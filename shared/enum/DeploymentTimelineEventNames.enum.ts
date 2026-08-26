@@ -3,7 +3,9 @@ export enum DeploymentTimelineEventNames {
   DeploymentCompleted = "Deployment Completed",
   DeploymentFailed = "Deployment Failed",
   OutboxFailed = "Outbox Failed",
-  ChaosInjected = "Chaos Injected"
+  ChaosInjected = "Chaos Injected",
+  DeploymentLive = "Deployment Live",
+  DeploymentTornDown = "Deployment Torn Down"
 }
 
-export type DeploymentTimelineEventNamesType = (typeof  DeploymentTimelineEventNames)[keyof typeof  DeploymentTimelineEventNames];
+export type DeploymentTimelineEventNamesType = (typeof DeploymentTimelineEventNames)[keyof typeof DeploymentTimelineEventNames];
