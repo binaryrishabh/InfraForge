@@ -27,9 +27,13 @@ model Deployment {
   stages                Json                        @default("[]") // Array of { timestamp, event, message }
   timeline              Json                        @default("[]") // Array of { timestamp, event, message }
   chaosEvents           Json                        @default("[]") // Chaos injection during deployment
+  workloadProfile       Json?
+  seed                  String?
+  simulationState       Json?
   createdAt             DateTime                    @default(now())
   updatedAt             DateTime                    @updatedAt
 }
+
 
 // Basically a schema to keep track of atomicity of events. It's being used in deployment and chaos injection /currently. 
 // i. In deployment it keeps track of either the deployment gets added to queue and mark completed at database or none happens...

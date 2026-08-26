@@ -39,6 +39,7 @@ export type DeploymentMinAggregateOutputType = {
   infrastructureId: string | null
   status: string | null
   resourceCount: number | null
+  seed: string | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -48,6 +49,7 @@ export type DeploymentMaxAggregateOutputType = {
   infrastructureId: string | null
   status: string | null
   resourceCount: number | null
+  seed: string | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -60,6 +62,9 @@ export type DeploymentCountAggregateOutputType = {
   stages: number
   timeline: number
   chaosEvents: number
+  workloadProfile: number
+  seed: number
+  simulationState: number
   createdAt: number
   updatedAt: number
   _all: number
@@ -79,6 +84,7 @@ export type DeploymentMinAggregateInputType = {
   infrastructureId?: true
   status?: true
   resourceCount?: true
+  seed?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -88,6 +94,7 @@ export type DeploymentMaxAggregateInputType = {
   infrastructureId?: true
   status?: true
   resourceCount?: true
+  seed?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -100,6 +107,9 @@ export type DeploymentCountAggregateInputType = {
   stages?: true
   timeline?: true
   chaosEvents?: true
+  workloadProfile?: true
+  seed?: true
+  simulationState?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -199,6 +209,9 @@ export type DeploymentGroupByOutputType = {
   stages: runtime.JsonValue
   timeline: runtime.JsonValue
   chaosEvents: runtime.JsonValue
+  workloadProfile: runtime.JsonValue | null
+  seed: string | null
+  simulationState: runtime.JsonValue | null
   createdAt: Date
   updatedAt: Date
   _count: DeploymentCountAggregateOutputType | null
@@ -234,6 +247,9 @@ export type DeploymentWhereInput = {
   stages?: Prisma.JsonFilter<"Deployment">
   timeline?: Prisma.JsonFilter<"Deployment">
   chaosEvents?: Prisma.JsonFilter<"Deployment">
+  workloadProfile?: Prisma.JsonNullableFilter<"Deployment">
+  seed?: Prisma.StringNullableFilter<"Deployment"> | string | null
+  simulationState?: Prisma.JsonNullableFilter<"Deployment">
   createdAt?: Prisma.DateTimeFilter<"Deployment"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Deployment"> | Date | string
   infrastructure?: Prisma.XOR<Prisma.InfrastructureScalarRelationFilter, Prisma.InfrastructureWhereInput>
@@ -247,6 +263,9 @@ export type DeploymentOrderByWithRelationInput = {
   stages?: Prisma.SortOrder
   timeline?: Prisma.SortOrder
   chaosEvents?: Prisma.SortOrder
+  workloadProfile?: Prisma.SortOrderInput | Prisma.SortOrder
+  seed?: Prisma.SortOrderInput | Prisma.SortOrder
+  simulationState?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   infrastructure?: Prisma.InfrastructureOrderByWithRelationInput
@@ -263,6 +282,9 @@ export type DeploymentWhereUniqueInput = Prisma.AtLeast<{
   stages?: Prisma.JsonFilter<"Deployment">
   timeline?: Prisma.JsonFilter<"Deployment">
   chaosEvents?: Prisma.JsonFilter<"Deployment">
+  workloadProfile?: Prisma.JsonNullableFilter<"Deployment">
+  seed?: Prisma.StringNullableFilter<"Deployment"> | string | null
+  simulationState?: Prisma.JsonNullableFilter<"Deployment">
   createdAt?: Prisma.DateTimeFilter<"Deployment"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Deployment"> | Date | string
   infrastructure?: Prisma.XOR<Prisma.InfrastructureScalarRelationFilter, Prisma.InfrastructureWhereInput>
@@ -276,6 +298,9 @@ export type DeploymentOrderByWithAggregationInput = {
   stages?: Prisma.SortOrder
   timeline?: Prisma.SortOrder
   chaosEvents?: Prisma.SortOrder
+  workloadProfile?: Prisma.SortOrderInput | Prisma.SortOrder
+  seed?: Prisma.SortOrderInput | Prisma.SortOrder
+  simulationState?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.DeploymentCountOrderByAggregateInput
@@ -296,6 +321,9 @@ export type DeploymentScalarWhereWithAggregatesInput = {
   stages?: Prisma.JsonWithAggregatesFilter<"Deployment">
   timeline?: Prisma.JsonWithAggregatesFilter<"Deployment">
   chaosEvents?: Prisma.JsonWithAggregatesFilter<"Deployment">
+  workloadProfile?: Prisma.JsonNullableWithAggregatesFilter<"Deployment">
+  seed?: Prisma.StringNullableWithAggregatesFilter<"Deployment"> | string | null
+  simulationState?: Prisma.JsonNullableWithAggregatesFilter<"Deployment">
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Deployment"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Deployment"> | Date | string
 }
@@ -307,6 +335,9 @@ export type DeploymentCreateInput = {
   stages?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   timeline?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   chaosEvents?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  workloadProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  seed?: string | null
+  simulationState?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
   infrastructure: Prisma.InfrastructureCreateNestedOneWithoutDeploymentsInput
@@ -320,6 +351,9 @@ export type DeploymentUncheckedCreateInput = {
   stages?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   timeline?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   chaosEvents?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  workloadProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  seed?: string | null
+  simulationState?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -331,6 +365,9 @@ export type DeploymentUpdateInput = {
   stages?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   timeline?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   chaosEvents?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  workloadProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  seed?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  simulationState?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   infrastructure?: Prisma.InfrastructureUpdateOneRequiredWithoutDeploymentsNestedInput
@@ -344,6 +381,9 @@ export type DeploymentUncheckedUpdateInput = {
   stages?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   timeline?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   chaosEvents?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  workloadProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  seed?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  simulationState?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -356,6 +396,9 @@ export type DeploymentCreateManyInput = {
   stages?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   timeline?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   chaosEvents?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  workloadProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  seed?: string | null
+  simulationState?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -367,6 +410,9 @@ export type DeploymentUpdateManyMutationInput = {
   stages?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   timeline?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   chaosEvents?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  workloadProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  seed?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  simulationState?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -379,6 +425,9 @@ export type DeploymentUncheckedUpdateManyInput = {
   stages?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   timeline?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   chaosEvents?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  workloadProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  seed?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  simulationState?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -401,6 +450,9 @@ export type DeploymentCountOrderByAggregateInput = {
   stages?: Prisma.SortOrder
   timeline?: Prisma.SortOrder
   chaosEvents?: Prisma.SortOrder
+  workloadProfile?: Prisma.SortOrder
+  seed?: Prisma.SortOrder
+  simulationState?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -414,6 +466,7 @@ export type DeploymentMaxOrderByAggregateInput = {
   infrastructureId?: Prisma.SortOrder
   status?: Prisma.SortOrder
   resourceCount?: Prisma.SortOrder
+  seed?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -423,6 +476,7 @@ export type DeploymentMinOrderByAggregateInput = {
   infrastructureId?: Prisma.SortOrder
   status?: Prisma.SortOrder
   resourceCount?: Prisma.SortOrder
+  seed?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -481,6 +535,10 @@ export type IntFieldUpdateOperationsInput = {
   divide?: number
 }
 
+export type NullableStringFieldUpdateOperationsInput = {
+  set?: string | null
+}
+
 export type DeploymentCreateWithoutInfrastructureInput = {
   id?: string
   status?: string
@@ -488,6 +546,9 @@ export type DeploymentCreateWithoutInfrastructureInput = {
   stages?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   timeline?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   chaosEvents?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  workloadProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  seed?: string | null
+  simulationState?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -499,6 +560,9 @@ export type DeploymentUncheckedCreateWithoutInfrastructureInput = {
   stages?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   timeline?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   chaosEvents?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  workloadProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  seed?: string | null
+  simulationState?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -540,6 +604,9 @@ export type DeploymentScalarWhereInput = {
   stages?: Prisma.JsonFilter<"Deployment">
   timeline?: Prisma.JsonFilter<"Deployment">
   chaosEvents?: Prisma.JsonFilter<"Deployment">
+  workloadProfile?: Prisma.JsonNullableFilter<"Deployment">
+  seed?: Prisma.StringNullableFilter<"Deployment"> | string | null
+  simulationState?: Prisma.JsonNullableFilter<"Deployment">
   createdAt?: Prisma.DateTimeFilter<"Deployment"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Deployment"> | Date | string
 }
@@ -551,6 +618,9 @@ export type DeploymentCreateManyInfrastructureInput = {
   stages?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   timeline?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   chaosEvents?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  workloadProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  seed?: string | null
+  simulationState?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -562,6 +632,9 @@ export type DeploymentUpdateWithoutInfrastructureInput = {
   stages?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   timeline?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   chaosEvents?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  workloadProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  seed?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  simulationState?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -573,6 +646,9 @@ export type DeploymentUncheckedUpdateWithoutInfrastructureInput = {
   stages?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   timeline?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   chaosEvents?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  workloadProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  seed?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  simulationState?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -584,6 +660,9 @@ export type DeploymentUncheckedUpdateManyWithoutInfrastructureInput = {
   stages?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   timeline?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   chaosEvents?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  workloadProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  seed?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  simulationState?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -598,6 +677,9 @@ export type DeploymentSelect<ExtArgs extends runtime.Types.Extensions.InternalAr
   stages?: boolean
   timeline?: boolean
   chaosEvents?: boolean
+  workloadProfile?: boolean
+  seed?: boolean
+  simulationState?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   infrastructure?: boolean | Prisma.InfrastructureDefaultArgs<ExtArgs>
@@ -611,6 +693,9 @@ export type DeploymentSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Ex
   stages?: boolean
   timeline?: boolean
   chaosEvents?: boolean
+  workloadProfile?: boolean
+  seed?: boolean
+  simulationState?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   infrastructure?: boolean | Prisma.InfrastructureDefaultArgs<ExtArgs>
@@ -624,6 +709,9 @@ export type DeploymentSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Ex
   stages?: boolean
   timeline?: boolean
   chaosEvents?: boolean
+  workloadProfile?: boolean
+  seed?: boolean
+  simulationState?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   infrastructure?: boolean | Prisma.InfrastructureDefaultArgs<ExtArgs>
@@ -637,11 +725,14 @@ export type DeploymentSelectScalar = {
   stages?: boolean
   timeline?: boolean
   chaosEvents?: boolean
+  workloadProfile?: boolean
+  seed?: boolean
+  simulationState?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type DeploymentOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "infrastructureId" | "status" | "resourceCount" | "stages" | "timeline" | "chaosEvents" | "createdAt" | "updatedAt", ExtArgs["result"]["deployment"]>
+export type DeploymentOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "infrastructureId" | "status" | "resourceCount" | "stages" | "timeline" | "chaosEvents" | "workloadProfile" | "seed" | "simulationState" | "createdAt" | "updatedAt", ExtArgs["result"]["deployment"]>
 export type DeploymentInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   infrastructure?: boolean | Prisma.InfrastructureDefaultArgs<ExtArgs>
 }
@@ -665,6 +756,9 @@ export type $DeploymentPayload<ExtArgs extends runtime.Types.Extensions.Internal
     stages: runtime.JsonValue
     timeline: runtime.JsonValue
     chaosEvents: runtime.JsonValue
+    workloadProfile: runtime.JsonValue | null
+    seed: string | null
+    simulationState: runtime.JsonValue | null
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["deployment"]>
@@ -1098,6 +1192,9 @@ export interface DeploymentFieldRefs {
   readonly stages: Prisma.FieldRef<"Deployment", 'Json'>
   readonly timeline: Prisma.FieldRef<"Deployment", 'Json'>
   readonly chaosEvents: Prisma.FieldRef<"Deployment", 'Json'>
+  readonly workloadProfile: Prisma.FieldRef<"Deployment", 'Json'>
+  readonly seed: Prisma.FieldRef<"Deployment", 'String'>
+  readonly simulationState: Prisma.FieldRef<"Deployment", 'Json'>
   readonly createdAt: Prisma.FieldRef<"Deployment", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"Deployment", 'DateTime'>
 }
