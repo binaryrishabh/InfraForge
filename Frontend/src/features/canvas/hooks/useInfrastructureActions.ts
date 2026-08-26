@@ -1,12 +1,17 @@
 import { useState } from "react";
 import { toast } from "sonner";
-import { createInfrastructure, deleteInfrastructure, updateInfrastructure } from "@/api/infrastructure.api";
+import {
+  createInfrastructure,
+  deleteInfrastructure,
+  updateInfrastructure,
+} from "@/api/infrastructure.api";
 import { createDeployment } from "@/api/deployment.api";
 import { SAMPLE_ARCHITECTURE } from "@shared/constants/SAMPLE_ARCHITECTURE.constants";
 import type { Resource } from "@shared/types/Resource.types";
 import type { ConnectionLine } from "@shared/types/ConnectionLine.types";
 import type { ModalState } from "@shared/types/ModalState.types";
 import type { UndoCanvasResourceAction } from "@shared/types/UndoCanvasResourceAction.types";
+import type { WorkloadProfile } from "@shared/types/WorkloadProfile.types";
 
 interface UseInfrastructureActionsProps {
   isDeploying: boolean;
@@ -23,8 +28,12 @@ interface UseInfrastructureActionsProps {
   setActiveDeploymentId: (id: string | null) => void;
   setIsDeploying: (deploying: boolean) => void;
   setSelectedResource: (id: string | null) => void;
-  setUndoResourcesSnapshotStackTrace: React.Dispatch<React.SetStateAction<UndoCanvasResourceAction[]>>;
-  setRedoResourcesSnapshotStackTrace: (stack: UndoCanvasResourceAction[]) => void;
+  setUndoResourcesSnapshotStackTrace: React.Dispatch<
+    React.SetStateAction<UndoCanvasResourceAction[]>
+  >;
+  setRedoResourcesSnapshotStackTrace: (
+    stack: UndoCanvasResourceAction[],
+  ) => void;
   setIsInitialized: (initialized: boolean) => void;
 }
 
@@ -115,10 +124,13 @@ export function useInfrastructureActions({
     return deletedInfrastructure;
   };
 
-  const handleDeployExecute = async () => {
+  const handleDeployExecute = async (workloadProfile?: WorkloadProfile) => {
     setActiveDeploymentId(null);
     await new Promise((r) => setTimeout(r, 100));
-    const deployment = await createDeployment(currentLayoutId!);
+    const deployment = await createDeployment(
+      currentLayoutId!,
+      workloadProfile,
+    );
     setActiveDeploymentId(deployment.id);
     setIsDeploying(true);
     setUndoResourcesSnapshotStackTrace([]);
@@ -132,22 +144,20 @@ export function useInfrastructureActions({
   const handleNew = () => {
     const hasRunningDeployment = isDeploying;
     const hasUnsavedChanges = !currentLayoutSaved && canvasResources.length > 0;
-
     // If nothing to lose, just clear immediately (no modal)
     if (!hasRunningDeployment && !hasUnsavedChanges) {
       handleNewExecute();
       return;
     }
-
     // Build dynamic modal state
     let title = "Discard changes?";
     let description = "You have unsaved changes on the current canvas.";
     let confirmLabel = "Clear canvas";
     let warnings: Array<{ icon: "danger" | "warning"; text: string }> = [];
-
     if (hasRunningDeployment && hasUnsavedChanges) {
       title = "Abort deployment and clear canvas?";
-      description = "Starting a new canvas will affect the current deployment and unsaved changes.";
+      description =
+        "Starting a new canvas will affect the current deployment and unsaved changes.";
       confirmLabel = "Abort and clear";
       warnings = [
         { icon: "danger", text: "The running deployment will be aborted." },
@@ -165,7 +175,6 @@ export function useInfrastructureActions({
         { icon: "danger", text: "Unsaved canvas changes will be discarded." },
       ];
     }
-
     setModalState({
       type: "confirm-new",
       title,

@@ -8,6 +8,7 @@ import { ResourceConfigPanel } from "./ResourceConfigPanel";
 import { InputModal } from "@/components/UI/InputModal";
 import { ConfirmModal } from "@/components/UI/ConfirmModal";
 import { TypeToConfirmModal } from "@/components/UI/TypeToConfirmModal";
+import { DeployModal } from "@/features/deployment/components/DeployModal";
 import { Network } from "lucide-react";
 import { ResourceIcon } from "@/components/common/ResourceIcon";
 import { useCanvasDesignerController } from "../hooks/useCanvasDesignerController";
@@ -27,26 +28,22 @@ export function CanvasDesignerPage() {
     setSelectedResourceForConfig,
     emptyCanvasStateDismissed,
     setEmptyCanvasStateDismissed,
-
     // Persistence
     isInitialized,
-
     // Dropdown
     showLayoutDropdown,
     savedLayouts,
     handleOpenCloseDropDownNameClick,
     handleSelectLayout,
-
     // Connections
     connectionLines,
     selectedResource,
     isConnecting,
     hanldeResouceClick,
     handleToggleConnectionLines,
-
     // Resource actions
     handleDeleteCanvasResource,
-
+    handleUpdateCanvasResource,
     // Infrastructure actions
     modalState,
     setModalState,
@@ -63,19 +60,21 @@ export function CanvasDesignerPage() {
     handleDeleteExecute,
     handleDeployExecute,
     loadSampleArchitecture,
-
     // Drag & Drop
     sensors,
     activeDrag,
     onDragStart,
     onDragEnd,
-
     // Config panel
     handleResourceDoubleClickShowConfig,
   } = useCanvasDesignerController();
 
   return (
-    <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd}>
+    <DndContext
+      sensors={sensors}
+      onDragStart={onDragStart}
+      onDragEnd={onDragEnd}
+    >
       <DragOverlay>
         {activeDrag && (
           <div className="w-12 h-12 rounded-lg bg-[#12162F] border border-[#35415A] flex items-center justify-center shadow-xl opacity-90">
@@ -87,7 +86,6 @@ export function CanvasDesignerPage() {
           </div>
         )}
       </DragOverlay>
-
       <div className="flex flex-col h-screen bg-[#0f1117] text-white">
         <CanvasTopbar
           showLayoutDropdown={showLayoutDropdown}
@@ -105,13 +103,11 @@ export function CanvasDesignerPage() {
           isConnecting={isConnecting}
           handleToggleConnectionLines={handleToggleConnectionLines}
         />
-
         <div className="flex flex-1 overflow-hidden">
           <ResourceSidebar />
-
           {canvasResources.length === 0 &&
-            !emptyCanvasStateDismissed &&
-            (!currentLayoutId || !isInitialized) ? (
+          !emptyCanvasStateDismissed &&
+          (!currentLayoutId || !isInitialized) ? (
             /* Empty state overlay */
             <div className="flex-1 flex items-center justify-center">
               <div className="text-center">
@@ -154,16 +150,15 @@ export function CanvasDesignerPage() {
           )}
         </div>
       </div>
-
       {selectedResourceForConfig && (
         <ResourceConfigPanel
           resource={canvasResources.find(
             (r) => r.id === selectedResourceForConfig,
           )}
           onClose={() => setSelectedResourceForConfig(null)}
+          onUpdateResource={handleUpdateCanvasResource}
         />
       )}
-
       {activeDeploymentId && (
         <DeploymentPipeline
           deploymentId={activeDeploymentId}
@@ -175,9 +170,7 @@ export function CanvasDesignerPage() {
           onDeploymentFailed={() => setIsDeploying(false)}
         />
       )}
-
       {/* -------------MODAL SYSTEM Conditionally Rendered----------------*/}
-
       {/* 1. SAVE MODAL */}
       {modalState?.type === "save" && (
         <InputModal
@@ -203,7 +196,6 @@ export function CanvasDesignerPage() {
           }}
         />
       )}
-
       {/* 2. UPDATE MODAL */}
       {modalState?.type === "update" && (
         <InputModal
@@ -230,7 +222,6 @@ export function CanvasDesignerPage() {
           }}
         />
       )}
-
       {/* 3. CONFIRM NEW MODAL */}
       {modalState?.type === "confirm-new" && (
         <ConfirmModal
@@ -251,25 +242,20 @@ export function CanvasDesignerPage() {
           }}
         />
       )}
-
       {/* 4. CONFIRM DEPLOY MODAL */}
       {modalState?.type === "confirm-deploy" && (
-        <ConfirmModal
+        <DeployModal
           open={true}
           onOpenChange={(open) => {
             if (!open && !modalLoading) setModalState(null);
           }}
-          title="Deploy infrastructure?"
-          description="This will start a simulated deployment pipeline for this infrastructure."
-          consequences={[]}
-          metadata={`${canvasResources.length} resources · ${connectionLines.length} connections`}
-          confirmLabel="Deploy"
-          intent="primary"
+          resourceCount={canvasResources.length}
+          connectionCount={connectionLines.length}
           loading={modalLoading}
-          onConfirm={async () => {
+          onDeploy={async (profile) => {
             setModalLoading(true);
             try {
-              await handleDeployExecute();
+              await handleDeployExecute(profile);
               setModalState(null);
             } catch {
               toast.error("Failed to start deployment");
@@ -279,7 +265,6 @@ export function CanvasDesignerPage() {
           }}
         />
       )}
-
       {/* 5. DELETE MODAL */}
       {modalState?.type === "delete" && (
         <TypeToConfirmModal
