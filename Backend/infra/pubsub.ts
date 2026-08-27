@@ -1,6 +1,6 @@
 import { redis } from "./redis";
-import type { OutboxPayload } from "@shared/types/OutboxPayload.types";
-import type { SimulationSnapshot } from "@shared/types/SimulationSnapshot.types";
+import type { OutboxPayload } from "@shared/interface/OutboxPayload.interface";
+import type { SimulationSnapshot } from "@shared/interface/SimulationSnapshot.interface";
 import { Publish } from "@shared/enum/Publish.enum";
 
 /* ------------------------Publisher code--------------------- */

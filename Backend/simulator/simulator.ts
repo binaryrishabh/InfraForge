@@ -1,13 +1,17 @@
 import { prisma } from "../lib/prisma";
 import { redis } from "../infra/redis";
 import { publishSimulationSnapshot } from "../infra/pubsub";
-import { createInitialState, tick, DEFAULT_WORKLOAD_PROFILE } from "@shared/simulation/engine";
-import type { SimulationState } from "@shared/simulation/engine";
-import type { SimulationSnapshot } from "@shared/types/SimulationSnapshot.types";
-import type { SimulationLog } from "@shared/types/SimulationLog.types";
-import type { Resource } from "@shared/types/Resource.types";
-import type { ConnectionLine } from "@shared/types/ConnectionLine.types";
-import type { WorkloadProfile } from "@shared/types/WorkloadProfile.types";
+import { createInitialState, tick } from "@shared/simulation/engine";
+import { DEFAULT_WORKLOAD_PROFILE } from "@shared/constants/DEFAULT_WORKLOAD_PROFILE.constants";
+import { SIMULATION_CONSTANTS } from "@shared/constants/SIMULATION_CONSTANTS.constants";
+import type { SimulationState } from "@shared/interface/SimulationState.interface";
+import type { ChaosType } from "@shared/types/ChaosType.types";
+import type { ChaosEffect } from "@shared/interface/ChaosEffect.interface";
+import type { SimulationSnapshot } from "@shared/interface/SimulationSnapshot.interface";
+import type { SimulationLog } from "@shared/interface/SimulationLog.interface";
+import type { Resource } from "@shared/interface/Resource.interface";
+import type { ConnectionLine } from "@shared/interface/ConnectionLine.interface";
+import type { WorkloadProfile } from "@shared/interface/WorkloadProfile.interface";
 import { DeploymentStatus } from "@shared/enum/DeploymentStatus.enum";
 
 interface SimulationInstance {
@@ -64,12 +68,18 @@ export const resurrectLiveDeployments = async () => {
   }
 };
 
-/* ------- Control channel: load adjustments and stop commands from the API server ------- */
+/* ------- Control channel: load adjustments, stop commands, and chaos injection from the API server ------- */
 const controlSubscriber = redis.duplicate();
 controlSubscriber.subscribe("simulator:control");
 controlSubscriber.on("message", (_channel: string, message: string) => {
   try {
-    const command = JSON.parse(message) as { deploymentId: string; action: string; targetLoadFraction?: number };
+    const command = JSON.parse(message) as { 
+      deploymentId: string; 
+      action: string; 
+      targetLoadFraction?: number;
+      chaosType?: ChaosType;
+      resourceId?: string;
+    };
     const instance = registry.get(command.deploymentId);
     if (!instance) return;
 
@@ -89,6 +99,30 @@ controlSubscriber.on("message", (_channel: string, message: string) => {
     } else if (command.action === "stop") {
       registry.delete(command.deploymentId);
       console.log(`[simulator] stopped ${command.deploymentId} — environment torn down`);
+    } else if (command.action === "inject-chaos" && command.chaosType && command.resourceId) {
+      const durationMap: Record<ChaosType, number> = {
+        "crash": SIMULATION_CONSTANTS.CHAOS.CRASH_DURATION,
+        "cpu-spike": SIMULATION_CONSTANTS.CHAOS.CPU_SPIKE_DURATION,
+        "memory-leak": SIMULATION_CONSTANTS.CHAOS.MEMORY_LEAK_DURATION,
+        "network-delay": SIMULATION_CONSTANTS.CHAOS.NETWORK_DELAY_DURATION,
+        "disk-failure": SIMULATION_CONSTANTS.CHAOS.DISK_FAILURE_DURATION
+      };
+
+      const durationTicks = durationMap[command.chaosType];
+      if (durationTicks === undefined) {
+        console.error(`[simulator] unknown chaos type: ${command.chaosType}`);
+        return;
+      }
+
+      const effect: ChaosEffect = {
+        chaosType: command.chaosType,
+        resourceId: command.resourceId,
+        durationTicks,
+        remainingTicks: durationTicks
+      };
+
+      instance.state.activeChaos.push(effect);
+      console.log(`[simulator] chaos ${command.chaosType} injected on ${command.resourceId} for ${command.deploymentId}`);
     }
   } catch (err: any) {
     console.error(`[simulator] control message failed: ${err.message}`);

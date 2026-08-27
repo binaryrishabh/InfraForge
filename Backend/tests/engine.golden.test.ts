@@ -1,14 +1,17 @@
 import { describe, expect, test } from "bun:test";
 import { createInitialState, tick } from "@shared/simulation/engine";
-import type { SimulationState } from "@shared/simulation/engine";
+import type { SimulationState } from "@shared/interface/SimulationState.interface";
+import type { ChaosEffect } from "@shared/interface/ChaosEffect.interface";
+import type { ChaosType } from "@shared/types/ChaosType.types";
 import { SAMPLE_ARCHITECTURE } from "@shared/constants/SAMPLE_ARCHITECTURE.constants";
 import { RESOURCE_TYPES } from "@shared/constants/RESOURCE_TYPES.constants";
 import { ResourceHealth } from "@shared/enum/ResourceHealth.enum";
-import type { WorkloadProfile } from "@shared/types/WorkloadProfile.types";
-import type { SimulationLog } from "@shared/types/SimulationLog.types";
+import type { WorkloadProfile } from "@shared/interface/WorkloadProfile.interface";
+import type { SimulationLog } from "@shared/interface/SimulationLog.interface";
+import { DeploymentChaosNames } from "@shared/enum/DeploymentChaosNames.enum";
 
 const makeProfile = (overrides: Partial<WorkloadProfile> = {}): WorkloadProfile => ({
-  targetThroughput: 1_000_000,
+  targetThroughput: 1000000,
   throughputUnit: "per-hour",
   trafficShape: "steady",
   readWriteRatio: 0.8,
@@ -29,6 +32,29 @@ function simulate(profile: WorkloadProfile, totalTicks: number, seed = 42, resou
   return { states, allLogs, final: state };
 }
 
+function simulateWithChaos(
+  profile: WorkloadProfile, 
+  totalTicks: number, 
+  chaos: ChaosEffect, 
+  injectAtTick: number, 
+  seed = 42, 
+  resources = SAMPLE_ARCHITECTURE.resources
+) {
+  let state = createInitialState("golden-test", resources, SAMPLE_ARCHITECTURE.connectionLines, profile, seed);
+  const allLogs: SimulationLog[] = [];
+  const states: SimulationState[] = [];
+  for (let i = 0; i < totalTicks; i++) {
+    if (i === injectAtTick) {
+      state.activeChaos.push(chaos);
+    }
+    const result = tick(state, {});
+    state = result.state;
+    allLogs.push(...result.logs);
+    states.push(state);
+  }
+  return { states, allLogs, final: state };
+}
+
 const cpuOf = (state: SimulationState, id: string) => state.metrics[id]?.cpu ?? -1;
 const healthOf = (state: SimulationState, id: string) => state.metrics[id]?.health;
 
@@ -37,7 +63,7 @@ const withSku = (skuId: string, types: string[]) =>
 
 describe("golden scenarios — sample architecture", () => {
   test("S1: 500K users/hr steady stays healthy", () => {
-    const { final } = simulate(makeProfile({ targetThroughput: 500_000 }), 60);
+    const { final } = simulate(makeProfile({ targetThroughput: 500000 }), 60);
     expect(cpuOf(final, "vm-1")).toBeGreaterThan(40);
     expect(cpuOf(final, "vm-1")).toBeLessThan(52);
     expect(healthOf(final, "vm-1")).toBe(ResourceHealth.HEALTHY);
@@ -47,7 +73,7 @@ describe("golden scenarios — sample architecture", () => {
   });
 
   test("S2: 2M users/hr steady saturates VMs and DB", () => {
-    const { final } = simulate(makeProfile({ targetThroughput: 2_000_000 }), 60);
+    const { final } = simulate(makeProfile({ targetThroughput: 2000000 }), 60);
     expect(cpuOf(final, "vm-1")).toBeGreaterThanOrEqual(95);
     expect(healthOf(final, "vm-1")).toBe(ResourceHealth.SATURATED);
     expect(cpuOf(final, "db-1")).toBeGreaterThanOrEqual(95);
@@ -55,7 +81,7 @@ describe("golden scenarios — sample architecture", () => {
   });
 
   test("S3: peak shape produces real burst windows", () => {
-    const { states, allLogs } = simulate(makeProfile({ targetThroughput: 500_000, trafficShape: "peak", peakMultiplier: 3 }), 127);
+    const { states, allLogs } = simulate(makeProfile({ targetThroughput: 500000, trafficShape: "peak", peakMultiplier: 3 }), 127);
     const base = states[109]!;
     const burst = states[126]!;
     expect(cpuOf(base, "vm-1")).toBeLessThan(60);
@@ -87,7 +113,7 @@ describe("golden scenarios — sample architecture", () => {
   });
 
   test("S7: undersized t3.micro VMs saturate under modest load", () => {
-    const { final } = simulate(makeProfile({ targetThroughput: 500_000 }), 60, 42, withSku("t3.micro", [RESOURCE_TYPES.VirtualMachine]));
+    const { final } = simulate(makeProfile({ targetThroughput: 500000 }), 60, 42, withSku("t3.micro", [RESOURCE_TYPES.VirtualMachine]));
     expect(cpuOf(final, "vm-1")).toBeGreaterThanOrEqual(95);
     expect(healthOf(final, "vm-1")).toBe(ResourceHealth.SATURATED);
   });
@@ -100,9 +126,57 @@ describe("golden scenarios — sample architecture", () => {
   });
 
   test("S9: DigitalOcean s-4vcpu-8gb degrades but survives 1.6M users/hr", () => {
-    const { final } = simulate(makeProfile({ targetThroughput: 1_600_000 }), 60, 42, withSku("s-4vcpu-8gb", [RESOURCE_TYPES.VirtualMachine]));
+    const { final } = simulate(makeProfile({ targetThroughput: 1_600000 }), 60, 42, withSku("s-4vcpu-8gb", [RESOURCE_TYPES.VirtualMachine]));
     expect(cpuOf(final, "vm-1")).toBeGreaterThan(70);
     expect(cpuOf(final, "vm-1")).toBeLessThan(80);
     expect(healthOf(final, "vm-1")).toBe(ResourceHealth.DEGRADED);
+  });
+});
+
+describe("golden scenarios — chaos", () => {
+  test("C1: crash kills a VM and redistributes its load", () => {
+    const chaos: ChaosEffect = {
+      chaosType: DeploymentChaosNames.Crash,
+      resourceId: "vm-1",
+      durationTicks: 30,
+      remainingTicks: 30
+    };
+    const { states } = simulateWithChaos(makeProfile({ targetThroughput: 1000000 }), 95, chaos, 60);
+    
+    const state65 = states[64]!; 
+    expect(healthOf(state65, "vm-1")).toBe(ResourceHealth.FAILED);
+    expect(cpuOf(state65, "vm-1")).toBe(0);
+    expect(cpuOf(state65, "vm-2")).toBeGreaterThan(cpuOf(state65, "vm-1"));
+
+    const state95 = states[94]!;
+    expect(healthOf(state95, "vm-1")).not.toBe(ResourceHealth.FAILED);
+  });
+
+  test("C2: cpu-spike pushes a healthy VM into degraded or saturated", () => {
+    const chaos: ChaosEffect = {
+      chaosType: DeploymentChaosNames.CpuSpike,
+      resourceId: "vm-1",
+      durationTicks: 20,
+      remainingTicks: 20
+    };
+    const { states } = simulateWithChaos(makeProfile({ targetThroughput: 500000 }), 62, chaos, 60);
+    const state62 = states[61]!;
+    
+    expect(cpuOf(state62, "vm-1")).toBeGreaterThanOrEqual(85);
+    const health = healthOf(state62, "vm-1");
+    expect(health === ResourceHealth.DEGRADED || health === ResourceHealth.SATURATED).toBe(true);
+  });
+
+  test("C3: memory-leak eventually saturates via memory", () => {
+    const chaos: ChaosEffect = {
+      chaosType: DeploymentChaosNames.MemoryLeak,
+      resourceId: "vm-1",
+      durationTicks: 40,
+      remainingTicks: 40
+    };
+    const { states } = simulateWithChaos(makeProfile({ targetThroughput: 500000 }), 95, chaos, 60);
+    const state95 = states[94]!;
+    
+    expect(state95.metrics["vm-1"]!.memory).toBeGreaterThanOrEqual(90);
   });
 });

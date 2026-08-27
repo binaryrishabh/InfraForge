@@ -1,6 +1,6 @@
 import { RESOURCE_TYPES } from "@shared/constants/RESOURCE_TYPES.constants";
-import type { Resource } from "@shared/types/Resource.types";
-import type { DeploymentStageResult } from "@shared/types/DeploymentStageResult.types";
+import type { Resource } from "@shared/interface/Resource.interface";
+import type { DeploymentStageResult } from "@shared/interface/DeploymentStageResult.interface";
 
 export const runSecurityScan = (resources: Resource[]): DeploymentStageResult => {
   const issues: string[] = [];

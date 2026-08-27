@@ -10,10 +10,10 @@ import { OutboxBullMQStatus } from "@shared/enum/OutboxBullMQStatus.enum";
 import { DeploymentStatus } from "@shared/enum/DeploymentStatus.enum";
 import { DEPLOYMENT_STAGES_NAMES } from "@shared/constants/DEPLOYMENT_STAGES_NAMES.constants";
 import { DeploymentStageStatus } from "@shared/enum/DeploymentStageStatus.enum";
-import type { OutboxPayload } from "@shared/types/OutboxPayload.types";
-import type { DeploymentJob } from "@shared/types/DeploymentJob.types";
-import type { DeploymentStages } from "@shared/types/DeploymentStages.types";
-import type { DeploymentTimeline } from "@shared/types/DeploymentTimeline.types";
+import type { OutboxPayload } from "@shared/interface/OutboxPayload.interface";
+import type { DeploymentJob } from "@shared/interface/DeploymentJob.interface";
+import type { DeploymentStages } from "@shared/interface/DeploymentStages.interface";
+import type { DeploymentTimeline } from "@shared/interface/DeploymentTimeline.interface";
 
 // Outbox processor-> Polls the unprocessed events from outbox table every 5 seconds and adds to BullMQ.
 // This is because we have implemented the atomicity in the /api/deployments api end-point code.

@@ -1,7 +1,7 @@
 import { RESOURCE_TYPES } from "@shared/constants/RESOURCE_TYPES.constants";
 import { findSku } from "@shared/catalog/index";
-import type { Resource } from "@shared/types/Resource.types";
-import type { DeploymentStageResult } from "@shared/types/DeploymentStageResult.types";
+import type { Resource } from "@shared/interface/Resource.interface";
+import type { DeploymentStageResult } from "@shared/interface/DeploymentStageResult.interface";
 
 // Transitional fallback for resources without a selected SKU.
 // Audit: disappears as the SKU picker covers more resource categories.

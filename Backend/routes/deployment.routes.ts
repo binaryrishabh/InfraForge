@@ -93,41 +93,64 @@ deploymentRouter.post("/:deploymentId/chaos", async (req, res) => {
   if (!deployment) {
     throw new NotFoundError("Deployment not found with specified id " + deploymentId);
   }
-  if (deployment.status !== DeploymentStatus.RUNNING) {
-    throw new ValidationError("Can only inject chaos into a running deployment");
+  if (deployment.status !== DeploymentStatus.LIVE) {
+    throw new ValidationError("Chaos can only be injected into a live deployment");
   }
-  const [updatedDeploymentAfterChaosAdded] = await prisma.$transaction(async (tx) => {
+
+  const timestamp = new Date().toISOString();
+  const message = `Chaos ${type} injected on ${resourceId}`;
+
+  await prisma.$transaction(async (tx) => {
     const latestDeployment = await tx.deployment.findUnique({
       where: { id: deploymentId }
     });
+    
     const currentChaosEvents = (latestDeployment?.chaosEvents as any[]) || [];
     currentChaosEvents.push({
-      timestamp: new Date().toISOString(),
+      timestamp,
       type,
       resourceId,
-      message: `Chaos injected ${type} on ${resourceId}`
+      message
     });
-    const updated = await tx.deployment.update({
+
+    const currentTimeline = (latestDeployment?.timeline as any[]) || [];
+    currentTimeline.push({
+      timestamp,
+      event: "Chaos Injected",
+      message
+    });
+
+    await tx.deployment.update({
       where: { id: deploymentId },
-      data: { chaosEvents: currentChaosEvents }
-    });
-    const outbox = await tx.outbox.create({
-      data: {
-        eventType: "chaos-injected",
-        payload: {
-          deploymentId,
-          chaosType: type,
-          resourceId,
-          message: `Chaos ${type} injected on resource`
-        }
+      data: { 
+        chaosEvents: currentChaosEvents,
+        timeline: currentTimeline
       }
     });
-    return [updated, outbox];
   });
+
+  // Publish to deployment updates channel for frontend timeline
+  await redis.publish(`deployment:${deploymentId}:updates`, JSON.stringify({
+    deploymentId,
+    chaosType: type,
+    resourceId,
+    message,
+    timestamp,
+    publishType: Publish.publishChaosInjected
+  }));
+
+  // Publish to simulator control channel
+  await redis.publish("simulator:control", JSON.stringify({
+    deploymentId,
+    action: "inject-chaos",
+    chaosType: type,
+    resourceId
+  }));
+
   res.status(200).json({
     success: true,
     message: "Chaos injected",
-    updatedDeploymentAfterChaosAdded
+    deploymentId
   });
 });
 
