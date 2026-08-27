@@ -2,8 +2,8 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { validateConnection } from "@shared/validation/validateDeploymentReadiness.validation";
 import { RESOURCE_PORTS } from "@shared/constants/RESOURCE_PORTS.constants";
-import type { Resource } from "@shared/types/Resource.types";
-import type { ConnectionLine } from "@shared/types/ConnectionLine.types";
+import type { Resource } from "@shared/interface/Resource.interface";
+import type { ConnectionLine } from "@shared/interface/ConnectionLine.interface";
 import type { ResourceType } from "@shared/constants/RESOURCE_TYPES.constants";
 import type { UndoCanvasResourceAction } from "@shared/types/UndoCanvasResourceAction.types";
 

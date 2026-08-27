@@ -5,11 +5,11 @@ import { WebSocketMessage } from "@shared/enum/WebSocketMessage.enum";
 import { DeploymentStatus, type DeploymentStatusType } from "@shared/enum/DeploymentStatus.enum";
 import { DeploymentStageStatus } from "@shared/enum/DeploymentStageStatus.enum";
 import { DeploymentTimelineEventNames } from "@shared/enum/DeploymentTimelineEventNames.enum";
-import type { Deployment } from "@shared/types/Deployment.types";
-import type { DeploymentStages } from "@shared/types/DeploymentStages.types";
-import type { DeploymentTimeline } from "@shared/types/DeploymentTimeline.types";
+import type { Deployment } from "@shared/interface/Deployment.interface";
+import type { DeploymentStages } from "@shared/interface/DeploymentStages.interface";
+import type { DeploymentTimeline } from "@shared/interface/DeploymentTimeline.interface";
 import { useSimulationStore } from "@/features/monitoring/store/simulationStore";
-import type { SimulationSnapshot } from "@shared/types/SimulationSnapshot.types";
+import type { SimulationSnapshot } from "@shared/interface/SimulationSnapshot.interface";
 
 type PipelineUIStatus = DeploymentStatusType | "Web Socket connection error";
 

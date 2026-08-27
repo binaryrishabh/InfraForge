@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { PointerSensor, TouchSensor, MouseSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { toast } from "sonner";
-import type { Resource } from "@shared/types/Resource.types";
+import type { Resource } from "@shared/interface/Resource.interface";
 import type { ResourceType } from "@shared/constants/RESOURCE_TYPES.constants";
 import type { UndoCanvasResourceAction } from "@shared/types/UndoCanvasResourceAction.types";
 

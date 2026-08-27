@@ -1,7 +1,7 @@
 import { create } from "zustand";
-import type { ResourceMetrics } from "@shared/types/ResourceMetrics.types";
-import type { SimulationLog } from "@shared/types/SimulationLog.types";
-import type { SimulationSnapshot } from "@shared/types/SimulationSnapshot.types";
+import type { ResourceMetrics } from "@shared/interface/ResourceMetrics.interface";
+import type { SimulationLog } from "@shared/interface/SimulationLog.interface";
+import type { SimulationSnapshot } from "@shared/interface/SimulationSnapshot.interface";
 
 const MAX_LOGS = 150;
 

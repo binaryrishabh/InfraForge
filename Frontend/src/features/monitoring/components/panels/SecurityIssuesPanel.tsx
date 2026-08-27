@@ -1,5 +1,5 @@
 import { DEPLOYMENT_STAGES_NAMES } from "@shared/constants/DEPLOYMENT_STAGES_NAMES.constants";
-import type { Deployment } from "@shared/types/Deployment.types";
+import type { Deployment } from "@shared/interface/Deployment.interface";
 
 interface SecurityIssuesPanelProps {
   deployment: Deployment;

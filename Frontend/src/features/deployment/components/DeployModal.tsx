@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Modal } from "@/components/UI/Modal";
-import type { WorkloadProfile } from "@shared/types/WorkloadProfile.types";
+import type { WorkloadProfile } from "@shared/interface/WorkloadProfile.interface";
 
 interface DeployModalProps {
   open: boolean;

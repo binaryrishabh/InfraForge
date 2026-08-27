@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import type { Resource } from "@shared/types/Resource.types";
-import type { ConnectionLine } from "@shared/types/ConnectionLine.types";
+import type { Resource } from "@shared/interface/Resource.interface";
+import type { ConnectionLine } from "@shared/interface/ConnectionLine.interface";
 
 interface UseCanvasPersistenceProps {
   canvasResources: Resource[];

@@ -1,6 +1,6 @@
 import { ResourceIcon } from "@/components/common/ResourceIcon";
 import { CanvasResourcePorts } from "./CanvasResourcePorts";
-import type { Resource } from "@shared/types/Resource.types";
+import type { Resource } from "@shared/interface/Resource.interface";
 import type { ResourceType } from "@shared/constants/RESOURCE_TYPES.constants";
 
 interface CanvasResourceItemProps {

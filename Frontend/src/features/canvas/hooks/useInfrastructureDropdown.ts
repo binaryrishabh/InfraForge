@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { getAllInfrastructure } from "@/api/infrastructure.api";
-import type { Infrastructure } from "@shared/types/Infrastructure.types";
-import type { Resource } from "@shared/types/Resource.types";
-import type { ConnectionLine } from "@shared/types/ConnectionLine.types";
+import type { Infrastructure } from "@shared/interface/Infrastructure.interface";
+import type { Resource } from "@shared/interface/Resource.interface";
+import type { ConnectionLine } from "@shared/interface/ConnectionLine.interface";
 import type { UndoCanvasResourceAction } from "@shared/types/UndoCanvasResourceAction.types";
 
 interface UseInfrastructureDropdownProps {

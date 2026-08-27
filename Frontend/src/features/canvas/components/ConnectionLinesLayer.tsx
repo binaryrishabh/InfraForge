@@ -1,6 +1,6 @@
 import { ManhattanConnectionLine } from "./ManhattanConnectionLine";
-import type { ConnectionLine } from "@shared/types/ConnectionLine.types";
-import type { Resource } from "@shared/types/Resource.types";
+import type { ConnectionLine } from "@shared/interface/ConnectionLine.interface";
+import type { Resource } from "@shared/interface/Resource.interface";
 
 interface ConnectionLinesLayerProps {
   resources: Resource[];

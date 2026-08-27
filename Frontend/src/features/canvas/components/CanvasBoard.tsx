@@ -1,8 +1,8 @@
 import { useDroppable } from "@dnd-kit/core";
 import { CanvasResourceItem } from "./CanvasResourceItem";
 import { ConnectionLinesLayer } from "./ConnectionLinesLayer";
-import type { ConnectionLine } from "@shared/types/ConnectionLine.types";
-import type { Resource } from "@shared/types/Resource.types";
+import type { ConnectionLine } from "@shared/interface/ConnectionLine.interface";
+import type { Resource } from "@shared/interface/Resource.interface";
 import type { ResourceType } from "@shared/constants/RESOURCE_TYPES.constants";
 
 export interface CanvasBoardProps {

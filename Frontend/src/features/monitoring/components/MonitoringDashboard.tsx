@@ -11,15 +11,16 @@ import { DeploymentStatus } from "@shared/enum/DeploymentStatus.enum";
 import { ReadOnlyCanvas } from "./ReadOnlyCanvas";
 import { LiveLogsPanel } from "./LiveLogsPanel";
 import { LoadControlPanel } from "./LoadControlPanel";
+import { ChaosControlPanel } from "./ChaosControlPanel";
 import { ConfirmModal } from "@/components/UI/ConfirmModal";
 import { CostBreakdownPanel } from "./panels/CostBreakdownPanel";
 import { SecurityIssuesPanel } from "./panels/SecurityIssuesPanel";
 import { TimelinePanel } from "./panels/TimelinePanel";
 import { PastDeploymentsPanel } from "./panels/PastDeploymentsPanel";
-import type { Infrastructure } from "@shared/types/Infrastructure.types";
-import type { Resource } from "@shared/types/Resource.types";
-import type { ConnectionLine } from "@shared/types/ConnectionLine.types";
-import type { Deployment } from "@shared/types/Deployment.types";
+import type { Infrastructure } from "@shared/interface/Infrastructure.interface";
+import type { Resource } from "@shared/interface/Resource.interface";
+import type { ConnectionLine } from "@shared/interface/ConnectionLine.interface";
+import type { Deployment } from "@shared/interface/Deployment.interface";
 
 export function MonitoringDashboard() {
   const { deploymentId } = useParams<{ deploymentId: string }>();
@@ -106,15 +107,11 @@ export function MonitoringDashboard() {
         {/* Side panels */}
         <div className="w-80 border-l border-gray-800 overflow-y-auto p-4 space-y-4">
           <LoadControlPanel deploymentId={deploymentId!} status={status} />
-
+          <ChaosControlPanel deploymentId={deploymentId!} status={status} resources={resources} />
           <CostBreakdownPanel deployment={deployment} />
-
           <SecurityIssuesPanel deployment={deployment} />
-
           <TimelinePanel timeline={timeline} />
-
           <LiveLogsPanel />
-
           <PastDeploymentsPanel pastDeployments={pastDeployments} />
         </div>
       </div>

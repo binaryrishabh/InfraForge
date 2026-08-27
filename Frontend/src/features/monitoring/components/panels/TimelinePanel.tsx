@@ -1,4 +1,4 @@
-import type { DeploymentTimeline } from "@shared/types/DeploymentTimeline.types";
+import type { DeploymentTimeline } from "@shared/interface/DeploymentTimeline.interface";
 
 interface TimelinePanelProps {
   timeline: DeploymentTimeline[];

@@ -1,7 +1,7 @@
 import { ResourceIcon } from "@/components/common/ResourceIcon";
 import { useSimulationStore } from "../store/simulationStore";
 import { ResourceHealth } from "@shared/enum/ResourceHealth.enum";
-import type { Resource } from "@shared/types/Resource.types";
+import type { Resource } from "@shared/interface/Resource.interface";
 
 interface MonitoringResourceNodeProps {
   resource: Resource;

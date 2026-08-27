@@ -1,4 +1,4 @@
-import type { Infrastructure } from "@shared/types/Infrastructure.types";
+import type { Infrastructure } from "@shared/interface/Infrastructure.interface";
 
 interface InfrastructureLayoutDropdownProps {
   currentLayoutId: string | null;

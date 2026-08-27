@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Network, ArrowRight, Server, Activity } from 'lucide-react';
 import { useAuthStore } from '@/features/auth/store/auth.store';
 import { getAllInfrastructure } from '@/api/infrastructure.api';
-import type { Infrastructure } from '@shared/types/Infrastructure.types';
+import type { Infrastructure } from '@shared/interface/Infrastructure.interface';
 
 export function DashboardPage() {
   const user = useAuthStore(s => s.user);

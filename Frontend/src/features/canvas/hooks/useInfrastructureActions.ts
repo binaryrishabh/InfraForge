@@ -7,11 +7,11 @@ import {
 } from "@/api/infrastructure.api";
 import { createDeployment } from "@/api/deployment.api";
 import { SAMPLE_ARCHITECTURE } from "@shared/constants/SAMPLE_ARCHITECTURE.constants";
-import type { Resource } from "@shared/types/Resource.types";
-import type { ConnectionLine } from "@shared/types/ConnectionLine.types";
+import type { Resource } from "@shared/interface/Resource.interface";
+import type { ConnectionLine } from "@shared/interface/ConnectionLine.interface";
 import type { ModalState } from "@shared/types/ModalState.types";
 import type { UndoCanvasResourceAction } from "@shared/types/UndoCanvasResourceAction.types";
-import type { WorkloadProfile } from "@shared/types/WorkloadProfile.types";
+import type { WorkloadProfile } from "@shared/interface/WorkloadProfile.interface";
 
 interface UseInfrastructureActionsProps {
   isDeploying: boolean;

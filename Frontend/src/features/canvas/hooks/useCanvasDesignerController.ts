@@ -7,8 +7,8 @@ import { useCanvasConnections } from "./useCanvasConnections";
 import { useCanvasResourceActions } from "./useCanvasResourceActions";
 import { useInfrastructureActions } from "./useInfrastructureActions";
 import { useCanvasDragDrop } from "./useCanvasDragDrop";
-import type { Resource } from "@shared/types/Resource.types";
-import type { ConnectionLine } from "@shared/types/ConnectionLine.types";
+import type { Resource } from "@shared/interface/Resource.interface";
+import type { ConnectionLine } from "@shared/interface/ConnectionLine.interface";
 
 export function useCanvasDesignerController() {
   // Core canvas state (owned by controller)

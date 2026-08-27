@@ -8,8 +8,8 @@ import {
   type SkuCategory,
 } from "@shared/catalog/catalog.types";
 import { skusFor, findSku } from "@shared/catalog/index";
-import { SIMULATION_CONSTANTS } from "@shared/simulation/engine";
-import type { Resource } from "@shared/types/Resource.types";
+import { SIMULATION_CONSTANTS } from "@shared/constants/SIMULATION_CONSTANTS.constants";
+import type { Resource } from "@shared/interface/Resource.interface";
 import { ResourceIcon } from "@/components/common/ResourceIcon";
 
 interface ResourceConfigPanelProps {

@@ -1,5 +1,5 @@
 import { DeploymentStatus } from "@shared/enum/DeploymentStatus.enum";
-import type { Deployment } from "@shared/types/Deployment.types";
+import type { Deployment } from "@shared/interface/Deployment.interface";
 
 interface PastDeploymentsPanelProps {
   pastDeployments: Deployment[];
