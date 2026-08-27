@@ -8,94 +8,20 @@ All infrastructure access happens in the orchestrator that calls tick().
 import { RESOURCE_TYPES, type ResourceType } from "../constants/RESOURCE_TYPES.constants";
 import { ResourceHealth, type ResourceHealthType } from "../enum/ResourceHealth.enum";
 import { findSku } from "../catalog/index";
+import { SIMULATION_CONSTANTS } from "../constants/SIMULATION_CONSTANTS.constants";
+import { CAPACITY } from "../constants/CAPACITY.constants";
+import type { TickResult } from "../interface/TickResult.interface"; 
+import type { TickInputs } from "../interface/TickInputs.interface";
+import type { SimulationState } from "../interface/SimulationState.interface";
+import type { ChaosEffect } from "../interface/ChaosEffect.interface";
 import type { Sku } from "../catalog/catalog.types";
-import type { Resource } from "../types/Resource.types";
-import type { ConnectionLine } from "../types/ConnectionLine.types";
-import type { WorkloadProfile } from "../types/WorkloadProfile.types";
-import type { ResourceMetrics } from "../types/ResourceMetrics.types";
-import type { SimulationLog } from "../types/SimulationLog.types";
+import type { Resource } from "../interface/Resource.interface";
+import type { ConnectionLine } from "../interface/ConnectionLine.interface";
+import type { WorkloadProfile } from "../interface/WorkloadProfile.interface";
+import type { ResourceMetrics } from "../interface/ResourceMetrics.interface";
+import type { SimulationLog } from "../interface/SimulationLog.interface";
 
-/* ---------------- Simulation tuning constants ----------------
-Single home for every tuning number. Capacity TRUTH now comes from the
-SKU catalog wherever a resource carries a skuId; these constants are the
-physics that convert real specs (vCPU, baseline, network) into load. */
-export const SIMULATION_CONSTANTS = {
-  RAMP_SECONDS: 60,
-  MAX_LOAD_FRACTION: 2.0,
-  MAX_EFFECTIVE_LOAD: 3.0,
-  DEGRADED_AT: 70,
-  SATURATED_AT: 90,
-  CACHE_HIT_RATIO: 0.8,
-  DB_POOL_PER_VM: 20,
-  MAX_DB_CONNECTIONS: 100,
-  WRITE_COST_FACTOR: 2,
-  VM_WRITE_CPU_TAX: 0.3,
-  BURST_CYCLE_SECONDS: 120,
-  BURST_DURATION_SECONDS: 20,
-  BURST_RAMP_SECONDS: 5,
-  RPS_PER_VCPU: 80,           // typical web workload at 100% of one vCPU
-  QPS_PER_VCPU: 125,          // typical OLTP workload at 100% of one DB vCPU
-  KBPS_PER_GBPS: 125_000,     // 1 Gbps = 125,000 KB/s
-  PAYLOAD_KB: { light: 10, medium: 100, heavy: 1024 },
-  BANDWIDTH_CAPACITY_KBPS: {   // generic fallback when no SKU is selected
-    "Virtual Machine": 125_000,
-    "Load Balancer": 250_000,
-    "CDN": 1_000_000,
-    "Object Storage": 500_000
-  }
-} as const;
 
-export const DEFAULT_WORKLOAD_PROFILE: WorkloadProfile = {
-  targetThroughput: 1_000_000,
-  throughputUnit: "per-hour",
-  trafficShape: "steady",
-  payloadSize: "medium"
-};
-
-// Generic fallback capacity for resources WITHOUT a selected SKU.
-// Audit: deleted category-by-category as the catalog expands.
-const CAPACITY: Record<ResourceType, { rps: number; source: string }> = {
-  [RESOURCE_TYPES.DNS]: { rps: 5000, source: "named" },
-  [RESOURCE_TYPES.CDN]: { rps: 20000, source: "edge" },
-  [RESOURCE_TYPES.Firewall]: { rps: 15000, source: "waf" },
-  [RESOURCE_TYPES.LoadBalancer]: { rps: 10000, source: "nginx" },
-  [RESOURCE_TYPES.VirtualMachine]: { rps: 160, source: "app" },
-  [RESOURCE_TYPES.ContainerRegistry]: { rps: 1000, source: "registry" },
-  [RESOURCE_TYPES.Cache]: { rps: 8000, source: "redis" },
-  [RESOURCE_TYPES.Database]: { rps: 250, source: "postgres" },
-  [RESOURCE_TYPES.ObjectStorage]: { rps: 2000, source: "storage" },
-  [RESOURCE_TYPES.MessageQueue]: { rps: 5000, source: "rabbitmq" },
-  [RESOURCE_TYPES.MonitoringAgent]: { rps: 10000, source: "agent" }
-};
-
-/* ---------------- State ---------------- */
-
-export interface SimulationState {
-  deploymentId: string;
-  seed: number;
-  simulatedSeconds: number;
-  loadFraction: number;
-  targetLoadFraction: number;
-  targetRps: number;
-  workloadProfile: WorkloadProfile;
-  resourceTypes: Record<string, ResourceType>;
-  resourceSkus: Record<string, Sku>;
-  entryPoints: string[];
-  reachable: string[];
-  deadEnds: string[];
-  idle: string[];
-  metrics: Record<string, ResourceMetrics>;
-  overallHealth: "healthy" | "degraded" | "saturated" | "critical";
-}
-
-export interface TickInputs {
-  targetLoadFraction?: number;
-}
-
-export interface TickResult {
-  state: SimulationState;
-  logs: SimulationLog[];
-}
 
 /* ---------------- Deterministic jitter (seeded, replay-safe) ---------------- */
 
@@ -124,6 +50,18 @@ function burstFactor(seconds: number, profile: WorkloadProfile): number {
   if (cyclePos < duration) return 1 + (multiplier - 1) * ((duration - cyclePos) / ramp);
   return 1;
 }
+
+/* ---------------- Chaos helpers ---------------- */
+
+const chaosApplyMessage = (effect: ChaosEffect): string => {
+  switch (effect.chaosType) {
+    case "crash": return `${effect.resourceId} crashed — process terminated, capacity removed`;
+    case "cpu-spike": return `cpu spike injected on ${effect.resourceId} — runaway process detected`;
+    case "memory-leak": return `memory leak injected on ${effect.resourceId} — heap growing unbounded`;
+    case "network-delay": return `network delay injected on ${effect.resourceId} — packets timing out`;
+    case "disk-failure": return `disk failure injected on ${effect.resourceId} — I/O thrashing`;
+  }
+};
 
 /* ---------------- Initial state: traffic path v1 ---------------- */
 
@@ -199,7 +137,8 @@ export function createInitialState(
     deadEnds,
     idle,
     metrics,
-    overallHealth: "healthy"
+    overallHealth: "healthy",
+    activeChaos: []
   };
 }
 
@@ -222,7 +161,7 @@ export function tick(state: SimulationState, inputs: TickInputs): TickResult {
     loadFraction = Math.max(targetLoadFraction, loadFraction - rampStep * 2);
   }
 
-  // 2. Burst windows — peak traffic shapes produce recurring storms
+  // 2. Burst windows
   const burstNow = burstFactor(seconds, profile);
   const burstPrev = burstFactor(seconds - 1, profile);
   const effectiveMultiplier = Math.min(SIMULATION_CONSTANTS.MAX_EFFECTIVE_LOAD, loadFraction * burstNow);
@@ -237,7 +176,7 @@ export function tick(state: SimulationState, inputs: TickInputs): TickResult {
     }
   }
 
-  // 3. Workload mix — reads vs writes vs payload weight
+  // 3. Workload mix
   const readFraction = profile.readWriteRatio ?? 0.8;
   const writeFraction = 1 - readFraction;
   const payloadKB = SIMULATION_CONSTANTS.PAYLOAD_KB[profile.payloadSize];
@@ -246,9 +185,20 @@ export function tick(state: SimulationState, inputs: TickInputs): TickResult {
   const rng = mulberry32(state.seed * 100003 + seconds);
   const jitter = () => 1 + (rng() - 0.5) * 0.06;
 
-  // 4. Distribute load across the reachable graph
+  // 4. Index active chaos; crashed resources are removed from serving
+  const chaosByResource: Record<string, ChaosEffect[]> = {};
+  for (const effect of state.activeChaos) {
+    (chaosByResource[effect.resourceId] ??= []).push(effect);
+  }
+  const downResources = new Set(
+    state.activeChaos.filter(e => e.chaosType === "crash").map(e => e.resourceId)
+  );
+
+  // 5. Distribute load across the reachable graph (crashed VMs shed their share)
   const reachableSet = new Set(state.reachable);
-  const vmIds = state.reachable.filter(id => state.resourceTypes[id] === RESOURCE_TYPES.VirtualMachine);
+  const vmIds = state.reachable.filter(id =>
+    state.resourceTypes[id] === RESOURCE_TYPES.VirtualMachine && !downResources.has(id)
+  );
   const cacheIds = state.reachable.filter(id => state.resourceTypes[id] === RESOURCE_TYPES.Cache);
   const rpsPerVm = vmIds.length > 0 ? totalRps / vmIds.length : 0;
 
@@ -271,7 +221,6 @@ export function tick(state: SimulationState, inputs: TickInputs): TickResult {
       switch (type) {
         case RESOURCE_TYPES.VirtualMachine: {
           rps = rpsPerVm;
-          // SKU truth: real cores x real baseline x physics. Else generic fallback.
           const vmCapacity = sku
             ? sku.vCpu * sku.baselineFactor * SIMULATION_CONSTANTS.RPS_PER_VCPU
             : capacity.rps;
@@ -310,7 +259,7 @@ export function tick(state: SimulationState, inputs: TickInputs): TickResult {
         }
       }
 
-      // 5. Bandwidth pressure — SKU network truth beats the generic table
+      // Bandwidth pressure
       let bandCap = (SIMULATION_CONSTANTS.BANDWIDTH_CAPACITY_KBPS as Record<string, number>)[type];
       if (sku?.networkGbps) {
         bandCap = sku.networkGbps * SIMULATION_CONSTANTS.KBPS_PER_GBPS;
@@ -321,12 +270,52 @@ export function tick(state: SimulationState, inputs: TickInputs): TickResult {
       }
     }
 
+    // 6. Apply active chaos effects to this resource
+    const effects = chaosByResource[resourceId];
+    let crashed = false;
+    if (effects) {
+      for (const effect of effects) {
+        switch (effect.chaosType) {
+          case "crash":
+            crashed = true;
+            break;
+          case "cpu-spike":
+            cpu += SIMULATION_CONSTANTS.CHAOS.CPU_SPIKE_BOOST;
+            break;
+          case "memory-leak": {
+            const elapsed = effect.durationTicks - effect.remainingTicks;
+            memory += elapsed * SIMULATION_CONSTANTS.CHAOS.MEMORY_LEAK_RATE;
+            break;
+          }
+          case "network-delay":
+            cpu = cpu * SIMULATION_CONSTANTS.CHAOS.NETWORK_DELAY_CPU_FACTOR;
+            break;
+          case "disk-failure":
+            cpu = 100;
+            break;
+        }
+      }
+    }
+    if (crashed) {
+      cpu = 0;
+      memory = 0;
+      rps = 0;
+      connections = undefined;
+    }
+
     cpu = Math.min(100, Math.max(0, cpu * jitter()));
     memory = Math.min(100, Math.max(0, memory * jitter()));
 
-    let health: ResourceHealthType = ResourceHealth.HEALTHY;
-    if (cpu >= SIMULATION_CONSTANTS.SATURATED_AT || memory >= 97) health = ResourceHealth.SATURATED;
-    else if (cpu >= SIMULATION_CONSTANTS.DEGRADED_AT) health = ResourceHealth.DEGRADED;
+    let health: ResourceHealthType;
+    if (crashed) {
+      health = ResourceHealth.FAILED;
+    } else if (cpu >= SIMULATION_CONSTANTS.SATURATED_AT || memory >= 97) {
+      health = ResourceHealth.SATURATED;
+    } else if (cpu >= SIMULATION_CONSTANTS.DEGRADED_AT) {
+      health = ResourceHealth.DEGRADED;
+    } else {
+      health = ResourceHealth.HEALTHY;
+    }
 
     const metric: ResourceMetrics = { cpu: round1(cpu), memory: round1(memory), health };
     if (rps > 0) metric.rps = Math.round(rps);
@@ -334,7 +323,22 @@ export function tick(state: SimulationState, inputs: TickInputs): TickResult {
     newMetrics[resourceId] = metric;
   }
 
-  // 6. Threshold-crossing logs
+  // 7. Chaos lifecycle: emit logs, count down, retire expired effects
+  const nextActiveChaos: ChaosEffect[] = [];
+  for (const effect of state.activeChaos) {
+    const isFirstTick = effect.remainingTicks === effect.durationTicks;
+    if (isFirstTick) {
+      logs.push({ timestamp: now, severity: "error", resourceId: effect.resourceId, source: "chaos", message: chaosApplyMessage(effect) });
+    }
+    const remaining = effect.remainingTicks - 1;
+    if (remaining <= 0) {
+      logs.push({ timestamp: now, severity: "info", resourceId: effect.resourceId, source: "chaos", message: `${effect.resourceId} recovered from ${effect.chaosType}` });
+    } else {
+      nextActiveChaos.push({ ...effect, remainingTicks: remaining });
+    }
+  }
+
+  // 8. Threshold-crossing logs
   for (const [resourceId, metric] of Object.entries(newMetrics)) {
     const before = state.metrics[resourceId]?.health ?? ResourceHealth.HEALTHY;
     const after = metric.health;
@@ -356,7 +360,7 @@ export function tick(state: SimulationState, inputs: TickInputs): TickResult {
     logs.push({ timestamp: now, severity, resourceId, source, message });
   }
 
-  // 7. One-time structural logs — the engine speaks the declared truth
+  // 9. One-time structural logs
   if (seconds === 1) {
     logs.push({
       timestamp: now,
@@ -375,7 +379,7 @@ export function tick(state: SimulationState, inputs: TickInputs): TickResult {
     }
   }
 
-  // 8. Overall health
+  // 10. Overall health
   const healths = Object.values(newMetrics).map(m => m.health);
   let overallHealth: SimulationState["overallHealth"] = "healthy";
   if (healths.includes(ResourceHealth.FAILED)) overallHealth = "critical";
@@ -389,7 +393,8 @@ export function tick(state: SimulationState, inputs: TickInputs): TickResult {
       loadFraction: round1(loadFraction * 100) / 100,
       targetLoadFraction,
       metrics: newMetrics,
-      overallHealth
+      overallHealth,
+      activeChaos: nextActiveChaos
     },
     logs
   };

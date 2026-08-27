@@ -1,5 +1,5 @@
-import type { Resource } from "./Resource.types";
-import type { ConnectionLine } from "./ConnectionLine.types";
+import type { Resource } from "./Resource.interface";
+import type { ConnectionLine } from "./ConnectionLine.interface";
 
 export interface Infrastructure {
   id: string;

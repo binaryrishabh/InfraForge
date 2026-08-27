@@ -1,8 +1,8 @@
-import type { ChaosEvents } from "./ChaosEvents.types";
-import type { DeploymentStages } from "./DeploymentStages.types";
+import type { ChaosEvents } from "./ChaosEvents.interface";
+import type { DeploymentStages } from "./DeploymentStages.interface";
 import type { DeploymentStatus } from "../enum/DeploymentStatus.enum";
-import type { DeploymentTimeline } from "./DeploymentTimeline.types";
-import type { WorkloadProfile } from "./WorkloadProfile.types";
+import type { DeploymentTimeline } from "./DeploymentTimeline.interface";
+import type { WorkloadProfile } from "./WorkloadProfile.interface";
 
 export interface Deployment {
   id: string,

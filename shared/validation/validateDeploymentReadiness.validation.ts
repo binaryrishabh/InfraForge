@@ -1,7 +1,7 @@
 import { RESOURCE_TYPES, type ResourceType } from "../constants/RESOURCE_TYPES.constants";
-import type { ConnectionLine } from "../types/ConnectionLine.types";
-import type { Resource } from "../types/Resource.types";
-import { CONNECTION_RULES } from "../constants/ConnectionRules.constants";
+import type { ConnectionLine } from "@shared/interface/ConnectionLine.interface";
+import type { Resource } from "@shared/interface/Resource.interface";
+import { CONNECTION_RULES } from "@shared/constants/CONNECTION_RULES.constants";
 
 // Function to validete the above defined rules
 export function validateConnection(sourceType: ResourceType, targetType: ResourceType): {valid: boolean, message: string} {

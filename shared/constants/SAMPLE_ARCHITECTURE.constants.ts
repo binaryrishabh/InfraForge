@@ -1,5 +1,5 @@
-import { ConnectionLine } from "../types/ConnectionLine.types";
-import { Resource } from "../types/Resource.types";
+import { ConnectionLine } from "../interface/ConnectionLine.interface";
+import { Resource } from "../interface/Resource.interface";
 import { RESOURCE_TYPES } from "./RESOURCE_TYPES.constants";
 
 export const SAMPLE_ARCHITECTURE: { resources: Resource[]; connectionLines: ConnectionLine[]; } = {

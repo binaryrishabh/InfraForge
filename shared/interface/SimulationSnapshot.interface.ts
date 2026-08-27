@@ -1,5 +1,5 @@
-import type { ResourceMetrics } from "./ResourceMetrics.types";
-import type { SimulationLog } from "./SimulationLog.types";
+import type { ResourceMetrics } from "./ResourceMetrics.interface";
+import type { SimulationLog } from "./SimulationLog.interface";
 
 export interface SimulationSnapshot {
   deploymentId: string;

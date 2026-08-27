@@ -1,5 +1,5 @@
-import type { Resource } from "./Resource.types";
-import type { ConnectionLine } from "./ConnectionLine.types";
+import type { Resource } from "../interface/Resource.interface";
+import type { ConnectionLine } from "../interface/ConnectionLine.interface";
 
 // Set the state for undo/redo of resource elements on the canvas.
 export type UndoCanvasResourceAction = 
