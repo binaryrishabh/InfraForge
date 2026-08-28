@@ -31,8 +31,18 @@ export const SIMULATION_CONSTANTS = {
     NETWORK_DELAY_DURATION: 25,
     NETWORK_DELAY_CPU_FACTOR: 1.6,
     DISK_FAILURE_DURATION: 35
+  },
+  AUTOSCALING: {
+    HOT_TICKS: 5,          // sustained ticks above target before scale-up triggers
+    COLD_TICKS: 30,        // sustained ticks below SCALE_DOWN_AT before scale-down
+    PROVISION_TICKS: 60,   // simulated seconds to boot a new instance (the drama window)
+    DRAIN_TICKS: 15,       // simulated seconds to drain an instance before removal
+    SCALE_DOWN_AT: 30,     // avg pool cpu below this counts as cold
+    DEFAULT_TARGET_CPU: 75,
+    DEFAULT_MAX_MULTIPLIER: 3,
+    DEFAULT_MAX_CAP: 8,
+    SPAWN_Y_GAP: 96
   }
 } as const;
-
 
 export type SimulationConstantsType = typeof SIMULATION_CONSTANTS;

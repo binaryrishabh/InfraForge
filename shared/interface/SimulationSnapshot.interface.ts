@@ -1,3 +1,5 @@
+import type { PoolSnapshot } from "./PoolSnapshot.interface";
+import type { SpawnedVmInfo } from "./SpawnedVmInfo.interface";
 import type { ResourceMetrics } from "./ResourceMetrics.interface";
 import type { SimulationLog } from "./SimulationLog.interface";
 
@@ -9,4 +11,6 @@ export interface SimulationSnapshot {
   metrics: Record<string, ResourceMetrics>;
   logs: SimulationLog[];
   health: "healthy" | "degraded" | "saturated" | "critical";
+  pools?: Record<string, PoolSnapshot>;
+  spawnedVms?: SpawnedVmInfo[];
 }

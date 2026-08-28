@@ -5,15 +5,25 @@ No Prisma, no Redis, no sockets inside this file. Ever.
 All infrastructure access happens in the orchestrator that calls tick().
 */
 
-import { RESOURCE_TYPES, type ResourceType } from "../constants/RESOURCE_TYPES.constants";
-import { ResourceHealth, type ResourceHealthType } from "../enum/ResourceHealth.enum";
+import {
+  RESOURCE_TYPES,
+  type ResourceType,
+} from "../constants/RESOURCE_TYPES.constants";
+import {
+  ResourceHealth,
+  type ResourceHealthType,
+} from "../enum/ResourceHealth.enum";
 import { findSku } from "../catalog/index";
 import { SIMULATION_CONSTANTS } from "../constants/SIMULATION_CONSTANTS.constants";
 import { CAPACITY } from "../constants/CAPACITY.constants";
-import type { TickResult } from "../interface/TickResult.interface"; 
+import { DeploymentChaosNames } from "../enum/DeploymentChaosNames.enum";
+import type { TickResult } from "../interface/TickResult.interface";
 import type { TickInputs } from "../interface/TickInputs.interface";
 import type { SimulationState } from "../interface/SimulationState.interface";
 import type { ChaosEffect } from "../interface/ChaosEffect.interface";
+import type { PoolRuntime } from "../interface/PoolRuntime.interface";
+import type { SpawnedVmInfo } from "../interface/SpawnedVmInfo.interface";
+import type { PoolSnapshot } from "../interface/PoolSnapshot.interface";
 import type { Sku } from "../catalog/catalog.types";
 import type { Resource } from "../interface/Resource.interface";
 import type { ConnectionLine } from "../interface/ConnectionLine.interface";
@@ -22,13 +32,12 @@ import type { ResourceMetrics } from "../interface/ResourceMetrics.interface";
 import type { SimulationLog } from "../interface/SimulationLog.interface";
 
 
-
 /* ---------------- Deterministic jitter (seeded, replay-safe) ---------------- */
 
 function mulberry32(seed: number) {
   return function () {
     seed |= 0;
-    seed = (seed + 0x6D2B79F5) | 0;
+    seed = (seed + 0x6d2b79f5) | 0;
     let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
     t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
@@ -47,7 +56,8 @@ function burstFactor(seconds: number, profile: WorkloadProfile): number {
   const duration = SIMULATION_CONSTANTS.BURST_DURATION_SECONDS;
   if (cyclePos < ramp) return 1 + (multiplier - 1) * (cyclePos / ramp);
   if (cyclePos < duration - ramp) return multiplier;
-  if (cyclePos < duration) return 1 + (multiplier - 1) * ((duration - cyclePos) / ramp);
+  if (cyclePos < duration)
+    return 1 + (multiplier - 1) * ((duration - cyclePos) / ramp);
   return 1;
 }
 
@@ -55,33 +65,42 @@ function burstFactor(seconds: number, profile: WorkloadProfile): number {
 
 const chaosApplyMessage = (effect: ChaosEffect): string => {
   switch (effect.chaosType) {
-    case "crash": return `${effect.resourceId} crashed — process terminated, capacity removed`;
-    case "cpu-spike": return `cpu spike injected on ${effect.resourceId} — runaway process detected`;
-    case "memory-leak": return `memory leak injected on ${effect.resourceId} — heap growing unbounded`;
-    case "network-delay": return `network delay injected on ${effect.resourceId} — packets timing out`;
-    case "disk-failure": return `disk failure injected on ${effect.resourceId} — I/O thrashing`;
+    case DeploymentChaosNames.Crash:
+      return `${effect.resourceId} crashed — process terminated, capacity removed`;
+    case DeploymentChaosNames.CpuSpike:
+      return `cpu spike injected on ${effect.resourceId} — runaway process detected`;
+    case DeploymentChaosNames.MemoryLeak:
+      return `memory leak injected on ${effect.resourceId} — heap growing unbounded`;
+    case DeploymentChaosNames.NetworkDelay:
+      return `network delay injected on ${effect.resourceId} — packets timing out`;
+    case DeploymentChaosNames.DiskFailure:
+      return `disk failure injected on ${effect.resourceId} — I/O thrashing`;
   }
 };
 
-/* ---------------- Initial state: traffic path v1 ---------------- */
+/* ---------------- Initial state: traffic path + implicit pools ---------------- */
 
 export function createInitialState(
   deploymentId: string,
   resources: Resource[],
   connectionLines: ConnectionLine[],
   workloadProfile: WorkloadProfile,
-  seed: number
+  seed: number,
 ): SimulationState {
-  const targets = new Set(connectionLines.map(c => c.targetId));
+  const targets = new Set(connectionLines.map((c) => c.targetId));
   const entryTypes: ResourceType[] = [
     RESOURCE_TYPES.DNS,
     RESOURCE_TYPES.CDN,
     RESOURCE_TYPES.Firewall,
-    RESOURCE_TYPES.LoadBalancer
+    RESOURCE_TYPES.LoadBalancer,
   ];
   const entryPoints = resources
-    .filter(r => entryTypes.includes(r.type) && (r.type === RESOURCE_TYPES.DNS || !targets.has(r.id)))
-    .map(r => r.id);
+    .filter(
+      (r) =>
+        entryTypes.includes(r.type) &&
+        (r.type === RESOURCE_TYPES.DNS || !targets.has(r.id)),
+    )
+    .map((r) => r.id);
 
   const adjacency: Record<string, string[]> = {};
   for (const c of connectionLines) {
@@ -97,18 +116,20 @@ export function createInitialState(
   }
 
   const deadEnds = resources
-    .filter(r =>
-      r.type === RESOURCE_TYPES.VirtualMachine &&
-      reachable.has(r.id) &&
-      (adjacency[r.id] ?? []).length === 0
+    .filter(
+      (r) =>
+        r.type === RESOURCE_TYPES.VirtualMachine &&
+        reachable.has(r.id) &&
+        (adjacency[r.id] ?? []).length === 0,
     )
-    .map(r => r.id);
+    .map((r) => r.id);
 
-  const idle = resources.filter(r => !reachable.has(r.id)).map(r => r.id);
+  const idle = resources.filter((r) => !reachable.has(r.id)).map((r) => r.id);
 
-  const targetRps = workloadProfile.throughputUnit === "per-minute"
-    ? workloadProfile.targetThroughput / 60
-    : workloadProfile.targetThroughput / 3600;
+  const targetRps =
+    workloadProfile.throughputUnit === "per-minute"
+      ? workloadProfile.targetThroughput / 60
+      : workloadProfile.targetThroughput / 3600;
 
   const resourceTypes: Record<string, ResourceType> = {};
   const resourceSkus: Record<string, Sku> = {};
@@ -120,6 +141,48 @@ export function createInitialState(
       const sku = findSku(r.skuId);
       if (sku) resourceSkus[r.id] = sku;
     }
+  }
+
+  // Implicit pools: every Load Balancer with VM targets anchors one scaling group
+  const pools: Record<string, PoolRuntime> = {};
+  for (const lb of resources) {
+    if (lb.type !== RESOURCE_TYPES.LoadBalancer) continue;
+    const poolVmIds = (adjacency[lb.id] ?? []).filter(
+      (id) => resourceTypes[id] === RESOURCE_TYPES.VirtualMachine,
+    );
+    if (poolVmIds.length === 0) continue;
+    const policy = lb.autoscaling;
+    if (policy?.enabled === false) continue;
+    const base = poolVmIds.length;
+    const minReplicas = policy?.minReplicas ?? base;
+    const maxReplicas = Math.max(
+      minReplicas,
+      Math.min(
+        policy?.maxReplicas ??
+          base * SIMULATION_CONSTANTS.AUTOSCALING.DEFAULT_MAX_MULTIPLIER,
+        SIMULATION_CONSTANTS.AUTOSCALING.DEFAULT_MAX_CAP,
+      ),
+    );
+    const basePositions = poolVmIds
+      .map((id) => resources.find((r) => r.id === id))
+      .filter((r): r is Resource => Boolean(r));
+    pools[lb.id] = {
+      lbId: lb.id,
+      baseVmIds: poolVmIds,
+      minReplicas,
+      maxReplicas,
+      targetCpu:
+        policy?.targetCpu ??
+        SIMULATION_CONSTANTS.AUTOSCALING.DEFAULT_TARGET_CPU,
+      hotTicks: 0,
+      coldTicks: 0,
+      spawnCounter: 0,
+      spawnOrigin: {
+        x: basePositions[0]?.x ?? 200,
+        y: Math.max(...basePositions.map((r) => r.y), 0),
+      },
+      pending: null,
+    };
   }
 
   return {
@@ -138,7 +201,9 @@ export function createInitialState(
     idle,
     metrics,
     overallHealth: "healthy",
-    activeChaos: []
+    activeChaos: [],
+    pools,
+    spawnedVms: [],
   };
 }
 
@@ -151,8 +216,12 @@ export function tick(state: SimulationState, inputs: TickInputs): TickResult {
   const profile = state.workloadProfile;
 
   // 1. Slider-driven load target (ramp up slow, shed fast)
-  let targetLoadFraction = inputs.targetLoadFraction ?? state.targetLoadFraction;
-  targetLoadFraction = Math.min(SIMULATION_CONSTANTS.MAX_LOAD_FRACTION, Math.max(0, targetLoadFraction));
+  let targetLoadFraction =
+    inputs.targetLoadFraction ?? state.targetLoadFraction;
+  targetLoadFraction = Math.min(
+    SIMULATION_CONSTANTS.MAX_LOAD_FRACTION,
+    Math.max(0, targetLoadFraction),
+  );
   const rampStep = 1 / SIMULATION_CONSTANTS.RAMP_SECONDS;
   let loadFraction = state.loadFraction;
   if (loadFraction < targetLoadFraction) {
@@ -164,15 +233,28 @@ export function tick(state: SimulationState, inputs: TickInputs): TickResult {
   // 2. Burst windows
   const burstNow = burstFactor(seconds, profile);
   const burstPrev = burstFactor(seconds - 1, profile);
-  const effectiveMultiplier = Math.min(SIMULATION_CONSTANTS.MAX_EFFECTIVE_LOAD, loadFraction * burstNow);
+  const effectiveMultiplier = Math.min(
+    SIMULATION_CONSTANTS.MAX_EFFECTIVE_LOAD,
+    loadFraction * burstNow,
+  );
   const totalRps = state.targetRps * effectiveMultiplier;
 
   if (profile.trafficShape === "peak") {
     const peak = profile.peakMultiplier ?? 3;
     if (burstPrev <= 1.01 && burstNow > 1.01) {
-      logs.push({ timestamp: now, severity: "warn", source: "load-generator", message: `traffic burst beginning — ${peak}x declared base load` });
+      logs.push({
+        timestamp: now,
+        severity: "warn",
+        source: "load-generator",
+        message: `traffic burst beginning — ${peak}x declared base load`,
+      });
     } else if (burstPrev > 1.01 && burstNow <= 1.01) {
-      logs.push({ timestamp: now, severity: "info", source: "load-generator", message: "burst subsided — traffic returning to base level" });
+      logs.push({
+        timestamp: now,
+        severity: "info",
+        source: "load-generator",
+        message: "burst subsided — traffic returning to base level",
+      });
     }
   }
 
@@ -180,7 +262,9 @@ export function tick(state: SimulationState, inputs: TickInputs): TickResult {
   const readFraction = profile.readWriteRatio ?? 0.8;
   const writeFraction = 1 - readFraction;
   const payloadKB = SIMULATION_CONSTANTS.PAYLOAD_KB[profile.payloadSize];
-  const dbLoadFactor = readFraction * (1 - SIMULATION_CONSTANTS.CACHE_HIT_RATIO) + writeFraction * SIMULATION_CONSTANTS.WRITE_COST_FACTOR;
+  const dbLoadFactor =
+    readFraction * (1 - SIMULATION_CONSTANTS.CACHE_HIT_RATIO) +
+    writeFraction * SIMULATION_CONSTANTS.WRITE_COST_FACTOR;
 
   const rng = mulberry32(state.seed * 100003 + seconds);
   const jitter = () => 1 + (rng() - 0.5) * 0.06;
@@ -191,15 +275,24 @@ export function tick(state: SimulationState, inputs: TickInputs): TickResult {
     (chaosByResource[effect.resourceId] ??= []).push(effect);
   }
   const downResources = new Set(
-    state.activeChaos.filter(e => e.chaosType === "crash").map(e => e.resourceId)
+    state.activeChaos
+      .filter((e) => e.chaosType === "crash")
+      .map((e) => e.resourceId),
   );
 
-  // 5. Distribute load across the reachable graph (crashed VMs shed their share)
+  // 5. Distribute load — serving VMs = reachable base VMs + active spawned VMs
   const reachableSet = new Set(state.reachable);
-  const vmIds = state.reachable.filter(id =>
-    state.resourceTypes[id] === RESOURCE_TYPES.VirtualMachine && !downResources.has(id)
+  const activeSpawned = state.spawnedVms.filter((v) => v.status === "active");
+  const activeSpawnedIds = new Set(activeSpawned.map((v) => v.id));
+  const vmIds = [
+    ...state.reachable.filter(
+      (id) => state.resourceTypes[id] === RESOURCE_TYPES.VirtualMachine,
+    ),
+    ...activeSpawned.map((v) => v.id),
+  ].filter((id) => !downResources.has(id));
+  const cacheIds = state.reachable.filter(
+    (id) => state.resourceTypes[id] === RESOURCE_TYPES.Cache,
   );
-  const cacheIds = state.reachable.filter(id => state.resourceTypes[id] === RESOURCE_TYPES.Cache);
   const rpsPerVm = vmIds.length > 0 ? totalRps / vmIds.length : 0;
 
   const newMetrics: Record<string, ResourceMetrics> = {};
@@ -214,7 +307,9 @@ export function tick(state: SimulationState, inputs: TickInputs): TickResult {
     let rps = 0;
     let connections: number | undefined;
 
-    if (!reachableSet.has(resourceId)) {
+    const isServing =
+      reachableSet.has(resourceId) || activeSpawnedIds.has(resourceId);
+    if (!isServing) {
       cpu = type === RESOURCE_TYPES.MonitoringAgent ? 12 : 2;
       memory = type === RESOURCE_TYPES.MonitoringAgent ? 18 : 8;
     } else {
@@ -224,7 +319,10 @@ export function tick(state: SimulationState, inputs: TickInputs): TickResult {
           const vmCapacity = sku
             ? sku.vCpu * sku.baselineFactor * SIMULATION_CONSTANTS.RPS_PER_VCPU
             : capacity.rps;
-          cpu = (rps / vmCapacity) * 100 * (1 + writeFraction * SIMULATION_CONSTANTS.VM_WRITE_CPU_TAX);
+          cpu =
+            (rps / vmCapacity) *
+            100 *
+            (1 + writeFraction * SIMULATION_CONSTANTS.VM_WRITE_CPU_TAX);
           memory = 25 + cpu * 0.5;
           connections = Math.ceil(rps / 10);
           break;
@@ -237,7 +335,8 @@ export function tick(state: SimulationState, inputs: TickInputs): TickResult {
           cpu = (rps / dbCapacity) * 100;
           connections = vmIds.length * SIMULATION_CONSTANTS.DB_POOL_PER_VM;
           memory = 30 + cpu * 0.4;
-          const maxConn = sku?.maxConnections ?? SIMULATION_CONSTANTS.MAX_DB_CONNECTIONS;
+          const maxConn =
+            sku?.maxConnections ?? SIMULATION_CONSTANTS.MAX_DB_CONNECTIONS;
           if (connections > maxConn) cpu = Math.max(cpu, 95);
           break;
         }
@@ -260,12 +359,14 @@ export function tick(state: SimulationState, inputs: TickInputs): TickResult {
       }
 
       // Bandwidth pressure
-      let bandCap = (SIMULATION_CONSTANTS.BANDWIDTH_CAPACITY_KBPS as Record<string, number>)[type];
+      let bandCap = (
+        SIMULATION_CONSTANTS.BANDWIDTH_CAPACITY_KBPS as Record<string, number>
+      )[type];
       if (sku?.networkGbps) {
         bandCap = sku.networkGbps * SIMULATION_CONSTANTS.KBPS_PER_GBPS;
       }
       if (bandCap && rps > 0) {
-        const bandUtil = (rps * payloadKB / bandCap) * 100;
+        const bandUtil = ((rps * payloadKB) / bandCap) * 100;
         if (bandUtil > cpu) cpu = bandUtil;
       }
     }
@@ -317,7 +418,11 @@ export function tick(state: SimulationState, inputs: TickInputs): TickResult {
       health = ResourceHealth.HEALTHY;
     }
 
-    const metric: ResourceMetrics = { cpu: round1(cpu), memory: round1(memory), health };
+    const metric: ResourceMetrics = {
+      cpu: round1(cpu),
+      memory: round1(memory),
+      health,
+    };
     if (rps > 0) metric.rps = Math.round(rps);
     if (connections !== undefined) metric.connections = connections;
     newMetrics[resourceId] = metric;
@@ -328,17 +433,165 @@ export function tick(state: SimulationState, inputs: TickInputs): TickResult {
   for (const effect of state.activeChaos) {
     const isFirstTick = effect.remainingTicks === effect.durationTicks;
     if (isFirstTick) {
-      logs.push({ timestamp: now, severity: "error", resourceId: effect.resourceId, source: "chaos", message: chaosApplyMessage(effect) });
+      logs.push({
+        timestamp: now,
+        severity: "error",
+        resourceId: effect.resourceId,
+        source: "chaos",
+        message: chaosApplyMessage(effect),
+      });
     }
     const remaining = effect.remainingTicks - 1;
     if (remaining <= 0) {
-      logs.push({ timestamp: now, severity: "info", resourceId: effect.resourceId, source: "chaos", message: `${effect.resourceId} recovered from ${effect.chaosType}` });
+      logs.push({
+        timestamp: now,
+        severity: "info",
+        resourceId: effect.resourceId,
+        source: "chaos",
+        message: `${effect.resourceId} recovered from ${effect.chaosType}`,
+      });
     } else {
       nextActiveChaos.push({ ...effect, remainingTicks: remaining });
     }
   }
 
-  // 8. Threshold-crossing logs
+  // 8. Autoscaler — implicit pools react to sustained heat or cold
+  let nextSpawnedVms: SpawnedVmInfo[] = state.spawnedVms.map((v) => ({ ...v }));
+  let nextResourceTypes = state.resourceTypes;
+  let nextResourceSkus = state.resourceSkus;
+  const nextPools: Record<string, PoolRuntime> = {};
+
+  for (const [lbId, pool] of Object.entries(state.pools)) {
+    const p: PoolRuntime = {
+      ...pool,
+      pending: pool.pending ? { ...pool.pending } : null,
+    };
+    const alivePoolVmIds = [
+      ...p.baseVmIds,
+      ...nextSpawnedVms
+        .filter((v) => v.poolId === lbId && v.status === "active")
+        .map((v) => v.id),
+    ].filter((id) => !downResources.has(id));
+    const cpus = alivePoolVmIds.map((id) => newMetrics[id]?.cpu ?? 0);
+    const avgCpu =
+      cpus.length > 0 ? cpus.reduce((a, b) => a + b, 0) / cpus.length : 0;
+    const totalReplicas =
+      p.baseVmIds.length +
+      nextSpawnedVms.filter((v) => v.poolId === lbId).length;
+
+    if (p.pending) {
+      p.pending.ticksRemaining -= 1;
+      if (p.pending.ticksRemaining <= 0) {
+        if (p.pending.action === "up") {
+          nextResourceTypes = { ...nextResourceTypes };
+          nextResourceSkus = { ...nextResourceSkus };
+          const templateId = p.baseVmIds[0]!;
+          const templateSku = nextResourceSkus[templateId];
+          for (const v of nextSpawnedVms) {
+            if (v.poolId === lbId && v.status === "provisioning") {
+              v.status = "active";
+              nextResourceTypes[v.id] = RESOURCE_TYPES.VirtualMachine;
+              if (templateSku) nextResourceSkus[v.id] = templateSku;
+              logs.push({
+                timestamp: now,
+                severity: "info",
+                resourceId: v.id,
+                source: "autoscaler",
+                message: `${v.id} joined pool ${lbId} — traffic redistributing`,
+              });
+            }
+          }
+        } else {
+          const activeInPool = nextSpawnedVms.filter(
+            (v) => v.poolId === lbId && v.status === "active",
+          );
+          const victim = activeInPool[activeInPool.length - 1];
+          if (victim) {
+            nextSpawnedVms = nextSpawnedVms.filter((v) => v.id !== victim.id);
+            if (nextResourceTypes[victim.id]) {
+              nextResourceTypes = { ...nextResourceTypes };
+              delete nextResourceTypes[victim.id];
+              nextResourceSkus = { ...nextResourceSkus };
+              delete nextResourceSkus[victim.id];
+            }
+            logs.push({
+              timestamp: now,
+              severity: "info",
+              resourceId: victim.id,
+              source: "autoscaler",
+              message: `${victim.id} drained and removed — pool ${lbId} back to ${totalReplicas - 1} replicas`,
+            });
+          }
+        }
+        p.pending = null;
+      }
+    } else if (avgCpu > p.targetCpu) {
+      p.hotTicks += 1;
+      p.coldTicks = 0;
+      if (p.hotTicks >= SIMULATION_CONSTANTS.AUTOSCALING.HOT_TICKS) {
+        if (totalReplicas < p.maxReplicas) {
+          p.hotTicks = 0;
+          p.pending = {
+            action: "up",
+            ticksRemaining: SIMULATION_CONSTANTS.AUTOSCALING.PROVISION_TICKS,
+          };
+          p.spawnCounter += 1;
+          const newId = `${p.baseVmIds[0]!}-asg-${p.spawnCounter}`;
+          nextSpawnedVms = [
+            ...nextSpawnedVms,
+            {
+              id: newId,
+              poolId: lbId,
+              x: p.spawnOrigin.x,
+              y:
+                p.spawnOrigin.y +
+                SIMULATION_CONSTANTS.AUTOSCALING.SPAWN_Y_GAP * p.spawnCounter,
+              status: "provisioning",
+              spawnedAtTick: seconds,
+            },
+          ];
+          logs.push({
+            timestamp: now,
+            severity: "warn",
+            source: "autoscaler",
+            message: `pool ${lbId} avg cpu ${round1(avgCpu)}% above target ${p.targetCpu}% — provisioning new instance (${SIMULATION_CONSTANTS.AUTOSCALING.PROVISION_TICKS}s)`,
+          });
+        } else {
+          p.hotTicks = SIMULATION_CONSTANTS.AUTOSCALING.HOT_TICKS;
+        }
+      }
+    } else if (avgCpu < SIMULATION_CONSTANTS.AUTOSCALING.SCALE_DOWN_AT) {
+      p.coldTicks += 1;
+      p.hotTicks = 0;
+      const activeSpawnedCount = nextSpawnedVms.filter(
+        (v) => v.poolId === lbId && v.status === "active",
+      ).length;
+      if (
+        p.coldTicks >= SIMULATION_CONSTANTS.AUTOSCALING.COLD_TICKS &&
+        activeSpawnedCount > 0 &&
+        totalReplicas > p.minReplicas
+      ) {
+        p.coldTicks = 0;
+        p.pending = {
+          action: "down",
+          ticksRemaining: SIMULATION_CONSTANTS.AUTOSCALING.DRAIN_TICKS,
+        };
+        logs.push({
+          timestamp: now,
+          severity: "info",
+          source: "autoscaler",
+          message: `pool ${lbId} running cold at ${round1(avgCpu)}% — draining one instance`,
+        });
+      }
+    } else {
+      p.hotTicks = 0;
+      p.coldTicks = 0;
+    }
+
+    nextPools[lbId] = p;
+  }
+
+  // 9. Threshold-crossing logs
   for (const [resourceId, metric] of Object.entries(newMetrics)) {
     const before = state.metrics[resourceId]?.health ?? ResourceHealth.HEALTHY;
     const after = metric.health;
@@ -360,31 +613,41 @@ export function tick(state: SimulationState, inputs: TickInputs): TickResult {
     logs.push({ timestamp: now, severity, resourceId, source, message });
   }
 
-  // 9. One-time structural logs
+  // 10. One-time structural logs
   if (seconds === 1) {
     logs.push({
       timestamp: now,
       severity: "info",
       source: "simulator",
-      message: `simulation started — target ${Math.round(state.targetRps)} rps | ${profile.trafficShape === "peak" ? `peak bursts ${profile.peakMultiplier ?? 3}x` : "steady traffic"} | ${Math.round(readFraction * 100)}% reads | ${profile.payloadSize} payloads | ramping over ${SIMULATION_CONSTANTS.RAMP_SECONDS}s`
+      message: `simulation started — target ${Math.round(state.targetRps)} rps | ${profile.trafficShape === "peak" ? `peak bursts ${profile.peakMultiplier ?? 3}x` : "steady traffic"} | ${Math.round(readFraction * 100)}% reads | ${profile.payloadSize} payloads | ramping over ${SIMULATION_CONSTANTS.RAMP_SECONDS}s`,
     });
+    for (const [lbId, pool] of Object.entries(nextPools)) {
+      logs.push({
+        timestamp: now,
+        severity: "info",
+        source: "autoscaler",
+        message: `pool ${lbId} formed — ${pool.baseVmIds.length} base replicas, autoscale ${pool.minReplicas}-${pool.maxReplicas} at ${pool.targetCpu}% target`,
+      });
+    }
     for (const id of state.deadEnds) {
       logs.push({
         timestamp: now,
         severity: "warn",
         resourceId: id,
         source: "nginx",
-        message: `${id} has no downstream data path — requests requiring data will fail`
+        message: `${id} has no downstream data path — requests requiring data will fail`,
       });
     }
   }
 
-  // 10. Overall health
-  const healths = Object.values(newMetrics).map(m => m.health);
+  // 11. Overall health
+  const healths = Object.values(newMetrics).map((m) => m.health);
   let overallHealth: SimulationState["overallHealth"] = "healthy";
   if (healths.includes(ResourceHealth.FAILED)) overallHealth = "critical";
-  else if (healths.includes(ResourceHealth.SATURATED)) overallHealth = "saturated";
-  else if (healths.includes(ResourceHealth.DEGRADED)) overallHealth = "degraded";
+  else if (healths.includes(ResourceHealth.SATURATED))
+    overallHealth = "saturated";
+  else if (healths.includes(ResourceHealth.DEGRADED))
+    overallHealth = "degraded";
 
   return {
     state: {
@@ -392,10 +655,44 @@ export function tick(state: SimulationState, inputs: TickInputs): TickResult {
       simulatedSeconds: seconds,
       loadFraction: round1(loadFraction * 100) / 100,
       targetLoadFraction,
+      resourceTypes: nextResourceTypes,
+      resourceSkus: nextResourceSkus,
       metrics: newMetrics,
       overallHealth,
-      activeChaos: nextActiveChaos
+      activeChaos: nextActiveChaos,
+      pools: nextPools,
+      spawnedVms: nextSpawnedVms,
     },
-    logs
+    logs,
   };
+}
+
+/* ---------------- Wire-format helper for the orchestrator ---------------- */
+
+export function buildPoolSnapshots(state: SimulationState): {
+  pools: Record<string, PoolSnapshot>;
+  spawnedVms: SpawnedVmInfo[];
+} {
+  const pools: Record<string, PoolSnapshot> = {};
+  for (const [lbId, p] of Object.entries(state.pools)) {
+    const activeCount =
+      p.baseVmIds.length +
+      state.spawnedVms.filter((v) => v.poolId === lbId && v.status === "active")
+        .length;
+    pools[lbId] = {
+      lbId,
+      baseVmIds: p.baseVmIds,
+      currentReplicas: activeCount,
+      minReplicas: p.minReplicas,
+      maxReplicas: p.maxReplicas,
+      targetCpu: p.targetCpu,
+      pending: p.pending
+        ? {
+            action: p.pending.action,
+            secondsRemaining: p.pending.ticksRemaining,
+          }
+        : null,
+    };
+  }
+  return { pools, spawnedVms: state.spawnedVms };
 }
