@@ -10,6 +10,7 @@ import {
 import { skusFor, findSku } from "@shared/catalog/index";
 import { SIMULATION_CONSTANTS } from "@shared/constants/SIMULATION_CONSTANTS.constants";
 import type { Resource } from "@shared/interface/Resource.interface";
+import type { AutoscalingPolicy } from "@shared/interface/AutoscalingPolicy.interface";
 import { ResourceIcon } from "@/components/common/ResourceIcon";
 
 interface ResourceConfigPanelProps {
@@ -24,12 +25,31 @@ export function ResourceConfigPanel({
   onUpdateResource,
 }: ResourceConfigPanelProps) {
   const [provider, setProvider] = useState<ProviderId>("aws");
+  const [asEnabled, setAsEnabled] = useState(true);
+  const [asMin, setAsMin] = useState(2);
+  const [asMax, setAsMax] = useState(6);
+  const [asTargetCpu, setAsTargetCpu] = useState(75);
 
   // When the selected resource changes, open the provider that owns its current SKU
   useEffect(() => {
     if (resource?.skuId) {
       const current = findSku(resource.skuId);
       if (current) setProvider(current.provider);
+    }
+  }, [resource?.id]);
+
+  // Sync autoscaling local state from resource
+  useEffect(() => {
+    if (resource?.autoscaling) {
+      setAsEnabled(resource.autoscaling.enabled ?? true);
+      setAsMin(resource.autoscaling.minReplicas ?? 2);
+      setAsMax(resource.autoscaling.maxReplicas ?? 6);
+      setAsTargetCpu(resource.autoscaling.targetCpu ?? 75);
+    } else {
+      setAsEnabled(true);
+      setAsMin(2);
+      setAsMax(6);
+      setAsTargetCpu(75);
     }
   }, [resource?.id]);
 
@@ -44,6 +64,47 @@ export function ResourceConfigPanel({
     ? skusFor(provider, resource.type as SkuCategory)
     : [];
   const isVm = resource.type === RESOURCE_TYPES.VirtualMachine;
+  const isLb = resource.type === RESOURCE_TYPES.LoadBalancer;
+
+  const commitAutoscaling = (patch: Partial<AutoscalingPolicy>) => {
+    const next: AutoscalingPolicy = {
+      enabled: patch.enabled ?? asEnabled,
+      minReplicas: patch.minReplicas ?? asMin,
+      maxReplicas: patch.maxReplicas ?? asMax,
+      targetCpu: patch.targetCpu ?? asTargetCpu,
+    };
+    // Clamp max to be >= min
+    if (next.maxReplicas !== undefined && next.minReplicas !== undefined) {
+      if (next.maxReplicas < next.minReplicas) {
+        next.maxReplicas = next.minReplicas;
+      }
+    }
+    onUpdateResource(resource.id, { autoscaling: next });
+  };
+
+  const handleMinChange = (val: number) => {
+    const clamped = Math.max(1, Math.min(8, val));
+    setAsMin(clamped);
+    const effectiveMax = Math.max(clamped, asMax);
+    setAsMax(effectiveMax);
+    commitAutoscaling({ minReplicas: clamped, maxReplicas: effectiveMax });
+  };
+
+  const handleMaxChange = (val: number) => {
+    const clamped = Math.max(asMin, Math.min(8, val));
+    setAsMax(clamped);
+    commitAutoscaling({ maxReplicas: clamped });
+  };
+
+  const handleEnabledChange = (enabled: boolean) => {
+    setAsEnabled(enabled);
+    commitAutoscaling({ enabled });
+  };
+
+  const handleTargetCpuChange = (val: number) => {
+    setAsTargetCpu(val);
+    commitAutoscaling({ targetCpu: val });
+  };
 
   return (
     <div className="config-panel-container fixed right-0 top-12 bottom-0 w-64 bg-gray-950 border-l border-gray-800 p-4 z-30 overflow-y-auto hover:opacity-100 opacity-50">
@@ -79,6 +140,99 @@ export function ResourceConfigPanel({
           </p>
         </div>
 
+        {isLb && (
+          <div>
+            <p className="text-[10px] text-gray-500 uppercase mb-1.5">
+              Autoscaling policy
+            </p>
+            {/* Enabled toggle */}
+            <div className="flex rounded-lg border border-[#273042] overflow-hidden mb-2">
+              <button
+                type="button"
+                onClick={() => handleEnabledChange(true)}
+                className={`flex-1 py-1.5 text-[11px] transition-colors duration-150 ${
+                  asEnabled
+                    ? "bg-[#5B8CFF] text-[#081018] font-medium"
+                    : "bg-[#0B0E14] text-[#AAB4C5] hover:text-[#EDF1F7]"
+                }`}
+              >
+                Enabled
+              </button>
+              <button
+                type="button"
+                onClick={() => handleEnabledChange(false)}
+                className={`flex-1 py-1.5 text-[11px] transition-colors duration-150 ${
+                  !asEnabled
+                    ? "bg-[#5B8CFF] text-[#081018] font-medium"
+                    : "bg-[#0B0E14] text-[#AAB4C5] hover:text-[#EDF1F7]"
+                }`}
+              >
+                Disabled
+              </button>
+            </div>
+
+            {/* Min replicas */}
+            <div className="mb-2">
+              <label className="block text-[10px] text-gray-500 uppercase mb-1">
+                Min replicas
+              </label>
+              <input
+                type="number"
+                min={1}
+                max={8}
+                value={asMin}
+                onChange={(e) => handleMinChange(Number(e.target.value))}
+                className="w-full h-8 rounded-lg bg-[#0B0E14] border border-[#273042] text-[12px] font-mono text-[#EDF1F7] px-2.5 outline-none focus:border-[#5B8CFF] focus:shadow-[0_0_0_3px_rgba(91,140,255,0.18)] transition-colors duration-150"
+              />
+            </div>
+
+            {/* Max replicas */}
+            <div className="mb-2">
+              <label className="block text-[10px] text-gray-500 uppercase mb-1">
+                Max replicas
+              </label>
+              <input
+                type="number"
+                min={1}
+                max={8}
+                value={asMax}
+                onChange={(e) => handleMaxChange(Number(e.target.value))}
+                className="w-full h-8 rounded-lg bg-[#0B0E14] border border-[#273042] text-[12px] font-mono text-[#EDF1F7] px-2.5 outline-none focus:border-[#5B8CFF] focus:shadow-[0_0_0_3px_rgba(91,140,255,0.18)] transition-colors duration-150"
+              />
+            </div>
+
+            {/* Target CPU */}
+            <div className="mb-2">
+              <div className="flex justify-between items-center mb-1">
+                <label className="block text-[10px] text-gray-500 uppercase">
+                  Target CPU
+                </label>
+                <span className="text-[11px] font-mono text-[#AAB4C5]">
+                  {asTargetCpu}%
+                </span>
+              </div>
+              <input
+                type="range"
+                min={50}
+                max={90}
+                step={5}
+                value={asTargetCpu}
+                onChange={(e) => handleTargetCpuChange(Number(e.target.value))}
+                className="w-full accent-[#5B8CFF]"
+              />
+              <div className="flex justify-between text-[9px] font-mono text-[#677185] mt-0.5">
+                <span>50%</span>
+                <span>90%</span>
+              </div>
+            </div>
+
+            <p className="text-[9px] text-[#677185] mt-2">
+              Defaults when unset: min = current VM count, max = 3x (cap 8),
+              target 75%. Save or Update the layout, then deploy.
+            </p>
+          </div>
+        )}
+
         {isSkuable && (
           <div>
             <p className="text-[10px] text-gray-500 uppercase mb-1.5">
@@ -91,7 +245,11 @@ export function ResourceConfigPanel({
                   key={providerId}
                   type="button"
                   onClick={() => setProvider(providerId)}
-                  className={`flex-1 py-1.5 text-[11px] transition-colors duration-150 ${provider === providerId ? "bg-[#5B8CFF] text-[#081018] font-medium" : "bg-[#0B0E14] text-[#AAB4C5] hover:text-[#EDF1F7]"}`}
+                  className={`flex-1 py-1.5 text-[11px] transition-colors duration-150 ${
+                    provider === providerId
+                      ? "bg-[#5B8CFF] text-[#081018] font-medium"
+                      : "bg-[#0B0E14] text-[#AAB4C5] hover:text-[#EDF1F7]"
+                  }`}
                 >
                   {providerId === "aws" ? "AWS" : "DigitalOcean"}
                 </button>
@@ -115,11 +273,17 @@ export function ResourceConfigPanel({
                     onClick={() =>
                       onUpdateResource(resource.id, { skuId: sku.skuId })
                     }
-                    className={`w-full text-left rounded-lg border px-2.5 py-2 transition-colors duration-150 ${selected ? "border-[#5B8CFF] bg-[rgba(91,140,255,0.10)]" : "border-[#273042] bg-[#0B0E14] hover:border-[#35415A]"}`}
+                    className={`w-full text-left rounded-lg border px-2.5 py-2 transition-colors duration-150 ${
+                      selected
+                        ? "border-[#5B8CFF] bg-[rgba(91,140,255,0.10)]"
+                        : "border-[#273042] bg-[#0B0E14] hover:border-[#35415A]"
+                    }`}
                   >
                     <div className="flex items-center justify-between gap-2">
                       <span
-                        className={`text-[11px] font-medium truncate ${selected ? "text-[#5B8CFF]" : "text-[#EDF1F7]"}`}
+                        className={`text-[11px] font-medium truncate ${
+                          selected ? "text-[#5B8CFF]" : "text-[#EDF1F7]"
+                        }`}
                       >
                         {sku.label}
                       </span>

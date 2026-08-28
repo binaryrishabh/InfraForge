@@ -2,6 +2,8 @@ import { create } from "zustand";
 import type { ResourceMetrics } from "@shared/interface/ResourceMetrics.interface";
 import type { SimulationLog } from "@shared/interface/SimulationLog.interface";
 import type { SimulationSnapshot } from "@shared/interface/SimulationSnapshot.interface";
+import type { PoolSnapshot } from "@shared/interface/PoolSnapshot.interface";
+import type { SpawnedVmInfo } from "@shared/interface/SpawnedVmInfo.interface";
 
 const MAX_LOGS = 150;
 
@@ -12,6 +14,8 @@ interface SimulationStoreState {
   loadFraction: number;
   simulatedSeconds: number;
   lastSnapshotAt: string | null;
+  pools: Record<string, PoolSnapshot>;
+  spawnedVms: SpawnedVmInfo[];
   applySnapshot: (snapshot: SimulationSnapshot) => void;
   reset: () => void;
 }
@@ -22,7 +26,9 @@ const initialState = {
   health: null as SimulationSnapshot["health"] | null,
   loadFraction: 0,
   simulatedSeconds: 0,
-  lastSnapshotAt: null as string | null
+  lastSnapshotAt: null as string | null,
+  pools: {} as Record<string, PoolSnapshot>,
+  spawnedVms: [] as SpawnedVmInfo[]
 };
 
 export const useSimulationStore = create<SimulationStoreState>()((set) => ({
@@ -33,7 +39,9 @@ export const useSimulationStore = create<SimulationStoreState>()((set) => ({
     health: snapshot.health,
     loadFraction: snapshot.loadFraction,
     simulatedSeconds: snapshot.simulatedSeconds,
-    lastSnapshotAt: snapshot.timestamp
+    lastSnapshotAt: snapshot.timestamp,
+    pools: snapshot.pools ?? {},
+    spawnedVms: snapshot.spawnedVms ?? []
   })),
-  reset: () => set({ ...initialState, metrics: {}, logs: [] })
+  reset: () => set({ ...initialState, metrics: {}, logs: [], pools: {}, spawnedVms: [] })
 }));
