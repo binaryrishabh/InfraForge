@@ -1,9 +1,10 @@
 import { prisma } from "../lib/prisma";
 import { redis } from "../infra/redis";
 import { publishSimulationSnapshot } from "../infra/pubsub";
-import { createInitialState, tick } from "@shared/simulation/engine";
+import { createInitialState, tick, buildPoolSnapshots } from "@shared/simulation/engine";
 import { DEFAULT_WORKLOAD_PROFILE } from "@shared/constants/DEFAULT_WORKLOAD_PROFILE.constants";
 import { SIMULATION_CONSTANTS } from "@shared/constants/SIMULATION_CONSTANTS.constants";
+import { DeploymentStatus } from "@shared/enum/DeploymentStatus.enum";
 import type { SimulationState } from "@shared/interface/SimulationState.interface";
 import type { ChaosType } from "@shared/types/ChaosType.types";
 import type { ChaosEffect } from "@shared/interface/ChaosEffect.interface";
@@ -12,7 +13,6 @@ import type { SimulationLog } from "@shared/interface/SimulationLog.interface";
 import type { Resource } from "@shared/interface/Resource.interface";
 import type { ConnectionLine } from "@shared/interface/ConnectionLine.interface";
 import type { WorkloadProfile } from "@shared/interface/WorkloadProfile.interface";
-import { DeploymentStatus } from "@shared/enum/DeploymentStatus.enum";
 
 interface SimulationInstance {
   state: SimulationState;
@@ -73,9 +73,9 @@ const controlSubscriber = redis.duplicate();
 controlSubscriber.subscribe("simulator:control");
 controlSubscriber.on("message", (_channel: string, message: string) => {
   try {
-    const command = JSON.parse(message) as { 
-      deploymentId: string; 
-      action: string; 
+    const command = JSON.parse(message) as {
+      deploymentId: string;
+      action: string;
       targetLoadFraction?: number;
       chaosType?: ChaosType;
       resourceId?: string;
@@ -138,6 +138,8 @@ setInterval(async () => {
 
       const queuedLogs = instance.pendingLogs.splice(0);
 
+      const poolData = buildPoolSnapshots(result.state);
+
       const snapshot: SimulationSnapshot = {
         deploymentId,
         timestamp: new Date().toISOString(),
@@ -145,7 +147,9 @@ setInterval(async () => {
         loadFraction: result.state.loadFraction,
         metrics: result.state.metrics,
         logs: [...queuedLogs, ...result.logs],
-        health: result.state.overallHealth
+        health: result.state.overallHealth,
+        pools: poolData.pools,
+        spawnedVms: poolData.spawnedVms
       };
       await publishSimulationSnapshot(snapshot);
 

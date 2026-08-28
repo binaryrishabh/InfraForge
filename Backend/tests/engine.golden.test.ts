@@ -1,14 +1,14 @@
 import { describe, expect, test } from "bun:test";
 import { createInitialState, tick } from "@shared/simulation/engine";
-import type { SimulationState } from "@shared/interface/SimulationState.interface";
-import type { ChaosEffect } from "@shared/interface/ChaosEffect.interface";
-import type { ChaosType } from "@shared/types/ChaosType.types";
+import { DeploymentChaosNames } from "@shared/enum/DeploymentChaosNames.enum";
 import { SAMPLE_ARCHITECTURE } from "@shared/constants/SAMPLE_ARCHITECTURE.constants";
 import { RESOURCE_TYPES } from "@shared/constants/RESOURCE_TYPES.constants";
 import { ResourceHealth } from "@shared/enum/ResourceHealth.enum";
+import type { SimulationState } from "@shared/interface/SimulationState.interface";
+import type { ChaosEffect } from "@shared/interface/ChaosEffect.interface";
+import type { TickInputs } from "@shared/interface/TickInputs.interface";
 import type { WorkloadProfile } from "@shared/interface/WorkloadProfile.interface";
 import type { SimulationLog } from "@shared/interface/SimulationLog.interface";
-import { DeploymentChaosNames } from "@shared/enum/DeploymentChaosNames.enum";
 
 const makeProfile = (overrides: Partial<WorkloadProfile> = {}): WorkloadProfile => ({
   targetThroughput: 1000000,
@@ -33,11 +33,11 @@ function simulate(profile: WorkloadProfile, totalTicks: number, seed = 42, resou
 }
 
 function simulateWithChaos(
-  profile: WorkloadProfile, 
-  totalTicks: number, 
-  chaos: ChaosEffect, 
-  injectAtTick: number, 
-  seed = 42, 
+  profile: WorkloadProfile,
+  totalTicks: number,
+  chaos: ChaosEffect,
+  injectAtTick: number,
+  seed = 42,
   resources = SAMPLE_ARCHITECTURE.resources
 ) {
   let state = createInitialState("golden-test", resources, SAMPLE_ARCHITECTURE.connectionLines, profile, seed);
@@ -54,6 +54,31 @@ function simulateWithChaos(
   }
   return { states, allLogs, final: state };
 }
+
+function simulateWithInputs(
+  profile: WorkloadProfile,
+  totalTicks: number,
+  inputAtTick: Record<number, TickInputs>,
+  seed = 42,
+  resources = SAMPLE_ARCHITECTURE.resources
+) {
+  let state = createInitialState("golden-test", resources, SAMPLE_ARCHITECTURE.connectionLines, profile, seed);
+  const allLogs: SimulationLog[] = [];
+  const states: SimulationState[] = [];
+  for (let i = 0; i < totalTicks; i++) {
+    const result = tick(state, inputAtTick[i] ?? {});
+    state = result.state;
+    allLogs.push(...result.logs);
+    states.push(state);
+  }
+  return { states, allLogs, final: state };
+}
+
+const activeReplicas = (s: SimulationState, lbId: string) => {
+  const pool = s.pools[lbId];
+  if (!pool) return 0;
+  return pool.baseVmIds.length + s.spawnedVms.filter(v => v.poolId === lbId && v.status === "active").length;
+};
 
 const cpuOf = (state: SimulationState, id: string) => state.metrics[id]?.cpu ?? -1;
 const healthOf = (state: SimulationState, id: string) => state.metrics[id]?.health;
@@ -142,12 +167,10 @@ describe("golden scenarios — chaos", () => {
       remainingTicks: 30
     };
     const { states } = simulateWithChaos(makeProfile({ targetThroughput: 1000000 }), 95, chaos, 60);
-    
-    const state65 = states[64]!; 
+    const state65 = states[64]!;
     expect(healthOf(state65, "vm-1")).toBe(ResourceHealth.FAILED);
     expect(cpuOf(state65, "vm-1")).toBe(0);
     expect(cpuOf(state65, "vm-2")).toBeGreaterThan(cpuOf(state65, "vm-1"));
-
     const state95 = states[94]!;
     expect(healthOf(state95, "vm-1")).not.toBe(ResourceHealth.FAILED);
   });
@@ -161,7 +184,6 @@ describe("golden scenarios — chaos", () => {
     };
     const { states } = simulateWithChaos(makeProfile({ targetThroughput: 500000 }), 62, chaos, 60);
     const state62 = states[61]!;
-    
     expect(cpuOf(state62, "vm-1")).toBeGreaterThanOrEqual(85);
     const health = healthOf(state62, "vm-1");
     expect(health === ResourceHealth.DEGRADED || health === ResourceHealth.SATURATED).toBe(true);
@@ -176,7 +198,36 @@ describe("golden scenarios — chaos", () => {
     };
     const { states } = simulateWithChaos(makeProfile({ targetThroughput: 500000 }), 95, chaos, 60);
     const state95 = states[94]!;
-    
     expect(state95.metrics["vm-1"]!.memory).toBeGreaterThanOrEqual(90);
+  });
+});
+
+describe("golden scenarios — autoscaling", () => {
+  test("S10: autoscaler rescues a saturating pool", () => {
+    const { states, allLogs, final } = simulate(makeProfile({ targetThroughput: 1_000_000 }), 150);
+    const before = states[59]!;
+    expect(cpuOf(before, "vm-1")).toBeGreaterThanOrEqual(85);
+    expect(activeReplicas(final, "lb-1")).toBe(3);
+    expect(final.spawnedVms.filter(v => v.status === "active").length).toBe(1);
+    expect(cpuOf(final, "vm-1")).toBeGreaterThan(50);
+    expect(cpuOf(final, "vm-1")).toBeLessThan(70);
+    expect(healthOf(final, "vm-1")).toBe(ResourceHealth.HEALTHY);
+    expect(allLogs.some(l => l.source === "autoscaler" && l.message.includes("provisioning"))).toBe(true);
+  });
+
+  test("S11: autoscaler respects maxReplicas under relentless load", () => {
+    const resources = SAMPLE_ARCHITECTURE.resources.map(r =>
+      r.id === "lb-1" ? { ...r, autoscaling: { minReplicas: 2, maxReplicas: 3, targetCpu: 75 } } : r
+    );
+    const { final } = simulate(makeProfile({ targetThroughput: 3_000_000 }), 250, 42, resources);
+    expect(activeReplicas(final, "lb-1")).toBe(3);
+    expect(final.spawnedVms.length).toBe(1);
+    expect(healthOf(final, "vm-1")).toBe(ResourceHealth.SATURATED);
+  });
+
+  test("S12: cold pool scales back down to base replicas", () => {
+    const { final } = simulateWithInputs(makeProfile({ targetThroughput: 1_000_000 }), 300, { 160: { targetLoadFraction: 0.3 } });
+    expect(activeReplicas(final, "lb-1")).toBe(2);
+    expect(final.spawnedVms.filter(v => v.status === "active").length).toBe(0);
   });
 });
