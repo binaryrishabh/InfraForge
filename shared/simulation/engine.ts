@@ -717,3 +717,89 @@ export function buildPoolSnapshots(state: SimulationState): {
   }
   return { pools, spawnedVms: state.spawnedVms };
 }
+
+/* ---------------- Manual scaling — the operator's hand on the pool ----------------
+Pure decision function. Reuses the autoscaler's provisioning and drain
+machinery so manual and automatic scaling share one code path. Refusals
+are honest: max cap, protected base replicas, and already-scaling pools. */
+export function applyManualScale(
+  state: SimulationState,
+  lbId: string,
+  delta: 1 | -1,
+): { state: SimulationState; log: SimulationLog } {
+  const now = new Date().toISOString();
+  const pool = state.pools[lbId];
+
+  if (!pool) {
+    return {
+      state,
+      log: { timestamp: now, severity: "warn", source: "operator", message: `no pool found at ${lbId} — manual scale ignored` },
+    };
+  }
+
+  if (pool.pending) {
+    return {
+      state,
+      log: { timestamp: now, severity: "warn", source: "operator", message: `pool ${lbId} is already scaling — manual command refused` },
+    };
+  }
+
+  const spawnedInPool = state.spawnedVms.filter((v) => v.poolId === lbId);
+  const totalReplicas = pool.baseVmIds.length + spawnedInPool.length;
+  const activeSpawnedCount = spawnedInPool.filter((v) => v.status === "active").length;
+
+  if (delta === 1) {
+    if (totalReplicas >= pool.maxReplicas) {
+      return {
+        state,
+        log: { timestamp: now, severity: "warn", source: "operator", message: `pool ${lbId} at max replicas (${pool.maxReplicas}) — manual scale-up refused` },
+      };
+    }
+    const spawnCounter = pool.spawnCounter + 1;
+    const newId = `${pool.baseVmIds[0]!}-asg-${spawnCounter}`;
+    const ghost: SpawnedVmInfo = {
+      id: newId,
+      poolId: lbId,
+      x: pool.spawnOrigin.x,
+      y: pool.spawnOrigin.y + SIMULATION_CONSTANTS.AUTOSCALING.SPAWN_Y_GAP * spawnCounter,
+      status: "provisioning",
+      spawnedAtTick: state.simulatedSeconds,
+    };
+    return {
+      state: {
+        ...state,
+        spawnedVms: [...state.spawnedVms, ghost],
+        pools: {
+          ...state.pools,
+          [lbId]: {
+            ...pool,
+            spawnCounter,
+            pending: { action: "up", ticksRemaining: SIMULATION_CONSTANTS.AUTOSCALING.PROVISION_TICKS },
+          },
+        },
+      },
+      log: { timestamp: now, severity: "info", source: "operator", message: `manual scale-up on ${lbId} — provisioning replica ${totalReplicas + 1} (${SIMULATION_CONSTANTS.AUTOSCALING.PROVISION_TICKS}s)` },
+    };
+  }
+
+  if (activeSpawnedCount === 0 || totalReplicas <= pool.minReplicas) {
+    return {
+      state,
+      log: { timestamp: now, severity: "warn", source: "operator", message: `pool ${lbId} has no scalable replicas — base replicas are protected` },
+    };
+  }
+
+  return {
+    state: {
+      ...state,
+      pools: {
+        ...state.pools,
+        [lbId]: {
+          ...pool,
+          pending: { action: "down", ticksRemaining: SIMULATION_CONSTANTS.AUTOSCALING.DRAIN_TICKS },
+        },
+      },
+    },
+    log: { timestamp: now, severity: "info", source: "operator", message: `manual scale-down on ${lbId} — draining one replica` },
+  };
+}
