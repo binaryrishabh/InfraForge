@@ -52,3 +52,12 @@ export const scaleVertical = async(deploymentId: string, resourceId: string, sku
   });
   return response.data.message;
 }
+
+// Manual horizontal scale — nudge a VM pool's replica count up or down on a LIVE deployment
+export const scalePool = async(deploymentId: string, lbId: string, delta: number): Promise<string> => {
+  const response = await axios.post(`${API_URL}/deployments/${deploymentId}/scale-pool`, {
+    lbId,
+    delta
+  });
+  return response.data.message;
+}

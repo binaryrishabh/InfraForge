@@ -13,6 +13,7 @@ import { LiveLogsPanel } from "./LiveLogsPanel";
 import { LoadControlPanel } from "./LoadControlPanel";
 import { ChaosControlPanel } from "./ChaosControlPanel";
 import { VerticalScalePanel } from "./VerticalScalePanel";
+import { ManualScalePanel } from "./ManualScalePanel";
 import { ConfirmModal } from "@/components/UI/ConfirmModal";
 import { CostBreakdownPanel } from "./panels/CostBreakdownPanel";
 import { SecurityIssuesPanel } from "./panels/SecurityIssuesPanel";
@@ -110,6 +111,7 @@ export function MonitoringDashboard() {
           <LoadControlPanel deploymentId={deploymentId!} status={status} />
           <ChaosControlPanel deploymentId={deploymentId!} status={status} resources={resources} />
           <VerticalScalePanel deploymentId={deploymentId!} status={status} resources={resources} />
+          <ManualScalePanel deploymentId={deploymentId!} status={status} />
           <CostBreakdownPanel deployment={deployment} />
           <SecurityIssuesPanel deployment={deployment} />
           <TimelinePanel timeline={timeline} />
