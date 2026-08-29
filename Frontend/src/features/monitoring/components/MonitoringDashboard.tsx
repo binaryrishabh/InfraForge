@@ -12,6 +12,7 @@ import { ReadOnlyCanvas } from "./ReadOnlyCanvas";
 import { LiveLogsPanel } from "./LiveLogsPanel";
 import { LoadControlPanel } from "./LoadControlPanel";
 import { ChaosControlPanel } from "./ChaosControlPanel";
+import { VerticalScalePanel } from "./VerticalScalePanel";
 import { ConfirmModal } from "@/components/UI/ConfirmModal";
 import { CostBreakdownPanel } from "./panels/CostBreakdownPanel";
 import { SecurityIssuesPanel } from "./panels/SecurityIssuesPanel";
@@ -108,6 +109,7 @@ export function MonitoringDashboard() {
         <div className="w-80 border-l border-gray-800 overflow-y-auto p-4 space-y-4">
           <LoadControlPanel deploymentId={deploymentId!} status={status} />
           <ChaosControlPanel deploymentId={deploymentId!} status={status} resources={resources} />
+          <VerticalScalePanel deploymentId={deploymentId!} status={status} resources={resources} />
           <CostBreakdownPanel deployment={deployment} />
           <SecurityIssuesPanel deployment={deployment} />
           <TimelinePanel timeline={timeline} />

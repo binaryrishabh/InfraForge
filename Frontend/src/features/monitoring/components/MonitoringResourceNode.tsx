@@ -40,44 +40,60 @@ function HudRow({ label, value, pct }: { label: string; value: string; pct: numb
 
 export function MonitoringResourceNode({ resource }: MonitoringResourceNodeProps) {
   const metric = useSimulationStore((s) => s.metrics[resource.id]);
+  const isRestarting = useSimulationStore((s) => s.restarting.includes(resource.id));
 
   const health = metric?.health ?? ResourceHealth.HEALTHY;
   const cpu = metric?.cpu ?? 0;
   const memory = metric?.memory ?? 0;
   const showAutoPop =
+    isRestarting ||
     health === ResourceHealth.DEGRADED ||
     health === ResourceHealth.SATURATED ||
     health === ResourceHealth.FAILED;
 
   return (
     <div className="absolute group" style={{ left: resource.x, top: resource.y }}>
-      {/* AUTO-POP METER — appears uninvited when a resource crosses its safe threshold */}
+      {/* AUTO-POP METER — appears uninvited when a resource crosses its safe threshold or is restarting */}
       {showAutoPop && (
         <div
           className={`absolute -top-16 left-1/2 -translate-x-1/2 w-32 bg-[#0B0E14]/95 border rounded-lg px-2 py-1.5 shadow-xl z-30 ${
-            health === ResourceHealth.SATURATED || health === ResourceHealth.FAILED
+            isRestarting
+              ? "border-[#F5A524]/60"
+              : health === ResourceHealth.SATURATED || health === ResourceHealth.FAILED
               ? "border-[#F0564A]/60"
               : "border-[#F5A524]/60"
           }`}
         >
           <div className="flex items-center justify-between mb-1">
             <span className="text-[9px] font-mono text-[#AAB4C5] truncate max-w-17.5">{resource.id}</span>
-            <span className={`text-[10px] font-mono font-semibold ${healthText[health]}`}>{cpu}%</span>
+            {isRestarting ? (
+              <span className="text-[10px] font-mono font-semibold text-amber-400">RESTARTING</span>
+            ) : (
+              <span className={`text-[10px] font-mono font-semibold ${healthText[health]}`}>{cpu}%</span>
+            )}
           </div>
           <div className="h-1 rounded-full bg-[#1F2633] overflow-hidden">
-            <div
-              className={`h-full rounded-full transition-all duration-500 ${cpu >= 90 ? "bg-[#F0564A]" : "bg-[#F5A524]"}`}
-              style={{ width: `${Math.min(100, cpu)}%` }}
-            />
+            {isRestarting ? (
+              <div className="h-full w-full rounded-full bg-[#F5A524] animate-pulse" />
+            ) : (
+              <div
+                className={`h-full rounded-full transition-all duration-500 ${cpu >= 90 ? "bg-[#F0564A]" : "bg-[#F5A524]"}`}
+                style={{ width: `${Math.min(100, cpu)}%` }}
+              />
+            )}
           </div>
-          <p className={`text-[8px] font-mono mt-0.5 ${healthText[health]}`}>{health.toUpperCase()}</p>
+          <p className={`text-[8px] font-mono mt-0.5 ${isRestarting ? "text-amber-400" : healthText[health]}`}>
+            {isRestarting ? "RESTARTING" : health.toUpperCase()}
+          </p>
         </div>
       )}
 
-      {/* NODE with health-driven ring */}
+      {/* NODE with health-driven ring (amber pulse while a vertical SKU swap restarts it) */}
       <div
         title={resource.type}
-        className={`w-12 h-12 rounded-lg bg-[#12161F] ring-2 flex items-center justify-center transition-colors duration-300 ${healthRing[health]}`}
+        className={`w-12 h-12 rounded-lg bg-[#12161F] ring-2 flex items-center justify-center transition-colors duration-300 ${
+          isRestarting ? "ring-amber-400 animate-pulse" : healthRing[health]
+        }`}
       >
         <ResourceIcon type={resource.type} size={20} className={healthText[health]} />
       </div>

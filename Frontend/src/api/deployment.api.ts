@@ -43,3 +43,12 @@ export const injectChaos = async(deploymentId: string, type: string, resourceId:
   });
   return response.data.message;
 }
+
+// Vertical scale — swap a resource's SKU on a LIVE deployment (the resource restarts during the swap)
+export const scaleVertical = async(deploymentId: string, resourceId: string, skuId: string): Promise<string> => {
+  const response = await axios.post(`${API_URL}/deployments/${deploymentId}/scale-vertical`, {
+    resourceId,
+    skuId
+  });
+  return response.data.message;
+}
