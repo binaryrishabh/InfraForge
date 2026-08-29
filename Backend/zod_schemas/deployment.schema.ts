@@ -2,12 +2,12 @@ import * as z from "zod";
 import { DeploymentChaosNames } from "@shared/enum/DeploymentChaosNames.enum";
 
 export const ChaosInjectionBodySchema = z.object({
-    type: z.enum(DeploymentChaosNames, "Must be of the specified chaos type only"),
-    resourceId: z.string("Must be of a string type")
+  type: z.enum(DeploymentChaosNames, "Must be of the specified chaos type only"),
+  resourceId: z.string("Must be of a string type")
 })
 
 export const DeploymentIdSchema = z.object({
-    deploymentId: z.string("Must be a string").uuid("Invalid deployment id schema")
+  deploymentId: z.string("Must be a string").uuid("Invalid deployment id schema")
 });
 
 export const LoadControlBodySchema = z.object({
@@ -33,9 +33,15 @@ export const VerticalScaleBodySchema = z.object({
   skuId: z.string("Must be a string")
 });
 
+export const PoolScaleBodySchema = z.object({
+  lbId: z.string("Must be a string"),
+  delta: z.union([z.literal(1), z.literal(-1)], "Delta must be exactly 1 or -1")
+});
+
 export type ChaosInjectionBodySchemaType = z.infer<typeof ChaosInjectionBodySchema>;
 export type DeploymentIdSchemaType = z.infer<typeof DeploymentIdSchema>;
 export type LoadControlBodySchemaType = z.infer<typeof LoadControlBodySchema>;
 export type WorkloadProfileSchemaType = z.infer<typeof WorkloadProfileSchema>;
 export type DeploymentCreateBodySchemaType = z.infer<typeof DeploymentCreateBodySchema>;
 export type VerticalScaleBodySchemaType = z.infer<typeof VerticalScaleBodySchema>;
+export type PoolScaleBodySchemaType = z.infer<typeof PoolScaleBodySchema>;

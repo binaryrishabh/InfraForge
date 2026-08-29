@@ -3,7 +3,7 @@ import crypto from "crypto";
 import { prisma } from "../lib/prisma";
 import { redis } from "../infra/redis";
 import { ValidationError, NotFoundError } from "../utils/errors";
-import { ChaosInjectionBodySchema, DeploymentIdSchema, LoadControlBodySchema, DeploymentCreateBodySchema, VerticalScaleBodySchema } from "../zod_schemas/deployment.schema";
+import { ChaosInjectionBodySchema, DeploymentIdSchema, LoadControlBodySchema, DeploymentCreateBodySchema, VerticalScaleBodySchema, PoolScaleBodySchema } from "../zod_schemas/deployment.schema";
 import { DeploymentStatus } from "@shared/enum/DeploymentStatus.enum";
 import { Publish } from "@shared/enum/Publish.enum";
 
@@ -104,7 +104,6 @@ deploymentRouter.post("/:deploymentId/chaos", async (req, res) => {
     const latestDeployment = await tx.deployment.findUnique({
       where: { id: deploymentId }
     });
-
     const currentChaosEvents = (latestDeployment?.chaosEvents as any[]) || [];
     currentChaosEvents.push({
       timestamp,
@@ -112,14 +111,12 @@ deploymentRouter.post("/:deploymentId/chaos", async (req, res) => {
       resourceId,
       message
     });
-
     const currentTimeline = (latestDeployment?.timeline as any[]) || [];
     currentTimeline.push({
       timestamp,
       event: "Chaos Injected",
       message
     });
-
     await tx.deployment.update({
       where: { id: deploymentId },
       data: {
@@ -217,6 +214,40 @@ deploymentRouter.post("/:deploymentId/scale-vertical", async (req, res) => {
   res.status(200).json({
     success: true,
     message: "Vertical scaling initiated",
+    deploymentId
+  });
+});
+
+// Manual pool scaling — immediate replica lever on a LIVE deployment's scaling pool
+deploymentRouter.post("/:deploymentId/scale-pool", async (req, res) => {
+  const DeploymentId = DeploymentIdSchema.safeParse(req.params);
+  if (!DeploymentId.success) {
+    const errorMessages = DeploymentId.error.issues.map(err => err.message).join(", ");
+    throw new ValidationError(errorMessages);
+  }
+  const PoolScaleData = PoolScaleBodySchema.safeParse(req.body);
+  if (!PoolScaleData.success) {
+    const errorMessages = PoolScaleData.error.issues.map(err => err.message).join(", ");
+    throw new ValidationError(errorMessages);
+  }
+  const { deploymentId } = DeploymentId.data;
+  const { lbId, delta } = PoolScaleData.data;
+  const deployment = await prisma.deployment.findUnique({ where: { id: deploymentId } });
+  if (!deployment) {
+    throw new NotFoundError("Deployment not found with specified id " + deploymentId);
+  }
+  if (deployment.status !== DeploymentStatus.LIVE) {
+    throw new ValidationError("Manual scaling only applies to a live deployment");
+  }
+  await redis.publish("simulator:control", JSON.stringify({
+    deploymentId,
+    action: "scale-pool",
+    lbId,
+    delta
+  }));
+  res.status(200).json({
+    success: true,
+    message: "Manual scaling command sent to simulator",
     deploymentId
   });
 });

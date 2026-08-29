@@ -1,7 +1,7 @@
 import { prisma } from "../lib/prisma";
 import { redis } from "../infra/redis";
 import { publishSimulationSnapshot } from "../infra/pubsub";
-import { createInitialState, tick, buildPoolSnapshots } from "@shared/simulation/engine";
+import { createInitialState, tick, buildPoolSnapshots, applyManualScale } from "@shared/simulation/engine";
 import { DEFAULT_WORKLOAD_PROFILE } from "@shared/constants/DEFAULT_WORKLOAD_PROFILE.constants";
 import { SIMULATION_CONSTANTS } from "@shared/constants/SIMULATION_CONSTANTS.constants";
 import { DeploymentStatus } from "@shared/enum/DeploymentStatus.enum";
@@ -42,7 +42,6 @@ export const startSimulation = async (deploymentId: string) => {
   const layout = (infrastructure?.layout ?? {}) as { resources?: Resource[]; connectionLines?: ConnectionLine[] };
   const resources = layout.resources ?? [];
   const connectionLines = layout.connectionLines ?? [];
-
   let seedText = deployment.seed;
   if (!seedText) {
     seedText = Math.random().toString(36).slice(2, 10);
@@ -69,7 +68,7 @@ export const resurrectLiveDeployments = async () => {
   }
 };
 
-/* ------- Control channel: load adjustments, stop commands, chaos injection, and vertical scaling from the API server ------- */
+/* ------- Control channel: load adjustments, stop commands, chaos injection, vertical scaling, and manual pool scaling from the API server ------- */
 const controlSubscriber = redis.duplicate();
 controlSubscriber.subscribe("simulator:control");
 controlSubscriber.on("message", (_channel: string, message: string) => {
@@ -81,6 +80,8 @@ controlSubscriber.on("message", (_channel: string, message: string) => {
       chaosType?: ChaosType;
       resourceId?: string;
       skuId?: string;
+      lbId?: string;
+      delta?: number;
     };
     const instance = registry.get(command.deploymentId);
     if (!instance) return;
@@ -109,20 +110,17 @@ controlSubscriber.on("message", (_channel: string, message: string) => {
         "network-delay": SIMULATION_CONSTANTS.CHAOS.NETWORK_DELAY_DURATION,
         "disk-failure": SIMULATION_CONSTANTS.CHAOS.DISK_FAILURE_DURATION
       };
-
       const durationTicks = durationMap[command.chaosType];
       if (durationTicks === undefined) {
         console.error(`[simulator] unknown chaos type: ${command.chaosType}`);
         return;
       }
-
       const effect: ChaosEffect = {
         chaosType: command.chaosType,
         resourceId: command.resourceId,
         durationTicks,
         remainingTicks: durationTicks
       };
-
       instance.state.activeChaos.push(effect);
       console.log(`[simulator] chaos ${command.chaosType} injected on ${command.resourceId} for ${command.deploymentId}`);
     } else if (command.action === "scale-vertical" && command.resourceId && command.skuId) {
@@ -134,6 +132,11 @@ controlSubscriber.on("message", (_channel: string, message: string) => {
       };
       instance.state.verticalScaling.push(action);
       console.log(`[simulator] vertical scale ${command.resourceId} -> ${command.skuId} for ${command.deploymentId}`);
+    } else if (command.action === "scale-pool" && command.lbId && (command.delta === 1 || command.delta === -1)) {
+      const result = applyManualScale(instance.state, command.lbId, command.delta as 1 | -1);
+      instance.state = result.state;
+      instance.pendingLogs.push(result.log);
+      console.log(`[simulator] manual scale ${command.delta === 1 ? "up" : "down"} on ${command.lbId} for ${command.deploymentId}`);
     }
   } catch (err: any) {
     console.error(`[simulator] control message failed: ${err.message}`);
@@ -146,7 +149,6 @@ setInterval(async () => {
       const result = tick(instance.state, {});
       instance.state = result.state;
       instance.tickCount += 1;
-
       const queuedLogs = instance.pendingLogs.splice(0);
 
       const poolData = buildPoolSnapshots(result.state);
@@ -164,7 +166,6 @@ setInterval(async () => {
         restarting: result.state.verticalScaling.map(v => v.resourceId)
       };
       await publishSimulationSnapshot(snapshot);
-
       if (instance.tickCount % 5 === 0) {
         await prisma.deployment.update({
           where: { id: deploymentId },

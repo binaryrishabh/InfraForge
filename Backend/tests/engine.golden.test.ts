@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { createInitialState, tick } from "@shared/simulation/engine";
+import { createInitialState, tick, applyManualScale } from "@shared/simulation/engine";
 import { DeploymentChaosNames } from "@shared/enum/DeploymentChaosNames.enum";
 import { SAMPLE_ARCHITECTURE } from "@shared/constants/SAMPLE_ARCHITECTURE.constants";
 import { RESOURCE_TYPES } from "@shared/constants/RESOURCE_TYPES.constants";
@@ -297,5 +297,47 @@ describe("golden scenarios — vertical scaling", () => {
     const health = healthOf(final, "vm-1");
     expect(health === ResourceHealth.HEALTHY || health === ResourceHealth.DEGRADED).toBe(true);
     expect(final.resourceSkus["vm-1"]!.skuId).toBe("m5.large");
+  });
+});
+
+describe("golden scenarios — manual scaling", () => {
+  test("M1: manual scale-up provisions a new replica into the pool", () => {
+    const { final } = simulate(makeProfile({ targetThroughput: 500_000 }), 60);
+    const result = applyManualScale(final, "lb-1", 1);
+    expect(result.log.message.includes("manual scale-up")).toBe(true);
+    expect(result.state.pools["lb-1"]!.pending?.action).toBe("up");
+    expect(result.state.spawnedVms.filter(v => v.status === "provisioning").length).toBe(1);
+    let state = result.state;
+    for (let i = 0; i < 80; i++) state = tick(state, {}).state;
+    expect(activeReplicas(state, "lb-1")).toBe(3);
+    expect(state.spawnedVms.filter(v => v.status === "active").length).toBe(1);
+  });
+
+  test("M2: manual scale-down drains a spawned replica and protects the base", () => {
+    const { final } = simulate(makeProfile({ targetThroughput: 500_000 }), 60);
+    let state = applyManualScale(final, "lb-1", 1).state;
+    for (let i = 0; i < 80; i++) state = tick(state, {}).state;
+    expect(activeReplicas(state, "lb-1")).toBe(3);
+    const drained = applyManualScale(state, "lb-1", -1);
+    expect(drained.log.message.includes("manual scale-down")).toBe(true);
+    state = drained.state;
+    for (let i = 0; i < 20; i++) state = tick(state, {}).state;
+    expect(activeReplicas(state, "lb-1")).toBe(2);
+    expect(state.spawnedVms.filter(v => v.status === "active").length).toBe(0);
+  });
+
+  test("M3: manual scale refuses when capped or protecting base replicas", () => {
+    const { final } = simulate(makeProfile({ targetThroughput: 500_000 }), 60);
+    const noSpawned = applyManualScale(final, "lb-1", -1);
+    expect(noSpawned.log.message.includes("protected")).toBe(true);
+    expect(noSpawned.state.spawnedVms.length).toBe(0);
+    expect(noSpawned.state.pools["lb-1"]!.pending).toBe(null);
+    const cappedResources = SAMPLE_ARCHITECTURE.resources.map(r =>
+      r.id === "lb-1" ? { ...r, autoscaling: { minReplicas: 2, maxReplicas: 2, targetCpu: 75 } } : r
+    );
+    const cappedState = createInitialState("golden-test", cappedResources, SAMPLE_ARCHITECTURE.connectionLines, makeProfile({ targetThroughput: 500_000 }), 42);
+    const refused = applyManualScale(cappedState, "lb-1", 1);
+    expect(refused.log.message.includes("max replicas")).toBe(true);
+    expect(refused.state.spawnedVms.length).toBe(0);
   });
 });
