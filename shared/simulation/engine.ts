@@ -98,6 +98,12 @@ export function createInitialState(
   for (const c of connectionLines) {
     (adjacency[c.sourceId] ??= []).push(c.targetId);
   }
+  // Reverse edges: who feeds into each resource (used for cache->DB stampede)
+  const upstream: Record<string, string[]> = {};
+  for (const c of connectionLines) {
+    (upstream[c.targetId] ??= []).push(c.sourceId);
+  }
+
   const reachable = new Set<string>();
   const queue = [...entryPoints];
   while (queue.length > 0) {
@@ -106,7 +112,6 @@ export function createInitialState(
     reachable.add(id);
     for (const next of adjacency[id] ?? []) queue.push(next);
   }
-
   const deadEnds = resources
     .filter(
       (r) =>
@@ -195,6 +200,9 @@ export function createInitialState(
     pools,
     spawnedVms: [],
     verticalScaling: [],
+    downstream: adjacency,
+    upstream,
+    sheddingLbs: [],
   };
 }
 
@@ -226,7 +234,6 @@ export function tick(state: SimulationState, inputs: TickInputs): TickResult {
     loadFraction * burstNow,
   );
   const totalRps = state.targetRps * effectiveMultiplier;
-
   if (profile.trafficShape === "peak") {
     const peak = profile.peakMultiplier ?? 3;
     if (burstPrev <= 1.01 && burstNow > 1.01) {
@@ -250,9 +257,6 @@ export function tick(state: SimulationState, inputs: TickInputs): TickResult {
   const readFraction = profile.readWriteRatio ?? 0.8;
   const writeFraction = 1 - readFraction;
   const payloadKB = SIMULATION_CONSTANTS.PAYLOAD_KB[profile.payloadSize];
-  const dbLoadFactor =
-    readFraction * (1 - SIMULATION_CONSTANTS.CACHE_HIT_RATIO) +
-    writeFraction * SIMULATION_CONSTANTS.WRITE_COST_FACTOR;
 
   const rng = mulberry32(state.seed * 100003 + seconds);
   const jitter = () => 1 + (rng() - 0.5) * 0.06;
@@ -270,6 +274,24 @@ export function tick(state: SimulationState, inputs: TickInputs): TickResult {
     state.verticalScaling.map((v) => v.resourceId),
   );
 
+  // 4c. CASCADE — read the PREVIOUS tick's health so failure walks the graph one hop per tick
+  const failedSet = new Set<string>();
+  const saturatedSet = new Set<string>();
+  for (const [rid, m] of Object.entries(state.metrics)) {
+    if (m.health === ResourceHealth.FAILED) failedSet.add(rid);
+    else if (m.health === ResourceHealth.SATURATED) saturatedSet.add(rid);
+  }
+  const cascadeStress: Record<string, number> = {};
+  for (const resourceId of Object.keys(state.resourceTypes)) {
+    let stress = 0;
+    const downs = state.downstream[resourceId] ?? [];
+    for (const d of downs) {
+      if (failedSet.has(d)) stress += 0.5;
+      else if (saturatedSet.has(d)) stress += 0.2;
+    }
+    cascadeStress[resourceId] = Math.min(1, stress);
+  }
+
   // 5. Distribute load — exclude crashed AND restarting resources from serving
   const reachableSet = new Set(state.reachable);
   const activeSpawned = state.spawnedVms.filter((v) => v.status === "active");
@@ -280,9 +302,6 @@ export function tick(state: SimulationState, inputs: TickInputs): TickResult {
     ),
     ...activeSpawned.map((v) => v.id),
   ].filter((id) => !downResources.has(id) && !restartingResources.has(id));
-  const cacheIds = state.reachable.filter(
-    (id) => state.resourceTypes[id] === RESOURCE_TYPES.Cache,
-  );
   const rpsPerVm = vmIds.length > 0 ? totalRps / vmIds.length : 0;
 
   const newMetrics: Record<string, ResourceMetrics> = {};
@@ -291,7 +310,6 @@ export function tick(state: SimulationState, inputs: TickInputs): TickResult {
     if (!type) continue;
     const capacity = CAPACITY[type];
     const sku = state.resourceSkus[resourceId];
-
     let cpu = 0,
       memory = 0,
       rps = 0;
@@ -319,7 +337,20 @@ export function tick(state: SimulationState, inputs: TickInputs): TickResult {
           break;
         }
         case RESOURCE_TYPES.Database: {
-          rps = totalRps * dbLoadFactor;
+          // 5b. STAMPEDE — if a feeding cache is down, its hit ratio collapses and full read load floods this DB
+          const ups = state.upstream[resourceId] ?? [];
+          const feedingCaches = ups.filter(
+            (id) => state.resourceTypes[id] === RESOURCE_TYPES.Cache,
+          );
+          const cacheDown = feedingCaches.some((id) => failedSet.has(id));
+          const effectiveHitRatio =
+            feedingCaches.length > 0 && !cacheDown
+              ? SIMULATION_CONSTANTS.CACHE_HIT_RATIO
+              : 0;
+          const dbLoadFactorLocal =
+            readFraction * (1 - effectiveHitRatio) +
+            writeFraction * SIMULATION_CONSTANTS.WRITE_COST_FACTOR;
+          rps = totalRps * dbLoadFactorLocal;
           const dbCapacity = sku
             ? sku.vCpu * sku.baselineFactor * SIMULATION_CONSTANTS.QPS_PER_VCPU
             : capacity.rps;
@@ -358,6 +389,10 @@ export function tick(state: SimulationState, inputs: TickInputs): TickResult {
         const bandUtil = ((rps * payloadKB) / bandCap) * 100;
         if (bandUtil > cpu) cpu = bandUtil;
       }
+
+      // 5c. CASCADE stress — downstream trouble inflates cpu (blocked threads, retries)
+      const stress = cascadeStress[resourceId] ?? 0;
+      if (stress > 0) cpu = cpu * (1 + stress);
     }
 
     // 6. Apply chaos effects
@@ -424,6 +459,43 @@ export function tick(state: SimulationState, inputs: TickInputs): TickResult {
     newMetrics[resourceId] = metric;
   }
 
+  // 6c. CASCADE — Load Balancer sheds 502s when its backend VMs are unhealthy
+  const nextSheddingLbs: string[] = [];
+  for (const resourceId of Object.keys(state.resourceTypes)) {
+    if (state.resourceTypes[resourceId] !== RESOURCE_TYPES.LoadBalancer)
+      continue;
+    const downs = state.downstream[resourceId] ?? [];
+    const backendVms = downs.filter(
+      (id) => state.resourceTypes[id] === RESOURCE_TYPES.VirtualMachine,
+    );
+    const unhealthyBackends = backendVms.filter(
+      (id) => failedSet.has(id) || saturatedSet.has(id),
+    );
+    if (unhealthyBackends.length > 0) {
+      nextSheddingLbs.push(resourceId);
+      if (!state.sheddingLbs.includes(resourceId)) {
+        logs.push({
+          timestamp: now,
+          severity: "error",
+          resourceId,
+          source: "nginx",
+          message: `${resourceId} shedding 502s — ${unhealthyBackends.length} backend(s) unhealthy (${unhealthyBackends.join(", ")})`,
+        });
+      }
+    }
+  }
+  for (const lbId of state.sheddingLbs) {
+    if (!nextSheddingLbs.includes(lbId)) {
+      logs.push({
+        timestamp: now,
+        severity: "info",
+        resourceId: lbId,
+        source: "nginx",
+        message: `${lbId} recovered — backends healthy, 502s stopped`,
+      });
+    }
+  }
+
   // 7. Chaos lifecycle
   const nextActiveChaos: ChaosEffect[] = [];
   for (const effect of state.activeChaos) {
@@ -453,7 +525,6 @@ export function tick(state: SimulationState, inputs: TickInputs): TickResult {
   let nextResourceTypes = state.resourceTypes;
   let nextResourceSkus = state.resourceSkus;
   const nextPools: Record<string, PoolRuntime> = {};
-
   for (const [lbId, pool] of Object.entries(state.pools)) {
     const p: PoolRuntime = {
       ...pool,
@@ -613,21 +684,27 @@ export function tick(state: SimulationState, inputs: TickInputs): TickResult {
     }
   }
 
-  // 9. Threshold-crossing logs
+  // 9. Threshold-crossing logs — now with the cascade culprit named
   for (const [resourceId, metric] of Object.entries(newMetrics)) {
     const before = state.metrics[resourceId]?.health ?? ResourceHealth.HEALTHY;
     const after = metric.health;
     if (before === after) continue;
     const type = state.resourceTypes[resourceId];
     const source = type ? CAPACITY[type].source : "app";
+    const downs = state.downstream[resourceId] ?? [];
+    const culprit = downs.find((d) => failedSet.has(d) || saturatedSet.has(d));
     let severity: "info" | "warn" | "error" = "info";
     let message = `utilization recovered on ${resourceId} — cpu ${metric.cpu}%`;
     if (after === ResourceHealth.DEGRADED) {
       severity = "warn";
-      message = `cpu at ${metric.cpu}% on ${resourceId} — approaching saturation`;
+      message = culprit
+        ? `${resourceId} degrading — downstream ${culprit} is ${failedSet.has(culprit) ? "down" : "saturated"}`
+        : `cpu at ${metric.cpu}% on ${resourceId} — approaching saturation`;
     } else if (after === ResourceHealth.SATURATED) {
       severity = "error";
-      message = `${resourceId} saturated — cpu ${metric.cpu}%, requests queueing`;
+      message = culprit
+        ? `${resourceId} saturated — downstream ${culprit} is ${failedSet.has(culprit) ? "down" : "saturated"}`
+        : `${resourceId} saturated — cpu ${metric.cpu}%, requests queueing`;
     } else if (after === ResourceHealth.FAILED) {
       severity = "error";
       message = `${resourceId} is down`;
@@ -685,6 +762,7 @@ export function tick(state: SimulationState, inputs: TickInputs): TickResult {
       pools: nextPools,
       spawnedVms: nextSpawnedVms,
       verticalScaling: nextVerticalScaling,
+      sheddingLbs: nextSheddingLbs,
     },
     logs,
   };
@@ -733,26 +811,43 @@ export function applyManualScale(
   if (!pool) {
     return {
       state,
-      log: { timestamp: now, severity: "warn", source: "operator", message: `no pool found at ${lbId} — manual scale ignored` },
+      log: {
+        timestamp: now,
+        severity: "warn",
+        source: "operator",
+        message: `no pool found at ${lbId} — manual scale ignored`,
+      },
     };
   }
 
   if (pool.pending) {
     return {
       state,
-      log: { timestamp: now, severity: "warn", source: "operator", message: `pool ${lbId} is already scaling — manual command refused` },
+      log: {
+        timestamp: now,
+        severity: "warn",
+        source: "operator",
+        message: `pool ${lbId} is already scaling — manual command refused`,
+      },
     };
   }
 
   const spawnedInPool = state.spawnedVms.filter((v) => v.poolId === lbId);
   const totalReplicas = pool.baseVmIds.length + spawnedInPool.length;
-  const activeSpawnedCount = spawnedInPool.filter((v) => v.status === "active").length;
+  const activeSpawnedCount = spawnedInPool.filter(
+    (v) => v.status === "active",
+  ).length;
 
   if (delta === 1) {
     if (totalReplicas >= pool.maxReplicas) {
       return {
         state,
-        log: { timestamp: now, severity: "warn", source: "operator", message: `pool ${lbId} at max replicas (${pool.maxReplicas}) — manual scale-up refused` },
+        log: {
+          timestamp: now,
+          severity: "warn",
+          source: "operator",
+          message: `pool ${lbId} at max replicas (${pool.maxReplicas}) — manual scale-up refused`,
+        },
       };
     }
     const spawnCounter = pool.spawnCounter + 1;
@@ -761,7 +856,9 @@ export function applyManualScale(
       id: newId,
       poolId: lbId,
       x: pool.spawnOrigin.x,
-      y: pool.spawnOrigin.y + SIMULATION_CONSTANTS.AUTOSCALING.SPAWN_Y_GAP * spawnCounter,
+      y:
+        pool.spawnOrigin.y +
+        SIMULATION_CONSTANTS.AUTOSCALING.SPAWN_Y_GAP * spawnCounter,
       status: "provisioning",
       spawnedAtTick: state.simulatedSeconds,
     };
@@ -774,18 +871,31 @@ export function applyManualScale(
           [lbId]: {
             ...pool,
             spawnCounter,
-            pending: { action: "up", ticksRemaining: SIMULATION_CONSTANTS.AUTOSCALING.PROVISION_TICKS },
+            pending: {
+              action: "up",
+              ticksRemaining: SIMULATION_CONSTANTS.AUTOSCALING.PROVISION_TICKS,
+            },
           },
         },
       },
-      log: { timestamp: now, severity: "info", source: "operator", message: `manual scale-up on ${lbId} — provisioning replica ${totalReplicas + 1} (${SIMULATION_CONSTANTS.AUTOSCALING.PROVISION_TICKS}s)` },
+      log: {
+        timestamp: now,
+        severity: "info",
+        source: "operator",
+        message: `manual scale-up on ${lbId} — provisioning replica ${totalReplicas + 1} (${SIMULATION_CONSTANTS.AUTOSCALING.PROVISION_TICKS}s)`,
+      },
     };
   }
 
   if (activeSpawnedCount === 0 || totalReplicas <= pool.minReplicas) {
     return {
       state,
-      log: { timestamp: now, severity: "warn", source: "operator", message: `pool ${lbId} has no scalable replicas — base replicas are protected` },
+      log: {
+        timestamp: now,
+        severity: "warn",
+        source: "operator",
+        message: `pool ${lbId} has no scalable replicas — base replicas are protected`,
+      },
     };
   }
 
@@ -796,10 +906,18 @@ export function applyManualScale(
         ...state.pools,
         [lbId]: {
           ...pool,
-          pending: { action: "down", ticksRemaining: SIMULATION_CONSTANTS.AUTOSCALING.DRAIN_TICKS },
+          pending: {
+            action: "down",
+            ticksRemaining: SIMULATION_CONSTANTS.AUTOSCALING.DRAIN_TICKS,
+          },
         },
       },
     },
-    log: { timestamp: now, severity: "info", source: "operator", message: `manual scale-down on ${lbId} — draining one replica` },
+    log: {
+      timestamp: now,
+      severity: "info",
+      source: "operator",
+      message: `manual scale-down on ${lbId} — draining one replica`,
+    },
   };
 }

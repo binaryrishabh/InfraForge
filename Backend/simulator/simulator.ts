@@ -31,9 +31,9 @@ const hashSeed = (seedText: string): number => {
   return Math.abs(hash);
 };
 
-export const startSimulation = async (deploymentId: string) => {
+export const startSimulation = async (deploymentId: string, existingDeployment?: { id: string; seed: string | null; workloadProfile: unknown; infrastructureId: string } | null) => {
   if (registry.has(deploymentId)) return;
-  const deployment = await prisma.deployment.findUnique({ where: { id: deploymentId } });
+  const deployment = existingDeployment ?? await prisma.deployment.findUnique({ where: { id: deploymentId } });
   if (!deployment) {
     console.error(`[simulator] deployment ${deploymentId} not found`);
     return;
@@ -61,7 +61,7 @@ export const stopSimulation = (deploymentId: string) => {
 export const resurrectLiveDeployments = async () => {
   const liveDeployments = await prisma.deployment.findMany({ where: { status: DeploymentStatus.LIVE } });
   for (const deployment of liveDeployments) {
-    await startSimulation(deployment.id);
+    await startSimulation(deployment.id, deployment);
   }
   if (liveDeployments.length > 0) {
     console.log(`[simulator] resurrected ${liveDeployments.length} live deployment(s)`);
@@ -166,10 +166,27 @@ setInterval(async () => {
         restarting: result.state.verticalScaling.map(v => v.resourceId)
       };
       await publishSimulationSnapshot(snapshot);
-      if (instance.tickCount % 5 === 0) {
+
+      // Neon relief: checkpoint every 60 ticks (was 5) and persist only non-derivable
+      // runtime state. resourceTypes / resourceSkus / entryPoints / reachable /
+      // deadEnds / idle / workloadProfile are all rebuildable from the infrastructure
+      // layout, so we stop paying Neon to store them.
+      if (instance.tickCount % 60 === 0) {
+        const s = instance.state;
+        const checkpoint = {
+          simulatedSeconds: s.simulatedSeconds,
+          loadFraction: s.loadFraction,
+          targetLoadFraction: s.targetLoadFraction,
+          overallHealth: s.overallHealth,
+          metrics: s.metrics,
+          activeChaos: s.activeChaos,
+          pools: s.pools,
+          spawnedVms: s.spawnedVms,
+          verticalScaling: s.verticalScaling
+        };
         await prisma.deployment.update({
           where: { id: deploymentId },
-          data: { simulationState: instance.state as any }
+          data: { simulationState: checkpoint as any }
         });
       }
     } catch (err: any) {

@@ -341,3 +341,28 @@ describe("golden scenarios — manual scaling", () => {
     expect(refused.state.spawnedVms.length).toBe(0);
   });
 });
+
+describe("golden scenarios — cascading failures", () => {
+  test("X1: cache crash stampedes the database", () => {
+    const chaos: ChaosEffect = { chaosType: DeploymentChaosNames.Crash, resourceId: "cache-1", durationTicks: 30, remainingTicks: 30 };
+    const { states } = simulateWithChaos(makeProfile({ targetThroughput: 1_000_000 }), 70, chaos, 60);
+    const state65 = states[64]!;
+    expect(healthOf(state65, "db-1")).toBe(ResourceHealth.SATURATED);
+    expect(cpuOf(state65, "db-1")).toBeGreaterThanOrEqual(95);
+  });
+
+  test("X2: cache crash stresses the dependent VM into saturation", () => {
+    const chaos: ChaosEffect = { chaosType: DeploymentChaosNames.Crash, resourceId: "cache-1", durationTicks: 30, remainingTicks: 30 };
+    const { states } = simulateWithChaos(makeProfile({ targetThroughput: 700_000 }), 70, chaos, 60);
+    const before = states[58]!;
+    expect(healthOf(before, "vm-1")).not.toBe(ResourceHealth.SATURATED);
+    const after = states[64]!;
+    expect(healthOf(after, "vm-1")).toBe(ResourceHealth.SATURATED);
+  });
+
+  test("X3: load balancer sheds 502s when a backend VM dies", () => {
+    const chaos: ChaosEffect = { chaosType: DeploymentChaosNames.Crash, resourceId: "vm-1", durationTicks: 30, remainingTicks: 30 };
+    const { allLogs } = simulateWithChaos(makeProfile({ targetThroughput: 500_000 }), 70, chaos, 60);
+    expect(allLogs.some(l => l.message.includes("shedding 502s"))).toBe(true);
+  });
+});

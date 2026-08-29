@@ -27,4 +27,7 @@ export interface SimulationState {
   pools: Record<string, PoolRuntime>;
   spawnedVms: SpawnedVmInfo[];
   verticalScaling: VerticalScaleAction[];
+  downstream: Record<string, string[]>;
+  upstream: Record<string, string[]>;
+  sheddingLbs: string[];
 }
