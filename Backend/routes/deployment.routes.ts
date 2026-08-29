@@ -3,7 +3,7 @@ import crypto from "crypto";
 import { prisma } from "../lib/prisma";
 import { redis } from "../infra/redis";
 import { ValidationError, NotFoundError } from "../utils/errors";
-import { ChaosInjectionBodySchema, DeploymentIdSchema, LoadControlBodySchema, DeploymentCreateBodySchema } from "../zod_schemas/deployment.schema";
+import { ChaosInjectionBodySchema, DeploymentIdSchema, LoadControlBodySchema, DeploymentCreateBodySchema, VerticalScaleBodySchema } from "../zod_schemas/deployment.schema";
 import { DeploymentStatus } from "@shared/enum/DeploymentStatus.enum";
 import { Publish } from "@shared/enum/Publish.enum";
 
@@ -104,7 +104,7 @@ deploymentRouter.post("/:deploymentId/chaos", async (req, res) => {
     const latestDeployment = await tx.deployment.findUnique({
       where: { id: deploymentId }
     });
-    
+
     const currentChaosEvents = (latestDeployment?.chaosEvents as any[]) || [];
     currentChaosEvents.push({
       timestamp,
@@ -122,7 +122,7 @@ deploymentRouter.post("/:deploymentId/chaos", async (req, res) => {
 
     await tx.deployment.update({
       where: { id: deploymentId },
-      data: { 
+      data: {
         chaosEvents: currentChaosEvents,
         timeline: currentTimeline
       }
@@ -184,6 +184,40 @@ deploymentRouter.post("/:deploymentId/load", async (req, res) => {
     success: true,
     message: `Load target set to ${Math.round(targetLoadFraction * 100)}% of declared capacity`,
     targetLoadFraction
+  });
+});
+
+// Vertical scaling — swaps a resource's SKU with realistic restart downtime
+deploymentRouter.post("/:deploymentId/scale-vertical", async (req, res) => {
+  const DeploymentId = DeploymentIdSchema.safeParse(req.params);
+  if (!DeploymentId.success) {
+    const errorMessages = DeploymentId.error.issues.map(err => err.message).join(", ");
+    throw new ValidationError(errorMessages);
+  }
+  const VerticalScaleData = VerticalScaleBodySchema.safeParse(req.body);
+  if (!VerticalScaleData.success) {
+    const errorMessages = VerticalScaleData.error.issues.map(err => err.message).join(", ");
+    throw new ValidationError(errorMessages);
+  }
+  const { deploymentId } = DeploymentId.data;
+  const { resourceId, skuId } = VerticalScaleData.data;
+  const deployment = await prisma.deployment.findUnique({ where: { id: deploymentId } });
+  if (!deployment) {
+    throw new NotFoundError("Deployment not found with specified id " + deploymentId);
+  }
+  if (deployment.status !== DeploymentStatus.LIVE) {
+    throw new ValidationError("Vertical scaling only applies to a live deployment");
+  }
+  await redis.publish("simulator:control", JSON.stringify({
+    deploymentId,
+    action: "scale-vertical",
+    resourceId,
+    skuId
+  }));
+  res.status(200).json({
+    success: true,
+    message: "Vertical scaling initiated",
+    deploymentId
   });
 });
 

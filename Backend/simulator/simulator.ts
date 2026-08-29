@@ -8,6 +8,7 @@ import { DeploymentStatus } from "@shared/enum/DeploymentStatus.enum";
 import type { SimulationState } from "@shared/interface/SimulationState.interface";
 import type { ChaosType } from "@shared/types/ChaosType.types";
 import type { ChaosEffect } from "@shared/interface/ChaosEffect.interface";
+import type { VerticalScaleAction } from "@shared/interface/VerticalScaleAction.interface";
 import type { SimulationSnapshot } from "@shared/interface/SimulationSnapshot.interface";
 import type { SimulationLog } from "@shared/interface/SimulationLog.interface";
 import type { Resource } from "@shared/interface/Resource.interface";
@@ -68,7 +69,7 @@ export const resurrectLiveDeployments = async () => {
   }
 };
 
-/* ------- Control channel: load adjustments, stop commands, and chaos injection from the API server ------- */
+/* ------- Control channel: load adjustments, stop commands, chaos injection, and vertical scaling from the API server ------- */
 const controlSubscriber = redis.duplicate();
 controlSubscriber.subscribe("simulator:control");
 controlSubscriber.on("message", (_channel: string, message: string) => {
@@ -79,6 +80,7 @@ controlSubscriber.on("message", (_channel: string, message: string) => {
       targetLoadFraction?: number;
       chaosType?: ChaosType;
       resourceId?: string;
+      skuId?: string;
     };
     const instance = registry.get(command.deploymentId);
     if (!instance) return;
@@ -123,6 +125,15 @@ controlSubscriber.on("message", (_channel: string, message: string) => {
 
       instance.state.activeChaos.push(effect);
       console.log(`[simulator] chaos ${command.chaosType} injected on ${command.resourceId} for ${command.deploymentId}`);
+    } else if (command.action === "scale-vertical" && command.resourceId && command.skuId) {
+      const action: VerticalScaleAction = {
+        resourceId: command.resourceId,
+        toSkuId: command.skuId,
+        downtimeTicks: SIMULATION_CONSTANTS.VERTICAL_SCALING.RESTART_TICKS,
+        remainingTicks: SIMULATION_CONSTANTS.VERTICAL_SCALING.RESTART_TICKS
+      };
+      instance.state.verticalScaling.push(action);
+      console.log(`[simulator] vertical scale ${command.resourceId} -> ${command.skuId} for ${command.deploymentId}`);
     }
   } catch (err: any) {
     console.error(`[simulator] control message failed: ${err.message}`);
@@ -149,7 +160,8 @@ setInterval(async () => {
         logs: [...queuedLogs, ...result.logs],
         health: result.state.overallHealth,
         pools: poolData.pools,
-        spawnedVms: poolData.spawnedVms
+        spawnedVms: poolData.spawnedVms,
+        restarting: result.state.verticalScaling.map(v => v.resourceId)
       };
       await publishSimulationSnapshot(snapshot);
 

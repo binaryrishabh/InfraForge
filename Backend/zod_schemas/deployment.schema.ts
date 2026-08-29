@@ -28,8 +28,14 @@ export const DeploymentCreateBodySchema = z.object({
   workloadProfile: WorkloadProfileSchema.optional()
 });
 
+export const VerticalScaleBodySchema = z.object({
+  resourceId: z.string("Must be a string"),
+  skuId: z.string("Must be a string")
+});
+
 export type ChaosInjectionBodySchemaType = z.infer<typeof ChaosInjectionBodySchema>;
 export type DeploymentIdSchemaType = z.infer<typeof DeploymentIdSchema>;
 export type LoadControlBodySchemaType = z.infer<typeof LoadControlBodySchema>;
 export type WorkloadProfileSchemaType = z.infer<typeof WorkloadProfileSchema>;
 export type DeploymentCreateBodySchemaType = z.infer<typeof DeploymentCreateBodySchema>;
+export type VerticalScaleBodySchemaType = z.infer<typeof VerticalScaleBodySchema>;

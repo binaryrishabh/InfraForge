@@ -9,6 +9,7 @@ import type { ChaosEffect } from "@shared/interface/ChaosEffect.interface";
 import type { TickInputs } from "@shared/interface/TickInputs.interface";
 import type { WorkloadProfile } from "@shared/interface/WorkloadProfile.interface";
 import type { SimulationLog } from "@shared/interface/SimulationLog.interface";
+import type { VerticalScaleAction } from "@shared/interface/VerticalScaleAction.interface";
 
 const makeProfile = (overrides: Partial<WorkloadProfile> = {}): WorkloadProfile => ({
   targetThroughput: 1000000,
@@ -67,6 +68,29 @@ function simulateWithInputs(
   const states: SimulationState[] = [];
   for (let i = 0; i < totalTicks; i++) {
     const result = tick(state, inputAtTick[i] ?? {});
+    state = result.state;
+    allLogs.push(...result.logs);
+    states.push(state);
+  }
+  return { states, allLogs, final: state };
+}
+
+function simulateWithVerticalScale(
+  profile: WorkloadProfile,
+  totalTicks: number,
+  action: VerticalScaleAction,
+  injectAtTick: number,
+  seed = 42,
+  resources = SAMPLE_ARCHITECTURE.resources
+) {
+  let state = createInitialState("golden-test", resources, SAMPLE_ARCHITECTURE.connectionLines, profile, seed);
+  const allLogs: SimulationLog[] = [];
+  const states: SimulationState[] = [];
+  for (let i = 0; i < totalTicks; i++) {
+    if (i === injectAtTick) {
+      state.verticalScaling.push(action);
+    }
+    const result = tick(state, {});
     state = result.state;
     allLogs.push(...result.logs);
     states.push(state);
@@ -229,5 +253,49 @@ describe("golden scenarios — autoscaling", () => {
     const { final } = simulateWithInputs(makeProfile({ targetThroughput: 1_000_000 }), 300, { 160: { targetLoadFraction: 0.3 } });
     expect(activeReplicas(final, "lb-1")).toBe(2);
     expect(final.spawnedVms.filter(v => v.status === "active").length).toBe(0);
+  });
+});
+
+describe("golden scenarios — vertical scaling", () => {
+  test("V1: vertical swap takes the resource offline then brings it back", () => {
+    const action: VerticalScaleAction = {
+      resourceId: "vm-1",
+      toSkuId: "m5.large",
+      downtimeTicks: 20,
+      remainingTicks: 20
+    };
+    const { states } = simulateWithVerticalScale(
+      makeProfile({ targetThroughput: 1_000_000 }),
+      100,
+      action,
+      60,
+      42,
+      withSku("t3.micro", [RESOURCE_TYPES.VirtualMachine])
+    );
+    const state70 = states[69]!;
+    expect(healthOf(state70, "vm-1")).toBe(ResourceHealth.FAILED);
+    expect(cpuOf(state70, "vm-1")).toBe(0);
+    const state95 = states[94]!;
+    expect(healthOf(state95, "vm-1")).not.toBe(ResourceHealth.FAILED);
+  });
+
+  test("V2: scaled-up VM survives load that crushed the small SKU", () => {
+    const action: VerticalScaleAction = {
+      resourceId: "vm-1",
+      toSkuId: "m5.large",
+      downtimeTicks: 20,
+      remainingTicks: 20
+    };
+    const { final } = simulateWithVerticalScale(
+      makeProfile({ targetThroughput: 1_200_000 }),
+      150,
+      action,
+      60,
+      42,
+      withSku("t3.micro", [RESOURCE_TYPES.VirtualMachine])
+    );
+    const health = healthOf(final, "vm-1");
+    expect(health === ResourceHealth.HEALTHY || health === ResourceHealth.DEGRADED).toBe(true);
+    expect(final.resourceSkus["vm-1"]!.skuId).toBe("m5.large");
   });
 });
