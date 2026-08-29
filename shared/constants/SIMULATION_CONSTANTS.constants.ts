@@ -33,15 +33,18 @@ export const SIMULATION_CONSTANTS = {
     DISK_FAILURE_DURATION: 35
   },
   AUTOSCALING: {
-    HOT_TICKS: 5,          // sustained ticks above target before scale-up triggers
-    COLD_TICKS: 30,        // sustained ticks below SCALE_DOWN_AT before scale-down
-    PROVISION_TICKS: 60,   // simulated seconds to boot a new instance (the drama window)
-    DRAIN_TICKS: 15,       // simulated seconds to drain an instance before removal
-    SCALE_DOWN_AT: 30,     // avg pool cpu below this counts as cold
+    HOT_TICKS: 5,
+    COLD_TICKS: 30,
+    PROVISION_TICKS: 60,
+    DRAIN_TICKS: 15,
+    SCALE_DOWN_AT: 30,
     DEFAULT_TARGET_CPU: 75,
     DEFAULT_MAX_MULTIPLIER: 3,
     DEFAULT_MAX_CAP: 8,
     SPAWN_Y_GAP: 96
+  },
+  VERTICAL_SCALING: {
+    RESTART_TICKS: 20   // simulated seconds a resource is down during a SKU swap
   }
 } as const;
 

@@ -23,6 +23,7 @@ import type { SimulationState } from "../interface/SimulationState.interface";
 import type { ChaosEffect } from "../interface/ChaosEffect.interface";
 import type { PoolRuntime } from "../interface/PoolRuntime.interface";
 import type { SpawnedVmInfo } from "../interface/SpawnedVmInfo.interface";
+import type { VerticalScaleAction } from "../interface/VerticalScaleAction.interface";
 import type { PoolSnapshot } from "../interface/PoolSnapshot.interface";
 import type { Sku } from "../catalog/catalog.types";
 import type { Resource } from "../interface/Resource.interface";
@@ -30,9 +31,6 @@ import type { ConnectionLine } from "../interface/ConnectionLine.interface";
 import type { WorkloadProfile } from "../interface/WorkloadProfile.interface";
 import type { ResourceMetrics } from "../interface/ResourceMetrics.interface";
 import type { SimulationLog } from "../interface/SimulationLog.interface";
-
-
-/* ---------------- Deterministic jitter (seeded, replay-safe) ---------------- */
 
 function mulberry32(seed: number) {
   return function () {
@@ -46,8 +44,6 @@ function mulberry32(seed: number) {
 
 const round1 = (n: number) => Math.round(n * 10) / 10;
 
-/* ---------------- Burst windows for peak traffic shapes ---------------- */
-
 function burstFactor(seconds: number, profile: WorkloadProfile): number {
   if (profile.trafficShape !== "peak") return 1;
   const multiplier = profile.peakMultiplier ?? 3;
@@ -60,8 +56,6 @@ function burstFactor(seconds: number, profile: WorkloadProfile): number {
     return 1 + (multiplier - 1) * ((duration - cyclePos) / ramp);
   return 1;
 }
-
-/* ---------------- Chaos helpers ---------------- */
 
 const chaosApplyMessage = (effect: ChaosEffect): string => {
   switch (effect.chaosType) {
@@ -77,8 +71,6 @@ const chaosApplyMessage = (effect: ChaosEffect): string => {
       return `disk failure injected on ${effect.resourceId} — I/O thrashing`;
   }
 };
-
-/* ---------------- Initial state: traffic path + implicit pools ---------------- */
 
 export function createInitialState(
   deploymentId: string,
@@ -123,7 +115,6 @@ export function createInitialState(
         (adjacency[r.id] ?? []).length === 0,
     )
     .map((r) => r.id);
-
   const idle = resources.filter((r) => !reachable.has(r.id)).map((r) => r.id);
 
   const targetRps =
@@ -143,7 +134,6 @@ export function createInitialState(
     }
   }
 
-  // Implicit pools: every Load Balancer with VM targets anchors one scaling group
   const pools: Record<string, PoolRuntime> = {};
   for (const lb of resources) {
     if (lb.type !== RESOURCE_TYPES.LoadBalancer) continue;
@@ -204,10 +194,9 @@ export function createInitialState(
     activeChaos: [],
     pools,
     spawnedVms: [],
+    verticalScaling: [],
   };
 }
-
-/* ---------------- The tick ---------------- */
 
 export function tick(state: SimulationState, inputs: TickInputs): TickResult {
   const logs: SimulationLog[] = [];
@@ -215,7 +204,7 @@ export function tick(state: SimulationState, inputs: TickInputs): TickResult {
   const now = new Date().toISOString();
   const profile = state.workloadProfile;
 
-  // 1. Slider-driven load target (ramp up slow, shed fast)
+  // 1. Slider-driven load target
   let targetLoadFraction =
     inputs.targetLoadFraction ?? state.targetLoadFraction;
   targetLoadFraction = Math.min(
@@ -224,11 +213,10 @@ export function tick(state: SimulationState, inputs: TickInputs): TickResult {
   );
   const rampStep = 1 / SIMULATION_CONSTANTS.RAMP_SECONDS;
   let loadFraction = state.loadFraction;
-  if (loadFraction < targetLoadFraction) {
+  if (loadFraction < targetLoadFraction)
     loadFraction = Math.min(targetLoadFraction, loadFraction + rampStep);
-  } else if (loadFraction > targetLoadFraction) {
+  else if (loadFraction > targetLoadFraction)
     loadFraction = Math.max(targetLoadFraction, loadFraction - rampStep * 2);
-  }
 
   // 2. Burst windows
   const burstNow = burstFactor(seconds, profile);
@@ -269,18 +257,20 @@ export function tick(state: SimulationState, inputs: TickInputs): TickResult {
   const rng = mulberry32(state.seed * 100003 + seconds);
   const jitter = () => 1 + (rng() - 0.5) * 0.06;
 
-  // 4. Index active chaos; crashed resources are removed from serving
+  // 4. Index active chaos and vertical scaling
   const chaosByResource: Record<string, ChaosEffect[]> = {};
-  for (const effect of state.activeChaos) {
+  for (const effect of state.activeChaos)
     (chaosByResource[effect.resourceId] ??= []).push(effect);
-  }
   const downResources = new Set(
     state.activeChaos
       .filter((e) => e.chaosType === "crash")
       .map((e) => e.resourceId),
   );
+  const restartingResources = new Set(
+    state.verticalScaling.map((v) => v.resourceId),
+  );
 
-  // 5. Distribute load — serving VMs = reachable base VMs + active spawned VMs
+  // 5. Distribute load — exclude crashed AND restarting resources from serving
   const reachableSet = new Set(state.reachable);
   const activeSpawned = state.spawnedVms.filter((v) => v.status === "active");
   const activeSpawnedIds = new Set(activeSpawned.map((v) => v.id));
@@ -289,7 +279,7 @@ export function tick(state: SimulationState, inputs: TickInputs): TickResult {
       (id) => state.resourceTypes[id] === RESOURCE_TYPES.VirtualMachine,
     ),
     ...activeSpawned.map((v) => v.id),
-  ].filter((id) => !downResources.has(id));
+  ].filter((id) => !downResources.has(id) && !restartingResources.has(id));
   const cacheIds = state.reachable.filter(
     (id) => state.resourceTypes[id] === RESOURCE_TYPES.Cache,
   );
@@ -302,13 +292,14 @@ export function tick(state: SimulationState, inputs: TickInputs): TickResult {
     const capacity = CAPACITY[type];
     const sku = state.resourceSkus[resourceId];
 
-    let cpu = 0;
-    let memory = 0;
-    let rps = 0;
+    let cpu = 0,
+      memory = 0,
+      rps = 0;
     let connections: number | undefined;
 
     const isServing =
-      reachableSet.has(resourceId) || activeSpawnedIds.has(resourceId);
+      (reachableSet.has(resourceId) || activeSpawnedIds.has(resourceId)) &&
+      !restartingResources.has(resourceId);
     if (!isServing) {
       cpu = type === RESOURCE_TYPES.MonitoringAgent ? 12 : 2;
       memory = type === RESOURCE_TYPES.MonitoringAgent ? 18 : 8;
@@ -358,20 +349,18 @@ export function tick(state: SimulationState, inputs: TickInputs): TickResult {
         }
       }
 
-      // Bandwidth pressure
       let bandCap = (
         SIMULATION_CONSTANTS.BANDWIDTH_CAPACITY_KBPS as Record<string, number>
       )[type];
-      if (sku?.networkGbps) {
+      if (sku?.networkGbps)
         bandCap = sku.networkGbps * SIMULATION_CONSTANTS.KBPS_PER_GBPS;
-      }
       if (bandCap && rps > 0) {
         const bandUtil = ((rps * payloadKB) / bandCap) * 100;
         if (bandUtil > cpu) cpu = bandUtil;
       }
     }
 
-    // 6. Apply active chaos effects to this resource
+    // 6. Apply chaos effects
     const effects = chaosByResource[resourceId];
     let crashed = false;
     if (effects) {
@@ -404,19 +393,26 @@ export function tick(state: SimulationState, inputs: TickInputs): TickResult {
       connections = undefined;
     }
 
+    // 6b. Restarting resources are offline for the SKU swap window
+    const isRestarting = restartingResources.has(resourceId);
+    if (isRestarting) {
+      cpu = 0;
+      memory = 0;
+      rps = 0;
+      connections = undefined;
+    }
+
     cpu = Math.min(100, Math.max(0, cpu * jitter()));
     memory = Math.min(100, Math.max(0, memory * jitter()));
 
     let health: ResourceHealthType;
-    if (crashed) {
-      health = ResourceHealth.FAILED;
-    } else if (cpu >= SIMULATION_CONSTANTS.SATURATED_AT || memory >= 97) {
+    if (crashed) health = ResourceHealth.FAILED;
+    else if (isRestarting) health = ResourceHealth.FAILED;
+    else if (cpu >= SIMULATION_CONSTANTS.SATURATED_AT || memory >= 97)
       health = ResourceHealth.SATURATED;
-    } else if (cpu >= SIMULATION_CONSTANTS.DEGRADED_AT) {
+    else if (cpu >= SIMULATION_CONSTANTS.DEGRADED_AT)
       health = ResourceHealth.DEGRADED;
-    } else {
-      health = ResourceHealth.HEALTHY;
-    }
+    else health = ResourceHealth.HEALTHY;
 
     const metric: ResourceMetrics = {
       cpu: round1(cpu),
@@ -428,11 +424,11 @@ export function tick(state: SimulationState, inputs: TickInputs): TickResult {
     newMetrics[resourceId] = metric;
   }
 
-  // 7. Chaos lifecycle: emit logs, count down, retire expired effects
+  // 7. Chaos lifecycle
   const nextActiveChaos: ChaosEffect[] = [];
   for (const effect of state.activeChaos) {
     const isFirstTick = effect.remainingTicks === effect.durationTicks;
-    if (isFirstTick) {
+    if (isFirstTick)
       logs.push({
         timestamp: now,
         severity: "error",
@@ -440,9 +436,8 @@ export function tick(state: SimulationState, inputs: TickInputs): TickResult {
         source: "chaos",
         message: chaosApplyMessage(effect),
       });
-    }
     const remaining = effect.remainingTicks - 1;
-    if (remaining <= 0) {
+    if (remaining <= 0)
       logs.push({
         timestamp: now,
         severity: "info",
@@ -450,12 +445,10 @@ export function tick(state: SimulationState, inputs: TickInputs): TickResult {
         source: "chaos",
         message: `${effect.resourceId} recovered from ${effect.chaosType}`,
       });
-    } else {
-      nextActiveChaos.push({ ...effect, remainingTicks: remaining });
-    }
+    else nextActiveChaos.push({ ...effect, remainingTicks: remaining });
   }
 
-  // 8. Autoscaler — implicit pools react to sustained heat or cold
+  // 8. Autoscaler
   let nextSpawnedVms: SpawnedVmInfo[] = state.spawnedVms.map((v) => ({ ...v }));
   let nextResourceTypes = state.resourceTypes;
   let nextResourceSkus = state.resourceSkus;
@@ -471,7 +464,7 @@ export function tick(state: SimulationState, inputs: TickInputs): TickResult {
       ...nextSpawnedVms
         .filter((v) => v.poolId === lbId && v.status === "active")
         .map((v) => v.id),
-    ].filter((id) => !downResources.has(id));
+    ].filter((id) => !downResources.has(id) && !restartingResources.has(id));
     const cpus = alivePoolVmIds.map((id) => newMetrics[id]?.cpu ?? 0);
     const avgCpu =
       cpus.length > 0 ? cpus.reduce((a, b) => a + b, 0) / cpus.length : 0;
@@ -587,8 +580,37 @@ export function tick(state: SimulationState, inputs: TickInputs): TickResult {
       p.hotTicks = 0;
       p.coldTicks = 0;
     }
-
     nextPools[lbId] = p;
+  }
+
+  // 8b. Vertical scaling lifecycle — downtime countdown, then live SKU swap
+  const nextVerticalScaling: VerticalScaleAction[] = [];
+  for (const action of state.verticalScaling) {
+    const isFirstTick = action.remainingTicks === action.downtimeTicks;
+    if (isFirstTick) {
+      logs.push({
+        timestamp: now,
+        severity: "warn",
+        resourceId: action.resourceId,
+        source: "autoscaler",
+        message: `${action.resourceId} scaling vertically to ${action.toSkuId} — restarting (${action.downtimeTicks}s downtime)`,
+      });
+    }
+    const remaining = action.remainingTicks - 1;
+    if (remaining <= 0) {
+      nextResourceSkus = { ...nextResourceSkus };
+      const newSku = findSku(action.toSkuId);
+      if (newSku) nextResourceSkus[action.resourceId] = newSku;
+      logs.push({
+        timestamp: now,
+        severity: "info",
+        resourceId: action.resourceId,
+        source: "autoscaler",
+        message: `${action.resourceId} back online at ${action.toSkuId}`,
+      });
+    } else {
+      nextVerticalScaling.push({ ...action, remainingTicks: remaining });
+    }
   }
 
   // 9. Threshold-crossing logs
@@ -662,12 +684,11 @@ export function tick(state: SimulationState, inputs: TickInputs): TickResult {
       activeChaos: nextActiveChaos,
       pools: nextPools,
       spawnedVms: nextSpawnedVms,
+      verticalScaling: nextVerticalScaling,
     },
     logs,
   };
 }
-
-/* ---------------- Wire-format helper for the orchestrator ---------------- */
 
 export function buildPoolSnapshots(state: SimulationState): {
   pools: Record<string, PoolSnapshot>;
