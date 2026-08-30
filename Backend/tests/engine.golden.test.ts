@@ -387,3 +387,35 @@ describe("golden scenarios — retry storms and failure voices", () => {
     expect(allLogs.some(l => l.message.includes("oom-killer"))).toBe(true);
   });
 });
+
+describe("golden scenarios — full request routing", () => {
+  test("F1: dead-end VM drops data requests under load", () => {
+    const { allLogs } = simulate(makeProfile({ targetThroughput: 1_000_000 }), 12);
+    expect(allLogs.some(l => l.resourceId === "vm-2" && l.message.includes("dropping data requests"))).toBe(true);
+  });
+
+  test("F2: traffic splits across multiple load balancers by path", () => {
+    const resources = [
+      { id: "dns-1", type: RESOURCE_TYPES.DNS, x: 0, y: 0 },
+      { id: "lb-a", type: RESOURCE_TYPES.LoadBalancer, x: 0, y: 0 },
+      { id: "lb-b", type: RESOURCE_TYPES.LoadBalancer, x: 0, y: 0 },
+      { id: "vm-a1", type: RESOURCE_TYPES.VirtualMachine, x: 0, y: 0 },
+      { id: "vm-a2", type: RESOURCE_TYPES.VirtualMachine, x: 0, y: 0 },
+      { id: "vm-b1", type: RESOURCE_TYPES.VirtualMachine, x: 0, y: 0 },
+    ];
+    const connectionLines = [
+      { id: "e1", sourceId: "dns-1", targetId: "lb-a", sourceType: "DNS", targetType: "Load Balancer", port: 53 },
+      { id: "e2", sourceId: "dns-1", targetId: "lb-b", sourceType: "DNS", targetType: "Load Balancer", port: 53 },
+      { id: "e3", sourceId: "lb-a", targetId: "vm-a1", sourceType: "Load Balancer", targetType: "Virtual Machine", port: 80 },
+      { id: "e4", sourceId: "lb-a", targetId: "vm-a2", sourceType: "Load Balancer", targetType: "Virtual Machine", port: 80 },
+      { id: "e5", sourceId: "lb-b", targetId: "vm-b1", sourceType: "Load Balancer", targetType: "Virtual Machine", port: 80 },
+    ];
+    let state = createInitialState("golden-f2", resources, connectionLines, makeProfile({ targetThroughput: 1_000_000 }), 42);
+    for (let i = 0; i < 60; i++) state = tick(state, {}).state;
+    const cpuA1 = state.metrics["vm-a1"]?.cpu ?? -1;
+    const cpuB1 = state.metrics["vm-b1"]?.cpu ?? -1;
+    expect(cpuB1).toBeGreaterThan(cpuA1);
+    expect(cpuB1).toBeGreaterThan(80);
+    expect(cpuA1).toBeLessThan(60);
+  });
+});
