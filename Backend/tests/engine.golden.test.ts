@@ -366,3 +366,24 @@ describe("golden scenarios — cascading failures", () => {
     expect(allLogs.some(l => l.message.includes("shedding 502s"))).toBe(true);
   });
 });
+
+describe("golden scenarios — retry storms and failure voices", () => {
+  test("R1: retry amplification pushes a stampeded DB harder than the stampede alone", () => {
+    const chaos: ChaosEffect = { chaosType: DeploymentChaosNames.Crash, resourceId: "cache-1", durationTicks: 30, remainingTicks: 30 };
+    const { states } = simulateWithChaos(makeProfile({ targetThroughput: 500_000 }), 70, chaos, 60);
+    const state65 = states[64]!;
+    expect(cpuOf(state65, "db-1")).toBeGreaterThan(75);
+  });
+
+  test("R2: a crashed database speaks in the postgres recovery voice", () => {
+    const chaos: ChaosEffect = { chaosType: DeploymentChaosNames.Crash, resourceId: "db-1", durationTicks: 30, remainingTicks: 30 };
+    const { allLogs } = simulateWithChaos(makeProfile({ targetThroughput: 500_000 }), 70, chaos, 60);
+    expect(allLogs.some(l => l.message.includes("recovery in progress"))).toBe(true);
+  });
+
+  test("R3: an OOM-killed VM logs the kernel oom-killer voice", () => {
+    const chaos: ChaosEffect = { chaosType: DeploymentChaosNames.MemoryLeak, resourceId: "vm-1", durationTicks: 40, remainingTicks: 40 };
+    const { allLogs } = simulateWithChaos(makeProfile({ targetThroughput: 500_000 }), 95, chaos, 60);
+    expect(allLogs.some(l => l.message.includes("oom-killer"))).toBe(true);
+  });
+});
