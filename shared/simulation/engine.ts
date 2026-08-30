@@ -72,6 +72,35 @@ const chaosApplyMessage = (effect: ChaosEffect): string => {
   }
 };
 
+const failureVoice = (type: ResourceType | undefined, health: ResourceHealthType, metric: ResourceMetrics): string => {
+  if (health === ResourceHealth.FAILED) {
+    switch (type) {
+      case RESOURCE_TYPES.VirtualMachine: return "process terminated — core dumped";
+      case RESOURCE_TYPES.Database: return "server process terminated — recovery in progress";
+      case RESOURCE_TYPES.Cache: return "connection reset by peer — replica out of sync";
+      case RESOURCE_TYPES.LoadBalancer: return "no live upstreams — all backends unreachable";
+      case RESOURCE_TYPES.ObjectStorage: return "I/O error — volume detached";
+      default: return "is down";
+    }
+  }
+  if (health === ResourceHealth.SATURATED) {
+    if (metric.memory >= 97) {
+      return type === RESOURCE_TYPES.VirtualMachine
+        ? "Out of memory: Killed process (kernel oom-killer invoked)"
+        : "memory limit exceeded — thrashing";
+    }
+    switch (type) {
+      case RESOURCE_TYPES.Database: return "FATAL: remaining connection slots are 0 — rejecting new connections";
+      case RESOURCE_TYPES.VirtualMachine: return "request queue depth critical — worker threads blocked";
+      case RESOURCE_TYPES.Cache: return "maxmemory reached — aggressively evicting keys";
+      case RESOURCE_TYPES.LoadBalancer: return "upstream response time exceeded — 504s climbing";
+      case RESOURCE_TYPES.ObjectStorage: return "write latency spiking — throttling puts";
+      default: return "saturated — requests queueing";
+    }
+  }
+  return `utilization recovered — cpu ${metric.cpu}%`;
+};
+
 export function createInitialState(
   deploymentId: string,
   resources: Resource[],
@@ -277,11 +306,14 @@ export function tick(state: SimulationState, inputs: TickInputs): TickResult {
   // 4c. CASCADE — read the PREVIOUS tick's health so failure walks the graph one hop per tick
   const failedSet = new Set<string>();
   const saturatedSet = new Set<string>();
+  const degradedSet = new Set<string>();
   for (const [rid, m] of Object.entries(state.metrics)) {
     if (m.health === ResourceHealth.FAILED) failedSet.add(rid);
     else if (m.health === ResourceHealth.SATURATED) saturatedSet.add(rid);
+    else if (m.health === ResourceHealth.DEGRADED) degradedSet.add(rid);
   }
   const cascadeStress: Record<string, number> = {};
+  const retryBoost: Record<string, number> = {};
   for (const resourceId of Object.keys(state.resourceTypes)) {
     let stress = 0;
     const downs = state.downstream[resourceId] ?? [];
@@ -290,6 +322,18 @@ export function tick(state: SimulationState, inputs: TickInputs): TickResult {
       else if (saturatedSet.has(d)) stress += 0.2;
     }
     cascadeStress[resourceId] = Math.min(1, stress);
+    // RETRY STORM — stressed UPSTREAMS retry onto this resource, amplifying its load
+    let boost = 0;
+    const ups = state.upstream[resourceId] ?? [];
+    for (const u of ups) {
+      if (failedSet.has(u) || saturatedSet.has(u) || degradedSet.has(u)) {
+        boost += SIMULATION_CONSTANTS.CASCADE.RETRY_AMPLIFICATION;
+      }
+    }
+    retryBoost[resourceId] = Math.min(
+      SIMULATION_CONSTANTS.CASCADE.MAX_RETRY_BOOST,
+      boost,
+    );
   }
 
   // 5. Distribute load — exclude crashed AND restarting resources from serving
@@ -390,9 +434,13 @@ export function tick(state: SimulationState, inputs: TickInputs): TickResult {
         if (bandUtil > cpu) cpu = bandUtil;
       }
 
-      // 5c. CASCADE stress — downstream trouble inflates cpu (blocked threads, retries)
+      // 5c. CASCADE stress — downstream trouble inflates cpu (blocked threads)
       const stress = cascadeStress[resourceId] ?? 0;
       if (stress > 0) cpu = cpu * (1 + stress);
+      
+      // 5d. RETRY STORM — stressed upstreams retry onto this resource, amplifying load
+      const retries = retryBoost[resourceId] ?? 0;
+      if (retries > 0) cpu = cpu * (1 + retries);
     }
 
     // 6. Apply chaos effects
@@ -702,12 +750,13 @@ export function tick(state: SimulationState, inputs: TickInputs): TickResult {
         : `cpu at ${metric.cpu}% on ${resourceId} — approaching saturation`;
     } else if (after === ResourceHealth.SATURATED) {
       severity = "error";
+      const voice = failureVoice(type, after, metric);
       message = culprit
-        ? `${resourceId} saturated — downstream ${culprit} is ${failedSet.has(culprit) ? "down" : "saturated"}`
-        : `${resourceId} saturated — cpu ${metric.cpu}%, requests queueing`;
+        ? `${resourceId} saturated — downstream ${culprit} is ${failedSet.has(culprit) ? "down" : "saturated"}; ${voice}`
+        : `${resourceId} ${voice}`;
     } else if (after === ResourceHealth.FAILED) {
       severity = "error";
-      message = `${resourceId} is down`;
+      message = `${resourceId} ${failureVoice(type, after, metric)}`;
     }
     logs.push({ timestamp: now, severity, resourceId, source, message });
   }
