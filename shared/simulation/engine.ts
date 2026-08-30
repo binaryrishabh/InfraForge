@@ -235,6 +235,76 @@ export function createInitialState(
   };
 }
 
+/* ---------------- Full request routing ----------------
+Computes the RPS that actually reaches each resource by walking the
+connection graph from the entry points. Load balancers split to their
+VM backends, caches forward only misses + writes, DBs forward writes,
+everything else passes its load downstream. Pure, zero I/O. */
+function computeInboundRps(state: SimulationState, totalRps: number): Record<string, number> {
+  const inbound: Record<string, number> = {};
+  const entryPoints = state.entryPoints;
+  if (entryPoints.length === 0 || totalRps <= 0) return inbound;
+
+  const entryShare = totalRps / entryPoints.length;
+  for (const e of entryPoints) inbound[e] = (inbound[e] ?? 0) + entryShare;
+
+  const inDegree: Record<string, number> = {};
+  for (const id of Object.keys(state.resourceTypes)) inDegree[id] = 0;
+  for (const id of Object.keys(state.resourceTypes)) {
+    for (const down of state.downstream[id] ?? []) {
+      if (state.resourceTypes[down] !== undefined) inDegree[down] = (inDegree[down] ?? 0) + 1;
+    }
+  }
+  for (const e of entryPoints) inDegree[e] = 0;
+
+  const readFraction = state.workloadProfile.readWriteRatio ?? 0.8;
+  const writeFraction = 1 - readFraction;
+
+  const queue: string[] = [...entryPoints];
+  const processed = new Set<string>();
+
+  while (queue.length > 0) {
+    const id = queue.shift()!;
+    if (processed.has(id)) continue;
+    processed.add(id);
+    const rps = inbound[id] ?? 0;
+    const type = state.resourceTypes[id];
+    const downs = (state.downstream[id] ?? []).filter(d => state.resourceTypes[d] !== undefined);
+
+    if (rps > 0 && downs.length > 0) {
+      if (type === RESOURCE_TYPES.LoadBalancer) {
+        const vmBackends = downs.filter(d => state.resourceTypes[d] === RESOURCE_TYPES.VirtualMachine);
+        if (vmBackends.length > 0) {
+          const share = rps / vmBackends.length;
+          for (const vm of vmBackends) inbound[vm] = (inbound[vm] ?? 0) + share;
+        }
+      } else if (type === RESOURCE_TYPES.Cache) {
+        const isDown = state.metrics[id]?.health === ResourceHealth.FAILED;
+        const hitRatio = isDown ? 0 : SIMULATION_CONSTANTS.CACHE_HIT_RATIO;
+        const forwardFraction = readFraction * (1 - hitRatio) + writeFraction;
+        const share = (rps * forwardFraction) / downs.length;
+        for (const d of downs) inbound[d] = (inbound[d] ?? 0) + share;
+      } else if (type === RESOURCE_TYPES.Database) {
+        const forwarded = rps * writeFraction;
+        if (forwarded > 0) {
+          const share = forwarded / downs.length;
+          for (const d of downs) inbound[d] = (inbound[d] ?? 0) + share;
+        }
+      } else {
+        const share = rps / downs.length;
+        for (const d of downs) inbound[d] = (inbound[d] ?? 0) + share;
+      }
+    }
+
+    for (const d of downs) {
+      inDegree[d] = (inDegree[d] ?? 0) - 1;
+      if (inDegree[d] === 0) queue.push(d);
+    }
+  }
+
+  return inbound;
+}
+
 export function tick(state: SimulationState, inputs: TickInputs): TickResult {
   const logs: SimulationLog[] = [];
   const seconds = state.simulatedSeconds + 1;
@@ -336,6 +406,21 @@ export function tick(state: SimulationState, inputs: TickInputs): TickResult {
     );
   }
 
+    // 4d. FULL REQUEST ROUTING — path-aware inbound RPS, then re-split each
+  // pool's LB traffic across ALL serving replicas (base + spawned).
+  const inbound = computeInboundRps(state, totalRps);
+  for (const [lbId, pool] of Object.entries(state.pools)) {
+    const lbInbound = inbound[lbId] ?? 0;
+    const servingPoolVms = [
+      ...pool.baseVmIds,
+      ...state.spawnedVms.filter(v => v.poolId === lbId && v.status === "active").map(v => v.id)
+    ].filter(id => !downResources.has(id) && !restartingResources.has(id));
+    if (servingPoolVms.length > 0 && lbInbound > 0) {
+      const perVm = lbInbound / servingPoolVms.length;
+      for (const vmId of servingPoolVms) inbound[vmId] = perVm;
+    }
+  }
+
   // 5. Distribute load — exclude crashed AND restarting resources from serving
   const reachableSet = new Set(state.reachable);
   const activeSpawned = state.spawnedVms.filter((v) => v.status === "active");
@@ -346,7 +431,6 @@ export function tick(state: SimulationState, inputs: TickInputs): TickResult {
     ),
     ...activeSpawned.map((v) => v.id),
   ].filter((id) => !downResources.has(id) && !restartingResources.has(id));
-  const rpsPerVm = vmIds.length > 0 ? totalRps / vmIds.length : 0;
 
   const newMetrics: Record<string, ResourceMetrics> = {};
   for (const resourceId of Object.keys(state.resourceTypes)) {
@@ -368,7 +452,7 @@ export function tick(state: SimulationState, inputs: TickInputs): TickResult {
     } else {
       switch (type) {
         case RESOURCE_TYPES.VirtualMachine: {
-          rps = rpsPerVm;
+          rps = inbound[resourceId] ?? 0;
           const vmCapacity = sku
             ? sku.vCpu * sku.baselineFactor * SIMULATION_CONSTANTS.RPS_PER_VCPU
             : capacity.rps;
@@ -418,7 +502,7 @@ export function tick(state: SimulationState, inputs: TickInputs): TickResult {
           break;
         }
         default: {
-          rps = totalRps;
+          rps = inbound[resourceId] ?? 0;
           cpu = (rps / capacity.rps) * 100;
           memory = 20 + cpu * 0.3;
         }
@@ -505,6 +589,16 @@ export function tick(state: SimulationState, inputs: TickInputs): TickResult {
     if (rps > 0) metric.rps = Math.round(rps);
     if (connections !== undefined) metric.connections = connections;
     newMetrics[resourceId] = metric;
+  }
+
+  // 5e. DEAD-END REQUEST FAILURE — a VM with traffic but no downstream data
+  // path drops its data requests (throttled to once every 10 simulated seconds).
+  if (seconds % 10 === 0) {
+    for (const deadId of state.deadEnds) {
+      if ((inbound[deadId] ?? 0) > 0 && !downResources.has(deadId) && !restartingResources.has(deadId)) {
+        logs.push({ timestamp: now, severity: "error", resourceId: deadId, source: "app", message: `${deadId} dropping data requests — no downstream data path, returning 500s` });
+      }
+    }
   }
 
   // 6c. CASCADE — Load Balancer sheds 502s when its backend VMs are unhealthy
