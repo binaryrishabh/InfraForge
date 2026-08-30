@@ -7,6 +7,7 @@ import {
 } from "@/api/infrastructure.api";
 import { createDeployment } from "@/api/deployment.api";
 import { SAMPLE_ARCHITECTURE } from "@shared/constants/SAMPLE_ARCHITECTURE.constants";
+import { validateDeploymentReadiness } from "@shared/validation/validateDeploymentReadiness.validation";
 import type { Resource } from "@shared/interface/Resource.interface";
 import type { ConnectionLine } from "@shared/interface/ConnectionLine.interface";
 import type { ModalState } from "@shared/types/ModalState.types";
@@ -240,6 +241,15 @@ export function useInfrastructureActions({
     if (canvasResources.length === 0) {
       toast.warning("Add resources to the canvas before deploying.");
       return;
+    }
+    // Structural readiness gate — errors block the deploy, warnings do not
+    const readiness = validateDeploymentReadiness(canvasResources, connectionLines);
+    if (!readiness.valid) {
+      toast.error("Cannot deploy — " + readiness.errors.join(" · "));
+      return;
+    }
+    if (readiness.warnings.length > 0) {
+      readiness.warnings.forEach(w => toast.warning(w));
     }
     setModalState({ type: "confirm-deploy" });
   };
