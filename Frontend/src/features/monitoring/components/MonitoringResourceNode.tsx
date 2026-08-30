@@ -50,13 +50,19 @@ export function MonitoringResourceNode({ resource }: MonitoringResourceNodeProps
     health === ResourceHealth.DEGRADED ||
     health === ResourceHealth.SATURATED ||
     health === ResourceHealth.FAILED;
+  const popNearTop = resource.y < 96;
 
   return (
     <div className="absolute group" style={{ left: resource.x, top: resource.y }}>
-      {/* AUTO-POP METER — appears uninvited when a resource crosses its safe threshold or is restarting */}
+      {/* AUTO-POP METER — appears uninvited when a resource crosses its safe threshold or is restarting.
+          Flips to the right of the node when the node sits near the canvas top edge so it never clips. */}
       {showAutoPop && (
         <div
-          className={`absolute -top-16 left-1/2 -translate-x-1/2 w-32 bg-[#0B0E14]/95 border rounded-lg px-2 py-1.5 shadow-xl z-30 ${
+          className={`${
+            popNearTop
+              ? "absolute left-full top-0 ml-2"
+              : "absolute -top-16 left-1/2 -translate-x-1/2"
+          } w-32 bg-[#0B0E14]/95 border rounded-lg px-2 py-1.5 shadow-xl z-30 ${
             isRestarting
               ? "border-[#F5A524]/60"
               : health === ResourceHealth.SATURATED || health === ResourceHealth.FAILED

@@ -3,7 +3,7 @@ import { toast } from "sonner";
 import { scaleVertical } from "@/api/deployment.api";
 import { skusFor, findSku } from "@shared/catalog/index";
 import { RESOURCE_TYPES } from "@shared/constants/RESOURCE_TYPES.constants";
-import type { ProviderId, SkuCategory } from "@shared/catalog/catalog.types";
+import { PROVIDERS, type ProviderId, type SkuCategory } from "@shared/catalog/catalog.types";
 
 interface VerticalScalePanelProps {
   deploymentId: string;
@@ -18,6 +18,7 @@ export function VerticalScalePanel({ deploymentId, status, resources }: Vertical
 
   const [selectedResourceId, setSelectedResourceId] = useState<string>("");
   const [selectedSkuId, setSelectedSkuId] = useState<string>("");
+  const [provider, setProvider] = useState<ProviderId>("aws");
   const [loading, setLoading] = useState(false);
   const isLive = status === "live";
 
@@ -32,15 +33,21 @@ export function VerticalScalePanel({ deploymentId, status, resources }: Vertical
 
   const selectedResource = skuableResources.find((r) => r.id === selectedResourceId);
 
-  // When the selected resource changes, reset the SKU dropdown to its current SKU
+  // When the selected resource changes, reset the SKU dropdown and provider to its current SKU
   useEffect(() => {
     const res = skuableResources.find((r) => r.id === selectedResourceId);
     setSelectedSkuId(res?.skuId ?? "");
+    setProvider(res?.skuId ? findSku(res.skuId)?.provider ?? "aws" : "aws");
   }, [selectedResourceId]);
 
-  const provider: ProviderId = selectedResource?.skuId
-    ? findSku(selectedResource.skuId)?.provider ?? "aws"
-    : "aws";
+  // Switching provider swaps the visible catalog; drop a selection that isn't in it
+  const handleProviderChange = (next: ProviderId) => {
+    setProvider(next);
+    const resSkuId = selectedResource?.skuId;
+    const resSkuProvider = resSkuId ? findSku(resSkuId)?.provider : undefined;
+    setSelectedSkuId(resSkuProvider === next ? resSkuId! : "");
+  };
+
   const category: SkuCategory =
     selectedResource?.type === RESOURCE_TYPES.Database ? "Database" : "Virtual Machine";
   const skus = skusFor(provider, category);
@@ -67,7 +74,6 @@ export function VerticalScalePanel({ deploymentId, status, resources }: Vertical
       <div className="flex items-center justify-between mb-2">
         <h3 className="text-xs font-semibold text-gray-400">Vertical Scale</h3>
       </div>
-
       {skuableResources.length === 0 ? (
         <p className="text-[9px] text-[#677185]">No Virtual Machines or Databases to scale.</p>
       ) : (
@@ -82,7 +88,24 @@ export function VerticalScalePanel({ deploymentId, status, resources }: Vertical
               <option key={resource.id} value={resource.id}>{resource.id}</option>
             ))}
           </select>
-
+          {/* Provider toggle */}
+          <div className="flex rounded-lg border border-[#273042] overflow-hidden">
+            {(Object.keys(PROVIDERS) as ProviderId[]).map((providerId) => (
+              <button
+                key={providerId}
+                type="button"
+                onClick={() => handleProviderChange(providerId)}
+                disabled={!isLive || loading}
+                className={`flex-1 py-1.5 text-[11px] transition-colors duration-150 disabled:opacity-40 disabled:cursor-not-allowed ${
+                  provider === providerId
+                    ? "bg-[#5B8CFF] text-[#081018] font-medium"
+                    : "bg-[#0B0E14] text-[#AAB4C5] hover:text-[#EDF1F7]"
+                }`}
+              >
+                {providerId === "aws" ? "AWS" : "DigitalOcean"}
+              </button>
+            ))}
+          </div>
           <select
             value={selectedSkuId}
             onChange={(e) => setSelectedSkuId(e.target.value)}
@@ -96,7 +119,6 @@ export function VerticalScalePanel({ deploymentId, status, resources }: Vertical
               </option>
             ))}
           </select>
-
           <button
             onClick={handleScale}
             disabled={!canScale || loading}
@@ -109,7 +131,6 @@ export function VerticalScalePanel({ deploymentId, status, resources }: Vertical
           </button>
         </div>
       )}
-
       <p className="text-[9px] text-[#677185] mt-1.5">Resource restarts during the swap.</p>
       {!isLive && (
         <p className="text-[9px] text-[#677185] mt-1.5">Vertical scaling is available while the environment is live.</p>

@@ -13,6 +13,7 @@ interface ReadOnlyCanvasProps {
 
 export function ReadOnlyCanvas({ resources, connectionLines }: ReadOnlyCanvasProps) {
   const spawnedVms = useSimulationStore((s) => s.spawnedVms);
+  const pools = useSimulationStore((s) => s.pools);
 
   return (
     <div className="relative w-full h-full bg-[#0f1117] rounded-lg border border-gray-800 overflow-hidden">
@@ -22,6 +23,21 @@ export function ReadOnlyCanvas({ resources, connectionLines }: ReadOnlyCanvasPro
           const target = resources.find(resource => resource.id === connectionLine.targetId);
           if (!source || !target) return null;
           return <ManhattanConnectionLine key={connectionLine.id} source={source} target={target} port={connectionLine.port} />;
+        })}
+        {/* Pool links — every spawned/provisioning replica stays visually wired to its Load Balancer */}
+        {spawnedVms.map(vm => {
+          const pool = pools[vm.poolId];
+          if (!pool) return null;
+          const lb = resources.find(resource => resource.id === pool.lbId);
+          if (!lb) return null;
+          return (
+            <ManhattanConnectionLine
+              key={`spawn-link-${vm.id}`}
+              source={lb}
+              target={{ x: vm.x, y: vm.y, type: RESOURCE_TYPES.VirtualMachine }}
+              port={80}
+            />
+          );
         })}
       </svg>
       {resources.map(resource => (
