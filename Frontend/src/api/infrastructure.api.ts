@@ -1,7 +1,7 @@
 import axios from "axios";
 
 import type { Infrastructure } from "@shared/interface/Infrastructure.interface";
-import { API_URL } from "./httpClient";
+import { API_URL } from "../client/httpClient";
 import type { Deployment } from "@shared/interface/Deployment.interface";
 
 /* ------------------Infrastructure api calls--------------- */

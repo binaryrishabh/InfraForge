@@ -5,15 +5,15 @@ import { WebSocketMessage } from "@shared/enum/WebSocketMessage.enum";
 import { DeploymentStatus, type DeploymentStatusType } from "@shared/enum/DeploymentStatus.enum";
 import { DeploymentStageStatus } from "@shared/enum/DeploymentStageStatus.enum";
 import { DeploymentTimelineEventNames } from "@shared/enum/DeploymentTimelineEventNames.enum";
+import { useSimulationStore } from "@/features/monitoring/store/simulationStore";
+import { WS_URL } from "@/client/wsClient";
 import type { Deployment } from "@shared/interface/Deployment.interface";
 import type { DeploymentStages } from "@shared/interface/DeploymentStages.interface";
 import type { DeploymentTimeline } from "@shared/interface/DeploymentTimeline.interface";
-import { useSimulationStore } from "@/features/monitoring/store/simulationStore";
 import type { SimulationSnapshot } from "@shared/interface/SimulationSnapshot.interface";
 
 type PipelineUIStatus = DeploymentStatusType | "Web Socket connection error";
 
-const WS_URL = import.meta.env.VITE_WS_URL || "ws://localhost:3001";
 
 export function useDeploymentSocket(deploymentId: string) {
     const [ deployment, setDeployment ] = useState<Deployment | null>(null);
