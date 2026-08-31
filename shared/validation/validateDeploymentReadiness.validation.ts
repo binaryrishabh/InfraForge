@@ -41,7 +41,7 @@ TODO (Phase 5): Add actual graph traversal here.
 Currently checks type presence. Future: walk connection edges to verify
 that specific instances are connected, not just that types exist.
  */
-export function validateDeploymentReadiness(resources: Array<Resource>, connections: Array<ConnectionLine>): { valid: boolean, errors: string[], warnings: string[] } {
+export function validateDeploymentReadiness(resources: Array<Resource>, _connections: Array<ConnectionLine>): { valid: boolean, errors: string[], warnings: string[] } {
   const errors: string[] = [];
   const warnings: string[] = [];
   const types = resources.map(resource => resource.type); // Here type is resource name
