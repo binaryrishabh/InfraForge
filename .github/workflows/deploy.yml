@@ -1,0 +1,29 @@
+name: Deploy InfraForge
+
+on:
+  push:
+    branches: [main]
+    # Only rebuild backend containers when backend & shared code changes.
+    # (Vercel auto-deploys the frontend on EVERY push, regardless.)
+    paths:
+      - "Backend/**"
+      - "shared/**"
+      - ".github/workflows/deploy.yml"
+
+jobs:
+  deploy-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to EC2 via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd ~/InfraForge
+            git pull origin main
+            cd Backend
+            docker compose down
+            docker compose up --build -d
+            docker image prune -f
