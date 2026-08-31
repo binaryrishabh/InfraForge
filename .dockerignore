@@ -1,0 +1,5 @@
+.git
+Frontend
+**/node_modules
+**/.env
+**/dist
