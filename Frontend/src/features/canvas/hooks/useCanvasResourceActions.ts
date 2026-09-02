@@ -2,111 +2,52 @@ import { useCallback } from "react";
 import { toast } from "sonner";
 import { useCanvasStore } from "../store/canvasStore";
 import type { Resource } from "@shared/interface/Resource.interface";
-import type { ConnectionLine } from "@shared/interface/ConnectionLine.interface";
-import type { UndoCanvasResourceAction } from "@shared/types/UndoCanvasResourceAction.types";
-import type { RefObject } from "react";
 
-interface UseCanvasResourceActionsProps {
-  isDeploying: boolean;
-  canvasResources: Resource[];
-  connectionLines: ConnectionLine[];
-  currentLayoutSaved: boolean;
-  setCanvasResources: React.Dispatch<React.SetStateAction<Resource[]>>;
-  setConnectionLines: React.Dispatch<React.SetStateAction<ConnectionLine[]>>;
-  setCurrentLayoutSaved: (saved: boolean) => void;
-  setUndoResourcesSnapshotStackTrace: React.Dispatch<
-    React.SetStateAction<UndoCanvasResourceAction[]>
-  >;
-  setRedoResourcesSnapshotStackTrace: (
-    stack: UndoCanvasResourceAction[],
-  ) => void;
-  handleUndoRef: RefObject<() => void>;
-}
-
-export function useCanvasResourceActions({
-  isDeploying,
-  setCanvasResources,
-  setConnectionLines,
-  setCurrentLayoutSaved,
-  setUndoResourcesSnapshotStackTrace,
-  setRedoResourcesSnapshotStackTrace,
-  handleUndoRef,
-}: UseCanvasResourceActionsProps) {
-  /* ----------------------Canvas Resources------------------ */
-  // Delete canvas resource.
-  // Stable identity (useCallback + []) so CanvasResourceItem's memo can skip
-  // repaints — live values are read from the store at call time instead of
-  // from render-scope props.
-  const handleDeleteCanvasResource = useCallback((resourceId: string) => {
+export function useCanvasResourceActions() {
+  const performUndo = useCallback(() => {
     const store = useCanvasStore.getState();
-    if (store.isDeploying) {
-      // Deployement already in process
-      toast.warning("A deployment is in progress. Can't select");
-      return;
+    if (store.isDeploying || store.undoStack.length === 0) return;
+    const last = store.undoStack[store.undoStack.length - 1];
+    if (!last) return;
+    if (last.type === "add") {
+      store.setResources(prev => prev.filter(r => r.id !== last.resource.id));
+      store.setConnectionLines(prev => prev.filter(l => l.sourceId !== last.resource.id && l.targetId !== last.resource.id));
+      store.setCurrentLayoutSaved(last.savedState);
+    } else {
+      store.setResources(prev => [...prev, last.resource]);
+      store.setConnectionLines(prev => [...prev, ...last.connectionLines]);
+      store.setCurrentLayoutSaved(last.savedState);
     }
-    // Find particular resource on the canvas whse resourceId has been passed.
-    const resource = store.resources.find(
-      (canvasResource) => canvasResource.id === resourceId,
-    );
-    // Find the resource whose resourceId has been passed and has any connection or not...
-    const touchingConnections = store.connectionLines.filter(
-      (connectionLine) =>
-        connectionLine.sourceId === resourceId ||
-        connectionLine.targetId === resourceId,
-    );
-    // Add the deleted resource to the undoStack so that future undo could be done...
-    if (resource) {
-      setUndoResourcesSnapshotStackTrace((prev) => [
-        ...prev,
-        {
-          type: "delete",
-          resource,
-          connectionLines: touchingConnections,
-          savedState: store.currentLayoutSaved,
-        },
-      ]);
-      setRedoResourcesSnapshotStackTrace([]);
-    }
-    // Delete resource
-    setCanvasResources((prev) =>
-      prev.filter((resource) => resource.id !== resourceId),
-    );
-    // Delete connectionLines touching this resource (fixes dangling connections)
-    setConnectionLines((prev) =>
-      prev.filter(
-        (connectionLine) =>
-          connectionLine.sourceId !== resourceId &&
-          connectionLine.targetId !== resourceId,
-      ),
-    );
-    setCurrentLayoutSaved(false);
-    // Undo toast
-    toast("Resource deleted", {
-      action: {
-        label: "Undo",
-        onClick: () => handleUndoRef.current(), // Use ref to avaoid stale state
-      },
-      duration: 5000,
-    });
+    store.setUndoStack(prev => prev.slice(0, -1));
+    store.setRedoStack(prev => [...prev, last]);
+    toast.success("Undo");
   }, []);
 
-  // Update a canvas resource in place (e.g. assign a provider SKU)
-  const handleUpdateCanvasResource = (
-    resourceId: string,
-    patch: Partial<Resource>,
-  ) => {
-    if (isDeploying) {
-      toast.warning("A deployment is in progress. Can't modify");
-      return;
-    }
-    setCanvasResources((prev) =>
-      prev.map((r) => (r.id === resourceId ? { ...r, ...patch } : r)),
+  const handleDeleteCanvasResource = useCallback((resourceId: string) => {
+    const store = useCanvasStore.getState();
+    if (store.isDeploying) { toast.warning("A deployment is in progress. Can't select"); return; }
+    const resource = store.resources.find((r) => r.id === resourceId);
+    const touchingConnections = store.connectionLines.filter(
+      (line) => line.sourceId === resourceId || line.targetId === resourceId,
     );
-    setCurrentLayoutSaved(false);
-  };
+    if (resource) {
+      store.setUndoStack((prev) => [
+        ...prev, { type: "delete", resource, connectionLines: touchingConnections, savedState: store.currentLayoutSaved },
+      ]);
+      store.setRedoStack([]);
+    }
+    store.setResources((prev) => prev.filter((r) => r.id !== resourceId));
+    store.setConnectionLines((prev) => prev.filter((line) => line.sourceId !== resourceId && line.targetId !== resourceId));
+    store.setCurrentLayoutSaved(false);
+    toast("Resource deleted", { action: { label: "Undo", onClick: performUndo }, duration: 5000 });
+  }, [performUndo]);
 
-  return {
-    handleDeleteCanvasResource,
-    handleUpdateCanvasResource,
-  };
+  const handleUpdateCanvasResource = useCallback((resourceId: string, patch: Partial<Resource>) => {
+    const store = useCanvasStore.getState();
+    if (store.isDeploying) { toast.warning("A deployment is in progress. Can't modify"); return; }
+    store.setResources((prev) => prev.map((r) => (r.id === resourceId ? { ...r, ...patch } : r)));
+    store.setCurrentLayoutSaved(false);
+  }, []);
+
+  return { handleDeleteCanvasResource, handleUpdateCanvasResource };
 }

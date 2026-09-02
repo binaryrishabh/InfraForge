@@ -1,19 +1,14 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useCanvasStore } from "../store/canvasStore";
 
 export function useCanvasPersistence() {
-  /* ------Save the current state of canvas resources into localstorage prevents vanish on reloads----- */
-  // state tracking for we have initialized the current state from localstorage or not
-  const [isInitialized, setIsInitialized] = useState(false);
-
-  // Store reads for the save effect — the store is the single source of truth
   const resources = useCanvasStore((s) => s.resources);
   const connectionLines = useCanvasStore((s) => s.connectionLines);
   const currentLayoutId = useCanvasStore((s) => s.currentLayoutId);
   const currentLayoutName = useCanvasStore((s) => s.currentLayoutName);
   const currentLayoutSaved = useCanvasStore((s) => s.currentLayoutSaved);
+  const isInitialized = useCanvasStore((s) => s.isInitialized);
 
-  // Restore on mount — write straight into the store (via getState())
   useEffect(() => {
     const infra = localStorage.getItem("Infraforge_Infrastucture_Draft");
     if (infra) {
@@ -25,12 +20,11 @@ export function useCanvasPersistence() {
       store.setCurrentLayoutName(parsed.currentLayoutName);
       store.setCurrentLayoutSaved(parsed.saved);
     }
-    setIsInitialized(true); // Mark i.e. we got the current state from localstorage
+    useCanvasStore.getState().setIsInitialized(true);
   }, []);
 
-  // Save to localStorage current infrastructure state, but only after getting the current state from browser
   useEffect(() => {
-    if (!isInitialized) return; // ← Skip on first render
+    if (!isInitialized) return;
     localStorage.setItem(
       "Infraforge_Infrastucture_Draft",
       JSON.stringify({
@@ -41,16 +35,5 @@ export function useCanvasPersistence() {
         saved: currentLayoutSaved,
       }),
     );
-  }, [
-    resources,
-    currentLayoutId,
-    currentLayoutName,
-    connectionLines,
-    currentLayoutSaved,
-  ]);
-
-  return {
-    isInitialized,
-    setIsInitialized,
-  };
+  }, [resources, currentLayoutId, currentLayoutName, connectionLines, currentLayoutSaved, isInitialized]);
 }
