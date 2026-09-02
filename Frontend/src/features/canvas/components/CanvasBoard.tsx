@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { useDroppable } from "@dnd-kit/core";
 import { CanvasResourceItem } from "./CanvasResourceItem";
 import { ConnectionLinesLayer } from "./ConnectionLinesLayer";
@@ -10,18 +11,14 @@ export interface CanvasBoardProps {
   onDeleteResource: (itemId: string) => void;
   onResourceClick: (resourceId: string, resourceType: ResourceType) => void;
   connectionLines: Array<ConnectionLine>;
-  selectedResource: string | null;
-  isConnecting: boolean;
   onResourceDoubleClick: (resourceId: string) => void;
 }
 
-export function CanvasBoard({
+export const CanvasBoard = memo(function CanvasBoard({
   resources,
   onDeleteResource,
   onResourceClick,
   connectionLines,
-  selectedResource,
-  isConnecting,
   onResourceDoubleClick,
 }: CanvasBoardProps) {
   const { setNodeRef } = useDroppable({
@@ -42,13 +39,10 @@ export function CanvasBoard({
         resources={resources}
         connectionLines={connectionLines}
       />
-
       {resources.map((resource) => (
         <CanvasResourceItem
           key={resource.id}
           resource={resource}
-          isSelected={selectedResource === resource.id}
-          isConnecting={isConnecting}
           onResourceClick={onResourceClick}
           onResourceDoubleClick={onResourceDoubleClick}
           onDeleteResource={onDeleteResource}
@@ -56,4 +50,4 @@ export function CanvasBoard({
       ))}
     </div>
   );
-}
+});

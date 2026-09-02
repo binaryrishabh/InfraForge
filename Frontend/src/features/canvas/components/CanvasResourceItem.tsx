@@ -1,25 +1,26 @@
+import { memo } from "react";
 import { ResourceIcon } from "@/components/common/ResourceIcon";
 import { CanvasResourcePorts } from "./CanvasResourcePorts";
+import { useCanvasStore } from "../store/canvasStore";
 import type { Resource } from "@shared/interface/Resource.interface";
 import type { ResourceType } from "@shared/constants/RESOURCE_TYPES.constants";
 
 interface CanvasResourceItemProps {
   resource: Resource;
-  isSelected: boolean;
-  isConnecting: boolean;
   onResourceClick: (resourceId: string, resourceType: ResourceType) => void;
   onResourceDoubleClick: (resourceId: string) => void;
   onDeleteResource: (resourceId: string) => void;
 }
 
-export function CanvasResourceItem({
+export const CanvasResourceItem = memo(function CanvasResourceItem({
   resource,
-  isSelected,
-  isConnecting,
   onResourceClick,
   onResourceDoubleClick,
   onDeleteResource,
 }: CanvasResourceItemProps) {
+  const isSelected = useCanvasStore((s) => s.selectedResourceId === resource.id);
+  const isConnecting = useCanvasStore((s) => s.isConnecting);
+
   return (
     <div
       title={resource.type}
@@ -50,4 +51,4 @@ export function CanvasResourceItem({
       </button>
     </div>
   );
-}
+});

@@ -1,4 +1,6 @@
+import { useCallback } from "react";
 import { toast } from "sonner";
+import { useCanvasStore } from "../store/canvasStore";
 import type { Resource } from "@shared/interface/Resource.interface";
 import type { ConnectionLine } from "@shared/interface/ConnectionLine.interface";
 import type { UndoCanvasResourceAction } from "@shared/types/UndoCanvasResourceAction.types";
@@ -23,9 +25,6 @@ interface UseCanvasResourceActionsProps {
 
 export function useCanvasResourceActions({
   isDeploying,
-  canvasResources,
-  connectionLines,
-  currentLayoutSaved,
   setCanvasResources,
   setConnectionLines,
   setCurrentLayoutSaved,
@@ -34,19 +33,23 @@ export function useCanvasResourceActions({
   handleUndoRef,
 }: UseCanvasResourceActionsProps) {
   /* ----------------------Canvas Resources------------------ */
-  // Delete canvas resource
-  const handleDeleteCanvasResource = (resourceId: string) => {
-    if (isDeploying) {
+  // Delete canvas resource.
+  // Stable identity (useCallback + []) so CanvasResourceItem's memo can skip
+  // repaints — live values are read from the store at call time instead of
+  // from render-scope props.
+  const handleDeleteCanvasResource = useCallback((resourceId: string) => {
+    const store = useCanvasStore.getState();
+    if (store.isDeploying) {
       // Deployement already in process
       toast.warning("A deployment is in progress. Can't select");
       return;
     }
     // Find particular resource on the canvas whse resourceId has been passed.
-    const resource = canvasResources.find(
+    const resource = store.resources.find(
       (canvasResource) => canvasResource.id === resourceId,
     );
     // Find the resource whose resourceId has been passed and has any connection or not...
-    const touchingConnections = connectionLines.filter(
+    const touchingConnections = store.connectionLines.filter(
       (connectionLine) =>
         connectionLine.sourceId === resourceId ||
         connectionLine.targetId === resourceId,
@@ -59,7 +62,7 @@ export function useCanvasResourceActions({
           type: "delete",
           resource,
           connectionLines: touchingConnections,
-          savedState: currentLayoutSaved,
+          savedState: store.currentLayoutSaved,
         },
       ]);
       setRedoResourcesSnapshotStackTrace([]);
@@ -85,7 +88,7 @@ export function useCanvasResourceActions({
       },
       duration: 5000,
     });
-  };
+  }, []);
 
   // Update a canvas resource in place (e.g. assign a provider SKU)
   const handleUpdateCanvasResource = (

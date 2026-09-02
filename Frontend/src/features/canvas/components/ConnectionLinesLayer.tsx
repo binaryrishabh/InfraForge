@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { ManhattanConnectionLine } from "./ManhattanConnectionLine";
 import type { ConnectionLine } from "@shared/interface/ConnectionLine.interface";
 import type { Resource } from "@shared/interface/Resource.interface";
@@ -7,7 +8,7 @@ interface ConnectionLinesLayerProps {
   connectionLines: ConnectionLine[];
 }
 
-export function ConnectionLinesLayer({
+export const ConnectionLinesLayer = memo(function ConnectionLinesLayer({
   resources,
   connectionLines,
 }: ConnectionLinesLayerProps) {
@@ -24,11 +25,9 @@ export function ConnectionLinesLayer({
         const target = resources.find(
           (resource) => resource.id === connectionLine.targetId
         );
-
         if (!source || !target) {
           return null;
         }
-
         return (
           <ManhattanConnectionLine
             key={connectionLine.id}
@@ -40,4 +39,4 @@ export function ConnectionLinesLayer({
       })}
     </svg>
   );
-}
+});

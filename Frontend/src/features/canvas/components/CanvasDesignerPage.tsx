@@ -12,21 +12,29 @@ import { DeployModal } from "@/features/deployment/components/DeployModal";
 import { Network } from "lucide-react";
 import { ResourceIcon } from "@/components/common/ResourceIcon";
 import { useCanvasDesignerController } from "../hooks/useCanvasDesignerController";
+import { useCanvasStore } from "../store/canvasStore";
 
 export function CanvasDesignerPage() {
+  // Canvas state — read straight from the single source of truth
+  const canvasResources = useCanvasStore((s) => s.resources);
+  const connectionLines = useCanvasStore((s) => s.connectionLines);
+  const selectedResource = useCanvasStore((s) => s.selectedResourceId);
+  const isConnecting = useCanvasStore((s) => s.isConnecting);
+  const selectedResourceForConfig = useCanvasStore((s) => s.selectedResourceForConfigId);
+  const emptyCanvasStateDismissed = useCanvasStore((s) => s.emptyCanvasStateDismissed);
+  const currentLayoutId = useCanvasStore((s) => s.currentLayoutId);
+
   const {
-    // Core state
-    canvasResources,
-    currentLayoutId,
+    // Layout metadata
     currentLayoutName,
     currentLayoutSaved,
+    // Deployment
     activeDeploymentId,
     setActiveDeploymentId,
     // isDeploying,
     setIsDeploying,
-    selectedResourceForConfig,
+    // Config panel + empty state
     setSelectedResourceForConfig,
-    emptyCanvasStateDismissed,
     setEmptyCanvasStateDismissed,
     // Persistence
     isInitialized,
@@ -36,9 +44,6 @@ export function CanvasDesignerPage() {
     handleOpenCloseDropDownNameClick,
     handleSelectLayout,
     // Connections
-    connectionLines,
-    selectedResource,
-    isConnecting,
     hanldeResouceClick,
     handleToggleConnectionLines,
     // Resource actions

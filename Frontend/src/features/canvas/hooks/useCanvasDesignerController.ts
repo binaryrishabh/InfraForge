@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect } from "react";
+import { useCanvasStore } from "../store/canvasStore";
 import { useCanvasPersistence } from "./useCanvasPersistence";
 import { useInfrastructureDropdown } from "./useInfrastructureDropdown";
 import { useCanvasUndoRedo } from "./useCanvasUndoRedo";
@@ -7,45 +8,46 @@ import { useCanvasConnections } from "./useCanvasConnections";
 import { useCanvasResourceActions } from "./useCanvasResourceActions";
 import { useInfrastructureActions } from "./useInfrastructureActions";
 import { useCanvasDragDrop } from "./useCanvasDragDrop";
-import type { Resource } from "@shared/interface/Resource.interface";
-import type { ConnectionLine } from "@shared/interface/ConnectionLine.interface";
 
 export function useCanvasDesignerController() {
-  // Core canvas state (owned by controller)
-  const [canvasResources, setCanvasResources] = useState<Array<Resource>>([]);
-  const [connectionLines, setConnectionLines] = useState<Array<ConnectionLine>>(
-    [],
-  );
-  // states about current state of layout on canvas
-  const [currentLayoutId, setCurrentLayoutId] = useState<string | null>(null);
-  const [currentLayoutName, setCurrentLayoutName] = useState<string | null>(
-    null,
-  );
-  const [currentLayoutSaved, setCurrentLayoutSaved] = useState<boolean>(true);
-  // set the deployment status when deploy button is clicked
-  const [activeDeploymentId, setActiveDeploymentId] = useState<string | null>(
-    null,
-  );
-  const [isDeploying, setIsDeploying] = useState<boolean>(false);
-  // On clicking the resources on canavs -> a side panel opens showing there details/config...
-  const [selectedResourceForConfig, setSelectedResourceForConfig] = useState<
-    string | null
-  >(null);
-  // This for the dismiss button next to the LoadSampleArchitecture
-  const [emptyCanvasStateDismissed, setEmptyCanvasStateDismissed] =
-    useState<boolean>(false);
+  // Core canvas state — ONE source of truth, read from useCanvasStore
+  const canvasResources = useCanvasStore((s) => s.resources);
+  const connectionLines = useCanvasStore((s) => s.connectionLines);
+  const currentLayoutId = useCanvasStore((s) => s.currentLayoutId);
+  const currentLayoutName = useCanvasStore((s) => s.currentLayoutName);
+  const currentLayoutSaved = useCanvasStore((s) => s.currentLayoutSaved);
+  const activeDeploymentId = useCanvasStore((s) => s.activeDeploymentId);
+  const isDeploying = useCanvasStore((s) => s.isDeploying);
+  const selectedResourceForConfig = useCanvasStore((s) => s.selectedResourceForConfigId);
+  const emptyCanvasStateDismissed = useCanvasStore((s) => s.emptyCanvasStateDismissed);
+  const selectedResource = useCanvasStore((s) => s.selectedResourceId);
+  const isConnecting = useCanvasStore((s) => s.isConnecting);
+
+  // Store actions — passed down to sub-hooks. They accept a value OR an updater
+  // function, so every existing prev => ... call site keeps working unchanged.
+  const setResources = useCanvasStore((s) => s.setResources);
+  const setConnectionLines = useCanvasStore((s) => s.setConnectionLines);
+  const setCurrentLayoutId = useCanvasStore((s) => s.setCurrentLayoutId);
+  const setCurrentLayoutName = useCanvasStore((s) => s.setCurrentLayoutName);
+  const setCurrentLayoutSaved = useCanvasStore((s) => s.setCurrentLayoutSaved);
+  const setSelectedResourceId = useCanvasStore((s) => s.setSelectedResourceId);
+  const setActiveDeploymentId = useCanvasStore((s) => s.setActiveDeploymentId);
+  const setIsDeploying = useCanvasStore((s) => s.setIsDeploying);
+  const setEmptyCanvasStateDismissed = useCanvasStore((s) => s.setEmptyCanvasStateDismissed);
+  const setSelectedResourceForConfigId = useCanvasStore((s) => s.setSelectedResourceForConfigId);
 
   /* ------------------Config panel---------------------- */
-  const handleResourceDoubleClickShowConfig = (resourceId: string) => {
-    setSelectedResourceForConfig(resourceId);
-  };
+  // Stable identity (useCallback + []) so CanvasResourceItem's memo can skip repaints.
+  const handleResourceDoubleClickShowConfig = useCallback((resourceId: string) => {
+    useCanvasStore.getState().setSelectedResourceForConfigId(resourceId);
+  }, []);
 
   // close the config by clicking anywhere except the config panel itself.
   useEffect(() => {
     const handleClickOutsideConfigPanel = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
       if (!target.closest(".config-panel-container")) {
-        setSelectedResourceForConfig(null);
+        useCanvasStore.getState().setSelectedResourceForConfigId(null);
       }
     };
     if (selectedResourceForConfig) {
@@ -56,23 +58,12 @@ export function useCanvasDesignerController() {
   }, [selectedResourceForConfig]);
 
   // --- Compose all extracted hooks ---
-  const persistence = useCanvasPersistence({
-    canvasResources,
-    connectionLines,
-    currentLayoutId,
-    currentLayoutName,
-    currentLayoutSaved,
-    setCanvasResources,
-    setCurrentLayoutId,
-    setCurrentLayoutName,
-    setCurrentLayoutSaved,
-    setConnectionLines,
-  });
+  const persistence = useCanvasPersistence();
 
   const undoRedo = useCanvasUndoRedo({
     isDeploying,
     canvasResources,
-    setCanvasResources,
+    setCanvasResources: setResources,
     connectionLines,
     setConnectionLines,
     setCurrentLayoutSaved,
@@ -90,24 +81,23 @@ export function useCanvasDesignerController() {
       undoRedo.setRedoResourcesSnapshotStackTrace,
   });
 
-  // Sync connectionLines from connections hook back to controller state
-  // This is needed because useCanvasConnections owns its own connectionLines state
-  // In Phase C wiring, we will unify this properly
-  useEffect(() => {
-    setConnectionLines(connections.connectionLines);
-  }, [connections.connectionLines]);
+  // NOTE: the old sync effect that copied connections.connectionLines into a second
+  // controller-owned connectionLines state has been DELETED. That effect was the
+  // reload bug: it ran with the connections hook's empty initial array and
+  // clobbered the lines restored from localStorage. There is now exactly one
+  // connectionLines — in the store.
 
   const dropdown = useInfrastructureDropdown({
     isDeploying,
     setCurrentLayoutId,
     setCurrentLayoutName,
-    setCanvasResources,
-    setConnectionLines: connections.setConnectionLines,
+    setCanvasResources: setResources,
+    setConnectionLines,
     setCurrentLayoutSaved,
     setShowLayoutDropdown: () => {},
     setActiveDeploymentId,
     setIsDeploying,
-    setSelectedResource: connections.setSelectedResource,
+    setSelectedResource: setSelectedResourceId,
     setUndoResourcesSnapshotStackTrace:
       undoRedo.setUndoResourcesSnapshotStackTrace,
     setRedoResourcesSnapshotStackTrace:
@@ -117,10 +107,10 @@ export function useCanvasDesignerController() {
   const resourceActions = useCanvasResourceActions({
     isDeploying,
     canvasResources,
-    connectionLines: connections.connectionLines,
+    connectionLines,
     currentLayoutSaved,
-    setCanvasResources,
-    setConnectionLines: connections.setConnectionLines,
+    setCanvasResources: setResources,
+    setConnectionLines,
     setCurrentLayoutSaved,
     setUndoResourcesSnapshotStackTrace:
       undoRedo.setUndoResourcesSnapshotStackTrace,
@@ -132,18 +122,18 @@ export function useCanvasDesignerController() {
   const infrastructureActions = useInfrastructureActions({
     isDeploying,
     canvasResources,
-    connectionLines: connections.connectionLines,
+    connectionLines,
     currentLayoutId,
     currentLayoutName,
     currentLayoutSaved,
-    setCanvasResources,
-    setConnectionLines: connections.setConnectionLines,
+    setCanvasResources: setResources,
+    setConnectionLines,
     setCurrentLayoutId,
     setCurrentLayoutName,
     setCurrentLayoutSaved,
     setActiveDeploymentId,
     setIsDeploying,
-    setSelectedResource: connections.setSelectedResource,
+    setSelectedResource: setSelectedResourceId,
     setUndoResourcesSnapshotStackTrace:
       undoRedo.setUndoResourcesSnapshotStackTrace,
     setRedoResourcesSnapshotStackTrace:
@@ -153,7 +143,7 @@ export function useCanvasDesignerController() {
 
   const dragDrop = useCanvasDragDrop({
     canvasResources,
-    setCanvasResources,
+    setCanvasResources: setResources,
     setCurrentLayoutSaved,
     setIsInitialized: persistence.setIsInitialized,
     setUndoResourcesSnapshotStackTrace:
@@ -164,8 +154,9 @@ export function useCanvasDesignerController() {
   });
 
   return {
-    // Core state
+    // Core state (sourced from the store)
     canvasResources,
+    connectionLines,
     currentLayoutId,
     currentLayoutName,
     currentLayoutSaved,
@@ -174,7 +165,7 @@ export function useCanvasDesignerController() {
     isDeploying,
     setIsDeploying,
     selectedResourceForConfig,
-    setSelectedResourceForConfig,
+    setSelectedResourceForConfig: setSelectedResourceForConfigId,
     emptyCanvasStateDismissed,
     setEmptyCanvasStateDismissed,
     // Persistence
@@ -185,9 +176,8 @@ export function useCanvasDesignerController() {
     handleOpenCloseDropDownNameClick: dropdown.handleOpenCloseDropDownNameClick,
     handleSelectLayout: dropdown.handleSelectLayout,
     // Connections
-    connectionLines: connections.connectionLines,
-    selectedResource: connections.selectedResource,
-    isConnecting: connections.isConnecting,
+    selectedResource,
+    isConnecting,
     hanldeResouceClick: connections.hanldeResouceClick,
     handleToggleConnectionLines: connections.handleToggleConnectionLines,
     // Undo/Redo
