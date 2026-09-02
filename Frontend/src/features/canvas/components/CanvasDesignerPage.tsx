@@ -22,6 +22,7 @@ export function CanvasDesignerPage() {
   const selectedResourceForConfig = useCanvasStore((s) => s.selectedResourceForConfigId);
   const emptyCanvasStateDismissed = useCanvasStore((s) => s.emptyCanvasStateDismissed);
   const currentLayoutId = useCanvasStore((s) => s.currentLayoutId);
+  const activeDrag = useCanvasStore((s) => s.activeDrag);
 
   const {
     // Layout metadata
@@ -66,7 +67,6 @@ export function CanvasDesignerPage() {
     loadSampleArchitecture,
     // Drag & Drop
     sensors,
-    activeDrag,
     onDragStart,
     onDragEnd,
     // Config panel

@@ -1,6 +1,6 @@
-import { useState } from "react";
 import { PointerSensor, TouchSensor, MouseSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { toast } from "sonner";
+import { useCanvasStore } from "../store/canvasStore";
 import type { Resource } from "@shared/interface/Resource.interface";
 import type { ResourceType } from "@shared/constants/RESOURCE_TYPES.constants";
 import type { UndoCanvasResourceAction } from "@shared/types/UndoCanvasResourceAction.types";
@@ -34,12 +34,10 @@ export function useCanvasDragDrop({
     useSensor(MouseSensor),
   );
 
-  const [activeDrag, setActiveDrag] = useState<{ label: ResourceType } | null>(null);
+  const setActiveDrag = useCanvasStore((s) => s.setActiveDrag);
 
   return {
     sensors,
-    activeDrag,
-    setActiveDrag,
     onDragStart: (event: any) => {
       const label = event.active.id as ResourceType;
       setActiveDrag({ label });
@@ -47,13 +45,10 @@ export function useCanvasDragDrop({
     },
     onDragEnd: (event: any) => {
       setActiveDrag(null);
-
       console.log("over id: ", event.over?.id);
-
       if (event.over?.id === "canvas") {
         setCurrentLayoutSaved(false); // tracking there was a new resource added to the canvas
         setIsInitialized(true); // saving to localstorage there was a new resource added to the canvas
-
         const { active, delta } = event;
 
         // Get the canvas element
@@ -67,13 +62,11 @@ export function useCanvasDragDrop({
           const pointerEvent = event.activatorEvent as PointerEvent;
           x = pointerEvent.clientX - canvasRect.left + delta.x - 20; // these - constant values are according to the visuals
           y = pointerEvent.clientY - canvasRect.top + delta.y - 20;
-
           if (x < 0 || y < 0) {
             return;
           }
 
           const GRID_SIZE = 24; // matches background dot grid
-
           x = Math.round(x / GRID_SIZE) * GRID_SIZE;
           y = Math.round(y / GRID_SIZE) * GRID_SIZE;
         }

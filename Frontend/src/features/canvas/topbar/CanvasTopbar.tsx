@@ -1,3 +1,4 @@
+import { memo } from "react";
 import type { Infrastructure } from "@shared/interface/Infrastructure.interface";
 import { InfrastructureLayoutDropdown } from "./InfrastructureLayoutDropdown";
 import { TopbarActionButton } from "./TopbarActionButton";
@@ -19,23 +20,22 @@ interface CanvasTopbarProps {
   handleToggleConnectionLines: () => void
 }
 
-export function CanvasTopbar({ 
-    showLayoutDropdown,
-    savedLayouts,
-    handleOpenCloseDropDownNameClick,
-    handleSelectLayout,
-    currentLayoutId,
-    currentLayoutName,
-    currentLayoutSaved,
-    handleNew,
-    handleSave,
-    handleUpdate,
-    handleDeploy,
-    handleDelete,
-    isConnecting,
-    handleToggleConnectionLines
-  }: CanvasTopbarProps) {
-
+export const CanvasTopbar = memo(function CanvasTopbar({
+  showLayoutDropdown,
+  savedLayouts,
+  handleOpenCloseDropDownNameClick,
+  handleSelectLayout,
+  currentLayoutId,
+  currentLayoutName,
+  currentLayoutSaved,
+  handleNew,
+  handleSave,
+  handleUpdate,
+  handleDeploy,
+  handleDelete,
+  isConnecting,
+  handleToggleConnectionLines
+}: CanvasTopbarProps) {
   return (
     <div className="h-12 bg-gray-950 border-b border-gray-800 flex items-center justify-between px-4 shrink-0">
       {/* Logo */}
@@ -68,4 +68,4 @@ export function CanvasTopbar({
       </div>
     </div>
   )
-}
+});

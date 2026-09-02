@@ -1,7 +1,8 @@
+import { memo } from "react";
 import { RESOURCE_TYPES } from "@shared/constants/RESOURCE_TYPES.constants";
 import { ResourceSidebarItem } from "./ResourceSidebarItem";
 
-export function ResourceSidebar() {
+export const ResourceSidebar = memo(function ResourceSidebar() {
   return (
     <div className="w-16 h-full bg-gray-950 border-r border-gray-800 flex flex-col items-center gap-4 pt-4">
       {/* Entry Points — user-facing, first touch */}
@@ -28,4 +29,4 @@ export function ResourceSidebar() {
       <ResourceSidebarItem label={RESOURCE_TYPES.MonitoringAgent} />
     </div>
   )
-}
+});

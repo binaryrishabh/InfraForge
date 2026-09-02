@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import type { Resource } from "@shared/interface/Resource.interface";
 import type { ConnectionLine } from "@shared/interface/ConnectionLine.interface";
+import type { ResourceType } from "@shared/constants/RESOURCE_TYPES.constants";
 
 type Updater<T> = T | ((prev: T) => T);
 
@@ -21,6 +22,7 @@ interface CanvasStoreState {
   isDeploying: boolean;
   // Empty state
   emptyCanvasStateDismissed: boolean;
+  activeDrag: { label: ResourceType } | null;
 
   // Layout actions (Dispatch-compatible signatures so existing hooks keep working)
   setResources: (updater: Updater<Resource[]>) => void;
@@ -41,6 +43,7 @@ interface CanvasStoreState {
   // Composite actions
   loadLayout: (resources: Resource[], connectionLines: ConnectionLine[], id: string | null, name: string | null) => void;
   clearCanvas: () => void;
+  setActiveDrag: (drag: { label: ResourceType } | null) => void;
 }
 
 export const useCanvasStore = create<CanvasStoreState>()((set) => ({
@@ -55,6 +58,7 @@ export const useCanvasStore = create<CanvasStoreState>()((set) => ({
   activeDeploymentId: null,
   isDeploying: false,
   emptyCanvasStateDismissed: false,
+  activeDrag: null,
 
   setResources: (updater) =>
     set((s) => ({ resources: typeof updater === "function" ? updater(s.resources) : updater })),
@@ -70,6 +74,7 @@ export const useCanvasStore = create<CanvasStoreState>()((set) => ({
   setActiveDeploymentId: (id) => set({ activeDeploymentId: id }),
   setIsDeploying: (deploying) => set({ isDeploying: deploying }),
   setEmptyCanvasStateDismissed: (dismissed) => set({ emptyCanvasStateDismissed: dismissed }),
+  setActiveDrag: (drag) => set({ activeDrag: drag }),
 
   loadLayout: (resources, connectionLines, id, name) =>
     set({
@@ -93,5 +98,6 @@ export const useCanvasStore = create<CanvasStoreState>()((set) => ({
       selectedResourceForConfigId: null,
       activeDeploymentId: null,
       isDeploying: false,
+      activeDrag: null,
     }),
 }));

@@ -81,12 +81,6 @@ export function useCanvasDesignerController() {
       undoRedo.setRedoResourcesSnapshotStackTrace,
   });
 
-  // NOTE: the old sync effect that copied connections.connectionLines into a second
-  // controller-owned connectionLines state has been DELETED. That effect was the
-  // reload bug: it ran with the connections hook's empty initial array and
-  // clobbered the lines restored from localStorage. There is now exactly one
-  // connectionLines — in the store.
-
   const dropdown = useInfrastructureDropdown({
     isDeploying,
     setCurrentLayoutId,
@@ -202,9 +196,8 @@ export function useCanvasDesignerController() {
     handleDeleteExecute: infrastructureActions.handleDeleteExecute,
     handleDeployExecute: infrastructureActions.handleDeployExecute,
     loadSampleArchitecture: infrastructureActions.loadSampleArchitecture,
-    // Drag & Drop
+    // Drag & Drop (activeDrag removed — now read directly from store in CanvasDesignerPage)
     sensors: dragDrop.sensors,
-    activeDrag: dragDrop.activeDrag,
     onDragStart: dragDrop.onDragStart,
     onDragEnd: dragDrop.onDragEnd,
     // Config panel
