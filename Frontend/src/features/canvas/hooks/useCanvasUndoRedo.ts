@@ -18,7 +18,7 @@ export function useCanvasUndoRedo() {
       store.setResources(prev => prev.filter(r => r.id !== last.resource.id));
       store.setConnectionLines(prev => prev.filter(l => l.sourceId !== last.resource.id && l.targetId !== last.resource.id));
       store.setCurrentLayoutSaved(last.savedState);
-    } else {
+    } else if (last.type === "delete") {
       const occupied = store.resources.some(
         r => Math.abs(r.x - last.resource.x) < 40 && Math.abs(r.y - last.resource.y) < 40
       );
@@ -30,7 +30,11 @@ export function useCanvasUndoRedo() {
       store.setResources(prev => [...prev, last.resource]);
       store.setConnectionLines(prev => [...prev, ...last.connectionLines]);
       store.setCurrentLayoutSaved(last.savedState);
+    } else if (last.type === "move") {
+      store.setResources(prev => prev.map(r => r.id === last.resourceId ? { ...r, x: last.fromX, y: last.fromY } : r));
+      store.setCurrentLayoutSaved(last.savedState);
     }
+
     store.setUndoStack(prev => prev.slice(0, -1));
     store.setRedoStack(prev => [...prev, last]);
     toast.success("Undo");
@@ -45,13 +49,18 @@ export function useCanvasUndoRedo() {
     if (store.redoStack.length === 0) return;
 
     const last = store.redoStack[store.redoStack.length - 1];
+    if (!last) return;
+
     if (last.type === "add") {
       store.setResources(prev => [...prev, last.resource]);
       store.setConnectionLines(prev => [...prev, ...last.connectionLines]);
-    } else {
+    } else if (last.type === "delete") {
       store.setResources(prev => prev.filter(r => r.id !== last.resource.id));
       store.setConnectionLines(prev => prev.filter(l => l.sourceId !== last.resource.id && l.targetId !== last.resource.id));
+    } else if (last.type === "move") {
+      store.setResources(prev => prev.map(r => r.id === last.resourceId ? { ...r, x: last.toX, y: last.toY } : r));
     }
+
     store.setRedoStack(prev => prev.slice(0, -1));
     store.setCurrentLayoutSaved(false);
     store.setUndoStack(prev => [...prev, last]);

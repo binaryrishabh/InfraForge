@@ -13,9 +13,12 @@ export function useCanvasResourceActions() {
       store.setResources(prev => prev.filter(r => r.id !== last.resource.id));
       store.setConnectionLines(prev => prev.filter(l => l.sourceId !== last.resource.id && l.targetId !== last.resource.id));
       store.setCurrentLayoutSaved(last.savedState);
-    } else {
+    } else if (last.type === "delete") {
       store.setResources(prev => [...prev, last.resource]);
       store.setConnectionLines(prev => [...prev, ...last.connectionLines]);
+      store.setCurrentLayoutSaved(last.savedState);
+    } else if (last.type === "move") {
+      store.setResources(prev => prev.map(r => r.id === last.resourceId ? { ...r, x: last.fromX, y: last.fromY } : r));
       store.setCurrentLayoutSaved(last.savedState);
     }
     store.setUndoStack(prev => prev.slice(0, -1));
@@ -49,5 +52,36 @@ export function useCanvasResourceActions() {
     store.setCurrentLayoutSaved(false);
   }, []);
 
-  return { handleDeleteCanvasResource, handleUpdateCanvasResource };
+  // Live drag feedback — called on every pointermove. Deliberately does NOT touch
+  // the undo stack or the saved flag; that only happens once in commitMove.
+  const handleMoveCanvasResource = useCallback((resourceId: string, x: number, y: number) => {
+    const store = useCanvasStore.getState();
+    if (store.isDeploying) return;
+    store.setResources(prev => prev.map(r => r.id === resourceId ? { ...r, x, y } : r));
+  }, []);
+
+  // Called once on drag release. Records the move for undo/redo and marks dirty.
+  const commitMoveCanvasResource = useCallback((resourceId: string, fromX: number, fromY: number, toX: number, toY: number) => {
+    const store = useCanvasStore.getState();
+    if (store.isDeploying) return;
+    if (fromX === toX && fromY === toY) return;
+    store.setUndoStack(prev => [...prev, {
+      type: "move",
+      resourceId,
+      fromX,
+      fromY,
+      toX,
+      toY,
+      savedState: store.currentLayoutSaved,
+    }]);
+    store.setRedoStack([]);
+    store.setCurrentLayoutSaved(false);
+  }, []);
+
+  return {
+    handleDeleteCanvasResource,
+    handleUpdateCanvasResource,
+    handleMoveCanvasResource,
+    commitMoveCanvasResource,
+  };
 }

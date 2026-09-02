@@ -11,7 +11,11 @@ export const CanvasBoard = memo(function CanvasBoard() {
   const connectionLines = useCanvasStore((s) => s.connectionLines);
   const setSelectedResourceForConfigId = useCanvasStore((s) => s.setSelectedResourceForConfigId);
 
-  const { handleDeleteCanvasResource } = useCanvasResourceActions();
+  const {
+    handleDeleteCanvasResource,
+    handleMoveCanvasResource,
+    commitMoveCanvasResource,
+  } = useCanvasResourceActions();
   const { hanldeResouceClick } = useCanvasConnectionActions();
 
   const { setNodeRef } = useDroppable({ id: "canvas" });
@@ -34,6 +38,8 @@ export const CanvasBoard = memo(function CanvasBoard() {
           onResourceClick={hanldeResouceClick}
           onResourceDoubleClick={setSelectedResourceForConfigId}
           onDeleteResource={handleDeleteCanvasResource}
+          onMoveResource={handleMoveCanvasResource}
+          onCommitMove={commitMoveCanvasResource}
         />
       ))}
     </div>

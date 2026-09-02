@@ -19,22 +19,29 @@ export function useCanvasPersistence() {
     useCanvasStore.getState().setIsInitialized(true);
   }, []);
 
-  // Persist to localStorage on every store change — the subscribe callback
-  // receives the full state, so no React subscriptions are needed at all.
+  // Persist to localStorage on every store change — debounced by 300ms so a
+  // drag (which fires ~60 store updates/sec) does not thrash localStorage.
   useEffect(() => {
+    let saveTimeout: ReturnType<typeof setTimeout> | null = null;
     const unsubscribe = useCanvasStore.subscribe((state) => {
       if (!state.isInitialized) return;
-      localStorage.setItem(
-        "Infraforge_Infrastucture_Draft",
-        JSON.stringify({
-          canvasResources: state.resources,
-          connectionLines: state.connectionLines,
-          currentLayoutId: state.currentLayoutId,
-          currentLayoutName: state.currentLayoutName,
-          saved: state.currentLayoutSaved,
-        }),
-      );
+      if (saveTimeout) clearTimeout(saveTimeout);
+      saveTimeout = setTimeout(() => {
+        localStorage.setItem(
+          "Infraforge_Infrastucture_Draft",
+          JSON.stringify({
+            canvasResources: state.resources,
+            connectionLines: state.connectionLines,
+            currentLayoutId: state.currentLayoutId,
+            currentLayoutName: state.currentLayoutName,
+            saved: state.currentLayoutSaved,
+          }),
+        );
+      }, 300);
     });
-    return unsubscribe;
+    return () => {
+      unsubscribe();
+      if (saveTimeout) clearTimeout(saveTimeout);
+    };
   }, []);
 }
