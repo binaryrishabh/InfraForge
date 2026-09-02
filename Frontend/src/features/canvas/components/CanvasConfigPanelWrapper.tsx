@@ -3,19 +3,21 @@ import { useCanvasResourceActions } from "../hooks/useCanvasResourceActions";
 import { ResourceConfigPanel } from "./ResourceConfigPanel";
 
 export function CanvasConfigPanelWrapper() {
-  const selectedResourceForConfig = useCanvasStore((s) => s.selectedResourceForConfigId);
-  const resources = useCanvasStore((s) => s.resources);
-  const setSelectedResourceForConfig = useCanvasStore((s) => s.setSelectedResourceForConfigId);
+  const resource = useCanvasStore((s) =>
+    s.selectedResourceForConfigId
+      ? s.resources.find((r) => r.id === s.selectedResourceForConfigId)
+      : undefined
+  );
   const { handleUpdateCanvasResource } = useCanvasResourceActions();
 
-  if (!selectedResourceForConfig) return null;
-  const resource = resources.find((r) => r.id === selectedResourceForConfig);
-  if (!resource) return null;
+  if (!resource) {
+    return null;
+  }
 
   return (
     <ResourceConfigPanel
       resource={resource}
-      onClose={() => setSelectedResourceForConfig(null)}
+      onClose={() => useCanvasStore.getState().setSelectedResourceForConfigId(null)}
       onUpdateResource={handleUpdateCanvasResource}
     />
   );

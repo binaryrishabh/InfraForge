@@ -10,12 +10,12 @@ export function CanvasModals() {
   const modalState = useCanvasStore((s) => s.modalState);
   const modalLoading = useCanvasStore((s) => s.modalLoading);
   const currentLayoutName = useCanvasStore((s) => s.currentLayoutName);
-  const resources = useCanvasStore((s) => s.resources);
-  const connectionLines = useCanvasStore((s) => s.connectionLines);
-  
+  const resourceCount = useCanvasStore((s) => s.resources.length);
+  const connectionCount = useCanvasStore((s) => s.connectionLines.length);
+
   const setModalState = useCanvasStore((s) => s.setModalState);
   const setModalLoading = useCanvasStore((s) => s.setModalLoading);
-  
+
   const {
     handleNewExecute, handleSaveWithName, handleUpdateWithName,
     handleDeleteExecute, handleDeployExecute
@@ -75,8 +75,8 @@ export function CanvasModals() {
         <DeployModal
           open={true}
           onOpenChange={(open) => { if (!open && !modalLoading) setModalState(null); }}
-          resourceCount={resources.length}
-          connectionCount={connectionLines.length}
+          resourceCount={resourceCount}
+          connectionCount={connectionCount}
           loading={modalLoading}
           onDeploy={async (profile) => {
             setModalLoading(true);

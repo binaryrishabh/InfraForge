@@ -1,5 +1,5 @@
 import { memo } from "react";
-import { ManhattanConnectionLine } from "./ManhattanConnectionLine";
+import { BezierConnectionLine } from "./BezierConnectionLine";
 import type { ConnectionLine } from "@shared/interface/ConnectionLine.interface";
 import type { Resource } from "@shared/interface/Resource.interface";
 
@@ -29,7 +29,7 @@ export const ConnectionLinesLayer = memo(function ConnectionLinesLayer({
           return null;
         }
         return (
-          <ManhattanConnectionLine
+          <BezierConnectionLine
             key={connectionLine.id}
             source={source}
             target={target}

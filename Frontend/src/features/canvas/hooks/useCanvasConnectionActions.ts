@@ -5,11 +5,12 @@ import { RESOURCE_PORTS } from "@shared/constants/RESOURCE_PORTS.constants";
 import { useCanvasStore } from "../store/canvasStore";
 import type { ResourceType } from "@shared/constants/RESOURCE_TYPES.constants";
 
-export function useCanvasConnections() {
-  const connectionLines = useCanvasStore((s) => s.connectionLines);
-  const selectedResource = useCanvasStore((s) => s.selectedResourceId);
-  const isConnecting = useCanvasStore((s) => s.isConnecting);
-
+// Actions-only variant of useCanvasConnections: NO store subscriptions, so
+// components that only need the handlers never re-render from connection state.
+// All live values are read via useCanvasStore.getState() at call time.
+// NOTE: hanldeResouceClick keeps its existing (misspelled) name deliberately
+// so no consumer file has to change.
+export function useCanvasConnectionActions() {
   const hanldeResouceClick = useCallback((resourceId: string, resourceType: ResourceType) => {
     const store = useCanvasStore.getState();
     if (!store.isConnecting) return;
@@ -27,7 +28,6 @@ export function useCanvasConnections() {
       if (!sourceItem) return;
       const validConnection = validateConnection(sourceItem.type, resourceType);
       if (!validConnection.valid) { toast.warning(validConnection.message); store.setSelectedResourceId(null); return; }
-      
       const port = RESOURCE_PORTS[sourceItem.type] || 80;
       store.setCurrentLayoutSaved(false);
       store.setConnectionLines((prev) => [
@@ -44,5 +44,5 @@ export function useCanvasConnections() {
     store.setSelectedResourceId(null);
   }, []);
 
-  return { connectionLines, selectedResource, isConnecting, hanldeResouceClick, handleToggleConnectionLines };
+  return { hanldeResouceClick, handleToggleConnectionLines };
 }

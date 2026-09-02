@@ -1,14 +1,10 @@
 import { useEffect } from "react";
 import { useCanvasStore } from "../store/canvasStore";
 
+// Zero-subscription persistence: restore once on mount via getState(), then
+// persist via store.subscribe() so this hook never re-renders its host.
 export function useCanvasPersistence() {
-  const resources = useCanvasStore((s) => s.resources);
-  const connectionLines = useCanvasStore((s) => s.connectionLines);
-  const currentLayoutId = useCanvasStore((s) => s.currentLayoutId);
-  const currentLayoutName = useCanvasStore((s) => s.currentLayoutName);
-  const currentLayoutSaved = useCanvasStore((s) => s.currentLayoutSaved);
-  const isInitialized = useCanvasStore((s) => s.isInitialized);
-
+  // One-time restore from localStorage on mount
   useEffect(() => {
     const infra = localStorage.getItem("Infraforge_Infrastucture_Draft");
     if (infra) {
@@ -23,17 +19,22 @@ export function useCanvasPersistence() {
     useCanvasStore.getState().setIsInitialized(true);
   }, []);
 
+  // Persist to localStorage on every store change — the subscribe callback
+  // receives the full state, so no React subscriptions are needed at all.
   useEffect(() => {
-    if (!isInitialized) return;
-    localStorage.setItem(
-      "Infraforge_Infrastucture_Draft",
-      JSON.stringify({
-        canvasResources: resources,
-        connectionLines,
-        currentLayoutId,
-        currentLayoutName,
-        saved: currentLayoutSaved,
-      }),
-    );
-  }, [resources, currentLayoutId, currentLayoutName, connectionLines, currentLayoutSaved, isInitialized]);
+    const unsubscribe = useCanvasStore.subscribe((state) => {
+      if (!state.isInitialized) return;
+      localStorage.setItem(
+        "Infraforge_Infrastucture_Draft",
+        JSON.stringify({
+          canvasResources: state.resources,
+          connectionLines: state.connectionLines,
+          currentLayoutId: state.currentLayoutId,
+          currentLayoutName: state.currentLayoutName,
+          saved: state.currentLayoutSaved,
+        }),
+      );
+    });
+    return unsubscribe;
+  }, []);
 }

@@ -2,7 +2,7 @@ import { memo } from "react";
 import { useDroppable } from "@dnd-kit/core";
 import { useCanvasStore } from "../store/canvasStore";
 import { useCanvasResourceActions } from "../hooks/useCanvasResourceActions";
-import { useCanvasConnections } from "../hooks/useCanvasConnections";
+import { useCanvasConnectionActions } from "../hooks/useCanvasConnectionActions";
 import { CanvasResourceItem } from "./CanvasResourceItem";
 import { ConnectionLinesLayer } from "./ConnectionLinesLayer";
 
@@ -10,9 +10,9 @@ export const CanvasBoard = memo(function CanvasBoard() {
   const resources = useCanvasStore((s) => s.resources);
   const connectionLines = useCanvasStore((s) => s.connectionLines);
   const setSelectedResourceForConfigId = useCanvasStore((s) => s.setSelectedResourceForConfigId);
-  
+
   const { handleDeleteCanvasResource } = useCanvasResourceActions();
-  const { hanldeResouceClick } = useCanvasConnections();
+  const { hanldeResouceClick } = useCanvasConnectionActions();
 
   const { setNodeRef } = useDroppable({ id: "canvas" });
 
@@ -32,7 +32,7 @@ export const CanvasBoard = memo(function CanvasBoard() {
           key={resource.id}
           resource={resource}
           onResourceClick={hanldeResouceClick}
-          onResourceDoubleClick={(id) => setSelectedResourceForConfigId(id)}
+          onResourceDoubleClick={setSelectedResourceForConfigId}
           onDeleteResource={handleDeleteCanvasResource}
         />
       ))}

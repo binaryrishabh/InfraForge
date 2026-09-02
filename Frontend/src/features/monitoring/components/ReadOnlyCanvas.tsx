@@ -2,7 +2,7 @@ import { RESOURCE_TYPES } from "@shared/constants/RESOURCE_TYPES.constants";
 import { useSimulationStore } from "../store/simulationStore";
 import type { ConnectionLine } from "@shared/interface/ConnectionLine.interface";
 import type { Resource } from "@shared/interface/Resource.interface";
-import { ManhattanConnectionLine } from "@/features/canvas/components/ManhattanConnectionLine";
+import { BezierConnectionLine } from "@/features/canvas/components/BezierConnectionLine";
 import { MonitoringResourceNode } from "./MonitoringResourceNode";
 import { ProvisioningNode } from "./ProvisioningNode";
 
@@ -22,7 +22,7 @@ export function ReadOnlyCanvas({ resources, connectionLines }: ReadOnlyCanvasPro
           const source = resources.find(resource => resource.id === connectionLine.sourceId);
           const target = resources.find(resource => resource.id === connectionLine.targetId);
           if (!source || !target) return null;
-          return <ManhattanConnectionLine key={connectionLine.id} source={source} target={target} port={connectionLine.port} />;
+          return <BezierConnectionLine key={connectionLine.id} source={source} target={target} port={connectionLine.port} />;
         })}
         {/* Pool links — every spawned/provisioning replica stays visually wired to its Load Balancer */}
         {spawnedVms.map(vm => {
@@ -31,7 +31,7 @@ export function ReadOnlyCanvas({ resources, connectionLines }: ReadOnlyCanvasPro
           const lb = resources.find(resource => resource.id === pool.lbId);
           if (!lb) return null;
           return (
-            <ManhattanConnectionLine
+            <BezierConnectionLine
               key={`spawn-link-${vm.id}`}
               source={lb}
               target={{ x: vm.x, y: vm.y, type: RESOURCE_TYPES.VirtualMachine }}

@@ -7,9 +7,6 @@ import { useCanvasStore } from "../store/canvasStore";
 import type { WorkloadProfile } from "@shared/interface/WorkloadProfile.interface";
 
 export function useInfrastructureActions() {
-  const modalState = useCanvasStore((s) => s.modalState);
-  const modalLoading = useCanvasStore((s) => s.modalLoading);
-
   const handleNewExecute = () => {
     const store = useCanvasStore.getState();
     store.setResources([]);
@@ -158,7 +155,7 @@ export function useInfrastructureActions() {
   };
 
   return {
-    modalState, modalLoading, handleNew, handleSave, handleUpdate, handleDelete, handleDeploy,
+    handleNew, handleSave, handleUpdate, handleDelete, handleDeploy,
     handleNewExecute, handleSaveWithName, handleUpdateWithName, handleDeleteExecute, handleDeployExecute, loadSampleArchitecture,
   };
 }
