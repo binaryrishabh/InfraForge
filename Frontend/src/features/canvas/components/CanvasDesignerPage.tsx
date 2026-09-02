@@ -18,7 +18,6 @@ export function CanvasDesignerPage() {
   // Canvas state — read straight from the single source of truth
   const canvasResources = useCanvasStore((s) => s.resources);
   const connectionLines = useCanvasStore((s) => s.connectionLines);
-  const selectedResource = useCanvasStore((s) => s.selectedResourceId);
   const isConnecting = useCanvasStore((s) => s.isConnecting);
   const selectedResourceForConfig = useCanvasStore((s) => s.selectedResourceForConfigId);
   const emptyCanvasStateDismissed = useCanvasStore((s) => s.emptyCanvasStateDismissed);
@@ -148,8 +147,6 @@ export function CanvasDesignerPage() {
               onDeleteResource={handleDeleteCanvasResource}
               onResourceClick={hanldeResouceClick}
               connectionLines={connectionLines}
-              selectedResource={selectedResource}
-              isConnecting={isConnecting}
               onResourceDoubleClick={handleResourceDoubleClickShowConfig}
             />
           )}
