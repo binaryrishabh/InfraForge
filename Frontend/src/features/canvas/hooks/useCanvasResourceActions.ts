@@ -68,6 +68,17 @@ export function useCanvasResourceActions() {
     const store = useCanvasStore.getState();
     if (store.isDeploying) return;
     if (fromX === toX && fromY === toY) return;
+    // Overlap prevention: reject the drop if the destination collides with another
+    // resource, and snap the node back to where the drag started. Same 40px
+    // threshold as the sidebar-drop guard.
+    const isOverlapping = store.resources.some(
+      (r) => r.id !== resourceId && Math.abs(r.x - toX) < 40 && Math.abs(r.y - toY) < 40,
+    );
+    if (isOverlapping) {
+      store.setResources(prev => prev.map(r => r.id === resourceId ? { ...r, x: fromX, y: fromY } : r));
+      toast.warning("Space already occupied!");
+      return;
+    }
     store.setUndoStack(prev => [...prev, {
       type: "move",
       resourceId,
