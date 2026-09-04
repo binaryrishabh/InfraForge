@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { RESOURCE_TYPES } from "@shared/constants/RESOURCE_TYPES.constants";
 import { useSimulationStore } from "../store/simulationStore";
 import type { ConnectionLine } from "@shared/interface/ConnectionLine.interface";
@@ -6,17 +6,8 @@ import type { Resource } from "@shared/interface/Resource.interface";
 import { BezierConnectionLine } from "@/features/canvas/components/BezierConnectionLine";
 import { MonitoringResourceNode } from "./MonitoringResourceNode";
 import { ProvisioningNode } from "./ProvisioningNode";
-
-const NODE_SIZE = 48;
-const FIT_PADDING = 64;
-const MIN_SCALE = 0.3;
-const MAX_SCALE = 1.0;
-
-interface Viewport {
-  scale: number;
-  translateX: number;
-  translateY: number;
-}
+import { useMonitoringViewport } from "../hooks/useMonitoringViewport";
+import { MonitoringZoomControls } from "./MonitoringZoomControls";
 
 interface ReadOnlyCanvasProps {
   resources: Resource[];
@@ -26,84 +17,82 @@ interface ReadOnlyCanvasProps {
 export function ReadOnlyCanvas({ resources, connectionLines }: ReadOnlyCanvasProps) {
   const spawnedVms = useSimulationStore((s) => s.spawnedVms);
   const pools = useSimulationStore((s) => s.pools);
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const [viewport, setViewport] = useState<Viewport>({
-    scale: 1,
-    translateX: 0,
-    translateY: 0,
-  });
+  const {
+    containerRef,
+    viewport,
+    glide,
+    handlePanStart,
+    handlePointerMove,
+    handlePointerUp,
+    startNodeDrag,
+    getNodeOffset,
+    fitToNodes,
+    zoomIn,
+    zoomOut,
+  } = useMonitoringViewport();
 
-  // Auto-fit: frame every node (base + active replicas + provisioning ghosts) so
-  // nothing ever clips. Runs on mount and whenever the replica set changes. The
-  // bounding box only changes when a replica is added/removed, and the setViewport
-  // guard below skips no-op updates, so the view glides only on spawn/drain.
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-    const rect = container.getBoundingClientRect();
-    if (rect.width === 0 || rect.height === 0) return;
+  // Effective position = base position + any user drag offset.
+  const effectivePos = (id: string, baseX: number, baseY: number) => {
+    const off = getNodeOffset(id);
+    return { x: baseX + off.dx, y: baseY + off.dy };
+  };
 
-    const positions: Array<{ x: number; y: number }> = [
-      ...resources.map((r) => ({ x: r.x, y: r.y })),
-      ...spawnedVms.map((v) => ({ x: v.x, y: v.y })),
-    ];
-    if (positions.length === 0) return;
-
-    let minX = Infinity;
-    let minY = Infinity;
-    let maxX = -Infinity;
-    let maxY = -Infinity;
-    for (const p of positions) {
-      if (p.x < minX) minX = p.x;
-      if (p.y < minY) minY = p.y;
-      if (p.x + NODE_SIZE > maxX) maxX = p.x + NODE_SIZE;
-      if (p.y + NODE_SIZE > maxY) maxY = p.y + NODE_SIZE;
+  // All current node positions (base + spawned + dragged) for framing.
+  const computeNodePositions = useCallback(() => {
+    const positions: { x: number; y: number }[] = [];
+    for (const r of resources) {
+      const off = getNodeOffset(r.id);
+      positions.push({ x: r.x + off.dx, y: r.y + off.dy });
     }
+    for (const v of spawnedVms) {
+      const off = getNodeOffset(v.id);
+      positions.push({ x: v.x + off.dx, y: v.y + off.dy });
+    }
+    return positions;
+  }, [resources, spawnedVms, getNodeOffset]);
 
-    const boxWidth = maxX - minX;
-    const boxHeight = maxY - minY;
-    if (boxWidth <= 0 || boxHeight <= 0) return;
+  // Re-fit only when the SET of nodes changes (a replica spawns or drains), not on
+  // every position/offset change. A provisioning->active flip keeps its position,
+  // so the key is unchanged and the view does not jitter.
+  const nodeSetKey = useMemo(
+    () => [...resources.map((r) => r.id), ...spawnedVms.map((v) => v.id)].sort().join("|"),
+    [resources, spawnedVms]
+  );
 
-    const rawScale = Math.min(
-      (rect.width - FIT_PADDING * 2) / boxWidth,
-      (rect.height - FIT_PADDING * 2) / boxHeight,
-    );
-    // Never zoom in past 100%, never shrink below 30% — only zoom out to fit.
-    const scale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, rawScale));
+  useEffect(() => {
+    fitToNodes(computeNodePositions());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [nodeSetKey]);
 
-    const translateX = (rect.width - boxWidth * scale) / 2 - minX * scale;
-    const translateY = (rect.height - boxHeight * scale) / 2 - minY * scale;
-
-    // Skip no-op updates so a status-only flip (provisioning->active) that leaves
-    // the bounding box unchanged does not re-trigger a render or a transition.
-    setViewport((prev) => {
-      if (
-        prev.scale === scale &&
-        prev.translateX === translateX &&
-        prev.translateY === translateY
-      ) {
-        return prev;
-      }
-      return { scale, translateX, translateY };
-    });
-  }, [spawnedVms, resources]);
+  // The ⟲ control now performs a TRUE fit — re-frame every node at its current
+  // (possibly dragged) position, gliding smoothly. Replaces the old 100%/origin reset.
+  const handleFitView = useCallback(() => {
+    fitToNodes(computeNodePositions());
+  }, [fitToNodes, computeNodePositions]);
 
   return (
     <div
       ref={containerRef}
       className="relative w-full h-full bg-[#0f1117] rounded-lg border border-gray-800 overflow-hidden"
+      onPointerDown={handlePanStart}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
     >
-      {/* Transformed "world" layer — SVG lines + all nodes transform together. */}
+      {/* Transformed "world" layer. pointer-events: none so pan/zoom fall through
+          to the container; resource nodes re-enable pointer events. The transform
+          transition only applies while `glide` is set (auto-fit), keeping manual
+          pan/zoom/drag instant. */}
       <div
         style={{
           transform: `translate(${viewport.translateX}px, ${viewport.translateY}px) scale(${viewport.scale})`,
           transformOrigin: "0 0",
-          transition: "transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)",
           position: "absolute",
           top: 0,
           left: 0,
           width: "100%",
           height: "100%",
+          pointerEvents: "none",
+          transition: glide ? "transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)" : "none",
         }}
       >
         <svg
@@ -113,18 +102,16 @@ export function ReadOnlyCanvas({ resources, connectionLines }: ReadOnlyCanvasPro
           style={{ overflow: "visible" }}
         >
           {connectionLines.map((connectionLine) => {
-            const source = resources.find(
-              (resource) => resource.id === connectionLine.sourceId,
-            );
-            const target = resources.find(
-              (resource) => resource.id === connectionLine.targetId,
-            );
+            const source = resources.find((resource) => resource.id === connectionLine.sourceId);
+            const target = resources.find((resource) => resource.id === connectionLine.targetId);
             if (!source || !target) return null;
+            const sPos = effectivePos(source.id, source.x, source.y);
+            const tPos = effectivePos(target.id, target.x, target.y);
             return (
               <BezierConnectionLine
                 key={connectionLine.id}
-                source={source}
-                target={target}
+                source={{ ...source, x: sPos.x, y: sPos.y }}
+                target={{ ...target, x: tPos.x, y: tPos.y }}
                 port={connectionLine.port}
               />
             );
@@ -135,38 +122,58 @@ export function ReadOnlyCanvas({ resources, connectionLines }: ReadOnlyCanvasPro
             if (!pool) return null;
             const lb = resources.find((resource) => resource.id === pool.lbId);
             if (!lb) return null;
+            const lbPos = effectivePos(lb.id, lb.x, lb.y);
+            const vmPos = effectivePos(vm.id, vm.x, vm.y);
             return (
               <BezierConnectionLine
                 key={`spawn-link-${vm.id}`}
-                source={lb}
-                target={{ x: vm.x, y: vm.y, type: RESOURCE_TYPES.VirtualMachine }}
+                source={{ ...lb, x: lbPos.x, y: lbPos.y }}
+                target={{ x: vmPos.x, y: vmPos.y, type: RESOURCE_TYPES.VirtualMachine }}
                 port={80}
               />
             );
           })}
         </svg>
-        {resources.map((resource) => (
-          <MonitoringResourceNode key={resource.id} resource={resource} />
-        ))}
+        {resources.map((resource) => {
+          const pos = effectivePos(resource.id, resource.x, resource.y);
+          return (
+            <MonitoringResourceNode
+              key={resource.id}
+              resource={{ ...resource, x: pos.x, y: pos.y }}
+              onNodePointerDown={startNodeDrag}
+            />
+          );
+        })}
         {spawnedVms
           .filter((v) => v.status === "active")
-          .map((v) => (
-            <MonitoringResourceNode
-              key={v.id}
-              resource={{
-                id: v.id,
-                type: RESOURCE_TYPES.VirtualMachine,
-                x: v.x,
-                y: v.y,
-              }}
-            />
-          ))}
+          .map((v) => {
+            const pos = effectivePos(v.id, v.x, v.y);
+            return (
+              <MonitoringResourceNode
+                key={v.id}
+                resource={{
+                  id: v.id,
+                  type: RESOURCE_TYPES.VirtualMachine,
+                  x: pos.x,
+                  y: pos.y,
+                }}
+                onNodePointerDown={startNodeDrag}
+              />
+            );
+          })}
         {spawnedVms
           .filter((v) => v.status === "provisioning")
-          .map((v) => (
-            <ProvisioningNode key={v.id} vm={v} />
-          ))}
+          .map((v) => {
+            const pos = effectivePos(v.id, v.x, v.y);
+            return <ProvisioningNode key={v.id} vm={{ ...v, x: pos.x, y: pos.y }} />;
+          })}
       </div>
+      <MonitoringZoomControls
+        scale={viewport.scale}
+        onZoomIn={zoomIn}
+        onZoomOut={zoomOut}
+        onReset={handleFitView}
+      />
     </div>
   );
 }

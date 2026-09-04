@@ -5,7 +5,9 @@ import type { Resource } from "@shared/interface/Resource.interface";
 
 interface MonitoringResourceNodeProps {
   resource: Resource;
-}
+  // Optional cosmetic drag hook (monitoring only). Not wired on the designer.
+  onNodePointerDown?: (nodeId: string, clientX: number, clientY: number, pointerId: number) => void;
+};
 
 const healthRing: Record<string, string> = {
   [ResourceHealth.HEALTHY]: "ring-emerald-500/60",
@@ -36,9 +38,9 @@ function HudRow({ label, value, pct }: { label: string; value: string; pct: numb
       </div>
     </div>
   );
-}
+};
 
-export function MonitoringResourceNode({ resource }: MonitoringResourceNodeProps) {
+export function MonitoringResourceNode({ resource, onNodePointerDown }: MonitoringResourceNodeProps) {
   const metric = useSimulationStore((s) => s.metrics[resource.id]);
   const isRestarting = useSimulationStore((s) => s.restarting.includes(resource.id));
 
@@ -53,7 +55,18 @@ export function MonitoringResourceNode({ resource }: MonitoringResourceNodeProps
   const popNearTop = resource.y < 96;
 
   return (
-    <div className="absolute group" style={{ left: resource.x, top: resource.y }}>
+    <div
+      className={`absolute group pointer-events-auto ${onNodePointerDown ? "cursor-grab active:cursor-grabbing" : ""}`}
+      style={{ left: resource.x, top: resource.y }}
+      onPointerDown={
+        onNodePointerDown
+          ? (e) => {
+              e.stopPropagation();
+              onNodePointerDown(resource.id, e.clientX, e.clientY, e.pointerId);
+            }
+          : undefined
+      }
+    >
       {/* AUTO-POP METER — appears uninvited when a resource crosses its safe threshold or is restarting.
           Flips to the right of the node when the node sits near the canvas top edge so it never clips. */}
       {showAutoPop && (
@@ -129,4 +142,4 @@ export function MonitoringResourceNode({ resource }: MonitoringResourceNodeProps
       </div>
     </div>
   );
-}
+};
