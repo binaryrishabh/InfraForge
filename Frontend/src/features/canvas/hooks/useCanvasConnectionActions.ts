@@ -28,7 +28,7 @@ export function useCanvasConnectionActions() {
       if (!sourceItem) return;
       const validConnection = validateConnection(sourceItem.type, resourceType);
       if (!validConnection.valid) { toast.warning(validConnection.message); store.setSelectedResourceId(null); return; }
-      const port = RESOURCE_PORTS[sourceItem.type] || 80;
+      const port = RESOURCE_PORTS[resourceType] || 80;
       store.setCurrentLayoutSaved(false);
       store.setConnectionLines((prev) => [
         ...prev, { id: `connection-${Date.now()}`, sourceId: selectedResourceId, targetId: resourceId, sourceType: sourceItem.type, targetType: resourceType, port },
