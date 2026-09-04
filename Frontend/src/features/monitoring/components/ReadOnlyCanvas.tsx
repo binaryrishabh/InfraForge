@@ -17,6 +17,7 @@ interface ReadOnlyCanvasProps {
 export function ReadOnlyCanvas({ resources, connectionLines }: ReadOnlyCanvasProps) {
   const spawnedVms = useSimulationStore((s) => s.spawnedVms);
   const pools = useSimulationStore((s) => s.pools);
+
   const {
     containerRef,
     viewport,
@@ -113,6 +114,7 @@ export function ReadOnlyCanvas({ resources, connectionLines }: ReadOnlyCanvasPro
                 source={{ ...source, x: sPos.x, y: sPos.y }}
                 target={{ ...target, x: tPos.x, y: tPos.y }}
                 port={connectionLine.port}
+                scale={viewport.scale}
               />
             );
           })}
@@ -130,6 +132,7 @@ export function ReadOnlyCanvas({ resources, connectionLines }: ReadOnlyCanvasPro
                 source={{ ...lb, x: lbPos.x, y: lbPos.y }}
                 target={{ x: vmPos.x, y: vmPos.y, type: RESOURCE_TYPES.VirtualMachine }}
                 port={80}
+                scale={viewport.scale}
               />
             );
           })}
@@ -141,6 +144,7 @@ export function ReadOnlyCanvas({ resources, connectionLines }: ReadOnlyCanvasPro
               key={resource.id}
               resource={{ ...resource, x: pos.x, y: pos.y }}
               onNodePointerDown={startNodeDrag}
+              scale={viewport.scale}
             />
           );
         })}
@@ -158,6 +162,7 @@ export function ReadOnlyCanvas({ resources, connectionLines }: ReadOnlyCanvasPro
                   y: pos.y,
                 }}
                 onNodePointerDown={startNodeDrag}
+                scale={viewport.scale}
               />
             );
           })}

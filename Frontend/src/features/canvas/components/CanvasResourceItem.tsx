@@ -7,6 +7,7 @@ import type { ResourceType } from "@shared/constants/RESOURCE_TYPES.constants";
 
 interface CanvasResourceItemProps {
   resource: Resource;
+  scale: number;
   onResourceClick: (resourceId: string, resourceType: ResourceType) => void;
   onResourceDoubleClick: (resourceId: string) => void;
   onDeleteResource: (resourceId: string) => void;
@@ -18,6 +19,7 @@ const GRID_SIZE = 24;
 
 export const CanvasResourceItem = memo(function CanvasResourceItem({
   resource,
+  scale,
   onResourceClick,
   onResourceDoubleClick,
   onDeleteResource,
@@ -32,6 +34,9 @@ export const CanvasResourceItem = memo(function CanvasResourceItem({
   const dragOffsetRef = useRef({ x: 0, y: 0 });
   const startPosRef = useRef({ x: 0, y: 0 });
 
+  // Readable-zoom: grow icon + SKU label up to 3x as the world zooms out.
+  const inverseScale = scale < 1 ? Math.min(1 / scale, 3) : 1;
+
   const handlePointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
     if (e.button !== 0) return;
     isDraggingRef.current = true;
@@ -40,10 +45,10 @@ export const CanvasResourceItem = memo(function CanvasResourceItem({
     const canvas = document.getElementById("canvas");
     if (canvas) {
       const rect = canvas.getBoundingClientRect();
-      const { scale, translateX, translateY } = useCanvasStore.getState();
+      const { scale: viewScale, translateX, translateY } = useCanvasStore.getState();
       // Grab offset in CANVAS space (not raw screen space) so it survives zoom.
-      const pointerCanvasX = (e.clientX - rect.left - translateX) / scale;
-      const pointerCanvasY = (e.clientY - rect.top - translateY) / scale;
+      const pointerCanvasX = (e.clientX - rect.left - translateX) / viewScale;
+      const pointerCanvasY = (e.clientY - rect.top - translateY) / viewScale;
       dragOffsetRef.current = {
         x: pointerCanvasX - resource.x,
         y: pointerCanvasY - resource.y,
@@ -57,9 +62,9 @@ export const CanvasResourceItem = memo(function CanvasResourceItem({
     const canvas = document.getElementById("canvas");
     if (!canvas) return;
     const rect = canvas.getBoundingClientRect();
-    const { scale, translateX, translateY } = useCanvasStore.getState();
-    const pointerCanvasX = (e.clientX - rect.left - translateX) / scale;
-    const pointerCanvasY = (e.clientY - rect.top - translateY) / scale;
+    const { scale: viewScale, translateX, translateY } = useCanvasStore.getState();
+    const pointerCanvasX = (e.clientX - rect.left - translateX) / viewScale;
+    const pointerCanvasY = (e.clientY - rect.top - translateY) / viewScale;
     const startPointerX = startPosRef.current.x + dragOffsetRef.current.x;
     const startPointerY = startPosRef.current.y + dragOffsetRef.current.y;
     if (Math.hypot(pointerCanvasX - startPointerX, pointerCanvasY - startPointerY) > 3) {
@@ -79,9 +84,9 @@ export const CanvasResourceItem = memo(function CanvasResourceItem({
       const canvas = document.getElementById("canvas");
       if (!canvas) return;
       const rect = canvas.getBoundingClientRect();
-      const { scale, translateX, translateY } = useCanvasStore.getState();
-      const pointerCanvasX = (e.clientX - rect.left - translateX) / scale;
-      const pointerCanvasY = (e.clientY - rect.top - translateY) / scale;
+      const { scale: viewScale, translateX, translateY } = useCanvasStore.getState();
+      const pointerCanvasX = (e.clientX - rect.left - translateX) / viewScale;
+      const pointerCanvasY = (e.clientY - rect.top - translateY) / viewScale;
       const x = pointerCanvasX - dragOffsetRef.current.x;
       const y = pointerCanvasY - dragOffsetRef.current.y;
       const snappedX = Math.round(x / GRID_SIZE) * GRID_SIZE;
@@ -114,10 +119,24 @@ export const CanvasResourceItem = memo(function CanvasResourceItem({
       onClick={handleClick}
       onDoubleClick={() => onResourceDoubleClick(resource.id)}
     >
-      <ResourceIcon type={resource.type} size={20} />
+      {/* Icon is inverse-scaled so it stays readable when zoomed out. The 48x48
+          node box itself is NOT inverse-scaled, so spatial layout stays accurate. */}
+      <span
+        className="inline-flex items-center justify-center"
+        style={{ transform: `scale(${inverseScale})`, transformOrigin: "center" }}
+      >
+        <ResourceIcon type={resource.type} size={20} />
+      </span>
       {resource.skuId && (
-        <span className="absolute top-full left-1/2 -translate-x-1/2 mt-1 max-w-16 truncate text-[8px] font-mono text-[#AAB4C5] bg-[#0B0E14]/85 border border-[#1F2633] rounded px-1 pointer-events-none whitespace-nowrap">
-          {resource.skuId}
+        // Outer span keeps the existing centering/positioning; inner span carries
+        // the inverse scale (its transform would otherwise override -translate-x-1/2).
+        <span className="absolute top-full left-1/2 -translate-x-1/2 mt-1 pointer-events-none">
+          <span
+            className="block max-w-16 truncate text-[8px] font-mono text-[#AAB4C5] bg-[#0B0E14]/85 border border-[#1F2633] rounded px-1 whitespace-nowrap"
+            style={{ transform: `scale(${inverseScale})`, transformOrigin: "top center" }}
+          >
+            {resource.skuId}
+          </span>
         </span>
       )}
       <CanvasResourcePorts isConnecting={isConnecting} />

@@ -6,9 +6,10 @@ interface BezierConnectionLineProps {
   port: number;
   isSelected?: boolean;
   onSelect?: () => void;
+  scale?: number;
 }
 
-export function BezierConnectionLine({ source, target, port, isSelected = false, onSelect }: BezierConnectionLineProps) {
+export function BezierConnectionLine({ source, target, port, isSelected = false, onSelect, scale = 1 }: BezierConnectionLineProps) {
   const CENTER_OFFSET = 24;
   const NODE_HALF = 20;
 
@@ -59,6 +60,10 @@ export function BezierConnectionLine({ source, target, port, isSelected = false,
   const midX = (x1 + 3 * c1x + 3 * c2x + x2) / 8;
   const midY = (y1 + 3 * c1y + 3 * c2y + y2) / 8;
 
+  // Readable-zoom: enlarge the port label + hit area as the world zooms out.
+  // The glow and main-curve stroke widths are left alone (they scale with the world).
+  const inverseScale = scale < 1 ? Math.min(1 / scale, 3) : 1;
+
   const strokeColor = isSelected ? "#F0564A" : "#3b82f6";
 
   return (
@@ -68,8 +73,8 @@ export function BezierConnectionLine({ source, target, port, isSelected = false,
       {/* Main curve */}
       <path d={path} fill="none" stroke={strokeColor} strokeWidth={isSelected ? 2.5 : 1.5} strokeLinecap="round" />
       {/* Port label pinned to the exact curve midpoint */}
-      <circle cx={midX} cy={midY} r={9} fill="#1e293b" stroke={strokeColor} strokeWidth={1} />
-      <text x={midX} y={midY + 3} textAnchor="middle" fill="#94a3b8" fontSize="8">
+      <circle cx={midX} cy={midY} r={9 * inverseScale} fill="#1e293b" stroke={strokeColor} strokeWidth={1} />
+      <text x={midX} y={midY + 3 * inverseScale} textAnchor="middle" fill="#94a3b8" fontSize={8 * inverseScale}>
         :{port}
       </text>
       {/* Invisible wide hit path on top for click select/delete. Its own
@@ -78,7 +83,7 @@ export function BezierConnectionLine({ source, target, port, isSelected = false,
         d={path}
         fill="none"
         stroke="transparent"
-        strokeWidth={14}
+        strokeWidth={14 * inverseScale}
         style={{ cursor: "pointer" }}
         pointerEvents="stroke"
         onClick={(e) => {

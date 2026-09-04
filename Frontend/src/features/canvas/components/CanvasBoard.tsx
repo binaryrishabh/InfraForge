@@ -68,11 +68,13 @@ export const CanvasBoard = memo(function CanvasBoard() {
           resources={resources}
           connectionLines={connectionLines}
           onDeleteConnection={handleDeleteConnectionLine}
+          scale={scale}
         />
         {resources.map((resource) => (
           <CanvasResourceItem
             key={resource.id}
             resource={resource}
+            scale={scale}
             onResourceClick={hanldeResouceClick}
             onResourceDoubleClick={setSelectedResourceForConfigId}
             onDeleteResource={handleDeleteCanvasResource}

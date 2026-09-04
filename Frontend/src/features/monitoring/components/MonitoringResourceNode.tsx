@@ -7,6 +7,8 @@ interface MonitoringResourceNodeProps {
   resource: Resource;
   // Optional cosmetic drag hook (monitoring only). Not wired on the designer.
   onNodePointerDown?: (nodeId: string, clientX: number, clientY: number, pointerId: number) => void;
+  // World zoom level; used only to keep the icon readable when zoomed out.
+  scale?: number;
 };
 
 const healthRing: Record<string, string> = {
@@ -40,7 +42,7 @@ function HudRow({ label, value, pct }: { label: string; value: string; pct: numb
   );
 };
 
-export function MonitoringResourceNode({ resource, onNodePointerDown }: MonitoringResourceNodeProps) {
+export function MonitoringResourceNode({ resource, onNodePointerDown, scale = 1 }: MonitoringResourceNodeProps) {
   const metric = useSimulationStore((s) => s.metrics[resource.id]);
   const isRestarting = useSimulationStore((s) => s.restarting.includes(resource.id));
 
@@ -53,6 +55,10 @@ export function MonitoringResourceNode({ resource, onNodePointerDown }: Monitori
     health === ResourceHealth.SATURATED ||
     health === ResourceHealth.FAILED;
   const popNearTop = resource.y < 96;
+
+  // Readable-zoom: grow the icon as the world zooms out. The auto-pop meter and
+  // hover HUD are screen-space overlays and are deliberately NOT inverse-scaled.
+  const inverseScale = scale < 1 ? Math.min(1 / scale, 3) : 1;
 
   return (
     <div
@@ -114,7 +120,13 @@ export function MonitoringResourceNode({ resource, onNodePointerDown }: Monitori
           isRestarting ? "ring-amber-400 animate-pulse" : healthRing[health]
         }`}
       >
-        <ResourceIcon type={resource.type} size={20} className={healthText[health]} />
+        {/* Icon is inverse-scaled so it stays readable when zoomed out. */}
+        <span
+          className="inline-flex items-center justify-center"
+          style={{ transform: `scale(${inverseScale})`, transformOrigin: "center" }}
+        >
+          <ResourceIcon type={resource.type} size={20} className={healthText[health]} />
+        </span>
       </div>
 
       {/* HOVER HUD */}

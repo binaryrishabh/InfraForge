@@ -8,12 +8,14 @@ interface ConnectionLinesLayerProps {
   resources: Resource[];
   connectionLines: ConnectionLine[];
   onDeleteConnection: (connectionId: string) => void;
+  scale: number;
 }
 
 export const ConnectionLinesLayer = memo(function ConnectionLinesLayer({
   resources,
   connectionLines,
   onDeleteConnection,
+  scale,
 }: ConnectionLinesLayerProps) {
   const selectedConnectionId = useCanvasStore((s) => s.selectedConnectionId);
 
@@ -42,6 +44,7 @@ export const ConnectionLinesLayer = memo(function ConnectionLinesLayer({
             target={target}
             port={connectionLine.port}
             isSelected={isSelected}
+            scale={scale}
             onSelect={() =>
               isSelected
                 ? onDeleteConnection(connectionLine.id)
