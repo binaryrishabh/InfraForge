@@ -22,6 +22,7 @@ export const ConnectionLinesLayer = memo(function ConnectionLinesLayer({
       className="absolute inset-0 pointer-events-none z-10"
       width="100%"
       height="100%"
+      style={{ overflow: "visible" }}
     >
       {connectionLines.map((connectionLine) => {
         const source = resources.find(

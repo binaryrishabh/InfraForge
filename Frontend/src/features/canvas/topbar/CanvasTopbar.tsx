@@ -3,6 +3,7 @@ import { useCanvasStore } from "../store/canvasStore";
 import { useInfrastructureDropdown } from "../hooks/useInfrastructureDropdown";
 import { useInfrastructureActions } from "../hooks/useInfrastructureActions";
 import { useCanvasConnectionActions } from "../hooks/useCanvasConnectionActions";
+import { fitCanvasView } from "../hooks/useCanvasViewport";
 import { InfrastructureLayoutDropdown } from "./InfrastructureLayoutDropdown";
 import { TopbarActionButton } from "./TopbarActionButton";
 
@@ -32,15 +33,16 @@ export const CanvasTopbar = memo(function CanvasTopbar() {
         />
       </span>
       <div className="flex items-center gap-2">
-        <TopbarActionButton icon="✨" label="New" variant="new" onclick={handleNew} />
+        <TopbarActionButton icon="" label="New" variant="new" onclick={handleNew} />
         {currentLayoutId ? (
-          <TopbarActionButton icon="📝" label="Update" variant="update" onclick={currentLayoutSaved ? undefined : handleUpdate} />
+          <TopbarActionButton icon="" label="Update" variant="update" onclick={currentLayoutSaved ? undefined : handleUpdate} />
         ) : (
-          <TopbarActionButton icon="💾" label="Save" variant="save" onclick={handleSave} />
+          <TopbarActionButton icon="" label="Save" variant="save" onclick={handleSave} />
         )}
-        {currentLayoutId && <TopbarActionButton icon="🚀" label="deploy" variant="deploy" onclick={handleDeploy} />}
-        <TopbarActionButton icon="X" label="Delete Infrastructure" variant="delete" onclick={handleDelete} />
-        <TopbarActionButton icon="🔗" label={isConnecting ? "Connecting..." : "Connect"} variant={isConnecting ? "deploy" : "default"} onclick={handleToggleConnectionLines} />
+        {currentLayoutId && <TopbarActionButton icon="" label="deploy" variant="deploy" onclick={handleDeploy} />}
+        <TopbarActionButton icon="" label="Delete Infrastructure" variant="delete" onclick={handleDelete} />
+        <TopbarActionButton icon="" label="Fit" variant="default" onclick={() => fitCanvasView()} />
+        <TopbarActionButton icon="" label={isConnecting ? "Connecting..." : "Connect"} variant={isConnecting ? "deploy" : "default"} onclick={handleToggleConnectionLines} />
       </div>
     </div>
   );

@@ -27,9 +27,14 @@ export function useCanvasDragDrop() {
         const canvasRect = canvas?.getBoundingClientRect();
         let x = 50, y = 50;
         if (canvasRect) {
+          const { scale, translateX, translateY } = store;
           const pointerEvent = event.activatorEvent as PointerEvent;
-          x = pointerEvent.clientX - canvasRect.left + delta.x - 20;
-          y = pointerEvent.clientY - canvasRect.top + delta.y - 20;
+          // Final pointer position = activator position + total drag delta.
+          const finalClientX = pointerEvent.clientX + delta.x;
+          const finalClientY = pointerEvent.clientY + delta.y;
+          // Screen -> canvas space, then center the 48px node on the cursor.
+          x = (finalClientX - canvasRect.left - translateX) / scale - 24;
+          y = (finalClientY - canvasRect.top - translateY) / scale - 24;
           if (x < 0 || y < 0) return;
           const GRID_SIZE = 24;
           x = Math.round(x / GRID_SIZE) * GRID_SIZE;
@@ -39,7 +44,6 @@ export function useCanvasDragDrop() {
           (resource) => Math.abs(resource.x - x) < 40 && Math.abs(resource.y - y) < 40
         );
         if (isOverlapping) { toast.warning("Space already occupied!"); return; }
-        
         const newResource = { id: `${active.id}-${Date.now()}`, type: active.id as ResourceType, x, y };
         store.setResources((prev) => [...prev, newResource]);
         store.setUndoStack(prev => [...prev, {

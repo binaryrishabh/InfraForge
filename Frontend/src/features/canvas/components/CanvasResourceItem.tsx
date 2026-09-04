@@ -40,9 +40,13 @@ export const CanvasResourceItem = memo(function CanvasResourceItem({
     const canvas = document.getElementById("canvas");
     if (canvas) {
       const rect = canvas.getBoundingClientRect();
+      const { scale, translateX, translateY } = useCanvasStore.getState();
+      // Grab offset in CANVAS space (not raw screen space) so it survives zoom.
+      const pointerCanvasX = (e.clientX - rect.left - translateX) / scale;
+      const pointerCanvasY = (e.clientY - rect.top - translateY) / scale;
       dragOffsetRef.current = {
-        x: e.clientX - rect.left - resource.x,
-        y: e.clientY - rect.top - resource.y,
+        x: pointerCanvasX - resource.x,
+        y: pointerCanvasY - resource.y,
       };
     }
     e.currentTarget.setPointerCapture(e.pointerId);
@@ -53,15 +57,16 @@ export const CanvasResourceItem = memo(function CanvasResourceItem({
     const canvas = document.getElementById("canvas");
     if (!canvas) return;
     const rect = canvas.getBoundingClientRect();
-    const pointerX = e.clientX - rect.left;
-    const pointerY = e.clientY - rect.top;
-    const startX = startPosRef.current.x + dragOffsetRef.current.x;
-    const startY = startPosRef.current.y + dragOffsetRef.current.y;
-    if (Math.hypot(pointerX - startX, pointerY - startY) > 3) {
+    const { scale, translateX, translateY } = useCanvasStore.getState();
+    const pointerCanvasX = (e.clientX - rect.left - translateX) / scale;
+    const pointerCanvasY = (e.clientY - rect.top - translateY) / scale;
+    const startPointerX = startPosRef.current.x + dragOffsetRef.current.x;
+    const startPointerY = startPosRef.current.y + dragOffsetRef.current.y;
+    if (Math.hypot(pointerCanvasX - startPointerX, pointerCanvasY - startPointerY) > 3) {
       wasDragRef.current = true;
     }
-    const x = Math.max(0, pointerX - dragOffsetRef.current.x);
-    const y = Math.max(0, pointerY - dragOffsetRef.current.y);
+    const x = Math.max(0, pointerCanvasX - dragOffsetRef.current.x);
+    const y = Math.max(0, pointerCanvasY - dragOffsetRef.current.y);
     onMoveResource(resource.id, x, y);
   };
 
@@ -73,10 +78,11 @@ export const CanvasResourceItem = memo(function CanvasResourceItem({
       const canvas = document.getElementById("canvas");
       if (!canvas) return;
       const rect = canvas.getBoundingClientRect();
-      const pointerX = e.clientX - rect.left;
-      const pointerY = e.clientY - rect.top;
-      const x = Math.max(0, pointerX - dragOffsetRef.current.x);
-      const y = Math.max(0, pointerY - dragOffsetRef.current.y);
+      const { scale, translateX, translateY } = useCanvasStore.getState();
+      const pointerCanvasX = (e.clientX - rect.left - translateX) / scale;
+      const pointerCanvasY = (e.clientY - rect.top - translateY) / scale;
+      const x = Math.max(0, pointerCanvasX - dragOffsetRef.current.x);
+      const y = Math.max(0, pointerCanvasY - dragOffsetRef.current.y);
       const snappedX = Math.round(x / GRID_SIZE) * GRID_SIZE;
       const snappedY = Math.round(y / GRID_SIZE) * GRID_SIZE;
       onMoveResource(resource.id, snappedX, snappedY);
@@ -95,7 +101,7 @@ export const CanvasResourceItem = memo(function CanvasResourceItem({
   return (
     <div
       title={resource.type}
-      className={`absolute group w-12 h-12 rounded-lg bg-[#12161F] border flex items-center justify-center cursor-pointer select-none transition-colors duration-150 ${
+      className={`absolute group w-12 h-12 rounded-lg bg-[#12161F] border flex items-center justify-center cursor-pointer select-none pointer-events-auto transition-colors duration-150 ${
         isSelected
           ? "border-blue-500/60 ring-2 ring-blue-500/30"
           : "border-[#1F2633] hover:border-[#35415A]"

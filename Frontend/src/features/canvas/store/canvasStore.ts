@@ -35,6 +35,10 @@ interface CanvasStoreState {
   emptyCanvasStateDismissed: boolean;
   // Drag
   activeDrag: { label: ResourceType } | null;
+  // Viewport (zoom & pan)
+  scale: number;
+  translateX: number;
+  translateY: number;
   // Dropdown
   showLayoutDropdown: boolean;
   savedLayouts: Infrastructure[];
@@ -60,6 +64,7 @@ interface CanvasStoreState {
   setIsDeploying: (deploying: boolean) => void;
   setEmptyCanvasStateDismissed: (dismissed: boolean) => void;
   setActiveDrag: (drag: { label: ResourceType } | null) => void;
+  setViewport: (scale: number, tx: number, ty: number) => void;
   setShowLayoutDropdown: (show: boolean) => void;
   setSavedLayouts: (layouts: Infrastructure[]) => void;
   setModalState: (state: ModalState) => void;
@@ -85,6 +90,9 @@ export const useCanvasStore = create<CanvasStoreState>()((set) => ({
   isDeploying: false,
   emptyCanvasStateDismissed: false,
   activeDrag: null,
+  scale: 1,
+  translateX: 0,
+  translateY: 0,
   showLayoutDropdown: false,
   savedLayouts: [],
   modalState: null,
@@ -105,6 +113,7 @@ export const useCanvasStore = create<CanvasStoreState>()((set) => ({
   setIsDeploying: (deploying) => set({ isDeploying: deploying }),
   setEmptyCanvasStateDismissed: (dismissed) => set({ emptyCanvasStateDismissed: dismissed }),
   setActiveDrag: (drag) => set({ activeDrag: drag }),
+  setViewport: (scale, tx, ty) => set({ scale, translateX: tx, translateY: ty }),
   setShowLayoutDropdown: (show) => set({ showLayoutDropdown: show }),
   setSavedLayouts: (layouts) => set({ savedLayouts: layouts }),
   setModalState: (state) => set({ modalState: state }),
@@ -120,6 +129,7 @@ export const useCanvasStore = create<CanvasStoreState>()((set) => ({
     resources: [], connectionLines: [], currentLayoutId: null, currentLayoutName: null,
     currentLayoutSaved: true, selectedResourceId: null, selectedResourceForConfigId: null,
     selectedConnectionId: null,
+    scale: 1, translateX: 0, translateY: 0,
     activeDeploymentId: null, isDeploying: false, activeDrag: null, undoStack: [], redoStack: [],
   }),
 }));
