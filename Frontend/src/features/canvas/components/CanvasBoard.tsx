@@ -15,6 +15,7 @@ export const CanvasBoard = memo(function CanvasBoard() {
     handleDeleteCanvasResource,
     handleMoveCanvasResource,
     commitMoveCanvasResource,
+    handleDeleteConnectionLine,
   } = useCanvasResourceActions();
   const { hanldeResouceClick } = useCanvasConnectionActions();
 
@@ -29,8 +30,18 @@ export const CanvasBoard = memo(function CanvasBoard() {
         backgroundImage: `radial-gradient(circle, #1e293b 1px, transparent 1px)`,
         backgroundSize: "24px 24px",
       }}
+      onClick={(e) => {
+        // Deselect a connection only when the empty canvas itself is clicked.
+        if (e.target === e.currentTarget) {
+          useCanvasStore.getState().setSelectedConnectionId(null);
+        }
+      }}
     >
-      <ConnectionLinesLayer resources={resources} connectionLines={connectionLines} />
+      <ConnectionLinesLayer
+        resources={resources}
+        connectionLines={connectionLines}
+        onDeleteConnection={handleDeleteConnectionLine}
+      />
       {resources.map((resource) => (
         <CanvasResourceItem
           key={resource.id}

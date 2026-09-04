@@ -1,17 +1,22 @@
 import { memo } from "react";
 import { BezierConnectionLine } from "./BezierConnectionLine";
+import { useCanvasStore } from "../store/canvasStore";
 import type { ConnectionLine } from "@shared/interface/ConnectionLine.interface";
 import type { Resource } from "@shared/interface/Resource.interface";
 
 interface ConnectionLinesLayerProps {
   resources: Resource[];
   connectionLines: ConnectionLine[];
+  onDeleteConnection: (connectionId: string) => void;
 }
 
 export const ConnectionLinesLayer = memo(function ConnectionLinesLayer({
   resources,
   connectionLines,
+  onDeleteConnection,
 }: ConnectionLinesLayerProps) {
+  const selectedConnectionId = useCanvasStore((s) => s.selectedConnectionId);
+
   return (
     <svg
       className="absolute inset-0 pointer-events-none z-10"
@@ -28,12 +33,19 @@ export const ConnectionLinesLayer = memo(function ConnectionLinesLayer({
         if (!source || !target) {
           return null;
         }
+        const isSelected = selectedConnectionId === connectionLine.id;
         return (
           <BezierConnectionLine
             key={connectionLine.id}
             source={source}
             target={target}
             port={connectionLine.port}
+            isSelected={isSelected}
+            onSelect={() =>
+              isSelected
+                ? onDeleteConnection(connectionLine.id)
+                : useCanvasStore.getState().setSelectedConnectionId(connectionLine.id)
+            }
           />
         );
       })}

@@ -33,6 +33,9 @@ export function useCanvasUndoRedo() {
     } else if (last.type === "move") {
       store.setResources(prev => prev.map(r => r.id === last.resourceId ? { ...r, x: last.fromX, y: last.fromY } : r));
       store.setCurrentLayoutSaved(last.savedState);
+    } else if (last.type === "delete-connection") {
+      store.setConnectionLines(prev => [...prev, last.connectionLine]);
+      store.setCurrentLayoutSaved(last.savedState);
     }
 
     store.setUndoStack(prev => prev.slice(0, -1));
@@ -59,6 +62,8 @@ export function useCanvasUndoRedo() {
       store.setConnectionLines(prev => prev.filter(l => l.sourceId !== last.resource.id && l.targetId !== last.resource.id));
     } else if (last.type === "move") {
       store.setResources(prev => prev.map(r => r.id === last.resourceId ? { ...r, x: last.toX, y: last.toY } : r));
+    } else if (last.type === "delete-connection") {
+      store.setConnectionLines(prev => prev.filter(l => l.id !== last.connectionLine.id));
     }
 
     store.setRedoStack(prev => prev.slice(0, -1));

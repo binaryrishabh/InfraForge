@@ -20,6 +20,9 @@ export function useCanvasResourceActions() {
     } else if (last.type === "move") {
       store.setResources(prev => prev.map(r => r.id === last.resourceId ? { ...r, x: last.fromX, y: last.fromY } : r));
       store.setCurrentLayoutSaved(last.savedState);
+    } else if (last.type === "delete-connection") {
+      store.setConnectionLines(prev => [...prev, last.connectionLine]);
+      store.setCurrentLayoutSaved(last.savedState);
     }
     store.setUndoStack(prev => prev.slice(0, -1));
     store.setRedoStack(prev => [...prev, last]);
@@ -78,10 +81,27 @@ export function useCanvasResourceActions() {
     store.setCurrentLayoutSaved(false);
   }, []);
 
+  // Delete a single connection line by id, with undo support.
+  const handleDeleteConnectionLine = useCallback((connectionId: string) => {
+    const store = useCanvasStore.getState();
+    if (store.isDeploying) { toast.warning("A deployment is in progress. Can't modify"); return; }
+    const line = store.connectionLines.find((l) => l.id === connectionId);
+    if (!line) return;
+    store.setUndoStack((prev) => [
+      ...prev, { type: "delete-connection", connectionLine: line, savedState: store.currentLayoutSaved },
+    ]);
+    store.setRedoStack([]);
+    store.setConnectionLines((prev) => prev.filter((l) => l.id !== connectionId));
+    store.setSelectedConnectionId(null);
+    store.setCurrentLayoutSaved(false);
+    toast("Connection removed", { action: { label: "Undo", onClick: performUndo }, duration: 5000 });
+  }, [performUndo]);
+
   return {
     handleDeleteCanvasResource,
     handleUpdateCanvasResource,
     handleMoveCanvasResource,
     commitMoveCanvasResource,
+    handleDeleteConnectionLine,
   };
 }
