@@ -5,4 +5,5 @@ import type { ConnectionLine } from "../interface/ConnectionLine.interface";
 export type UndoCanvasResourceAction =
 | { type: "delete"; resource: Resource; connectionLines: ConnectionLine[]; savedState: boolean }
 | { type: "add"; resource: Resource; connectionLines: ConnectionLine[]; savedState: boolean }
-| { type: "move"; resourceId: string; fromX: number; fromY: number; toX: number; toY: number; savedState: boolean };
+| { type: "move"; resourceId: string; fromX: number; fromY: number; toX: number; toY: number; savedState: boolean }
+| { type: "delete-connection"; connectionLine: ConnectionLine; savedState: boolean };
