@@ -33,9 +33,9 @@ export function useCanvasDragDrop() {
           const finalClientX = pointerEvent.clientX + delta.x;
           const finalClientY = pointerEvent.clientY + delta.y;
           // Screen -> canvas space, then center the 48px node on the cursor.
+          // No negative-coordinate rejection — the canvas is infinite with pan.
           x = (finalClientX - canvasRect.left - translateX) / scale - 24;
           y = (finalClientY - canvasRect.top - translateY) / scale - 24;
-          if (x < 0 || y < 0) return;
           const GRID_SIZE = 24;
           x = Math.round(x / GRID_SIZE) * GRID_SIZE;
           y = Math.round(y / GRID_SIZE) * GRID_SIZE;

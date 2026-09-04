@@ -10,6 +10,7 @@ import { CanvasConfigPanelWrapper } from "./CanvasConfigPanelWrapper";
 import { CanvasActiveDeployment } from "./CanvasActiveDeployment";
 import { CanvasModals } from "./CanvasModals";
 import { CanvasDragLayer } from "./CanvasDragLayer";
+import { ZoomControls } from "./ZoomControls";
 
 export function CanvasDesignerPage() {
   useCanvasPersistence();
@@ -24,6 +25,7 @@ export function CanvasDesignerPage() {
           <ResourceSidebar />
           <CanvasBoard />
           <CanvasEmptyState />
+          <ZoomControls />
         </div>
       </div>
       <CanvasConfigPanelWrapper />

@@ -40,7 +40,6 @@ export const CanvasBoard = memo(function CanvasBoard() {
         backgroundSize: `${24 * scale}px ${24 * scale}px`,
         backgroundPosition: `${translateX}px ${translateY}px`,
       }}
-      onWheel={viewport.handleWheel}
       onPointerDown={viewport.handlePanStart}
       onPointerMove={viewport.handlePanMove}
       onPointerUp={viewport.handlePanEnd}

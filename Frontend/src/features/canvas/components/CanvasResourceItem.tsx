@@ -65,8 +65,9 @@ export const CanvasResourceItem = memo(function CanvasResourceItem({
     if (Math.hypot(pointerCanvasX - startPointerX, pointerCanvasY - startPointerY) > 3) {
       wasDragRef.current = true;
     }
-    const x = Math.max(0, pointerCanvasX - dragOffsetRef.current.x);
-    const y = Math.max(0, pointerCanvasY - dragOffsetRef.current.y);
+    // No clamping — the canvas is infinite in every direction now that pan exists.
+    const x = pointerCanvasX - dragOffsetRef.current.x;
+    const y = pointerCanvasY - dragOffsetRef.current.y;
     onMoveResource(resource.id, x, y);
   };
 
@@ -81,8 +82,8 @@ export const CanvasResourceItem = memo(function CanvasResourceItem({
       const { scale, translateX, translateY } = useCanvasStore.getState();
       const pointerCanvasX = (e.clientX - rect.left - translateX) / scale;
       const pointerCanvasY = (e.clientY - rect.top - translateY) / scale;
-      const x = Math.max(0, pointerCanvasX - dragOffsetRef.current.x);
-      const y = Math.max(0, pointerCanvasY - dragOffsetRef.current.y);
+      const x = pointerCanvasX - dragOffsetRef.current.x;
+      const y = pointerCanvasY - dragOffsetRef.current.y;
       const snappedX = Math.round(x / GRID_SIZE) * GRID_SIZE;
       const snappedY = Math.round(y / GRID_SIZE) * GRID_SIZE;
       onMoveResource(resource.id, snappedX, snappedY);

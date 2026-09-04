@@ -1,12 +1,14 @@
-import { useCallback, useRef, type WheelEvent as ReactWheelEvent, type PointerEvent as ReactPointerEvent } from "react";
+import { useCallback, useEffect, useRef, type PointerEvent as ReactPointerEvent } from "react";
 import { useCanvasStore } from "../store/canvasStore";
 
-const MIN_SCALE = 0.2;
-const MAX_SCALE = 2.0;
+export const MIN_SCALE = 0.2;
+export const MAX_SCALE = 2.0;
 const FIT_MIN_SCALE = 0.2;
 const FIT_MAX_SCALE = 1.5;
 const FIT_PADDING = 64;
 const NODE_SIZE = 48;
+// Wheel zoom speed — doubled from 0.001 after the "zoom is slow" report.
+const WHEEL_ZOOM_INTENSITY = 0.002;
 
 /* Standalone fit-view. Reads the DOM + store directly so both the hook and the
    topbar can call it without prop-drilling. Frames every resource with padding. */
@@ -76,15 +78,17 @@ export function useCanvasViewport() {
   }, []);
 
   // Zoom toward the cursor: the canvas point under the cursor stays fixed.
-  const handleWheel = useCallback((e: ReactWheelEvent<HTMLDivElement>) => {
+  // Native WheelEvent — attached below with { passive: false } so preventDefault
+  // actually blocks the browser's own page-zoom/scroll.
+  const handleWheel = useCallback((e: WheelEvent) => {
     e.preventDefault();
-    const rect = containerRef.current?.getBoundingClientRect();
-    if (!rect) return;
+    const el = containerRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
     const store = useCanvasStore.getState();
-    const { scale, translateX, translateY } = store;
-    const nextScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, scale * (1 + -e.deltaY * 0.001)));
+    const { scale } = store;
+    const nextScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, scale * (1 + -e.deltaY * WHEEL_ZOOM_INTENSITY)));
     if (nextScale === scale) return;
-
     // Canvas-space point currently under the cursor (before zoom).
     const cursor = screenToCanvas(e.clientX, e.clientY);
     // Solve for the translate that keeps that same point under the cursor.
@@ -92,6 +96,15 @@ export function useCanvasViewport() {
     const nextTy = e.clientY - rect.top - cursor.y * nextScale;
     store.setViewport(nextScale, nextTx, nextTy);
   }, [screenToCanvas]);
+
+  // Native non-passive wheel listener so preventDefault() actually works.
+  // React's onWheel is passive — the browser's own page-zoom would hijack it.
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    el.addEventListener("wheel", handleWheel, { passive: false });
+    return () => el.removeEventListener("wheel", handleWheel);
+  }, [handleWheel]);
 
   // Pan only starts when the empty canvas background itself is pressed.
   const handlePanStart = useCallback((e: ReactPointerEvent<HTMLDivElement>) => {
