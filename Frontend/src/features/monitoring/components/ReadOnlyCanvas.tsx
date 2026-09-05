@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from "react";
 import { RESOURCE_TYPES } from "@shared/constants/RESOURCE_TYPES.constants";
 import { useSimulationStore } from "../store/simulationStore";
 import type { ConnectionLine } from "@shared/interface/ConnectionLine.interface";
@@ -31,6 +31,20 @@ export function ReadOnlyCanvas({ resources, connectionLines }: ReadOnlyCanvasPro
     zoomIn,
     zoomOut,
   } = useMonitoringViewport();
+
+  // Measure the canvas container height so nodes can decide when their hover HUD
+  // would clip below the canvas bottom and flip to the right instead.
+  const [containerHeight, setContainerHeight] = useState(0);
+  useLayoutEffect(() => {
+    const measure = () => {
+      if (containerRef.current) {
+        setContainerHeight(containerRef.current.getBoundingClientRect().height);
+      }
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, []);
 
   // Effective position = base position + any user drag offset.
   const effectivePos = (id: string, baseX: number, baseY: number) => {
@@ -145,6 +159,8 @@ export function ReadOnlyCanvas({ resources, connectionLines }: ReadOnlyCanvasPro
               resource={{ ...resource, x: pos.x, y: pos.y }}
               onNodePointerDown={startNodeDrag}
               scale={viewport.scale}
+              translateY={viewport.translateY}
+              containerHeight={containerHeight}
             />
           );
         })}
@@ -163,6 +179,8 @@ export function ReadOnlyCanvas({ resources, connectionLines }: ReadOnlyCanvasPro
                 }}
                 onNodePointerDown={startNodeDrag}
                 scale={viewport.scale}
+                translateY={viewport.translateY}
+                containerHeight={containerHeight}
               />
             );
           })}

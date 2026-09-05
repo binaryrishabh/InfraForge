@@ -9,7 +9,16 @@ interface MonitoringResourceNodeProps {
   onNodePointerDown?: (nodeId: string, clientX: number, clientY: number, pointerId: number) => void;
   // World zoom level; used only to keep the icon readable when zoomed out.
   scale?: number;
+  // Viewport vertical translate + canvas container height; used to decide when
+  // the hover HUD would clip below the canvas bottom and should flip right.
+  translateY?: number;
+  containerHeight?: number;
 };
+
+// Estimated hover-HUD height (world units, before counter-scaling) used only to
+// decide when the HUD would clip below the canvas bottom. Slightly generous so
+// the flip triggers a touch early rather than letting the HUD clip.
+const HUD_BASE_HEIGHT = 120;
 
 const healthRing: Record<string, string> = {
   [ResourceHealth.HEALTHY]: "ring-emerald-500/60",
@@ -42,7 +51,7 @@ function HudRow({ label, value, pct }: { label: string; value: string; pct: numb
   );
 };
 
-export function MonitoringResourceNode({ resource, onNodePointerDown, scale = 1 }: MonitoringResourceNodeProps) {
+export function MonitoringResourceNode({ resource, onNodePointerDown, scale = 1, translateY = 0, containerHeight = 0 }: MonitoringResourceNodeProps) {
   const metric = useSimulationStore((s) => s.metrics[resource.id]);
   const isRestarting = useSimulationStore((s) => s.restarting.includes(resource.id));
 
@@ -62,6 +71,14 @@ export function MonitoringResourceNode({ resource, onNodePointerDown, scale = 1 
   // they stay full size when zoomed out, capped at 3x so they never get absurd
   // at the 0.3 minimum zoom.
   const overlayScale = scale < 1 ? Math.min(1 / scale, 3) : 1;
+
+  // Decide whether the hover HUD (rendered below the node) would clip below the
+  // canvas bottom. Node screen bottom = translateY + (y + 48) * scale; the HUD
+  // then extends further down by its (counter-scaled) height. Flip right when
+  // the projected bottom passes the canvas container height.
+  const nodeScreenBottom = translateY + (resource.y + 48) * scale;
+  const hudScreenBottom = nodeScreenBottom + 8 * scale + HUD_BASE_HEIGHT * overlayScale * scale;
+  const hudNearBottom = containerHeight > 0 && hudScreenBottom > containerHeight;
 
   return (
     <div
@@ -146,12 +163,19 @@ export function MonitoringResourceNode({ resource, onNodePointerDown, scale = 1 
 
       {/* HOVER HUD — pointer-events-none on the wrapper so the counter-scaled HUD
           never enlarges the node's hover/drag hit region. It still appears on node
-          hover because `group` is on the node ancestor. */}
-      <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 z-40 pointer-events-none">
+          hover because `group` is on the node ancestor. When the HUD would clip
+          below the canvas bottom it flips to the right of the node instead. */}
+      <div
+        className={`absolute z-40 pointer-events-none ${
+          hudNearBottom
+            ? "left-full bottom-0 ml-2"
+            : "top-full left-1/2 -translate-x-1/2 mt-2"
+        }`}
+      >
         <div
           style={{
             transform: `scale(${overlayScale})`,
-            transformOrigin: "top center",
+            transformOrigin: hudNearBottom ? "left bottom" : "top center",
           }}
         >
           <div className="w-40 bg-[#0B0E14]/95 border border-[#273042] rounded-lg p-2 shadow-xl opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none">
