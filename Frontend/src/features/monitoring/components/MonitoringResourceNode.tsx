@@ -28,7 +28,7 @@ const healthText: Record<string, string> = {
 function HudRow({ label, value, pct }: { label: string; value: string; pct: number }) {
   return (
     <div>
-      <div className="flex justify-between text-[9px] font-mono mb-0.5">
+      <div className="flex justify-between text-[10px] font-mono mb-0.5">
         <span className="text-[#677185]">{label}</span>
         <span className="text-[#AAB4C5]">{value}</span>
       </div>
@@ -56,9 +56,12 @@ export function MonitoringResourceNode({ resource, onNodePointerDown, scale = 1 
     health === ResourceHealth.FAILED;
   const popNearTop = resource.y < 96;
 
-  // Readable-zoom: grow the icon up to 1.75x as the world zooms out. The
-  // auto-pop meter and hover HUD are screen-space overlays and stay fixed size.
+  // Readable-zoom: grow the icon up to 1.75x as the world zooms out.
   const inverseScale = scale < 1 ? Math.min(1 / scale, 1.75) : 1;
+  // Counter-scale for the screen-space overlays (auto-pop meter + hover HUD) so
+  // they stay full size when zoomed out, capped at 3x so they never get absurd
+  // at the 0.3 minimum zoom.
+  const overlayScale = scale < 1 ? Math.min(1 / scale, 3) : 1;
 
   return (
     <div
@@ -74,42 +77,55 @@ export function MonitoringResourceNode({ resource, onNodePointerDown, scale = 1 
       }
     >
       {/* AUTO-POP METER — appears uninvited when a resource crosses its safe threshold or is restarting.
-          Flips to the right of the node when the node sits near the canvas top edge so it never clips. */}
+          Outer wrapper keeps the positioning (and flips right when near the top edge);
+          the extra div counter-scales the visible meter so it stays readable at low zoom,
+          growing upward (bottom center) or rightward (left center) away from the node. */}
       {showAutoPop && (
         <div
           className={`${
             popNearTop
               ? "absolute left-full top-0 ml-2"
               : "absolute -top-16 left-1/2 -translate-x-1/2"
-          } w-32 bg-[#0B0E14]/95 border rounded-lg px-2 py-1.5 shadow-xl z-30 ${
-            isRestarting
-              ? "border-[#F5A524]/60"
-              : health === ResourceHealth.SATURATED || health === ResourceHealth.FAILED
-              ? "border-[#F0564A]/60"
-              : "border-[#F5A524]/60"
-          }`}
+          } z-30`}
         >
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-[9px] font-mono text-[#AAB4C5] truncate max-w-17.5">{resource.id}</span>
-            {isRestarting ? (
-              <span className="text-[10px] font-mono font-semibold text-amber-400">RESTARTING</span>
-            ) : (
-              <span className={`text-[10px] font-mono font-semibold ${healthText[health]}`}>{cpu}%</span>
-            )}
+          <div
+            style={{
+              transform: `scale(${overlayScale})`,
+              transformOrigin: popNearTop ? "left center" : "bottom center",
+            }}
+          >
+            <div
+              className={`w-36 bg-[#0B0E14]/95 border rounded-lg px-2 py-1.5 shadow-xl ${
+                isRestarting
+                  ? "border-[#F5A524]/60"
+                  : health === ResourceHealth.SATURATED || health === ResourceHealth.FAILED
+                  ? "border-[#F0564A]/60"
+                  : "border-[#F5A524]/60"
+              }`}
+            >
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[10px] font-mono text-[#AAB4C5] truncate max-w-24">{resource.id}</span>
+                {isRestarting ? (
+                  <span className="text-[12px] font-mono font-semibold text-amber-400">RESTARTING</span>
+                ) : (
+                  <span className={`text-[12px] font-mono font-semibold ${healthText[health]}`}>{cpu}%</span>
+                )}
+              </div>
+              <div className="h-1 rounded-full bg-[#1F2633] overflow-hidden">
+                {isRestarting ? (
+                  <div className="h-full w-full rounded-full bg-[#F5A524] animate-pulse" />
+                ) : (
+                  <div
+                    className={`h-full rounded-full transition-all duration-500 ${cpu >= 90 ? "bg-[#F0564A]" : "bg-[#F5A524]"}`}
+                    style={{ width: `${Math.min(100, cpu)}%` }}
+                  />
+                )}
+              </div>
+              <p className={`text-[9px] font-mono mt-0.5 ${isRestarting ? "text-amber-400" : healthText[health]}`}>
+                {isRestarting ? "RESTARTING" : health.toUpperCase()}
+              </p>
+            </div>
           </div>
-          <div className="h-1 rounded-full bg-[#1F2633] overflow-hidden">
-            {isRestarting ? (
-              <div className="h-full w-full rounded-full bg-[#F5A524] animate-pulse" />
-            ) : (
-              <div
-                className={`h-full rounded-full transition-all duration-500 ${cpu >= 90 ? "bg-[#F0564A]" : "bg-[#F5A524]"}`}
-                style={{ width: `${Math.min(100, cpu)}%` }}
-              />
-            )}
-          </div>
-          <p className={`text-[8px] font-mono mt-0.5 ${isRestarting ? "text-amber-400" : healthText[health]}`}>
-            {isRestarting ? "RESTARTING" : health.toUpperCase()}
-          </p>
         </div>
       )}
 
@@ -129,27 +145,39 @@ export function MonitoringResourceNode({ resource, onNodePointerDown, scale = 1 
         </span>
       </div>
 
-      {/* HOVER HUD */}
-      <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-40 bg-[#0B0E14]/95 border border-[#273042] rounded-lg p-2 shadow-xl opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none z-40">
-        <div className="flex items-center justify-between mb-1.5">
-          <span className="text-[10px] font-mono text-[#EDF1F7] truncate">{resource.id}</span>
-          <span className={`text-[9px] font-mono ${healthText[health]}`}>{health.toUpperCase()}</span>
-        </div>
-        <div className="space-y-1">
-          <HudRow label="CPU" value={`${cpu}%`} pct={cpu} />
-          <HudRow label="MEM" value={`${memory}%`} pct={memory} />
-          {metric?.rps !== undefined && (
-            <div className="flex justify-between text-[9px] font-mono">
-              <span className="text-[#677185]">RPS</span>
-              <span className="text-[#AAB4C5]">{metric.rps}</span>
+      {/* HOVER HUD — outer wrapper keeps the positioning; the extra div counter-scales
+          the visible HUD so it stays readable at low zoom, growing downward (top center)
+          away from the node. The opacity hover classes stay on the visible box and still
+          work because `group` is on the node ancestor. */}
+      <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 z-40">
+        <div
+          style={{
+            transform: `scale(${overlayScale})`,
+            transformOrigin: "top center",
+          }}
+        >
+          <div className="w-40 bg-[#0B0E14]/95 border border-[#273042] rounded-lg p-2 shadow-xl opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none">
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-[11px] font-mono text-[#EDF1F7] truncate">{resource.id}</span>
+              <span className={`text-[10px] font-mono ${healthText[health]}`}>{health.toUpperCase()}</span>
             </div>
-          )}
-          {metric?.connections !== undefined && (
-            <div className="flex justify-between text-[9px] font-mono">
-              <span className="text-[#677185]">CONN</span>
-              <span className="text-[#AAB4C5]">{metric.connections}</span>
+            <div className="space-y-1">
+              <HudRow label="CPU" value={`${cpu}%`} pct={cpu} />
+              <HudRow label="MEM" value={`${memory}%`} pct={memory} />
+              {metric?.rps !== undefined && (
+                <div className="flex justify-between text-[10px] font-mono">
+                  <span className="text-[#677185]">RPS</span>
+                  <span className="text-[#AAB4C5]">{metric.rps}</span>
+                </div>
+              )}
+              {metric?.connections !== undefined && (
+                <div className="flex justify-between text-[10px] font-mono">
+                  <span className="text-[#677185]">CONN</span>
+                  <span className="text-[#AAB4C5]">{metric.connections}</span>
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
       </div>
     </div>
