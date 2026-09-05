@@ -38,6 +38,10 @@ export const PoolScaleBodySchema = z.object({
   delta: z.union([z.literal(1), z.literal(-1)], "Delta must be exactly 1 or -1")
 });
 
+export const SpeedControlBodySchema = z.object({
+  speed: z.union([z.literal(0), z.literal(1), z.literal(10), z.literal(60)], "Speed must be 0, 1, 10, or 60")
+});
+
 export type ChaosInjectionBodySchemaType = z.infer<typeof ChaosInjectionBodySchema>;
 export type DeploymentIdSchemaType = z.infer<typeof DeploymentIdSchema>;
 export type LoadControlBodySchemaType = z.infer<typeof LoadControlBodySchema>;
@@ -45,3 +49,4 @@ export type WorkloadProfileSchemaType = z.infer<typeof WorkloadProfileSchema>;
 export type DeploymentCreateBodySchemaType = z.infer<typeof DeploymentCreateBodySchema>;
 export type VerticalScaleBodySchemaType = z.infer<typeof VerticalScaleBodySchema>;
 export type PoolScaleBodySchemaType = z.infer<typeof PoolScaleBodySchema>;
+export type SpeedControlBodySchemaType = z.infer<typeof SpeedControlBodySchema>;

@@ -3,7 +3,7 @@ import crypto from "crypto";
 import { prisma } from "../lib/prisma";
 import { redis } from "../infra/redis";
 import { ValidationError, NotFoundError } from "../utils/errors";
-import { ChaosInjectionBodySchema, DeploymentIdSchema, LoadControlBodySchema, DeploymentCreateBodySchema, VerticalScaleBodySchema, PoolScaleBodySchema } from "../zod_schemas/deployment.schema";
+import { ChaosInjectionBodySchema, DeploymentIdSchema, LoadControlBodySchema, DeploymentCreateBodySchema, VerticalScaleBodySchema, PoolScaleBodySchema, SpeedControlBodySchema } from "../zod_schemas/deployment.schema";
 import { DeploymentStatus } from "@shared/enum/DeploymentStatus.enum";
 import { Publish } from "@shared/enum/Publish.enum";
 
@@ -96,10 +96,8 @@ deploymentRouter.post("/:deploymentId/chaos", async (req, res) => {
   if (deployment.status !== DeploymentStatus.LIVE) {
     throw new ValidationError("Chaos can only be injected into a live deployment");
   }
-
   const timestamp = new Date().toISOString();
   const message = `Chaos ${type} injected on ${resourceId}`;
-
   await prisma.$transaction(async (tx) => {
     const latestDeployment = await tx.deployment.findUnique({
       where: { id: deploymentId }
@@ -125,8 +123,6 @@ deploymentRouter.post("/:deploymentId/chaos", async (req, res) => {
       }
     });
   });
-
-  // Publish to deployment updates channel for frontend timeline
   await redis.publish(`deployment:${deploymentId}:updates`, JSON.stringify({
     deploymentId,
     chaosType: type,
@@ -135,15 +131,12 @@ deploymentRouter.post("/:deploymentId/chaos", async (req, res) => {
     timestamp,
     publishType: Publish.publishChaosInjected
   }));
-
-  // Publish to simulator control channel
   await redis.publish("simulator:control", JSON.stringify({
     deploymentId,
     action: "inject-chaos",
     chaosType: type,
     resourceId
   }));
-
   res.status(200).json({
     success: true,
     message: "Chaos injected",
@@ -249,6 +242,39 @@ deploymentRouter.post("/:deploymentId/scale-pool", async (req, res) => {
     success: true,
     message: "Manual scaling command sent to simulator",
     deploymentId
+  });
+});
+
+// Speed control — pause / fast-forward the LIVE simulation clock
+deploymentRouter.post("/:deploymentId/speed", async (req, res) => {
+  const DeploymentId = DeploymentIdSchema.safeParse(req.params);
+  if (!DeploymentId.success) {
+    const errorMessages = DeploymentId.error.issues.map(err => err.message).join(", ");
+    throw new ValidationError(errorMessages);
+  }
+  const SpeedControlData = SpeedControlBodySchema.safeParse(req.body);
+  if (!SpeedControlData.success) {
+    const errorMessages = SpeedControlData.error.issues.map(err => err.message).join(", ");
+    throw new ValidationError(errorMessages);
+  }
+  const { deploymentId } = DeploymentId.data;
+  const { speed } = SpeedControlData.data;
+  const deployment = await prisma.deployment.findUnique({ where: { id: deploymentId } });
+  if (!deployment) {
+    throw new NotFoundError("Deployment not found with specified id " + deploymentId);
+  }
+  if (deployment.status !== DeploymentStatus.LIVE) {
+    throw new ValidationError("Speed can only be adjusted on a live deployment");
+  }
+  await redis.publish("simulator:control", JSON.stringify({
+    deploymentId,
+    action: "set-speed",
+    speed
+  }));
+  res.status(200).json({
+    success: true,
+    message: "Speed updated",
+    speed
   });
 });
 

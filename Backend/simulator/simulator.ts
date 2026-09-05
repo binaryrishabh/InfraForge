@@ -19,6 +19,8 @@ interface SimulationInstance {
   state: SimulationState;
   tickCount: number;
   pendingLogs: SimulationLog[];
+  speed: number;
+  lastCheckpointAt: number;
 }
 
 const registry = new Map<string, SimulationInstance>();
@@ -50,7 +52,7 @@ export const startSimulation = async (deploymentId: string, existingDeployment?:
   const workloadProfile = (deployment.workloadProfile as WorkloadProfile | null) ?? DEFAULT_WORKLOAD_PROFILE;
 
   const state = createInitialState(deploymentId, resources, connectionLines, workloadProfile, hashSeed(seedText));
-  registry.set(deploymentId, { state, tickCount: 0, pendingLogs: [] });
+  registry.set(deploymentId, { state, tickCount: 0, pendingLogs: [], speed: 1, lastCheckpointAt: Date.now() });
   console.log(`[simulator] registered ${deploymentId} | ${resources.length} resources | target ${Math.round(state.targetRps)} rps`);
 };
 
@@ -68,7 +70,7 @@ export const resurrectLiveDeployments = async () => {
   }
 };
 
-/* ------- Control channel: load adjustments, stop commands, chaos injection, vertical scaling, and manual pool scaling from the API server ------- */
+/* ------- Control channel: load adjustments, stop commands, chaos injection, vertical scaling, manual pool scaling, and speed control from the API server ------- */
 const controlSubscriber = redis.duplicate();
 controlSubscriber.subscribe("simulator:control");
 controlSubscriber.on("message", (_channel: string, message: string) => {
@@ -82,6 +84,7 @@ controlSubscriber.on("message", (_channel: string, message: string) => {
       skuId?: string;
       lbId?: string;
       delta?: number;
+      speed?: number;
     };
     const instance = registry.get(command.deploymentId);
     if (!instance) return;
@@ -137,6 +140,14 @@ controlSubscriber.on("message", (_channel: string, message: string) => {
       instance.state = result.state;
       instance.pendingLogs.push(result.log);
       console.log(`[simulator] manual scale ${command.delta === 1 ? "up" : "down"} on ${command.lbId} for ${command.deploymentId}`);
+    } else if (command.action === "set-speed" && typeof command.speed === "number") {
+      const validSpeeds = [0, 1, 10, 60];
+      if (validSpeeds.includes(command.speed)) {
+        instance.speed = command.speed;
+        console.log(`[simulator] speed for ${command.deploymentId} set to ${command.speed}x`);
+      } else {
+        console.error(`[simulator] invalid speed ${command.speed} for ${command.deploymentId} — must be 0, 1, 10, or 60`);
+      }
     }
   } catch (err: any) {
     console.error(`[simulator] control message failed: ${err.message}`);
@@ -146,32 +157,46 @@ controlSubscriber.on("message", (_channel: string, message: string) => {
 setInterval(async () => {
   for (const [deploymentId, instance] of registry) {
     try {
-      const result = tick(instance.state, {});
-      instance.state = result.state;
-      instance.tickCount += 1;
+      const speed = instance.speed;
+
+      // Paused — skip entirely. No ticks, no snapshot, no checkpoint.
+      if (speed === 0) {
+        continue;
+      }
+
+      // Run `speed` engine ticks per real second, accumulating logs.
+      const allLogs: SimulationLog[] = [];
+      for (let i = 0; i < speed; i++) {
+        const result = tick(instance.state, {});
+        instance.state = result.state;
+        instance.tickCount += 1;
+        allLogs.push(...result.logs);
+      }
+
+      // Build ONE snapshot per interval from the final state (instance.state
+      // is the last tick's result.state), draining any queued control logs.
       const queuedLogs = instance.pendingLogs.splice(0);
-
-      const poolData = buildPoolSnapshots(result.state);
-
+      const poolData = buildPoolSnapshots(instance.state);
       const snapshot: SimulationSnapshot = {
         deploymentId,
         timestamp: new Date().toISOString(),
         simulatedSeconds: instance.state.simulatedSeconds,
-        loadFraction: result.state.loadFraction,
-        metrics: result.state.metrics,
-        logs: [...queuedLogs, ...result.logs],
-        health: result.state.overallHealth,
+        loadFraction: instance.state.loadFraction,
+        metrics: instance.state.metrics,
+        logs: [...queuedLogs, ...allLogs],
+        health: instance.state.overallHealth,
         pools: poolData.pools,
         spawnedVms: poolData.spawnedVms,
-        restarting: result.state.verticalScaling.map(v => v.resourceId)
+        restarting: instance.state.verticalScaling.map(v => v.resourceId),
+        speed: instance.speed
       };
       await publishSimulationSnapshot(snapshot);
 
-      // Neon relief: checkpoint every 60 ticks (was 5) and persist only non-derivable
-      // runtime state. resourceTypes / resourceSkus / entryPoints / reachable /
-      // deadEnds / idle / workloadProfile are all rebuildable from the infrastructure
-      // layout, so we stop paying Neon to store them.
-      if (instance.tickCount % 60 === 0) {
+      // Neon relief: wall-time-based checkpoint (at most once per real minute),
+      // persisting only non-derivable runtime state. This keeps 60x speed from
+      // writing to Postgres every second.
+      if (Date.now() - instance.lastCheckpointAt >= 60000) {
+        instance.lastCheckpointAt = Date.now();
         const s = instance.state;
         const checkpoint = {
           simulatedSeconds: s.simulatedSeconds,
