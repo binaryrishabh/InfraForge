@@ -2,6 +2,7 @@ import { prisma } from "../lib/prisma";
 import { redis } from "../infra/redis";
 import { publishSimulationSnapshot } from "../infra/pubsub";
 import { createInitialState, tick, buildPoolSnapshots, applyManualScale } from "@shared/simulation/engine";
+import { computeHourlyBurnRateUsd } from "@shared/simulation/cost";
 import { DEFAULT_WORKLOAD_PROFILE } from "@shared/constants/DEFAULT_WORKLOAD_PROFILE.constants";
 import { SIMULATION_CONSTANTS } from "@shared/constants/SIMULATION_CONSTANTS.constants";
 import { DeploymentStatus } from "@shared/enum/DeploymentStatus.enum";
@@ -21,6 +22,7 @@ interface SimulationInstance {
   pendingLogs: SimulationLog[];
   speed: number;
   lastCheckpointAt: number;
+  accumulatedCostUsd: number;
 }
 
 const registry = new Map<string, SimulationInstance>();
@@ -50,9 +52,8 @@ export const startSimulation = async (deploymentId: string, existingDeployment?:
     await prisma.deployment.update({ where: { id: deploymentId }, data: { seed: seedText } });
   }
   const workloadProfile = (deployment.workloadProfile as WorkloadProfile | null) ?? DEFAULT_WORKLOAD_PROFILE;
-
   const state = createInitialState(deploymentId, resources, connectionLines, workloadProfile, hashSeed(seedText));
-  registry.set(deploymentId, { state, tickCount: 0, pendingLogs: [], speed: 1, lastCheckpointAt: Date.now() });
+  registry.set(deploymentId, { state, tickCount: 0, pendingLogs: [], speed: 1, lastCheckpointAt: Date.now(), accumulatedCostUsd: 0 });
   console.log(`[simulator] registered ${deploymentId} | ${resources.length} resources | target ${Math.round(state.targetRps)} rps`);
 };
 
@@ -159,7 +160,7 @@ setInterval(async () => {
     try {
       const speed = instance.speed;
 
-      // Paused — skip entirely. No ticks, no snapshot, no checkpoint.
+      // Paused — skip entirely. No ticks, no snapshot, no checkpoint, no cost.
       if (speed === 0) {
         continue;
       }
@@ -171,12 +172,18 @@ setInterval(async () => {
         instance.state = result.state;
         instance.tickCount += 1;
         allLogs.push(...result.logs);
+        // Live cost: one simulated second = 1/3600 of an hour. Accumulated per
+        // tick so burn-rate changes from autoscaling / vertical scaling are
+        // tracked mid-interval. Cost is a pure function of SIMULATED time —
+        // never speed-multiplied (Locked Decision #8).
+        instance.accumulatedCostUsd += computeHourlyBurnRateUsd(instance.state) / 3600;
       }
 
       // Build ONE snapshot per interval from the final state (instance.state
       // is the last tick's result.state), draining any queued control logs.
       const queuedLogs = instance.pendingLogs.splice(0);
       const poolData = buildPoolSnapshots(instance.state);
+      const burnRate = computeHourlyBurnRateUsd(instance.state);
       const snapshot: SimulationSnapshot = {
         deploymentId,
         timestamp: new Date().toISOString(),
@@ -188,7 +195,9 @@ setInterval(async () => {
         pools: poolData.pools,
         spawnedVms: poolData.spawnedVms,
         restarting: instance.state.verticalScaling.map(v => v.resourceId),
-        speed: instance.speed
+        speed: instance.speed,
+        burnRatePerHourUsd: burnRate,
+        accumulatedCostUsd: instance.accumulatedCostUsd
       };
       await publishSimulationSnapshot(snapshot);
 
@@ -207,7 +216,8 @@ setInterval(async () => {
           activeChaos: s.activeChaos,
           pools: s.pools,
           spawnedVms: s.spawnedVms,
-          verticalScaling: s.verticalScaling
+          verticalScaling: s.verticalScaling,
+          accumulatedCostUsd: instance.accumulatedCostUsd
         };
         await prisma.deployment.update({
           where: { id: deploymentId },
