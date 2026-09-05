@@ -1,5 +1,33 @@
 @import "tailwindcss";
 
 body {
-    margin: 0
+margin: 0
+}
+
+@keyframes infraforge-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-2px) rotate(-0.5deg); }
+  40% { transform: translateX(2px) rotate(0.5deg); }
+  60% { transform: translateX(-2px) rotate(-0.5deg); }
+  80% { transform: translateX(2px) rotate(0.5deg); }
+}
+
+@keyframes infraforge-smoke {
+  0% { opacity: 0.5; transform: translateY(0) translateX(0) scale(0.6); }
+  50% { opacity: 0.3; transform: translateY(-12px) translateX(3px) scale(1); }
+  100% { opacity: 0; transform: translateY(-24px) translateX(-2px) scale(1.4); }
+}
+
+@keyframes infraforge-orbit {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.infraforge-smoke-wisp {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(148, 163, 184, 0.5) 0%, rgba(148, 163, 184, 0) 70%);
+  animation: infraforge-smoke 2.4s ease-out infinite;
 }

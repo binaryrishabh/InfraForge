@@ -6,7 +6,12 @@ import type { Resource } from "@shared/interface/Resource.interface";
 interface MonitoringResourceNodeProps {
   resource: Resource;
   // Optional cosmetic drag hook (monitoring only). Not wired on the designer.
-  onNodePointerDown?: (nodeId: string, clientX: number, clientY: number, pointerId: number) => void;
+  onNodePointerDown?: (
+    nodeId: string,
+    clientX: number,
+    clientY: number,
+    pointerId: number,
+  ) => void;
   // World zoom level; used only to keep the icon readable when zoomed out.
   scale?: number;
   // Viewport translate + canvas container size; used to place overlays in true
@@ -15,7 +20,7 @@ interface MonitoringResourceNodeProps {
   translateY?: number;
   containerWidth?: number;
   containerHeight?: number;
-};
+}
 
 // Estimated overlay base sizes (screen px at overlayScale = 1) used only to
 // decide which side an overlay fits on. Slightly generous so we flip a touch
@@ -26,21 +31,35 @@ const HUD_BASE_W = 160; // w-40
 const HUD_BASE_H = 110;
 const EDGE_GAP = 8;
 
+// Cinematic gauge arc geometry (orbiting arc rendered behind the node).
+const ARC_RADIUS = 29;
+const ARC_CIRCUMFERENCE = 2 * Math.PI * ARC_RADIUS;
+const ARC_FRACTION = 0.25;
+const ARC_LENGTH = ARC_CIRCUMFERENCE * ARC_FRACTION;
+
 const healthRing: Record<string, string> = {
   [ResourceHealth.HEALTHY]: "ring-emerald-500/60",
   [ResourceHealth.DEGRADED]: "ring-amber-400",
   [ResourceHealth.SATURATED]: "ring-red-500 animate-pulse",
-  [ResourceHealth.FAILED]: "ring-red-600 animate-pulse"
+  [ResourceHealth.FAILED]: "ring-red-600 animate-pulse",
 };
 
 const healthText: Record<string, string> = {
   [ResourceHealth.HEALTHY]: "text-emerald-400",
   [ResourceHealth.DEGRADED]: "text-amber-400",
   [ResourceHealth.SATURATED]: "text-red-400",
-  [ResourceHealth.FAILED]: "text-red-500"
+  [ResourceHealth.FAILED]: "text-red-500",
 };
 
-function HudRow({ label, value, pct }: { label: string; value: string; pct: number }) {
+function HudRow({
+  label,
+  value,
+  pct,
+}: {
+  label: string;
+  value: string;
+  pct: number;
+}) {
   return (
     <div>
       <div className="flex justify-between text-[10px] font-mono mb-0.5">
@@ -55,7 +74,7 @@ function HudRow({ label, value, pct }: { label: string; value: string; pct: numb
       </div>
     </div>
   );
-};
+}
 
 export function MonitoringResourceNode({
   resource,
@@ -64,10 +83,12 @@ export function MonitoringResourceNode({
   translateX = 0,
   translateY = 0,
   containerWidth = 0,
-  containerHeight = 0
+  containerHeight = 0,
 }: MonitoringResourceNodeProps) {
   const metric = useSimulationStore((s) => s.metrics[resource.id]);
-  const isRestarting = useSimulationStore((s) => s.restarting.includes(resource.id));
+  const isRestarting = useSimulationStore((s) =>
+    s.restarting.includes(resource.id),
+  );
 
   const health = metric?.health ?? ResourceHealth.HEALTHY;
   const cpu = metric?.cpu ?? 0;
@@ -80,12 +101,27 @@ export function MonitoringResourceNode({
 
   // Readable-zoom: grow the icon up to 1.75x as the world zooms out.
   const inverseScale = scale < 1 ? Math.min(1 / scale, 1.75) : 1;
+
   // Counter-scale for the screen-space overlays (auto-pop meter + hover HUD) so
   // they stay full size when zoomed out, capped at 3x so they never get absurd
   // at the 0.3 minimum zoom.
   const overlayScale = scale < 1 ? Math.min(1 / scale, 3) : 1;
+
   // Net screen-space scale of the overlays (world scale x counter-scale).
   const overlayScreenScale = scale * overlayScale;
+
+  // --- Cinematic layer state ---
+  const isShaking = health === ResourceHealth.SATURATED;
+  const isFailed = health === ResourceHealth.FAILED;
+  const isOrbiting = !isFailed;
+  const arcColor =
+    {
+      [ResourceHealth.HEALTHY]: "#10b981",
+      [ResourceHealth.DEGRADED]: "#f59e0b",
+      [ResourceHealth.SATURATED]: "#ef4444",
+      [ResourceHealth.FAILED]: "#4b5563",
+    }[health] ?? "#4b5563";
+  const orbitDuration = isOrbiting ? Math.max(0.8, 8 - (cpu / 100) * 7.2) : 0;
 
   // --- True screen-space geometry for edge-aware overlay placement ---
   const nodeScreenX = translateX + resource.x * scale;
@@ -99,16 +135,31 @@ export function MonitoringResourceNode({
   // Auto-pop meter: prefer top, then RIGHT, then left, then bottom.
   // Only flips right when it would actually clip the top edge.
   const meterFitsAbove = nodeScreenY - EDGE_GAP - meterH >= 0;
-  const meterFitsRight = nodeScreenX + nodeScreenSize + EDGE_GAP + meterW <= containerWidth;
+  const meterFitsRight =
+    nodeScreenX + nodeScreenSize + EDGE_GAP + meterW <= containerWidth;
   const meterFitsLeft = nodeScreenX - EDGE_GAP - meterW >= 0;
-  const meterSide = meterFitsAbove ? "top" : meterFitsRight ? "right" : meterFitsLeft ? "left" : "bottom";
+  const meterSide = meterFitsAbove
+    ? "top"
+    : meterFitsRight
+      ? "right"
+      : meterFitsLeft
+        ? "left"
+        : "bottom";
 
   // Hover HUD: prefer bottom, then LEFT, then right, then top.
   // Avoids the bottom edge AND the right edge (bottom-right corner case).
-  const hudFitsBelow = nodeScreenY + nodeScreenSize + EDGE_GAP + hudH <= containerHeight;
-  const hudFitsRight = nodeScreenX + nodeScreenSize + EDGE_GAP + hudW <= containerWidth;
+  const hudFitsBelow =
+    nodeScreenY + nodeScreenSize + EDGE_GAP + hudH <= containerHeight;
+  const hudFitsRight =
+    nodeScreenX + nodeScreenSize + EDGE_GAP + hudW <= containerWidth;
   const hudFitsLeft = nodeScreenX - EDGE_GAP - hudW >= 0;
-  const hudSide = hudFitsBelow ? "bottom" : hudFitsLeft ? "left" : hudFitsRight ? "right" : "top";
+  const hudSide = hudFitsBelow
+    ? "bottom"
+    : hudFitsLeft
+      ? "left"
+      : hudFitsRight
+        ? "right"
+        : "top";
 
   // Meter prefers top/right, HUD prefers bottom/left -> they pick opposite sides
   // and stop overlapping each other. Meter gets the higher z so if they ever do
@@ -153,8 +204,8 @@ export function MonitoringResourceNode({
       }
     >
       {/* AUTO-POP METER — appears uninvited when a resource crosses its safe threshold or is restarting.
-          pointer-events-none so the counter-scaled meter never enlarges the node's
-          hover/drag hit region. Flips side only when it would actually clip an edge. */}
+pointer-events-none so the counter-scaled meter never enlarges the node's
+hover/drag hit region. Flips side only when it would actually clip an edge. */}
       {showAutoPop && (
         <div className={`${meterPosClass} z-50 pointer-events-none`}>
           <div
@@ -167,17 +218,26 @@ export function MonitoringResourceNode({
               className={`w-36 bg-[#0B0E14]/95 border rounded-lg px-2 py-1.5 shadow-xl ${
                 isRestarting
                   ? "border-[#F5A524]/60"
-                  : health === ResourceHealth.SATURATED || health === ResourceHealth.FAILED
-                  ? "border-[#F0564A]/60"
-                  : "border-[#F5A524]/60"
+                  : health === ResourceHealth.SATURATED ||
+                      health === ResourceHealth.FAILED
+                    ? "border-[#F0564A]/60"
+                    : "border-[#F5A524]/60"
               }`}
             >
               <div className="flex items-center justify-between mb-1">
-                <span className="text-[10px] font-mono text-[#AAB4C5] truncate max-w-24">{resource.id}</span>
+                <span className="text-[10px] font-mono text-[#AAB4C5] truncate max-w-24">
+                  {resource.id}
+                </span>
                 {isRestarting ? (
-                  <span className="text-[12px] font-mono font-semibold text-amber-400">RESTARTING</span>
+                  <span className="text-[12px] font-mono font-semibold text-amber-400">
+                    RESTARTING
+                  </span>
                 ) : (
-                  <span className={`text-[12px] font-mono font-semibold ${healthText[health]}`}>{cpu}%</span>
+                  <span
+                    className={`text-[12px] font-mono font-semibold ${healthText[health]}`}
+                  >
+                    {cpu}%
+                  </span>
                 )}
               </div>
               <div className="h-1 rounded-full bg-[#1F2633] overflow-hidden">
@@ -190,7 +250,9 @@ export function MonitoringResourceNode({
                   />
                 )}
               </div>
-              <p className={`text-[9px] font-mono mt-0.5 ${isRestarting ? "text-amber-400" : healthText[health]}`}>
+              <p
+                className={`text-[9px] font-mono mt-0.5 ${isRestarting ? "text-amber-400" : healthText[health]}`}
+              >
                 {isRestarting ? "RESTARTING" : health.toUpperCase()}
               </p>
             </div>
@@ -198,26 +260,82 @@ export function MonitoringResourceNode({
         </div>
       )}
 
+      {/* ORBITING GAUGE ARC — cinematic arc orbiting behind the node. Speed tracks CPU. */}
+      <svg
+        className="absolute -inset-2 pointer-events-none"
+        width="64"
+        height="64"
+        viewBox="0 0 64 64"
+      >
+        <circle
+          cx="32"
+          cy="32"
+          r={ARC_RADIUS}
+          fill="none"
+          stroke={arcColor}
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeDasharray={`${ARC_LENGTH} ${ARC_CIRCUMFERENCE - ARC_LENGTH}`}
+          opacity={isFailed ? 0.3 : 0.6}
+          style={{
+            transformOrigin: "center",
+            animation: isOrbiting
+              ? `infraforge-orbit ${orbitDuration}s linear infinite`
+              : "none",
+          }}
+        />
+      </svg>
+
       {/* NODE with health-driven ring (amber pulse while a vertical SKU swap restarts it) */}
       <div
         title={resource.type}
         className={`w-12 h-12 rounded-lg bg-[#12161F] ring-2 flex items-center justify-center transition-colors duration-300 ${
           isRestarting ? "ring-amber-400 animate-pulse" : healthRing[health]
         }`}
+        style={{
+          animation: isShaking
+            ? "infraforge-shake 0.2s ease-in-out infinite"
+            : undefined,
+        }}
       >
         {/* Icon is inverse-scaled so it stays readable when zoomed out. */}
         <span
           className="inline-flex items-center justify-center"
-          style={{ transform: `scale(${inverseScale})`, transformOrigin: "center" }}
+          style={{
+            transform: `scale(${inverseScale})`,
+            transformOrigin: "center",
+          }}
         >
-          <ResourceIcon type={resource.type} size={20} className={healthText[health]} />
+          <ResourceIcon
+            type={resource.type}
+            size={20}
+            className={healthText[health]}
+          />
         </span>
       </div>
 
+      {/* SMOKE WISPS — rising smoke rendered only when the resource has failed. */}
+      {isFailed && (
+        <div className="absolute -top-1 left-1/2 -translate-x-1/2 pointer-events-none z-10">
+          <div
+            className="infraforge-smoke-wisp"
+            style={{ animationDelay: "0s", left: "-6px" }}
+          />
+          <div
+            className="infraforge-smoke-wisp"
+            style={{ animationDelay: "0.6s", left: "0px" }}
+          />
+          <div
+            className="infraforge-smoke-wisp"
+            style={{ animationDelay: "1.2s", left: "6px" }}
+          />
+        </div>
+      )}
+
       {/* HOVER HUD — pointer-events-none on the wrapper so the counter-scaled HUD
-          never enlarges the node's hover/drag hit region. It still appears on node
-          hover because `group` is on the node ancestor. Flips side only when it
-          would actually clip the bottom/right/left edge. */}
+never enlarges the node's hover/drag hit region. It still appears on node
+hover because `group` is on the node ancestor. Flips side only when it
+would actually clip the bottom/right/left edge. */}
       <div className={`${hudPosClass} z-40 pointer-events-none`}>
         <div
           style={{
@@ -227,8 +345,12 @@ export function MonitoringResourceNode({
         >
           <div className="w-40 bg-[#0B0E14]/95 border border-[#273042] rounded-lg p-2 shadow-xl opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none">
             <div className="flex items-center justify-between mb-1.5">
-              <span className="text-[11px] font-mono text-[#EDF1F7] truncate">{resource.id}</span>
-              <span className={`text-[10px] font-mono ${healthText[health]}`}>{health.toUpperCase()}</span>
+              <span className="text-[11px] font-mono text-[#EDF1F7] truncate">
+                {resource.id}
+              </span>
+              <span className={`text-[10px] font-mono ${healthText[health]}`}>
+                {health.toUpperCase()}
+              </span>
             </div>
             <div className="space-y-1">
               <HudRow label="CPU" value={`${cpu}%`} pct={cpu} />
@@ -251,4 +373,4 @@ export function MonitoringResourceNode({
       </div>
     </div>
   );
-};
+}
