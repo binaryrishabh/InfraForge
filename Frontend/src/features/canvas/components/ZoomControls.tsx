@@ -1,6 +1,11 @@
 import { memo, useCallback, useEffect, useRef, useState } from "react";
+import { RotateCcw } from "lucide-react";
 import { useCanvasStore } from "../store/canvasStore";
-import { MIN_SCALE, MAX_SCALE } from "../hooks/useCanvasViewport";
+import {
+  MIN_SCALE,
+  MAX_SCALE,
+  fitCanvasView,
+} from "../hooks/useCanvasViewport";
 
 // Wakes on zoom activity or hover, hides this long after the last activity.
 const HIDE_AFTER_MS = 5000;
@@ -12,19 +17,16 @@ export const ZoomControls = memo(function ZoomControls() {
   const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hoveredRef = useRef(false);
   const prevScaleRef = useRef(scale);
-
   const clearHideTimer = useCallback(() => {
     if (hideTimerRef.current) {
       clearTimeout(hideTimerRef.current);
       hideTimerRef.current = null;
     }
   }, []);
-
   const scheduleHide = useCallback(() => {
     clearHideTimer();
     hideTimerRef.current = setTimeout(() => setVisible(false), HIDE_AFTER_MS);
   }, [clearHideTimer]);
-
   // Any zoom-level change (wheel, buttons, fit-view) wakes the controls.
   useEffect(() => {
     if (prevScaleRef.current !== scale) {
@@ -33,39 +35,40 @@ export const ZoomControls = memo(function ZoomControls() {
       if (!hoveredRef.current) scheduleHide();
     }
   }, [scale, scheduleHide]);
-
   // Clean up the timer on unmount.
   useEffect(() => clearHideTimer, [clearHideTimer]);
-
   const handleMouseEnter = useCallback(() => {
     hoveredRef.current = true;
     clearHideTimer();
     setVisible(true);
   }, [clearHideTimer]);
-
   const handleMouseLeave = useCallback(() => {
     hoveredRef.current = false;
     scheduleHide();
   }, [scheduleHide]);
-
   // Zoom around the canvas center.
   const zoomBy = useCallback((factor: number) => {
     const store = useCanvasStore.getState();
     const container = document.getElementById("canvas");
     if (!container) return;
     const rect = container.getBoundingClientRect();
-    const nextScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, store.scale * factor));
+    const nextScale = Math.min(
+      MAX_SCALE,
+      Math.max(MIN_SCALE, store.scale * factor),
+    );
     if (nextScale === store.scale) return;
     const centerX = rect.width / 2;
     const centerY = rect.height / 2;
     const cx = (centerX - store.translateX) / store.scale;
     const cy = (centerY - store.translateY) / store.scale;
-    store.setViewport(nextScale, centerX - cx * nextScale, centerY - cy * nextScale);
+    store.setViewport(
+      nextScale,
+      centerX - cx * nextScale,
+      centerY - cy * nextScale,
+    );
   }, []);
-
   const atMin = scale <= MIN_SCALE + 0.001;
   const atMax = scale >= MAX_SCALE - 0.001;
-
   return (
     <div
       onMouseEnter={handleMouseEnter}
@@ -97,6 +100,14 @@ export const ZoomControls = memo(function ZoomControls() {
           className="w-7 h-7 rounded-md bg-[#0B0E14] border border-[#1F2633] text-[13px] font-medium leading-none text-[#AAB4C5] hover:text-[#EDF1F7] hover:border-[#35415A] active:scale-[0.95] transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center"
         >
           +
+        </button>
+        <button
+          type="button"
+          title="Fit view"
+          onClick={() => fitCanvasView()}
+          className="w-7 h-7 rounded-md bg-[#0B0E14] border border-[#1F2633] text-[#AAB4C5] hover:text-[#EDF1F7] hover:border-[#35415A] active:scale-[0.95] transition-all duration-150 flex items-center justify-center"
+        >
+          <RotateCcw size={14} strokeWidth={1.75} />
         </button>
       </div>
     </div>
