@@ -31,12 +31,6 @@ const HUD_BASE_W = 160; // w-40
 const HUD_BASE_H = 110;
 const EDGE_GAP = 8;
 
-// Cinematic gauge arc geometry (orbiting arc rendered behind the node).
-const ARC_RADIUS = 29;
-const ARC_CIRCUMFERENCE = 2 * Math.PI * ARC_RADIUS;
-const ARC_FRACTION = 0.25;
-const ARC_LENGTH = ARC_CIRCUMFERENCE * ARC_FRACTION;
-
 const healthRing: Record<string, string> = {
   [ResourceHealth.HEALTHY]: "ring-emerald-500/60",
   [ResourceHealth.DEGRADED]: "ring-amber-400",
@@ -101,27 +95,25 @@ export function MonitoringResourceNode({
 
   // Readable-zoom: grow the icon up to 1.75x as the world zooms out.
   const inverseScale = scale < 1 ? Math.min(1 / scale, 1.75) : 1;
-
   // Counter-scale for the screen-space overlays (auto-pop meter + hover HUD) so
   // they stay full size when zoomed out, capped at 3x so they never get absurd
   // at the 0.3 minimum zoom.
   const overlayScale = scale < 1 ? Math.min(1 / scale, 3) : 1;
-
   // Net screen-space scale of the overlays (world scale x counter-scale).
   const overlayScreenScale = scale * overlayScale;
 
   // --- Cinematic layer state ---
-  const isShaking = health === ResourceHealth.SATURATED;
+  // Saturated resources shake hard and fast; degraded resources get a slow,
+  // subtle tremble. Failed resources don't shake — they smoke instead.
+  const isShaking =
+    health === ResourceHealth.SATURATED || health === ResourceHealth.DEGRADED;
+  const shakeAnimation =
+    health === ResourceHealth.SATURATED
+      ? "infraforge-shake 0.2s ease-in-out infinite"
+      : health === ResourceHealth.DEGRADED
+        ? "infraforge-shake-slow 0.6s ease-in-out infinite"
+        : undefined;
   const isFailed = health === ResourceHealth.FAILED;
-  const isOrbiting = !isFailed;
-  const arcColor =
-    {
-      [ResourceHealth.HEALTHY]: "#10b981",
-      [ResourceHealth.DEGRADED]: "#f59e0b",
-      [ResourceHealth.SATURATED]: "#ef4444",
-      [ResourceHealth.FAILED]: "#4b5563",
-    }[health] ?? "#4b5563";
-  const orbitDuration = isOrbiting ? Math.max(0.8, 8 - (cpu / 100) * 7.2) : 0;
 
   // --- True screen-space geometry for edge-aware overlay placement ---
   const nodeScreenX = translateX + resource.x * scale;
@@ -260,42 +252,15 @@ hover/drag hit region. Flips side only when it would actually clip an edge. */}
         </div>
       )}
 
-      {/* ORBITING GAUGE ARC — cinematic arc orbiting behind the node. Speed tracks CPU. */}
-      <svg
-        className="absolute -inset-2 pointer-events-none"
-        width="64"
-        height="64"
-        viewBox="0 0 64 64"
-      >
-        <circle
-          cx="32"
-          cy="32"
-          r={ARC_RADIUS}
-          fill="none"
-          stroke={arcColor}
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeDasharray={`${ARC_LENGTH} ${ARC_CIRCUMFERENCE - ARC_LENGTH}`}
-          opacity={isFailed ? 0.3 : 0.6}
-          style={{
-            transformOrigin: "center",
-            animation: isOrbiting
-              ? `infraforge-orbit ${orbitDuration}s linear infinite`
-              : "none",
-          }}
-        />
-      </svg>
-
-      {/* NODE with health-driven ring (amber pulse while a vertical SKU swap restarts it) */}
+      {/* NODE with health-driven ring (amber pulse while a vertical SKU swap restarts it).
+Shakes hard+fast when saturated, slow+subtle when degraded. */}
       <div
         title={resource.type}
         className={`w-12 h-12 rounded-lg bg-[#12161F] ring-2 flex items-center justify-center transition-colors duration-300 ${
           isRestarting ? "ring-amber-400 animate-pulse" : healthRing[health]
         }`}
         style={{
-          animation: isShaking
-            ? "infraforge-shake 0.2s ease-in-out infinite"
-            : undefined,
+          animation: isShaking ? shakeAnimation : undefined,
         }}
       >
         {/* Icon is inverse-scaled so it stays readable when zoomed out. */}
@@ -328,6 +293,10 @@ hover/drag hit region. Flips side only when it would actually clip an edge. */}
           <div
             className="infraforge-smoke-wisp"
             style={{ animationDelay: "1.2s", left: "6px" }}
+          />
+          <div
+            className="infraforge-smoke-wisp"
+            style={{ animationDelay: "1.8s", left: "3px" }}
           />
         </div>
       )}
