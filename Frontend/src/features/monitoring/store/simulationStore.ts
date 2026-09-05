@@ -18,6 +18,8 @@ interface SimulationStoreState {
   spawnedVms: SpawnedVmInfo[];
   restarting: string[];
   speed: number;
+  burnRatePerHourUsd: number;
+  accumulatedCostUsd: number;
   applySnapshot: (snapshot: SimulationSnapshot) => void;
   setSpeed: (speed: number) => void;
   reset: () => void;
@@ -33,7 +35,9 @@ const initialState = {
   pools: {} as Record<string, PoolSnapshot>,
   spawnedVms: [] as SpawnedVmInfo[],
   restarting: [] as string[],
-  speed: 1
+  speed: 1,
+  burnRatePerHourUsd: 0,
+  accumulatedCostUsd: 0
 };
 
 export const useSimulationStore = create<SimulationStoreState>()((set) => ({
@@ -48,8 +52,10 @@ export const useSimulationStore = create<SimulationStoreState>()((set) => ({
     pools: snapshot.pools ?? {},
     spawnedVms: snapshot.spawnedVms ?? [],
     restarting: snapshot.restarting ?? [],
-    speed: snapshot.speed ?? 1
+    speed: snapshot.speed ?? 1,
+    burnRatePerHourUsd: snapshot.burnRatePerHourUsd ?? 0,
+    accumulatedCostUsd: snapshot.accumulatedCostUsd ?? 0
   })),
   setSpeed: (speed) => set({ speed }),
-  reset: () => set({ ...initialState, metrics: {}, logs: [], pools: {}, spawnedVms: [], restarting: [], speed: 1 })
+  reset: () => set({ ...initialState, metrics: {}, logs: [], pools: {}, spawnedVms: [], restarting: [], speed: 1, burnRatePerHourUsd: 0, accumulatedCostUsd: 0 })
 }));

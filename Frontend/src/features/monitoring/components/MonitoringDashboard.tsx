@@ -15,6 +15,7 @@ import { ChaosControlPanel } from "./ChaosControlPanel";
 import { VerticalScalePanel } from "./VerticalScalePanel";
 import { ManualScalePanel } from "./ManualScalePanel";
 import { SpeedControlPanel } from "./SpeedControlPanel";
+import { CostBurnTicker } from "./CostBurnTicker";
 import { ConfirmModal } from "@/components/UI/ConfirmModal";
 import { CostBreakdownPanel } from "./panels/CostBreakdownPanel";
 import { SecurityIssuesPanel } from "./panels/SecurityIssuesPanel";
@@ -69,6 +70,7 @@ export function MonitoringDashboard() {
       <div className="h-12 bg-gray-950 border-b border-gray-800 flex items-center justify-between px-4 shrink-0">
         <h1 className="text-sm font-semibold">InfraForge - Monitoring</h1>
         <div className="flex items-center gap-3">
+          <CostBurnTicker />
           <SpeedControlPanel deploymentId={deploymentId!} status={status} />
           <span
             className={`text-xs ${
