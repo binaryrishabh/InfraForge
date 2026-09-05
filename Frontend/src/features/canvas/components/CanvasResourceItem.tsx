@@ -34,8 +34,9 @@ export const CanvasResourceItem = memo(function CanvasResourceItem({
   const dragOffsetRef = useRef({ x: 0, y: 0 });
   const startPosRef = useRef({ x: 0, y: 0 });
 
-  // Readable-zoom: grow icon + SKU label up to 3x as the world zooms out.
-  const inverseScale = scale < 1 ? Math.min(1 / scale, 3) : 1;
+  // Readable-zoom: grow the icon up to 1.75x as the world zooms out.
+  // SKU labels hide instead (gated by zoom) to keep the canvas uncluttered.
+  const inverseScale = scale < 1 ? Math.min(1 / scale, 1.75) : 1;
 
   const handlePointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
     if (e.button !== 0) return;
@@ -127,13 +128,12 @@ export const CanvasResourceItem = memo(function CanvasResourceItem({
       >
         <ResourceIcon type={resource.type} size={20} />
       </span>
-      {resource.skuId && (
-        // Outer span keeps the existing centering/positioning; inner span carries
-        // the inverse scale (its transform would otherwise override -translate-x-1/2).
+      {resource.skuId && scale >= 0.8 && (
+        // Outer span keeps the existing centering/positioning; the inner span
+        // carries the visual styling (no inverse-scale — it simply hides when zoomed out).
         <span className="absolute top-full left-1/2 -translate-x-1/2 mt-1 pointer-events-none">
           <span
-            className="block max-w-16 truncate text-[8px] font-mono text-[#AAB4C5] bg-[#0B0E14]/85 border border-[#1F2633] rounded px-1 whitespace-nowrap"
-            style={{ transform: `scale(${inverseScale})`, transformOrigin: "top center" }}
+            className="block max-w-16 truncate text-[9px] font-mono text-[#AAB4C5] bg-[#0B0E14]/85 border border-[#1F2633] rounded px-1 whitespace-nowrap"
           >
             {resource.skuId}
           </span>

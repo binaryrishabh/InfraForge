@@ -56,9 +56,9 @@ export function MonitoringResourceNode({ resource, onNodePointerDown, scale = 1 
     health === ResourceHealth.FAILED;
   const popNearTop = resource.y < 96;
 
-  // Readable-zoom: grow the icon as the world zooms out. The auto-pop meter and
-  // hover HUD are screen-space overlays and are deliberately NOT inverse-scaled.
-  const inverseScale = scale < 1 ? Math.min(1 / scale, 3) : 1;
+  // Readable-zoom: grow the icon up to 1.75x as the world zooms out. The
+  // auto-pop meter and hover HUD are screen-space overlays and stay fixed size.
+  const inverseScale = scale < 1 ? Math.min(1 / scale, 1.75) : 1;
 
   return (
     <div

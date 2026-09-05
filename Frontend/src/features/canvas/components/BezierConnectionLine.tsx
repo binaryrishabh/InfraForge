@@ -60,11 +60,16 @@ export function BezierConnectionLine({ source, target, port, isSelected = false,
   const midX = (x1 + 3 * c1x + 3 * c2x + x2) / 8;
   const midY = (y1 + 3 * c1y + 3 * c2y + y2) / 8;
 
-  // Readable-zoom: enlarge the port label + hit area as the world zooms out.
-  // The glow and main-curve stroke widths are left alone (they scale with the world).
-  const inverseScale = scale < 1 ? Math.min(1 / scale, 3) : 1;
-
   const strokeColor = isSelected ? "#F0564A" : "#3b82f6";
+
+  // Level-of-detail: the port badge is a clean readable pill, rendered only
+  // above ~65% zoom. Below that it disappears so the canvas stays uncluttered.
+  const showPortBadge = scale >= 0.65;
+  const label = ":" + port;
+  const estWidth = label.length * 7 + 14;
+
+  // Keep the invisible hit path clickable at low zoom without over-growing.
+  const hitScale = scale < 1 ? Math.min(1 / scale, 2) : 1;
 
   return (
     <g>
@@ -72,18 +77,20 @@ export function BezierConnectionLine({ source, target, port, isSelected = false,
       <path d={path} fill="none" stroke={strokeColor} strokeWidth={4} opacity={0.15} strokeLinecap="round" />
       {/* Main curve */}
       <path d={path} fill="none" stroke={strokeColor} strokeWidth={isSelected ? 2.5 : 1.5} strokeLinecap="round" />
-      {/* Port label pinned to the exact curve midpoint */}
-      <circle cx={midX} cy={midY} r={9 * inverseScale} fill="#1e293b" stroke={strokeColor} strokeWidth={1} />
-      <text x={midX} y={midY + 3 * inverseScale} textAnchor="middle" fill="#94a3b8" fontSize={8 * inverseScale}>
-        :{port}
-      </text>
+      {/* Port badge pinned to the exact curve midpoint — gated by zoom */}
+      {showPortBadge && (
+        <g>
+          <rect x={midX - estWidth / 2} y={midY - 9} width={estWidth} height={18} rx={9} fill="#0B0E14" stroke={strokeColor} strokeWidth={1.5} />
+          <text x={midX} y={midY + 3.5} textAnchor="middle" fill="#EDF1F7" fontSize={11} fontFamily="ui-monospace, SFMono-Regular, monospace" fontWeight={500}>{label}</text>
+        </g>
+      )}
       {/* Invisible wide hit path on top for click select/delete. Its own
           pointerEvents="stroke" overrides the layer's pointer-events-none. */}
       <path
         d={path}
         fill="none"
         stroke="transparent"
-        strokeWidth={14 * inverseScale}
+        strokeWidth={16 * hitScale}
         style={{ cursor: "pointer" }}
         pointerEvents="stroke"
         onClick={(e) => {
