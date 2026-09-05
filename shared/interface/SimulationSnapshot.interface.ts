@@ -15,4 +15,6 @@ export interface SimulationSnapshot {
   spawnedVms?: SpawnedVmInfo[];
   restarting?: string[];
   speed?: number;   // current simulation speed multiplier (0=pause, 1, 10, 60)
+  burnRatePerHourUsd?: number;   // current $/hr to run the live infrastructure
+  accumulatedCostUsd?: number;   // total $ burned so far (function of simulated time)
 }
