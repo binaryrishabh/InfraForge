@@ -17,7 +17,9 @@ interface SimulationStoreState {
   pools: Record<string, PoolSnapshot>;
   spawnedVms: SpawnedVmInfo[];
   restarting: string[];
+  speed: number;
   applySnapshot: (snapshot: SimulationSnapshot) => void;
+  setSpeed: (speed: number) => void;
   reset: () => void;
 }
 
@@ -30,7 +32,8 @@ const initialState = {
   lastSnapshotAt: null as string | null,
   pools: {} as Record<string, PoolSnapshot>,
   spawnedVms: [] as SpawnedVmInfo[],
-  restarting: [] as string[]
+  restarting: [] as string[],
+  speed: 1
 };
 
 export const useSimulationStore = create<SimulationStoreState>()((set) => ({
@@ -44,7 +47,9 @@ export const useSimulationStore = create<SimulationStoreState>()((set) => ({
     lastSnapshotAt: snapshot.timestamp,
     pools: snapshot.pools ?? {},
     spawnedVms: snapshot.spawnedVms ?? [],
-    restarting: snapshot.restarting ?? []
+    restarting: snapshot.restarting ?? [],
+    speed: snapshot.speed ?? 1
   })),
-  reset: () => set({ ...initialState, metrics: {}, logs: [], pools: {}, spawnedVms: [], restarting: [] })
+  setSpeed: (speed) => set({ speed }),
+  reset: () => set({ ...initialState, metrics: {}, logs: [], pools: {}, spawnedVms: [], restarting: [], speed: 1 })
 }));

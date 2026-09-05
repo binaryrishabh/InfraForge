@@ -44,7 +44,7 @@ export const injectChaos = async(deploymentId: string, type: string, resourceId:
   return response.data.message;
 }
 
-// Vertical scale — swap a resource's SKU on a LIVE deployment (the resource restarts during the swap)
+// Vertical scaling — swap a resource's SKU with realistic restart downtime
 export const scaleVertical = async(deploymentId: string, resourceId: string, skuId: string): Promise<string> => {
   const response = await axios.post(`${API_URL}/deployments/${deploymentId}/scale-vertical`, {
     resourceId,
@@ -61,3 +61,9 @@ export const scalePool = async(deploymentId: string, lbId: string, delta: number
   });
   return response.data.message;
 }
+
+// Set the simulation speed of a LIVE deployment (0=pause, 1, 10, 60)
+export const setDeploymentSpeed = async (deploymentId: string, speed: number): Promise<string> => {
+  const response = await axios.post(`${API_URL}/deployments/${deploymentId}/speed`, { speed });
+  return response.data.message;
+};
