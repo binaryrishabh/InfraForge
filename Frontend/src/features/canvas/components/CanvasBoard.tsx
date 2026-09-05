@@ -1,9 +1,9 @@
-import { memo } from "react";
+import { memo, useEffect, useRef } from "react";
 import { useDroppable } from "@dnd-kit/core";
 import { useCanvasStore } from "../store/canvasStore";
 import { useCanvasResourceActions } from "../hooks/useCanvasResourceActions";
 import { useCanvasConnectionActions } from "../hooks/useCanvasConnectionActions";
-import { useCanvasViewport } from "../hooks/useCanvasViewport";
+import { useCanvasViewport, fitCanvasView } from "../hooks/useCanvasViewport";
 import { CanvasResourceItem } from "./CanvasResourceItem";
 import { ConnectionLinesLayer } from "./ConnectionLinesLayer";
 
@@ -13,7 +13,9 @@ export const CanvasBoard = memo(function CanvasBoard() {
   const scale = useCanvasStore((s) => s.scale);
   const translateX = useCanvasStore((s) => s.translateX);
   const translateY = useCanvasStore((s) => s.translateY);
-  const setSelectedResourceForConfigId = useCanvasStore((s) => s.setSelectedResourceForConfigId);
+  const setSelectedResourceForConfigId = useCanvasStore(
+    (s) => s.setSelectedResourceForConfigId,
+  );
 
   const {
     handleDeleteCanvasResource,
@@ -23,8 +25,22 @@ export const CanvasBoard = memo(function CanvasBoard() {
   } = useCanvasResourceActions();
   const { hanldeResouceClick } = useCanvasConnectionActions();
   const viewport = useCanvasViewport();
-
   const { setNodeRef } = useDroppable({ id: "canvas" });
+
+  // Auto-fit once after the design is restored from localStorage on reload.
+  // The viewport state (scale/translate) is not persisted, so on reload it
+  // resets to scale=1, translateX=0, translateY=0. Auto-fitting frames the
+  // restored design so it's visible instead of sitting at the default origin.
+  const hasAutoFittedRef = useRef(false);
+  useEffect(() => {
+    if (!hasAutoFittedRef.current && resources.length > 0) {
+      hasAutoFittedRef.current = true;
+      // Wait for the DOM to render the restored resources before measuring.
+      requestAnimationFrame(() => {
+        fitCanvasView();
+      });
+    }
+  }, [resources]);
 
   return (
     <div
@@ -51,7 +67,7 @@ export const CanvasBoard = memo(function CanvasBoard() {
       }}
     >
       {/* Transformed "world" layer. pointer-events: none so pan/click fall through
-          to the outer canvas; individual resource items re-enable pointer events. */}
+to the outer canvas; individual resource items re-enable pointer events. */}
       <div
         style={{
           transform: `translate(${translateX}px, ${translateY}px) scale(${scale})`,
