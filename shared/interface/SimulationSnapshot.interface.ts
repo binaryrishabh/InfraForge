@@ -13,5 +13,6 @@ export interface SimulationSnapshot {
   health: "healthy" | "degraded" | "saturated" | "critical";
   pools?: Record<string, PoolSnapshot>;
   spawnedVms?: SpawnedVmInfo[];
-  restarting?: string[];   // resourceIds currently down for a vertical SKU swap
+  restarting?: string[];
+  speed?: number;   // current simulation speed multiplier (0=pause, 1, 10, 60)
 }
