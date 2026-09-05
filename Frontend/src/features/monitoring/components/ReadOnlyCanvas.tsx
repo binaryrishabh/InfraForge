@@ -32,13 +32,14 @@ export function ReadOnlyCanvas({ resources, connectionLines }: ReadOnlyCanvasPro
     zoomOut,
   } = useMonitoringViewport();
 
-  // Measure the canvas container height so nodes can decide when their hover HUD
-  // would clip below the canvas bottom and flip to the right instead.
-  const [containerHeight, setContainerHeight] = useState(0);
+  // Measure the canvas container size so nodes can place their overlays in true
+  // screen space (deciding when an overlay would clip an edge and flip sides).
+  const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
   useLayoutEffect(() => {
     const measure = () => {
       if (containerRef.current) {
-        setContainerHeight(containerRef.current.getBoundingClientRect().height);
+        const rect = containerRef.current.getBoundingClientRect();
+        setContainerSize({ width: rect.width, height: rect.height });
       }
     };
     measure();
@@ -159,8 +160,10 @@ export function ReadOnlyCanvas({ resources, connectionLines }: ReadOnlyCanvasPro
               resource={{ ...resource, x: pos.x, y: pos.y }}
               onNodePointerDown={startNodeDrag}
               scale={viewport.scale}
+              translateX={viewport.translateX}
               translateY={viewport.translateY}
-              containerHeight={containerHeight}
+              containerWidth={containerSize.width}
+              containerHeight={containerSize.height}
             />
           );
         })}
@@ -179,8 +182,10 @@ export function ReadOnlyCanvas({ resources, connectionLines }: ReadOnlyCanvasPro
                 }}
                 onNodePointerDown={startNodeDrag}
                 scale={viewport.scale}
+                translateX={viewport.translateX}
                 translateY={viewport.translateY}
-                containerHeight={containerHeight}
+                containerWidth={containerSize.width}
+                containerHeight={containerSize.height}
               />
             );
           })}

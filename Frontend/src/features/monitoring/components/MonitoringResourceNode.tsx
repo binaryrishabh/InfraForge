@@ -9,16 +9,22 @@ interface MonitoringResourceNodeProps {
   onNodePointerDown?: (nodeId: string, clientX: number, clientY: number, pointerId: number) => void;
   // World zoom level; used only to keep the icon readable when zoomed out.
   scale?: number;
-  // Viewport vertical translate + canvas container height; used to decide when
-  // the hover HUD would clip below the canvas bottom and should flip right.
+  // Viewport translate + canvas container size; used to place overlays in true
+  // screen space so they only flip when they would actually clip an edge.
+  translateX?: number;
   translateY?: number;
+  containerWidth?: number;
   containerHeight?: number;
 };
 
-// Estimated hover-HUD height (world units, before counter-scaling) used only to
-// decide when the HUD would clip below the canvas bottom. Slightly generous so
-// the flip triggers a touch early rather than letting the HUD clip.
-const HUD_BASE_HEIGHT = 120;
+// Estimated overlay base sizes (screen px at overlayScale = 1) used only to
+// decide which side an overlay fits on. Slightly generous so we flip a touch
+// early rather than let an overlay clip.
+const METER_BASE_W = 144; // w-36
+const METER_BASE_H = 56;
+const HUD_BASE_W = 160; // w-40
+const HUD_BASE_H = 110;
+const EDGE_GAP = 8;
 
 const healthRing: Record<string, string> = {
   [ResourceHealth.HEALTHY]: "ring-emerald-500/60",
@@ -51,7 +57,15 @@ function HudRow({ label, value, pct }: { label: string; value: string; pct: numb
   );
 };
 
-export function MonitoringResourceNode({ resource, onNodePointerDown, scale = 1, translateY = 0, containerHeight = 0 }: MonitoringResourceNodeProps) {
+export function MonitoringResourceNode({
+  resource,
+  onNodePointerDown,
+  scale = 1,
+  translateX = 0,
+  translateY = 0,
+  containerWidth = 0,
+  containerHeight = 0
+}: MonitoringResourceNodeProps) {
   const metric = useSimulationStore((s) => s.metrics[resource.id]);
   const isRestarting = useSimulationStore((s) => s.restarting.includes(resource.id));
 
@@ -63,7 +77,6 @@ export function MonitoringResourceNode({ resource, onNodePointerDown, scale = 1,
     health === ResourceHealth.DEGRADED ||
     health === ResourceHealth.SATURATED ||
     health === ResourceHealth.FAILED;
-  const popNearTop = resource.y < 96;
 
   // Readable-zoom: grow the icon up to 1.75x as the world zooms out.
   const inverseScale = scale < 1 ? Math.min(1 / scale, 1.75) : 1;
@@ -71,14 +84,60 @@ export function MonitoringResourceNode({ resource, onNodePointerDown, scale = 1,
   // they stay full size when zoomed out, capped at 3x so they never get absurd
   // at the 0.3 minimum zoom.
   const overlayScale = scale < 1 ? Math.min(1 / scale, 3) : 1;
+  // Net screen-space scale of the overlays (world scale x counter-scale).
+  const overlayScreenScale = scale * overlayScale;
 
-  // Decide whether the hover HUD (rendered below the node) would clip below the
-  // canvas bottom. Node screen bottom = translateY + (y + 48) * scale; the HUD
-  // then extends further down by its (counter-scaled) height. Flip right when
-  // the projected bottom passes the canvas container height.
-  const nodeScreenBottom = translateY + (resource.y + 48) * scale;
-  const hudScreenBottom = nodeScreenBottom + 8 * scale + HUD_BASE_HEIGHT * overlayScale * scale;
-  const hudNearBottom = containerHeight > 0 && hudScreenBottom > containerHeight;
+  // --- True screen-space geometry for edge-aware overlay placement ---
+  const nodeScreenX = translateX + resource.x * scale;
+  const nodeScreenY = translateY + resource.y * scale;
+  const nodeScreenSize = 48 * scale;
+  const meterW = METER_BASE_W * overlayScreenScale;
+  const meterH = METER_BASE_H * overlayScreenScale;
+  const hudW = HUD_BASE_W * overlayScreenScale;
+  const hudH = HUD_BASE_H * overlayScreenScale;
+
+  // Auto-pop meter: prefer top, then RIGHT, then left, then bottom.
+  // Only flips right when it would actually clip the top edge.
+  const meterFitsAbove = nodeScreenY - EDGE_GAP - meterH >= 0;
+  const meterFitsRight = nodeScreenX + nodeScreenSize + EDGE_GAP + meterW <= containerWidth;
+  const meterFitsLeft = nodeScreenX - EDGE_GAP - meterW >= 0;
+  const meterSide = meterFitsAbove ? "top" : meterFitsRight ? "right" : meterFitsLeft ? "left" : "bottom";
+
+  // Hover HUD: prefer bottom, then LEFT, then right, then top.
+  // Avoids the bottom edge AND the right edge (bottom-right corner case).
+  const hudFitsBelow = nodeScreenY + nodeScreenSize + EDGE_GAP + hudH <= containerHeight;
+  const hudFitsRight = nodeScreenX + nodeScreenSize + EDGE_GAP + hudW <= containerWidth;
+  const hudFitsLeft = nodeScreenX - EDGE_GAP - hudW >= 0;
+  const hudSide = hudFitsBelow ? "bottom" : hudFitsLeft ? "left" : hudFitsRight ? "right" : "top";
+
+  // Meter prefers top/right, HUD prefers bottom/left -> they pick opposite sides
+  // and stop overlapping each other. Meter gets the higher z so if they ever do
+  // collide, the alert stays visible.
+  const meterPosClass = {
+    top: "absolute left-1/2 -translate-x-1/2 -top-16",
+    right: "absolute left-full top-0 ml-2",
+    left: "absolute right-full top-0 mr-2",
+    bottom: "absolute left-1/2 -translate-x-1/2 top-full mt-2",
+  }[meterSide];
+  const meterOrigin = {
+    top: "bottom center",
+    right: "left center",
+    left: "right center",
+    bottom: "top center",
+  }[meterSide];
+
+  const hudPosClass = {
+    bottom: "absolute left-1/2 -translate-x-1/2 top-full mt-2",
+    left: "absolute right-full top-0 mr-2",
+    right: "absolute left-full top-0 ml-2",
+    top: "absolute left-1/2 -translate-x-1/2 -top-16",
+  }[hudSide];
+  const hudOrigin = {
+    bottom: "top center",
+    left: "right center",
+    right: "left center",
+    top: "bottom center",
+  }[hudSide];
 
   return (
     <div
@@ -95,19 +154,13 @@ export function MonitoringResourceNode({ resource, onNodePointerDown, scale = 1,
     >
       {/* AUTO-POP METER — appears uninvited when a resource crosses its safe threshold or is restarting.
           pointer-events-none so the counter-scaled meter never enlarges the node's
-          hover/drag hit region. */}
+          hover/drag hit region. Flips side only when it would actually clip an edge. */}
       {showAutoPop && (
-        <div
-          className={`${
-            popNearTop
-              ? "absolute left-full top-0 ml-2"
-              : "absolute -top-16 left-1/2 -translate-x-1/2"
-          } z-30 pointer-events-none`}
-        >
+        <div className={`${meterPosClass} z-50 pointer-events-none`}>
           <div
             style={{
               transform: `scale(${overlayScale})`,
-              transformOrigin: popNearTop ? "left center" : "bottom center",
+              transformOrigin: meterOrigin,
             }}
           >
             <div
@@ -163,19 +216,13 @@ export function MonitoringResourceNode({ resource, onNodePointerDown, scale = 1,
 
       {/* HOVER HUD — pointer-events-none on the wrapper so the counter-scaled HUD
           never enlarges the node's hover/drag hit region. It still appears on node
-          hover because `group` is on the node ancestor. When the HUD would clip
-          below the canvas bottom it flips to the right of the node instead. */}
-      <div
-        className={`absolute z-40 pointer-events-none ${
-          hudNearBottom
-            ? "left-full bottom-0 ml-2"
-            : "top-full left-1/2 -translate-x-1/2 mt-2"
-        }`}
-      >
+          hover because `group` is on the node ancestor. Flips side only when it
+          would actually clip the bottom/right/left edge. */}
+      <div className={`${hudPosClass} z-40 pointer-events-none`}>
         <div
           style={{
             transform: `scale(${overlayScale})`,
-            transformOrigin: hudNearBottom ? "left bottom" : "top center",
+            transformOrigin: hudOrigin,
           }}
         >
           <div className="w-40 bg-[#0B0E14]/95 border border-[#273042] rounded-lg p-2 shadow-xl opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none">
