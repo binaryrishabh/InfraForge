@@ -77,16 +77,15 @@ export function MonitoringResourceNode({ resource, onNodePointerDown, scale = 1 
       }
     >
       {/* AUTO-POP METER — appears uninvited when a resource crosses its safe threshold or is restarting.
-          Outer wrapper keeps the positioning (and flips right when near the top edge);
-          the extra div counter-scales the visible meter so it stays readable at low zoom,
-          growing upward (bottom center) or rightward (left center) away from the node. */}
+          pointer-events-none so the counter-scaled meter never enlarges the node's
+          hover/drag hit region. */}
       {showAutoPop && (
         <div
           className={`${
             popNearTop
               ? "absolute left-full top-0 ml-2"
               : "absolute -top-16 left-1/2 -translate-x-1/2"
-          } z-30`}
+          } z-30 pointer-events-none`}
         >
           <div
             style={{
@@ -145,11 +144,10 @@ export function MonitoringResourceNode({ resource, onNodePointerDown, scale = 1 
         </span>
       </div>
 
-      {/* HOVER HUD — outer wrapper keeps the positioning; the extra div counter-scales
-          the visible HUD so it stays readable at low zoom, growing downward (top center)
-          away from the node. The opacity hover classes stay on the visible box and still
-          work because `group` is on the node ancestor. */}
-      <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 z-40">
+      {/* HOVER HUD — pointer-events-none on the wrapper so the counter-scaled HUD
+          never enlarges the node's hover/drag hit region. It still appears on node
+          hover because `group` is on the node ancestor. */}
+      <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 z-40 pointer-events-none">
         <div
           style={{
             transform: `scale(${overlayScale})`,
