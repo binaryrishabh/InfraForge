@@ -2,13 +2,12 @@ import { memo, useRef, type PointerEvent as ReactPointerEvent } from "react";
 import { ResourceIcon } from "@/components/common/ResourceIcon";
 import { CanvasResourcePorts } from "./CanvasResourcePorts";
 import { useCanvasStore } from "../store/canvasStore";
+import { startConnectionFromPort } from "../hooks/useCanvasConnectionDrag";
 import type { Resource } from "@shared/interface/Resource.interface";
-import type { ResourceType } from "@shared/constants/RESOURCE_TYPES.constants";
 
 interface CanvasResourceItemProps {
   resource: Resource;
   scale: number;
-  onResourceClick: (resourceId: string, resourceType: ResourceType) => void;
   onResourceDoubleClick: (resourceId: string) => void;
   onDeleteResource: (resourceId: string) => void;
   onMoveResource: (resourceId: string, x: number, y: number) => void;
@@ -20,22 +19,17 @@ const GRID_SIZE = 24;
 export const CanvasResourceItem = memo(function CanvasResourceItem({
   resource,
   scale,
-  onResourceClick,
   onResourceDoubleClick,
   onDeleteResource,
   onMoveResource,
   onCommitMove,
 }: CanvasResourceItemProps) {
   const isSelected = useCanvasStore((s) => s.selectedResourceId === resource.id);
-  const isConnecting = useCanvasStore((s) => s.isConnecting);
-
   const isDraggingRef = useRef(false);
   const wasDragRef = useRef(false);
   const dragOffsetRef = useRef({ x: 0, y: 0 });
   const startPosRef = useRef({ x: 0, y: 0 });
 
-  // Readable-zoom: grow the icon up to 1.75x as the world zooms out.
-  // SKU labels hide instead (gated by zoom) to keep the canvas uncluttered.
   const inverseScale = scale < 1 ? Math.min(1 / scale, 1.75) : 1;
 
   const handlePointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
@@ -43,11 +37,11 @@ export const CanvasResourceItem = memo(function CanvasResourceItem({
     isDraggingRef.current = true;
     wasDragRef.current = false;
     startPosRef.current = { x: resource.x, y: resource.y };
+
     const canvas = document.getElementById("canvas");
     if (canvas) {
       const rect = canvas.getBoundingClientRect();
       const { scale: viewScale, translateX, translateY } = useCanvasStore.getState();
-      // Grab offset in CANVAS space (not raw screen space) so it survives zoom.
       const pointerCanvasX = (e.clientX - rect.left - translateX) / viewScale;
       const pointerCanvasY = (e.clientY - rect.top - translateY) / viewScale;
       dragOffsetRef.current = {
@@ -71,7 +65,7 @@ export const CanvasResourceItem = memo(function CanvasResourceItem({
     if (Math.hypot(pointerCanvasX - startPointerX, pointerCanvasY - startPointerY) > 3) {
       wasDragRef.current = true;
     }
-    // No clamping — the canvas is infinite in every direction now that pan exists.
+
     const x = pointerCanvasX - dragOffsetRef.current.x;
     const y = pointerCanvasY - dragOffsetRef.current.y;
     onMoveResource(resource.id, x, y);
@@ -81,6 +75,7 @@ export const CanvasResourceItem = memo(function CanvasResourceItem({
     if (!isDraggingRef.current) return;
     isDraggingRef.current = false;
     e.currentTarget.releasePointerCapture(e.pointerId);
+
     if (wasDragRef.current) {
       const canvas = document.getElementById("canvas");
       if (!canvas) return;
@@ -97,16 +92,9 @@ export const CanvasResourceItem = memo(function CanvasResourceItem({
     }
   };
 
-  const handleClick = () => {
-    if (wasDragRef.current) {
-      wasDragRef.current = false;
-      return;
-    }
-    onResourceClick(resource.id, resource.type);
-  };
-
   return (
     <div
+      data-resource-id={resource.id}
       title={resource.type}
       className={`absolute group w-12 h-12 rounded-lg bg-[#12161F] border flex items-center justify-center cursor-pointer select-none pointer-events-auto transition-colors duration-150 ${
         isSelected
@@ -117,11 +105,15 @@ export const CanvasResourceItem = memo(function CanvasResourceItem({
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
-      onClick={handleClick}
+      onClick={() => {
+        if (wasDragRef.current) {
+          wasDragRef.current = false;
+          return;
+        }
+        useCanvasStore.getState().setSelectedResourceId(resource.id);
+      }}
       onDoubleClick={() => onResourceDoubleClick(resource.id)}
     >
-      {/* Icon is inverse-scaled so it stays readable when zoomed out. The 48x48
-          node box itself is NOT inverse-scaled, so spatial layout stays accurate. */}
       <span
         className="inline-flex items-center justify-center"
         style={{ transform: `scale(${inverseScale})`, transformOrigin: "center" }}
@@ -129,8 +121,6 @@ export const CanvasResourceItem = memo(function CanvasResourceItem({
         <ResourceIcon type={resource.type} size={20} />
       </span>
       {resource.skuId && scale >= 0.8 && (
-        // Outer span keeps the existing centering/positioning; the inner span
-        // carries the visual styling (no inverse-scale — it simply hides when zoomed out).
         <span className="absolute top-full left-1/2 -translate-x-1/2 mt-1 pointer-events-none">
           <span
             className="block max-w-16 truncate text-[9px] font-mono text-[#AAB4C5] bg-[#0B0E14]/85 border border-[#1F2633] rounded px-1 whitespace-nowrap"
@@ -139,7 +129,11 @@ export const CanvasResourceItem = memo(function CanvasResourceItem({
           </span>
         </span>
       )}
-      <CanvasResourcePorts isConnecting={isConnecting} />
+      <CanvasResourcePorts 
+        resourceId={resource.id} 
+        resourceType={resource.type} 
+        onStartConnection={startConnectionFromPort} 
+      />
       <button
         className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-red-500 hover:bg-red-400 text-white text-[11px] flex items-center justify-center leading-none opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer shadow-md"
         onPointerDown={(e) => e.stopPropagation()}

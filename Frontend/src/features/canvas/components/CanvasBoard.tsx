@@ -2,8 +2,8 @@ import { memo, useEffect, useRef } from "react";
 import { useDroppable } from "@dnd-kit/core";
 import { useCanvasStore } from "../store/canvasStore";
 import { useCanvasResourceActions } from "../hooks/useCanvasResourceActions";
-import { useCanvasConnectionActions } from "../hooks/useCanvasConnectionActions";
 import { useCanvasViewport, fitCanvasView } from "../hooks/useCanvasViewport";
+import { useCanvasConnectionDrag } from "../hooks/useCanvasConnectionDrag";
 import { CanvasResourceItem } from "./CanvasResourceItem";
 import { ConnectionLinesLayer } from "./ConnectionLinesLayer";
 
@@ -16,26 +16,22 @@ export const CanvasBoard = memo(function CanvasBoard() {
   const setSelectedResourceForConfigId = useCanvasStore(
     (s) => s.setSelectedResourceForConfigId,
   );
-
   const {
     handleDeleteCanvasResource,
     handleMoveCanvasResource,
     commitMoveCanvasResource,
     handleDeleteConnectionLine,
   } = useCanvasResourceActions();
-  const { hanldeResouceClick } = useCanvasConnectionActions();
+  
   const viewport = useCanvasViewport();
+  useCanvasConnectionDrag();
   const { setNodeRef } = useDroppable({ id: "canvas" });
 
-  // Auto-fit once after the design is restored from localStorage on reload.
-  // The viewport state (scale/translate) is not persisted, so on reload it
-  // resets to scale=1, translateX=0, translateY=0. Auto-fitting frames the
-  // restored design so it's visible instead of sitting at the default origin.
   const hasAutoFittedRef = useRef(false);
+
   useEffect(() => {
     if (!hasAutoFittedRef.current && resources.length > 0) {
       hasAutoFittedRef.current = true;
-      // Wait for the DOM to render the restored resources before measuring.
       requestAnimationFrame(() => {
         fitCanvasView();
       });
@@ -51,7 +47,6 @@ export const CanvasBoard = memo(function CanvasBoard() {
       }}
       className="flex-1 h-full relative overflow-hidden"
       style={{
-        // Dot grid scales + pans with the viewport so the whole canvas feels alive.
         backgroundImage: `radial-gradient(circle, #1e293b 1px, transparent 1px)`,
         backgroundSize: `${24 * scale}px ${24 * scale}px`,
         backgroundPosition: `${translateX}px ${translateY}px`,
@@ -60,14 +55,12 @@ export const CanvasBoard = memo(function CanvasBoard() {
       onPointerMove={viewport.handlePanMove}
       onPointerUp={viewport.handlePanEnd}
       onClick={(e) => {
-        // Deselect a connection only when the empty canvas itself is clicked.
         if (e.target === e.currentTarget) {
           useCanvasStore.getState().setSelectedConnectionId(null);
+          useCanvasStore.getState().setSelectedResourceId(null);
         }
       }}
     >
-      {/* Transformed "world" layer. pointer-events: none so pan/click fall through
-to the outer canvas; individual resource items re-enable pointer events. */}
       <div
         style={{
           transform: `translate(${translateX}px, ${translateY}px) scale(${scale})`,
@@ -91,7 +84,6 @@ to the outer canvas; individual resource items re-enable pointer events. */}
             key={resource.id}
             resource={resource}
             scale={scale}
-            onResourceClick={hanldeResouceClick}
             onResourceDoubleClick={setSelectedResourceForConfigId}
             onDeleteResource={handleDeleteCanvasResource}
             onMoveResource={handleMoveCanvasResource}

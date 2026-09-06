@@ -1,5 +1,6 @@
 import { memo } from "react";
 import { BezierConnectionLine } from "./BezierConnectionLine";
+import { PendingConnectionLine } from "./PendingConnectionLine";
 import { useCanvasStore } from "../store/canvasStore";
 import type { ConnectionLine } from "@shared/interface/ConnectionLine.interface";
 import type { Resource } from "@shared/interface/Resource.interface";
@@ -18,6 +19,11 @@ export const ConnectionLinesLayer = memo(function ConnectionLinesLayer({
   scale,
 }: ConnectionLinesLayerProps) {
   const selectedConnectionId = useCanvasStore((s) => s.selectedConnectionId);
+  const pendingConnection = useCanvasStore((s) => s.pendingConnection);
+
+  const pendingSource = pendingConnection
+    ? resources.find((r) => r.id === pendingConnection.sourceId)
+    : null;
 
   return (
     <svg
@@ -53,6 +59,12 @@ export const ConnectionLinesLayer = memo(function ConnectionLinesLayer({
           />
         );
       })}
+      {pendingConnection && pendingSource && (
+        <PendingConnectionLine
+          source={{ x: pendingSource.x, y: pendingSource.y }}
+          cursor={{ x: pendingConnection.cursorX, y: pendingConnection.cursorY }}
+        />
+      )}
     </svg>
   );
 });

@@ -2,7 +2,6 @@ import { memo } from "react";
 import { useCanvasStore } from "../store/canvasStore";
 import { useInfrastructureDropdown } from "../hooks/useInfrastructureDropdown";
 import { useInfrastructureActions } from "../hooks/useInfrastructureActions";
-import { useCanvasConnectionActions } from "../hooks/useCanvasConnectionActions";
 import { InfrastructureLayoutDropdown } from "./InfrastructureLayoutDropdown";
 import { TopbarActionButton } from "./TopbarActionButton";
 
@@ -12,12 +11,12 @@ export const CanvasTopbar = memo(function CanvasTopbar() {
   const currentLayoutSaved = useCanvasStore((s) => s.currentLayoutSaved);
   const showLayoutDropdown = useCanvasStore((s) => s.showLayoutDropdown);
   const savedLayouts = useCanvasStore((s) => s.savedLayouts);
-  const isConnecting = useCanvasStore((s) => s.isConnecting);
+  
   const { handleOpenCloseDropDownNameClick, handleSelectLayout } =
     useInfrastructureDropdown();
   const { handleNew, handleSave, handleUpdate, handleDeploy, handleDelete } =
     useInfrastructureActions();
-  const { handleToggleConnectionLines } = useCanvasConnectionActions();
+
   return (
     <div className="h-12 bg-gray-950 border-b border-gray-800 flex items-center justify-between px-4 shrink-0">
       <span className="text-sm font-semibold tracking-wide text-gray-200 select-none">
@@ -66,12 +65,6 @@ export const CanvasTopbar = memo(function CanvasTopbar() {
           label="Delete Infrastructure"
           variant="delete"
           onclick={handleDelete}
-        />
-        <TopbarActionButton
-          icon=""
-          label={isConnecting ? "Connecting..." : "Connect"}
-          variant={isConnecting ? "deploy" : "default"}
-          onclick={handleToggleConnectionLines}
         />
       </div>
     </div>

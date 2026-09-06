@@ -8,12 +8,16 @@ import type { UndoCanvasResourceAction } from "@shared/types/UndoCanvasResourceA
 
 type Updater<T> = T | ((prev: T) => T);
 
-// The shared UndoCanvasResourceAction contract is left untouched. This local
-// union extends it with a canvas-only "delete-connection" variant so that
-// single-line deletion can participate in undo/redo without editing shared.
 export type CanvasUndoAction =
   | UndoCanvasResourceAction
   | { type: "delete-connection"; connectionLine: ConnectionLine; savedState: boolean };
+
+export interface PendingConnection {
+  sourceId: string;
+  sourceType: ResourceType;
+  cursorX: number;
+  cursorY: number;
+}
 
 interface CanvasStoreState {
   // Layout
@@ -27,7 +31,7 @@ interface CanvasStoreState {
   selectedResourceId: string | null;
   selectedResourceForConfigId: string | null;
   selectedConnectionId: string | null;
-  isConnecting: boolean;
+  pendingConnection: PendingConnection | null;
   // Deployment
   activeDeploymentId: string | null;
   isDeploying: boolean;
@@ -50,6 +54,7 @@ interface CanvasStoreState {
   redoStack: CanvasUndoAction[];
   // Persistence
   isInitialized: boolean;
+
   // Actions
   setResources: (updater: Updater<Resource[]>) => void;
   setConnectionLines: (updater: Updater<ConnectionLine[]>) => void;
@@ -59,7 +64,9 @@ interface CanvasStoreState {
   setSelectedResourceId: (id: string | null) => void;
   setSelectedResourceForConfigId: (id: string | null) => void;
   setSelectedConnectionId: (id: string | null) => void;
-  setIsConnecting: (connecting: boolean) => void;
+  startPendingConnection: (sourceId: string, sourceType: ResourceType, cursorX: number, cursorY: number) => void;
+  movePendingConnection: (cursorX: number, cursorY: number) => void;
+  cancelPendingConnection: () => void;
   setActiveDeploymentId: (id: string | null) => void;
   setIsDeploying: (deploying: boolean) => void;
   setEmptyCanvasStateDismissed: (dismissed: boolean) => void;
@@ -85,7 +92,7 @@ export const useCanvasStore = create<CanvasStoreState>()((set) => ({
   selectedResourceId: null,
   selectedResourceForConfigId: null,
   selectedConnectionId: null,
-  isConnecting: false,
+  pendingConnection: null,
   activeDeploymentId: null,
   isDeploying: false,
   emptyCanvasStateDismissed: false,
@@ -100,6 +107,7 @@ export const useCanvasStore = create<CanvasStoreState>()((set) => ({
   undoStack: [],
   redoStack: [],
   isInitialized: false,
+
   setResources: (updater) => set((s) => ({ resources: typeof updater === "function" ? updater(s.resources) : updater })),
   setConnectionLines: (updater) => set((s) => ({ connectionLines: typeof updater === "function" ? updater(s.connectionLines) : updater })),
   setCurrentLayoutId: (id) => set({ currentLayoutId: id }),
@@ -108,7 +116,9 @@ export const useCanvasStore = create<CanvasStoreState>()((set) => ({
   setSelectedResourceId: (id) => set({ selectedResourceId: id }),
   setSelectedResourceForConfigId: (id) => set({ selectedResourceForConfigId: id }),
   setSelectedConnectionId: (id) => set({ selectedConnectionId: id }),
-  setIsConnecting: (connecting) => set({ isConnecting: connecting }),
+  startPendingConnection: (sourceId, sourceType, cursorX, cursorY) => set({ pendingConnection: { sourceId, sourceType, cursorX, cursorY } }),
+  movePendingConnection: (cursorX, cursorY) => set((s) => s.pendingConnection ? ({ pendingConnection: { ...s.pendingConnection, cursorX, cursorY } }) : {}),
+  cancelPendingConnection: () => set({ pendingConnection: null }),
   setActiveDeploymentId: (id) => set({ activeDeploymentId: id }),
   setIsDeploying: (deploying) => set({ isDeploying: deploying }),
   setEmptyCanvasStateDismissed: (dismissed) => set({ emptyCanvasStateDismissed: dismissed }),
@@ -121,14 +131,16 @@ export const useCanvasStore = create<CanvasStoreState>()((set) => ({
   setUndoStack: (updater) => set((s) => ({ undoStack: typeof updater === "function" ? updater(s.undoStack) : updater })),
   setRedoStack: (updater) => set((s) => ({ redoStack: typeof updater === "function" ? updater(s.redoStack) : updater })),
   setIsInitialized: (isInitialized) => set({ isInitialized }),
+
   loadLayout: (resources, connectionLines, id, name) => set({
     resources, connectionLines, currentLayoutId: id, currentLayoutName: name,
     currentLayoutSaved: true, selectedResourceId: null, selectedResourceForConfigId: null,
   }),
+
   clearCanvas: () => set({
     resources: [], connectionLines: [], currentLayoutId: null, currentLayoutName: null,
     currentLayoutSaved: true, selectedResourceId: null, selectedResourceForConfigId: null,
-    selectedConnectionId: null,
+    selectedConnectionId: null, pendingConnection: null,
     scale: 1, translateX: 0, translateY: 0,
     activeDeploymentId: null, isDeploying: false, activeDrag: null, undoStack: [], redoStack: [],
   }),
