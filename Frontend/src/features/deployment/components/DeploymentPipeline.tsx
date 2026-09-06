@@ -15,7 +15,8 @@ interface DeploymentPipelineProps {
 }
 
 export function DeploymentPipeline({
-  deploymentId,
+  // deploymentId remains part of the prop contract for callers, but the
+  // presentational render does not need it — so it is not destructured.
   status,
   completedStages,
   timeline,

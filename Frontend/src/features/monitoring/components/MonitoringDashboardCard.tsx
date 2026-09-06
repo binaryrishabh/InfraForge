@@ -43,7 +43,9 @@ function getBarColor(pct: number): string {
 export const MonitoringDashboardCard = memo(function MonitoringDashboardCard({
   resource,
   onNodePointerDown,
-  scale = 1,
+  // scale stays in the prop contract for callers (reserved for a future
+  // level-of-detail pass); the card renders at a fixed size, so it is not
+  // destructured here.
 }: MonitoringDashboardCardProps) {
   const metric = useSimulationStore((s) => s.metrics[resource.id]);
   const isRestarting = useSimulationStore((s) =>
