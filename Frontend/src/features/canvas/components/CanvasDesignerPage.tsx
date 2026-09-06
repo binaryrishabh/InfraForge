@@ -7,15 +7,21 @@ import { ResourceSidebar } from "./ResourceSidebar";
 import { CanvasBoard } from "./CanvasBoard";
 import { CanvasEmptyState } from "./CanvasEmptyState";
 import { CanvasConfigPanelWrapper } from "./CanvasConfigPanelWrapper";
-import { CanvasActiveDeployment } from "./CanvasActiveDeployment";
 import { CanvasModals } from "./CanvasModals";
 import { CanvasDragLayer } from "./CanvasDragLayer";
 import { ZoomControls } from "./ZoomControls";
+import { CanvasLiveMode } from "./CanvasLiveMode";
+import { useCanvasStore } from "../store/canvasStore";
 
 export function CanvasDesignerPage() {
   useCanvasPersistence();
   useCanvasKeyboardShortcuts();
   const dragDrop = useCanvasDragDrop();
+  const activeDeploymentId = useCanvasStore((s) => s.activeDeploymentId);
+
+  if (activeDeploymentId) {
+    return <CanvasLiveMode deploymentId={activeDeploymentId} />;
+  }
 
   return (
     <DndContext sensors={dragDrop.sensors} onDragStart={dragDrop.onDragStart} onDragEnd={dragDrop.onDragEnd}>
@@ -29,7 +35,6 @@ export function CanvasDesignerPage() {
         </div>
       </div>
       <CanvasConfigPanelWrapper />
-      <CanvasActiveDeployment />
       <CanvasModals />
       <CanvasDragLayer />
     </DndContext>
