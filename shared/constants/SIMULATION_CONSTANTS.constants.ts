@@ -41,7 +41,7 @@ export const SIMULATION_CONSTANTS = {
     DEFAULT_TARGET_CPU: 75,
     DEFAULT_MAX_MULTIPLIER: 3,
     DEFAULT_MAX_CAP: 8,
-    SPAWN_Y_GAP: 96
+    SPAWN_Y_GAP: 192
   },
   VERTICAL_SCALING: {
     RESTART_TICKS: 20   // simulated seconds a resource is down during a SKU swap
