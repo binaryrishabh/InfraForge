@@ -4,7 +4,7 @@ import { useCanvasStore } from "../store/canvasStore";
 import { DeploymentStatus } from "@shared/enum/DeploymentStatus.enum";
 import { ReadOnlyCanvas } from "@/features/monitoring/components/ReadOnlyCanvas";
 import { LiveTopbar } from "./LiveTopbar";
-import { LiveControlRail } from "./LiveControlRail";
+import { LiveOperatorDock } from "./LiveOperatorDock";
 import { DeploymentPipeline } from "@/features/deployment/components/DeploymentPipeline";
 
 interface CanvasLiveModeProps {
@@ -12,16 +12,20 @@ interface CanvasLiveModeProps {
 }
 
 export function CanvasLiveMode({ deploymentId }: CanvasLiveModeProps) {
-  const { status, completedStages, timeline } = useDeploymentSocket(deploymentId);
+  const { deployment, status, completedStages, timeline } =
+    useDeploymentSocket(deploymentId);
   const resources = useCanvasStore((s) => s.resources);
   const connectionLines = useCanvasStore((s) => s.connectionLines);
   const setActiveDeploymentId = useCanvasStore((s) => s.setActiveDeploymentId);
   const setIsDeploying = useCanvasStore((s) => s.setIsDeploying);
 
   const isLive = status === DeploymentStatus.LIVE;
+  const isConnectionError = status === "Web Socket connection error";
 
+  // Auto-return to the designer ONLY on teardown. On FAILED the user stays
+  // here, reads the failed pipeline dock, and leaves via its X Close button.
   useEffect(() => {
-    if (status === DeploymentStatus.TORN_DOWN || status === DeploymentStatus.FAILED) {
+    if (status === DeploymentStatus.TORN_DOWN) {
       setActiveDeploymentId(null);
       setIsDeploying(false);
     }
@@ -30,24 +34,18 @@ export function CanvasLiveMode({ deploymentId }: CanvasLiveModeProps) {
   const showPipeline =
     status === DeploymentStatus.PENDING ||
     status === DeploymentStatus.RUNNING ||
-    status === DeploymentStatus.COMPLETED;
+    status === DeploymentStatus.COMPLETED ||
+    status === DeploymentStatus.FAILED;
 
   return (
     <div className="flex flex-col h-screen bg-[#0f1117] text-white">
       <LiveTopbar deploymentId={deploymentId} status={status} />
-      
+
       <div className="flex-1 flex overflow-hidden relative">
         {isLive ? (
-          <>
-            <div className="flex-1 p-4">
-              <ReadOnlyCanvas resources={resources} connectionLines={connectionLines} />
-            </div>
-            <LiveControlRail
-              deploymentId={deploymentId}
-              status={status}
-              resources={resources}
-            />
-          </>
+          <div className="flex-1 p-4">
+            <ReadOnlyCanvas resources={resources} connectionLines={connectionLines} />
+          </div>
         ) : (
           <div
             className="flex-1 flex items-center justify-center"
@@ -56,10 +54,25 @@ export function CanvasLiveMode({ deploymentId }: CanvasLiveModeProps) {
               backgroundSize: `24px 24px`,
             }}
           >
-            <span className="text-sm font-mono text-[#677185]">provisioning…</span>
+            {isConnectionError ? (
+              <span className="text-sm font-mono text-[#F5A524]">
+                connection lost — reconnecting…
+              </span>
+            ) : (
+              <span className="text-sm font-mono text-[#677185]">provisioning…</span>
+            )}
           </div>
         )}
       </div>
+
+      {isLive && (
+        <LiveOperatorDock
+          deploymentId={deploymentId}
+          status={status}
+          resources={resources}
+          deployment={deployment}
+        />
+      )}
 
       {showPipeline && (
         <DeploymentPipeline
