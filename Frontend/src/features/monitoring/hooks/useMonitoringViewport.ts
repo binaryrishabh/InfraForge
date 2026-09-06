@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
+import { NODE_CARD_WIDTH, NODE_CARD_HEIGHT } from "../components/MonitoringDashboardCard";
 
 const MIN_SCALE = 0.3;
 const MAX_SCALE = 2.5;
 const FIT_MIN_SCALE = 0.3;
 const FIT_MAX_SCALE = 1.0;
-const FIT_PADDING = 64;
-const NODE_SIZE = 48;
+const FIT_PADDING = 96;
+const NODE_SIZE = NODE_CARD_WIDTH;
+const NODE_HEIGHT = NODE_CARD_HEIGHT;
 const WHEEL_ZOOM_INTENSITY = 0.002;
 const GLIDE_MS = 500;
 
@@ -36,6 +38,7 @@ export function useMonitoringViewport() {
 
   const viewportRef = useRef(viewport);
   viewportRef.current = viewport;
+
   const nodeOffsetsRef = useRef(nodeOffsets);
   nodeOffsetsRef.current = nodeOffsets;
 
@@ -44,7 +47,6 @@ export function useMonitoringViewport() {
   const draggingNodeRef = useRef<string | null>(null);
   const nodeDragStartRef = useRef<{ pointerX: number; pointerY: number; startDx: number; startDy: number } | null>(null);
 
-  /* Convert a screen (client) point into canvas-space coordinates. */
   const screenToCanvas = useCallback((clientX: number, clientY: number) => {
     const el = containerRef.current;
     if (!el) return { x: 0, y: 0 };
@@ -64,7 +66,6 @@ export function useMonitoringViewport() {
     setGlide(false);
   }, []);
 
-  /* Wheel zoom toward the cursor (native non-passive listener). */
   const handleWheel = useCallback((e: WheelEvent) => {
     e.preventDefault();
     const el = containerRef.current;
@@ -92,36 +93,38 @@ export function useMonitoringViewport() {
     return () => el.removeEventListener("wheel", handleWheel);
   }, [handleWheel]);
 
-  /* Auto-fit: frame a set of nodes with padding, gliding smoothly. */
   const fitToNodes = useCallback((nodes: { x: number; y: number }[]) => {
     const el = containerRef.current;
     if (!el || nodes.length === 0) return;
     const rect = el.getBoundingClientRect();
     if (rect.width === 0 || rect.height === 0) return;
+
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
     for (const n of nodes) {
       if (n.x < minX) minX = n.x;
       if (n.y < minY) minY = n.y;
       if (n.x + NODE_SIZE > maxX) maxX = n.x + NODE_SIZE;
-      if (n.y + NODE_SIZE > maxY) maxY = n.y + NODE_SIZE;
+      if (n.y + NODE_HEIGHT > maxY) maxY = n.y + NODE_HEIGHT;
     }
+
     const boxW = maxX - minX;
     const boxH = maxY - minY;
     if (boxW <= 0 || boxH <= 0) return;
-    // Never zoom in past 100%, never shrink below 30% — only zoom out to fit.
+
     const scale = Math.min(
       FIT_MAX_SCALE,
       Math.max(FIT_MIN_SCALE, Math.min((rect.width - FIT_PADDING * 2) / boxW, (rect.height - FIT_PADDING * 2) / boxH))
     );
+
     const translateX = (rect.width - boxW * scale) / 2 - minX * scale;
     const translateY = (rect.height - boxH * scale) / 2 - minY * scale;
+
     if (glideTimerRef.current) clearTimeout(glideTimerRef.current);
     setGlide(true);
     glideTimerRef.current = setTimeout(() => setGlide(false), GLIDE_MS + 100);
     setViewport({ scale, translateX, translateY });
   }, []);
 
-  /* Background pan (only when the empty canvas itself is pressed). */
   const handlePanStart = useCallback((e: ReactPointerEvent<HTMLDivElement>) => {
     if (draggingNodeRef.current) return;
     if (e.target !== e.currentTarget) return;
@@ -149,7 +152,6 @@ export function useMonitoringViewport() {
     }
   }, []);
 
-  /* Node dragging — cosmetic local repositioning (does not touch the sim/layout). */
   const startNodeDrag = useCallback((nodeId: string, clientX: number, clientY: number, pointerId: number) => {
     disableGlide();
     draggingNodeRef.current = nodeId;
@@ -186,7 +188,6 @@ export function useMonitoringViewport() {
     }
   }, []);
 
-  /* Combined pointer handlers on the container: route node-drag vs pan. */
   const handlePointerMove = useCallback((e: ReactPointerEvent<HTMLDivElement>) => {
     if (draggingNodeRef.current) {
       moveNodeDrag(e.clientX, e.clientY);
@@ -207,7 +208,6 @@ export function useMonitoringViewport() {
     return nodeOffsets[nodeId] || { dx: 0, dy: 0 };
   }, [nodeOffsets]);
 
-  /* Button-driven zoom around the canvas center. */
   const zoomBy = useCallback((factor: number) => {
     const el = containerRef.current;
     if (!el) return;
@@ -230,6 +230,7 @@ export function useMonitoringViewport() {
 
   const zoomIn = useCallback(() => zoomBy(1.2), [zoomBy]);
   const zoomOut = useCallback(() => zoomBy(1 / 1.2), [zoomBy]);
+  
   const resetView = useCallback(() => {
     disableGlide();
     setViewport({ scale: 1, translateX: 0, translateY: 0 });

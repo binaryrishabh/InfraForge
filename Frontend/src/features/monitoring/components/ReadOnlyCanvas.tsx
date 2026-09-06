@@ -4,7 +4,7 @@ import { useSimulationStore } from "../store/simulationStore";
 import type { ConnectionLine } from "@shared/interface/ConnectionLine.interface";
 import type { Resource } from "@shared/interface/Resource.interface";
 import { BezierConnectionLine } from "@/features/canvas/components/BezierConnectionLine";
-import { MonitoringResourceNode } from "./MonitoringResourceNode";
+import { MonitoringDashboardCard, NODE_CARD_WIDTH, NODE_CARD_HEIGHT } from "./MonitoringDashboardCard";
 import { ProvisioningNode } from "./ProvisioningNode";
 import { useMonitoringViewport } from "../hooks/useMonitoringViewport";
 import { MonitoringZoomControls } from "./MonitoringZoomControls";
@@ -17,7 +17,6 @@ interface ReadOnlyCanvasProps {
 export function ReadOnlyCanvas({ resources, connectionLines }: ReadOnlyCanvasProps) {
   const spawnedVms = useSimulationStore((s) => s.spawnedVms);
   const pools = useSimulationStore((s) => s.pools);
-
   const {
     containerRef,
     viewport,
@@ -32,9 +31,8 @@ export function ReadOnlyCanvas({ resources, connectionLines }: ReadOnlyCanvasPro
     zoomOut,
   } = useMonitoringViewport();
 
-  // Measure the canvas container size so nodes can place their overlays in true
-  // screen space (deciding when an overlay would clip an edge and flip sides).
-  const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
+  const [_containerSize, setContainerSize] = useState({ width: 0, height: 0 });
+
   useLayoutEffect(() => {
     const measure = () => {
       if (containerRef.current) {
@@ -47,13 +45,11 @@ export function ReadOnlyCanvas({ resources, connectionLines }: ReadOnlyCanvasPro
     return () => window.removeEventListener("resize", measure);
   }, []);
 
-  // Effective position = base position + any user drag offset.
   const effectivePos = (id: string, baseX: number, baseY: number) => {
     const off = getNodeOffset(id);
     return { x: baseX + off.dx, y: baseY + off.dy };
   };
 
-  // All current node positions (base + spawned + dragged) for framing.
   const computeNodePositions = useCallback(() => {
     const positions: { x: number; y: number }[] = [];
     for (const r of resources) {
@@ -67,9 +63,6 @@ export function ReadOnlyCanvas({ resources, connectionLines }: ReadOnlyCanvasPro
     return positions;
   }, [resources, spawnedVms, getNodeOffset]);
 
-  // Re-fit only when the SET of nodes changes (a replica spawns or drains), not on
-  // every position/offset change. A provisioning->active flip keeps its position,
-  // so the key is unchanged and the view does not jitter.
   const nodeSetKey = useMemo(
     () => [...resources.map((r) => r.id), ...spawnedVms.map((v) => v.id)].sort().join("|"),
     [resources, spawnedVms]
@@ -80,8 +73,6 @@ export function ReadOnlyCanvas({ resources, connectionLines }: ReadOnlyCanvasPro
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [nodeSetKey]);
 
-  // The ⟲ control now performs a TRUE fit — re-frame every node at its current
-  // (possibly dragged) position, gliding smoothly. Replaces the old 100%/origin reset.
   const handleFitView = useCallback(() => {
     fitToNodes(computeNodePositions());
   }, [fitToNodes, computeNodePositions]);
@@ -94,10 +85,6 @@ export function ReadOnlyCanvas({ resources, connectionLines }: ReadOnlyCanvasPro
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
     >
-      {/* Transformed "world" layer. pointer-events: none so pan/zoom fall through
-          to the container; resource nodes re-enable pointer events. The transform
-          transition only applies while `glide` is set (auto-fit), keeping manual
-          pan/zoom/drag instant. */}
       <div
         style={{
           transform: `translate(${viewport.translateX}px, ${viewport.translateY}px) scale(${viewport.scale})`,
@@ -130,10 +117,11 @@ export function ReadOnlyCanvas({ resources, connectionLines }: ReadOnlyCanvasPro
                 target={{ ...target, x: tPos.x, y: tPos.y }}
                 port={connectionLine.port}
                 scale={viewport.scale}
+                nodeWidth={NODE_CARD_WIDTH}
+                nodeHeight={NODE_CARD_HEIGHT}
               />
             );
           })}
-          {/* Pool links — every spawned/provisioning replica stays visually wired to its Load Balancer */}
           {spawnedVms.map((vm) => {
             const pool = pools[vm.poolId];
             if (!pool) return null;
@@ -148,6 +136,8 @@ export function ReadOnlyCanvas({ resources, connectionLines }: ReadOnlyCanvasPro
                 target={{ x: vmPos.x, y: vmPos.y, type: RESOURCE_TYPES.VirtualMachine }}
                 port={80}
                 scale={viewport.scale}
+                nodeWidth={NODE_CARD_WIDTH}
+                nodeHeight={NODE_CARD_HEIGHT}
               />
             );
           })}
@@ -155,15 +145,11 @@ export function ReadOnlyCanvas({ resources, connectionLines }: ReadOnlyCanvasPro
         {resources.map((resource) => {
           const pos = effectivePos(resource.id, resource.x, resource.y);
           return (
-            <MonitoringResourceNode
+            <MonitoringDashboardCard
               key={resource.id}
               resource={{ ...resource, x: pos.x, y: pos.y }}
               onNodePointerDown={startNodeDrag}
               scale={viewport.scale}
-              translateX={viewport.translateX}
-              translateY={viewport.translateY}
-              containerWidth={containerSize.width}
-              containerHeight={containerSize.height}
             />
           );
         })}
@@ -172,7 +158,7 @@ export function ReadOnlyCanvas({ resources, connectionLines }: ReadOnlyCanvasPro
           .map((v) => {
             const pos = effectivePos(v.id, v.x, v.y);
             return (
-              <MonitoringResourceNode
+              <MonitoringDashboardCard
                 key={v.id}
                 resource={{
                   id: v.id,
@@ -182,10 +168,6 @@ export function ReadOnlyCanvas({ resources, connectionLines }: ReadOnlyCanvasPro
                 }}
                 onNodePointerDown={startNodeDrag}
                 scale={viewport.scale}
-                translateX={viewport.translateX}
-                translateY={viewport.translateY}
-                containerWidth={containerSize.width}
-                containerHeight={containerSize.height}
               />
             );
           })}
