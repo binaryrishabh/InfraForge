@@ -3,6 +3,7 @@ import { ResourceIcon } from "@/components/common/ResourceIcon";
 import { useSimulationStore } from "../store/simulationStore";
 import { ResourceHealth } from "@shared/enum/ResourceHealth.enum";
 import { MonitoringCardSparkline } from "./MonitoringCardSparkline";
+import { CHAOS_LABELS } from "@shared/constants/CHAOS_LABELS.constants";
 import type { Resource } from "@shared/interface/Resource.interface";
 
 export const NODE_CARD_WIDTH = 220;
@@ -49,6 +50,9 @@ export const MonitoringDashboardCard = memo(function MonitoringDashboardCard({
     s.restarting.includes(resource.id)
   );
   const cpuHistory = useSimulationStore((s) => s.cpuHistory[resource.id]);
+  const activeChaos = useSimulationStore((s) => s.activeChaos);
+
+  const chaosEffect = activeChaos.find((c) => c.resourceId === resource.id);
 
   const health = metric?.health ?? ResourceHealth.HEALTHY;
   const cpu = metric?.cpu ?? 0;
@@ -163,8 +167,14 @@ export const MonitoringDashboardCard = memo(function MonitoringDashboardCard({
 
         {/* Status Row */}
         {isRestarting && (
-          <div className="text-[10px] font-mono font-semibold text-amber-400 text-center">
+          <div className="text-[10px] font-mono font-semibold text-amber-400 text-center mb-1">
             RESTARTING
+          </div>
+        )}
+
+        {chaosEffect && (
+          <div className="text-[10px] font-mono font-semibold text-[#F0564A] text-center">
+            {CHAOS_LABELS[chaosEffect.chaosType]} · {chaosEffect.remainingTicks}s
           </div>
         )}
 

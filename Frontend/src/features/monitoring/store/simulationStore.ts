@@ -4,9 +4,11 @@ import type { SimulationLog } from "@shared/interface/SimulationLog.interface";
 import type { SimulationSnapshot } from "@shared/interface/SimulationSnapshot.interface";
 import type { PoolSnapshot } from "@shared/interface/PoolSnapshot.interface";
 import type { SpawnedVmInfo } from "@shared/interface/SpawnedVmInfo.interface";
+import type { ChaosEffect } from "@shared/interface/ChaosEffect.interface";
 
 const MAX_LOGS = 150;
 const MAX_CPU_HISTORY = 30;
+const EMPTY_ACTIVE_CHAOS: ChaosEffect[] = [];
 
 interface SimulationStoreState {
   metrics: Record<string, ResourceMetrics>;
@@ -22,6 +24,7 @@ interface SimulationStoreState {
   burnRatePerHourUsd: number;
   accumulatedCostUsd: number;
   cpuHistory: Record<string, number[]>;
+  activeChaos: ChaosEffect[];
   applySnapshot: (snapshot: SimulationSnapshot) => void;
   setSpeed: (speed: number) => void;
   reset: () => void;
@@ -41,6 +44,7 @@ const initialState = {
   burnRatePerHourUsd: 0,
   accumulatedCostUsd: 0,
   cpuHistory: {} as Record<string, number[]>,
+  activeChaos: EMPTY_ACTIVE_CHAOS,
 };
 
 export const useSimulationStore = create<SimulationStoreState>()((set) => ({
@@ -62,6 +66,23 @@ export const useSimulationStore = create<SimulationStoreState>()((set) => ({
         }
       }
 
+      const incomingChaos = snapshot.activeChaos ?? EMPTY_ACTIVE_CHAOS;
+      const previousChaos = prev.activeChaos;
+      let chaosChanged = incomingChaos.length !== previousChaos.length;
+      
+      if (!chaosChanged) {
+        for (let i = 0; i < incomingChaos.length; i++) {
+          const next = incomingChaos[i];
+          const old = previousChaos[i];
+          if (!old || old.resourceId !== next.resourceId ||
+              old.chaosType !== next.chaosType ||
+              old.remainingTicks !== next.remainingTicks) {
+            chaosChanged = true;
+            break;
+          }
+        }
+      }
+
       return {
         metrics: snapshot.metrics,
         logs: [...prev.logs, ...snapshot.logs].slice(-MAX_LOGS),
@@ -76,6 +97,7 @@ export const useSimulationStore = create<SimulationStoreState>()((set) => ({
         burnRatePerHourUsd: snapshot.burnRatePerHourUsd ?? 0,
         accumulatedCostUsd: snapshot.accumulatedCostUsd ?? 0,
         cpuHistory: nextCpuHistory,
+        activeChaos: chaosChanged ? incomingChaos : previousChaos,
       };
     }),
   setSpeed: (speed) => set({ speed }),
@@ -91,5 +113,6 @@ export const useSimulationStore = create<SimulationStoreState>()((set) => ({
       burnRatePerHourUsd: 0,
       accumulatedCostUsd: 0,
       cpuHistory: {},
+      activeChaos: EMPTY_ACTIVE_CHAOS,
     }),
 }));
