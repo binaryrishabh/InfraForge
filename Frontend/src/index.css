@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 body {
-margin: 0
+  margin: 0
 }
 
 @keyframes infraforge-shake {
@@ -29,6 +29,13 @@ margin: 0
   to { transform: rotate(360deg); }
 }
 
+/* Packets flowing through a live connection tube. The -24 offset equals one
+   dash+gap period (8+16) so the loop is seamless. */
+@keyframes infraforge-flow {
+  from { stroke-dashoffset: 0; }
+  to { stroke-dashoffset: -24; }
+}
+
 .infraforge-smoke-wisp {
   position: absolute;
   width: 14px;
@@ -36,4 +43,8 @@ margin: 0
   border-radius: 50%;
   background: radial-gradient(circle, rgba(148, 163, 184, 0.85) 0%, rgba(148, 163, 184, 0.4) 50%, rgba(148, 163, 184, 0) 70%);
   animation: infraforge-smoke 2.2s ease-out infinite;
+}
+
+.infraforge-flow-packets {
+  animation: infraforge-flow 0.9s linear infinite;
 }

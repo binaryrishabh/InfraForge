@@ -17,6 +17,8 @@ interface ReadOnlyCanvasProps {
 export function ReadOnlyCanvas({ resources, connectionLines }: ReadOnlyCanvasProps) {
   const spawnedVms = useSimulationStore((s) => s.spawnedVms);
   const pools = useSimulationStore((s) => s.pools);
+  // Packets flow only while the simulation is actually ticking.
+  const flow = useSimulationStore((s) => s.simulatedSeconds > 0 && s.speed > 0);
   const {
     containerRef,
     viewport,
@@ -119,6 +121,7 @@ export function ReadOnlyCanvas({ resources, connectionLines }: ReadOnlyCanvasPro
                 scale={viewport.scale}
                 nodeWidth={NODE_CARD_WIDTH}
                 nodeHeight={NODE_CARD_HEIGHT}
+                flow={flow}
               />
             );
           })}
@@ -138,6 +141,7 @@ export function ReadOnlyCanvas({ resources, connectionLines }: ReadOnlyCanvasPro
                 scale={viewport.scale}
                 nodeWidth={NODE_CARD_WIDTH}
                 nodeHeight={NODE_CARD_HEIGHT}
+                flow={flow}
               />
             );
           })}
