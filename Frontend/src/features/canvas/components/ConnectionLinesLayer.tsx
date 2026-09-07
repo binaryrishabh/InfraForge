@@ -2,7 +2,6 @@ import { memo } from "react";
 import { BezierConnectionLine } from "./BezierConnectionLine";
 import { PendingConnectionLine } from "./PendingConnectionLine";
 import { useCanvasStore } from "../store/canvasStore";
-import { useSimulationStore } from "@/features/monitoring/store/simulationStore";
 import {
   NODE_CARD_WIDTH,
   NODE_CARD_HEIGHT,
@@ -25,8 +24,6 @@ export const ConnectionLinesLayer = memo(function ConnectionLinesLayer({
 }: ConnectionLinesLayerProps) {
   const selectedConnectionId = useCanvasStore((s) => s.selectedConnectionId);
   const pendingConnection = useCanvasStore((s) => s.pendingConnection);
-  // Packets flow only while a simulation is actually ticking (live + not paused).
-  const flow = useSimulationStore((s) => s.simulatedSeconds > 0 && s.speed > 0);
 
   const pendingSource = pendingConnection
     ? resources.find((r) => r.id === pendingConnection.sourceId)
@@ -60,7 +57,6 @@ export const ConnectionLinesLayer = memo(function ConnectionLinesLayer({
             scale={scale}
             nodeWidth={NODE_CARD_WIDTH}
             nodeHeight={NODE_CARD_HEIGHT}
-            flow={flow}
             onSelect={() =>
               isSelected
                 ? onDeleteConnection(connectionLine.id)
@@ -71,7 +67,7 @@ export const ConnectionLinesLayer = memo(function ConnectionLinesLayer({
       })}
       {pendingConnection && pendingSource && (
         <PendingConnectionLine
-          source={{ x: pendingSource.x, y: pendingSource.y }}
+          source={{ x: pendingConnection.anchorX, y: pendingConnection.anchorY }}
           cursor={{ x: pendingConnection.cursorX, y: pendingConnection.cursorY }}
         />
       )}

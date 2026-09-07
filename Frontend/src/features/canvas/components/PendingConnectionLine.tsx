@@ -1,10 +1,7 @@
 import { memo } from "react";
-import {
-  NODE_CARD_WIDTH,
-  NODE_CARD_HEIGHT,
-} from "@/features/monitoring/components/MonitoringDashboardCard";
 
 interface PendingConnectionLineProps {
+  // Canvas-space port anchor on the card edge — the drag's fixed origin.
   source: { x: number; y: number };
   cursor: { x: number; y: number };
 }
@@ -13,8 +10,8 @@ export const PendingConnectionLine = memo(function PendingConnectionLine({
   source,
   cursor,
 }: PendingConnectionLineProps) {
-  const x1 = source.x + NODE_CARD_WIDTH / 2;
-  const y1 = source.y + NODE_CARD_HEIGHT / 2;
+  const x1 = source.x;
+  const y1 = source.y;
   const x2 = cursor.x;
   const y2 = cursor.y;
 
@@ -43,13 +40,18 @@ export const PendingConnectionLine = memo(function PendingConnectionLine({
   const path = `M ${x1} ${y1} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${x2} ${y2}`;
 
   return (
-    <path
-      d={path}
-      fill="none"
-      stroke="#5B8CFF"
-      strokeWidth={1.5}
-      strokeDasharray="6 4"
-      pointerEvents="none"
-    />
+    <g>
+      <path
+        d={path}
+        fill="none"
+        stroke="#5B8CFF"
+        strokeWidth={1.5}
+        strokeDasharray="6 4"
+        pointerEvents="none"
+      />
+      {/* Socket at the origin port so the drag visibly starts plugged in */}
+      <circle cx={x1} cy={y1} r={4.5} fill="#0B0E14" stroke="#5B8CFF" strokeWidth={1.5} pointerEvents="none" />
+      <circle cx={x1} cy={y1} r={1.75} fill="#5B8CFF" pointerEvents="none" />
+    </g>
   );
 });

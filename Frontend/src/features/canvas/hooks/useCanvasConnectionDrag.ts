@@ -5,6 +5,8 @@ import { validateConnection } from "@shared/validation/validateDeploymentReadine
 import { RESOURCE_PORTS } from "@shared/constants/RESOURCE_PORTS.constants";
 import type { ResourceType } from "@shared/constants/RESOURCE_TYPES.constants";
 
+/* clientX/clientY are the port dot's center (sent by CanvasResourcePorts),
+   so the pending line's anchor lands exactly on the card edge. */
 export function startConnectionFromPort(
   sourceId: string,
   sourceType: ResourceType,
@@ -69,7 +71,6 @@ function finalizeConnection(clientX: number, clientY: number) {
 
   const targetElement = document.elementFromPoint(clientX, clientY);
   const targetNode = targetElement?.closest("[data-resource-id]");
-
   if (!targetNode) return; // empty space: silent cancel
 
   const targetId = targetNode.getAttribute("data-resource-id");
@@ -93,7 +94,6 @@ function finalizeConnection(clientX: number, clientY: number) {
   }
 
   const port = RESOURCE_PORTS[targetResource.type] || 80;
-
   store.setConnectionLines((prev) => [
     ...prev,
     {

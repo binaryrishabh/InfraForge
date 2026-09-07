@@ -2,6 +2,7 @@ import { memo, useRef, type PointerEvent as ReactPointerEvent } from "react";
 import { CanvasResourcePorts } from "./CanvasResourcePorts";
 import { useCanvasStore } from "../store/canvasStore";
 import { startConnectionFromPort } from "../hooks/useCanvasConnectionDrag";
+import { occupiedSidesFor } from "../utils/connectionSides";
 import { hueForType } from "@/theme/resourceCategoryHues";
 import {
   MonitoringDashboardCard,
@@ -29,6 +30,10 @@ export const CanvasResourceItem = memo(function CanvasResourceItem({
 }: CanvasResourceItemProps) {
   const isSelected = useCanvasStore((s) => s.selectedResourceId === resource.id);
   const liveMode = useCanvasStore((s) => s.liveMode);
+  // Primitive string selector: re-renders only when the occupied-edge set changes.
+  const occupiedSides = useCanvasStore((s) =>
+    occupiedSidesFor(s.resources, s.connectionLines, resource.id)
+  );
   const isDraggingRef = useRef(false);
   const wasDragRef = useRef(false);
   const dragOffsetRef = useRef({ x: 0, y: 0 });
@@ -127,6 +132,7 @@ export const CanvasResourceItem = memo(function CanvasResourceItem({
       <CanvasResourcePorts
         resourceId={resource.id}
         resourceType={resource.type}
+        occupiedSides={occupiedSides}
         onStartConnection={startConnectionFromPort}
       />
       <button

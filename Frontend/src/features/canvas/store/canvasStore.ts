@@ -15,49 +15,38 @@ export type CanvasUndoAction =
 export interface PendingConnection {
   sourceId: string;
   sourceType: ResourceType;
+  // Canvas-space port the drag started from — the line's fixed origin edge.
+  anchorX: number;
+  anchorY: number;
   cursorX: number;
   cursorY: number;
 }
 
 interface CanvasStoreState {
-  // Layout
   resources: Resource[];
   connectionLines: ConnectionLine[];
-  // Layout metadata
   currentLayoutId: string | null;
   currentLayoutName: string | null;
   currentLayoutSaved: boolean;
-  // Interaction
   selectedResourceId: string | null;
   selectedResourceForConfigId: string | null;
   selectedConnectionId: string | null;
   pendingConnection: PendingConnection | null;
-  // Deployment
   activeDeploymentId: string | null;
   isDeploying: boolean;
-  // True while a deployment is LIVE; cards switch from design to live mode.
   liveMode: boolean;
-  // Empty state
   emptyCanvasStateDismissed: boolean;
-  // Drag
   activeDrag: { label: ResourceType } | null;
-  // Viewport (zoom & pan)
   scale: number;
   translateX: number;
   translateY: number;
-  // Dropdown
   showLayoutDropdown: boolean;
   savedLayouts: Infrastructure[];
-  // Modals
   modalState: ModalState;
   modalLoading: boolean;
-  // Undo/Redo
   undoStack: CanvasUndoAction[];
   redoStack: CanvasUndoAction[];
-  // Persistence
   isInitialized: boolean;
-
-  // Actions
   setResources: (updater: Updater<Resource[]>) => void;
   setConnectionLines: (updater: Updater<ConnectionLine[]>) => void;
   setCurrentLayoutId: (id: string | null) => void;
@@ -66,7 +55,7 @@ interface CanvasStoreState {
   setSelectedResourceId: (id: string | null) => void;
   setSelectedResourceForConfigId: (id: string | null) => void;
   setSelectedConnectionId: (id: string | null) => void;
-  startPendingConnection: (sourceId: string, sourceType: ResourceType, cursorX: number, cursorY: number) => void;
+  startPendingConnection: (sourceId: string, sourceType: ResourceType, anchorX: number, anchorY: number) => void;
   movePendingConnection: (cursorX: number, cursorY: number) => void;
   cancelPendingConnection: () => void;
   setActiveDeploymentId: (id: string | null) => void;
@@ -111,7 +100,6 @@ export const useCanvasStore = create<CanvasStoreState>()((set) => ({
   undoStack: [],
   redoStack: [],
   isInitialized: false,
-
   setResources: (updater) => set((s) => ({ resources: typeof updater === "function" ? updater(s.resources) : updater })),
   setConnectionLines: (updater) => set((s) => ({ connectionLines: typeof updater === "function" ? updater(s.connectionLines) : updater })),
   setCurrentLayoutId: (id) => set({ currentLayoutId: id }),
@@ -120,7 +108,17 @@ export const useCanvasStore = create<CanvasStoreState>()((set) => ({
   setSelectedResourceId: (id) => set({ selectedResourceId: id }),
   setSelectedResourceForConfigId: (id) => set({ selectedResourceForConfigId: id }),
   setSelectedConnectionId: (id) => set({ selectedConnectionId: id }),
-  startPendingConnection: (sourceId, sourceType, cursorX, cursorY) => set({ pendingConnection: { sourceId, sourceType, cursorX, cursorY } }),
+  startPendingConnection: (sourceId, sourceType, anchorX, anchorY) =>
+    set({
+      pendingConnection: {
+        sourceId,
+        sourceType,
+        anchorX,
+        anchorY,
+        cursorX: anchorX,
+        cursorY: anchorY,
+      },
+    }),
   movePendingConnection: (cursorX, cursorY) => set((s) => s.pendingConnection ? ({ pendingConnection: { ...s.pendingConnection, cursorX, cursorY } }) : {}),
   cancelPendingConnection: () => set({ pendingConnection: null }),
   setActiveDeploymentId: (id) => set({ activeDeploymentId: id }),
@@ -136,12 +134,10 @@ export const useCanvasStore = create<CanvasStoreState>()((set) => ({
   setUndoStack: (updater) => set((s) => ({ undoStack: typeof updater === "function" ? updater(s.undoStack) : updater })),
   setRedoStack: (updater) => set((s) => ({ redoStack: typeof updater === "function" ? updater(s.redoStack) : updater })),
   setIsInitialized: (isInitialized) => set({ isInitialized }),
-
   loadLayout: (resources, connectionLines, id, name) => set({
     resources, connectionLines, currentLayoutId: id, currentLayoutName: name,
     currentLayoutSaved: true, selectedResourceId: null, selectedResourceForConfigId: null,
   }),
-
   clearCanvas: () => set({
     resources: [], connectionLines: [], currentLayoutId: null, currentLayoutName: null,
     currentLayoutSaved: true, selectedResourceId: null, selectedResourceForConfigId: null,
