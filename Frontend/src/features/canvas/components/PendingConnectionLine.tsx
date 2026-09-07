@@ -45,13 +45,13 @@ export const PendingConnectionLine = memo(function PendingConnectionLine({
         d={path}
         fill="none"
         stroke="#5B8CFF"
-        strokeWidth={1.5}
+        strokeWidth={2}
         strokeDasharray="6 4"
         pointerEvents="none"
       />
       {/* Socket at the origin port so the drag visibly starts plugged in */}
-      <circle cx={x1} cy={y1} r={4.5} fill="#0B0E14" stroke="#5B8CFF" strokeWidth={1.5} pointerEvents="none" />
-      <circle cx={x1} cy={y1} r={1.75} fill="#5B8CFF" pointerEvents="none" />
+      <circle cx={x1} cy={y1} r={5} fill="#0B0E14" stroke="#5B8CFF" strokeWidth={2} pointerEvents="none" />
+      <circle cx={x1} cy={y1} r={2} fill="#7AA2FF" pointerEvents="none" />
     </g>
   );
 });

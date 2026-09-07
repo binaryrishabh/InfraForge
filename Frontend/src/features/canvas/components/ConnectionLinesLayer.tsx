@@ -2,6 +2,7 @@ import { memo } from "react";
 import { BezierConnectionLine } from "./BezierConnectionLine";
 import { PendingConnectionLine } from "./PendingConnectionLine";
 import { useCanvasStore } from "../store/canvasStore";
+import { useSimulationStore } from "@/features/monitoring/store/simulationStore";
 import {
   NODE_CARD_WIDTH,
   NODE_CARD_HEIGHT,
@@ -24,6 +25,11 @@ export const ConnectionLinesLayer = memo(function ConnectionLinesLayer({
 }: ConnectionLinesLayerProps) {
   const selectedConnectionId = useCanvasStore((s) => s.selectedConnectionId);
   const pendingConnection = useCanvasStore((s) => s.pendingConnection);
+  const liveMode = useCanvasStore((s) => s.liveMode);
+  // Boolean selectors: stable across 1Hz snapshots, no extra re-renders.
+  const simulationRunning = useSimulationStore(
+    (s) => s.simulatedSeconds > 0 && s.speed > 0
+  );
 
   const pendingSource = pendingConnection
     ? resources.find((r) => r.id === pendingConnection.sourceId)
@@ -57,6 +63,8 @@ export const ConnectionLinesLayer = memo(function ConnectionLinesLayer({
             scale={scale}
             nodeWidth={NODE_CARD_WIDTH}
             nodeHeight={NODE_CARD_HEIGHT}
+            showPackets={liveMode}
+            animatePackets={simulationRunning}
             onSelect={() =>
               isSelected
                 ? onDeleteConnection(connectionLine.id)

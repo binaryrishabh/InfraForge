@@ -17,6 +17,9 @@ interface ReadOnlyCanvasProps {
 export function ReadOnlyCanvas({ resources, connectionLines }: ReadOnlyCanvasProps) {
   const spawnedVms = useSimulationStore((s) => s.spawnedVms);
   const pools = useSimulationStore((s) => s.pools);
+  const simulationRunning = useSimulationStore(
+    (s) => s.simulatedSeconds > 0 && s.speed > 0
+  );
   const {
     containerRef,
     viewport,
@@ -119,7 +122,8 @@ export function ReadOnlyCanvas({ resources, connectionLines }: ReadOnlyCanvasPro
                 scale={viewport.scale}
                 nodeWidth={NODE_CARD_WIDTH}
                 nodeHeight={NODE_CARD_HEIGHT}
-                showSockets
+                showPackets
+                animatePackets={simulationRunning}
               />
             );
           })}
@@ -139,7 +143,8 @@ export function ReadOnlyCanvas({ resources, connectionLines }: ReadOnlyCanvasPro
                 scale={viewport.scale}
                 nodeWidth={NODE_CARD_WIDTH}
                 nodeHeight={NODE_CARD_HEIGHT}
-                showSockets
+                showPackets
+                animatePackets={simulationRunning}
               />
             );
           })}

@@ -30,7 +30,7 @@ body {
 }
 
 /* Packets flowing through a live connection tube. The -24 offset equals one
-   dash+gap period (8+16) so the loop is seamless. */
+   dash+gap period (7+17) so the loop is seamless. */
 @keyframes infraforge-flow {
   from { stroke-dashoffset: 0; }
   to { stroke-dashoffset: -24; }
