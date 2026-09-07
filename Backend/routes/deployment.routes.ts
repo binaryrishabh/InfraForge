@@ -3,7 +3,15 @@ import crypto from "crypto";
 import { prisma } from "../lib/prisma";
 import { redis } from "../infra/redis";
 import { ValidationError, NotFoundError } from "../utils/errors";
-import { ChaosInjectionBodySchema, DeploymentIdSchema, LoadControlBodySchema, DeploymentCreateBodySchema, VerticalScaleBodySchema, PoolScaleBodySchema, SpeedControlBodySchema } from "../zod_schemas/deployment.schema";
+import {
+  ChaosInjectionBodySchema,
+  DeploymentIdSchema,
+  LoadControlBodySchema,
+  DeploymentCreateBodySchema,
+  VerticalScaleBodySchema,
+  PoolScaleBodySchema,
+  SpeedControlBodySchema,
+} from "../zod_schemas/deployment.schema";
 import { DeploymentStatus } from "@shared/enum/DeploymentStatus.enum";
 import { Publish } from "@shared/enum/Publish.enum";
 
@@ -13,17 +21,20 @@ export const deploymentRouter = Router();
 deploymentRouter.post("/", async (req, res) => {
   const DeploymentBody = DeploymentCreateBodySchema.safeParse(req.body);
   if (!DeploymentBody.success) {
-    const errorMessages = DeploymentBody.error.issues.map(err => err.message).join(", ");
+    const errorMessages = DeploymentBody.error.issues
+      .map((err) => err.message)
+      .join(", ");
     throw new ValidationError(errorMessages);
   }
   const { infrastructureId, workloadProfile } = DeploymentBody.data;
   const infrastructure = await prisma.infrastructure.findUnique({
-    where: { id: infrastructureId }
+    where: { id: infrastructureId },
   });
   if (!infrastructure) {
     throw new NotFoundError("Infrastructure not found with the given id.");
   }
   const resources = (infrastructure.layout as any).resources || [];
+  const connectionLines = (infrastructure.layout as any).connectionLines || [];
   const resourceCount = resources.length;
   const deploymentId = crypto.randomUUID();
   const [createdDeployment] = await prisma.$transaction([
@@ -32,23 +43,24 @@ deploymentRouter.post("/", async (req, res) => {
         id: deploymentId,
         infrastructureId,
         resourceCount,
-        workloadProfile
-      }
+        workloadProfile,
+      },
     }),
     prisma.outbox.create({
       data: {
         eventType: "deployment-created",
         payload: {
           deploymentId,
-          resources
-        }
-      }
-    })
+          resources,
+          connectionLines,
+        },
+      },
+    }),
   ]);
   res.status(201).json({
     success: true,
     message: "The deployment created successfully",
-    createdDeployment
+    createdDeployment,
   });
 });
 
@@ -56,20 +68,24 @@ deploymentRouter.post("/", async (req, res) => {
 deploymentRouter.get("/:deploymentId", async (req, res) => {
   const DeploymentId = DeploymentIdSchema.safeParse(req.params);
   if (!DeploymentId.success) {
-    const errorMessages = DeploymentId.error.issues.map(err => err.message).join(", ");
+    const errorMessages = DeploymentId.error.issues
+      .map((err) => err.message)
+      .join(", ");
     throw new ValidationError(errorMessages);
   }
   const { deploymentId } = DeploymentId.data;
   const deployment = await prisma.deployment.findUnique({
-    where: { id: deploymentId }
+    where: { id: deploymentId },
   });
   if (!deployment) {
-    throw new NotFoundError("No deployment with the specification id: " + deploymentId);
+    throw new NotFoundError(
+      "No deployment with the specification id: " + deploymentId,
+    );
   }
   res.status(200).json({
     success: true,
     message: "We have fetched the deployment successfully",
-    deployment
+    deployment,
   });
 });
 
@@ -77,70 +93,84 @@ deploymentRouter.get("/:deploymentId", async (req, res) => {
 deploymentRouter.post("/:deploymentId/chaos", async (req, res) => {
   const DeploymentId = DeploymentIdSchema.safeParse(req.params);
   if (!DeploymentId.success) {
-    const errorMessages = DeploymentId.error.issues.map(err => err.message).join(", ");
+    const errorMessages = DeploymentId.error.issues
+      .map((err) => err.message)
+      .join(", ");
     throw new ValidationError(errorMessages);
   }
   const ChaosInjectionData = ChaosInjectionBodySchema.safeParse(req.body);
   if (!ChaosInjectionData.success) {
-    const errorMessages = ChaosInjectionData.error.issues.map(err => err.message).join(", ");
+    const errorMessages = ChaosInjectionData.error.issues
+      .map((err) => err.message)
+      .join(", ");
     throw new ValidationError(errorMessages);
   }
   const { deploymentId } = DeploymentId.data;
   const { type, resourceId } = ChaosInjectionData.data;
   const deployment = await prisma.deployment.findUnique({
-    where: { id: deploymentId }
+    where: { id: deploymentId },
   });
   if (!deployment) {
-    throw new NotFoundError("Deployment not found with specified id " + deploymentId);
+    throw new NotFoundError(
+      "Deployment not found with specified id " + deploymentId,
+    );
   }
   if (deployment.status !== DeploymentStatus.LIVE) {
-    throw new ValidationError("Chaos can only be injected into a live deployment");
+    throw new ValidationError(
+      "Chaos can only be injected into a live deployment",
+    );
   }
   const timestamp = new Date().toISOString();
   const message = `Chaos ${type} injected on ${resourceId}`;
   await prisma.$transaction(async (tx) => {
     const latestDeployment = await tx.deployment.findUnique({
-      where: { id: deploymentId }
+      where: { id: deploymentId },
     });
     const currentChaosEvents = (latestDeployment?.chaosEvents as any[]) || [];
     currentChaosEvents.push({
       timestamp,
       type,
       resourceId,
-      message
+      message,
     });
     const currentTimeline = (latestDeployment?.timeline as any[]) || [];
     currentTimeline.push({
       timestamp,
       event: "Chaos Injected",
-      message
+      message,
     });
     await tx.deployment.update({
       where: { id: deploymentId },
       data: {
         chaosEvents: currentChaosEvents,
-        timeline: currentTimeline
-      }
+        timeline: currentTimeline,
+      },
     });
   });
-  await redis.publish(`deployment:${deploymentId}:updates`, JSON.stringify({
-    deploymentId,
-    chaosType: type,
-    resourceId,
-    message,
-    timestamp,
-    publishType: Publish.publishChaosInjected
-  }));
-  await redis.publish("simulator:control", JSON.stringify({
-    deploymentId,
-    action: "inject-chaos",
-    chaosType: type,
-    resourceId
-  }));
+  await redis.publish(
+    `deployment:${deploymentId}:updates`,
+    JSON.stringify({
+      deploymentId,
+      chaosType: type,
+      resourceId,
+      message,
+      timestamp,
+      publishType: Publish.publishChaosInjected,
+    }),
+  );
+  await redis.publish(
+    "simulator:control",
+    JSON.stringify({
+      deploymentId,
+      action: "inject-chaos",
+      chaosType: type,
+      resourceId,
+    }),
+  );
   res.status(200).json({
     success: true,
     message: "Chaos injected",
-    deploymentId
+    deploymentId,
   });
 });
 
@@ -148,32 +178,43 @@ deploymentRouter.post("/:deploymentId/chaos", async (req, res) => {
 deploymentRouter.post("/:deploymentId/load", async (req, res) => {
   const DeploymentId = DeploymentIdSchema.safeParse(req.params);
   if (!DeploymentId.success) {
-    const errorMessages = DeploymentId.error.issues.map(err => err.message).join(", ");
+    const errorMessages = DeploymentId.error.issues
+      .map((err) => err.message)
+      .join(", ");
     throw new ValidationError(errorMessages);
   }
   const LoadControlData = LoadControlBodySchema.safeParse(req.body);
   if (!LoadControlData.success) {
-    const errorMessages = LoadControlData.error.issues.map(err => err.message).join(", ");
+    const errorMessages = LoadControlData.error.issues
+      .map((err) => err.message)
+      .join(", ");
     throw new ValidationError(errorMessages);
   }
   const { deploymentId } = DeploymentId.data;
   const { targetLoadFraction } = LoadControlData.data;
-  const deployment = await prisma.deployment.findUnique({ where: { id: deploymentId } });
+  const deployment = await prisma.deployment.findUnique({
+    where: { id: deploymentId },
+  });
   if (!deployment) {
-    throw new NotFoundError("Deployment not found with specified id " + deploymentId);
+    throw new NotFoundError(
+      "Deployment not found with specified id " + deploymentId,
+    );
   }
   if (deployment.status !== DeploymentStatus.LIVE) {
     throw new ValidationError("Load can only be adjusted on a live deployment");
   }
-  await redis.publish("simulator:control", JSON.stringify({
-    deploymentId,
-    action: "set-load",
-    targetLoadFraction
-  }));
+  await redis.publish(
+    "simulator:control",
+    JSON.stringify({
+      deploymentId,
+      action: "set-load",
+      targetLoadFraction,
+    }),
+  );
   res.status(200).json({
     success: true,
     message: `Load target set to ${Math.round(targetLoadFraction * 100)}% of declared capacity`,
-    targetLoadFraction
+    targetLoadFraction,
   });
 });
 
@@ -181,33 +222,46 @@ deploymentRouter.post("/:deploymentId/load", async (req, res) => {
 deploymentRouter.post("/:deploymentId/scale-vertical", async (req, res) => {
   const DeploymentId = DeploymentIdSchema.safeParse(req.params);
   if (!DeploymentId.success) {
-    const errorMessages = DeploymentId.error.issues.map(err => err.message).join(", ");
+    const errorMessages = DeploymentId.error.issues
+      .map((err) => err.message)
+      .join(", ");
     throw new ValidationError(errorMessages);
   }
   const VerticalScaleData = VerticalScaleBodySchema.safeParse(req.body);
   if (!VerticalScaleData.success) {
-    const errorMessages = VerticalScaleData.error.issues.map(err => err.message).join(", ");
+    const errorMessages = VerticalScaleData.error.issues
+      .map((err) => err.message)
+      .join(", ");
     throw new ValidationError(errorMessages);
   }
   const { deploymentId } = DeploymentId.data;
   const { resourceId, skuId } = VerticalScaleData.data;
-  const deployment = await prisma.deployment.findUnique({ where: { id: deploymentId } });
+  const deployment = await prisma.deployment.findUnique({
+    where: { id: deploymentId },
+  });
   if (!deployment) {
-    throw new NotFoundError("Deployment not found with specified id " + deploymentId);
+    throw new NotFoundError(
+      "Deployment not found with specified id " + deploymentId,
+    );
   }
   if (deployment.status !== DeploymentStatus.LIVE) {
-    throw new ValidationError("Vertical scaling only applies to a live deployment");
+    throw new ValidationError(
+      "Vertical scaling only applies to a live deployment",
+    );
   }
-  await redis.publish("simulator:control", JSON.stringify({
-    deploymentId,
-    action: "scale-vertical",
-    resourceId,
-    skuId
-  }));
+  await redis.publish(
+    "simulator:control",
+    JSON.stringify({
+      deploymentId,
+      action: "scale-vertical",
+      resourceId,
+      skuId,
+    }),
+  );
   res.status(200).json({
     success: true,
     message: "Vertical scaling initiated",
-    deploymentId
+    deploymentId,
   });
 });
 
@@ -215,33 +269,46 @@ deploymentRouter.post("/:deploymentId/scale-vertical", async (req, res) => {
 deploymentRouter.post("/:deploymentId/scale-pool", async (req, res) => {
   const DeploymentId = DeploymentIdSchema.safeParse(req.params);
   if (!DeploymentId.success) {
-    const errorMessages = DeploymentId.error.issues.map(err => err.message).join(", ");
+    const errorMessages = DeploymentId.error.issues
+      .map((err) => err.message)
+      .join(", ");
     throw new ValidationError(errorMessages);
   }
   const PoolScaleData = PoolScaleBodySchema.safeParse(req.body);
   if (!PoolScaleData.success) {
-    const errorMessages = PoolScaleData.error.issues.map(err => err.message).join(", ");
+    const errorMessages = PoolScaleData.error.issues
+      .map((err) => err.message)
+      .join(", ");
     throw new ValidationError(errorMessages);
   }
   const { deploymentId } = DeploymentId.data;
   const { lbId, delta } = PoolScaleData.data;
-  const deployment = await prisma.deployment.findUnique({ where: { id: deploymentId } });
+  const deployment = await prisma.deployment.findUnique({
+    where: { id: deploymentId },
+  });
   if (!deployment) {
-    throw new NotFoundError("Deployment not found with specified id " + deploymentId);
+    throw new NotFoundError(
+      "Deployment not found with specified id " + deploymentId,
+    );
   }
   if (deployment.status !== DeploymentStatus.LIVE) {
-    throw new ValidationError("Manual scaling only applies to a live deployment");
+    throw new ValidationError(
+      "Manual scaling only applies to a live deployment",
+    );
   }
-  await redis.publish("simulator:control", JSON.stringify({
-    deploymentId,
-    action: "scale-pool",
-    lbId,
-    delta
-  }));
+  await redis.publish(
+    "simulator:control",
+    JSON.stringify({
+      deploymentId,
+      action: "scale-pool",
+      lbId,
+      delta,
+    }),
+  );
   res.status(200).json({
     success: true,
     message: "Manual scaling command sent to simulator",
-    deploymentId
+    deploymentId,
   });
 });
 
@@ -249,32 +316,45 @@ deploymentRouter.post("/:deploymentId/scale-pool", async (req, res) => {
 deploymentRouter.post("/:deploymentId/speed", async (req, res) => {
   const DeploymentId = DeploymentIdSchema.safeParse(req.params);
   if (!DeploymentId.success) {
-    const errorMessages = DeploymentId.error.issues.map(err => err.message).join(", ");
+    const errorMessages = DeploymentId.error.issues
+      .map((err) => err.message)
+      .join(", ");
     throw new ValidationError(errorMessages);
   }
   const SpeedControlData = SpeedControlBodySchema.safeParse(req.body);
   if (!SpeedControlData.success) {
-    const errorMessages = SpeedControlData.error.issues.map(err => err.message).join(", ");
+    const errorMessages = SpeedControlData.error.issues
+      .map((err) => err.message)
+      .join(", ");
     throw new ValidationError(errorMessages);
   }
   const { deploymentId } = DeploymentId.data;
   const { speed } = SpeedControlData.data;
-  const deployment = await prisma.deployment.findUnique({ where: { id: deploymentId } });
+  const deployment = await prisma.deployment.findUnique({
+    where: { id: deploymentId },
+  });
   if (!deployment) {
-    throw new NotFoundError("Deployment not found with specified id " + deploymentId);
+    throw new NotFoundError(
+      "Deployment not found with specified id " + deploymentId,
+    );
   }
   if (deployment.status !== DeploymentStatus.LIVE) {
-    throw new ValidationError("Speed can only be adjusted on a live deployment");
+    throw new ValidationError(
+      "Speed can only be adjusted on a live deployment",
+    );
   }
-  await redis.publish("simulator:control", JSON.stringify({
-    deploymentId,
-    action: "set-speed",
-    speed
-  }));
+  await redis.publish(
+    "simulator:control",
+    JSON.stringify({
+      deploymentId,
+      action: "set-speed",
+      speed,
+    }),
+  );
   res.status(200).json({
     success: true,
     message: "Speed updated",
-    speed
+    speed,
   });
 });
 
@@ -282,13 +362,19 @@ deploymentRouter.post("/:deploymentId/speed", async (req, res) => {
 deploymentRouter.post("/:deploymentId/teardown", async (req, res) => {
   const DeploymentId = DeploymentIdSchema.safeParse(req.params);
   if (!DeploymentId.success) {
-    const errorMessages = DeploymentId.error.issues.map(err => err.message).join(", ");
+    const errorMessages = DeploymentId.error.issues
+      .map((err) => err.message)
+      .join(", ");
     throw new ValidationError(errorMessages);
   }
   const { deploymentId } = DeploymentId.data;
-  const deployment = await prisma.deployment.findUnique({ where: { id: deploymentId } });
+  const deployment = await prisma.deployment.findUnique({
+    where: { id: deploymentId },
+  });
   if (!deployment) {
-    throw new NotFoundError("Deployment not found with specified id " + deploymentId);
+    throw new NotFoundError(
+      "Deployment not found with specified id " + deploymentId,
+    );
   }
   if (deployment.status !== DeploymentStatus.LIVE) {
     throw new ValidationError("Only live deployments can be torn down");
@@ -297,26 +383,32 @@ deploymentRouter.post("/:deploymentId/teardown", async (req, res) => {
   tornTimeline.push({
     timestamp: new Date().toISOString(),
     event: "Deployment Torn Down",
-    message: "Environment torn down. Simulation stopped."
+    message: "Environment torn down. Simulation stopped.",
   });
   await prisma.deployment.update({
     where: { id: deploymentId },
-    data: { status: DeploymentStatus.TORN_DOWN, timeline: tornTimeline }
+    data: { status: DeploymentStatus.TORN_DOWN, timeline: tornTimeline },
   });
-  await redis.publish("simulator:control", JSON.stringify({
-    deploymentId,
-    action: "stop"
-  }));
-  await redis.publish(`deployment:${deploymentId}:updates`, JSON.stringify({
-    deploymentId,
-    publishType: Publish.publishDeploymentTornDown,
-    status: "torn-down",
-    message: "Environment torn down. Simulation stopped.",
-    timestamp: new Date().toISOString()
-  }));
+  await redis.publish(
+    "simulator:control",
+    JSON.stringify({
+      deploymentId,
+      action: "stop",
+    }),
+  );
+  await redis.publish(
+    `deployment:${deploymentId}:updates`,
+    JSON.stringify({
+      deploymentId,
+      publishType: Publish.publishDeploymentTornDown,
+      status: "torn-down",
+      message: "Environment torn down. Simulation stopped.",
+      timestamp: new Date().toISOString(),
+    }),
+  );
   res.status(200).json({
     success: true,
     message: "Deployment torn down",
-    deploymentId
+    deploymentId,
   });
 });

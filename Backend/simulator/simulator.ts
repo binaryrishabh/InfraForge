@@ -6,6 +6,7 @@ import {
   tick,
   buildPoolSnapshots,
   applyManualScale,
+  reconcileTopology,
 } from "@shared/simulation/engine";
 import { computeHourlyBurnRateUsd } from "@shared/simulation/cost";
 import { DEFAULT_WORKLOAD_PROFILE } from "@shared/constants/DEFAULT_WORKLOAD_PROFILE.constants";
@@ -115,7 +116,7 @@ export const resurrectLiveDeployments = async () => {
   }
 };
 
-/* ------- Control channel: load adjustments, stop commands, chaos injection, vertical scaling, manual pool scaling, and speed control from the API server ------- */
+/* ------- Control channel: load adjustments, stop commands, chaos injection, vertical scaling, manual pool scaling, speed control, and topology sync from the API server ------- */
 const controlSubscriber = redis.duplicate();
 controlSubscriber.subscribe("simulator:control");
 controlSubscriber.on("message", (_channel: string, message: string) => {
@@ -130,6 +131,8 @@ controlSubscriber.on("message", (_channel: string, message: string) => {
       lbId?: string;
       delta?: number;
       speed?: number;
+      resources?: Resource[];
+      connectionLines?: ConnectionLine[];
     };
     const instance = registry.get(command.deploymentId);
     if (!instance) return;
@@ -229,6 +232,26 @@ controlSubscriber.on("message", (_channel: string, message: string) => {
           `[simulator] invalid speed ${command.speed} for ${command.deploymentId} — must be 0, 1, 10, or 60`,
         );
       }
+    } else if (command.action === "sync-topology") {
+      // Live-edit reconcile: rebuild topology from the current canvas while
+      // preserving runtime state (metrics, chaos, pools, spawned replicas,
+      // cost accumulation lives in this registry and is untouched).
+      const nextResources = command.resources ?? [];
+      const nextConnectionLines = command.connectionLines ?? [];
+      instance.state = reconcileTopology(
+        instance.state,
+        nextResources,
+        nextConnectionLines,
+      );
+      instance.pendingLogs.push({
+        timestamp: new Date().toISOString(),
+        severity: "info",
+        source: "simulator",
+        message: `topology synced — ${nextResources.length} resources, ${nextConnectionLines.length} connections`,
+      });
+      console.log(
+        `[simulator] topology synced for ${command.deploymentId} — ${nextResources.length} resources, ${nextConnectionLines.length} connections`,
+      );
     }
   } catch (err: any) {
     console.error(`[simulator] control message failed: ${err.message}`);
