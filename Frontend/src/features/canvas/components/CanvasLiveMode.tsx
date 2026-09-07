@@ -1,8 +1,16 @@
 import { useEffect } from "react";
+import { DndContext } from "@dnd-kit/core";
 import { useDeploymentSocket } from "@/features/deployment/hooks/useDeploymentSocket";
 import { useCanvasStore } from "../store/canvasStore";
+import { useCanvasDragDrop } from "../hooks/useCanvasDragDrop";
+import { useLiveTopologySync } from "../hooks/useLiveTopologySync";
 import { DeploymentStatus } from "@shared/enum/DeploymentStatus.enum";
-import { ReadOnlyCanvas } from "@/features/monitoring/components/ReadOnlyCanvas";
+import { CanvasBoard } from "./CanvasBoard";
+import { ResourceSidebar } from "./ResourceSidebar";
+import { ZoomControls } from "./ZoomControls";
+import { CanvasConfigPanelWrapper } from "./CanvasConfigPanelWrapper";
+import { CanvasModals } from "./CanvasModals";
+import { CanvasDragLayer } from "./CanvasDragLayer";
 import { LiveTopbar } from "./LiveTopbar";
 import { LiveOperatorDock } from "./LiveOperatorDock";
 import { DeploymentPipeline } from "@/features/deployment/components/DeploymentPipeline";
@@ -15,12 +23,22 @@ export function CanvasLiveMode({ deploymentId }: CanvasLiveModeProps) {
   const { deployment, status, completedStages, timeline } =
     useDeploymentSocket(deploymentId);
   const resources = useCanvasStore((s) => s.resources);
-  const connectionLines = useCanvasStore((s) => s.connectionLines);
   const setActiveDeploymentId = useCanvasStore((s) => s.setActiveDeploymentId);
   const setIsDeploying = useCanvasStore((s) => s.setIsDeploying);
+  const setLiveMode = useCanvasStore((s) => s.setLiveMode);
+  const dragDrop = useCanvasDragDrop();
 
   const isLive = status === DeploymentStatus.LIVE;
   const isConnectionError = status === "Web Socket connection error";
+
+  // Stream committed canvas edits to the running simulator while LIVE.
+  useLiveTopologySync(isLive);
+
+  // Track liveness so cards flip between design and live telemetry.
+  useEffect(() => {
+    setLiveMode(isLive);
+    return () => setLiveMode(false);
+  }, [isLive, setLiveMode]);
 
   useEffect(() => {
     if (status === DeploymentStatus.TORN_DOWN) {
@@ -39,12 +57,23 @@ export function CanvasLiveMode({ deploymentId }: CanvasLiveModeProps) {
     <div className="flex flex-col h-screen bg-[#0f1117] text-white">
       <LiveTopbar deploymentId={deploymentId} status={status} />
 
-      <div className="flex-1 flex overflow-hidden relative">
-        {isLive ? (
-          <div className="flex-1 p-4">
-            <ReadOnlyCanvas resources={resources} connectionLines={connectionLines} />
+      {isLive ? (
+        <DndContext
+          sensors={dragDrop.sensors}
+          onDragStart={dragDrop.onDragStart}
+          onDragEnd={dragDrop.onDragEnd}
+        >
+          <div className="flex-1 flex overflow-hidden relative">
+            <ResourceSidebar />
+            <CanvasBoard />
+            <ZoomControls />
           </div>
-        ) : (
+          <CanvasConfigPanelWrapper />
+          <CanvasModals />
+          <CanvasDragLayer />
+        </DndContext>
+      ) : (
+        <div className="flex-1 flex overflow-hidden relative">
           <div
             className="flex-1 flex items-center justify-center"
             style={{
@@ -64,8 +93,8 @@ export function CanvasLiveMode({ deploymentId }: CanvasLiveModeProps) {
               <span className="text-sm font-mono text-[#677185]">provisioning…</span>
             )}
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {isLive && (
         <LiveOperatorDock

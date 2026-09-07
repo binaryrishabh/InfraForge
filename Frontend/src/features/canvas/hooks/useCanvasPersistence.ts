@@ -1,16 +1,24 @@
 import { useEffect } from "react";
 import { useCanvasStore } from "../store/canvasStore";
+import {
+  CARD_LAYOUT_VERSION,
+  migrateLayoutToCardScale,
+} from "../utils/layoutMigration";
 
 // Zero-subscription persistence: restore once on mount via getState(), then
 // persist via store.subscribe() so this hook never re-renders its host.
 export function useCanvasPersistence() {
-  // One-time restore from localStorage on mount
+  // One-time restore from localStorage on mount, migrating legacy coordinates.
   useEffect(() => {
     const infra = localStorage.getItem("Infraforge_Infrastucture_Draft");
     if (infra) {
       const parsed = JSON.parse(infra);
       const store = useCanvasStore.getState();
-      store.setResources(parsed.canvasResources);
+      const migratedResources = migrateLayoutToCardScale(
+        parsed.canvasResources || [],
+        parsed.layoutVersion,
+      );
+      store.setResources(migratedResources);
       store.setConnectionLines(parsed.connectionLines || []);
       store.setCurrentLayoutId(parsed.currentLayoutId);
       store.setCurrentLayoutName(parsed.currentLayoutName);
@@ -35,6 +43,7 @@ export function useCanvasPersistence() {
             currentLayoutId: state.currentLayoutId,
             currentLayoutName: state.currentLayoutName,
             saved: state.currentLayoutSaved,
+            layoutVersion: CARD_LAYOUT_VERSION,
           }),
         );
       }, 300);

@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { toast } from "sonner";
 import { getAllInfrastructure } from "@/api/infrastructure.api";
 import { useCanvasStore } from "../store/canvasStore";
+import { migrateLayoutToCardScale } from "../utils/layoutMigration";
 import type { Infrastructure } from "@shared/interface/Infrastructure.interface";
 
 export function useInfrastructureDropdown() {
@@ -29,10 +30,21 @@ export function useInfrastructureDropdown() {
       toast.warning("A deployment is in progress. Can't select");
       return;
     }
+
+    const layout = infrastructure.layout as {
+      resources?: any[];
+      connectionLines?: any[];
+      layoutVersion?: number;
+    };
+    const migratedResources = migrateLayoutToCardScale(
+      layout.resources || [],
+      layout.layoutVersion,
+    );
+
     store.setCurrentLayoutId(infrastructure.id);
     store.setCurrentLayoutName(infrastructure.name);
-    store.setResources(infrastructure.layout.resources || []);
-    store.setConnectionLines(infrastructure.layout.connectionLines || []);
+    store.setResources(migratedResources);
+    store.setConnectionLines(layout.connectionLines || []);
     store.setCurrentLayoutSaved(true);
     store.setShowLayoutDropdown(false);
     store.setActiveDeploymentId(null);

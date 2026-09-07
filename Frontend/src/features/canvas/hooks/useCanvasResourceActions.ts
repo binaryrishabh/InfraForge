@@ -1,7 +1,15 @@
 import { useCallback } from "react";
 import { toast } from "sonner";
 import { useCanvasStore } from "../store/canvasStore";
+import {
+  NODE_CARD_WIDTH,
+  NODE_CARD_HEIGHT,
+} from "@/features/monitoring/components/MonitoringDashboardCard";
 import type { Resource } from "@shared/interface/Resource.interface";
+
+// Card-sized overlap thresholds: card dimension + a 20px breathing gap.
+const CARD_OVERLAP_X = NODE_CARD_WIDTH + 20;
+const CARD_OVERLAP_Y = NODE_CARD_HEIGHT + 20;
 
 export function useCanvasResourceActions() {
   const performUndo = useCallback(() => {
@@ -9,6 +17,7 @@ export function useCanvasResourceActions() {
     if (store.isDeploying || store.undoStack.length === 0) return;
     const last = store.undoStack[store.undoStack.length - 1];
     if (!last) return;
+
     if (last.type === "add") {
       store.setResources(prev => prev.filter(r => r.id !== last.resource.id));
       store.setConnectionLines(prev => prev.filter(l => l.sourceId !== last.resource.id && l.targetId !== last.resource.id));
@@ -24,6 +33,7 @@ export function useCanvasResourceActions() {
       store.setConnectionLines(prev => [...prev, last.connectionLine]);
       store.setCurrentLayoutSaved(last.savedState);
     }
+
     store.setUndoStack(prev => prev.slice(0, -1));
     store.setRedoStack(prev => [...prev, last]);
     toast.success("Undo");
@@ -32,16 +42,19 @@ export function useCanvasResourceActions() {
   const handleDeleteCanvasResource = useCallback((resourceId: string) => {
     const store = useCanvasStore.getState();
     if (store.isDeploying) { toast.warning("A deployment is in progress. Can't select"); return; }
+
     const resource = store.resources.find((r) => r.id === resourceId);
     const touchingConnections = store.connectionLines.filter(
       (line) => line.sourceId === resourceId || line.targetId === resourceId,
     );
+
     if (resource) {
       store.setUndoStack((prev) => [
         ...prev, { type: "delete", resource, connectionLines: touchingConnections, savedState: store.currentLayoutSaved },
       ]);
       store.setRedoStack([]);
     }
+
     store.setResources((prev) => prev.filter((r) => r.id !== resourceId));
     store.setConnectionLines((prev) => prev.filter((line) => line.sourceId !== resourceId && line.targetId !== resourceId));
     store.setCurrentLayoutSaved(false);
@@ -68,17 +81,20 @@ export function useCanvasResourceActions() {
     const store = useCanvasStore.getState();
     if (store.isDeploying) return;
     if (fromX === toX && fromY === toY) return;
-    // Overlap prevention: reject the drop if the destination collides with another
-    // resource, and snap the node back to where the drag started. Same 40px
-    // threshold as the sidebar-drop guard.
+
+    // Overlap prevention with the card-sized threshold: reject the drop if the
+    // destination collides with another card, snapping back to the start.
     const isOverlapping = store.resources.some(
-      (r) => r.id !== resourceId && Math.abs(r.x - toX) < 40 && Math.abs(r.y - toY) < 40,
+      (r) => r.id !== resourceId &&
+        Math.abs(r.x - toX) < CARD_OVERLAP_X &&
+        Math.abs(r.y - toY) < CARD_OVERLAP_Y,
     );
     if (isOverlapping) {
       store.setResources(prev => prev.map(r => r.id === resourceId ? { ...r, x: fromX, y: fromY } : r));
       toast.warning("Space already occupied!");
       return;
     }
+
     store.setUndoStack(prev => [...prev, {
       type: "move",
       resourceId,
@@ -98,6 +114,7 @@ export function useCanvasResourceActions() {
     if (store.isDeploying) { toast.warning("A deployment is in progress. Can't modify"); return; }
     const line = store.connectionLines.find((l) => l.id === connectionId);
     if (!line) return;
+
     store.setUndoStack((prev) => [
       ...prev, { type: "delete-connection", connectionLine: line, savedState: store.currentLayoutSaved },
     ]);

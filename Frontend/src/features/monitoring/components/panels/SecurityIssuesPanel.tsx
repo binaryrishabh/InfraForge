@@ -1,4 +1,3 @@
-import { DEPLOYMENT_STAGES_NAMES } from "@shared/constants/DEPLOYMENT_STAGES_NAMES.constants";
 import type { Deployment } from "@shared/interface/Deployment.interface";
 import { PANEL_SHELL_CLASS } from "@/theme/resourceCategoryHues";
 
@@ -7,8 +6,9 @@ interface SecurityIssuesPanelProps {
 }
 
 export function SecurityIssuesPanel({ deployment }: SecurityIssuesPanelProps) {
+  // Stage lookup by name — resilient to the stage list shrinking to three.
   const securityStage = deployment.stages?.find(
-    (stage) => stage.name === DEPLOYMENT_STAGES_NAMES[5],
+    (stage) => stage.name === "SecurityScan",
   );
   if (!securityStage?.details) return null;
 

@@ -35,6 +35,8 @@ interface CanvasStoreState {
   // Deployment
   activeDeploymentId: string | null;
   isDeploying: boolean;
+  // True while a deployment is LIVE; cards switch from design to live mode.
+  liveMode: boolean;
   // Empty state
   emptyCanvasStateDismissed: boolean;
   // Drag
@@ -69,6 +71,7 @@ interface CanvasStoreState {
   cancelPendingConnection: () => void;
   setActiveDeploymentId: (id: string | null) => void;
   setIsDeploying: (deploying: boolean) => void;
+  setLiveMode: (live: boolean) => void;
   setEmptyCanvasStateDismissed: (dismissed: boolean) => void;
   setActiveDrag: (drag: { label: ResourceType } | null) => void;
   setViewport: (scale: number, tx: number, ty: number) => void;
@@ -95,6 +98,7 @@ export const useCanvasStore = create<CanvasStoreState>()((set) => ({
   pendingConnection: null,
   activeDeploymentId: null,
   isDeploying: false,
+  liveMode: false,
   emptyCanvasStateDismissed: false,
   activeDrag: null,
   scale: 1,
@@ -121,6 +125,7 @@ export const useCanvasStore = create<CanvasStoreState>()((set) => ({
   cancelPendingConnection: () => set({ pendingConnection: null }),
   setActiveDeploymentId: (id) => set({ activeDeploymentId: id }),
   setIsDeploying: (deploying) => set({ isDeploying: deploying }),
+  setLiveMode: (live) => set({ liveMode: live }),
   setEmptyCanvasStateDismissed: (dismissed) => set({ emptyCanvasStateDismissed: dismissed }),
   setActiveDrag: (drag) => set({ activeDrag: drag }),
   setViewport: (scale, tx, ty) => set({ scale, translateX: tx, translateY: ty }),
@@ -142,6 +147,6 @@ export const useCanvasStore = create<CanvasStoreState>()((set) => ({
     currentLayoutSaved: true, selectedResourceId: null, selectedResourceForConfigId: null,
     selectedConnectionId: null, pendingConnection: null,
     scale: 1, translateX: 0, translateY: 0,
-    activeDeploymentId: null, isDeploying: false, activeDrag: null, undoStack: [], redoStack: [],
+    activeDeploymentId: null, isDeploying: false, liveMode: false, activeDrag: null, undoStack: [], redoStack: [],
   }),
 }));

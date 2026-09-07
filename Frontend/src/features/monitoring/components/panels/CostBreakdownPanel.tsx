@@ -1,4 +1,3 @@
-import { DEPLOYMENT_STAGES_NAMES } from "@shared/constants/DEPLOYMENT_STAGES_NAMES.constants";
 import type { Deployment } from "@shared/interface/Deployment.interface";
 import { PANEL_SHELL_CLASS } from "@/theme/resourceCategoryHues";
 
@@ -16,8 +15,9 @@ interface CostLineItem {
 }
 
 export function CostBreakdownPanel({ deployment }: CostBreakdownPanelProps) {
+  // Stage lookup by name — resilient to the stage list shrinking to three.
   const costStage = deployment.stages?.find(
-    (stage) => stage.name === DEPLOYMENT_STAGES_NAMES[6],
+    (stage) => stage.name === "CostEstimate",
   );
   if (!costStage?.details) return null;
 
