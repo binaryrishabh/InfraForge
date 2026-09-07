@@ -1,4 +1,8 @@
 import { memo } from "react";
+import {
+  NODE_CARD_WIDTH,
+  NODE_CARD_HEIGHT,
+} from "@/features/monitoring/components/MonitoringDashboardCard";
 
 interface PendingConnectionLineProps {
   source: { x: number; y: number };
@@ -9,8 +13,8 @@ export const PendingConnectionLine = memo(function PendingConnectionLine({
   source,
   cursor,
 }: PendingConnectionLineProps) {
-  const x1 = source.x + 24;
-  const y1 = source.y + 24;
+  const x1 = source.x + NODE_CARD_WIDTH / 2;
+  const y1 = source.y + NODE_CARD_HEIGHT / 2;
   const x2 = cursor.x;
   const y2 = cursor.y;
 

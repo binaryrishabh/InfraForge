@@ -33,22 +33,28 @@ export function BezierConnectionLine({
   const distance = Math.sqrt(dx * dx + dy * dy);
   const isHorizontal = Math.abs(dx) >= Math.abs(dy);
 
-  const nodeHalf = Math.min(nodeWidth, nodeHeight) / 2 - 4;
+  // The line tucks just under the node edge (small gap) so it appears to
+  // emerge cleanly from the border instead of floating or hiding inside.
+  const EDGE_GAP = 4;
 
   let x1: number, y1: number, x2: number, y2: number;
 
   if (isHorizontal) {
+    // Exits the left/right edge -> measure half the node WIDTH.
+    const halfExtent = nodeWidth / 2 - EDGE_GAP;
     const dir = dx >= 0 ? 1 : -1;
-    x1 = cx1 + nodeHalf * dir;
+    x1 = cx1 + halfExtent * dir;
     y1 = cy1;
-    x2 = cx2 - nodeHalf * dir;
+    x2 = cx2 - halfExtent * dir;
     y2 = cy2;
   } else {
+    // Exits the top/bottom edge -> measure half the node HEIGHT.
+    const halfExtent = nodeHeight / 2 - EDGE_GAP;
     const dir = dy >= 0 ? 1 : -1;
     x1 = cx1;
-    y1 = cy1 + nodeHalf * dir;
+    y1 = cy1 + halfExtent * dir;
     x2 = cx2;
-    y2 = cy2 - nodeHalf * dir;
+    y2 = cy2 - halfExtent * dir;
   }
 
   const pull = distance * 0.4;
@@ -85,14 +91,14 @@ export function BezierConnectionLine({
     <g>
       <path d={path} fill="none" stroke={strokeColor} strokeWidth={4} opacity={0.15} strokeLinecap="round" />
       <path d={path} fill="none" stroke={strokeColor} strokeWidth={isSelected ? 2.5 : 1.5} strokeLinecap="round" />
-      
+
       {showPortBadge && (
         <g>
           <rect x={midX - estWidth / 2} y={midY - 9} width={estWidth} height={18} rx={9} fill="#0B0E14" stroke={isSelected ? "#5B8CFF" : "#273042"} strokeWidth={1.5} />
           <text x={midX} y={midY + 3.5} textAnchor="middle" fill={isSelected ? "#AAB4C5" : "#677185"} fontSize={11} fontFamily="ui-monospace, SFMono-Regular, monospace" fontWeight={500}>{label}</text>
         </g>
       )}
-      
+
       <path
         d={path}
         fill="none"

@@ -2,6 +2,10 @@ import { memo } from "react";
 import { BezierConnectionLine } from "./BezierConnectionLine";
 import { PendingConnectionLine } from "./PendingConnectionLine";
 import { useCanvasStore } from "../store/canvasStore";
+import {
+  NODE_CARD_WIDTH,
+  NODE_CARD_HEIGHT,
+} from "@/features/monitoring/components/MonitoringDashboardCard";
 import type { ConnectionLine } from "@shared/interface/ConnectionLine.interface";
 import type { Resource } from "@shared/interface/Resource.interface";
 
@@ -51,6 +55,8 @@ export const ConnectionLinesLayer = memo(function ConnectionLinesLayer({
             port={connectionLine.port}
             isSelected={isSelected}
             scale={scale}
+            nodeWidth={NODE_CARD_WIDTH}
+            nodeHeight={NODE_CARD_HEIGHT}
             onSelect={() =>
               isSelected
                 ? onDeleteConnection(connectionLine.id)
