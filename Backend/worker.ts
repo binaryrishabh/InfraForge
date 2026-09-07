@@ -51,6 +51,7 @@ notification. Skipping BullMQ reduces latency and keeps the queue clean.
 Later Production upgrade path: Replace polling with CDC (Debezium + Kafka).
 */
 async function pollOutbox() {
+  let busy = false;
   try {
     // 1. FETCH — Get up to 10 unprocessed entries, ordered by fewest retries first
     const unprocessed = await prisma.outbox.findMany({
@@ -135,11 +136,16 @@ async function pollOutbox() {
         }
       }
     }
+    busy = unprocessed.length > 0;
   } catch (err: any) {
     // Outer catch — errors here don't crash the poller. Next interval retries.
     console.error(`Outbox poller error: ${err.message}`);
   } finally {
-    setTimeout(pollOutbox, 5000);
+    // Adaptive scheduling — Neon relief (Challenge C3): busy = fast re-poll
+    // (1s) so queued work moves quickly; idle = back off (5s) so the
+    // serverless DB can auto-suspend. The error path keeps the idle
+    // interval so a transient failure never becomes a hot polling loop.
+    setTimeout(pollOutbox, busy ? 1000 : 5000);
   }
 }
 
@@ -232,6 +238,7 @@ const worker = new Worker(
             existingStage.name === stageName &&
             existingStage.status === DeploymentStageStatus.COMPLETED,
         );
+
         if (alreadyDone) {
           console.log(`${stageName} already completed. Skipping.`);
           return true;

@@ -42,6 +42,11 @@ export const SpeedControlBodySchema = z.object({
   speed: z.union([z.literal(0), z.literal(1), z.literal(10), z.literal(60)], "Speed must be 0, 1, 10, or 60")
 });
 
+export const SyncTopologyBodySchema = z.object({
+  resources: z.array(z.any()).min(1),
+  connectionLines: z.array(z.any())
+});
+
 export type ChaosInjectionBodySchemaType = z.infer<typeof ChaosInjectionBodySchema>;
 export type DeploymentIdSchemaType = z.infer<typeof DeploymentIdSchema>;
 export type LoadControlBodySchemaType = z.infer<typeof LoadControlBodySchema>;
@@ -50,3 +55,4 @@ export type DeploymentCreateBodySchemaType = z.infer<typeof DeploymentCreateBody
 export type VerticalScaleBodySchemaType = z.infer<typeof VerticalScaleBodySchema>;
 export type PoolScaleBodySchemaType = z.infer<typeof PoolScaleBodySchema>;
 export type SpeedControlBodySchemaType = z.infer<typeof SpeedControlBodySchema>;
+export type SyncTopologyBodySchemaType = z.infer<typeof SyncTopologyBodySchema>;

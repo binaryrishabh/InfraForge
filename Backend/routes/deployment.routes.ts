@@ -11,6 +11,7 @@ import {
   VerticalScaleBodySchema,
   PoolScaleBodySchema,
   SpeedControlBodySchema,
+  SyncTopologyBodySchema,
 } from "../zod_schemas/deployment.schema";
 import { DeploymentStatus } from "@shared/enum/DeploymentStatus.enum";
 import { Publish } from "@shared/enum/Publish.enum";
@@ -355,6 +356,56 @@ deploymentRouter.post("/:deploymentId/speed", async (req, res) => {
     success: true,
     message: "Speed updated",
     speed,
+  });
+});
+
+// Live-edit topology sync — pushes the CURRENT canvas layout into the running
+// simulation. NO database write: live edits live in the simulator's memory
+// only; the saved infrastructure layout changes only when the user explicitly
+// Saves/Updates (locked decision).
+deploymentRouter.post("/:deploymentId/sync-topology", async (req, res) => {
+  const DeploymentId = DeploymentIdSchema.safeParse(req.params);
+  if (!DeploymentId.success) {
+    const errorMessages = DeploymentId.error.issues
+      .map((err) => err.message)
+      .join(", ");
+    throw new ValidationError(errorMessages);
+  }
+  const SyncTopologyData = SyncTopologyBodySchema.safeParse(req.body);
+  if (!SyncTopologyData.success) {
+    const errorMessages = SyncTopologyData.error.issues
+      .map((err) => err.message)
+      .join(", ");
+    throw new ValidationError(errorMessages);
+  }
+  const { deploymentId } = DeploymentId.data;
+  const { resources, connectionLines } = SyncTopologyData.data;
+  const deployment = await prisma.deployment.findUnique({
+    where: { id: deploymentId },
+  });
+  if (!deployment) {
+    throw new NotFoundError(
+      "Deployment not found with specified id " + deploymentId,
+    );
+  }
+  if (deployment.status !== DeploymentStatus.LIVE) {
+    throw new ValidationError(
+      "Topology can only be synced on a live deployment",
+    );
+  }
+  await redis.publish(
+    "simulator:control",
+    JSON.stringify({
+      deploymentId,
+      action: "sync-topology",
+      resources,
+      connectionLines,
+    }),
+  );
+  res.status(200).json({
+    success: true,
+    message: "Topology synced",
+    deploymentId,
   });
 });
 
