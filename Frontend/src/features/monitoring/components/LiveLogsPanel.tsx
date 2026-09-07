@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useSimulationStore } from "../store/simulationStore";
+import { PANEL_SHELL_CLASS } from "@/theme/resourceCategoryHues";
 
 const severityColor: Record<string, string> = {
   info: "text-[#5B8CFF]",
@@ -16,9 +17,9 @@ export function LiveLogsPanel() {
   }, [logs]);
 
   return (
-    <div className="bg-gray-950 border border-gray-800 rounded-lg p-3">
+    <div className={PANEL_SHELL_CLASS}>
       <div className="flex items-center justify-between mb-2">
-        <h3 className="text-xs font-semibold text-gray-400">Live Logs</h3>
+        <h3 className="text-[10px] uppercase tracking-wider text-[#677185] font-semibold">Live Logs</h3>
         <span className="text-[9px] font-mono text-[#677185]">{logs.length} entries</span>
       </div>
       <div ref={scrollRef} className="space-y-1 max-h-48 overflow-y-auto font-mono">

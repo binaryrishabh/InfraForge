@@ -4,6 +4,7 @@ import { useSimulationStore } from "../store/simulationStore";
 import { ResourceHealth } from "@shared/enum/ResourceHealth.enum";
 import { MonitoringCardSparkline } from "./MonitoringCardSparkline";
 import { CHAOS_LABELS } from "@shared/constants/CHAOS_LABELS.constants";
+import { hueForType, hueBorder, hueTint, hueTile, CATEGORY_OF_RESOURCE_TYPE } from "@/theme/resourceCategoryHues";
 import type { Resource } from "@shared/interface/Resource.interface";
 
 export const NODE_CARD_WIDTH = 220;
@@ -20,18 +21,11 @@ interface MonitoringDashboardCardProps {
   scale?: number;
 }
 
-const healthBorderColor: Record<string, string> = {
-  [ResourceHealth.HEALTHY]: "border-[#273042]",
-  [ResourceHealth.DEGRADED]: "border-amber-400/60",
-  [ResourceHealth.SATURATED]: "border-red-500/60",
-  [ResourceHealth.FAILED]: "border-red-600/60",
-};
-
-const healthTextColor: Record<string, string> = {
-  [ResourceHealth.HEALTHY]: "text-emerald-400",
-  [ResourceHealth.DEGRADED]: "text-amber-400",
-  [ResourceHealth.SATURATED]: "text-red-400",
-  [ResourceHealth.FAILED]: "text-red-500",
+const healthChipStyles: Record<string, { text: string; border: string }> = {
+  [ResourceHealth.HEALTHY]: { text: "text-emerald-400", border: "border-emerald-400/40" },
+  [ResourceHealth.DEGRADED]: { text: "text-amber-400", border: "border-amber-400/40" },
+  [ResourceHealth.SATURATED]: { text: "text-red-400", border: "border-red-400/40" },
+  [ResourceHealth.FAILED]: { text: "text-red-500", border: "border-red-500/40" },
 };
 
 function getBarColor(pct: number): string {
@@ -43,9 +37,6 @@ function getBarColor(pct: number): string {
 export const MonitoringDashboardCard = memo(function MonitoringDashboardCard({
   resource,
   onNodePointerDown,
-  // scale stays in the prop contract for callers (reserved for a future
-  // level-of-detail pass); the card renders at a fixed size, so it is not
-  // destructured here.
 }: MonitoringDashboardCardProps) {
   const metric = useSimulationStore((s) => s.metrics[resource.id]);
   const isRestarting = useSimulationStore((s) =>
@@ -70,6 +61,9 @@ export const MonitoringDashboardCard = memo(function MonitoringDashboardCard({
       : undefined;
 
   const isFailed = health === ResourceHealth.FAILED;
+  const hue = hueForType(resource.type);
+  const category = CATEGORY_OF_RESOURCE_TYPE[resource.type];
+  const chipStyle = healthChipStyles[health];
 
   return (
     <div
@@ -85,22 +79,36 @@ export const MonitoringDashboardCard = memo(function MonitoringDashboardCard({
       }
     >
       <div
-        className={`bg-[#12161F] border rounded-lg p-3 shadow-lg transition-colors duration-300 ${healthBorderColor[health]} ${isRestarting ? "ring-2 ring-amber-400/60 animate-pulse" : ""}`}
+        className={`border rounded-xl p-3 shadow-lg shadow-black/40 transition-colors duration-300 ${isRestarting ? "ring-2 ring-amber-400/60 animate-pulse" : ""}`}
         style={{
+          borderColor: hueBorder(hue),
+          background: `linear-gradient(180deg, ${hueTint(hue)} 0%, rgba(21,27,41,0) 45%), #151B29`,
           animation: isShaking ? shakeAnimation : undefined,
           minHeight: NODE_CARD_HEIGHT,
         }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center justify-between mb-1">
           <div className="flex items-center gap-2 min-w-0">
-            <ResourceIcon type={resource.type} size={16} className={healthTextColor[health]} />
+            <span
+              className="w-6 h-6 rounded-md flex items-center justify-center shrink-0"
+              style={{ background: hueTile(hue), color: hue }}
+            >
+              <ResourceIcon type={resource.type} size={14} className="" />
+            </span>
             <span className="text-[11px] font-mono text-[#EDF1F7] truncate">
               {resource.id}
             </span>
           </div>
-          <span className={`text-[9px] font-mono uppercase font-semibold ${healthTextColor[health]}`}>
+          <span className={`text-[9px] font-mono uppercase font-semibold px-1.5 py-0.5 rounded border ${chipStyle.text} ${chipStyle.border}`}>
             {health}
+          </span>
+        </div>
+
+        {/* Category micro-label */}
+        <div className="mb-2">
+          <span className="text-[8px] uppercase tracking-wider font-medium" style={{ color: `${hue}B3` }}>
+            {category}
           </span>
         </div>
 
@@ -115,9 +123,9 @@ export const MonitoringDashboardCard = memo(function MonitoringDashboardCard({
 
         {/* CPU Bar */}
         <div className="mb-1.5">
-          <div className="flex justify-between text-[10px] font-mono mb-0.5">
-            <span className="text-[#677185]">CPU</span>
-            <span className="text-[#AAB4C5]">{cpu.toFixed(1)}%</span>
+          <div className="flex justify-between mb-0.5">
+            <span className="text-[9px] font-mono text-[#677185]">CPU</span>
+            <span className="text-[10px] font-mono text-[#EDF1F7] tabular-nums">{cpu.toFixed(1)}%</span>
           </div>
           <div className="h-1.5 rounded-full bg-[#1F2633] overflow-hidden">
             <div
@@ -129,9 +137,9 @@ export const MonitoringDashboardCard = memo(function MonitoringDashboardCard({
 
         {/* Memory Bar */}
         <div className="mb-2">
-          <div className="flex justify-between text-[10px] font-mono mb-0.5">
-            <span className="text-[#677185]">MEM</span>
-            <span className="text-[#AAB4C5]">{memory.toFixed(1)}%</span>
+          <div className="flex justify-between mb-0.5">
+            <span className="text-[9px] font-mono text-[#677185]">MEM</span>
+            <span className="text-[10px] font-mono text-[#EDF1F7] tabular-nums">{memory.toFixed(1)}%</span>
           </div>
           <div className="h-1.5 rounded-full bg-[#1F2633] overflow-hidden">
             <div
@@ -142,17 +150,17 @@ export const MonitoringDashboardCard = memo(function MonitoringDashboardCard({
         </div>
 
         {/* Stats Row */}
-        <div className="flex justify-between text-[10px] font-mono text-[#AAB4C5] mb-2">
+        <div className="flex justify-between text-[10px] font-mono tabular-nums mb-2">
           {metric?.rps !== undefined && (
             <div className="flex gap-1">
               <span className="text-[#677185]">RPS</span>
-              <span>{metric.rps}</span>
+              <span className="text-[#EDF1F7]">{metric.rps}</span>
             </div>
           )}
           {metric?.connections !== undefined && (
             <div className="flex gap-1">
               <span className="text-[#677185]">CONN</span>
-              <span>{metric.connections}</span>
+              <span className="text-[#EDF1F7]">{metric.connections}</span>
             </div>
           )}
         </div>

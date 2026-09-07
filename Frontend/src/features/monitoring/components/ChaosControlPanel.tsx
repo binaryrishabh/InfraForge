@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { injectChaos } from "@/api/deployment.api";
 import { DeploymentChaosNames } from "@shared/enum/DeploymentChaosNames.enum";
+import { PANEL_SHELL_CLASS } from "@/theme/resourceCategoryHues";
 
 interface ChaosControlPanelProps {
   deploymentId: string;
@@ -43,9 +44,9 @@ export function ChaosControlPanel({ deploymentId, status, resources }: ChaosCont
   };
 
   return (
-    <div className="bg-gray-950 border border-gray-800 rounded-lg p-3">
+    <div className={PANEL_SHELL_CLASS}>
       <div className="flex items-center justify-between mb-2">
-        <h3 className="text-xs font-semibold text-gray-400">Chaos Control</h3>
+        <h3 className="text-[10px] uppercase tracking-wider text-[#677185] font-semibold">Chaos Control</h3>
       </div>
       <div className="space-y-2">
         <select

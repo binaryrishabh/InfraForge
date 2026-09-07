@@ -32,7 +32,7 @@ export const LiveTopbar = memo(function LiveTopbar({ deploymentId, status }: Liv
 
   return (
     <>
-      <div className="h-12 bg-gray-950 border-b border-gray-800 flex items-center justify-between px-4 shrink-0">
+      <div className="h-12 bg-[#12161F] border-b border-[#1F2633] flex items-center justify-between px-4 shrink-0">
         <span className="text-sm font-semibold tracking-wide text-gray-200 select-none flex items-center gap-2">
           ⚡ InfraForge
           {currentLayoutName && (
@@ -42,7 +42,9 @@ export const LiveTopbar = memo(function LiveTopbar({ deploymentId, status }: Liv
         <div className="flex items-center gap-3">
           <CostBurnTicker />
           <SpeedControlPanel deploymentId={deploymentId} status={status} />
-          <span className={`text-xs ${statusColor}`}>{status}</span>
+          <span className={`px-2 py-0.5 rounded-md border border-[#273042] bg-[#0B0E14] text-[11px] font-mono ${statusColor}`}>
+            {status}
+          </span>
           {status === DeploymentStatus.LIVE && (
             <button
               onClick={() => setShowTeardownConfirm(true)}

@@ -22,8 +22,6 @@ export function CanvasLiveMode({ deploymentId }: CanvasLiveModeProps) {
   const isLive = status === DeploymentStatus.LIVE;
   const isConnectionError = status === "Web Socket connection error";
 
-  // Auto-return to the designer ONLY on teardown. On FAILED the user stays
-  // here, reads the failed pipeline dock, and leaves via its X Close button.
   useEffect(() => {
     if (status === DeploymentStatus.TORN_DOWN) {
       setActiveDeploymentId(null);
@@ -57,6 +55,10 @@ export function CanvasLiveMode({ deploymentId }: CanvasLiveModeProps) {
             {isConnectionError ? (
               <span className="text-sm font-mono text-[#F5A524]">
                 connection lost — reconnecting…
+              </span>
+            ) : status === DeploymentStatus.FAILED ? (
+              <span className="text-sm font-mono text-[#F0564A]">
+                deployment failed — read the timeline below
               </span>
             ) : (
               <span className="text-sm font-mono text-[#677185]">provisioning…</span>

@@ -1,34 +1,43 @@
+import { FilePlus, Save, RefreshCw, Rocket, Trash2, Circle } from "lucide-react";
+
 interface TopbarActionButtonProps {
-  icon: string;
   label: string;
   onclick?: () => void;
   variant?: "new" | "save" | "update" | "deploy" | "delete" | "default";
 }
 
-export function TopbarActionButton({ icon, label, onclick, variant = "default" }: TopbarActionButtonProps) {
+const ICON_MAP = {
+  new: FilePlus,
+  save: Save,
+  update: RefreshCw,
+  deploy: Rocket,
+  delete: Trash2,
+  default: Circle,
+};
+
+export function TopbarActionButton({ label, onclick, variant = "default" }: TopbarActionButtonProps) {
   const isDisabled = !onclick;
-  
-  const baseStyles = "px-3 py-1.5 rounded-md text-xs font-medium transition-colors";
-  const cursorStyles = isDisabled 
-    ? "cursor-not-allowed opacity-40" 
-    : "cursor-pointer";
-  
-  const variableStyles = {
-    new: "bg-gray-800 hover:bg-green-700 text-gray-300",
-    save: "bg-gray-600 hover:bg-blue-500 text-white",
-    update: "bg-gray-600 hover:bg-yellow-500 text-white",
-    deploy: "bg-gray-600 hover:bg-green-500 text-white",
-    delete: "bg-gray-700 hover:bg-red-600 text-gray-200",
-    default: "bg-gray-700 hover:bg-gray-600 text-gray-200"
-  };
-  
+  const Icon = ICON_MAP[variant];
+
+  let variantStyles = "";
+  if (variant === "deploy") {
+    variantStyles = "bg-[#5B8CFF] text-[#081018] hover:bg-[#7AA2FF]";
+  } else if (variant === "delete") {
+    variantStyles = "bg-[rgba(240,86,74,0.08)] border border-[rgba(240,86,74,0.35)] text-[#F0564A] hover:bg-[rgba(240,86,74,0.16)]";
+  } else {
+    variantStyles = "bg-[#171C27] border border-[#273042] text-[#AAB4C5] hover:border-[#35415A] hover:text-[#EDF1F7]";
+  }
+
+  const cursorStyles = isDisabled ? "cursor-not-allowed opacity-40" : "cursor-pointer";
+
   return (
-    <button 
-      className={`${baseStyles} ${cursorStyles} ${variableStyles[variant]}`} 
+    <button
+      className={`h-8 px-3 rounded-lg text-[12px] font-medium flex items-center gap-1.5 transition-colors duration-150 ${cursorStyles} ${variantStyles}`}
       onClick={onclick}
       disabled={isDisabled}
     >
-      {icon} {label}
+      <Icon size={14} strokeWidth={2} />
+      {label}
     </button>
   );
 }

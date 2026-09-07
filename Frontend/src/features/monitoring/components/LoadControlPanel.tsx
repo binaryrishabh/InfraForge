@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { setDeploymentLoad } from "@/api/deployment.api";
 import { useSimulationStore } from "../store/simulationStore";
+import { PANEL_SHELL_CLASS } from "@/theme/resourceCategoryHues";
 
 interface LoadControlPanelProps {
   deploymentId: string;
@@ -30,9 +31,9 @@ export function LoadControlPanel({ deploymentId, status }: LoadControlPanelProps
   };
 
   return (
-    <div className="bg-gray-950 border border-gray-800 rounded-lg p-3">
+    <div className={PANEL_SHELL_CLASS}>
       <div className="flex items-center justify-between mb-2">
-        <h3 className="text-xs font-semibold text-gray-400">Load Control</h3>
+        <h3 className="text-[10px] uppercase tracking-wider text-[#677185] font-semibold">Load Control</h3>
         <span className="text-[9px] font-mono text-[#677185]">applied {Math.round(appliedLoad * 100)}%</span>
       </div>
       <input

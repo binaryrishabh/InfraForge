@@ -32,6 +32,13 @@ export const MonitoringCardSparkline = memo(function MonitoringCardSparkline({
 
   return (
     <svg width={width} height={height} className="overflow-visible">
+      <line x1={0} y1={height / 2} x2={width} y2={height / 2} stroke="#1F2633" strokeWidth={1} />
+      <polygon
+        points={`0,${height} ${points} ${width},${height}`}
+        fill={color}
+        fillOpacity={0.08}
+        stroke="none"
+      />
       <polyline
         points={points}
         fill="none"

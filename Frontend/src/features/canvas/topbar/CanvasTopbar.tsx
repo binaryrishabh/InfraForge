@@ -18,7 +18,7 @@ export const CanvasTopbar = memo(function CanvasTopbar() {
     useInfrastructureActions();
 
   return (
-    <div className="h-12 bg-gray-950 border-b border-gray-800 flex items-center justify-between px-4 shrink-0">
+    <div className="h-12 bg-[#12161F] border-b border-[#1F2633] flex items-center justify-between px-4 shrink-0">
       <span className="text-sm font-semibold tracking-wide text-gray-200 select-none">
         ⚡ InfraForge
         <InfrastructureLayoutDropdown
@@ -32,21 +32,18 @@ export const CanvasTopbar = memo(function CanvasTopbar() {
       </span>
       <div className="flex items-center gap-2">
         <TopbarActionButton
-          icon=""
           label="New"
           variant="new"
           onclick={handleNew}
         />
         {currentLayoutId ? (
           <TopbarActionButton
-            icon=""
             label="Update"
             variant="update"
             onclick={currentLayoutSaved ? undefined : handleUpdate}
           />
         ) : (
           <TopbarActionButton
-            icon=""
             label="Save"
             variant="save"
             onclick={handleSave}
@@ -54,15 +51,13 @@ export const CanvasTopbar = memo(function CanvasTopbar() {
         )}
         {currentLayoutId && (
           <TopbarActionButton
-            icon=""
-            label="deploy"
+            label="Deploy"
             variant="deploy"
             onclick={handleDeploy}
           />
         )}
         <TopbarActionButton
-          icon=""
-          label="Delete Infrastructure"
+          label="Delete"
           variant="delete"
           onclick={handleDelete}
         />

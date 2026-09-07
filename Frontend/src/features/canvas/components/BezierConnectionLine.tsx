@@ -73,7 +73,7 @@ export function BezierConnectionLine({
   const midX = (x1 + 3 * c1x + 3 * c2x + x2) / 8;
   const midY = (y1 + 3 * c1y + 3 * c2y + y2) / 8;
 
-  const strokeColor = isSelected ? "#F0564A" : "#3b82f6";
+  const strokeColor = isSelected ? "#5B8CFF" : "#3A465C";
 
   const showPortBadge = scale >= 0.65;
   const label = ":" + port;
@@ -88,8 +88,8 @@ export function BezierConnectionLine({
       
       {showPortBadge && (
         <g>
-          <rect x={midX - estWidth / 2} y={midY - 9} width={estWidth} height={18} rx={9} fill="#0B0E14" stroke={strokeColor} strokeWidth={1.5} />
-          <text x={midX} y={midY + 3.5} textAnchor="middle" fill="#EDF1F7" fontSize={11} fontFamily="ui-monospace, SFMono-Regular, monospace" fontWeight={500}>{label}</text>
+          <rect x={midX - estWidth / 2} y={midY - 9} width={estWidth} height={18} rx={9} fill="#0B0E14" stroke={isSelected ? "#5B8CFF" : "#273042"} strokeWidth={1.5} />
+          <text x={midX} y={midY + 3.5} textAnchor="middle" fill={isSelected ? "#AAB4C5" : "#677185"} fontSize={11} fontFamily="ui-monospace, SFMono-Regular, monospace" fontWeight={500}>{label}</text>
         </g>
       )}
       

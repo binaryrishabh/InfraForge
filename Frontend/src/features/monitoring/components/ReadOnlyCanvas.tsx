@@ -80,7 +80,7 @@ export function ReadOnlyCanvas({ resources, connectionLines }: ReadOnlyCanvasPro
   return (
     <div
       ref={containerRef}
-      className="relative w-full h-full bg-[#0f1117] rounded-lg border border-gray-800 overflow-hidden"
+      className="relative w-full h-full bg-[#0B0E14] rounded-lg border border-[#1F2633] overflow-hidden"
       onPointerDown={handlePanStart}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}

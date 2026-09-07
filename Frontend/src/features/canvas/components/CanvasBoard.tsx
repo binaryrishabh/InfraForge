@@ -47,9 +47,10 @@ export const CanvasBoard = memo(function CanvasBoard() {
       }}
       className="flex-1 h-full relative overflow-hidden"
       style={{
-        backgroundImage: `radial-gradient(circle, #1e293b 1px, transparent 1px)`,
+        backgroundImage: `radial-gradient(circle, #18202E 1px, transparent 1px)`,
         backgroundSize: `${24 * scale}px ${24 * scale}px`,
         backgroundPosition: `${translateX}px ${translateY}px`,
+        backgroundColor: "#0B0E14",
       }}
       onPointerDown={viewport.handlePanStart}
       onPointerMove={viewport.handlePanMove}

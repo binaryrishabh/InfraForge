@@ -11,7 +11,7 @@ export const getAllInfrastructure = async(): Promise<Infrastructure[]> => {
 
   const allInfrastructure = response.data.allInfrastructure;
 
-  return allInfrastructure; 
+  return allInfrastructure;
 }
 
 // get specific Iinfrastructure of the specified infrastructure id

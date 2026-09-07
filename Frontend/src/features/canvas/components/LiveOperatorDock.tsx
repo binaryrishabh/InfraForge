@@ -71,7 +71,6 @@ export const LiveOperatorDock = memo(function LiveOperatorDock({
       return <LiveLogsPanel />;
     }
 
-    // preflight — panels render null on their own when stage details are absent
     if (!deployment) {
       return (
         <p className="text-[10px] text-[#677185]">
@@ -88,8 +87,7 @@ export const LiveOperatorDock = memo(function LiveOperatorDock({
   };
 
   return (
-    <div className="border-t border-gray-800 bg-gray-950 shrink-0">
-      {/* Header row: tabs on the left, collapse toggle on the right */}
+    <div className="border-t border-[#1F2633] bg-[#12161F] shrink-0">
       <div className="h-10 px-3 flex items-center justify-between">
         <div className="flex items-center h-full">
           {DOCK_TABS.map((tab) => {
@@ -120,9 +118,8 @@ export const LiveOperatorDock = memo(function LiveOperatorDock({
         </button>
       </div>
 
-      {/* Content area — only mounted while expanded */}
       {!collapsed && (
-        <div className="h-[190px] overflow-y-auto p-3">{renderTabContent()}</div>
+        <div className="h-47.5 overflow-y-auto p-3">{renderTabContent()}</div>
       )}
     </div>
   );

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { scalePool } from "@/api/deployment.api";
 import { useSimulationStore } from "../store/simulationStore";
+import { PANEL_SHELL_CLASS } from "@/theme/resourceCategoryHues";
 
 interface ManualScalePanelProps {
   deploymentId: string;
@@ -28,11 +29,10 @@ export function ManualScalePanel({ deploymentId, status }: ManualScalePanelProps
   };
 
   return (
-    <div className="bg-gray-950 border border-gray-800 rounded-lg p-3">
+    <div className={PANEL_SHELL_CLASS}>
       <div className="flex items-center justify-between mb-2">
-        <h3 className="text-xs font-semibold text-gray-400">Manual Scale</h3>
+        <h3 className="text-[10px] uppercase tracking-wider text-[#677185] font-semibold">Manual Scale</h3>
       </div>
-
       {sortedPools.length === 0 ? (
         <p className="text-[9px] text-[#677185]">No VM pools detected — place VMs behind a Load Balancer.</p>
       ) : (
@@ -91,7 +91,6 @@ export function ManualScalePanel({ deploymentId, status }: ManualScalePanelProps
           })}
         </div>
       )}
-
       <p className="text-[9px] text-[#677185] mt-1.5">Base replicas are never removed by manual scale-down.</p>
       {!isLive && (
         <p className="text-[9px] text-[#677185] mt-1.5">Manual scaling is available while the environment is live.</p>

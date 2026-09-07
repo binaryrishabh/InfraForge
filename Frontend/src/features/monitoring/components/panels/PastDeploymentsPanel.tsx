@@ -1,5 +1,6 @@
 import { DeploymentStatus } from "@shared/enum/DeploymentStatus.enum";
 import type { Deployment } from "@shared/interface/Deployment.interface";
+import { PANEL_SHELL_CLASS } from "@/theme/resourceCategoryHues";
 
 interface PastDeploymentsPanelProps {
   pastDeployments: Deployment[];
@@ -9,8 +10,8 @@ export function PastDeploymentsPanel({
   pastDeployments,
 }: PastDeploymentsPanelProps) {
   return (
-    <div className="bg-gray-950 border border-gray-800 rounded-lg p-3">
-      <h3 className="text-xs font-semibold text-gray-400 mb-2">
+    <div className={PANEL_SHELL_CLASS}>
+      <h3 className="text-[10px] uppercase tracking-wider text-[#677185] font-semibold mb-2">
         Past Deployments
       </h3>
       {pastDeployments.length === 0 ? (
@@ -27,10 +28,10 @@ export function PastDeploymentsPanel({
                   pastDeployment.status === DeploymentStatus.COMPLETED
                     ? "bg-green-500"
                     : pastDeployment.status === DeploymentStatus.FAILED
-                      ? "bg-red-500"
-                      : pastDeployment.status === DeploymentStatus.RUNNING
-                        ? "bg-blue-500 animate-pulse"
-                        : "bg-gray-600"
+                    ? "bg-red-500"
+                    : pastDeployment.status === DeploymentStatus.RUNNING
+                    ? "bg-blue-500 animate-pulse"
+                    : "bg-gray-600"
                 }`}
               />
               <span className="text-gray-400 truncate flex-1 ml-2">

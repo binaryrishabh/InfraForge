@@ -3,6 +3,7 @@ import { ResourceIcon } from "@/components/common/ResourceIcon";
 import { CanvasResourcePorts } from "./CanvasResourcePorts";
 import { useCanvasStore } from "../store/canvasStore";
 import { startConnectionFromPort } from "../hooks/useCanvasConnectionDrag";
+import { hueForType, hueBorder } from "@/theme/resourceCategoryHues";
 import type { Resource } from "@shared/interface/Resource.interface";
 
 interface CanvasResourceItemProps {
@@ -31,6 +32,7 @@ export const CanvasResourceItem = memo(function CanvasResourceItem({
   const startPosRef = useRef({ x: 0, y: 0 });
 
   const inverseScale = scale < 1 ? Math.min(1 / scale, 1.75) : 1;
+  const hue = hueForType(resource.type);
 
   const handlePointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
     if (e.button !== 0) return;
@@ -96,12 +98,14 @@ export const CanvasResourceItem = memo(function CanvasResourceItem({
     <div
       data-resource-id={resource.id}
       title={resource.type}
-      className={`absolute group w-12 h-12 rounded-lg bg-[#12161F] border flex items-center justify-center cursor-pointer select-none pointer-events-auto transition-colors duration-150 ${
-        isSelected
-          ? "border-blue-500/60 ring-2 ring-blue-500/30"
-          : "border-[#1F2633] hover:border-[#35415A]"
-      }`}
-      style={{ left: resource.x, top: resource.y }}
+      className="absolute group w-12 h-12 rounded-lg bg-[#12161F] border border-[#1F2633] hover:border-[var(--hue-border)] flex items-center justify-center cursor-pointer select-none pointer-events-auto transition-colors duration-150"
+      style={{
+        left: resource.x,
+        top: resource.y,
+        "--hue-border": hueBorder(hue),
+        borderColor: isSelected ? hueBorder(hue) : undefined,
+        boxShadow: isSelected ? `0 0 0 2px ${hue}4D` : undefined,
+      } as React.CSSProperties}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
@@ -116,9 +120,9 @@ export const CanvasResourceItem = memo(function CanvasResourceItem({
     >
       <span
         className="inline-flex items-center justify-center"
-        style={{ transform: `scale(${inverseScale})`, transformOrigin: "center" }}
+        style={{ transform: `scale(${inverseScale})`, transformOrigin: "center", color: hue }}
       >
-        <ResourceIcon type={resource.type} size={20} />
+        <ResourceIcon type={resource.type} size={20} className="" />
       </span>
       {resource.skuId && scale >= 0.8 && (
         <span className="absolute top-full left-1/2 -translate-x-1/2 mt-1 pointer-events-none">
