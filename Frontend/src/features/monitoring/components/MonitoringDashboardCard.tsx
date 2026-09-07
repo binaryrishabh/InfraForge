@@ -126,7 +126,7 @@ export const MonitoringDashboardCard = memo(function MonitoringDashboardCard({
       }}
     >
       {/* Top edge highlight */}
-      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent pointer-events-none" />
+      <div className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-white/10 to-transparent pointer-events-none" />
 
       {/* Header */}
       <div className="flex items-center justify-between mb-1">
@@ -169,7 +169,7 @@ export const MonitoringDashboardCard = memo(function MonitoringDashboardCard({
           <div className="space-y-1 text-[10px] font-mono mb-2">
             <div className="flex justify-between">
               <span className="text-[#677185]">INSTANCE</span>
-              <span className="text-[#AAB4C5] truncate max-w-[130px]">
+              <span className="text-[#AAB4C5] truncate max-w-32.5">
                 {resource.skuId ?? "generic"}
               </span>
             </div>
