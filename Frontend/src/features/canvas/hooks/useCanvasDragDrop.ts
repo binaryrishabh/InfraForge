@@ -8,9 +8,11 @@ import {
 import type { ResourceType } from "@shared/constants/RESOURCE_TYPES.constants";
 
 const GRID_SIZE = 24;
-// Card-sized overlap thresholds: card dimension + a 20px breathing gap.
-const CARD_OVERLAP_X = NODE_CARD_WIDTH + 20;
-const CARD_OVERLAP_Y = NODE_CARD_HEIGHT + 20;
+// Horizontal guard: card width + breathing room for edge ports.
+const CARD_OVERLAP_X = NODE_CARD_WIDTH + 40;
+// Vertical guard: live cards render content-tall (~260px), well above the
+// nominal NODE_CARD_HEIGHT, so the vertical threshold accounts for that.
+const CARD_OVERLAP_Y = NODE_CARD_HEIGHT + 80;
 
 export function useCanvasDragDrop() {
   const sensors = useSensors(
@@ -41,15 +43,10 @@ export function useCanvasDragDrop() {
         if (canvasRect) {
           const { scale, translateX, translateY } = store;
           const pointerEvent = event.activatorEvent as PointerEvent;
-
-          // Final pointer position = activator position + total drag delta.
           const finalClientX = pointerEvent.clientX + delta.x;
           const finalClientY = pointerEvent.clientY + delta.y;
-
-          // Screen -> canvas space, then center the card on the cursor.
           x = (finalClientX - canvasRect.left - translateX) / scale - NODE_CARD_WIDTH / 2;
           y = (finalClientY - canvasRect.top - translateY) / scale - NODE_CARD_HEIGHT / 2;
-
           x = Math.round(x / GRID_SIZE) * GRID_SIZE;
           y = Math.round(y / GRID_SIZE) * GRID_SIZE;
         }

@@ -30,7 +30,6 @@ export const CanvasResourceItem = memo(function CanvasResourceItem({
 }: CanvasResourceItemProps) {
   const isSelected = useCanvasStore((s) => s.selectedResourceId === resource.id);
   const liveMode = useCanvasStore((s) => s.liveMode);
-  // Primitive string selector: re-renders only when the occupied-edge set changes.
   const occupiedSides = useCanvasStore((s) =>
     occupiedSidesFor(s.resources, s.connectionLines, resource.id)
   );
@@ -46,16 +45,13 @@ export const CanvasResourceItem = memo(function CanvasResourceItem({
     isDraggingRef.current = true;
     wasDragRef.current = false;
     startPosRef.current = { x: resource.x, y: resource.y };
-
     const canvas = document.getElementById("canvas");
     if (canvas) {
       const rect = canvas.getBoundingClientRect();
       const { scale: viewScale, translateX, translateY } = useCanvasStore.getState();
-      const pointerCanvasX = (e.clientX - rect.left - translateX) / viewScale;
-      const pointerCanvasY = (e.clientY - rect.top - translateY) / viewScale;
       dragOffsetRef.current = {
-        x: pointerCanvasX - resource.x,
-        y: pointerCanvasY - resource.y,
+        x: (e.clientX - rect.left - translateX) / viewScale - resource.x,
+        y: (e.clientY - rect.top - translateY) / viewScale - resource.y,
       };
     }
     e.currentTarget.setPointerCapture(e.pointerId);
@@ -74,26 +70,24 @@ export const CanvasResourceItem = memo(function CanvasResourceItem({
     if (Math.hypot(pointerCanvasX - startPointerX, pointerCanvasY - startPointerY) > 3) {
       wasDragRef.current = true;
     }
-
-    const x = pointerCanvasX - dragOffsetRef.current.x;
-    const y = pointerCanvasY - dragOffsetRef.current.y;
-    onMoveResource(resource.id, x, y);
+    onMoveResource(
+      resource.id,
+      pointerCanvasX - dragOffsetRef.current.x,
+      pointerCanvasY - dragOffsetRef.current.y,
+    );
   };
 
   const handlePointerUp = (e: ReactPointerEvent<HTMLDivElement>) => {
     if (!isDraggingRef.current) return;
     isDraggingRef.current = false;
     e.currentTarget.releasePointerCapture(e.pointerId);
-
     if (wasDragRef.current) {
       const canvas = document.getElementById("canvas");
       if (!canvas) return;
       const rect = canvas.getBoundingClientRect();
       const { scale: viewScale, translateX, translateY } = useCanvasStore.getState();
-      const pointerCanvasX = (e.clientX - rect.left - translateX) / viewScale;
-      const pointerCanvasY = (e.clientY - rect.top - translateY) / viewScale;
-      const x = pointerCanvasX - dragOffsetRef.current.x;
-      const y = pointerCanvasY - dragOffsetRef.current.y;
+      const x = (e.clientX - rect.left - translateX) / viewScale - dragOffsetRef.current.x;
+      const y = (e.clientY - rect.top - translateY) / viewScale - dragOffsetRef.current.y;
       const snappedX = Math.round(x / GRID_SIZE) * GRID_SIZE;
       const snappedY = Math.round(y / GRID_SIZE) * GRID_SIZE;
       onMoveResource(resource.id, snappedX, snappedY);
@@ -136,7 +130,7 @@ export const CanvasResourceItem = memo(function CanvasResourceItem({
         onStartConnection={startConnectionFromPort}
       />
       <button
-        className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-red-500 hover:bg-red-400 text-white text-[11px] flex items-center justify-center leading-none opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer shadow-md"
+        className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-red-500 hover:bg-red-400 text-white text-[12px] flex items-center justify-center leading-none opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer shadow-md"
         onPointerDown={(e) => e.stopPropagation()}
         onClick={(e) => {
           e.stopPropagation();

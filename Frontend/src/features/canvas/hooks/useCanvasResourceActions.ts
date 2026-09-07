@@ -7,9 +7,10 @@ import {
 } from "@/features/monitoring/components/MonitoringDashboardCard";
 import type { Resource } from "@shared/interface/Resource.interface";
 
-// Card-sized overlap thresholds: card dimension + a 20px breathing gap.
-const CARD_OVERLAP_X = NODE_CARD_WIDTH + 20;
-const CARD_OVERLAP_Y = NODE_CARD_HEIGHT + 20;
+// Mirrors useCanvasDragDrop: width + port breathing room; height accounts
+// for content-tall live cards.
+const CARD_OVERLAP_X = NODE_CARD_WIDTH + 40;
+const CARD_OVERLAP_Y = NODE_CARD_HEIGHT + 80;
 
 export function useCanvasResourceActions() {
   const performUndo = useCallback(() => {
@@ -17,7 +18,6 @@ export function useCanvasResourceActions() {
     if (store.isDeploying || store.undoStack.length === 0) return;
     const last = store.undoStack[store.undoStack.length - 1];
     if (!last) return;
-
     if (last.type === "add") {
       store.setResources(prev => prev.filter(r => r.id !== last.resource.id));
       store.setConnectionLines(prev => prev.filter(l => l.sourceId !== last.resource.id && l.targetId !== last.resource.id));
@@ -33,7 +33,6 @@ export function useCanvasResourceActions() {
       store.setConnectionLines(prev => [...prev, last.connectionLine]);
       store.setCurrentLayoutSaved(last.savedState);
     }
-
     store.setUndoStack(prev => prev.slice(0, -1));
     store.setRedoStack(prev => [...prev, last]);
     toast.success("Undo");
@@ -42,19 +41,16 @@ export function useCanvasResourceActions() {
   const handleDeleteCanvasResource = useCallback((resourceId: string) => {
     const store = useCanvasStore.getState();
     if (store.isDeploying) { toast.warning("A deployment is in progress. Can't select"); return; }
-
     const resource = store.resources.find((r) => r.id === resourceId);
     const touchingConnections = store.connectionLines.filter(
       (line) => line.sourceId === resourceId || line.targetId === resourceId,
     );
-
     if (resource) {
       store.setUndoStack((prev) => [
         ...prev, { type: "delete", resource, connectionLines: touchingConnections, savedState: store.currentLayoutSaved },
       ]);
       store.setRedoStack([]);
     }
-
     store.setResources((prev) => prev.filter((r) => r.id !== resourceId));
     store.setConnectionLines((prev) => prev.filter((line) => line.sourceId !== resourceId && line.targetId !== resourceId));
     store.setCurrentLayoutSaved(false);
@@ -68,22 +64,16 @@ export function useCanvasResourceActions() {
     store.setCurrentLayoutSaved(false);
   }, []);
 
-  // Live drag feedback — called on every pointermove. Deliberately does NOT touch
-  // the undo stack or the saved flag; that only happens once in commitMove.
   const handleMoveCanvasResource = useCallback((resourceId: string, x: number, y: number) => {
     const store = useCanvasStore.getState();
     if (store.isDeploying) return;
     store.setResources(prev => prev.map(r => r.id === resourceId ? { ...r, x, y } : r));
   }, []);
 
-  // Called once on drag release. Records the move for undo/redo and marks dirty.
   const commitMoveCanvasResource = useCallback((resourceId: string, fromX: number, fromY: number, toX: number, toY: number) => {
     const store = useCanvasStore.getState();
     if (store.isDeploying) return;
     if (fromX === toX && fromY === toY) return;
-
-    // Overlap prevention with the card-sized threshold: reject the drop if the
-    // destination collides with another card, snapping back to the start.
     const isOverlapping = store.resources.some(
       (r) => r.id !== resourceId &&
         Math.abs(r.x - toX) < CARD_OVERLAP_X &&
@@ -94,7 +84,6 @@ export function useCanvasResourceActions() {
       toast.warning("Space already occupied!");
       return;
     }
-
     store.setUndoStack(prev => [...prev, {
       type: "move",
       resourceId,
@@ -108,13 +97,11 @@ export function useCanvasResourceActions() {
     store.setCurrentLayoutSaved(false);
   }, []);
 
-  // Delete a single connection line by id, with undo support.
   const handleDeleteConnectionLine = useCallback((connectionId: string) => {
     const store = useCanvasStore.getState();
     if (store.isDeploying) { toast.warning("A deployment is in progress. Can't modify"); return; }
     const line = store.connectionLines.find((l) => l.id === connectionId);
     if (!line) return;
-
     store.setUndoStack((prev) => [
       ...prev, { type: "delete-connection", connectionLine: line, savedState: store.currentLayoutSaved },
     ]);

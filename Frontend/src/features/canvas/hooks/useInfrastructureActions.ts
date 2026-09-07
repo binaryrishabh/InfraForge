@@ -4,7 +4,10 @@ import { createDeployment } from "@/api/deployment.api";
 import { SAMPLE_ARCHITECTURE } from "@shared/constants/SAMPLE_ARCHITECTURE.constants";
 import { validateDeploymentReadiness } from "@shared/validation/validateDeploymentReadiness.validation";
 import { useCanvasStore } from "../store/canvasStore";
-import { CARD_LAYOUT_VERSION } from "../utils/layoutMigration";
+import {
+  CARD_LAYOUT_VERSION,
+  migrateLayoutToCardScale,
+} from "../utils/layoutMigration";
 import type { WorkloadProfile } from "@shared/interface/WorkloadProfile.interface";
 
 export function useInfrastructureActions() {
@@ -94,14 +97,11 @@ export function useInfrastructureActions() {
     const store = useCanvasStore.getState();
     const hasRunningDeployment = store.isDeploying;
     const hasUnsavedChanges = !store.currentLayoutSaved && store.resources.length > 0;
-
     if (!hasRunningDeployment && !hasUnsavedChanges) { handleNewExecute(); return; }
-
     let title = "Discard changes?";
     let description = "You have unsaved changes on the current canvas.";
     let confirmLabel = "Clear canvas";
     let warnings: Array<{ icon: "danger" | "warning"; text: string }> = [];
-
     if (hasRunningDeployment && hasUnsavedChanges) {
       title = "Abort deployment and clear canvas?";
       description = "Starting a new canvas will affect the current deployment and unsaved changes.";
@@ -117,7 +117,6 @@ export function useInfrastructureActions() {
     } else if (hasUnsavedChanges) {
       warnings = [{ icon: "danger", text: "Unsaved canvas changes will be discarded." }];
     }
-
     store.setModalState({ type: "confirm-new", title, description, confirmLabel, warnings });
   };
 
@@ -148,17 +147,18 @@ export function useInfrastructureActions() {
     if (store.isDeploying) { toast.warning("A deployment is in progress."); return; }
     if (!store.currentLayoutId || !store.currentLayoutSaved) { store.setModalState({ type: "save" }); return; }
     if (store.resources.length === 0) { toast.warning("Add resources to the canvas before deploying."); return; }
-
     const readiness = validateDeploymentReadiness(store.resources, store.connectionLines);
     if (!readiness.valid) { toast.error("Cannot deploy — " + readiness.errors.join(" · ")); return; }
     if (readiness.warnings.length > 0) readiness.warnings.forEach(w => toast.warning(w));
-
     store.setModalState({ type: "confirm-deploy" });
   };
 
   const loadSampleArchitecture = () => {
     const store = useCanvasStore.getState();
-    store.setResources(SAMPLE_ARCHITECTURE.resources);
+    // SAMPLE_ARCHITECTURE still ships at v2 card spacing; re-space at load
+    // until the shared constant is re-delivered at v3 (see ASSUMPTIONS).
+    const spacedResources = migrateLayoutToCardScale(SAMPLE_ARCHITECTURE.resources, 2);
+    store.setResources(spacedResources);
     store.setConnectionLines(SAMPLE_ARCHITECTURE.connectionLines);
     store.setCurrentLayoutSaved(false);
     store.setCurrentLayoutId(null);
