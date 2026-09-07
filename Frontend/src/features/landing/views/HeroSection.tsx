@@ -1,4 +1,3 @@
-import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Command, ArrowRight } from 'lucide-react'
 
@@ -47,7 +46,7 @@ export default function HeroSection() {
             />
           </button>
 
-          <button onclick={handleExploreDemo} className='text-zinc-100 text-xs lg:text-base clash-display px-3 lg:px-5 py-2.5 lg:py-3 rounded-xl lg:rounded-2xl cursor-pointer hover:-translate-y-1 transition hover:bg-indigo-500/20'>
+          <button onClick={handleExploreDemo} className='text-zinc-100 text-xs lg:text-base clash-display px-3 lg:px-5 py-2.5 lg:py-3 rounded-xl lg:rounded-2xl cursor-pointer hover:-translate-y-1 transition hover:bg-indigo-500/20'>
             Explore Demo
           </button>
         </div>
