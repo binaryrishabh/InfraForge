@@ -4,6 +4,7 @@ import { useCanvasStore } from "../store/canvasStore";
 import { useCanvasResourceActions } from "../hooks/useCanvasResourceActions";
 import { useCanvasViewport, fitCanvasView } from "../hooks/useCanvasViewport";
 import { useCanvasConnectionDrag } from "../hooks/useCanvasConnectionDrag";
+import { canvasGridStyle } from "../utils/canvasGridStyle";
 import { CanvasResourceItem } from "./CanvasResourceItem";
 import { ConnectionLinesLayer } from "./ConnectionLinesLayer";
 
@@ -22,7 +23,6 @@ export const CanvasBoard = memo(function CanvasBoard() {
     commitMoveCanvasResource,
     handleDeleteConnectionLine,
   } = useCanvasResourceActions();
-  
   const viewport = useCanvasViewport();
   useCanvasConnectionDrag();
   const { setNodeRef } = useDroppable({ id: "canvas" });
@@ -46,12 +46,7 @@ export const CanvasBoard = memo(function CanvasBoard() {
         viewport.containerRef.current = el;
       }}
       className="flex-1 h-full relative overflow-hidden"
-      style={{
-        backgroundImage: `radial-gradient(circle, #18202E 1px, transparent 1px)`,
-        backgroundSize: `${24 * scale}px ${24 * scale}px`,
-        backgroundPosition: `${translateX}px ${translateY}px`,
-        backgroundColor: "#0B0E14",
-      }}
+      style={canvasGridStyle(scale, translateX, translateY)}
       onPointerDown={viewport.handlePanStart}
       onPointerMove={viewport.handlePanMove}
       onPointerUp={viewport.handlePanEnd}

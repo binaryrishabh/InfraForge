@@ -4,6 +4,7 @@ import { useDeploymentSocket } from "@/features/deployment/hooks/useDeploymentSo
 import { useCanvasStore } from "../store/canvasStore";
 import { useCanvasDragDrop } from "../hooks/useCanvasDragDrop";
 import { useLiveTopologySync } from "../hooks/useLiveTopologySync";
+import { canvasGridStyle } from "../utils/canvasGridStyle";
 import { DeploymentStatus } from "@shared/enum/DeploymentStatus.enum";
 import { CanvasBoard } from "./CanvasBoard";
 import { ResourceSidebar } from "./ResourceSidebar";
@@ -56,7 +57,6 @@ export function CanvasLiveMode({ deploymentId }: CanvasLiveModeProps) {
   return (
     <div className="flex flex-col h-screen bg-[#0f1117] text-white">
       <LiveTopbar deploymentId={deploymentId} status={status} />
-
       {isLive ? (
         <DndContext
           sensors={dragDrop.sensors}
@@ -76,10 +76,7 @@ export function CanvasLiveMode({ deploymentId }: CanvasLiveModeProps) {
         <div className="flex-1 flex overflow-hidden relative">
           <div
             className="flex-1 flex items-center justify-center"
-            style={{
-              backgroundImage: `radial-gradient(circle, #1e293b 1px, transparent 1px)`,
-              backgroundSize: `24px 24px`,
-            }}
+            style={canvasGridStyle(1, 0, 0)}
           >
             {isConnectionError ? (
               <span className="text-sm font-mono text-[#F5A524]">
@@ -95,7 +92,6 @@ export function CanvasLiveMode({ deploymentId }: CanvasLiveModeProps) {
           </div>
         </div>
       )}
-
       {isLive && (
         <LiveOperatorDock
           deploymentId={deploymentId}
@@ -104,7 +100,6 @@ export function CanvasLiveMode({ deploymentId }: CanvasLiveModeProps) {
           deployment={deployment}
         />
       )}
-
       {showPipeline && (
         <DeploymentPipeline
           deploymentId={deploymentId}
