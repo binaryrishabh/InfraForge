@@ -36,6 +36,12 @@ body {
   to { stroke-dashoffset: -24; }
 }
 
+/* Breathing glow for plugged connection ports. */
+@keyframes infraforge-port-pulse {
+  0%, 100% { box-shadow: 0 0 10px rgba(122, 162, 255, 0.45), inset 0 0 5px rgba(122, 162, 255, 0.20); }
+  50% { box-shadow: 0 0 18px rgba(122, 162, 255, 0.75), inset 0 0 8px rgba(122, 162, 255, 0.35); }
+}
+
 .infraforge-smoke-wisp {
   position: absolute;
   width: 14px;
@@ -47,4 +53,8 @@ body {
 
 .infraforge-flow-packets {
   animation: infraforge-flow 0.9s linear infinite;
+}
+
+.infraforge-port-pulse {
+  animation: infraforge-port-pulse 2.4s ease-in-out infinite;
 }

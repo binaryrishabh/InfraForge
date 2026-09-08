@@ -49,9 +49,9 @@ export const PendingConnectionLine = memo(function PendingConnectionLine({
         strokeDasharray="6 4"
         pointerEvents="none"
       />
-      {/* Socket at the origin port so the drag visibly starts plugged in */}
-      <circle cx={x1} cy={y1} r={5} fill="#0B0E14" stroke="#5B8CFF" strokeWidth={2} pointerEvents="none" />
-      <circle cx={x1} cy={y1} r={2} fill="#7AA2FF" pointerEvents="none" />
+      {/* Socket at the origin port, sized to match the plugged port ring */}
+      <circle cx={x1} cy={y1} r={7} fill="#0B0E14" stroke="#7AA2FF" strokeWidth={2} pointerEvents="none" />
+      <circle cx={x1} cy={y1} r={3} fill="#7AA2FF" pointerEvents="none" />
     </g>
   );
 });
