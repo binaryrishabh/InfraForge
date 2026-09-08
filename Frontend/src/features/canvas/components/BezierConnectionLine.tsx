@@ -22,6 +22,8 @@ const PACKET_DASH = "7 17";
 // Flow chevrons sit in the node-side half of each gap (between the node edge
 // and the mid-line port badge), biased toward the nodes per owner feedback.
 const CHEVRON_TS = [0.18, 0.82];
+// Zoomed out (port badge hidden): the pair merges into one center marker.
+const CENTER_CHEVRON_TS = [0.5];
 const CHEVRON_PATH = "M -6.1 -3.5 L 0 0 L -6.1 3.5";
 // Stubby lines skip the chevrons so short connections never look cluttered.
 const CHEVRON_MIN_DISTANCE = 110;
@@ -115,11 +117,14 @@ export function BezierConnectionLine({
 
   const casingColor = isSelected ? "#273042" : "#1F2633";
   const coreColor = isSelected ? "#5B8CFF" : "#3A465C";
-  const packetColor = isSelected ? "#EDF1F7" : "#8FB3FF";
+  const packetColor = isSelected ? "#EDF1F7" : showPackets ? "#8FB3FF" : "#677185";
   const arrowColor = isSelected ? "#EDF1F7" : showPackets ? "#8FB3FF" : "#677185";
 
   const showPortBadge = scale >= 0.65;
   const showChevrons = distance > CHEVRON_MIN_DISTANCE;
+  // Badge visible: two chevrons flank it in the node-side gaps.
+  // Badge hidden (zoomed out): the pair merges into ONE center marker.
+  const chevronTs = showPortBadge ? CHEVRON_TS : CENTER_CHEVRON_TS;
   const label = ":" + port;
   const badgeWidth = label.length * 7 + 16;
 
@@ -151,9 +156,11 @@ export function BezierConnectionLine({
           className={animatePackets ? "infraforge-flow-packets" : undefined}
         />
       )}
-      {/* Two aesthetic flow chevrons in the gaps node→badge and badge→node */}
+      {/* Flow chevrons: two flanking the port badge while it is visible, or a
+          single direction marker at the exact line center once zoom-out
+          hides the badge. */}
       {showChevrons &&
-        CHEVRON_TS.map((t) => {
+        chevronTs.map((t) => {
           const p = pointAt(t);
           const angle = tangentAngleAt(t);
           return (

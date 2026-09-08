@@ -12,6 +12,7 @@ import { CanvasDragLayer } from "./CanvasDragLayer";
 import { ZoomControls } from "./ZoomControls";
 import { HistoryControls } from "./HistoryControls";
 import { CanvasLiveMode } from "./CanvasLiveMode";
+import { ShellMenu } from "@/components/shell/ShellMenu";
 import { useCanvasStore } from "../store/canvasStore";
 
 export function CanvasDesignerPage() {
@@ -36,6 +37,11 @@ export function CanvasDesignerPage() {
           <ResourcePaletteDrawer />
         </div>
         <CanvasTopbar />
+        {/* Hamburger shell menu at the top-right, aligned to navbar level
+            (top-3 + h-12 button matches the floating topbar band). */}
+        <div className="absolute top-3 right-4 z-40">
+          <ShellMenu />
+        </div>
         <CanvasConfigPanelWrapper />
         <CanvasModals />
         <CanvasDragLayer />
