@@ -1,6 +1,5 @@
 import { memo } from "react";
 import { BezierConnectionLine } from "./BezierConnectionLine";
-import { PendingConnectionLine } from "./PendingConnectionLine";
 import { useCanvasStore } from "../store/canvasStore";
 import { useSimulationStore } from "@/features/monitoring/store/simulationStore";
 import {
@@ -24,20 +23,16 @@ export const ConnectionLinesLayer = memo(function ConnectionLinesLayer({
   scale,
 }: ConnectionLinesLayerProps) {
   const selectedConnectionId = useCanvasStore((s) => s.selectedConnectionId);
-  const pendingConnection = useCanvasStore((s) => s.pendingConnection);
   const liveMode = useCanvasStore((s) => s.liveMode);
   // Boolean selectors: stable across 1Hz snapshots, no extra re-renders.
   const simulationRunning = useSimulationStore(
     (s) => s.simulatedSeconds > 0 && s.speed > 0
   );
 
-  const pendingSource = pendingConnection
-    ? resources.find((r) => r.id === pendingConnection.sourceId)
-    : null;
-
   return (
-    // z-0: tubes and the pending drag line always paint BELOW every card
-    // wrapper (z-10), matching react-flow-style edge-under-node stacking.
+    // z-0: committed tubes always paint BELOW every card wrapper (z-10),
+    // matching react-flow-style edge-under-node stacking. The pending
+    // drag line moved to PendingConnectionLayer (z-20, above everything).
     <svg
       className="absolute inset-0 pointer-events-none z-0"
       width="100%"
@@ -75,12 +70,6 @@ export const ConnectionLinesLayer = memo(function ConnectionLinesLayer({
           />
         );
       })}
-      {pendingConnection && pendingSource && (
-        <PendingConnectionLine
-          source={{ x: pendingConnection.anchorX, y: pendingConnection.anchorY }}
-          cursor={{ x: pendingConnection.cursorX, y: pendingConnection.cursorY }}
-        />
-      )}
     </svg>
   );
 });

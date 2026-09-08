@@ -13,12 +13,13 @@ interface CanvasResourcePortsProps {
   ) => void;
 }
 
-// 36px grab zone centered on each compact card edge — invisible, generous.
+// 28px invisible grab zone centered on each card edge — generous target,
+// zero visual noise.
 const SIDE_POSITION_CLASS: Record<ConnectionSide, string> = {
-  top: "-top-4.5 left-1/2 -translate-x-1/2",
-  bottom: "-bottom-4.5 left-1/2 -translate-x-1/2",
-  left: "-left-4.5 top-1/2 -translate-y-1/2",
-  right: "-right-4.5 top-1/2 -translate-y-1/2",
+  top: "-top-3.5 left-1/2 -translate-x-1/2",
+  bottom: "-bottom-3.5 left-1/2 -translate-x-1/2",
+  left: "-left-3.5 top-1/2 -translate-y-1/2",
+  right: "-right-3.5 top-1/2 -translate-y-1/2",
 };
 
 const SIDES: ConnectionSide[] = ["top", "right", "bottom", "left"];
@@ -49,34 +50,26 @@ export function CanvasResourcePorts({
         return (
           <div
             key={side}
-            className={`group/port absolute ${SIDE_POSITION_CLASS[side]} w-9 h-9 z-20 flex items-center justify-center cursor-crosshair transition-opacity duration-150 ${
+            // z-20 keeps every port above its OWN card body. The card
+            // wrapper's z-10 stacking context still contains it, so ports
+            // never paint above sibling cards.
+            className={`group/port absolute ${SIDE_POSITION_CLASS[side]} z-20 w-7 h-7 flex items-center justify-center cursor-crosshair transition-opacity duration-150 ${
               isOccupied ? "opacity-100" : "opacity-0 group-hover:opacity-100"
             }`}
             title={isOccupied ? "Drag another connection from this port" : "Drag to connect"}
             onPointerDown={handlePointerDown}
           >
-            {/* Aura bloom — soft halo that opens behind the port on hover */}
-            <span className="absolute w-8 h-8 rounded-full bg-[rgba(91,140,255,0.12)] scale-50 opacity-0 transition-all duration-150 group-hover/port:scale-100 group-hover/port:opacity-100" />
-            {/* Flange — thin outer ring marking a plugged connector */}
-            {isOccupied && (
-              <span className="absolute w-8 h-8 rounded-full border border-[rgba(122,162,255,0.30)]" />
+            {isOccupied ? (
+              // Plugged port: quiet accent socket with a dark separation ring
+              // so it reads on top of both the card face and the canvas.
+              <span className="w-3.5 h-3.5 rounded-full bg-[#12161F] border-2 border-[#5B8CFF]/60 ring-2 ring-[#0B0E14]/70 flex items-center justify-center transition-colors duration-150 hover:border-[#7AA2FF]">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#7AA2FF]" />
+              </span>
+            ) : (
+              // Free port: accent dot with the same separation ring and a
+              // gentle grow on hover — visible only while the card is hovered.
+              <span className="w-2.5 h-2.5 rounded-full bg-[#5B8CFF] ring-2 ring-[#0B0E14]/70 transition-transform duration-150 group-hover/port:scale-125" />
             )}
-            {/* Port ring — dark core, accent wall, breathing glow when plugged */}
-            <span
-              className={`relative flex items-center justify-center rounded-full border-2 bg-[#0B0E14] transition-all duration-150 group-hover/port:scale-110 ${
-                isOccupied
-                  ? "w-6 h-6 border-[#7AA2FF] infraforge-port-pulse"
-                  : "w-5 h-5 border-[#5B8CFF]/70 shadow-[0_0_8px_rgba(91,140,255,0.35)] group-hover/port:border-[#7AA2FF] group-hover/port:shadow-[0_0_16px_rgba(122,162,255,0.70)]"
-              }`}
-            >
-              <span
-                className={`rounded-full transition-all duration-150 ${
-                  isOccupied
-                    ? "w-2.5 h-2.5 bg-[#A8C4FF]"
-                    : "w-2 h-2 bg-[#5B8CFF] group-hover/port:bg-[#A8C4FF]"
-                }`}
-              />
-            </span>
           </div>
         );
       })}

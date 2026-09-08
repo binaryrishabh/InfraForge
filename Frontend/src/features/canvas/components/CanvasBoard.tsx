@@ -7,6 +7,7 @@ import { useCanvasConnectionDrag } from "../hooks/useCanvasConnectionDrag";
 import { canvasGridStyle } from "../utils/canvasGridStyle";
 import { CanvasResourceItem } from "./CanvasResourceItem";
 import { ConnectionLinesLayer } from "./ConnectionLinesLayer";
+import { PendingConnectionLayer } from "./PendingConnectionLayer";
 
 export const CanvasBoard = memo(function CanvasBoard() {
   const resources = useCanvasStore((s) => s.resources);
@@ -100,6 +101,8 @@ export const CanvasBoard = memo(function CanvasBoard() {
             onCommitMove={commitMoveCanvasResource}
           />
         ))}
+        {/* Top-most world layer: the pending drag line over every node. */}
+        <PendingConnectionLayer />
       </div>
     </div>
   );
