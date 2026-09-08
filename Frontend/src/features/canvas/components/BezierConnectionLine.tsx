@@ -19,8 +19,9 @@ const TUBE_CORE_WIDTH = 4;
 const PACKET_WIDTH = 2.5;
 // Dash period 24 matches the -24 flow keyframe offset for a seamless loop.
 const PACKET_DASH = "7 17";
-// Two flow chevrons ride the gaps between the nodes and the port badge.
-const CHEVRON_TS = [0.25, 0.75];
+// Flow chevrons sit in the node-side half of each gap (between the node edge
+// and the mid-line port badge), biased toward the nodes per owner feedback.
+const CHEVRON_TS = [0.18, 0.82];
 const CHEVRON_PATH = "M -6.1 -3.5 L 0 0 L -6.1 3.5";
 // Stubby lines skip the chevrons so short connections never look cluttered.
 const CHEVRON_MIN_DISTANCE = 110;

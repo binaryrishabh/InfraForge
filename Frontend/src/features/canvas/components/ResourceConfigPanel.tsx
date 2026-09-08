@@ -107,7 +107,8 @@ export function ResourceConfigPanel({
   };
 
   return (
-    <div className="config-panel-container fixed right-0 top-12 bottom-0 w-64 bg-gray-950 border-l border-gray-800 p-4 z-30 overflow-y-auto hover:opacity-100 opacity-50">
+    // top-20 clears the floating topbar (top-3 + 48px bar) on the right edge.
+    <div className="config-panel-container fixed right-0 top-20 bottom-0 w-64 bg-gray-950 border-l border-gray-800 p-4 z-30 overflow-y-auto hover:opacity-100 opacity-50">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-sm font-semibold text-white">Resource Config</h3>
         <button
@@ -139,7 +140,6 @@ export function ResourceConfigPanel({
             {RESOURCE_PORTS[resource.type] || 80}
           </p>
         </div>
-
         {isLb && (
           <div>
             <p className="text-[10px] text-gray-500 uppercase mb-1.5">
@@ -170,7 +170,6 @@ export function ResourceConfigPanel({
                 Disabled
               </button>
             </div>
-
             {/* Min replicas */}
             <div className="mb-2">
               <label className="block text-[10px] text-gray-500 uppercase mb-1">
@@ -185,7 +184,6 @@ export function ResourceConfigPanel({
                 className="w-full h-8 rounded-lg bg-[#0B0E14] border border-[#273042] text-[12px] font-mono text-[#EDF1F7] px-2.5 outline-none focus:border-[#5B8CFF] focus:shadow-[0_0_0_3px_rgba(91,140,255,0.18)] transition-colors duration-150"
               />
             </div>
-
             {/* Max replicas */}
             <div className="mb-2">
               <label className="block text-[10px] text-gray-500 uppercase mb-1">
@@ -200,7 +198,6 @@ export function ResourceConfigPanel({
                 className="w-full h-8 rounded-lg bg-[#0B0E14] border border-[#273042] text-[12px] font-mono text-[#EDF1F7] px-2.5 outline-none focus:border-[#5B8CFF] focus:shadow-[0_0_0_3px_rgba(91,140,255,0.18)] transition-colors duration-150"
               />
             </div>
-
             {/* Target CPU */}
             <div className="mb-2">
               <div className="flex justify-between items-center mb-1">
@@ -225,14 +222,12 @@ export function ResourceConfigPanel({
                 <span>90%</span>
               </div>
             </div>
-
             <p className="text-[9px] text-[#677185] mt-2">
               Defaults when unset: min = current VM count, max = 3x (cap 8),
               target 75%. Save or Update the layout, then deploy.
             </p>
           </div>
         )}
-
         {isSkuable && (
           <div>
             <p className="text-[10px] text-gray-500 uppercase mb-1.5">

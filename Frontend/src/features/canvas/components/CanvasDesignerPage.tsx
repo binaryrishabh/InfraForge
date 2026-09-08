@@ -3,7 +3,7 @@ import { useCanvasDragDrop } from "../hooks/useCanvasDragDrop";
 import { useCanvasKeyboardShortcuts } from "../hooks/useCanvasKeyboardShortcuts";
 import { useCanvasPersistence } from "../hooks/useCanvasPersistence";
 import { CanvasTopbar } from "../topbar/CanvasTopbar";
-import { ResourceSidebar } from "./ResourceSidebar";
+import { ResourcePaletteDrawer } from "./ResourcePaletteDrawer";
 import { CanvasBoard } from "./CanvasBoard";
 import { CanvasEmptyState } from "./CanvasEmptyState";
 import { CanvasConfigPanelWrapper } from "./CanvasConfigPanelWrapper";
@@ -25,18 +25,19 @@ export function CanvasDesignerPage() {
 
   return (
     <DndContext sensors={dragDrop.sensors} onDragStart={dragDrop.onDragStart} onDragEnd={dragDrop.onDragEnd}>
-      <div className="flex flex-col h-screen bg-[#0f1117] text-white">
-        <CanvasTopbar />
-        <div className="flex flex-1 overflow-hidden relative">
-          <ResourceSidebar />
+      {/* Full-bleed canvas surface; chrome floats above it. */}
+      <div className="relative h-screen bg-[#0f1117] text-white overflow-hidden">
+        <div className="absolute inset-0 flex overflow-hidden">
           <CanvasBoard />
           <CanvasEmptyState />
           <ZoomControls />
+          <ResourcePaletteDrawer />
         </div>
+        <CanvasTopbar />
+        <CanvasConfigPanelWrapper />
+        <CanvasModals />
+        <CanvasDragLayer />
       </div>
-      <CanvasConfigPanelWrapper />
-      <CanvasModals />
-      <CanvasDragLayer />
     </DndContext>
   );
 }

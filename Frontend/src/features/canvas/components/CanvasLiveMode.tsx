@@ -7,7 +7,7 @@ import { useLiveTopologySync } from "../hooks/useLiveTopologySync";
 import { canvasGridStyle } from "../utils/canvasGridStyle";
 import { DeploymentStatus } from "@shared/enum/DeploymentStatus.enum";
 import { CanvasBoard } from "./CanvasBoard";
-import { ResourceSidebar } from "./ResourceSidebar";
+import { ResourcePaletteDrawer } from "./ResourcePaletteDrawer";
 import { ZoomControls } from "./ZoomControls";
 import { CanvasConfigPanelWrapper } from "./CanvasConfigPanelWrapper";
 import { CanvasModals } from "./CanvasModals";
@@ -64,9 +64,9 @@ export function CanvasLiveMode({ deploymentId }: CanvasLiveModeProps) {
           onDragEnd={dragDrop.onDragEnd}
         >
           <div className="flex-1 flex overflow-hidden relative">
-            <ResourceSidebar />
             <CanvasBoard />
             <ZoomControls />
+            <ResourcePaletteDrawer />
           </div>
           <CanvasConfigPanelWrapper />
           <CanvasModals />
