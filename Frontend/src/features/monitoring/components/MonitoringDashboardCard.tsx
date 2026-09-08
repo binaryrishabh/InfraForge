@@ -11,8 +11,11 @@ import { findSku } from "@shared/catalog/index";
 import { hueForType, hueBorder, hueTint, hueTile } from "@/theme/resourceCategoryHues";
 import type { Resource } from "@shared/interface/Resource.interface";
 
-export const NODE_CARD_WIDTH = 264;
-export const NODE_CARD_HEIGHT = 200;
+// Compact Excalidraw-scale footprint: ~208px wide nodes. HEIGHT is the
+// footprint/anchor constant (overlap guards + line anchors); design cards
+// settle near it, live cards may grow slightly with content.
+export const NODE_CARD_WIDTH = 208;
+export const NODE_CARD_HEIGHT = 160;
 
 interface MonitoringDashboardCardProps {
   resource: Resource;
@@ -110,7 +113,7 @@ export const MonitoringDashboardCard = memo(function MonitoringDashboardCard({
 
   const cardBody = (
     <div
-      className={`relative overflow-hidden border rounded-xl p-4 shadow-lg shadow-black/40 transition-colors duration-300 ${isRestarting ? "ring-2 ring-amber-400/60 animate-pulse" : ""}`}
+      className={`relative overflow-hidden border rounded-xl p-3 shadow-lg shadow-black/40 transition-colors duration-300 ${isRestarting ? "ring-2 ring-amber-400/60 animate-pulse" : ""}`}
       style={{
         borderColor: hueBorder(hue),
         background: `linear-gradient(180deg, ${hueTint(hue)} 0%, rgba(21,27,41,0) 45%), #151B29`,
@@ -121,46 +124,46 @@ export const MonitoringDashboardCard = memo(function MonitoringDashboardCard({
       <div className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-white/10 to-transparent pointer-events-none" />
 
       {/* Header */}
-      <div className="flex items-center justify-between mb-1.5">
-        <div className="flex items-center gap-2.5 min-w-0">
+      <div className="flex items-center justify-between mb-1">
+        <div className="flex items-center gap-2 min-w-0">
           <span
-            className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
+            className="w-7 h-7 rounded-md flex items-center justify-center shrink-0"
             style={{ background: hueTile(hue), color: hue }}
           >
-            <ResourceIcon type={resource.type} size={18} className="" />
+            <ResourceIcon type={resource.type} size={14} className="" />
           </span>
-          <span className="text-[15px] font-mono font-semibold text-[#EDF1F7] truncate">
+          <span className="text-[13px] font-mono font-semibold text-[#EDF1F7] truncate">
             {resource.id}
           </span>
         </div>
         <span
-          className={`flex items-center gap-2 text-[10px] font-mono uppercase font-semibold px-2.5 py-1 rounded-full border ${chipStyle.text} ${chipStyle.border}`}
+          className={`flex items-center gap-1 text-[9px] font-mono uppercase font-semibold px-1.5 py-0.5 rounded-full border ${chipStyle.text} ${chipStyle.border}`}
           style={{ background: `${healthColor}14` }}
         >
           <span
-            className={`w-2 h-2 rounded-full ${chipStyle.dotBg}`}
-            style={{ boxShadow: `0 0 8px ${healthColor}, 0 0 16px ${healthColor}80` }}
+            className={`w-1.5 h-1.5 rounded-full ${chipStyle.dotBg}`}
+            style={{ boxShadow: `0 0 6px ${healthColor}, 0 0 12px ${healthColor}80` }}
           />
           {health}
         </span>
       </div>
 
       {/* Hero metric */}
-      <div className="flex items-baseline gap-2 mb-2">
-        <span className="text-[24px] font-mono font-semibold text-[#EDF1F7] tabular-nums leading-none">
+      <div className="flex items-baseline gap-1.5 mb-1.5">
+        <span className="text-[18px] font-mono font-semibold text-[#EDF1F7] tabular-nums leading-none">
           {heroValue.toLocaleString()}
         </span>
-        <span className="text-[10px] font-mono uppercase tracking-wider text-[#677185]">
+        <span className="text-[9px] font-mono uppercase tracking-wider text-[#677185]">
           {heroUnit}
         </span>
       </div>
 
       {mode === "design" ? (
         <>
-          <div className="space-y-1.5 text-[11px] font-mono mb-2">
+          <div className="space-y-1 text-[10px] font-mono mb-1.5">
             <div className="flex justify-between">
               <span className="text-[#677185]">INSTANCE</span>
-              <span className="text-[#AAB4C5] truncate max-w-40">
+              <span className="text-[#AAB4C5] truncate max-w-28">
                 {resource.skuId ?? "generic"}
               </span>
             </div>
@@ -175,17 +178,17 @@ export const MonitoringDashboardCard = memo(function MonitoringDashboardCard({
           </div>
           <MonitoringCardSparkline
             values={cpuHistory ?? []}
-            width={NODE_CARD_WIDTH - 32}
-            height={56}
+            width={NODE_CARD_WIDTH - 24}
+            height={28}
             color={hue}
           />
         </>
       ) : (
         <>
-          <div className="mb-1.5">
-            <div className="flex justify-between mb-1">
-              <span className="text-[10px] font-mono text-[#677185]">CPU</span>
-              <span className="text-[11px] font-mono text-[#EDF1F7] tabular-nums">{cpu.toFixed(1)}%</span>
+          <div className="mb-1">
+            <div className="flex justify-between mb-0.5">
+              <span className="text-[9px] font-mono text-[#677185]">CPU</span>
+              <span className="text-[10px] font-mono text-[#EDF1F7] tabular-nums">{cpu.toFixed(1)}%</span>
             </div>
             <div className="h-1 rounded-full bg-[#1F2633] overflow-hidden">
               <div
@@ -194,10 +197,10 @@ export const MonitoringDashboardCard = memo(function MonitoringDashboardCard({
               />
             </div>
           </div>
-          <div className="mb-2">
-            <div className="flex justify-between mb-1">
-              <span className="text-[10px] font-mono text-[#677185]">MEM</span>
-              <span className="text-[11px] font-mono text-[#EDF1F7] tabular-nums">{memory.toFixed(1)}%</span>
+          <div className="mb-1.5">
+            <div className="flex justify-between mb-0.5">
+              <span className="text-[9px] font-mono text-[#677185]">MEM</span>
+              <span className="text-[10px] font-mono text-[#EDF1F7] tabular-nums">{memory.toFixed(1)}%</span>
             </div>
             <div className="h-1 rounded-full bg-[#1F2633] overflow-hidden">
               <div
@@ -206,7 +209,7 @@ export const MonitoringDashboardCard = memo(function MonitoringDashboardCard({
               />
             </div>
           </div>
-          <div className="flex justify-between text-[11px] font-mono tabular-nums mb-2">
+          <div className="flex justify-between text-[10px] font-mono tabular-nums mb-1.5">
             {metric?.rps !== undefined && (
               <div className="flex gap-1.5">
                 <span className="text-[#677185]">RPS</span>
@@ -221,24 +224,24 @@ export const MonitoringDashboardCard = memo(function MonitoringDashboardCard({
             )}
           </div>
           {isRestarting && (
-            <div className="text-[11px] font-mono font-semibold text-amber-400 text-center mb-1">
+            <div className="text-[10px] font-mono font-semibold text-amber-400 text-center mb-0.5">
               RESTARTING
             </div>
           )}
-          <div className="mb-2">
+          <div className="mb-1">
             <MonitoringCardSparkline
               values={cpuHistory ?? []}
-              width={NODE_CARD_WIDTH - 32}
-              height={56}
+              width={NODE_CARD_WIDTH - 24}
+              height={28}
               color={hue}
             />
           </div>
           {chaosEffect && (
-            <div className="mt-2 -mx-4 -mb-4 px-4 py-2 rounded-b-xl bg-[rgba(240,86,74,0.10)] border-t border-[rgba(240,86,74,0.35)] flex items-center justify-between">
-              <span className="text-[11px] font-mono font-semibold text-[#F0564A]">
+            <div className="mt-1.5 -mx-3 -mb-3 px-3 py-1.5 rounded-b-xl bg-[rgba(240,86,74,0.10)] border-t border-[rgba(240,86,74,0.35)] flex items-center justify-between">
+              <span className="text-[10px] font-mono font-semibold text-[#F0564A]">
                 {CHAOS_LABELS[chaosEffect.chaosType]}
               </span>
-              <span className="text-[11px] font-mono text-[#F0564A] tabular-nums">
+              <span className="text-[10px] font-mono text-[#F0564A] tabular-nums">
                 {chaosEffect.remainingTicks}s
               </span>
             </div>

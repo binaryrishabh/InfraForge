@@ -1,8 +1,9 @@
-import { memo, useRef, type PointerEvent as ReactPointerEvent } from "react";
+import { memo, useEffect, useRef, type PointerEvent as ReactPointerEvent } from "react";
 import { CanvasResourcePorts } from "./CanvasResourcePorts";
 import { useCanvasStore } from "../store/canvasStore";
 import { startConnectionFromPort } from "../hooks/useCanvasConnectionDrag";
 import { occupiedSidesFor } from "../utils/connectionSides";
+import { setGlobalDragCursor } from "../utils/dragCursor";
 import { hueForType } from "@/theme/resourceCategoryHues";
 import {
   MonitoringDashboardCard,
@@ -35,10 +36,22 @@ export const CanvasResourceItem = memo(function CanvasResourceItem({
   );
   const isDraggingRef = useRef(false);
   const wasDragRef = useRef(false);
+  const dragCursorActiveRef = useRef(false);
   const dragOffsetRef = useRef({ x: 0, y: 0 });
   const startPosRef = useRef({ x: 0, y: 0 });
 
   const hue = hueForType(resource.type);
+
+  // Safety net: never leave the global grabbing cursor stuck if this item
+  // unmounts mid-drag (e.g. a live topology sync removes it).
+  useEffect(() => {
+    return () => {
+      if (dragCursorActiveRef.current) {
+        dragCursorActiveRef.current = false;
+        setGlobalDragCursor(false);
+      }
+    };
+  }, []);
 
   const handlePointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
     if (e.button !== 0) return;
@@ -67,8 +80,15 @@ export const CanvasResourceItem = memo(function CanvasResourceItem({
     const pointerCanvasY = (e.clientY - rect.top - translateY) / viewScale;
     const startPointerX = startPosRef.current.x + dragOffsetRef.current.x;
     const startPointerY = startPosRef.current.y + dragOffsetRef.current.y;
-    if (Math.hypot(pointerCanvasX - startPointerX, pointerCanvasY - startPointerY) > 3) {
+    // Grabbing cursor only once real movement begins, so plain clicks on a
+    // card never flash the dragging cursor.
+    if (
+      !wasDragRef.current &&
+      Math.hypot(pointerCanvasX - startPointerX, pointerCanvasY - startPointerY) > 3
+    ) {
       wasDragRef.current = true;
+      dragCursorActiveRef.current = true;
+      setGlobalDragCursor(true);
     }
     onMoveResource(
       resource.id,
@@ -81,6 +101,10 @@ export const CanvasResourceItem = memo(function CanvasResourceItem({
     if (!isDraggingRef.current) return;
     isDraggingRef.current = false;
     e.currentTarget.releasePointerCapture(e.pointerId);
+    if (dragCursorActiveRef.current) {
+      dragCursorActiveRef.current = false;
+      setGlobalDragCursor(false);
+    }
     if (wasDragRef.current) {
       const canvas = document.getElementById("canvas");
       if (!canvas) return;
@@ -99,7 +123,7 @@ export const CanvasResourceItem = memo(function CanvasResourceItem({
     <div
       data-resource-id={resource.id}
       title={resource.type}
-      className="absolute group rounded-xl pointer-events-auto cursor-pointer select-none"
+      className="absolute group rounded-xl pointer-events-auto cursor-grab select-none"
       style={{
         left: resource.x,
         top: resource.y,
@@ -130,7 +154,7 @@ export const CanvasResourceItem = memo(function CanvasResourceItem({
         onStartConnection={startConnectionFromPort}
       />
       <button
-        className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-red-500 hover:bg-red-400 text-white text-[12px] flex items-center justify-center leading-none opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer shadow-md"
+        className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-red-500 hover:bg-red-400 text-white text-[11px] flex items-center justify-center leading-none opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer shadow-md"
         onPointerDown={(e) => e.stopPropagation()}
         onClick={(e) => {
           e.stopPropagation();

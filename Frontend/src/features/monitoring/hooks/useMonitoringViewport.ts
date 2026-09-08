@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { NODE_CARD_WIDTH, NODE_CARD_HEIGHT } from "../components/MonitoringDashboardCard";
 import { computeFitViewport } from "@/features/canvas/utils/computeFitViewport";
+import { setGlobalDragCursor } from "@/features/canvas/utils/dragCursor";
 
 const MIN_SCALE = 0.3;
 const MAX_SCALE = 2.5;
@@ -122,6 +123,7 @@ export function useMonitoringViewport() {
     disableGlide();
     const { translateX, translateY } = viewportRef.current;
     panStateRef.current = { active: true, startX: e.clientX, startY: e.clientY, startTx: translateX, startTy: translateY };
+    setGlobalDragCursor(true);
     e.currentTarget.setPointerCapture(e.pointerId);
   }, [disableGlide]);
 
@@ -137,6 +139,7 @@ export function useMonitoringViewport() {
     const pan = panStateRef.current;
     if (!pan.active) return;
     pan.active = false;
+    setGlobalDragCursor(false);
     if (e.currentTarget.hasPointerCapture(e.pointerId)) {
       e.currentTarget.releasePointerCapture(e.pointerId);
     }
@@ -148,6 +151,7 @@ export function useMonitoringViewport() {
     const pointer = screenToCanvas(clientX, clientY);
     const offset = nodeOffsetsRef.current[nodeId] || { dx: 0, dy: 0 };
     nodeDragStartRef.current = { pointerX: pointer.x, pointerY: pointer.y, startDx: offset.dx, startDy: offset.dy };
+    setGlobalDragCursor(true);
     try {
       containerRef.current?.setPointerCapture(pointerId);
     } catch {
@@ -169,6 +173,7 @@ export function useMonitoringViewport() {
     if (!draggingNodeRef.current) return;
     draggingNodeRef.current = null;
     nodeDragStartRef.current = null;
+    setGlobalDragCursor(false);
     try {
       if (e.currentTarget.hasPointerCapture(e.pointerId)) {
         e.currentTarget.releasePointerCapture(e.pointerId);

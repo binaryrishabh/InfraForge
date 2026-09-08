@@ -58,3 +58,10 @@ body {
 .infraforge-port-pulse {
   animation: infraforge-port-pulse 2.4s ease-in-out infinite;
 }
+
+/* While any canvas drag is in flight, force the grabbing cursor on every
+   element so fast pointer movement never reveals a stale child cursor. */
+body.infraforge-dragging,
+body.infraforge-dragging * {
+  cursor: grabbing !important;
+}

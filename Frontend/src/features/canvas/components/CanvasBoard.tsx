@@ -60,7 +60,7 @@ export const CanvasBoard = memo(function CanvasBoard() {
         setNodeRef(el);
         viewport.containerRef.current = el;
       }}
-      className="flex-1 h-full relative overflow-hidden"
+      className="flex-1 h-full relative overflow-hidden cursor-pointer"
       style={canvasGridStyle(scale, translateX, translateY)}
       onPointerDown={viewport.handlePanStart}
       onPointerMove={viewport.handlePanMove}

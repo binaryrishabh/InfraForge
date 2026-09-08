@@ -13,13 +13,12 @@ import {
 export function CanvasDragLayer() {
   const activeDrag = useCanvasStore((s) => s.activeDrag);
   const hue = activeDrag ? hueForType(activeDrag.label) : "#5B8CFF";
-
   return (
     <DragOverlay>
       {activeDrag && (
         <div className="relative w-0 h-0">
           <div
-            className="absolute rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-2 pointer-events-none"
+            className="absolute rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-1.5 pointer-events-none"
             style={{
               width: NODE_CARD_WIDTH,
               height: NODE_CARD_HEIGHT,
@@ -31,7 +30,7 @@ export function CanvasDragLayer() {
               boxShadow: `0 12px 32px rgba(0,0,0,0.45)`,
             }}
           >
-            <ResourceIcon type={activeDrag.label} size={24} className="" />
+            <ResourceIcon type={activeDrag.label} size={20} className="" />
             <span className="text-[10px] font-mono uppercase tracking-wider text-[#AAB4C5]">
               {activeDrag.label}
             </span>

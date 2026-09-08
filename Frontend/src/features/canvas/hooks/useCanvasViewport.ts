@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, type PointerEvent as ReactPointerEvent } from "react";
 import { useCanvasStore } from "../store/canvasStore";
 import { computeFitViewport } from "../utils/computeFitViewport";
+import { setGlobalDragCursor } from "../utils/dragCursor";
 import {
   NODE_CARD_WIDTH,
   NODE_CARD_HEIGHT,
@@ -108,6 +109,7 @@ export function useCanvasViewport() {
       startTx: store.translateX,
       startTy: store.translateY,
     };
+    setGlobalDragCursor(true);
     e.currentTarget.setPointerCapture(e.pointerId);
   }, []);
 
@@ -125,6 +127,7 @@ export function useCanvasViewport() {
     const pan = panStateRef.current;
     if (!pan.active) return;
     pan.active = false;
+    setGlobalDragCursor(false);
     if (e.currentTarget.hasPointerCapture(e.pointerId)) {
       e.currentTarget.releasePointerCapture(e.pointerId);
     }
