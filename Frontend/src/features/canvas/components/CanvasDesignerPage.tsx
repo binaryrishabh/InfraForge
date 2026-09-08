@@ -10,8 +10,8 @@ import { CanvasConfigPanelWrapper } from "./CanvasConfigPanelWrapper";
 import { CanvasModals } from "./CanvasModals";
 import { CanvasDragLayer } from "./CanvasDragLayer";
 import { ZoomControls } from "./ZoomControls";
+import { HistoryControls } from "./HistoryControls";
 import { CanvasLiveMode } from "./CanvasLiveMode";
-import { ShellMenu } from "@/components/shell/ShellMenu";
 import { useCanvasStore } from "../store/canvasStore";
 
 export function CanvasDesignerPage() {
@@ -32,13 +32,10 @@ export function CanvasDesignerPage() {
           <CanvasBoard />
           <CanvasEmptyState />
           <ZoomControls />
+          <HistoryControls />
           <ResourcePaletteDrawer />
         </div>
         <CanvasTopbar />
-        {/* Hamburger shell menu at the top-right, navbar height. */}
-        <div className="absolute top-3 right-4 z-40">
-          <ShellMenu />
-        </div>
         <CanvasConfigPanelWrapper />
         <CanvasModals />
         <CanvasDragLayer />

@@ -9,6 +9,7 @@ import { DeploymentStatus } from "@shared/enum/DeploymentStatus.enum";
 import { CanvasBoard } from "./CanvasBoard";
 import { ResourcePaletteDrawer } from "./ResourcePaletteDrawer";
 import { ZoomControls } from "./ZoomControls";
+import { HistoryControls } from "./HistoryControls";
 import { CanvasConfigPanelWrapper } from "./CanvasConfigPanelWrapper";
 import { CanvasModals } from "./CanvasModals";
 import { CanvasDragLayer } from "./CanvasDragLayer";
@@ -66,6 +67,7 @@ export function CanvasLiveMode({ deploymentId }: CanvasLiveModeProps) {
           <div className="flex-1 flex overflow-hidden relative">
             <CanvasBoard />
             <ZoomControls />
+            <HistoryControls />
             <ResourcePaletteDrawer />
           </div>
           <CanvasConfigPanelWrapper />
