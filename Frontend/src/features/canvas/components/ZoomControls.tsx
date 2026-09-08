@@ -6,16 +6,16 @@ import {
   fitCanvasView,
 } from "../hooks/useCanvasViewport";
 import { useAutoHideControls } from "../hooks/useAutoHideControls";
+import {
+  BARE_CONTROL_BUTTON,
+  CONTROL_PILL_SURFACE,
+} from "../utils/controlPillClass";
 
 const BUTTON_ZOOM_FACTOR = 1.2;
 
-// ~30% larger controls: height up slightly (28->32), width up more (28->36).
-const BUTTON_CLASS =
-  "h-8 w-9 rounded-md bg-[#0B0E14] border border-[#1F2633] text-[#AAB4C5] hover:text-[#EDF1F7] hover:border-[#35415A] active:scale-[0.95] transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center";
-
 /* Fit-view glyph: a square box framed by four corner brackets — the classic
    "frame the content" read, replacing the old rotate-ccw icon. */
-function FitViewIcon({ size = 16 }: { size?: number }) {
+function FitViewIcon({ size = 15 }: { size?: number }) {
   return (
     <svg
       width={size}
@@ -38,6 +38,8 @@ function FitViewIcon({ size = 16 }: { size?: number }) {
   );
 }
 
+/* Idle-hidden pill: wakes on hover or any zoom activity, re-hides after the
+   shared 4s idle timeout. The wrapper stays hoverable so hover can wake it. */
 export const ZoomControls = memo(function ZoomControls() {
   const scale = useCanvasStore((s) => s.scale);
   const { visible, wake, handleMouseEnter, handleMouseLeave } =
@@ -84,7 +86,7 @@ export const ZoomControls = memo(function ZoomControls() {
       className="absolute bottom-4 right-4 z-30 select-none"
     >
       <div
-        className={`flex items-center gap-1 bg-[#12161F] border border-[#273042] rounded-lg p-1.5 shadow-xl transition-opacity duration-150 ${
+        className={`${CONTROL_PILL_SURFACE} transition-opacity duration-150 ${
           visible ? "opacity-100" : "opacity-0 pointer-events-none"
         }`}
       >
@@ -93,11 +95,11 @@ export const ZoomControls = memo(function ZoomControls() {
           title="Zoom out"
           onClick={() => zoomBy(1 / BUTTON_ZOOM_FACTOR)}
           disabled={atMin}
-          className={`${BUTTON_CLASS} text-[15px] font-medium leading-none`}
+          className={BARE_CONTROL_BUTTON}
         >
           −
         </button>
-        <span className="w-14 text-center text-[15px] font-mono text-[#AAB4C5]">
+        <span className="w-14 text-center text-[13px] font-mono tabular-nums text-[#EDF1F7]">
           {Math.round(scale * 100)}%
         </span>
         <button
@@ -105,7 +107,7 @@ export const ZoomControls = memo(function ZoomControls() {
           title="Zoom in"
           onClick={() => zoomBy(BUTTON_ZOOM_FACTOR)}
           disabled={atMax}
-          className={`${BUTTON_CLASS} text-[15px] font-medium leading-none`}
+          className={BARE_CONTROL_BUTTON}
         >
           +
         </button>
@@ -113,9 +115,9 @@ export const ZoomControls = memo(function ZoomControls() {
           type="button"
           title="Fit view"
           onClick={() => fitCanvasView()}
-          className={BUTTON_CLASS}
+          className={BARE_CONTROL_BUTTON}
         >
-          <FitViewIcon size={16} />
+          <FitViewIcon size={15} />
         </button>
       </div>
     </div>
