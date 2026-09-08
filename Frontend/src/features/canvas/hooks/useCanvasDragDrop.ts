@@ -1,6 +1,7 @@
 import { PointerSensor, TouchSensor, MouseSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { toast } from "sonner";
 import { useCanvasStore } from "../store/canvasStore";
+import { positionIsOccupied } from "../utils/cardFootprint";
 import {
   NODE_CARD_WIDTH,
   NODE_CARD_HEIGHT,
@@ -8,11 +9,6 @@ import {
 import type { ResourceType } from "@shared/constants/RESOURCE_TYPES.constants";
 
 const GRID_SIZE = 24;
-// Horizontal guard: card width + breathing room for edge ports.
-const CARD_OVERLAP_X = NODE_CARD_WIDTH + 40;
-// Vertical guard: live cards render content-tall (~260px), well above the
-// nominal NODE_CARD_HEIGHT, so the vertical threshold accounts for that.
-const CARD_OVERLAP_Y = NODE_CARD_HEIGHT + 80;
 
 export function useCanvasDragDrop() {
   const sensors = useSensors(
@@ -43,20 +39,21 @@ export function useCanvasDragDrop() {
         if (canvasRect) {
           const { scale, translateX, translateY } = store;
           const pointerEvent = event.activatorEvent as PointerEvent;
+          // Final pointer position = activator position + total drag delta.
           const finalClientX = pointerEvent.clientX + delta.x;
           const finalClientY = pointerEvent.clientY + delta.y;
+          // Screen -> canvas space, then center the card on the cursor.
           x = (finalClientX - canvasRect.left - translateX) / scale - NODE_CARD_WIDTH / 2;
           y = (finalClientY - canvasRect.top - translateY) / scale - NODE_CARD_HEIGHT / 2;
           x = Math.round(x / GRID_SIZE) * GRID_SIZE;
           y = Math.round(y / GRID_SIZE) * GRID_SIZE;
         }
 
-        const isOverlapping = store.resources.some(
-          (resource) =>
-            Math.abs(resource.x - x) < CARD_OVERLAP_X &&
-            Math.abs(resource.y - y) < CARD_OVERLAP_Y
-        );
-        if (isOverlapping) { toast.warning("Space already occupied!"); return; }
+        // Only a REAL rectangle overlap (plus a small pack gap) rejects now.
+        if (positionIsOccupied(store.resources, x, y)) {
+          toast.warning("Space already occupied!");
+          return;
+        }
 
         const newResource = { id: `${active.id}-${Date.now()}`, type: active.id as ResourceType, x, y };
         store.setResources((prev) => [...prev, newResource]);

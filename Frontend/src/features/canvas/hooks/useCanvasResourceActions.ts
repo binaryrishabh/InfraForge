@@ -1,16 +1,8 @@
 import { useCallback } from "react";
 import { toast } from "sonner";
 import { useCanvasStore } from "../store/canvasStore";
-import {
-  NODE_CARD_WIDTH,
-  NODE_CARD_HEIGHT,
-} from "@/features/monitoring/components/MonitoringDashboardCard";
+import { positionIsOccupied } from "../utils/cardFootprint";
 import type { Resource } from "@shared/interface/Resource.interface";
-
-// Mirrors useCanvasDragDrop: width + port breathing room; height accounts
-// for content-tall live cards.
-const CARD_OVERLAP_X = NODE_CARD_WIDTH + 40;
-const CARD_OVERLAP_Y = NODE_CARD_HEIGHT + 80;
 
 export function useCanvasResourceActions() {
   const performUndo = useCallback(() => {
@@ -64,22 +56,21 @@ export function useCanvasResourceActions() {
     store.setCurrentLayoutSaved(false);
   }, []);
 
+  // Live drag feedback — called on every pointermove. Deliberately does NOT touch
+  // the undo stack or the saved flag; that only happens once in commitMove.
   const handleMoveCanvasResource = useCallback((resourceId: string, x: number, y: number) => {
     const store = useCanvasStore.getState();
     if (store.isDeploying) return;
     store.setResources(prev => prev.map(r => r.id === resourceId ? { ...r, x, y } : r));
   }, []);
 
+  // Called once on drag release. Records the move for undo/redo and marks dirty.
   const commitMoveCanvasResource = useCallback((resourceId: string, fromX: number, fromY: number, toX: number, toY: number) => {
     const store = useCanvasStore.getState();
     if (store.isDeploying) return;
     if (fromX === toX && fromY === toY) return;
-    const isOverlapping = store.resources.some(
-      (r) => r.id !== resourceId &&
-        Math.abs(r.x - toX) < CARD_OVERLAP_X &&
-        Math.abs(r.y - toY) < CARD_OVERLAP_Y,
-    );
-    if (isOverlapping) {
+    // Only a REAL rectangle overlap rejects; the moved card ignores itself.
+    if (positionIsOccupied(store.resources, toX, toY, resourceId)) {
       store.setResources(prev => prev.map(r => r.id === resourceId ? { ...r, x: fromX, y: fromY } : r));
       toast.warning("Space already occupied!");
       return;
@@ -97,6 +88,7 @@ export function useCanvasResourceActions() {
     store.setCurrentLayoutSaved(false);
   }, []);
 
+  // Delete a single connection line by id, with undo support.
   const handleDeleteConnectionLine = useCallback((connectionId: string) => {
     const store = useCanvasStore.getState();
     if (store.isDeploying) { toast.warning("A deployment is in progress. Can't modify"); return; }

@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { useCanvasStore } from "../store/canvasStore";
+import { positionIsOccupied } from "../utils/cardFootprint";
 
 export function useCanvasUndoRedo() {
   const handleUndoResource = () => {
@@ -10,19 +11,15 @@ export function useCanvasUndoRedo() {
       return;
     }
     if (store.undoStack.length === 0) return;
-
     const last = store.undoStack[store.undoStack.length - 1];
     if (!last) return;
-
     if (last.type === "add") {
       store.setResources(prev => prev.filter(r => r.id !== last.resource.id));
       store.setConnectionLines(prev => prev.filter(l => l.sourceId !== last.resource.id && l.targetId !== last.resource.id));
       store.setCurrentLayoutSaved(last.savedState);
     } else if (last.type === "delete") {
-      const occupied = store.resources.some(
-        r => Math.abs(r.x - last.resource.x) < 40 && Math.abs(r.y - last.resource.y) < 40
-      );
-      if (occupied) {
+      // Same true-overlap test as placement, so undo never stacks cards.
+      if (positionIsOccupied(store.resources, last.resource.x, last.resource.y)) {
         toast.warning("Can't undo - that spot is now occupied");
         store.setUndoStack(prev => prev.slice(0, -1));
         return;
@@ -37,7 +34,6 @@ export function useCanvasUndoRedo() {
       store.setConnectionLines(prev => [...prev, last.connectionLine]);
       store.setCurrentLayoutSaved(last.savedState);
     }
-
     store.setUndoStack(prev => prev.slice(0, -1));
     store.setRedoStack(prev => [...prev, last]);
     toast.success("Undo");
@@ -50,10 +46,8 @@ export function useCanvasUndoRedo() {
       return;
     }
     if (store.redoStack.length === 0) return;
-
     const last = store.redoStack[store.redoStack.length - 1];
     if (!last) return;
-
     if (last.type === "add") {
       store.setResources(prev => [...prev, last.resource]);
       store.setConnectionLines(prev => [...prev, ...last.connectionLines]);
@@ -65,7 +59,6 @@ export function useCanvasUndoRedo() {
     } else if (last.type === "delete-connection") {
       store.setConnectionLines(prev => prev.filter(l => l.id !== last.connectionLine.id));
     }
-
     store.setRedoStack(prev => prev.slice(0, -1));
     store.setCurrentLayoutSaved(false);
     store.setUndoStack(prev => [...prev, last]);
