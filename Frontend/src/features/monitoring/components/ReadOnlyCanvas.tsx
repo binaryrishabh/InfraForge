@@ -101,8 +101,9 @@ export function ReadOnlyCanvas({ resources, connectionLines }: ReadOnlyCanvasPro
           transition: glide ? "transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)" : "none",
         }}
       >
+        {/* z-0: tubes always paint below the card wrappers that follow in DOM order. */}
         <svg
-          className="absolute inset-0 pointer-events-none z-10"
+          className="absolute inset-0 pointer-events-none z-0"
           width="100%"
           height="100%"
           style={{ overflow: "visible" }}

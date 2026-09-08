@@ -44,7 +44,6 @@ export const CanvasBoard = memo(function CanvasBoard() {
       prevResourceCountRef.current === 0 && resourceCount > 0;
     prevLayoutIdRef.current = currentLayoutId;
     prevResourceCountRef.current = resourceCount;
-
     const shouldFit =
       resourceCount > 0 && (isInitialMount || layoutChanged || canvasBecameNotEmpty);
     if (!shouldFit) return;
@@ -60,7 +59,7 @@ export const CanvasBoard = memo(function CanvasBoard() {
         setNodeRef(el);
         viewport.containerRef.current = el;
       }}
-      className="flex-1 h-full relative overflow-hidden cursor-pointer"
+      className="flex-1 h-full relative overflow-hidden cursor-default"
       style={canvasGridStyle(scale, translateX, translateY)}
       onPointerDown={viewport.handlePanStart}
       onPointerMove={viewport.handlePanMove}

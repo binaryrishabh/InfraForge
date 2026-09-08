@@ -120,10 +120,13 @@ export const CanvasResourceItem = memo(function CanvasResourceItem({
   };
 
   return (
+    // z-10 makes this wrapper a stacking context: its ports (z-20) and delete
+    // button stay INSIDE it, so they can never paint above a sibling card.
+    // Sibling cards share z-10 and paint in DOM order, line svg sits at z-0.
     <div
       data-resource-id={resource.id}
       title={resource.type}
-      className="absolute group rounded-xl pointer-events-auto cursor-grab select-none"
+      className="absolute group rounded-xl pointer-events-auto cursor-grab select-none z-10"
       style={{
         left: resource.x,
         top: resource.y,

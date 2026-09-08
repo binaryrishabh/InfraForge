@@ -36,8 +36,10 @@ export const ConnectionLinesLayer = memo(function ConnectionLinesLayer({
     : null;
 
   return (
+    // z-0: tubes and the pending drag line always paint BELOW every card
+    // wrapper (z-10), matching react-flow-style edge-under-node stacking.
     <svg
-      className="absolute inset-0 pointer-events-none z-10"
+      className="absolute inset-0 pointer-events-none z-0"
       width="100%"
       height="100%"
       style={{ overflow: "visible" }}
