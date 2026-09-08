@@ -4,12 +4,12 @@ import {
 } from "@/features/monitoring/components/MonitoringDashboardCard";
 
 // Breathing room kept between cards so port rings and card shadows never
-// collide. With 24px grid snap this still packs cards nearly edge-to-edge.
+// collide. With 24px grid snap this still packs cards nearly edge-to-edge,
+// so nodes no longer "invisibly" reserve extra space.
 const CARD_PACK_GAP = 8;
 
 /* True rectangle overlap for two card top-left anchors, inflated only by
-   CARD_PACK_GAP. Replaces the old "card + 20" box that made nodes feel like
-   they invisibly occupied extra space. */
+   CARD_PACK_GAP. Replaces the old "card + 20" invisible box. */
 export function cardsOverlap(
   aX: number,
   aY: number,
@@ -23,7 +23,7 @@ export function cardsOverlap(
 }
 
 /* Whether a proposed top-left position collides with any existing card.
-   ignoreId lets move/undo checks exclude the card being moved. */
+   ignoreId lets move checks exclude the card being moved. */
 export function positionIsOccupied(
   resources: Array<{ id: string; x: number; y: number }>,
   x: number,
