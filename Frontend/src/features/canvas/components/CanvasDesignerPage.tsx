@@ -11,6 +11,7 @@ import { CanvasModals } from "./CanvasModals";
 import { CanvasDragLayer } from "./CanvasDragLayer";
 import { ZoomControls } from "./ZoomControls";
 import { CanvasLiveMode } from "./CanvasLiveMode";
+import { QuickNavCluster } from "@/components/shell/QuickNavCluster";
 import { useCanvasStore } from "../store/canvasStore";
 
 export function CanvasDesignerPage() {
@@ -34,6 +35,11 @@ export function CanvasDesignerPage() {
           <ResourcePaletteDrawer />
         </div>
         <CanvasTopbar />
+        {/* Shell quick-nav: separate navbar-height buttons at the top-right,
+            sharing the navbar's exact vertical band (top-3 + h-12). */}
+        <div className="absolute top-3 right-4 z-40">
+          <QuickNavCluster />
+        </div>
         <CanvasConfigPanelWrapper />
         <CanvasModals />
         <CanvasDragLayer />

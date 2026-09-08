@@ -4,6 +4,7 @@ import { useCanvasStore } from "../store/canvasStore";
 import { CostBurnTicker } from "@/features/monitoring/components/CostBurnTicker";
 import { SpeedControlPanel } from "@/features/monitoring/components/SpeedControlPanel";
 import { ConfirmModal } from "@/components/UI/ConfirmModal";
+import { QuickNavCluster } from "@/components/shell/QuickNavCluster";
 import { teardownDeployment } from "@/api/deployment.api";
 import { DeploymentStatus } from "@shared/enum/DeploymentStatus.enum";
 
@@ -53,9 +54,10 @@ export const LiveTopbar = memo(function LiveTopbar({ deploymentId, status }: Liv
               Tear down
             </button>
           )}
+          {/* Shell navigation rides the live navbar's right edge. */}
+          <QuickNavCluster variant="inline" />
         </div>
       </div>
-      
       {showTeardownConfirm && (
         <ConfirmModal
           open={true}
