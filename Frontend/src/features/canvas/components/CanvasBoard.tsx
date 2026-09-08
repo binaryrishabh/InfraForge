@@ -17,9 +17,6 @@ export const CanvasBoard = memo(function CanvasBoard() {
   const translateY = useCanvasStore((s) => s.translateY);
   const currentLayoutId = useCanvasStore((s) => s.currentLayoutId);
   const resourceCount = useCanvasStore((s) => s.resources.length);
-  const setSelectedResourceForConfigId = useCanvasStore(
-    (s) => s.setSelectedResourceForConfigId,
-  );
   const {
     handleDeleteCanvasResource,
     handleMoveCanvasResource,
@@ -95,7 +92,6 @@ export const CanvasBoard = memo(function CanvasBoard() {
             key={resource.id}
             resource={resource}
             scale={scale}
-            onResourceDoubleClick={setSelectedResourceForConfigId}
             onDeleteResource={handleDeleteCanvasResource}
             onMoveResource={handleMoveCanvasResource}
             onCommitMove={commitMoveCanvasResource}

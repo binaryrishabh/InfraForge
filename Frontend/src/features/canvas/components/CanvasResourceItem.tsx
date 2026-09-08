@@ -14,7 +14,6 @@ import type { Resource } from "@shared/interface/Resource.interface";
 interface CanvasResourceItemProps {
   resource: Resource;
   scale: number;
-  onResourceDoubleClick: (resourceId: string) => void;
   onDeleteResource: (resourceId: string) => void;
   onMoveResource: (resourceId: string, x: number, y: number) => void;
   onCommitMove: (resourceId: string, fromX: number, fromY: number, toX: number, toY: number) => void;
@@ -24,7 +23,6 @@ const GRID_SIZE = 24;
 
 export const CanvasResourceItem = memo(function CanvasResourceItem({
   resource,
-  onResourceDoubleClick,
   onDeleteResource,
   onMoveResource,
   onCommitMove,
@@ -119,10 +117,22 @@ export const CanvasResourceItem = memo(function CanvasResourceItem({
     }
   };
 
+  // Single click: select AND open the inspector. The wasDragRef guard keeps
+  // drags from triggering it; the shell ignores node pointerdowns for its
+  // outside-click dismissal, so clicking nodes switches instead of closing.
+  const handleClick = () => {
+    if (wasDragRef.current) {
+      wasDragRef.current = false;
+      return;
+    }
+    const store = useCanvasStore.getState();
+    store.setSelectedResourceId(resource.id);
+    store.setSelectedResourceForConfigId(resource.id);
+  };
+
   return (
     // z-10 makes this wrapper a stacking context: its ports (z-20) and delete
     // button stay INSIDE it, so they can never paint above a sibling card.
-    // Sibling cards share z-10 and paint in DOM order, line svg sits at z-0.
     <div
       data-resource-id={resource.id}
       title={resource.type}
@@ -136,14 +146,7 @@ export const CanvasResourceItem = memo(function CanvasResourceItem({
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
-      onClick={() => {
-        if (wasDragRef.current) {
-          wasDragRef.current = false;
-          return;
-        }
-        useCanvasStore.getState().setSelectedResourceId(resource.id);
-      }}
-      onDoubleClick={() => onResourceDoubleClick(resource.id)}
+      onClick={handleClick}
     >
       <MonitoringDashboardCard
         resource={resource}

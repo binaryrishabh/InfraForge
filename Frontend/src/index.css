@@ -36,6 +36,12 @@ body {
   to { stroke-dashoffset: -24; }
 }
 
+/* Dropdown menu entrance — 150ms per Section 9 transition budget. */
+@keyframes infraforge-drop-in {
+  from { opacity: 0; transform: translateY(-4px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
 .infraforge-smoke-wisp {
   position: absolute;
   width: 14px;
@@ -47,6 +53,11 @@ body {
 
 .infraforge-flow-packets {
   animation: infraforge-flow 0.9s linear infinite;
+}
+
+.infraforge-drop-in {
+  animation: infraforge-drop-in 150ms ease-out;
+  transform-origin: top left;
 }
 
 /* While any canvas drag is in flight, force the grabbing cursor on every

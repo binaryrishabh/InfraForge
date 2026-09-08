@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { RESOURCE_TYPES } from "@shared/constants/RESOURCE_TYPES.constants";
 import { ResourcePaletteItem } from "./ResourcePaletteItem";
@@ -13,10 +13,26 @@ const OPEN_TOGGLE_LEFT = EDGE_GAP + DRAWER_WIDTH + EDGE_GAP;
 export function ResourcePaletteDrawer() {
   const [open, setOpen] = useState(false);
 
+  // Click anywhere outside the drawer (and outside its toggle) closes it.
+  // Pointerdown on a palette row is INSIDE the drawer, so dragging a
+  // resource onto the canvas never closes the drawer mid-drag.
+  useEffect(() => {
+    if (!open) return;
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target as HTMLElement;
+      if (target.closest("[data-palette-drawer]")) return;
+      if (target.closest("[data-palette-toggle]")) return;
+      setOpen(false);
+    };
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => document.removeEventListener("pointerdown", handlePointerDown);
+  }, [open]);
+
   return (
     <div className="absolute inset-0 z-30 pointer-events-none">
       {/* Drawer panel — slides out of / into the left edge */}
       <div
+        data-palette-drawer
         className={`pointer-events-auto absolute top-16 bottom-4 left-3 rounded-xl bg-[#12161F]/95 backdrop-blur-md border border-[#273042] shadow-[0_12px_32px_rgba(0,0,0,0.45)] flex flex-col overflow-hidden transition-transform duration-200 ease-out ${
           open ? "translate-x-0" : "-translate-x-[calc(100%+12px)]"
         }`}
@@ -42,10 +58,10 @@ export function ResourcePaletteDrawer() {
           <ResourcePaletteItem label={RESOURCE_TYPES.MonitoringAgent} />
         </div>
       </div>
-
       {/* Toggle — stays top-left when closed, rides the drawer's right edge when open */}
       <button
         type="button"
+        data-palette-toggle
         onClick={() => setOpen(!open)}
         title={open ? "Close palette" : "Open palette"}
         className="pointer-events-auto absolute top-16 w-9 h-9 rounded-lg bg-[#12161F]/95 backdrop-blur-md border border-[#273042] text-[#AAB4C5] hover:text-[#EDF1F7] hover:border-[#35415A] shadow-[0_4px_12px_rgba(0,0,0,0.35)] flex items-center justify-center transition-[left] duration-200 ease-out"

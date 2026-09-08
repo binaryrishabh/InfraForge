@@ -97,6 +97,7 @@ export const MonitoringDashboardCard = memo(function MonitoringDashboardCard({
     declaredCapacity = CAPACITY[resource.type].rps;
     capacityUnit = "rps";
   }
+
   const showAutoscalingChip =
     resource.type === RESOURCE_TYPES.LoadBalancer &&
     resource.autoscaling?.enabled !== false;
@@ -111,6 +112,10 @@ export const MonitoringDashboardCard = memo(function MonitoringDashboardCard({
   const heroValue = mode === "design" ? declaredCapacity : (metric?.rps ?? 0);
   const heroUnit = mode === "design" ? capacityUnit : "rps";
 
+  // Node naming UI: the user-set name leads; the id stays as the tooltip.
+  const displayName = resource.name || resource.id;
+  const titleText = resource.name ? `${resource.name} · ${resource.id}` : resource.id;
+
   const cardBody = (
     <div
       className={`relative overflow-hidden border rounded-xl p-3 shadow-lg shadow-black/40 transition-colors duration-300 ${isRestarting ? "ring-2 ring-amber-400/60 animate-pulse" : ""}`}
@@ -122,7 +127,6 @@ export const MonitoringDashboardCard = memo(function MonitoringDashboardCard({
       }}
     >
       <div className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-white/10 to-transparent pointer-events-none" />
-
       {/* Header */}
       <div className="flex items-center justify-between mb-1">
         <div className="flex items-center gap-2 min-w-0">
@@ -132,8 +136,11 @@ export const MonitoringDashboardCard = memo(function MonitoringDashboardCard({
           >
             <ResourceIcon type={resource.type} size={14} className="" />
           </span>
-          <span className="text-[13px] font-mono font-semibold text-[#EDF1F7] truncate">
-            {resource.id}
+          <span
+            className="text-[13px] font-mono font-semibold text-[#EDF1F7] truncate"
+            title={titleText}
+          >
+            {displayName}
           </span>
         </div>
         <span
@@ -147,7 +154,6 @@ export const MonitoringDashboardCard = memo(function MonitoringDashboardCard({
           {health}
         </span>
       </div>
-
       {/* Hero metric */}
       <div className="flex items-baseline gap-1.5 mb-1.5">
         <span className="text-[18px] font-mono font-semibold text-[#EDF1F7] tabular-nums leading-none">
@@ -157,7 +163,6 @@ export const MonitoringDashboardCard = memo(function MonitoringDashboardCard({
           {heroUnit}
         </span>
       </div>
-
       {mode === "design" ? (
         <>
           <div className="space-y-1 text-[10px] font-mono mb-1.5">
