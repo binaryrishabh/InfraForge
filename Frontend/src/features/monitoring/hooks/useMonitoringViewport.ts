@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { NODE_CARD_WIDTH, NODE_CARD_HEIGHT } from "../components/MonitoringDashboardCard";
+import { computeFitViewport } from "@/features/canvas/utils/computeFitViewport";
 
 const MIN_SCALE = 0.3;
 const MAX_SCALE = 2.5;
@@ -93,36 +94,25 @@ export function useMonitoringViewport() {
     return () => el.removeEventListener("wheel", handleWheel);
   }, [handleWheel]);
 
+  // Same pure fit math as the designer, with monitoring's own padding/clamps,
+  // wrapped in the glide animation so reframes feel cinematic, not jumpy.
   const fitToNodes = useCallback((nodes: { x: number; y: number }[]) => {
     const el = containerRef.current;
-    if (!el || nodes.length === 0) return;
+    if (!el) return;
     const rect = el.getBoundingClientRect();
-    if (rect.width === 0 || rect.height === 0) return;
-
-    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-    for (const n of nodes) {
-      if (n.x < minX) minX = n.x;
-      if (n.y < minY) minY = n.y;
-      if (n.x + NODE_SIZE > maxX) maxX = n.x + NODE_SIZE;
-      if (n.y + NODE_HEIGHT > maxY) maxY = n.y + NODE_HEIGHT;
-    }
-
-    const boxW = maxX - minX;
-    const boxH = maxY - minY;
-    if (boxW <= 0 || boxH <= 0) return;
-
-    const scale = Math.min(
-      FIT_MAX_SCALE,
-      Math.max(FIT_MIN_SCALE, Math.min((rect.width - FIT_PADDING * 2) / boxW, (rect.height - FIT_PADDING * 2) / boxH))
+    const fit = computeFitViewport(
+      nodes,
+      rect.width,
+      rect.height,
+      NODE_SIZE,
+      NODE_HEIGHT,
+      { padding: FIT_PADDING, minScale: FIT_MIN_SCALE, maxScale: FIT_MAX_SCALE },
     );
-
-    const translateX = (rect.width - boxW * scale) / 2 - minX * scale;
-    const translateY = (rect.height - boxH * scale) / 2 - minY * scale;
-
+    if (!fit) return;
     if (glideTimerRef.current) clearTimeout(glideTimerRef.current);
     setGlide(true);
     glideTimerRef.current = setTimeout(() => setGlide(false), GLIDE_MS + 100);
-    setViewport({ scale, translateX, translateY });
+    setViewport(fit);
   }, []);
 
   const handlePanStart = useCallback((e: ReactPointerEvent<HTMLDivElement>) => {
@@ -230,7 +220,7 @@ export function useMonitoringViewport() {
 
   const zoomIn = useCallback(() => zoomBy(1.2), [zoomBy]);
   const zoomOut = useCallback(() => zoomBy(1 / 1.2), [zoomBy]);
-  
+
   const resetView = useCallback(() => {
     disableGlide();
     setViewport({ scale: 1, translateX: 0, translateY: 0 });

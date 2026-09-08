@@ -1,50 +1,40 @@
 import { useCallback, useEffect, useRef, type PointerEvent as ReactPointerEvent } from "react";
 import { useCanvasStore } from "../store/canvasStore";
+import { computeFitViewport } from "../utils/computeFitViewport";
+import {
+  NODE_CARD_WIDTH,
+  NODE_CARD_HEIGHT,
+} from "@/features/monitoring/components/MonitoringDashboardCard";
 
 export const MIN_SCALE = 0.2;
 export const MAX_SCALE = 2.0;
 const FIT_MIN_SCALE = 0.2;
 const FIT_MAX_SCALE = 1.5;
 const FIT_PADDING = 64;
-const NODE_SIZE = 48;
 // Wheel zoom speed — doubled from 0.001 after the "zoom is slow" report.
 const WHEEL_ZOOM_INTENSITY = 0.002;
 
-/* Standalone fit-view. Reads the DOM + store directly so both the hook and the
-   topbar can call it without prop-drilling. Frames every resource with padding. */
+/* Standalone fit-view. Reads the DOM + store directly so both the hook and
+   the zoom controls can call it without prop-drilling. Frames every card
+   using the REAL card dimensions (this was the auto-fit bug: it used to
+   frame 48px boxes while cards are 264x200). */
 export function fitCanvasView() {
   const store = useCanvasStore.getState();
   const resources = store.resources;
   if (resources.length === 0) return;
-
   const container = document.getElementById("canvas");
   if (!container) return;
   const rect = container.getBoundingClientRect();
-  if (rect.width === 0 || rect.height === 0) return;
-
-  let minX = Infinity;
-  let minY = Infinity;
-  let maxX = -Infinity;
-  let maxY = -Infinity;
-  for (const r of resources) {
-    if (r.x < minX) minX = r.x;
-    if (r.y < minY) minY = r.y;
-    if (r.x + NODE_SIZE > maxX) maxX = r.x + NODE_SIZE;
-    if (r.y + NODE_SIZE > maxY) maxY = r.y + NODE_SIZE;
-  }
-
-  const boxWidth = maxX - minX;
-  const boxHeight = maxY - minY;
-  if (boxWidth <= 0 || boxHeight <= 0) return;
-
-  const scaleX = (rect.width - FIT_PADDING * 2) / boxWidth;
-  const scaleY = (rect.height - FIT_PADDING * 2) / boxHeight;
-  const scale = Math.min(FIT_MAX_SCALE, Math.max(FIT_MIN_SCALE, Math.min(scaleX, scaleY)));
-
-  // Center the fitted box inside the container.
-  const tx = (rect.width - boxWidth * scale) / 2 - minX * scale;
-  const ty = (rect.height - boxHeight * scale) / 2 - minY * scale;
-  store.setViewport(scale, tx, ty);
+  const fit = computeFitViewport(
+    resources,
+    rect.width,
+    rect.height,
+    NODE_CARD_WIDTH,
+    NODE_CARD_HEIGHT,
+    { padding: FIT_PADDING, minScale: FIT_MIN_SCALE, maxScale: FIT_MAX_SCALE },
+  );
+  if (!fit) return;
+  store.setViewport(fit.scale, fit.translateX, fit.translateY);
 }
 
 interface PanState {

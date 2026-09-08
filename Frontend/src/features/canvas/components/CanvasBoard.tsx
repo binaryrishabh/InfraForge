@@ -14,6 +14,8 @@ export const CanvasBoard = memo(function CanvasBoard() {
   const scale = useCanvasStore((s) => s.scale);
   const translateX = useCanvasStore((s) => s.translateX);
   const translateY = useCanvasStore((s) => s.translateY);
+  const currentLayoutId = useCanvasStore((s) => s.currentLayoutId);
+  const resourceCount = useCanvasStore((s) => s.resources.length);
   const setSelectedResourceForConfigId = useCanvasStore(
     (s) => s.setSelectedResourceForConfigId,
   );
@@ -27,16 +29,29 @@ export const CanvasBoard = memo(function CanvasBoard() {
   useCanvasConnectionDrag();
   const { setNodeRef } = useDroppable({ id: "canvas" });
 
-  const hasAutoFittedRef = useRef(false);
+  // Auto-fit triggers: first mount with nodes, switching saved layouts, and
+  // the canvas going from empty to non-empty (sample load / restore).
+  // Single-node adds/deletes deliberately do NOT reframe — that would yank
+  // the view mid-design; the fit button stays the manual reframe.
+  const prevLayoutIdRef = useRef<string | null | undefined>(undefined);
+  const prevResourceCountRef = useRef(0);
 
   useEffect(() => {
-    if (!hasAutoFittedRef.current && resources.length > 0) {
-      hasAutoFittedRef.current = true;
-      requestAnimationFrame(() => {
-        fitCanvasView();
-      });
-    }
-  }, [resources]);
+    const isInitialMount = prevLayoutIdRef.current === undefined;
+    const layoutChanged =
+      !isInitialMount && prevLayoutIdRef.current !== currentLayoutId;
+    const canvasBecameNotEmpty =
+      prevResourceCountRef.current === 0 && resourceCount > 0;
+    prevLayoutIdRef.current = currentLayoutId;
+    prevResourceCountRef.current = resourceCount;
+
+    const shouldFit =
+      resourceCount > 0 && (isInitialMount || layoutChanged || canvasBecameNotEmpty);
+    if (!shouldFit) return;
+    // rAF so the container is laid out and measurable before fitting.
+    const frame = requestAnimationFrame(() => fitCanvasView());
+    return () => cancelAnimationFrame(frame);
+  }, [currentLayoutId, resourceCount]);
 
   return (
     <div
