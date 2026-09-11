@@ -22,7 +22,7 @@ export default function HeroSection() {
         </div>
 
         <h1 className='w-[95%] text-4xl md:text-7xl mb-5 tracking-tight text-left leading-[1.05]'>
-          <span className='font-semibold tracking-tight bg-gradient-to-r from-[#5B8CFF] to-[#7AA2FF] bg-clip-text text-transparent'>
+          <span className='font-semibold tracking-tight bg-linear-to-r from-[#5B8CFF] to-[#7AA2FF] bg-clip-text text-transparent'>
             Build systems that
           </span>
           <br />
