@@ -11,6 +11,8 @@ import { CanvasModals } from "./CanvasModals";
 import { CanvasDragLayer } from "./CanvasDragLayer";
 import { ZoomControls } from "./ZoomControls";
 import { HistoryControls } from "./HistoryControls";
+import { CanvasStatusPill } from "./CanvasStatusPill";
+import { GestureHintPill } from "./GestureHintPill";
 import { CanvasLiveMode } from "./CanvasLiveMode";
 import { ShellMenu } from "@/components/shell/ShellMenu";
 import { useCanvasStore } from "../store/canvasStore";
@@ -40,6 +42,8 @@ export function CanvasDesignerPage() {
           <CanvasEmptyState />
           <ZoomControls />
           <HistoryControls />
+          <CanvasStatusPill />
+          <GestureHintPill />
           <ResourcePaletteDrawer />
         </div>
         <CanvasTopbar />

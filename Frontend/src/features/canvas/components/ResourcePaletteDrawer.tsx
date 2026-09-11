@@ -1,7 +1,11 @@
 import { useEffect, useState } from "react";
 import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
-import { RESOURCE_TYPES } from "@shared/constants/RESOURCE_TYPES.constants";
+import {
+  RESOURCE_TYPES,
+  type ResourceType,
+} from "@shared/constants/RESOURCE_TYPES.constants";
 import { ResourcePaletteItem } from "./ResourcePaletteItem";
+import { PRODUCT_SUBLABELS, capacityLabel } from "../utils/paletteMetadata";
 
 // Drawer geometry: floating rounded panel inset from the edges; the toggle
 // rides exactly one gap to the right of the drawer's right edge so the two
@@ -10,8 +14,38 @@ const DRAWER_WIDTH = 256;
 const EDGE_GAP = 12;
 const OPEN_TOGGLE_LEFT = EDGE_GAP + DRAWER_WIDTH + EDGE_GAP;
 
+interface PaletteGroup {
+  title: string;
+  types: ResourceType[];
+}
+
+/* Category groups mirror the hue categories (Section 9) so the palette
+teaches the same identity grammar the canvas uses. */
+const PALETTE_GROUPS: PaletteGroup[] = [
+  { title: "Entry & Edge", types: [RESOURCE_TYPES.DNS, RESOURCE_TYPES.CDN] },
+  {
+    title: "Traffic & Security",
+    types: [RESOURCE_TYPES.Firewall, RESOURCE_TYPES.LoadBalancer],
+  },
+  {
+    title: "Compute",
+    types: [RESOURCE_TYPES.VirtualMachine, RESOURCE_TYPES.ContainerRegistry],
+  },
+  {
+    title: "Data",
+    types: [
+      RESOURCE_TYPES.Cache,
+      RESOURCE_TYPES.Database,
+      RESOURCE_TYPES.ObjectStorage,
+    ],
+  },
+  { title: "Async & Messaging", types: [RESOURCE_TYPES.MessageQueue] },
+  { title: "Observability", types: [RESOURCE_TYPES.MonitoringAgent] },
+];
+
 export function ResourcePaletteDrawer() {
   const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
 
   // Click anywhere outside the drawer (and outside its toggle) closes it.
   // Pointerdown on a palette row is INSIDE the drawer, so dragging a
@@ -27,6 +61,17 @@ export function ResourcePaletteDrawer() {
     document.addEventListener("pointerdown", handlePointerDown);
     return () => document.removeEventListener("pointerdown", handlePointerDown);
   }, [open]);
+
+  const normalizedQuery = query.trim().toLowerCase();
+  const visibleGroups = PALETTE_GROUPS.map((group) => ({
+    ...group,
+    types:
+      normalizedQuery === ""
+        ? group.types
+        : group.types.filter((type) =>
+            type.toLowerCase().includes(normalizedQuery),
+          ),
+  })).filter((group) => group.types.length > 0);
 
   return (
     <div className="absolute inset-0 z-30 pointer-events-none">
@@ -44,18 +89,40 @@ export function ResourcePaletteDrawer() {
           </span>
           <span className="text-[10px] text-[#677185]">drag to canvas</span>
         </div>
-        <div className="flex-1 overflow-y-auto px-3 pb-3 flex flex-col gap-1">
-          <ResourcePaletteItem label={RESOURCE_TYPES.DNS} />
-          <ResourcePaletteItem label={RESOURCE_TYPES.CDN} />
-          <ResourcePaletteItem label={RESOURCE_TYPES.Firewall} />
-          <ResourcePaletteItem label={RESOURCE_TYPES.LoadBalancer} />
-          <ResourcePaletteItem label={RESOURCE_TYPES.VirtualMachine} />
-          <ResourcePaletteItem label={RESOURCE_TYPES.ContainerRegistry} />
-          <ResourcePaletteItem label={RESOURCE_TYPES.Cache} />
-          <ResourcePaletteItem label={RESOURCE_TYPES.Database} />
-          <ResourcePaletteItem label={RESOURCE_TYPES.ObjectStorage} />
-          <ResourcePaletteItem label={RESOURCE_TYPES.MessageQueue} />
-          <ResourcePaletteItem label={RESOURCE_TYPES.MonitoringAgent} />
+        {/* Search — filters groups case-insensitively by type label */}
+        <div className="px-3 pb-2 shrink-0">
+          <input
+            type="text"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="search resources…"
+            className="w-full h-8 rounded-lg bg-[#0B0E14] border border-[#273042] text-[12px] text-[#EDF1F7] placeholder-[#677185] px-2.5 outline-none focus:border-[#5B8CFF] transition-colors duration-150"
+          />
+        </div>
+        <div className="flex-1 overflow-y-auto px-3 pb-3 flex flex-col">
+          {visibleGroups.length === 0 ? (
+            <p className="text-[10px] text-[#677185] px-2 pt-2">
+              no resources match “{query.trim()}”
+            </p>
+          ) : (
+            visibleGroups.map((group) => (
+              <div key={group.title}>
+                <p className="text-[9px] uppercase tracking-wider text-[#677185] px-2 pt-2 pb-1">
+                  {group.title}
+                </p>
+                <div className="flex flex-col gap-1">
+                  {group.types.map((type) => (
+                    <ResourcePaletteItem
+                      key={type}
+                      label={type}
+                      sublabel={PRODUCT_SUBLABELS[type]}
+                      capacity={capacityLabel(type)}
+                    />
+                  ))}
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </div>
       {/* Toggle — stays top-left when closed, rides the drawer's right edge when open */}

@@ -10,6 +10,8 @@ import { CanvasBoard } from "./CanvasBoard";
 import { ResourcePaletteDrawer } from "./ResourcePaletteDrawer";
 import { ZoomControls } from "./ZoomControls";
 import { HistoryControls } from "./HistoryControls";
+import { CanvasStatusPill } from "./CanvasStatusPill";
+import { GestureHintPill } from "./GestureHintPill";
 import { CanvasConfigPanelWrapper } from "./CanvasConfigPanelWrapper";
 import { CanvasModals } from "./CanvasModals";
 import { CanvasDragLayer } from "./CanvasDragLayer";
@@ -70,6 +72,8 @@ export function CanvasLiveMode({ deploymentId }: CanvasLiveModeProps) {
             <CanvasBoard />
             <ZoomControls />
             <HistoryControls />
+            <CanvasStatusPill />
+            <GestureHintPill />
             <ResourcePaletteDrawer />
           </div>
           <CanvasConfigPanelWrapper />
