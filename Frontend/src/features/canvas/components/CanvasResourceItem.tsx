@@ -1,4 +1,5 @@
 import { memo, useEffect, useRef, type PointerEvent as ReactPointerEvent } from "react";
+import { X } from "lucide-react";
 import { CanvasResourcePorts } from "./CanvasResourcePorts";
 import { useCanvasStore } from "../store/canvasStore";
 import { startConnectionFromPort } from "../hooks/useCanvasConnectionDrag";
@@ -159,15 +160,20 @@ export const CanvasResourceItem = memo(function CanvasResourceItem({
         occupiedSides={occupiedSides}
         onStartConnection={startConnectionFromPort}
       />
+      {/* Delete chip: hidden + shrunk at rest, pops in on card hover, fills
+          solid danger on its own hover, presses down on click. */}
       <button
-        className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-red-500 hover:bg-red-400 text-white text-[11px] flex items-center justify-center leading-none opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer shadow-md"
+        type="button"
+        title="Delete node"
+        aria-label={`Delete ${resource.id}`}
+        className="absolute -top-2 -right-2 w-6 h-6 rounded-full flex items-center justify-center opacity-0 scale-75 group-hover:opacity-100 group-hover:scale-100 active:scale-90 transition-all duration-150 cursor-pointer bg-[#12161F]/95 backdrop-blur-md border border-[rgba(240,86,74,0.35)] text-[#F0564A] hover:bg-[#F0564A] hover:border-[#F0564A] hover:text-[#081018] shadow-[0_4px_12px_rgba(0,0,0,0.45)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F0564A]/50"
         onPointerDown={(e) => e.stopPropagation()}
         onClick={(e) => {
           e.stopPropagation();
           onDeleteResource(resource.id);
         }}
       >
-        X
+        <X size={12} strokeWidth={2.25} />
       </button>
     </div>
   );

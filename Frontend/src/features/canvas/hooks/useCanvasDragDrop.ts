@@ -1,4 +1,13 @@
-import { PointerSensor, TouchSensor, MouseSensor, useSensor, useSensors } from "@dnd-kit/core";
+import {
+  PointerSensor,
+  useSensor,
+  useSensors,
+  pointerWithin,
+  rectIntersection,
+  MeasuringStrategy,
+  type CollisionDetection,
+  type MeasuringConfiguration,
+} from "@dnd-kit/core";
 import { toast } from "sonner";
 import { useCanvasStore } from "../store/canvasStore";
 import { positionIsOccupied } from "../utils/cardFootprint";
@@ -10,18 +19,62 @@ import type { ResourceType } from "@shared/constants/RESOURCE_TYPES.constants";
 
 const GRID_SIZE = 24;
 
+/* Pointer-first collision: the drop target is whichever droppable actually
+contains the pointer; fall back to rect overlap when the pointer sits over
+floating chrome. With one full-screen canvas droppable this keeps `over`
+deterministic instead of occasionally resolving to null (which read as
+"drop does nothing"). */
+const canvasCollisionDetection: CollisionDetection = (args) => {
+  const within = pointerWithin(args);
+  return within.length > 0 ? within : rectIntersection(args);
+};
+
+/* Re-measure droppables continuously during a drag so the canvas rect is
+never stale (pan/zoom or layout shifts mid-drag used to invalidate it). */
+export const CANVAS_MEASURING: Partial<MeasuringConfiguration> = {
+  droppable: { strategy: MeasuringStrategy.Always },
+};
+
 export function useCanvasDragDrop() {
+  // PointerSensor alone covers mouse + touch + pen. Registering MouseSensor
+  // and TouchSensor alongside it caused double activation: the drag started,
+  // then one of the duplicate sensors cancelled it silently, so drops never
+  // landed. One sensor, one activation path.
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
-    useSensor(TouchSensor),
-    useSensor(MouseSensor),
   );
 
   return {
     sensors,
+    collisionDetection: canvasCollisionDetection,
+    measuring: CANVAS_MEASURING,
     onDragStart: (event: any) => {
       const label = event.active.id as ResourceType;
-      useCanvasStore.getState().setActiveDrag({ label });
+      // Where inside the palette row the pointer pressed. The DragOverlay
+      // origin trails the cursor by exactly this offset for the whole drag,
+      // so CanvasDragLayer re-adds it to keep the ghost centered on the
+      // cursor from the very first frame. Measured synchronously from the
+      // pressed row element (data-palette-row), falling back to dnd-kit's
+      // measured active rect if the anchor is ever missing.
+      const activator = event.activatorEvent as PointerEvent | undefined;
+      const rowElement = (
+        activator?.target as HTMLElement | undefined
+      )?.closest?.("[data-palette-row]");
+      const rowRect =
+        rowElement?.getBoundingClientRect() ??
+        event.active?.rect?.current?.initial ??
+        null;
+      const grabOffsetX =
+        rowRect && typeof activator?.clientX === "number"
+          ? activator.clientX - rowRect.left
+          : 0;
+      const grabOffsetY =
+        rowRect && typeof activator?.clientY === "number"
+          ? activator.clientY - rowRect.top
+          : 0;
+      useCanvasStore
+        .getState()
+        .setActiveDrag({ label, grabOffsetX, grabOffsetY });
     },
     onDragEnd: (event: any) => {
       const store = useCanvasStore.getState();

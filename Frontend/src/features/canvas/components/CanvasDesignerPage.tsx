@@ -26,7 +26,13 @@ export function CanvasDesignerPage() {
   }
 
   return (
-    <DndContext sensors={dragDrop.sensors} onDragStart={dragDrop.onDragStart} onDragEnd={dragDrop.onDragEnd}>
+    <DndContext
+      sensors={dragDrop.sensors}
+      collisionDetection={dragDrop.collisionDetection}
+      measuring={dragDrop.measuring}
+      onDragStart={dragDrop.onDragStart}
+      onDragEnd={dragDrop.onDragEnd}
+    >
       {/* Full-bleed canvas surface; chrome floats above it. */}
       <div className="relative h-screen bg-[#0f1117] text-white overflow-hidden">
         <div className="absolute inset-0 flex overflow-hidden">

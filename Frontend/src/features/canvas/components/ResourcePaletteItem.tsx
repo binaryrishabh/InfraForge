@@ -25,6 +25,9 @@ export function ResourcePaletteItem({ label }: { label: ResourceType }) {
       ref={setNodeRef}
       {...listeners}
       {...attributes}
+      // Drag anchor: onDragStart measures this row's rect synchronously so
+      // the ghost can center on the cursor from the first frame.
+      data-palette-row={label}
       className="flex items-center gap-2.5 h-10 px-2 rounded-lg border border-transparent hover:border-[#273042] hover:bg-[#171C27] cursor-grab active:cursor-grabbing transition-colors duration-150 group select-none"
       style={transform ? { opacity: 0.4 } : undefined}
       title={label}

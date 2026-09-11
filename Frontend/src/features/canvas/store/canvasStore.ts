@@ -22,6 +22,15 @@ export interface PendingConnection {
   cursorY: number;
 }
 
+/* Where inside the palette row the pointer grabbed. The DragOverlay origin
+trails the cursor by exactly this offset, so the ghost re-adds it to stay
+centered on the cursor. */
+export interface ActiveDragState {
+  label: ResourceType;
+  grabOffsetX: number;
+  grabOffsetY: number;
+}
+
 interface CanvasStoreState {
   resources: Resource[];
   connectionLines: ConnectionLine[];
@@ -36,7 +45,7 @@ interface CanvasStoreState {
   isDeploying: boolean;
   liveMode: boolean;
   emptyCanvasStateDismissed: boolean;
-  activeDrag: { label: ResourceType } | null;
+  activeDrag: ActiveDragState | null;
   scale: number;
   translateX: number;
   translateY: number;
@@ -62,7 +71,7 @@ interface CanvasStoreState {
   setIsDeploying: (deploying: boolean) => void;
   setLiveMode: (live: boolean) => void;
   setEmptyCanvasStateDismissed: (dismissed: boolean) => void;
-  setActiveDrag: (drag: { label: ResourceType } | null) => void;
+  setActiveDrag: (drag: ActiveDragState | null) => void;
   setViewport: (scale: number, tx: number, ty: number) => void;
   setShowLayoutDropdown: (show: boolean) => void;
   setSavedLayouts: (layouts: Infrastructure[]) => void;

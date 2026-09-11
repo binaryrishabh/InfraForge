@@ -61,6 +61,8 @@ export function CanvasLiveMode({ deploymentId }: CanvasLiveModeProps) {
       {isLive ? (
         <DndContext
           sensors={dragDrop.sensors}
+          collisionDetection={dragDrop.collisionDetection}
+          measuring={dragDrop.measuring}
           onDragStart={dragDrop.onDragStart}
           onDragEnd={dragDrop.onDragEnd}
         >
