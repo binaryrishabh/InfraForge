@@ -8,6 +8,7 @@ import { canvasGridStyle } from "../utils/canvasGridStyle";
 import { CanvasResourceItem } from "./CanvasResourceItem";
 import { ConnectionLinesLayer } from "./ConnectionLinesLayer";
 import { PendingConnectionLayer } from "./PendingConnectionLayer";
+import { SpawnedReplicaLayer } from "./SpawnedReplicaLayer";
 
 export const CanvasBoard = memo(function CanvasBoard() {
   const resources = useCanvasStore((s) => s.resources);
@@ -87,6 +88,9 @@ export const CanvasBoard = memo(function CanvasBoard() {
           onDeleteConnection={handleDeleteConnectionLine}
           scale={scale}
         />
+        {/* Engine-owned autoscaled replicas: link tubes, live cards, ghosts.
+            Sits under the designer cards so user nodes stay on top. */}
+        <SpawnedReplicaLayer />
         {resources.map((resource) => (
           <CanvasResourceItem
             key={resource.id}

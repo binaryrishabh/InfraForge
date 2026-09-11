@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, type PointerEvent as ReactPointerEvent } from "react";
 import { useCanvasStore } from "../store/canvasStore";
+import { useSimulationStore } from "@/features/monitoring/store/simulationStore";
 import { computeFitViewport } from "../utils/computeFitViewport";
 import { setGlobalDragCursor } from "../utils/dragCursor";
 import {
@@ -16,18 +17,25 @@ const FIT_PADDING = 64;
 const WHEEL_ZOOM_INTENSITY = 0.002;
 
 /* Standalone fit-view. Reads the DOM + store directly so both the hook and
-   the zoom controls can call it without prop-drilling. Frames every card
-   using the REAL card dimensions (this was the auto-fit bug: it used to
-   frame 48px boxes while cards are 264x200). */
+the zoom controls can call it without prop-drilling. Frames every card
+using the REAL card dimensions (this was the auto-fit bug: it used to
+frame 48px boxes while cards are 264x200). While LIVE, autoscaled replicas
+are part of the visible topology, so manual fit-view frames them too;
+spawning itself never reframes (no auto-fit trigger touches replicas). */
 export function fitCanvasView() {
   const store = useCanvasStore.getState();
-  const resources = store.resources;
-  if (resources.length === 0) return;
+  const nodes: Array<{ x: number; y: number }> = [...store.resources];
+  if (store.liveMode) {
+    for (const vm of useSimulationStore.getState().spawnedVms) {
+      nodes.push({ x: vm.x, y: vm.y });
+    }
+  }
+  if (nodes.length === 0) return;
   const container = document.getElementById("canvas");
   if (!container) return;
   const rect = container.getBoundingClientRect();
   const fit = computeFitViewport(
-    resources,
+    nodes,
     rect.width,
     rect.height,
     NODE_CARD_WIDTH,
