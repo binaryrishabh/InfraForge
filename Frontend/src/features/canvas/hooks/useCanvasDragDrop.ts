@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import {
   PointerSensor,
   useSensor,
@@ -36,6 +37,27 @@ export const CANVAS_MEASURING: Partial<MeasuringConfiguration> = {
 };
 
 export function useCanvasDragDrop() {
+  // The TRUE last cursor position, tracked independently of dnd-kit. The
+  // drop math used to derive the cursor from activatorEvent + delta, which
+  // can diverge from where the pointer actually ended (activation offset,
+  // sensor quirks) — that divergence is what misplaced dropped cards.
+  const lastPointerRef = useRef<{ clientX: number; clientY: number } | null>(
+    null,
+  );
+
+  useEffect(() => {
+    const handlePointerMove = (event: PointerEvent) => {
+      lastPointerRef.current = {
+        clientX: event.clientX,
+        clientY: event.clientY,
+      };
+    };
+    window.addEventListener("pointermove", handlePointerMove, {
+      passive: true,
+    });
+    return () => window.removeEventListener("pointermove", handlePointerMove);
+  }, []);
+
   // PointerSensor alone covers mouse + touch + pen. Registering MouseSensor
   // and TouchSensor alongside it caused double activation: the drag started,
   // then one of the duplicate sensors cancelled it silently, so drops never
@@ -50,13 +72,21 @@ export function useCanvasDragDrop() {
     measuring: CANVAS_MEASURING,
     onDragStart: (event: any) => {
       const label = event.active.id as ResourceType;
+      // Seed the tracked pointer with the press position so a drop without
+      // any further movement still lands under the cursor.
+      const activator = event.activatorEvent as PointerEvent | undefined;
+      if (activator && typeof activator.clientX === "number") {
+        lastPointerRef.current = {
+          clientX: activator.clientX,
+          clientY: activator.clientY,
+        };
+      }
       // Where inside the palette row the pointer pressed. The DragOverlay
       // origin trails the cursor by exactly this offset for the whole drag,
       // so CanvasDragLayer re-adds it to keep the ghost centered on the
       // cursor from the very first frame. Measured synchronously from the
       // pressed row element (data-palette-row), falling back to dnd-kit's
       // measured active rect if the anchor is ever missing.
-      const activator = event.activatorEvent as PointerEvent | undefined;
       const rowElement = (
         activator?.target as HTMLElement | undefined
       )?.closest?.("[data-palette-row]");
@@ -91,13 +121,22 @@ export function useCanvasDragDrop() {
 
         if (canvasRect) {
           const { scale, translateX, translateY } = store;
+          // Prefer the tracked real cursor; fall back to dnd-kit's
+          // activator + delta if the tracker never fired.
           const pointerEvent = event.activatorEvent as PointerEvent;
-          // Final pointer position = activator position + total drag delta.
-          const finalClientX = pointerEvent.clientX + delta.x;
-          const finalClientY = pointerEvent.clientY + delta.y;
-          // Screen -> canvas space, then center the card on the cursor.
-          x = (finalClientX - canvasRect.left - translateX) / scale - NODE_CARD_WIDTH / 2;
-          y = (finalClientY - canvasRect.top - translateY) / scale - NODE_CARD_HEIGHT / 2;
+          const tracked = lastPointerRef.current;
+          const finalClientX =
+            tracked?.clientX ?? pointerEvent.clientX + delta.x;
+          const finalClientY =
+            tracked?.clientY ?? pointerEvent.clientY + delta.y;
+          // Screen -> canvas space, then center the card on the cursor so
+          // the landed card matches the centered ghost exactly.
+          x =
+            (finalClientX - canvasRect.left - translateX) / scale -
+            NODE_CARD_WIDTH / 2;
+          y =
+            (finalClientY - canvasRect.top - translateY) / scale -
+            NODE_CARD_HEIGHT / 2;
           x = Math.round(x / GRID_SIZE) * GRID_SIZE;
           y = Math.round(y / GRID_SIZE) * GRID_SIZE;
         }
@@ -108,13 +147,26 @@ export function useCanvasDragDrop() {
           return;
         }
 
-        const newResource = { id: `${active.id}-${Date.now()}`, type: active.id as ResourceType, x, y };
+        const newResource = {
+          id: `${active.id}-${Date.now()}`,
+          type: active.id as ResourceType,
+          x,
+          y,
+        };
         store.setResources((prev) => [...prev, newResource]);
-        store.setUndoStack(prev => [...prev, {
-          type: "add", resource: newResource, connectionLines: [], savedState: store.currentLayoutSaved,
-        }]);
+        store.setUndoStack((prev) => [
+          ...prev,
+          {
+            type: "add",
+            resource: newResource,
+            connectionLines: [],
+            savedState: store.currentLayoutSaved,
+          },
+        ]);
         store.setRedoStack([]);
       }
+      // Reset so a stale pointer never leaks into the next drag.
+      lastPointerRef.current = null;
     },
   };
 }

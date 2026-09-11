@@ -17,8 +17,8 @@ interface ResourceConfigPanelProps {
 }
 
 /* Inspector drawer: slides from the right on single click, closes on outside
-   click, no close button. Interior is deliberately roomy — 20px gutters,
-   12-13px type, one concern per section. */
+click, no close button. Interior is deliberately roomy — 20px gutters,
+12-13px type, one concern per section, thin custom scrollbar. */
 export function ResourceConfigPanel({
   resource,
   open,
@@ -65,7 +65,7 @@ export function ResourceConfigPanel({
     <div
       ref={drawerRef}
       data-config-drawer
-      className={`absolute top-16 bottom-4 right-3 w-80 z-30 rounded-xl border bg-[#12161F]/95 backdrop-blur-md shadow-[0_12px_32px_rgba(0,0,0,0.45)] flex flex-col overflow-hidden transition-transform duration-200 ease-out ${
+      className={`absolute top-16 bottom-4 right-3 w-80 z-30 rounded-xl border bg-[#12161F]/95 backdrop-blur-md shadow-[0_12px_32px_rgba(0,0,0,0.45)] flex flex-col overflow-hidden transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] ${
         open ? "translate-x-0 pointer-events-auto" : "translate-x-[calc(100%+12px)] pointer-events-none"
       }`}
       style={{ borderColor: hueBorder(hue) }}
@@ -97,7 +97,6 @@ export function ResourceConfigPanel({
           onRename={handleRename}
         />
       </div>
-
       {/* Facts strip */}
       <div className="shrink-0 px-5 py-3 flex items-center justify-between border-b border-[#1F2633]">
         <span className="text-[11px] uppercase tracking-wider text-[#677185] font-semibold">
@@ -107,9 +106,8 @@ export function ResourceConfigPanel({
           :{RESOURCE_PORTS[displayedResource.type] || 80}
         </span>
       </div>
-
-      {/* Body — one concern per section, generous rhythm */}
-      <div className="flex-1 overflow-y-auto px-5 py-5 space-y-6">
+      {/* Body — one concern per section, generous rhythm, thin scrollbar */}
+      <div className="infraforge-scroll flex-1 overflow-y-auto px-5 py-5 space-y-6">
         {isLb && (
           <AutoscalingPolicySection
             resource={displayedResource}

@@ -60,6 +60,28 @@ body {
   transform-origin: top left;
 }
 
+/* Thin custom scrollbar for the floating drawers (left palette, right
+   inspector). The track stays invisible so the drawer surface reads clean;
+   the thumb is a quiet strong-border tone that brightens on hover.
+   Firefox gets the same look via scrollbar-width/color. */
+.infraforge-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #273042 transparent;
+}
+.infraforge-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+.infraforge-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.infraforge-scroll::-webkit-scrollbar-thumb {
+  background: #273042;
+  border-radius: 999px;
+}
+.infraforge-scroll::-webkit-scrollbar-thumb:hover {
+  background: #35415A;
+}
+
 /* While any canvas drag is in flight, force the grabbing cursor on every
    element so fast pointer movement never reveals a stale child cursor. */
 body.infraforge-dragging,
