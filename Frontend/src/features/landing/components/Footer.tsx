@@ -11,21 +11,20 @@ const Footer = () => {
   return (
     <footer className='w-[90%] mx-auto py-10'>
       <div className='container mx-auto'>
-        <div className='rounded-xl border border-white/10 bg-[#0A0A0A]/80 px-6 py-7 md:px-8'>
+        <div className='rounded-xl border border-[#273042] bg-[#12161F]/80 px-6 py-7 md:px-8'>
           <div className='flex flex-col gap-7 md:flex-row md:items-center md:justify-between'>
             {/* Brand */}
             <div>
               <a
                 href='#home'
-                className='flex w-fit items-center gap-2 transition hover:text-indigo-200'
+                className='flex w-fit items-center gap-2 transition hover:text-[#7AA2FF]'
               >
-                <Command className='h-4 w-4 text-indigo-400' />
-                <span className='clash-display text-base text-zinc-100'>
+                <Command className='h-4 w-4 text-[#5B8CFF]' />
+                <span className='text-base font-semibold tracking-tight text-[#EDF1F7]'>
                   InfraForge
                 </span>
               </a>
-
-              <p className='mt-2 max-w-sm text-xs leading-relaxed text-zinc-400'>
+              <p className='mt-2 max-w-sm text-xs leading-relaxed text-[#AAB4C5]'>
                 Design, simulate, and stress-test cloud architectures safely.
               </p>
             </div>
@@ -41,7 +40,7 @@ const Footer = () => {
                   href={link.href}
                   target={link.label === 'GitHub' ? '_blank' : undefined}
                   rel={link.label === 'GitHub' ? 'noreferrer' : undefined}
-                  className='text-xs text-zinc-400 transition-colors hover:text-indigo-300'
+                  className='text-xs text-[#AAB4C5] transition-colors hover:text-[#7AA2FF]'
                 >
                   {link.label}
                 </a>
@@ -49,8 +48,8 @@ const Footer = () => {
             </nav>
           </div>
 
-          <div className='mt-7 border-t border-white/10 pt-5'>
-            <p className='text-center text-xs text-zinc-500'>
+          <div className='mt-7 border-t border-[#1F2633] pt-5'>
+            <p className='text-center text-xs text-[#677185]'>
               © {new Date().getFullYear()} InfraForge. Built for better systems.
             </p>
           </div>
