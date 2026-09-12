@@ -13,6 +13,7 @@ export function useCanvasUndoRedo() {
     if (store.undoStack.length === 0) return;
     const last = store.undoStack[store.undoStack.length - 1];
     if (!last) return;
+
     if (last.type === "add") {
       store.setResources(prev => prev.filter(r => r.id !== last.resource.id));
       store.setConnectionLines(prev => prev.filter(l => l.sourceId !== last.resource.id && l.targetId !== last.resource.id));
@@ -33,7 +34,11 @@ export function useCanvasUndoRedo() {
     } else if (last.type === "delete-connection") {
       store.setConnectionLines(prev => [...prev, last.connectionLine]);
       store.setCurrentLayoutSaved(last.savedState);
+    } else if (last.type === "config") {
+      store.setResources(prev => prev.map(r => r.id === last.resourceId ? { ...r, ...last.before } : r));
+      store.setCurrentLayoutSaved(last.savedState);
     }
+
     store.setUndoStack(prev => prev.slice(0, -1));
     store.setRedoStack(prev => [...prev, last]);
     toast.success("Undo");
@@ -48,6 +53,7 @@ export function useCanvasUndoRedo() {
     if (store.redoStack.length === 0) return;
     const last = store.redoStack[store.redoStack.length - 1];
     if (!last) return;
+
     if (last.type === "add") {
       store.setResources(prev => [...prev, last.resource]);
       store.setConnectionLines(prev => [...prev, ...last.connectionLines]);
@@ -58,7 +64,10 @@ export function useCanvasUndoRedo() {
       store.setResources(prev => prev.map(r => r.id === last.resourceId ? { ...r, x: last.toX, y: last.toY } : r));
     } else if (last.type === "delete-connection") {
       store.setConnectionLines(prev => prev.filter(l => l.id !== last.connectionLine.id));
+    } else if (last.type === "config") {
+      store.setResources(prev => prev.map(r => r.id === last.resourceId ? { ...r, ...last.after } : r));
     }
+
     store.setRedoStack(prev => prev.slice(0, -1));
     store.setCurrentLayoutSaved(false);
     store.setUndoStack(prev => [...prev, last]);

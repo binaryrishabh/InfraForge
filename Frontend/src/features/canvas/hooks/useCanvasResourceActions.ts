@@ -8,8 +8,10 @@ export function useCanvasResourceActions() {
   const performUndo = useCallback(() => {
     const store = useCanvasStore.getState();
     if (store.isDeploying || store.undoStack.length === 0) return;
+
     const last = store.undoStack[store.undoStack.length - 1];
     if (!last) return;
+
     if (last.type === "add") {
       store.setResources(prev => prev.filter(r => r.id !== last.resource.id));
       store.setConnectionLines(prev => prev.filter(l => l.sourceId !== last.resource.id && l.targetId !== last.resource.id));
@@ -24,7 +26,11 @@ export function useCanvasResourceActions() {
     } else if (last.type === "delete-connection") {
       store.setConnectionLines(prev => [...prev, last.connectionLine]);
       store.setCurrentLayoutSaved(last.savedState);
+    } else if (last.type === "config") {
+      store.setResources(prev => prev.map(r => r.id === last.resourceId ? { ...r, ...last.before } : r));
+      store.setCurrentLayoutSaved(last.savedState);
     }
+
     store.setUndoStack(prev => prev.slice(0, -1));
     store.setRedoStack(prev => [...prev, last]);
     toast.success("Undo");
@@ -33,16 +39,19 @@ export function useCanvasResourceActions() {
   const handleDeleteCanvasResource = useCallback((resourceId: string) => {
     const store = useCanvasStore.getState();
     if (store.isDeploying) { toast.warning("A deployment is in progress. Can't select"); return; }
+
     const resource = store.resources.find((r) => r.id === resourceId);
     const touchingConnections = store.connectionLines.filter(
       (line) => line.sourceId === resourceId || line.targetId === resourceId,
     );
+
     if (resource) {
       store.setUndoStack((prev) => [
         ...prev, { type: "delete", resource, connectionLines: touchingConnections, savedState: store.currentLayoutSaved },
       ]);
       store.setRedoStack([]);
     }
+
     store.setResources((prev) => prev.filter((r) => r.id !== resourceId));
     store.setConnectionLines((prev) => prev.filter((line) => line.sourceId !== resourceId && line.targetId !== resourceId));
     store.setCurrentLayoutSaved(false);
@@ -52,6 +61,44 @@ export function useCanvasResourceActions() {
   const handleUpdateCanvasResource = useCallback((resourceId: string, patch: Partial<Resource>) => {
     const store = useCanvasStore.getState();
     if (store.isDeploying) { toast.warning("A deployment is in progress. Can't modify"); return; }
+
+    const resource = store.resources.find((r) => r.id === resourceId);
+    if (resource) {
+      const before: Partial<Resource> = {};
+      const after: Partial<Resource> = {};
+      
+      // Capture only the fields the patch touches
+      if ("name" in patch) { before.name = resource.name; after.name = patch.name; }
+      if ("skuId" in patch) { before.skuId = resource.skuId; after.skuId = patch.skuId; }
+      if ("autoscaling" in patch) { before.autoscaling = resource.autoscaling; after.autoscaling = patch.autoscaling; }
+
+      const last = store.undoStack[store.undoStack.length - 1];
+      const afterKeys = Object.keys(after).sort().join(",");
+
+      // Coalesce rapid typing into a single undo step if the keys match
+      if (
+        last &&
+        last.type === "config" &&
+        last.resourceId === resourceId &&
+        Object.keys(last.after).sort().join(",") === afterKeys
+      ) {
+        store.setUndoStack((prev) => {
+          const next = [...prev];
+          const lastEntry = next[next.length - 1];
+          if (lastEntry && lastEntry.type === "config") {
+            next[next.length - 1] = { ...lastEntry, after };
+          }
+          return next;
+        });
+      } else {
+        store.setUndoStack((prev) => [
+          ...prev,
+          { type: "config", resourceId, before, after, savedState: store.currentLayoutSaved },
+        ]);
+        store.setRedoStack([]);
+      }
+    }
+
     store.setResources((prev) => prev.map((r) => (r.id === resourceId ? { ...r, ...patch } : r)));
     store.setCurrentLayoutSaved(false);
   }, []);
@@ -69,12 +116,14 @@ export function useCanvasResourceActions() {
     const store = useCanvasStore.getState();
     if (store.isDeploying) return;
     if (fromX === toX && fromY === toY) return;
+
     // Only a REAL rectangle overlap rejects; the moved card ignores itself.
     if (positionIsOccupied(store.resources, toX, toY, resourceId)) {
       store.setResources(prev => prev.map(r => r.id === resourceId ? { ...r, x: fromX, y: fromY } : r));
       toast.warning("Space already occupied!");
       return;
     }
+
     store.setUndoStack(prev => [...prev, {
       type: "move",
       resourceId,
@@ -92,8 +141,10 @@ export function useCanvasResourceActions() {
   const handleDeleteConnectionLine = useCallback((connectionId: string) => {
     const store = useCanvasStore.getState();
     if (store.isDeploying) { toast.warning("A deployment is in progress. Can't modify"); return; }
+
     const line = store.connectionLines.find((l) => l.id === connectionId);
     if (!line) return;
+
     store.setUndoStack((prev) => [
       ...prev, { type: "delete-connection", connectionLine: line, savedState: store.currentLayoutSaved },
     ]);

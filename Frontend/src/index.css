@@ -24,11 +24,6 @@ body {
   100% { opacity: 0; transform: translateY(-34px) translateX(-3px) scale(1.7); }
 }
 
-@keyframes infraforge-orbit {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
 /* Packets flowing through a live connection tube. The -24 offset equals one
    dash+gap period (7+17) so the loop is seamless. */
 @keyframes infraforge-flow {
@@ -58,6 +53,13 @@ body {
 .infraforge-drop-in {
   animation: infraforge-drop-in 150ms ease-out;
   transform-origin: top left;
+}
+
+/* Soft edge fade for scrollable chrome lists so rows dissolve at the panel
+   edges instead of clipping hard against the border. */
+.infraforge-scroll-fade {
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, black 14px, black calc(100% - 14px), transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0, black 14px, black calc(100% - 14px), transparent 100%);
 }
 
 /* Thin custom scrollbar for the floating drawers (left palette, right

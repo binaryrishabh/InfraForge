@@ -9,7 +9,11 @@ import {
 // persist via store.subscribe() so this hook never re-renders its host.
 export function useCanvasPersistence() {
   // One-time restore from localStorage on mount, migrating legacy coordinates.
+  // Guard: if the store is already initialized (e.g. the dashboard just loaded
+  // a live reattach layout), do NOT overwrite it with a stale local draft.
   useEffect(() => {
+    if (useCanvasStore.getState().isInitialized) return;
+
     const infra = localStorage.getItem("Infraforge_Infrastucture_Draft");
     if (infra) {
       const parsed = JSON.parse(infra);
@@ -31,8 +35,10 @@ export function useCanvasPersistence() {
   // drag (which fires ~60 store updates/sec) does not thrash localStorage.
   useEffect(() => {
     let saveTimeout: ReturnType<typeof setTimeout> | null = null;
+
     const unsubscribe = useCanvasStore.subscribe((state) => {
       if (!state.isInitialized) return;
+
       if (saveTimeout) clearTimeout(saveTimeout);
       saveTimeout = setTimeout(() => {
         localStorage.setItem(
@@ -48,6 +54,7 @@ export function useCanvasPersistence() {
         );
       }, 300);
     });
+
     return () => {
       unsubscribe();
       if (saveTimeout) clearTimeout(saveTimeout);
