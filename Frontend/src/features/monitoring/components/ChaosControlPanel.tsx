@@ -72,10 +72,10 @@ export function ChaosControlPanel({ deploymentId, status, resources }: ChaosCont
         <button
           onClick={handleInject}
           disabled={!isLive || loading || !selectedResourceId}
-          className="w-full h-8 rounded-lg bg-[#5B8CFF] border border-[rgba(240,86,74,0.40)] text-[11px] font-medium text-[#081018] hover:bg-[#7AA2FF] active:scale-[0.98] transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
+          className="w-full h-8 rounded-lg bg-[rgba(240,86,74,0.08)] border border-[rgba(240,86,74,0.35)] text-[11px] font-medium text-[#F0564A] hover:bg-[rgba(240,86,74,0.16)] active:scale-[0.98] transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
         >
           {loading && (
-            <span className="w-3 h-3 border-2 border-[#081018]/30 border-t-[#081018] rounded-full animate-spin" />
+            <span className="w-3 h-3 border-2 border-[#F0564A]/30 border-t-[#F0564A] rounded-full animate-spin" />
           )}
           Inject
         </button>

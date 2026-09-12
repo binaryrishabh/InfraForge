@@ -60,7 +60,7 @@ function App() {
           </Route>
 
           {/* Designer is fullscreen and chrome-free: its shell navigation
-              lives in the floating top-right QuickNavCluster, not the rail. */}
+              lives in the top-right ShellMenu, not the rail. */}
           <Route path="/design" element={<CanvasDesignerPage />} />
         </Route>
 

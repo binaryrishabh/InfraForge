@@ -19,7 +19,7 @@ const WHEEL_ZOOM_INTENSITY = 0.002;
 /* Standalone fit-view. Reads the DOM + store directly so both the hook and
 the zoom controls can call it without prop-drilling. Frames every card
 using the REAL card dimensions (this was the auto-fit bug: it used to
-frame 48px boxes while cards are 264x200). While LIVE, autoscaled replicas
+frame 48px boxes while cards are 208x160). While LIVE, autoscaled replicas
 are part of the visible topology, so manual fit-view frames them too;
 spawning itself never reframes (no auto-fit trigger touches replicas). */
 export function fitCanvasView() {

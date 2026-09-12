@@ -50,8 +50,8 @@ export function CostBreakdownPanel({ deployment }: CostBreakdownPanelProps) {
             </div>
           ))}
           {monthlyEstimate !== undefined && (
-            <div className="flex justify-between text-xs py-1.5 mt-1 border-t border-gray-800">
-              <span className="text-gray-400">Estimated monthly</span>
+            <div className="flex justify-between text-xs py-1.5 mt-1 border-t border-[#1F2633]">
+              <span className="text-[#AAB4C5]">Estimated monthly</span>
               <span className="text-green-400 font-semibold">
                 ${monthlyEstimate.toFixed(2)}
               </span>

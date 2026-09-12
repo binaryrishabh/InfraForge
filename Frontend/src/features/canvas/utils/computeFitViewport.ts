@@ -1,7 +1,7 @@
-/* Pure fit-view math shared by the designer and monitoring viewports.
-   Frames every node box (top-left anchor + card dimensions) inside the
-   container with padding, clamped to a scale range, then centered.
-   Returns null when there is nothing to frame or no space to frame it in. */
+/* Pure fit-view math for the designer canvas.
+Frames every node box (top-left anchor + card dimensions) inside the
+container with padding, clamped to a scale range, then centered.
+Returns null when there is nothing to frame or no space to frame it in. */
 
 export interface FitNodeBox {
   x: number;
@@ -35,6 +35,7 @@ export function computeFitViewport(
   let minY = Infinity;
   let maxX = -Infinity;
   let maxY = -Infinity;
+
   for (const node of nodes) {
     if (node.x < minX) minX = node.x;
     if (node.y < minY) minY = node.y;
@@ -44,16 +45,19 @@ export function computeFitViewport(
 
   const boxWidth = maxX - minX;
   const boxHeight = maxY - minY;
+
   if (boxWidth <= 0 || boxHeight <= 0) return null;
 
   const availableWidth = containerWidth - options.padding * 2;
   const availableHeight = containerHeight - options.padding * 2;
+
   if (availableWidth <= 0 || availableHeight <= 0) return null;
 
   const naturalScale = Math.min(
     availableWidth / boxWidth,
     availableHeight / boxHeight,
   );
+
   const scale = Math.min(
     options.maxScale,
     Math.max(options.minScale, naturalScale),
