@@ -65,6 +65,34 @@ deploymentRouter.post("/", async (req, res) => {
   });
 });
 
+// List LIVE deployments — powers the Dashboard "Live Environments" reattach
+// card (R12). Registered ABOVE /:deploymentId on purpose: Express matches
+// routes in order, and if the parameter route came first, the literal
+// segment "live" would be captured as :deploymentId and fail the UUID
+// schema with a 400.
+deploymentRouter.get("/live", async (req, res) => {
+  const liveDeployments = await prisma.deployment.findMany({
+    where: { status: DeploymentStatus.LIVE },
+    include: { infrastructure: { select: { name: true } } },
+    orderBy: { updatedAt: "desc" },
+  });
+  // Explicit shape — never leak the full Prisma row to the client.
+  const deployments = liveDeployments.map((d) => ({
+    id: d.id,
+    infrastructureId: d.infrastructureId,
+    infrastructureName: d.infrastructure.name,
+    resourceCount: d.resourceCount,
+    status: d.status,
+    createdAt: d.createdAt,
+    updatedAt: d.updatedAt,
+  }));
+  res.status(200).json({
+    success: true,
+    message: "Fetched live deployments",
+    deployments,
+  });
+});
+
 // Get details of existing deployment
 deploymentRouter.get("/:deploymentId", async (req, res) => {
   const DeploymentId = DeploymentIdSchema.safeParse(req.params);
