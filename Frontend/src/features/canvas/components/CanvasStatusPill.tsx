@@ -1,6 +1,5 @@
 import { memo } from "react";
 import { useCanvasStore } from "../store/canvasStore";
-import { useSimulationStore } from "@/features/monitoring/store/simulationStore";
 import {
   CATEGORY_OF_RESOURCE_TYPE,
   type ResourceCategory,
@@ -17,16 +16,11 @@ const CATEGORY_ORDER: Array<{ category: ResourceCategory; label: string }> = [
   { category: "observability", label: "OBS" },
 ];
 
-/* Persistent, quiet composition readout. Subscriptions are primitive-only:
-a counts key (changes only when the category mix changes), link count,
-liveMode, and simulatedSeconds ONLY while live (selector returns 0 otherwise
-so 1Hz snapshots never re-render this pill in design mode). */
+/* Design-only composition readout. The live surface carries its own readout
+in the operator dock header, so this pill drops the live clock entirely and
+keeps only the static canvas mix. Subscriptions stay primitive-only. */
 export const CanvasStatusPill = memo(function CanvasStatusPill() {
   const linkCount = useCanvasStore((s) => s.connectionLines.length);
-  const liveMode = useCanvasStore((s) => s.liveMode);
-  const simulatedSeconds = useSimulationStore((s) =>
-    liveMode ? s.simulatedSeconds : 0,
-  );
   const compositionKey = useCanvasStore((s) => {
     const counts: Partial<Record<ResourceCategory, number>> = {};
     for (const resource of s.resources) {
@@ -56,15 +50,6 @@ export const CanvasStatusPill = memo(function CanvasStatusPill() {
               </span>
             </span>
           ) : null,
-        )}
-        {liveMode && (
-          <span>
-            {" · "}t+
-            <span className="text-[#AAB4C5] tabular-nums">
-              {simulatedSeconds}
-            </span>
-            s
-          </span>
         )}
       </span>
     </div>
