@@ -62,7 +62,6 @@ export const MonitoringDashboardCard = memo(function MonitoringDashboardCard({
   );
   const cpuHistory = useSimulationStore((s) => s.cpuHistory[resource.id]);
   const activeChaos = useSimulationStore((s) => s.activeChaos);
-
   const chaosEffect = activeChaos.find((c) => c.resourceId === resource.id);
 
   const health = metric?.health ?? ResourceHealth.HEALTHY;
@@ -75,8 +74,8 @@ export const MonitoringDashboardCard = memo(function MonitoringDashboardCard({
     health === ResourceHealth.SATURATED
       ? "infraforge-shake 0.2s ease-in-out infinite"
       : health === ResourceHealth.DEGRADED
-      ? "infraforge-shake-slow 0.6s ease-in-out infinite"
-      : undefined;
+        ? "infraforge-shake-slow 0.6s ease-in-out infinite"
+        : undefined;
 
   const isFailed = health === ResourceHealth.FAILED;
   const hue = hueForType(resource.type);
@@ -118,7 +117,7 @@ export const MonitoringDashboardCard = memo(function MonitoringDashboardCard({
 
   const cardBody = (
     <div
-      className={`relative overflow-hidden border rounded-xl p-3 shadow-lg shadow-black/40 transition-colors duration-300 ${isRestarting ? "ring-2 ring-amber-400/60 animate-pulse" : ""}`}
+      className={`relative overflow-hidden border rounded-xl p-3 shadow-lg shadow-black/40 transition-colors duration-300 flex flex-col ${isRestarting ? "ring-2 ring-amber-400/60 animate-pulse" : ""}`}
       style={{
         borderColor: hueBorder(hue),
         background: `linear-gradient(180deg, ${hueTint(hue)} 0%, rgba(21,27,41,0) 45%), #151B29`,
@@ -127,34 +126,54 @@ export const MonitoringDashboardCard = memo(function MonitoringDashboardCard({
       }}
     >
       <div className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-white/10 to-transparent pointer-events-none" />
-      {/* Header */}
-      <div className="flex items-center justify-between mb-1">
-        <div className="flex items-center gap-2 min-w-0">
+
+      {/* Header — design leads with the name and parks the identity tile
+          top-right; live keeps the small tile + glowing health chip. */}
+      {mode === "design" ? (
+        <div className="flex items-start justify-between gap-2 mb-1.5">
           <span
-            className="w-7 h-7 rounded-md flex items-center justify-center shrink-0"
-            style={{ background: hueTile(hue), color: hue }}
-          >
-            <ResourceIcon type={resource.type} size={14} className="" />
-          </span>
-          <span
-            className="text-[13px] font-mono font-semibold text-[#EDF1F7] truncate"
+            className="min-w-0 text-[13px] font-mono font-semibold text-[#EDF1F7] truncate"
             title={titleText}
           >
             {displayName}
           </span>
-        </div>
-        <span
-          className={`flex items-center gap-1 text-[9px] font-mono uppercase font-semibold px-1.5 py-0.5 rounded-full border ${chipStyle.text} ${chipStyle.border}`}
-          style={{ background: `${healthColor}14` }}
-        >
           <span
-            className={`w-1.5 h-1.5 rounded-full ${chipStyle.dotBg}`}
-            style={{ boxShadow: `0 0 6px ${healthColor}, 0 0 12px ${healthColor}80` }}
-          />
-          {health}
-        </span>
-      </div>
-      {/* Hero metric */}
+            className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0"
+            style={{ background: hueTile(hue), color: hue }}
+          >
+            <ResourceIcon type={resource.type} size={20} className="" />
+          </span>
+        </div>
+      ) : (
+        <div className="flex items-center justify-between mb-1">
+          <div className="flex items-center gap-2 min-w-0">
+            <span
+              className="w-7 h-7 rounded-md flex items-center justify-center shrink-0"
+              style={{ background: hueTile(hue), color: hue }}
+            >
+              <ResourceIcon type={resource.type} size={14} className="" />
+            </span>
+            <span
+              className="text-[13px] font-mono font-semibold text-[#EDF1F7] truncate"
+              title={titleText}
+            >
+              {displayName}
+            </span>
+          </div>
+          <span
+            className={`flex items-center gap-1 text-[9px] font-mono uppercase font-semibold px-1.5 py-0.5 rounded-full border ${chipStyle.text} ${chipStyle.border}`}
+            style={{ background: `${healthColor}14` }}
+          >
+            <span
+              className={`w-1.5 h-1.5 rounded-full ${chipStyle.dotBg}`}
+              style={{ boxShadow: `0 0 6px ${healthColor}, 0 0 12px ${healthColor}80` }}
+            />
+            {health}
+          </span>
+        </div>
+      )}
+
+      {/* Hero metric — shared, unchanged */}
       <div className="flex items-baseline gap-1.5 mb-1.5">
         <span className="text-[18px] font-mono font-semibold text-[#EDF1F7] tabular-nums leading-none">
           {heroValue.toLocaleString()}
@@ -163,31 +182,23 @@ export const MonitoringDashboardCard = memo(function MonitoringDashboardCard({
           {heroUnit}
         </span>
       </div>
+
       {mode === "design" ? (
-        <>
-          <div className="space-y-1 text-[10px] font-mono mb-1.5">
-            <div className="flex justify-between">
-              <span className="text-[#677185]">INSTANCE</span>
-              <span className="text-[#AAB4C5] truncate max-w-28">
-                {resource.skuId ?? "generic"}
-              </span>
-            </div>
-            {showAutoscalingChip && (
-              <div className="flex justify-between">
-                <span className="text-[#677185]">POOL</span>
-                <span className="text-[#AAB4C5]">
-                  {autoscalingRange ?? "auto"} · {targetCpuDisplay}%
-                </span>
-              </div>
-            )}
-          </div>
-          <MonitoringCardSparkline
-            values={cpuHistory ?? []}
-            width={NODE_CARD_WIDTH - 24}
-            height={28}
-            color={hue}
-          />
-        </>
+        /* Design footer pinned to the bottom of the fixed footprint: pool
+           token only when the resource anchors an autoscaling pool, instance
+           token always on the right. No sparkline, no health chip here. */
+        <div className="flex items-end justify-between gap-2 mt-auto pt-2">
+          {showAutoscalingChip ? (
+            <span className="text-[10px] font-mono text-[#677185]">
+              pool {autoscalingRange ?? "auto"} · {targetCpuDisplay}%
+            </span>
+          ) : (
+            <span />
+          )}
+          <span className="text-[10px] font-mono text-[#AAB4C5]">
+            {resource.skuId ?? "generic"}
+          </span>
+        </div>
       ) : (
         <>
           <div className="mb-1">
