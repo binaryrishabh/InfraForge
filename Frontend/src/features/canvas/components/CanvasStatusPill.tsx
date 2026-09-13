@@ -17,9 +17,10 @@ const CATEGORY_ORDER: Array<{ category: ResourceCategory; label: string }> = [
 ];
 
 /* Design-only composition readout. The live surface carries its own readout
-in the operator dock header, so this pill drops the live clock entirely and
-keeps only the static canvas mix. Subscriptions stay primitive-only. */
+in the operator dock header, so this pill bows out entirely while liveMode
+is on. Subscriptions stay primitive-only. */
 export const CanvasStatusPill = memo(function CanvasStatusPill() {
+  const liveMode = useCanvasStore((s) => s.liveMode);
   const linkCount = useCanvasStore((s) => s.connectionLines.length);
   const compositionKey = useCanvasStore((s) => {
     const counts: Partial<Record<ResourceCategory, number>> = {};
@@ -29,6 +30,8 @@ export const CanvasStatusPill = memo(function CanvasStatusPill() {
     }
     return CATEGORY_ORDER.map((entry) => counts[entry.category] ?? 0).join(":");
   });
+
+  if (liveMode) return null;
 
   const counts = compositionKey.split(":").map(Number);
   const nodeCount = counts.reduce((total, value) => total + value, 0);

@@ -2,12 +2,13 @@ import { useEffect } from "react";
 import { useDeploymentSocket } from "@/features/deployment/hooks/useDeploymentSocket";
 import { useCanvasStore } from "../store/canvasStore";
 import { useLiveTopologySync } from "../hooks/useLiveTopologySync";
-import { canvasGridStyle } from "../utils/canvasGridStyle";
 import { DeploymentStatus } from "@shared/enum/DeploymentStatus.enum";
 import { CanvasSurface } from "./CanvasSurface";
 import { LiveTopbar } from "./LiveTopbar";
 import { LiveOperatorDock } from "./LiveOperatorDock";
+import { LiveWaitingState } from "./LiveWaitingState";
 import { DeploymentPipeline } from "@/features/deployment/components/DeploymentPipeline";
+import { ShellMenu } from "@/components/shell/ShellMenu";
 
 interface CanvasLiveModeProps {
   deploymentId: string;
@@ -20,7 +21,6 @@ export function CanvasLiveMode({ deploymentId }: CanvasLiveModeProps) {
   const setActiveDeploymentId = useCanvasStore((s) => s.setActiveDeploymentId);
   const setIsDeploying = useCanvasStore((s) => s.setIsDeploying);
   const setLiveMode = useCanvasStore((s) => s.setLiveMode);
-
   const isLive = status === DeploymentStatus.LIVE;
   const isConnectionError = status === "Web Socket connection error";
 
@@ -47,39 +47,30 @@ export function CanvasLiveMode({ deploymentId }: CanvasLiveModeProps) {
     status === DeploymentStatus.FAILED;
 
   return (
-    <div className="flex flex-col h-screen bg-[#0f1117] text-white">
-      {/* Live-only chrome: docked cockpit topbar above the shared surface. */}
-      <LiveTopbar deploymentId={deploymentId} status={status} />
-      {isLive ? (
-        <CanvasSurface className="flex-1" />
-      ) : (
-        <div className="flex-1 flex overflow-hidden relative">
-          <div
-            className="flex-1 flex items-center justify-center"
-            style={canvasGridStyle(1, 0, 0)}
-          >
-            {isConnectionError ? (
-              <span className="text-sm font-mono text-[#F5A524]">
-                connection lost — reconnecting…
-              </span>
-            ) : status === DeploymentStatus.FAILED ? (
-              <span className="text-sm font-mono text-[#F0564A]">
-                deployment failed — read the timeline below
-              </span>
-            ) : (
-              <span className="text-sm font-mono text-[#677185]">provisioning…</span>
-            )}
-          </div>
+    <>
+      {/* Exact design-page composition: ONE full-bleed surface, with the
+          mode-specific chrome floated above it as children. The surface
+          owns the grid now — no local canvasGridStyle needed. */}
+      <CanvasSurface className="h-screen bg-[#0f1117] text-white">
+        <LiveTopbar deploymentId={deploymentId} status={status} />
+        <div className="absolute top-3 right-4 z-40">
+          <ShellMenu />
         </div>
-      )}
-      {isLive && (
-        <LiveOperatorDock
-          deploymentId={deploymentId}
-          status={status}
-          resources={resources}
-          deployment={deployment}
-        />
-      )}
+        {!isLive && (
+          <LiveWaitingState
+            status={status}
+            isConnectionError={isConnectionError}
+          />
+        )}
+        {isLive && (
+          <LiveOperatorDock
+            deploymentId={deploymentId}
+            status={status}
+            resources={resources}
+            deployment={deployment}
+          />
+        )}
+      </CanvasSurface>
       {showPipeline && (
         <DeploymentPipeline
           deploymentId={deploymentId}
@@ -95,6 +86,6 @@ export function CanvasLiveMode({ deploymentId }: CanvasLiveModeProps) {
           onDeploymentFailed={() => setIsDeploying(false)}
         />
       )}
-    </div>
+    </>
   );
 }

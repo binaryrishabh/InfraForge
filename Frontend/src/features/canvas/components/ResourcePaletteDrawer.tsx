@@ -6,6 +6,10 @@ import {
 } from "@shared/constants/RESOURCE_TYPES.constants";
 import { ResourcePaletteItem } from "./ResourcePaletteItem";
 import { PRODUCT_SUBLABELS, capacityLabel } from "../utils/paletteMetadata";
+import {
+  FLOATING_CHROME_SURFACE,
+  FLOATING_CHROME_SHADOW_DEEP,
+} from "@/theme/floatingChrome";
 
 // Drawer geometry: floating rounded panel inset from the edges; the toggle
 // rides exactly one gap to the right of the drawer's right edge so the two
@@ -81,7 +85,7 @@ export function ResourcePaletteDrawer() {
       {/* Drawer panel — slides out of / into the left edge */}
       <div
         data-palette-drawer
-        className={`pointer-events-auto absolute top-16 bottom-4 left-3 rounded-xl bg-[#12161F]/95 backdrop-blur-md border border-[#273042] shadow-[0_12px_32px_rgba(0,0,0,0.45)] flex flex-col overflow-hidden transition-transform duration-300 ${DRAWER_EASE} ${
+        className={`pointer-events-auto absolute top-16 bottom-4 left-3 ${FLOATING_CHROME_SURFACE} ${FLOATING_CHROME_SHADOW_DEEP} flex flex-col overflow-hidden transition-transform duration-300 ${DRAWER_EASE} ${
           open ? "translate-x-0" : "-translate-x-[calc(100%+12px)]"
         }`}
         style={{ width: DRAWER_WIDTH }}
@@ -130,7 +134,8 @@ export function ResourcePaletteDrawer() {
         </div>
       </div>
       {/* Toggle — stays top-left when closed, rides the drawer's right edge
-          when open, on the same glide curve as the panel. */}
+          when open, on the same glide curve as the panel. Keeps its own
+          smaller rounded-lg geometry and shadow on purpose. */}
       <button
         type="button"
         data-palette-toggle

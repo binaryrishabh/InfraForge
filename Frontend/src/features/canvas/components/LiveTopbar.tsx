@@ -6,15 +6,19 @@ import { SpeedControlPanel } from "@/features/monitoring/components/SpeedControl
 import { ConfirmModal } from "@/components/UI/ConfirmModal";
 import { teardownDeployment } from "@/api/deployment.api";
 import { DeploymentStatus } from "@shared/enum/DeploymentStatus.enum";
+import {
+  FLOATING_CHROME_SURFACE,
+  FLOATING_CHROME_SHADOW,
+} from "@/theme/floatingChrome";
 
 interface LiveTopbarProps {
   deploymentId: string;
   status: string;
 }
 
-/* Floating pill — the live surface now speaks the exact same chrome grammar
-as the design canvas topbar: blurred floating surface, favicon brand (the
-emoji is gone), live readouts only while LIVE, on-token status chip. */
+/* Floating pill — the live surface speaks the exact same chrome grammar as
+the design canvas topbar: blurred floating surface, favicon brand, live
+readouts only while LIVE, on-token status chip. */
 export const LiveTopbar = memo(function LiveTopbar({ deploymentId, status }: LiveTopbarProps) {
   const currentLayoutName = useCanvasStore((s) => s.currentLayoutName);
   const [showTeardownConfirm, setShowTeardownConfirm] = useState(false);
@@ -37,7 +41,7 @@ export const LiveTopbar = memo(function LiveTopbar({ deploymentId, status }: Liv
   return (
     <>
       <div className="absolute top-3 left-1/2 -translate-x-1/2 z-40 pointer-events-none">
-        <div className="pointer-events-auto h-12 rounded-xl border border-[#273042] bg-[#12161F]/95 backdrop-blur-md shadow-[0_8px_24px_rgba(0,0,0,0.45)] flex items-center gap-3 px-3 select-none max-w-[calc(100vw-7rem)]">
+        <div className={`pointer-events-auto h-12 ${FLOATING_CHROME_SURFACE} ${FLOATING_CHROME_SHADOW} flex items-center gap-3 px-3 select-none max-w-[calc(100vw-7rem)]`}>
           <img
             src="/favicon.png"
             alt="InfraForge"

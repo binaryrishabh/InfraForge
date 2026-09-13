@@ -4,6 +4,10 @@ import { useInfrastructureDropdown } from "../hooks/useInfrastructureDropdown";
 import { useInfrastructureActions } from "../hooks/useInfrastructureActions";
 import { InfrastructureLayoutDropdown } from "./InfrastructureLayoutDropdown";
 import { TopbarActionButton } from "./TopbarActionButton";
+import {
+  FLOATING_CHROME_SURFACE,
+  FLOATING_CHROME_SHADOW,
+} from "@/theme/floatingChrome";
 
 export const CanvasTopbar = memo(function CanvasTopbar() {
   const currentLayoutId = useCanvasStore((s) => s.currentLayoutId);
@@ -21,7 +25,7 @@ export const CanvasTopbar = memo(function CanvasTopbar() {
     // min-w guard keeps the button cluster usable on narrow windows;
     // max-w keeps side gaps if the viewport is ever tiny.
     <div className="absolute top-3 left-1/2 -translate-x-1/2 w-1/2 min-w-140 max-w-[calc(100vw-1.5rem)] z-40 pointer-events-none">
-      <div className="pointer-events-auto h-12 rounded-xl border border-[#273042] bg-[#12161F]/95 backdrop-blur-md shadow-[0_8px_24px_rgba(0,0,0,0.45)] flex items-center justify-between gap-2 px-3 select-none">
+      <div className={`pointer-events-auto h-12 ${FLOATING_CHROME_SURFACE} ${FLOATING_CHROME_SHADOW} flex items-center justify-between gap-2 px-3 select-none`}>
         {/* Logo + infrastructure selector */}
         <div className="flex items-center gap-2 min-w-0">
           <img

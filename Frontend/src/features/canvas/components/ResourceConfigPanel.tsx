@@ -5,6 +5,10 @@ import type { Resource } from "@shared/interface/Resource.interface";
 import type { AutoscalingPolicy } from "@shared/interface/AutoscalingPolicy.interface";
 import { ResourceIcon } from "@/components/common/ResourceIcon";
 import { hueForType, hueBorder, hueTint } from "@/theme/resourceCategoryHues";
+import {
+  FLOATING_CHROME_SURFACE,
+  FLOATING_CHROME_SHADOW_DEEP,
+} from "@/theme/floatingChrome";
 import { ConfigNameField } from "./config/ConfigNameField";
 import { AutoscalingPolicySection } from "./config/AutoscalingPolicySection";
 import { InstancePickerSection } from "./config/InstancePickerSection";
@@ -18,7 +22,8 @@ interface ResourceConfigPanelProps {
 
 /* Inspector drawer: slides from the right on single click, closes on outside
 click, no close button. Interior is deliberately roomy — 20px gutters,
-12-13px type, one concern per section, thin custom scrollbar. */
+12-13px type, one concern per section, thin custom scrollbar. The dynamic
+hue border keeps working through the inline borderColor override. */
 export function ResourceConfigPanel({
   resource,
   open,
@@ -65,7 +70,7 @@ export function ResourceConfigPanel({
     <div
       ref={drawerRef}
       data-config-drawer
-      className={`absolute top-16 bottom-4 right-3 w-80 z-30 rounded-xl border bg-[#12161F]/95 backdrop-blur-md shadow-[0_12px_32px_rgba(0,0,0,0.45)] flex flex-col overflow-hidden transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] ${
+      className={`absolute top-16 bottom-4 right-3 w-80 z-30 ${FLOATING_CHROME_SURFACE} ${FLOATING_CHROME_SHADOW_DEEP} flex flex-col overflow-hidden transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] ${
         open ? "translate-x-0 pointer-events-auto" : "translate-x-[calc(100%+12px)] pointer-events-none"
       }`}
       style={{ borderColor: hueBorder(hue) }}

@@ -8,6 +8,10 @@ import { SecurityIssuesPanel } from "@/features/monitoring/components/panels/Sec
 import { CostBreakdownPanel } from "@/features/monitoring/components/panels/CostBreakdownPanel";
 import { useCanvasStore } from "../store/canvasStore";
 import { useSimulationStore } from "@/features/monitoring/store/simulationStore";
+import {
+  FLOATING_CHROME_SURFACE,
+  FLOATING_CHROME_SHADOW_DEEP,
+} from "@/theme/floatingChrome";
 import type { Deployment } from "@shared/interface/Deployment.interface";
 
 type DockTab = "load" | "chaos" | "scale" | "logs" | "preflight";
@@ -93,7 +97,7 @@ export const LiveOperatorDock = memo(function LiveOperatorDock({
 
   return (
     <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 w-[min(720px,calc(100vw-2rem))]">
-      <div className="rounded-xl border border-[#273042] bg-[#12161F]/95 backdrop-blur-md shadow-[0_12px_32px_rgba(0,0,0,0.45)] overflow-hidden">
+      <div className={`${FLOATING_CHROME_SURFACE} ${FLOATING_CHROME_SHADOW_DEEP} overflow-hidden`}>
         <div className="h-10 px-3 flex items-center justify-between">
           <div className="flex items-center h-full">
             {DOCK_TABS.map((tab) => {

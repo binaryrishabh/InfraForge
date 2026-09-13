@@ -9,14 +9,17 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useAuthStore } from "@/features/auth/store/auth.store";
+import {
+  FLOATING_CHROME_SURFACE,
+  FLOATING_CHROME_SHADOW,
+} from "@/theme/floatingChrome";
 
-/* Hamburger shell menu for the fullscreen designer. One button at the
-   top-right; everything (profile, dashboard, reports, settings, sign out)
-   lives inside the dropdown. "floating" rides beside the floating navbar at
-   navbar height; "inline" nests inside the live topbar at control height. */
-
-const FLOATING_SURFACE =
-  "border border-[#273042] bg-[#12161F]/95 backdrop-blur-md shadow-[0_8px_24px_rgba(0,0,0,0.45)]";
+/* Hamburger shell menu for the fullscreen designer and the live surface.
+One button at the top-right; everything (profile, dashboard, reports,
+settings, sign out) lives inside the dropdown. "floating" rides beside the
+floating navbar at navbar height; "inline" nests inside a bar at control
+height. */
+const FLOATING_SURFACE = `${FLOATING_CHROME_SURFACE} ${FLOATING_CHROME_SHADOW}`;
 const INLINE_SURFACE = "border border-[#273042] bg-[#171C27]";
 
 interface ShellMenuItemProps {
@@ -107,7 +110,6 @@ export function ShellMenu({ variant = "floating" }: ShellMenuProps) {
       >
         <Menu size={16} strokeWidth={1.75} />
       </button>
-
       {open && (
         <div className="absolute top-full right-0 mt-2 w-56 rounded-xl border border-[#273042] bg-[#12161F] backdrop-blur-md shadow-[0_16px_40px_rgba(0,0,0,0.5)] p-1.5 z-50">
           {user && (
