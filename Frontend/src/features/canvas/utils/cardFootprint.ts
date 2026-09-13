@@ -1,29 +1,37 @@
 import {
   NODE_CARD_WIDTH,
   NODE_CARD_HEIGHT,
+  DESIGN_CARD_HEIGHT,
 } from "@/features/monitoring/components/MonitoringDashboardCard";
+import { useCanvasStore } from "../store/canvasStore";
 
 // Breathing room kept between cards so port rings and card shadows never
-// collide. With 24px grid snap this still packs cards nearly edge-to-edge,
-// so nodes no longer "invisibly" reserve extra space.
+// collide. With 24px grid snap this still packs cards nearly edge-to-edge.
 const CARD_PACK_GAP = 8;
 
+/* Cards are shorter in design mode than in live mode, so the overlap guard
+reads the active mode's footprint instead of assuming one height forever. */
+export function activeCardHeight(): number {
+  return useCanvasStore.getState().liveMode ? NODE_CARD_HEIGHT : DESIGN_CARD_HEIGHT;
+}
+
 /* True rectangle overlap for two card top-left anchors, inflated only by
-   CARD_PACK_GAP. Replaces the old "card + 20" invisible box. */
+CARD_PACK_GAP. Replaces the old "card + 20" invisible box. */
 export function cardsOverlap(
   aX: number,
   aY: number,
   bX: number,
   bY: number,
+  cardHeight: number = activeCardHeight(),
 ): boolean {
   return (
     Math.abs(aX - bX) < NODE_CARD_WIDTH + CARD_PACK_GAP &&
-    Math.abs(aY - bY) < NODE_CARD_HEIGHT + CARD_PACK_GAP
+    Math.abs(aY - bY) < cardHeight + CARD_PACK_GAP
   );
 }
 
 /* Whether a proposed top-left position collides with any existing card.
-   ignoreId lets move checks exclude the card being moved. */
+ignoreId lets move checks exclude the card being moved. */
 export function positionIsOccupied(
   resources: Array<{ id: string; x: number; y: number }>,
   x: number,

@@ -6,6 +6,7 @@ import { setGlobalDragCursor } from "../utils/dragCursor";
 import {
   NODE_CARD_WIDTH,
   NODE_CARD_HEIGHT,
+  DESIGN_CARD_HEIGHT,
 } from "@/features/monitoring/components/MonitoringDashboardCard";
 
 export const MIN_SCALE = 0.2;
@@ -18,10 +19,10 @@ const WHEEL_ZOOM_INTENSITY = 0.002;
 
 /* Standalone fit-view. Reads the DOM + store directly so both the hook and
 the zoom controls can call it without prop-drilling. Frames every card
-using the REAL card dimensions (this was the auto-fit bug: it used to
-frame 48px boxes while cards are 208x160). While LIVE, autoscaled replicas
-are part of the visible topology, so manual fit-view frames them too;
-spawning itself never reframes (no auto-fit trigger touches replicas). */
+using the REAL card dimensions for the active mode (design tiles are
+shorter than live cards). While LIVE, autoscaled replicas are part of the
+visible topology, so manual fit-view frames them too; spawning itself
+never reframes (no auto-fit trigger touches replicas). */
 export function fitCanvasView() {
   const store = useCanvasStore.getState();
   const nodes: Array<{ x: number; y: number }> = [...store.resources];
@@ -34,12 +35,13 @@ export function fitCanvasView() {
   const container = document.getElementById("canvas");
   if (!container) return;
   const rect = container.getBoundingClientRect();
+  const cardHeight = store.liveMode ? NODE_CARD_HEIGHT : DESIGN_CARD_HEIGHT;
   const fit = computeFitViewport(
     nodes,
     rect.width,
     rect.height,
     NODE_CARD_WIDTH,
-    NODE_CARD_HEIGHT,
+    cardHeight,
     { padding: FIT_PADDING, minScale: FIT_MIN_SCALE, maxScale: FIT_MAX_SCALE },
   );
   if (!fit) return;

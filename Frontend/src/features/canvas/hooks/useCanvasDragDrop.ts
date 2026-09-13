@@ -15,6 +15,7 @@ import { positionIsOccupied } from "../utils/cardFootprint";
 import {
   NODE_CARD_WIDTH,
   NODE_CARD_HEIGHT,
+  DESIGN_CARD_HEIGHT,
 } from "@/features/monitoring/components/MonitoringDashboardCard";
 import type { ResourceType } from "@shared/constants/RESOURCE_TYPES.constants";
 
@@ -129,14 +130,15 @@ export function useCanvasDragDrop() {
             tracked?.clientX ?? pointerEvent.clientX + delta.x;
           const finalClientY =
             tracked?.clientY ?? pointerEvent.clientY + delta.y;
-          // Screen -> canvas space, then center the card on the cursor so
-          // the landed card matches the centered ghost exactly.
+          // Center on the cursor using the active mode's card height so the
+          // landed card matches the ghost and the rendered card exactly.
+          const cardHeight = store.liveMode ? NODE_CARD_HEIGHT : DESIGN_CARD_HEIGHT;
           x =
             (finalClientX - canvasRect.left - translateX) / scale -
             NODE_CARD_WIDTH / 2;
           y =
             (finalClientY - canvasRect.top - translateY) / scale -
-            NODE_CARD_HEIGHT / 2;
+            cardHeight / 2;
           x = Math.round(x / GRID_SIZE) * GRID_SIZE;
           y = Math.round(y / GRID_SIZE) * GRID_SIZE;
         }

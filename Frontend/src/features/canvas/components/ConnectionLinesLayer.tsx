@@ -5,6 +5,7 @@ import { useSimulationStore } from "@/features/monitoring/store/simulationStore"
 import {
   NODE_CARD_WIDTH,
   NODE_CARD_HEIGHT,
+  DESIGN_CARD_HEIGHT,
 } from "@/features/monitoring/components/MonitoringDashboardCard";
 import type { ConnectionLine } from "@shared/interface/ConnectionLine.interface";
 import type { Resource } from "@shared/interface/Resource.interface";
@@ -28,6 +29,8 @@ export const ConnectionLinesLayer = memo(function ConnectionLinesLayer({
   const simulationRunning = useSimulationStore(
     (s) => s.simulatedSeconds > 0 && s.speed > 0
   );
+  // Tubes anchor to the card's visual center, which differs per mode.
+  const nodeHeight = liveMode ? NODE_CARD_HEIGHT : DESIGN_CARD_HEIGHT;
 
   return (
     // z-0: committed tubes always paint BELOW every card wrapper (z-10),
@@ -59,7 +62,7 @@ export const ConnectionLinesLayer = memo(function ConnectionLinesLayer({
             isSelected={isSelected}
             scale={scale}
             nodeWidth={NODE_CARD_WIDTH}
-            nodeHeight={NODE_CARD_HEIGHT}
+            nodeHeight={nodeHeight}
             showPackets={liveMode}
             animatePackets={simulationRunning}
             onSelect={() =>
