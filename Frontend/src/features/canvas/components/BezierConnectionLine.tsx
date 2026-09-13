@@ -27,6 +27,12 @@ const CENTER_CHEVRON_TS = [0.5];
 const CHEVRON_PATH = "M -6.1 -3.5 L 0 0 L -6.1 3.5";
 // Stubby lines skip the chevrons so short connections never look cluttered.
 const CHEVRON_MIN_DISTANCE = 110;
+// Port badge typography: font lifted ~25% (10 -> 12.5) per owner ask; the
+// pill geometry scales with it so the label keeps its breathing room.
+const PORT_FONT_SIZE = 12.5;
+const PORT_BADGE_HEIGHT = 20;
+const PORT_BADGE_PADDING = 18;
+const PORT_CHAR_ADVANCE = 8.5;
 
 export function BezierConnectionLine({
   source,
@@ -126,7 +132,7 @@ export function BezierConnectionLine({
   // Badge hidden (zoomed out): the pair merges into ONE center marker.
   const chevronTs = showPortBadge ? CHEVRON_TS : CENTER_CHEVRON_TS;
   const label = ":" + port;
-  const badgeWidth = label.length * 7 + 16;
+  const badgeWidth = label.length * PORT_CHAR_ADVANCE + PORT_BADGE_PADDING;
 
   const hitScale = scale < 1 ? Math.min(1 / scale, 2) : 1;
 
@@ -191,25 +197,25 @@ export function BezierConnectionLine({
         transform={`translate(${x2} ${y2}) rotate(${arrowAngle})`}
         fill={coreColor}
       />
-      {/* Port badge: oval pill, exactly as it was */}
+      {/* Port badge: oval pill riding the curve midpoint */}
       {showPortBadge && (
         <g>
           <rect
             x={midX - badgeWidth / 2}
-            y={midY - 8}
+            y={midY - PORT_BADGE_HEIGHT / 2}
             width={badgeWidth}
-            height={16}
-            rx={8}
+            height={PORT_BADGE_HEIGHT}
+            rx={PORT_BADGE_HEIGHT / 2}
             fill="#12161F"
             stroke={isSelected ? "#5B8CFF" : "#35415A"}
             strokeWidth={1}
           />
           <text
             x={midX}
-            y={midY + 3.5}
+            y={midY + PORT_FONT_SIZE * 0.35}
             textAnchor="middle"
             fill={isSelected ? "#EDF1F7" : "#AAB4C5"}
-            fontSize={10}
+            fontSize={PORT_FONT_SIZE}
             fontFamily="ui-monospace, SFMono-Regular, monospace"
             fontWeight={600}
           >
