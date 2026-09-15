@@ -12,10 +12,8 @@ export function CanvasModals() {
   const currentLayoutName = useCanvasStore((s) => s.currentLayoutName);
   const resourceCount = useCanvasStore((s) => s.resources.length);
   const connectionCount = useCanvasStore((s) => s.connectionLines.length);
-
   const setModalState = useCanvasStore((s) => s.setModalState);
   const setModalLoading = useCanvasStore((s) => s.setModalLoading);
-
   const {
     handleNewExecute, handleSaveWithName, handleUpdateWithName,
     handleDeleteExecute, handleDeployExecute
@@ -75,12 +73,13 @@ export function CanvasModals() {
         <DeployModal
           open={true}
           onOpenChange={(open) => { if (!open && !modalLoading) setModalState(null); }}
+          initialName={currentLayoutName || ""}
           resourceCount={resourceCount}
           connectionCount={connectionCount}
           loading={modalLoading}
-          onDeploy={async (profile) => {
+          onDeploy={async (profile, name) => {
             setModalLoading(true);
-            try { await handleDeployExecute(profile); setModalState(null); }
+            try { await handleDeployExecute(profile, name); setModalState(null); }
             catch { toast.error("Failed to start deployment"); }
             finally { setModalLoading(false); }
           }}

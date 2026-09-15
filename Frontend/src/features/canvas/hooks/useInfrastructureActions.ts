@@ -77,11 +77,36 @@ export function useInfrastructureActions() {
     return deletedInfrastructure;
   };
 
-  const handleDeployExecute = async (workloadProfile?: WorkloadProfile) => {
+  /* Deploy always ships exactly what is on the canvas right now. The backend
+  deployment reads infrastructure.layout at creation time, so the canvas is
+  persisted first under the name typed in the deploy modal: created when the
+  layout was never saved, updated when it was. This is a pre-LIVE implicit
+  save required by the wire contract — Decision 38 (live edits never rewrite
+  the saved layout) is untouched. */
+  const handleDeployExecute = async (
+    workloadProfile: WorkloadProfile | undefined,
+    name: string,
+  ) => {
     const store = useCanvasStore.getState();
     store.setActiveDeploymentId(null);
     await new Promise((r) => setTimeout(r, 100));
-    const deployment = await createDeployment(store.currentLayoutId!, workloadProfile);
+    const layout = {
+      resources: store.resources,
+      connectionLines: store.connectionLines,
+      layoutVersion: CARD_LAYOUT_VERSION,
+    };
+    let infrastructureId = store.currentLayoutId;
+    if (!infrastructureId) {
+      const created = await createInfrastructure(name, layout);
+      infrastructureId = created.id;
+      store.setCurrentLayoutId(created.id);
+      store.setCurrentLayoutName(created.name);
+    } else {
+      await updateInfrastructure(infrastructureId, { name, layout });
+      store.setCurrentLayoutName(name);
+    }
+    store.setCurrentLayoutSaved(true);
+    const deployment = await createDeployment(infrastructureId, workloadProfile);
     store.setActiveDeploymentId(deployment.id);
     store.setIsDeploying(true);
     store.setUndoStack([]);
@@ -94,14 +119,11 @@ export function useInfrastructureActions() {
     const store = useCanvasStore.getState();
     const hasRunningDeployment = store.isDeploying;
     const hasUnsavedChanges = !store.currentLayoutSaved && store.resources.length > 0;
-
     if (!hasRunningDeployment && !hasUnsavedChanges) { handleNewExecute(); return; }
-
     let title = "Discard changes?";
     let description = "You have unsaved changes on the current canvas.";
     let confirmLabel = "Clear canvas";
     let warnings: Array<{ icon: "danger" | "warning"; text: string }> = [];
-
     if (hasRunningDeployment && hasUnsavedChanges) {
       title = "Abort deployment and clear canvas?";
       description = "Starting a new canvas will affect the current deployment and unsaved changes.";
@@ -117,7 +139,6 @@ export function useInfrastructureActions() {
     } else if (hasUnsavedChanges) {
       warnings = [{ icon: "danger", text: "Unsaved canvas changes will be discarded." }];
     }
-
     store.setModalState({ type: "confirm-new", title, description, confirmLabel, warnings });
   };
 
@@ -143,16 +164,16 @@ export function useInfrastructureActions() {
     store.setModalState({ type: "delete" });
   };
 
+  /* Deploy is always allowed straight into the deploy modal — saved or not,
+  dirty or clean. Only real blockers remain: a deployment already running,
+  an empty canvas, or a structurally invalid graph (the readiness gate). */
   const handleDeploy = () => {
     const store = useCanvasStore.getState();
     if (store.isDeploying) { toast.warning("A deployment is in progress."); return; }
-    if (!store.currentLayoutId || !store.currentLayoutSaved) { store.setModalState({ type: "save" }); return; }
     if (store.resources.length === 0) { toast.warning("Add resources to the canvas before deploying."); return; }
-
     const readiness = validateDeploymentReadiness(store.resources, store.connectionLines);
     if (!readiness.valid) { toast.error("Cannot deploy — " + readiness.errors.join(" · ")); return; }
     if (readiness.warnings.length > 0) readiness.warnings.forEach(w => toast.warning(w));
-
     store.setModalState({ type: "confirm-deploy" });
   };
 

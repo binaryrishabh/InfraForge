@@ -13,10 +13,11 @@ interface BezierConnectionLineProps {
   animatePackets?: boolean;
 }
 
-// Slightly thinner tube: casing 7, core 4 (was 9 / 5).
-const TUBE_CASING_WIDTH = 7;
-const TUBE_CORE_WIDTH = 4;
-const PACKET_WIDTH = 2.5;
+// Tube family thinned ~35% per owner ask: casing 7 -> 4.5, core 4 -> 2.5,
+// packets 2.5 -> 1.6. The line reads as a precise wire, not a pipe.
+const TUBE_CASING_WIDTH = 4.5;
+const TUBE_CORE_WIDTH = 2.5;
+const PACKET_WIDTH = 1.6;
 // Dash period 24 matches the -24 flow keyframe offset for a seamless loop.
 const PACKET_DASH = "7 17";
 // Flow chevrons sit in the node-side half of each gap (between the node edge
@@ -25,6 +26,9 @@ const CHEVRON_TS = [0.18, 0.82];
 // Zoomed out (port badge hidden): the pair merges into one center marker.
 const CENTER_CHEVRON_TS = [0.5];
 const CHEVRON_PATH = "M -6.1 -3.5 L 0 0 L -6.1 3.5";
+// Chevron strokes thinned with the tube so the whole line family matches.
+const CHEVRON_HALO_WIDTH = 3.25;
+const CHEVRON_CORE_WIDTH = 1.5;
 // Stubby lines skip the chevrons so short connections never look cluttered.
 const CHEVRON_MIN_DISTANCE = 110;
 // Port badge typography: font lifted ~25% (10 -> 12.5) per owner ask; the
@@ -141,8 +145,8 @@ export function BezierConnectionLine({
       {/* Energized halo behind a live tube (thinned with the tube) */}
       {showPackets && (
         <>
-          <path d={path} fill="none" stroke="#5B8CFF" strokeWidth={10} opacity={0.10} strokeLinecap="round" />
-          <path d={path} fill="none" stroke="#5B8CFF" strokeWidth={6} opacity={0.16} strokeLinecap="round" />
+          <path d={path} fill="none" stroke="#5B8CFF" strokeWidth={6.5} opacity={0.10} strokeLinecap="round" />
+          <path d={path} fill="none" stroke="#5B8CFF" strokeWidth={4} opacity={0.16} strokeLinecap="round" />
         </>
       )}
       {/* Tube casing (outer wall) */}
@@ -175,7 +179,7 @@ export function BezierConnectionLine({
                 d={CHEVRON_PATH}
                 fill="none"
                 stroke={arrowColor}
-                strokeWidth={5}
+                strokeWidth={CHEVRON_HALO_WIDTH}
                 opacity={0.18}
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -184,7 +188,7 @@ export function BezierConnectionLine({
                 d={CHEVRON_PATH}
                 fill="none"
                 stroke={arrowColor}
-                strokeWidth={2.25}
+                strokeWidth={CHEVRON_CORE_WIDTH}
                 strokeLinecap="round"
                 strokeLinejoin="round"
               />

@@ -5,10 +5,11 @@ import type { WorkloadProfile } from "@shared/interface/WorkloadProfile.interfac
 interface DeployModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  initialName?: string;
   resourceCount: number;
   connectionCount: number;
   loading?: boolean;
-  onDeploy: (profile: WorkloadProfile) => void;
+  onDeploy: (profile: WorkloadProfile, name: string) => void;
 }
 
 interface ScenarioPreset {
@@ -80,11 +81,14 @@ const SCENARIO_PRESETS: ScenarioPreset[] = [
 export function DeployModal({
   open,
   onOpenChange,
+  initialName = "",
   resourceCount,
   connectionCount,
   loading = false,
   onDeploy,
 }: DeployModalProps) {
+  const [name, setName] = useState(initialName);
+  const [nameError, setNameError] = useState<string | null>(null);
   const [targetThroughput, setTargetThroughput] = useState(1_000_000);
   const [throughputUnit, setThroughputUnit] = useState<
     "per-minute" | "per-hour"
@@ -102,7 +106,6 @@ export function DeployModal({
 
   const activePresetObj =
     SCENARIO_PRESETS.find((p) => p.id === activePreset) ?? null;
-
   const divisor = throughputUnit === "per-minute" ? 60 : 3600;
   const rpsPreview =
     targetThroughput > 0 ? Math.round(targetThroughput / divisor) : 0;
@@ -119,6 +122,10 @@ export function DeployModal({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!name.trim()) {
+      setNameError("Deployment name is required.");
+      return;
+    }
     if (!targetThroughput || targetThroughput <= 0) return;
     const profile: WorkloadProfile = {
       targetThroughput,
@@ -128,7 +135,7 @@ export function DeployModal({
       readWriteRatio,
       payloadSize,
     };
-    onDeploy(profile);
+    onDeploy(profile, name.trim());
   };
 
   return (
@@ -136,14 +143,39 @@ export function DeployModal({
       open={open}
       onOpenChange={onOpenChange}
       title="Deploy infrastructure"
-      description="Declare the load this architecture must survive."
+      description="Name this deployment and declare the load it must survive."
       loading={loading}
     >
       <form onSubmit={handleSubmit}>
+        {/* Name box leads the modal — deployments are named artifacts. */}
+        <div className="mb-4">
+          <label className="block text-xs font-medium text-[#AAB4C5] mb-1.5">
+            Deployment name
+          </label>
+          <input
+            autoFocus
+            type="text"
+            value={name}
+            onChange={(e) => {
+              setName(e.target.value);
+              if (nameError) setNameError(null);
+            }}
+            placeholder="production-web-cluster"
+            maxLength={64}
+            disabled={loading}
+            className={`w-full h-9 rounded-lg bg-[#0B0E14] border text-[13px] text-[#EDF1F7] placeholder-[#677185] px-3 outline-none transition-colors duration-150 ${
+              nameError
+                ? "border-[#F0564A] shadow-[0_0_0_3px_rgba(240,86,74,0.16)]"
+                : "border-[#273042] hover:border-[#35415A] focus:border-[#5B8CFF] focus:shadow-[0_0_0_3px_rgba(91,140,255,0.18)]"
+            } ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
+          />
+          {nameError && (
+            <p className="text-xs text-[#F0564A] mt-1.5">{nameError}</p>
+          )}
+        </div>
         <p className="font-mono text-xs text-[#677185] mb-4">
           {resourceCount} resources · {connectionCount} connections
         </p>
-
         {/* Scenario preset selector */}
         <div className="mb-4">
           <label className="block text-xs font-medium text-[#AAB4C5] mb-1.5">
@@ -172,7 +204,6 @@ export function DeployModal({
               : "Custom profile — tuned by hand."}
           </p>
         </div>
-
         <div className="mb-4">
           <label className="block text-xs font-medium text-[#AAB4C5] mb-1.5">
             Target throughput
@@ -220,7 +251,6 @@ export function DeployModal({
             ≈ {rpsPreview.toLocaleString()} requests/second at full load
           </p>
         </div>
-
         <button
           type="button"
           onClick={() => setShowAdvanced(!showAdvanced)}
@@ -229,7 +259,6 @@ export function DeployModal({
           <span>Advanced workload settings</span>
           <span>{showAdvanced ? "▴" : "▾"}</span>
         </button>
-
         {showAdvanced && (
           <div className="space-y-4 pt-3">
             <div>
@@ -263,7 +292,6 @@ export function DeployModal({
                 </button>
               </div>
             </div>
-
             {trafficShape === "peak" && (
               <div>
                 <label className="block text-xs font-medium text-[#AAB4C5] mb-1.5">
@@ -287,7 +315,6 @@ export function DeployModal({
                 </p>
               </div>
             )}
-
             <div>
               <label className="block text-xs font-medium text-[#AAB4C5] mb-1.5">
                 Read / write mix
@@ -312,7 +339,6 @@ export function DeployModal({
                 </span>
               </div>
             </div>
-
             <div>
               <label className="block text-xs font-medium text-[#AAB4C5] mb-1.5">
                 Payload size
@@ -337,7 +363,6 @@ export function DeployModal({
             </div>
           </div>
         )}
-
         <div className="flex gap-2 justify-end mt-6">
           <button
             type="button"
