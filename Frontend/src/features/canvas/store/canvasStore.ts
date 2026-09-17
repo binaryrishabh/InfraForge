@@ -46,6 +46,10 @@ interface CanvasStoreState {
   liveMode: boolean;
   emptyCanvasStateDismissed: boolean;
   activeDrag: ActiveDragState | null;
+  // Canvas positions of engine-owned ASG replicas. Assigned once when a
+  // replica first appears, then frozen: dragging a base VM never drags its
+  // replicas along, and replicas occupy space like real nodes.
+  replicaPositions: Record<string, { x: number; y: number }>;
   scale: number;
   translateX: number;
   translateY: number;
@@ -72,6 +76,9 @@ interface CanvasStoreState {
   setLiveMode: (live: boolean) => void;
   setEmptyCanvasStateDismissed: (dismissed: boolean) => void;
   setActiveDrag: (drag: ActiveDragState | null) => void;
+  setReplicaPosition: (id: string, x: number, y: number) => void;
+  pruneReplicaPositions: (aliveIds: string[]) => void;
+  clearReplicaPositions: () => void;
   setViewport: (scale: number, tx: number, ty: number) => void;
   setShowLayoutDropdown: (show: boolean) => void;
   setSavedLayouts: (layouts: Infrastructure[]) => void;
@@ -99,6 +106,7 @@ export const useCanvasStore = create<CanvasStoreState>()((set) => ({
   liveMode: false,
   emptyCanvasStateDismissed: false,
   activeDrag: null,
+  replicaPositions: {},
   scale: 1,
   translateX: 0,
   translateY: 0,
@@ -135,6 +143,18 @@ export const useCanvasStore = create<CanvasStoreState>()((set) => ({
   setLiveMode: (live) => set({ liveMode: live }),
   setEmptyCanvasStateDismissed: (dismissed) => set({ emptyCanvasStateDismissed: dismissed }),
   setActiveDrag: (drag) => set({ activeDrag: drag }),
+  setReplicaPosition: (id, x, y) =>
+    set((s) => ({ replicaPositions: { ...s.replicaPositions, [id]: { x, y } } })),
+  pruneReplicaPositions: (aliveIds) =>
+    set((s) => {
+      const alive = new Set(aliveIds);
+      const next: Record<string, { x: number; y: number }> = {};
+      for (const [id, pos] of Object.entries(s.replicaPositions)) {
+        if (alive.has(id)) next[id] = pos;
+      }
+      return { replicaPositions: next };
+    }),
+  clearReplicaPositions: () => set({ replicaPositions: {} }),
   setViewport: (scale, tx, ty) => set({ scale, translateX: tx, translateY: ty }),
   setShowLayoutDropdown: (show) => set({ showLayoutDropdown: show }),
   setSavedLayouts: (layouts) => set({ savedLayouts: layouts }),
@@ -152,6 +172,7 @@ export const useCanvasStore = create<CanvasStoreState>()((set) => ({
     currentLayoutSaved: true, selectedResourceId: null, selectedResourceForConfigId: null,
     selectedConnectionId: null, pendingConnection: null,
     scale: 1, translateX: 0, translateY: 0,
-    activeDeploymentId: null, isDeploying: false, liveMode: false, activeDrag: null, undoStack: [], redoStack: [],
+    activeDeploymentId: null, isDeploying: false, liveMode: false, activeDrag: null,
+    replicaPositions: {}, undoStack: [], redoStack: [],
   }),
 }));

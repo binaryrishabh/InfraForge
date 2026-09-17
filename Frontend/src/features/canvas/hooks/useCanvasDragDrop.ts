@@ -110,16 +110,13 @@ export function useCanvasDragDrop() {
     onDragEnd: (event: any) => {
       const store = useCanvasStore.getState();
       store.setActiveDrag(null);
-
       if (event.over?.id === "canvas") {
         store.setCurrentLayoutSaved(false);
         store.setIsInitialized(true);
-
         const { active, delta } = event;
         const canvas = document.querySelector("#canvas") as HTMLElement;
         const canvasRect = canvas?.getBoundingClientRect();
         let x = 50, y = 50;
-
         if (canvasRect) {
           const { scale, translateX, translateY } = store;
           // Prefer the tracked real cursor; fall back to dnd-kit's
@@ -142,13 +139,17 @@ export function useCanvasDragDrop() {
           x = Math.round(x / GRID_SIZE) * GRID_SIZE;
           y = Math.round(y / GRID_SIZE) * GRID_SIZE;
         }
-
-        // Only a REAL rectangle overlap (plus a small pack gap) rejects now.
-        if (positionIsOccupied(store.resources, x, y)) {
+        // Only a REAL rectangle overlap rejects — and engine-owned replicas
+        // occupy space exactly like designer cards, so dropping onto an ASG
+        // replica warns instead of stacking.
+        const obstacles = [
+          ...store.resources.map((r) => ({ id: r.id, x: r.x, y: r.y })),
+          ...Object.entries(store.replicaPositions).map(([id, pos]) => ({ id, x: pos.x, y: pos.y })),
+        ];
+        if (positionIsOccupied(obstacles, x, y)) {
           toast.warning("Space already occupied!");
           return;
         }
-
         const newResource = {
           id: `${active.id}-${Date.now()}`,
           type: active.id as ResourceType,

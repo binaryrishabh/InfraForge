@@ -2,7 +2,6 @@ import { useCallback, useEffect, useRef, type PointerEvent as ReactPointerEvent 
 import { useCanvasStore } from "../store/canvasStore";
 import { useSimulationStore } from "@/features/monitoring/store/simulationStore";
 import { computeFitViewport } from "../utils/computeFitViewport";
-import { replicaSlotPositions } from "../utils/replicaSlotLayout";
 import { setGlobalDragCursor } from "../utils/dragCursor";
 import {
   NODE_CARD_WIDTH,
@@ -21,22 +20,16 @@ const WHEEL_ZOOM_INTENSITY = 0.002;
 /* Standalone fit-view. Reads the DOM + store directly so both the hook and
 the zoom controls can call it without prop-drilling. Frames every card
 using the REAL card dimensions for the active mode (design tiles are
-shorter than live cards). While LIVE, autoscaled replicas are part of the
-visible topology at their RENDERED slot positions (same util the replica
-layer uses), so manual fit-view frames what the eye actually sees;
-spawning itself never reframes (no auto-fit trigger touches replicas). */
+shorter than live cards). While LIVE, autoscaled replicas are framed at
+their frozen canvas slots (canvasStore.replicaPositions), so fit-view
+matches what the eye actually sees; spawning itself never reframes. */
 export function fitCanvasView() {
   const store = useCanvasStore.getState();
   const nodes: Array<{ x: number; y: number }> = [...store.resources];
   if (store.liveMode) {
     const sim = useSimulationStore.getState();
-    const positions = replicaSlotPositions(
-      sim.spawnedVms,
-      store.resources,
-      sim.pools,
-    );
     for (const vm of sim.spawnedVms) {
-      nodes.push(positions.get(vm.id) ?? { x: vm.x, y: vm.y });
+      nodes.push(store.replicaPositions[vm.id] ?? { x: vm.x, y: vm.y });
     }
   }
   if (nodes.length === 0) return;
@@ -97,7 +90,7 @@ export function useCanvasViewport() {
     const store = useCanvasStore.getState();
     const { scale } = store;
     const nextScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, scale * (1 + -e.deltaY * WHEEL_ZOOM_INTENSITY)));
-    if (nextScale === scale) return;
+    if (nextScale === store.scale) return;
     // Canvas-space point currently under the cursor (before zoom).
     const cursor = screenToCanvas(e.clientX, e.clientY);
     // Solve for the translate that keeps that same point under the cursor.

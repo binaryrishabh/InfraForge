@@ -1,14 +1,14 @@
-import { memo } from "react";
+import { memo, useEffect } from "react";
 import { useCanvasStore } from "../store/canvasStore";
 import { useSimulationStore } from "@/features/monitoring/store/simulationStore";
 import { BezierConnectionLine } from "./BezierConnectionLine";
+import { ReplicaCard } from "./ReplicaCard";
+import { ProvisioningNode } from "@/features/monitoring/components/ProvisioningNode";
+import { findFreeReplicaSlot } from "../utils/replicaSlotLayout";
 import {
-  MonitoringDashboardCard,
   NODE_CARD_WIDTH,
   NODE_CARD_HEIGHT,
 } from "@/features/monitoring/components/MonitoringDashboardCard";
-import { ProvisioningNode } from "@/features/monitoring/components/ProvisioningNode";
-import { replicaSlotPositions } from "../utils/replicaSlotLayout";
 import { RESOURCE_TYPES } from "@shared/constants/RESOURCE_TYPES.constants";
 import type { Resource } from "@shared/interface/Resource.interface";
 import type { SpawnedVmInfo } from "@shared/interface/SpawnedVmInfo.interface";
@@ -21,40 +21,55 @@ interface ReplicaLink {
 }
 
 /* Engine-owned autoscaled replicas on the unified canvas: lb→replica link
-tubes, live replica cards, and provisioning ghosts. Replicas are NOT
-draggable, selectable, or deletable — wrappers are pointer-events-none and
-cards render as content only (no ports, no delete chip).
-Render positions come from replicaSlotPositions (tidy scattered free slots)
-instead of the engine's fixed downward stack, so drain cycles never leave
-holes. Re-renders stay driven by primitive keys only. */
+tubes, draggable replica cards, and provisioning ghosts. Each replica gets a
+tidy free slot ONCE, at first sight, frozen in canvasStore.replicaPositions —
+so dragging a base VM never drags its ASG along, replicas occupy space like
+real nodes, and drains simply prune their positions. Re-renders stay driven
+by primitive keys only. */
 export const SpawnedReplicaLayer = memo(function SpawnedReplicaLayer() {
   const liveMode = useCanvasStore((s) => s.liveMode);
   const scale = useCanvasStore((s) => s.scale);
-  // Slot layout depends on the canvas cards too, so subscribe to them:
-  // identity changes only on real edits, never on 1Hz snapshots.
   const resources = useCanvasStore((s) => s.resources);
+  const replicaPositions = useCanvasStore((s) => s.replicaPositions);
   // Boolean selectors: stable across 1Hz snapshots, no extra re-renders.
   const simulationRunning = useSimulationStore(
     (s) => s.simulatedSeconds > 0 && s.speed > 0,
   );
-  // Subscription-only primitive key: id:status:x:y:poolId per replica (the
-  // poolId keeps lb-link changes in the key). A change here is the ONLY
-  // snapshot-driven reason this layer re-renders; the fresh arrays are read
-  // via getState() at render time below.
-  useSimulationStore((s) =>
+  // Subscription-only primitive key: id:status:x:y:poolId per replica.
+  const replicaKey = useSimulationStore((s) =>
     s.spawnedVms
       .map((v) => `${v.id}:${v.status}:${v.x}:${v.y}:${v.poolId}`)
       .join("|"),
   );
 
+  // Freeze a slot for every replica the first time we see it; prune the
+  // positions of drained replicas; wipe everything when we leave LIVE.
+  useEffect(() => {
+    const store = useCanvasStore.getState();
+    if (!liveMode) {
+      store.clearReplicaPositions();
+      return;
+    }
+    const { spawnedVms } = useSimulationStore.getState();
+    store.pruneReplicaPositions(spawnedVms.map((v) => v.id));
+    const taken = [
+      ...store.resources.map((r) => ({ x: r.x, y: r.y })),
+      ...Object.values(store.replicaPositions).map((p) => ({ x: p.x, y: p.y })),
+    ];
+    for (const vm of spawnedVms) {
+      if (store.replicaPositions[vm.id]) continue;
+      const slot = findFreeReplicaSlot(vm.id, vm.x, vm.y, taken);
+      taken.push(slot);
+      store.setReplicaPosition(vm.id, slot.x, slot.y);
+    }
+  }, [replicaKey, liveMode]);
+
   if (!liveMode) return null;
 
   const { spawnedVms, pools } = useSimulationStore.getState();
-  const positions = replicaSlotPositions(spawnedVms, resources, pools);
   const resourceById = new Map(resources.map((r) => [r.id, r]));
-
-  const slotOf = (vm: SpawnedVmInfo) =>
-    positions.get(vm.id) ?? { x: vm.x, y: vm.y };
+  const posOf = (vm: SpawnedVmInfo) =>
+    replicaPositions[vm.id] ?? { x: vm.x, y: vm.y };
 
   // lb → replica link tubes: only while the pool's lb still exists on canvas.
   const linkTubes: ReplicaLink[] = [];
@@ -63,8 +78,8 @@ export const SpawnedReplicaLayer = memo(function SpawnedReplicaLayer() {
     if (!pool) continue;
     const lb = resourceById.get(pool.lbId);
     if (!lb) continue;
-    const slot = slotOf(vm);
-    linkTubes.push({ vm, lb, x: slot.x, y: slot.y });
+    const pos = posOf(vm);
+    linkTubes.push({ vm, lb, x: pos.x, y: pos.y });
   }
   const activeVms = spawnedVms.filter((v) => v.status === "active");
   const provisioningVms = spawnedVms.filter((v) => v.status === "provisioning");
@@ -92,33 +107,18 @@ export const SpawnedReplicaLayer = memo(function SpawnedReplicaLayer() {
           />
         ))}
       </svg>
-      {/* Active replica cards: engine-owned, never interactive */}
+      {/* Active replica cards: real draggable canvas nodes */}
       {activeVms.map((vm) => {
-        const slot = slotOf(vm);
+        const pos = posOf(vm);
         return (
-          <div
-            key={vm.id}
-            className="absolute z-10 pointer-events-none"
-            style={{ left: slot.x, top: slot.y, width: NODE_CARD_WIDTH }}
-          >
-            <MonitoringDashboardCard
-              mode="live"
-              asContent
-              resource={{
-                id: vm.id,
-                type: RESOURCE_TYPES.VirtualMachine,
-                x: slot.x,
-                y: slot.y,
-              }}
-            />
-          </div>
+          <ReplicaCard key={vm.id} replicaId={vm.id} x={pos.x} y={pos.y} />
         );
       })}
       {/* Provisioning ghosts */}
       {provisioningVms.map((vm) => {
-        const slot = slotOf(vm);
+        const pos = posOf(vm);
         return (
-          <ProvisioningNode key={vm.id} vm={{ ...vm, x: slot.x, y: slot.y }} />
+          <ProvisioningNode key={vm.id} vm={{ ...vm, x: pos.x, y: pos.y }} />
         );
       })}
     </>
