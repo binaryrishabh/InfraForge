@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, type PointerEvent as ReactPointerEvent 
 import { useCanvasStore } from "../store/canvasStore";
 import { useSimulationStore } from "@/features/monitoring/store/simulationStore";
 import { computeFitViewport } from "../utils/computeFitViewport";
+import { replicaSlotPositions } from "../utils/replicaSlotLayout";
 import { setGlobalDragCursor } from "../utils/dragCursor";
 import {
   NODE_CARD_WIDTH,
@@ -21,14 +22,21 @@ const WHEEL_ZOOM_INTENSITY = 0.002;
 the zoom controls can call it without prop-drilling. Frames every card
 using the REAL card dimensions for the active mode (design tiles are
 shorter than live cards). While LIVE, autoscaled replicas are part of the
-visible topology, so manual fit-view frames them too; spawning itself
-never reframes (no auto-fit trigger touches replicas). */
+visible topology at their RENDERED slot positions (same util the replica
+layer uses), so manual fit-view frames what the eye actually sees;
+spawning itself never reframes (no auto-fit trigger touches replicas). */
 export function fitCanvasView() {
   const store = useCanvasStore.getState();
   const nodes: Array<{ x: number; y: number }> = [...store.resources];
   if (store.liveMode) {
-    for (const vm of useSimulationStore.getState().spawnedVms) {
-      nodes.push({ x: vm.x, y: vm.y });
+    const sim = useSimulationStore.getState();
+    const positions = replicaSlotPositions(
+      sim.spawnedVms,
+      store.resources,
+      sim.pools,
+    );
+    for (const vm of sim.spawnedVms) {
+      nodes.push(positions.get(vm.id) ?? { x: vm.x, y: vm.y });
     }
   }
   if (nodes.length === 0) return;
