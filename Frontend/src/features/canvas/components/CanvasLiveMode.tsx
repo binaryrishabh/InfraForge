@@ -27,11 +27,18 @@ export function CanvasLiveMode({ deploymentId }: CanvasLiveModeProps) {
   // Stream committed canvas edits to the running simulator while LIVE.
   useLiveTopologySync(isLive);
 
-  // Track liveness so cards flip between design and live telemetry.
+  // Track liveness so cards flip between design and live telemetry — AND
+  // release the deploy lock the moment the environment goes LIVE.
+  // Root cause of the frozen live canvas: the pipeline popup unmounts on
+  // the same render that status flips RUNNING -> LIVE (showPipeline excludes
+  // LIVE), so its onDeploymentComplete effect can never observe LIVE and
+  // isDeploying stayed true forever, blocking every drag/edit (Decision 34:
+  // LIVE is editable). Resetting here makes the transition unconditional.
   useEffect(() => {
     setLiveMode(isLive);
+    if (isLive) setIsDeploying(false);
     return () => setLiveMode(false);
-  }, [isLive, setLiveMode]);
+  }, [isLive, setLiveMode, setIsDeploying]);
 
   useEffect(() => {
     if (status === DeploymentStatus.TORN_DOWN) {
