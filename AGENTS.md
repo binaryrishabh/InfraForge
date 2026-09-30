@@ -59,6 +59,13 @@ It reuses existing Docker containers, waits for readiness, runs Prisma `migrate 
 - Surface consequential product/architecture decisions and unresolved tradeoffs instead of quietly guessing.
 - Do not commit, push, or merge unless explicitly requested.
 
+## Long-running work
+
+- For complex features, significant refactors, or work expected to span many steps/turns, create and maintain an ExecPlan following `.agent/PLANS.md`.
+- Keep the plan updated as work progresses.
+- Record discoveries, decisions, completed work, validation results, and unresolved risks.
+- Do not create an ExecPlan for trivial changes.
+
 ## Verification
 
 Choose checks appropriate to the change and honor explicit task limits:
