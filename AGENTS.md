@@ -22,6 +22,9 @@ This is the product priority, not a claim that every step is already implemented
 
 - Simulation truth comes from deterministic engine behavior and backend results. The frontend must not invent telemetry, health, failures, or outcomes. Presentation effects must not change simulation truth.
 - AI may explain recorded simulation facts; it must never invent simulation facts. Distinguish observations, interpretations, and unknowns.
+- Simulation produces truth. Explanations consume truth. Prefer real infrastructure behavior within the documented educational abstraction: named resources must reflect their infrastructure meaning, not decorative or fake functionality added to impress in the UI.
+- Source capacity, cost, limits, provider facts, and behavior from verified provider/catalog data, workload/resource configuration, shared domain rules, or one clearly defined simulation-tuning source. Do not hardcode substitutes when these sources can supply the value.
+- When real infrastructure cannot reasonably be reproduced, use intentional, explainable, testable educational approximations. Document their limits; never present them as real cloud guarantees.
 - Preserve reproducible outcomes for the same architecture, workload/scenario, seed, engine behavior, and control inputs at the same simulated ticks. Keep unseeded randomness and wall-clock timing out of outcome calculations. Current log timestamps use wall-clock time; do not claim byte-identical replay of all metadata or complete checkpoint recovery.
 - Do not independently duplicate shared simulation/domain rules in frontend and backend. Extend the shared source and contracts where appropriate.
 - Derive costs from SKU/catalog and shared domain data, including existing generic estimates where applicable. Do not introduce arbitrary UI pricing constants. Accumulated live cost follows simulated time.
@@ -57,7 +60,18 @@ It reuses existing Docker containers, waits for readiness, runs Prisma `migrate 
 - Never silently alter committed database migrations. Use a new migration for schema evolution and explain its effect on local data.
 - New behavior requires appropriate tests. Add regression coverage for bugs where practical.
 - Surface consequential product/architecture decisions and unresolved tradeoffs instead of quietly guessing.
-- Do not commit, push, or merge unless explicitly requested.
+- An explicit founder-assigned development/setup task authorizes routine Lead Architect → Git Steward commit/push of its completed coherent diff to `origin` on `develop` or a founder-approved non-protected task/feature branch, after all required validation and required independent review pass. Do not ask again merely for this handoff. Task-specific restrictions, review-only requests, and revoked authorization override it; unclear scope, authorization, validation, or review stops the handoff.
+
+## Code quality and modularity
+
+- Write careful, readable engineering for humans: clear names, simple control flow, and straightforward code over cleverness. Comments should mainly explain why; avoid comments that repeat code and unnecessary explanatory prose in source files.
+- Use natural, clear language; avoid robotic, templated, overly formal, or generic commentary. Do not intentionally introduce spelling mistakes or poor grammar.
+- Prefer small cohesive files, focused reusable modules, and clear ownership boundaries. Split meaningfully different responsibilities; separate domain logic from I/O, rendering, persistence, transport, and orchestration where appropriate. Avoid god files and meaningless micro-files. Cohesion, readability, testability, and ownership matter more than arbitrary line limits. Apply this within task scope, not as permission for unrelated refactors.
+
+## Normal project output
+
+- Do not add automated-authorship or provenance-style claims to application source comments, normal project documentation, commit messages, PR titles/descriptions, or user-facing UI/copy. Do not insert claims about who or what generated the code.
+- Keep necessary workflow terms such as agent, specialist, Lead Architect, and Git Steward in `.agent/`, `.agents/`, and other internal orchestration/configuration files. Do not rewrite historical files merely to remove terminology unless they are already part of a real task.
 
 ## Long-running work
 
@@ -79,10 +93,13 @@ Choose checks appropriate to the change and honor explicit task limits:
 
 ## Git safety
 
-- Treat `main` as stable and conceptually protected. `agent/dev` is the current integration branch; verify the actual branch before work.
+- Treat `main` as stable and conceptually protected. `develop` is the current integration branch; verify the actual branch before work.
 - `safety/pre-agent-setup` is a historical rescue snapshot. Do not modify it.
 - Never reset, clean, force-push, or otherwise destroy user work without explicit permission. Do not discard unrelated changes or overwrite them to simplify a task.
+- Standing routine Git authorization excludes merging into or pushing directly to `main`, touching `safety/pre-agent-setup`, force push, `git reset --hard`, `git clean`, history rewriting, branch deletion, production actions, external secrets, and destructive repository operations. These require separate explicit founder approval where applicable and remain subject to repository restrictions. Routine authorization never grants external-secret access or permission to bypass branch protections.
 
 ## Agent communication
 
 Report what changed, why it changed, tests/checks executed and their results, and remaining risks or untested behavior. Identify decisions requiring user direction. Keep reports concrete and concise; never claim successful validation that was not performed.
+
+Use very simple English with the founder. Prefer short, clear explanations, avoid unnecessary jargon, and explain required jargon simply.

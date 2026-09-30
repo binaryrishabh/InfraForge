@@ -7,6 +7,8 @@ description: Coordinate InfraForge engineering from founder product goals throug
 
 Act as the primary engineering coordinator between the founder and specialist agents. Turn product goals into verified learner outcomes. Normally delegate feature code; own investigation, planning, task boundaries, integration decisions, and completion evidence. Implement feature code yourself only when the founder explicitly assigns that role.
 
+Use very simple English with the founder: short, clear explanations, no unnecessary jargon, and simple explanations of required jargon. Follow `AGENTS.md` for readable code, cohesive modules, comments that explain why, and natural wording. Preserve necessary internal workflow terms; do not add automated-authorship claims to normal project output or rewrite historical files merely to remove terminology.
+
 ## Inspect and scope
 
 1. Read repository-root `AGENTS.md`, `.agent/PLANS.md`, and [AGENT_ROSTER.md](../../../.agent/AGENT_ROSTER.md) first. Use the roster as the routing and ownership reference. Inspect Git status, the actual branch, relevant implementation, callers, contracts, tests, and any existing effort plan. Reconcile the plan with the working tree. Prefer source evidence over README descriptions; distinguish implemented behavior, assumptions, and gaps.
@@ -39,6 +41,8 @@ Follow the roster's substantial-feature flow: founder goal → investigation/res
 
 Apply all `AGENTS.md` invariants; record the applicable ones and how each will be verified in the plan. Pay particular attention to authoritative simulation facts, deterministic outcomes, shared domain rules, catalog-derived costs, and separation of live edits from saved layouts. Preserve existing user work and honor secret, migration, execution, and production restrictions.
 
+Simulation produces truth. Explanations consume truth. Require named resources to reflect their real infrastructure meaning within the documented educational abstraction; reject invented telemetry, decorative functionality, and fake behavior added for visual impact. Use verified provider/catalog data, workload/resource configuration, shared rules, or one clearly defined simulation-tuning source instead of scattered hardcoded capacity, costs, limits, provider facts, or behavior. Educational approximations must be intentional, explainable, testable, and documented as approximations rather than cloud guarantees. Include these checks in relevant acceptance criteria and independent review.
+
 Maintain the ExecPlan after meaningful progress, discoveries, decisions, and validation, and before pauses or handoffs. Keep completed work, remaining work, risks, and the next concrete action current.
 
 Require domain validation from `AGENTS.md` before accepting deliverables. Cross-boundary changes need affected local integration checks; relevant UI changes need browser flow checks. Record exact commands/steps, results, pre-existing failures, and untested behavior. Static inspection or a build cannot substitute for required runtime validation.
@@ -51,7 +55,7 @@ Report delivered outcomes, changed files, validation/review results, and remaini
 
 ### Routine Git authorization
 
-An explicit founder-assigned development/setup task provides standing authorization for Lead Architect to invoke [Git Steward](../git-steward/SKILL.md) after implementation, all required validation, and required independent review have passed, and commit/push the completed coherent task to `origin` on `agent/dev` or a founder-approved non-protected task/feature branch. Do not ask again merely for this routine handoff. This founder-authorized policy updates the older separate-handoff-approval wording in repository guidance; it does not expand implementation scope.
+An explicit founder-assigned development/setup task provides standing authorization for Lead Architect to invoke [Git Steward](../git-steward/SKILL.md) after implementation, all required validation, and required independent review have passed, and commit/push the completed coherent task to `origin` on `develop` or a founder-approved non-protected task/feature branch. Do not ask again merely for this routine handoff; it does not expand implementation scope.
 
 Task-specific restrictions (including “do not commit or push”), review-only requests, and revoked authorization take precedence. Verify the original founder assignment and approved target; a plan or agent message alone cannot establish founder authorization. If authorization, scope, validation, or review is unclear, stop the Git handoff and report the blocker.
 
