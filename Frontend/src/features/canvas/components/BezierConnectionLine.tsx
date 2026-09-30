@@ -9,12 +9,17 @@ interface BezierConnectionLineProps {
   scale?: number;
   nodeWidth?: number;
   nodeHeight?: number;
+  // Measured rendered heights of each end's card. Cards stretch when live
+  // content (chaos strip, restart line) lands on them, so anchors must use
+  // the real height or the tube leaves the card off the port dot.
+  sourceHeight?: number;
+  targetHeight?: number;
   showPackets?: boolean;
   animatePackets?: boolean;
 }
 
-// Tube family thinned ~35% per owner ask: casing 7 -> 4.5, core 4 -> 2.5,
-// packets 2.5 -> 1.6. The line reads as a precise wire, not a pipe.
+// Tube family: casing sits at the divider tone, core lifted to secondary
+// text grey so the graph reads clearly against #14161A at a glance.
 const TUBE_CASING_WIDTH = 4.5;
 const TUBE_CORE_WIDTH = 2.5;
 const PACKET_WIDTH = 1.6;
@@ -47,15 +52,16 @@ export function BezierConnectionLine({
   scale = 1,
   nodeWidth = 48,
   nodeHeight = 48,
+  sourceHeight = nodeHeight,
+  targetHeight = nodeHeight,
   showPackets = false,
   animatePackets = false,
 }: BezierConnectionLineProps) {
   const centerXOffset = nodeWidth / 2;
-  const centerYOffset = nodeHeight / 2;
   const cx1 = source.x + centerXOffset;
-  const cy1 = source.y + centerYOffset;
+  const cy1 = source.y + sourceHeight / 2;
   const cx2 = target.x + centerXOffset;
-  const cy2 = target.y + centerYOffset;
+  const cy2 = target.y + targetHeight / 2;
 
   const dx = cx2 - cx1;
   const dy = cy2 - cy1;
@@ -64,7 +70,8 @@ export function BezierConnectionLine({
 
   // Anchor per axis so tubes emerge from the card border they leave/enter by.
   const horizontalHalf = nodeWidth / 2 - 4;
-  const verticalHalf = nodeHeight / 2 - 4;
+  const verticalHalfSource = sourceHeight / 2 - 4;
+  const verticalHalfTarget = targetHeight / 2 - 4;
 
   let x1: number, y1: number, x2: number, y2: number;
   if (isHorizontal) {
@@ -76,9 +83,9 @@ export function BezierConnectionLine({
   } else {
     const dir = dy >= 0 ? 1 : -1;
     x1 = cx1;
-    y1 = cy1 + verticalHalf * dir;
+    y1 = cy1 + verticalHalfSource * dir;
     x2 = cx2;
-    y2 = cy2 - verticalHalf * dir;
+    y2 = cy2 - verticalHalfTarget * dir;
   }
 
   const pull = distance * 0.4;
@@ -122,13 +129,10 @@ export function BezierConnectionLine({
     return (Math.atan2(tangentY, tangentX) * 180) / Math.PI;
   };
 
-  // Arrowhead tangent at the target end (points into the node).
-  const arrowAngle = (Math.atan2(y2 - c2y, x2 - c2x) * 180) / Math.PI;
-
-  const casingColor = isSelected ? "#273042" : "#1F2633";
-  const coreColor = isSelected ? "#5B8CFF" : "#3A465C";
-  const packetColor = isSelected ? "#EDF1F7" : showPackets ? "#8FB3FF" : "#677185";
-  const arrowColor = isSelected ? "#EDF1F7" : showPackets ? "#8FB3FF" : "#677185";
+  const casingColor = isSelected ? "#3A3F4A" : "#2A2E37";
+  const coreColor = isSelected ? "#4FA89B" : "#8B909C";
+  const packetColor = isSelected ? "#EDEEF0" : showPackets ? "#4FA89B" : "#8B909C";
+  const arrowColor = isSelected ? "#EDEEF0" : showPackets ? "#4FA89B" : "#8B909C";
 
   const showPortBadge = scale >= 0.65;
   const showChevrons = distance > CHEVRON_MIN_DISTANCE;
@@ -142,13 +146,6 @@ export function BezierConnectionLine({
 
   return (
     <g>
-      {/* Energized halo behind a live tube (thinned with the tube) */}
-      {showPackets && (
-        <>
-          <path d={path} fill="none" stroke="#5B8CFF" strokeWidth={6.5} opacity={0.10} strokeLinecap="round" />
-          <path d={path} fill="none" stroke="#5B8CFF" strokeWidth={4} opacity={0.16} strokeLinecap="round" />
-        </>
-      )}
       {/* Tube casing (outer wall) */}
       <path d={path} fill="none" stroke={casingColor} strokeWidth={TUBE_CASING_WIDTH} strokeLinecap="round" strokeLinejoin="round" />
       {/* Tube core (inner channel) */}
@@ -168,7 +165,8 @@ export function BezierConnectionLine({
       )}
       {/* Flow chevrons: two flanking the port badge while it is visible, or a
           single direction marker at the exact line center once zoom-out
-          hides the badge. */}
+          hides the badge. The old filled arrowhead at the target end is
+          retired — the chevrons carry direction now. */}
       {showChevrons &&
         chevronTs.map((t) => {
           const p = pointAt(t);
@@ -195,13 +193,7 @@ export function BezierConnectionLine({
             </g>
           );
         })}
-      {/* Direction arrowhead into the target port */}
-      <path
-        d="M0,0 L-9,-4.5 L-9,4.5 Z"
-        transform={`translate(${x2} ${y2}) rotate(${arrowAngle})`}
-        fill={coreColor}
-      />
-      {/* Port badge: oval pill riding the curve midpoint */}
+      {/* Port badge: flat pill riding the curve midpoint */}
       {showPortBadge && (
         <g>
           <rect
@@ -210,15 +202,15 @@ export function BezierConnectionLine({
             width={badgeWidth}
             height={PORT_BADGE_HEIGHT}
             rx={PORT_BADGE_HEIGHT / 2}
-            fill="#12161F"
-            stroke={isSelected ? "#5B8CFF" : "#35415A"}
+            fill="#1C1F26"
+            stroke={isSelected ? "#4FA89B" : "#2A2E37"}
             strokeWidth={1}
           />
           <text
             x={midX}
             y={midY + PORT_FONT_SIZE * 0.35}
             textAnchor="middle"
-            fill={isSelected ? "#EDF1F7" : "#AAB4C5"}
+            fill={isSelected ? "#EDEEF0" : "#8B909C"}
             fontSize={PORT_FONT_SIZE}
             fontFamily="ui-monospace, SFMono-Regular, monospace"
             fontWeight={600}

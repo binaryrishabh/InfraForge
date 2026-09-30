@@ -91,10 +91,10 @@ export function ResourcePaletteDrawer() {
         style={{ width: DRAWER_WIDTH }}
       >
         <div className="flex items-center justify-between px-4 pt-3 pb-2 shrink-0">
-          <span className="text-[11px] uppercase tracking-wider text-[#677185] font-semibold">
+          <span className="text-[11px] uppercase tracking-wider text-[#5A5F6B] font-semibold">
             Resources
           </span>
-          <span className="text-[10px] text-[#677185]">drag to canvas</span>
+          <span className="text-[10px] text-[#5A5F6B]">drag to canvas</span>
         </div>
         {/* Search — filters groups case-insensitively by type label */}
         <div className="px-3 pb-2 shrink-0">
@@ -103,19 +103,19 @@ export function ResourcePaletteDrawer() {
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder="search resources…"
-            className="w-full h-8 rounded-lg bg-[#0B0E14] border border-[#273042] text-[12px] text-[#EDF1F7] placeholder-[#677185] px-2.5 outline-none focus:border-[#5B8CFF] transition-colors duration-150"
+            className="w-full h-8 rounded-lg bg-[#14161A] border border-[#2A2E37] text-[12px] text-[#EDEEF0] placeholder-[#5A5F6B] px-2.5 outline-none focus:border-[#4FA89B] transition-colors duration-150"
           />
         </div>
         {/* Scrollable list — thin custom scrollbar, never the browser default */}
         <div className="infraforge-scroll flex-1 overflow-y-auto px-3 pb-3 flex flex-col">
           {visibleGroups.length === 0 ? (
-            <p className="text-[10px] text-[#677185] px-2 pt-2">
+            <p className="text-[10px] text-[#5A5F6B] px-2 pt-2">
               no resources match “{query.trim()}”
             </p>
           ) : (
             visibleGroups.map((group) => (
               <div key={group.title}>
-                <p className="text-[9px] uppercase tracking-wider text-[#677185] px-2 pt-2 pb-1">
+                <p className="text-[9px] uppercase tracking-wider text-[#5A5F6B] px-2 pt-2 pb-1">
                   {group.title}
                 </p>
                 <div className="flex flex-col gap-1">
@@ -141,7 +141,7 @@ export function ResourcePaletteDrawer() {
         data-palette-toggle
         onClick={() => setOpen(!open)}
         title={open ? "Close palette" : "Open palette"}
-        className={`pointer-events-auto absolute top-16 w-9 h-9 rounded-lg bg-[#12161F]/95 backdrop-blur-md border border-[#273042] text-[#AAB4C5] hover:text-[#EDF1F7] hover:border-[#35415A] shadow-[0_4px_12px_rgba(0,0,0,0.35)] flex items-center justify-center transition-[left] duration-300 ${DRAWER_EASE}`}
+        className={`pointer-events-auto absolute top-16 w-9 h-9 rounded-lg bg-[#1C1F26] border border-[#2A2E37] text-[#8B909C] hover:text-[#EDEEF0] hover:border-[#3A3F4A] shadow-[0_4px_12px_rgba(0,0,0,0.35)] flex items-center justify-center transition-[left] duration-300 ${DRAWER_EASE}`}
         style={{ left: open ? OPEN_TOGGLE_LEFT : EDGE_GAP }}
       >
         {open ? (

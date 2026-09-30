@@ -50,6 +50,9 @@ interface CanvasStoreState {
   // replica first appears, then frozen: dragging a base VM never drags its
   // replicas along, and replicas occupy space like real nodes.
   replicaPositions: Record<string, { x: number; y: number }>;
+  // Measured rendered heights of card wrappers, fed by useCardHeight so
+  // connection anchors sit exactly on the port dots at any card height.
+  cardHeights: Record<string, number>;
   scale: number;
   translateX: number;
   translateY: number;
@@ -79,6 +82,7 @@ interface CanvasStoreState {
   setReplicaPosition: (id: string, x: number, y: number) => void;
   pruneReplicaPositions: (aliveIds: string[]) => void;
   clearReplicaPositions: () => void;
+  setCardHeight: (id: string, height: number) => void;
   setViewport: (scale: number, tx: number, ty: number) => void;
   setShowLayoutDropdown: (show: boolean) => void;
   setSavedLayouts: (layouts: Infrastructure[]) => void;
@@ -107,6 +111,7 @@ export const useCanvasStore = create<CanvasStoreState>()((set) => ({
   emptyCanvasStateDismissed: false,
   activeDrag: null,
   replicaPositions: {},
+  cardHeights: {},
   scale: 1,
   translateX: 0,
   translateY: 0,
@@ -155,6 +160,8 @@ export const useCanvasStore = create<CanvasStoreState>()((set) => ({
       return { replicaPositions: next };
     }),
   clearReplicaPositions: () => set({ replicaPositions: {} }),
+  setCardHeight: (id, height) =>
+    set((s) => ({ cardHeights: { ...s.cardHeights, [id]: height } })),
   setViewport: (scale, tx, ty) => set({ scale, translateX: tx, translateY: ty }),
   setShowLayoutDropdown: (show) => set({ showLayoutDropdown: show }),
   setSavedLayouts: (layouts) => set({ savedLayouts: layouts }),
@@ -173,6 +180,6 @@ export const useCanvasStore = create<CanvasStoreState>()((set) => ({
     selectedConnectionId: null, pendingConnection: null,
     scale: 1, translateX: 0, translateY: 0,
     activeDeploymentId: null, isDeploying: false, liveMode: false, activeDrag: null,
-    replicaPositions: {}, undoStack: [], redoStack: [],
+    replicaPositions: {}, cardHeights: {}, undoStack: [], redoStack: [],
   }),
 }));

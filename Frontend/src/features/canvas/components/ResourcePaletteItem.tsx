@@ -1,7 +1,10 @@
 import { useEffect } from "react";
 import { useDraggable } from "@dnd-kit/core";
 import { ResourceIcon } from "@/components/common/ResourceIcon";
-import { hueForType, hueTint } from "@/theme/resourceCategoryHues";
+import {
+  categoryColorForType,
+  categoryBadgeTint,
+} from "@/theme/resourceCategoryHues";
 import { setGlobalDragCursor } from "../utils/dragCursor";
 import type { ResourceType } from "@shared/constants/RESOURCE_TYPES.constants";
 
@@ -11,6 +14,8 @@ interface ResourcePaletteItemProps {
   capacity: string;
 }
 
+/* Palette row: the icon tile wears the SAME category color + tint as the
+canvas card badge, so sidebar and canvas read as one coherent system. */
 export function ResourcePaletteItem({
   label,
   sublabel,
@@ -29,7 +34,7 @@ export function ResourcePaletteItem({
     return () => setGlobalDragCursor(false);
   }, [isDragging]);
 
-  const hue = hueForType(label);
+  const color = categoryColorForType(label);
 
   return (
     <div
@@ -45,7 +50,7 @@ export function ResourcePaletteItem({
     >
       <span
         className="w-8 h-8 rounded-md flex items-center justify-center shrink-0"
-        style={{ background: hueTint(hue), color: hue }}
+        style={{ background: categoryBadgeTint(label), color }}
       >
         <ResourceIcon type={label} size={16} className="" />
       </span>

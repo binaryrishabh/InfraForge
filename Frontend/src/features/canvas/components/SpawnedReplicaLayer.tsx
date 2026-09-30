@@ -18,6 +18,8 @@ interface ReplicaLink {
   lb: Resource;
   x: number;
   y: number;
+  sourceHeight: number;
+  targetHeight: number;
 }
 
 /* Engine-owned autoscaled replicas on the unified canvas: lb→replica link
@@ -31,6 +33,8 @@ export const SpawnedReplicaLayer = memo(function SpawnedReplicaLayer() {
   const scale = useCanvasStore((s) => s.scale);
   const resources = useCanvasStore((s) => s.resources);
   const replicaPositions = useCanvasStore((s) => s.replicaPositions);
+  // Measured card heights so lb->replica tubes anchor on real card edges.
+  const cardHeights = useCanvasStore((s) => s.cardHeights);
   // Boolean selectors: stable across 1Hz snapshots, no extra re-renders.
   const simulationRunning = useSimulationStore(
     (s) => s.simulatedSeconds > 0 && s.speed > 0,
@@ -79,7 +83,14 @@ export const SpawnedReplicaLayer = memo(function SpawnedReplicaLayer() {
     const lb = resourceById.get(pool.lbId);
     if (!lb) continue;
     const pos = posOf(vm);
-    linkTubes.push({ vm, lb, x: pos.x, y: pos.y });
+    linkTubes.push({
+      vm,
+      lb,
+      x: pos.x,
+      y: pos.y,
+      sourceHeight: cardHeights[lb.id] ?? NODE_CARD_HEIGHT,
+      targetHeight: cardHeights[vm.id] ?? NODE_CARD_HEIGHT,
+    });
   }
   const activeVms = spawnedVms.filter((v) => v.status === "active");
   const provisioningVms = spawnedVms.filter((v) => v.status === "provisioning");
@@ -93,7 +104,7 @@ export const SpawnedReplicaLayer = memo(function SpawnedReplicaLayer() {
         height="100%"
         style={{ overflow: "visible" }}
       >
-        {linkTubes.map(({ vm, lb, x, y }) => (
+        {linkTubes.map(({ vm, lb, x, y, sourceHeight, targetHeight }) => (
           <BezierConnectionLine
             key={`replica-link-${vm.id}`}
             source={lb}
@@ -102,6 +113,8 @@ export const SpawnedReplicaLayer = memo(function SpawnedReplicaLayer() {
             scale={scale}
             nodeWidth={NODE_CARD_WIDTH}
             nodeHeight={NODE_CARD_HEIGHT}
+            sourceHeight={sourceHeight}
+            targetHeight={targetHeight}
             showPackets={liveMode}
             animatePackets={simulationRunning}
           />

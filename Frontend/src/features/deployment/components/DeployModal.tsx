@@ -1,5 +1,13 @@
 import { useState } from "react";
 import { Modal } from "@/components/UI/Modal";
+import {
+  INPUT_CLASS,
+  LABEL_CLASS,
+  CANCEL_BUTTON_CLASS,
+  AMBER_BUTTON_CLASS,
+  TOGGLE_ACTIVE_CLASS,
+  TOGGLE_IDLE_CLASS,
+} from "@/theme/controlClasses";
 import type { WorkloadProfile } from "@shared/interface/WorkloadProfile.interface";
 
 interface DeployModalProps {
@@ -149,7 +157,7 @@ export function DeployModal({
       <form onSubmit={handleSubmit}>
         {/* Name box leads the modal — deployments are named artifacts. */}
         <div className="mb-4">
-          <label className="block text-xs font-medium text-[#AAB4C5] mb-1.5">
+          <label className={LABEL_CLASS}>
             Deployment name
           </label>
           <input
@@ -163,22 +171,22 @@ export function DeployModal({
             placeholder="production-web-cluster"
             maxLength={64}
             disabled={loading}
-            className={`w-full h-9 rounded-lg bg-[#0B0E14] border text-[13px] text-[#EDF1F7] placeholder-[#677185] px-3 outline-none transition-colors duration-150 ${
+            className={`${INPUT_CLASS} ${
               nameError
-                ? "border-[#F0564A] shadow-[0_0_0_3px_rgba(240,86,74,0.16)]"
-                : "border-[#273042] hover:border-[#35415A] focus:border-[#5B8CFF] focus:shadow-[0_0_0_3px_rgba(91,140,255,0.18)]"
+                ? "!border-[#C4574A] !shadow-[0_0_0_3px_rgba(196,87,74,0.16)]"
+                : ""
             } ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
           />
           {nameError && (
-            <p className="text-xs text-[#F0564A] mt-1.5">{nameError}</p>
+            <p className="text-xs text-[#C4574A] mt-1.5">{nameError}</p>
           )}
         </div>
-        <p className="font-mono text-xs text-[#677185] mb-4">
+        <p className="font-mono text-xs text-[#5A5F6B] mb-4">
           {resourceCount} resources · {connectionCount} connections
         </p>
         {/* Scenario preset selector */}
         <div className="mb-4">
-          <label className="block text-xs font-medium text-[#AAB4C5] mb-1.5">
+          <label className={LABEL_CLASS}>
             Scenario preset
           </label>
           <div className="flex flex-wrap gap-1.5">
@@ -188,24 +196,24 @@ export function DeployModal({
                 type="button"
                 onClick={() => applyPreset(preset)}
                 disabled={loading}
-                className={`px-2.5 py-1.5 rounded-full text-[11px] font-medium transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed ${
+                className={`px-2.5 py-1.5 rounded-full text-[11px] font-medium transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed border ${
                   activePreset === preset.id
-                    ? "bg-[#5B8CFF] text-[#081018]"
-                    : "bg-[#0B0E14] border border-[#273042] text-[#AAB4C5] hover:text-[#EDF1F7] hover:border-[#35415A]"
+                    ? `${TOGGLE_ACTIVE_CLASS} border-transparent`
+                    : `${TOGGLE_IDLE_CLASS} border-[#2A2E37] hover:border-[#3A3F4A]`
                 }`}
               >
                 {preset.label}
               </button>
             ))}
           </div>
-          <p className="text-[11px] text-[#677185] mt-1.5">
+          <p className="text-[11px] text-[#5A5F6B] mt-1.5">
             {activePresetObj
               ? activePresetObj.description
               : "Custom profile — tuned by hand."}
           </p>
         </div>
         <div className="mb-4">
-          <label className="block text-xs font-medium text-[#AAB4C5] mb-1.5">
+          <label className={LABEL_CLASS}>
             Target throughput
           </label>
           <div className="flex gap-2">
@@ -218,9 +226,9 @@ export function DeployModal({
                 setActivePreset(null);
               }}
               disabled={loading}
-              className="flex-1 h-9 rounded-lg bg-[#0B0E14] border border-[#273042] text-[13px] text-[#EDF1F7] px-3 outline-none focus:border-[#5B8CFF] focus:shadow-[0_0_0_3px_rgba(91,140,255,0.18)] transition-colors duration-150"
+              className={`flex-1 ${INPUT_CLASS}`}
             />
-            <div className="flex rounded-lg border border-[#273042] overflow-hidden shrink-0">
+            <div className="flex rounded-lg border border-[#2A2E37] overflow-hidden shrink-0">
               <button
                 type="button"
                 onClick={() => {
@@ -229,7 +237,9 @@ export function DeployModal({
                     setActivePreset(null);
                   }
                 }}
-                className={`px-3 text-xs transition-colors duration-150 ${throughputUnit === "per-hour" ? "bg-[#5B8CFF] text-[#081018] font-medium" : "bg-[#0B0E14] text-[#AAB4C5] hover:text-[#EDF1F7]"}`}
+                className={`px-3 text-xs transition-colors duration-150 ${
+                  throughputUnit === "per-hour" ? TOGGLE_ACTIVE_CLASS : TOGGLE_IDLE_CLASS
+                }`}
               >
                 /hr
               </button>
@@ -241,20 +251,22 @@ export function DeployModal({
                     setActivePreset(null);
                   }
                 }}
-                className={`px-3 text-xs transition-colors duration-150 ${throughputUnit === "per-minute" ? "bg-[#5B8CFF] text-[#081018] font-medium" : "bg-[#0B0E14] text-[#AAB4C5] hover:text-[#EDF1F7]"}`}
+                className={`px-3 text-xs transition-colors duration-150 ${
+                  throughputUnit === "per-minute" ? TOGGLE_ACTIVE_CLASS : TOGGLE_IDLE_CLASS
+                }`}
               >
                 /min
               </button>
             </div>
           </div>
-          <p className="text-[11px] text-[#677185] mt-1.5 font-mono">
+          <p className="text-[11px] text-[#5A5F6B] mt-1.5 font-mono">
             ≈ {rpsPreview.toLocaleString()} requests/second at full load
           </p>
         </div>
         <button
           type="button"
           onClick={() => setShowAdvanced(!showAdvanced)}
-          className="w-full flex items-center justify-between text-xs text-[#AAB4C5] hover:text-[#EDF1F7] py-2 border-t border-[#1F2633] transition-colors duration-150"
+          className="w-full flex items-center justify-between text-xs text-[#8B909C] hover:text-[#EDEEF0] py-2 border-t border-[#2A2E37] transition-colors duration-150"
         >
           <span>Advanced workload settings</span>
           <span>{showAdvanced ? "▴" : "▾"}</span>
@@ -262,10 +274,10 @@ export function DeployModal({
         {showAdvanced && (
           <div className="space-y-4 pt-3">
             <div>
-              <label className="block text-xs font-medium text-[#AAB4C5] mb-1.5">
+              <label className={LABEL_CLASS}>
                 Traffic shape
               </label>
-              <div className="flex rounded-lg border border-[#273042] overflow-hidden">
+              <div className="flex rounded-lg border border-[#2A2E37] overflow-hidden">
                 <button
                   type="button"
                   onClick={() => {
@@ -274,7 +286,9 @@ export function DeployModal({
                       setActivePreset(null);
                     }
                   }}
-                  className={`flex-1 py-1.5 text-xs transition-colors duration-150 ${trafficShape === "steady" ? "bg-[#5B8CFF] text-[#081018] font-medium" : "bg-[#0B0E14] text-[#AAB4C5]"}`}
+                  className={`flex-1 py-1.5 text-xs transition-colors duration-150 ${
+                    trafficShape === "steady" ? TOGGLE_ACTIVE_CLASS : TOGGLE_IDLE_CLASS
+                  }`}
                 >
                   Steady
                 </button>
@@ -286,7 +300,9 @@ export function DeployModal({
                       setActivePreset(null);
                     }
                   }}
-                  className={`flex-1 py-1.5 text-xs transition-colors duration-150 ${trafficShape === "peak" ? "bg-[#5B8CFF] text-[#081018] font-medium" : "bg-[#0B0E14] text-[#AAB4C5]"}`}
+                  className={`flex-1 py-1.5 text-xs transition-colors duration-150 ${
+                    trafficShape === "peak" ? TOGGLE_ACTIVE_CLASS : TOGGLE_IDLE_CLASS
+                  }`}
                 >
                   Peak
                 </button>
@@ -294,7 +310,7 @@ export function DeployModal({
             </div>
             {trafficShape === "peak" && (
               <div>
-                <label className="block text-xs font-medium text-[#AAB4C5] mb-1.5">
+                <label className={LABEL_CLASS}>
                   Peak multiplier
                 </label>
                 <input
@@ -308,15 +324,15 @@ export function DeployModal({
                     setActivePreset(null);
                   }}
                   disabled={loading}
-                  className="w-full h-9 rounded-lg bg-[#0B0E14] border border-[#273042] text-[13px] text-[#EDF1F7] px-3 outline-none focus:border-[#5B8CFF] focus:shadow-[0_0_0_3px_rgba(91,140,255,0.18)] transition-colors duration-150"
+                  className={INPUT_CLASS}
                 />
-                <p className="text-[11px] text-[#677185] mt-1">
+                <p className="text-[11px] text-[#5A5F6B] mt-1">
                   Bursts up to {peakMultiplier}× the base load.
                 </p>
               </div>
             )}
             <div>
-              <label className="block text-xs font-medium text-[#AAB4C5] mb-1.5">
+              <label className={LABEL_CLASS}>
                 Read / write mix
               </label>
               <input
@@ -328,22 +344,22 @@ export function DeployModal({
                   setReadWriteRatio(Number(e.target.value) / 100);
                   setActivePreset(null);
                 }}
-                className="w-full accent-[#5B8CFF]"
+                className="w-full accent-[#4FA89B]"
               />
               <div className="flex justify-between text-[11px] font-mono mt-1">
-                <span className="text-[#AAB4C5]">
+                <span className="text-[#8B909C]">
                   {Math.round(readWriteRatio * 100)}% reads
                 </span>
-                <span className="text-[#677185]">
+                <span className="text-[#5A5F6B]">
                   {Math.round((1 - readWriteRatio) * 100)}% writes
                 </span>
               </div>
             </div>
             <div>
-              <label className="block text-xs font-medium text-[#AAB4C5] mb-1.5">
+              <label className={LABEL_CLASS}>
                 Payload size
               </label>
-              <div className="flex rounded-lg border border-[#273042] overflow-hidden">
+              <div className="flex rounded-lg border border-[#2A2E37] overflow-hidden">
                 {(["light", "medium", "heavy"] as const).map((size) => (
                   <button
                     key={size}
@@ -354,7 +370,9 @@ export function DeployModal({
                         setActivePreset(null);
                       }
                     }}
-                    className={`flex-1 py-1.5 text-xs capitalize transition-colors duration-150 ${payloadSize === size ? "bg-[#5B8CFF] text-[#081018] font-medium" : "bg-[#0B0E14] text-[#AAB4C5]"}`}
+                    className={`flex-1 py-1.5 text-xs capitalize transition-colors duration-150 ${
+                      payloadSize === size ? TOGGLE_ACTIVE_CLASS : TOGGLE_IDLE_CLASS
+                    }`}
                   >
                     {size}
                   </button>
@@ -368,17 +386,18 @@ export function DeployModal({
             type="button"
             onClick={() => onOpenChange(false)}
             disabled={loading}
-            className="h-8 px-3 rounded-lg bg-[#1D2432] border border-[#273042] text-[13px] font-medium text-[#AAB4C5] hover:bg-[#232B3B] hover:border-[#35415A] hover:text-[#EDF1F7] active:scale-[0.98] transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+            className={CANCEL_BUTTON_CLASS}
           >
             Cancel
           </button>
+          {/* Deploy is THE single most important action — it owns the amber. */}
           <button
             type="submit"
             disabled={loading || !targetThroughput || targetThroughput <= 0}
-            className="h-8 px-3 rounded-lg bg-[#5B8CFF] text-[13px] font-medium text-[#081018] hover:bg-[#7AA2FF] active:bg-[#4C7DF0] active:scale-[0.98] transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5"
+            className={AMBER_BUTTON_CLASS}
           >
             {loading && (
-              <span className="w-3.5 h-3.5 border-2 border-[#081018]/30 border-t-[#081018] rounded-full animate-spin" />
+              <span className="w-3.5 h-3.5 border-2 border-[#14161A]/30 border-t-[#14161A] rounded-full animate-spin" />
             )}
             Deploy
           </button>

@@ -60,15 +60,15 @@ export function CanvasResourcePorts({
             onPointerDown={handlePointerDown}
           >
             {isOccupied ? (
-              // Plugged port: quiet accent socket with a dark separation ring
+              // Plugged port: quiet teal socket with a dark separation ring
               // so it reads on top of both the card face and the canvas.
-              <span className="w-3.5 h-3.5 rounded-full bg-[#12161F] border-2 border-[#5B8CFF]/60 ring-2 ring-[#0B0E14]/70 flex items-center justify-center transition-colors duration-150 hover:border-[#7AA2FF]">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#7AA2FF]" />
+              <span className="w-3.5 h-3.5 rounded-full bg-[#1C1F26] border-2 border-[#4FA89B]/60 ring-2 ring-[#14161A]/70 flex items-center justify-center transition-colors duration-150 hover:border-[#5FBBA9]">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#5FBBA9]" />
               </span>
             ) : (
-              // Free port: accent dot with the same separation ring and a
+              // Free port: teal dot with the same separation ring and a
               // gentle grow on hover — visible only while the card is hovered.
-              <span className="w-2.5 h-2.5 rounded-full bg-[#5B8CFF] ring-2 ring-[#0B0E14]/70 transition-transform duration-150 group-hover/port:scale-125" />
+              <span className="w-2.5 h-2.5 rounded-full bg-[#4FA89B] ring-2 ring-[#14161A]/70 transition-transform duration-150 group-hover/port:scale-125" />
             )}
           </div>
         );

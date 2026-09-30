@@ -36,9 +36,9 @@ interface LiveOperatorDockProps {
   deployment: Deployment | null;
 }
 
-/* Floating bottom-center operator panel — same blurred floating grammar as
-every other chrome surface. The header carries the live readout (nodes ·
-links · simulated clock) so the status pill is design-only now. */
+/* Floating bottom-center operator panel — solid floating grammar, no blur.
+The header carries the live readout (nodes · links · simulated clock) so the
+status pill is design-only now. Active tab owns the teal underline. */
 export const LiveOperatorDock = memo(function LiveOperatorDock({
   deploymentId,
   status,
@@ -82,7 +82,7 @@ export const LiveOperatorDock = memo(function LiveOperatorDock({
     }
     if (!deployment) {
       return (
-        <p className="text-[10px] text-[#677185]">
+        <p className="text-[10px] text-[#5A5F6B]">
           Deployment details unavailable yet.
         </p>
       );
@@ -109,8 +109,8 @@ export const LiveOperatorDock = memo(function LiveOperatorDock({
                   onClick={() => setActiveTab(tab.id)}
                   className={`h-full px-3 uppercase text-[11px] font-mono tracking-wide transition-colors duration-150 ${
                     isActive
-                      ? "text-[#5B8CFF] border-b-2 border-[#5B8CFF]"
-                      : "text-[#677185] hover:text-[#AAB4C5] border-b-2 border-transparent"
+                      ? "text-[#4FA89B] border-b-2 border-[#4FA89B]"
+                      : "text-[#5A5F6B] hover:text-[#8B909C] border-b-2 border-transparent"
                   }`}
                 >
                   {tab.label}
@@ -120,15 +120,15 @@ export const LiveOperatorDock = memo(function LiveOperatorDock({
           </div>
           <div className="flex items-center gap-2">
             {/* Live readout — status-pill grammar, primitive subscriptions */}
-            <span className="text-[10px] font-mono uppercase tracking-wider text-[#677185] whitespace-nowrap">
-              <span className="text-[#AAB4C5] tabular-nums">{nodeCount}</span> nodes ·{" "}
-              <span className="text-[#AAB4C5] tabular-nums">{linkCount}</span> links · t+
-              <span className="text-[#AAB4C5] tabular-nums">{simulatedSeconds}</span>s
+            <span className="text-[10px] font-mono uppercase tracking-wider text-[#5A5F6B] whitespace-nowrap">
+              <span className="text-[#8B909C] tabular-nums">{nodeCount}</span> nodes ·{" "}
+              <span className="text-[#8B909C] tabular-nums">{linkCount}</span> links · t+
+              <span className="text-[#8B909C] tabular-nums">{simulatedSeconds}</span>s
             </span>
             <button
               type="button"
               onClick={() => setCollapsed(!collapsed)}
-              className="w-7 h-7 flex items-center justify-center text-[#677185] hover:text-[#AAB4C5] transition-colors duration-150"
+              className="w-7 h-7 flex items-center justify-center text-[#5A5F6B] hover:text-[#8B909C] transition-colors duration-150"
               title={collapsed ? "Expand dock" : "Collapse dock"}
             >
               {collapsed ? "▸" : "▾"}

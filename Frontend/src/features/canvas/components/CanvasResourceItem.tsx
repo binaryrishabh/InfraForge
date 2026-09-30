@@ -2,10 +2,10 @@ import { memo, useEffect, useRef, type PointerEvent as ReactPointerEvent } from 
 import { X } from "lucide-react";
 import { CanvasResourcePorts } from "./CanvasResourcePorts";
 import { useCanvasStore } from "../store/canvasStore";
+import { useCardHeight } from "../hooks/useCardHeight";
 import { startConnectionFromPort } from "../hooks/useCanvasConnectionDrag";
 import { occupiedSidesFor } from "../utils/connectionSides";
 import { setGlobalDragCursor } from "../utils/dragCursor";
-import { hueForType } from "@/theme/resourceCategoryHues";
 import {
   MonitoringDashboardCard,
   NODE_CARD_WIDTH,
@@ -33,13 +33,14 @@ export const CanvasResourceItem = memo(function CanvasResourceItem({
   const occupiedSides = useCanvasStore((s) =>
     occupiedSidesFor(s.resources, s.connectionLines, resource.id)
   );
+  // Feed the wrapper's real rendered height into the store so connection
+  // anchors land exactly on the port dots at any card height.
+  const cardHeightRef = useCardHeight(resource.id);
   const isDraggingRef = useRef(false);
   const wasDragRef = useRef(false);
   const dragCursorActiveRef = useRef(false);
   const dragOffsetRef = useRef({ x: 0, y: 0 });
   const startPosRef = useRef({ x: 0, y: 0 });
-
-  const hue = hueForType(resource.type);
 
   // Safety net: never leave the global grabbing cursor stuck if this item
   // unmounts mid-drag (e.g. a live topology sync removes it).
@@ -135,14 +136,16 @@ export const CanvasResourceItem = memo(function CanvasResourceItem({
     // z-10 makes this wrapper a stacking context: its ports (z-20) and delete
     // button stay INSIDE it, so they can never paint above a sibling card.
     <div
+      ref={cardHeightRef}
       data-resource-id={resource.id}
       title={resource.type}
-      className="absolute group rounded-xl pointer-events-auto cursor-grab select-none z-10"
+      className="absolute group rounded-md pointer-events-auto cursor-grab select-none z-10"
       style={{
         left: resource.x,
         top: resource.y,
         width: NODE_CARD_WIDTH,
-        boxShadow: isSelected ? `0 0 0 2px ${hue}4D` : undefined,
+        // Selection = active state = muted teal ring, never a glow.
+        boxShadow: isSelected ? "0 0 0 2px rgba(79, 168, 155, 0.45)" : undefined,
       }}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
@@ -160,13 +163,12 @@ export const CanvasResourceItem = memo(function CanvasResourceItem({
         occupiedSides={occupiedSides}
         onStartConnection={startConnectionFromPort}
       />
-      {/* Delete chip: hidden + shrunk at rest, pops in on card hover, fills
-          solid danger on its own hover, presses down on click. */}
+      {/* Delete chip: brick ghost at rest, solid brick on its own hover. */}
       <button
         type="button"
         title="Delete node"
         aria-label={`Delete ${resource.id}`}
-        className="absolute -top-2 -right-2 w-6 h-6 rounded-full flex items-center justify-center opacity-0 scale-75 group-hover:opacity-100 group-hover:scale-100 active:scale-90 transition-all duration-150 cursor-pointer bg-[#12161F]/95 backdrop-blur-md border border-[rgba(240,86,74,0.35)] text-[#F0564A] hover:bg-[#F0564A] hover:border-[#F0564A] hover:text-[#081018] shadow-[0_4px_12px_rgba(0,0,0,0.45)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F0564A]/50"
+        className="absolute -top-2 -right-2 w-6 h-6 rounded-full flex items-center justify-center opacity-0 scale-75 group-hover:opacity-100 group-hover:scale-100 active:scale-90 transition-all duration-150 cursor-pointer bg-[#1C1F26] border border-[#C4574A]/40 text-[#C4574A] hover:bg-[#C4574A] hover:border-[#C4574A] hover:text-[#14161A] shadow-[0_4px_12px_rgba(0,0,0,0.35)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C4574A]/50"
         onPointerDown={(e) => e.stopPropagation()}
         onClick={(e) => {
           e.stopPropagation();

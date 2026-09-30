@@ -16,7 +16,7 @@ export function CanvasDesignerPage() {
   }
 
   return (
-    <CanvasSurface className="h-screen bg-[#0f1117] text-white" showEmptyState>
+    <CanvasSurface className="h-screen bg-[#14161A] text-white" showEmptyState>
       {/* Design-only chrome: the floating action topbar and shell menu. */}
       <CanvasTopbar />
       <div className="absolute top-3 right-4 z-40">

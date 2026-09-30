@@ -1,6 +1,7 @@
 import { memo, useRef, type PointerEvent as ReactPointerEvent } from "react";
 import { toast } from "sonner";
 import { useCanvasStore } from "../store/canvasStore";
+import { useCardHeight } from "../hooks/useCardHeight";
 import {
   MonitoringDashboardCard,
   NODE_CARD_WIDTH,
@@ -21,6 +22,9 @@ snap, blocked by (and blocking) every other card through the shared overlap
 guard, removed by the engine on drain — no ports, no delete chip, because
 descale is the only honest way to retire a replica. */
 export const ReplicaCard = memo(function ReplicaCard({ replicaId, x, y }: ReplicaCardProps) {
+  // Feed the wrapper's real rendered height into the store so the lb->replica
+  // tube lands exactly on the card edge like every other connection.
+  const cardHeightRef = useCardHeight(replicaId);
   const dragRef = useRef<{
     offsetX: number;
     offsetY: number;
@@ -80,6 +84,7 @@ export const ReplicaCard = memo(function ReplicaCard({ replicaId, x, y }: Replic
 
   return (
     <div
+      ref={cardHeightRef}
       className="absolute group rounded-xl pointer-events-auto cursor-grab active:cursor-grabbing select-none z-10"
       style={{ left: x, top: y, width: NODE_CARD_WIDTH }}
       title={replicaId}

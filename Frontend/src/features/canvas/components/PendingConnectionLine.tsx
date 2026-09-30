@@ -14,15 +14,12 @@ export const PendingConnectionLine = memo(function PendingConnectionLine({
   const y1 = source.y;
   const x2 = cursor.x;
   const y2 = cursor.y;
-
   const dx = x2 - x1;
   const dy = y2 - y1;
   const distance = Math.sqrt(dx * dx + dy * dy);
   const isHorizontal = Math.abs(dx) >= Math.abs(dy);
   const pull = distance * 0.4;
-
   let c1x: number, c1y: number, c2x: number, c2y: number;
-
   if (isHorizontal) {
     const dir = dx >= 0 ? 1 : -1;
     c1x = x1 + pull * dir;
@@ -36,22 +33,20 @@ export const PendingConnectionLine = memo(function PendingConnectionLine({
     c2x = x2;
     c2y = y2 - pull * dir;
   }
-
   const path = `M ${x1} ${y1} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${x2} ${y2}`;
-
   return (
     <g>
       <path
         d={path}
         fill="none"
-        stroke="#5B8CFF"
+        stroke="#4FA89B"
         strokeWidth={2}
         strokeDasharray="6 4"
         pointerEvents="none"
       />
       {/* Calm origin socket at the port the drag started from */}
-      <circle cx={x1} cy={y1} r={5} fill="#0B0E14" stroke="#5B8CFF" strokeWidth={2} pointerEvents="none" />
-      <circle cx={x1} cy={y1} r={2} fill="#5B8CFF" pointerEvents="none" />
+      <circle cx={x1} cy={y1} r={5} fill="#14161A" stroke="#4FA89B" strokeWidth={2} pointerEvents="none" />
+      <circle cx={x1} cy={y1} r={2} fill="#4FA89B" pointerEvents="none" />
     </g>
   );
 });

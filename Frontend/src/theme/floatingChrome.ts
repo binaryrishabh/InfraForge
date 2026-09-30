@@ -1,7 +1,6 @@
-/* The single source of truth for the floating chrome grammar shared by the
-topbars, the drawers, the operator dock, and the shell menu. Topbars ride
-the standard shadow; drawers and the dock ride the deep one. */
+/* Solid floating chrome — no frosted blur, no glow. Shadows are plain black
+depth; borders are the single low-contrast divider tone. */
 export const FLOATING_CHROME_SURFACE =
-  "rounded-xl border border-[#273042] bg-[#12161F]/95 backdrop-blur-md";
-export const FLOATING_CHROME_SHADOW = "shadow-[0_8px_24px_rgba(0,0,0,0.45)]";
-export const FLOATING_CHROME_SHADOW_DEEP = "shadow-[0_12px_32px_rgba(0,0,0,0.45)]";
+  "rounded-lg border border-[#2A2E37] bg-[#1C1F26]";
+export const FLOATING_CHROME_SHADOW = "shadow-[0_8px_24px_rgba(0,0,0,0.35)]";
+export const FLOATING_CHROME_SHADOW_DEEP = "shadow-[0_12px_32px_rgba(0,0,0,0.40)]";

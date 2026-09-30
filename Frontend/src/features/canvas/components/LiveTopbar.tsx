@@ -16,9 +16,9 @@ interface LiveTopbarProps {
   status: string;
 }
 
-/* Floating pill — the live surface speaks the exact same chrome grammar as
-the design canvas topbar: blurred floating surface, favicon brand, live
-readouts only while LIVE, on-token status chip. */
+/* Floating pill — same solid chrome grammar as the design topbar. Status
+chip is strictly semantic: teal for live/running/completed, brick for
+failed, graphite for torn-down. Tear down owns the brick ghost. */
 export const LiveTopbar = memo(function LiveTopbar({ deploymentId, status }: LiveTopbarProps) {
   const currentLayoutName = useCanvasStore((s) => s.currentLayoutName);
   const [showTeardownConfirm, setShowTeardownConfirm] = useState(false);
@@ -26,17 +26,16 @@ export const LiveTopbar = memo(function LiveTopbar({ deploymentId, status }: Liv
 
   const isLive = status === DeploymentStatus.LIVE;
 
-  // Fully on-token status tones — no legacy gray/blue classes.
   const statusColor =
-    status === DeploymentStatus.LIVE || status === DeploymentStatus.COMPLETED
-      ? "text-emerald-400"
-      : status === DeploymentStatus.RUNNING
-        ? "text-[#5B8CFF]"
-        : status === DeploymentStatus.FAILED
-          ? "text-[#F0564A]"
-          : status === DeploymentStatus.TORN_DOWN
-            ? "text-[#677185]"
-            : "text-[#AAB4C5]";
+    status === DeploymentStatus.LIVE ||
+    status === DeploymentStatus.COMPLETED ||
+    status === DeploymentStatus.RUNNING
+      ? "text-[#4FA89B]"
+      : status === DeploymentStatus.FAILED
+        ? "text-[#C4574A]"
+        : status === DeploymentStatus.TORN_DOWN
+          ? "text-[#5A5F6B]"
+          : "text-[#8B909C]";
 
   return (
     <>
@@ -48,9 +47,9 @@ export const LiveTopbar = memo(function LiveTopbar({ deploymentId, status }: Liv
             className="h-6 w-6 shrink-0"
             draggable={false}
           />
-          <span className="w-px h-5 bg-[#273042] shrink-0" />
+          <span className="w-px h-5 bg-[#2A2E37] shrink-0" />
           {currentLayoutName && (
-            <span className="text-[13px] font-medium text-[#EDF1F7] truncate max-w-40">
+            <span className="text-[13px] font-medium text-[#EDEEF0] truncate max-w-40">
               {currentLayoutName}
             </span>
           )}
@@ -61,14 +60,14 @@ export const LiveTopbar = memo(function LiveTopbar({ deploymentId, status }: Liv
             </>
           )}
           <span
-            className={`px-2 py-0.5 rounded-md border border-[#273042] bg-[#0B0E14] text-[11px] font-mono shrink-0 ${statusColor}`}
+            className={`px-2 py-0.5 rounded-md border border-[#2A2E37] bg-[#14161A] text-[11px] font-mono shrink-0 ${statusColor}`}
           >
             {status}
           </span>
           {isLive && (
             <button
               onClick={() => setShowTeardownConfirm(true)}
-              className="h-7 px-3 rounded-lg bg-[rgba(240,86,74,0.10)] border border-[rgba(240,86,74,0.35)] text-[12px] font-medium text-[#F0564A] hover:bg-[rgba(240,86,74,0.18)] transition-colors duration-150 shrink-0"
+              className="h-7 px-3 rounded-lg bg-transparent border border-[#C4574A]/40 text-[12px] font-medium text-[#C4574A] hover:bg-[#C4574A]/10 transition-colors duration-150 shrink-0"
             >
               Tear down
             </button>

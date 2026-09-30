@@ -1,4 +1,5 @@
 import { RESOURCE_TYPES, type ResourceType } from "@shared/constants/RESOURCE_TYPES.constants";
+import { PALETTE } from "./palette";
 
 export type ResourceCategory =
   | "entry-edge"
@@ -22,34 +23,55 @@ export const CATEGORY_OF_RESOURCE_TYPE: Record<ResourceType, ResourceCategory> =
   [RESOURCE_TYPES.MonitoringAgent]: "observability",
 };
 
-export const CATEGORY_HUE: Record<ResourceCategory, string> = {
-  "entry-edge": "#A78BFA",
-  "traffic-security": "#60A5FA",
-  "compute": "#22D3EE",
-  "data": "#2DD4BF",
-  "messaging": "#F472B6",
-  "observability": "#FACC15",
+/* Muted stripe tones for the 2px card edge. Untouched by the icon-badge
+round — node borders and backgrounds keep their existing language. */
+export const CATEGORY_STRIPE: Record<ResourceCategory, string> = {
+  "entry-edge": "#7C8798",
+  "traffic-security": "#4FA89B",
+  compute: "#B58A5A",
+  data: "#5E8CA8",
+  messaging: "#A8785E",
+  observability: "#8CA85E",
 };
 
-export function hueForType(type: ResourceType): string {
-  const category = CATEGORY_OF_RESOURCE_TYPE[type];
-  return CATEGORY_HUE[category];
+/* Vivid category colors for ICON BADGES — canvas cards, resource sidebar,
+inspector. One map, one language: the same category always wears the same
+color regardless of instance (vm-1 and vm-2 match, every Database-* matches).
+Exact owner-specified mapping; unknown categories fall back to neutral gray. */
+export const CATEGORY_COLOR: Record<ResourceCategory, string> = {
+  "entry-edge": "#7B88B8",
+  "traffic-security": "#4A7FE0",
+  compute: "#3FA88C",
+  data: "#3FA0B8",
+  messaging: "#D45FA0",
+  observability: "#E0A83D",
+};
+
+export function stripeForType(type: ResourceType): string {
+  return CATEGORY_STRIPE[CATEGORY_OF_RESOURCE_TYPE[type]];
 }
 
-// hue + "59" (35% alpha)
-export function hueBorder(hue: string): string {
-  return `${hue}59`;
+export function categoryColorForType(type: ResourceType): string {
+  return CATEGORY_COLOR[CATEGORY_OF_RESOURCE_TYPE[type]] ?? "#5A5F6B";
 }
 
-// hue + "14" (8% alpha)
+/* Badge background = the category color at ~15% opacity (hex alpha 26).
+Shared by every badge site so tints never drift apart. */
+export function categoryBadgeTint(type: ResourceType): string {
+  return `${categoryColorForType(type)}26`;
+}
+
+/* Legacy aliases kept so existing import sites keep compiling while the
+sweep lands; they resolve to control-room tokens instead of vivid hues. */
+export const hueForType = stripeForType;
+export function hueBorder(_hue: string): string {
+  return PALETTE.border;
+}
 export function hueTint(hue: string): string {
   return `${hue}14`;
 }
-
-// hue + "1A" (10% alpha)
 export function hueTile(hue: string): string {
   return `${hue}1A`;
 }
-
 export const PANEL_SHELL_CLASS =
-  "bg-[#12161F] border border-[#1F2633] rounded-xl p-3";
+  "bg-[#1C1F26] border border-[#2A2E37] rounded-lg p-3";

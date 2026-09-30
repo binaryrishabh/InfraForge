@@ -18,6 +18,7 @@ model Infrastructure {
   updatedAt             DateTime                    @updatedAt
 }
 
+
 model Deployment {
   id                    String           @id        @default(uuid())
   infrastructureId      String

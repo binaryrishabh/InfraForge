@@ -26,7 +26,6 @@ export function Modal({
   loading = false,
   width = "440px",
 }: ModalProps) {
-  
   const handleOpenChange = (nextOpen: boolean) => {
     if (loading) return; // Lock dismissal while loading
     onOpenChange(nextOpen);
@@ -44,31 +43,27 @@ export function Modal({
       <Dialog.Portal>
         <Dialog.Overlay
           className={`fixed inset-0 z-40 transition-opacity duration-150 ease-out ${
-            destructive ? "bg-[#05070C]/85" : "bg-[#05070C]/75"
+            destructive ? "bg-[#0A0B0D]/85" : "bg-[#0A0B0D]/75"
           }`}
         />
-        
         <Dialog.Content
           onPointerDownOutside={handlePointerDownOutside}
-          className={`fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 max-h-[calc(100vh-128px)] overflow-y-auto bg-[#171C27] border border-[#273042] rounded-[14px] p-5 shadow-[0_24px_60px_rgba(0,0,0,0.55),0_8px_20px_rgba(0,0,0,0.35)] outline-none`}
-          style={{ width }} 
+          className={`fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 max-h-[calc(100vh-128px)] overflow-y-auto bg-[#1C1F26] border border-[#2A2E37] rounded-[14px] p-5 shadow-[0_24px_60px_rgba(0,0,0,0.55),0_8px_20px_rgba(0,0,0,0.35)] outline-none`}
+          style={{ width }}
         >
           {title && (
-            <Dialog.Title className="text-[14px] font-semibold text-[#EDF1F7] leading-5 tracking-[-0.01em]">
+            <Dialog.Title className="text-[14px] font-semibold text-[#EDEEF0] leading-5 tracking-[-0.01em]">
               {title}
             </Dialog.Title>
           )}
-          
           {description && (
-            <Dialog.Description className="text-[13px] font-normal text-[#AAB4C5] leading mt-1">
+            <Dialog.Description className="text-[13px] font-normal text-[#8B909C] leading mt-1">
               {description}
             </Dialog.Description>
           )}
-          
           <div className={title || description ? "mt-5" : ""}>
             {children}
           </div>
-
           {footer && (
             <div className="mt-6 flex gap-2 justify-end">
               {footer}

@@ -6,7 +6,7 @@ import { RESOURCE_TYPES } from "@shared/constants/RESOURCE_TYPES.constants";
 import { CAPACITY } from "@shared/constants/CAPACITY.constants";
 import { SIMULATION_CONSTANTS } from "@shared/constants/SIMULATION_CONSTANTS.constants";
 import { findSku } from "@shared/catalog/index";
-import { hueForType } from "@/theme/resourceCategoryHues";
+import { stripeForType } from "@/theme/resourceCategoryHues";
 import type { Resource } from "@shared/interface/Resource.interface";
 import { CardShell } from "./card/CardShell";
 import { DesignCardHeader } from "./card/DesignCardHeader";
@@ -17,10 +17,9 @@ import { LiveTelemetryBlock } from "./card/LiveTelemetryBlock";
 import { ChaosAccentStrip } from "./card/ChaosAccentStrip";
 import { SmokeWisps } from "./card/SmokeWisps";
 
-// Compact Excalidraw-scale footprint: ~208px wide nodes. NODE_CARD_HEIGHT is
-// the LIVE footprint/anchor constant (overlap guards + line anchors); the
-// design state settles at the shorter DESIGN_CARD_HEIGHT so the drafting
-// card reads as a compact tile instead of a half-empty panel.
+// Compact footprint: ~208px wide nodes. NODE_CARD_HEIGHT is the LIVE
+// footprint/anchor constant (overlap guards + line anchors); the design
+// state settles at the shorter DESIGN_CARD_HEIGHT.
 export const NODE_CARD_WIDTH = 208;
 export const NODE_CARD_HEIGHT = 160;
 export const DESIGN_CARD_HEIGHT = 120;
@@ -51,11 +50,9 @@ export const MonitoringDashboardCard = memo(function MonitoringDashboardCard({
   const cpuHistory = useSimulationStore((s) => s.cpuHistory[resource.id]);
   const activeChaos = useSimulationStore((s) => s.activeChaos);
   const chaosEffect = activeChaos.find((c) => c.resourceId === resource.id);
-
   const health = metric?.health ?? ResourceHealth.HEALTHY;
   const cpu = metric?.cpu ?? 0;
   const memory = metric?.memory ?? 0;
-
   const shakeAnimation =
     health === ResourceHealth.SATURATED
       ? "infraforge-shake 0.2s ease-in-out infinite"
@@ -63,8 +60,7 @@ export const MonitoringDashboardCard = memo(function MonitoringDashboardCard({
         ? "infraforge-shake-slow 0.6s ease-in-out infinite"
         : undefined;
   const isFailed = health === ResourceHealth.FAILED;
-  const hue = hueForType(resource.type);
-
+  const stripe = stripeForType(resource.type);
   const sku = resource.skuId ? findSku(resource.skuId) : undefined;
   const isVmType = resource.type === RESOURCE_TYPES.VirtualMachine;
   let declaredCapacity: number;
@@ -79,7 +75,6 @@ export const MonitoringDashboardCard = memo(function MonitoringDashboardCard({
     declaredCapacity = CAPACITY[resource.type].rps;
     capacityUnit = "rps";
   }
-
   const showAutoscalingChip =
     resource.type === RESOURCE_TYPES.LoadBalancer &&
     resource.autoscaling?.enabled !== false;
@@ -90,16 +85,14 @@ export const MonitoringDashboardCard = memo(function MonitoringDashboardCard({
     ? `${resource.autoscaling!.minReplicas}-${resource.autoscaling!.maxReplicas}`
     : null;
   const targetCpuDisplay = resource.autoscaling?.targetCpu ?? 75;
-
   const heroValue = mode === "design" ? declaredCapacity : (metric?.rps ?? 0);
   const heroUnit = mode === "design" ? capacityUnit : "rps";
   const displayName = resource.name || resource.id;
   const titleText = resource.name ? `${resource.name} · ${resource.id}` : resource.id;
   const minHeight = mode === "design" ? DESIGN_CARD_HEIGHT : NODE_CARD_HEIGHT;
-
   const cardBody = (
     <CardShell
-      hue={hue}
+      stripe={stripe}
       isRestarting={isRestarting}
       shakeAnimation={shakeAnimation}
       minHeight={minHeight}
@@ -110,7 +103,6 @@ export const MonitoringDashboardCard = memo(function MonitoringDashboardCard({
             type={resource.type}
             displayName={displayName}
             titleText={titleText}
-            hue={hue}
           />
           <CardHeroMetric value={heroValue} unit={heroUnit} />
           <DesignCardFooter
@@ -125,7 +117,6 @@ export const MonitoringDashboardCard = memo(function MonitoringDashboardCard({
             type={resource.type}
             displayName={displayName}
             titleText={titleText}
-            hue={hue}
             health={health}
           />
           <CardHeroMetric value={heroValue} unit={heroUnit} />
@@ -141,7 +132,7 @@ export const MonitoringDashboardCard = memo(function MonitoringDashboardCard({
               values={cpuHistory ?? []}
               width={NODE_CARD_WIDTH - 24}
               height={28}
-              color={hue}
+              color="#4FA89B"
             />
           </div>
           {chaosEffect && <ChaosAccentStrip effect={chaosEffect} />}
@@ -149,9 +140,7 @@ export const MonitoringDashboardCard = memo(function MonitoringDashboardCard({
       )}
     </CardShell>
   );
-
   const smokeWisps = isFailed ? <SmokeWisps /> : null;
-
   if (asContent) {
     return (
       <>
@@ -160,7 +149,6 @@ export const MonitoringDashboardCard = memo(function MonitoringDashboardCard({
       </>
     );
   }
-
   return (
     <div
       className={`absolute group pointer-events-auto ${onNodePointerDown ? "cursor-grab active:cursor-grabbing" : ""}`}

@@ -25,13 +25,16 @@ export const ConnectionLinesLayer = memo(function ConnectionLinesLayer({
 }: ConnectionLinesLayerProps) {
   const selectedConnectionId = useCanvasStore((s) => s.selectedConnectionId);
   const liveMode = useCanvasStore((s) => s.liveMode);
+  // Measured rendered card heights: live cards stretch when a chaos strip or
+  // a restart line lands on them, and anchors must follow the real edge or
+  // the tube leaves the card a few px off the port dot.
+  const cardHeights = useCanvasStore((s) => s.cardHeights);
   // Boolean selectors: stable across 1Hz snapshots, no extra re-renders.
   const simulationRunning = useSimulationStore(
     (s) => s.simulatedSeconds > 0 && s.speed > 0
   );
   // Tubes anchor to the card's visual center, which differs per mode.
   const nodeHeight = liveMode ? NODE_CARD_HEIGHT : DESIGN_CARD_HEIGHT;
-
   return (
     // z-0: committed tubes always paint BELOW every card wrapper (z-10),
     // matching react-flow-style edge-under-node stacking. The pending
@@ -63,6 +66,8 @@ export const ConnectionLinesLayer = memo(function ConnectionLinesLayer({
             scale={scale}
             nodeWidth={NODE_CARD_WIDTH}
             nodeHeight={nodeHeight}
+            sourceHeight={cardHeights[source.id] ?? nodeHeight}
+            targetHeight={cardHeights[target.id] ?? nodeHeight}
             showPackets={liveMode}
             animatePackets={simulationRunning}
             onSelect={() =>

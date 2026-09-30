@@ -1,7 +1,12 @@
 @import "tailwindcss";
 
 body {
-  margin: 0
+  margin: 0;
+  /* Grotesque system stack for UI chrome — distinct from the mono used for
+     technical labels; no webfont dependency, no Inter-only template feel. */
+  font-family: "Geist", "General Sans", ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  background: #14161A;
 }
 
 @keyframes infraforge-shake {
@@ -31,7 +36,7 @@ body {
   to { stroke-dashoffset: -24; }
 }
 
-/* Dropdown menu entrance — 150ms per Section 9 transition budget. */
+/* Dropdown menu entrance — 150ms per transition budget. */
 @keyframes infraforge-drop-in {
   from { opacity: 0; transform: translateY(-4px) scale(0.98); }
   to { opacity: 1; transform: translateY(0) scale(1); }
@@ -42,7 +47,7 @@ body {
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(148, 163, 184, 0.85) 0%, rgba(148, 163, 184, 0.4) 50%, rgba(148, 163, 184, 0) 70%);
+  background: radial-gradient(circle, rgba(139, 144, 156, 0.85) 0%, rgba(139, 144, 156, 0.4) 50%, rgba(139, 144, 156, 0) 70%);
   animation: infraforge-smoke 2.2s ease-out infinite;
 }
 
@@ -64,11 +69,11 @@ body {
 
 /* Thin custom scrollbar for the floating drawers (left palette, right
    inspector). The track stays invisible so the drawer surface reads clean;
-   the thumb is a quiet strong-border tone that brightens on hover.
+   the thumb is a quiet divider tone that brightens on hover.
    Firefox gets the same look via scrollbar-width/color. */
 .infraforge-scroll {
   scrollbar-width: thin;
-  scrollbar-color: #273042 transparent;
+  scrollbar-color: #2A2E37 transparent;
 }
 .infraforge-scroll::-webkit-scrollbar {
   width: 6px;
@@ -77,11 +82,11 @@ body {
   background: transparent;
 }
 .infraforge-scroll::-webkit-scrollbar-thumb {
-  background: #273042;
+  background: #2A2E37;
   border-radius: 999px;
 }
 .infraforge-scroll::-webkit-scrollbar-thumb:hover {
-  background: #35415A;
+  background: #3A3F4A;
 }
 
 /* While any canvas drag is in flight, force the grabbing cursor on every

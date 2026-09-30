@@ -1,5 +1,21 @@
-import { RESOURCE_TYPES, type ResourceType } from "@shared/constants/RESOURCE_TYPES.constants";
-import { Database, Globe, HardDrive, Network, Package, Radio, Server, Shield, Zap, Activity, type LucideIcon, Inbox } from "lucide-react";
+import {
+  RESOURCE_TYPES,
+  type ResourceType,
+} from "@shared/constants/RESOURCE_TYPES.constants";
+import {
+  Database,
+  Globe,
+  Archive,
+  Network,
+  Package,
+  Radio,
+  Server,
+  Shield,
+  Zap,
+  Activity,
+  Mail,
+  type LucideIcon,
+} from "lucide-react";
 
 const ResourceIconMap: Record<ResourceType, LucideIcon> = {
   [RESOURCE_TYPES.DNS]: Globe,
@@ -10,10 +26,13 @@ const ResourceIconMap: Record<ResourceType, LucideIcon> = {
   [RESOURCE_TYPES.ContainerRegistry]: Package,
   [RESOURCE_TYPES.Cache]: Zap,
   [RESOURCE_TYPES.Database]: Database,
-  [RESOURCE_TYPES.ObjectStorage]: HardDrive,
-  [RESOURCE_TYPES.MessageQueue]: Inbox,
-  [RESOURCE_TYPES.MonitoringAgent]: Activity
-}
+  // lucide-react@1.31 ships no `Bucket` export (build error TS2305), so the
+  // object-storage badge wears Archive — the closest existing "stored objects"
+  // glyph — until a real bucket icon lands in the installed icon set.
+  [RESOURCE_TYPES.ObjectStorage]: Archive,
+  [RESOURCE_TYPES.MessageQueue]: Mail,
+  [RESOURCE_TYPES.MonitoringAgent]: Activity,
+};
 
 interface ResourceIconProps {
   type: ResourceType;
@@ -21,7 +40,17 @@ interface ResourceIconProps {
   className?: string;
 }
 
-export function ResourceIcon({type, size = 20, className}: ResourceIconProps) {
+export function ResourceIcon({
+  type,
+  size = 20,
+  className,
+}: ResourceIconProps) {
   const IconComponent = ResourceIconMap[type] ?? Server;
-  return <IconComponent size={size} strokeWidth={1.75} className={className ?? "text-gray-400"}></IconComponent>
+  return (
+    <IconComponent
+      size={size}
+      strokeWidth={1.75}
+      className={className ?? "text-gray-400"}
+    ></IconComponent>
+  );
 }

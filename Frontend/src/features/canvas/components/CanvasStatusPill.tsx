@@ -40,17 +40,15 @@ export const CanvasStatusPill = memo(function CanvasStatusPill() {
     <div
       className={`absolute bottom-4 left-1/2 -translate-x-1/2 z-30 ${CONTROL_PILL_SURFACE}`}
     >
-      <span className="text-[10px] font-mono uppercase tracking-wider text-[#677185] whitespace-nowrap">
-        <span className="text-[#AAB4C5] tabular-nums">{nodeCount}</span> nodes ·{" "}
-        <span className="text-[#AAB4C5] tabular-nums">{linkCount}</span> links
+      <span className="text-[10px] font-mono uppercase tracking-wider text-[#5A5F6B] whitespace-nowrap">
+        <span className="text-[#8B909C] tabular-nums">{nodeCount}</span> nodes ·{" "}
+        <span className="text-[#8B909C] tabular-nums">{linkCount}</span> links
         {CATEGORY_ORDER.map((entry, index) =>
           counts[index] ? (
             <span key={entry.category}>
               {" · "}
               {entry.label}{" "}
-              <span className="text-[#AAB4C5] tabular-nums">
-                {counts[index]}
-              </span>
+              <span className="text-[#8B909C] tabular-nums">{counts[index]}</span>
             </span>
           ) : null,
         )}

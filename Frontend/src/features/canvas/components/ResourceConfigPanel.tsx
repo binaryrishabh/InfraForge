@@ -4,7 +4,11 @@ import { RESOURCE_PORTS } from "@shared/constants/RESOURCE_PORTS.constants";
 import type { Resource } from "@shared/interface/Resource.interface";
 import type { AutoscalingPolicy } from "@shared/interface/AutoscalingPolicy.interface";
 import { ResourceIcon } from "@/components/common/ResourceIcon";
-import { hueForType, hueBorder, hueTint } from "@/theme/resourceCategoryHues";
+import {
+  categoryColorForType,
+  categoryBadgeTint,
+  hueBorder,
+} from "@/theme/resourceCategoryHues";
 import {
   FLOATING_CHROME_SURFACE,
   FLOATING_CHROME_SHADOW_DEEP,
@@ -22,8 +26,8 @@ interface ResourceConfigPanelProps {
 
 /* Inspector drawer: slides from the right on single click, closes on outside
 click, no close button. Interior is deliberately roomy — 20px gutters,
-12-13px type, one concern per section, thin custom scrollbar. The dynamic
-hue border keeps working through the inline borderColor override. */
+12-13px type, one concern per section, thin custom scrollbar. The identity
+tile and port readout wear the same category color as the canvas badge. */
 export function ResourceConfigPanel({
   resource,
   open,
@@ -53,7 +57,7 @@ export function ResourceConfigPanel({
 
   if (!displayedResource) return null;
 
-  const hue = hueForType(displayedResource.type);
+  const categoryColor = categoryColorForType(displayedResource.type);
   const isLb = displayedResource.type === RESOURCE_TYPES.LoadBalancer;
   const isSkuable =
     displayedResource.type === RESOURCE_TYPES.VirtualMachine ||
@@ -73,17 +77,17 @@ export function ResourceConfigPanel({
       className={`absolute top-16 bottom-4 right-3 w-80 z-30 ${FLOATING_CHROME_SURFACE} ${FLOATING_CHROME_SHADOW_DEEP} flex flex-col overflow-hidden transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] ${
         open ? "translate-x-0 pointer-events-auto" : "translate-x-[calc(100%+12px)] pointer-events-none"
       }`}
-      style={{ borderColor: hueBorder(hue) }}
+      style={{ borderColor: hueBorder(categoryColor) }}
     >
       {/* Header: identity + live name editor */}
       <div
         className="shrink-0 px-5 pt-4 pb-4"
-        style={{ borderBottom: `1px solid ${hue}33` }}
+        style={{ borderBottom: `1px solid ${categoryColor}33` }}
       >
         <div className="flex items-center gap-3 mb-3">
           <span
             className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
-            style={{ background: hueTint(hue), color: hue }}
+            style={{ background: categoryBadgeTint(displayedResource.type), color: categoryColor }}
           >
             <ResourceIcon type={displayedResource.type} size={18} className="" />
           </span>
@@ -107,7 +111,7 @@ export function ResourceConfigPanel({
         <span className="text-[11px] uppercase tracking-wider text-[#677185] font-semibold">
           Default port
         </span>
-        <span className="text-[13px] font-mono" style={{ color: hue }}>
+        <span className="text-[13px] font-mono" style={{ color: categoryColor }}>
           :{RESOURCE_PORTS[displayedResource.type] || 80}
         </span>
       </div>

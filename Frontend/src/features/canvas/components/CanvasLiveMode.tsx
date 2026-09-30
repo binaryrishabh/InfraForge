@@ -29,11 +29,6 @@ export function CanvasLiveMode({ deploymentId }: CanvasLiveModeProps) {
 
   // Track liveness so cards flip between design and live telemetry — AND
   // release the deploy lock the moment the environment goes LIVE.
-  // Root cause of the frozen live canvas: the pipeline popup unmounts on
-  // the same render that status flips RUNNING -> LIVE (showPipeline excludes
-  // LIVE), so its onDeploymentComplete effect can never observe LIVE and
-  // isDeploying stayed true forever, blocking every drag/edit (Decision 34:
-  // LIVE is editable). Resetting here makes the transition unconditional.
   useEffect(() => {
     setLiveMode(isLive);
     if (isLive) setIsDeploying(false);
@@ -56,9 +51,8 @@ export function CanvasLiveMode({ deploymentId }: CanvasLiveModeProps) {
   return (
     <>
       {/* Exact design-page composition: ONE full-bleed surface, with the
-          mode-specific chrome floated above it as children. The surface
-          owns the grid now — no local canvasGridStyle needed. */}
-      <CanvasSurface className="h-screen bg-[#0f1117] text-white">
+          mode-specific chrome floated above it as children. */}
+      <CanvasSurface className="h-screen bg-[#14161A] text-white">
         <LiveTopbar deploymentId={deploymentId} status={status} />
         <div className="absolute top-3 right-4 z-40">
           <ShellMenu />
