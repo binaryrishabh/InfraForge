@@ -1,0 +1,61 @@
+name: Validate workspaces
+
+on:
+  pull_request:
+  push:
+    branches: [develop]
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        command:
+          - build --filter=@infraforge/web
+          - typecheck
+          - lint
+          - test
+          - check:boundaries
+          - test:tooling
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.14
+      - run: bun install --frozen-lockfile
+      # Each command has its own job so an existing lint/type failure cannot hide other results.
+      - run: bun run ${{ matrix.command }}
+
+  integration:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_HOST_AUTH_METHOD: trust
+          POSTGRES_DB: infraforge_it_0123abcd
+        ports: ["55432:5432"]
+        options: >-
+          --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 12
+      redis:
+        image: redis:8-alpine
+        ports: ["56379:6379"]
+        options: >-
+          --health-cmd "redis-cli ping" --health-interval 5s --health-timeout 5s --health-retries 12
+    env:
+      INTEGRATION_RUN: "1"
+      INTEGRATION_DISPOSABLE: local-only
+      INTEGRATION_DATABASE_URL: postgresql://postgres@127.0.0.1:55432/infraforge_it_0123abcd
+      INTEGRATION_REDIS_PORT: "56379"
+      INTEGRATION_API_PORT: "3100"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.14
+      - run: bun install --frozen-lockfile
+      - run: bun run test:integration

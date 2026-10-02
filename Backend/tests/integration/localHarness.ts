@@ -144,7 +144,7 @@ export class LocalHarness {
     if (await this.redis.dbsize() !== 0 || (await this.redis.pubsub("CHANNELS") as string[]).length !== 0) {
       throw new Error("Dedicated Redis must start empty with no Pub/Sub channels");
     }
-    const migration = this.spawn("migration", ["node_modules/prisma/build/index.js", "migrate", "deploy"]);
+    const migration = this.spawn("migration", ["run", "db:migrate"]);
     const result = await until(async () => migration.exitCode === null ? undefined : migration.exitCode, "migration completion", 60000);
     const record = this.processRecords.findLast((item) => item.pid === migration.pid);
     if (record) { record.exitCode = result; record.signalCode = migration.signalCode; }

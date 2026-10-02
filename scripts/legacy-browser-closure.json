@@ -1,0 +1,122 @@
+{
+  "shared/catalog/aws.catalog.ts": [
+    "shared/catalog/catalog.types.ts"
+  ],
+  "shared/catalog/catalog.types.ts": [],
+  "shared/catalog/digitalocean.catalog.ts": [
+    "shared/catalog/catalog.types.ts"
+  ],
+  "shared/catalog/index.ts": [
+    "shared/catalog/aws.catalog.ts",
+    "shared/catalog/catalog.types.ts",
+    "shared/catalog/digitalocean.catalog.ts"
+  ],
+  "shared/constants/CAPACITY.constants.ts": [
+    "shared/constants/RESOURCE_TYPES.constants.ts"
+  ],
+  "shared/constants/CHAOS_LABELS.constants.ts": [
+    "shared/enum/DeploymentChaosNames.enum.ts"
+  ],
+  "shared/constants/CONNECTION_RULES.constants.ts": [
+    "shared/constants/RESOURCE_TYPES.constants.ts"
+  ],
+  "shared/constants/DEPLOYMENT_STAGES_NAMES.constants.ts": [],
+  "shared/constants/RESOURCE_PORTS.constants.ts": [
+    "shared/constants/RESOURCE_TYPES.constants.ts"
+  ],
+  "shared/constants/RESOURCE_TYPES.constants.ts": [],
+  "shared/constants/SAMPLE_ARCHITECTURE.constants.ts": [
+    "shared/constants/RESOURCE_TYPES.constants.ts",
+    "shared/interface/ConnectionLine.interface.ts",
+    "shared/interface/Resource.interface.ts"
+  ],
+  "shared/constants/SIMULATION_CONSTANTS.constants.ts": [],
+  "shared/enum/DeploymentChaosNames.enum.ts": [],
+  "shared/enum/DeploymentStageStatus.enum.ts": [],
+  "shared/enum/DeploymentStatus.enum.ts": [],
+  "shared/enum/DeploymentTimelineEventNames.enum.ts": [],
+  "shared/enum/Publish.enum.ts": [],
+  "shared/enum/ResourceHealth.enum.ts": [],
+  "shared/enum/WebSocketMessage.enum.ts": [],
+  "shared/interface/AutoscalingPolicy.interface.ts": [],
+  "shared/interface/ChaosEffect.interface.ts": [
+    "shared/enum/DeploymentChaosNames.enum.ts"
+  ],
+  "shared/interface/ChaosEvents.interface.ts": [
+    "shared/enum/DeploymentChaosNames.enum.ts"
+  ],
+  "shared/interface/ConnectionLine.interface.ts": [],
+  "shared/interface/Deployment.interface.ts": [
+    "shared/enum/DeploymentStatus.enum.ts",
+    "shared/interface/ChaosEvents.interface.ts",
+    "shared/interface/DeploymentStages.interface.ts",
+    "shared/interface/DeploymentTimeline.interface.ts",
+    "shared/interface/WorkloadProfile.interface.ts"
+  ],
+  "shared/interface/DeploymentStages.interface.ts": [
+    "shared/constants/DEPLOYMENT_STAGES_NAMES.constants.ts",
+    "shared/enum/DeploymentStageStatus.enum.ts"
+  ],
+  "shared/interface/DeploymentTimeline.interface.ts": [
+    "shared/constants/DEPLOYMENT_STAGES_NAMES.constants.ts",
+    "shared/enum/DeploymentTimelineEventNames.enum.ts"
+  ],
+  "shared/interface/Infrastructure.interface.ts": [
+    "shared/interface/ConnectionLine.interface.ts",
+    "shared/interface/Resource.interface.ts"
+  ],
+  "shared/interface/PoolRuntime.interface.ts": [],
+  "shared/interface/PoolSnapshot.interface.ts": [],
+  "shared/interface/Resource.interface.ts": [
+    "shared/constants/RESOURCE_TYPES.constants.ts",
+    "shared/interface/AutoscalingPolicy.interface.ts"
+  ],
+  "shared/interface/ResourceMetrics.interface.ts": [
+    "shared/enum/ResourceHealth.enum.ts"
+  ],
+  "shared/interface/SimulationLog.interface.ts": [],
+  "shared/interface/SimulationSnapshot.interface.ts": [
+    "shared/interface/ChaosEffect.interface.ts",
+    "shared/interface/PoolSnapshot.interface.ts",
+    "shared/interface/ResourceMetrics.interface.ts",
+    "shared/interface/SimulationLog.interface.ts",
+    "shared/interface/SpawnedVmInfo.interface.ts"
+  ],
+  "shared/interface/SimulationState.interface.ts": [
+    "shared/catalog/index.ts",
+    "shared/constants/RESOURCE_TYPES.constants.ts",
+    "shared/interface/ChaosEffect.interface.ts",
+    "shared/interface/PoolRuntime.interface.ts",
+    "shared/interface/ResourceMetrics.interface.ts",
+    "shared/interface/SpawnedVmInfo.interface.ts",
+    "shared/interface/VerticalScaleAction.interface.ts",
+    "shared/interface/WorkloadProfile.interface.ts"
+  ],
+  "shared/interface/SpawnedVmInfo.interface.ts": [],
+  "shared/interface/VerticalScaleAction.interface.ts": [],
+  "shared/interface/WorkloadProfile.interface.ts": [],
+  "shared/simulation/topology.ts": [
+    "shared/catalog/catalog.types.ts",
+    "shared/catalog/index.ts",
+    "shared/constants/RESOURCE_TYPES.constants.ts",
+    "shared/constants/SIMULATION_CONSTANTS.constants.ts",
+    "shared/enum/ResourceHealth.enum.ts",
+    "shared/interface/ConnectionLine.interface.ts",
+    "shared/interface/PoolRuntime.interface.ts",
+    "shared/interface/Resource.interface.ts",
+    "shared/interface/ResourceMetrics.interface.ts",
+    "shared/interface/SimulationState.interface.ts"
+  ],
+  "shared/types/ModalState.types.ts": [],
+  "shared/types/UndoCanvasResourceAction.types.ts": [
+    "shared/interface/ConnectionLine.interface.ts",
+    "shared/interface/Resource.interface.ts"
+  ],
+  "shared/validation/validateDeploymentReadiness.validation.ts": [
+    "shared/constants/CONNECTION_RULES.constants.ts",
+    "shared/constants/RESOURCE_TYPES.constants.ts",
+    "shared/interface/ConnectionLine.interface.ts",
+    "shared/interface/Resource.interface.ts",
+    "shared/simulation/topology.ts"
+  ]
+}

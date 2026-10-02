@@ -235,12 +235,12 @@ try {
     Invoke-CheckedCommand `
         -Description "Applying committed Prisma migrations" `
         -FilePath $bun `
-        -Arguments @("x", "prisma", "migrate", "deploy") `
+        -Arguments @("run", "db:migrate") `
         -WorkingDirectory $backendDirectory
     Invoke-CheckedCommand `
         -Description "Generating the Prisma client" `
         -FilePath $bun `
-        -Arguments @("x", "prisma", "generate") `
+        -Arguments @("run", "db:generate") `
         -WorkingDirectory $backendDirectory
 
     Write-Step "Starting InfraForge application services"

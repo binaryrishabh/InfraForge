@@ -37,7 +37,7 @@ Frontend/  React 19 + Vite + Tailwind 4 + zustand + dnd-kit
 
 ## Prerequisites
 
-- [Bun](https://bun.sh) 1.x or newer
+- [Bun](https://bun.sh) 1.3.14
 - Docker (for Redis)
 - PostgreSQL (local, or a free-tier host such as Neon)
 
@@ -46,9 +46,28 @@ Frontend/  React 19 + Vite + Tailwind 4 + zustand + dnd-kit
 ### 1. Install dependencies
 
 ```bash
-cd Backend && bun install
-cd ../Frontend && bun install
+bun install --frozen-lockfile
 ```
+
+Install once from the repository root. `Frontend/` and `Backend/` are Bun workspaces;
+the root `bun.lock` is the dependency authority. Both app manifests pin the existing
+installed versions. The frontend router is pinned to 7.18.2 to reconcile its previous
+manifest/lock mismatch. Root overrides and three existing dependency constraints
+preserve transitive resolutions while consolidating the two installs. Hoisting may
+change optional type peer placement; each app keeps its own TypeScript version
+(web 6.0.3, backend 5.9.3).
+
+Run `bun run build`, `bun run typecheck`, `bun run lint`, `bun run test`, and
+`bun run check:boundaries` from the root. Checks run without caching during migration.
+The frontend lint and backend type checks currently report existing failures;
+the validation workflow runs each check independently and retains those failures.
+`bun run test:integration` requires the disposable local service settings documented
+in [the integration test guide](Backend/tests/integration/README.md).
+
+On Windows, `bun run dev` calls the existing PowerShell launcher. It reuses the
+configured local PostgreSQL/Redis containers, applies committed migrations, generates
+the client, and supervises all four application processes. Keep local `.env` files in
+their app directories.
 
 ### 2. Start Redis
 
@@ -68,8 +87,8 @@ Then generate the Prisma client and create the schema:
 
 ```bash
 cd Backend
-bunx prisma generate
-bunx prisma migrate dev
+bun run db:generate
+bun run db:migrate
 ```
 
 ### 4. Run the backend (three processes)

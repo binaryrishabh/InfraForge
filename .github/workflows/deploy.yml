@@ -3,11 +3,17 @@ name: Deploy InfraForge
 on:
   push:
     branches: [main]
-    # Only rebuild backend containers when backend & shared code changes.
-    # (Vercel auto-deploys the frontend on EVERY push, regardless.)
+    # Rebuild backend containers when their source or workspace inputs change.
     paths:
       - "Backend/**"
       - "shared/**"
+      - "Frontend/package.json"
+      - "package.json"
+      - "bun.lock"
+      - "bunfig.toml"
+      - "tsconfig.base.json"
+      - "turbo.json"
+      - ".dockerignore"
       - ".github/workflows/deploy.yml"
 
 jobs:
