@@ -2,7 +2,7 @@ import { useCallback } from "react";
 import { toast } from "sonner";
 import { useCanvasStore } from "../store/canvasStore";
 import { positionIsOccupied } from "../utils/cardFootprint";
-import type { Resource } from "@shared/interface/Resource.interface";
+import type { Resource } from "@infraforge/domain/resource";
 
 /* Canvas cards PLUS engine-owned replicas form the obstacle set: a real node
 can never be dropped or moved on top of an ASG replica, and vice versa. */

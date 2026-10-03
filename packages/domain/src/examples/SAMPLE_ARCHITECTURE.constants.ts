@@ -1,6 +1,6 @@
-import type { ConnectionLine } from "../interface/ConnectionLine.interface";
-import type { Resource } from "../interface/Resource.interface";
-import { RESOURCE_TYPES } from "./RESOURCE_TYPES.constants";
+import type { ConnectionLine } from "../resource/ConnectionLine.interface";
+import type { Resource } from "../resource/Resource.interface";
+import { RESOURCE_TYPES } from "../resource/RESOURCE_TYPES.constants";
 
 /* Native v3 card spacing (CARD_LAYOUT_VERSION 3, 208x160 cards on the
 24px grid): 432px column step, 288px row step. Loads as-is — the old

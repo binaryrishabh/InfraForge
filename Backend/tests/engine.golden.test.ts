@@ -5,15 +5,15 @@ import {
   applyManualScale,
   reconcileTopology,
 } from "@shared/simulation/engine";
-import { DeploymentChaosNames } from "@shared/enum/DeploymentChaosNames.enum";
-import { SAMPLE_ARCHITECTURE } from "@shared/constants/SAMPLE_ARCHITECTURE.constants";
-import { RESOURCE_TYPES } from "@shared/constants/RESOURCE_TYPES.constants";
-import { ResourceHealth } from "@shared/enum/ResourceHealth.enum";
-import { validateDeploymentReadiness } from "@shared/validation/validateDeploymentReadiness.validation";
+import { DeploymentChaosNames } from "@infraforge/domain/resource";
+import { SAMPLE_ARCHITECTURE } from "@infraforge/domain/examples";
+import { RESOURCE_TYPES } from "@infraforge/domain/resource";
+import { ResourceHealth } from "@infraforge/domain/resource";
+import { validateDeploymentReadiness } from "@infraforge/domain/validation";
 import type { SimulationState } from "@shared/interface/SimulationState.interface";
 import type { ChaosEffect } from "@shared/interface/ChaosEffect.interface";
 import type { TickInputs } from "@shared/interface/TickInputs.interface";
-import type { WorkloadProfile } from "@shared/interface/WorkloadProfile.interface";
+import type { WorkloadProfile } from "@infraforge/domain/workload";
 import type { SimulationLog } from "@shared/interface/SimulationLog.interface";
 import type { VerticalScaleAction } from "@shared/interface/VerticalScaleAction.interface";
 

@@ -1,11 +1,11 @@
 import { toast } from "sonner";
 import { createInfrastructure, deleteInfrastructure, updateInfrastructure } from "@/api/infrastructure.api";
 import { createDeployment } from "@/api/deployment.api";
-import { SAMPLE_ARCHITECTURE } from "@shared/constants/SAMPLE_ARCHITECTURE.constants";
-import { validateDeploymentReadiness } from "@shared/validation/validateDeploymentReadiness.validation";
+import { SAMPLE_ARCHITECTURE } from "@infraforge/domain/examples";
+import { validateDeploymentReadiness } from "@infraforge/domain/validation";
 import { useCanvasStore } from "../store/canvasStore";
 import { CARD_LAYOUT_VERSION } from "../utils/layoutMigration";
-import type { WorkloadProfile } from "@shared/interface/WorkloadProfile.interface";
+import type { WorkloadProfile } from "@infraforge/domain/workload";
 
 export function useInfrastructureActions() {
   const handleNewExecute = () => {

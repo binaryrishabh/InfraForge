@@ -6,7 +6,7 @@ import {
   categoryBadgeTint,
 } from "@/theme/resourceCategoryHues";
 import { setGlobalDragCursor } from "../utils/dragCursor";
-import type { ResourceType } from "@shared/constants/RESOURCE_TYPES.constants";
+import type { ResourceType } from "@infraforge/domain/resource";
 
 interface ResourcePaletteItemProps {
   label: ResourceType;

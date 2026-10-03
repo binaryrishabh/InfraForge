@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { injectChaos } from "@/api/deployment.api";
-import { DeploymentChaosNames } from "@shared/enum/DeploymentChaosNames.enum";
+import { DeploymentChaosNames } from "@infraforge/domain/resource";
 import { PANEL_SHELL_CLASS } from "@/theme/resourceCategoryHues";
 
 interface ChaosControlPanelProps {

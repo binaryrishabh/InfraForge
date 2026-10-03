@@ -1,7 +1,7 @@
 import { create } from "zustand";
-import type { Resource } from "@shared/interface/Resource.interface";
-import type { ConnectionLine } from "@shared/interface/ConnectionLine.interface";
-import type { ResourceType } from "@shared/constants/RESOURCE_TYPES.constants";
+import type { Resource } from "@infraforge/domain/resource";
+import type { ConnectionLine } from "@infraforge/domain/resource";
+import type { ResourceType } from "@infraforge/domain/resource";
 import type { Infrastructure } from "@shared/interface/Infrastructure.interface";
 import type { ModalState } from "@shared/types/ModalState.types";
 import type { UndoCanvasResourceAction } from "@shared/types/UndoCanvasResourceAction.types";

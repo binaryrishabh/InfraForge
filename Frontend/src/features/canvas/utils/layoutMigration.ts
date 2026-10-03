@@ -1,4 +1,4 @@
-import type { Resource } from "@shared/interface/Resource.interface";
+import type { Resource } from "@infraforge/domain/resource";
 
 export const CARD_LAYOUT_VERSION = 3;
 const GRID_SIZE = 24;

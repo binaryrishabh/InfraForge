@@ -2,7 +2,7 @@
 Cost is a pure function of simulated time (Locked Decision #8).
 The burn rate derives from the SKU catalog; resources without a SKU
 fall back to a labelled generic estimate. */
-import { RESOURCE_TYPES } from "../constants/RESOURCE_TYPES.constants";
+import { RESOURCE_TYPES } from "@infraforge/domain/resource";
 import type { SimulationState } from "../interface/SimulationState.interface";
 
 // Transitional fallback for resources without a selected SKU.

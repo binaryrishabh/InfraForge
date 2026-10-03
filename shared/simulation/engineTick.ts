@@ -1,8 +1,8 @@
 /* The heart: one deterministic simulation second. Pure, zero I/O.
 Loads, routes, cascades, retry storms, chaos, autoscaling, vertical scaling. */
-import { RESOURCE_TYPES } from "../constants/RESOURCE_TYPES.constants";
-import { ResourceHealth, type ResourceHealthType } from "../enum/ResourceHealth.enum";
-import { findSku } from "../catalog/index";
+import { RESOURCE_TYPES } from "@infraforge/domain/resource";
+import { ResourceHealth, type ResourceHealthType } from "@infraforge/domain/resource";
+import { findSku } from "@infraforge/catalog";
 import { SIMULATION_CONSTANTS } from "../constants/SIMULATION_CONSTANTS.constants";
 import { CAPACITY } from "../constants/CAPACITY.constants";
 import { mulberry32, round1, burstFactor, chaosApplyMessage, failureVoice } from "./engineHelpers";

@@ -8,7 +8,7 @@ import {
   TOGGLE_ACTIVE_CLASS,
   TOGGLE_IDLE_CLASS,
 } from "@/theme/controlClasses";
-import type { WorkloadProfile } from "@shared/interface/WorkloadProfile.interface";
+import type { WorkloadProfile } from "@infraforge/domain/workload";
 
 interface DeployModalProps {
   open: boolean;

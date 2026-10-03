@@ -1,8 +1,8 @@
-import { RESOURCE_TYPES, type ResourceType } from "../constants/RESOURCE_TYPES.constants";
-import type { ConnectionLine } from "../interface/ConnectionLine.interface";
-import type { Resource } from "../interface/Resource.interface";
-import { CONNECTION_RULES } from "../constants/CONNECTION_RULES.constants";
-import { computeTopology } from "../simulation/topology";
+import { RESOURCE_TYPES, type ResourceType } from "../resource/RESOURCE_TYPES.constants";
+import type { ConnectionLine } from "../resource/ConnectionLine.interface";
+import type { Resource } from "../resource/Resource.interface";
+import { CONNECTION_RULES } from "../topology/CONNECTION_RULES.constants";
+import { computeTopology } from "../topology/computeTopology";
 
 // Function to validete the above defined rules
 export function validateConnection(sourceType: ResourceType, targetType: ResourceType): { valid: boolean, message: string } {

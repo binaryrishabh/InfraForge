@@ -1,0 +1,68 @@
+{
+  "expiresAtStage": 8,
+  "dependencyOwner": "Backend",
+  "imports": {
+    "shared/constants/CAPACITY.constants.ts": [
+      "@infraforge/domain/resource"
+    ],
+    "shared/constants/CHAOS_LABELS.constants.ts": [
+      "@infraforge/domain/resource"
+    ],
+    "shared/interface/ChaosEffect.interface.ts": [
+      "@infraforge/domain/resource"
+    ],
+    "shared/interface/ChaosEvents.interface.ts": [
+      "@infraforge/domain/resource"
+    ],
+    "shared/interface/Deployment.interface.ts": [
+      "@infraforge/domain/workload"
+    ],
+    "shared/interface/DeploymentJob.interface.ts": [
+      "@infraforge/domain/resource"
+    ],
+    "shared/interface/Infrastructure.interface.ts": [
+      "@infraforge/domain/resource"
+    ],
+    "shared/interface/OutboxPayload.interface.ts": [
+      "@infraforge/domain/resource"
+    ],
+    "shared/interface/ResourceMetrics.interface.ts": [
+      "@infraforge/domain/resource"
+    ],
+    "shared/interface/SimulationState.interface.ts": [
+      "@infraforge/catalog/types",
+      "@infraforge/domain/resource",
+      "@infraforge/domain/workload"
+    ],
+    "shared/simulation/cost.ts": [
+      "@infraforge/domain/resource"
+    ],
+    "shared/simulation/engineHelpers.ts": [
+      "@infraforge/domain/resource",
+      "@infraforge/domain/workload"
+    ],
+    "shared/simulation/engineInitialState.ts": [
+      "@infraforge/catalog",
+      "@infraforge/catalog/types",
+      "@infraforge/domain/resource",
+      "@infraforge/domain/topology",
+      "@infraforge/domain/workload"
+    ],
+    "shared/simulation/engineRouting.ts": [
+      "@infraforge/domain/resource"
+    ],
+    "shared/simulation/engineTick.ts": [
+      "@infraforge/catalog",
+      "@infraforge/domain/resource"
+    ],
+    "shared/simulation/topology.ts": [
+      "@infraforge/catalog",
+      "@infraforge/catalog/types",
+      "@infraforge/domain/resource",
+      "@infraforge/domain/topology"
+    ],
+    "shared/types/UndoCanvasResourceAction.types.ts": [
+      "@infraforge/domain/resource"
+    ]
+  }
+}

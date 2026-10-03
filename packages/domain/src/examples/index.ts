@@ -1,0 +1,1 @@
+export { SAMPLE_ARCHITECTURE } from "./SAMPLE_ARCHITECTURE.constants";

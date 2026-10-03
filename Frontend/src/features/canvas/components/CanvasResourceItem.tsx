@@ -10,7 +10,7 @@ import {
   MonitoringDashboardCard,
   NODE_CARD_WIDTH,
 } from "@/features/monitoring/components/MonitoringDashboardCard";
-import type { Resource } from "@shared/interface/Resource.interface";
+import type { Resource } from "@infraforge/domain/resource";
 
 interface CanvasResourceItemProps {
   resource: Resource;

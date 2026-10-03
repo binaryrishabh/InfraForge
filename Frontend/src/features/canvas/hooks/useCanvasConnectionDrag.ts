@@ -1,9 +1,9 @@
 import { useEffect } from "react";
 import { toast } from "sonner";
 import { useCanvasStore } from "../store/canvasStore";
-import { validateConnection } from "@shared/validation/validateDeploymentReadiness.validation";
-import { RESOURCE_PORTS } from "@shared/constants/RESOURCE_PORTS.constants";
-import type { ResourceType } from "@shared/constants/RESOURCE_TYPES.constants";
+import { validateConnection } from "@infraforge/domain/validation";
+import { RESOURCE_PORTS } from "@infraforge/domain/resource";
+import type { ResourceType } from "@infraforge/domain/resource";
 
 /* clientX/clientY are the port dot's center (sent by CanvasResourcePorts),
    so the pending line's anchor lands exactly on the card edge. */

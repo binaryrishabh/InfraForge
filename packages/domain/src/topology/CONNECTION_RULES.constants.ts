@@ -1,4 +1,4 @@
-import { RESOURCE_TYPES, type ResourceType } from "./RESOURCE_TYPES.constants";
+import { RESOURCE_TYPES, type ResourceType } from "../resource/RESOURCE_TYPES.constants";
 
 /* A rule specifing between which resources connections could be done and which one will be the source and which 
 one will be the target */

@@ -7,7 +7,7 @@ import {
   NODE_CARD_WIDTH,
 } from "@/features/monitoring/components/MonitoringDashboardCard";
 import { positionIsOccupied } from "../utils/cardFootprint";
-import { RESOURCE_TYPES } from "@shared/constants/RESOURCE_TYPES.constants";
+import { RESOURCE_TYPES } from "@infraforge/domain/resource";
 
 const GRID_SIZE = 24;
 

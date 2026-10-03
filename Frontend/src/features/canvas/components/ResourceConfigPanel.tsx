@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { RESOURCE_TYPES } from "@shared/constants/RESOURCE_TYPES.constants";
-import { RESOURCE_PORTS } from "@shared/constants/RESOURCE_PORTS.constants";
-import type { Resource } from "@shared/interface/Resource.interface";
-import type { AutoscalingPolicy } from "@shared/interface/AutoscalingPolicy.interface";
+import { RESOURCE_TYPES } from "@infraforge/domain/resource";
+import { RESOURCE_PORTS } from "@infraforge/domain/resource";
+import type { Resource } from "@infraforge/domain/resource";
+import type { AutoscalingPolicy } from "@infraforge/domain/resource";
 import { ResourceIcon } from "@/components/common/ResourceIcon";
 import {
   categoryColorForType,

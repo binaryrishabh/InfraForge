@@ -9,8 +9,8 @@ import {
   NODE_CARD_WIDTH,
   NODE_CARD_HEIGHT,
 } from "@/features/monitoring/components/MonitoringDashboardCard";
-import { RESOURCE_TYPES } from "@shared/constants/RESOURCE_TYPES.constants";
-import type { Resource } from "@shared/interface/Resource.interface";
+import { RESOURCE_TYPES } from "@infraforge/domain/resource";
+import type { Resource } from "@infraforge/domain/resource";
 import type { SpawnedVmInfo } from "@shared/interface/SpawnedVmInfo.interface";
 
 interface ReplicaLink {

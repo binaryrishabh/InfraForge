@@ -1,8 +1,8 @@
 /* Full request routing: path-aware inbound RPS by walking the connection
 graph from entry points. LBs split to VM backends, caches forward only
 misses + writes, DBs forward writes. Pure, zero I/O. */
-import { RESOURCE_TYPES } from "../constants/RESOURCE_TYPES.constants";
-import { ResourceHealth } from "../enum/ResourceHealth.enum";
+import { RESOURCE_TYPES } from "@infraforge/domain/resource";
+import { ResourceHealth } from "@infraforge/domain/resource";
 import { SIMULATION_CONSTANTS } from "../constants/SIMULATION_CONSTANTS.constants";
 import type { SimulationState } from "../interface/SimulationState.interface";
 

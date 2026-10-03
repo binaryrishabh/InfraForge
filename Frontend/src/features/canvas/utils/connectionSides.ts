@@ -1,5 +1,5 @@
-import type { ConnectionLine } from "@shared/interface/ConnectionLine.interface";
-import type { Resource } from "@shared/interface/Resource.interface";
+import type { ConnectionLine } from "@infraforge/domain/resource";
+import type { Resource } from "@infraforge/domain/resource";
 
 export type ConnectionSide = "top" | "right" | "bottom" | "left";
 

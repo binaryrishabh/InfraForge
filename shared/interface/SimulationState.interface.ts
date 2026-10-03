@@ -1,11 +1,11 @@
-import type { Sku } from "../catalog";
-import type { ResourceType } from "../constants/RESOURCE_TYPES.constants";
+import type { Sku } from "@infraforge/catalog/types";
+import type { ResourceType } from "@infraforge/domain/resource";
 import type { ChaosEffect } from "./ChaosEffect.interface";
 import type { PoolRuntime } from "./PoolRuntime.interface";
 import type { SpawnedVmInfo } from "./SpawnedVmInfo.interface";
 import type { VerticalScaleAction } from "./VerticalScaleAction.interface";
 import type { ResourceMetrics } from "./ResourceMetrics.interface";
-import type { WorkloadProfile } from "./WorkloadProfile.interface";
+import type { WorkloadProfile } from "@infraforge/domain/workload";
 
 export interface SimulationState {
   deploymentId: string;

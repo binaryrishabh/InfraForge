@@ -1,7 +1,7 @@
 import {
   RESOURCE_TYPES,
   type ResourceType,
-} from "@shared/constants/RESOURCE_TYPES.constants";
+} from "@infraforge/domain/resource";
 import {
   Database,
   Globe,

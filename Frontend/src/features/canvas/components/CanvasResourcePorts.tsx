@@ -1,4 +1,4 @@
-import type { ResourceType } from "@shared/constants/RESOURCE_TYPES.constants";
+import type { ResourceType } from "@infraforge/domain/resource";
 import type { ConnectionSide } from "../utils/connectionSides";
 
 interface CanvasResourcePortsProps {

@@ -1,4 +1,4 @@
-import { RESOURCE_TYPES, type ResourceType } from "./RESOURCE_TYPES.constants";
+import { RESOURCE_TYPES, type ResourceType } from "@infraforge/domain/resource";
 
 // Generic fallback capacity for resources WITHOUT a selected SKU.
 export const CAPACITY: Record<ResourceType, { rps: number; source: string }> = {

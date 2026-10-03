@@ -5,6 +5,8 @@ WORKDIR /app
 COPY package.json bun.lock bunfig.toml tsconfig.base.json ./
 COPY Backend/package.json ./Backend/
 COPY Frontend/package.json ./Frontend/
+COPY packages/domain/package.json ./packages/domain/
+COPY packages/catalog/package.json ./packages/catalog/
 RUN bun install --frozen-lockfile
 
 # Preserve the current source paths and exclude existing generated clients.
@@ -18,6 +20,8 @@ COPY Backend/utils ./Backend/utils/
 COPY Backend/zod_schemas ./Backend/zod_schemas/
 COPY Backend/prisma ./Backend/prisma/
 COPY shared ./shared/
+COPY packages/domain/src ./packages/domain/src/
+COPY packages/catalog/src ./packages/catalog/src/
 
 # Generate after every authored copy so stale local output cannot replace it.
 RUN cd Backend && bun --bun run db:generate

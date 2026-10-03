@@ -1,4 +1,4 @@
-import type { DeploymentChaosNamesType } from "../enum/DeploymentChaosNames.enum";
+import type { DeploymentChaosNamesType } from "@infraforge/domain/resource";
 
 export interface ChaosEvents {
   timestamp: string;

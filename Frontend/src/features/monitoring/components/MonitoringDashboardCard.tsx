@@ -1,13 +1,13 @@
 import { memo } from "react";
 import { useSimulationStore } from "../store/simulationStore";
-import { ResourceHealth } from "@shared/enum/ResourceHealth.enum";
+import { ResourceHealth } from "@infraforge/domain/resource";
 import { MonitoringCardSparkline } from "./MonitoringCardSparkline";
-import { RESOURCE_TYPES } from "@shared/constants/RESOURCE_TYPES.constants";
+import { RESOURCE_TYPES } from "@infraforge/domain/resource";
 import { CAPACITY } from "@shared/constants/CAPACITY.constants";
 import { SIMULATION_CONSTANTS } from "@shared/constants/SIMULATION_CONSTANTS.constants";
-import { findSku } from "@shared/catalog/index";
+import { findSku } from "@infraforge/catalog";
 import { stripeForType } from "@/theme/resourceCategoryHues";
-import type { Resource } from "@shared/interface/Resource.interface";
+import type { Resource } from "@infraforge/domain/resource";
 import { CardShell } from "./card/CardShell";
 import { DesignCardHeader } from "./card/DesignCardHeader";
 import { LiveCardHeader } from "./card/LiveCardHeader";

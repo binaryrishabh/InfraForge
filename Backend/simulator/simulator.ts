@@ -9,18 +9,18 @@ import {
   reconcileTopology,
 } from "@shared/simulation/engine";
 import { computeHourlyBurnRateUsd } from "@shared/simulation/cost";
-import { DEFAULT_WORKLOAD_PROFILE } from "@shared/constants/DEFAULT_WORKLOAD_PROFILE.constants";
+import { DEFAULT_WORKLOAD_PROFILE } from "@infraforge/domain/workload";
 import { SIMULATION_CONSTANTS } from "@shared/constants/SIMULATION_CONSTANTS.constants";
 import { DeploymentStatus } from "@shared/enum/DeploymentStatus.enum";
 import type { SimulationState } from "@shared/interface/SimulationState.interface";
-import type { ChaosType } from "@shared/types/ChaosType.types";
+import type { ChaosType } from "@infraforge/domain/resource";
 import type { ChaosEffect } from "@shared/interface/ChaosEffect.interface";
 import type { VerticalScaleAction } from "@shared/interface/VerticalScaleAction.interface";
 import type { SimulationSnapshot } from "@shared/interface/SimulationSnapshot.interface";
 import type { SimulationLog } from "@shared/interface/SimulationLog.interface";
-import type { Resource } from "@shared/interface/Resource.interface";
-import type { ConnectionLine } from "@shared/interface/ConnectionLine.interface";
-import type { WorkloadProfile } from "@shared/interface/WorkloadProfile.interface";
+import type { Resource } from "@infraforge/domain/resource";
+import type { ConnectionLine } from "@infraforge/domain/resource";
+import type { WorkloadProfile } from "@infraforge/domain/workload";
 
 interface SimulationInstance {
   state: SimulationState;

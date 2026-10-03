@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { scaleVertical } from "@/api/deployment.api";
-import { skusFor, findSku } from "@shared/catalog/index";
-import { RESOURCE_TYPES } from "@shared/constants/RESOURCE_TYPES.constants";
-import { PROVIDERS, type ProviderId, type SkuCategory } from "@shared/catalog/catalog.types";
+import { skusFor, findSku } from "@infraforge/catalog";
+import { RESOURCE_TYPES } from "@infraforge/domain/resource";
+import { PROVIDERS, type ProviderId, type SkuCategory } from "@infraforge/catalog/types";
 import { PANEL_SHELL_CLASS } from "@/theme/resourceCategoryHues";
 
 interface VerticalScalePanelProps {

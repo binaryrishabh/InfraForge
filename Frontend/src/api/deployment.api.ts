@@ -1,8 +1,8 @@
 import axios from "axios";
 import type { Deployment } from "@shared/interface/Deployment.interface";
-import type { WorkloadProfile } from "@shared/interface/WorkloadProfile.interface";
-import type { Resource } from "@shared/interface/Resource.interface";
-import type { ConnectionLine } from "@shared/interface/ConnectionLine.interface";
+import type { WorkloadProfile } from "@infraforge/domain/workload";
+import type { Resource } from "@infraforge/domain/resource";
+import type { ConnectionLine } from "@infraforge/domain/resource";
 import { API_URL } from "../client/httpClient";
 
 export interface LiveDeploymentSummary {

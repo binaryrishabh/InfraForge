@@ -87,7 +87,13 @@ function owner(file: string): string {
   return "root";
 }
 
-export function checkBoundaries(root: string, legacy: Record<string, string[]>, browserClosure?: Record<string, string[]>): { errors: string[]; edges: ImportEdge[] } {
+export interface LegacyPackages {
+  expiresAtStage: number;
+  dependencyOwner: string;
+  imports: Record<string, string[]>;
+}
+
+export function checkBoundaries(root: string, legacy: Record<string, string[]>, browserClosure?: Record<string, string[]>, legacyPackages?: LegacyPackages): { errors: string[]; edges: ImportEdge[] } {
   const errors: string[] = [];
   const files = ["Frontend", "Backend", "shared", "packages"].flatMap((folder) => sourceFiles(join(root, folder)));
   const manifests = new Map<string, any>();
@@ -96,6 +102,11 @@ export function checkBoundaries(root: string, legacy: Record<string, string[]>, 
     if (!manifests.has(area) && existsSync(join(root, area, "package.json"))) {
       manifests.set(area, JSON.parse(readFileSync(join(root, area, "package.json"), "utf8")));
     }
+  }
+  const workspaces = new Map<string, { area: string; manifest: any }>();
+  for (const [area, manifest] of manifests) workspaces.set(manifest.name, { area, manifest });
+  if (legacyPackages && (legacyPackages.expiresAtStage !== 8 || legacyPackages.dependencyOwner !== "Backend")) {
+    errors.push("Legacy package transition must expire at Stage 8 and remain owned by Backend");
   }
   const graph = new Map<string, string[]>();
   const compilerOptions = new Map<string, any>();
@@ -118,8 +129,37 @@ export function checkBoundaries(root: string, legacy: Record<string, string[]>, 
     for (const edge of outgoing) {
       const specifier = edge.specifier;
       const local = specifier.startsWith(".") || specifier.startsWith("@/") || specifier.startsWith("@shared/");
-      const resolved = ts.resolveModuleName(specifier, file, options, ts.sys).resolvedModule?.resolvedFileName;
+      let resolved = ts.resolveModuleName(specifier, file, options, ts.sys).resolvedModule?.resolvedFileName;
       const location = `${source}:${edge.line} (${edge.typeOnly ? "type" : "value"})`;
+      const dependency = specifier.startsWith("@") ? specifier.split("/").slice(0, 2).join("/") : specifier.split("/")[0]!;
+      const workspace = workspaces.get(dependency);
+      const packageImport = specifier.startsWith("@infraforge/");
+      const dependencyArea = area === "shared" ? legacyPackages?.dependencyOwner : area;
+      const manifest = manifests.get(dependencyArea ?? area);
+      const declared = { ...manifest?.dependencies, ...manifest?.devDependencies, ...manifest?.peerDependencies };
+      if (packageImport) {
+        if (area === "shared" && !legacyPackages?.imports[source]?.includes(specifier)) {
+          errors.push(`${location}: legacy package edge is not allowlisted: ${specifier}`);
+        }
+        if (dependency !== manifests.get(area)?.name && declared[dependency] !== "workspace:*") {
+          errors.push(`${location}: workspace dependency must be declared as workspace:*: ${dependency}`);
+        }
+        if (!workspace) errors.push(`${location}: unknown workspace ${dependency}`);
+        else if (workspace.area === "Frontend" || workspace.area === "Backend") {
+          errors.push(`${location}: app-to-app or package-to-app dependency ${dependency}`);
+        } else {
+          const subpath = specifier === dependency ? "." : `.${specifier.slice(dependency.length)}`;
+          const entry = workspace.manifest.exports?.[subpath];
+          const target = typeof entry === "string" ? entry : entry?.types ?? entry?.default;
+          if (!target || subpath.includes("*") || !target.startsWith("./") || target.includes("..") || !workspace.manifest.exports?.[subpath]) {
+            errors.push(`${location}: package subpath is not an explicit export: ${specifier}`);
+            resolved = undefined;
+          } else {
+            resolved = resolve(root, workspace.area, target);
+            if (!existsSync(resolved)) errors.push(`${location}: package export target is missing: ${specifier}`);
+          }
+        }
+      }
       if (specifier.startsWith("@/") && area !== "Frontend") errors.push(`${location}: web alias used outside its workspace`);
       if (source.startsWith("Frontend/src/") && (specifier.startsWith("node:") || builtins.has(specifier) ||
         specifier === "bun" || specifier === "bun:test")) errors.push(`${location}: browser source imports a runtime-only module ${specifier}`);
@@ -128,23 +168,24 @@ export function checkBoundaries(root: string, legacy: Record<string, string[]>, 
         const targetArea = owner(edge.target);
         if (targetArea === "shared" && area !== "shared") {
           if (!legacy[source]?.includes(edge.target)) errors.push(`${location}: legacy shared edge is not allowlisted: ${edge.target}`);
-        } else if (area !== targetArea) {
+        } else if (area !== targetArea && !packageImport) {
           errors.push(`${location}: cross-workspace source import: ${edge.target}`);
         }
-        if (area === "shared" && targetArea !== "shared") errors.push(`${location}: shared source cannot import ${targetArea}`);
+        if (area === "shared" && targetArea !== "shared" && !packageImport) errors.push(`${location}: shared source cannot import ${targetArea}`);
+        if (area.startsWith("packages/") && targetArea === "shared") errors.push(`${location}: leaf package cannot import legacy shared source`);
         graph.set(source, [...(graph.get(source) ?? []), edge.target]);
       } else if (local) {
         // Vite owns CSS and image imports; they must still point to real app assets.
         const asset = specifier.startsWith("@/") ? join(root, "Frontend/src", specifier.slice(2)) : resolve(dirname(file), specifier);
         if (!existsSync(asset.split("?")[0]!)) errors.push(`${location}: unresolved local import ${specifier}`);
-      } else if (!specifier.startsWith("node:") && !builtins.has(specifier) && specifier !== "bun" && specifier !== "bun:test") {
-        const dependency = specifier.startsWith("@") ? specifier.split("/").slice(0, 2).join("/") : specifier.split("/")[0]!;
-        const manifest = manifests.get(area);
-        const declared = { ...manifest?.dependencies, ...manifest?.devDependencies, ...manifest?.peerDependencies };
+      } else if (!packageImport && !specifier.startsWith("node:") && !builtins.has(specifier) && specifier !== "bun" && specifier !== "bun:test") {
         if (!(dependency in declared)) errors.push(`${location}: undeclared dependency ${dependency}`);
         if ((area === "Frontend" && dependency === "@infraforge/backend") ||
           (area === "Backend" && dependency === "@infraforge/web")) errors.push(`${location}: app-to-app dependency ${dependency}`);
         if (specifier.startsWith("@infraforge/") && /\/src(?:\/|$)/.test(specifier)) errors.push(`${location}: package source deep import ${specifier}`);
+      }
+      if (area.startsWith("packages/") && source.includes("/src/") && !local) {
+        errors.push(`${location}: leaf package source must use package-local imports: ${specifier}`);
       }
       edges.push(edge);
     }
@@ -159,10 +200,27 @@ export function checkBoundaries(root: string, legacy: Record<string, string[]>, 
       if (reachable.has(source)) continue;
       reachable.add(source);
       for (const edge of edges.filter((item) => item.source === source)) {
-        const destination = edge.target ?? edge.specifier;
+        const destination = edge.specifier.startsWith("@infraforge/") ? edge.specifier : edge.target ?? edge.specifier;
         if (!browserClosure[source]?.includes(destination)) errors.push(`${source}:${edge.line}: browser shared closure gains ${destination}`);
         if (edge.target?.startsWith("shared/")) pending.push(edge.target);
       }
+    }
+  }
+  // Include type edges: browser-visible state and contracts must stay safe too.
+  const reachable = new Set<string>();
+  const pending = files.map((file) => normalized(relative(root, file))).filter((file) => file.startsWith("Frontend/src/"));
+  while (pending.length) {
+    const source = pending.pop()!;
+    if (reachable.has(source)) continue;
+    reachable.add(source);
+    if (/^(?:shared\/simulation\/(?:engine[^/]*|cost)|packages\/simulation\/src\/(?:engine|state|cost|tuning|runtime))(?:\.|\/)/.test(source)) {
+      errors.push(`${source}: browser closure reaches forbidden simulation runtime`);
+    }
+    for (const edge of edges.filter((item) => item.source === source)) {
+      if (edge.specifier.startsWith("node:") || builtins.has(edge.specifier) || edge.specifier === "bun" || edge.specifier === "bun:test") {
+        errors.push(`${source}:${edge.line}: browser closure imports runtime-only module ${edge.specifier}`);
+      }
+      if (edge.target) pending.push(edge.target);
     }
   }
   const packageGraph = new Map<string, string[]>();

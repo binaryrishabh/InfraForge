@@ -7,8 +7,8 @@ import {
   NODE_CARD_HEIGHT,
   DESIGN_CARD_HEIGHT,
 } from "@/features/monitoring/components/MonitoringDashboardCard";
-import type { ConnectionLine } from "@shared/interface/ConnectionLine.interface";
-import type { Resource } from "@shared/interface/Resource.interface";
+import type { ConnectionLine } from "@infraforge/domain/resource";
+import type { Resource } from "@infraforge/domain/resource";
 
 interface ConnectionLinesLayerProps {
   resources: Resource[];

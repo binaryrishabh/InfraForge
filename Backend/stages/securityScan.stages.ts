@@ -1,5 +1,5 @@
-import { RESOURCE_TYPES } from "@shared/constants/RESOURCE_TYPES.constants";
-import type { Resource } from "@shared/interface/Resource.interface";
+import { RESOURCE_TYPES } from "@infraforge/domain/resource";
+import type { Resource } from "@infraforge/domain/resource";
 import type { DeploymentStageResult } from "@shared/interface/DeploymentStageResult.interface";
 
 export const runSecurityScan = (resources: Resource[]): DeploymentStageResult => {

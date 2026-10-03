@@ -19,7 +19,7 @@ import { runCostEstimation } from "./stages/costEstimation.stages";
 import { OutboxBullMQStatus } from "@shared/enum/OutboxBullMQStatus.enum";
 import { DeploymentStatus } from "@shared/enum/DeploymentStatus.enum";
 import { DeploymentStageStatus } from "@shared/enum/DeploymentStageStatus.enum";
-import { validateDeploymentReadiness } from "@shared/validation/validateDeploymentReadiness.validation";
+import { validateDeploymentReadiness } from "@infraforge/domain/validation";
 import type { OutboxPayload } from "@shared/interface/OutboxPayload.interface";
 import type { DeploymentJob } from "@shared/interface/DeploymentJob.interface";
 import type { DeploymentStages } from "@shared/interface/DeploymentStages.interface";

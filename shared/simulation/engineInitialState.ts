@@ -1,16 +1,16 @@
 /* Builds the initial simulation state. Topology comes from computeTopology
 (topology.ts) — one source of truth for reachability rules. Pure, zero I/O. */
-import { RESOURCE_TYPES, type ResourceType } from "../constants/RESOURCE_TYPES.constants";
-import { ResourceHealth } from "../enum/ResourceHealth.enum";
-import { findSku } from "../catalog/index";
+import { RESOURCE_TYPES, type ResourceType } from "@infraforge/domain/resource";
+import { ResourceHealth } from "@infraforge/domain/resource";
+import { findSku } from "@infraforge/catalog";
 import { SIMULATION_CONSTANTS } from "../constants/SIMULATION_CONSTANTS.constants";
-import { computeTopology } from "./topology";
-import type { Resource } from "../interface/Resource.interface";
-import type { ConnectionLine } from "../interface/ConnectionLine.interface";
-import type { WorkloadProfile } from "../interface/WorkloadProfile.interface";
+import { computeTopology } from "@infraforge/domain/topology";
+import type { Resource } from "@infraforge/domain/resource";
+import type { ConnectionLine } from "@infraforge/domain/resource";
+import type { WorkloadProfile } from "@infraforge/domain/workload";
 import type { SimulationState } from "../interface/SimulationState.interface";
 import type { PoolRuntime } from "../interface/PoolRuntime.interface";
-import type { Sku } from "../catalog/catalog.types";
+import type { Sku } from "@infraforge/catalog/types";
 import type { ResourceMetrics } from "../interface/ResourceMetrics.interface";
 
 export function createInitialState(

@@ -1,5 +1,5 @@
-import type { Resource } from "./Resource.interface";
-import type { ConnectionLine } from "./ConnectionLine.interface";
+import type { Resource } from "@infraforge/domain/resource";
+import type { ConnectionLine } from "@infraforge/domain/resource";
 
 export interface Infrastructure {
   id: string;

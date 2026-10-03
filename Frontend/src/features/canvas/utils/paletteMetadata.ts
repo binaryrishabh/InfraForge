@@ -1,5 +1,5 @@
 import { CAPACITY } from "@shared/constants/CAPACITY.constants";
-import type { ResourceType } from "@shared/constants/RESOURCE_TYPES.constants";
+import type { ResourceType } from "@infraforge/domain/resource";
 
 /* Real-product sublabels for palette rows — identity flavor only, never
 consumed by simulation math (Section 6: capacity stays catalog/CAPACITY-derived). */

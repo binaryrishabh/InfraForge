@@ -1,4 +1,4 @@
-import { ResourceHealth } from "@shared/enum/ResourceHealth.enum";
+import { ResourceHealth } from "@infraforge/domain/resource";
 
 /* Semantic health tones only: teal = healthy/active, bronze = degraded,
 brick = saturated/failed. No glow, no neon — flat dots and text. */

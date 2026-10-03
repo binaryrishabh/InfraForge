@@ -14,6 +14,8 @@
     "Backend": {
       "name": "@infraforge/backend",
       "dependencies": {
+        "@infraforge/catalog": "workspace:*",
+        "@infraforge/domain": "workspace:*",
         "@prisma/adapter-pg": "7.9.1",
         "@prisma/client": "7.9.1",
         "bullmq": "6.0.8",
@@ -44,6 +46,8 @@
       "version": "0.0.0",
       "dependencies": {
         "@dnd-kit/core": "6.3.1",
+        "@infraforge/catalog": "workspace:*",
+        "@infraforge/domain": "workspace:*",
         "@radix-ui/react-dialog": "1.1.23",
         "@tailwindcss/vite": "4.3.3",
         "axios": "1.19.0",
@@ -70,6 +74,24 @@
         "typescript": "6.0.3",
         "typescript-eslint": "8.66.0",
         "vite": "8.2.0",
+      },
+    },
+    "packages/catalog": {
+      "name": "@infraforge/catalog",
+      "devDependencies": {
+        "@types/bun": "1.3.14",
+        "eslint": "10.8.0",
+        "typescript": "5.9.3",
+        "typescript-eslint": "8.66.0",
+      },
+    },
+    "packages/domain": {
+      "name": "@infraforge/domain",
+      "devDependencies": {
+        "@types/bun": "1.3.14",
+        "eslint": "10.8.0",
+        "typescript": "5.9.3",
+        "typescript-eslint": "8.66.0",
       },
     },
   },
@@ -195,6 +217,10 @@
     "@humanwhocodes/retry": ["@humanwhocodes/retry@0.4.3", "", {}, "sha512-bV0Tgo9K4hfPCek+aMAn81RppFKv2ySDQeMoSZuvTASywNTnVJCArCZE2FWqpvIatKu7VMRLWlR1EazvVhDyhQ=="],
 
     "@infraforge/backend": ["@infraforge/backend@workspace:Backend"],
+
+    "@infraforge/catalog": ["@infraforge/catalog@workspace:packages/catalog"],
+
+    "@infraforge/domain": ["@infraforge/domain@workspace:packages/domain"],
 
     "@infraforge/web": ["@infraforge/web@workspace:Frontend"],
 
@@ -1089,6 +1115,10 @@
     "@eslint-community/eslint-utils/eslint-visitor-keys": ["eslint-visitor-keys@3.4.3", "", {}, "sha512-wpc+LXeiyiisxPlEkUzU6svyS1frIO3Mgxj1fdy7Pm8Ygzguax2N3Fa/D/ag1WqbOprdI+uY6wMUl8/a2G+iag=="],
 
     "@infraforge/backend/typescript": ["typescript@5.9.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="],
+
+    "@infraforge/catalog/typescript": ["typescript@5.9.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="],
+
+    "@infraforge/domain/typescript": ["typescript@5.9.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="],
 
     "@infraforge/web/@types/node": ["@types/node@24.13.3", "", { "dependencies": { "undici-types": "~7.18.0" } }, "sha512-Dh8vAsV36ig5wa9OX4pXvMc9D3Veibfw2wix0CUwYODLD8nkj9UsLjASr49nPg+2eKzxhBV+v7L8pXvT4e639Q=="],
 

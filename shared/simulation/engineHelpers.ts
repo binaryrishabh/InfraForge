@@ -1,10 +1,10 @@
 /* Small pure helpers for the engine: rng, rounding, burst windows,
 chaos log voices, and failure voices. Zero I/O. */
-import { RESOURCE_TYPES, type ResourceType } from "../constants/RESOURCE_TYPES.constants";
-import { ResourceHealth, type ResourceHealthType } from "../enum/ResourceHealth.enum";
-import { DeploymentChaosNames } from "../enum/DeploymentChaosNames.enum";
+import { RESOURCE_TYPES, type ResourceType } from "@infraforge/domain/resource";
+import { ResourceHealth, type ResourceHealthType } from "@infraforge/domain/resource";
+import { DeploymentChaosNames } from "@infraforge/domain/resource";
 import { SIMULATION_CONSTANTS } from "../constants/SIMULATION_CONSTANTS.constants";
-import type { WorkloadProfile } from "../interface/WorkloadProfile.interface";
+import type { WorkloadProfile } from "@infraforge/domain/workload";
 import type { ChaosEffect } from "../interface/ChaosEffect.interface";
 import type { ResourceMetrics } from "../interface/ResourceMetrics.interface";
 

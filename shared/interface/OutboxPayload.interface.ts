@@ -1,5 +1,5 @@
-import { Resource } from "./Resource.interface";
-import { ConnectionLine } from "./ConnectionLine.interface";
+import { Resource } from "@infraforge/domain/resource";
+import { ConnectionLine } from "@infraforge/domain/resource";
 
 export interface OutboxPayload {
     deploymentId: string;

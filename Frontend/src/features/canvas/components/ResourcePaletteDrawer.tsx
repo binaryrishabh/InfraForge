@@ -3,7 +3,7 @@ import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import {
   RESOURCE_TYPES,
   type ResourceType,
-} from "@shared/constants/RESOURCE_TYPES.constants";
+} from "@infraforge/domain/resource";
 import { ResourcePaletteItem } from "./ResourcePaletteItem";
 import { PRODUCT_SUBLABELS, capacityLabel } from "../utils/paletteMetadata";
 import {

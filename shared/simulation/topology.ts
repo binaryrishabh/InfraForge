@@ -4,71 +4,19 @@ reconcileTopology, and the readiness validation all call computeTopology. */
 import {
     RESOURCE_TYPES,
     type ResourceType,
-} from "../constants/RESOURCE_TYPES.constants";
-import { ResourceHealth } from "../enum/ResourceHealth.enum";
-import { findSku } from "../catalog/index";
+} from "@infraforge/domain/resource";
+import { ResourceHealth } from "@infraforge/domain/resource";
+import { findSku } from "@infraforge/catalog";
 import { SIMULATION_CONSTANTS } from "../constants/SIMULATION_CONSTANTS.constants";
-import type { Resource } from "../interface/Resource.interface";
-import type { ConnectionLine } from "../interface/ConnectionLine.interface";
+import type { Resource } from "@infraforge/domain/resource";
+import type { ConnectionLine } from "@infraforge/domain/resource";
 import type { SimulationState } from "../interface/SimulationState.interface";
 import type { PoolRuntime } from "../interface/PoolRuntime.interface";
-import type { Sku } from "../catalog/catalog.types";
+import type { Sku } from "@infraforge/catalog/types";
 import type { ResourceMetrics } from "../interface/ResourceMetrics.interface";
 
-export interface TopologyAnalysis {
-    adjacency: Record<string, string[]>;
-    upstream: Record<string, string[]>;
-    entryPoints: string[];
-    reachable: string[];
-    deadEnds: string[];
-    idle: string[];
-}
-
-export function computeTopology(
-    resources: Resource[],
-    connectionLines: ConnectionLine[],
-): TopologyAnalysis {
-    const adjacency: Record<string, string[]> = {};
-    for (const c of connectionLines) {
-        (adjacency[c.sourceId] ??= []).push(c.targetId);
-    }
-    const upstream: Record<string, string[]> = {};
-    for (const c of connectionLines) {
-        (upstream[c.targetId] ??= []).push(c.sourceId);
-    }
-    const targets = new Set(connectionLines.map((c) => c.targetId));
-    const entryTypes: ResourceType[] = [
-        RESOURCE_TYPES.DNS,
-        RESOURCE_TYPES.CDN,
-        RESOURCE_TYPES.Firewall,
-        RESOURCE_TYPES.LoadBalancer,
-    ];
-    const entryPoints = resources
-        .filter(
-            (r) =>
-                entryTypes.includes(r.type) &&
-                (r.type === RESOURCE_TYPES.DNS || !targets.has(r.id)),
-        )
-        .map((r) => r.id);
-    const reachableSet = new Set<string>();
-    const queue = [...entryPoints];
-    while (queue.length > 0) {
-        const id = queue.shift()!;
-        if (reachableSet.has(id)) continue;
-        reachableSet.add(id);
-        for (const next of adjacency[id] ?? []) queue.push(next);
-    }
-    const deadEnds = resources
-        .filter(
-            (r) =>
-                r.type === RESOURCE_TYPES.VirtualMachine &&
-                reachableSet.has(r.id) &&
-                (adjacency[r.id] ?? []).length === 0,
-        )
-        .map((r) => r.id);
-    const idle = resources.filter((r) => !reachableSet.has(r.id)).map((r) => r.id);
-    return { adjacency, upstream, entryPoints, reachable: [...reachableSet], deadEnds, idle };
-}
+import { computeTopology } from "@infraforge/domain/topology";
+export { computeTopology, type TopologyAnalysis } from "@infraforge/domain/topology";
 
 /* LIVE-EDIT RECONCILE — rebuilds topology from the current canvas while
 preserving runtime state: metrics, chaos, vertical scales, spawned replicas,

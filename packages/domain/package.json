@@ -1,0 +1,38 @@
+{
+  "name": "@infraforge/domain",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./resource": {
+      "types": "./src/resource/index.ts",
+      "default": "./src/resource/index.ts"
+    },
+    "./workload": {
+      "types": "./src/workload/index.ts",
+      "default": "./src/workload/index.ts"
+    },
+    "./topology": {
+      "types": "./src/topology/index.ts",
+      "default": "./src/topology/index.ts"
+    },
+    "./validation": {
+      "types": "./src/validation/index.ts",
+      "default": "./src/validation/index.ts"
+    },
+    "./examples": {
+      "types": "./src/examples/index.ts",
+      "default": "./src/examples/index.ts"
+    }
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.test.json",
+    "test": "bun test tests",
+    "lint": "eslint src tests"
+  },
+  "devDependencies": {
+    "@types/bun": "1.3.14",
+    "typescript": "5.9.3",
+    "eslint": "10.8.0",
+    "typescript-eslint": "8.66.0"
+  }
+}

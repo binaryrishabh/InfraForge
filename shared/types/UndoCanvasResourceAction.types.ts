@@ -1,5 +1,5 @@
-import type { Resource } from "../interface/Resource.interface";
-import type { ConnectionLine } from "../interface/ConnectionLine.interface";
+import type { Resource } from "@infraforge/domain/resource";
+import type { ConnectionLine } from "@infraforge/domain/resource";
 
 // Set the state for undo/redo of resource elements on the canvas.
 export type UndoCanvasResourceAction =

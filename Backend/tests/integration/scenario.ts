@@ -1,6 +1,6 @@
-import type { Resource } from "@shared/interface/Resource.interface";
-import type { ConnectionLine } from "@shared/interface/ConnectionLine.interface";
-import type { WorkloadProfile } from "@shared/interface/WorkloadProfile.interface";
+import type { Resource } from "@infraforge/domain/resource";
+import type { ConnectionLine } from "@infraforge/domain/resource";
+import type { WorkloadProfile } from "@infraforge/domain/workload";
 
 export const seed = { text: "migration-baseline", engine: 1918722716 };
 export const workload: WorkloadProfile = {

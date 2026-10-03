@@ -17,7 +17,7 @@ import {
   NODE_CARD_HEIGHT,
   DESIGN_CARD_HEIGHT,
 } from "@/features/monitoring/components/MonitoringDashboardCard";
-import type { ResourceType } from "@shared/constants/RESOURCE_TYPES.constants";
+import type { ResourceType } from "@infraforge/domain/resource";
 
 const GRID_SIZE = 24;
 

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import type { Resource } from "@shared/interface/Resource.interface";
-import type { AutoscalingPolicy } from "@shared/interface/AutoscalingPolicy.interface";
+import type { Resource } from "@infraforge/domain/resource";
+import type { AutoscalingPolicy } from "@infraforge/domain/resource";
 
 interface AutoscalingPolicySectionProps {
   resource: Resource;

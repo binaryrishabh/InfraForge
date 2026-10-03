@@ -1,7 +1,7 @@
-import { RESOURCE_TYPES } from "@shared/constants/RESOURCE_TYPES.constants";
-import { findSku } from "@shared/catalog/index";
+import { RESOURCE_TYPES } from "@infraforge/domain/resource";
+import { findSku } from "@infraforge/catalog";
 import { GENERIC_MONTHLY_USD } from "@shared/simulation/cost";
-import type { Resource } from "@shared/interface/Resource.interface";
+import type { Resource } from "@infraforge/domain/resource";
 import type { DeploymentStageResult } from "@shared/interface/DeploymentStageResult.interface";
 
 export const runCostEstimation = (resources: Resource[]): DeploymentStageResult => {

@@ -1,5 +1,5 @@
-import type { ResourceHealthType } from "@shared/enum/ResourceHealth.enum";
-import type { ResourceType } from "@shared/constants/RESOURCE_TYPES.constants";
+import type { ResourceHealthType } from "@infraforge/domain/resource";
+import type { ResourceType } from "@infraforge/domain/resource";
 import { healthChipStyles } from "./healthStyles";
 import { CategoryIconBadge } from "./CategoryIconBadge";
 

@@ -1,4 +1,4 @@
-import { WorkloadProfile } from "../interface/WorkloadProfile.interface";
+import type { WorkloadProfile } from "./WorkloadProfile.interface";
 
 export const DEFAULT_WORKLOAD_PROFILE: WorkloadProfile = {
   targetThroughput: 1_000_000,

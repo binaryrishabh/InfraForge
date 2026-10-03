@@ -4,11 +4,11 @@ import {
   type ProviderId,
   type Sku,
   type SkuCategory,
-} from "@shared/catalog/catalog.types";
-import { skusFor, findSku } from "@shared/catalog/index";
+} from "@infraforge/catalog/types";
+import { skusFor, findSku } from "@infraforge/catalog";
 import { SIMULATION_CONSTANTS } from "@shared/constants/SIMULATION_CONSTANTS.constants";
-import { RESOURCE_TYPES } from "@shared/constants/RESOURCE_TYPES.constants";
-import type { Resource } from "@shared/interface/Resource.interface";
+import { RESOURCE_TYPES } from "@infraforge/domain/resource";
+import type { Resource } from "@infraforge/domain/resource";
 
 interface InstancePickerSectionProps {
   resource: Resource;

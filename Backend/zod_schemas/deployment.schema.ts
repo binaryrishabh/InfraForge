@@ -1,5 +1,5 @@
 import * as z from "zod";
-import { DeploymentChaosNames } from "@shared/enum/DeploymentChaosNames.enum";
+import { DeploymentChaosNames } from "@infraforge/domain/resource";
 
 export const ChaosInjectionBodySchema = z.object({
   type: z.enum(DeploymentChaosNames, "Must be of the specified chaos type only"),

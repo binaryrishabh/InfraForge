@@ -6,7 +6,7 @@ import { Queue } from "bullmq";
 import WebSocket from "ws";
 import { createInitialState, tick } from "@shared/simulation/engine";
 import type { SimulationSnapshot } from "@shared/interface/SimulationSnapshot.interface";
-import { ResourceHealth } from "@shared/enum/ResourceHealth.enum";
+import { ResourceHealth } from "@infraforge/domain/resource";
 import { LocalHarness, readLocalSettings, until } from "./localHarness";
 import { layout, seed, workload } from "./scenario";
 

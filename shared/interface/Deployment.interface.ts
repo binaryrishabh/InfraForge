@@ -2,7 +2,7 @@ import type { ChaosEvents } from "./ChaosEvents.interface";
 import type { DeploymentStages } from "./DeploymentStages.interface";
 import type { DeploymentStatus } from "../enum/DeploymentStatus.enum";
 import type { DeploymentTimeline } from "./DeploymentTimeline.interface";
-import type { WorkloadProfile } from "./WorkloadProfile.interface";
+import type { WorkloadProfile } from "@infraforge/domain/workload";
 
 export interface Deployment {
   id: string,

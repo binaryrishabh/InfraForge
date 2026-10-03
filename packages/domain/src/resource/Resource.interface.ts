@@ -1,4 +1,4 @@
-import type { ResourceType } from "../constants/RESOURCE_TYPES.constants";
+import type { ResourceType } from "./RESOURCE_TYPES.constants";
 import type { AutoscalingPolicy } from "./AutoscalingPolicy.interface";
 
 export interface Resource {

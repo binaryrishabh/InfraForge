@@ -1,4 +1,4 @@
-import { RESOURCE_TYPES, type ResourceType } from "@shared/constants/RESOURCE_TYPES.constants";
+import { RESOURCE_TYPES, type ResourceType } from "@infraforge/domain/resource";
 import { PALETTE } from "./palette";
 
 export type ResourceCategory =

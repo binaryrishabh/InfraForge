@@ -4,6 +4,27 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { checkBoundaries, cycles, imports } from "../boundaries";
 
+function withWorkspaceFixture(run: (root: string, put: (file: string, text: string) => void) => void) {
+  const root = mkdtempSync(join(tmpdir(), "infraforge-workspaces-"));
+  const put = (file: string, text: string) => {
+    mkdirSync(join(root, file, ".."), { recursive: true });
+    writeFileSync(join(root, file), text);
+  };
+  try {
+    for (const [folder, name] of [["Frontend", "web"], ["Backend", "backend"]]) {
+      put(`${folder}/package.json`, JSON.stringify({ name: `@infraforge/${name}`, dependencies: { "@infraforge/domain": "workspace:*" } }));
+    }
+    put("packages/domain/package.json", JSON.stringify({ name: "@infraforge/domain", exports: { "./resource": { types: "./src/resource.ts", default: "./src/resource.ts" } } }));
+    put("packages/domain/src/resource.ts", "export type Resource = string;");
+    put("Frontend/src/app.ts", "import type { Resource } from '@infraforge/domain/resource';");
+    put("Backend/app.ts", "import type { Resource } from '@infraforge/domain/resource';");
+    run(root, put);
+  } finally {
+    if (!root.startsWith(join(tmpdir(), "infraforge-workspaces-"))) throw new Error("Unexpected temporary fixture path");
+    rmSync(root, { recursive: true, force: true });
+  }
+}
+
 describe("source import boundaries", () => {
   test("finds aliases, re-exports, dynamic/require and type-only imports", () => {
     const edges = imports("example.ts", `
@@ -23,6 +44,64 @@ describe("source import boundaries", () => {
   test("detects import cycles including type-only cycles", () => {
     expect(cycles(new Map([["a", ["b"]], ["b", ["a"]]]))).toEqual([["a", "b", "a"]]);
     expect(cycles(new Map([["a", ["b"]], ["b", []]]))).toEqual([]);
+  });
+
+  test("accepts explicit workspace exports and rejects undeclared, private and relative package imports", () => {
+    withWorkspaceFixture((root, put) => {
+      expect(checkBoundaries(root, {}).errors).toEqual([]);
+      put("Frontend/package.json", JSON.stringify({ name: "@infraforge/web" }));
+      expect(checkBoundaries(root, {}).errors.join("\n")).toContain("workspace dependency must be declared");
+      put("Frontend/src/app.ts", "import '@infraforge/domain/src/resource'; import '@infraforge/domain/private'; import '../../packages/domain/src/resource'; import '../../Backend/app';");
+      const errors = checkBoundaries(root, {}).errors.join("\n");
+      expect(errors).toContain("package subpath is not an explicit export");
+      expect(errors).toContain("cross-workspace source import: packages/domain/src/resource.ts");
+      expect(errors).toContain("cross-workspace source import: Backend/app.ts");
+    });
+  });
+
+  test("requires exact shared package transitions, their dependency owner and Stage 8 expiry", () => {
+    withWorkspaceFixture((root, put) => {
+      put("shared/state.ts", "export type { Resource } from '@infraforge/domain/resource';");
+      expect(checkBoundaries(root, {}).errors.join("\n")).toContain("legacy package edge is not allowlisted");
+      const transition = { expiresAtStage: 8, dependencyOwner: "Backend", imports: { "shared/state.ts": ["@infraforge/domain/resource"] } };
+      expect(checkBoundaries(root, {}, undefined, transition).errors).toEqual([]);
+      put("Backend/package.json", JSON.stringify({ name: "@infraforge/backend" }));
+      expect(checkBoundaries(root, {}, undefined, transition).errors.join("\n")).toContain("workspace dependency must be declared");
+      expect(checkBoundaries(root, {}, undefined, { ...transition, expiresAtStage: 9 }).errors.join("\n")).toContain("must expire at Stage 8");
+    });
+  });
+
+  test("rejects leaf legacy and app imports even when an old shared edge is allowlisted", () => {
+    withWorkspaceFixture((root, put) => {
+      put("shared/state.ts", "export type State = string;");
+      put("packages/domain/src/resource.ts", "import type { State } from '../../../shared/state'; import '@infraforge/backend';");
+      const errors = checkBoundaries(root, { "packages/domain/src/resource.ts": ["shared/state.ts"] }).errors.join("\n");
+      expect(errors).toContain("leaf package cannot import legacy shared source");
+      expect(errors).toContain("app-to-app or package-to-app dependency");
+    });
+  });
+
+  test("rejects type cycles and transitive browser runtime imports behind public exports", () => {
+    withWorkspaceFixture((root, put) => {
+      put("packages/domain/src/resource.ts", "export type { Resource } from './internal';");
+      put("packages/domain/src/internal.ts", "import type { Resource } from './resource'; import 'node:fs'; export type Internal = string;");
+      const errors = checkBoundaries(root, {}).errors.join("\n");
+      expect(errors).toContain("File import cycle");
+      expect(errors).toContain("browser closure imports runtime-only module node:fs");
+      expect(errors).toContain("leaf package source must use package-local imports");
+      put("packages/domain/package.json", JSON.stringify({ name: "@infraforge/domain", dependencies: { "@infraforge/web": "workspace:*" }, exports: { "./resource": "./src/resource.ts" } }));
+      expect(checkBoundaries(root, {}).errors.join("\n")).toContain("Workspace dependency cycle");
+    });
+  });
+
+  test("rejects simulation runtime reached through an allowlisted browser shared type", () => {
+    withWorkspaceFixture((root, put) => {
+      put("Frontend/src/app.ts", "import type { State } from '../../shared/state';");
+      put("shared/state.ts", "export type { State } from './simulation/engine';");
+      put("shared/simulation/engine.ts", "export type State = string;");
+      const errors = checkBoundaries(root, { "Frontend/src/app.ts": ["shared/state.ts"] }).errors.join("\n");
+      expect(errors).toContain("browser closure reaches forbidden simulation runtime");
+    });
   });
 
   test("resolves aliases/relative imports and rejects new shared, app, dependency and cycle edges", () => {

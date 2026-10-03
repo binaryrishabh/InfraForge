@@ -1,5 +1,5 @@
 import { CategoryIconBadge } from "./CategoryIconBadge";
-import type { ResourceType } from "@shared/constants/RESOURCE_TYPES.constants";
+import type { ResourceType } from "@infraforge/domain/resource";
 
 interface DesignCardHeaderProps {
   type: ResourceType;

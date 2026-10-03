@@ -1,4 +1,4 @@
-import { DeploymentChaosNames } from "../enum/DeploymentChaosNames.enum";
+import { DeploymentChaosNames } from "@infraforge/domain/resource";
 
 export const CHAOS_LABELS: Record<DeploymentChaosNames, string> = {
   [DeploymentChaosNames.Crash]: "Crash",

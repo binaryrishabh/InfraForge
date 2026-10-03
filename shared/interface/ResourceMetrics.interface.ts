@@ -1,4 +1,4 @@
-import type { ResourceHealthType } from "../enum/ResourceHealth.enum";
+import type { ResourceHealthType } from "@infraforge/domain/resource";
 
 export interface ResourceMetrics {
   cpu: number;

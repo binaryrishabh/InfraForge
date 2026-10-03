@@ -9,57 +9,36 @@
     "shared/enum/Publish.enum.ts"
   ],
   "Backend/simulator/simulator.ts": [
-    "shared/constants/DEFAULT_WORKLOAD_PROFILE.constants.ts",
     "shared/constants/SIMULATION_CONSTANTS.constants.ts",
     "shared/enum/DeploymentStatus.enum.ts",
     "shared/interface/ChaosEffect.interface.ts",
-    "shared/interface/ConnectionLine.interface.ts",
-    "shared/interface/Resource.interface.ts",
     "shared/interface/SimulationLog.interface.ts",
     "shared/interface/SimulationSnapshot.interface.ts",
     "shared/interface/SimulationState.interface.ts",
     "shared/interface/VerticalScaleAction.interface.ts",
-    "shared/interface/WorkloadProfile.interface.ts",
     "shared/simulation/cost.ts",
-    "shared/simulation/engine.ts",
-    "shared/types/ChaosType.types.ts"
+    "shared/simulation/engine.ts"
   ],
   "Backend/stages/costEstimation.stages.ts": [
-    "shared/catalog/index.ts",
-    "shared/constants/RESOURCE_TYPES.constants.ts",
     "shared/interface/DeploymentStageResult.interface.ts",
-    "shared/interface/Resource.interface.ts",
     "shared/simulation/cost.ts"
   ],
   "Backend/stages/securityScan.stages.ts": [
-    "shared/constants/RESOURCE_TYPES.constants.ts",
-    "shared/interface/DeploymentStageResult.interface.ts",
-    "shared/interface/Resource.interface.ts"
+    "shared/interface/DeploymentStageResult.interface.ts"
   ],
   "Backend/tests/engine.golden.test.ts": [
-    "shared/constants/RESOURCE_TYPES.constants.ts",
-    "shared/constants/SAMPLE_ARCHITECTURE.constants.ts",
-    "shared/enum/DeploymentChaosNames.enum.ts",
-    "shared/enum/ResourceHealth.enum.ts",
     "shared/interface/ChaosEffect.interface.ts",
     "shared/interface/SimulationLog.interface.ts",
     "shared/interface/SimulationState.interface.ts",
     "shared/interface/TickInputs.interface.ts",
     "shared/interface/VerticalScaleAction.interface.ts",
-    "shared/interface/WorkloadProfile.interface.ts",
-    "shared/simulation/engine.ts",
-    "shared/validation/validateDeploymentReadiness.validation.ts"
+    "shared/simulation/engine.ts"
   ],
   "Backend/tests/integration/deployment.integration.test.ts": [
-    "shared/enum/ResourceHealth.enum.ts",
     "shared/interface/SimulationSnapshot.interface.ts",
     "shared/simulation/engine.ts"
   ],
-  "Backend/tests/integration/scenario.ts": [
-    "shared/interface/ConnectionLine.interface.ts",
-    "shared/interface/Resource.interface.ts",
-    "shared/interface/WorkloadProfile.interface.ts"
-  ],
+  "Backend/tests/integration/scenario.ts": [],
   "Backend/worker.ts": [
     "shared/enum/DeploymentStageStatus.enum.ts",
     "shared/enum/DeploymentStatus.enum.ts",
@@ -67,44 +46,27 @@
     "shared/interface/DeploymentJob.interface.ts",
     "shared/interface/DeploymentStages.interface.ts",
     "shared/interface/DeploymentTimeline.interface.ts",
-    "shared/interface/OutboxPayload.interface.ts",
-    "shared/validation/validateDeploymentReadiness.validation.ts"
+    "shared/interface/OutboxPayload.interface.ts"
   ],
   "Backend/ws-server.ts": [
     "shared/enum/WebSocketMessage.enum.ts"
   ],
-  "Backend/zod_schemas/deployment.schema.ts": [
-    "shared/enum/DeploymentChaosNames.enum.ts"
-  ],
+  "Backend/zod_schemas/deployment.schema.ts": [],
   "Frontend/src/api/deployment.api.ts": [
-    "shared/interface/ConnectionLine.interface.ts",
-    "shared/interface/Deployment.interface.ts",
-    "shared/interface/Resource.interface.ts",
-    "shared/interface/WorkloadProfile.interface.ts"
+    "shared/interface/Deployment.interface.ts"
   ],
   "Frontend/src/api/infrastructure.api.ts": [
     "shared/interface/Deployment.interface.ts",
     "shared/interface/Infrastructure.interface.ts"
   ],
-  "Frontend/src/components/common/ResourceIcon.tsx": [
-    "shared/constants/RESOURCE_TYPES.constants.ts"
-  ],
-  "Frontend/src/features/canvas/components/BezierConnectionLine.tsx": [
-    "shared/constants/RESOURCE_TYPES.constants.ts"
-  ],
+  "Frontend/src/components/common/ResourceIcon.tsx": [],
+  "Frontend/src/features/canvas/components/BezierConnectionLine.tsx": [],
   "Frontend/src/features/canvas/components/CanvasLiveMode.tsx": [
     "shared/enum/DeploymentStatus.enum.ts"
   ],
-  "Frontend/src/features/canvas/components/CanvasResourceItem.tsx": [
-    "shared/interface/Resource.interface.ts"
-  ],
-  "Frontend/src/features/canvas/components/CanvasResourcePorts.tsx": [
-    "shared/constants/RESOURCE_TYPES.constants.ts"
-  ],
-  "Frontend/src/features/canvas/components/ConnectionLinesLayer.tsx": [
-    "shared/interface/ConnectionLine.interface.ts",
-    "shared/interface/Resource.interface.ts"
-  ],
+  "Frontend/src/features/canvas/components/CanvasResourceItem.tsx": [],
+  "Frontend/src/features/canvas/components/CanvasResourcePorts.tsx": [],
+  "Frontend/src/features/canvas/components/ConnectionLinesLayer.tsx": [],
   "Frontend/src/features/canvas/components/LiveOperatorDock.tsx": [
     "shared/interface/Deployment.interface.ts"
   ],
@@ -114,84 +76,41 @@
   "Frontend/src/features/canvas/components/LiveWaitingState.tsx": [
     "shared/enum/DeploymentStatus.enum.ts"
   ],
-  "Frontend/src/features/canvas/components/ReplicaCard.tsx": [
-    "shared/constants/RESOURCE_TYPES.constants.ts"
-  ],
-  "Frontend/src/features/canvas/components/ResourceConfigPanel.tsx": [
-    "shared/constants/RESOURCE_PORTS.constants.ts",
-    "shared/constants/RESOURCE_TYPES.constants.ts",
-    "shared/interface/AutoscalingPolicy.interface.ts",
-    "shared/interface/Resource.interface.ts"
-  ],
-  "Frontend/src/features/canvas/components/ResourcePaletteDrawer.tsx": [
-    "shared/constants/RESOURCE_TYPES.constants.ts"
-  ],
-  "Frontend/src/features/canvas/components/ResourcePaletteItem.tsx": [
-    "shared/constants/RESOURCE_TYPES.constants.ts"
-  ],
+  "Frontend/src/features/canvas/components/ReplicaCard.tsx": [],
+  "Frontend/src/features/canvas/components/ResourceConfigPanel.tsx": [],
+  "Frontend/src/features/canvas/components/ResourcePaletteDrawer.tsx": [],
+  "Frontend/src/features/canvas/components/ResourcePaletteItem.tsx": [],
   "Frontend/src/features/canvas/components/SpawnedReplicaLayer.tsx": [
-    "shared/constants/RESOURCE_TYPES.constants.ts",
-    "shared/interface/Resource.interface.ts",
     "shared/interface/SpawnedVmInfo.interface.ts"
   ],
-  "Frontend/src/features/canvas/components/config/AutoscalingPolicySection.tsx": [
-    "shared/interface/AutoscalingPolicy.interface.ts",
-    "shared/interface/Resource.interface.ts"
-  ],
+  "Frontend/src/features/canvas/components/config/AutoscalingPolicySection.tsx": [],
   "Frontend/src/features/canvas/components/config/InstancePickerSection.tsx": [
-    "shared/catalog/catalog.types.ts",
-    "shared/catalog/index.ts",
-    "shared/constants/RESOURCE_TYPES.constants.ts",
-    "shared/constants/SIMULATION_CONSTANTS.constants.ts",
-    "shared/interface/Resource.interface.ts"
+    "shared/constants/SIMULATION_CONSTANTS.constants.ts"
   ],
-  "Frontend/src/features/canvas/hooks/useCanvasConnectionDrag.ts": [
-    "shared/constants/RESOURCE_PORTS.constants.ts",
-    "shared/constants/RESOURCE_TYPES.constants.ts",
-    "shared/validation/validateDeploymentReadiness.validation.ts"
-  ],
-  "Frontend/src/features/canvas/hooks/useCanvasDragDrop.ts": [
-    "shared/constants/RESOURCE_TYPES.constants.ts"
-  ],
-  "Frontend/src/features/canvas/hooks/useCanvasResourceActions.ts": [
-    "shared/interface/Resource.interface.ts"
-  ],
-  "Frontend/src/features/canvas/hooks/useInfrastructureActions.ts": [
-    "shared/constants/SAMPLE_ARCHITECTURE.constants.ts",
-    "shared/interface/WorkloadProfile.interface.ts",
-    "shared/validation/validateDeploymentReadiness.validation.ts"
-  ],
+  "Frontend/src/features/canvas/hooks/useCanvasConnectionDrag.ts": [],
+  "Frontend/src/features/canvas/hooks/useCanvasDragDrop.ts": [],
+  "Frontend/src/features/canvas/hooks/useCanvasResourceActions.ts": [],
+  "Frontend/src/features/canvas/hooks/useInfrastructureActions.ts": [],
   "Frontend/src/features/canvas/hooks/useInfrastructureDropdown.ts": [
     "shared/interface/Infrastructure.interface.ts"
   ],
   "Frontend/src/features/canvas/store/canvasStore.ts": [
-    "shared/constants/RESOURCE_TYPES.constants.ts",
-    "shared/interface/ConnectionLine.interface.ts",
     "shared/interface/Infrastructure.interface.ts",
-    "shared/interface/Resource.interface.ts",
     "shared/types/ModalState.types.ts",
     "shared/types/UndoCanvasResourceAction.types.ts"
   ],
   "Frontend/src/features/canvas/topbar/InfrastructureLayoutDropdown.tsx": [
     "shared/interface/Infrastructure.interface.ts"
   ],
-  "Frontend/src/features/canvas/utils/connectionSides.ts": [
-    "shared/interface/ConnectionLine.interface.ts",
-    "shared/interface/Resource.interface.ts"
-  ],
-  "Frontend/src/features/canvas/utils/layoutMigration.ts": [
-    "shared/interface/Resource.interface.ts"
-  ],
+  "Frontend/src/features/canvas/utils/connectionSides.ts": [],
+  "Frontend/src/features/canvas/utils/layoutMigration.ts": [],
   "Frontend/src/features/canvas/utils/paletteMetadata.ts": [
-    "shared/constants/CAPACITY.constants.ts",
-    "shared/constants/RESOURCE_TYPES.constants.ts"
+    "shared/constants/CAPACITY.constants.ts"
   ],
   "Frontend/src/features/dashboard/pages/DashboardPage.tsx": [
     "shared/interface/Infrastructure.interface.ts"
   ],
-  "Frontend/src/features/deployment/components/DeployModal.tsx": [
-    "shared/interface/WorkloadProfile.interface.ts"
-  ],
+  "Frontend/src/features/deployment/components/DeployModal.tsx": [],
   "Frontend/src/features/deployment/components/DeploymentPipeline.tsx": [
     "shared/constants/DEPLOYMENT_STAGES_NAMES.constants.ts",
     "shared/enum/DeploymentStatus.enum.ts",
@@ -208,39 +127,20 @@
     "shared/interface/DeploymentTimeline.interface.ts",
     "shared/interface/SimulationSnapshot.interface.ts"
   ],
-  "Frontend/src/features/monitoring/components/ChaosControlPanel.tsx": [
-    "shared/enum/DeploymentChaosNames.enum.ts"
-  ],
+  "Frontend/src/features/monitoring/components/ChaosControlPanel.tsx": [],
   "Frontend/src/features/monitoring/components/MonitoringDashboardCard.tsx": [
-    "shared/catalog/index.ts",
     "shared/constants/CAPACITY.constants.ts",
-    "shared/constants/RESOURCE_TYPES.constants.ts",
-    "shared/constants/SIMULATION_CONSTANTS.constants.ts",
-    "shared/enum/ResourceHealth.enum.ts",
-    "shared/interface/Resource.interface.ts"
+    "shared/constants/SIMULATION_CONSTANTS.constants.ts"
   ],
-  "Frontend/src/features/monitoring/components/VerticalScalePanel.tsx": [
-    "shared/catalog/catalog.types.ts",
-    "shared/catalog/index.ts",
-    "shared/constants/RESOURCE_TYPES.constants.ts"
-  ],
-  "Frontend/src/features/monitoring/components/card/CategoryIconBadge.tsx": [
-    "shared/constants/RESOURCE_TYPES.constants.ts"
-  ],
+  "Frontend/src/features/monitoring/components/VerticalScalePanel.tsx": [],
+  "Frontend/src/features/monitoring/components/card/CategoryIconBadge.tsx": [],
   "Frontend/src/features/monitoring/components/card/ChaosAccentStrip.tsx": [
     "shared/constants/CHAOS_LABELS.constants.ts",
     "shared/interface/ChaosEffect.interface.ts"
   ],
-  "Frontend/src/features/monitoring/components/card/DesignCardHeader.tsx": [
-    "shared/constants/RESOURCE_TYPES.constants.ts"
-  ],
-  "Frontend/src/features/monitoring/components/card/LiveCardHeader.tsx": [
-    "shared/constants/RESOURCE_TYPES.constants.ts",
-    "shared/enum/ResourceHealth.enum.ts"
-  ],
-  "Frontend/src/features/monitoring/components/card/healthStyles.ts": [
-    "shared/enum/ResourceHealth.enum.ts"
-  ],
+  "Frontend/src/features/monitoring/components/card/DesignCardHeader.tsx": [],
+  "Frontend/src/features/monitoring/components/card/LiveCardHeader.tsx": [],
+  "Frontend/src/features/monitoring/components/card/healthStyles.ts": [],
   "Frontend/src/features/monitoring/components/panels/CostBreakdownPanel.tsx": [
     "shared/interface/Deployment.interface.ts"
   ],
@@ -255,7 +155,5 @@
     "shared/interface/SimulationSnapshot.interface.ts",
     "shared/interface/SpawnedVmInfo.interface.ts"
   ],
-  "Frontend/src/theme/resourceCategoryHues.ts": [
-    "shared/constants/RESOURCE_TYPES.constants.ts"
-  ]
+  "Frontend/src/theme/resourceCategoryHues.ts": []
 }

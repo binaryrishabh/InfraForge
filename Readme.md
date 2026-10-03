@@ -30,7 +30,9 @@ real cloud, but educational — never production sizing advice.
 ## Repo layout
 
 ```
-shared/    TypeScript contract layer (engine, SKU catalog, types) — used by both sides
+packages/domain/   Resource/workload types, graph rules, readiness and examples
+packages/catalog/  Provider SKU data and lookup/filter functions
+shared/    Remaining simulation and transport contracts during extraction
 Backend/   Bun + Express + Prisma + PostgreSQL + Redis + BullMQ
 Frontend/  React 19 + Vite + Tailwind 4 + zustand + dnd-kit
 ```
@@ -49,13 +51,20 @@ Frontend/  React 19 + Vite + Tailwind 4 + zustand + dnd-kit
 bun install --frozen-lockfile
 ```
 
-Install once from the repository root. `Frontend/` and `Backend/` are Bun workspaces;
+Install once from the repository root. The apps and `packages/*` are Bun workspaces;
 the root `bun.lock` is the dependency authority. Both app manifests pin the existing
 installed versions. The frontend router is pinned to 7.18.2 to reconcile its previous
 manifest/lock mismatch. Root overrides and three existing dependency constraints
 preserve transitive resolutions while consolidating the two installs. Hoisting may
 change optional type peer placement; each app keeps its own TypeScript version
 (web 6.0.3, backend 5.9.3).
+
+Both apps declare domain/catalog workspace dependencies and import their explicit
+package exports. These packages expose TypeScript source directly to Bun and Vite;
+they have typecheck, lint and test tasks and no emitted build. Domain offers
+`resource`, `workload`, `topology`, `validation` and `examples` subpaths. Catalog
+offers its root lookup/data API and a `types` subpath. Remaining shared simulation
+source resolves these packages through the backend's declared dependencies.
 
 Run `bun run build`, `bun run typecheck`, `bun run lint`, `bun run test`, and
 `bun run check:boundaries` from the root. Checks run without caching during migration.
