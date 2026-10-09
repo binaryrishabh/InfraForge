@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { setDeploymentLoad } from "@/api/deployment.api";
+import { errorMessage } from "@/api/errorMessage";
 import { useSimulationStore } from "../store/simulationStore";
 import { PANEL_SHELL_CLASS } from "@/theme/resourceCategoryHues";
 
@@ -19,8 +20,8 @@ export function LoadControlPanel({ deploymentId, status }: LoadControlPanelProps
     try {
       const message = await setDeploymentLoad(deploymentId, pct / 100);
       toast.success(message);
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message || "Failed to adjust load");
+    } catch (err) {
+      toast.error(errorMessage(err, "Failed to adjust load"));
     }
   };
 

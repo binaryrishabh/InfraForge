@@ -15,6 +15,7 @@ import {
 } from "../zod_schemas/deployment.schema";
 import { DeploymentStatus } from "@shared/enum/DeploymentStatus.enum";
 import { Publish } from "@shared/enum/Publish.enum";
+import { LayoutSchema } from "../zod_schemas/layout.schema";
 
 export const deploymentRouter = Router();
 
@@ -34,8 +35,11 @@ deploymentRouter.post("/", async (req, res) => {
   if (!infrastructure) {
     throw new NotFoundError("Infrastructure not found with the given id.");
   }
-  const resources = (infrastructure.layout as any).resources || [];
-  const connectionLines = (infrastructure.layout as any).connectionLines || [];
+  const savedLayout = LayoutSchema.safeParse(infrastructure.layout);
+  if (!savedLayout.success) {
+    throw new ValidationError("Saved infrastructure layout is invalid. Update it before deploying.");
+  }
+  const { resources, connectionLines } = savedLayout.data;
   const resourceCount = resources.length;
   const deploymentId = crypto.randomUUID();
   const [createdDeployment] = await prisma.$transaction([

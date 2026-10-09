@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { errorMessage } from "@/api/errorMessage";
 import { toast } from "sonner";
 import { injectChaos } from "@/api/deployment.api";
 import { DeploymentChaosNames } from "@infraforge/domain/resource";
@@ -19,16 +20,12 @@ const CHAOS_LABELS: Record<DeploymentChaosNames, string> = {
 };
 
 export function ChaosControlPanel({ deploymentId, status, resources }: ChaosControlPanelProps) {
-  const [selectedResourceId, setSelectedResourceId] = useState<string>("");
+  const [requestedResourceId, setSelectedResourceId] = useState<string>("");
+  const selectedResourceId = resources.find((resource) => resource.id === requestedResourceId)?.id
+    ?? resources[0]?.id ?? "";
   const [selectedChaos, setSelectedChaos] = useState<string>(DeploymentChaosNames.Crash);
   const [loading, setLoading] = useState(false);
   const isLive = status === "live";
-
-  useEffect(() => {
-    if (resources.length > 0) {
-      setSelectedResourceId(resources[0]!.id);
-    }
-  }, [resources]);
 
   const handleInject = async () => {
     if (!selectedResourceId) return;
@@ -36,8 +33,8 @@ export function ChaosControlPanel({ deploymentId, status, resources }: ChaosCont
     try {
       const message = await injectChaos(deploymentId, selectedChaos, selectedResourceId);
       toast.success(message);
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message || "Failed to inject chaos");
+    } catch (err) {
+      toast.error(errorMessage(err, "Failed to inject chaos"));
     } finally {
       setLoading(false);
     }

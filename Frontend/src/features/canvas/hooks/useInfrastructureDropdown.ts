@@ -31,11 +31,7 @@ export function useInfrastructureDropdown() {
       return;
     }
 
-    const layout = infrastructure.layout as {
-      resources?: any[];
-      connectionLines?: any[];
-      layoutVersion?: number;
-    };
+    const layout = infrastructure.layout;
     const migratedResources = migrateLayoutToCardScale(
       layout.resources || [],
       layout.layoutVersion,

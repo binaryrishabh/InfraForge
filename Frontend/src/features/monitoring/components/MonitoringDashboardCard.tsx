@@ -111,6 +111,11 @@ export const MonitoringDashboardCard = memo(function MonitoringDashboardCard({
             instanceText={resource.skuId ?? "generic"}
           />
         </>
+      ) : !metric ? (
+        <>
+          <DesignCardHeader type={resource.type} displayName={displayName} titleText={titleText} />
+          <p className="px-3 py-5 text-xs text-[#AAB4C5]" role="status">Waiting for simulator telemetry</p>
+        </>
       ) : (
         <>
           <LiveCardHeader

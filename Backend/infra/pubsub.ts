@@ -99,12 +99,23 @@ export const publishSimulationSnapshot = async(snapshot: SimulationSnapshot) => 
 
 /* ------------------------Subscriber code--------------------- */
 // this is to where all websocket servers are listening to and listens when there deploymentId matches or the client that's wanting the deploymentId matches
-export const subscribeToDeployment = async(deploymentId: string, callback: (event: any) => void) => { // this callback function is passed by the websocket server
+export const subscribeToDeployment = async(deploymentId: string, callback: (event: unknown) => void, signal?: AbortSignal) => {
     const subscriber = redis.duplicate(); // we are creating a new redis connection. Here redis connection by subscriber can only subscribe they won't be allowed to do any thing else that's why making new redis connection for each subscriptions. This is scaling so that subscribers don't block the publishing queing and chaching.
-    await subscriber.subscribe(`deployment:${deploymentId}:updates`); // shouts for specific deploymentId and websocket subscribes to the particular one can listen and notify the subscribed clients.
-    subscriber.on("message", (channel, message) => { // event listener. Fires every time a message arrives on the subscribed channel.
-        const event = JSON.parse(message); // json string conversion to string
-        callback(event); // passes the event to the WebSocket server, which forwards it to the frontend. Because this function has been passed by the websocket server itself. SO we call here it with the message event
-    })
-    return subscriber;
+    const abort = () => subscriber.disconnect();
+    if (signal?.aborted) {
+        abort();
+        throw new Error("Subscription closed");
+    }
+    signal?.addEventListener("abort", abort, { once: true });
+    try {
+        await subscriber.subscribe(`deployment:${deploymentId}:updates`);
+        subscriber.on("message", (_channel, message) => {
+            try { callback(JSON.parse(message)); }
+            catch (error) { console.error("Invalid deployment event", error); }
+        });
+        return subscriber;
+    } catch (error) {
+        subscriber.disconnect();
+        throw error;
+    } finally { signal?.removeEventListener("abort", abort); }
 }

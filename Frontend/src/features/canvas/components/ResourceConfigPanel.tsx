@@ -38,9 +38,9 @@ export function ResourceConfigPanel({
   // Keep the last resource mounted so content survives the slide-out.
   const [displayedResource, setDisplayedResource] = useState<Resource | undefined>(resource);
 
-  useEffect(() => {
-    if (resource) setDisplayedResource(resource);
-  }, [resource]);
+  if (resource && resource !== displayedResource) {
+    setDisplayedResource(resource);
+  }
 
   useEffect(() => {
     if (!open) return;
@@ -77,7 +77,7 @@ export function ResourceConfigPanel({
       className={`absolute top-16 bottom-4 right-3 w-80 z-30 ${FLOATING_CHROME_SURFACE} ${FLOATING_CHROME_SHADOW_DEEP} flex flex-col overflow-hidden transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] ${
         open ? "translate-x-0 pointer-events-auto" : "translate-x-[calc(100%+12px)] pointer-events-none"
       }`}
-      style={{ borderColor: hueBorder(categoryColor) }}
+      style={{ borderColor: hueBorder() }}
     >
       {/* Header: identity + live name editor */}
       <div
@@ -119,12 +119,14 @@ export function ResourceConfigPanel({
       <div className="infraforge-scroll flex-1 overflow-y-auto px-5 py-5 space-y-6">
         {isLb && (
           <AutoscalingPolicySection
+            key={displayedResource.id}
             resource={displayedResource}
             onCommit={handleCommitPolicy}
           />
         )}
         {isSkuable && (
           <InstancePickerSection
+            key={displayedResource.id}
             resource={displayedResource}
             onSkuChange={handleSkuChange}
           />

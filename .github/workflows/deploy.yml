@@ -17,9 +17,21 @@ on:
       - ".dockerignore"
       - ".github/workflows/deploy.yml"
 
+permissions:
+  contents: read
+
+concurrency:
+  group: production-backend
+  cancel-in-progress: false
+
 jobs:
+  validate:
+    uses: ./.github/workflows/validate.yml
+
   deploy-backend:
+    needs: validate
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - name: Deploy to EC2 via SSH
         uses: appleboy/ssh-action@v1.0.3
@@ -28,9 +40,10 @@ jobs:
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
+            set -eu
             cd ~/InfraForge
-            git pull origin main
+            git pull --ff-only origin main
+            test "$(git rev-parse HEAD)" = "${{ github.sha }}"
             cd Backend
-            docker compose down
-            docker compose up --build -d
-            docker image prune -f
+            docker compose build
+            docker compose up -d

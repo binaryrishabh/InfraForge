@@ -9,6 +9,7 @@ import {
   TOGGLE_IDLE_CLASS,
 } from "@/theme/controlClasses";
 import type { WorkloadProfile } from "@infraforge/domain/workload";
+import { INFRASTRUCTURE_NAME_MAX_LENGTH, validateInfrastructureName } from "@infraforge/domain/validation";
 
 interface DeployModalProps {
   open: boolean;
@@ -130,8 +131,9 @@ export function DeployModal({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) {
-      setNameError("Deployment name is required.");
+    const validationError = validateInfrastructureName(name);
+    if (validationError) {
+      setNameError(validationError);
       return;
     }
     if (!targetThroughput || targetThroughput <= 0) return;
@@ -169,7 +171,7 @@ export function DeployModal({
               if (nameError) setNameError(null);
             }}
             placeholder="production-web-cluster"
-            maxLength={64}
+            maxLength={INFRASTRUCTURE_NAME_MAX_LENGTH}
             disabled={loading}
             className={`${INPUT_CLASS} ${
               nameError

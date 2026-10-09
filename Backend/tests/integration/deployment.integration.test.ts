@@ -29,6 +29,10 @@ integration("local deployment lifecycle", () => {
     let workerStarted = false;
     let schemaReady = false;
     const evidencePath = join(tmpdir(), `infraforge-integration-${randomUUID()}.json`);
+    const phase = (name: string) => {
+      evidence.phase = name;
+      console.info(`Integration phase: ${name}`);
+    };
 
     const deployment = async (id: string) => (await harness.request(`/deployments/${id}`)).deployment;
     const connectWs = async (id: string) => {
@@ -38,10 +42,14 @@ integration("local deployment lifecycle", () => {
       await new Promise<void>((resolve, reject) => { socket.once("open", resolve); socket.once("error", reject); });
       socket.send("invalid-json");
       socket.send(JSON.stringify({ type: "subscribe", deploymentId: id }));
+      socket.send(JSON.stringify({ type: "subscribe", deploymentId: id }));
       await until(async () => {
         const counts = await harness.redis.pubsub("NUMSUB", `deployment:${id}:updates`) as Array<string | number>;
         return Number(counts[1]) >= 1 || undefined;
       }, "WebSocket Redis subscription");
+      await Bun.sleep(100);
+      const counts = await harness.redis.pubsub("NUMSUB", `deployment:${id}:updates`) as Array<string | number>;
+      expect(Number(counts[1])).toBe(1);
       return socket;
     };
     const command = async (id: string, path: string, body: unknown) => {
@@ -78,8 +86,19 @@ integration("local deployment lifecycle", () => {
     };
 
     try {
+      phase("prepare");
       await harness.prepare();
       schemaReady = true;
+      const invalidJson = await fetch(harness.api + "/infrastructure", {
+        method: "POST", headers: { "Content-Type": "application/json" }, body: "{",
+      });
+      expect(invalidJson.status).toBe(400);
+      expect(await invalidJson.json()).toEqual({ success: false, message: "Invalid JSON body" });
+      const oversized = await fetch(harness.api + "/infrastructure", {
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: "x".repeat(110000) }),
+      });
+      expect(oversized.status).toBe(413);
+      await harness.request("/infrastructure", { name: "Malformed layout", layout: { resources: [null] } }, "POST", 400);
       queue = new Queue("deployments", { connection: harness.redis });
       await observer.connect();
       observer.on("pmessage", (_pattern, channel, raw) => evidence.redisEvents.push({ channel, event: JSON.parse(raw) }));
@@ -140,8 +159,27 @@ integration("local deployment lifecycle", () => {
         [retryOutboxId, JSON.stringify({ deploymentId: "0", resources: layout.resources, connectionLines: layout.connectionLines })]);
 
       let socket = await connectWs(id);
+      await harness.sql.query("CREATE SEQUENCE integration_worker_attempt");
+      await harness.sql.query(`CREATE FUNCTION integration_worker_retry() RETURNS trigger LANGUAGE plpgsql AS $$
+        BEGIN
+          IF NEW.id = TG_ARGV[0] AND NEW.status = 'running' AND nextval('integration_worker_attempt') = 1 THEN
+            RAISE EXCEPTION 'integration transient worker probe';
+          END IF;
+          RETURN NEW;
+        END $$`);
+      await harness.sql.query(`CREATE TRIGGER integration_worker_retry BEFORE UPDATE OF status ON "Deployment"
+        FOR EACH ROW EXECUTE FUNCTION integration_worker_retry('${id}')`);
+      phase("worker and gates");
       await harness.startWorker();
       workerStarted = true;
+      await until(async () => (await queue!.getJob(id))?.getState().then((state) => state === "delayed" || undefined), "worker retry delay");
+      const intermediateStatus = (await deployment(id)).status;
+      expect(intermediateStatus).toBe("running");
+      expect(evidence.wsEvents.some((event: Event) => event.deploymentId === id && event.publishType === "deployment-failed")).toBe(false);
+      await harness.sql.query('DROP TRIGGER integration_worker_retry ON "Deployment"');
+      await harness.sql.query("DROP FUNCTION integration_worker_retry()");
+      await harness.sql.query("DROP SEQUENCE integration_worker_attempt");
+      evidence.workerRetry = { intermediateStatus, recovered: false };
       latest = await snapshotAfter(id, 0);
       await command(id, "speed", { speed: 0 });
       expect(latest.simulatedSeconds).toBe(1);
@@ -185,6 +223,9 @@ integration("local deployment lifecycle", () => {
       expect(validJob?.opts.attempts).toBe(10);
       expect(validJob?.opts.backoff).toEqual({ type: "exponential", delay: 10000 });
       await until(async () => (await validJob?.getState()) === "completed" || undefined, "valid BullMQ completion");
+      const retriedJob = await queue.getJob(id);
+      expect(retriedJob?.attemptsMade).toBe(2);
+      evidence.workerRetry = { intermediateStatus, recovered: true, attemptsMade: retriedJob?.attemptsMade };
       const delivered = await harness.sql.query('SELECT status FROM "Outbox" WHERE payload->>\'deploymentId\' = $1', [id]);
       expect(delivered.rows.map((r) => r.status)).toEqual(["completed", "completed"]);
       await until(async () => (await deployment(invalidDeployment.createdDeployment.id)).status === "failed" || undefined, "readiness failure");
@@ -193,13 +234,106 @@ integration("local deployment lifecycle", () => {
       expect(rejected.timeline[0].message).toContain("isolated");
       const invalidJob = await queue.getJob(invalidDeployment.createdDeployment.id);
       expect(await invalidJob?.getState()).toBe("completed");
+
+      const workerFixture = async (name: string) => {
+        const infrastructure = (await harness.request("/infrastructure", { name, layout }, "POST", 201)).createdInfrastructure;
+        infrastructureIds.push(infrastructure.id);
+        const deploymentId = randomUUID();
+        deploymentIds.push(deploymentId);
+        await harness.sql.query(`INSERT INTO "Deployment" (id, "infrastructureId", "resourceCount", seed, "workloadProfile", "updatedAt")
+          VALUES ($1, $2, $3, $4, $5, now())`, [deploymentId, infrastructure.id, layout.resources.length, seed.text, JSON.stringify(workload)]);
+        return { deploymentId, infrastructureId: infrastructure.id };
+      };
+      const fixtureJob = (deploymentId: string) => queue!.add("deployment-created", {
+        deploymentId, resources: layout.resources, connectionLines: layout.connectionLines,
+      }, { jobId: deploymentId, attempts: 2, backoff: { type: "fixed", delay: 20 } });
+      const fixtureEvents = (deploymentId: string, type: string) => evidence.redisEvents.filter((event: Event) =>
+        event.event.deploymentId === deploymentId && event.event.publishType === type);
+
+      phase("failure after live transition");
+      const bootstrap = await workerFixture("Live bootstrap failure");
+      await harness.sql.query('UPDATE "Infrastructure" SET layout = $1 WHERE id = $2',
+        [JSON.stringify({ resources: [null], connectionLines: [] }), bootstrap.infrastructureId]);
+      await harness.request("/deployments", { infrastructureId: bootstrap.infrastructureId }, "POST", 400);
+      const bootstrapJob = await fixtureJob(bootstrap.deploymentId);
+      await until(async () => (await bootstrapJob.getState()) === "failed" || undefined, "LIVE bootstrap retry exhaustion");
+      const failedBootstrapJob = await queue.getJob(bootstrap.deploymentId);
+      expect((await deployment(bootstrap.deploymentId)).status).toBe("live");
+      expect(failedBootstrapJob?.attemptsMade).toBe(2);
+      expect(fixtureEvents(bootstrap.deploymentId, "deployment-failed")).toHaveLength(0);
+      expect(fixtureEvents(bootstrap.deploymentId, "deployment-started")).toHaveLength(1);
+      expect(fixtureEvents(bootstrap.deploymentId, "stage-of-deployment-completed")).toHaveLength(3);
+      evidence.liveBootstrapFailure = { status: (await deployment(bootstrap.deploymentId)).status, attemptsMade: failedBootstrapJob?.attemptsMade };
+      // The deliberately corrupt fixture must not participate in later resurrection.
+      await harness.sql.query('DELETE FROM "Deployment" WHERE id = $1', [bootstrap.deploymentId]);
+
+      phase("gate retries");
+      for (const recover of [true, false]) {
+        const fixture = await workerFixture(recover ? "Gate retry recovery" : "Gate retry exhaustion");
+        await harness.sql.query("CREATE SEQUENCE integration_gate_attempt");
+        await harness.sql.query(`CREATE FUNCTION integration_gate_retry() RETURNS trigger LANGUAGE plpgsql AS $$
+          BEGIN
+            IF NEW.id = TG_ARGV[0] AND jsonb_array_length(NEW.stages::jsonb) = 2
+              AND (${recover ? "nextval('integration_gate_attempt') = 1" : "TRUE"}) THEN
+              RAISE EXCEPTION 'integration gate retry probe';
+            END IF;
+            RETURN NEW;
+          END $$`);
+        await harness.sql.query(`CREATE TRIGGER integration_gate_retry BEFORE UPDATE OF stages ON "Deployment"
+          FOR EACH ROW EXECUTE FUNCTION integration_gate_retry('${fixture.deploymentId}')`);
+        try {
+          const job = await fixtureJob(fixture.deploymentId);
+          await until(async () => (await job.getState()) === (recover ? "completed" : "failed") || undefined, "gate retry outcome");
+          const processedJob = await queue.getJob(fixture.deploymentId);
+          const current = await deployment(fixture.deploymentId);
+          expect(processedJob?.attemptsMade).toBe(2);
+          expect(current.status).toBe(recover ? "live" : "failed");
+          expect(current.stages.map((stage: Event) => stage.name)).toEqual(recover ? ["Validate", "SecurityScan", "CostEstimate"] : ["Validate"]);
+          expect(current.timeline.map((entry: Event) => entry.event)).toEqual(recover ? ["Validate", "SecurityScan", "CostEstimate"] : ["Validate"]);
+          await until(async () => fixtureEvents(fixture.deploymentId, recover ? "simulation-snapshot" : "deployment-failed").length > 0 || undefined,
+            "gate retry published outcome");
+          expect(fixtureEvents(fixture.deploymentId, "deployment-started")).toHaveLength(2);
+          expect(fixtureEvents(fixture.deploymentId, "deployment-failed")).toHaveLength(recover ? 0 : 1);
+          expect(fixtureEvents(fixture.deploymentId, "stage-of-deployment-completed").map((event: Event) => event.event.stageName))
+            .toEqual(recover ? ["Validate", "SecurityScan", "CostEstimate"] : ["Validate"]);
+          evidence[recover ? "gateRetryRecovery" : "gateRetryExhaustion"] = { status: current.status, attemptsMade: processedJob?.attemptsMade,
+            stages: current.stages, timeline: current.timeline, startedEvents: fixtureEvents(fixture.deploymentId, "deployment-started").length };
+          if (recover) await harness.request(`/deployments/${fixture.deploymentId}/teardown`, {});
+        } finally {
+          await harness.sql.query('DROP TRIGGER integration_gate_retry ON "Deployment"');
+          await harness.sql.query("DROP FUNCTION integration_gate_retry()");
+          await harness.sql.query("DROP SEQUENCE integration_gate_attempt");
+        }
+      }
       expect(invalidJob?.attemptsMade).toBe(1);
 
+      phase("notification delivery failure");
+      const access = await harness.redis.call("ACL", "GETUSER", "default") as Array<unknown>;
+      const originalCommands = access[access.indexOf("commands") + 1];
+      if (typeof originalCommands !== "string") throw new Error("Disposable Redis ACL commands are unavailable");
+      const notificationId = randomUUID();
+      try {
+        await harness.redis.call("ACL", "SETUSER", "default", "-publish");
+        await harness.sql.query(`INSERT INTO "Outbox" (id, "eventType", payload, "maxRetries") VALUES ($1, 'chaos-injected', $2, 1)`,
+          [notificationId, JSON.stringify({ deploymentId: id, chaosType: "crash", resourceId: "vm-a", message: "Notification delivery probe" })]);
+        await until(async () => {
+          const result = await harness.sql.query('SELECT status FROM "Outbox" WHERE id = $1', [notificationId]);
+          return result.rows[0]?.status === "failed" || undefined;
+        }, "notification outbox exhaustion");
+        expect((await deployment(id)).status).toBe("live");
+      } finally {
+        await harness.redis.call("ACL", "SETUSER", "default", ...originalCommands.split(" "));
+      }
+      expect(fixtureEvents(id, "outbox-BullMQ-push-failed")).toHaveLength(0);
+      evidence.notificationFailure = { outboxId: notificationId, deploymentStatus: (await deployment(id)).status };
+
       const pausedCount = evidence.wsEvents.filter((e: Event) => e.publishType === "simulation-snapshot" && e.deploymentId === id).length;
+      phase("live controls");
       await Bun.sleep(1500);
       expect(evidence.wsEvents.filter((e: Event) => e.publishType === "simulation-snapshot" && e.deploymentId === id)).toHaveLength(pausedCount);
 
       await command(id, "load", { targetLoadFraction: 0.5 });
+      await harness.request(`/deployments/${id}/sync-topology`, { resources: [null], connectionLines: [] }, "POST", 400);
       await command(id, "chaos", { type: "crash", resourceId: "vm-a" });
       await command(id, "scale-vertical", { resourceId: "vm-b", skuId: "m5.xlarge" });
       await command(id, "scale-pool", { lbId: "lb", delta: 1 });
@@ -253,6 +387,7 @@ integration("local deployment lifecycle", () => {
 
       // Exercise an actual wall-time checkpoint. It is persisted but current
       // resurrection intentionally starts again from saved layout + seed.
+      phase("checkpoint");
       await command(id, "speed", { speed: 60 });
       const checkpoint = await until(async () => {
         const current = await deployment(id);
@@ -263,6 +398,7 @@ integration("local deployment lifecycle", () => {
       expect(checkpoint.metrics["live-storage"]).toBeDefined();
       expect(checkpoint.accumulatedCostUsd).toBeGreaterThan(at102.accumulatedCostUsd!);
       evidence.checkpoint = checkpoint;
+      phase("worker restart");
       await harness.stop("worker");
       const beforeRestart = evidence.wsEvents.length;
       await harness.startWorker();
@@ -279,12 +415,16 @@ integration("local deployment lifecycle", () => {
       evidence.resurrectedSnapshot = latest;
 
       const beforeResume = evidence.wsEvents.length;
+      phase("teardown");
       await command(id, "speed", { speed: 1 });
       latest = await snapshotAfter(id, latest.simulatedSeconds, beforeResume);
       expect(latest.speed).toBe(1);
       await command(id, "teardown", {});
       await until(async () => evidence.wsEvents.some((e: Event) => e.deploymentId === id && e.publishType === "deployment-torn-down") || undefined,
         "teardown WebSocket event");
+      expect((await deployment(id)).status).toBe("torn-down");
+      const retiredJob = await queue.add("deployment-created", outbox.rows[0].payload, { jobId: randomUUID() });
+      await until(async () => (await retiredJob.getState()) === "completed" || undefined, "retired deployment job skip");
       expect((await deployment(id)).status).toBe("torn-down");
       expect((await harness.request("/deployments/live")).deployments.some((d: Event) => d.id === id)).toBe(false);
       await harness.request(`/deployments/${id}/load`, { targetLoadFraction: 1 }, "POST", 400);
@@ -293,12 +433,40 @@ integration("local deployment lifecycle", () => {
       await Bun.sleep(1500);
       expect(evidence.wsEvents.slice(afterTeardown).some((e: Event) => e.deploymentId === id && e.publishType === "simulation-snapshot")).toBe(false);
       expect((await harness.request(`/infrastructure/${infrastructureId}`)).infrastructure.layout).toEqual(layout);
+      phase("WebSocket transport failures");
+      socket.close();
+      await until(async () => socket.readyState === WebSocket.CLOSED || undefined, "final socket disconnect");
+      await until(async () => {
+        const counts = await harness.redis.pubsub("NUMSUB", `deployment:${id}:updates`) as Array<string | number>;
+        return Number(counts[1]) === 0 || undefined;
+      }, "final subscription cleanup");
+      await harness.redis.call("CLIENT", "PAUSE", 1000, "ALL");
+      const pendingSocket = new WebSocket("ws://localhost:3001");
+      sockets.push(pendingSocket);
+      await new Promise<void>((resolve, reject) => { pendingSocket.once("open", resolve); pendingSocket.once("error", reject); });
+      pendingSocket.send(JSON.stringify({ type: "subscribe", deploymentId: id }));
+      await Bun.sleep(30);
+      pendingSocket.close();
+      await until(async () => pendingSocket.readyState === WebSocket.CLOSED || undefined, "pending socket disconnect");
+      const pendingCounts = await harness.redis.pubsub("NUMSUB", `deployment:${id}:updates`) as Array<string | number>;
+      expect(Number(pendingCounts[1])).toBe(0);
+      const oversizedSocket = new WebSocket("ws://localhost:3001");
+      sockets.push(oversizedSocket);
+      await new Promise<void>((resolve, reject) => { oversizedSocket.once("open", resolve); oversizedSocket.once("error", reject); });
+      let closedCode: number | undefined;
+      oversizedSocket.once("close", (code) => { closedCode = code; });
+      oversizedSocket.send("x".repeat(1025));
+      await until(async () => closedCode, "oversized frame rejection");
+      expect(closedCode).toBe(1009);
+      expect((await fetch("http://localhost:3001")).status).toBe(200);
+      evidence.websocketFailures = { pendingSubscriberCount: Number(pendingCounts[1]), oversizedCloseCode: 1009, serverHealth: 200 };
       evidence.result = "passed";
     } catch (error) {
       evidence.result = "failed";
       evidence.failure = error instanceof Error ? error.message : "Unknown test failure";
       throw error;
     } finally {
+      phase("cleanup");
       for (const socket of sockets) socket.terminate();
       observer.disconnect();
       const cleanupErrors: string[] = [];

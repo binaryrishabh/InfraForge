@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import type { Resource } from "@infraforge/domain/resource";
 import type { AutoscalingPolicy } from "@infraforge/domain/resource";
 
@@ -8,18 +7,10 @@ interface AutoscalingPolicySectionProps {
 }
 
 export function AutoscalingPolicySection({ resource, onCommit }: AutoscalingPolicySectionProps) {
-  const [enabled, setEnabled] = useState(true);
-  const [minReplicas, setMinReplicas] = useState(2);
-  const [maxReplicas, setMaxReplicas] = useState(6);
-  const [targetCpu, setTargetCpu] = useState(75);
-
-  useEffect(() => {
-    const policy = resource.autoscaling;
-    setEnabled(policy?.enabled ?? true);
-    setMinReplicas(policy?.minReplicas ?? 2);
-    setMaxReplicas(policy?.maxReplicas ?? 6);
-    setTargetCpu(policy?.targetCpu ?? 75);
-  }, [resource.id]);
+  const enabled = resource.autoscaling?.enabled ?? true;
+  const minReplicas = resource.autoscaling?.minReplicas ?? 2;
+  const maxReplicas = resource.autoscaling?.maxReplicas ?? 6;
+  const targetCpu = resource.autoscaling?.targetCpu ?? 75;
 
   const commit = (patch: Partial<AutoscalingPolicy>) => {
     const next: AutoscalingPolicy = {
@@ -37,26 +28,21 @@ export function AutoscalingPolicySection({ resource, onCommit }: AutoscalingPoli
   };
 
   const handleEnabledChange = (value: boolean) => {
-    setEnabled(value);
     commit({ enabled: value });
   };
 
   const handleMinChange = (value: number) => {
     const clamped = Math.max(1, Math.min(8, value));
     const effectiveMax = Math.max(clamped, maxReplicas);
-    setMinReplicas(clamped);
-    setMaxReplicas(effectiveMax);
     commit({ minReplicas: clamped, maxReplicas: effectiveMax });
   };
 
   const handleMaxChange = (value: number) => {
     const clamped = Math.max(minReplicas, Math.min(8, value));
-    setMaxReplicas(clamped);
     commit({ maxReplicas: clamped });
   };
 
   const handleTargetCpuChange = (value: number) => {
-    setTargetCpu(value);
     commit({ targetCpu: value });
   };
 

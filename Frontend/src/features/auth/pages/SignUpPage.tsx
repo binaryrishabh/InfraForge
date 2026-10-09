@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthLayout } from '../components/AuthLayout';
 import { useAuthStore } from '../store/auth.store';
+import { errorMessage } from '@/api/errorMessage';
 
 export function SignUpPage() {
   const navigate = useNavigate();
@@ -31,8 +32,8 @@ export function SignUpPage() {
     try {
       await signUp(name.trim(), email, password);
       navigate('/dashboard', { replace: true });
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(errorMessage(err, "Failed to create account"));
     } finally {
       setLoading(false);
     }

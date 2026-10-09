@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { setDeploymentSpeed } from "@/api/deployment.api";
+import { errorMessage } from "@/api/errorMessage";
 import { useSimulationStore } from "@/features/monitoring/store/simulationStore";
 import { TOGGLE_ACTIVE_CLASS, TOGGLE_IDLE_CLASS } from "@/theme/controlClasses";
 
@@ -25,11 +26,12 @@ export function SpeedControlPanel({ deploymentId, status }: SpeedControlPanelPro
     if (value === speed) return;
     setLoading(true);
     // Optimistic update so the UI feels instant
-    useSimulationStore.getState().setSpeed(value);
+    const restoreSpeed = useSimulationStore.getState().setSpeed(value);
     try {
       await setDeploymentSpeed(deploymentId, value);
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message || "Failed to set speed");
+    } catch (err) {
+      restoreSpeed();
+      toast.error(errorMessage(err, "Failed to set speed"));
     } finally {
       setLoading(false);
     }

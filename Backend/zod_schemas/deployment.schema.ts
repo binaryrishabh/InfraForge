@@ -1,5 +1,6 @@
 import * as z from "zod";
 import { DeploymentChaosNames } from "@infraforge/domain/resource";
+import { LiveTopologySchema } from "./layout.schema";
 
 export const ChaosInjectionBodySchema = z.object({
   type: z.enum(DeploymentChaosNames, "Must be of the specified chaos type only"),
@@ -42,10 +43,7 @@ export const SpeedControlBodySchema = z.object({
   speed: z.union([z.literal(0), z.literal(1), z.literal(10), z.literal(60)], "Speed must be 0, 1, 10, or 60")
 });
 
-export const SyncTopologyBodySchema = z.object({
-  resources: z.array(z.any()).min(1),
-  connectionLines: z.array(z.any())
-});
+export const SyncTopologyBodySchema = LiveTopologySchema;
 
 export type ChaosInjectionBodySchemaType = z.infer<typeof ChaosInjectionBodySchema>;
 export type DeploymentIdSchemaType = z.infer<typeof DeploymentIdSchema>;

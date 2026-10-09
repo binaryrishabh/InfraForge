@@ -1,5 +1,5 @@
-import { SimulationLog } from "./SimulationLog.interface";
-import { SimulationState } from "./SimulationState.interface";
+import type { SimulationLog } from "./SimulationLog.interface";
+import type { SimulationState } from "./SimulationState.interface";
 
 export interface TickResult {
   state: SimulationState;

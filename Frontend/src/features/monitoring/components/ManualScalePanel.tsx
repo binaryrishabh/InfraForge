@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { scalePool } from "@/api/deployment.api";
+import { errorMessage } from "@/api/errorMessage";
 import { useSimulationStore } from "../store/simulationStore";
 import { PANEL_SHELL_CLASS } from "@/theme/resourceCategoryHues";
 
@@ -21,8 +22,8 @@ export function ManualScalePanel({ deploymentId, status }: ManualScalePanelProps
     try {
       const message = await scalePool(deploymentId, lbId, delta);
       toast.success(message);
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message || "Failed to scale pool");
+    } catch (err) {
+      toast.error(errorMessage(err, "Failed to scale pool"));
     } finally {
       setLoadingLb(null);
     }

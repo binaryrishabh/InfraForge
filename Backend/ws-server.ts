@@ -1,45 +1,17 @@
-import WebSocket, { WebSocketServer } from "ws";
+import { WebSocketServer } from "ws";
 import http from "http";
 import { subscribeToDeployment } from "./infra/pubsub";
-import { WebSocketMessage } from "@shared/enum/WebSocketMessage.enum"
+import { attachDeploymentSubscription, SUBSCRIPTION_MAX_BYTES } from "./infra/deploymentSubscriptions";
 
 const httpSever = http.createServer((req: any, res: any) => {
   console.log("Http server 3001 connected successfully. The first handshake for websocket server.");
   res.end("Http server 3001 connected successfully. The first handshake for websocket server.")
 });
 
-const wss = new WebSocketServer({ server: httpSever });
+const wss = new WebSocketServer({ server: httpSever, maxPayload: SUBSCRIPTION_MAX_BYTES });
 
 wss.on("connection", (socket) => {
-  const subscribers: Array<{ quit: () => void }> = [];
-
-  socket.on("message", async(data) => {
-    try {
-      const message = JSON.parse(data.toString());
-
-      if (message.type === WebSocketMessage.Subscribe) {
-        const { deploymentId } = message;
-
-        const subscriber = await subscribeToDeployment(deploymentId, (event) => {
-          if (socket.readyState === WebSocket.OPEN) {
-            socket.send(JSON.stringify(event));
-          }
-        });
-
-        subscribers.push(subscriber);
-      }
-    } catch (err) {
-      console.error("Invalid message from client: " + err);
-    }
-  });
-
-  socket.on("close", () => {
-    // Clean up all Redis subscribers when socket closes
-    for (const subscriber of subscribers) {
-      subscriber.quit();
-    }
-    console.log("Client disconnected. Cleaned up subscribers.");
-  });
+  attachDeploymentSubscription(socket, subscribeToDeployment);
 });
 
 httpSever.listen(3001);

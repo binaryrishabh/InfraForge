@@ -18,7 +18,7 @@ const ICON_MAP = {
 export function TopbarActionButton({ label, onclick, variant = "default" }: TopbarActionButtonProps) {
   const isDisabled = !onclick;
   const Icon = ICON_MAP[variant];
-  let variantStyles = "";
+  let variantStyles: string;
   if (variant === "deploy") {
     // The single most important action owns the warm amber — nobody else.
     variantStyles = "bg-[#E8A33D] text-[#14161A] hover:bg-[#F0B45C]";

@@ -48,7 +48,7 @@ export function CanvasDragLayer() {
               height: baseHeight,
               transform: `scale(${scale})`,
               transformOrigin: "top left",
-              borderColor: hueBorder(hue),
+              borderColor: hueBorder(),
               background: hueTint(hue),
               color: hue,
               boxShadow: `0 12px 32px rgba(0,0,0,0.45)`,

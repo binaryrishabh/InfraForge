@@ -1,6 +1,7 @@
 name: Validate workspaces
 
 on:
+  workflow_call:
   pull_request:
   push:
     branches: [develop]
@@ -21,6 +22,7 @@ jobs:
           - test
           - check:boundaries
           - test:tooling
+          - audit
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2

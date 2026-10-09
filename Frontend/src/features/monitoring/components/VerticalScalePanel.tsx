@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { scaleVertical } from "@/api/deployment.api";
+import { errorMessage } from "@/api/errorMessage";
 import { skusFor, findSku } from "@infraforge/catalog";
 import { RESOURCE_TYPES } from "@infraforge/domain/resource";
 import { PROVIDERS, type ProviderId, type SkuCategory } from "@infraforge/catalog/types";
@@ -12,31 +13,36 @@ interface VerticalScalePanelProps {
   resources: Array<{ id: string; type: string; skuId?: string }>;
 }
 
-export function VerticalScalePanel({ deploymentId, status, resources }: VerticalScalePanelProps) {
-  const skuableResources = resources.filter(
+export function VerticalScalePanel(props: VerticalScalePanelProps) {
+  const [requestedResourceId, setSelectedResourceId] = useState("");
+  const resources = props.resources.filter(
     (r) => r.type === RESOURCE_TYPES.VirtualMachine || r.type === RESOURCE_TYPES.Database
   );
-  const [selectedResourceId, setSelectedResourceId] = useState<string>("");
-  const [selectedSkuId, setSelectedSkuId] = useState<string>("");
-  const [provider, setProvider] = useState<ProviderId>("aws");
+  const selectedResource = resources.find((r) => r.id === requestedResourceId) ?? resources[0];
+  return (
+    <VerticalScaleSelection
+      key={`${props.deploymentId}:${selectedResource?.id ?? "empty"}`}
+      {...props}
+      resources={resources}
+      selectedResource={selectedResource}
+      onResourceChange={setSelectedResourceId}
+    />
+  );
+}
+
+interface VerticalScaleSelectionProps extends VerticalScalePanelProps {
+  selectedResource: VerticalScalePanelProps["resources"][number] | undefined;
+  onResourceChange: (id: string) => void;
+}
+
+function VerticalScaleSelection({ deploymentId, status, resources: skuableResources, selectedResource, onResourceChange }: VerticalScaleSelectionProps) {
+  const selectedResourceId = selectedResource?.id ?? "";
+  const [selectedSkuId, setSelectedSkuId] = useState(selectedResource?.skuId ?? "");
+  const [provider, setProvider] = useState<ProviderId>(() =>
+    selectedResource?.skuId ? findSku(selectedResource.skuId)?.provider ?? "aws" : "aws",
+  );
   const [loading, setLoading] = useState(false);
   const isLive = status === "live";
-
-  useEffect(() => {
-    if (skuableResources.length === 0) return;
-    setSelectedResourceId((prev) => {
-      const stillExists = skuableResources.some((r) => r.id === prev);
-      return stillExists ? prev : skuableResources[0]!.id;
-    });
-  }, [resources]);
-
-  const selectedResource = skuableResources.find((r) => r.id === selectedResourceId);
-
-  useEffect(() => {
-    const res = skuableResources.find((r) => r.id === selectedResourceId);
-    setSelectedSkuId(res?.skuId ?? "");
-    setProvider(res?.skuId ? findSku(res.skuId)?.provider ?? "aws" : "aws");
-  }, [selectedResourceId]);
 
   const handleProviderChange = (next: ProviderId) => {
     setProvider(next);
@@ -59,8 +65,8 @@ export function VerticalScalePanel({ deploymentId, status, resources }: Vertical
     try {
       const message = await scaleVertical(deploymentId, selectedResourceId, selectedSkuId);
       toast.success(message);
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message || "Failed to scale resource");
+    } catch (err) {
+      toast.error(errorMessage(err, "Failed to scale resource"));
     } finally {
       setLoading(false);
     }
@@ -77,7 +83,7 @@ export function VerticalScalePanel({ deploymentId, status, resources }: Vertical
         <div className="space-y-2">
           <select
             value={selectedResourceId}
-            onChange={(e) => setSelectedResourceId(e.target.value)}
+            onChange={(e) => onResourceChange(e.target.value)}
             disabled={!isLive || loading}
             className="w-full h-8 rounded-lg bg-[#0B0E14] border border-[#273042] text-[11px] text-[#EDF1F7] px-2.5 outline-none focus:border-[#5B8CFF] transition-colors duration-150 disabled:opacity-40 disabled:cursor-not-allowed"
           >

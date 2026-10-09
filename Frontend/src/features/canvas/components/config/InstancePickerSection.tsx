@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   PROVIDERS,
   type ProviderId,
@@ -16,13 +16,12 @@ interface InstancePickerSectionProps {
 }
 
 export function InstancePickerSection({ resource, onSkuChange }: InstancePickerSectionProps) {
-  const [provider, setProvider] = useState<ProviderId>("aws");
-  const [selectedSkuId, setSelectedSkuId] = useState<string>("");
-
-  useEffect(() => {
-    setSelectedSkuId(resource.skuId ?? "");
-    setProvider(resource.skuId ? findSku(resource.skuId)?.provider ?? "aws" : "aws");
-  }, [resource.id]);
+  const [provider, setProvider] = useState<ProviderId>(() =>
+    resource.skuId ? findSku(resource.skuId)?.provider ?? "aws" : "aws",
+  );
+  const selectedSkuId = resource.skuId && findSku(resource.skuId)?.provider === provider
+    ? resource.skuId
+    : "";
 
   const isVm = resource.type === RESOURCE_TYPES.VirtualMachine;
   const category: SkuCategory = isVm ? "Virtual Machine" : "Database";
@@ -30,10 +29,6 @@ export function InstancePickerSection({ resource, onSkuChange }: InstancePickerS
 
   const handleProviderChange = (next: ProviderId) => {
     setProvider(next);
-    const currentProvider = resource.skuId
-      ? findSku(resource.skuId)?.provider
-      : undefined;
-    setSelectedSkuId(currentProvider === next ? resource.skuId ?? "" : "");
   };
 
   return (

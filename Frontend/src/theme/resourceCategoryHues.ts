@@ -64,7 +64,7 @@ export function categoryBadgeTint(type: ResourceType): string {
 /* Legacy aliases kept so existing import sites keep compiling while the
 sweep lands; they resolve to control-room tokens instead of vivid hues. */
 export const hueForType = stripeForType;
-export function hueBorder(_hue: string): string {
+export function hueBorder(): string {
   return PALETTE.border;
 }
 export function hueTint(hue: string): string {

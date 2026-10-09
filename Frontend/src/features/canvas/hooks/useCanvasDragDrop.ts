@@ -8,6 +8,8 @@ import {
   MeasuringStrategy,
   type CollisionDetection,
   type MeasuringConfiguration,
+  type DragStartEvent,
+  type DragEndEvent,
 } from "@dnd-kit/core";
 import { toast } from "sonner";
 import { useCanvasStore } from "../store/canvasStore";
@@ -71,7 +73,7 @@ export function useCanvasDragDrop() {
     sensors,
     collisionDetection: canvasCollisionDetection,
     measuring: CANVAS_MEASURING,
-    onDragStart: (event: any) => {
+    onDragStart: (event: DragStartEvent) => {
       const label = event.active.id as ResourceType;
       // Seed the tracked pointer with the press position so a drop without
       // any further movement still lands under the cursor.
@@ -107,7 +109,7 @@ export function useCanvasDragDrop() {
         .getState()
         .setActiveDrag({ label, grabOffsetX, grabOffsetY });
     },
-    onDragEnd: (event: any) => {
+    onDragEnd: (event: DragEndEvent) => {
       const store = useCanvasStore.getState();
       store.setActiveDrag(null);
       if (event.over?.id === "canvas") {

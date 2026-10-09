@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Modal } from "./Modal";
 import {
   INPUT_CLASS,
@@ -14,7 +14,12 @@ interface TypeToConfirmModalProps {
   onConfirm: () => void;
 }
 
-export function TypeToConfirmModal({
+export function TypeToConfirmModal(props: TypeToConfirmModalProps) {
+  if (!props.open) return null;
+  return <OpenTypeToConfirmModal key={props.infrastructureName} {...props} />;
+}
+
+function OpenTypeToConfirmModal({
   open,
   onOpenChange,
   infrastructureName,
@@ -23,13 +28,6 @@ export function TypeToConfirmModal({
 }: TypeToConfirmModalProps) {
   const [value, setValue] = useState("");
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (open) {
-      setValue("");
-      setError(null);
-    }
-  }, [open]);
 
   // Exact match. We don't trim the infrastructureName because if it has spaces, the user should type them.
   const isMatch = value.trim() === infrastructureName.trim();

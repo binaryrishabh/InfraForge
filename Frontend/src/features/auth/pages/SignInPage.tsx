@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { AuthLayout } from '../components/AuthLayout';
 import { useAuthStore } from '../store/auth.store';
+import { errorMessage } from '@/api/errorMessage';
 
 export function SignInPage() {
   const navigate = useNavigate();
@@ -14,7 +15,8 @@ export function SignInPage() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  const returnTo = (location.state as any)?.returnTo || '/dashboard';
+  const returnState = location.state as { returnTo?: unknown } | null;
+  const returnTo = typeof returnState?.returnTo === 'string' ? returnState.returnTo : '/dashboard';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,8 +25,8 @@ export function SignInPage() {
     try {
       await signIn(email, password);
       navigate(returnTo, { replace: true });
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(errorMessage(err, "Failed to sign in"));
     } finally {
       setLoading(false);
     }

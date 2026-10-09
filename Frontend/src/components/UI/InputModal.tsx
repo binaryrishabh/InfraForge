@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Modal } from "./Modal";
+import { INFRASTRUCTURE_NAME_MAX_LENGTH, validateInfrastructureName } from "@infraforge/domain/validation";
 import {
   INPUT_CLASS,
   LABEL_CLASS,
@@ -20,7 +21,12 @@ interface InputModalProps {
   onSubmit: (value: string) => void;
 }
 
-export function InputModal({
+export function InputModal(props: InputModalProps) {
+  if (!props.open) return null;
+  return <OpenInputModal key={props.initialValue ?? ""} {...props} />;
+}
+
+function OpenInputModal({
   open,
   onOpenChange,
   title,
@@ -36,17 +42,8 @@ export function InputModal({
   const [error, setError] = useState<string | null>(null);
   const [touched, setTouched] = useState(false);
 
-  useEffect(() => {
-    if (open) {
-      setValue(initialValue);
-      setError(null);
-      setTouched(false);
-    }
-  }, [open, initialValue]);
-
   const validate = (val: string) => {
-    if (!val.trim()) return "Infrastructure name is required.";
-    return null;
+    return validateInfrastructureName(val);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -92,7 +89,7 @@ export function InputModal({
             }}
             onFocus={(e) => e.target.select()}
             placeholder={placeholder}
-            maxLength={64}
+            maxLength={INFRASTRUCTURE_NAME_MAX_LENGTH}
             disabled={loading}
             className={`${INPUT_CLASS} ${
               showError
@@ -110,9 +107,9 @@ export function InputModal({
               {error}
             </p>
           )}
-          {value.length >= 48 && !showError && (
+          {value.length >= INFRASTRUCTURE_NAME_MAX_LENGTH - 6 && !showError && (
             <p className="text-[11px] text-[#5A5F6B] text-right mt-1.5">
-              {value.length}/64
+              {value.length}/{INFRASTRUCTURE_NAME_MAX_LENGTH}
             </p>
           )}
         </div>

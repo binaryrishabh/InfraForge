@@ -34,11 +34,7 @@ export function DashboardPage() {
     setReattachingId(deployment.id);
     try {
       const infrastructure = await getSpecificInfrastructure(deployment.infrastructureId);
-      const layout = infrastructure.layout as {
-        resources?: any[];
-        connectionLines?: any[];
-        layoutVersion?: number;
-      };
+      const layout = infrastructure.layout;
       // Migrate legacy coordinates if the saved layout is old
       const migratedResources = migrateLayoutToCardScale(
         layout.resources ?? [],
@@ -56,7 +52,7 @@ export function DashboardPage() {
       // Best effort sync to the simulator so the live state resumes smoothly
       syncDeploymentTopology(deployment.id, migratedResources, connectionLines)
         .catch(() => toast.error("Reattached, but topology sync to the simulator failed"));
-    } catch (err) {
+    } catch {
       toast.error("Failed to fetch infrastructure layout");
     } finally {
       setReattachingId(null);
@@ -162,7 +158,7 @@ export function DashboardPage() {
                     </div>
                   </div>
                   <span className="text-xs text-[#8B909C] bg-[#14161A] px-2 py-1 rounded">
-                    {(infra.layout as any)?.resources?.length || 0} resources
+                    {infra.layout?.resources?.length || 0} resources
                   </span>
                 </Link>
               ))

@@ -1,13 +1,20 @@
 import * as z from "zod";
+import { LayoutSchema } from "./layout.schema";
+import { validateInfrastructureName } from "@infraforge/domain/validation";
+
+const NameSchema = z.string().trim().superRefine((value, context) => {
+  const message = validateInfrastructureName(value);
+  if (message) context.addIssue({ code: "custom", message });
+});
 
 export const InfrastructureBodySchema = z.object({
-  name: z.string().min(3, "Name must be at least 3 characters").max(30, "Name must be at most 20 characters"),
-  layout: z.record(z.string(), z.any())
+  name: NameSchema,
+  layout: LayoutSchema
 })
 
 export const UpdateInfrastructureBodySchema = z.object({
-  name: z.string().min(3, "Name must be at least 3 characters").max(30, "Name must be at most 20 characters").optional(),
-  layout: z.record(z.string(), z.any()).optional()
+  name: NameSchema.optional(),
+  layout: LayoutSchema.optional()
 }).refine(
   (data) => data.name !== undefined || data.layout !== undefined,
   { message: "At least one field (name or layout) must be provided" }

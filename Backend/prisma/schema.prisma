@@ -45,7 +45,6 @@ model Outbox {
   payload               Json
   status                String                      @default("pending") // pending -> processing -> completed -> failed
   retries               Int                         @default(0) // retries already done
-  // NOTE: worker.ts poller hardcodes retries < 4. Keep in sync if changing make changes at both places.
   maxRetries            Int                         @default(4) // max allowed retries 
   processedAt           DateTime?
   error                 String?

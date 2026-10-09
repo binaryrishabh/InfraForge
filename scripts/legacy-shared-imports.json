@@ -1,4 +1,10 @@
 {
+  "Backend/utils/deploymentJobPolicy.ts": [
+    "shared/enum/DeploymentStatus.enum.ts"
+  ],
+  "Backend/infra/deploymentSubscriptions.ts": [
+    "shared/enum/WebSocketMessage.enum.ts"
+  ],
   "Backend/infra/pubsub.ts": [
     "shared/enum/Publish.enum.ts",
     "shared/interface/OutboxPayload.interface.ts",
@@ -48,9 +54,7 @@
     "shared/interface/DeploymentTimeline.interface.ts",
     "shared/interface/OutboxPayload.interface.ts"
   ],
-  "Backend/ws-server.ts": [
-    "shared/enum/WebSocketMessage.enum.ts"
-  ],
+  "Backend/ws-server.ts": [],
   "Backend/zod_schemas/deployment.schema.ts": [],
   "Frontend/src/api/deployment.api.ts": [
     "shared/interface/Deployment.interface.ts"

@@ -26,7 +26,7 @@ interface SimulationStoreState {
   cpuHistory: Record<string, number[]>;
   activeChaos: ChaosEffect[];
   applySnapshot: (snapshot: SimulationSnapshot) => void;
-  setSpeed: (speed: number) => void;
+  setSpeed: (speed: number) => () => void;
   reset: () => void;
 }
 
@@ -47,7 +47,7 @@ const initialState = {
   activeChaos: EMPTY_ACTIVE_CHAOS,
 };
 
-export const useSimulationStore = create<SimulationStoreState>()((set) => ({
+export const useSimulationStore = create<SimulationStoreState>()((set, get) => ({
   ...initialState,
   applySnapshot: (snapshot) =>
     set((prev) => {
@@ -100,7 +100,15 @@ export const useSimulationStore = create<SimulationStoreState>()((set) => ({
         activeChaos: chaosChanged ? incomingChaos : previousChaos,
       };
     }),
-  setSpeed: (speed) => set({ speed }),
+  setSpeed: (speed) => {
+    const previousSpeed = get().speed;
+    set({ speed });
+    const pendingState = get();
+    return () => {
+      // A late failure must preserve newer snapshots and reset sessions.
+      if (get() === pendingState) set({ speed: previousSpeed });
+    };
+  },
   reset: () =>
     set({
       ...initialState,

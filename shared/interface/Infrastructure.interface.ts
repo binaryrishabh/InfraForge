@@ -7,7 +7,8 @@ export interface Infrastructure {
   name: string;
   layout: {
     resources: Resource[],
-    connectionLines: ConnectionLine[]
+    connectionLines: ConnectionLine[],
+    layoutVersion?: number
   };
   createdAt: string;
   updatedAt: string;

@@ -24,6 +24,7 @@ import type { OutboxPayload } from "@shared/interface/OutboxPayload.interface";
 import type { DeploymentJob } from "@shared/interface/DeploymentJob.interface";
 import type { DeploymentStages } from "@shared/interface/DeploymentStages.interface";
 import type { DeploymentTimeline } from "@shared/interface/DeploymentTimeline.interface";
+import { deploymentFailureStatus, isRetiredDeployment } from "./utils/deploymentJobPolicy";
 
 // Outbox processor-> Polls the unprocessed events from outbox table every 5 seconds and adds to BullMQ.
 // This is because we have implemented the atomicity in the /api/deployments api end-point code.
@@ -111,16 +112,21 @@ async function pollOutbox() {
         // If permanently failed, mark deployment as failed and notify
         if (isFailed) {
           try {
-            await prisma.deployment.update({
-              where: {
-                id: (entry.payload as unknown as OutboxPayload).deploymentId,
-              },
-              data: { status: DeploymentStatus.FAILED },
-            });
-            await publishOutboxFailed(
-              (entry.payload as unknown as OutboxPayload).deploymentId,
-              "Outbox delivery exhausted all retries.",
-            );
+            if (entry.eventType === "deployment-created") {
+              const failure = await prisma.deployment.updateMany({
+                where: {
+                  id: (entry.payload as unknown as OutboxPayload).deploymentId,
+                  status: { in: [DeploymentStatus.PENDING, DeploymentStatus.RUNNING] },
+                },
+                data: { status: DeploymentStatus.FAILED },
+              });
+              if (failure.count > 0) {
+                await publishOutboxFailed(
+                  (entry.payload as unknown as OutboxPayload).deploymentId,
+                  "Outbox delivery exhausted all retries.",
+                );
+              }
+            }
           } catch (sideEffectErr: any) {
             console.error(
               `Failure handling failed for outbox ${entry.id}: ${sideEffectErr.message}`,
@@ -178,13 +184,13 @@ const worker = new Worker(
         return;
       }
 
-      if (deploymentState.status === DeploymentStatus.COMPLETED) {
-        console.log(`Deployment ${deploymentId} already completed. Skipping.`);
+      if (isRetiredDeployment(deploymentState.status)) {
+        console.log(`Deployment ${deploymentId} is ${deploymentState.status}. Skipping.`);
         return;
       }
 
-      if (deploymentState.status === DeploymentStatus.FAILED) {
-        console.log(`Deployment ${deploymentId} already failed. Skipping.`);
+      if (deploymentState.status === DeploymentStatus.LIVE) {
+        await startSimulation(deploymentId);
         return;
       }
 
@@ -344,20 +350,23 @@ const worker = new Worker(
       console.log(`Deployment is LIVE ${deploymentId}`);
       await startSimulation(deploymentId);
     } catch (err: any) {
-      await prisma.deployment.update({
+      const status = deploymentFailureStatus(job.attemptsMade, job.opts.attempts);
+      const failure = await prisma.deployment.updateMany({
         where: {
           id: deploymentId,
+          status: { in: [DeploymentStatus.PENDING, DeploymentStatus.RUNNING] },
         },
         data: {
-          status: DeploymentStatus.FAILED,
+          status,
         },
       });
 
-      // Publish that current deployment failed....
-      await publishDeploymentFailed(
-        deploymentId,
-        `Deployment failed at some stage due to: ${err.message}`,
-      );
+      if (failure.count > 0 && status === DeploymentStatus.FAILED) {
+        await publishDeploymentFailed(
+          deploymentId,
+          `Deployment failed at some stage due to: ${err.message}`,
+        );
+      }
       throw err; // This tells BullMQ that the deploymentJob failed due to worker crash or something it will retry on the basis of retries set in the queue.ts file...
     }
   },
