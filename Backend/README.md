@@ -1,15 +1,29 @@
-# backend
+# InfraForge backend
 
-To install dependencies:
+Install dependencies once from the repository root with `bun install --frozen-lockfile`.
+See [project setup](../Readme.md) and [project state](../docs/PROJECT_STATE.md).
 
-```bash
-bun install
+The API, worker/simulator and WebSocket server run as separate Bun processes.
+PostgreSQL stores layouts, deployments and outbox entries; Redis carries queue jobs,
+control commands and deployment events. The worker runs Validate, SecurityScan and
+CostEstimate before starting the shared simulation engine.
+
+From this directory:
+
+```sh
+bun run db:generate
+bun run db:migrate
+bun run index.ts
+# In separate terminals:
+bun run worker.ts
+bun run ws-server.ts
 ```
 
-To run:
+Migration deployment applies committed SQL to the configured database. Use local
+development infrastructure and keep `.env` local. Root `bun run typecheck` generates
+the client and checks all workspaces. Root `bun run test` runs unit and simulation
+tests. [Integration tests](tests/integration/README.md) require fresh disposable
+services and never use the ordinary development database.
 
-```bash
-bun run dev
-```
-
-This project was created using `bun init` in bun v1.3.14. [Bun](https://bun.com) is a fast all-in-one JavaScript runtime.
+Authentication, per-user authorization and full checkpoint recovery remain release
+blockers. The current backend is an educational development baseline.

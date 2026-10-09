@@ -12,8 +12,9 @@ InfraForge is not a diagramming tool. It is a living model of a cloud:
 
 - **Designer canvas** — drag & drop 11 resource types (DNS, CDN, load
   balancer, VMs, cache, database, queues…), connect them, and pick real
-  provider SKUs (AWS + DigitalOcean) with real prices and capacity.
-- **9-stage deployment pipeline** — transactional outbox → queue → worker,
+  provider SKUs (AWS + DigitalOcean) from a dated price catalog, with educational capacity estimates.
+- **Three deployment gates** — Validate, SecurityScan and CostEstimate;
+  transactional outbox → queue → worker,
   streamed live over WebSockets.
 - **Living simulation** — per-resource telemetry at 1 Hz (CPU, memory, RPS,
   connections, health), autoscaling pools, vertical scaling with restart
@@ -24,8 +25,9 @@ InfraForge is not a diagramming tool. It is a living model of a cloud:
   (pause / 1x / 10x / 60x), and scenario presets (Peak Hours, Flash Sale,
   Bot Attack…).
 
-The simulation is *simulation theater*: indistinguishable in feel from a
-real cloud, but educational — never production sizing advice.
+The simulation is an educational model, not production sizing advice. Resource
+behavior and capacity are intentional approximations; catalog prices are snapshots,
+not live quotes. See [accepted architecture and release risks](docs/PROJECT_STATE.md).
 
 ## Repo layout
 
@@ -68,10 +70,13 @@ source resolves these packages through the backend's declared dependencies.
 
 Run `bun run build`, `bun run typecheck`, `bun run lint`, `bun run test`, and
 `bun run check:boundaries` from the root. Checks run without caching during migration.
-The frontend lint and backend type checks currently report existing failures;
-the validation workflow runs each check independently and retains those failures.
-`bun run test:integration` requires the disposable local service settings documented
-in [the integration test guide](Backend/tests/integration/README.md).
+The validation workflow runs each check independently, including `bun run audit`
+and `bun run test:tooling`. See [baseline verification](docs/BASELINE_VERIFICATION.md)
+for measured results and remaining gaps.
+`bun run test:integration:local` creates and disposes of isolated local Docker fixtures,
+keeping evidence outside the containers. `bun run test:integration` uses caller-managed
+services. Requirements and the temporary-resource policy are in
+[the integration test guide](Backend/tests/integration/README.md).
 
 On Windows, `bun run dev` calls the existing PowerShell launcher. It reuses the
 configured local PostgreSQL/Redis containers, applies committed migrations, generates
@@ -137,7 +142,7 @@ VITE_WS_URL=ws://localhost:3001
 ## Tests
 
 ```bash
-cd Backend && bun test   # 28 golden simulation scenarios
+bun run test   # domain, catalog, frontend and backend; 30 simulation golden scenarios
 ```
 
 ## Docker (all-in-one backend)
@@ -152,4 +157,5 @@ runs via `bun run dev` (or is deployed separately).
 
 ---
 
-*Everything real. Everything live. Nothing hardcoded that shouldn't be.*
+Public multi-user release requires backend authentication and authorization,
+reviewed run persistence/recovery, and an independently verified release process.
