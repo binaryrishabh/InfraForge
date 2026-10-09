@@ -5,10 +5,9 @@ on:
     branches: [main]
     # Rebuild backend containers when their source or workspace inputs change.
     paths:
-      - "Backend/**"
-      - "shared/**"
+      - "apps/backend/**"
       - "packages/**"
-      - "Frontend/package.json"
+      - "apps/web/package.json"
       - "package.json"
       - "bun.lock"
       - "bunfig.toml"
@@ -44,6 +43,6 @@ jobs:
             cd ~/InfraForge
             git pull --ff-only origin main
             test "$(git rev-parse HEAD)" = "${{ github.sha }}"
-            cd Backend
+            cd apps/backend
             docker compose build
             docker compose up -d

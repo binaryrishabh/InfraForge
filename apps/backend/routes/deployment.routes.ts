@@ -1,0 +1,487 @@
+import { Router } from "express";
+import crypto from "crypto";
+import { prisma } from "../lib/prisma";
+import { redis } from "../infra/redis";
+import { ValidationError, NotFoundError, ConflictError } from "../utils/errors";
+import {
+  ChaosInjectionBodySchema,
+  DeploymentIdSchema,
+  LoadControlBodySchema,
+  DeploymentCreateBodySchema,
+  VerticalScaleBodySchema,
+  PoolScaleBodySchema,
+  SpeedControlBodySchema,
+  SyncTopologyBodySchema,
+} from "../zod_schemas/deployment.schema";
+import { DeploymentStatus } from "@infraforge/contracts/deployment";
+import { Publish } from "@infraforge/contracts/events";
+import { captureRunInputs } from "../deployments/runInputs";
+
+export const deploymentRouter = Router();
+
+// Create new deployment — transactional outbox
+deploymentRouter.post("/", async (req, res) => {
+  const DeploymentBody = DeploymentCreateBodySchema.safeParse(req.body);
+  if (!DeploymentBody.success) {
+    const errorMessages = DeploymentBody.error.issues
+      .map((err) => err.message)
+      .join(", ");
+    throw new ValidationError(errorMessages);
+  }
+  const { infrastructureId, workloadProfile } = DeploymentBody.data;
+  const deploymentId = crypto.randomUUID();
+  const createdDeployment = await prisma.$transaction(async (tx) => {
+    // Serialize capture with design updates/deletion; keep the outbox atomic.
+    await tx.$queryRaw`SELECT id FROM "Infrastructure" WHERE id = ${infrastructureId} FOR UPDATE`;
+    const infrastructure = await tx.infrastructure.findUnique({ where: { id: infrastructureId, ownerId: res.locals.userId } });
+    if (!infrastructure) throw new NotFoundError("Infrastructure not found with the given id.");
+    const runInputs = captureRunInputs(infrastructure.layout, workloadProfile);
+    const deployment = await tx.deployment.create({
+      data: {
+        id: deploymentId,
+        infrastructureId,
+        resourceCount: runInputs.resources.length,
+        workloadProfile: runInputs.workloadProfile,
+        seed: runInputs.seed,
+        runInputs,
+        liveTopology: { resources: runInputs.resources, connectionLines: runInputs.connectionLines },
+      },
+    });
+    await tx.outbox.create({
+      data: {
+        eventType: "deployment-created",
+        payload: { deploymentId },
+      },
+    });
+    return deployment;
+  });
+  res.status(201).json({
+    success: true,
+    message: "The deployment created successfully",
+    createdDeployment,
+  });
+});
+
+// List LIVE deployments — powers the Dashboard "Live Environments" reattach
+// card (R12). Registered ABOVE /:deploymentId on purpose: Express matches
+// routes in order, and if the parameter route came first, the literal
+// segment "live" would be captured as :deploymentId and fail the UUID
+// schema with a 400.
+deploymentRouter.get("/live", async (req, res) => {
+  const liveDeployments = await prisma.deployment.findMany({
+    where: { status: DeploymentStatus.LIVE, infrastructure: { ownerId: res.locals.userId } },
+    include: { infrastructure: { select: { name: true } } },
+    orderBy: { updatedAt: "desc" },
+  });
+  // Explicit shape — never leak the full Prisma row to the client.
+  const deployments = liveDeployments.map((d) => ({
+    id: d.id,
+    infrastructureId: d.infrastructureId,
+    infrastructureName: d.infrastructure.name,
+    resourceCount: d.resourceCount,
+    status: d.status,
+    createdAt: d.createdAt,
+    updatedAt: d.updatedAt,
+  }));
+  res.status(200).json({
+    success: true,
+    message: "Fetched live deployments",
+    deployments,
+  });
+});
+
+// Get details of existing deployment
+deploymentRouter.get("/:deploymentId", async (req, res) => {
+  const DeploymentId = DeploymentIdSchema.safeParse(req.params);
+  if (!DeploymentId.success) {
+    const errorMessages = DeploymentId.error.issues
+      .map((err) => err.message)
+      .join(", ");
+    throw new ValidationError(errorMessages);
+  }
+  const { deploymentId } = DeploymentId.data;
+  const deployment = await prisma.deployment.findUnique({
+    where: { id: deploymentId, infrastructure: { ownerId: res.locals.userId } },
+  });
+  if (!deployment) {
+    throw new NotFoundError(
+      "No deployment with the specification id: " + deploymentId,
+    );
+  }
+  res.status(200).json({
+    success: true,
+    message: "We have fetched the deployment successfully",
+    deployment,
+  });
+});
+
+// Chaos injection
+deploymentRouter.post("/:deploymentId/chaos", async (req, res) => {
+  const DeploymentId = DeploymentIdSchema.safeParse(req.params);
+  if (!DeploymentId.success) {
+    const errorMessages = DeploymentId.error.issues
+      .map((err) => err.message)
+      .join(", ");
+    throw new ValidationError(errorMessages);
+  }
+  const ChaosInjectionData = ChaosInjectionBodySchema.safeParse(req.body);
+  if (!ChaosInjectionData.success) {
+    const errorMessages = ChaosInjectionData.error.issues
+      .map((err) => err.message)
+      .join(", ");
+    throw new ValidationError(errorMessages);
+  }
+  const { deploymentId } = DeploymentId.data;
+  const { type, resourceId } = ChaosInjectionData.data;
+  const deployment = await prisma.deployment.findUnique({
+    where: { id: deploymentId, infrastructure: { ownerId: res.locals.userId } },
+  });
+  if (!deployment) {
+    throw new NotFoundError(
+      "Deployment not found with specified id " + deploymentId,
+    );
+  }
+  if (deployment.status !== DeploymentStatus.LIVE) {
+    throw new ValidationError(
+      "Chaos can only be injected into a live deployment",
+    );
+  }
+  const timestamp = new Date().toISOString();
+  const message = `Chaos ${type} injected on ${resourceId}`;
+  await prisma.$transaction(async (tx) => {
+    const latestDeployment = await tx.deployment.findUnique({
+      where: { id: deploymentId, infrastructure: { ownerId: res.locals.userId } },
+    });
+    const currentChaosEvents = (latestDeployment?.chaosEvents as any[]) || [];
+    currentChaosEvents.push({
+      timestamp,
+      type,
+      resourceId,
+      message,
+    });
+    const currentTimeline = (latestDeployment?.timeline as any[]) || [];
+    currentTimeline.push({
+      timestamp,
+      event: "Chaos Injected",
+      message,
+    });
+    await tx.deployment.update({
+      where: { id: deploymentId, infrastructure: { ownerId: res.locals.userId } },
+      data: {
+        chaosEvents: currentChaosEvents,
+        timeline: currentTimeline,
+      },
+    });
+  });
+  await redis.publish(
+    `deployment:${deploymentId}:updates`,
+    JSON.stringify({
+      deploymentId,
+      chaosType: type,
+      resourceId,
+      message,
+      timestamp,
+      publishType: Publish.publishChaosInjected,
+    }),
+  );
+  await redis.publish(
+    "simulator:control",
+    JSON.stringify({
+      deploymentId,
+      action: "inject-chaos",
+      chaosType: type,
+      resourceId,
+    }),
+  );
+  res.status(200).json({
+    success: true,
+    message: "Chaos injected",
+    deploymentId,
+  });
+});
+
+// Load control — sets the load target of a LIVE deployment's simulation
+deploymentRouter.post("/:deploymentId/load", async (req, res) => {
+  const DeploymentId = DeploymentIdSchema.safeParse(req.params);
+  if (!DeploymentId.success) {
+    const errorMessages = DeploymentId.error.issues
+      .map((err) => err.message)
+      .join(", ");
+    throw new ValidationError(errorMessages);
+  }
+  const LoadControlData = LoadControlBodySchema.safeParse(req.body);
+  if (!LoadControlData.success) {
+    const errorMessages = LoadControlData.error.issues
+      .map((err) => err.message)
+      .join(", ");
+    throw new ValidationError(errorMessages);
+  }
+  const { deploymentId } = DeploymentId.data;
+  const { targetLoadFraction } = LoadControlData.data;
+  const deployment = await prisma.deployment.findUnique({
+    where: { id: deploymentId, infrastructure: { ownerId: res.locals.userId } },
+  });
+  if (!deployment) {
+    throw new NotFoundError(
+      "Deployment not found with specified id " + deploymentId,
+    );
+  }
+  if (deployment.status !== DeploymentStatus.LIVE) {
+    throw new ValidationError("Load can only be adjusted on a live deployment");
+  }
+  await redis.publish(
+    "simulator:control",
+    JSON.stringify({
+      deploymentId,
+      action: "set-load",
+      targetLoadFraction,
+    }),
+  );
+  res.status(200).json({
+    success: true,
+    message: `Load target set to ${Math.round(targetLoadFraction * 100)}% of declared capacity`,
+    targetLoadFraction,
+  });
+});
+
+// Vertical scaling — swaps a resource's SKU with realistic restart downtime
+deploymentRouter.post("/:deploymentId/scale-vertical", async (req, res) => {
+  const DeploymentId = DeploymentIdSchema.safeParse(req.params);
+  if (!DeploymentId.success) {
+    const errorMessages = DeploymentId.error.issues
+      .map((err) => err.message)
+      .join(", ");
+    throw new ValidationError(errorMessages);
+  }
+  const VerticalScaleData = VerticalScaleBodySchema.safeParse(req.body);
+  if (!VerticalScaleData.success) {
+    const errorMessages = VerticalScaleData.error.issues
+      .map((err) => err.message)
+      .join(", ");
+    throw new ValidationError(errorMessages);
+  }
+  const { deploymentId } = DeploymentId.data;
+  const { resourceId, skuId } = VerticalScaleData.data;
+  const deployment = await prisma.deployment.findUnique({
+    where: { id: deploymentId, infrastructure: { ownerId: res.locals.userId } },
+  });
+  if (!deployment) {
+    throw new NotFoundError(
+      "Deployment not found with specified id " + deploymentId,
+    );
+  }
+  if (deployment.status !== DeploymentStatus.LIVE) {
+    throw new ValidationError(
+      "Vertical scaling only applies to a live deployment",
+    );
+  }
+  await redis.publish(
+    "simulator:control",
+    JSON.stringify({
+      deploymentId,
+      action: "scale-vertical",
+      resourceId,
+      skuId,
+    }),
+  );
+  res.status(200).json({
+    success: true,
+    message: "Vertical scaling initiated",
+    deploymentId,
+  });
+});
+
+// Manual pool scaling — immediate replica lever on a LIVE deployment's scaling pool
+deploymentRouter.post("/:deploymentId/scale-pool", async (req, res) => {
+  const DeploymentId = DeploymentIdSchema.safeParse(req.params);
+  if (!DeploymentId.success) {
+    const errorMessages = DeploymentId.error.issues
+      .map((err) => err.message)
+      .join(", ");
+    throw new ValidationError(errorMessages);
+  }
+  const PoolScaleData = PoolScaleBodySchema.safeParse(req.body);
+  if (!PoolScaleData.success) {
+    const errorMessages = PoolScaleData.error.issues
+      .map((err) => err.message)
+      .join(", ");
+    throw new ValidationError(errorMessages);
+  }
+  const { deploymentId } = DeploymentId.data;
+  const { lbId, delta } = PoolScaleData.data;
+  const deployment = await prisma.deployment.findUnique({
+    where: { id: deploymentId, infrastructure: { ownerId: res.locals.userId } },
+  });
+  if (!deployment) {
+    throw new NotFoundError(
+      "Deployment not found with specified id " + deploymentId,
+    );
+  }
+  if (deployment.status !== DeploymentStatus.LIVE) {
+    throw new ValidationError(
+      "Manual scaling only applies to a live deployment",
+    );
+  }
+  await redis.publish(
+    "simulator:control",
+    JSON.stringify({
+      deploymentId,
+      action: "scale-pool",
+      lbId,
+      delta,
+    }),
+  );
+  res.status(200).json({
+    success: true,
+    message: "Manual scaling command sent to simulator",
+    deploymentId,
+  });
+});
+
+// Speed control — pause / fast-forward the LIVE simulation clock
+deploymentRouter.post("/:deploymentId/speed", async (req, res) => {
+  const DeploymentId = DeploymentIdSchema.safeParse(req.params);
+  if (!DeploymentId.success) {
+    const errorMessages = DeploymentId.error.issues
+      .map((err) => err.message)
+      .join(", ");
+    throw new ValidationError(errorMessages);
+  }
+  const SpeedControlData = SpeedControlBodySchema.safeParse(req.body);
+  if (!SpeedControlData.success) {
+    const errorMessages = SpeedControlData.error.issues
+      .map((err) => err.message)
+      .join(", ");
+    throw new ValidationError(errorMessages);
+  }
+  const { deploymentId } = DeploymentId.data;
+  const { speed } = SpeedControlData.data;
+  const deployment = await prisma.deployment.findUnique({
+    where: { id: deploymentId, infrastructure: { ownerId: res.locals.userId } },
+  });
+  if (!deployment) {
+    throw new NotFoundError(
+      "Deployment not found with specified id " + deploymentId,
+    );
+  }
+  if (deployment.status !== DeploymentStatus.LIVE) {
+    throw new ValidationError(
+      "Speed can only be adjusted on a live deployment",
+    );
+  }
+  await redis.publish(
+    "simulator:control",
+    JSON.stringify({
+      deploymentId,
+      action: "set-speed",
+      speed,
+    }),
+  );
+  res.status(200).json({
+    success: true,
+    message: "Speed updated",
+    speed,
+  });
+});
+
+// Live edits belong to this run, never to its saved design or original inputs.
+deploymentRouter.post("/:deploymentId/sync-topology", async (req, res) => {
+  const DeploymentId = DeploymentIdSchema.safeParse(req.params);
+  if (!DeploymentId.success) {
+    const errorMessages = DeploymentId.error.issues
+      .map((err) => err.message)
+      .join(", ");
+    throw new ValidationError(errorMessages);
+  }
+  const SyncTopologyData = SyncTopologyBodySchema.safeParse(req.body);
+  if (!SyncTopologyData.success) {
+    const errorMessages = SyncTopologyData.error.issues
+      .map((err) => err.message)
+      .join(", ");
+    throw new ValidationError(errorMessages);
+  }
+  const { deploymentId } = DeploymentId.data;
+  const { resources, connectionLines, expectedRevision } = SyncTopologyData.data;
+  const deployment = await prisma.deployment.findUnique({
+    where: { id: deploymentId, infrastructure: { ownerId: res.locals.userId } },
+  });
+  if (!deployment) {
+    throw new NotFoundError(
+      "Deployment not found with specified id " + deploymentId,
+    );
+  }
+  if (deployment.status !== DeploymentStatus.LIVE) {
+    throw new ValidationError(
+      "Topology can only be synced on a live deployment",
+    );
+  }
+  const changed = await prisma.deployment.updateMany({
+    where: { id: deploymentId, infrastructure: { ownerId: res.locals.userId }, status: DeploymentStatus.LIVE, topologyRevision: expectedRevision },
+    data: { liveTopology: { resources, connectionLines }, topologyRevision: { increment: 1 } },
+  });
+  if (changed.count !== 1) {
+    throw new ConflictError("Live topology changed. Re-enter the environment before editing again.");
+  }
+  res.status(200).json({
+    success: true,
+    message: "Topology accepted",
+    deploymentId,
+    topologyRevision: expectedRevision + 1,
+  });
+});
+
+// Teardown — stops the simulation and retires the deployment
+deploymentRouter.post("/:deploymentId/teardown", async (req, res) => {
+  const DeploymentId = DeploymentIdSchema.safeParse(req.params);
+  if (!DeploymentId.success) {
+    const errorMessages = DeploymentId.error.issues
+      .map((err) => err.message)
+      .join(", ");
+    throw new ValidationError(errorMessages);
+  }
+  const { deploymentId } = DeploymentId.data;
+  const deployment = await prisma.deployment.findUnique({
+    where: { id: deploymentId, infrastructure: { ownerId: res.locals.userId } },
+  });
+  if (!deployment) {
+    throw new NotFoundError(
+      "Deployment not found with specified id " + deploymentId,
+    );
+  }
+  if (deployment.status !== DeploymentStatus.LIVE) {
+    throw new ValidationError("Only live deployments can be torn down");
+  }
+  const tornTimeline = (deployment.timeline as any[]) || [];
+  tornTimeline.push({
+    timestamp: new Date().toISOString(),
+    event: "Deployment Torn Down",
+    message: "Environment torn down. Simulation stopped.",
+  });
+  const stopped = await prisma.deployment.updateMany({
+    where: { id: deploymentId, infrastructure: { ownerId: res.locals.userId }, status: DeploymentStatus.LIVE },
+    data: { status: DeploymentStatus.TORN_DOWN, timeline: tornTimeline },
+  });
+  if (stopped.count !== 1) throw new ConflictError("Deployment is no longer live.");
+  await redis.publish(
+    "simulator:control",
+    JSON.stringify({
+      deploymentId,
+      action: "stop",
+    }),
+  );
+  await redis.publish(
+    `deployment:${deploymentId}:updates`,
+    JSON.stringify({
+      deploymentId,
+      publishType: Publish.publishDeploymentTornDown,
+      status: "torn-down",
+      message: "Environment torn down. Simulation stopped.",
+      timestamp: new Date().toISOString(),
+    }),
+  );
+  res.status(200).json({
+    success: true,
+    message: "Deployment torn down",
+    deploymentId,
+  });
+});

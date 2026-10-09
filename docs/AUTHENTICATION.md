@@ -15,7 +15,7 @@ before changing the pinned version. The installed Prisma adapter declares Prisma
 
 ## Configuration
 
-Set these through the environment or the gitignored `Backend/.env` for local work:
+Set these through the environment or the gitignored `apps/backend/.env` for local work:
 
 | Variable | Meaning |
 | --- | --- |
@@ -97,7 +97,7 @@ reassignment of an owned design. Recovery preserves historical fields and origin
 run inputs. This is an operator CLI, never a public endpoint or automatic startup
 operation.
 
-From `Backend/`, against an explicitly approved database, first run:
+From `apps/backend/`, against an explicitly approved database, first run:
 
 ```powershell
 bun run scripts/recover-ownership.ts --design <design-uuid> --user <verified-user-id> --legacy-user <historical-marker> --evidence <ownership-evidence-reference>

@@ -135,7 +135,7 @@ try {
         $pgPort = Invoke-Docker @('inspect', $names.postgres, '--format', '{{(index (index .NetworkSettings.Ports "5432/tcp") 0).HostPort}}')
         $redisPort = Invoke-Docker @('inspect', $names.redis, '--format', '{{(index (index .NetworkSettings.Ports "6379/tcp") 0).HostPort}}')
         $start = [Diagnostics.ProcessStartInfo]::new((Get-Command bun -ErrorAction Stop).Source)
-        $start.WorkingDirectory = if ($SafetyGuardsOnly) { Join-Path $repoRoot 'Backend' } else { $repoRoot }
+        $start.WorkingDirectory = if ($SafetyGuardsOnly) { Join-Path $repoRoot 'apps/backend' } else { $repoRoot }
         $start.UseShellExecute = $false
         $start.CreateNoWindow = $true
         $start.WindowStyle = 'Hidden'

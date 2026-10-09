@@ -61,3 +61,23 @@ jobs:
           bun-version: 1.3.14
       - run: bun install --frozen-lockfile
       - run: bun run test:integration
+
+  packaging:
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: postgresql://postgres@localhost/infraforge_packaging
+      BETTER_AUTH_SECRET: packaging-only-fixture-secret-at-least-32-characters
+      BETTER_AUTH_URL: https://api.example.invalid
+      APP_ORIGINS: https://app.example.invalid
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker compose --env-file /dev/null -f apps/backend/docker-compose.yml config --quiet
+      - run: docker build -f apps/backend/Dockerfile -t infraforge-packaging .
+      - run: |
+          docker compose --env-file /dev/null -f apps/backend/docker-compose.yml config --format json > /tmp/compose.json
+          for service in api worker ws-server; do
+            workdir=$(jq -er --arg service "$service" '.services[$service].working_dir' /tmp/compose.json)
+            entrypoint=$(jq -er --arg service "$service" '.services[$service].command[2]' /tmp/compose.json)
+            docker run --rm --workdir "$workdir" infraforge-packaging bun build "$entrypoint" --target=bun --outdir=/tmp/entrypoints
+          done
+          docker run --rm --workdir "$workdir" infraforge-packaging bun build scripts/recover-ownership.ts --target=bun --outdir=/tmp/entrypoints

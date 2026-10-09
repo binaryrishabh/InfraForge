@@ -1,31 +1,150 @@
 {
   "$schema": "https://turborepo.dev/schema.json",
-  "globalDependencies": ["tsconfig.base.json", "bunfig.toml", "scripts/**", "shared/**"],
+  "globalDependencies": [
+    "tsconfig.base.json",
+    "bunfig.toml",
+    "scripts/**"
+  ],
   "tasks": {
     "build": {
-      "dependsOn": ["^typecheck"],
+      "dependsOn": [
+        "^typecheck"
+      ],
       "cache": false,
-      "inputs": ["$TURBO_DEFAULT$", ".env*"],
-      "env": ["VITE_BACKEND_API_URL", "VITE_WS_URL"],
-      "outputs": ["dist/**"]
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        ".env*"
+      ],
+      "env": [
+        "VITE_BACKEND_API_URL",
+        "VITE_WS_URL"
+      ],
+      "outputs": [
+        "dist/**"
+      ]
     },
-    "typecheck": { "dependsOn": ["^typecheck"], "cache": false, "outputs": [] },
-    "@infraforge/backend#typecheck": {
-      "dependsOn": ["^typecheck", "db:generate"], "cache": false, "outputs": []
-    },
-    "lint": { "cache": false, "outputs": [] },
-    "test": { "dependsOn": ["^typecheck"], "cache": false, "outputs": [] },
-    "db:generate": { "cache": false, "env": ["DATABASE_URL"], "outputs": [] },
-    "db:migrate": { "cache": false, "env": ["DATABASE_URL"], "outputs": [] },
-    "test:integration": {
-      "dependsOn": ["db:generate"],
+    "typecheck": {
+      "dependsOn": [
+        "^typecheck"
+      ],
       "cache": false,
-      "env": ["INTEGRATION_RUN", "INTEGRATION_DISPOSABLE", "INTEGRATION_DATABASE_URL", "INTEGRATION_REDIS_PORT", "INTEGRATION_API_PORT", "INTEGRATION_ALLOW_API_3000", "PG*"],
       "outputs": []
     },
-    "dev": { "cache": false, "persistent": true, "env": ["VITE_BACKEND_API_URL", "VITE_WS_URL", "NODE_ENV"] },
-    "dev:api": { "dependsOn": ["db:generate"], "cache": false, "persistent": true, "env": ["DATABASE_URL", "REDIS_HOST", "REDIS_PORT", "PORT", "NODE_ENV"] },
-    "dev:worker": { "dependsOn": ["db:generate"], "cache": false, "persistent": true, "env": ["DATABASE_URL", "REDIS_HOST", "REDIS_PORT", "NODE_ENV"] },
-    "dev:ws": { "cache": false, "persistent": true, "env": ["REDIS_HOST", "REDIS_PORT", "NODE_ENV"] }
+    "@infraforge/backend#typecheck": {
+      "dependsOn": [
+        "^typecheck",
+        "db:generate"
+      ],
+      "cache": false,
+      "outputs": []
+    },
+    "lint": {
+      "cache": false,
+      "outputs": []
+    },
+    "test": {
+      "dependsOn": [
+        "^typecheck"
+      ],
+      "cache": false,
+      "outputs": []
+    },
+    "@infraforge/backend#test": {
+      "dependsOn": [
+        "^typecheck",
+        "db:generate"
+      ],
+      "cache": false,
+      "outputs": []
+    },
+    "db:generate": {
+      "cache": false,
+      "env": [
+        "DATABASE_URL"
+      ],
+      "outputs": []
+    },
+    "db:migrate": {
+      "cache": false,
+      "env": [
+        "DATABASE_URL"
+      ],
+      "outputs": []
+    },
+    "test:integration": {
+      "dependsOn": [
+        "db:generate"
+      ],
+      "cache": false,
+      "env": [
+        "INTEGRATION_RUN",
+        "INTEGRATION_DISPOSABLE",
+        "INTEGRATION_DATABASE_URL",
+        "INTEGRATION_REDIS_PORT",
+        "INTEGRATION_API_PORT",
+        "INTEGRATION_ALLOW_API_3000",
+        "PG*"
+      ],
+      "outputs": []
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true,
+      "env": [
+        "VITE_BACKEND_API_URL",
+        "VITE_WS_URL",
+        "NODE_ENV"
+      ]
+    },
+    "dev:api": {
+      "dependsOn": [
+        "db:generate"
+      ],
+      "cache": false,
+      "persistent": true,
+      "env": [
+        "DATABASE_URL",
+        "REDIS_HOST",
+        "REDIS_PORT",
+        "PORT",
+        "NODE_ENV",
+        "BETTER_AUTH_SECRET",
+        "BETTER_AUTH_URL",
+        "APP_ORIGINS",
+        "GOOGLE_CLIENT_ID",
+        "GOOGLE_CLIENT_SECRET",
+        "GITHUB_CLIENT_ID",
+        "GITHUB_CLIENT_SECRET"
+      ]
+    },
+    "dev:worker": {
+      "dependsOn": [
+        "db:generate"
+      ],
+      "cache": false,
+      "persistent": true,
+      "env": [
+        "DATABASE_URL",
+        "REDIS_HOST",
+        "REDIS_PORT",
+        "NODE_ENV"
+      ]
+    },
+    "dev:ws": {
+      "cache": false,
+      "persistent": true,
+      "env": [
+        "REDIS_HOST",
+        "REDIS_PORT",
+        "NODE_ENV",
+        "DATABASE_URL",
+        "BETTER_AUTH_SECRET",
+        "BETTER_AUTH_URL",
+        "APP_ORIGINS"
+      ],
+      "dependsOn": [
+        "db:generate"
+      ]
+    }
   }
 }

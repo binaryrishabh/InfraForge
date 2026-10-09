@@ -5,8 +5,8 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 $repositoryRoot = $PSScriptRoot
-$backendDirectory = Join-Path $repositoryRoot "Backend"
-$frontendDirectory = Join-Path $repositoryRoot "Frontend"
+$backendDirectory = Join-Path $repositoryRoot "apps/backend"
+$frontendDirectory = Join-Path $repositoryRoot "apps/web"
 $managedProcesses = [System.Collections.Generic.List[object]]::new()
 
 function Write-Step {
@@ -260,7 +260,7 @@ try {
         -Arguments @("run", "ws-server.ts") `
         -WorkingDirectory $backendDirectory
     $frontend = Start-ManagedService `
-        -Name "Frontend" `
+        -Name "apps/web" `
         -FilePath $bun `
         -Arguments @("run", "dev") `
         -WorkingDirectory $frontendDirectory

@@ -1,0 +1,39 @@
+{
+  "name": "@infraforge/contracts",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./deployment": {
+      "types": "./src/deployment/index.ts",
+      "default": "./src/deployment/index.ts"
+    },
+    "./events": {
+      "types": "./src/events/index.ts",
+      "default": "./src/events/index.ts"
+    },
+    "./infrastructure": {
+      "types": "./src/infrastructure/index.ts",
+      "default": "./src/infrastructure/index.ts"
+    },
+    "./run-inputs": {
+      "types": "./src/run-inputs/index.ts",
+      "default": "./src/run-inputs/index.ts"
+    },
+    "./telemetry": {
+      "types": "./src/telemetry/index.ts",
+      "default": "./src/telemetry/index.ts"
+    }
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "lint": "eslint src"
+  },
+  "dependencies": {
+    "@infraforge/domain": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3",
+    "eslint": "10.8.0",
+    "typescript-eslint": "8.66.0"
+  }
+}

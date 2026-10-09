@@ -1,0 +1,108 @@
+/* Builds the initial simulation state. Topology comes from computeTopology
+(topology.ts) — one source of truth for reachability rules. Pure, zero I/O. */
+import { RESOURCE_TYPES, type ResourceType } from "@infraforge/domain/resource";
+import { ResourceHealth } from "@infraforge/domain/resource";
+import { findSku } from "@infraforge/catalog";
+import { SIMULATION_CONSTANTS } from "./tuning";
+import { computeTopology } from "@infraforge/domain/topology";
+import type { Resource } from "@infraforge/domain/resource";
+import type { ConnectionLine } from "@infraforge/domain/resource";
+import type { WorkloadProfile } from "@infraforge/domain/workload";
+import type { SimulationState } from "./types/SimulationState.interface";
+import type { PoolRuntime } from "./types/PoolRuntime.interface";
+import type { Sku } from "@infraforge/catalog/types";
+import type { ResourceMetrics } from "@infraforge/contracts/telemetry";
+
+export function createInitialState(
+    deploymentId: string,
+    resources: Resource[],
+    connectionLines: ConnectionLine[],
+    workloadProfile: WorkloadProfile,
+    seed: number,
+): SimulationState {
+    const topology = computeTopology(resources, connectionLines);
+    const entryPoints = topology.entryPoints;
+    const adjacency = topology.adjacency;
+    const upstream = topology.upstream;
+    const reachable = new Set(topology.reachable);
+    const deadEnds = topology.deadEnds;
+    const idle = topology.idle;
+    const targetRps =
+        workloadProfile.throughputUnit === "per-minute"
+            ? workloadProfile.targetThroughput / 60
+            : workloadProfile.targetThroughput / 3600;
+    const resourceTypes: Record<string, ResourceType> = {};
+    const resourceSkus: Record<string, Sku> = {};
+    const metrics: Record<string, ResourceMetrics> = {};
+    for (const r of resources) {
+        resourceTypes[r.id] = r.type;
+        metrics[r.id] = { cpu: 0, memory: 0, health: ResourceHealth.HEALTHY };
+        if (r.skuId) {
+            const sku = findSku(r.skuId);
+            if (sku) resourceSkus[r.id] = sku;
+        }
+    }
+    const pools: Record<string, PoolRuntime> = {};
+    for (const lb of resources) {
+        if (lb.type !== RESOURCE_TYPES.LoadBalancer) continue;
+        const poolVmIds = (adjacency[lb.id] ?? []).filter(
+            (id) => resourceTypes[id] === RESOURCE_TYPES.VirtualMachine,
+        );
+        if (poolVmIds.length === 0) continue;
+        const policy = lb.autoscaling;
+        if (policy?.enabled === false) continue;
+        const base = poolVmIds.length;
+        const minReplicas = policy?.minReplicas ?? base;
+        const maxReplicas = Math.max(
+            minReplicas,
+            Math.min(
+                policy?.maxReplicas ??
+                    base * SIMULATION_CONSTANTS.AUTOSCALING.DEFAULT_MAX_MULTIPLIER,
+                SIMULATION_CONSTANTS.AUTOSCALING.DEFAULT_MAX_CAP,
+            ),
+        );
+        const basePositions = poolVmIds
+            .map((id) => resources.find((r) => r.id === id))
+            .filter((r): r is Resource => Boolean(r));
+        pools[lb.id] = {
+            lbId: lb.id,
+            baseVmIds: poolVmIds,
+            minReplicas,
+            maxReplicas,
+            targetCpu:
+                policy?.targetCpu ?? SIMULATION_CONSTANTS.AUTOSCALING.DEFAULT_TARGET_CPU,
+            hotTicks: 0,
+            coldTicks: 0,
+            spawnCounter: 0,
+            spawnOrigin: {
+                x: basePositions[0]?.x ?? 200,
+                y: Math.max(...basePositions.map((r) => r.y), 0),
+            },
+            pending: null,
+        };
+    }
+    return {
+        deploymentId,
+        seed,
+        simulatedSeconds: 0,
+        loadFraction: 0,
+        targetLoadFraction: 1,
+        targetRps,
+        workloadProfile,
+        resourceTypes,
+        resourceSkus,
+        entryPoints,
+        reachable: [...reachable],
+        deadEnds,
+        idle,
+        metrics,
+        overallHealth: "healthy",
+        activeChaos: [],
+        pools,
+        spawnedVms: [],
+        verticalScaling: [],
+        downstream: adjacency,
+        upstream,
+        sheddingLbs: [],
+    };
+}

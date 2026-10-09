@@ -1,0 +1,70 @@
+services:
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+
+  api:
+    build:
+      context: ../..
+      dockerfile: apps/backend/Dockerfile
+    working_dir: /app/apps/backend
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - NODE_ENV=production
+      - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET:?Set a stable random authentication secret}
+      - BETTER_AUTH_URL=${BETTER_AUTH_URL:?Set the public HTTPS API origin}
+      - APP_ORIGINS=${APP_ORIGINS:?Set exact permitted HTTPS frontend origins}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
+      - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID:-}
+      - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET:-}
+    depends_on:
+      - redis
+    restart: unless-stopped
+    command: bun run index.ts
+
+  worker:
+    build:
+      context: ../..
+      dockerfile: apps/backend/Dockerfile
+    working_dir: /app/apps/backend
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - NODE_ENV=production
+    depends_on:
+      - redis
+    restart: unless-stopped
+    command: bun run worker.ts
+
+  ws-server:
+    build:
+      context: ../..
+      dockerfile: apps/backend/Dockerfile
+    working_dir: /app/apps/backend
+    ports:
+      - "3001:3001"
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - NODE_ENV=production
+      - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET:?Set a stable random authentication secret}
+      - BETTER_AUTH_URL=${BETTER_AUTH_URL:?Set the public HTTPS API origin}
+      - APP_ORIGINS=${APP_ORIGINS:?Set exact permitted HTTPS frontend origins}
+    depends_on:
+      - redis
+    restart: unless-stopped
+    command: bun run ws-server.ts
+
+volumes:
+  redis_data:

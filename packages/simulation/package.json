@@ -1,0 +1,43 @@
+{
+  "name": "@infraforge/simulation",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./capacity": {
+      "types": "./src/capacity.ts",
+      "default": "./src/capacity.ts"
+    },
+    "./cost": {
+      "types": "./src/cost.ts",
+      "default": "./src/cost.ts"
+    },
+    "./engine": {
+      "types": "./src/engine.ts",
+      "default": "./src/engine.ts"
+    },
+    "./tuning": {
+      "types": "./src/tuning.ts",
+      "default": "./src/tuning.ts"
+    },
+    "./types": {
+      "types": "./src/types/index.ts",
+      "default": "./src/types/index.ts"
+    }
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.test.json",
+    "lint": "eslint src tests",
+    "test": "bun --no-env-file --no-install test tests"
+  },
+  "dependencies": {
+    "@infraforge/domain": "workspace:*",
+    "@infraforge/catalog": "workspace:*",
+    "@infraforge/contracts": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3",
+    "eslint": "10.8.0",
+    "typescript-eslint": "8.66.0",
+    "@types/bun": "1.3.14"
+  }
+}

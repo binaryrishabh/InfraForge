@@ -27,7 +27,7 @@ logs
 *.sw?
 
 # Prisma generated client (backend)
-/lib/generated/prisma
+/apps/backend/lib/generated/prisma/
 
 # Testing & Coverage
 coverage

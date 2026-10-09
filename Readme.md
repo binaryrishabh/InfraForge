@@ -32,11 +32,12 @@ not live quotes. See [accepted architecture and release risks](docs/PROJECT_STAT
 ## Repo layout
 
 ```
-packages/domain/   Resource/workload types, graph rules, readiness and examples
-packages/catalog/  Provider SKU data and lookup/filter functions
-shared/    Remaining simulation and transport contracts during extraction
-Backend/   Bun + Express + Prisma + PostgreSQL + Redis + BullMQ
-Frontend/  React 19 + Vite + Tailwind 4 + zustand + dnd-kit
+apps/web/            React 19 + Vite + Tailwind 4 + Zustand + dnd-kit
+apps/backend/        Bun + Express + Prisma + PostgreSQL + Redis + BullMQ
+packages/domain/     Resource/workload types, graph rules, readiness and examples
+packages/catalog/    Provider SKU data and lookup/filter functions
+packages/contracts/  Deployment, run-input, telemetry and event contracts
+packages/simulation/ Deterministic engine, runtime types, cost and tuning
 ```
 
 ## Prerequisites
@@ -54,29 +55,25 @@ bun install --frozen-lockfile
 ```
 
 Install once from the repository root. The apps and `packages/*` are Bun workspaces;
-the root `bun.lock` is the dependency authority. Both app manifests pin the existing
-installed versions. The frontend router is pinned to 7.18.2 to reconcile its previous
-manifest/lock mismatch. Root overrides and three existing dependency constraints
-preserve transitive resolutions while consolidating the two installs. Hoisting may
-change optional type peer placement; each app keeps its own TypeScript version
+the root `bun.lock` is the dependency authority. App manifests and root overrides
+pin dependency versions. Each app keeps its own TypeScript version
 (web 6.0.3, backend 5.9.3).
 
-Both apps declare domain/catalog workspace dependencies and import their explicit
-package exports. These packages expose TypeScript source directly to Bun and Vite;
-they have typecheck, lint and test tasks and no emitted build. Domain offers
-`resource`, `workload`, `topology`, `validation` and `examples` subpaths. Catalog
-offers its root lookup/data API and a `types` subpath. Remaining shared simulation
-source resolves these packages through the backend's declared dependencies.
+Both apps declare explicit workspace dependencies and import package exports.
+Packages expose TypeScript source directly to Bun and Vite without an emitted build.
+Contracts depend on domain; simulation depends on domain, catalog and contracts.
+The web app imports simulation tuning and capacity, never engine runtime or cost.
+Engine goldens live in `packages/simulation/tests`. Prisma generation runs before
+backend tests and typechecks; generated files stay untracked.
 
 Run `bun run build`, `bun run typecheck`, `bun run lint`, `bun run test`, and
 `bun run check:boundaries` from the root. Checks run without caching during migration.
 The validation workflow runs each check independently, including `bun run audit`
-and `bun run test:tooling`. See [baseline verification](docs/BASELINE_VERIFICATION.md)
-for measured results and remaining gaps.
+and `bun run test:tooling`. See [project state](docs/PROJECT_STATE.md) for results and remaining gaps.
 `bun run test:integration:local` creates and disposes of isolated local Docker fixtures,
 keeping evidence outside the containers. `bun run test:integration` uses caller-managed
 services. Requirements and the temporary-resource policy are in
-[the integration test guide](Backend/tests/integration/README.md).
+[the integration test guide](apps/backend/tests/integration/README.md).
 
 On Windows, `bun run dev` calls the existing PowerShell launcher. It reuses the
 configured local PostgreSQL/Redis containers, applies committed migrations, generates
@@ -91,7 +88,7 @@ docker run -d -p 6379:6379 --name infraforge-redis redis:7-alpine
 
 ### 3. Configure the database
 
-Create `Backend/.env`:
+Create `apps/backend/.env`:
 
 ```
 DATABASE_URL=postgresql://user:password@localhost:5432/infraforge
@@ -107,7 +104,7 @@ in the backend. Sign-in remains unavailable until a provider is configured.
 Then generate the Prisma client and create the schema:
 
 ```bash
-cd Backend
+cd apps/backend
 bun run db:generate
 bun run db:migrate
 ```
@@ -115,7 +112,7 @@ bun run db:migrate
 ### 4. Run the backend (three processes)
 
 ```bash
-cd Backend
+cd apps/backend
 bun run index.ts       # API server           → :3000
 bun run worker.ts      # pipeline + simulator (keep running)
 bun run ws-server.ts   # WebSocket server     → :3001
@@ -124,11 +121,11 @@ bun run ws-server.ts   # WebSocket server     → :3001
 ### 5. Run the frontend
 
 ```bash
-cd Frontend
+cd apps/web
 bun run dev            # → http://localhost:5173
 ```
 
-Defaults already point at localhost. Override via `Frontend/.env` if needed:
+Defaults already point at localhost. Override via `apps/web/.env` if needed:
 
 ```
 VITE_BACKEND_API_URL=http://localhost:3000/api
@@ -154,7 +151,7 @@ bun run test   # domain, catalog, frontend and backend; 30 simulation golden sce
 ## Docker (all-in-one backend)
 
 ```bash
-cd Backend
+cd apps/backend
 docker compose build
 # Apply the additive migration using the explicitly configured database:
 docker compose run --rm api bun run db:migrate
