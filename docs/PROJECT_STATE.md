@@ -1,119 +1,114 @@
 # InfraForge project state
 
-Verified 2026-10-09 on `develop`. B0.3 adds real authentication and user ownership
-while preserving B0.2 simulation behavior. OAuth provisioning and release rehearsal
-remain required before public use or promotion to `main`.
-See [authentication setup](AUTHENTICATION.md), [historical baseline evidence](BASELINE_VERIFICATION.md)
-and [disposable integration instructions](../Backend/tests/integration/README.md).
+Verified 2026-10-09 on `develop`. B0.4 consolidates the monorepo while preserving
+B0.2 run consistency and B0.3 authentication. See [setup](../Readme.md),
+[authentication](AUTHENTICATION.md), [deployment settings](DEPLOYMENT.md) and
+[disposable integration tests](../apps/backend/tests/integration/README.md).
 
 ## Accepted architecture
 
-- Bun 1.3.14/Turbo 2.11.6 own the root workspace and lockfile. Domain/catalog packages
-  own shared rules and SKU data; the bounded `shared` extraction remains constrained
-  by exact import allowances, cycle checks and browser runtime boundaries.
-- React 19/Vite/Zustand implement the canvas and monitoring. Server sessions establish
-  identity. Account changes cancel requests, clear canvas/telemetry/dialog state and
-  remount protected pages. Draft keys use the server user ID; old browser password,
-  session and ownerless draft keys are removed. Local drafts remain readable by anyone
-  with access to the browser profile. Explicit saves/pre-run saves update designs;
-  live edits only affect the current simulation.
-- Express 5/Better Auth 1.7.7 use Prisma 7.9.1/PostgreSQL database sessions. Configured
-  Google/GitHub OAuth is the sign-in direction; passwords, implicit account linking,
-  optional plugins, cookie session caching and sliding session refresh are disabled.
-  HTTP requires a current session and filters all design/run access by verified owner.
-  Unsafe requests require an exact permitted Origin. Cookies are host-only, HttpOnly,
-  SameSite=Lax and Secure on HTTPS. Production origins require HTTPS; frontend/API/WS
-  must share a site; API and WS also share a hostname for the host-only cookie.
-  Provider settings and public origins are configurable.
-  Compose keeps Redis private to its service network; no Redis host port is published.
-- WebSocket verification checks Origin/session before upgrade and run ownership before
-  Redis subscription and each delivery. Database checks also close expired/revoked
-  sessions every second. Bun's supported `ws` verification callback sends proper HTTP
-  rejection responses; direct writes to its synthetic upgrade socket did not.
-- The additive auth migration preserves historical data and adds nullable `ownerId`.
-  Ownerless designs/runs are quarantined, invisible to new users and refused by workers.
-  Recovery is per-design, requires independent ownership evidence, verified target
-  account, matching historical marker and no active runs, and defaults to dry run.
-  An owned design cannot be reassigned. No automatic ownership backfill exists.
-- PostgreSQL persists deployments/outbox; Redis/BullMQ dispatches jobs. Validate,
-  SecurityScan and CostEstimate read immutable versioned inputs captured transactionally
-  at deployment creation: validated topology, resolved workload and seed. Retries and
-  stale queue payloads cannot replace them. Database triggers preserve captured inputs.
-- Saved design, original input and revisioned live topology are distinct. Atomic revision
-  checks reject stale live edits; reattachment reads live state without writing it back.
-  One worker owns the database through a session advisory lock; initialization and cycles
-  do not overlap. Active design deletion waits for runtime stop acknowledgement.
-- Worker restart explicitly fails interrupted runs while preserving original inputs,
-  history and diagnostic checkpoints. Full checkpoint recovery/replay is absent. Costs
-  and outcomes come from the shared deterministic engine/catalog and simulated time;
-  timestamps and orchestration timing are not byte-identical replay or cloud guarantees.
+| Workspace | Responsibility |
+| --- | --- |
+| `apps/web` | React 19/Vite/Zustand canvas, deployment and monitoring UI |
+| `apps/backend` | Express API, Prisma/PostgreSQL, outbox/BullMQ, worker/simulator and WebSocket server |
+| `packages/domain` | Resource/workload types, topology rules, readiness and examples |
+| `packages/catalog` | Curated provider SKU snapshot and lookup functions |
+| `packages/contracts` | Deployment, immutable run-input, infrastructure, telemetry and event contracts |
+| `packages/simulation` | Deterministic engine, runtime types, cost calculations, capacity and tuning |
+
+Bun 1.3.14/Turbo 2.11.6 own one root installation and `bun.lock`. Internal imports
+use explicit exports and `workspace:*` dependencies. Contracts depend on domain;
+simulation depends on domain, catalog and contracts. Browser code may use simulation
+capacity/tuning, but cannot reach its engine, runtime types or cost implementation.
+Source exports work directly with Bun/Vite. Root `shared`, `Backend`, `Frontend`,
+their aliases and legacy boundary exception files are removed. Prisma generation
+runs before backend tests/typechecking; generated files remain untracked. All ten
+versioned migrations and the schema retain their contents.
+
+Better Auth 1.7.7/Prisma 7.9.1 provide database sessions and configurable Google/GitHub
+OAuth. HTTP requires verified ownership; unsafe requests require an exact permitted
+Origin. WebSockets check Origin/session before upgrade, ownership before subscription
+and delivery, and expiry/revocation every second. Cookies are host-only, HttpOnly,
+SameSite=Lax and Secure on HTTPS. Production requires exact HTTPS origins, same-site
+frontend/API/WS and the same API/WS hostname. Redis has no Compose host port.
+Passwords, implicit account linking and optional auth plugins are disabled.
+Ownerless historical records stay quarantined; ownership recovery requires evidence,
+a verified account and an inactive design, and defaults to dry run. Browser drafts
+use server user IDs; account changes clear requests, canvas and monitoring state.
+
+Deployment creation transactionally captures validated topology, resolved workload
+and seed. Gates, startup and retries consume these immutable inputs. Saved designs,
+original inputs and revisioned live topology are separate; reattachment reads live
+state without overwriting it. One worker holds a PostgreSQL session advisory lock.
+Active design deletion requires runtime stop acknowledgement. Worker interruption
+explicitly fails affected runs and preserves diagnostic checkpoints; checkpoint
+recovery/replay is not implemented. Outcomes and costs come from engine/catalog data
+and simulated time. Wall-clock metadata is not byte-identical replay, and the model
+is educational rather than cloud capacity-planning advice.
 
 ## Verification
 
 | Check | Result |
 | --- | --- |
-| Frozen root install | Pass; 487 installs/543 packages, no changes |
-| Typecheck | Five tasks passed, including Prisma generation |
-| Unit tests | 94 passes, zero failures, three intentionally gated integration skips |
-| Engine goldens | All 30 passed; source and expectations unchanged |
-| Lint/boundaries | Three lint tasks passed; 878 imports, no cycles/browser runtime leaks |
-| Tooling tests | Eight passes, 26 assertions |
-| Build | Three tasks passed; 2,099 modules; JS 590.18 kB / 180.55 kB gzip |
-| Dependency audit | Exit zero, `{}` |
-| Disposable integration | Nine passes, 345 assertions; lifecycle 104.40s / suite 108.24s |
-| Docker packaging | Final image built; all four backend entrypoints bundle, 1,333 modules |
-| Compose security | Rendered config verified; Redis has no published port; API/worker/WS share the internal service network |
-| Browser/session QA | Two real database users; isolation, live reattachment/control, sign-out and expiry passed; no console errors |
-| Remote CI | Develop validation has eight jobs; the result for the published SHA is recorded with delivery |
+| `bun install --frozen-lockfile` | Pass; 491 installs/545 packages checked, no changes |
+| `bun run typecheck` | Seven tasks passed, including Prisma generation |
+| `bun run lint` | Five lint tasks passed; backend has no lint script |
+| `bun run check:boundaries` | 903 value/type imports; no file/workspace cycles or browser runtime leaks |
+| `bun run test:tooling` | Eight tests, 22 assertions, zero failures |
+| `bun run test` | 94 passes; three integration tests intentionally gated in this command |
+| Engine goldens | All 30 passed; only import paths changed, expectations unchanged |
+| `bun run build` | Five tasks; 2,103 modules; JS 593.04 kB / 181.49 kB gzip; existing chunk warning |
+| `bun run audit` | Exit zero, `{}` |
+| Disposable integration | Nine passes, 345 assertions; includes the three gated tests |
+| Docker/Compose | Image built; API, worker, WS and recovery CLI bundle; actual Compose working directories verified; Redis remains private |
+| Browser | Save, deploy, monitor, dashboard reattachment, teardown, two-user isolation, sign-out and session expiry passed; no console errors |
+| Linux validation | Nine GitHub Actions jobs cover seven checks, integration and container packaging; final published-SHA result accompanies delivery |
 
-Real adapter-created database sessions exercised both users, forbidden HTTP operations
-and all seven controls, WebSocket ownership/upgrades, Origin/CSRF checks, tampering,
-expiry, revocation, actual sign-out, legacy records/recovery and ownerless worker jobs.
-Unauthorized commands caused no domain/outbox mutation or simulator control event.
-The full existing input/gate/retry/live-control/checkpoint/restart/deletion/worker-loss
-lifecycle passed. Separate migration tests preserve B0.2 legacy-input coverage and
-verify that authentication preserves all old fields without inventing ownership.
+Source comparison checked 249 relocated source/schema/migration files: declarations
+and behavior are unchanged after import relocation. Integration exercises real signed
+database sessions, cross-user HTTP/WS rejection, expiry/revocation, Origin/CSRF,
+legacy quarantine/recovery, immutable inputs, retries, live revisions, worker loss,
+restart and deletion. Unauthorized controls cause no mutation or simulator event.
+Browser evidence observed nine nodes/eight links at simulated second 262, DNS 278
+RPS, database 156 RPS and a spawned replica. Database evidence confirms teardown left
+the run `torn-down` with `runtimeActive=false`. Bob saw only his design and an empty
+canvas. External OAuth was not tested without provider credentials.
 
-Initial checks exposed test typing/icon errors and Bun's unsupported WebSocket rejection
-interfaces. Three lifecycle attempts timed out; a bounded fourth captured the missing
-HTTP response. The supported verification callback passed the complete lifecycle.
-Additional recovery regressions exposed a native Bun rejection-matcher stall: the
-database had completed BEGIN, but the matcher waited until the transaction-start
-timeout. Normal promise awaiting followed by exact error assertions passed the
-isolated security sequence and final suite. Timeout increases did not solve it;
-the final checks retain normal transaction limits and verify unchanged ownership.
-Docker packaging omitted the deployment modules and new auth paths; the Dockerfile and
-restricted context allowlist now include them. A private browser fixture stalled when
-launching Vite directly under Bun; its exact child was stopped and cleanup confirmed.
-Browser QA used real signed database-session fixtures, never a public login bypass:
-Alice reattached and controlled her run; Bob saw only his design and an empty canvas.
-Sign-out and database session expiry returned to sign-in. Backend telemetry was
-observed at simulated second 170 (DNS 278 RPS, database 333 RPS). External OAuth was
-not tested without provider credentials. Owned test services, volumes, networks,
-processes and the packaging-check image were removed; shared caches and unknown
-resources were preserved. Unique sanitized evidence is retained locally; verified
-duplicate scratch and temporary evidence copies are removed, never published.
+An incomplete intermediate extraction caused missing-module errors and was corrected.
+Review also caught stale Compose working directories and missing Turbo auth/database
+environment forwarding. Private browser setup attempts encountered a migration timeout,
+a Docker network timeout and fixture cleanup/validation errors. The corrected fixture
+passed its cleanup regression, including a design created outside its original ID list;
+no application security checks were weakened for testing.
 
-## Remaining risks and next milestone
+## Workspace cleanup
 
-1. Provision a stable auth secret, exact HTTPS origins and registered Google/GitHub
-   credentials/callbacks. Neither external OAuth flow was end-to-end verified without
-   credentials. Disabling account linking may require using the original provider.
-2. Rehearse additive migration, worker shutdown/startup, quarantine recovery, proxy/TLS,
-   same-site cookies, health and rollback before release. Old unauthenticated services
-   must not remain exposed. The current deploy workflow does not apply migrations;
-   promotion requires an approved migration/startup sequence. No production data,
-   secrets or deployment were accessed.
-3. Measure hosted database traffic, WS/resource budgets and proxy-aware rate limits;
-   limits are process-local. Session revocation is checked before delivery and at most
-   one second between idle checks. This is bounded local evidence, not a load/HA audit.
-4. Single-worker interruption ends runs; non-topology controls lack durable acknowledgement
-   or replay. Session-preserving PostgreSQL connections are required; transaction poolers
-   and complete checkpoint recovery remain unsupported.
-5. Existing native Windows Bun instability, bundle warning, semantic SKU validation,
-   corrupt draft handling and legacy layout compatibility still need focused work.
-   Reports/settings remain stubs; beginner UX, narrow screens and modal focus are deferred.
+Obsolete plans, source copies, review packets, build contexts and unused skill copies
+were removed after inventory and evidence preservation. Three clean, inactive detached
+worktrees were removed through normal Git worktree operations. Required local tool
+configuration/principles and unique validation/browser/cleanup evidence remain private
+and untracked. Owner learning notes and local environment files remain local.
+Root dependencies and useful shared caches remain; old per-app installations were
+removed and frozen installation rebuilt only the required compiler links. Historical
+committed reports remain in Git history; this is the single current-state document.
 
-Next milestone: owner-configured OAuth end-to-end tests and independent security/release
-review, then migration/proxy/rollback rehearsal before considering `develop` to `main`.
-This checkpoint authorizes neither promotion nor production deployment.
+## Release risks and next milestone
+
+1. Change the Vercel root from `Frontend` to `apps/web`, include files outside that
+   root, retain production branch `main`, and verify hosted Bun/build overrides.
+   Update external backend working-directory/Dockerfile settings to `apps/backend`.
+2. Provision a stable auth secret, exact HTTPS origins and registered Google/GitHub
+   credentials/callbacks; verify both real OAuth flows. Account linking remains disabled.
+3. Rehearse worker shutdown, additive migrations, quarantine recovery, proxy/TLS,
+   health and rollback before release. The deploy workflow does not apply migrations.
+   Old unauthenticated services must not remain exposed.
+4. Single-worker execution needs session-preserving PostgreSQL connections; transaction
+   poolers and full recovery are unsupported. Other live controls lack durable replay.
+   Measure hosted WS/database load and proxy-aware, currently process-local rate limits.
+5. Existing Windows Bun instability, bundle size, semantic SKU validation, corrupt
+   drafts and legacy layouts need focused follow-up. Reports/settings remain stubs;
+   beginner UX, narrow screens and modal focus remain incomplete.
+
+Next: configured OAuth end-to-end tests and security/release review, then a migration,
+proxy and rollback rehearsal before considering `develop` to `main`. No hosting
+settings, production data, secrets or deployments were changed by consolidation.
