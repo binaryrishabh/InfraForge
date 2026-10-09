@@ -142,6 +142,11 @@ These failed attempts are not counted as successful validation.
    Existing bundle size, semantic SKU validation, corrupt legacy drafts/layouts and
    unfinished beginner/narrow-screen/focus behaviour remain follow-up work. Reports/settings are stubs.
 
+Product follow-up includes evidence-based run reports and deployment history,
+meaningful queue/monitor behaviour, clearer feedback on live edits and remaining
+canvas usability gaps. These need scoped design and model validation; old era
+schedules and claims of completed product polish are superseded.
+
 ## Evidence and cleanup
 
 Owned test containers, volumes, networks, derived images, the local test image and
@@ -154,7 +159,9 @@ and repository-specific tool overrides were removed at the owner's request. Reta
 historical verification evidence and original founder notes are in `docs/evidence.local/`,
 which is ignored by the existing `*.local` rule and must remain unpublished. Redundant
 archives, screenshots, review packets and unused frontend build caches were removed.
-Personal notes and required dependencies, generated Prisma files and environment files
+Superseded progress/vision notes, unmeasured resume-metric claims and unused
+Redis/WebSocket tutorial examples were also removed at the owner's request.
+Required dependencies, generated Prisma files and environment files
 remain; unrelated resources were untouched.
 
 Next: owner configuration and hosted OAuth/TLS/backup/session-pooling smoke tests,
