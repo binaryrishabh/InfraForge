@@ -92,11 +92,12 @@ export const setDeploymentSpeed = async (deploymentId: string, speed: number): P
 export const syncDeploymentTopology = async (
   deploymentId: string,
   resources: Resource[],
-  connectionLines: ConnectionLine[]
-): Promise<string> => {
+  connectionLines: ConnectionLine[],
+  expectedRevision: number,
+): Promise<number> => {
   const response = await axios.post(
     `${API_URL}/deployments/${deploymentId}/sync-topology`,
-    { resources, connectionLines }
+    { resources, connectionLines, expectedRevision }
   );
-  return response.data.message;
+  return response.data.topologyRevision;
 }

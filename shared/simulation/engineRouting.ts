@@ -5,6 +5,7 @@ import { RESOURCE_TYPES } from "@infraforge/domain/resource";
 import { ResourceHealth } from "@infraforge/domain/resource";
 import { SIMULATION_CONSTANTS } from "../constants/SIMULATION_CONSTANTS.constants";
 import type { SimulationState } from "../interface/SimulationState.interface";
+import { WORKLOAD_DEFAULTS } from "@infraforge/domain/workload";
 
 export function computeInboundRps(
     state: SimulationState,
@@ -24,7 +25,7 @@ export function computeInboundRps(
         }
     }
     for (const e of entryPoints) inDegree[e] = 0;
-    const readFraction = state.workloadProfile.readWriteRatio ?? 0.8;
+    const readFraction = state.workloadProfile.readWriteRatio ?? WORKLOAD_DEFAULTS.readWriteRatio;
     const writeFraction = 1 - readFraction;
     const queue: string[] = [...entryPoints];
     const processed = new Set<string>();

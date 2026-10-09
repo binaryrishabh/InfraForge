@@ -337,3 +337,12 @@ that result. No `main` change or production deployment is part of this checkpoin
 Source/test/configuration repairs are commit
 `309815a07e122bf6f8a32ada157f0e764061eb4e`; the companion documentation commit records
 the final results above. Neither commit changes the original 13-commit history.
+
+## B0.2 follow-up
+
+The results above describe B0.1. B0.2 stores immutable deployment inputs, orders
+durable live topology edits, guards active deletion, enforces one worker per database
+and explicitly fails interrupted runs instead of resetting at tick one. Its final
+unit, migration, runtime and browser results are recorded in
+[PROJECT_STATE.md](PROJECT_STATE.md). Authentication/ownership and release rehearsal
+remain required before promotion to `main`; checkpoint recovery is still absent.

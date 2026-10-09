@@ -28,10 +28,12 @@ export type AggregateDeployment = {
 
 export type DeploymentAvgAggregateOutputType = {
   resourceCount: number | null
+  topologyRevision: number | null
 }
 
 export type DeploymentSumAggregateOutputType = {
   resourceCount: number | null
+  topologyRevision: number | null
 }
 
 export type DeploymentMinAggregateOutputType = {
@@ -40,6 +42,8 @@ export type DeploymentMinAggregateOutputType = {
   status: string | null
   resourceCount: number | null
   seed: string | null
+  topologyRevision: number | null
+  runtimeActive: boolean | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -50,6 +54,8 @@ export type DeploymentMaxAggregateOutputType = {
   status: string | null
   resourceCount: number | null
   seed: string | null
+  topologyRevision: number | null
+  runtimeActive: boolean | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -65,6 +71,10 @@ export type DeploymentCountAggregateOutputType = {
   workloadProfile: number
   seed: number
   simulationState: number
+  runInputs: number
+  liveTopology: number
+  topologyRevision: number
+  runtimeActive: number
   createdAt: number
   updatedAt: number
   _all: number
@@ -73,10 +83,12 @@ export type DeploymentCountAggregateOutputType = {
 
 export type DeploymentAvgAggregateInputType = {
   resourceCount?: true
+  topologyRevision?: true
 }
 
 export type DeploymentSumAggregateInputType = {
   resourceCount?: true
+  topologyRevision?: true
 }
 
 export type DeploymentMinAggregateInputType = {
@@ -85,6 +97,8 @@ export type DeploymentMinAggregateInputType = {
   status?: true
   resourceCount?: true
   seed?: true
+  topologyRevision?: true
+  runtimeActive?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -95,6 +109,8 @@ export type DeploymentMaxAggregateInputType = {
   status?: true
   resourceCount?: true
   seed?: true
+  topologyRevision?: true
+  runtimeActive?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -110,6 +126,10 @@ export type DeploymentCountAggregateInputType = {
   workloadProfile?: true
   seed?: true
   simulationState?: true
+  runInputs?: true
+  liveTopology?: true
+  topologyRevision?: true
+  runtimeActive?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -212,6 +232,10 @@ export type DeploymentGroupByOutputType = {
   workloadProfile: runtime.JsonValue | null
   seed: string | null
   simulationState: runtime.JsonValue | null
+  runInputs: runtime.JsonValue | null
+  liveTopology: runtime.JsonValue | null
+  topologyRevision: number
+  runtimeActive: boolean
   createdAt: Date
   updatedAt: Date
   _count: DeploymentCountAggregateOutputType | null
@@ -250,6 +274,10 @@ export type DeploymentWhereInput = {
   workloadProfile?: Prisma.JsonNullableFilter<"Deployment">
   seed?: Prisma.StringNullableFilter<"Deployment"> | string | null
   simulationState?: Prisma.JsonNullableFilter<"Deployment">
+  runInputs?: Prisma.JsonNullableFilter<"Deployment">
+  liveTopology?: Prisma.JsonNullableFilter<"Deployment">
+  topologyRevision?: Prisma.IntFilter<"Deployment"> | number
+  runtimeActive?: Prisma.BoolFilter<"Deployment"> | boolean
   createdAt?: Prisma.DateTimeFilter<"Deployment"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Deployment"> | Date | string
   infrastructure?: Prisma.XOR<Prisma.InfrastructureScalarRelationFilter, Prisma.InfrastructureWhereInput>
@@ -266,6 +294,10 @@ export type DeploymentOrderByWithRelationInput = {
   workloadProfile?: Prisma.SortOrderInput | Prisma.SortOrder
   seed?: Prisma.SortOrderInput | Prisma.SortOrder
   simulationState?: Prisma.SortOrderInput | Prisma.SortOrder
+  runInputs?: Prisma.SortOrderInput | Prisma.SortOrder
+  liveTopology?: Prisma.SortOrderInput | Prisma.SortOrder
+  topologyRevision?: Prisma.SortOrder
+  runtimeActive?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   infrastructure?: Prisma.InfrastructureOrderByWithRelationInput
@@ -285,6 +317,10 @@ export type DeploymentWhereUniqueInput = Prisma.AtLeast<{
   workloadProfile?: Prisma.JsonNullableFilter<"Deployment">
   seed?: Prisma.StringNullableFilter<"Deployment"> | string | null
   simulationState?: Prisma.JsonNullableFilter<"Deployment">
+  runInputs?: Prisma.JsonNullableFilter<"Deployment">
+  liveTopology?: Prisma.JsonNullableFilter<"Deployment">
+  topologyRevision?: Prisma.IntFilter<"Deployment"> | number
+  runtimeActive?: Prisma.BoolFilter<"Deployment"> | boolean
   createdAt?: Prisma.DateTimeFilter<"Deployment"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Deployment"> | Date | string
   infrastructure?: Prisma.XOR<Prisma.InfrastructureScalarRelationFilter, Prisma.InfrastructureWhereInput>
@@ -301,6 +337,10 @@ export type DeploymentOrderByWithAggregationInput = {
   workloadProfile?: Prisma.SortOrderInput | Prisma.SortOrder
   seed?: Prisma.SortOrderInput | Prisma.SortOrder
   simulationState?: Prisma.SortOrderInput | Prisma.SortOrder
+  runInputs?: Prisma.SortOrderInput | Prisma.SortOrder
+  liveTopology?: Prisma.SortOrderInput | Prisma.SortOrder
+  topologyRevision?: Prisma.SortOrder
+  runtimeActive?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.DeploymentCountOrderByAggregateInput
@@ -324,6 +364,10 @@ export type DeploymentScalarWhereWithAggregatesInput = {
   workloadProfile?: Prisma.JsonNullableWithAggregatesFilter<"Deployment">
   seed?: Prisma.StringNullableWithAggregatesFilter<"Deployment"> | string | null
   simulationState?: Prisma.JsonNullableWithAggregatesFilter<"Deployment">
+  runInputs?: Prisma.JsonNullableWithAggregatesFilter<"Deployment">
+  liveTopology?: Prisma.JsonNullableWithAggregatesFilter<"Deployment">
+  topologyRevision?: Prisma.IntWithAggregatesFilter<"Deployment"> | number
+  runtimeActive?: Prisma.BoolWithAggregatesFilter<"Deployment"> | boolean
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Deployment"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Deployment"> | Date | string
 }
@@ -338,6 +382,10 @@ export type DeploymentCreateInput = {
   workloadProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   seed?: string | null
   simulationState?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  runInputs?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  liveTopology?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  topologyRevision?: number
+  runtimeActive?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   infrastructure: Prisma.InfrastructureCreateNestedOneWithoutDeploymentsInput
@@ -354,6 +402,10 @@ export type DeploymentUncheckedCreateInput = {
   workloadProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   seed?: string | null
   simulationState?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  runInputs?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  liveTopology?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  topologyRevision?: number
+  runtimeActive?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -368,6 +420,10 @@ export type DeploymentUpdateInput = {
   workloadProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   seed?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   simulationState?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  runInputs?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  liveTopology?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  topologyRevision?: Prisma.IntFieldUpdateOperationsInput | number
+  runtimeActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   infrastructure?: Prisma.InfrastructureUpdateOneRequiredWithoutDeploymentsNestedInput
@@ -384,6 +440,10 @@ export type DeploymentUncheckedUpdateInput = {
   workloadProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   seed?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   simulationState?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  runInputs?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  liveTopology?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  topologyRevision?: Prisma.IntFieldUpdateOperationsInput | number
+  runtimeActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -399,6 +459,10 @@ export type DeploymentCreateManyInput = {
   workloadProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   seed?: string | null
   simulationState?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  runInputs?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  liveTopology?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  topologyRevision?: number
+  runtimeActive?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -413,6 +477,10 @@ export type DeploymentUpdateManyMutationInput = {
   workloadProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   seed?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   simulationState?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  runInputs?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  liveTopology?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  topologyRevision?: Prisma.IntFieldUpdateOperationsInput | number
+  runtimeActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -428,6 +496,10 @@ export type DeploymentUncheckedUpdateManyInput = {
   workloadProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   seed?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   simulationState?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  runInputs?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  liveTopology?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  topologyRevision?: Prisma.IntFieldUpdateOperationsInput | number
+  runtimeActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -453,12 +525,17 @@ export type DeploymentCountOrderByAggregateInput = {
   workloadProfile?: Prisma.SortOrder
   seed?: Prisma.SortOrder
   simulationState?: Prisma.SortOrder
+  runInputs?: Prisma.SortOrder
+  liveTopology?: Prisma.SortOrder
+  topologyRevision?: Prisma.SortOrder
+  runtimeActive?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
 
 export type DeploymentAvgOrderByAggregateInput = {
   resourceCount?: Prisma.SortOrder
+  topologyRevision?: Prisma.SortOrder
 }
 
 export type DeploymentMaxOrderByAggregateInput = {
@@ -467,6 +544,8 @@ export type DeploymentMaxOrderByAggregateInput = {
   status?: Prisma.SortOrder
   resourceCount?: Prisma.SortOrder
   seed?: Prisma.SortOrder
+  topologyRevision?: Prisma.SortOrder
+  runtimeActive?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -477,12 +556,15 @@ export type DeploymentMinOrderByAggregateInput = {
   status?: Prisma.SortOrder
   resourceCount?: Prisma.SortOrder
   seed?: Prisma.SortOrder
+  topologyRevision?: Prisma.SortOrder
+  runtimeActive?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
 
 export type DeploymentSumOrderByAggregateInput = {
   resourceCount?: Prisma.SortOrder
+  topologyRevision?: Prisma.SortOrder
 }
 
 export type DeploymentCreateNestedManyWithoutInfrastructureInput = {
@@ -539,6 +621,10 @@ export type NullableStringFieldUpdateOperationsInput = {
   set?: string | null
 }
 
+export type BoolFieldUpdateOperationsInput = {
+  set?: boolean
+}
+
 export type DeploymentCreateWithoutInfrastructureInput = {
   id?: string
   status?: string
@@ -549,6 +635,10 @@ export type DeploymentCreateWithoutInfrastructureInput = {
   workloadProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   seed?: string | null
   simulationState?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  runInputs?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  liveTopology?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  topologyRevision?: number
+  runtimeActive?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -563,6 +653,10 @@ export type DeploymentUncheckedCreateWithoutInfrastructureInput = {
   workloadProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   seed?: string | null
   simulationState?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  runInputs?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  liveTopology?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  topologyRevision?: number
+  runtimeActive?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -607,6 +701,10 @@ export type DeploymentScalarWhereInput = {
   workloadProfile?: Prisma.JsonNullableFilter<"Deployment">
   seed?: Prisma.StringNullableFilter<"Deployment"> | string | null
   simulationState?: Prisma.JsonNullableFilter<"Deployment">
+  runInputs?: Prisma.JsonNullableFilter<"Deployment">
+  liveTopology?: Prisma.JsonNullableFilter<"Deployment">
+  topologyRevision?: Prisma.IntFilter<"Deployment"> | number
+  runtimeActive?: Prisma.BoolFilter<"Deployment"> | boolean
   createdAt?: Prisma.DateTimeFilter<"Deployment"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Deployment"> | Date | string
 }
@@ -621,6 +719,10 @@ export type DeploymentCreateManyInfrastructureInput = {
   workloadProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   seed?: string | null
   simulationState?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  runInputs?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  liveTopology?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  topologyRevision?: number
+  runtimeActive?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -635,6 +737,10 @@ export type DeploymentUpdateWithoutInfrastructureInput = {
   workloadProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   seed?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   simulationState?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  runInputs?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  liveTopology?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  topologyRevision?: Prisma.IntFieldUpdateOperationsInput | number
+  runtimeActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -649,6 +755,10 @@ export type DeploymentUncheckedUpdateWithoutInfrastructureInput = {
   workloadProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   seed?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   simulationState?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  runInputs?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  liveTopology?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  topologyRevision?: Prisma.IntFieldUpdateOperationsInput | number
+  runtimeActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -663,6 +773,10 @@ export type DeploymentUncheckedUpdateManyWithoutInfrastructureInput = {
   workloadProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   seed?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   simulationState?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  runInputs?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  liveTopology?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  topologyRevision?: Prisma.IntFieldUpdateOperationsInput | number
+  runtimeActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -680,6 +794,10 @@ export type DeploymentSelect<ExtArgs extends runtime.Types.Extensions.InternalAr
   workloadProfile?: boolean
   seed?: boolean
   simulationState?: boolean
+  runInputs?: boolean
+  liveTopology?: boolean
+  topologyRevision?: boolean
+  runtimeActive?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   infrastructure?: boolean | Prisma.InfrastructureDefaultArgs<ExtArgs>
@@ -696,6 +814,10 @@ export type DeploymentSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Ex
   workloadProfile?: boolean
   seed?: boolean
   simulationState?: boolean
+  runInputs?: boolean
+  liveTopology?: boolean
+  topologyRevision?: boolean
+  runtimeActive?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   infrastructure?: boolean | Prisma.InfrastructureDefaultArgs<ExtArgs>
@@ -712,6 +834,10 @@ export type DeploymentSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Ex
   workloadProfile?: boolean
   seed?: boolean
   simulationState?: boolean
+  runInputs?: boolean
+  liveTopology?: boolean
+  topologyRevision?: boolean
+  runtimeActive?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   infrastructure?: boolean | Prisma.InfrastructureDefaultArgs<ExtArgs>
@@ -728,11 +854,15 @@ export type DeploymentSelectScalar = {
   workloadProfile?: boolean
   seed?: boolean
   simulationState?: boolean
+  runInputs?: boolean
+  liveTopology?: boolean
+  topologyRevision?: boolean
+  runtimeActive?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type DeploymentOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "infrastructureId" | "status" | "resourceCount" | "stages" | "timeline" | "chaosEvents" | "workloadProfile" | "seed" | "simulationState" | "createdAt" | "updatedAt", ExtArgs["result"]["deployment"]>
+export type DeploymentOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "infrastructureId" | "status" | "resourceCount" | "stages" | "timeline" | "chaosEvents" | "workloadProfile" | "seed" | "simulationState" | "runInputs" | "liveTopology" | "topologyRevision" | "runtimeActive" | "createdAt" | "updatedAt", ExtArgs["result"]["deployment"]>
 export type DeploymentInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   infrastructure?: boolean | Prisma.InfrastructureDefaultArgs<ExtArgs>
 }
@@ -759,6 +889,10 @@ export type $DeploymentPayload<ExtArgs extends runtime.Types.Extensions.Internal
     workloadProfile: runtime.JsonValue | null
     seed: string | null
     simulationState: runtime.JsonValue | null
+    runInputs: runtime.JsonValue | null
+    liveTopology: runtime.JsonValue | null
+    topologyRevision: number
+    runtimeActive: boolean
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["deployment"]>
@@ -1195,6 +1329,10 @@ export interface DeploymentFieldRefs {
   readonly workloadProfile: Prisma.FieldRef<"Deployment", 'Json'>
   readonly seed: Prisma.FieldRef<"Deployment", 'String'>
   readonly simulationState: Prisma.FieldRef<"Deployment", 'Json'>
+  readonly runInputs: Prisma.FieldRef<"Deployment", 'Json'>
+  readonly liveTopology: Prisma.FieldRef<"Deployment", 'Json'>
+  readonly topologyRevision: Prisma.FieldRef<"Deployment", 'Int'>
+  readonly runtimeActive: Prisma.FieldRef<"Deployment", 'Boolean'>
   readonly createdAt: Prisma.FieldRef<"Deployment", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"Deployment", 'DateTime'>
 }

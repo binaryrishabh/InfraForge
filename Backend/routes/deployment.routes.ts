@@ -2,7 +2,7 @@ import { Router } from "express";
 import crypto from "crypto";
 import { prisma } from "../lib/prisma";
 import { redis } from "../infra/redis";
-import { ValidationError, NotFoundError } from "../utils/errors";
+import { ValidationError, NotFoundError, ConflictError } from "../utils/errors";
 import {
   ChaosInjectionBodySchema,
   DeploymentIdSchema,
@@ -15,7 +15,7 @@ import {
 } from "../zod_schemas/deployment.schema";
 import { DeploymentStatus } from "@shared/enum/DeploymentStatus.enum";
 import { Publish } from "@shared/enum/Publish.enum";
-import { LayoutSchema } from "../zod_schemas/layout.schema";
+import { captureRunInputs } from "../deployments/runInputs";
 
 export const deploymentRouter = Router();
 
@@ -29,39 +29,32 @@ deploymentRouter.post("/", async (req, res) => {
     throw new ValidationError(errorMessages);
   }
   const { infrastructureId, workloadProfile } = DeploymentBody.data;
-  const infrastructure = await prisma.infrastructure.findUnique({
-    where: { id: infrastructureId },
-  });
-  if (!infrastructure) {
-    throw new NotFoundError("Infrastructure not found with the given id.");
-  }
-  const savedLayout = LayoutSchema.safeParse(infrastructure.layout);
-  if (!savedLayout.success) {
-    throw new ValidationError("Saved infrastructure layout is invalid. Update it before deploying.");
-  }
-  const { resources, connectionLines } = savedLayout.data;
-  const resourceCount = resources.length;
   const deploymentId = crypto.randomUUID();
-  const [createdDeployment] = await prisma.$transaction([
-    prisma.deployment.create({
+  const createdDeployment = await prisma.$transaction(async (tx) => {
+    // Serialize capture with design updates/deletion; keep the outbox atomic.
+    await tx.$queryRaw`SELECT id FROM "Infrastructure" WHERE id = ${infrastructureId} FOR UPDATE`;
+    const infrastructure = await tx.infrastructure.findUnique({ where: { id: infrastructureId } });
+    if (!infrastructure) throw new NotFoundError("Infrastructure not found with the given id.");
+    const runInputs = captureRunInputs(infrastructure.layout, workloadProfile);
+    const deployment = await tx.deployment.create({
       data: {
         id: deploymentId,
         infrastructureId,
-        resourceCount,
-        workloadProfile,
+        resourceCount: runInputs.resources.length,
+        workloadProfile: runInputs.workloadProfile,
+        seed: runInputs.seed,
+        runInputs,
+        liveTopology: { resources: runInputs.resources, connectionLines: runInputs.connectionLines },
       },
-    }),
-    prisma.outbox.create({
+    });
+    await tx.outbox.create({
       data: {
         eventType: "deployment-created",
-        payload: {
-          deploymentId,
-          resources,
-          connectionLines,
-        },
+        payload: { deploymentId },
       },
-    }),
-  ]);
+    });
+    return deployment;
+  });
   res.status(201).json({
     success: true,
     message: "The deployment created successfully",
@@ -391,10 +384,7 @@ deploymentRouter.post("/:deploymentId/speed", async (req, res) => {
   });
 });
 
-// Live-edit topology sync — pushes the CURRENT canvas layout into the running
-// simulation. NO database write: live edits live in the simulator's memory
-// only; the saved infrastructure layout changes only when the user explicitly
-// Saves/Updates (locked decision).
+// Live edits belong to this run, never to its saved design or original inputs.
 deploymentRouter.post("/:deploymentId/sync-topology", async (req, res) => {
   const DeploymentId = DeploymentIdSchema.safeParse(req.params);
   if (!DeploymentId.success) {
@@ -411,7 +401,7 @@ deploymentRouter.post("/:deploymentId/sync-topology", async (req, res) => {
     throw new ValidationError(errorMessages);
   }
   const { deploymentId } = DeploymentId.data;
-  const { resources, connectionLines } = SyncTopologyData.data;
+  const { resources, connectionLines, expectedRevision } = SyncTopologyData.data;
   const deployment = await prisma.deployment.findUnique({
     where: { id: deploymentId },
   });
@@ -425,19 +415,18 @@ deploymentRouter.post("/:deploymentId/sync-topology", async (req, res) => {
       "Topology can only be synced on a live deployment",
     );
   }
-  await redis.publish(
-    "simulator:control",
-    JSON.stringify({
-      deploymentId,
-      action: "sync-topology",
-      resources,
-      connectionLines,
-    }),
-  );
+  const changed = await prisma.deployment.updateMany({
+    where: { id: deploymentId, status: DeploymentStatus.LIVE, topologyRevision: expectedRevision },
+    data: { liveTopology: { resources, connectionLines }, topologyRevision: { increment: 1 } },
+  });
+  if (changed.count !== 1) {
+    throw new ConflictError("Live topology changed. Re-enter the environment before editing again.");
+  }
   res.status(200).json({
     success: true,
-    message: "Topology synced",
+    message: "Topology accepted",
     deploymentId,
+    topologyRevision: expectedRevision + 1,
   });
 });
 
@@ -468,10 +457,11 @@ deploymentRouter.post("/:deploymentId/teardown", async (req, res) => {
     event: "Deployment Torn Down",
     message: "Environment torn down. Simulation stopped.",
   });
-  await prisma.deployment.update({
-    where: { id: deploymentId },
+  const stopped = await prisma.deployment.updateMany({
+    where: { id: deploymentId, status: DeploymentStatus.LIVE },
     data: { status: DeploymentStatus.TORN_DOWN, timeline: tornTimeline },
   });
+  if (stopped.count !== 1) throw new ConflictError("Deployment is no longer live.");
   await redis.publish(
     "simulator:control",
     JSON.stringify({

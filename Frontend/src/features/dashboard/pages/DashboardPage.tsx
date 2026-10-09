@@ -3,10 +3,9 @@ import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Network, ArrowRight, Server, Activity } from 'lucide-react';
 import { useAuthStore } from '@/features/auth/store/auth.store';
-import { getAllInfrastructure, getSpecificInfrastructure } from '@/api/infrastructure.api';
-import { getLiveDeployments, syncDeploymentTopology, type LiveDeploymentSummary } from '@/api/deployment.api';
+import { getAllInfrastructure } from '@/api/infrastructure.api';
+import { getLiveDeployments, getSpecificDeployment, type LiveDeploymentSummary } from '@/api/deployment.api';
 import { useCanvasStore } from '@/features/canvas/store/canvasStore';
-import { migrateLayoutToCardScale } from '@/features/canvas/utils/layoutMigration';
 import type { Infrastructure } from '@shared/interface/Infrastructure.interface';
 
 export function DashboardPage() {
@@ -33,27 +32,13 @@ export function DashboardPage() {
   const handleReattach = async (deployment: LiveDeploymentSummary) => {
     setReattachingId(deployment.id);
     try {
-      const infrastructure = await getSpecificInfrastructure(deployment.infrastructureId);
-      const layout = infrastructure.layout;
-      // Migrate legacy coordinates if the saved layout is old
-      const migratedResources = migrateLayoutToCardScale(
-        layout.resources ?? [],
-        layout.layoutVersion,
-      );
-      const connectionLines = layout.connectionLines ?? [];
+      const run = await getSpecificDeployment(deployment.id);
+      if (run.status !== "live" || !run.liveTopology) throw new Error("This environment is no longer live");
       const store = useCanvasStore.getState();
-      store.loadLayout(migratedResources, connectionLines, infrastructure.id, infrastructure.name);
-      store.setIsInitialized(true);
-      store.setUndoStack([]);
-      store.setRedoStack([]);
-      store.setIsDeploying(false);
-      store.setActiveDeploymentId(deployment.id);
+      store.loadRunTopology(run.id, run.liveTopology, run.topologyRevision, run.infrastructureId, deployment.infrastructureName);
       navigate("/design");
-      // Best effort sync to the simulator so the live state resumes smoothly
-      syncDeploymentTopology(deployment.id, migratedResources, connectionLines)
-        .catch(() => toast.error("Reattached, but topology sync to the simulator failed"));
     } catch {
-      toast.error("Failed to fetch infrastructure layout");
+      toast.error("Failed to re-enter the live environment");
     } finally {
       setReattachingId(null);
     }

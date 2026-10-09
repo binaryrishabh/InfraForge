@@ -107,7 +107,8 @@ export function useInfrastructureActions() {
     }
     store.setCurrentLayoutSaved(true);
     const deployment = await createDeployment(infrastructureId, workloadProfile);
-    store.setActiveDeploymentId(deployment.id);
+    if (!deployment.liveTopology) throw new Error("Deployment has no captured topology");
+    store.loadRunTopology(deployment.id, deployment.liveTopology, deployment.topologyRevision, infrastructureId, name);
     store.setIsDeploying(true);
     store.setUndoStack([]);
     store.setRedoStack([]);

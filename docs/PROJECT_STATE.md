@@ -1,106 +1,148 @@
 # InfraForge project state
 
-Verified 2026-10-09. B0.1 is the validated repair checkpoint for `develop`.
-The final local review and required checks are complete. Promotion remains blocked by the
-identity, run-persistence and release-safety decisions below.
-See [verification evidence](BASELINE_VERIFICATION.md) for exact checks, failures and limits.
-Validated source checkpoint: `309815a07e122bf6f8a32ada157f0e764061eb4e`.
+Verified 2026-10-09. B0.2 establishes reliable run inputs on `develop`, following
+B0.1's shipping-baseline repairs. The local regression, integration and browser
+checks below passed. Public multi-user release and promotion to `main` remain
+blocked by authentication/ownership and release rehearsal.
+See [baseline verification](BASELINE_VERIFICATION.md) for historical failures and
+[local integration instructions](../Backend/tests/integration/README.md) to repeat
+runtime validation.
 
 ## Accepted architecture
 
-- Bun 1.3.14 and Turbo 2.11.6 own the root workspace install and single `bun.lock`.
-  Frontend/backend declare their package dependencies. Domain/catalog export TypeScript
-  source, have no emitted build, and remain narrow, browser-safe packages.
-- `packages/domain` owns resource/workload vocabulary, topology, readiness and examples;
-  `packages/catalog` owns dated AWS/DigitalOcean SKU data. `shared` still owns simulation
-  and transport contracts during extraction. Exact legacy allowances and cycle/browser
-  checks constrain that transition; further extraction is a separate milestone.
-- React 19/Vite/Tailwind/Zustand/dnd-kit implement the canvas, deployment and monitoring.
-  Drafts persist locally. Explicit save/update and pre-run deploy save use the API;
-  live topology edits change runtime state without saving the architecture.
-- Bun/Express/Zod handles commands. PostgreSQL/Prisma stores layouts, deployments and
-  a transactional outbox. BullMQ/Redis dispatches worker jobs. Validate, SecurityScan
-  and CostEstimate are the three gates. The worker hosts the shared deterministic
-  engine; Redis events are forwarded through WebSockets to browser stores.
-- Costs and resource behavior come from catalog/shared model data. Capacity, generic
-  costs and failure/scaling behavior are educational approximations, not cloud guarantees.
-  Same seed/input/tick controls reproduce engine outcomes; wall-time metadata does not.
-  Checkpoints are written but current restart starts again from saved layout and seed,
-  resetting simulated time/cost. The first published snapshot is tick one, speed one,
-  with one tick's cost. Full checkpoint recovery is not implemented.
+- Bun 1.3.14 and Turbo 2.11.6 own the root workspace install and `bun.lock`.
+  Apps declare their dependencies. `packages/domain` owns resource/workload rules,
+  topology, readiness and examples; `packages/catalog` owns dated SKU data.
+  `shared` owns simulation and transport contracts during the bounded extraction.
+  Exact import allowances, cycle checks and browser checks constrain that transition.
+- React 19/Vite/Tailwind/Zustand/dnd-kit implement canvas, deployment and monitoring.
+  Drafts stay in localStorage. Explicit save/update and pre-run deploy save persist
+  designs. A saved design, original run input and current live topology are distinct.
+- Bun/Express/Zod handles commands. PostgreSQL/Prisma persists designs, deployments
+  and transactional outbox entries. Redis/BullMQ dispatches jobs. Validate,
+  SecurityScan and CostEstimate are the three gates. The worker runs the shared
+  deterministic engine and Redis/WebSockets deliver its snapshots.
+- At creation, a transaction locks the design, validates its layout and stores
+  version-one `runInputs`: ordered resources/connections, fully resolved workload
+  and a generated seed. The same transaction stores the outbox reference. Gates,
+  startup and retries read these inputs from the deployment; queue topology and
+  later design updates have no authority. Database triggers prevent changing the
+  input JSON or captured seed/workload. Existing workload defaults remain 3x peak
+  and 80% reads; engine tuning, catalog values and golden expectations are unchanged.
+- `liveTopology` and `topologyRevision` belong to a run. Edits use an atomic expected
+  revision check; stale requests return 409. Runtime polls durable topology, including
+  while paused, and ignores old Redis topology payloads. Snapshots carry the applied
+  topology/revision. The browser serializes edit requests, preserves newer local edits
+  while a request is pending, and requires re-entry after an unconfirmed edit.
+  Reattachment reads live topology without sending the saved design back to runtime.
+- One worker owns a database through a dedicated PostgreSQL session advisory lock.
+  A competing worker exits; ownership loss stops the worker. Initialization has a
+  shared in-flight promise and runtime cycles do not overlap. State is constructed
+  from original inputs before the LIVE transition. The initial snapshot is tick zero,
+  original topology and zero accumulated cost; subsequent snapshots reflect ticks
+  and accepted controls. This requires a direct/session-preserving PostgreSQL
+  connection. Transaction-pooling URLs are unsupported.
+- Design creation/deletion lock the parent row. Deletion rejects pending, running or
+  live deployments and waits for runtime stop acknowledgement after teardown. A
+  database trigger also protects direct/cascade deletion of active deployments.
+  Runtime checks durable status, so losing the Redis stop message cannot leave it
+  running indefinitely; failed stop acknowledgements are retried by the host.
+- Restart explicitly fails interrupted LIVE runs and preserves original inputs,
+  live topology, history and diagnostic checkpoints. It never silently restarts at
+  tick one. Legacy pending/running/live records without original inputs fail with a
+  clear reason; historical records are retained without guessed inputs or ownership.
+  Create a new deployment to run again. Full checkpoint recovery/replay is absent.
+- Costs and resource outcomes come from domain/catalog data and simulated time.
+  These are documented educational approximations, not cloud guarantees. Identical
+  inputs, engine behavior and tick-ordered controls reproduce outcomes; timestamps
+  and orchestration timing are not byte-identical replay.
 
-## B0.1 repairs and checks
+## Verification
 
-Repairs cover six TypeScript import errors, frontend lint and stale state, shared
-name validation, absent-telemetry presentation, malformed saved/live layouts,
-JSON parser errors, deployment retries/retired jobs and WebSocket subscription cleanup.
-Failed speed requests restore the preceding value only while their optimistic state
-is current; late failures preserve newer snapshots and reset monitoring sessions.
-Failure handling now preserves LIVE/retired statuses and does not turn notification
-delivery failure into simulation failure. Bun's ignored WebSocket payload setting
-has an application byte guard before subscription parsing.
-Targeted dependency changes removed the 30 reported advisories; framework versions,
-catalog numbers, engine tuning, golden expectations and committed SQL are preserved.
-CI now audits dependencies. Production deployment requires validation, checks the
-triggering SHA, serializes releases and builds before replacing containers.
+B0.1 repaired workspace TypeScript/lint, stale frontend state, malformed layouts,
+request parsing, retries, WebSocket cleanup and 30 dependency advisories. Its final
+checks and release limits remain recorded in BASELINE_VERIFICATION.md.
 
-Final native Windows frozen install, serial build/typecheck, lint, unit/golden tests,
-import boundaries, tooling tests and JSON audit passed: 82 unit passes, zero failures,
-one deliberately gated lifecycle skip, 30 unchanged engine goldens, 773 import edges
-and eight tooling tests. The frontend build processed 2,051 modules and emitted
-561.69 kB JavaScript / 170.51 kB gzip; the large-chunk warning remains.
-The full managed Windows disposable lifecycle passed seven tests/205 assertions,
-zero failures, in 100.43 seconds, including post-gate retries,
-notification failure, pending subscription cleanup, frame rejection, checkpoint/restart
-and teardown. Its runner exited zero and disposed of both test containers, the named
-volume and network; a separate inventory check confirmed no fixtures or test listeners
-remained and all 11 existing containers were preserved. Earlier Linux lifecycle
-validation also passed. The actual backend Dockerfile previously built; API/WS health returned 200,
-the worker stayed running, and image event forwarding/cleanup/frame rejection passed.
-Browser save/deploy/telemetry/chaos/scaling,
-live-only edits, explicit update, rerun and teardown passed against isolated services.
-Earlier Windows native runtime failures remain documented; this successful run does
-not establish long-term host stability. Final local review covered all 67 changed/new
-files and the retained verification evidence. The earlier supplied-material review's
-LIVE-status finding was repaired, and its gate-retry hypothesis was checked against
-actual post-gate recovery/exhaustion tests. No additional external review was invoked.
-No independent runtime or full visual/accessibility review is claimed. Keyboard modal
-return focus remains an accessibility gap.
+B0.2 final checks used the installed tools and disposable local services:
 
-Temporary test/build resources follow Create → Use → Capture Evidence → Verify →
-Remove → Confirm Cleanup. The local integration runner labels each run, preserves
-logs and checks ownership/references before disposal. See the
-[integration guide](../Backend/tests/integration/README.md). Cleanup-runner checks
-include success, expected failure, interruption, conservative recovery and the final
-complete Windows lifecycle.
+| Check | Result |
+| --- | --- |
+| `bun install --frozen-lockfile` | Pass; lockfile/dependencies unchanged |
+| `bun run typecheck -- --concurrency=1` | Five tasks passed, including Prisma generation |
+| `bun run test -- --concurrency=1` | 89 passes, zero failures, two intentionally gated integration skips |
+| Engine goldens | All 30 passed; file and expectations unchanged |
+| `bun run lint -- --concurrency=1` | Three lint tasks passed; final boundary check covers 815 imports, no cycles/browser runtime leaks |
+| `bun run test:tooling` | Eight passes, zero failures, 26 assertions |
+| `bun run build -- --concurrency=1` | Three tasks passed; 2,051 modules; JS 563.02 kB / 170.81 kB gzip |
+| `bun audit --json` | Exit zero, `{}` |
+| `pwsh ./scripts/test-integration.ps1` | Eight passes, zero failures, 266 assertions; lifecycle 94.05s / suite 95.25s |
 
-## Release blockers and next milestone
+The lifecycle verifies outbox rollback, immutable inputs despite saved edits and
+corrupt saved layouts, original tick-zero/tick-one state, gate retry recovery and
+exhaustion, stale/duplicate jobs, a competing worker, revision conflicts, live/original/
+saved separation, chaos/scaling/cost, checkpoint evidence, crash restart, teardown,
+creation/deletion races and worker ownership-connection loss. Existing WebSocket
+subscription, pending-close and frame-size checks also pass.
+The migration check applies the previous SQL schema to a fresh disposable database,
+inserts historical/pending/live records, and verifies that the additive migration
+preserves every existing column and design owner without inventing run inputs.
 
-1. **Critical for public multi-user use:** API and WebSocket requests have no backend
-   authentication or ownership checks. Browser-local password/session storage is a
-   placeholder; `userId` defaults to `test-user`. Define identity, ownership and
-   authenticated HTTP/WS contracts before implementation.
-2. **High:** gates use the queued layout snapshot, while simulation startup loads the
-   current saved layout. Define an immutable, versioned run snapshot and its relation
-   to explicit saves, live edits, checkpoints, replay and restart before changing storage.
-3. **High for Windows development:** investigate intermittent Bun native crashes and
-   host resource exhaustion. Final Linux validation and one complete native Windows
-   lifecycle passed; intermittent failures remain unexplained. Do not change runtime
-   versions without evidence.
-4. **High for release:** define/rehearse migration order, health/readiness, rollback,
-   frontend/backend compatibility and the single-worker operating limit. Production was
-   not accessed or deployed. Existing SSH/Compose infrastructure is preserved.
-5. **Medium:** no durable control acknowledgement/log, overlapping checkpoint work can
-   lag under I/O stalls, and reconnecting through the dashboard can replace live-only
-   topology with the saved layout. API/WS resource budgets and proxy-aware rate limits
-   need a deployment-specific review. The frontend bundle remains above Vite's 500 kB warning.
-6. **Operational/compatibility:** default job retries can spend about 85 minutes in
-   backoff. Final database-write failure can leave stale RUNNING rows, and startup
-   failure can leave LIVE without a simulator. Pre-await registry checks can race.
-   Legacy layouts were not scanned, Prisma dependency overrides need future compatibility
-   checks, and audit severity/hotfix and image-retention policies remain unresolved.
+Browser QA used a separate isolated fixture: re-entry loaded a live-only resource,
+a browser rename advanced revision 1 to 2 while original/saved inputs remained
+unchanged, re-entry loaded revision 3 without writing, and a stale browser did not
+overwrite revision 4. Re-entry then showed the current name and real server telemetry.
+No redesign or full responsive/accessibility review is claimed.
 
-Next milestone: resolve identity/ownership and immutable run-snapshot/recovery
-contracts, implement their regression coverage, and rehearse release migration,
-readiness and rollback. Obtain independent architecture/security review before
-promotion to `main`. B0.1 does not authorize production deployment.
+Initial validation exposed two JSON typing errors and two test typing errors;
+all were corrected before final checks. One integration assertion incorrectly waited
+on an unsubscribed WebSocket channel; it now observes that fixture's Redis channel.
+A later control observer mistook a delayed stale-topology test message for a speed
+command; it now matches both deployment and action before asserting the payload.
+Windows Bun instability from B0.1 recurred: an illegal instruction during Prisma
+CLI generation, a unit child exiting 9, and a worker exiting 9 before its snapshot.
+The final serial checks and full native lifecycle passed; this does not establish
+long-term host stability. The browser fixture's wrapper exited 1 because an owned
+Vite child held its stderr pipe after the Bun parent exited. Its UI assertions and
+container cleanup completed; the verified Vite child was stopped separately.
+Raw successes, failures, browser observations and resource records remain local.
+The official Prisma generator leaves one whitespace-only line in its generated
+namespace file; authored source passes the whitespace check.
+
+## Remaining risks and next milestone
+
+1. **Public-use blocker:** HTTP/WS authentication and ownership remain absent.
+   Browser-local authentication is a placeholder and `userId` defaults to `test-user`.
+   Define and implement real identity, ownership and authenticated HTTP/WS contracts.
+2. **Release blocker:** rehearse additive migration before starting the new backend,
+   coordinate the frontend revision API, stop old workers, confirm a direct/session
+   database connection, and test health, rollback and version compatibility. Old
+   workers are incompatible with immutable-input/delete triggers. No production
+   database, secrets, deployment or transaction-pooling environment was accessed.
+3. **Operations:** worker interruption ends a run. There is no checkpoint recovery,
+   replay or high availability. PostgreSQL polling/ownership adds database traffic;
+   measure hosted connection and workload limits before release. Single-worker
+   enforcement is tested locally, not under production network partitions/poolers.
+4. **Development:** intermittent native Bun exits remain unexplained. The successful
+   final runs are bounded evidence, not a runtime-version or hardware fix.
+5. **Deferred:** load/chaos/scaling/speed controls still lack durable acknowledgement
+   and replay. API/WS budgets and proxy-aware rate limits need deployment review.
+   Final DB-write failure may leave a pre-LIVE run pending/running until recovery.
+6. **Compatibility/product:** legacy layouts were not scanned; semantic SKU validation,
+   corrupt draft handling and configuration defaults need focused work. Reports and
+   settings remain stubs. Beginner support, narrow-screen usability and modal focus
+   need product work. The bundle-size warning and Prisma override compatibility
+   follow-up remain.
+
+Next milestone: authentication/ownership, then release migration/readiness/rollback
+rehearsal and independent architecture/security review before `develop` to `main`.
+B0.2 authorizes neither promotion nor production deployment. Required local tool
+configuration and unique evidence are retained; only positively identified disposable
+scratch and owned test resources are removed at checkpoint closure.
+Cleanup retained 22 evidence files and removed 34 verified disposable/duplicate files
+(1,330,804 bytes) and six empty fixture directories. No owned test containers,
+volumes, networks, processes or application listeners remained at closure. Three
+detached worktrees were inspected read-only; all 291 recorded files in each were
+unchanged. Unknown older scratch and required tool configuration were preserved.
+Docker Desktop was unavailable on the later publication recheck. The managed
+cleanup records and earlier successful resource inventory establish fixture removal;
+no fresh Docker inventory is claimed while its daemon is stopped.

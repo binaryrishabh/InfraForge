@@ -12,8 +12,13 @@ import {
 } from "./infra/pubsub";
 import {
   startSimulation,
-  resurrectLiveDeployments,
+  startRuntime,
+  stopRuntime,
 } from "./simulator/simulator";
+import { WorkerOwnership } from "./infra/workerOwnership";
+import { config } from "./utils/config";
+import { retireInterruptedRuns } from "./deployments/restartPolicy";
+import { readRunInputs } from "./deployments/runInputs";
 import { runSecurityScan } from "./stages/securityScan.stages";
 import { runCostEstimation } from "./stages/costEstimation.stages";
 import { OutboxBullMQStatus } from "@shared/enum/OutboxBullMQStatus.enum";
@@ -26,16 +31,14 @@ import type { DeploymentStages } from "@shared/interface/DeploymentStages.interf
 import type { DeploymentTimeline } from "@shared/interface/DeploymentTimeline.interface";
 import { deploymentFailureStatus, isRetiredDeployment } from "./utils/deploymentJobPolicy";
 
-// Outbox processor-> Polls the unprocessed events from outbox table every 5 seconds and adds to BullMQ.
-// This is because we have implemented the atomicity in the /api/deployments api end-point code.
-// This is polling to the database server every 5 seconds. But at production shift to switch to CDC with Debezium and Kafka.
-
-// Wait 5s for Redis connection to establish before polling outbox
-await new Promise((r) => setTimeout(r, 5000));
-
-resurrectLiveDeployments().catch((err) =>
-  console.error("Resurrection failed: " + err.message),
-);
+if (!config.DATABASE_URL) throw new Error("Worker requires DATABASE_URL");
+const ownership = await WorkerOwnership.acquire(config.DATABASE_URL, () => {
+  stopRuntime();
+  console.error("Worker ownership lost. Stopping before another worker can advance simulations.");
+  process.exit(1);
+});
+await retireInterruptedRuns();
+await startRuntime(ownership);
 
 /*
 What setInterval is doing:- OUTBOX PROCESSOR
@@ -54,6 +57,7 @@ Later Production upgrade path: Replace polling with CDC (Debezium + Kafka).
 async function pollOutbox() {
   let busy = false;
   try {
+    await ownership.assertHeld();
     // 1. FETCH — Get up to 10 unprocessed entries, ordered by fewest retries first
     const unprocessed = await prisma.outbox.findMany({
       where: {
@@ -161,19 +165,15 @@ const worker = new Worker(
   "deployments", // Watches the "deploymets" queue
   async (job) => {
     // This function runs for every job
-    const {
-      deploymentId,
-      resources,
-      connectionLines = [],
-    } = job.data as DeploymentJob;
+    const { deploymentId } = job.data as DeploymentJob;
 
     try {
+      await ownership.assertHeld();
       // 1. Mark deployment as running
       const deploymentState = await prisma.deployment.findUnique({
         where: {
           id: deploymentId,
         },
-        select: { status: true },
       });
 
       if (!deploymentState) {
@@ -190,19 +190,38 @@ const worker = new Worker(
       }
 
       if (deploymentState.status === DeploymentStatus.LIVE) {
-        await startSimulation(deploymentId);
+        // A LIVE duplicate never initializes/reset a simulation. Restart policy
+        // retires interrupted runs before any jobs can be consumed.
         return;
       }
 
+      let inputs;
+      try { inputs = readRunInputs(deploymentState.runInputs); }
+      catch (error) {
+        const message = error instanceof Error ? error.message : "Unsupported run inputs";
+        await prisma.deployment.updateMany({
+          where: { id: deploymentId, status: { in: [DeploymentStatus.PENDING, DeploymentStatus.RUNNING] } },
+          data: { status: DeploymentStatus.FAILED, timeline: [
+            ...(Array.isArray(deploymentState.timeline) ? deploymentState.timeline : []),
+            { timestamp: new Date().toISOString(), event: "Deployment Failed", message },
+          ] },
+        });
+        await publishDeploymentFailed(deploymentId, message);
+        return;
+      }
+      const { resources, connectionLines } = inputs;
+
       if (deploymentState.status !== DeploymentStatus.RUNNING) {
-        await prisma.deployment.update({
+        const claimed = await prisma.deployment.updateMany({
           where: {
             id: deploymentId,
+            status: DeploymentStatus.PENDING,
           },
           data: {
             status: DeploymentStatus.RUNNING,
           },
         });
+        if (claimed.count !== 1) return;
       }
 
       // Publish as current deployment has started running
@@ -268,13 +287,14 @@ const worker = new Worker(
           message: result.summary,
         });
 
-        await prisma.deployment.update({
-          where: { id: deploymentId },
+        const recorded = await prisma.deployment.updateMany({
+          where: { id: deploymentId, status: DeploymentStatus.RUNNING },
           data: {
             stages: existingStages as any,
             timeline: currentTimeline as any,
           },
         });
+        if (recorded.count !== 1) return false;
 
         await publishStageCompleted(
           deploymentId,
@@ -294,8 +314,8 @@ const worker = new Worker(
       const readiness = validateDeploymentReadiness(resources, connectionLines);
       if (!readiness.valid) {
         const failureReason = readiness.errors.join("; ");
-        await prisma.deployment.update({
-          where: { id: deploymentId },
+        const failed = await prisma.deployment.updateMany({
+          where: { id: deploymentId, status: DeploymentStatus.RUNNING },
           data: {
             status: DeploymentStatus.FAILED,
             timeline: [
@@ -307,6 +327,7 @@ const worker = new Worker(
             ] as any,
           },
         });
+        if (failed.count !== 1) return;
         await publishDeploymentFailed(deploymentId, failureReason);
         console.log(
           `Deployment ${deploymentId} FAILED at Validate — ${failureReason}`,
@@ -333,22 +354,13 @@ const worker = new Worker(
       );
       if (!costPassed) return;
 
-      // 3. Mark as LIVE
-      // Update the status in the db as live for this deployment
-      await prisma.deployment.update({
-        where: {
-          id: deploymentId,
-        },
-        data: {
-          status: DeploymentStatus.LIVE,
-        },
-      });
+      // Construct from the same immutable inputs before making the run LIVE.
+      if (!(await startSimulation(deploymentId))) return;
 
       // broadcasts to Redis pub/sub. Websocket server will forward it to frontend.
       // Publish that current deployment is now live
       await publishDeploymentLive(deploymentId, resources.length);
       console.log(`Deployment is LIVE ${deploymentId}`);
-      await startSimulation(deploymentId);
     } catch (err: any) {
       const status = deploymentFailureStatus(job.attemptsMade, job.opts.attempts);
       const failure = await prisma.deployment.updateMany({

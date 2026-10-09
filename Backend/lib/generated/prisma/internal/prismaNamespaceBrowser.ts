@@ -95,6 +95,10 @@ export const DeploymentScalarFieldEnum = {
   workloadProfile: 'workloadProfile',
   seed: 'seed',
   simulationState: 'simulationState',
+  runInputs: 'runInputs',
+  liveTopology: 'liveTopology',
+  topologyRevision: 'topologyRevision',
+  runtimeActive: 'runtimeActive',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const

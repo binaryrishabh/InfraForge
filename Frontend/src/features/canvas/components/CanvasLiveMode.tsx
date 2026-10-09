@@ -25,7 +25,7 @@ export function CanvasLiveMode({ deploymentId }: CanvasLiveModeProps) {
   const isConnectionError = status === "Web Socket connection error";
 
   // Stream committed canvas edits to the running simulator while LIVE.
-  useLiveTopologySync(isLive);
+  useLiveTopologySync(isLive, deploymentId);
 
   // Track liveness so cards flip between design and live telemetry — AND
   // release the deploy lock the moment the environment goes LIVE.

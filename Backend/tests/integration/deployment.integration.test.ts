@@ -9,6 +9,7 @@ import type { SimulationSnapshot } from "@shared/interface/SimulationSnapshot.in
 import { ResourceHealth } from "@infraforge/domain/resource";
 import { LocalHarness, readLocalSettings, until } from "./localHarness";
 import { layout, seed, workload } from "./scenario";
+import { engineSeed, captureRunInputs } from "../../deployments/runInputs";
 
 type Event = Record<string, any>;
 type Snapshot = SimulationSnapshot & { publishType: string };
@@ -28,6 +29,8 @@ integration("local deployment lifecycle", () => {
     let latest: Snapshot;
     let workerStarted = false;
     let schemaReady = false;
+    let actualSeed: string;
+    const editedSavedLayout = { ...layout, resources: [...layout.resources, { id: "saved-only", type: "Object Storage", x: 900, y: 0 }] };
     const evidencePath = join(tmpdir(), `infraforge-integration-${randomUUID()}.json`);
     const phase = (name: string) => {
       evidence.phase = name;
@@ -55,11 +58,20 @@ integration("local deployment lifecycle", () => {
     const command = async (id: string, path: string, body: unknown) => {
       const count = evidence.redisEvents.filter((e: Event) => e.channel === "simulator:control").length;
       evidence.controls.push({ beforeTick: latest?.simulatedSeconds ?? null, path, body });
-      await harness.request(`/deployments/${id}/${path}`, body);
-      const emitted = await until(async () => evidence.redisEvents.filter((e: Event) => e.channel === "simulator:control")[count],
-        `${path} Redis command`);
+      if (path === "sync-topology") {
+        const revision = (await deployment(id)).topologyRevision;
+        const response = await harness.request(`/deployments/${id}/${path}`, { ...(body as object), expectedRevision: revision });
+        expect(response.topologyRevision).toBe(revision + 1);
+        await until(async () => (await deployment(id)).topologyRevision === revision + 1 || undefined, "durable topology edit");
+        // Runtime applies durable topology even while the clock is paused.
+        await Bun.sleep(1200);
+        return;
+      }
       const actions: Record<string, string> = { load: "set-load", chaos: "inject-chaos", "scale-vertical": "scale-vertical",
         "scale-pool": "scale-pool", speed: "set-speed", "sync-topology": "sync-topology", teardown: "stop" };
+      await harness.request(`/deployments/${id}/${path}`, body);
+      const emitted = await until(async () => evidence.redisEvents.filter((e: Event) => e.channel === "simulator:control")
+        .slice(count).find((e: Event) => e.event.deploymentId === id && e.event.action === actions[path]), `${path} Redis command`);
       const fields = body as Record<string, any>;
       expect(emitted.event).toEqual({ deploymentId: id, action: actions[path],
         ...(path === "chaos" ? { chaosType: fields.type, resourceId: fields.resourceId } : fields) });
@@ -139,8 +151,18 @@ integration("local deployment lifecycle", () => {
       const outbox = await harness.sql.query('SELECT * FROM "Outbox" WHERE payload->>\'deploymentId\' = $1', [id]);
       expect(outbox.rows).toHaveLength(1);
       expect(outbox.rows[0].status).toBe("pending");
-      expect(outbox.rows[0].payload).toEqual({ deploymentId: id, resources: layout.resources, connectionLines: layout.connectionLines });
-      await harness.sql.query('UPDATE "Deployment" SET seed = $1 WHERE id = $2', [seed.text, id]);
+      expect(outbox.rows[0].payload).toEqual({ deploymentId: id });
+      actualSeed = created.createdDeployment.runInputs.seed;
+      evidence.capturedInputs = created.createdDeployment.runInputs;
+      expect(created.createdDeployment.seed).toBe(actualSeed);
+      expect(created.createdDeployment.runInputs.workloadProfile.peakMultiplier).toBe(3);
+      expect(created.createdDeployment.liveTopology).toEqual(layout);
+      await harness.request(`/infrastructure/${infrastructureId}`, { layout: editedSavedLayout }, "PUT");
+      await harness.request(`/infrastructure/${infrastructureId}`, undefined, "DELETE", 409);
+      await harness.request("/infrastructure", undefined, "DELETE", 409);
+      await expect(harness.sql.query('UPDATE "Deployment" SET "runInputs" = NULL WHERE id = $1', [id])).rejects.toThrow("immutable");
+      await expect(harness.sql.query('UPDATE "Deployment" SET seed = $1 WHERE id = $2', ["stale", id])).rejects.toThrow("immutable");
+      await expect(harness.sql.query('DELETE FROM "Infrastructure" WHERE id = $1', [infrastructureId])).rejects.toThrow("active");
       // Deliver the same deployment twice through the real outbox poller.
       await harness.sql.query('INSERT INTO "Outbox" (id, "eventType", payload) VALUES ($1, $2, $3)',
         [randomUUID(), "deployment-created", JSON.stringify(outbox.rows[0].payload)]);
@@ -157,6 +179,15 @@ integration("local deployment lifecycle", () => {
       const retryOutboxId = randomUUID();
       await harness.sql.query(`INSERT INTO "Outbox" (id, "eventType", payload, "maxRetries") VALUES ($1, 'deployment-created', $2, 2)`,
         [retryOutboxId, JSON.stringify({ deploymentId: "0", resources: layout.resources, connectionLines: layout.connectionLines })]);
+
+      const legacyId = randomUUID();
+      const historicalId = randomUUID();
+      deploymentIds.push(legacyId, historicalId);
+      for (const [legacy, status] of [[legacyId, "live"], [historicalId, "completed"]]) {
+        await harness.sql.query(`INSERT INTO "Deployment" (id, "infrastructureId", status, seed, "workloadProfile", timeline, "updatedAt")
+          VALUES ($1, $2, $3, 'legacy-seed', $4, $5, now())`, [legacy, infrastructureId, status,
+          JSON.stringify(workload), JSON.stringify([{ event: "Existing history", message: "keep", timestamp: "2026-10-01T00:00:00Z" }])]);
+      }
 
       let socket = await connectWs(id);
       await harness.sql.query("CREATE SEQUENCE integration_worker_attempt");
@@ -183,7 +214,8 @@ integration("local deployment lifecycle", () => {
       latest = await snapshotAfter(id, 0);
       await command(id, "speed", { speed: 0 });
       expect(latest.simulatedSeconds).toBe(1);
-      const initial = tick(createInitialState(id, layout.resources, layout.connectionLines, workload, seed.engine), {}).state;
+      const initial = tick(createInitialState(id, layout.resources, layout.connectionLines,
+        created.createdDeployment.runInputs.workloadProfile, engineSeed(actualSeed)), {}).state;
       expect(latest.metrics).toEqual(initial.metrics);
       expect(latest.health).toBe(initial.overallHealth);
       expect(latest.loadFraction).toBe(initial.loadFraction);
@@ -193,6 +225,7 @@ integration("local deployment lifecycle", () => {
       expect(Object.keys(latest).sort()).toEqual([
         "deploymentId", "timestamp", "simulatedSeconds", "loadFraction", "metrics", "logs", "health", "pools",
         "spawnedVms", "restarting", "activeChaos", "speed", "burnRatePerHourUsd", "accumulatedCostUsd", "publishType",
+        "liveTopology", "topologyRevision",
       ].sort());
       const wireEvents = evidence.wsEvents.filter((e: Event) => e.deploymentId === id);
       expect(wireEvents.filter((e: Event) => e.publishType === "stage-of-deployment-completed").map((e: Event) => e.stageName))
@@ -208,8 +241,28 @@ integration("local deployment lifecycle", () => {
       }
 
       const live = await deployment(id);
+      const first = evidence.wsEvents.find((event: Event) => event.deploymentId === id && event.publishType === "simulation-snapshot");
+      expect(first.simulatedSeconds).toBe(0);
+      expect(first.accumulatedCostUsd).toBe(0);
+      expect(first.liveTopology).toEqual(layout);
+      expect(first.topologyRevision).toBe(0);
+      evidence.initialSnapshot = first;
       expect(live.status).toBe("live");
-      expect(live.seed).toBe(seed.text);
+      expect(live.seed).toBe(actualSeed);
+      expect(latest.liveTopology).toEqual(layout);
+      expect(latest.metrics["saved-only"]).toBeUndefined();
+      expect(live.runInputs).toEqual(created.createdDeployment.runInputs);
+      const legacy = await deployment(legacyId);
+      expect(legacy.status).toBe("failed");
+      expect(legacy.runInputs).toBeNull();
+      expect(legacy.seed).toBe("legacy-seed");
+      expect(legacy.workloadProfile).toEqual(workload);
+      expect(legacy.timeline[0].event).toBe("Existing history");
+      expect(legacy.timeline[1].message).toContain("cannot be reconstructed");
+      const historical = await deployment(historicalId);
+      expect(historical.status).toBe("completed");
+      expect(historical.runInputs).toBeNull();
+      expect(historical.timeline).toHaveLength(1);
       expect(live.stages.map((s: Event) => s.name)).toEqual(["Validate", "SecurityScan", "CostEstimate"]);
       expect(live.stages.every((s: Event) => s.status === "completed")).toBe(true);
       expect(live.stages[1].details.issues).toContain("Database should not be publicly accessible");
@@ -228,6 +281,21 @@ integration("local deployment lifecycle", () => {
       evidence.workerRetry = { intermediateStatus, recovered: true, attemptsMade: retriedJob?.attemptsMade };
       const delivered = await harness.sql.query('SELECT status FROM "Outbox" WHERE payload->>\'deploymentId\' = $1', [id]);
       expect(delivered.rows.map((r) => r.status)).toEqual(["completed", "completed"]);
+      phase("duplicate jobs and competing worker");
+      const duplicateJobs = await Promise.all(Array.from({ length: 4 }, () => queue!.add("deployment-created", {
+        deploymentId: id, resources: [], connectionLines: [], seed: "stale", workloadProfile: { targetThroughput: 1 },
+      }, { jobId: randomUUID() })));
+      for (const duplicate of duplicateJobs) await until(async () => (await duplicate.getState()) === "completed" || undefined, "duplicate job skip");
+      expect((await deployment(id)).runInputs).toEqual(live.runInputs);
+      expect((await deployment(id)).stages).toEqual(live.stages);
+      expect(evidence.wsEvents.filter((event: Event) => event.deploymentId === id && event.publishType === "simulation-snapshot")
+        .map((event: Event) => event.simulatedSeconds)).toEqual([0, 1]);
+      await harness.startWorker("competing-worker");
+      expect(await harness.waitForExit("competing-worker")).toBe(1);
+      expect((await deployment(id)).status).toBe("live");
+      expect(harness.logs()["competing-worker"]).toContain("Another InfraForge worker owns");
+      await harness.stop("competing-worker");
+      evidence.duplicateJobs = { skipped: duplicateJobs.length, runInputsUnchanged: true, competingWorkerExit: 1 };
       await until(async () => (await deployment(invalidDeployment.createdDeployment.id)).status === "failed" || undefined, "readiness failure");
       const rejected = await deployment(invalidDeployment.createdDeployment.id);
       expect(rejected.stages).toEqual([]);
@@ -240,8 +308,10 @@ integration("local deployment lifecycle", () => {
         infrastructureIds.push(infrastructure.id);
         const deploymentId = randomUUID();
         deploymentIds.push(deploymentId);
-        await harness.sql.query(`INSERT INTO "Deployment" (id, "infrastructureId", "resourceCount", seed, "workloadProfile", "updatedAt")
-          VALUES ($1, $2, $3, $4, $5, now())`, [deploymentId, infrastructure.id, layout.resources.length, seed.text, JSON.stringify(workload)]);
+        const input = captureRunInputs(layout, workload);
+        await harness.sql.query(`INSERT INTO "Deployment" (id, "infrastructureId", "resourceCount", seed, "workloadProfile", "runInputs", "liveTopology", "updatedAt")
+          VALUES ($1, $2, $3, $4, $5, $6, $7, now())`, [deploymentId, infrastructure.id, layout.resources.length,
+          input.seed, JSON.stringify(input.workloadProfile), JSON.stringify(input), JSON.stringify(layout)]);
         return { deploymentId, infrastructureId: infrastructure.id };
       };
       const fixtureJob = (deploymentId: string) => queue!.add("deployment-created", {
@@ -250,21 +320,25 @@ integration("local deployment lifecycle", () => {
       const fixtureEvents = (deploymentId: string, type: string) => evidence.redisEvents.filter((event: Event) =>
         event.event.deploymentId === deploymentId && event.event.publishType === type);
 
-      phase("failure after live transition");
+      phase("saved layout cannot break captured run");
       const bootstrap = await workerFixture("Live bootstrap failure");
       await harness.sql.query('UPDATE "Infrastructure" SET layout = $1 WHERE id = $2',
         [JSON.stringify({ resources: [null], connectionLines: [] }), bootstrap.infrastructureId]);
       await harness.request("/deployments", { infrastructureId: bootstrap.infrastructureId }, "POST", 400);
       const bootstrapJob = await fixtureJob(bootstrap.deploymentId);
-      await until(async () => (await bootstrapJob.getState()) === "failed" || undefined, "LIVE bootstrap retry exhaustion");
+      await until(async () => (await bootstrapJob.getState()) === "completed" || undefined, "captured bootstrap completion");
       const failedBootstrapJob = await queue.getJob(bootstrap.deploymentId);
       expect((await deployment(bootstrap.deploymentId)).status).toBe("live");
-      expect(failedBootstrapJob?.attemptsMade).toBe(2);
+      expect(failedBootstrapJob?.attemptsMade).toBe(1);
       expect(fixtureEvents(bootstrap.deploymentId, "deployment-failed")).toHaveLength(0);
       expect(fixtureEvents(bootstrap.deploymentId, "deployment-started")).toHaveLength(1);
       expect(fixtureEvents(bootstrap.deploymentId, "stage-of-deployment-completed")).toHaveLength(3);
-      evidence.liveBootstrapFailure = { status: (await deployment(bootstrap.deploymentId)).status, attemptsMade: failedBootstrapJob?.attemptsMade };
-      // The deliberately corrupt fixture must not participate in later resurrection.
+      const bootstrapSnapshot = await until(async () => fixtureEvents(bootstrap.deploymentId, "simulation-snapshot")
+        .map((entry: Event) => entry.event).find((snapshot: Snapshot) => snapshot.simulatedSeconds > 0), "captured bootstrap snapshot");
+      expect(Object.keys(bootstrapSnapshot.metrics).sort()).toEqual(layout.resources.map((resource) => resource.id).sort());
+      evidence.savedLayoutIsolation = { status: (await deployment(bootstrap.deploymentId)).status, snapshot: bootstrapSnapshot };
+      await harness.request(`/deployments/${bootstrap.deploymentId}/teardown`, {});
+      await until(async () => !(await deployment(bootstrap.deploymentId)).runtimeActive || undefined, "bootstrap stop acknowledgement");
       await harness.sql.query('DELETE FROM "Deployment" WHERE id = $1', [bootstrap.deploymentId]);
 
       phase("gate retries");
@@ -339,7 +413,22 @@ integration("local deployment lifecycle", () => {
       await command(id, "scale-pool", { lbId: "lb", delta: 1 });
       const liveLayout = { ...layout, resources: [...layout.resources, { id: "live-storage", type: "Object Storage", x: 800, y: 0 }] };
       await command(id, "sync-topology", liveLayout);
-      expect((await harness.request(`/infrastructure/${infrastructureId}`)).infrastructure.layout).toEqual(layout);
+      expect((await harness.request(`/infrastructure/${infrastructureId}`)).infrastructure.layout).toEqual(editedSavedLayout);
+      expect((await deployment(id)).runInputs).toEqual(live.runInputs);
+      await harness.request(`/deployments/${id}/sync-topology`, { ...layout, expectedRevision: 0 }, "POST", 409);
+      expect((await deployment(id)).liveTopology).toEqual(liveLayout);
+      // Two editors using the same revision: exactly one may commit.
+      const concurrent = await Promise.all([liveLayout, layout].map(async (topology) => {
+        const response = await fetch(harness.api + `/deployments/${id}/sync-topology`, {
+          method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...topology, expectedRevision: 1 }),
+        });
+        return { status: response.status, topology };
+      }));
+      expect(concurrent.map((result) => result.status).sort()).toEqual([200, 409]);
+      expect((await deployment(id)).liveTopology).toEqual(concurrent.find((result) => result.status === 200)!.topology);
+      // Put the chosen learning fixture back through its current revision.
+      await command(id, "sync-topology", liveLayout);
+      await harness.redis.publish("simulator:control", JSON.stringify({ deploymentId: id, action: "sync-topology", resources: [], connectionLines: [], topologyRevision: 0 }));
       const at2 = await advance(id, 1);
       expect(at2.activeChaos?.[0]?.resourceId).toBe("vm-a");
       expect(at2.metrics["vm-a"]?.health).toBe(ResourceHealth.FAILED);
@@ -385,8 +474,7 @@ integration("local deployment lifecycle", () => {
       expect((await harness.sql.query('SELECT status FROM "Deployment" WHERE id = \'0\'')).rows[0].status).toBe("failed");
       evidence.retry = { status: retry.status, retries: retry.retries, error: retry.error };
 
-      // Exercise an actual wall-time checkpoint. It is persisted but current
-      // resurrection intentionally starts again from saved layout + seed.
+      // Diagnostic checkpoints are preserved; they are not recovery state.
       phase("checkpoint");
       await command(id, "speed", { speed: 60 });
       const checkpoint = await until(async () => {
@@ -402,37 +490,86 @@ integration("local deployment lifecycle", () => {
       await harness.stop("worker");
       const beforeRestart = evidence.wsEvents.length;
       await harness.startWorker();
-      latest = await until(async () => evidence.wsEvents.slice(beforeRestart).find((e: Event) =>
-        e.deploymentId === id && e.publishType === "simulation-snapshot") as Snapshot | undefined, "worker resurrection");
-      await command(id, "speed", { speed: 0 });
-      expect(latest.simulatedSeconds).toBe(1);
-      expect(latest.speed).toBe(1);
-      expect(latest.metrics).toEqual(evidence.firstSnapshot.metrics);
-      expect(latest.metrics["live-storage"]).toBeUndefined();
-      expect(latest.accumulatedCostUsd).toBe(evidence.firstSnapshot.accumulatedCostUsd);
-      expect((await deployment(id)).seed).toBe(seed.text);
+      await until(async () => (await deployment(id)).status === "failed" || undefined, "explicit interrupted run failure");
+      await Bun.sleep(1500);
+      expect(evidence.wsEvents.slice(beforeRestart).some((event: Event) => event.deploymentId === id && event.publishType === "simulation-snapshot")).toBe(false);
+      expect((await deployment(id)).runtimeActive).toBe(false);
+      expect((await deployment(id)).seed).toBe(actualSeed);
       expect((await deployment(id)).stages).toEqual(live.stages);
-      evidence.resurrectedSnapshot = latest;
+      expect((await deployment(id)).runInputs).toEqual(live.runInputs);
+      expect((await deployment(id)).liveTopology).toEqual(liveLayout);
+      expect((await deployment(id)).simulationState).toEqual(checkpoint);
+      expect((await deployment(id)).timeline.at(-1).message).toContain("Checkpoints are diagnostic only");
+      const staleRestart = await queue.add("deployment-created", { deploymentId: id, resources: [] }, { jobId: randomUUID() });
+      await until(async () => (await staleRestart.getState()) === "completed" || undefined, "interrupted duplicate skip");
+      evidence.restart = { status: (await deployment(id)).status, originalInputsPreserved: true, checkpointPreserved: true, snapshotsAfterRestart: 0 };
+
+      const teardownFixture = await workerFixture("Teardown safety");
+      const retiredId = teardownFixture.deploymentId;
+      socket.close();
+      socket = await connectWs(retiredId);
+      await fixtureJob(retiredId);
+      latest = await snapshotAfter(retiredId, 0);
+      await harness.request(`/infrastructure/${teardownFixture.infrastructureId}`, undefined, "DELETE", 409);
 
       const beforeResume = evidence.wsEvents.length;
       phase("teardown");
-      await command(id, "speed", { speed: 1 });
-      latest = await snapshotAfter(id, latest.simulatedSeconds, beforeResume);
+      await command(retiredId, "speed", { speed: 1 });
+      latest = await snapshotAfter(retiredId, latest.simulatedSeconds, beforeResume);
       expect(latest.speed).toBe(1);
-      await command(id, "teardown", {});
-      await until(async () => evidence.wsEvents.some((e: Event) => e.deploymentId === id && e.publishType === "deployment-torn-down") || undefined,
+      await command(retiredId, "teardown", {});
+      await until(async () => evidence.wsEvents.some((e: Event) => e.deploymentId === retiredId && e.publishType === "deployment-torn-down") || undefined,
         "teardown WebSocket event");
-      expect((await deployment(id)).status).toBe("torn-down");
-      const retiredJob = await queue.add("deployment-created", outbox.rows[0].payload, { jobId: randomUUID() });
+      expect((await deployment(retiredId)).status).toBe("torn-down");
+      const retiredJob = await queue.add("deployment-created", { deploymentId: retiredId }, { jobId: randomUUID() });
       await until(async () => (await retiredJob.getState()) === "completed" || undefined, "retired deployment job skip");
-      expect((await deployment(id)).status).toBe("torn-down");
-      expect((await harness.request("/deployments/live")).deployments.some((d: Event) => d.id === id)).toBe(false);
-      await harness.request(`/deployments/${id}/load`, { targetLoadFraction: 1 }, "POST", 400);
+      expect((await deployment(retiredId)).status).toBe("torn-down");
+      expect((await harness.request("/deployments/live")).deployments.some((d: Event) => d.id === retiredId)).toBe(false);
+      await harness.request(`/deployments/${retiredId}/load`, { targetLoadFraction: 1 }, "POST", 400);
       await Bun.sleep(200);
       const afterTeardown = evidence.wsEvents.length;
       await Bun.sleep(1500);
-      expect(evidence.wsEvents.slice(afterTeardown).some((e: Event) => e.deploymentId === id && e.publishType === "simulation-snapshot")).toBe(false);
-      expect((await harness.request(`/infrastructure/${infrastructureId}`)).infrastructure.layout).toEqual(layout);
+      expect(evidence.wsEvents.slice(afterTeardown).some((e: Event) => e.deploymentId === retiredId && e.publishType === "simulation-snapshot")).toBe(false);
+      await until(async () => !(await deployment(retiredId)).runtimeActive || undefined, "simulator stopped before deletion");
+      await harness.request(`/infrastructure/${teardownFixture.infrastructureId}`, undefined, "DELETE");
+      expect((await harness.sql.query('SELECT id FROM "Deployment" WHERE id = $1', [retiredId])).rowCount).toBe(0);
+      expect((await harness.request(`/infrastructure/${infrastructureId}`)).infrastructure.layout).toEqual(editedSavedLayout);
+      phase("creation versus deletion");
+      const raceDesign = (await harness.request("/infrastructure", { name: "Creation deletion race", layout }, "POST", 201)).createdInfrastructure;
+      infrastructureIds.push(raceDesign.id);
+      const race = await Promise.all([
+        fetch(harness.api + "/deployments", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ infrastructureId: raceDesign.id }) }),
+        fetch(harness.api + `/infrastructure/${raceDesign.id}`, { method: "DELETE" }),
+      ]);
+      if (race[0]!.status === 201) {
+        expect(race[1]!.status).toBe(409);
+        const raceRun = ((await race[0]!.json()) as Event).createdDeployment;
+        deploymentIds.push(raceRun.id);
+        await until(async () => (await deployment(raceRun.id)).status === "live" || undefined, "racing creation preserved");
+        await harness.request(`/deployments/${raceRun.id}/teardown`, {});
+      } else {
+        expect(race[0]!.status).toBe(404);
+        expect(race[1]!.status).toBe(200);
+      }
+      evidence.creationDeletionRace = race.map((response) => response.status);
+
+      phase("worker ownership loss");
+      const lossFixture = await workerFixture("Worker connection loss");
+      await fixtureJob(lossFixture.deploymentId);
+      await until(async () => fixtureEvents(lossFixture.deploymentId, "simulation-snapshot")
+        .some((entry: Event) => entry.event.simulatedSeconds > 0) || undefined, "ownership fixture snapshot");
+      const owner = await harness.sql.query(`SELECT pid FROM pg_locks WHERE locktype = 'advisory'
+        AND classid = 186542854 AND objid = 1 AND objsubid = 2 AND granted`);
+      expect(owner.rows).toHaveLength(1);
+      await harness.sql.query("SELECT pg_terminate_backend($1)", [owner.rows[0].pid]);
+      expect(await harness.waitForExit("worker")).toBe(1);
+      const afterLoss = evidence.wsEvents.length;
+      await Bun.sleep(1500);
+      expect(evidence.wsEvents.slice(afterLoss).some((event: Event) => event.publishType === "simulation-snapshot")).toBe(false);
+      await harness.stop("worker");
+      await harness.startWorker();
+      await until(async () => (await deployment(lossFixture.deploymentId)).status === "failed" || undefined, "ownership loss interrupted run");
+      evidence.ownershipLoss = { exit: 1, subsequentSnapshots: 0, interruptedStatus: "failed" };
       phase("WebSocket transport failures");
       socket.close();
       await until(async () => socket.readyState === WebSocket.CLOSED || undefined, "final socket disconnect");
@@ -473,6 +610,8 @@ integration("local deployment lifecycle", () => {
       try {
         if (workerStarted) await harness.stop("worker");
         if (schemaReady) {
+          // Only these fixture rows, after owned child processes have stopped.
+          await harness.sql.query(`UPDATE "Deployment" SET status = 'failed', "runtimeActive" = false WHERE id = ANY($1::text[])`, [deploymentIds]);
           await harness.sql.query('DELETE FROM "Outbox" WHERE payload->>\'deploymentId\' = ANY($1::text[])', [deploymentIds]);
           await harness.sql.query('DELETE FROM "Deployment" WHERE id = ANY($1::text[])', [deploymentIds]);
           await harness.sql.query('DELETE FROM "Infrastructure" WHERE id = ANY($1::text[])', [infrastructureIds]);

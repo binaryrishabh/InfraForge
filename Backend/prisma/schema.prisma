@@ -31,6 +31,10 @@ model Deployment {
   workloadProfile       Json?
   seed                  String?
   simulationState       Json?
+  runInputs             Json?
+  liveTopology          Json?
+  topologyRevision      Int                         @default(0)
+  runtimeActive         Boolean                     @default(false)
   createdAt             DateTime                    @default(now())
   updatedAt             DateTime                    @updatedAt
 }

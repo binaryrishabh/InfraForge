@@ -1,54 +1,45 @@
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { toast } from "sonner";
 import { useCanvasStore } from "../store/canvasStore";
 import { syncDeploymentTopology } from "@/api/deployment.api";
 
 const SYNC_DEBOUNCE_MS = 400;
 
-/* While a deployment is LIVE, any committed mutation to resources or
-   connectionLines is debounced (~400ms) then pushed to the simulator via
-   sync-topology. Uses store.subscribe (zero-render) so this hook never
-   re-renders its host. Errors toast once per burst, reset on success. */
-export function useLiveTopologySync(isLive: boolean) {
-  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const errorToastShownRef = useRef(false);
-
+export function useLiveTopologySync(isLive: boolean, deploymentId: string) {
   useEffect(() => {
     if (!isLive) return;
+    let disposed = false;
+    let sending = false;
+    let blocked = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
 
-    const scheduleSync = () => {
-      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
-      debounceTimerRef.current = setTimeout(async () => {
-        const store = useCanvasStore.getState();
-        const deploymentId = store.activeDeploymentId;
-        if (!deploymentId) return;
-        try {
-          await syncDeploymentTopology(
-            deploymentId,
-            store.resources,
-            store.connectionLines,
-          );
-          errorToastShownRef.current = false;
-        } catch {
-          if (!errorToastShownRef.current) {
-            errorToastShownRef.current = true;
-            toast.error("Failed to sync topology to the live simulation");
-          }
-        }
-      }, SYNC_DEBOUNCE_MS);
+    const schedule = () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => { void flush(); }, SYNC_DEBOUNCE_MS);
     };
-
-    const unsubscribe = useCanvasStore.subscribe((state, prevState) => {
-      const resourcesChanged = state.resources !== prevState.resources;
-      const connectionsChanged = state.connectionLines !== prevState.connectionLines;
-      if (resourcesChanged || connectionsChanged) {
-        scheduleSync();
+    const flush = async () => {
+      const store = useCanvasStore.getState();
+      if (disposed || blocked || sending || store.activeDeploymentId !== deploymentId ||
+          !store.liveTopologyDirty || store.topologyRevision === null) return;
+      sending = true;
+      const topology = { resources: store.resources, connectionLines: store.connectionLines };
+      try {
+        const revision = await syncDeploymentTopology(deploymentId, topology.resources, topology.connectionLines, store.topologyRevision);
+        if (!disposed) useCanvasStore.getState().acknowledgeLiveTopology(deploymentId, topology, revision);
+      } catch {
+        // An unknown response may already have committed. Never rebase/retry
+        // this stale canvas automatically over somebody else's newer state.
+        blocked = true;
+        if (!disposed) toast.error("Live edit could not be confirmed. Re-enter the environment before editing again.");
+      } finally {
+        sending = false;
+        if (!disposed && !blocked && useCanvasStore.getState().liveTopologyDirty) schedule();
       }
-    });
-
-    return () => {
-      unsubscribe();
-      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
     };
-  }, [isLive]);
+    const unsubscribe = useCanvasStore.subscribe((state, previous) => {
+      if (state.liveTopologyDirty && (state.resources !== previous.resources || state.connectionLines !== previous.connectionLines)) schedule();
+    });
+    if (useCanvasStore.getState().liveTopologyDirty) schedule();
+    return () => { disposed = true; clearTimeout(timer); unsubscribe(); };
+  }, [isLive, deploymentId]);
 }

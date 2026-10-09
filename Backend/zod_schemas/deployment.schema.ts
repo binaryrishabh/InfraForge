@@ -43,7 +43,9 @@ export const SpeedControlBodySchema = z.object({
   speed: z.union([z.literal(0), z.literal(1), z.literal(10), z.literal(60)], "Speed must be 0, 1, 10, or 60")
 });
 
-export const SyncTopologyBodySchema = LiveTopologySchema;
+export const SyncTopologyBodySchema = LiveTopologySchema.extend({
+  expectedRevision: z.number().int().min(0),
+});
 
 export type ChaosInjectionBodySchemaType = z.infer<typeof ChaosInjectionBodySchema>;
 export type DeploymentIdSchemaType = z.infer<typeof DeploymentIdSchema>;

@@ -23,7 +23,8 @@
     "shared/interface/ChaosEvents.interface.ts",
     "shared/interface/DeploymentStages.interface.ts",
     "shared/interface/DeploymentTimeline.interface.ts",
-    "@infraforge/domain/workload"
+    "@infraforge/domain/workload",
+    "shared/interface/RunInputs.interface.ts"
   ],
   "shared/interface/DeploymentStages.interface.ts": [
     "shared/constants/DEPLOYMENT_STAGES_NAMES.constants.ts",
@@ -48,7 +49,8 @@
     "shared/interface/PoolSnapshot.interface.ts",
     "shared/interface/ResourceMetrics.interface.ts",
     "shared/interface/SimulationLog.interface.ts",
-    "shared/interface/SpawnedVmInfo.interface.ts"
+    "shared/interface/SpawnedVmInfo.interface.ts",
+    "shared/interface/RunInputs.interface.ts"
   ],
   "shared/interface/SimulationState.interface.ts": [
     "@infraforge/catalog",
@@ -78,5 +80,9 @@
   "shared/types/UndoCanvasResourceAction.types.ts": [
     "@infraforge/domain/resource",
     "@infraforge/domain/resource"
+  ],
+  "shared/interface/RunInputs.interface.ts": [
+    "@infraforge/domain/resource",
+    "@infraforge/domain/workload"
   ]
 }

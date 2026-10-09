@@ -6,7 +6,7 @@ import { SyncTopologyBodySchema } from "../zod_schemas/deployment.schema";
 test("accepts existing sample resource configuration and layout metadata", () => {
   const layout = { ...SAMPLE_ARCHITECTURE, layoutVersion: 3 };
   expect<unknown>(InfrastructureBodySchema.parse({ name: "Sample architecture", layout }).layout).toEqual(layout);
-  expect<unknown>(SyncTopologyBodySchema.parse(SAMPLE_ARCHITECTURE)).toEqual(SAMPLE_ARCHITECTURE);
+  expect<unknown>(SyncTopologyBodySchema.parse({ ...SAMPLE_ARCHITECTURE, expectedRevision: 0 })).toEqual({ ...SAMPLE_ARCHITECTURE, expectedRevision: 0 });
 });
 
 test("rejects malformed resources before persistence or live reconciliation", () => {

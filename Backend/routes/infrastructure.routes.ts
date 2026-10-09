@@ -2,6 +2,7 @@ import { Router } from "express";
 import { prisma } from "../lib/prisma";
 import { ValidationError, NotFoundError } from "../utils/errors";
 import { config } from "../utils/config";
+import { assertNoActiveRuns } from "../deployments/designDeletion";
 import { InfrastructureIdSchema, InfrastructureBodySchema, UpdateInfrastructureBodySchema } from "../zod_schemas/infrastructure.schema";
 
 export const infrastructureRouter = Router();
@@ -95,8 +96,10 @@ infrastructureRouter.delete("/:infrastructureId", async (req, res) => {
     throw new ValidationError(errorMessages);
   }
   const { infrastructureId } = InfrastructureId.data;
-  const deletedInfrastructure = await prisma.infrastructure.delete({
-    where: { id: infrastructureId }
+  const deletedInfrastructure = await prisma.$transaction(async (tx) => {
+    await tx.$queryRaw`SELECT id FROM "Infrastructure" WHERE id = ${infrastructureId} FOR UPDATE`;
+    await assertNoActiveRuns(tx, infrastructureId);
+    return tx.infrastructure.delete({ where: { id: infrastructureId } });
   });
   return res.status(200).json({
     success: true,
@@ -108,7 +111,11 @@ infrastructureRouter.delete("/:infrastructureId", async (req, res) => {
 // Delete all — development only
 if (config.NODE_ENV !== "production") {
   infrastructureRouter.delete("/", async (req, res) => {
-    const allDeletedInfrastructure = await prisma.infrastructure.deleteMany();
+    const allDeletedInfrastructure = await prisma.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT id FROM "Infrastructure" ORDER BY id FOR UPDATE`;
+      await assertNoActiveRuns(tx);
+      return tx.infrastructure.deleteMany();
+    });
     if (allDeletedInfrastructure.count === 0) {
       throw new NotFoundError("No infrastructure found to delete");
     }

@@ -5,6 +5,7 @@ import { ResourceHealth, type ResourceHealthType } from "@infraforge/domain/reso
 import { DeploymentChaosNames } from "@infraforge/domain/resource";
 import { SIMULATION_CONSTANTS } from "../constants/SIMULATION_CONSTANTS.constants";
 import type { WorkloadProfile } from "@infraforge/domain/workload";
+import { WORKLOAD_DEFAULTS } from "@infraforge/domain/workload";
 import type { ChaosEffect } from "../interface/ChaosEffect.interface";
 import type { ResourceMetrics } from "../interface/ResourceMetrics.interface";
 
@@ -22,7 +23,7 @@ export const round1 = (n: number) => Math.round(n * 10) / 10;
 
 export function burstFactor(seconds: number, profile: WorkloadProfile): number {
     if (profile.trafficShape !== "peak") return 1;
-    const multiplier = profile.peakMultiplier ?? 3;
+    const multiplier = profile.peakMultiplier ?? WORKLOAD_DEFAULTS.peakMultiplier;
     const cyclePos = seconds % SIMULATION_CONSTANTS.BURST_CYCLE_SECONDS;
     const ramp = SIMULATION_CONSTANTS.BURST_RAMP_SECONDS;
     const duration = SIMULATION_CONSTANTS.BURST_DURATION_SECONDS;

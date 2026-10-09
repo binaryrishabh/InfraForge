@@ -168,9 +168,15 @@ export class LocalHarness {
     if (response !== "PONG") throw new Error("Dedicated Redis readiness check failed");
   }
 
-  async startWorker() {
+  async startWorker(name = "worker") {
     await this.checkRedis("before-worker-start");
-    this.spawn("worker", ["run", "worker.ts"]);
+    this.spawn(name, ["run", "worker.ts"]);
+  }
+
+  async waitForExit(name: string) {
+    const child = this.children.get(name);
+    if (!child) throw new Error(`Unknown process ${name}`);
+    return until(async () => child.exitCode === null ? undefined : child.exitCode, `${name} exit`);
   }
 
   async stop(name: string) {

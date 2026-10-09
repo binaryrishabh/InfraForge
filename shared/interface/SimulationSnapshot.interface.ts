@@ -3,6 +3,7 @@ import type { SpawnedVmInfo } from "./SpawnedVmInfo.interface";
 import type { ResourceMetrics } from "./ResourceMetrics.interface";
 import type { SimulationLog } from "./SimulationLog.interface";
 import type { ChaosEffect } from "./ChaosEffect.interface";
+import type { RunTopology } from "./RunInputs.interface";
 
 export interface SimulationSnapshot {
     deploymentId: string;
@@ -19,4 +20,6 @@ export interface SimulationSnapshot {
     speed?: number;
     burnRatePerHourUsd?: number;
     accumulatedCostUsd?: number;
+    liveTopology?: RunTopology;
+    topologyRevision?: number;
 }

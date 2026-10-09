@@ -9,7 +9,10 @@ import {
   reconcileTopology,
 } from "@shared/simulation/engine";
 import { computeHourlyBurnRateUsd } from "@shared/simulation/cost";
-import { DEFAULT_WORKLOAD_PROFILE } from "@infraforge/domain/workload";
+import { engineSeed, readRunInputs } from "../deployments/runInputs";
+import { LayoutSchema } from "../zod_schemas/layout.schema";
+import type { WorkerOwnership } from "../infra/workerOwnership";
+import type { RunTopology } from "@shared/interface/RunInputs.interface";
 import { SIMULATION_CONSTANTS } from "@shared/constants/SIMULATION_CONSTANTS.constants";
 import { DeploymentStatus } from "@shared/enum/DeploymentStatus.enum";
 import type { SimulationState } from "@shared/interface/SimulationState.interface";
@@ -18,9 +21,6 @@ import type { ChaosEffect } from "@shared/interface/ChaosEffect.interface";
 import type { VerticalScaleAction } from "@shared/interface/VerticalScaleAction.interface";
 import type { SimulationSnapshot } from "@shared/interface/SimulationSnapshot.interface";
 import type { SimulationLog } from "@shared/interface/SimulationLog.interface";
-import type { Resource } from "@infraforge/domain/resource";
-import type { ConnectionLine } from "@infraforge/domain/resource";
-import type { WorkloadProfile } from "@infraforge/domain/workload";
 
 interface SimulationInstance {
   state: SimulationState;
@@ -29,96 +29,80 @@ interface SimulationInstance {
   speed: number;
   lastCheckpointAt: number;
   accumulatedCostUsd: number;
+  topology: RunTopology;
+  topologyRevision: number;
 }
 
 const registry = new Map<string, SimulationInstance>();
 
-const hashSeed = (seedText: string): number => {
-  let hash = 0;
-  for (let i = 0; i < seedText.length; i++) {
-    hash = (Math.imul(31, hash) + seedText.charCodeAt(i)) | 0;
-  }
-  return Math.abs(hash);
-};
+const initializing = new Map<string, Promise<boolean>>();
 
-export const startSimulation = async (
-  deploymentId: string,
-  existingDeployment?: {
-    id: string;
-    seed: string | null;
-    workloadProfile: unknown;
-    infrastructureId: string;
-  } | null,
-) => {
-  if (registry.has(deploymentId)) return;
-  const deployment =
-    existingDeployment ??
-    (await prisma.deployment.findUnique({ where: { id: deploymentId } }));
-  if (!deployment) {
-    console.error(`[simulator] deployment ${deploymentId} not found`);
-    return;
-  }
-  const infrastructure = await prisma.infrastructure.findUnique({
-    where: { id: deployment.infrastructureId },
-  });
-  const layout = (infrastructure?.layout ?? {}) as {
-    resources?: Resource[];
-    connectionLines?: ConnectionLine[];
-  };
-  const resources = layout.resources ?? [];
-  const connectionLines = layout.connectionLines ?? [];
-  let seedText = deployment.seed;
-  if (!seedText) {
-    seedText = Math.random().toString(36).slice(2, 10);
-    await prisma.deployment.update({
-      where: { id: deploymentId },
-      data: { seed: seedText },
-    });
-  }
-  const workloadProfile =
-    (deployment.workloadProfile as WorkloadProfile | null) ??
-    DEFAULT_WORKLOAD_PROFILE;
+export function startSimulation(deploymentId: string): Promise<boolean> {
+  const pending = initializing.get(deploymentId);
+  if (pending) return pending;
+  const initialization = initialize(deploymentId).finally(() => initializing.delete(deploymentId));
+  initializing.set(deploymentId, initialization);
+  return initialization;
+}
+
+async function initialize(deploymentId: string) {
+  if (registry.has(deploymentId)) return true;
+  const deployment = await prisma.deployment.findUnique({ where: { id: deploymentId } });
+  if (!deployment || deployment.status !== DeploymentStatus.RUNNING) return false;
+  const input = readRunInputs(deployment.runInputs);
   const state = createInitialState(
     deploymentId,
-    resources,
-    connectionLines,
-    workloadProfile,
-    hashSeed(seedText),
+    input.resources,
+    input.connectionLines,
+    input.workloadProfile,
+    engineSeed(input.seed),
   );
-  registry.set(deploymentId, {
+  const started = await prisma.deployment.updateMany({
+    where: { id: deploymentId, status: DeploymentStatus.RUNNING, runtimeActive: false },
+    data: { status: DeploymentStatus.LIVE, runtimeActive: true },
+  });
+  if (started.count !== 1) return false;
+  const instance: SimulationInstance = {
     state,
     tickCount: 0,
     pendingLogs: [],
     speed: 1,
     lastCheckpointAt: Date.now(),
     accumulatedCostUsd: 0,
-  });
+    topology: { resources: input.resources, connectionLines: input.connectionLines },
+    topologyRevision: 0,
+  };
+  registry.set(deploymentId, instance);
   console.log(
-    `[simulator] registered ${deploymentId} | ${resources.length} resources | target ${Math.round(state.targetRps)} rps`,
+    `[simulator] registered ${deploymentId} | ${input.resources.length} resources | target ${Math.round(state.targetRps)} rps`,
   );
-};
+  // Publish the original initialized state before any live topology/control
+  // can be applied by the next serialized runtime cycle.
+  await publishSimulationSnapshot(buildSnapshot(deploymentId, instance, []));
+  return true;
+}
 
-export const stopSimulation = (deploymentId: string) => {
+function buildSnapshot(deploymentId: string, instance: SimulationInstance, logs: SimulationLog[]): SimulationSnapshot {
+  const pools = buildPoolSnapshots(instance.state);
+  return {
+    deploymentId, timestamp: new Date().toISOString(),
+    simulatedSeconds: instance.state.simulatedSeconds, loadFraction: instance.state.loadFraction,
+    metrics: instance.state.metrics, logs, health: instance.state.overallHealth,
+    pools: pools.pools, spawnedVms: pools.spawnedVms,
+    restarting: instance.state.verticalScaling.map((v) => v.resourceId),
+    activeChaos: instance.state.activeChaos, speed: instance.speed,
+    burnRatePerHourUsd: computeHourlyBurnRateUsd(instance.state), accumulatedCostUsd: instance.accumulatedCostUsd,
+    liveTopology: instance.topology, topologyRevision: instance.topologyRevision,
+  };
+}
+
+export const stopSimulation = async (deploymentId: string) => {
   registry.delete(deploymentId);
-};
-
-export const resurrectLiveDeployments = async () => {
-  const liveDeployments = await prisma.deployment.findMany({
-    where: { status: DeploymentStatus.LIVE },
-  });
-  for (const deployment of liveDeployments) {
-    await startSimulation(deployment.id, deployment);
-  }
-  if (liveDeployments.length > 0) {
-    console.log(
-      `[simulator] resurrected ${liveDeployments.length} live deployment(s)`,
-    );
-  }
+  await prisma.deployment.updateMany({ where: { id: deploymentId }, data: { runtimeActive: false } });
 };
 
 /* ------- Control channel: load adjustments, stop commands, chaos injection, vertical scaling, manual pool scaling, speed control, and topology sync from the API server ------- */
 const controlSubscriber = redis.duplicate();
-controlSubscriber.subscribe("simulator:control");
 controlSubscriber.on("message", (_channel: string, message: string) => {
   try {
     const command = JSON.parse(message) as {
@@ -131,8 +115,6 @@ controlSubscriber.on("message", (_channel: string, message: string) => {
       lbId?: string;
       delta?: number;
       speed?: number;
-      resources?: Resource[];
-      connectionLines?: ConnectionLine[];
     };
     const instance = registry.get(command.deploymentId);
     if (!instance) return;
@@ -156,7 +138,7 @@ controlSubscriber.on("message", (_channel: string, message: string) => {
         `[simulator] load target for ${command.deploymentId} set to ${pct}%`,
       );
     } else if (command.action === "stop") {
-      registry.delete(command.deploymentId);
+      void stopSimulation(command.deploymentId).catch(() => console.error("Could not acknowledge simulator stop; runtime polling will retry."));
       console.log(
         `[simulator] stopped ${command.deploymentId} — environment torn down`,
       );
@@ -232,35 +214,59 @@ controlSubscriber.on("message", (_channel: string, message: string) => {
           `[simulator] invalid speed ${command.speed} for ${command.deploymentId} — must be 0, 1, 10, or 60`,
         );
       }
-    } else if (command.action === "sync-topology") {
-      // Live-edit reconcile: rebuild topology from the current canvas while
-      // preserving runtime state (metrics, chaos, pools, spawned replicas,
-      // cost accumulation lives in this registry and is untouched).
-      const nextResources = command.resources ?? [];
-      const nextConnectionLines = command.connectionLines ?? [];
-      instance.state = reconcileTopology(
-        instance.state,
-        nextResources,
-        nextConnectionLines,
-      );
-      instance.pendingLogs.push({
-        timestamp: new Date().toISOString(),
-        severity: "info",
-        source: "simulator",
-        message: `topology synced — ${nextResources.length} resources, ${nextConnectionLines.length} connections`,
-      });
-      console.log(
-        `[simulator] topology synced for ${command.deploymentId} — ${nextResources.length} resources, ${nextConnectionLines.length} connections`,
-      );
     }
   } catch (err: any) {
     console.error(`[simulator] control message failed: ${err.message}`);
   }
 });
 
-setInterval(async () => {
+let runtimeTimer: ReturnType<typeof setTimeout> | undefined;
+let runtimeStopped = true;
+
+export async function startRuntime(ownership: WorkerOwnership) {
+  await controlSubscriber.subscribe("simulator:control");
+  runtimeStopped = false;
+  const cycle = async () => {
+    try {
+      await ownership.assertHeld();
+      if (!runtimeStopped) {
+        await advanceSimulations();
+        // Retry acknowledgements even if an earlier stop notification's DB
+        // write failed after its in-memory instance had already been removed.
+        await prisma.deployment.updateMany({
+          where: { runtimeActive: true, status: { in: ["torn-down", "failed", "completed"] } },
+          data: { runtimeActive: false },
+        });
+      }
+    } catch (error) { console.error("Simulator cycle failed", error); }
+    finally { if (!runtimeStopped) runtimeTimer = setTimeout(cycle, 1000); }
+  };
+  runtimeTimer = setTimeout(cycle, 1000);
+}
+
+export function stopRuntime() {
+  runtimeStopped = true;
+  clearTimeout(runtimeTimer);
+  registry.clear();
+}
+
+async function advanceSimulations() {
   for (const [deploymentId, instance] of registry) {
     try {
+      const deployment = await prisma.deployment.findUnique({ where: { id: deploymentId } });
+      if (registry.get(deploymentId) !== instance) continue;
+      if (!deployment || deployment.status !== DeploymentStatus.LIVE || !deployment.runtimeActive) {
+        await stopSimulation(deploymentId);
+        continue;
+      }
+      if (deployment.topologyRevision > instance.topologyRevision) {
+        const topology = LayoutSchema.parse(deployment.liveTopology);
+        instance.state = reconcileTopology(instance.state, topology.resources, topology.connectionLines);
+        instance.topology = { resources: topology.resources, connectionLines: topology.connectionLines };
+        instance.topologyRevision = deployment.topologyRevision;
+        instance.pendingLogs.push({ timestamp: new Date().toISOString(), severity: "info", source: "simulator",
+          message: `topology revision ${instance.topologyRevision} applied — ${topology.resources.length} resources` });
+      }
       const speed = instance.speed;
       // Paused — skip entirely. No ticks, no snapshot, no checkpoint, no cost.
       if (speed === 0) {
@@ -283,24 +289,8 @@ setInterval(async () => {
       // Build ONE snapshot per interval from the final state (instance.state
       // is the last tick's result.state), draining any queued control logs.
       const queuedLogs = instance.pendingLogs.splice(0);
-      const poolData = buildPoolSnapshots(instance.state);
-      const burnRate = computeHourlyBurnRateUsd(instance.state);
-      const snapshot: SimulationSnapshot = {
-        deploymentId,
-        timestamp: new Date().toISOString(),
-        simulatedSeconds: instance.state.simulatedSeconds,
-        loadFraction: instance.state.loadFraction,
-        metrics: instance.state.metrics,
-        logs: [...queuedLogs, ...allLogs],
-        health: instance.state.overallHealth,
-        pools: poolData.pools,
-        spawnedVms: poolData.spawnedVms,
-        restarting: instance.state.verticalScaling.map((v) => v.resourceId),
-        activeChaos: instance.state.activeChaos,
-        speed: instance.speed,
-        burnRatePerHourUsd: burnRate,
-        accumulatedCostUsd: instance.accumulatedCostUsd,
-      };
+      const snapshot = buildSnapshot(deploymentId, instance, [...queuedLogs, ...allLogs]);
+      if (runtimeStopped || registry.get(deploymentId) !== instance) continue;
       await publishSimulationSnapshot(snapshot);
       // Neon relief: wall-time-based checkpoint (at most once per real minute),
       // persisting only non-derivable runtime state. This keeps 60x speed from
@@ -320,8 +310,8 @@ setInterval(async () => {
           verticalScaling: s.verticalScaling,
           accumulatedCostUsd: instance.accumulatedCostUsd,
         };
-        await prisma.deployment.update({
-          where: { id: deploymentId },
+        await prisma.deployment.updateMany({
+          where: { id: deploymentId, status: DeploymentStatus.LIVE, runtimeActive: true },
           data: { simulationState: checkpoint as any },
         });
       }
@@ -331,4 +321,4 @@ setInterval(async () => {
       );
     }
   }
-}, 1000);
+}

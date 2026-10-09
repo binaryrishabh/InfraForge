@@ -11,6 +11,7 @@ import type { Deployment } from "@shared/interface/Deployment.interface";
 import type { DeploymentStages } from "@shared/interface/DeploymentStages.interface";
 import type { DeploymentTimeline } from "@shared/interface/DeploymentTimeline.interface";
 import type { SimulationSnapshot } from "@shared/interface/SimulationSnapshot.interface";
+import { useCanvasStore } from "@/features/canvas/store/canvasStore";
 
 type PipelineUIStatus = DeploymentStatusType | "Web Socket connection error";
 
@@ -43,6 +44,9 @@ export function useDeploymentSocket(deploymentId: string) {
                             .map((stage: DeploymentStages) => stage.name)
                     )
                     setTimeline(fetchedDeployment.timeline || []);
+                    if (fetchedDeployment.liveTopology) {
+                        useCanvasStore.getState().applyLiveTopology(deploymentId, fetchedDeployment.liveTopology, fetchedDeployment.topologyRevision);
+                    }
 
                     //If fetchedDeployment already in it's final stage or completely failed by the worker server, don't open ws connection
                     if(fetchedDeployment.status === DeploymentStatus.COMPLETED || fetchedDeployment.status === DeploymentStatus.FAILED || fetchedDeployment.status === DeploymentStatus.TORN_DOWN) {
@@ -149,6 +153,9 @@ export function useDeploymentSocket(deploymentId: string) {
                         break;
                     case Publish.publishSimulationSnapshot:
                         useSimulationStore.getState().applySnapshot(data as SimulationSnapshot);
+                        if (data.liveTopology && typeof data.topologyRevision === "number") {
+                            useCanvasStore.getState().applyLiveTopology(deploymentId, data.liveTopology, data.topologyRevision);
+                        }
                         break;
                 }
             }

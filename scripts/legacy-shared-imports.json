@@ -23,7 +23,8 @@
     "shared/interface/SimulationState.interface.ts",
     "shared/interface/VerticalScaleAction.interface.ts",
     "shared/simulation/cost.ts",
-    "shared/simulation/engine.ts"
+    "shared/simulation/engine.ts",
+    "shared/interface/RunInputs.interface.ts"
   ],
   "Backend/stages/costEstimation.stages.ts": [
     "shared/interface/DeploymentStageResult.interface.ts",
@@ -101,7 +102,8 @@
   "Frontend/src/features/canvas/store/canvasStore.ts": [
     "shared/interface/Infrastructure.interface.ts",
     "shared/types/ModalState.types.ts",
-    "shared/types/UndoCanvasResourceAction.types.ts"
+    "shared/types/UndoCanvasResourceAction.types.ts",
+    "shared/interface/RunInputs.interface.ts"
   ],
   "Frontend/src/features/canvas/topbar/InfrastructureLayoutDropdown.tsx": [
     "shared/interface/Infrastructure.interface.ts"
@@ -159,5 +161,14 @@
     "shared/interface/SimulationSnapshot.interface.ts",
     "shared/interface/SpawnedVmInfo.interface.ts"
   ],
-  "Frontend/src/theme/resourceCategoryHues.ts": []
+  "Frontend/src/theme/resourceCategoryHues.ts": [],
+  "Frontend/tests/liveTopology.test.ts": [
+    "shared/interface/RunInputs.interface.ts"
+  ],
+  "Backend/deployments/runInputs.ts": [
+    "shared/interface/RunInputs.interface.ts"
+  ],
+  "Backend/tests/runInputs.test.ts": [
+    "shared/simulation/engine.ts"
+  ]
 }

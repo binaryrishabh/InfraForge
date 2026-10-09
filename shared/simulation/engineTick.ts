@@ -16,6 +16,7 @@ import type { SpawnedVmInfo } from "../interface/SpawnedVmInfo.interface";
 import type { VerticalScaleAction } from "../interface/VerticalScaleAction.interface";
 import type { ResourceMetrics } from "../interface/ResourceMetrics.interface";
 import type { SimulationLog } from "../interface/SimulationLog.interface";
+import { WORKLOAD_DEFAULTS } from "@infraforge/domain/workload";
 
 export function tick(state: SimulationState, inputs: TickInputs): TickResult {
     const logs: SimulationLog[] = [];
@@ -43,7 +44,7 @@ export function tick(state: SimulationState, inputs: TickInputs): TickResult {
     );
     const totalRps = state.targetRps * effectiveMultiplier;
     if (profile.trafficShape === "peak") {
-        const peak = profile.peakMultiplier ?? 3;
+        const peak = profile.peakMultiplier ?? WORKLOAD_DEFAULTS.peakMultiplier;
         if (burstPrev <= 1.01 && burstNow > 1.01) {
             logs.push({
                 timestamp: now, severity: "warn", source: "load-generator",
@@ -57,7 +58,7 @@ export function tick(state: SimulationState, inputs: TickInputs): TickResult {
         }
     }
     // 3. Workload mix
-    const readFraction = profile.readWriteRatio ?? 0.8;
+    const readFraction = profile.readWriteRatio ?? WORKLOAD_DEFAULTS.readWriteRatio;
     const writeFraction = 1 - readFraction;
     const payloadKB = SIMULATION_CONSTANTS.PAYLOAD_KB[profile.payloadSize];
     const rng = mulberry32(state.seed * 100003 + seconds);
@@ -403,7 +404,7 @@ export function tick(state: SimulationState, inputs: TickInputs): TickResult {
     }
     // 10. One-time structural logs
     if (seconds === 1) {
-        logs.push({ timestamp: now, severity: "info", source: "simulator", message: `simulation started — target ${Math.round(state.targetRps)} rps | ${profile.trafficShape === "peak" ? `peak bursts ${profile.peakMultiplier ?? 3}x` : "steady traffic"} | ${Math.round(readFraction * 100)}% reads | ${profile.payloadSize} payloads | ramping over ${SIMULATION_CONSTANTS.RAMP_SECONDS}s` });
+        logs.push({ timestamp: now, severity: "info", source: "simulator", message: `simulation started — target ${Math.round(state.targetRps)} rps | ${profile.trafficShape === "peak" ? `peak bursts ${profile.peakMultiplier ?? WORKLOAD_DEFAULTS.peakMultiplier}x` : "steady traffic"} | ${Math.round(readFraction * 100)}% reads | ${profile.payloadSize} payloads | ramping over ${SIMULATION_CONSTANTS.RAMP_SECONDS}s` });
         for (const [lbId, pool] of Object.entries(nextPools)) {
             logs.push({ timestamp: now, severity: "info", source: "autoscaler", message: `pool ${lbId} formed — ${pool.baseVmIds.length} base replicas, autoscale ${pool.minReplicas}-${pool.maxReplicas} at ${pool.targetCpu}% target` });
         }

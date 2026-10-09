@@ -49,11 +49,13 @@
       "@infraforge/domain/workload"
     ],
     "shared/simulation/engineRouting.ts": [
-      "@infraforge/domain/resource"
+      "@infraforge/domain/resource",
+      "@infraforge/domain/workload"
     ],
     "shared/simulation/engineTick.ts": [
       "@infraforge/catalog",
-      "@infraforge/domain/resource"
+      "@infraforge/domain/resource",
+      "@infraforge/domain/workload"
     ],
     "shared/simulation/topology.ts": [
       "@infraforge/catalog",
@@ -63,6 +65,10 @@
     ],
     "shared/types/UndoCanvasResourceAction.types.ts": [
       "@infraforge/domain/resource"
+    ],
+    "shared/interface/RunInputs.interface.ts": [
+      "@infraforge/domain/resource",
+      "@infraforge/domain/workload"
     ]
   }
 }
