@@ -22,8 +22,8 @@ simulation depends on domain, catalog and contracts. Browser code may use simula
 capacity/tuning, but cannot reach its engine, runtime types or cost implementation.
 Source exports work directly with Bun/Vite. Root `shared`, `Backend`, `Frontend`,
 their aliases and legacy boundary exception files are removed. Prisma generation
-runs before backend tests/typechecking; generated files remain untracked. All ten
-versioned migrations and the schema retain their contents.
+runs before backend tests, typechecking and boundary checks; generated files remain
+untracked. All ten versioned migrations and the schema retain their contents.
 
 Better Auth 1.7.7/Prisma 7.9.1 provide database sessions and configurable Google/GitHub
 OAuth. HTTP requires verified ownership; unsafe requests require an exact permitted
@@ -76,8 +76,11 @@ canvas. External OAuth was not tested without provider credentials.
 
 An incomplete intermediate extraction caused missing-module errors and was corrected.
 Review also caught stale Compose working directories and missing Turbo auth/database
-environment forwarding. Private browser setup attempts encountered a migration timeout,
-a Docker network timeout and fixture cleanup/validation errors. The corrected fixture
+environment forwarding. The first Linux run exposed missing Prisma generation before
+standalone boundaries/lint; the root boundary command now generates its prerequisite
+client, verified with the local generated directory absent. Private browser setup
+attempts encountered a migration timeout, a Docker network timeout and fixture
+cleanup/validation errors. The corrected fixture
 passed its cleanup regression, including a design created outside its original ID list;
 no application security checks were weakened for testing.
 

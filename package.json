@@ -16,7 +16,7 @@
     "test": "turbo run test",
     "test:integration": "turbo run test:integration --filter=@infraforge/backend",
     "test:integration:local": "pwsh ./scripts/test-integration.ps1",
-    "check:boundaries": "bun scripts/check-boundaries.ts",
+    "check:boundaries": "turbo run db:generate --filter=@infraforge/backend && bun scripts/check-boundaries.ts",
     "test:tooling": "bun test scripts/tests",
     "audit": "bun audit --json"
   },
