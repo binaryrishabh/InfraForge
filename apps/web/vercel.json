@@ -1,5 +1,6 @@
 {
   "framework": "vite",
+  "git": { "deploymentEnabled": { "main": false } },
   "installCommand": "cd ../.. && bun install --frozen-lockfile",
   "buildCommand": "cd ../.. && bun run build --filter=@infraforge/web",
   "outputDirectory": "dist",

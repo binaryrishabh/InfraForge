@@ -48,4 +48,11 @@ export class WorkerOwnership {
       throw error;
     }
   }
+
+  async close() {
+    this.closing = true;
+    if (this.held) await this.client.query("SELECT pg_advisory_unlock($1, $2)", LOCK);
+    this.held = false;
+    await this.client.end();
+  }
 }

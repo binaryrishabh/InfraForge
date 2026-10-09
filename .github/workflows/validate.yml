@@ -2,6 +2,11 @@ name: Validate workspaces
 
 on:
   workflow_call:
+    inputs:
+      ref:
+        type: string
+        required: false
+        default: ""
   pull_request:
   push:
     branches: [develop]
@@ -25,6 +30,8 @@ jobs:
           - audit
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.sha }}
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.3.14
@@ -56,6 +63,8 @@ jobs:
       INTEGRATION_API_PORT: "3100"
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.sha }}
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.3.14
@@ -69,10 +78,17 @@ jobs:
       BETTER_AUTH_SECRET: packaging-only-fixture-secret-at-least-32-characters
       BETTER_AUTH_URL: https://api.example.invalid
       APP_ORIGINS: https://app.example.invalid
+      WORKER_DATABASE_URL: postgresql://postgres@localhost/infraforge_packaging
+      MIGRATION_DATABASE_URL: postgresql://postgres@localhost/infraforge_packaging
+      WORKER_DATABASE_MODE: direct
+      RELEASE_SHA: ${{ inputs.ref || github.sha }}
+      RELEASE_IMAGE: infraforge-packaging
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.sha }}
       - run: docker compose --env-file /dev/null -f apps/backend/docker-compose.yml config --quiet
-      - run: docker build -f apps/backend/Dockerfile -t infraforge-packaging .
+      - run: docker build --build-arg RELEASE_SHA="$RELEASE_SHA" -f apps/backend/Dockerfile -t infraforge-packaging .
       - run: |
           docker compose --env-file /dev/null -f apps/backend/docker-compose.yml config --format json > /tmp/compose.json
           for service in api worker ws-server; do
@@ -81,3 +97,7 @@ jobs:
             docker run --rm --workdir "$workdir" infraforge-packaging bun build "$entrypoint" --target=bun --outdir=/tmp/entrypoints
           done
           docker run --rm --workdir "$workdir" infraforge-packaging bun build scripts/recover-ownership.ts --target=bun --outdir=/tmp/entrypoints
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.14
+      - run: bun --no-env-file scripts/release/rehearse.ts infraforge-packaging

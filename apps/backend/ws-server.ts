@@ -5,8 +5,18 @@ import { auth, authSettings } from "./auth/auth";
 import { prisma } from "./lib/prisma";
 import { subscribeToDeployment } from "./infra/pubsub";
 import { attachDeploymentSubscription, SUBSCRIPTION_MAX_BYTES } from "./infra/deploymentSubscriptions";
+import { assertRuntimeSchema } from "./release/runtime";
+import { createReadiness } from "./health/readiness";
 
-const server = http.createServer((_req, res) => { res.writeHead(200); res.end("ok"); });
+await assertRuntimeSchema();
+const readiness = createReadiness();
+const server = http.createServer(async (req, res) => {
+  if (req.url === "/health/live") { res.writeHead(200); res.end("ok"); return; }
+  if (!["/", "/health", "/health/ready"].includes(req.url ?? "")) { res.writeHead(404); res.end(); return; }
+  const result = await readiness.check();
+  res.writeHead(result.success ? 200 : 503, { "Content-Type": "application/json" });
+  res.end(JSON.stringify(result));
+});
 const authenticated = new WeakMap<http.IncomingMessage, { headers: Headers; userId: string }>();
 // Bun 1.3.14 exposes a synthetic upgrade socket. Its ws verifier sends HTTP
 // rejection responses correctly; writing to that socket cannot do so reliably.

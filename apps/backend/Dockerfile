@@ -1,4 +1,7 @@
 FROM oven/bun:1.3.14
+ARG RELEASE_SHA
+LABEL org.opencontainers.image.source="https://github.com/binaryrishabh/InfraForge" \
+      org.opencontainers.image.revision=$RELEASE_SHA
 WORKDIR /app
 
 # Install the full workspace from its single lockfile.
@@ -15,6 +18,8 @@ RUN bun install --frozen-lockfile
 COPY apps/backend/index.ts apps/backend/worker.ts apps/backend/ws-server.ts apps/backend/tsconfig.json apps/backend/prisma.config.ts ./apps/backend/
 COPY apps/backend/infra ./apps/backend/infra/
 COPY apps/backend/auth ./apps/backend/auth/
+COPY apps/backend/health ./apps/backend/health/
+COPY apps/backend/release ./apps/backend/release/
 COPY apps/backend/deployments ./apps/backend/deployments/
 COPY apps/backend/scripts ./apps/backend/scripts/
 COPY apps/backend/lib/prisma.ts ./apps/backend/lib/
@@ -32,5 +37,7 @@ COPY packages/simulation/src ./packages/simulation/src/
 
 # Generate after every authored copy so stale local output cannot replace it.
 RUN cd apps/backend && bun --bun run db:generate
+RUN cd apps/backend && bun --no-env-file release/cli.ts manifest "$RELEASE_SHA" > release.json
+USER bun
 
 CMD ["bun", "run", "apps/backend/index.ts"]

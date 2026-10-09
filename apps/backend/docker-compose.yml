@@ -1,70 +1,97 @@
+x-app: &app
+  image: ${RELEASE_IMAGE:?Use a commit-tagged release image}
+  working_dir: /app/apps/backend
+  restart: unless-stopped
+  stop_grace_period: 30s
+  init: true
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  depends_on:
+    redis:
+      condition: service_healthy
+  networks: [application, egress]
+
+x-environment: &environment
+  DATABASE_URL: ${DATABASE_URL:?Set the database URL}
+  RELEASE_SHA: ${RELEASE_SHA:?Set the full release commit SHA}
+  REDIS_HOST: redis
+  REDIS_PORT: "6379"
+  NODE_ENV: production
+
+x-auth: &auth
+  <<: *environment
+  BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?Set a stable random authentication secret}
+  BETTER_AUTH_URL: ${BETTER_AUTH_URL:?Set the public HTTPS API origin}
+  APP_ORIGINS: ${APP_ORIGINS:?Set exact permitted HTTPS frontend origins}
+
+x-health: &health
+  interval: 10s
+  timeout: 8s
+  retries: 3
+  start_period: 15s
+
 services:
+  migration:
+    <<: *app
+    profiles: [release]
+    restart: "no"
+    environment:
+      <<: *environment
+      DATABASE_URL: ${MIGRATION_DATABASE_URL:?Set a direct migration database URL}
+      API_DATABASE_URL: ${DATABASE_URL:?Set the database URL}
+      WORKER_DATABASE_URL: ${WORKER_DATABASE_URL:?Set a session-preserving worker URL}
+    command: [bun, release/cli.ts, preflight]
+
   redis:
     image: redis:7-alpine
-    volumes:
-      - redis_data:/data
+    volumes: [redis_data:/data]
     restart: unless-stopped
-    command: redis-server --appendonly yes
+    command: [redis-server, --appendonly, "yes"]
+    networks: [application]
+    healthcheck:
+      test: [CMD, redis-cli, ping]
+      interval: 5s
+      timeout: 3s
+      retries: 12
 
   api:
-    build:
-      context: ../..
-      dockerfile: apps/backend/Dockerfile
-    working_dir: /app/apps/backend
-    ports:
-      - "3000:3000"
+    <<: *app
+    ports: ["127.0.0.1:${API_PORT:-3000}:3000"]
     environment:
-      - PORT=3000
-      - DATABASE_URL=${DATABASE_URL}
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-      - NODE_ENV=production
-      - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET:?Set a stable random authentication secret}
-      - BETTER_AUTH_URL=${BETTER_AUTH_URL:?Set the public HTTPS API origin}
-      - APP_ORIGINS=${APP_ORIGINS:?Set exact permitted HTTPS frontend origins}
-      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
-      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
-      - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID:-}
-      - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET:-}
-    depends_on:
-      - redis
-    restart: unless-stopped
-    command: bun run index.ts
+      <<: *auth
+      PORT: "3000"
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID:-}
+      GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET:-}
+    command: [bun, run, index.ts]
+    healthcheck:
+      <<: *health
+      test: [CMD, bun, health/probe.ts, "3000"]
 
   worker:
-    build:
-      context: ../..
-      dockerfile: apps/backend/Dockerfile
-    working_dir: /app/apps/backend
+    <<: *app
     environment:
-      - DATABASE_URL=${DATABASE_URL}
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-      - NODE_ENV=production
-    depends_on:
-      - redis
-    restart: unless-stopped
-    command: bun run worker.ts
+      <<: *environment
+      DATABASE_URL: ${WORKER_DATABASE_URL:?Set a session-preserving PostgreSQL worker URL}
+      WORKER_DATABASE_MODE: ${WORKER_DATABASE_MODE:?Set direct or session after checking the provider}
+    command: [bun, run, worker.ts]
+    healthcheck:
+      <<: *health
+      test: [CMD, bun, health/probe.ts, "3002"]
 
   ws-server:
-    build:
-      context: ../..
-      dockerfile: apps/backend/Dockerfile
-    working_dir: /app/apps/backend
-    ports:
-      - "3001:3001"
-    environment:
-      - DATABASE_URL=${DATABASE_URL}
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-      - NODE_ENV=production
-      - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET:?Set a stable random authentication secret}
-      - BETTER_AUTH_URL=${BETTER_AUTH_URL:?Set the public HTTPS API origin}
-      - APP_ORIGINS=${APP_ORIGINS:?Set exact permitted HTTPS frontend origins}
-    depends_on:
-      - redis
-    restart: unless-stopped
-    command: bun run ws-server.ts
+    <<: *app
+    ports: ["127.0.0.1:${WS_PORT:-3001}:3001"]
+    environment: *auth
+    command: [bun, run, ws-server.ts]
+    healthcheck:
+      <<: *health
+      test: [CMD, bun, health/probe.ts, "3001"]
 
 volumes:
   redis_data:
+networks:
+  application:
+    internal: true
+  egress:

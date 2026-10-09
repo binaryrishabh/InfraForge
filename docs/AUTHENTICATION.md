@@ -24,7 +24,9 @@ Set these through the environment or the gitignored `apps/backend/.env` for loca
 | `APP_ORIGINS` | Comma-separated exact frontend origins, such as `http://localhost:5173`; no wildcard or path |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Both required to enable Google |
 | `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` | Both required to enable GitHub |
-| `DATABASE_URL` | PostgreSQL connection for API, WebSocket server and worker |
+| `DATABASE_URL` | PostgreSQL connection for API and WebSocket server; local worker also uses this |
+| `WORKER_DATABASE_URL`, `WORKER_DATABASE_MODE` | Production Compose worker connection; provider-verified `direct` or `session` mode |
+| `MIGRATION_DATABASE_URL` | Direct PostgreSQL connection for the controlled release migration |
 
 Generate and store a real random secret securely; do not copy a documentation
 example as a secret. Never put provider secrets into a frontend environment file.
@@ -37,7 +39,7 @@ site; unrelated sites cannot share this cookie policy. API and WebSocket endpoin
 must also use the same hostname because the session cookie is host-only. Route
 WebSockets through that API host (for example, `/ws`). Use WSS through the trusted
 reverse proxy in production. Proxy routing, TLS and trusted-proxy/rate-limit
-settings require a release rehearsal; Compose does not supply a production proxy.
+settings follow [the controlled release process](DEPLOYMENT.md) and its host Nginx template.
 Compose keeps Redis on its private service network with no host-published port.
 Do not expose Redis or its control/event channels to public clients.
 
@@ -51,6 +53,27 @@ owner. No OAuth login is verified merely by installing the library or creating a
 session fixture. Without credentials, the UI reports that sign-in is unconfigured.
 With account linking disabled, using another provider for an existing email may
 require the original provider; InfraForge does not silently merge identities.
+
+Owner configuration steps:
+
+1. Choose the public frontend and API domains on the same site. Set `BETTER_AUTH_URL`
+   to the exact HTTPS API origin and `APP_ORIGINS` to each permitted exact frontend
+   origin. Use that same API hostname for WSS `/ws`; register DNS and trusted TLS.
+2. In Google's project, configure app branding/consent/audience and permitted test
+   users as needed, then create a **Web application** OAuth client. Register exactly
+   `<BETTER_AUTH_URL>/api/auth/callback/google`. Store its ID/secret only on the backend.
+   See [Google's server OAuth setup](https://developers.google.com/identity/protocols/oauth2/web-server)
+   and [Better Auth Google setup](https://better-auth.com/docs/authentication/google).
+3. In GitHub Settings → Developer settings → OAuth Apps, create an OAuth App with
+   the public frontend homepage and exactly
+   `<BETTER_AUTH_URL>/api/auth/callback/github` as its authorization callback.
+   Store its client ID/secret only on the backend. Use a separate app for local or
+   staging callbacks. See [GitHub's instructions](https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/creating-an-oauth-app).
+4. Set both credentials in each enabled provider pair and keep the stable random
+   Better Auth secret shared by API/WS. Configure Vercel public endpoint variables
+   and `apps/web` root as described in [deployment](DEPLOYMENT.md). Verify real
+   provider sign-in, session loading/sign-out/expiry and authenticated WS before
+   production frontend promotion. Fixture sessions do not verify OAuth callbacks.
 
 ## Access rules
 
@@ -81,8 +104,9 @@ sign-out, so anyone with access to that browser profile can inspect its storage.
 ## Additive migration and legacy recovery
 
 Run the versioned migration before starting the new API/worker/WebSocket processes.
-The current deployment workflow does not apply migrations; promotion must wait
-until the owner has rehearsed and approved that migration/startup sequence.
+The manual release workflow applies and verifies versioned migrations while the
+application is stopped. Promotion still requires owner configuration, a backup
+plan and successful release/OAuth verification; see [deployment](DEPLOYMENT.md).
 It adds the four auth tables and a nullable `Infrastructure.ownerId` foreign key.
 Existing historical `userId`, layouts, runs, inputs and checkpoints are preserved.
 Existing designs receive no guessed owner and are quarantined. Workers refuse

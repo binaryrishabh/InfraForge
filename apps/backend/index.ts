@@ -8,8 +8,19 @@ import { auth, authSettings } from "./auth/auth";
 import { checkOrigin, requireSession } from "./auth/httpSecurity";
 import { infrastructureRouter } from "./routes/infrastructure.routes";
 import { deploymentRouter } from "./routes/deployment.routes";
+import { assertRuntimeSchema } from "./release/runtime";
+import { createReadiness } from "./health/readiness";
 
+await assertRuntimeSchema();
+const readiness = createReadiness();
 const app = express();
+// Ports are bound to loopback by Compose. The local TLS proxy replaces forwarded headers.
+app.set("trust proxy", config.NODE_ENV === "production" ? 1 : "loopback");
+app.get("/health/live", (_req, res) => res.json({ success: true }));
+app.get(["/health", "/health/ready"], async (_req, res) => {
+  const result = await readiness.check();
+  res.status(result.success ? 200 : 503).json(result);
+});
 app.use(rateLimiter);
 app.use("/api", checkOrigin);
 app.use(cors({ origin: authSettings.origins, credentials: true }));
@@ -18,16 +29,6 @@ app.all("/api/auth/*splat", toNodeHandler(auth));
 app.use("/api/infrastructure", requireSession);
 app.use("/api/deployments", requireSession);
 app.use(express.json());
-
-// Health check
-app.get("/health", (req, res) => {
-  res.status(200).json({
-    success: true,
-    status: "ok",
-    uptime: process.uptime(),
-    timestamp: new Date().toISOString()
-  });
-});
 
 // Domain routers
 app.use("/api/infrastructure", infrastructureRouter);

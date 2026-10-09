@@ -14,6 +14,7 @@ export function readAuthSettings(env: Record<string, string | undefined>) {
   if (!env.BETTER_AUTH_URL || !env.APP_ORIGINS) throw new Error("BETTER_AUTH_URL and APP_ORIGINS are required");
   const baseURL = origin(env.BETTER_AUTH_URL);
   const origins = [...new Set(env.APP_ORIGINS.split(",").map((value) => origin(value.trim())))];
+  if (production && [baseURL, ...origins].some((value) => ["localhost", "127.0.0.1", "[::1]"].includes(new URL(value).hostname))) throw new Error("Production requires public authentication origins");
   const provider = (name: string) => {
     const clientId = env[`${name}_CLIENT_ID`];
     const clientSecret = env[`${name}_CLIENT_SECRET`];

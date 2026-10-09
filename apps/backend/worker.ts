@@ -17,6 +17,10 @@ import {
 } from "./simulator/simulator";
 import { WorkerOwnership } from "./infra/workerOwnership";
 import { config } from "./utils/config";
+import http from "node:http";
+import { workerDatabaseUrl, verifyWorkerSession } from "./infra/workerConnection";
+import { assertRuntimeSchema } from "./release/runtime";
+import { createReadiness } from "./health/readiness";
 import { retireInterruptedRuns, QUARANTINED_RUN_MESSAGE } from "./deployments/restartPolicy";
 import { readRunInputs } from "./deployments/runInputs";
 import { runSecurityScan } from "./stages/securityScan.stages";
@@ -31,14 +35,20 @@ import type { DeploymentStages } from "@infraforge/contracts/deployment";
 import type { DeploymentTimeline } from "@infraforge/contracts/deployment";
 import { deploymentFailureStatus, isRetiredDeployment } from "./utils/deploymentJobPolicy";
 
-if (!config.DATABASE_URL) throw new Error("Worker requires DATABASE_URL");
-const ownership = await WorkerOwnership.acquire(config.DATABASE_URL, () => {
+await assertRuntimeSchema();
+const databaseUrl = workerDatabaseUrl(process.env);
+if (config.NODE_ENV === "production") await verifyWorkerSession(databaseUrl);
+const ownership = await WorkerOwnership.acquire(databaseUrl, () => {
   stopRuntime();
   console.error("Worker ownership lost. Stopping before another worker can advance simulations.");
   process.exit(1);
 });
 await retireInterruptedRuns();
 await startRuntime(ownership);
+let stopping = false;
+let outboxTimer: ReturnType<typeof setTimeout> | undefined;
+let outboxPoll: Promise<void> | undefined;
+let lastOutboxSuccess = 0;
 
 /*
 What setInterval is doing:- OUTBOX PROCESSOR
@@ -55,6 +65,7 @@ notification. Skipping BullMQ reduces latency and keeps the queue clean.
 Later Production upgrade path: Replace polling with CDC (Debezium + Kafka).
 */
 async function pollOutbox() {
+  if (stopping) return;
   let busy = false;
   try {
     await ownership.assertHeld();
@@ -147,6 +158,7 @@ async function pollOutbox() {
       }
     }
     busy = unprocessed.length > 0;
+    lastOutboxSuccess = Date.now();
   } catch (err: any) {
     // Outer catch — errors here don't crash the poller. Next interval retries.
     console.error(`Outbox poller error: ${err.message}`);
@@ -155,11 +167,11 @@ async function pollOutbox() {
     // (1s) so queued work moves quickly; idle = back off (5s) so the
     // serverless DB can auto-suspend. The error path keeps the idle
     // interval so a transient failure never becomes a hot polling loop.
-    setTimeout(pollOutbox, busy ? 1000 : 5000);
+    if (!stopping) outboxTimer = setTimeout(() => { outboxPoll = pollOutbox(); }, busy ? 1000 : 5000);
   }
 }
 
-pollOutbox();
+outboxPoll = pollOutbox();
 
 const worker = new Worker(
   "deployments", // Watches the "deploymets" queue
@@ -392,3 +404,42 @@ const worker = new Worker(
     maxStalledCount: 10, // How many times a job can stall before failing
   },
 );
+
+worker.on("error", () => console.error("Queue worker error; readiness will check its connection and processing loop."));
+await worker.waitUntilReady();
+const readiness = createReadiness(async () => {
+  const backend = worker.getBackend();
+  const [queueConnection, blockingConnection] = await Promise.all([backend.client, backend.blockingClient]);
+  if (stopping || queueConnection.status !== "ready" || blockingConnection?.status !== "ready" ||
+    !worker.isRunning() || Date.now() - lastOutboxSuccess > 15000) {
+    throw new Error("Worker is not processing jobs/outbox");
+  }
+  await ownership.assertHeld();
+});
+const server = http.createServer(async (req, res) => {
+  if (req.url !== "/health/ready") { res.writeHead(404); res.end(); return; }
+  const result = await readiness.check();
+  res.writeHead(result.success ? 200 : 503, { "Content-Type": "application/json" });
+  res.end(JSON.stringify(result));
+});
+server.listen(Number(process.env.WORKER_HEALTH_PORT || 3002));
+
+async function shutdown() {
+  if (stopping) return;
+  stopping = true;
+  server.close();
+  clearTimeout(outboxTimer);
+  const runtimeStopped = stopRuntime();
+  const deadline = setTimeout(() => process.exit(1), 25000);
+  try {
+    await worker.close();
+    await Promise.all([runtimeStopped, outboxPoll]);
+    await readiness.close();
+    await prisma.$disconnect();
+    await ownership.close();
+    clearTimeout(deadline);
+    process.exit(0);
+  } catch { process.exit(1); }
+}
+process.on("SIGTERM", shutdown);
+process.on("SIGINT", shutdown);

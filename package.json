@@ -11,7 +11,7 @@
   "scripts": {
     "dev": "pwsh ./dev.ps1",
     "build": "turbo run build",
-    "typecheck": "turbo run typecheck",
+    "typecheck": "turbo run typecheck && tsc --noEmit -p scripts/release/tsconfig.json",
     "lint": "bun run check:boundaries && turbo run lint",
     "test": "turbo run test",
     "test:integration": "turbo run test:integration --filter=@infraforge/backend",

@@ -148,24 +148,16 @@ VITE_WS_URL=ws://localhost:3001
 bun run test   # domain, catalog, frontend and backend; 30 simulation golden scenarios
 ```
 
-## Docker (all-in-one backend)
+## Docker releases
 
-```bash
-cd apps/backend
-docker compose build
-# Apply the additive migration using the explicitly configured database:
-docker compose run --rm api bun run db:migrate
-docker compose up
-```
-
-This runs Redis + API + worker + ws-server together. The frontend still
-runs via `bun run dev` (or is deployed separately).
-Compose requires the database URL, stable auth secret, public HTTPS API origin,
-permitted HTTPS frontend origins and configured OAuth credentials. Stop old
-application processes before migrating; rehearse this sequence before production.
+Compose runs Redis, API, one worker and the WebSocket server from an exact
+commit-tagged image. Use the [controlled release procedure](docs/DEPLOYMENT.md)
+for migration preflight, maintenance, readiness and compatible container rollback.
+That guide also provides a disposable local rehearsal. For normal development,
+use `pwsh ./dev.ps1`; the frontend is served separately.
 
 ---
 
 Public release still requires provisioned/tested OAuth, reviewed hosted limits and
-an independently verified migration, proxy/TLS and rollback process. Runs interrupted
+a verified hosted backup, proxy/TLS and release process. Runs interrupted
 by a worker restart fail explicitly; complete checkpoint recovery is not implemented.

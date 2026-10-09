@@ -11,4 +11,9 @@ test("auth has no default secret and allows only exact origins", () => {
   expect(readAuthSettings(settings).socialProviders).toEqual({});
   expect(() => readAuthSettings({ ...settings, GOOGLE_CLIENT_ID: "incomplete" })).toThrow();
   expect(() => readAuthSettings({ ...settings, NODE_ENV: "production" })).toThrow();
+  for (const value of ["https://localhost", "https://127.0.0.1", "https://[::1]"]) {
+    const production = { ...settings, NODE_ENV: "production", BETTER_AUTH_URL: "https://api.example.invalid", APP_ORIGINS: "https://app.example.invalid" };
+    expect(() => readAuthSettings({ ...production, BETTER_AUTH_URL: value })).toThrow("public");
+    expect(() => readAuthSettings({ ...production, APP_ORIGINS: value })).toThrow("public");
+  }
 });

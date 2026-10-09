@@ -221,6 +221,7 @@ controlSubscriber.on("message", (_channel: string, message: string) => {
 });
 
 let runtimeTimer: ReturnType<typeof setTimeout> | undefined;
+let runtimeCycle: Promise<void> | undefined;
 let runtimeStopped = true;
 
 export async function startRuntime(ownership: WorkerOwnership) {
@@ -239,15 +240,16 @@ export async function startRuntime(ownership: WorkerOwnership) {
         });
       }
     } catch (error) { console.error("Simulator cycle failed", error); }
-    finally { if (!runtimeStopped) runtimeTimer = setTimeout(cycle, 1000); }
+    finally { if (!runtimeStopped) runtimeTimer = setTimeout(() => { runtimeCycle = cycle(); }, 1000); }
   };
-  runtimeTimer = setTimeout(cycle, 1000);
+  runtimeTimer = setTimeout(() => { runtimeCycle = cycle(); }, 1000);
 }
 
 export function stopRuntime() {
   runtimeStopped = true;
   clearTimeout(runtimeTimer);
   registry.clear();
+  return runtimeCycle ?? Promise.resolve();
 }
 
 async function advanceSimulations() {

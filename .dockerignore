@@ -65,6 +65,12 @@ apps/backend/infra/**
 !apps/backend/auth/
 apps/backend/auth/**
 !apps/backend/auth/*.ts
+!apps/backend/health/
+apps/backend/health/**
+!apps/backend/health/*.ts
+!apps/backend/release/
+apps/backend/release/**
+!apps/backend/release/*.ts
 !apps/backend/deployments/
 apps/backend/deployments/**
 !apps/backend/deployments/*.ts

@@ -17,7 +17,11 @@
       ],
       "env": [
         "VITE_BACKEND_API_URL",
-        "VITE_WS_URL"
+        "VITE_WS_URL",
+        "VERCEL_ENV",
+        "VERCEL_GIT_COMMIT_SHA",
+        "RELEASE_BUILD",
+        "RELEASE_SHA"
       ],
       "outputs": [
         "dist/**"
