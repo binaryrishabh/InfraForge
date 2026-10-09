@@ -6,6 +6,34 @@ See [setup](../Readme.md), [release instructions](DEPLOYMENT.md),
 [authentication](AUTHENTICATION.md) and [integration tests](../apps/backend/tests/integration/README.md).
 Local verification does not establish production readiness.
 
+## Product and engineering principles
+
+The learning loop is **Challenge → Build → Predict → Run → Break → Understand →
+Improve → Run again**. Complete this journey before expanding into unrelated scope.
+Beginner support is a direction, not a claim of current completeness; use contextual
+teaching and progressive disclosure while keeping advanced workflows quick.
+
+Simulation results are authoritative. Explanations must separate recorded observations,
+interpretations and unknowns. Preserve deterministic outcomes for identical inputs and
+ordered controls, and keep shared domain rules, catalog prices and simulation tuning
+in their owning packages. Do not invent telemetry or provider guarantees.
+
+Infrastructure controls need understood real-world meaning, sufficient research,
+meaningful model effects and an honest simulation representation. Research must
+distinguish facts, industry practice, the implemented model, approximations and unknowns;
+use authoritative sources appropriate to the question, including technical books.
+
+The interface may be redesigned within approved scope while preserving working
+save/deploy/live-edit behaviour. Aim for a clear, restrained, polished visual identity.
+Important UI changes need flow/design review, browser and accessibility checks, and
+independent final visual review. Expert review alone does not prove beginner learning.
+
+Inspect source and existing work before editing. Keep changes focused, modules readable
+and migrations additive. Validate affected behaviour with meaningful regressions;
+cross-service changes require disposable integration tests. Never expose credentials,
+modify production without explicit authorization, rewrite published history or promote
+main as part of routine develop work.
+
 ## Accepted architecture
 
 | Workspace | Responsibility |
@@ -84,7 +112,7 @@ endpoints, perform owner smoke tests, then promote the frontend separately.
 | Disposable release rehearsal | All 25 phases passed; actual migrations/failures, backup/restore, legacy records, competing workers, incompatible history, active runs, drift/guards, image rollback, health failures, Redis/PostgreSQL loss, session/transaction poolers, TLS/session/WS security, interruption and teardown |
 | Host file permissions | Unprivileged Linux process could stat maintenance but could not read private accepted state |
 | Workflow syntax | Actionlint 1.7.12 passed; official archive checksum verified |
-| Published-SHA CI | Final result accompanies the Git handoff |
+| B0.5 published-SHA CI | Pass at `4d145d1`; [completed run](https://github.com/binaryrishabh/InfraForge/actions/runs/37980676263) |
 
 Initial Windows integration attempts failed (8 passes/1 failure and 6 passes/3 failures)
 and a concurrent frontend build exhausted memory while Docker became unresponsive.
@@ -117,10 +145,17 @@ These failed attempts are not counted as successful validation.
 ## Evidence and cleanup
 
 Owned test containers, volumes, networks, derived images, the local test image and
-unused interrupted-fixture copies were removed. Unique integration logs/runtime JSON
-remain in OS temporary storage as evidence; required local configuration, ordinary
-build/dependency caches and unrelated resources remain untouched. No new permanent
-scratch archive was created. Final Linux CI evidence is linked in the handoff.
+unused interrupted-fixture copies were removed during B0.5. Unique B0.5 integration
+logs/runtime JSON remain in OS temporary storage as evidence. Its final Linux CI
+result is linked above.
+
+Project state is maintained here. Obsolete local role instructions, planning templates
+and repository-specific tool overrides were removed at the owner's request. Retained
+historical verification evidence and original founder notes are in `docs/evidence.local/`,
+which is ignored by the existing `*.local` rule and must remain unpublished. Redundant
+archives, screenshots, review packets and unused frontend build caches were removed.
+Personal notes and required dependencies, generated Prisma files and environment files
+remain; unrelated resources were untouched.
 
 Next: owner configuration and hosted OAuth/TLS/backup/session-pooling smoke tests,
 then review the promotion to main and an approved maintenance release. No production
