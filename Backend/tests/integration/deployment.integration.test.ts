@@ -10,6 +10,8 @@ import { ResourceHealth } from "@infraforge/domain/resource";
 import { LocalHarness, readLocalSettings, until } from "./localHarness";
 import { layout, seed, workload } from "./scenario";
 import { engineSeed, captureRunInputs } from "../../deployments/runInputs";
+import { SessionFixtures } from "./sessionFixtures";
+import { checkUserIsolation } from "./securityChecks";
 
 type Event = Record<string, any>;
 type Snapshot = SimulationSnapshot & { publishType: string };
@@ -30,6 +32,7 @@ integration("local deployment lifecycle", () => {
     let workerStarted = false;
     let schemaReady = false;
     let actualSeed: string;
+    let sessions: SessionFixtures | undefined;
     const editedSavedLayout = { ...layout, resources: [...layout.resources, { id: "saved-only", type: "Object Storage", x: 900, y: 0 }] };
     const evidencePath = join(tmpdir(), `infraforge-integration-${randomUUID()}.json`);
     const phase = (name: string) => {
@@ -39,7 +42,7 @@ integration("local deployment lifecycle", () => {
 
     const deployment = async (id: string) => (await harness.request(`/deployments/${id}`)).deployment;
     const connectWs = async (id: string) => {
-      const socket = new WebSocket("ws://localhost:3001");
+      const socket = new WebSocket("ws://localhost:3001", { headers: harness.headers });
       sockets.push(socket);
       socket.on("message", (raw) => evidence.wsEvents.push(JSON.parse(raw.toString())));
       await new Promise<void>((resolve, reject) => { socket.once("open", resolve); socket.once("error", reject); });
@@ -101,13 +104,15 @@ integration("local deployment lifecycle", () => {
       phase("prepare");
       await harness.prepare();
       schemaReady = true;
+      sessions = new SessionFixtures(harness);
+      harness.cookie = (await sessions.create()).cookie;
       const invalidJson = await fetch(harness.api + "/infrastructure", {
-        method: "POST", headers: { "Content-Type": "application/json" }, body: "{",
+        method: "POST", headers: harness.headers, body: "{",
       });
       expect(invalidJson.status).toBe(400);
       expect(await invalidJson.json()).toEqual({ success: false, message: "Invalid JSON body" });
       const oversized = await fetch(harness.api + "/infrastructure", {
-        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: "x".repeat(110000) }),
+        method: "POST", headers: harness.headers, body: JSON.stringify({ name: "x".repeat(110000) }),
       });
       expect(oversized.status).toBe(413);
       await harness.request("/infrastructure", { name: "Malformed layout", layout: { resources: [null] } }, "POST", 400);
@@ -159,7 +164,7 @@ integration("local deployment lifecycle", () => {
       expect(created.createdDeployment.liveTopology).toEqual(layout);
       await harness.request(`/infrastructure/${infrastructureId}`, { layout: editedSavedLayout }, "PUT");
       await harness.request(`/infrastructure/${infrastructureId}`, undefined, "DELETE", 409);
-      await harness.request("/infrastructure", undefined, "DELETE", 409);
+      await harness.request("/infrastructure", undefined, "DELETE", 404);
       await expect(harness.sql.query('UPDATE "Deployment" SET "runInputs" = NULL WHERE id = $1', [id])).rejects.toThrow("immutable");
       await expect(harness.sql.query('UPDATE "Deployment" SET seed = $1 WHERE id = $2', ["stale", id])).rejects.toThrow("immutable");
       await expect(harness.sql.query('DELETE FROM "Infrastructure" WHERE id = $1', [infrastructureId])).rejects.toThrow("active");
@@ -296,6 +301,8 @@ integration("local deployment lifecycle", () => {
       expect(harness.logs()["competing-worker"]).toContain("Another InfraForge worker owns");
       await harness.stop("competing-worker");
       evidence.duplicateJobs = { skipped: duplicateJobs.length, runInputsUnchanged: true, competingWorkerExit: 1 };
+      phase("authentication and ownership");
+      evidence.authentication = await checkUserIsolation(harness, sessions, infrastructureId, id);
       await until(async () => (await deployment(invalidDeployment.createdDeployment.id)).status === "failed" || undefined, "readiness failure");
       const rejected = await deployment(invalidDeployment.createdDeployment.id);
       expect(rejected.stages).toEqual([]);
@@ -420,7 +427,7 @@ integration("local deployment lifecycle", () => {
       // Two editors using the same revision: exactly one may commit.
       const concurrent = await Promise.all([liveLayout, layout].map(async (topology) => {
         const response = await fetch(harness.api + `/deployments/${id}/sync-topology`, {
-          method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...topology, expectedRevision: 1 }),
+          method: "POST", headers: harness.headers, body: JSON.stringify({ ...topology, expectedRevision: 1 }),
         });
         return { status: response.status, topology };
       }));
@@ -538,8 +545,8 @@ integration("local deployment lifecycle", () => {
       const raceDesign = (await harness.request("/infrastructure", { name: "Creation deletion race", layout }, "POST", 201)).createdInfrastructure;
       infrastructureIds.push(raceDesign.id);
       const race = await Promise.all([
-        fetch(harness.api + "/deployments", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ infrastructureId: raceDesign.id }) }),
-        fetch(harness.api + `/infrastructure/${raceDesign.id}`, { method: "DELETE" }),
+        fetch(harness.api + "/deployments", { method: "POST", headers: harness.headers, body: JSON.stringify({ infrastructureId: raceDesign.id }) }),
+        fetch(harness.api + `/infrastructure/${raceDesign.id}`, { method: "DELETE", headers: harness.headers }),
       ]);
       if (race[0]!.status === 201) {
         expect(race[1]!.status).toBe(409);
@@ -578,7 +585,7 @@ integration("local deployment lifecycle", () => {
         return Number(counts[1]) === 0 || undefined;
       }, "final subscription cleanup");
       await harness.redis.call("CLIENT", "PAUSE", 1000, "ALL");
-      const pendingSocket = new WebSocket("ws://localhost:3001");
+      const pendingSocket = new WebSocket("ws://localhost:3001", { headers: harness.headers });
       sockets.push(pendingSocket);
       await new Promise<void>((resolve, reject) => { pendingSocket.once("open", resolve); pendingSocket.once("error", reject); });
       pendingSocket.send(JSON.stringify({ type: "subscribe", deploymentId: id }));
@@ -587,7 +594,7 @@ integration("local deployment lifecycle", () => {
       await until(async () => pendingSocket.readyState === WebSocket.CLOSED || undefined, "pending socket disconnect");
       const pendingCounts = await harness.redis.pubsub("NUMSUB", `deployment:${id}:updates`) as Array<string | number>;
       expect(Number(pendingCounts[1])).toBe(0);
-      const oversizedSocket = new WebSocket("ws://localhost:3001");
+      const oversizedSocket = new WebSocket("ws://localhost:3001", { headers: harness.headers });
       sockets.push(oversizedSocket);
       await new Promise<void>((resolve, reject) => { oversizedSocket.once("open", resolve); oversizedSocket.once("error", reject); });
       let closedCode: number | undefined;
@@ -620,6 +627,7 @@ integration("local deployment lifecycle", () => {
         cleanupErrors.push(error instanceof Error ? error.message : "Fixture row cleanup failed");
       } finally {
         try { await queue?.close(); } catch { cleanupErrors.push("Queue close failed"); }
+        try { await sessions?.close(); } catch { cleanupErrors.push("Session fixture cleanup failed"); }
         try { await harness.close(); } catch (error) {
           cleanupErrors.push(error instanceof Error ? error.message : "Harness close failed");
         }

@@ -58,6 +58,12 @@ API port 3100 is the default. Port 3000 requires `INTEGRATION_ALLOW_API_3000=yes
 The test takes about 90–120 seconds because it exercises the actual one-minute checkpoint schedule and transient queue retries. It checks:
 
 - Saved infrastructure create, read, and explicit update.
+- Real Better Auth database sessions for two users. Cross-user reads, updates,
+  deletion, creation, all seven controls and WebSocket subscriptions are rejected.
+  Rejections change no domain rows/outbox and emit no simulator controls.
+- Origin/CSRF rejection, tampered cookies, session expiry/revocation, actual server
+  sign-out, ownerless records/jobs and explicit dry-run-first ownership recovery.
+  Session fixtures use the real adapter; no test login endpoint or fake OAuth exists.
 - Invalid JSON and oversized bodies returning 400/413, malformed saved/live resources returning 400, and subsequent valid requests still succeeding.
 - Real HTTP transaction rollback when the outbox insert fails, plus deployment/outbox creation and dispatch.
 - Duplicate outbox deliveries retaining one job ID and one ordered set of gates; readiness failure completes a queue job; reserved job ID `0` is rejected by the installed BullMQ queue and exhausts outbox retries.
@@ -75,7 +81,12 @@ The test takes about 90–120 seconds because it exercises the actual one-minute
 - Active design deletion is rejected through the API and direct cascade deletion. Creation/deletion races cannot orphan a run; teardown releases deletion only after runtime acknowledgement.
 - A real diagnostic checkpoint is preserved across worker crash/restart. Interrupted LIVE runs explicitly fail; they never restart at tick one. Legacy records are not backfilled and historical records are retained.
 - Terminating the owned worker's PostgreSQL ownership session stops its process and snapshots; the replacement records interruption explicitly. This is a disposable fixture session, never a development/production connection.
-- Applying the new migration over the previous SQL schema preserves existing records and ownership. This check creates and drops its own temporary database on the guarded disposable PostgreSQL server; it never backfills original inputs.
+- Applying the authentication migration over the previous SQL schema preserves
+  all legacy fields/runs and leaves verified ownership NULL. This check creates and
+  drops its own temporary database on the guarded disposable PostgreSQL server;
+  it never invents ownership or backfills original inputs.
+- The separate B0.2 migration regression still verifies that legacy runs receive
+  no reconstructed inputs when the original run-input migration is applied.
 
 Commands are sent while paused. Load/chaos/scaling/speed Redis payloads are checked before resuming; topology edits instead check the committed database revision. There is no durable acknowledgement/log for the other controls, so their boundaries describe the last observed tick rather than exact scheduling under arbitrary process stalls. Each advancement asserts its expected tick count, so an unexpected extra tick fails the fixture.
 

@@ -11,4 +11,8 @@
 export type * from './models/Infrastructure.ts'
 export type * from './models/Deployment.ts'
 export type * from './models/Outbox.ts'
+export type * from './models/User.ts'
+export type * from './models/Session.ts'
+export type * from './models/Account.ts'
+export type * from './models/Verification.ts'
 export type * from './commonInputTypes.ts'

@@ -53,6 +53,8 @@ export function childEnvironment(settings: LocalSettings, inherited: Record<stri
     if (inherited[name] !== undefined) env[name] = inherited[name];
   }
   return { ...env, NODE_ENV: "test", DATABASE_URL: settings.databaseUrl,
+    BETTER_AUTH_URL: `http://localhost:${settings.apiPort}`, APP_ORIGINS: "http://localhost:5173",
+    BETTER_AUTH_SECRET: randomUUID() + randomUUID(),
     PORT: String(settings.apiPort), REDIS_HOST: "127.0.0.1", REDIS_PORT: String(settings.redisPort),
     DOTENV_CONFIG_PATH: join(tmpdir(), `infraforge-no-env-${randomUUID()}`), DOTENV_CONFIG_OVERRIDE: "false" };
 }
@@ -79,6 +81,10 @@ async function assertPortFree(port: number) {
 }
 
 export class LocalHarness {
+  readonly authSecret = randomUUID() + randomUUID();
+  cookie = "";
+  readonly origin = "http://localhost:5173";
+  get headers() { return { "Content-Type": "application/json", Origin: this.origin, Cookie: this.cookie }; }
   readonly sql: Pool;
   readonly redis: Redis;
   readonly api: string;
@@ -109,7 +115,7 @@ export class LocalHarness {
     if (this.children.has(name)) throw new Error(`Process ${name} is already registered`);
     const child = Bun.spawn([process.execPath, "--no-env-file", "--no-install", ...args], {
       cwd: this.cwd,
-      env: childEnvironment(this.settings, process.env),
+      env: { ...childEnvironment(this.settings, process.env), BETTER_AUTH_SECRET: this.authSecret },
       stdout: "pipe", stderr: "pipe",
     });
     this.children.set(name, child);
@@ -199,7 +205,7 @@ export class LocalHarness {
   }
 
   async request(path: string, body?: unknown, method = body === undefined ? "GET" : "POST", status = 200): Promise<any> {
-    const response = await fetch(this.api + path, { method, headers: { "Content-Type": "application/json" },
+    const response = await fetch(this.api + path, { method, headers: this.headers,
       body: body === undefined ? undefined : JSON.stringify(body) });
     const data = await response.json();
     if (response.status !== status) throw new Error(`HTTP ${method} ${path} returned ${response.status}, expected ${status}`);

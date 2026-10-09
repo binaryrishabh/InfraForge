@@ -43,6 +43,15 @@ Backend/**
 !Backend/infra/
 Backend/infra/**
 !Backend/infra/*.ts
+!Backend/auth/
+Backend/auth/**
+!Backend/auth/*.ts
+!Backend/deployments/
+Backend/deployments/**
+!Backend/deployments/*.ts
+!Backend/scripts/
+Backend/scripts/**
+!Backend/scripts/recover-ownership.ts
 !Backend/lib/
 Backend/lib/**
 !Backend/lib/prisma.ts

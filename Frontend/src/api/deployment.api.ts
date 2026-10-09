@@ -1,4 +1,4 @@
-import axios from "axios";
+import { http as axios } from "../client/httpClient";
 import type { Deployment } from "@shared/interface/Deployment.interface";
 import type { WorkloadProfile } from "@infraforge/domain/workload";
 import type { Resource } from "@infraforge/domain/resource";

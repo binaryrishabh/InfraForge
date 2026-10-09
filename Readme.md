@@ -95,7 +95,14 @@ Create `Backend/.env`:
 
 ```
 DATABASE_URL=postgresql://user:password@localhost:5432/infraforge
+BETTER_AUTH_URL=http://localhost:3000
+APP_ORIGINS=http://localhost:5173
 ```
+
+Also set `BETTER_AUTH_SECRET` to a stable random secret of at least 32 characters.
+Enable Google/GitHub with registered OAuth credentials and exact callbacks, as
+described in [authentication setup](docs/AUTHENTICATION.md). Provider secrets stay
+in the backend. Sign-in remains unavailable until a provider is configured.
 
 Then generate the Prisma client and create the schema:
 
@@ -130,8 +137,7 @@ VITE_WS_URL=ws://localhost:3001
 
 ## Quick tour
 
-1. Open http://localhost:5173 and create an account (local mode — the
-   account lives in your browser for now).
+1. Open http://localhost:5173 and sign in with a configured Google/GitHub provider.
 2. Open the **Designer** and click *Load sample architecture*.
 3. **Save**, then **Deploy** — pick a scenario preset (try *Peak Hours*).
 4. Watch the pipeline run, then the canvas go **LIVE** with telemetry cards.
@@ -149,13 +155,20 @@ bun run test   # domain, catalog, frontend and backend; 30 simulation golden sce
 
 ```bash
 cd Backend
-DATABASE_URL=... docker compose up --build
+docker compose build
+# Apply the additive migration using the explicitly configured database:
+docker compose run --rm api bun run db:migrate
+docker compose up
 ```
 
 This runs Redis + API + worker + ws-server together. The frontend still
 runs via `bun run dev` (or is deployed separately).
+Compose requires the database URL, stable auth secret, public HTTPS API origin,
+permitted HTTPS frontend origins and configured OAuth credentials. Stop old
+application processes before migrating; rehearse this sequence before production.
 
 ---
 
-Public multi-user release requires backend authentication and authorization,
-reviewed run persistence/recovery, and an independently verified release process.
+Public release still requires provisioned/tested OAuth, reviewed hosted limits and
+an independently verified migration, proxy/TLS and rollback process. Runs interrupted
+by a worker restart fail explicitly; complete checkpoint recovery is not implemented.

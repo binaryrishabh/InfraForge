@@ -36,6 +36,7 @@ describe("local integration safety guards", () => {
       PATH: "system-path", DATABASE_URL: "wrong", REDIS_HOST: "wrong", PORT: "wrong",
       PGHOST: "wrong", PGOPTIONS: "wrong", PGPASSWORD: "wrong", PGSSLMODE: "wrong",
       DOTENV_CONFIG_PATH: "wrong", DOTENV_CONFIG_OVERRIDE: "true", NODE_OPTIONS: "wrong", BUN_OPTIONS: "wrong",
+      BETTER_AUTH_SECRET: "wrong", APP_ORIGINS: "*", GOOGLE_CLIENT_SECRET: "wrong",
     });
     expect(result.PATH).toBe("system-path");
     expect(result.DATABASE_URL).toBe(settings.databaseUrl);
@@ -43,6 +44,9 @@ describe("local integration safety guards", () => {
     expect(result.PORT).toBe("3100");
     expect(result.DOTENV_CONFIG_PATH).not.toBe("wrong");
     expect(result.DOTENV_CONFIG_OVERRIDE).toBe("false");
+    expect(result.BETTER_AUTH_SECRET).not.toBe("wrong");
+    expect(result.APP_ORIGINS).toBe("http://localhost:5173");
+    expect(result).not.toHaveProperty("GOOGLE_CLIENT_SECRET");
     for (const name of ["PGHOST", "PGOPTIONS", "PGPASSWORD", "PGSSLMODE", "NODE_OPTIONS", "BUN_OPTIONS"]) {
       expect(result).not.toHaveProperty(name);
     }

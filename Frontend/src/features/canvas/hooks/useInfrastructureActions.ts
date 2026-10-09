@@ -1,3 +1,5 @@
+import { useAuthStore } from "../../auth/store/auth.store";
+import { draftKey } from "../../auth/drafts";
 import { toast } from "sonner";
 import { createInfrastructure, deleteInfrastructure, updateInfrastructure } from "@/api/infrastructure.api";
 import { createDeployment } from "@/api/deployment.api";
@@ -20,7 +22,8 @@ export function useInfrastructureActions() {
     store.setSelectedResourceId(null);
     store.setUndoStack([]);
     store.setRedoStack([]);
-    localStorage.removeItem("Infraforge_Infrastucture_Draft");
+    const userId = useAuthStore.getState().user?.id;
+    if (userId) localStorage.removeItem(draftKey(userId));
   };
 
   const handleSaveWithName = async (name: string) => {
@@ -73,7 +76,8 @@ export function useInfrastructureActions() {
     store.setSelectedResourceId(null);
     store.setUndoStack([]);
     store.setRedoStack([]);
-    localStorage.removeItem("Infraforge_Infrastucture_Draft");
+    const userId = useAuthStore.getState().user?.id;
+    if (userId) localStorage.removeItem(draftKey(userId));
     return deletedInfrastructure;
   };
 

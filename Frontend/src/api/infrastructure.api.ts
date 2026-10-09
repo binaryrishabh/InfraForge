@@ -1,4 +1,4 @@
-import axios from "axios";
+import { http as axios } from "../client/httpClient";
 
 import type { Infrastructure } from "@shared/interface/Infrastructure.interface";
 import { API_URL } from "../client/httpClient";

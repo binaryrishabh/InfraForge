@@ -25,5 +25,7 @@ the client and checks all workspaces. Root `bun run test` runs unit and simulati
 tests. [Integration tests](tests/integration/README.md) require fresh disposable
 services and never use the ordinary development database.
 
-Authentication, per-user authorization and full checkpoint recovery remain release
-blockers. The current backend is an educational development baseline.
+Configure [authentication](../docs/AUTHENTICATION.md) before starting the API and
+WebSocket server. Database-backed sessions and verified design ownership protect
+HTTP/WS access. External OAuth credentials and a production release rehearsal
+remain necessary; full checkpoint recovery is not implemented.

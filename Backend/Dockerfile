@@ -12,6 +12,9 @@ RUN bun install --frozen-lockfile
 # Preserve the current source paths and exclude existing generated clients.
 COPY Backend/index.ts Backend/worker.ts Backend/ws-server.ts Backend/tsconfig.json Backend/prisma.config.ts ./Backend/
 COPY Backend/infra ./Backend/infra/
+COPY Backend/auth ./Backend/auth/
+COPY Backend/deployments ./Backend/deployments/
+COPY Backend/scripts ./Backend/scripts/
 COPY Backend/lib/prisma.ts ./Backend/lib/
 COPY Backend/routes ./Backend/routes/
 COPY Backend/simulator ./Backend/simulator/

@@ -9,6 +9,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useAuthStore } from "@/features/auth/store/auth.store";
+import { toast } from "sonner";
 import {
   FLOATING_CHROME_SURFACE,
   FLOATING_CHROME_SHADOW,
@@ -83,8 +84,8 @@ export function ShellMenu({ variant = "floating" }: ShellMenuProps) {
 
   const handleSignOut = async () => {
     setOpen(false);
-    await signOut();
-    navigate("/signin");
+    try { await signOut(); navigate("/signin"); }
+    catch { toast.error("Sign-out could not be confirmed. Please try again."); }
   };
 
   const goTo = (path: string) => {

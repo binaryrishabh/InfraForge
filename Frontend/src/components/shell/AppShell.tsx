@@ -1,14 +1,15 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, Network, FileText, Settings, LogOut } from 'lucide-react';
 import { useAuthStore } from '@/features/auth/store/auth.store';
+import { toast } from 'sonner';
 
 export function AppShell() {
   const navigate = useNavigate();
   const { user, signOut } = useAuthStore();
 
   const handleSignOut = async () => {
-    await signOut();
-    navigate('/signin');
+    try { await signOut(); navigate('/signin'); }
+    catch { toast.error('Sign-out could not be confirmed. Please try again.'); }
   };
 
   const navItems = [

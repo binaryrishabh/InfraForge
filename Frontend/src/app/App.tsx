@@ -24,7 +24,19 @@ function App() {
   const hydrate = useAuthStore(s => s.hydrate);
 
   useEffect(() => {
-    hydrate();
+    void hydrate();
+    const refresh = () => { void hydrate(); };
+    const expire = () => useAuthStore.getState().expire();
+    window.addEventListener("focus", refresh);
+    window.addEventListener("infraforge:session-ended", expire);
+    const interval = setInterval(refresh, 60000);
+    const channel = new BroadcastChannel("infraforge-session");
+    channel.onmessage = refresh;
+    return () => {
+      clearInterval(interval); channel.close();
+      window.removeEventListener("focus", refresh);
+      window.removeEventListener("infraforge:session-ended", expire);
+    };
   }, [hydrate]);
 
   return (

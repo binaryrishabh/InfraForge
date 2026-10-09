@@ -7,8 +7,8 @@ import { layout, workload } from "./scenario";
 
 const integration = process.env.INTEGRATION_RUN === "1" ? describe : describe.skip;
 
-integration("additive authentication migration", () => {
-  test("preserves legacy records without inventing owners or run inputs", async () => {
+integration("additive run-input migration", () => {
+  test("preserves records created under the previous schema without backfilling inputs", async () => {
     const settings = readLocalSettings(process.env);
     const admin = new Pool({ connectionString: settings.databaseUrl, ssl: false, options: "" });
     const name = `infraforge_it_${randomUUID().replaceAll("-", "")}`;
@@ -24,8 +24,8 @@ integration("additive authentication migration", () => {
       created = true;
       const migrations = new URL("../../prisma/migrations/", import.meta.url);
       const folders = (await readdir(migrations, { withFileTypes: true })).filter((entry) => entry.isDirectory())
-        .map((entry) => entry.name).sort();
-      expect(folders.at(-1)).toBe("20261009010000_add_authentication");
+        .map((entry) => entry.name).filter((name) => name <= "20261009000000_capture_run_inputs").sort();
+      expect(folders.at(-1)).toBe("20261009000000_capture_run_inputs");
       for (const folder of folders.slice(0, -1)) {
         await database.query(await Bun.file(new URL(`${folder}/migration.sql`, migrations)).text());
       }
@@ -40,14 +40,12 @@ integration("additive authentication migration", () => {
       const beforeDesign = (await database.query('SELECT * FROM "Infrastructure"')).rows;
       const beforeRuns = (await database.query('SELECT * FROM "Deployment" ORDER BY id')).rows;
       await database.query(await Bun.file(new URL(`${folders.at(-1)}/migration.sql`, migrations)).text());
-      const migratedDesigns = (await database.query('SELECT * FROM "Infrastructure"')).rows;
-      expect(migratedDesigns.map(({ ownerId, ...preserved }) => preserved)).toEqual(beforeDesign);
-      expect(migratedDesigns[0].ownerId).toBeNull();
+      expect((await database.query('SELECT * FROM "Infrastructure"')).rows).toEqual(beforeDesign);
       const after = (await database.query('SELECT * FROM "Deployment" ORDER BY id')).rows;
       expect(after).toHaveLength(3);
       for (let i = 0; i < after.length; i++) {
-        const { runInputs, liveTopology, topologyRevision, runtimeActive } = after[i];
-        expect(after[i]).toEqual(beforeRuns[i]);
+        const { runInputs, liveTopology, topologyRevision, runtimeActive, ...preserved } = after[i];
+        expect(preserved).toEqual(beforeRuns[i]);
         expect(runInputs).toBeNull();
         expect(liveTopology).toBeNull();
         expect(topologyRevision).toBe(0);

@@ -27,6 +27,7 @@ export type AggregateInfrastructure = {
 export type InfrastructureMinAggregateOutputType = {
   id: string | null
   userId: string | null
+  ownerId: string | null
   name: string | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -35,6 +36,7 @@ export type InfrastructureMinAggregateOutputType = {
 export type InfrastructureMaxAggregateOutputType = {
   id: string | null
   userId: string | null
+  ownerId: string | null
   name: string | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -43,6 +45,7 @@ export type InfrastructureMaxAggregateOutputType = {
 export type InfrastructureCountAggregateOutputType = {
   id: number
   userId: number
+  ownerId: number
   name: number
   layout: number
   createdAt: number
@@ -54,6 +57,7 @@ export type InfrastructureCountAggregateOutputType = {
 export type InfrastructureMinAggregateInputType = {
   id?: true
   userId?: true
+  ownerId?: true
   name?: true
   createdAt?: true
   updatedAt?: true
@@ -62,6 +66,7 @@ export type InfrastructureMinAggregateInputType = {
 export type InfrastructureMaxAggregateInputType = {
   id?: true
   userId?: true
+  ownerId?: true
   name?: true
   createdAt?: true
   updatedAt?: true
@@ -70,6 +75,7 @@ export type InfrastructureMaxAggregateInputType = {
 export type InfrastructureCountAggregateInputType = {
   id?: true
   userId?: true
+  ownerId?: true
   name?: true
   layout?: true
   createdAt?: true
@@ -152,6 +158,7 @@ export type InfrastructureGroupByArgs<ExtArgs extends runtime.Types.Extensions.I
 export type InfrastructureGroupByOutputType = {
   id: string
   userId: string
+  ownerId: string | null
   name: string
   layout: runtime.JsonValue
   createdAt: Date
@@ -182,20 +189,24 @@ export type InfrastructureWhereInput = {
   NOT?: Prisma.InfrastructureWhereInput | Prisma.InfrastructureWhereInput[]
   id?: Prisma.StringFilter<"Infrastructure"> | string
   userId?: Prisma.StringFilter<"Infrastructure"> | string
+  ownerId?: Prisma.StringNullableFilter<"Infrastructure"> | string | null
   name?: Prisma.StringFilter<"Infrastructure"> | string
   layout?: Prisma.JsonFilter<"Infrastructure">
   createdAt?: Prisma.DateTimeFilter<"Infrastructure"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Infrastructure"> | Date | string
+  owner?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
   deployments?: Prisma.DeploymentListRelationFilter
 }
 
 export type InfrastructureOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   userId?: Prisma.SortOrder
+  ownerId?: Prisma.SortOrderInput | Prisma.SortOrder
   name?: Prisma.SortOrder
   layout?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  owner?: Prisma.UserOrderByWithRelationInput
   deployments?: Prisma.DeploymentOrderByRelationAggregateInput
 }
 
@@ -205,16 +216,19 @@ export type InfrastructureWhereUniqueInput = Prisma.AtLeast<{
   OR?: Prisma.InfrastructureWhereInput[]
   NOT?: Prisma.InfrastructureWhereInput | Prisma.InfrastructureWhereInput[]
   userId?: Prisma.StringFilter<"Infrastructure"> | string
+  ownerId?: Prisma.StringNullableFilter<"Infrastructure"> | string | null
   name?: Prisma.StringFilter<"Infrastructure"> | string
   layout?: Prisma.JsonFilter<"Infrastructure">
   createdAt?: Prisma.DateTimeFilter<"Infrastructure"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Infrastructure"> | Date | string
+  owner?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
   deployments?: Prisma.DeploymentListRelationFilter
 }, "id">
 
 export type InfrastructureOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   userId?: Prisma.SortOrder
+  ownerId?: Prisma.SortOrderInput | Prisma.SortOrder
   name?: Prisma.SortOrder
   layout?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -230,6 +244,7 @@ export type InfrastructureScalarWhereWithAggregatesInput = {
   NOT?: Prisma.InfrastructureScalarWhereWithAggregatesInput | Prisma.InfrastructureScalarWhereWithAggregatesInput[]
   id?: Prisma.StringWithAggregatesFilter<"Infrastructure"> | string
   userId?: Prisma.StringWithAggregatesFilter<"Infrastructure"> | string
+  ownerId?: Prisma.StringNullableWithAggregatesFilter<"Infrastructure"> | string | null
   name?: Prisma.StringWithAggregatesFilter<"Infrastructure"> | string
   layout?: Prisma.JsonWithAggregatesFilter<"Infrastructure">
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Infrastructure"> | Date | string
@@ -238,17 +253,19 @@ export type InfrastructureScalarWhereWithAggregatesInput = {
 
 export type InfrastructureCreateInput = {
   id?: string
-  userId?: string
+  userId: string
   name: string
   layout: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
+  owner?: Prisma.UserCreateNestedOneWithoutDesignsInput
   deployments?: Prisma.DeploymentCreateNestedManyWithoutInfrastructureInput
 }
 
 export type InfrastructureUncheckedCreateInput = {
   id?: string
-  userId?: string
+  userId: string
+  ownerId?: string | null
   name: string
   layout: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
@@ -263,12 +280,14 @@ export type InfrastructureUpdateInput = {
   layout?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  owner?: Prisma.UserUpdateOneWithoutDesignsNestedInput
   deployments?: Prisma.DeploymentUpdateManyWithoutInfrastructureNestedInput
 }
 
 export type InfrastructureUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
+  ownerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.StringFieldUpdateOperationsInput | string
   layout?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -278,7 +297,8 @@ export type InfrastructureUncheckedUpdateInput = {
 
 export type InfrastructureCreateManyInput = {
   id?: string
-  userId?: string
+  userId: string
+  ownerId?: string | null
   name: string
   layout: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
@@ -297,6 +317,7 @@ export type InfrastructureUpdateManyMutationInput = {
 export type InfrastructureUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
+  ownerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.StringFieldUpdateOperationsInput | string
   layout?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -306,6 +327,7 @@ export type InfrastructureUncheckedUpdateManyInput = {
 export type InfrastructureCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   userId?: Prisma.SortOrder
+  ownerId?: Prisma.SortOrder
   name?: Prisma.SortOrder
   layout?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -315,6 +337,7 @@ export type InfrastructureCountOrderByAggregateInput = {
 export type InfrastructureMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   userId?: Prisma.SortOrder
+  ownerId?: Prisma.SortOrder
   name?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -323,6 +346,7 @@ export type InfrastructureMaxOrderByAggregateInput = {
 export type InfrastructureMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   userId?: Prisma.SortOrder
+  ownerId?: Prisma.SortOrder
   name?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -333,12 +357,26 @@ export type InfrastructureScalarRelationFilter = {
   isNot?: Prisma.InfrastructureWhereInput
 }
 
+export type InfrastructureListRelationFilter = {
+  every?: Prisma.InfrastructureWhereInput
+  some?: Prisma.InfrastructureWhereInput
+  none?: Prisma.InfrastructureWhereInput
+}
+
+export type InfrastructureOrderByRelationAggregateInput = {
+  _count?: Prisma.SortOrder
+}
+
 export type StringFieldUpdateOperationsInput = {
   set?: string
 }
 
 export type DateTimeFieldUpdateOperationsInput = {
   set?: Date | string
+}
+
+export type NullableStringFieldUpdateOperationsInput = {
+  set?: string | null
 }
 
 export type InfrastructureCreateNestedOneWithoutDeploymentsInput = {
@@ -355,18 +393,62 @@ export type InfrastructureUpdateOneRequiredWithoutDeploymentsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.InfrastructureUpdateToOneWithWhereWithoutDeploymentsInput, Prisma.InfrastructureUpdateWithoutDeploymentsInput>, Prisma.InfrastructureUncheckedUpdateWithoutDeploymentsInput>
 }
 
+export type InfrastructureCreateNestedManyWithoutOwnerInput = {
+  create?: Prisma.XOR<Prisma.InfrastructureCreateWithoutOwnerInput, Prisma.InfrastructureUncheckedCreateWithoutOwnerInput> | Prisma.InfrastructureCreateWithoutOwnerInput[] | Prisma.InfrastructureUncheckedCreateWithoutOwnerInput[]
+  connectOrCreate?: Prisma.InfrastructureCreateOrConnectWithoutOwnerInput | Prisma.InfrastructureCreateOrConnectWithoutOwnerInput[]
+  createMany?: Prisma.InfrastructureCreateManyOwnerInputEnvelope
+  connect?: Prisma.InfrastructureWhereUniqueInput | Prisma.InfrastructureWhereUniqueInput[]
+}
+
+export type InfrastructureUncheckedCreateNestedManyWithoutOwnerInput = {
+  create?: Prisma.XOR<Prisma.InfrastructureCreateWithoutOwnerInput, Prisma.InfrastructureUncheckedCreateWithoutOwnerInput> | Prisma.InfrastructureCreateWithoutOwnerInput[] | Prisma.InfrastructureUncheckedCreateWithoutOwnerInput[]
+  connectOrCreate?: Prisma.InfrastructureCreateOrConnectWithoutOwnerInput | Prisma.InfrastructureCreateOrConnectWithoutOwnerInput[]
+  createMany?: Prisma.InfrastructureCreateManyOwnerInputEnvelope
+  connect?: Prisma.InfrastructureWhereUniqueInput | Prisma.InfrastructureWhereUniqueInput[]
+}
+
+export type InfrastructureUpdateManyWithoutOwnerNestedInput = {
+  create?: Prisma.XOR<Prisma.InfrastructureCreateWithoutOwnerInput, Prisma.InfrastructureUncheckedCreateWithoutOwnerInput> | Prisma.InfrastructureCreateWithoutOwnerInput[] | Prisma.InfrastructureUncheckedCreateWithoutOwnerInput[]
+  connectOrCreate?: Prisma.InfrastructureCreateOrConnectWithoutOwnerInput | Prisma.InfrastructureCreateOrConnectWithoutOwnerInput[]
+  upsert?: Prisma.InfrastructureUpsertWithWhereUniqueWithoutOwnerInput | Prisma.InfrastructureUpsertWithWhereUniqueWithoutOwnerInput[]
+  createMany?: Prisma.InfrastructureCreateManyOwnerInputEnvelope
+  set?: Prisma.InfrastructureWhereUniqueInput | Prisma.InfrastructureWhereUniqueInput[]
+  disconnect?: Prisma.InfrastructureWhereUniqueInput | Prisma.InfrastructureWhereUniqueInput[]
+  delete?: Prisma.InfrastructureWhereUniqueInput | Prisma.InfrastructureWhereUniqueInput[]
+  connect?: Prisma.InfrastructureWhereUniqueInput | Prisma.InfrastructureWhereUniqueInput[]
+  update?: Prisma.InfrastructureUpdateWithWhereUniqueWithoutOwnerInput | Prisma.InfrastructureUpdateWithWhereUniqueWithoutOwnerInput[]
+  updateMany?: Prisma.InfrastructureUpdateManyWithWhereWithoutOwnerInput | Prisma.InfrastructureUpdateManyWithWhereWithoutOwnerInput[]
+  deleteMany?: Prisma.InfrastructureScalarWhereInput | Prisma.InfrastructureScalarWhereInput[]
+}
+
+export type InfrastructureUncheckedUpdateManyWithoutOwnerNestedInput = {
+  create?: Prisma.XOR<Prisma.InfrastructureCreateWithoutOwnerInput, Prisma.InfrastructureUncheckedCreateWithoutOwnerInput> | Prisma.InfrastructureCreateWithoutOwnerInput[] | Prisma.InfrastructureUncheckedCreateWithoutOwnerInput[]
+  connectOrCreate?: Prisma.InfrastructureCreateOrConnectWithoutOwnerInput | Prisma.InfrastructureCreateOrConnectWithoutOwnerInput[]
+  upsert?: Prisma.InfrastructureUpsertWithWhereUniqueWithoutOwnerInput | Prisma.InfrastructureUpsertWithWhereUniqueWithoutOwnerInput[]
+  createMany?: Prisma.InfrastructureCreateManyOwnerInputEnvelope
+  set?: Prisma.InfrastructureWhereUniqueInput | Prisma.InfrastructureWhereUniqueInput[]
+  disconnect?: Prisma.InfrastructureWhereUniqueInput | Prisma.InfrastructureWhereUniqueInput[]
+  delete?: Prisma.InfrastructureWhereUniqueInput | Prisma.InfrastructureWhereUniqueInput[]
+  connect?: Prisma.InfrastructureWhereUniqueInput | Prisma.InfrastructureWhereUniqueInput[]
+  update?: Prisma.InfrastructureUpdateWithWhereUniqueWithoutOwnerInput | Prisma.InfrastructureUpdateWithWhereUniqueWithoutOwnerInput[]
+  updateMany?: Prisma.InfrastructureUpdateManyWithWhereWithoutOwnerInput | Prisma.InfrastructureUpdateManyWithWhereWithoutOwnerInput[]
+  deleteMany?: Prisma.InfrastructureScalarWhereInput | Prisma.InfrastructureScalarWhereInput[]
+}
+
 export type InfrastructureCreateWithoutDeploymentsInput = {
   id?: string
-  userId?: string
+  userId: string
   name: string
   layout: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
+  owner?: Prisma.UserCreateNestedOneWithoutDesignsInput
 }
 
 export type InfrastructureUncheckedCreateWithoutDeploymentsInput = {
   id?: string
-  userId?: string
+  userId: string
+  ownerId?: string | null
   name: string
   layout: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
@@ -396,9 +478,108 @@ export type InfrastructureUpdateWithoutDeploymentsInput = {
   layout?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  owner?: Prisma.UserUpdateOneWithoutDesignsNestedInput
 }
 
 export type InfrastructureUncheckedUpdateWithoutDeploymentsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  userId?: Prisma.StringFieldUpdateOperationsInput | string
+  ownerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  layout?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type InfrastructureCreateWithoutOwnerInput = {
+  id?: string
+  userId: string
+  name: string
+  layout: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  deployments?: Prisma.DeploymentCreateNestedManyWithoutInfrastructureInput
+}
+
+export type InfrastructureUncheckedCreateWithoutOwnerInput = {
+  id?: string
+  userId: string
+  name: string
+  layout: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  deployments?: Prisma.DeploymentUncheckedCreateNestedManyWithoutInfrastructureInput
+}
+
+export type InfrastructureCreateOrConnectWithoutOwnerInput = {
+  where: Prisma.InfrastructureWhereUniqueInput
+  create: Prisma.XOR<Prisma.InfrastructureCreateWithoutOwnerInput, Prisma.InfrastructureUncheckedCreateWithoutOwnerInput>
+}
+
+export type InfrastructureCreateManyOwnerInputEnvelope = {
+  data: Prisma.InfrastructureCreateManyOwnerInput | Prisma.InfrastructureCreateManyOwnerInput[]
+  skipDuplicates?: boolean
+}
+
+export type InfrastructureUpsertWithWhereUniqueWithoutOwnerInput = {
+  where: Prisma.InfrastructureWhereUniqueInput
+  update: Prisma.XOR<Prisma.InfrastructureUpdateWithoutOwnerInput, Prisma.InfrastructureUncheckedUpdateWithoutOwnerInput>
+  create: Prisma.XOR<Prisma.InfrastructureCreateWithoutOwnerInput, Prisma.InfrastructureUncheckedCreateWithoutOwnerInput>
+}
+
+export type InfrastructureUpdateWithWhereUniqueWithoutOwnerInput = {
+  where: Prisma.InfrastructureWhereUniqueInput
+  data: Prisma.XOR<Prisma.InfrastructureUpdateWithoutOwnerInput, Prisma.InfrastructureUncheckedUpdateWithoutOwnerInput>
+}
+
+export type InfrastructureUpdateManyWithWhereWithoutOwnerInput = {
+  where: Prisma.InfrastructureScalarWhereInput
+  data: Prisma.XOR<Prisma.InfrastructureUpdateManyMutationInput, Prisma.InfrastructureUncheckedUpdateManyWithoutOwnerInput>
+}
+
+export type InfrastructureScalarWhereInput = {
+  AND?: Prisma.InfrastructureScalarWhereInput | Prisma.InfrastructureScalarWhereInput[]
+  OR?: Prisma.InfrastructureScalarWhereInput[]
+  NOT?: Prisma.InfrastructureScalarWhereInput | Prisma.InfrastructureScalarWhereInput[]
+  id?: Prisma.StringFilter<"Infrastructure"> | string
+  userId?: Prisma.StringFilter<"Infrastructure"> | string
+  ownerId?: Prisma.StringNullableFilter<"Infrastructure"> | string | null
+  name?: Prisma.StringFilter<"Infrastructure"> | string
+  layout?: Prisma.JsonFilter<"Infrastructure">
+  createdAt?: Prisma.DateTimeFilter<"Infrastructure"> | Date | string
+  updatedAt?: Prisma.DateTimeFilter<"Infrastructure"> | Date | string
+}
+
+export type InfrastructureCreateManyOwnerInput = {
+  id?: string
+  userId: string
+  name: string
+  layout: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Date | string
+  updatedAt?: Date | string
+}
+
+export type InfrastructureUpdateWithoutOwnerInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  userId?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  layout?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  deployments?: Prisma.DeploymentUpdateManyWithoutInfrastructureNestedInput
+}
+
+export type InfrastructureUncheckedUpdateWithoutOwnerInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  userId?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  layout?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  deployments?: Prisma.DeploymentUncheckedUpdateManyWithoutInfrastructureNestedInput
+}
+
+export type InfrastructureUncheckedUpdateManyWithoutOwnerInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
@@ -441,10 +622,12 @@ export type InfrastructureCountOutputTypeCountDeploymentsArgs<ExtArgs extends ru
 export type InfrastructureSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   userId?: boolean
+  ownerId?: boolean
   name?: boolean
   layout?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  owner?: boolean | Prisma.Infrastructure$ownerArgs<ExtArgs>
   deployments?: boolean | Prisma.Infrastructure$deploymentsArgs<ExtArgs>
   _count?: boolean | Prisma.InfrastructureCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["infrastructure"]>
@@ -452,46 +635,58 @@ export type InfrastructureSelect<ExtArgs extends runtime.Types.Extensions.Intern
 export type InfrastructureSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   userId?: boolean
+  ownerId?: boolean
   name?: boolean
   layout?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  owner?: boolean | Prisma.Infrastructure$ownerArgs<ExtArgs>
 }, ExtArgs["result"]["infrastructure"]>
 
 export type InfrastructureSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   userId?: boolean
+  ownerId?: boolean
   name?: boolean
   layout?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  owner?: boolean | Prisma.Infrastructure$ownerArgs<ExtArgs>
 }, ExtArgs["result"]["infrastructure"]>
 
 export type InfrastructureSelectScalar = {
   id?: boolean
   userId?: boolean
+  ownerId?: boolean
   name?: boolean
   layout?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type InfrastructureOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "name" | "layout" | "createdAt" | "updatedAt", ExtArgs["result"]["infrastructure"]>
+export type InfrastructureOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "ownerId" | "name" | "layout" | "createdAt" | "updatedAt", ExtArgs["result"]["infrastructure"]>
 export type InfrastructureInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  owner?: boolean | Prisma.Infrastructure$ownerArgs<ExtArgs>
   deployments?: boolean | Prisma.Infrastructure$deploymentsArgs<ExtArgs>
   _count?: boolean | Prisma.InfrastructureCountOutputTypeDefaultArgs<ExtArgs>
 }
-export type InfrastructureIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
-export type InfrastructureIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
+export type InfrastructureIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  owner?: boolean | Prisma.Infrastructure$ownerArgs<ExtArgs>
+}
+export type InfrastructureIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  owner?: boolean | Prisma.Infrastructure$ownerArgs<ExtArgs>
+}
 
 export type $InfrastructurePayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "Infrastructure"
   objects: {
+    owner: Prisma.$UserPayload<ExtArgs> | null
     deployments: Prisma.$DeploymentPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
     userId: string
+    ownerId: string | null
     name: string
     layout: runtime.JsonValue
     createdAt: Date
@@ -890,6 +1085,7 @@ readonly fields: InfrastructureFieldRefs;
  */
 export interface Prisma__InfrastructureClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
+  owner<T extends Prisma.Infrastructure$ownerArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Infrastructure$ownerArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   deployments<T extends Prisma.Infrastructure$deploymentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Infrastructure$deploymentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$DeploymentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
@@ -922,6 +1118,7 @@ export interface Prisma__InfrastructureClient<T, Null = never, ExtArgs extends r
 export interface InfrastructureFieldRefs {
   readonly id: Prisma.FieldRef<"Infrastructure", 'String'>
   readonly userId: Prisma.FieldRef<"Infrastructure", 'String'>
+  readonly ownerId: Prisma.FieldRef<"Infrastructure", 'String'>
   readonly name: Prisma.FieldRef<"Infrastructure", 'String'>
   readonly layout: Prisma.FieldRef<"Infrastructure", 'Json'>
   readonly createdAt: Prisma.FieldRef<"Infrastructure", 'DateTime'>
@@ -1180,6 +1377,10 @@ export type InfrastructureCreateManyAndReturnArgs<ExtArgs extends runtime.Types.
    */
   data: Prisma.InfrastructureCreateManyInput | Prisma.InfrastructureCreateManyInput[]
   skipDuplicates?: boolean
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.InfrastructureIncludeCreateManyAndReturn<ExtArgs> | null
 }
 
 /**
@@ -1250,6 +1451,10 @@ export type InfrastructureUpdateManyAndReturnArgs<ExtArgs extends runtime.Types.
    * Limit how many Infrastructures to update.
    */
   limit?: number
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.InfrastructureIncludeUpdateManyAndReturn<ExtArgs> | null
 }
 
 /**
@@ -1316,6 +1521,25 @@ export type InfrastructureDeleteManyArgs<ExtArgs extends runtime.Types.Extension
    * Limit how many Infrastructures to delete.
    */
   limit?: number
+}
+
+/**
+ * Infrastructure.owner
+ */
+export type Infrastructure$ownerArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the User
+   */
+  select?: Prisma.UserSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the User
+   */
+  omit?: Prisma.UserOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.UserInclude<ExtArgs> | null
+  where?: Prisma.UserWhereInput
 }
 
 /**

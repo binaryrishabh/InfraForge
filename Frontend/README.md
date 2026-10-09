@@ -9,8 +9,9 @@ From this directory, `bun run dev` serves `http://localhost:5173/`; `bun run bui
 commands also check its domain/catalog dependencies and package boundaries.
 
 API and WebSocket addresses use `VITE_BACKEND_API_URL` and `VITE_WS_URL`, with local
-defaults. Browser authentication is a local placeholder, not backend access control.
-Drafts live in localStorage. Explicit save/update and the pre-run deploy path persist
+defaults. [Authentication](../docs/AUTHENTICATION.md) uses backend sessions and
+configured Google/GitHub sign-in. Drafts use server-user-specific localStorage keys.
+Explicit save/update and the pre-run deploy path persist
 layouts through the API; live edits affect the running simulation without saving.
 Monitoring displays backend snapshots; it must not generate simulation results.
 

@@ -1,4 +1,6 @@
 import { useEffect } from "react";
+import { useAuthStore } from "../../auth/store/auth.store";
+import { draftKey } from "../../auth/drafts";
 import { useCanvasStore } from "../store/canvasStore";
 import {
   CARD_LAYOUT_VERSION,
@@ -8,13 +10,14 @@ import {
 // Zero-subscription persistence: restore once on mount via getState(), then
 // persist via store.subscribe() so this hook never re-renders its host.
 export function useCanvasPersistence() {
+  const userId = useAuthStore((state) => state.user?.id);
   // One-time restore from localStorage on mount, migrating legacy coordinates.
   // Guard: if the store is already initialized (e.g. the dashboard just loaded
   // a live reattach layout), do NOT overwrite it with a stale local draft.
   useEffect(() => {
-    if (useCanvasStore.getState().isInitialized) return;
+    if (!userId || useCanvasStore.getState().isInitialized) return;
 
-    const infra = localStorage.getItem("Infraforge_Infrastucture_Draft");
+    const infra = localStorage.getItem(draftKey(userId));
     if (infra) {
       const parsed = JSON.parse(infra);
       const store = useCanvasStore.getState();
@@ -29,11 +32,12 @@ export function useCanvasPersistence() {
       store.setCurrentLayoutSaved(parsed.saved);
     }
     useCanvasStore.getState().setIsInitialized(true);
-  }, []);
+  }, [userId]);
 
   // Persist to localStorage on every store change — debounced by 300ms so a
   // drag (which fires ~60 store updates/sec) does not thrash localStorage.
   useEffect(() => {
+    if (!userId) return;
     let saveTimeout: ReturnType<typeof setTimeout> | null = null;
 
     const unsubscribe = useCanvasStore.subscribe((state) => {
@@ -41,8 +45,9 @@ export function useCanvasPersistence() {
 
       if (saveTimeout) clearTimeout(saveTimeout);
       saveTimeout = setTimeout(() => {
+        if (useAuthStore.getState().user?.id !== userId) return;
         localStorage.setItem(
-          "Infraforge_Infrastucture_Draft",
+          draftKey(userId),
           JSON.stringify({
             canvasResources: state.resources,
             connectionLines: state.connectionLines,
@@ -59,5 +64,5 @@ export function useCanvasPersistence() {
       unsubscribe();
       if (saveTimeout) clearTimeout(saveTimeout);
     };
-  }, []);
+  }, [userId]);
 }

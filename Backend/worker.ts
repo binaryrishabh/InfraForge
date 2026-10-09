@@ -17,7 +17,7 @@ import {
 } from "./simulator/simulator";
 import { WorkerOwnership } from "./infra/workerOwnership";
 import { config } from "./utils/config";
-import { retireInterruptedRuns } from "./deployments/restartPolicy";
+import { retireInterruptedRuns, QUARANTINED_RUN_MESSAGE } from "./deployments/restartPolicy";
 import { readRunInputs } from "./deployments/runInputs";
 import { runSecurityScan } from "./stages/securityScan.stages";
 import { runCostEstimation } from "./stages/costEstimation.stages";
@@ -174,6 +174,7 @@ const worker = new Worker(
         where: {
           id: deploymentId,
         },
+        include: { infrastructure: { select: { ownerId: true } } },
       });
 
       if (!deploymentState) {
@@ -196,7 +197,10 @@ const worker = new Worker(
       }
 
       let inputs;
-      try { inputs = readRunInputs(deploymentState.runInputs); }
+      try {
+        if (!deploymentState.infrastructure.ownerId) throw new Error(QUARANTINED_RUN_MESSAGE);
+        inputs = readRunInputs(deploymentState.runInputs);
+      }
       catch (error) {
         const message = error instanceof Error ? error.message : "Unsupported run inputs";
         await prisma.deployment.updateMany({

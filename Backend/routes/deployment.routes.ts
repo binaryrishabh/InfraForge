@@ -33,7 +33,7 @@ deploymentRouter.post("/", async (req, res) => {
   const createdDeployment = await prisma.$transaction(async (tx) => {
     // Serialize capture with design updates/deletion; keep the outbox atomic.
     await tx.$queryRaw`SELECT id FROM "Infrastructure" WHERE id = ${infrastructureId} FOR UPDATE`;
-    const infrastructure = await tx.infrastructure.findUnique({ where: { id: infrastructureId } });
+    const infrastructure = await tx.infrastructure.findUnique({ where: { id: infrastructureId, ownerId: res.locals.userId } });
     if (!infrastructure) throw new NotFoundError("Infrastructure not found with the given id.");
     const runInputs = captureRunInputs(infrastructure.layout, workloadProfile);
     const deployment = await tx.deployment.create({
@@ -69,7 +69,7 @@ deploymentRouter.post("/", async (req, res) => {
 // schema with a 400.
 deploymentRouter.get("/live", async (req, res) => {
   const liveDeployments = await prisma.deployment.findMany({
-    where: { status: DeploymentStatus.LIVE },
+    where: { status: DeploymentStatus.LIVE, infrastructure: { ownerId: res.locals.userId } },
     include: { infrastructure: { select: { name: true } } },
     orderBy: { updatedAt: "desc" },
   });
@@ -101,7 +101,7 @@ deploymentRouter.get("/:deploymentId", async (req, res) => {
   }
   const { deploymentId } = DeploymentId.data;
   const deployment = await prisma.deployment.findUnique({
-    where: { id: deploymentId },
+    where: { id: deploymentId, infrastructure: { ownerId: res.locals.userId } },
   });
   if (!deployment) {
     throw new NotFoundError(
@@ -134,7 +134,7 @@ deploymentRouter.post("/:deploymentId/chaos", async (req, res) => {
   const { deploymentId } = DeploymentId.data;
   const { type, resourceId } = ChaosInjectionData.data;
   const deployment = await prisma.deployment.findUnique({
-    where: { id: deploymentId },
+    where: { id: deploymentId, infrastructure: { ownerId: res.locals.userId } },
   });
   if (!deployment) {
     throw new NotFoundError(
@@ -150,7 +150,7 @@ deploymentRouter.post("/:deploymentId/chaos", async (req, res) => {
   const message = `Chaos ${type} injected on ${resourceId}`;
   await prisma.$transaction(async (tx) => {
     const latestDeployment = await tx.deployment.findUnique({
-      where: { id: deploymentId },
+      where: { id: deploymentId, infrastructure: { ownerId: res.locals.userId } },
     });
     const currentChaosEvents = (latestDeployment?.chaosEvents as any[]) || [];
     currentChaosEvents.push({
@@ -166,7 +166,7 @@ deploymentRouter.post("/:deploymentId/chaos", async (req, res) => {
       message,
     });
     await tx.deployment.update({
-      where: { id: deploymentId },
+      where: { id: deploymentId, infrastructure: { ownerId: res.locals.userId } },
       data: {
         chaosEvents: currentChaosEvents,
         timeline: currentTimeline,
@@ -219,7 +219,7 @@ deploymentRouter.post("/:deploymentId/load", async (req, res) => {
   const { deploymentId } = DeploymentId.data;
   const { targetLoadFraction } = LoadControlData.data;
   const deployment = await prisma.deployment.findUnique({
-    where: { id: deploymentId },
+    where: { id: deploymentId, infrastructure: { ownerId: res.locals.userId } },
   });
   if (!deployment) {
     throw new NotFoundError(
@@ -263,7 +263,7 @@ deploymentRouter.post("/:deploymentId/scale-vertical", async (req, res) => {
   const { deploymentId } = DeploymentId.data;
   const { resourceId, skuId } = VerticalScaleData.data;
   const deployment = await prisma.deployment.findUnique({
-    where: { id: deploymentId },
+    where: { id: deploymentId, infrastructure: { ownerId: res.locals.userId } },
   });
   if (!deployment) {
     throw new NotFoundError(
@@ -310,7 +310,7 @@ deploymentRouter.post("/:deploymentId/scale-pool", async (req, res) => {
   const { deploymentId } = DeploymentId.data;
   const { lbId, delta } = PoolScaleData.data;
   const deployment = await prisma.deployment.findUnique({
-    where: { id: deploymentId },
+    where: { id: deploymentId, infrastructure: { ownerId: res.locals.userId } },
   });
   if (!deployment) {
     throw new NotFoundError(
@@ -357,7 +357,7 @@ deploymentRouter.post("/:deploymentId/speed", async (req, res) => {
   const { deploymentId } = DeploymentId.data;
   const { speed } = SpeedControlData.data;
   const deployment = await prisma.deployment.findUnique({
-    where: { id: deploymentId },
+    where: { id: deploymentId, infrastructure: { ownerId: res.locals.userId } },
   });
   if (!deployment) {
     throw new NotFoundError(
@@ -403,7 +403,7 @@ deploymentRouter.post("/:deploymentId/sync-topology", async (req, res) => {
   const { deploymentId } = DeploymentId.data;
   const { resources, connectionLines, expectedRevision } = SyncTopologyData.data;
   const deployment = await prisma.deployment.findUnique({
-    where: { id: deploymentId },
+    where: { id: deploymentId, infrastructure: { ownerId: res.locals.userId } },
   });
   if (!deployment) {
     throw new NotFoundError(
@@ -416,7 +416,7 @@ deploymentRouter.post("/:deploymentId/sync-topology", async (req, res) => {
     );
   }
   const changed = await prisma.deployment.updateMany({
-    where: { id: deploymentId, status: DeploymentStatus.LIVE, topologyRevision: expectedRevision },
+    where: { id: deploymentId, infrastructure: { ownerId: res.locals.userId }, status: DeploymentStatus.LIVE, topologyRevision: expectedRevision },
     data: { liveTopology: { resources, connectionLines }, topologyRevision: { increment: 1 } },
   });
   if (changed.count !== 1) {
@@ -441,7 +441,7 @@ deploymentRouter.post("/:deploymentId/teardown", async (req, res) => {
   }
   const { deploymentId } = DeploymentId.data;
   const deployment = await prisma.deployment.findUnique({
-    where: { id: deploymentId },
+    where: { id: deploymentId, infrastructure: { ownerId: res.locals.userId } },
   });
   if (!deployment) {
     throw new NotFoundError(
@@ -458,7 +458,7 @@ deploymentRouter.post("/:deploymentId/teardown", async (req, res) => {
     message: "Environment torn down. Simulation stopped.",
   });
   const stopped = await prisma.deployment.updateMany({
-    where: { id: deploymentId, status: DeploymentStatus.LIVE },
+    where: { id: deploymentId, infrastructure: { ownerId: res.locals.userId }, status: DeploymentStatus.LIVE },
     data: { status: DeploymentStatus.TORN_DOWN, timeline: tornTimeline },
   });
   if (stopped.count !== 1) throw new ConflictError("Deployment is no longer live.");

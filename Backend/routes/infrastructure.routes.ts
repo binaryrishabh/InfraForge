@@ -1,7 +1,6 @@
 import { Router } from "express";
 import { prisma } from "../lib/prisma";
 import { ValidationError, NotFoundError } from "../utils/errors";
-import { config } from "../utils/config";
 import { assertNoActiveRuns } from "../deployments/designDeletion";
 import { InfrastructureIdSchema, InfrastructureBodySchema, UpdateInfrastructureBodySchema } from "../zod_schemas/infrastructure.schema";
 
@@ -18,6 +17,8 @@ infrastructureRouter.post("/", async (req, res) => {
   const createdInfrastructure = await prisma.infrastructure.create({
     data: {
       name,
+      userId: res.locals.userId,
+      ownerId: res.locals.userId,
       layout: layout || {}
     }
   });
@@ -31,11 +32,9 @@ infrastructureRouter.post("/", async (req, res) => {
 // Get all infrastructure
 infrastructureRouter.get("/", async (req, res) => {
   const allInfrastructure = await prisma.infrastructure.findMany({
+    where: { ownerId: res.locals.userId },
     orderBy: { createdAt: "desc" }
   });
-  if (allInfrastructure.length === 0) {
-    throw new NotFoundError("No Infrastructure created yet");
-  }
   res.status(200).json({
     success: true,
     message: "Get all infrastructure",
@@ -52,7 +51,7 @@ infrastructureRouter.get("/:infrastructureId", async (req, res) => {
   }
   const { infrastructureId } = InfrastructureId.data;
   const infrastructure = await prisma.infrastructure.findUnique({
-    where: { id: infrastructureId }
+    where: { id: infrastructureId, ownerId: res.locals.userId }
   });
   if (!infrastructure) {
     throw new NotFoundError("Infrastructure not found with the given id");
@@ -78,7 +77,7 @@ infrastructureRouter.put("/:infrastructureId", async (req, res) => {
     throw new ValidationError(errorMessages);
   }
   const updatedInfrastructure = await prisma.infrastructure.update({
-    where: { id: infrastructureId },
+    where: { id: infrastructureId, ownerId: res.locals.userId },
     data: infrastructureResult.data
   });
   res.status(200).json({
@@ -98,8 +97,11 @@ infrastructureRouter.delete("/:infrastructureId", async (req, res) => {
   const { infrastructureId } = InfrastructureId.data;
   const deletedInfrastructure = await prisma.$transaction(async (tx) => {
     await tx.$queryRaw`SELECT id FROM "Infrastructure" WHERE id = ${infrastructureId} FOR UPDATE`;
+    if (!await tx.infrastructure.findUnique({ where: { id: infrastructureId, ownerId: res.locals.userId } })) {
+      throw new NotFoundError("Infrastructure not found");
+    }
     await assertNoActiveRuns(tx, infrastructureId);
-    return tx.infrastructure.delete({ where: { id: infrastructureId } });
+    return tx.infrastructure.delete({ where: { id: infrastructureId, ownerId: res.locals.userId } });
   });
   return res.status(200).json({
     success: true,
@@ -107,25 +109,6 @@ infrastructureRouter.delete("/:infrastructureId", async (req, res) => {
     deletedInfrastructure
   });
 });
-
-// Delete all — development only
-if (config.NODE_ENV !== "production") {
-  infrastructureRouter.delete("/", async (req, res) => {
-    const allDeletedInfrastructure = await prisma.$transaction(async (tx) => {
-      await tx.$queryRaw`SELECT id FROM "Infrastructure" ORDER BY id FOR UPDATE`;
-      await assertNoActiveRuns(tx);
-      return tx.infrastructure.deleteMany();
-    });
-    if (allDeletedInfrastructure.count === 0) {
-      throw new NotFoundError("No infrastructure found to delete");
-    }
-    res.status(200).json({
-      success: true,
-      message: "All infrastructure deleted",
-      allDeletedInfrastructure
-    });
-  });
-}
 
 // All deployments of an infrastructure
 infrastructureRouter.get("/:infrastructureId/deployments", async (req, res) => {
@@ -136,7 +119,7 @@ infrastructureRouter.get("/:infrastructureId/deployments", async (req, res) => {
   }
   const { infrastructureId } = InfrastructureId.data;
   const infrastructure = await prisma.infrastructure.findUnique({
-    where: { id: infrastructureId },
+    where: { id: infrastructureId, ownerId: res.locals.userId },
     include: { deployments: true }
   });
   if (!infrastructure) {

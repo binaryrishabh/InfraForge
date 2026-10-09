@@ -3,8 +3,6 @@ version: '3.8'
 services:
   redis:
     image: redis:7-alpine
-    ports:
-      - "6379:6379"
     volumes:
       - redis_data:/data
     restart: unless-stopped
@@ -23,6 +21,13 @@ services:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - NODE_ENV=production
+      - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET:?Set a stable random authentication secret}
+      - BETTER_AUTH_URL=${BETTER_AUTH_URL:?Set the public HTTPS API origin}
+      - APP_ORIGINS=${APP_ORIGINS:?Set exact permitted HTTPS frontend origins}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
+      - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID:-}
+      - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET:-}
     depends_on:
       - redis
     restart: unless-stopped
@@ -51,9 +56,13 @@ services:
     ports:
       - "3001:3001"
     environment:
+      - DATABASE_URL=${DATABASE_URL}
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - NODE_ENV=production
+      - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET:?Set a stable random authentication secret}
+      - BETTER_AUTH_URL=${BETTER_AUTH_URL:?Set the public HTTPS API origin}
+      - APP_ORIGINS=${APP_ORIGINS:?Set exact permitted HTTPS frontend origins}
     depends_on:
       - redis
     restart: unless-stopped

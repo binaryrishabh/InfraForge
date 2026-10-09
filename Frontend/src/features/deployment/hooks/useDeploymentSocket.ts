@@ -12,6 +12,7 @@ import type { DeploymentStages } from "@shared/interface/DeploymentStages.interf
 import type { DeploymentTimeline } from "@shared/interface/DeploymentTimeline.interface";
 import type { SimulationSnapshot } from "@shared/interface/SimulationSnapshot.interface";
 import { useCanvasStore } from "@/features/canvas/store/canvasStore";
+import { useAuthStore } from "@/features/auth/store/auth.store";
 
 type PipelineUIStatus = DeploymentStatusType | "Web Socket connection error";
 
@@ -160,7 +161,12 @@ export function useDeploymentSocket(deploymentId: string) {
                 }
             }
 
-            ws.onclose = () => {
+            ws.onclose = (event) => {
+                if (event.code === 1008) {
+                    setStatus("Web Socket connection error");
+                    void useAuthStore.getState().hydrate();
+                    return;
+                }
                 if(isClose || isServerStateFailed) { // If component unmonted or server itself failed completely we don't reconnect
                     return;
                 }
