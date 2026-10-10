@@ -6,6 +6,10 @@ import { randomBytes } from "node:crypto";
 import { ComposeRelease, settingsFingerprint } from "./compose";
 import { cancelCommands, command, waitFor } from "./process";
 import { releaseSequence, rollbackSequence, type Release } from "./sequence";
+import { proveCutoverDatabase } from "./cutover-proof";
+import { proveWorkerRecovery } from "./worker-recovery";
+import { connectDatabase } from "../../apps/backend/cutover/database";
+import { FENCE_ACK, retirementRequest } from "../../apps/backend/cutover/retire";
 
 const root = fileURLToPath(new URL("../../", import.meta.url));
 const image = process.argv[2];
@@ -16,6 +20,7 @@ if (!/^(npipe:|unix:)/.test(context.Endpoints.docker.Host)) throw new Error("Reh
 const environment = Object.fromEntries(Object.entries(process.env).filter(([key]) =>
   /^(PATH|SYSTEMROOT|WINDIR|TEMP|TMP|HOME|USERPROFILE|LOCALAPPDATA|APPDATA)$/i.test(key)));
 environment.RELEASE_REHEARSAL = "owned-local";
+environment.DOCKER_CONTEXT = context.Name;
 const docker = (args: string[]) => command(["docker", ...args], root, environment);
 const builder = await docker(["buildx", "inspect", context.Name]);
 if (!/^Driver:\s+docker\s*$/m.test(builder) ||
@@ -75,12 +80,14 @@ try {
   await Bun.write(envFile, `DATABASE_URL=postgresql://postgres@postgres/infraforge_release_${suffix}\nWORKER_DATABASE_URL=postgresql://postgres@postgres/infraforge_release_${suffix}\nMIGRATION_DATABASE_URL=postgresql://postgres@postgres/infraforge_release_${suffix}\nWORKER_DATABASE_MODE=direct\nBETTER_AUTH_SECRET=${randomBytes(32).toString("hex")}\nBETTER_AUTH_URL=https://api.example.invalid\nAPP_ORIGINS=https://app.example.invalid\nAPI_PORT=0\nWS_PORT=0\n`);
   await Bun.write(override, `services:
   postgres:
-    image: postgres:17-alpine
+    image: postgres:18-alpine
     environment:
       POSTGRES_HOST_AUTH_METHOD: trust
       POSTGRES_DB: infraforge_release_${suffix}
-    networks: [application]
-    volumes: [fixture_postgres:/var/lib/postgresql/data]
+    # A host-side proof client needs the loopback listener; internal-only bridges do not publish it.
+    networks: [application, egress]
+    ports: ["127.0.0.1:0:5432"]
+    volumes: [fixture_postgres:/var/lib/postgresql]
     healthcheck:
       test: [CMD, pg_isready, -U, postgres]
       interval: 1s
@@ -91,11 +98,15 @@ try {
       RELEASE_REHEARSAL: owned-local
     volumes:
       - "${fixture}:/app/apps/backend/tests/release-fixture.ts:ro"
+      - "${resolve(root, "apps/backend/tests/cutoverScenario.ts").replaceAll("\\", "/")}:/app/apps/backend/tests/cutoverScenario.ts:ro"
+  worker:
+    restart: "no"
   api:
     environment:
       RELEASE_REHEARSAL: owned-local
     volumes:
       - "${proxyFixture}:/app/apps/backend/tests/release-proxy.ts:ro"
+      - "${resolve(root, "apps/backend/tests/release-ownership.ts").replaceAll("\\", "/")}:/app/apps/backend/tests/release-ownership.ts:ro"
       - "${join(directory, "tls").replaceAll("\\", "/")}:/fixture/tls:ro"
   redis:
     image: redis:8-alpine
@@ -139,12 +150,27 @@ volumes:
   const fixtureCommand = (action: string) => operations!.compose(["run", "--rm", "--no-deps", "migration", "bun", "tests/release-fixture.ts", action]);
   await fixtureCommand("legacy");
   phase("legacy eight-migration database prepared");
-  await operations.compose(["exec", "-T", "postgres", "pg_dump", "-U", "postgres", "-d", `infraforge_release_${suffix}`, "-Fc", "-f", "/tmp/pre-release.dump"]);
-  await operations.compose(["exec", "-T", "postgres", "createdb", "-U", "postgres", `infraforge_restore_${suffix}`]);
-  await operations.compose(["exec", "-T", "postgres", "pg_restore", "-U", "postgres", "--exit-on-error", "--no-owner", "-d", `infraforge_restore_${suffix}`, "/tmp/pre-release.dump"]);
-  const restored = await operations.compose(["exec", "-T", "postgres", "psql", "-U", "postgres", "-d", `infraforge_restore_${suffix}`, "-Atc", 'SELECT "userId" FROM "Infrastructure" WHERE id=\'legacy\'']);
-  if (restored !== "historical-owner") throw new Error("Disposable backup restore did not preserve legacy data");
-  phase("real PostgreSQL custom backup restored into a separate disposable database");
+  const address = await operations.compose(["port", "postgres", "5432"]);
+  if (!/^127\.0\.0\.1:\d+$/.test(address)) throw new Error("Unexpected owned PostgreSQL listener");
+  const localUrl = (name: string) => `postgresql://postgres@${address}/${name}_${suffix}`;
+  const sourceUrl = localUrl("infraforge_release");
+  for (const name of ["reference", "restore"]) await operations.compose(["exec", "-T", "postgres", "createdb", "-U", "postgres", `infraforge_${name}_${suffix}`]);
+  const db = connectDatabase(sourceUrl, "infraforge-fixture-ids");
+  await db.connect();
+  const ids = (await db.query(`SELECT id FROM "Deployment" WHERE status='live' ORDER BY id`)).rows.map((row) => row.id);
+  await db.end();
+  const proof = await proveCutoverDatabase({ root, directory, environment, source: sourceUrl,
+    reference: localUrl("infraforge_reference"), restore: localUrl("infraforge_restore"), archive: join(directory, "pre-release.dump"),
+    request: retirementRequest(ids, FENCE_ACK, "owned-disposable-fixture"), verifyTarget: async () => {},
+    dump: async () => {
+      await operations!.compose(["exec", "-T", "postgres", "pg_dump", "-U", "postgres", "-d", `infraforge_release_${suffix}`, "-Fc", "-f", "/tmp/pre-release.dump"]);
+      const id = await operations!.compose(["ps", "-q", "postgres"]);
+      await docker(["cp", `${id}:/tmp/pre-release.dump`, join(directory, "pre-release.dump")]);
+    },
+    restoreDump: async () => { await operations!.compose(["exec", "-T", "postgres", "pg_restore", "-U", "postgres", "--exit-on-error", "--single-transaction", "--no-owner", "--no-acl", "-d", `infraforge_restore_${suffix}`, "/tmp/pre-release.dump"]); },
+  });
+  console.log(JSON.stringify({ cutoverProof: proof }));
+  phase("PostgreSQL 18 eight-migration catalog/Prisma drift, custom restore, mismatch rejection and four-run retirement passed");
   await fixtureCommand("migration-conflict");
   await mustFail(() => releaseSequence(operations!, release), "actual Prisma migration failure");
   if (await operations.compose(["ps", "--status", "running", "-q", "api", "worker", "ws-server"])) throw new Error("Migration failure started application");
@@ -152,6 +178,10 @@ volumes:
   await releaseSequence(operations, release);
   await fixtureCommand("check-legacy");
   phase("additive migration, postchecks, three readiness probes and legacy quarantine passed");
+  console.log(await operations.compose(["exec", "-T", "api", "bun", "tests/release-ownership.ts"]));
+  phase("two-user HTTP/WS isolation, legacy quarantine and zero unauthorized mutations/controls passed");
+  console.log(JSON.stringify({ workerRecovery: await proveWorkerRecovery(operations, release, sourceUrl) }));
+  phase("worker process death releases ownership and one replacement acquires it within the deadline");
   await mustFail(() => operations!.compose(["run", "--rm", "--no-deps", "worker"]), "duplicate worker");
   await mustFail(() => operations!.migrate(), "migration while worker owns database");
   await fixtureCommand("active");

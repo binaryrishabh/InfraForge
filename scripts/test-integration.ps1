@@ -118,9 +118,9 @@ try {
         Invoke-Docker (@('volume', 'create') + $labelArgs + @($names.volume)) | Out-Null
         $common = @('run', '-d', '--pull=never') + $labelArgs + @('--network', $names.network)
         Invoke-Docker ($common + @('--name', $names.postgres, '--publish', '127.0.0.1::5432',
-            '--mount', "type=volume,source=$($names.volume),target=/var/lib/postgresql/data",
+            '--mount', "type=volume,source=$($names.volume),target=/var/lib/postgresql",
             '--env', 'POSTGRES_HOST_AUTH_METHOD=trust', '--env', "POSTGRES_DB=infraforge_it_$run",
-            '--health-cmd', 'pg_isready -U postgres', '--health-interval', '1s', '--health-retries', '30', 'postgres:17-alpine')) | Out-Null
+            '--health-cmd', 'pg_isready -U postgres', '--health-interval', '1s', '--health-retries', '30', 'postgres:18-alpine')) | Out-Null
         Invoke-Docker ($common + @('--name', $names.redis, '--publish', '127.0.0.1::6379', '--tmpfs', '/data',
             '--health-cmd', 'redis-cli ping', '--health-interval', '1s', '--health-retries', '30', 'redis:8-alpine')) | Out-Null
         foreach ($name in @($names.postgres, $names.redis)) {

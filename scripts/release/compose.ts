@@ -42,7 +42,7 @@ export class ComposeRelease implements ReleaseOperations {
   async postcheck() { await this.compose(["run", "--rm", "--no-deps", "migration", "bun", "release/cli.ts", "postcheck"], this.next); }
   async start(release: Release) {
     this.active = release;
-    await verifyImage(release, this.root);
+    await verifyImage(release, this.root, this.environment);
     await this.compose(["up", "-d", "--no-build", "--pull", "never", "--scale", "worker=1", ...services]);
   }
   async ready(release: Release) {
@@ -50,7 +50,7 @@ export class ComposeRelease implements ReleaseOperations {
       try {
         const ids = (await this.compose(["ps", "-q", ...services])).split(/\s+/).filter(Boolean);
         if (ids.length !== 3) return false;
-        const records = JSON.parse(await command(["docker", "inspect", ...ids], this.root));
+        const records = JSON.parse(await command(["docker", "inspect", ...ids], this.root, this.environment));
         if (!records.every((record: { Image: string; State: { Health?: { Status: string } } }) =>
           record.Image === release.imageId && record.State.Health?.Status === "healthy")) return false;
         for (const service of services) {
@@ -63,8 +63,8 @@ export class ComposeRelease implements ReleaseOperations {
   }
 }
 
-export async function verifyImage(release: Release, root: string) {
-  const [image] = JSON.parse(await command(["docker", "image", "inspect", release.image], root));
+export async function verifyImage(release: Release, root: string, environment: Record<string, string | undefined> = process.env) {
+  const [image] = JSON.parse(await command(["docker", "image", "inspect", release.image], root, environment));
   if (image.Id !== release.imageId || image.Config.Labels?.["org.opencontainers.image.revision"] !== release.sha ||
       image.Config.Labels?.["org.opencontainers.image.source"] !== "https://github.com/binaryrishabh/InfraForge") {
     throw new Error("Image ID/source/revision does not match the approved release");

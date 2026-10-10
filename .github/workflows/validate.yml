@@ -43,7 +43,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: postgres:17-alpine
+        image: postgres:18-alpine
         env:
           POSTGRES_HOST_AUTH_METHOD: trust
           POSTGRES_DB: infraforge_it_0123abcd
@@ -97,7 +97,9 @@ jobs:
             docker run --rm --workdir "$workdir" infraforge-packaging bun build "$entrypoint" --target=bun --outdir=/tmp/entrypoints
           done
           docker run --rm --workdir "$workdir" infraforge-packaging bun build scripts/recover-ownership.ts --target=bun --outdir=/tmp/entrypoints
+          docker run --rm --workdir "$workdir" infraforge-packaging bun build cutover/cli.ts --target=bun --outdir=/tmp/entrypoints
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.3.14
-      - run: bun --no-env-file scripts/release/rehearse.ts infraforge-packaging
+      - run: bun install --frozen-lockfile
+      - run: bun --no-env-file --no-install scripts/release/rehearse.ts infraforge-packaging

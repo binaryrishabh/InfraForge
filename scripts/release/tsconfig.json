@@ -10,5 +10,5 @@
     "strict": true,
     "noUncheckedIndexedAccess": true
   },
-  "include": ["../release.ts", "./*.ts", "../tests/release.test.ts"]
+  "include": ["../release.ts", "./*.ts", "../tests/*.ts"]
 }

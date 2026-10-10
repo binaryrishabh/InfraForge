@@ -71,6 +71,9 @@ apps/backend/health/**
 !apps/backend/release/
 apps/backend/release/**
 !apps/backend/release/*.ts
+!apps/backend/cutover/
+apps/backend/cutover/**
+!apps/backend/cutover/*.ts
 !apps/backend/deployments/
 apps/backend/deployments/**
 !apps/backend/deployments/*.ts
