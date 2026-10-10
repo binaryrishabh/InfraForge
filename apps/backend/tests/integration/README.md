@@ -3,7 +3,7 @@
 ## Managed local fixtures
 
 From the repository root, run `bun run test:integration:local` with PowerShell 7,
-Docker Desktop and installed workspace dependencies. Have `postgres:17-alpine`
+Docker Desktop and installed workspace dependencies. Have `postgres:18-alpine`
 and `redis:8-alpine` available locally first; the runner never pulls images.
 It creates fresh loopback-only services with random database/Redis ports, a named
 disposable volume and network, a unique run ID and four ownership labels. API port
@@ -20,6 +20,9 @@ remain for that run. Referenced volumes/networks and mismatched labels are prese
 and reported as errors. Cleanup errors return a nonzero exit code.
 
 A host crash or force-killed PowerShell process can prevent `finally` from running.
+Forced termination can also leave Windows Bun/Turbo launcher descendants. Match
+their ancestry, command and creation time to the recorded run before stopping them;
+an absent parent PID does not prove that every child stopped.
 After confirming that the recorded test process and its children have stopped,
 select the same local Docker context and run:
 
@@ -87,6 +90,13 @@ The test takes about 90–120 seconds because it exercises the actual one-minute
   it never invents ownership or backfills original inputs.
 - The separate B0.2 migration regression still verifies that legacy runs receive
   no reconstructed inputs when the original run-input migration is applied.
+- PostgreSQL 18 cutover checks use separate owned migration-eight databases with
+  synthetic 28/331/348 records. A SELECT-only role exercises evidence capture;
+  baseline drift is deliberately detected. Retirement rejects peers, wrong/missing
+  IDs, extra active work, pending outbox and repeated execution. A trigger failure
+  proves atomic rollback; successful retirement preserves checkpoints, input fields,
+  historical ownership and every unrelated row. The Docker release rehearsal
+  separately executes custom-format dump/restore and deliberate restore corruption.
 
 Commands are sent while paused. Load/chaos/scaling/speed Redis payloads are checked before resuming; topology edits instead check the committed database revision. There is no durable acknowledgement/log for the other controls, so their boundaries describe the last observed tick rather than exact scheduling under arbitrary process stalls. Each advancement asserts its expected tick count, so an unexpected extra tick fails the fixture.
 
