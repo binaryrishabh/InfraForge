@@ -3,13 +3,12 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { randomBytes } from "node:crypto";
-import { productionIdentity, neonMetadata, rehearsalTarget, rehearsalWorkspace } from "./neon";
+import { productionIdentity, neonMetadata, rehearsalTarget, rehearsalWorkspace, rehearsalRetirementRequest, rehearsalPasswordFile, rehearsalDumpCommand } from "./neon";
 import { ComposeRelease, settingsFingerprint, verifyImage } from "./compose";
 import { releaseSequence, type Release } from "./sequence";
 import { command, cancelCommands, waitFor } from "./process";
 import { proveCutoverDatabase } from "./cutover-proof";
 import { proveWorkerRecovery } from "./worker-recovery";
-import { retirementRequest } from "../../apps/backend/cutover/retire";
 import { safeFailure, CutoverError } from "../../apps/backend/cutover/database";
 
 const root = fileURLToPath(new URL("../../", import.meta.url));
@@ -38,6 +37,9 @@ process.on("SIGINT", interrupt);
 process.on("SIGTERM", interrupt);
 try {
   if (!image || process.argv.length !== 3) throw new CutoverError("Supply one verified local application image");
+  if (!process.env.REHEARSAL_IDS_FILE) throw new CutoverError("Explicit rehearsal deployment IDs file required");
+  const request = rehearsalRetirementRequest(JSON.parse(await readFile(process.env.REHEARSAL_IDS_FILE, "utf8")), process.env);
+  if (request.ids.length !== 4) throw new CutoverError("This cutover rehearsal expects exactly four explicitly selected legacy live runs");
   if (process.env.DOCKER_HOST || process.env.DOCKER_CONTEXT) throw new CutoverError("Remote Docker overrides are forbidden");
   const context = JSON.parse(await command(["docker", "context", "inspect"], root))[0];
   if (!/^(npipe:|unix:)/.test(context.Endpoints.docker.Host)) throw new CutoverError("A local Docker engine is required");
@@ -45,10 +47,6 @@ try {
   const verifyTarget = async () => { rehearsalTarget(process.env, production, await neonMetadata(process.env, production)); };
   const target = rehearsalTarget(process.env, production, await neonMetadata(process.env, production));
   console.log(JSON.stringify({ target: target.display, productionRefused: true, noHostedSettingsChanged: true }));
-  if (!process.env.REHEARSAL_IDS_FILE) throw new CutoverError("Explicit rehearsal deployment IDs file required");
-  const request = retirementRequest(JSON.parse(await readFile(process.env.REHEARSAL_IDS_FILE, "utf8")),
-    process.env.REHEARSAL_FENCE_ACK, process.env.REHEARSAL_FENCE_EVIDENCE);
-  if (request.ids.length !== 4) throw new CutoverError("This cutover rehearsal expects exactly four explicitly selected legacy live runs");
   const environment: Record<string, string | undefined> = Object.fromEntries(Object.entries(process.env).filter(([key]) =>
     /^(PATH|SYSTEMROOT|WINDIR|TEMP|TMP|HOME|USERPROFILE|LOCALAPPDATA|APPDATA)$/i.test(key)));
   environment.DOCKER_CONTEXT = context.Name;
@@ -59,11 +57,14 @@ try {
     BETTER_AUTH_URL: "https://api.example.invalid", APP_ORIGINS: "https://app.example.invalid", API_PORT: "0", WS_PORT: "0" });
   const direct = new URL(target.urls[1]!);
   Object.assign(environment, { BACKUP_HOST: direct.hostname, BACKUP_USER: decodeURIComponent(direct.username),
-    BACKUP_PASSWORD: decodeURIComponent(direct.password), BACKUP_DATABASE: target.database });
+    BACKUP_DATABASE: target.database });
   rehearsalWorkspace(project, join(tmpdir(), `infraforge-neon-rehearsal-${suffix}`));
   directory = await mkdtemp(join(tmpdir(), "infraforge-neon-rehearsal-"));
   rehearsalWorkspace(project, directory);
   await chmod(directory, 0o700);
+  const passwordFile = join(directory, "dump.pgpass");
+  await Bun.write(passwordFile, rehearsalPasswordFile(target.urls[1]!));
+  await chmod(passwordFile, 0o600);
   const envFile = join(directory, "empty.env");
   await Bun.write(envFile, "");
   const override = join(directory, "compose.yml");
@@ -85,11 +86,13 @@ try {
     environment:
       PGHOST: \${BACKUP_HOST}
       PGUSER: \${BACKUP_USER}
-      PGPASSWORD: \${BACKUP_PASSWORD}
+      PGPASSFILE: /tmp/dump.pgpass
       PGDATABASE: \${BACKUP_DATABASE}
       PGSSLMODE: verify-full
       PGSSLROOTCERT: system
-    volumes: ["${directory.replaceAll("\\", "/") }:/proof"]
+    volumes:
+      - "${directory.replaceAll("\\", "/") }:/proof"
+      - "${passwordFile.replaceAll("\\", "/")}:/run/secrets/dump.pgpass:ro"
   api:
     environment:
       RELEASE_REHEARSAL: verified-neon
@@ -121,7 +124,7 @@ volumes:
     dump: async () => {
       const version = await operations!.compose(["run", "--rm", "--no-deps", "tools", "pg_dump", "--version"]);
       if (!/PostgreSQL\) 18\./.test(version)) throw new CutoverError("PostgreSQL 18 dump tools required");
-      await operations!.compose(["run", "--rm", "--no-deps", "tools", "pg_dump", "--format=custom", "--file=/proof/pre-release.dump"]);
+      await operations!.compose(["run", "--rm", "--no-deps", "tools", ...rehearsalDumpCommand]);
       await chmod(archive, 0o600);
     }, restoreDump: async () => {
       const id = await operations!.compose(["ps", "-q", "postgres"]);

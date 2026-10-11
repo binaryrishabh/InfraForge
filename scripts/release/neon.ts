@@ -2,6 +2,45 @@ import { readFile, realpath } from "node:fs/promises";
 import { isAbsolute, relative, sep, resolve, dirname, basename } from "node:path";
 import { tmpdir } from "node:os";
 import { databaseUrl, digest, CutoverError } from "../../apps/backend/cutover/database";
+import { retirementSelection } from "../../apps/backend/cutover/retire";
+
+export const REHEARSAL_CREDENTIAL_ACK = "disposable-clone-branch-credentials-reset";
+
+function requireBranchCredentials(env: Record<string, string | undefined>) {
+  if (env.REHEARSAL_CREDENTIAL_ACK !== REHEARSAL_CREDENTIAL_ACK) {
+    throw new CutoverError("Disposable branch credentials must be reset; rehearsal-only acknowledgement is required");
+  }
+}
+
+export function rehearsalRetirementRequest(ids: unknown, env: Record<string, string | undefined>) {
+  requireBranchCredentials(env);
+  return retirementSelection(ids, env.REHEARSAL_ISOLATION_EVIDENCE);
+}
+
+// Neon accepts endpoint=<id>;<password> and endpoint=<id>$<password>,
+// including the deprecated project= alias. Refuse the whole directive prefix,
+// even if incomplete, without rejecting ordinary passwords containing the text.
+function rejectPasswordRouting(url: URL) {
+  let password: string;
+  try { password = decodeURIComponent(url.password); }
+  catch { throw new CutoverError("Invalid Neon credential encoding"); }
+  if (/^(?:endpoint|project)=/i.test(password)) {
+    throw new CutoverError("Neon credential routing directives are forbidden; only the verified hostname may select the endpoint");
+  }
+}
+
+export function rehearsalPasswordFile(value: string) {
+  const url = databaseUrl(value, true);
+  const fields = [url.hostname, url.port || "5432", decodeURIComponent(url.pathname.slice(1)),
+    decodeURIComponent(url.username), decodeURIComponent(url.password)];
+  if (fields.some((field) => /[\r\n\0]/.test(field))) throw new CutoverError("Invalid password-file field");
+  return fields.map((field) => field.replaceAll("\\", "\\\\").replaceAll(":", "\\:")).join(":") + "\n";
+}
+
+// Docker Desktop bind mounts can report 0777 despite host chmod. Libpq must
+// receive a private container-side copy; no credential is passed in argv/env.
+export const rehearsalDumpCommand = ["sh", "-ec",
+  "umask 077; cp /run/secrets/dump.pgpass /tmp/dump.pgpass; chmod 600 /tmp/dump.pgpass; exec pg_dump --format=custom --file=/proof/pre-release.dump"];
 
 export type ProductionIdentity = { projectId: string; branchId: string };
 type Branch = { id: string; project_id: string; parent_id?: string; name: string; default: boolean;
@@ -28,6 +67,7 @@ export async function productionIdentity(path: string | undefined, root: string)
 }
 
 export function rehearsalTarget(env: Record<string, string | undefined>, production: ProductionIdentity, metadata: NeonMetadata) {
+  requireBranchCredentials(env);
   const project = env.REHEARSAL_PROJECT_ID;
   const branch = env.REHEARSAL_BRANCH_ID;
   const name = env.REHEARSAL_ID;
@@ -42,6 +82,7 @@ export function rehearsalTarget(env: Record<string, string | undefined>, product
   }
   const urls = [env.DATABASE_URL, env.MIGRATION_DATABASE_URL, env.WORKER_DATABASE_URL].map((value, index) => {
     const url = databaseUrl(value, index > 0);
+    rejectPasswordRouting(url);
     if (!/^ep-[a-z0-9-]+\.[a-z0-9.-]+\.neon\.tech$/.test(url.hostname) || !/^\/[a-zA-Z0-9_-]+$/.test(url.pathname) || !url.password || url.port && url.port !== "5432") {
       throw new CutoverError("Rehearsal requires unambiguous authenticated Neon endpoints");
     }
