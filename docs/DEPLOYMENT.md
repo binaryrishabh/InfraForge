@@ -226,6 +226,11 @@ Checksums alone are insufficient; do not mark baseline PASS from history alone.
 Operator authorization for hosted branch access is separate from local tests.
 Clone production into a non-default, unprotected, ready disposable child named
 `infraforge-rehearsal-16_RANDOM_HEX`. Do not connect any legacy application to it.
+Confirm the child identity, then select **that disposable branch only** in Neon's
+Roles view and reset every role password that the rehearsal will use. Build its
+direct/pooled URLs with those branch-only credentials. Never supply inherited
+production credentials or reset a production role for this rehearsal. Roles are
+branch-scoped and copied when branching; see [Neon role management](https://neon.com/docs/manage/roles).
 Supply these private environment values outside Git:
 
 | Variable | Required value |
@@ -238,17 +243,32 @@ Supply these private environment values outside Git:
 | `DATABASE_URL` | Verified disposable API endpoint, direct or pooled |
 | `MIGRATION_DATABASE_URL`, `WORKER_DATABASE_URL` | Verified disposable direct endpoints |
 | `REHEARSAL_IDS_FILE` | Private JSON array of the four exact legacy live deployment UUIDs |
-| `REHEARSAL_FENCE_ACK` | `legacy-writers-stopped-and-credentials-rotated` |
-| `REHEARSAL_FENCE_EVIDENCE` | Non-secret reference to actual clone isolation/fencing evidence |
+| `REHEARSAL_CREDENTIAL_ACK` | `disposable-clone-branch-credentials-reset` |
+| `REHEARSAL_ISOLATION_EVIDENCE` | Non-secret reference to the verified child identity and branch-only credential reset |
 
 All three URLs must use verified TLS and the same database. API metadata must prove
 each endpoint belongs to the disposable child of the independently identified
 production branch; same-branch, default/protected, wrong-parent or ambiguous
 endpoints are refused. Do not guess production identity from rehearsal credentials.
 Real identifiers and credentials are never examples committed to this repository.
+The hostname is the only endpoint-routing authority. Decoded password prefixes
+`endpoint=` and the deprecated `project=` are refused, including the documented
+`;`/`$` routing forms and incomplete directives; harmless partial text is allowed.
+Query routing overrides remain forbidden. See [Neon's password-routing documentation](https://github.com/neondatabase/website/blob/main/content/docs/connect/connection-errors.md#d-specify-the-endpoint-id-in-the-password-field).
+The tool cannot compare against production passwords, which it must never know.
+API branch/parent/endpoint proofs and repeated identity checks remain mandatory.
+The rehearsal acknowledgement does not assert production writers stopped; the
+production retirement acknowledgement is separate and cannot substitute for it.
 The PostgreSQL 18 dump container uses `PGSSLROOTCERT=system` with `verify-full`,
 so libpq validates Neon against its system CA store rather than expecting a local
 `~/.postgresql/root.crt`. See [libpq TLS settings](https://www.postgresql.org/docs/18/libpq-connect.html#LIBPQ-CONNECT-SSLROOTCERT).
+Its branch-only password is in a private temporary libpq password file, mounted
+read-only and copied to mode 0600 inside the dump container (Docker Desktop mounts
+can report 0777 despite host chmod), rather than `PGPASSWORD` in configuration/inspect. API/WS receive
+the API URL, worker its direct URL, and migration the URLs needed for target checks.
+These necessary service URLs are still visible to the local Docker administrator;
+restrict host/Docker access and capture output privately. The API key and operator
+acknowledgements are not forwarded to children.
 
 ```sh
 # From the repository root, using a verified already-built commit-labelled image:
@@ -295,7 +315,9 @@ branch for diagnosis; never use `migrate resolve` on primary to imitate fixture 
    Preserve Redis data and recovery evidence. Check no old service still listens on
    application/WS/Redis host ports and no independent worker can restart.
 4. Rotate every credential available to old writers using the supported Neon console
-   workflow. Rotation prevents reconnects; it does not terminate existing sessions.
+   workflow. Do not rely on reset/rotation behaviour for existing sessions; provider
+   documentation differs. Explicit session inspection/termination and rechecks below
+   remain mandatory, regardless of whether reset itself disconnects clients.
    Store new operator/release credentials privately, update approved secrets safely,
    and leave old jobs disabled. Confirm API/migration/worker target the same primary.
 5. Through a verified **direct** operator connection, inspect `pg_stat_activity` with
@@ -339,7 +361,10 @@ bun --no-env-file cutover/cli.ts retire --ids-file PRIVATE_IDS_JSON \
 
 All supplied records must be exactly live; no other pending/running/live record,
 pending outbox, other client or worker lock is permitted. Serializable transaction,
-table and row locks protect the set; any mismatch rolls everything back. Exactly
+transaction-local settings (including UTC), then deterministic NOWAIT table locks
+precede every query that fixes the snapshot; row locks protect the selected records.
+Version/history/worker/client/outbox checks follow the table lock. Any mismatch rolls
+everything back. Operator timeline and update timestamps use UTC. Exactly
 four records become torn-down with the durable operator event. Inputs, checkpoint,
 seed, workload, stages, chaos history and `test-user` marker stay intact. A second
 execution refuses. No owner or runInputs is generated.
@@ -368,6 +393,9 @@ and grants: separately inventory, review and test required hosted roles/grants,
 extensions, TLS, backup retention and provider fallback. Auth row counts are compared;
 auth token contents are never hashed or printed. This proof is for the pre-auth
 first release, not complete content certification of a later authentication backup.
+Before primary cutover, separately review rules/pg_rewrite, types/domains/enums,
+owners/default privileges, inheritance, publications, role/database settings and
+sequence parameters. The disposable baseline checker does not certify these.
 
 Run final idle/history/baseline/session/backup preflight, then the approved exact-SHA
 release for migrations 9/10 and postchecks. Require 28 ownerless historical designs,

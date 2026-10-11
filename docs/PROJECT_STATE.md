@@ -1,8 +1,9 @@
 # InfraForge project state
 
-Verified 2026-10-10 on `develop`. B0.6C now has executed PostgreSQL 18 cutover
-proof, preserving B0.2 run consistency, B0.3 authentication, B0.4 workspaces and
-B0.5 release behaviour. Local proof does not establish hosted production readiness.
+Verified 2026-10-11 on `develop`. B0.6D corrects the pre-rehearsal safety gates atop
+B0.6C's PostgreSQL 18 cutover proof. B0.2 run consistency, B0.3 authentication,
+B0.4 workspaces and B0.5 release behaviour remain intact. Local proof does not
+establish hosted production readiness.
 See [setup](../Readme.md), [cutover/release](DEPLOYMENT.md),
 [authentication](AUTHENTICATION.md) and [integration](../apps/backend/tests/integration/README.md).
 
@@ -90,6 +91,8 @@ writer-fencing acknowledgement/evidence. Serializable transaction, table/row loc
 exact live set, idle outbox and no other client/worker checks precede four-row retirement.
 Only status/update time/operator timeline change; inputs, checkpoints, history and
 historical ownership remain intact. Mismatch/failure rolls back completely.
+R1 now acquires deterministic NOWAIT table locks after only BEGIN/local settings,
+before any snapshot query; retirement timestamps use transaction-local UTC.
 
 External rehearsal requires an independent production identity outside Git plus Neon
 API proof of distinct disposable branch/endpoints. It reuses the normal release modules,
@@ -97,6 +100,14 @@ pins local Docker context, verifies remote TLS, rejects duplicate/redirecting UR
 and production state paths, and cleans only owned local resources. Hosted execution
 is unverified. Restore comparison certifies the pre-auth application contents/history;
 role/grant inventory and later authentication backup content need separate proof.
+The owner-supplied independent Claude verdict was **B: approve with required
+pre-rehearsal corrections** (no critical findings); this task used no inner reviewer.
+R2 refuses decoded password-routing prefixes `endpoint=`/`project=` while preserving
+ordinary passwords. R3 requires branch-only reset credentials and a rehearsal-only
+acknowledgement; production fencing remains separate. Dump passwords use a private
+file/container-side 0600 copy rather than Docker environment. The tool cannot compare
+production passwords and never receives them. Hosted rehearsal is **NOT EXECUTED**;
+primary production migration remains unauthorized.
 
 Release requires a clean exact approved remote-main SHA and manual protected workflow.
 Images/acceptance record exact commit/image/auth/migration/settings identities. Maintenance,
@@ -118,39 +129,49 @@ deployment; actual hosted settings still require owner verification.
 | --- | --- |
 | Frozen Bun install | 491 installs/545 packages checked, no changes |
 | Typecheck | Seven workspace tasks and release-operator compiler passed |
-| Lint/boundaries | Five ESLint tasks; 982 imports, no cycles/runtime leaks |
-| Workspace tests | 100 passes, 728 assertions, zero failures; four DB cases separately executed below |
+| Lint/boundaries | Five ESLint tasks; 988 imports, no cycles/runtime leaks |
+| Workspace tests | 101 passes, 743 assertions, zero failures; five DB cases separately executed below |
 | Engine goldens | All 30 freshly passed; expectations/source unchanged |
-| Tooling tests | 19 passes, 76 assertions, zero failures; synthetic Neon identity/state guards exercised |
+| Tooling tests | 23 passes, 279 assertions, zero failures; routing, distinct acknowledgements and Neon identity/state guards |
 | Dependency audit | Exit zero, `{}` |
 | Controlled frontend build | Five tasks, 2,103 modules; SHA/auth/HTTPS/WSS artifact verified; existing 593.06 kB / 181.51 kB gzip warning |
-| PostgreSQL 18.6 integration | 10 passes, 741 assertions, five files, zero failures; cleanup confirmed |
-| Docker packaging | Final frozen-install/Prisma image built; Compose, five entrypoints and Linux private-state permissions passed |
+| PostgreSQL 18.6 integration | 11 passes, 770 assertions, five files, zero failures; cleanup confirmed |
+| Docker packaging | Frozen-install/Prisma image, Compose and five entrypoints passed |
 | PostgreSQL 18.6 release rehearsal | All 27 phases passed; owned resources removed |
-| Workflow validation | Official checksum-verified Actionlint 1.7.12 passed |
+| Workflow validation | B0.6C Actionlint 1.7.12 proof retained; workflows unchanged |
 
 Database proof includes SELECT-only evidence, baseline PASS and intentional column/user
 schema FAIL, atomic retirement refusals/rollback, eight-to-ten migrations and quarantine.
+R1 regressions include real NOWAIT writer conflict (SQLSTATE 55P03, under two seconds),
+held worker lock, short history, non-array timeline, processing/running outbox and
+UTC timestamps from a non-UTC session. Independent M1 proof applies untouched 1–8
+SQL using real Prisma deploy/history in a fresh DB, then matches the reference catalog.
+The dump wrapper authenticated against local PostgreSQL with an escaped synthetic
+password, refused the wrong password and exposed no password in tools environment.
 PostgreSQL 18 custom dump SHA-256 was stable through separate atomic restore; source,
 restored catalog/history/counts/content matched and deliberate corruption failed.
 Two real sessions exercised cross-user HTTP/WS denial with zero domain mutations or
-controls. Worker SIGKILL released its lock in 611 ms; one replacement acquired it in
-3,497 ms (10-second bound). Session pooling passed; real transaction pooling failed.
+controls. B0.6C's local PostgreSQL/Docker fixture worker SIGKILL released its lock in
+611 ms; one replacement acquired it in 3,497 ms (10-second bound). These are not
+Neon-hosted measurements. Session pooling passed; real transaction pooling failed.
+B0.6D repeated the local worker proof: 707 ms release, 4,123 ms replacement, one owner.
 Exact-image rollback, unhealthy release, dependency loss, trusted TLS, Secure sessions,
 WS revocation/Origins and interrupted migration-helper cleanup all executed.
 
-Failed attempts are not passes: an initial Windows Promise matcher stalled DB I/O;
-awaiting the operation before matching resolved it. Rehearsal exposed an internal-only
-fixture listener, physical dropped-column numbering and invalid topology/UUID fixtures.
-Those were corrected without weakening checks. The first frontend artifact check used
-wrong field names; the successful build's actual metadata contract then verified.
+Failed attempts remain separate evidence. B0.6D corrected a test-only cross-workspace
+import and proved the Docker Desktop password-file permission fix without loosening
+boundaries or authentication checks; final complete suites passed afterward.
 
 ## Remaining hosted gates and product risks
 
-1. Separately authorize clone rehearsal, then fence/retire every legacy writer/run;
-   rotate old credentials and terminate verified old sessions. Maintenance alone is insufficient.
+1. After all B0.6D exact-SHA CI jobs pass, run the approved disposable clone rehearsal
+   with branch-only reset credentials. Primary writer fencing/retirement remains
+   separately authorized; inspect/terminate old sessions regardless of rotation behaviour.
 2. Prove hosted recovery branches/custom restoration, role/grants, retention/fallback
    and direct Neon lock release/replacement timing before primary migrations 9/10.
+   Primary review must also cover rules/pg_rewrite, types/domains/enums, owners/grants/
+   default privileges, inheritance, publications, role/database settings and sequence
+   parameters. These remain open primary-cutover gates, not disposable-rehearsal blockers.
 3. Configure EC2/Nginx/DNS/TLS renewal, loopback/security groups, private same-database
    endpoints, stable auth secret and exact same-site origins. Verify real Google/GitHub
    callbacks/session/WS/run smoke; OAuth was not end-to-end tested without credentials.
@@ -177,5 +198,5 @@ ignored `docs/evidence.local/`. Required dependencies/generated Prisma/environme
 files remain. No agent-memory folders, scratch archives or separate project memory
 were created; this document is the main durable project state.
 
-Next: owner-authorized disposable hosted clone/restore/fallback rehearsal and provider
-session/TLS/OAuth configuration proof, followed by a separately approved main cutover.
+Next: approved disposable hosted clone/restore rehearsal with branch-only credentials,
+then provider session/TLS/fallback/OAuth proof before a separately approved primary cutover.
