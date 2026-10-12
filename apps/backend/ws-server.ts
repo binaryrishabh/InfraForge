@@ -7,6 +7,7 @@ import { subscribeToDeployment } from "./infra/pubsub";
 import { attachDeploymentSubscription, SUBSCRIPTION_MAX_BYTES } from "./infra/deploymentSubscriptions";
 import { assertRuntimeSchema } from "./release/runtime";
 import { createReadiness } from "./health/readiness";
+import { config } from "./utils/config";
 
 await assertRuntimeSchema();
 const readiness = createReadiness();
@@ -75,4 +76,4 @@ wss.on("connection", (socket, req) => {
   });
 });
 
-server.listen(3001);
+server.listen(3001, config.LISTEN_HOST);

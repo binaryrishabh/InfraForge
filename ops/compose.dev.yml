@@ -1,0 +1,36 @@
+name: infraforge-dev
+services:
+  postgres:
+    image: postgres:18-alpine
+    container_name: infraforge-dev-postgres
+    labels:
+      infraforge.project: binaryrishabh/InfraForge
+      infraforge.purpose: development
+    environment:
+      POSTGRES_USER: infraforge
+      POSTGRES_DB: infraforge_dev
+      POSTGRES_PASSWORD: ${DEV_POSTGRES_PASSWORD:?Run bun run dev:setup}
+    ports: ["127.0.0.1:55432:5432"]
+    volumes: [postgres_data:/var/lib/postgresql]
+    networks: [development]
+  redis:
+    image: redis:8-alpine
+    container_name: infraforge-dev-redis
+    labels:
+      infraforge.project: binaryrishabh/InfraForge
+      infraforge.purpose: development
+    ports: ["127.0.0.1:56379:6379"]
+    networks: [development]
+    tmpfs: [/data]
+volumes:
+  postgres_data:
+    name: infraforge-dev-postgres-data
+    labels:
+      infraforge.project: binaryrishabh/InfraForge
+      infraforge.purpose: development
+networks:
+  development:
+    name: infraforge-dev-network
+    labels:
+      infraforge.project: binaryrishabh/InfraForge
+      infraforge.purpose: development

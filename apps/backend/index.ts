@@ -36,4 +36,4 @@ app.use("/api/deployments", deploymentRouter);
 app.use((_req, res) => res.status(404).json({ success: false, message: "Resource not found" }));
 
 app.use(errorHandler);
-app.listen(config.PORT);
+app.listen(Number(config.PORT), config.LISTEN_HOST);

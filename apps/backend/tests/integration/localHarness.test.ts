@@ -36,12 +36,13 @@ describe("local integration safety guards", () => {
       PATH: "system-path", DATABASE_URL: "wrong", REDIS_HOST: "wrong", PORT: "wrong",
       PGHOST: "wrong", PGOPTIONS: "wrong", PGPASSWORD: "wrong", PGSSLMODE: "wrong",
       DOTENV_CONFIG_PATH: "wrong", DOTENV_CONFIG_OVERRIDE: "true", NODE_OPTIONS: "wrong", BUN_OPTIONS: "wrong",
-      BETTER_AUTH_SECRET: "wrong", APP_ORIGINS: "*", GOOGLE_CLIENT_SECRET: "wrong",
+      BETTER_AUTH_SECRET: "wrong", APP_ORIGINS: "*", GOOGLE_CLIENT_SECRET: "wrong", LISTEN_HOST: "0.0.0.0",
     });
     expect(result.PATH).toBe("system-path");
     expect(result.DATABASE_URL).toBe(settings.databaseUrl);
     expect(result.REDIS_HOST).toBe("127.0.0.1");
     expect(result.PORT).toBe("3100");
+    expect(result.LISTEN_HOST).toBe("127.0.0.1");
     expect(result.DOTENV_CONFIG_PATH).not.toBe("wrong");
     expect(result.DOTENV_CONFIG_OVERRIDE).toBe("false");
     expect(result.BETTER_AUTH_SECRET).not.toBe("wrong");

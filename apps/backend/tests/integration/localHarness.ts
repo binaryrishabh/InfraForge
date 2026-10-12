@@ -55,7 +55,7 @@ export function childEnvironment(settings: LocalSettings, inherited: Record<stri
   return { ...env, NODE_ENV: "test", DATABASE_URL: settings.databaseUrl,
     BETTER_AUTH_URL: `http://localhost:${settings.apiPort}`, APP_ORIGINS: "http://localhost:5173",
     BETTER_AUTH_SECRET: randomUUID() + randomUUID(),
-    PORT: String(settings.apiPort), REDIS_HOST: "127.0.0.1", REDIS_PORT: String(settings.redisPort),
+    PORT: String(settings.apiPort), LISTEN_HOST: "127.0.0.1", REDIS_HOST: "127.0.0.1", REDIS_PORT: String(settings.redisPort),
     DOTENV_CONFIG_PATH: join(tmpdir(), `infraforge-no-env-${randomUUID()}`), DOTENV_CONFIG_OVERRIDE: "false" };
 }
 

@@ -10,6 +10,7 @@
   ],
   "scripts": {
     "dev": "pwsh ./dev.ps1",
+    "dev:setup": "pwsh ./dev.ps1 -SetupOnly",
     "build": "turbo run build",
     "typecheck": "turbo run typecheck && tsc --noEmit -p scripts/release/tsconfig.json",
     "lint": "bun run check:boundaries && turbo run lint",

@@ -43,8 +43,8 @@ packages/simulation/ Deterministic engine, runtime types, cost and tuning
 ## Prerequisites
 
 - [Bun](https://bun.sh) 1.3.14
-- Docker (for Redis)
-- PostgreSQL (local, or a free-tier host such as Neon)
+- Docker Desktop (local PostgreSQL 18 and Redis 8)
+- PowerShell 7 (`pwsh`) for the local launcher
 
 ## Setup
 
@@ -75,62 +75,38 @@ keeping evidence outside the containers. `bun run test:integration` uses caller-
 services. Requirements and the temporary-resource policy are in
 [the integration test guide](apps/backend/tests/integration/README.md).
 
-On Windows, `bun run dev` calls the existing PowerShell launcher. It reuses the
-configured local PostgreSQL/Redis containers, applies committed migrations, generates
-the client, and supervises all four application processes. Keep local `.env` files in
-their app directories.
-
-### 2. Start Redis
+### 2. Prepare and start the local stack
 
 ```bash
-docker run -d -p 6379:6379 --name infraforge-redis redis:7-alpine
+bun run dev:setup
+bun run dev
 ```
 
-### 3. Configure the database
+Setup creates clearly labelled development containers, a persistent PostgreSQL 18
+volume and a dedicated Docker network. Data ports bind only to loopback:
+PostgreSQL `127.0.0.1:55432`, Redis `127.0.0.1:56379`. The launcher refuses
+unknown resource/port collisions. It never resets an existing developer database.
 
-Create `apps/backend/.env`:
+The ignored root `.env.development.local` contains generated local database and
+session secrets. Keep it with the persistent volume; losing its database password
+requires deliberate local recovery. The launcher ignores app `.env` files and
+hosted database/provider settings, applies all ten committed migrations, generates
+Prisma, then supervises API, worker, WS and frontend. Application listeners also
+bind to loopback, on ports 3000, 3001 and 5173.
 
-```
-DATABASE_URL=postgresql://user:password@localhost:5432/infraforge
-BETTER_AUTH_URL=http://localhost:3000
-APP_ORIGINS=http://localhost:5173
-```
-
-Also set `BETTER_AUTH_SECRET` to a stable random secret of at least 32 characters.
-Enable Google/GitHub with registered OAuth credentials and exact callbacks, as
-described in [authentication setup](docs/AUTHENTICATION.md). Provider secrets stay
-in the backend. Sign-in remains unavailable until a provider is configured.
-
-Then generate the Prisma client and create the schema:
+Ctrl+C stops the four application processes. PostgreSQL/Redis remain for the next
+session. To stop these owned data services without deleting developer data:
 
 ```bash
-cd apps/backend
-bun run db:generate
-bun run db:migrate
+docker compose --env-file .env.development.local -f ops/compose.dev.yml stop
 ```
 
-### 4. Run the backend (three processes)
-
-```bash
-cd apps/backend
-bun run index.ts       # API server           → :3000
-bun run worker.ts      # pipeline + simulator (keep running)
-bun run ws-server.ts   # WebSocket server     → :3001
-```
-
-### 5. Run the frontend
-
-```bash
-cd apps/web
-bun run dev            # → http://localhost:5173
-```
-
-Defaults already point at localhost. Override via `apps/web/.env` if needed:
-
-```
-VITE_BACKEND_API_URL=http://localhost:3000/api
-VITE_WS_URL=ws://localhost:3001
-```
+OAuth is intentionally unconfigured in this isolated workflow. Authentication still
+uses real database sessions; it has no public test-login endpoint or browser-only
+identity bypass. Disposable integration tests create fixture users/sessions through
+Better Auth's adapter, separate from developer data. Provider configuration is
+described in [authentication setup](docs/AUTHENTICATION.md); hosted settings and
+production cutover are currently parked.
 
 ## Quick tour
 
@@ -140,7 +116,10 @@ VITE_WS_URL=ws://localhost:3001
 4. Watch the pipeline run, then the canvas go **LIVE** with telemetry cards.
 5. Push the load slider past 100%, inject a **Crash** on the cache, and
    watch the database stampede.
-6. **Tear down** when done.
+6. **Tear down** when done, then open **Reports** to understand retained run evidence.
+   Observations, deterministic interpretations and unknowns stay separate. Reports use
+   recorded gates, events, original inputs and checkpoints; they do not invent a full
+   telemetry trace or an exact final snapshot.
 
 ## Tests
 
@@ -153,8 +132,8 @@ bun run test   # domain, catalog, frontend and backend; 30 simulation golden sce
 Compose runs Redis, API, one worker and the WebSocket server from an exact
 commit-tagged image. Use the [controlled release procedure](docs/DEPLOYMENT.md)
 for migration preflight, maintenance, readiness and compatible container rollback.
-That guide also provides a disposable local rehearsal. For normal development,
-use `pwsh ./dev.ps1`; the frontend is served separately.
+That guide also provides a disposable local rehearsal. Hosted release work is parked;
+normal product development uses the local setup/launcher above.
 
 ---
 
