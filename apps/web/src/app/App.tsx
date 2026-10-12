@@ -10,7 +10,8 @@ import { LandingPage } from "../features/landing/pages/LandingPage";
 import { SignInPage } from "../features/auth/pages/SignInPage";
 import { SignUpPage } from "../features/auth/pages/SignUpPage";
 import { DashboardPage } from "../features/dashboard/pages/DashboardPage";
-import { ReportsStubPage } from "../features/dashboard/pages/ReportsStubPage";
+import { RunHistoryPage } from "../features/reports/pages/RunHistoryPage";
+import { RunReportPage } from "../features/reports/pages/RunReportPage";
 import { SettingsStubPage } from "../features/dashboard/pages/SettingsStubPage";
 import { NotFoundPage } from "../features/dashboard/pages/NotFoundPage";
 
@@ -66,8 +67,8 @@ function App() {
           {/* App Shell Routes (left rail) */}
           <Route element={<AppShell />}>
             <Route path="/dashboard" element={<DashboardPage />} />
-            <Route path="/reports" element={<ReportsStubPage />} />
-            <Route path="/reports/:deploymentId" element={<ReportsStubPage />} />
+            <Route path="/reports" element={<RunHistoryPage />} />
+            <Route path="/reports/:deploymentId" element={<RunReportPage />} />
             <Route path="/settings" element={<SettingsStubPage />} />
           </Route>
 

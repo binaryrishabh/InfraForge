@@ -16,8 +16,10 @@ import {
 import { DeploymentStatus } from "@infraforge/contracts/deployment";
 import { Publish } from "@infraforge/contracts/events";
 import { captureRunInputs } from "../deployments/runInputs";
+import { reportRouter } from "../reports/routes";
 
 export const deploymentRouter = Router();
+deploymentRouter.use(reportRouter);
 
 // Create new deployment — transactional outbox
 deploymentRouter.post("/", async (req, res) => {

@@ -7,6 +7,7 @@ import { getAllInfrastructure } from '@/api/infrastructure.api';
 import { getLiveDeployments, getSpecificDeployment, type LiveDeploymentSummary } from '@/api/deployment.api';
 import { useCanvasStore } from '@/features/canvas/store/canvasStore';
 import type { Infrastructure } from '@infraforge/contracts/infrastructure';
+import { RecentRuns } from '../../reports/components/RecentRuns';
 
 export function DashboardPage() {
   const user = useAuthStore(s => s.user);
@@ -115,6 +116,8 @@ export function DashboardPage() {
             )}
           </div>
         </div>
+
+        <RecentRuns key={user?.id} />
 
         {/* Infrastructures List */}
         <div className="bg-[#1C1F26] border border-[#2A2E37] rounded-xl overflow-hidden">

@@ -67,7 +67,9 @@ export async function checkUserIsolation(harness: LocalHarness, fixtures: Sessio
     expect((await harness.request("/auth/get-session")).user.id).toBe(bob.user.id);
     expect((await harness.request("/infrastructure")).allInfrastructure).toEqual([]);
     expect((await harness.request("/deployments/live")).deployments).toEqual([]);
-    for (const path of [`/infrastructure/${designId}`, `/infrastructure/${designId}/deployments`, `/deployments/${runId}`]) {
+    expect((await harness.request("/deployments/history")).runs).toEqual([]);
+    await harness.request(`/deployments/history?before=${runId}`, undefined, "GET", 404);
+    for (const path of [`/infrastructure/${designId}`, `/infrastructure/${designId}/deployments`, `/deployments/${runId}`, `/deployments/${runId}/report`]) {
       await harness.request(path, undefined, "GET", 404);
     }
     await harness.request(`/infrastructure/${designId}`, { name: "Stolen", userId: bob.user.id }, "PUT", 404);
@@ -79,6 +81,8 @@ export async function checkUserIsolation(harness: LocalHarness, fixtures: Sessio
     for (const [action, body] of Object.entries(commands)) await harness.request(`/deployments/${runId}/${action}`, body, "POST", 404);
     harness.cookie = "";
     await harness.request(`/deployments/${runId}/speed`, { speed: 60 }, "POST", 401);
+    await harness.request("/deployments/history", undefined, "GET", 401);
+    await harness.request(`/deployments/${runId}/report`, undefined, "GET", 401);
     harness.cookie = aliceCookie;
     const forbiddenSignOut = await fetch(`${harness.api}/auth/sign-out`, { method: "POST",
       headers: { Cookie: aliceCookie, Origin: "https://attacker.test", "Content-Type": "application/json" }, body: "{}" });
@@ -108,12 +112,20 @@ export async function checkUserIsolation(harness: LocalHarness, fixtures: Sessio
       return id;
     };
     const bobRun = await insertRun(bobDesign.id, "completed");
+    expect((await harness.request("/deployments/history")).runs.map((run: { id: string }) => run.id)).toEqual([bobRun]);
+    const bobReport = (await harness.request(`/deployments/${bobRun}/report`)).report;
+    expect(bobReport.run.status).toBe("completed");
+    expect(bobReport.checkpoint).toBeNull();
+    expect(bobReport.originalSeed).not.toBeNull();
     phase("reverse ownership and WebSocket denial");
     harness.cookie = aliceCookie;
     await harness.request(`/infrastructure/${bobDesign.id}`, undefined, "GET", 404);
     await harness.request(`/infrastructure/${bobDesign.id}`, { name: "Stolen" }, "PUT", 404);
     await harness.request(`/infrastructure/${bobDesign.id}`, undefined, "DELETE", 404);
     await harness.request(`/deployments/${bobRun}`, undefined, "GET", 404);
+    await harness.request(`/deployments/${bobRun}/report`, undefined, "GET", 404);
+    await harness.request(`/deployments/history?before=${bobRun}`, undefined, "GET", 404);
+    expect((await harness.request("/deployments/history")).runs.some((run: { id: string }) => run.id === bobRun)).toBe(false);
     for (const [action, body] of Object.entries(commands)) await harness.request(`/deployments/${bobRun}/${action}`, body, "POST", 404);
     await deniedSubscription(aliceCookie, bobRun);
     await harness.request("/infrastructure", undefined, "DELETE", 404);
@@ -129,6 +141,8 @@ export async function checkUserIsolation(harness: LocalHarness, fixtures: Sessio
       await harness.request(`/infrastructure/${legacyId}`, undefined, "GET", 404);
       await harness.request("/deployments", { infrastructureId: legacyId }, "POST", 404);
       await harness.request(`/deployments/${legacyRun}`, undefined, "GET", 404);
+      await harness.request(`/deployments/${legacyRun}/report`, undefined, "GET", 404);
+      expect((await harness.request("/deployments/history")).runs.some((run: { id: string }) => run.id === legacyRun)).toBe(false);
       await harness.request(`/deployments/${legacyRun}/speed`, { speed: 1 }, "POST", 404);
       await deniedSubscription(cookie, legacyRun);
     }
@@ -194,6 +208,8 @@ export async function checkUserIsolation(harness: LocalHarness, fixtures: Sessio
       expect(await rejectedUpgrade(session.cookie, harness.origin)).toBe(401);
       harness.cookie = session.cookie;
       await harness.request(`/deployments/${runId}/speed`, { speed: 60 }, "POST", 401);
+      await harness.request("/deployments/history", undefined, "GET", 401);
+      await harness.request(`/deployments/${runId}/report`, undefined, "GET", 401);
     }
     harness.cookie = aliceCookie;
     expect((await harness.request(`/deployments/${runId}`)).deployment.id).toBe(runId);

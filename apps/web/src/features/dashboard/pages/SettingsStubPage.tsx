@@ -9,7 +9,7 @@ export function SettingsStubPage() {
         </div>
         <h2 className="text-lg font-semibold text-[#EDF1F7]">Settings</h2>
         <p className="text-sm text-[#677185] max-w-xs mx-auto">
-          Profile, preferences, and Solana billing arrive in Era 2.
+          Profile and preference controls are not available yet.
         </p>
       </div>
     </div>

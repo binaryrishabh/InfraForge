@@ -3,6 +3,10 @@
   "private": true,
   "type": "module",
   "exports": {
+    "./reports": {
+      "types": "./src/reports/index.ts",
+      "default": "./src/reports/index.ts"
+    },
     "./deployment": {
       "types": "./src/deployment/index.ts",
       "default": "./src/deployment/index.ts"
