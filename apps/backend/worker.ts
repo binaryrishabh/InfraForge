@@ -422,7 +422,7 @@ const server = http.createServer(async (req, res) => {
   res.writeHead(result.success ? 200 : 503, { "Content-Type": "application/json" });
   res.end(JSON.stringify(result));
 });
-server.listen(Number(process.env.WORKER_HEALTH_PORT || 3002));
+server.listen(Number(process.env.WORKER_HEALTH_PORT || 3002), config.LISTEN_HOST);
 
 async function shutdown() {
   if (stopping) return;

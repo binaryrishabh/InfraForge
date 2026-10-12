@@ -92,7 +92,7 @@ session secrets. Keep it with the persistent volume; losing its database passwor
 requires deliberate local recovery. The launcher ignores app `.env` files and
 hosted database/provider settings, applies all ten committed migrations, generates
 Prisma, then supervises API, worker, WS and frontend. Application listeners also
-bind to loopback, on ports 3000, 3001 and 5173.
+bind to loopback, on ports 3000, 3001, worker readiness 3002 and frontend 5173.
 
 Ctrl+C stops the four application processes. PostgreSQL/Redis remain for the next
 session. To stop these owned data services without deleting developer data:

@@ -244,6 +244,7 @@ try {
     $env:REDIS_PORT = '56379'
     $env:PORT = '3000'
     $env:LISTEN_HOST = '127.0.0.1'
+    $env:WORKER_HEALTH_PORT = '3002'
     $env:NODE_ENV = 'development'
     $env:DOTENV_CONFIG_PATH = $localEnv
     $env:DOTENV_CONFIG_OVERRIDE = 'false'
@@ -278,12 +279,12 @@ try {
     if ($SetupOnly) { Write-Host 'Local services are ready. Run bun run dev.'; return }
 
     Write-Step "Checking application ports"
-    foreach ($port in @(3000, 3001, 5173)) {
+    foreach ($port in @(3000, 3001, 3002, 5173)) {
         if (Test-TcpPort -Port $port) {
             throw "Port $port is already in use. Stop the existing process before launching InfraForge."
         }
     }
-    Write-Host "  Ports 3000, 3001, and 5173 are available."
+    Write-Host "  Ports 3000, 3001, 3002, and 5173 are available."
 
     Write-Step "Preparing the local database client"
     Invoke-CheckedCommand `
@@ -341,7 +342,8 @@ try {
             $frontendReady = Test-HttpEndpoint -Uri "http://127.0.0.1:5173/"
         }
 
-        $workerReady = [DateTime]::UtcNow -ge $workerStableAt
+        $workerReady = [DateTime]::UtcNow -ge $workerStableAt -and
+            (Test-HttpEndpoint -Uri "http://127.0.0.1:3002/health/ready")
         if ($apiReady -and $webSocketReady -and $frontendReady -and $workerReady) {
             break
         }
@@ -350,6 +352,7 @@ try {
 
     if (-not $apiReady) { throw "Backend API did not become ready on http://127.0.0.1:3000/health." }
     if (-not $webSocketReady) { throw "WebSocket server did not become ready on port 3001." }
+    if (-not $workerReady) { throw "Worker did not become ready on port 3002." }
     if (-not $frontendReady) { throw "Frontend did not become ready on http://localhost:5173/." }
     Assert-ServiceStillRunning -Service $worker
 
