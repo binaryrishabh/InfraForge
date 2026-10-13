@@ -21,6 +21,9 @@ export async function getCompareOptions(id: string): Promise<RunSummary[]> {
 export async function getRerunOptions(id: string): Promise<RerunOptions> {
   return (await http.get(`${API_URL}/deployments/${encodeURIComponent(id)}/rerun-options`)).data.options;
 }
+export async function previewCanvasRerun(id: string, layout: object): Promise<RerunOptions> {
+  return (await http.post(`${API_URL}/deployments/${id}/rerun-preview`, { layout })).data.options;
+}
 export async function createRerun(id: string, mode: RerunMode, matchedStop: boolean, expectedInputHash?: string): Promise<Deployment> {
   return (await http.post(`${API_URL}/deployments/${encodeURIComponent(id)}/reruns`, { mode, matchedStop, expectedInputHash })).data.createdDeployment;
 }

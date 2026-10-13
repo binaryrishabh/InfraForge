@@ -3,6 +3,8 @@ import { draftKey } from "../../auth/drafts";
 import { toast } from "sonner";
 import { createInfrastructure, deleteInfrastructure, updateInfrastructure } from "@/api/infrastructure.api";
 import { createDeployment } from "@/api/deployment.api";
+import { createRerun } from "@/api/reports.api";
+import type { CanvasRerunRequest } from "../improvement";
 import { SAMPLE_ARCHITECTURE } from "@infraforge/domain/examples";
 import { validateDeploymentReadiness } from "@infraforge/domain/validation";
 import { useCanvasStore } from "../store/canvasStore";
@@ -90,10 +92,14 @@ export function useInfrastructureActions() {
   const handleDeployExecute = async (
     workloadProfile: WorkloadProfile | undefined,
     name: string,
+    match?: CanvasRerunRequest,
   ) => {
     const store = useCanvasStore.getState();
+    const owner = useAuthStore.getState().user?.id;
+    if (!owner) throw new Error("Session ended");
+    if (match && (store.activeDeploymentId || store.currentLayoutId !== match.designId ||
+        store.resources !== match.layout.resources || store.connectionLines !== match.layout.connectionLines)) throw new Error("Canvas changed since preview");
     store.setActiveDeploymentId(null);
-    await new Promise((r) => setTimeout(r, 100));
     const layout = {
       resources: store.resources,
       connectionLines: store.connectionLines,
@@ -102,15 +108,18 @@ export function useInfrastructureActions() {
     let infrastructureId = store.currentLayoutId;
     if (!infrastructureId) {
       const created = await createInfrastructure(name, layout);
+      if (useAuthStore.getState().user?.id !== owner) throw new Error("Session changed");
       infrastructureId = created.id;
       store.setCurrentLayoutId(created.id);
       store.setCurrentLayoutName(created.name);
     } else {
       await updateInfrastructure(infrastructureId, { name, layout });
+      if (useAuthStore.getState().user?.id !== owner) throw new Error("Session changed");
       store.setCurrentLayoutName(name);
     }
     store.setCurrentLayoutSaved(true);
-    const deployment = await createDeployment(infrastructureId, workloadProfile);
+    const deployment = match ? await createRerun(match.sourceId, "current-design", match.matchedStop, match.inputHash) : await createDeployment(infrastructureId, workloadProfile);
+    if (useAuthStore.getState().user?.id !== owner) throw new Error("Session changed");
     if (!deployment.liveTopology) throw new Error("Deployment has no captured topology");
     store.loadRunTopology(deployment.id, deployment.liveTopology, deployment.topologyRevision, infrastructureId, name);
     store.setIsDeploying(true);

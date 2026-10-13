@@ -6,6 +6,7 @@ import { reportSelection } from "../reports/routes";
 import { buildRerunOptions, currentDesignInput, rerunInputHash } from "./options";
 import { readRunInputs } from "../deployments/runInputs";
 import { storedJson } from "../utils/json";
+import { LayoutSchema } from "../zod_schemas/layout.schema";
 
 export const rerunRouter = Router();
 const sourceId = (v: unknown) => { const id = z.uuid().safeParse(v); if (!id.success) throw new ValidationError("A valid source run ID is required."); return id.data; };
@@ -16,6 +17,21 @@ rerunRouter.get("/:id/rerun-options", async (req, res) => {
     if (!source) throw new NotFoundError("Run not found");
     const design = source.infrastructureId ? await tx.infrastructure.findFirst({ where: { id: source.infrastructureId, ownerId: res.locals.userId } }) : null;
     return buildRerunOptions(source, design?.layout ?? null);
+  }, { isolationLevel: "RepeatableRead" });
+  res.json({ success: true, options });
+});
+const previewBody = z.object({ layout: LayoutSchema.extend({
+  resources: LayoutSchema.shape.resources.unwrap().min(1).max(500),
+  connectionLines: LayoutSchema.shape.connectionLines.unwrap().max(1000),
+}) }).strict();
+rerunRouter.post("/:id/rerun-preview", async (req, res) => {
+  const id = sourceId(req.params.id), parsed = previewBody.safeParse(req.body);
+  if (!parsed.success || Buffer.byteLength(JSON.stringify(parsed.data), "utf8") > 65536) throw new ValidationError("A bounded current canvas layout is required.");
+  const options = await prisma.$transaction(async (tx) => {
+    const source = await tx.deployment.findFirst({ where: { id, ownerId: res.locals.userId }, select: reportSelection });
+    if (!source) throw new NotFoundError("Run not found");
+    const design = source.infrastructureId ? await tx.infrastructure.findFirst({ where: { id: source.infrastructureId, ownerId: res.locals.userId }, select: { id: true } }) : null;
+    return buildRerunOptions(source, design ? parsed.data.layout : null);
   }, { isolationLevel: "RepeatableRead" });
   res.json({ success: true, options });
 });

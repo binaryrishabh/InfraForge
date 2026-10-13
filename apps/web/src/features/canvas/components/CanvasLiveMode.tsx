@@ -37,7 +37,6 @@ export function CanvasLiveMode({ deploymentId }: CanvasLiveModeProps) {
 
   useEffect(() => {
     if (status === DeploymentStatus.TORN_DOWN) {
-      setActiveDeploymentId(null);
       setIsDeploying(false);
     }
   }, [status, setActiveDeploymentId, setIsDeploying]);
@@ -57,7 +56,7 @@ export function CanvasLiveMode({ deploymentId }: CanvasLiveModeProps) {
         <div className="absolute top-3 right-4 z-40">
           <ShellMenu />
         </div>
-        {!isLive && (
+        {!isLive && status !== DeploymentStatus.TORN_DOWN && (
           <LiveWaitingState
             status={status}
             isConnectionError={isConnectionError}

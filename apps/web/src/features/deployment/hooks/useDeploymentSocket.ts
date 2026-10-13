@@ -30,6 +30,8 @@ export function useDeploymentSocket(deploymentId: string) {
         let ws: WebSocket;
         let retries = 0;
         let reconnectTimeout: ReturnType<typeof setTimeout>;
+        const owner = useAuthStore.getState().user?.id;
+        let pollBusy = false;
 
         const connect = async () => {
             // i. First fetch current state from DB
@@ -186,8 +188,26 @@ export function useDeploymentSocket(deploymentId: string) {
 
         connect();
 
+        // Redis notifications are optional. Confirm terminal lifecycle through the
+        // owner-scoped API without replacing newer live topology or telemetry.
+        const lifecycleTimer = setInterval(() => {
+            if (isClose || isServerStateFailed || pollBusy) return;
+            pollBusy = true;
+            void getSpecificDeployment(deploymentId).then((current) => {
+                if (isClose || !owner || useAuthStore.getState().user?.id !== owner) return;
+                if (![DeploymentStatus.TORN_DOWN, DeploymentStatus.FAILED, DeploymentStatus.COMPLETED].includes(current.status)) return;
+                setDeployment(current);
+                setStatus(current.status);
+                setTimeline(current.timeline || []);
+                isServerStateFailed = true;
+                clearTimeout(reconnectTimeout);
+                ws?.close();
+            }).catch(() => {}).finally(() => { pollBusy = false; });
+        }, 5000);
+
         return () => {
             isClose = true;
+            clearInterval(lifecycleTimer);
             if(reconnectTimeout) {
                 clearTimeout(reconnectTimeout);
             }

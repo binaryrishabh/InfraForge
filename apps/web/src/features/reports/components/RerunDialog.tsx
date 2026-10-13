@@ -8,6 +8,7 @@ import { StartingInputs } from "./StartingInputs";
 import { useCanvasStore } from "../../canvas/store/canvasStore";
 import { AMBER_BUTTON_CLASS } from "../../../theme/controlClasses";
 import { useAuthStore } from "../../auth/store/auth.store";
+import { SourceInputFacts } from "./SourceInputFacts";
 
 export function RerunChoices({ options, mode, onMode, matched, onMatched }: {
   options: RerunOptions; mode: RerunMode; onMode: (mode: RerunMode) => void; matched: boolean; onMatched: (value: boolean) => void;
@@ -21,8 +22,7 @@ export function RerunChoices({ options, mode, onMode, matched, onMatched }: {
     {options.currentDesign.reason && <p>{options.currentDesign.reason}</p>}
     {mode === "current-design" && options.currentDesign.preview && <details><summary className="cursor-pointer text-[#4FA89B]">What changed / comparison preview</summary><div className="mt-3"><StartingInputs starting={options.currentDesign.preview} detailed /></div></details>}
     {mode === "current-design" && options.currentDesign.available && !options.currentDesign.modelCatalogCompatible && <p>Model/catalog provenance differs or is missing. The resulting comparison is descriptive only.</p>}
-    <p>Source workload: {options.workload ? `${options.workload.targetThroughput.toLocaleString()} requests ${options.workload.throughputUnit.replaceAll("-", " ")} · ${options.workload.trafficShape} · ${options.workload.payloadSize}` : "unavailable"}</p>
-    <p className="break-all">Source seed: {options.seed ?? "unavailable"}</p>
+    <SourceInputFacts workload={options.workload} seed={options.seed} />
     <label className="flex gap-2 items-start"><input type="checkbox" checked={matched} disabled={!options.matchedStop.available} onChange={(e) => onMatched(e.target.checked)} />Stop automatically at the same simulated time as this run.{options.matchedStop.target !== null && ` (${options.matchedStop.target} s)`}</label>
     {options.matchedStop.reason && <p>{options.matchedStop.reason}</p>}
   </div>;

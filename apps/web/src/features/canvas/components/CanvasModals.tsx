@@ -1,12 +1,23 @@
 import { toast } from "sonner";
+import { useMemo } from "react";
+import { useLocation } from "react-router-dom";
 import { useCanvasStore } from "../store/canvasStore";
 import { useInfrastructureActions } from "../hooks/useInfrastructureActions";
 import { InputModal } from "@/components/UI/InputModal";
 import { ConfirmModal } from "@/components/UI/ConfirmModal";
 import { TypeToConfirmModal } from "@/components/UI/TypeToConfirmModal";
 import { DeployModal } from "@/features/deployment/components/DeployModal";
+import { ImproveDeployModal } from "../../deployment/components/ImproveDeployModal";
+import { readImprovementContext } from "../improvement";
 
 export function CanvasModals() {
+  const location = useLocation();
+  const currentLayoutId = useCanvasStore((s) => s.currentLayoutId);
+  const activeDeploymentId = useCanvasStore((s) => s.activeDeploymentId);
+  const resources = useCanvasStore((s) => s.resources);
+  const connectionLines = useCanvasStore((s) => s.connectionLines);
+  const layout = useMemo(() => ({ resources, connectionLines }), [resources, connectionLines]);
+  const improvement = !activeDeploymentId ? readImprovementContext(location.state, currentLayoutId) : null;
   const modalState = useCanvasStore((s) => s.modalState);
   const modalLoading = useCanvasStore((s) => s.modalLoading);
   const currentLayoutName = useCanvasStore((s) => s.currentLayoutName);
@@ -69,7 +80,16 @@ export function CanvasModals() {
           onConfirm={() => { setModalState(null); handleNewExecute(); toast.success("Canvas cleared"); }}
         />
       )}
-      {modalState.type === "confirm-deploy" && (
+      {modalState.type === "confirm-deploy" && improvement && (
+        <ImproveDeployModal sourceId={improvement.sourceRunId} designId={improvement.designId} layout={layout} initialName={currentLayoutName || ""}
+          loading={modalLoading} onClose={() => { if (!modalLoading) setModalState(null); }} onDeploy={async (name, request) => {
+            setModalLoading(true);
+            try { await handleDeployExecute(undefined, name, request); setModalState(null); }
+            catch { toast.error("Run not created. The canvas may have been saved; refresh the preview and try again."); }
+            finally { setModalLoading(false); }
+          }} />
+      )}
+      {modalState.type === "confirm-deploy" && !improvement && (
         <DeployModal
           open={true}
           onOpenChange={(open) => { if (!open && !modalLoading) setModalState(null); }}

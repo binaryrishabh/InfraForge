@@ -618,7 +618,8 @@ integration("local deployment lifecycle", () => {
       evidence.reports = await checkRecordedReports(harness, id, invalidDeployment.createdDeployment.id);
       evidence.compare = await checkCompareAccess(harness, sessions, [id, invalidDeployment.createdDeployment.id]);
       phase("honest reruns and exact matched stop");
-      evidence.reruns = await checkHonestReruns(harness, sessions, infrastructureIds, deploymentIds);
+      evidence.reruns = await checkHonestReruns(harness, sessions, infrastructureIds, deploymentIds,
+        (id) => evidence.redisEvents.filter((item: Event) => item.channel === `deployment:${id}:updates`).map((item: Event) => item.event));
       evidence.result = "passed";
     } catch (error) {
       evidence.result = "failed";

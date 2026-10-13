@@ -4,6 +4,9 @@ import { storedJson } from "../utils/json";
 import { captureSnapshot } from "./snapshot";
 import { flushAcknowledgement } from "./actionAcknowledgement";
 import type { SimulationInstance } from "./instance";
+import { publishSimulationSnapshot } from "../infra/pubsub";
+import { redis } from "../infra/redis";
+import { Publish } from "@infraforge/contracts/events";
 
 export async function finishTeardown(deploymentId: string, instance: SimulationInstance, action: RunAction, remove: () => void,
   snapshot = captureSnapshot(deploymentId, instance, "terminal")) {
@@ -30,6 +33,12 @@ export async function finishTeardown(deploymentId: string, instance: SimulationI
         status: "torn-down", runtimeActive: false, timeline: [...timeline, { timestamp: snapshot.capturedAt,
           event: "Deployment Torn Down", message: "Simulation stopped; exact terminal state captured." }] } });
     });
+    // Retrying this same acknowledgement also sends the final notification.
+    // Optional Redis delivery cannot invalidate the committed database evidence.
+    await publishSimulationSnapshot(snapshot).catch(() => {});
+    await redis.publish(`deployment:${deploymentId}:updates`, JSON.stringify({ deploymentId,
+      publishType: Publish.publishDeploymentTornDown, status: "torn-down", timestamp: snapshot.capturedAt,
+      message: "Simulation stopped; exact terminal state captured." })).catch(() => {});
     remove();
   };
   await flushAcknowledgement(instance);

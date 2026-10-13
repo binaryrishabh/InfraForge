@@ -5,6 +5,7 @@ import { CanvasTopbar } from "../topbar/CanvasTopbar";
 import { CanvasLiveMode } from "./CanvasLiveMode";
 import { ShellMenu } from "@/components/shell/ShellMenu";
 import { useCanvasStore } from "../store/canvasStore";
+import { ImprovementBanner } from "./ImprovementBanner";
 
 export function CanvasDesignerPage() {
   useCanvasPersistence();
@@ -19,6 +20,7 @@ export function CanvasDesignerPage() {
     <CanvasSurface className="h-screen bg-[#14161A] text-white" showEmptyState>
       {/* Design-only chrome: the floating action topbar and shell menu. */}
       <CanvasTopbar />
+      <ImprovementBanner />
       <div className="absolute top-3 right-4 z-40">
         <ShellMenu />
       </div>

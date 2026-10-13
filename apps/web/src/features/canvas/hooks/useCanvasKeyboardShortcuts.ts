@@ -14,6 +14,7 @@ export function useCanvasKeyboardShortcuts() {
 
   useEffect(() => {
     const handleKeyPressed = (event: KeyboardEvent) => {
+      if (useCanvasStore.getState().modalState || useCanvasStore.getState().modalLoading) return;
       const target = event.target as HTMLElement;
       const isInput = target.tagName === "INPUT" || target.tagName === "TEXTAREA";
       if (isInput) return;

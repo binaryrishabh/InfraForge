@@ -1,7 +1,5 @@
 import { prisma } from "../lib/prisma";
 import { publishSimulationSnapshot } from "../infra/pubsub";
-import { Publish } from "@infraforge/contracts/events";
-import { redis } from "../infra/redis";
 import { createInitialState } from "@infraforge/simulation/engine";
 import { engineSeed, readRunInputs, assertSimulationContext } from "../deployments/runInputs";
 import type { WorkerOwnership } from "../infra/workerOwnership";
@@ -90,10 +88,6 @@ async function advanceSimulations() {
       }
       const terminal = await processRunActions(deploymentId, instance, () => registry.delete(deploymentId));
       if (terminal) {
-        await publishSimulationSnapshot(terminal).catch(() => {});
-        await redis.publish(`deployment:${deploymentId}:updates`, JSON.stringify({ deploymentId,
-          publishType: Publish.publishDeploymentTornDown, status: "torn-down", timestamp: terminal.capturedAt,
-          message: "Simulation stopped; exact terminal state captured." })).catch(() => {});
         continue;
       }
       if (runtimeStopped || registry.get(deploymentId) !== instance) continue;

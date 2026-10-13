@@ -10,8 +10,9 @@ import type { SimulationInstance } from "../../simulator/instance";
 import { LocalHarness, until } from "./localHarness";
 import { SessionFixtures } from "./sessionFixtures";
 import { layout, workload } from "./scenario";
+import { checkCanvasPreview } from "./improveChecks";
 
-export async function checkHonestReruns(harness: LocalHarness, sessions: SessionFixtures, designs: string[], runs: string[]) {
+export async function checkHonestReruns(harness: LocalHarness, sessions: SessionFixtures, designs: string[], runs: string[], eventsFor: (id: string) => Record<string, any>[]) {
   const cookie = harness.cookie;
   const design = (await harness.request("/infrastructure", { name: "Rerun source", layout }, "POST", 201)).createdInfrastructure;
   designs.push(design.id);
@@ -37,8 +38,16 @@ export async function checkHonestReruns(harness: LocalHarness, sessions: Session
     harness.cookie = bob.cookie;
     for (const path of ["rerun-options", "family"]) await harness.request(`/deployments/${source}/${path}`, undefined, "GET", 404);
     await harness.request(`/deployments/${source}/reruns`, { mode: "exact", matchedStop: true }, "POST", 404);
+    await harness.request(`/deployments/${source}/rerun-preview`, { layout }, "POST", 404);
   } finally { harness.cookie = cookie; }
   expect(await counts()).toEqual(before);
+  for (const variant of [{ ...input, version: 1 }, { ...input, simulationModelVersion: "other" }, { ...input, catalogSnapshot: "other" }]) {
+    const id = randomUUID(); runs.push(id);
+    await harness.sql.query(`INSERT INTO "Deployment" (id,"infrastructureId",status,"runInputs",seed,"workloadProfile","updatedAt")
+      VALUES ($1,$2,'failed',$3,$4,$5,now())`, [id, design.id, variant, input.seed, input.workloadProfile]);
+    expect((await harness.request(`/deployments/${id}/rerun-options`)).options.exact.available).toBe(false);
+    await harness.request(`/deployments/${id}/reruns`, { mode: "exact", matchedStop: false }, "POST", 409);
+  }
   const create = async (mode: "exact" | "current-design", matchedStop: boolean, hash?: string) => {
     const run = (await harness.request(`/deployments/${source}/reruns`, { mode, matchedStop, ...(hash ? { expectedInputHash: hash } : {}) }, "POST", 201)).createdDeployment;
     runs.push(run.id);
@@ -92,15 +101,17 @@ export async function checkHonestReruns(harness: LocalHarness, sessions: Session
   const delayed = await create("exact", true);
   await harness.sql.query("CREATE SEQUENCE rerun_probe_seq");
   await harness.sql.query(`CREATE FUNCTION rerun_probe() RETURNS trigger LANGUAGE plpgsql AS $$
-    BEGIN IF NEW."deploymentId" = '${delayed.id}' AND NEW.kind='teardown' THEN
+    BEGIN IF NEW."deploymentId" = '${delayed.id}' AND NEW.kind='teardown' AND NEW.parameters->>'trigger'='matched-stop' THEN
       PERFORM nextval('rerun_probe_seq'); RAISE EXCEPTION 'owned matched stop action failure'; END IF; RETURN NEW; END $$`);
   await harness.sql.query('CREATE TRIGGER rerun_probe BEFORE INSERT ON "RunAction" FOR EACH ROW EXECUTE FUNCTION rerun_probe()');
   let capturedBeforeRetry: Date;
+  let lateStopId: string;
   try {
     await live(delayed.id); await speed(delayed.id, 60);
     await until(async () => Number((await harness.sql.query('SELECT last_value FROM rerun_probe_seq')).rows[0].last_value) >= 2 || undefined, "matched-stop insertion retries", 35000, 500);
     expect((await read(delayed.id)).terminalSnapshot).toBeNull();
     capturedBeforeRetry = (await harness.sql.query('SELECT now() AS at')).rows[0].at;
+    lateStopId = (await harness.request(`/deployments/${delayed.id}/teardown`, {}, "POST", 202)).action.id;
     await harness.sql.query(`CREATE FUNCTION rerun_terminal_probe() RETURNS trigger LANGUAGE plpgsql AS $$
       BEGIN IF NEW.id = '${delayed.id}' AND NEW."terminalSnapshot" IS NOT NULL THEN
         PERFORM nextval('rerun_probe_seq'); RAISE EXCEPTION 'owned terminal write failure'; END IF; RETURN NEW; END $$`);
@@ -117,9 +128,16 @@ export async function checkHonestReruns(harness: LocalHarness, sessions: Session
     await harness.sql.query('DROP SEQUENCE rerun_probe_seq');
   }
   const recovered = await stopped(delayed.id);
+  await until(async () => eventsFor(delayed.id).some((event) => event.publishType === "deployment-torn-down") || undefined, "terminal retry notification", 10000, 100);
+  expect(eventsFor(delayed.id).find((event) => event.kind === "terminal")?.simulatedSeconds).toBe(620);
+  expect(eventsFor(delayed.id).find((event) => event.kind === "terminal")?.capturedAt).toBe(recovered.terminalSnapshot.capturedAt);
   expect(recovered.terminalSnapshot.simulatedSeconds).toBe(620);
   expect(new Date(recovered.terminalSnapshot.capturedAt).getTime()).toBeLessThan(capturedBeforeRetry!.getTime());
-  expect((await harness.sql.query('SELECT count(*) FROM "RunAction" WHERE "deploymentId"=$1 AND kind=\'teardown\'', [delayed.id])).rows[0].count).toBe("1");
+  const stopActions = (await harness.sql.query('SELECT * FROM "RunAction" WHERE "deploymentId"=$1 AND kind=\'teardown\'', [delayed.id])).rows;
+  expect(stopActions.filter((a) => a.status === "completed")).toHaveLength(1);
+  expect(stopActions.filter((a) => a.parameters.trigger === "matched-stop")).toHaveLength(1);
+  expect(stopActions.find((a) => a.id === lateStopId!)?.status).toBe("cancelled");
+  expect(stopActions.find((a) => a.status === "completed")?.requestedAt.toISOString()).toBe(recovered.terminalSnapshot.capturedAt);
 
   const manual = await create("exact", true);
   await live(manual.id);
@@ -131,6 +149,9 @@ export async function checkHonestReruns(harness: LocalHarness, sessions: Session
   expect(earlyComparison.costs[1]!.delta).toBeNull();
   expect(earlyComparison.observed.some((fact) => fact.message.includes("matched stop was not reached"))).toBe(true);
 
+  const improved = await checkCanvasPreview(harness, source, design.id, runs);
+  await live(improved); await speed(improved, 60); await stopped(improved);
+
   await harness.request(`/infrastructure/${design.id}`, undefined, "DELETE");
   const detached = await create("exact", true);
   expect(detached.infrastructureId).toBeNull();
@@ -140,6 +161,6 @@ export async function checkHonestReruns(harness: LocalHarness, sessions: Session
   const family = (await harness.request(`/deployments/${source}/family`)).family;
   expect(family.reruns.map((item: any) => item.run.id)).toContain(detached.id);
   expect(family.reruns.find((item: any) => item.run.id === current.id).starting.grade).toBe("one-change-design");
-  return { source, exact: exact.id, current: current.id, delayed: delayed.id, manual: manual.id, detached: detached.id,
-    target: 620, exactStops: 4, insertionAndTerminalRetries: true, originalCapturePreserved: true, crossOwnerNoMutation: true };
+  return { source, exact: exact.id, current: current.id, delayed: delayed.id, manual: manual.id, detached: detached.id, improved,
+    target: 620, exactStops: 5, canvasPreviewPreserved: true, insertionAndTerminalRetries: true, originalCapturePreserved: true, crossOwnerNoMutation: true };
 }
