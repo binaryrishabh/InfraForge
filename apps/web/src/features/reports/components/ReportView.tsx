@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import type { RunReport } from "@infraforge/contracts/reports";
 import { ReportSection as Section } from "./ReportSection";
 import { ReportMeasurements } from "./ReportMeasurements";
+import { ActionTimeline } from "./ActionTimeline";
 
 export function ReportView({ report }: { report: RunReport }) {
   const { run, topology } = report;
@@ -31,6 +32,7 @@ export function ReportView({ report }: { report: RunReport }) {
       {run.workload.readWriteRatio !== undefined && <p>Read share: {Math.round(run.workload.readWriteRatio * 100)}%</p>}
       <p className="text-[#8B909C]">{run.workloadSource === "captured" ? "Workload captured when this run was created." : "Legacy workload record; full resolved original input is unavailable."}</p>
       {report.originalSeed && <p className="break-all">Original seed: {report.originalSeed}</p>}
+      <p>Simulation model: {report.provenance.simulationModelVersion ?? "not captured (legacy input)"} · catalog snapshot: {report.provenance.catalogSnapshot ?? "not captured"}</p>
       {report.legacySeed && <p className="break-all">Legacy seed record: {report.legacySeed} (original input unavailable)</p>}
       {topology.original && <>
         <p>Original architecture: {topology.original.resources.length} resources, {topology.original.connectionCount} connections</p>
@@ -39,6 +41,7 @@ export function ReportView({ report }: { report: RunReport }) {
         </li>)}</ul>
       </>}
     </Section>}
+    <ActionTimeline actions={report.actions} />
     {!!report.stages.length && <Section title="Deployment stages">
       <ol className="space-y-4">{report.stages.map((stage, i) => <li key={`${stage.name}:${i}`}>
         <p className="font-medium">{stage.name} · {stage.status}</p>
@@ -61,7 +64,7 @@ export function ReportView({ report }: { report: RunReport }) {
       </li>)}</ol>
     </Section>}
     {!!run.topologyRevision && topology.changes && <Section title="Last accepted topology changes">
-      <p>Revision {run.topologyRevision}. Compared with the original input; intermediate edits and checkpoint application are not known.</p>
+      <p>Revision {run.topologyRevision}, compared with the original input. Use the action timeline and snapshot revision for retained evidence of simulator application.</p>
       <p>Added: {topology.changes.added.join(", ") || "none"}</p>
       <p>Removed: {topology.changes.removed.join(", ") || "none"}</p>
       <p>Reconfigured: {topology.changes.reconfigured.join(", ") || "none"}</p>

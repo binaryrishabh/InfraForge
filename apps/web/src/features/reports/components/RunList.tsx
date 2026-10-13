@@ -14,6 +14,7 @@ export function RunList({ runs }: { runs: RunSummary[] }) {
           {run.chaosEventCount !== null && ` · ${run.chaosEventCount} chaos request${run.chaosEventCount === 1 ? "" : "s"}`}
         </p>
         {run.workload && <p className="mt-1 text-xs text-[#8B909C]">{run.workload.targetThroughput.toLocaleString()} requests {run.workload.throughputUnit.replaceAll("-", " ")} · {run.workload.trafficShape} traffic</p>}
+        {run.infrastructureId === null && <p className="mt-1 text-xs text-[#8B909C]">Saved design deleted; run history retained.</p>}
         <p className="mt-2 text-sm text-[#4FA89B]">{run.hasReportData ? "Understand this run →" : "View inputs and evidence limits →"}</p>
       </Link>
     </li>)}

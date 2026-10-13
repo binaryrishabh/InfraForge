@@ -95,7 +95,7 @@ interface CanvasStoreState {
   setRedoStack: (updater: Updater<CanvasUndoAction[]>) => void;
   setIsInitialized: (initialized: boolean) => void;
   loadLayout: (resources: Resource[], connectionLines: ConnectionLine[], id: string | null, name: string | null) => void;
-  loadRunTopology: (deploymentId: string, topology: RunTopology, revision: number, layoutId: string, name: string | null) => void;
+  loadRunTopology: (deploymentId: string, topology: RunTopology, revision: number, layoutId: string | null, name: string | null) => void;
   applyLiveTopology: (deploymentId: string, topology: RunTopology, revision: number) => void;
   acknowledgeLiveTopology: (deploymentId: string, topology: RunTopology, revision: number) => void;
   clearCanvas: () => void;

@@ -1,5 +1,7 @@
 import { expect, test } from "bun:test";
-import { captureRunInputs, readRunInputs, engineSeed } from "../deployments/runInputs";
+import { captureRunInputs, readRunInputs, engineSeed, assertSimulationContext } from "../deployments/runInputs";
+import { CATALOG_SNAPSHOT_DATE } from "@infraforge/catalog/types";
+import { SIMULATION_MODEL_VERSION } from "@infraforge/simulation/tuning";
 import { resolveWorkload } from "@infraforge/domain/workload";
 import { createInitialState, tick } from "@infraforge/simulation/engine";
 import { layout, seed, workload } from "./integration/scenario";
@@ -17,10 +19,24 @@ test("capture detaches topology and resolves all workload defaults", () => {
 
 test("legacy, unknown versions and incomplete persisted inputs fail explicitly", () => {
   const valid = captureRunInputs(layout, workload);
-  for (const input of [null, {}, { ...valid, version: 2 }, { ...valid, seed: "" },
+  for (const input of [null, {}, { ...valid, version: 3 }, { ...valid, seed: "" },
     { ...valid, resources: undefined }, { ...valid, workloadProfile: workload }]) {
     expect(() => readRunInputs(input)).toThrow("cannot be reconstructed safely");
   }
+});
+
+test("V2 captures model/catalog provenance and V1 reads without invented metadata", () => {
+  const v2 = captureRunInputs(layout, workload);
+  expect(v2.version).toBe(2);
+  expect(v2.simulationModelVersion).toBe(SIMULATION_MODEL_VERSION);
+  expect(v2.catalogSnapshot).toBe(CATALOG_SNAPSHOT_DATE);
+  const v1 = readRunInputs({ ...v2, version: 1 });
+  expect(v1.version).toBe(1);
+  expect(Object.hasOwn(v1, "simulationModelVersion")).toBe(false);
+  expect(Object.hasOwn(v1, "catalogSnapshot")).toBe(false);
+  expect(() => assertSimulationContext(v1)).not.toThrow();
+  expect(() => assertSimulationContext({ ...v2, simulationModelVersion: "different-model" })).toThrow("differs");
+  expect(() => assertSimulationContext({ ...v2, catalogSnapshot: "different-catalog" })).toThrow("differs");
 });
 
 test("resolved defaults preserve existing seeded engine outcomes", () => {

@@ -90,7 +90,7 @@ unknown resource/port collisions. It never resets an existing developer database
 The ignored root `.env.development.local` contains generated local database and
 session secrets. Keep it with the persistent volume; losing its database password
 requires deliberate local recovery. The launcher ignores app `.env` files and
-hosted database/provider settings, applies all ten committed migrations, generates
+hosted database/provider settings, applies the committed migrations, generates
 Prisma, then supervises API, worker, WS and frontend. Application listeners also
 bind to loopback, on ports 3000, 3001, worker readiness 3002 and frontend 5173.
 
@@ -118,8 +118,9 @@ production cutover are currently parked.
    watch the database stampede.
 6. **Tear down** when done, then open **Reports** to understand retained run evidence.
    Observations, deterministic interpretations and unknowns stay separate. Reports use
-   recorded gates, events, original inputs and checkpoints; they do not invent a full
-   telemetry trace or an exact final snapshot.
+   recorded gates, immutable inputs and durable control outcomes. Simulator-confirmed
+   teardown retains an exact timestamped terminal snapshot; older checkpoints remain
+   diagnostic evidence. Deleting a saved design preserves its owner's run history.
 
 ## Tests
 

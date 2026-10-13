@@ -7,7 +7,8 @@ import type { RunInputs, RunTopology } from "../run-inputs/RunInputs.interface";
 
 export interface Deployment {
   id: string,
-  infrastructureId: string,
+  infrastructureId: string | null,
+  runName: string | null,
   status: DeploymentStatus,
   resourceCount: number,
   stages: DeploymentStages[],

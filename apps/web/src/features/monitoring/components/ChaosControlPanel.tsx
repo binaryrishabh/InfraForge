@@ -32,7 +32,7 @@ export function ChaosControlPanel({ deploymentId, status, resources }: ChaosCont
     setLoading(true);
     try {
       const message = await injectChaos(deploymentId, selectedChaos, selectedResourceId);
-      toast.success(message);
+      toast.info(message);
     } catch (err) {
       toast.error(errorMessage(err, "Failed to inject chaos"));
     } finally {

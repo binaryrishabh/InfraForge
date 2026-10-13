@@ -24,7 +24,7 @@ integration("additive authentication migration", () => {
       created = true;
       const migrations = new URL("../../prisma/migrations/", import.meta.url);
       const folders = (await readdir(migrations, { withFileTypes: true })).filter((entry) => entry.isDirectory())
-        .map((entry) => entry.name).sort();
+        .map((entry) => entry.name).filter((name) => name <= "20261009010000_add_authentication").sort();
       expect(folders.at(-1)).toBe("20261009010000_add_authentication");
       for (const folder of folders.slice(0, -1)) {
         await database.query(await Bun.file(new URL(`${folder}/migration.sql`, migrations)).text());

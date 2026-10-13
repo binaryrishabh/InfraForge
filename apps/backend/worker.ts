@@ -22,7 +22,7 @@ import { workerDatabaseUrl, verifyWorkerSession } from "./infra/workerConnection
 import { assertRuntimeSchema } from "./release/runtime";
 import { createReadiness } from "./health/readiness";
 import { retireInterruptedRuns, QUARANTINED_RUN_MESSAGE } from "./deployments/restartPolicy";
-import { readRunInputs } from "./deployments/runInputs";
+import { readRunInputs, assertSimulationContext } from "./deployments/runInputs";
 import { runSecurityScan } from "./stages/securityScan.stages";
 import { runCostEstimation } from "./stages/costEstimation.stages";
 import { OutboxBullMQStatus } from "./types/OutboxBullMQStatus.enum";
@@ -186,7 +186,6 @@ const worker = new Worker(
         where: {
           id: deploymentId,
         },
-        include: { infrastructure: { select: { ownerId: true } } },
       });
 
       if (!deploymentState) {
@@ -210,8 +209,9 @@ const worker = new Worker(
 
       let inputs;
       try {
-        if (!deploymentState.infrastructure.ownerId) throw new Error(QUARANTINED_RUN_MESSAGE);
+        if (!deploymentState.ownerId) throw new Error(QUARANTINED_RUN_MESSAGE);
         inputs = readRunInputs(deploymentState.runInputs);
+        assertSimulationContext(inputs);
       }
       catch (error) {
         const message = error instanceof Error ? error.message : "Unsupported run inputs";

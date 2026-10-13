@@ -19,7 +19,7 @@ export function LoadControlPanel({ deploymentId, status }: LoadControlPanelProps
   const commitLoad = async (pct: number) => {
     try {
       const message = await setDeploymentLoad(deploymentId, pct / 100);
-      toast.success(message);
+      toast.info(message);
     } catch (err) {
       toast.error(errorMessage(err, "Failed to adjust load"));
     }

@@ -14,8 +14,12 @@ export async function recoverOwnership(prisma: PrismaClient, input: {
     }
     if (!user?.emailVerified) throw new Error("Target must be an existing account with verified email");
     await assertNoActiveRuns(tx, input.designId);
-    if (input.apply) await tx.infrastructure.update({ where: { id: input.designId, ownerId: null }, data: { ownerId: user.id } });
+    const runs = await tx.deployment.count({ where: { infrastructureId: design.id, ownerId: null } });
+    if (input.apply) {
+      await tx.infrastructure.update({ where: { id: input.designId, ownerId: null }, data: { ownerId: user.id } });
+      await tx.deployment.updateMany({ where: { infrastructureId: design.id, ownerId: null }, data: { ownerId: user.id } });
+    }
     return { designId: design.id, legacyUserId: design.userId, ownerId: user.id, evidence: input.evidence,
-      applied: input.apply, message: input.apply ? "Ownership assigned; historical data preserved" : "Dry run; no data changed" };
+      runsIncluded: runs, applied: input.apply, message: input.apply ? "Ownership assigned; historical data preserved" : "Dry run; no data changed" };
   });
 }

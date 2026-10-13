@@ -63,6 +63,7 @@ export async function checkUserIsolation(harness: LocalHarness, fixtures: Sessio
     const beforeDesign = (await harness.sql.query('SELECT * FROM "Infrastructure" WHERE id = $1', [designId])).rows[0];
     const beforeRun = (await harness.sql.query('SELECT * FROM "Deployment" WHERE id = $1', [runId])).rows[0];
     const outboxCount = (await harness.sql.query('SELECT count(*) AS count FROM "Outbox"')).rows[0].count;
+    const actionCount = (await harness.sql.query('SELECT count(*) AS count FROM "RunAction"')).rows[0].count;
     harness.cookie = bob.cookie;
     expect((await harness.request("/auth/get-session")).user.id).toBe(bob.user.id);
     expect((await harness.request("/infrastructure")).allInfrastructure).toEqual([]);
@@ -98,6 +99,7 @@ export async function checkUserIsolation(harness: LocalHarness, fixtures: Sessio
     expect((await harness.sql.query('SELECT * FROM "Infrastructure" WHERE id = $1', [designId])).rows[0]).toEqual(beforeDesign);
     expect((await harness.sql.query('SELECT * FROM "Deployment" WHERE id = $1', [runId])).rows[0]).toEqual(beforeRun);
     expect((await harness.sql.query('SELECT count(*) AS count FROM "Outbox"')).rows[0].count).toBe(outboxCount);
+    expect((await harness.sql.query('SELECT count(*) AS count FROM "RunAction"')).rows[0].count).toBe(actionCount);
 
     harness.cookie = bob.cookie;
     const bobDesign = (await harness.request("/infrastructure", { name: "Bob design", layout, userId: alice.user.id, ownerId: alice.user.id }, "POST", 201)).createdInfrastructure;
@@ -143,7 +145,7 @@ export async function checkUserIsolation(harness: LocalHarness, fixtures: Sessio
       await harness.request(`/deployments/${legacyRun}`, undefined, "GET", 404);
       await harness.request(`/deployments/${legacyRun}/report`, undefined, "GET", 404);
       expect((await harness.request("/deployments/history")).runs.some((run: { id: string }) => run.id === legacyRun)).toBe(false);
-      await harness.request(`/deployments/${legacyRun}/speed`, { speed: 1 }, "POST", 404);
+      for (const [action, body] of Object.entries(commands)) await harness.request(`/deployments/${legacyRun}/${action}`, body, "POST", 404);
       await deniedSubscription(cookie, legacyRun);
     }
     const recovery = { designId: legacyId, userId: bob.user.id, expectedLegacyUserId: "test-user", evidence: "disposable-fixture-owner-proof", apply: false };
@@ -221,6 +223,7 @@ export async function checkUserIsolation(harness: LocalHarness, fixtures: Sessio
     harness.cookie = aliceCookie;
     for (const socket of sockets) socket.terminate();
     observer.disconnect();
+    await harness.sql.query('DELETE FROM "Deployment" WHERE "infrastructureId" = ANY($1::text[])', [designIds]);
     await harness.sql.query('DELETE FROM "Infrastructure" WHERE id = ANY($1::text[])', [designIds]);
   }
 }

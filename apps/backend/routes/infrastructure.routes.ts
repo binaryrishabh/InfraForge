@@ -120,7 +120,7 @@ infrastructureRouter.get("/:infrastructureId/deployments", async (req, res) => {
   const { infrastructureId } = InfrastructureId.data;
   const infrastructure = await prisma.infrastructure.findUnique({
     where: { id: infrastructureId, ownerId: res.locals.userId },
-    include: { deployments: true }
+    include: { deployments: { where: { ownerId: res.locals.userId } } }
   });
   if (!infrastructure) {
     throw new NotFoundError("No infrastructure found with the provided infrastructure id");

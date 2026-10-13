@@ -25,12 +25,10 @@ export function SpeedControlPanel({ deploymentId, status }: SpeedControlPanelPro
   const handleSpeed = async (value: number) => {
     if (value === speed) return;
     setLoading(true);
-    // Optimistic update so the UI feels instant
-    const restoreSpeed = useSimulationStore.getState().setSpeed(value);
     try {
-      await setDeploymentSpeed(deploymentId, value);
+      const message = await setDeploymentSpeed(deploymentId, value);
+      toast.info(message);
     } catch (err) {
-      restoreSpeed();
       toast.error(errorMessage(err, "Failed to set speed"));
     } finally {
       setLoading(false);

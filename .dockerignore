@@ -80,6 +80,9 @@ apps/backend/deployments/**
 !apps/backend/reports/
 apps/backend/reports/**
 !apps/backend/reports/*.ts
+!apps/backend/actions/
+apps/backend/actions/**
+!apps/backend/actions/*.ts
 !apps/backend/scripts/
 apps/backend/scripts/**
 !apps/backend/scripts/recover-ownership.ts

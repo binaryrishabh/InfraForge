@@ -15,7 +15,14 @@ const metrics = z.object({ cpu: amount.max(100).optional(), memory: amount.max(1
   rps: amount.optional(), connections: amount.optional(), health: z.enum(["healthy", "degraded", "saturated", "failed"]).optional() });
 const checkpoint = z.object({ simulatedSeconds: amount.optional(), loadFraction: amount.optional(),
   overallHealth: z.enum(["healthy", "degraded", "saturated", "critical"]).optional(), accumulatedCostUsd: amount.optional(),
+  capturedAt: timestamp.optional(), topologyRevision: z.number().int().nonnegative().optional(), speed: amount.optional(),
+  metricsComputedAt: timestamp.nullable().optional(), metricsTopologyRevision: z.number().int().nonnegative().optional(),
   metrics: z.unknown().optional() });
+const terminal = checkpoint.extend({ version: z.literal(1), kind: z.literal("terminal"), capturedAt: timestamp,
+  topologyRevision: z.number().int().nonnegative(), simulatedSeconds: amount, accumulatedCostUsd: amount,
+  overallHealth: z.enum(["healthy", "degraded", "saturated", "critical"]),
+  metrics: z.record(z.string(), metrics.extend({ cpu: amount.max(100), memory: amount.max(100),
+    health: z.enum(["healthy", "degraded", "saturated", "failed"]) })) });
 
 export function readRecords(value: unknown, limits: string[]) {
   const list = <T>(input: unknown, schema: z.ZodType<T>, field: string): T[] => {
@@ -29,7 +36,7 @@ export function readRecords(value: unknown, limits: string[]) {
     return valid;
   };
   const row = value as { stages: unknown; timeline: unknown; chaosEvents: unknown; runInputs: unknown;
-    liveTopology: unknown; workloadProfile: unknown; simulationState: unknown };
+    liveTopology: unknown; workloadProfile: unknown; simulationState: unknown; terminalSnapshot?: unknown };
   let input: ReturnType<typeof readRunInputs> | null = null;
   if (row.runInputs != null) {
     try { input = readRunInputs(row.runInputs); }
@@ -53,7 +60,7 @@ export function readRecords(value: unknown, limits: string[]) {
   return { input, live: live?.success ? live.data : null,
     legacyWorkload: workload?.success ? workload.data : null, stages,
     timeline: list(row.timeline, event, "Timeline"), chaos: list(row.chaosEvents, chaos, "Chaos events"),
-    checkpoint: readCheckpoint(row.simulationState, limits) };
+    checkpoint: readCheckpoint(row.simulationState, limits), terminal: readTerminal(row.terminalSnapshot, limits) };
 }
 
 function readCheckpoint(value: unknown, limits: string[]): ReportCheckpoint | null {
@@ -77,5 +84,14 @@ function readCheckpoint(value: unknown, limits: string[]): ReportCheckpoint | nu
   if (!resources.length && data.simulatedSeconds === undefined && data.loadFraction === undefined &&
       data.overallHealth === undefined && data.accumulatedCostUsd === undefined) return null;
   return { resources, simulatedSeconds: data.simulatedSeconds, loadFraction: data.loadFraction,
+    capturedAt: data.capturedAt, topologyRevision: data.topologyRevision, speed: data.speed,
+    metricsComputedAt: data.metricsComputedAt, metricsTopologyRevision: data.metricsTopologyRevision,
     health: data.overallHealth, accumulatedCostUsd: data.accumulatedCostUsd };
+}
+
+function readTerminal(value: unknown, limits: string[]): ReportCheckpoint | null {
+  if (value == null) return null;
+  const parsed = terminal.safeParse(value);
+  if (!parsed.success) { limits.push("The terminal record is malformed; no exact final-state claim is made from it."); return null; }
+  return readCheckpoint(parsed.data, limits);
 }

@@ -4,8 +4,8 @@ import type { LocalHarness } from "./localHarness";
 
 export async function checkRecordedReports(harness: LocalHarness, checkpointRun: string, failedRun: string) {
   const session = await harness.request("/auth/get-session");
-  const rows = (await harness.sql.query(`SELECT d.id, d.status FROM "Deployment" d JOIN "Infrastructure" i ON i.id = d."infrastructureId"
-    WHERE i."ownerId" = $1 ORDER BY d."createdAt" DESC, d.id DESC`, [session.user.id])).rows;
+  const rows = (await harness.sql.query(`SELECT id, status FROM "Deployment"
+    WHERE "ownerId" = $1 ORDER BY "createdAt" DESC, id DESC`, [session.user.id])).rows;
   const ids: string[] = [];
   let cursor: string | null = null;
   do {
@@ -24,11 +24,12 @@ export async function checkRecordedReports(harness: LocalHarness, checkpointRun:
   const checkpoint: RunReport = (await harness.request(`/deployments/${checkpointRun}/report`)).report;
   expect(checkpoint.run.status).toBe("failed");
   expect(checkpoint.checkpoint?.simulatedSeconds).toBeGreaterThan(0);
-  expect(checkpoint.chaosEvents.length).toBeGreaterThan(0);
+  expect(checkpoint.actions.some((action) => action.kind === "chaos" && action.appliedAt)).toBe(true);
   expect(checkpoint.topology.original?.resources.some((r) => r.id === "saved-only")).toBe(false);
   expect(checkpoint.topology.changes?.added).toContain("live-storage");
   expect(checkpoint.observed.some((fact) => fact.id === "failure")).toBe(true);
-  expect(checkpoint.unknown.join(" ")).toContain("not its measurement time");
+  expect(checkpoint.checkpoint?.capturedAt).toBeDefined();
+  expect(checkpoint.unknown.join(" ")).toContain("not an exact final state");
   expect((await harness.request(`/deployments/${checkpointRun}/report`)).report).toEqual(checkpoint);
   const failure: RunReport = (await harness.request(`/deployments/${failedRun}/report`)).report;
   expect(failure.run.status).toBe("failed");

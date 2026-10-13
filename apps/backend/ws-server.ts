@@ -49,7 +49,7 @@ wss.on("connection", (socket, req) => {
     const current = await getSession();
     if (!current || current.user.id !== identity.userId) throw new Error("Session ended");
     if (deploymentId && !await prisma.deployment.findFirst({
-      where: { id: deploymentId, infrastructure: { ownerId: current.user.id } }, select: { id: true },
+      where: { id: deploymentId, ownerId: current.user.id }, select: { id: true },
     })) throw new Error("Deployment access denied");
   };
   let checking = false;

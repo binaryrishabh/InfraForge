@@ -53,3 +53,5 @@ export const SIMULATION_CONSTANTS = {
 } as const;
 
 export type SimulationConstantsType = typeof SIMULATION_CONSTANTS;
+// Bump this when model behaviour materially changes; metadata alone does not resume old runs.
+export const SIMULATION_MODEL_VERSION = "1";

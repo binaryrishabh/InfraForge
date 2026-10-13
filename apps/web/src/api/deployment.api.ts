@@ -4,6 +4,7 @@ import type { WorkloadProfile } from "@infraforge/domain/workload";
 import type { Resource } from "@infraforge/domain/resource";
 import type { ConnectionLine } from "@infraforge/domain/resource";
 import { API_URL } from "../client/httpClient";
+import type { RunAction } from "@infraforge/contracts/actions";
 
 export interface LiveDeploymentSummary {
   id: string;
@@ -48,10 +49,15 @@ export const setDeploymentLoad = async(deploymentId: string, targetLoadFraction:
 }
 
 // Tear down a LIVE deployment — stops the simulation permanently
-export const teardownDeployment = async(deploymentId: string): Promise<string> => {
+export const teardownDeployment = async(deploymentId: string): Promise<RunAction> => {
   const response = await axios.post(`${API_URL}/deployments/${deploymentId}/teardown`);
-  return response.data.message;
+  return response.data.action;
 }
+
+export const getRunAction = async (deploymentId: string, actionId: string): Promise<RunAction> => {
+  const response = await axios.get(`${API_URL}/deployments/${deploymentId}/actions/${actionId}`);
+  return response.data.action;
+};
 
 // Inject a chaos event into a LIVE deployment
 export const injectChaos = async(deploymentId: string, type: string, resourceId: string): Promise<string> => {

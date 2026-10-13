@@ -21,7 +21,7 @@ export function ManualScalePanel({ deploymentId, status }: ManualScalePanelProps
     setLoadingLb(lbId);
     try {
       const message = await scalePool(deploymentId, lbId, delta);
-      toast.success(message);
+      toast.info(message);
     } catch (err) {
       toast.error(errorMessage(err, "Failed to scale pool"));
     } finally {

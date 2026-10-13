@@ -53,7 +53,7 @@ export function CanvasLiveMode({ deploymentId }: CanvasLiveModeProps) {
       {/* Exact design-page composition: ONE full-bleed surface, with the
           mode-specific chrome floated above it as children. */}
       <CanvasSurface className="h-screen bg-[#14161A] text-white">
-        <LiveTopbar deploymentId={deploymentId} status={status} />
+        <LiveTopbar key={deploymentId} deploymentId={deploymentId} status={status} />
         <div className="absolute top-3 right-4 z-40">
           <ShellMenu />
         </div>

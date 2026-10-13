@@ -24,9 +24,15 @@ model Infrastructure {
 
 model Deployment {
   id                    String           @id        @default(uuid())
-  infrastructureId      String
-  infrastructure        Infrastructure   @relation(fields: [infrastructureId], references: [id], onDelete: Cascade) // Belongs to one infrastructure
-  status                String                      @default("pending") // pending, running completed failed
+  infrastructureId      String?
+  infrastructure        Infrastructure?  @relation(fields: [infrastructureId], references: [id], onDelete: SetNull)
+  ownerId               String?
+  owner                 User?            @relation(fields: [ownerId], references: [id], onDelete: Restrict)
+  runName               String?
+  actionSequence        Int                         @default(0)
+  actions               RunAction[]
+  terminalSnapshot      Json?
+  status                String                      @default("pending") // pending, running, live, completed, failed, torn-down
   resourceCount         Int                         @default(0) // How many resources in this deployment
   stages                Json                        @default("[]") // Array of { timestamp, event, message }
   timeline              Json                        @default("[]") // Array of { timestamp, event, message }
@@ -40,11 +46,30 @@ model Deployment {
   runtimeActive         Boolean                     @default(false)
   createdAt             DateTime                    @default(now())
   updatedAt             DateTime                    @updatedAt
+  @@index([ownerId, createdAt, id])
+  @@index([infrastructureId])
 }
 
+model RunAction {
+  id                        String   @id @default(uuid())
+  deploymentId              String
+  deployment                Deployment @relation(fields: [deploymentId], references: [id], onDelete: Cascade)
+  sequence                  Int
+  kind                      String
+  parameters                Json
+  status                    String   @default("requested")
+  requestedAt               DateTime @default(now())
+  appliedAt                 DateTime?
+  completedAt               DateTime?
+  appliedSimulatedSeconds   Int?
+  completedSimulatedSeconds Int?
+  outcome                   Json?
+  failureReason             String?  @db.VarChar(500)
+  @@unique([deploymentId, sequence])
+  @@index([deploymentId, status, sequence])
+}
 
-// Basically a schema to keep track of atomicity of events. It's being used in deployment and chaos injection /currently. 
-// i. In deployment it keeps track of either the deployment gets added to queue and mark completed at database or none happens...
+// Transactional delivery of deployment creation to BullMQ. Live controls use RunAction.
 // ii. In chaos-injection 
 model Outbox {
   id                    String           @id        @default(uuid())
@@ -69,6 +94,7 @@ model User {
   sessions      Session[]
   accounts      Account[]
   designs       Infrastructure[]
+  deployments   Deployment[]
 }
 
 model Session {

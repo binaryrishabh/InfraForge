@@ -3,6 +3,10 @@
   "private": true,
   "type": "module",
   "exports": {
+    "./actions": {
+      "types": "./src/actions/index.ts",
+      "default": "./src/actions/index.ts"
+    },
     "./reports": {
       "types": "./src/reports/index.ts",
       "default": "./src/reports/index.ts"

@@ -23,6 +23,7 @@ COPY apps/backend/release ./apps/backend/release/
 COPY apps/backend/cutover ./apps/backend/cutover/
 COPY apps/backend/deployments ./apps/backend/deployments/
 COPY apps/backend/reports ./apps/backend/reports/
+COPY apps/backend/actions ./apps/backend/actions/
 COPY apps/backend/scripts ./apps/backend/scripts/
 COPY apps/backend/lib/prisma.ts ./apps/backend/lib/
 COPY apps/backend/routes ./apps/backend/routes/

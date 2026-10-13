@@ -1,0 +1,47 @@
+import type { ActionRequest } from "@infraforge/contracts/actions";
+import { prisma } from "../lib/prisma";
+import { storedJson } from "../utils/json";
+import { LayoutSchema } from "../zod_schemas/layout.schema";
+import { ConflictError, NotFoundError, ValidationError } from "../utils/errors";
+import { readActionRequest, actionDto } from "./contract";
+import { validateActionTarget } from "./targets";
+
+export const OPEN_ACTION_STATUSES = ["requested", "applying", "running"];
+
+export async function requestRunAction(deploymentId: string, ownerId: string, input: ActionRequest) {
+  let request: ActionRequest;
+  try { request = readActionRequest(input); } catch { throw new ValidationError("Invalid or oversized action parameters."); }
+  return prisma.$transaction(async (tx) => {
+    await tx.$queryRaw`SELECT id FROM "Deployment" WHERE id = ${deploymentId} AND "ownerId" = ${ownerId} FOR UPDATE`;
+    const run = await tx.deployment.findUnique({ where: { id: deploymentId, ownerId } });
+    if (!run) throw new NotFoundError("Run not found");
+    const open = await tx.runAction.findMany({ where: { deploymentId, status: { in: OPEN_ACTION_STATUSES } }, orderBy: { sequence: "asc" } });
+    const stopping = open.find((a) => a.kind === "teardown");
+    if (request.kind === "teardown") {
+      if (stopping) return actionDto(stopping);
+      if (run.status === "torn-down") {
+        const done = await tx.runAction.findFirst({ where: { deploymentId, kind: "teardown", status: "completed" }, orderBy: { sequence: "desc" } });
+        if (done) return actionDto(done);
+      }
+    }
+    if (run.status !== "live" || !run.runtimeActive) throw new ConflictError("Actions require a live run.");
+    if (stopping) throw new ConflictError("This run is stopping; no further controls are accepted.");
+    const escape = request.kind === "teardown" || (request.kind === "speed" && !open.some((a) => a.kind === "speed"));
+    if ((!escape && open.length >= 128) || run.actionSequence >= (request.kind === "teardown" ? 2147483647 : 2147483646)) {
+      throw new ConflictError("Run action capacity reached; wait for pending actions or stop the run.");
+    }
+    const topology = LayoutSchema.parse(run.liveTopology);
+    validateActionTarget(request, topology, run.runInputs);
+    if (request.kind === "topology") {
+      if (request.parameters.expectedRevision !== run.topologyRevision) throw new ConflictError("Live topology changed. Re-enter the environment before editing again.");
+      request = { ...request, parameters: { ...request.parameters, acceptedRevision: run.topologyRevision + 1 } };
+      await tx.deployment.update({ where: { id: deploymentId }, data: {
+        liveTopology: storedJson({ resources: request.parameters.resources, connectionLines: request.parameters.connectionLines }),
+        topologyRevision: { increment: 1 },
+      } });
+    }
+    const sequenced = await tx.deployment.update({ where: { id: deploymentId }, data: { actionSequence: { increment: 1 } } });
+    return actionDto(await tx.runAction.create({ data: { deploymentId, sequence: sequenced.actionSequence,
+      kind: request.kind, parameters: storedJson(request.parameters) } }));
+  });
+}

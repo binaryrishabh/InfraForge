@@ -31,7 +31,7 @@ export class SessionFixtures {
     return { session, cookie: `${context.authCookies.sessionToken.name}=${encodeURIComponent(`${session.token}.${signature}`)}` };
   }
   async close() {
-    // Designs must already be removed; Restrict prevents hiding fixture cleanup bugs.
+    // Designs and runs must already be removed; Restrict exposes fixture cleanup bugs.
     await this.prisma.user.deleteMany({ where: { id: { in: this.users } } });
     await this.prisma.$disconnect();
   }

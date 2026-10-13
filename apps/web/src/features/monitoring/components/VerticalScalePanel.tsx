@@ -64,7 +64,7 @@ function VerticalScaleSelection({ deploymentId, status, resources: skuableResour
     setLoading(true);
     try {
       const message = await scaleVertical(deploymentId, selectedResourceId, selectedSkuId);
-      toast.success(message);
+      toast.info(message);
     } catch (err) {
       toast.error(errorMessage(err, "Failed to scale resource"));
     } finally {

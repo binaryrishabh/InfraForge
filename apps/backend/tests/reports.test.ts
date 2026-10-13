@@ -2,11 +2,12 @@ import { describe, expect, test } from "bun:test";
 import { buildRunReport, summarizeRun, type StoredRun } from "../reports/report";
 import { captureRunInputs } from "../deployments/runInputs";
 import { layout, workload } from "./integration/scenario";
+import type { RunAction } from "../lib/generated/prisma/client";
 
 const time = "2026-10-11T10:00:00.000Z";
 function row(overrides: Partial<StoredRun> = {}): StoredRun {
   const input = { ...captureRunInputs(layout, workload), seed: "repeatable-report" };
-  return { id: "11111111-1111-4111-8111-111111111111", infrastructureId: "design", infrastructure: { name: "Recorded architecture" },
+  return { id: "11111111-1111-4111-8111-111111111111", infrastructureId: "design", runName: "Recorded architecture",
     status: "completed", resourceCount: 5, createdAt: new Date(time), updatedAt: new Date(time), topologyRevision: 0,
     stages: [], timeline: [], chaosEvents: [], workloadProfile: input.workloadProfile, seed: input.seed,
     simulationState: null, runInputs: input, liveTopology: layout, ...overrides };
@@ -14,7 +15,60 @@ function row(overrides: Partial<StoredRun> = {}): StoredRun {
 const costStage = { name: "CostEstimate", status: "completed", message: "Recorded monthly estimate",
   startedAt: time, completedAt: time, details: { monthlyEstimate: 74.25 } };
 
+function action(overrides: Partial<RunAction> = {}): RunAction {
+  return { id: "11111111-1111-4111-8111-111111111112", deploymentId: "run", sequence: 1, kind: "load",
+    parameters: { targetLoadFraction: 0.5 }, status: "requested", requestedAt: new Date(time),
+    appliedAt: null, completedAt: null, appliedSimulatedSeconds: null, completedSimulatedSeconds: null,
+    outcome: null, failureReason: null, ...overrides };
+}
+
 describe("durable run reports", () => {
+  test("requested/applied/completed actions remain distinct, ordered and deterministic", () => {
+    const saved = row({ actions: [action({ sequence: 3, status: "completed", appliedAt: new Date(time), completedAt: new Date(time),
+      appliedSimulatedSeconds: 4, completedSimulatedSeconds: 4, outcome: { previousTarget: 1, appliedTarget: 0.5 } }),
+      action({ sequence: 1 }), action({ sequence: 2, kind: "chaos", parameters: { type: "crash", resourceId: "vm-a" },
+        status: "running", appliedAt: new Date(time), appliedSimulatedSeconds: 4, outcome: { durationSimulatedSeconds: 20 } })] });
+    const report = buildRunReport(saved);
+    expect(report.actions.map((a) => a.sequence)).toEqual([1, 2, 3]);
+    expect(report.actions[0]?.appliedAt).toBeNull();
+    expect(report.actions[1]?.completedAt).toBeNull();
+    expect(report.actions[2]?.outcome?.appliedTarget).toBe(0.5);
+    expect(buildRunReport(saved)).toEqual(report);
+  });
+
+  test("exact terminal state wins over a stale checkpoint, retaining capture time and applied revision", () => {
+    const report = buildRunReport(row({ infrastructureId: null, runName: "Original captured name", status: "torn-down",
+      simulationState: { simulatedSeconds: 30, overallHealth: "critical" }, terminalSnapshot: { version: 1, kind: "terminal",
+        capturedAt: time, topologyRevision: 2, simulatedSeconds: 42, accumulatedCostUsd: 0.01, overallHealth: "healthy",
+        metrics: { db: { cpu: 92, memory: 40, health: "healthy" } } } }));
+    expect(report.run.infrastructureName).toBe("Original captured name");
+    expect(report.terminal).toMatchObject({ capturedAt: time, topologyRevision: 2, simulatedSeconds: 42, health: "healthy" });
+    expect(report.checkpoint?.health).toBe("critical");
+    expect(report.interpreted[0]?.sources).toEqual(["terminalSnapshot.metrics.db.cpu"]);
+    expect(report.unknown.join(" ")).not.toContain("No usable simulation checkpoint");
+  });
+
+  test("malformed terminal/action data cannot fabricate an exact state or a successful effect", () => {
+    const report = buildRunReport(row({ terminalSnapshot: { kind: "terminal", overallHealth: "healthy" },
+      actions: [action({ parameters: { wrong: "value" } }), action({ sequence: 2, outcome: { recovered: true } }),
+        action({ sequence: 3, status: "completed", appliedAt: new Date(time), completedAt: new Date(time),
+          appliedSimulatedSeconds: 1, completedSimulatedSeconds: 1, outcome: {} })] }));
+    expect(report.terminal).toBeNull();
+    expect(report.actions).toEqual([]);
+    expect(report.unknown.join(" ")).toContain("malformed");
+    expect(report.unknown.join(" ")).toContain("no exact final-state claim");
+  });
+
+  test("legacy model provenance remains unknown and timestamped checkpoints are never called terminal", () => {
+    const input = captureRunInputs(layout);
+    const report = buildRunReport(row({ runInputs: { ...input, version: 1 }, simulationState: { capturedAt: time,
+      topologyRevision: 2, metricsTopologyRevision: 1, simulatedSeconds: 5, metrics: { db: { cpu: 10 } } } }));
+    expect(report.provenance).toEqual({ inputVersion: 1, simulationModelVersion: null, catalogSnapshot: null });
+    expect(report.terminal).toBeNull();
+    expect(report.checkpoint?.capturedAt).toBe(time);
+    expect(report.unknown.join(" ")).toContain("not an exact final state");
+    expect(report.unknown.join(" ")).toContain("before the captured topology revision");
+  });
   test("is deterministic, does not mutate records, and uses captured workload and seed", () => {
     const saved = row({ workloadProfile: { ...workload, targetThroughput: 1 }, seed: "stale-legacy-value" });
     const before = JSON.stringify(saved);
@@ -60,7 +114,7 @@ describe("durable run reports", () => {
     expect(report.interpreted[0]?.message).toContain("at this checkpoint");
     expect(report.unknown.join(" ")).toContain("may predate the last controls or teardown");
     expect(report.unknown.join(" ")).toContain("updated time is not its measurement time");
-    expect(report.unknown.join(" ")).toContain("full historical telemetry series");
+    expect(report.unknown.join(" ")).toContain("continuous telemetry");
   });
 
   test("chaos means recorded requests, not proof of a crash, causal bottleneck, recovery or cost change", () => {

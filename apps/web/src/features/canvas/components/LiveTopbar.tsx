@@ -1,10 +1,11 @@
-import { memo, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useCanvasStore } from "../store/canvasStore";
 import { CostBurnTicker } from "@/features/monitoring/components/CostBurnTicker";
 import { SpeedControlPanel } from "@/features/monitoring/components/SpeedControlPanel";
 import { ConfirmModal } from "@/components/UI/ConfirmModal";
-import { teardownDeployment } from "@/api/deployment.api";
+import { teardownDeployment, getRunAction } from "@/api/deployment.api";
+import type { RunAction } from "@infraforge/contracts/actions";
 import { DeploymentStatus } from "@infraforge/contracts/deployment";
 import {
   FLOATING_CHROME_SURFACE,
@@ -23,8 +24,24 @@ export const LiveTopbar = memo(function LiveTopbar({ deploymentId, status }: Liv
   const currentLayoutName = useCanvasStore((s) => s.currentLayoutName);
   const [showTeardownConfirm, setShowTeardownConfirm] = useState(false);
   const [teardownLoading, setTeardownLoading] = useState(false);
+  const [stopAction, setStopAction] = useState<RunAction | null>(null);
+  const stopping = !!stopAction && ["requested", "applying", "running"].includes(stopAction.status);
+  const stopActionId = stopAction?.id;
+  useEffect(() => {
+    if (!stopping || !stopActionId) return;
+    let active = true;
+    let busy = false;
+    const timer = setInterval(() => {
+      if (busy) return;
+      busy = true;
+      void getRunAction(deploymentId, stopActionId).then((action) => {
+        if (active) setStopAction(action);
+      }).catch(() => {}).finally(() => { busy = false; }); // A lost connection cannot establish completion.
+    }, 1000);
+    return () => { active = false; clearInterval(timer); };
+  }, [deploymentId, stopping, stopActionId]);
 
-  const isLive = status === DeploymentStatus.LIVE;
+  const isLive = status === DeploymentStatus.LIVE && stopAction?.status !== "completed";
 
   const statusColor =
     status === DeploymentStatus.LIVE ||
@@ -62,11 +79,12 @@ export const LiveTopbar = memo(function LiveTopbar({ deploymentId, status }: Liv
           <span
             className={`px-2 py-0.5 rounded-md border border-[#2A2E37] bg-[#14161A] text-[11px] font-mono shrink-0 ${statusColor}`}
           >
-            {status}
+            {stopping ? "Stopping…" : stopAction?.status === "completed" ? "torn-down" : status}
           </span>
           {isLive && (
             <button
               onClick={() => setShowTeardownConfirm(true)}
+              disabled={stopping}
               className="h-7 px-3 rounded-lg bg-transparent border border-[#C4574A]/40 text-[12px] font-medium text-[#C4574A] hover:bg-[#C4574A]/10 transition-colors duration-150 shrink-0"
             >
               Tear down
@@ -94,9 +112,10 @@ export const LiveTopbar = memo(function LiveTopbar({ deploymentId, status }: Liv
           onConfirm={async () => {
             setTeardownLoading(true);
             try {
-              await teardownDeployment(deploymentId);
+              const action = await teardownDeployment(deploymentId);
+              setStopAction(action);
               setShowTeardownConfirm(false);
-              toast.success("Environment torn down");
+              toast.info(action.status === "completed" ? "Environment torn down" : "Stop requested; waiting for the simulator to capture final state.");
             } catch {
               toast.error("Failed to tear down");
             } finally {

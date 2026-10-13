@@ -1,8 +1,9 @@
 import type { WorkloadProfile } from "@infraforge/domain/workload";
+import type { RunAction } from "../actions/index";
 
 export interface RunSummary {
   id: string;
-  infrastructureId: string;
+  infrastructureId: string | null;
   infrastructureName: string;
   status: string;
   createdAt: string;
@@ -13,6 +14,7 @@ export interface RunSummary {
   chaosEventCount: number | null;
   topologyRevision: number | null;
   hasReportData: boolean;
+  actionCount?: number;
 }
 
 export interface ReportStatement {
@@ -58,6 +60,11 @@ export interface ReportTopology {
 }
 
 export interface ReportCheckpoint {
+  capturedAt?: string;
+  topologyRevision?: number;
+  speed?: number;
+  metricsComputedAt?: string | null;
+  metricsTopologyRevision?: number;
   simulatedSeconds?: number;
   loadFraction?: number;
   health?: string;
@@ -79,6 +86,9 @@ export interface RunReport {
     changes: { added: string[]; removed: string[]; reconfigured: string[]; addedConnections: number; removedConnections: number } | null;
   };
   checkpoint: ReportCheckpoint | null;
+  terminal: ReportCheckpoint | null;
+  actions: RunAction[];
+  provenance: { inputVersion: 1 | 2 | null; simulationModelVersion: string | null; catalogSnapshot: string | null };
   observed: ReportStatement[];
   interpreted: ReportStatement[];
   unknown: string[];

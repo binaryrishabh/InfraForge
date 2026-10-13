@@ -2,6 +2,7 @@ import { expect, test } from "bun:test";
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
 import type { RunReport, RunSummary } from "@infraforge/contracts/reports";
+import { DeploymentChaosNames } from "@infraforge/domain/resource";
 import { HistoryContent } from "../src/features/reports/components/RunList";
 import { ReportContent } from "../src/features/reports/components/ReportContent";
 
@@ -11,6 +12,7 @@ const run: RunSummary = { id: "11111111-1111-4111-8111-111111111111", infrastruc
   chaosEventCount: 0, topologyRevision: 0, hasReportData: false };
 const report: RunReport = { version: 1, run, originalSeed: null, legacySeed: null, stages: [], timeline: [],
   chaosEvents: [], topology: { original: null, accepted: null, changes: null }, checkpoint: null,
+  terminal: null, actions: [], provenance: { inputVersion: 1, simulationModelVersion: null, catalogSnapshot: null },
   observed: [{ id: "status", message: "The stored run status is torn-down.", sources: ["status"] }],
   interpreted: [], unknown: ["No usable simulation checkpoint was retained."], inspectNext: ["Compare original inputs."] };
 const render = (element: React.ReactNode) => renderToStaticMarkup(<MemoryRouter>{element}</MemoryRouter>);
@@ -84,4 +86,34 @@ test("checkpoint measurements, cost measures and chaos request limits are clearl
   expect(html).toContain("<details");
   expect(html).toContain("<summary");
   expect(html).not.toContain("final health");
+});
+
+test("durable timeline distinguishes requests, running faults, completion and unproven recovery", () => {
+  const data: RunReport = { ...report, actions: [
+    { id: "requested", deploymentId: run.id, sequence: 1, kind: "load", parameters: { targetLoadFraction: 1 },
+      status: "requested", requestedAt: run.createdAt, appliedAt: null, completedAt: null,
+      appliedSimulatedSeconds: null, completedSimulatedSeconds: null, outcome: null, failureReason: null },
+    { id: "ended", deploymentId: run.id, sequence: 2, kind: "chaos", parameters: { type: DeploymentChaosNames.Crash, resourceId: "db" },
+      status: "completed", requestedAt: run.createdAt, appliedAt: run.createdAt, completedAt: run.updatedAt,
+      appliedSimulatedSeconds: 10, completedSimulatedSeconds: 30,
+      outcome: { durationSimulatedSeconds: 20, faultEnded: true, observedOverallHealth: "critical" }, failureReason: null },
+  ] };
+  const html = render(<ReportContent loading={false} error={null} data={data} retry={retry} />);
+  expect(html).toContain("No simulator application is recorded");
+  expect(html).toContain("Applied / started");
+  expect(html).toContain("simulated second 30");
+  expect(html).toContain("Injected fault ended");
+  expect(html).toContain("does not establish full system recovery");
+});
+
+test("exact terminal snapshot and deleted-design history are labelled honestly", () => {
+  const data: RunReport = { ...report, run: { ...run, infrastructureId: null },
+    terminal: { capturedAt: run.updatedAt, topologyRevision: 2, simulatedSeconds: 30, health: "healthy", resources: [] } };
+  const html = render(<ReportContent loading={false} error={null} data={data} retry={retry} />);
+  expect(html).toContain("Exact terminal simulation snapshot");
+  expect(html).toContain("Captured");
+  expect(html).toContain("topology revision: 2");
+  expect(html).not.toContain("Latest retained simulation checkpoint");
+  const history = render(<HistoryContent loading={false} error={null} runs={[data.run]} retry={retry} />);
+  expect(history).toContain("Saved design deleted; run history retained");
 });
