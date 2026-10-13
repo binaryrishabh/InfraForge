@@ -8,6 +8,7 @@ import { auth, authSettings } from "./auth/auth";
 import { checkOrigin, requireSession } from "./auth/httpSecurity";
 import { infrastructureRouter } from "./routes/infrastructure.routes";
 import { deploymentRouter } from "./routes/deployment.routes";
+import { challengeRouter } from "./challenges/routes";
 import { assertRuntimeSchema } from "./release/runtime";
 import { createReadiness } from "./health/readiness";
 
@@ -28,11 +29,13 @@ app.get("/api/auth/providers", (_req, res) => res.json({ providers: Object.keys(
 app.all("/api/auth/*splat", toNodeHandler(auth));
 app.use("/api/infrastructure", requireSession);
 app.use("/api/deployments", requireSession);
+app.use("/api/challenges", requireSession);
 app.use(express.json());
 
 // Domain routers
 app.use("/api/infrastructure", infrastructureRouter);
 app.use("/api/deployments", deploymentRouter);
+app.use("/api/challenges", challengeRouter);
 app.use((_req, res) => res.status(404).json({ success: false, message: "Resource not found" }));
 
 app.use(errorHandler);

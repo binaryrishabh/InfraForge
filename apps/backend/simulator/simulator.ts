@@ -36,7 +36,8 @@ async function initialize(deploymentId: string) {
     lastCheckpointAt: Date.now(), accumulatedCostUsd: 0,
     topology: { resources: input.resources, connectionLines: input.connectionLines }, topologyRevision: 0,
     actions: new Map(), acknowledge: null, metricsComputedAt: null, metricsTopologyRevision: 0,
-    autoStopAtSimulatedSeconds: deployment.autoStopAtSimulatedSeconds, finishMatchedStop: null };
+    autoStopAtSimulatedSeconds: deployment.autoStopAtSimulatedSeconds ?? deployment.evaluationStopAtSimulatedSeconds,
+    stopTrigger: deployment.evaluationStopAtSimulatedSeconds != null ? "challenge-evaluation" : "matched-stop", finishMatchedStop: null };
   registry.set(deploymentId, instance);
   await publishSimulationSnapshot(buildSnapshot(deploymentId, instance));
   return true;

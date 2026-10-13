@@ -10,11 +10,14 @@ import { readRunInputs } from "../deployments/runInputs";
 export const reportRouter = Router();
 export const reportSelection = { id: true, infrastructureId: true, runName: true, runtimeActive: true,
   sourceRunId: true, rerunMode: true, autoStopAtSimulatedSeconds: true, sourceRun: { select: { runName: true } },
+  challengeId: true, challengeVersion: true, challengeSpecHash: true, challengePrediction: true, predictionSubmittedAt: true,
+  evaluationStopAtSimulatedSeconds: true,
   status: true, createdAt: true, updatedAt: true, resourceCount: true, workloadProfile: true,
   seed: true, runInputs: true, liveTopology: true, topologyRevision: true, stages: true,
   timeline: true, chaosEvents: true, simulationState: true, terminalSnapshot: true, _count: { select: { actions: true } } } as const;
 const selection = reportSelection;
-const querySchema = z.object({ limit: z.coerce.number().int().min(1).max(100).default(50), before: z.uuid().optional() }).strict();
+const querySchema = z.object({ limit: z.coerce.number().int().min(1).max(100).default(50), before: z.uuid().optional(),
+  kind: z.enum(["all", "challenge", "freeform"]).default("all") }).strict();
 
 reportRouter.get("/compare", async (req, res) => {
   const query = z.object({ a: z.uuid(), b: z.uuid() }).strict().safeParse(req.query);
@@ -61,13 +64,14 @@ reportRouter.get("/:deploymentId/family", async (req, res) => {
 
 reportRouter.get("/history", async (req, res) => {
   const query = querySchema.safeParse(req.query);
-  if (!query.success) throw new ValidationError("Use a limit from 1 to 100 and an optional deployment cursor.");
+  if (!query.success) throw new ValidationError("Use a limit from 1 to 100, an optional deployment cursor and kind all, challenge or freeform.");
   const ownerId: string = res.locals.userId;
-  const { limit, before } = query.data;
+  const { limit, before, kind } = query.data;
+  const filter = kind === "challenge" ? { challengeId: { not: null } } : kind === "freeform" ? { challengeId: null } : {};
   if (before && !await prisma.deployment.findFirst({ where: { id: before, ownerId }, select: { id: true } })) {
     throw new NotFoundError("Run not found");
   }
-  const rows = await prisma.deployment.findMany({ where: { ownerId }, select: selection,
+  const rows = await prisma.deployment.findMany({ where: { ownerId, ...filter }, select: selection,
     orderBy: [{ createdAt: "desc" }, { id: "desc" }], take: limit + 1,
     ...(before ? { cursor: { id: before }, skip: 1 } : {}) });
   const counts = await prisma.runAction.groupBy({ by: ["deploymentId"], where: { deploymentId: { in: rows.map((r) => r.id) }, kind: "chaos" }, _count: { _all: true } });

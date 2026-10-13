@@ -1,6 +1,16 @@
 import type { WorkloadProfile } from "@infraforge/domain/workload";
 import type { RunAction } from "../actions/index";
 import type { ChaosEffect, PoolSnapshot } from "../telemetry/index";
+import type { ChallengeEvaluation, ChallengeStatus } from "../challenges/index";
+
+export interface RunChallengeSummary {
+  id: string;
+  version: number;
+  title: string;
+  status: ChallengeStatus;
+  metCount: number;
+  total: number;
+}
 
 export interface RunSummary {
   id: string;
@@ -20,6 +30,7 @@ export interface RunSummary {
   sourceRunName?: string | null;
   rerunMode?: "exact" | "current-design" | null;
   autoStopAtSimulatedSeconds?: number | null;
+  challenge?: RunChallengeSummary | null;
 }
 
 export interface ReportStatement {
@@ -105,6 +116,7 @@ export interface RunReport {
   interpreted: ReportStatement[];
   unknown: string[];
   inspectNext: string[];
+  challenge?: ChallengeEvaluation | null;
 }
 
 export interface RunHistory {

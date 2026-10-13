@@ -26,6 +26,10 @@ export async function requestRunAction(deploymentId: string, ownerId: string, in
     }
     if (run.status !== "live" || !run.runtimeActive) throw new ConflictError("Actions require a live run.");
     if (stopping) throw new ConflictError("This run is stopping; no further controls are accepted.");
+    // A challenge attempt is evaluated under its fixed conditions; only pacing and stopping stay available.
+    if (run.challengeId && request.kind !== "speed" && request.kind !== "teardown") {
+      throw new ConflictError("Challenge attempts run under fixed conditions. Only speed and stop are available.");
+    }
     const escape = request.kind === "teardown" || (request.kind === "speed" && !open.some((a) => a.kind === "speed"));
     if ((!escape && open.length >= 128) || run.actionSequence >= (request.kind === "teardown" ? 2147483647 : 2147483646)) {
       throw new ConflictError("Run action capacity reached; wait for pending actions or stop the run.");

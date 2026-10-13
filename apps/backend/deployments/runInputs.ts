@@ -23,7 +23,7 @@ const RunInputsV2Schema = RunInputsV1Schema.extend({ version: z.literal(2),
   simulationModelVersion: z.string().min(1).max(64), catalogSnapshot: z.string().min(1).max(64) });
 const RunInputsSchema = z.discriminatedUnion("version", [RunInputsV1Schema, RunInputsV2Schema]);
 
-export function captureRunInputs(layout: unknown, workload?: WorkloadProfile) {
+export function captureRunInputs(layout: unknown, workload?: WorkloadProfile, seed: string = randomUUID()) {
   const parsed = LayoutSchema.safeParse(layout);
   if (!parsed.success) throw new ValidationError("Saved infrastructure layout is invalid. Update it before deploying.");
   return RunInputsV2Schema.parse({
@@ -31,7 +31,7 @@ export function captureRunInputs(layout: unknown, workload?: WorkloadProfile) {
     resources: parsed.data.resources,
     connectionLines: parsed.data.connectionLines,
     workloadProfile: resolveWorkload(workload),
-    seed: randomUUID(),
+    seed,
   });
 }
 

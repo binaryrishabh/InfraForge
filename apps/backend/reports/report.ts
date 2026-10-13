@@ -3,6 +3,7 @@ import { readRecords } from "./records";
 import { topologyChanges, topologySummary } from "./topology";
 import { readReportActions } from "./actions";
 import type { RunAction as StoredAction } from "../lib/generated/prisma/client";
+import { evaluateAttempt } from "../challenges/evaluate";
 
 export interface StoredRun {
   id: string; infrastructureId: string | null; runName?: string | null; status: string; resourceCount: number;
@@ -11,9 +12,24 @@ export interface StoredRun {
   simulationState: unknown; runInputs: unknown; liveTopology: unknown;
   terminalSnapshot?: unknown; actions?: StoredAction[]; actionCount?: number; durableChaosCount?: number;
   sourceRunId?: string | null; sourceRun?: { runName: string | null } | null; rerunMode?: string | null; autoStopAtSimulatedSeconds?: number | null;
+  runtimeActive?: boolean; challengeId?: string | null; challengeVersion?: number | null; challengeSpecHash?: string | null;
+  challengePrediction?: unknown; predictionSubmittedAt?: Date | null; evaluationStopAtSimulatedSeconds?: number | null;
 }
 
-function summary(row: StoredRun, records: ReturnType<typeof readRecords>): RunSummary {
+type Records = ReturnType<typeof readRecords>;
+const failureOf = (records: Records) => records.timeline.filter((e) => e.event === "Deployment Failed" || e.event === "Simulation Interrupted").at(-1);
+
+// Challenge results are derived from the run's own evidence on every read; nothing is stored as a score.
+function challengeOf(row: StoredRun, records: Records) {
+  if (!row.challengeId) return null;
+  return evaluateAttempt({ challengeId: row.challengeId, challengeVersion: row.challengeVersion ?? null,
+    challengeSpecHash: row.challengeSpecHash ?? null, challengePrediction: row.challengePrediction,
+    predictionSubmittedAt: row.predictionSubmittedAt ?? null, evaluationStopAtSimulatedSeconds: row.evaluationStopAtSimulatedSeconds ?? null },
+  { status: row.status, runtimeActive: !!row.runtimeActive, input: records.input, stages: records.stages, terminal: records.terminal,
+    failure: row.status === "failed" ? failureOf(records)?.message ?? "The run failed without a recorded message." : null });
+}
+
+function summary(row: StoredRun, records: Records, challenge = challengeOf(row, records)): RunSummary {
   return { id: row.id, infrastructureId: row.infrastructureId, infrastructureName: row.runName ?? "Unnamed legacy run",
     status: row.status, createdAt: row.createdAt.toISOString(), updatedAt: row.updatedAt.toISOString(),
     resourceCount: row.resourceCount, workload: records.input?.workloadProfile ?? records.legacyWorkload,
@@ -24,6 +40,8 @@ function summary(row: StoredRun, records: ReturnType<typeof readRecords>): RunSu
     sourceRunId: row.sourceRunId ?? null, sourceRunName: row.sourceRun?.runName ?? null,
     rerunMode: row.rerunMode === "exact" || row.rerunMode === "current-design" ? row.rerunMode : null,
     autoStopAtSimulatedSeconds: row.autoStopAtSimulatedSeconds ?? null,
+    challenge: challenge ? { id: challenge.challengeId, version: challenge.version, title: challenge.title, status: challenge.status,
+      metCount: challenge.metCount, total: challenge.total } : null,
     hasReportData: !!(records.stages.length || records.timeline.length || records.chaos.length || records.checkpoint || records.terminal || row.actionCount || row.actions?.length) };
 }
 
@@ -32,7 +50,8 @@ export function summarizeRun(row: StoredRun): RunSummary { return summary(row, r
 export function buildRunReport(row: StoredRun): RunReport {
   const limits: string[] = [];
   const records = readRecords(row, limits);
-  const run = summary(row, records);
+  const challenge = challengeOf(row, records);
+  const run = summary(row, records, challenge);
   const report: RunReport = { version: 1, run, originalSeed: records.input?.seed ?? null,
     legacySeed: !records.input && typeof row.seed === "string" ? row.seed : null,
     stages: records.stages, timeline: records.timeline, chaosEvents: records.chaos,
@@ -43,7 +62,7 @@ export function buildRunReport(row: StoredRun): RunReport {
     topology: { original: topologySummary(records.input), accepted: topologySummary(records.live),
       changes: topologyChanges(records.input, records.live) }, checkpoint: records.checkpoint,
     observed: [{ id: "status", message: `The stored run status is ${run.status}.`, sources: ["status"] }],
-    interpreted: [], unknown: limits, inspectNext: [] };
+    interpreted: [], unknown: limits, inspectNext: [], challenge };
   if (records.input && records.live && !report.topology.changes) {
     report.unknown.push("Duplicate resource identifiers or connections make the original/live topology comparison ambiguous; no edits were inferred.");
   }
@@ -51,7 +70,7 @@ export function buildRunReport(row: StoredRun): RunReport {
     message: run.chaosEventCount === 1 ? "1 chaos request was recorded." : `${run.chaosEventCount} chaos requests were recorded.`, sources: ["chaosEvents", "RunAction"] });
   if (run.topologyRevision !== null) report.observed.push({ id: "revision",
     message: `The last accepted live topology revision is ${run.topologyRevision}.`, sources: ["topologyRevision", "liveTopology"] });
-  const failure = records.timeline.filter((event) => event.event === "Deployment Failed" || event.event === "Simulation Interrupted").at(-1);
+  const failure = failureOf(records);
   if (failure && run.status === "failed") {
     report.observed.push({ id: "failure", message: failure.message, sources: ["timeline"] });
     report.inspectNext.push("Start with the recorded failure message and original inputs before rerunning.");

@@ -16,6 +16,7 @@ import { checkRecordedReports } from "./reportChecks";
 import { checkReliableEvidence } from "./runEvidenceChecks";
 import { checkCompareAccess } from "./compareChecks";
 import { checkHonestReruns } from "./rerunChecks";
+import { checkChallengeAttempts } from "./challengeChecks";
 
 type Event = Record<string, any>;
 type Snapshot = SimulationSnapshot & { publishType: string };
@@ -620,6 +621,8 @@ integration("local deployment lifecycle", () => {
       phase("honest reruns and exact matched stop");
       evidence.reruns = await checkHonestReruns(harness, sessions, infrastructureIds, deploymentIds,
         (id) => evidence.redisEvents.filter((item: Event) => item.channel === `deployment:${id}:updates`).map((item: Event) => item.event));
+      phase("challenge attempts and evaluation stop");
+      evidence.challenges = await checkChallengeAttempts(harness, sessions, infrastructureIds, deploymentIds);
       evidence.result = "passed";
     } catch (error) {
       evidence.result = "failed";

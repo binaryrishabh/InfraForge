@@ -14,7 +14,9 @@ export interface SimulationInstance {
   metricsTopologyRevision: number;
   // Freeze this instance until the exact acknowledgement succeeds. Never replay its effect.
   acknowledge: (() => Promise<void>) | null;
+  // One stop horizon: a rerun's matched stop or a challenge's evaluation second.
   autoStopAtSimulatedSeconds?: number | null;
+  stopTrigger?: "matched-stop" | "challenge-evaluation";
   finishMatchedStop?: (() => Promise<void>) | null;
 }
 export class ActionExecutionError extends Error {}

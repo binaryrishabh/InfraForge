@@ -3,20 +3,20 @@ import type { SimulationInstance } from "./instance";
 import { captureSnapshot } from "./snapshot";
 import { finishTeardown } from "./terminal";
 
-async function claimTeardown(deploymentId: string, capturedAt: string, simulatedSeconds: number) {
+async function claimTeardown(deploymentId: string, capturedAt: string, simulatedSeconds: number, trigger: "matched-stop" | "challenge-evaluation") {
   return prisma.$transaction(async (tx) => {
     await tx.$queryRaw`SELECT id FROM "Deployment" WHERE id = ${deploymentId} FOR UPDATE`;
     const run = await tx.deployment.findUniqueOrThrow({ where: { id: deploymentId } });
-    if (run.status !== "live" || !run.runtimeActive) throw new Error("Run stopped before matched-stop acknowledgement");
+    if (run.status !== "live" || !run.runtimeActive) throw new Error(`Run stopped before ${trigger} acknowledgement`);
     // A user stop already queued at the horizon wins. Later requests cannot change
     // the original capture's audit identity or occupy the unique open-teardown slot.
     const existing = await tx.runAction.findFirst({ where: { deploymentId, kind: "teardown", requestedAt: { lte: new Date(capturedAt) }, status: { in: ["requested", "applying", "running"] } } });
     if (existing) return existing.status === "requested" ? tx.runAction.update({ where: { id: existing.id }, data: { status: "applying" } }) : existing;
     await tx.runAction.updateMany({ where: { deploymentId, kind: "teardown", requestedAt: { gt: new Date(capturedAt) }, status: { in: ["requested", "applying", "running"] } },
       data: { status: "cancelled", completedAt: new Date(), completedSimulatedSeconds: simulatedSeconds,
-        failureReason: "Matched stop had already captured the terminal state before this request." } });
+        failureReason: `${trigger === "challenge-evaluation" ? "Challenge evaluation" : "Matched stop"} had already captured the terminal state before this request.` } });
     const sequence = await tx.deployment.update({ where: { id: deploymentId }, data: { actionSequence: { increment: 1 } } });
-    const action = await tx.runAction.create({ data: { deploymentId, sequence: sequence.actionSequence, kind: "teardown", requestedAt: new Date(capturedAt), parameters: { trigger: "matched-stop" } } });
+    const action = await tx.runAction.create({ data: { deploymentId, sequence: sequence.actionSequence, kind: "teardown", requestedAt: new Date(capturedAt), parameters: { trigger } } });
     return tx.runAction.update({ where: { id: action.id }, data: { status: "applying" } });
   });
 }
@@ -25,7 +25,7 @@ export async function finishMatchedStop(deploymentId: string, instance: Simulati
     // Capture once even if creating the system action fails. Retain this closure while frozen.
     const snapshot = captureSnapshot(deploymentId, instance, "terminal");
     instance.finishMatchedStop = async () => {
-      const action = await claimTeardown(deploymentId, snapshot.capturedAt, snapshot.simulatedSeconds);
+      const action = await claimTeardown(deploymentId, snapshot.capturedAt, snapshot.simulatedSeconds, instance.stopTrigger ?? "matched-stop");
       await finishTeardown(deploymentId, instance, action, remove, snapshot);
     };
   }

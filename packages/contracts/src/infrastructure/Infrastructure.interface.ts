@@ -5,6 +5,7 @@ export interface Infrastructure {
   id: string;
   userId: string;
   name: string;
+  challengeId?: string | null;
   layout: {
     resources: Resource[],
     connectionLines: ConnectionLine[],

@@ -15,10 +15,12 @@ model Infrastructure {
   owner                 User?         @relation(fields: [ownerId], references: [id], onDelete: Restrict)
   name                  String
   layout                Json
+  challengeId           String?
   deployments           Deployment[] // One infrastructure has many deployments
   createdAt             DateTime                    @default(now())
   updatedAt             DateTime                    @updatedAt
   @@index([ownerId])
+  @@index([ownerId, challengeId])
 }
 
 
@@ -37,6 +39,12 @@ model Deployment {
   reruns                Deployment[]     @relation("RunLineage")
   rerunMode             String?
   autoStopAtSimulatedSeconds Int?
+  challengeId           String?
+  challengeVersion      Int?
+  challengeSpecHash     String?
+  challengePrediction   Json?
+  predictionSubmittedAt DateTime?
+  evaluationStopAtSimulatedSeconds Int?
   status                String                      @default("pending") // pending, running, live, completed, failed, torn-down
   resourceCount         Int                         @default(0) // How many resources in this deployment
   stages                Json                        @default("[]") // Array of { timestamp, event, message }
@@ -54,6 +62,7 @@ model Deployment {
   @@index([ownerId, createdAt, id])
   @@index([infrastructureId])
   @@index([sourceRunId, createdAt, id])
+  @@index([ownerId, challengeId, createdAt])
 }
 
 model RunAction {
