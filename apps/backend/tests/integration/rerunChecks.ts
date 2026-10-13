@@ -120,6 +120,10 @@ export async function checkHonestReruns(harness: LocalHarness, sessions: Session
     const attempts = Number((await harness.sql.query('SELECT last_value FROM rerun_probe_seq')).rows[0].last_value);
     await until(async () => Number((await harness.sql.query('SELECT last_value FROM rerun_probe_seq')).rows[0].last_value) >= attempts + 2 || undefined, "terminal write retries", 10000, 500);
     expect((await read(delayed.id)).terminalSnapshot).toBeNull();
+    const late = (await harness.sql.query('SELECT * FROM "RunAction" WHERE id=$1', [lateStopId])).rows[0];
+    expect(late.status).toBe("cancelled");
+    expect(late.completedSimulatedSeconds).toBe(620);
+    expect(late.completedAt.getTime()).toBeGreaterThanOrEqual(late.requestedAt.getTime());
   } finally {
     await harness.sql.query('DROP TRIGGER IF EXISTS rerun_probe ON "RunAction"');
     await harness.sql.query('DROP TRIGGER IF EXISTS rerun_terminal_probe ON "Deployment"');
