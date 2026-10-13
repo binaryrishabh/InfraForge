@@ -58,12 +58,12 @@ These are example service addresses; provision the matching disposable services 
 
 API port 3100 is the default. Port 3000 requires `INTEGRATION_ALLOW_API_3000=yes` and a separately verified disposable setup. The current WebSocket entrypoint always binds port 3001. Both application ports must be free; the harness refuses to replace an existing process. Child processes receive only system path/temp variables and explicit local service settings. Automatic Bun env loading is disabled; dotenv receives a nonexistent temporary file path. Ambient PostgreSQL, dotenv, and runtime injection variables are excluded from child environments. The parent test shell must have no `PG*` environment variables: the harness rejects them before opening any connection, because the installed PostgreSQL client can use ambient settings when a supplied option is empty.
 
-The test takes about 90–120 seconds because it exercises the actual one-minute checkpoint schedule and transient queue retries. It checks:
+The test takes about 140 seconds because it exercises the actual one-minute checkpoint schedule, durable controls and transient queue retries. It checks:
 
 - Saved infrastructure create, read, and explicit update.
 - Real Better Auth database sessions for two users. Cross-user reads, updates,
   deletion, creation, all seven controls and WebSocket subscriptions are rejected.
-  Rejections change no domain rows/outbox and emit no simulator controls.
+  Rejections change no domain rows/outbox/actions and emit no simulator controls.
 - Origin/CSRF rejection, tampered cookies, session expiry/revocation, actual server
   sign-out, ownerless records/jobs and explicit dry-run-first ownership recovery.
   Session fixtures use the real adapter; no test login endpoint or fake OAuth exists.
@@ -81,7 +81,23 @@ The test takes about 90–120 seconds because it exercises the actual one-minute
 - Load, chaos, vertical and pool scaling, speed, pause, topology, saved/live layout separation, disconnect/subscription cleanup, reconnect, and active teardown.
 - Stale and duplicate jobs cannot replace inputs or initialize another simulator. A competing worker cannot acquire the database's session advisory lock.
 - Durable live topology revision checks reject stale/concurrent editors. Live edits never change original inputs or the saved design; stale Redis topology messages have no authority.
-- Active design deletion is rejected through the API and direct cascade deletion. Creation/deletion races cannot orphan a run; teardown releases deletion only after runtime acknowledgement.
+- Active design deletion is rejected through HTTP and direct SQL. Creation/deletion races cannot orphan a run; teardown releases deletion only after its terminal snapshot and action completion commit.
+- Durable actions survive Redis publication denial, execute in database sequence order,
+  and keep requested/claimed/application/completion phases distinct. A scoped SQL
+  failure after in-memory load application proves acknowledgement retries do not
+  apply it twice. Speed zero still processes controls, resume and teardown.
+- High-speed chaos retains its exact logical end without claiming recovery. Vertical
+  scale waits for the installed SKU to be observed online; pool provisioning/draining
+  retains final replica counts. Topology claim failure leaves acceptance distinct
+  from application. Invalid targets and stale revisions create no action.
+- Duplicate teardown returns the same action. An offline worker cannot fabricate a
+  terminal snapshot; restart atomically fails its interrupted run and open actions.
+  Two forced terminal-write failures leave the run live with no terminal record;
+  acknowledgement retry preserves the original capture time instead of recapturing.
+  Captured names and owner-only HTTP/WS history survive saved-design deletion.
+- The eleventh migration preserves prior fields and old checkpoints, derives ownership
+  only from already verified design ownership, and enforces immutable run identity,
+  action parameters/outcomes and active-design deletion guards.
 - A real diagnostic checkpoint is preserved across worker crash/restart. Interrupted LIVE runs explicitly fail; they never restart at tick one. Legacy records are not backfilled and historical records are retained.
 - Terminating the owned worker's PostgreSQL ownership session stops its process and snapshots; the replacement records interruption explicitly. This is a disposable fixture session, never a development/production connection.
 - Applying the authentication migration over the previous SQL schema preserves
@@ -98,7 +114,12 @@ The test takes about 90–120 seconds because it exercises the actual one-minute
   historical ownership and every unrelated row. The Docker release rehearsal
   separately executes custom-format dump/restore and deliberate restore corruption.
 
-Commands are sent while paused. Load/chaos/scaling/speed Redis payloads are checked before resuming; topology edits instead check the committed database revision. There is no durable acknowledgement/log for the other controls, so their boundaries describe the last observed tick rather than exact scheduling under arbitrary process stalls. Each advancement asserts its expected tick count, so an unexpected extra tick fails the fixture.
+Controls are accepted through the real HTTP routes, then checked against their
+PostgreSQL action records. No simulator-control Redis publication is required.
+Most controls are issued while paused to make the logical application boundary
+explicit. Advancements check exact tick counts; high-speed completion checks run
+at each simulated second. Checkpoints retain their real capture timestamp and
+applied topology revision; terminal captures are separate exact state records.
 
 The test writes a JSON evidence file in the OS temporary directory and prints its path. It contains captured inputs, control ticks, Redis/WS events, checkpoint and explicit restart outcome, process IDs/timestamps, readiness checks, sanitized process logs and cleanup results. Keep it as local evidence. It does not dump environment variables or credentials.
 

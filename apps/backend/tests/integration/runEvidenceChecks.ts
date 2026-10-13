@@ -124,10 +124,24 @@ export async function checkReliableEvidence(harness: LocalHarness, sessions: Ses
   await complete(await requested("speed", { speed: 10 }));
   expect((await complete(drain)).outcome?.finalReplicaCount).toBe(2);
   await complete(await requested("speed", { speed: 0 }));
-  const stop = await requested("teardown", {});
-  const duplicate = await harness.request(`/deployments/${id}/teardown`, {}, "POST", 202);
-  expect(duplicate.action.id).toBe(stop.id);
+  let stop!: RunAction;
+  let acknowledgementBlockedAt = 0;
+  await probe("teardown", "completed", async () => {
+    stop = await requested("teardown", {});
+    const duplicate = await harness.request(`/deployments/${id}/teardown`, {}, "POST", 202);
+    expect(duplicate.action.id).toBe(stop.id);
+    await until(async () => Number((await harness.sql.query('SELECT last_value FROM evidence_action_probe_seq')).rows[0].last_value) >= 2 || undefined,
+      "two terminal acknowledgement attempts");
+    expect((await action(stop.id)).status).toBe("applying");
+    const pendingStop = await run();
+    expect(pendingStop.status).toBe("live");
+    expect(pendingStop.runtimeActive).toBe(true);
+    expect(pendingStop.terminalSnapshot).toBeNull();
+    acknowledgementBlockedAt = Date.now();
+  });
   const stopped = await complete(stop);
+  // The retry persists the original capture, not a fabricated later measurement time.
+  expect(Date.parse(stopped.outcome!.capturedAt!)).toBeLessThan(acknowledgementBlockedAt);
   const final = await run();
   expect(final.status).toBe("torn-down");
   expect(final.runtimeActive).toBe(false);

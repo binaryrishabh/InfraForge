@@ -15,7 +15,9 @@ before changing the pinned version. The installed Prisma adapter declares Prisma
 
 ## Configuration
 
-Set these through the environment or the gitignored `apps/backend/.env` for local work:
+The supervised local launcher uses the ignored root `.env.development.local` and
+ignores app dotenv files. For separately started entrypoints, set these through the
+environment or the gitignored `apps/backend/.env`:
 
 | Variable | Meaning |
 | --- | --- |
@@ -78,7 +80,9 @@ Owner configuration steps:
 ## Access rules
 
 Protected HTTP routes read identity from the current database session. Every
-design/run query and mutation filters by the verified design owner. Client `userId`
+design query and mutation filters by its verified owner; run/report/control/WS
+access uses the run's independently retained `ownerId`. Deleting an inactive design
+does not remove or transfer its historical runs. Client `userId`
 and `ownerId` values never grant access. Missing sessions return 401; another user's
 or quarantined records return 404. Lists contain only the current user's records.
 Unsafe HTTP requests require an exact permitted Origin in addition to Better
@@ -117,7 +121,10 @@ Recover only a specific design after establishing independent ownership evidence
 The historical `test-user` marker alone proves nothing. The target must already
 exist with verified email, the design must still be unassigned, its historical
 marker must match, and it must have no active runs. The database also rejects
-reassignment of an owned design. Recovery preserves historical fields and original
+reassignment of an owned design. Dry runs include the count of linked unassigned
+historical runs; applying recovery assigns those inactive runs in the same transaction.
+Detached ownerless history cannot be claimed through this design recovery method.
+Recovery preserves historical fields and original
 run inputs. This is an operator CLI, never a public endpoint or automatic startup
 operation.
 

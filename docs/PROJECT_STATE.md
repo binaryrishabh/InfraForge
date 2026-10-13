@@ -1,195 +1,192 @@
 # InfraForge project state
 
-Verified 2026-10-12 on `develop`. **Local-first product development is the priority.**
-Hosted production cutover is **PARKED** until the local learning experience reaches
-stronger V1 quality. The local PostgreSQL/Docker foundation is accepted after the
-actual four-process smoke; it is not another ongoing release-hardening milestone.
+Verified locally 2026-10-13 on `develop`. **Reliable Run Evidence is implemented.**
+Product development remains local-first; hosted production cutover is **PARKED**.
+This milestone did not access Neon, EC2/AWS, hosted Nginx, Vercel, DNS, OAuth settings,
+production secrets/databases or `main`.
 
 See [local setup](../Readme.md), [authentication](AUTHENTICATION.md),
 [integration tests](../apps/backend/tests/integration/README.md) and the existing
-[release procedure](DEPLOYMENT.md). No further hosted verification is planned during
-current product development.
+[release procedure](DEPLOYMENT.md). This document is the main project state;
+do not create executor memories or planning archives.
 
 ## Product direction and policy
 
 The learning loop is **Challenge → Build → Predict → Run → Break → Understand →
-Improve → Run again**. Complete it before expanding scope. Preserve the existing
-visual identity; deeper UX redesign comes later. Beginner teaching and progressive
-disclosure should keep advanced workflows quick.
+Improve → Run again**. Complete it before expanding scope. Preserve the visual
+identity; deeper UX redesign comes later. Progressive disclosure should help
+beginners without slowing advanced workflows.
 
-**Observed / Interpreted / Unknown is a permanent product rule.** Simulation results
-are authoritative within an educational model, not production sizing advice.
-Interpretations need deterministic evidence and tests; never invent telemetry,
-causality, provider guarantees or recovery. Domain, catalog and simulation packages
-own their respective rules, prices and tuning.
-
-Keep modules readable, workspace boundaries explicit and migrations additive.
-Preserve working save/deploy/live-edit behaviour and published history. One mutating
-executor uses the owner Git identity. Approved policy for this milestone: GPT-6.1
-Sol, Extra High; INNER NONE. External review requires explicit scoped authorization.
+**Observed / Interpreted / Unknown is permanent.** Results describe an educational
+model, not production sizing or cloud bills. Interpretations need deterministic
+retained evidence; never invent telemetry, causality, provider guarantees or recovery.
+Keep modules small, boundaries explicit, migrations additive and published history intact.
+One mutating executor uses the owner Git identity. Approved policy: GPT-6.1 Sol,
+Extra High; INNER NONE. External review requires scoped owner authorization.
 Normal develop work cannot promote/deploy main or operate on production data.
-This document is the main project state; do not create executor memories.
 
-## Accepted architecture
+## Accepted architecture and local foundation
 
 | Workspace | Responsibility |
 | --- | --- |
-| `apps/web` | React 19/Vite/Zustand canvas, deployment, monitoring and reports |
-| `apps/backend` | Express API, Prisma/PostgreSQL, outbox/BullMQ, worker/simulator, WS and report derivation |
-| `packages/domain` | Resource/workload types, graph rules, readiness and examples |
+| `apps/web` | React 19/Vite/Zustand canvas, monitoring, history and reports |
+| `apps/backend` | Express, Prisma/PostgreSQL, outbox/BullMQ, worker/simulator, WS and report derivation |
+| `packages/domain` | Resource/workload types, graph/readiness rules and examples |
 | `packages/catalog` | Provider SKU data and lookup |
-| `packages/contracts` | Deployment, immutable inputs, infrastructure, telemetry, events and report DTOs |
+| `packages/contracts` | Deployment, inputs, actions, telemetry/events and report DTOs |
 | `packages/simulation` | Deterministic engine, runtime, cost, capacity and tuning |
 
-Bun 1.3.14/Turbo 2.11.6 own one root install and lockfile. Browser imports cannot reach
-simulation engine/runtime/cost. Prisma 7.9.1 and all ten original migrations remain
-unchanged; all 30 engine goldens and their expectations are unchanged.
+Bun 1.3.14/Turbo 2.11.6 own one root install/lockfile. Browser imports cannot reach
+engine/runtime/cost. Prisma 7.9.1 now has eleven migrations: the original ten are
+unchanged, followed by `20261013000000_reliable_run_evidence`. All 30 engine goldens,
+expectations, RNG consumption and simulation behavior remain unchanged.
 
-Better Auth 1.7.7 validates database sessions and exact HTTP/WS ownership and Origins.
-Cookies are host-only, HttpOnly, SameSite=Lax, and Secure on HTTPS. WS closes on
-expiry/revocation. Ownerless legacy designs remain quarantined; recovery is dry-run
-first and never fabricates identity. Real Google/GitHub OAuth still needs owner
-configuration and end-to-end verification; the isolated launcher leaves providers
-unconfigured and adds no test-login endpoint.
+Better Auth 1.7.7 uses database sessions and exact HTTP/WS ownership and Origins.
+Cookies are host-only, HttpOnly, SameSite=Lax and Secure on HTTPS. WS checks expiry,
+revocation and run ownership. Ownerless history stays quarantined; dry-run-first
+recovery requires independent evidence and assigns only linked inactive unassigned
+runs alongside their verified design. Detached ownerless runs remain quarantined.
+Google/GitHub OAuth still requires owner credentials and end-to-end verification.
+There is no public fixture-login endpoint or browser identity bypass.
 
-Creation captures validated topology, resolved workload and seed. Gates, startup and
-retries use those immutable inputs. Saved design, original input and revisioned live
-topology remain separate. One session advisory lock owns simulations. Worker restart
-fails interrupted runs explicitly and preserves diagnostic checkpoints; replay and
-checkpoint recovery are not implemented.
+`bun run dev:setup` prepares labelled PostgreSQL 18/Redis 8 resources. `bun run dev`
+migrates/generates and supervises API, worker, WS and frontend using generated local
+configuration, ignoring app dotenv/hosted settings. Ports 55432/56379 and
+3000/3001/3002/5173 bind to loopback. Unknown resource/port collisions are refused.
+The accepted four-process and listener smokes preserve persistent developer storage;
+a dedicated bridge supports Docker Desktop host probes. These are completed local
+foundation checks, not an ongoing hosted-release milestone.
 
-## Closed local foundation
+## Reliable Run Evidence
 
-`bun run dev:setup` prepares labelled PostgreSQL 18/Redis 8 resources; `bun run dev`
-applies migrations, generates Prisma and supervises API, worker, WS and frontend.
-Only generated local configuration is used; app dotenv files and hosted settings
-cannot select a remote database through the launcher. Data ports 55432/56379 and
-application ports 3000/3001/3002/5173 bind to loopback. Unknown Docker resource/port
-collisions are refused. Developer PostgreSQL storage is persistent.
+Creation captures RunInputs V2: validated topology, fully resolved workload, seed,
+model version `1` and catalog snapshot `2026-08`. Gates, initialization and retries
+use those immutable inputs. V1 remains readable without reconstructed metadata.
+A V2 model/catalog mismatch refuses execution rather than silently changing context.
+Saved design, original input and revisioned accepted/applied live topology stay separate.
 
-The 2026-10-11 smoke used a separately marked disposable database and real Better
-Auth fixture sessions. Ten migrations, Prisma generation, API/WS readiness,
-frontend load, a surviving single worker, save/deploy/live load control, chaos,
-accepted topology edits and teardown all executed. Normal developer data was untouched.
-The internal-only development bridge failed host connectivity on Docker Desktop;
-the dedicated bridge and host readiness probes corrected it. Readiness now uses
-explicit loopback addresses without inherited proxies.
+`RunAction` is a bounded, deployment-specific record for load, speed, chaos, vertical
+scale, pool scale, topology and teardown. Owner/live/target/SKU/pool/revision checks
+precede insertion. PostgreSQL row locking allocates a unique per-run sequence;
+HTTP returns 202 with the requested action ID. The worker polls PostgreSQL on its
+one-second cycle, including while paused. Redis carries optional notifications,
+not simulator control truth. Reports show the latest 500 actions with an omission
+notice; earlier records remain in the database.
 
-The follow-up listener smoke verified all four listeners on `127.0.0.1` and HTTP
-200 from API, WS, worker readiness and frontend. An occupied worker port was refused
-before migrations without stopping its listener. Worker readiness now honors the
-launcher interface and is checked alongside the other services.
+Lifecycle: **requested → applying → running/completed**, or **failed/cancelled**.
+Claiming precedes memory application. An acknowledgement write failure freezes that
+exact memory state and retries its write, never reapplies the action. SQL guards
+protect request identity/parameters and closed outcomes. A session advisory lock
+still permits one worker. Restart atomically fails interrupted runs and unfinished
+actions; uncertain effects remain unverified. There is no replay or checkpoint resume.
 
-## Run History + Understand Report
+Load/speed outcomes retain previous and applied values. Chaos retains actual start,
+logical duration/end and observed end health; **fault ended is not system recovery**.
+Vertical scaling completes only after the requested SKU is installed and observed
+online. Pool scaling records the actual replica transition and final count.
+Topology retains both accepted and simulator-applied revision. Successful action
+phases lacking their required outcome evidence are omitted as malformed in reports.
 
-Authenticated endpoints:
+Teardown is durable and idempotent. The simulator deep-captures its current state
+once, then atomically persists the terminal snapshot, action completion, cancellation
+of unfinished controls, `torn-down` and `runtimeActive=false`. Only after commit does
+it remove memory. Failed writes freeze/retry that capture. An unavailable worker
+leaves teardown requested and has no terminal snapshot; restart fails it explicitly.
+The frontend says **Stopping…** until confirmed completion.
 
-- `GET /api/deployments/history`: current owner's runs, newest first; bounded cursor
-  pagination, workload/source, status/times, resource count, chaos count, revision
-  and evidence availability.
-- `GET /api/deployments/:deploymentId/report`: owner-only deterministic derivation
-  from existing durable records. Other owners and ownerless records return safe 404s.
+New wall-minute checkpoints include actual `capturedAt` and applied topology revision.
+Terminal captures also retain simulated seconds, cost, health, resource measurements,
+load/speed, live topology, installed SKUs, pool/fault/restart state and measurement
+computation time/revision. Exact state can contain initialized or older measurements;
+reports label that explicitly. `updatedAt` is never treated as measurement time.
+Old timestamp-less checkpoints remain unknown and are never called final state.
 
-No new database table or migration was needed. Saved designs never substitute for
-original inputs. Malformed history is omitted with explicit limits; ambiguous
-topology comparisons produce no inferred edits.
+Runs own their nullable `ownerId` and captured `runName`. Migration backfills only
+from the linked design's already verified owner/name, preserving unassigned legacy
+ownership and all previous fields. Legacy backfilled names are not claimed to be
+original creation names. The nullable design FK uses SET NULL. Active deletion is
+blocked through HTTP and SQL; inactive design deletion preserves run/report/action
+history and its original owner. Run/control/report/WS authorization uses run ownership.
 
-`/reports` provides loading/empty/error/list states and pagination.
-`/reports/:deploymentId` uses progressive disclosure for inputs, gates, timeline,
-chaos requests, accepted topology changes, checkpoint measurements, cost estimates
-and evidence limits. Dashboard shows five recent runs and a history link. User changes,
-report changes and page changes discard older request state. Settings stays a stub;
-the speculative billing wording was removed.
-
-Observed facts come from stored statuses, stages/events, inputs, accepted revisions
-and checkpoints. Interpretations are currently narrow: CPU at least 90% implies at
-most ten percentage points of headroom at that checkpoint; original/live topology
-differences describe accepted edits. Neither proves duration, cause or application
-at the checkpoint. Chaos entries establish recorded requests, not full impact/recovery.
-Monthly gate estimates and accumulated simulated checkpoint cost stay distinct.
-
-Checkpoints are retained about once a wall-clock minute, without a capture timestamp.
-Teardown does not persist an exact final snapshot. Full telemetry series, intermediate
-topology versions and many streamed controls are absent. Reports say so explicitly,
-show missing fields as unavailable, and contain no fabricated charts or final health.
+Existing reports retain Observed / Interpreted / Unknown and add action phase,
+parameter, wall/logical timing and outcome disclosure, V2 provenance and clearly
+separate exact terminal vs diagnostic checkpoint evidence. Legacy chaos arrays
+remain request-only. No charts, LLM explanations, rerun or comparison UI were added.
 
 ## Verification and local QA
 
-| Check | Actual result |
+| Check | Actual local result |
 | --- | --- |
 | Frozen install | 491 installs/545 packages checked; no lockfile changes |
-| Typecheck | Seven workspace tasks plus release-operator compiler passed |
-| Lint and boundaries | Five ESLint tasks; 1,052 imports, no cycles/runtime leaks |
-| Workspace tests | 118 passed, 853 assertions; five DB cases executed separately below |
-| Engine goldens | All 30 passed; source/expectations unchanged |
+| Typecheck | Seven workspace tasks and release compiler passed; final run serialized after local memory pressure |
+| Lint/boundaries | Five ESLint tasks; 1,152 imports, no cycles/runtime leaks |
+| Workspace tests | 132 passed, 952 assertions; six DB cases executed separately below |
+| Engine goldens | All 30 passed; engine source/expectations unchanged |
 | Tooling | 23 passed, 279 assertions |
-| PostgreSQL 18 integration | 11 passed, 807 assertions, five files; owned cleanup confirmed |
-| Frontend build | Five tasks, 2,112 modules; existing bundle-size warning remains |
+| PostgreSQL 18/Redis integration | 12 passed, 1,047 expect calls across six files; cleanup confirmed |
+| Frontend build | Passed; existing bundle-size warning remains |
+| Final report rendering | Seven SSR tests, 50 assertions passed after final wording |
 | Dependency audit | Exit zero, `{}` |
-| Final report rendering | Five SSR tests, 40 assertions; final wording/build passed |
-| Docker packaging/runtime compatibility | Five packaged entrypoints compiled; 27 disposable local runtime phases passed |
+| Committed Docker packaging | Image `f2de3dc`; five entrypoints compiled, all 27 disposable compatibility phases passed |
 
-Local QA created normal, chaos, short torn-down and invalid-design runs through
-real authenticated HTTP/WS paths. The normal/chaos checkpoints retained simulated
-seconds 57/56 and healthy overall state; the chaos report still does not infer a
-causal recovery story. One chaos request and topology revision 1 were recorded.
-Short/failure reports had no checkpoint; the isolated VM failure kept its actual
-reason. Saved-design edits did not alter original report architecture.
+Real database-backed session HTTP/WS scenarios covered normal runs, load, all scaling,
+chaos, topology, pause/resume, teardown, restart, two-user/ownerless denial and zero
+unauthorized actions/mutations. Redis PUBLISH denial did not lose a load action.
+Concurrent requests retained stable sequence; two forced acknowledgement failures
+after memory application did not apply load twice. A topology claim failure retained
+acceptance without falsely claiming application. Two failed terminal writes left the
+run live with no terminal record; retry committed the original capture timestamp.
+Offline teardown/restart stayed honest.
 
-The real frontend loaded in the browser. All four report views were inspected
-separately using the actual recorded fixture data and application report components,
-including keyboard disclosure and readable measurement tables. This is not a claim
-of end-to-end OAuth or authenticated SPA browser sign-in without provider credentials.
-Real-session API/WS integration covers two users, missing/expired/revoked sessions,
-cross-user reports/cursors, ownerless records and zero unauthorized mutations/controls.
+The recorded example had 18 actions: crash at second 0 ended at 30 while overall
+health was still critical; vertical scaling was observed online at 21; pool count
+went 2→3 at 60 and 3→2 at 75. Teardown captured healthy state at second 80, revision 1,
+with the real wall timestamp. Renaming/deleting the design retained its original run
+name, report and owner-only HTTP/WS access. The browser inspected the actual recorded
+report using application components/CSS, keyboard disclosures and retained history.
+This verifies report rendering, not authenticated SPA/OAuth sign-in without credentials.
 
-Failed attempts remain separate evidence: invalid QA fixture name and a nonexistent
-WS assertion field were corrected without weakening product checks. A later Prisma
-helper timed out across a recorded sixteen-hour wall-clock gap; the unchanged fresh
-full integration rerun passed. Docker context inspection found the new report source
-directory missing from its allowlist; the focused packaging correction is committed.
-The follow-up web lint process exhausted memory while local stacks ran concurrently;
-checks were rerun sequentially after their cleanup. No validation rule was weakened.
-The 27-phase rehearsal used report image `594be56`; the subsequent worker listener
-correction was exercised separately through the real local launcher. Its committed
-image `29c7ffb` also built and compiled all five entrypoints. The first frozen-install
-image attempt failed extracting the unchanged `effect` tarball; the unchanged retry
-passed. Exact-SHA CI repeats the complete packaging/runtime job before final acceptance.
+Failed attempts were retained separately: Docker initially stopped; Bun's native
+SQL rejection matcher stalled and was replaced by Node's awaited assertion; restart
+retirement initially exposed run failure before action failure and is now atomic;
+the old migration-count assertion and new test enum literals were corrected. The
+first image command selected the wrong builder; the verified local engine build passed.
+A concurrent compiler attempt exhausted local memory; the final unchanged checks
+passed serially after owned stack cleanup.
+No golden, protection or validation requirement was weakened.
 
-## Parked hosted work
+## Evidence, cleanup and parked hosted work
 
-B0.6E stopped **before database access**, with identity/reset-credential gates
-unfinished. A hosted rehearsal child was created and retained; the existing private
-operator record is needed for future authorized inspection/cleanup. This task did not
-resume it or access Neon, EC2/AWS, Nginx, Vercel, OAuth settings, DNS or production secrets.
+Sanitized evidence stays outside Git in OS temporary storage:
+`infraforge-run-evidence-c943b5fd14674aad` plus owned integration run records.
+Disposable PostgreSQL/Redis containers, volumes/networks, fixture rows/sessions and
+child processes were removed. The temporary report server/tab, its script, three
+superseded successful check logs (9,711 bytes total scratch) and unused labelled test
+image were removed. Unique final/failed evidence and the inspection screenshot remain.
+Developer storage/configuration and shared caches
+remain intentionally, with unknown resources and owner files preserved. No agent
+memory folder or permanent scratch archive was added.
 
-Last historical hosted observation: legacy SHA `6b465c6`, Neon PostgreSQL 18.6,
-migrations 1–8 only; 28 `test-user` designs and 331 deployments (223 completed,
-8 failed, 4 live, 96 torn-down), with 348 completed outbox rows. Three simulations
-advanced; the fourth was unknown. Public API/WS had maintenance 503 containment,
-while legacy writers remained running. These are historical facts, not a fresh census.
-Future recovery must re-establish writer fencing, database/restore truth, direct
-session-preserving worker connectivity and real same-site OAuth/TLS before cutover.
-The existing release kit and its limits remain documented; production work needs
-fresh authorization after local V1 quality improves.
+B0.6E remains stopped before database access, with identity/reset-credential gates
+unfinished. A retained hosted rehearsal child and existing private operator record
+need future authorized inspection/cleanup; this task did not reopen them.
+Last historical hosted facts: legacy SHA `6b465c6`, Neon PostgreSQL 18.6, migrations
+1–8, 28 `test-user` designs, 331 deployments (223 completed, 8 failed, 4 live,
+96 torn-down), 348 completed outbox rows. Three simulations advanced; the fourth
+was unknown. Public API/WS had maintenance containment while legacy writers remained.
+These are historical facts, not a fresh census. Future cutover needs renewed writer
+fencing, database/restore truth, session-preserving worker connections and OAuth/TLS.
 
-## Evidence, cleanup and next milestone
+## Remaining limits and next product milestone
 
-Sanitized local smoke/check/build/audit evidence lives outside Git in OS temporary
-storage (`infraforge-local-product-80227d683c124918` and owned integration run records).
-Failed attempts are distinct. The disposable smoke database, fixture users/sessions,
-temporary visual server/tabs, ten scratch files and all integration containers,
-volumes/networks were removed. Cleanup removed eleven verified fixture jobs and
-55 matching Redis events, preserving unrelated state and initialized queue metadata.
-The second marked listener-smoke database and occupied-port fixture were also removed.
-Developer containers are stopped for reuse; their volume, network and generated
-local configuration remain intentionally. Unknown Docker resources/caches and
-owner files were preserved. Verified unused local test images were removed after
-verification. No agent memory folder or permanent scratch archive was added.
+Next: **honest Rerun + Compare**, using trustworthy original inputs, actions and
+snapshots. Same seed alone does **not** establish a perfectly controlled comparison
+across changed topologies: the engine consumes seeded jitter sequentially across
+resources. Future comparison must address or explicitly grade that comparability;
+do not change RNG/goldens merely to claim fairness.
 
-Next local milestone: **Reliable Run Outcomes**. Retain timestamped final snapshots
-and durable control/chaos application outcomes, then use those facts for useful run
-comparison with matching workload/seed. Current gaps include final-state certainty,
-control history, causal explanations, run comparison, deletion removing a design's
-history, current design names rather than captured run titles, beginner/narrow-screen
-UX and the existing bundle size. Do not schedule hosted cutover work during this phase.
+Continuous telemetry, all automatic scaling events, causal effects and checkpoint
+recovery remain absent. Exact terminal state is an educational-model observation,
+not production recovery or sizing proof. Browser OAuth/complete authenticated SPA
+QA, beginner/narrow-screen UX and bundle size remain separate work. Local tests do
+not establish production readiness; hosted work stays parked.
