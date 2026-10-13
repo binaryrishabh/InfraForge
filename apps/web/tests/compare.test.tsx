@@ -7,6 +7,7 @@ import { CompareSelection, RunSelection } from "../src/features/reports/componen
 import { selectionReason, toggleRun } from "../src/features/reports/selection";
 import { signedValue } from "../src/features/reports/formatDifference";
 import { ComparePicker } from "../src/features/reports/components/ComparePicker";
+import { StartingInputs } from "../src/features/reports/components/StartingInputs";
 
 const run: RunSummary = { id: "a", infrastructureId: null, infrastructureName: "Archived design", status: "torn-down",
   createdAt: "2026-10-13T10:00:00.000Z", updatedAt: "2026-10-13T10:10:00.000Z", resourceCount: 1,
@@ -44,4 +45,15 @@ test("two-run selection is keyboard-native, bounded and gives live/pending reaso
 });
 test("signed differences convey units without value judgements", () => {
   expect(signedValue(2)).toBe("+2"); expect(signedValue(-2)).toBe("-2"); expect(signedValue(0)).toBe("0"); expect(signedValue(null)).toBe("withheld");
+});
+
+test("starting design disclosure retains connection order and its model-1 significance", () => {
+  const a = { sourceId: "lb", targetId: "a", port: 80 }, b = { ...a, targetId: "b" };
+  const html = render(<StartingInputs detailed starting={{ ...comparison.starting, grade: "one-change-design", design: {
+    added: [], removed: [], reconfigured: [], addedConnections: [], removedConnections: [], resourceOrder: null,
+    connectionOrder: { earlier: [a, b], later: [b, a] },
+  } }} />);
+  expect(html).toContain("Connection order changed"); expect(html).toContain("autoscaling pool templates");
+  expect(html).toContain("Earlier connection order: lb → a:80; lb → b:80");
+  expect(html).toContain("Later connection order: lb → b:80; lb → a:80");
 });

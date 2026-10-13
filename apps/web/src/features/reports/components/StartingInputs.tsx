@@ -16,6 +16,9 @@ export function StartingInputs({ starting, detailed = false }: { starting: Start
         <p>Added connections: {starting.design.addedConnections.map((e) => `${e.sourceId} → ${e.targetId}:${e.port}`).join(", ") || "none"}</p>
         <p>Removed connections: {starting.design.removedConnections.map((e) => `${e.sourceId} → ${e.targetId}:${e.port}`).join(", ") || "none"}</p>
         {starting.design.resourceOrder && <><p className="break-words">Earlier order: {starting.design.resourceOrder.earlier.join(" → ")}</p><p className="break-words">Later order: {starting.design.resourceOrder.later.join(" → ")}</p></>}
+        {starting.design.connectionOrder && <><p>Connection order changed. Model 1 uses this order for routing and autoscaling pool templates.</p>
+          <p className="break-words">Earlier connection order: {starting.design.connectionOrder.earlier.map((e) => `${e.sourceId} → ${e.targetId}:${e.port}`).join("; ")}</p>
+          <p className="break-words">Later connection order: {starting.design.connectionOrder.later.map((e) => `${e.sourceId} → ${e.targetId}:${e.port}`).join("; ")}</p></>}
       </> : <p>Starting design differences unavailable.</p>}
       <ul>{starting.workload.map((f) => <li key={f.field}>{f.field}: {JSON.stringify(f.earlier)} → {JSON.stringify(f.later)}</li>)}</ul>
     </>}

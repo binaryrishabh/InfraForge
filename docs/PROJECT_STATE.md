@@ -115,6 +115,10 @@ appending preserves them, while insertion/removal/reordering shifts displaced
 resources. Alignment does not imply identical measurements or controlled causality.
 Dynamic resources/future models are ungraded; non-preserved numeric object-key order
 is unknown. An engine regression isolates jitter from traffic distribution.
+Connection order is also retained as a starting-design and topology-action difference.
+Model 1 builds ordered adjacency and uses the first pool VM as its autoscaling
+template; reversing connections can change spawned identity/SKU even with aligned
+starting jitter. A direct engine regression proves this without changing the model.
 
 Exact rerun copies supported V2 input in the current model/catalog, even after design
 deletion. Current-design rerun requires the original owned design and captures its
@@ -150,9 +154,9 @@ portal text, reduced motion and narrow metric blocks preserve the existing desig
 | --- | --- |
 | Frozen install | 491 installs/545 packages checked; lockfile unchanged |
 | Typecheck | Seven workspace tasks and release compiler passed; correction recheck passed |
-| Lint/boundaries | Five ESLint tasks; 1,388 imports, no cycles/runtime leaks |
-| Workspace unit tests | 159 passed, 1,136 assertions in Linux; seven DB cases skipped here and executed below |
-| Engine | All 30 goldens plus jitter-alignment regression passed; source/goldens unchanged |
+| Lint/boundaries | Five ESLint tasks; 1,389 imports, no cycles/runtime leaks |
+| Workspace unit tests | 162 passed, 1,151 assertions in final serialized run; seven DB cases skipped here and executed below |
+| Engine | All 30 goldens plus jitter/connection-order regressions passed; source/goldens unchanged |
 | Tooling | 23 passed, 279 assertions |
 | PostgreSQL 18/Redis integration | 13 passed, 1,123 assertions across seven files; no cleanup errors |
 | Docker | Commit-labelled image, five entrypoints compiled and explicit fixture Compose config passed |
@@ -179,10 +183,11 @@ comes from the real database-backed integration suite.
 
 Failed attempts remain separately recorded. Windows Bun 1.3.14 repeatedly crashed
 in native startup/generation/tests; some attempts explicitly reported memory
-exhaustion. Earlier serialized checks passed, but Windows integration stability is
+exhaustion. Final serialized checks passed, but Windows integration stability is
 not established. Speculative launch/JIT changes were removed. Linux Docker runs
 passed. Final QA found and fixed late teardown contention during a frozen matched
-stop and low-contrast portalled text. The security test now asserts no delivery
+stop, low-contrast portalled text and sorting away meaningful connection order.
+The security test now asserts no delivery
 from confirmed invalidation onward, excluding legitimate telemetry during the
 in-flight invalidation request. No authorization or golden requirement was weakened.
 
@@ -190,7 +195,8 @@ Sanitized final/failed evidence and browser screenshot stay outside Git under OS
 temporary `infraforge-compare-20261013` and labelled integration run records; final
 integration run is `10151e0558b84d2484109e757a0dd4b6`. Owned test containers, volumes,
 networks, sessions and child processes were removed. The temporary unit source bundle
-was removed. Shared caches, persistent developer storage/configuration and owner files
+and QA folder were removed (1,018,993 bytes of QA scratch), along with four unused
+owned test image tags. Shared caches, persistent developer storage/configuration and owner files
 remain intentionally. No agent-memory folder or permanent scratch archive was added.
 
 ## Parked hosted work and remaining limits

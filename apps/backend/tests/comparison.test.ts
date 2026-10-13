@@ -60,6 +60,20 @@ test("missing/different model/catalog provenance degrades; future models have un
   expect(compareInputs(future, future).alignment.code).toBe("unknown");
 });
 
+test("connection order remains a starting-design and action-conduct difference", () => {
+  const reordered = { ...captured, connectionLines: [...captured.connectionLines].reverse() };
+  const c = pair({}, { runInputs: reordered });
+  expect(c.starting.grade).toBe("one-change-design");
+  expect(c.starting.facets.topology).toBe("different");
+  expect(c.starting.design?.connectionOrder?.earlier[0]?.sourceId).toBe("dns");
+  expect(c.starting.design?.addedConnections).toEqual([]);
+  expect(c.starting.alignment.code).toBe("aligned");
+  expect(c.evidence.deterministicState).toBe("not-established");
+  const a = { ...action("topology", 5, { ...layout, expectedRevision: 0, acceptedRevision: 1 }), outcome: { acceptedRevision: 1, appliedRevision: 1 } };
+  const b = { ...action("topology", 5, { ...layout, connectionLines: reordered.connectionLines, expectedRevision: 0, acceptedRevision: 1 }), outcome: a.outcome };
+  expect(pair({ actions: [a], actionCount: 1 }, { actions: [b], actionCount: 1 }).conduct.code).toBe("different");
+});
+
 test("starting positional alignment handles append, removal, reorder and never grades spawned resources", () => {
   const appended = { ...captured, resources: [...captured.resources, { id: "extra", type: "DNS" as const, x: 0, y: 0 }] };
   expect(compareInputs(captured, appended).alignment.aligned).toEqual(captured.resources.map((r) => r.id));

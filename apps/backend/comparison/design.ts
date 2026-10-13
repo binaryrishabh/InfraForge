@@ -22,7 +22,8 @@ export function configuration(r: Resource): Record<string, unknown> {
 const edge = (c: ConnectionLine) => ({ sourceId: c.sourceId, targetId: c.targetId, port: c.port });
 export function normalizedTopology(topology: RunTopology) {
   return { resources: topology.resources.map((r) => ({ id: r.id, ...configuration(r) })).sort((a, b) => a.id.localeCompare(b.id)),
-    connections: topology.connectionLines.map(edge).sort((a, b) => canonical(a).localeCompare(canonical(b))) };
+    // Model 1 preserves adjacency order and chooses a pool's first VM as its template.
+    connections: topology.connectionLines.map(edge) };
 }
 export function unambiguous(topology: RunTopology) {
   return topology.resources.length <= 500 && topology.connectionLines.length <= 1000 &&
@@ -40,5 +41,7 @@ export function designDifference(before: RunTopology, after: RunTopology): Desig
       const changed = fields(configuration(a.get(id)!), configuration(r)); return changed.length ? [{ id, fields: changed }] : [];
     }), addedConnections: [...be].filter(([k]) => !ae.has(k)).sort(([x], [y]) => x.localeCompare(y)).map(([, v]) => v),
     removedConnections: [...ae].filter(([k]) => !be.has(k)).sort(([x], [y]) => x.localeCompare(y)).map(([, v]) => v),
-    resourceOrder: canonical(orderA) === canonical(orderB) ? null : { earlier: orderA, later: orderB } };
+    resourceOrder: canonical(orderA) === canonical(orderB) ? null : { earlier: orderA, later: orderB },
+    connectionOrder: canonical(before.connectionLines.map(edge)) === canonical(after.connectionLines.map(edge)) ? null :
+      { earlier: before.connectionLines.map(edge), later: after.connectionLines.map(edge) } };
 }

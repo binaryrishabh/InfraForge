@@ -9,6 +9,7 @@ export interface DesignDifference {
   addedConnections: Array<{ sourceId: string; targetId: string; port: number }>;
   removedConnections: Array<{ sourceId: string; targetId: string; port: number }>;
   resourceOrder: { earlier: string[]; later: string[] } | null;
+  connectionOrder: { earlier: Array<{ sourceId: string; targetId: string; port: number }>; later: Array<{ sourceId: string; targetId: string; port: number }> } | null;
 }
 export interface StartingComparison {
   grade: StartingGrade;
