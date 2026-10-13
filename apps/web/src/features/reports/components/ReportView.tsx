@@ -4,6 +4,8 @@ import { ReportSection as Section } from "./ReportSection";
 import { ReportMeasurements } from "./ReportMeasurements";
 import { ActionTimeline } from "./ActionTimeline";
 import { ComparePicker } from "./ComparePicker";
+import { RerunDialog } from "./RerunDialog";
+import { RunFamily } from "./RunFamily";
 
 export function ReportView({ report }: { report: RunReport }) {
   const { run, topology } = report;
@@ -17,7 +19,10 @@ export function ReportView({ report }: { report: RunReport }) {
       {run.status === "live" && <p className="mt-3 text-sm text-[#C3C7D0]">This run is still live. This report shows retained evidence, not a live monitor.</p>}
       {!run.hasReportData && <p className="mt-3 text-sm text-[#C3C7D0]">No usable stages, events or checkpoint data were retained for this run.</p>}
     </div>
-    <div className="flex flex-wrap gap-3 items-center"><ComparePicker id={run.id} eligible={!["pending", "running", "live"].includes(run.status)} /></div>
+    <div className="flex flex-wrap gap-3 items-center"><RerunDialog id={run.id} eligible={!["pending", "running", "live"].includes(run.status)} /><ComparePicker id={run.id} eligible={!["pending", "running", "live"].includes(run.status)} />
+      {run.sourceRunId && !["pending", "running", "live"].includes(run.status) && <Link className="text-[#4FA89B] underline" to={`/reports/compare?a=${run.sourceRunId}&b=${run.id}`}>Compare with source run</Link>}
+    </div>
+    <RunFamily id={run.id} />
     <Section title="Observed — recorded facts" open>
       <ul className="space-y-3">{report.observed.map((fact) => <li key={fact.id}>
         <p>{fact.message}</p><p className="text-xs text-[#8B909C]">Source: {fact.sources.join(", ")}</p>

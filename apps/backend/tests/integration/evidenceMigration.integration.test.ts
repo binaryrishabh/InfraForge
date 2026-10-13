@@ -17,7 +17,7 @@ integration("run-evidence migration preserves verified and quarantined history, 
     expect((await admin.query("SELECT current_database() AS name")).rows[0].name).toBe(settings.databaseName);
     await admin.query(`CREATE DATABASE "${name}" TEMPLATE template0`); created = true;
     const directory = new URL("../../prisma/migrations/", import.meta.url);
-    const folders = (await readdir(directory, { withFileTypes: true })).filter((e) => e.isDirectory()).map((e) => e.name).sort();
+    const folders = (await readdir(directory, { withFileTypes: true })).filter((e) => e.isDirectory()).map((e) => e.name).filter((name) => name <= "20261013000000_reliable_run_evidence").sort();
     expect(folders.at(-1)).toBe("20261013000000_reliable_run_evidence");
     for (const folder of folders.slice(0, -1)) await db.query(await Bun.file(new URL(`${folder}/migration.sql`, directory)).text());
     const user = randomUUID(), owned = randomUUID(), legacy = randomUUID(), ownedRun = randomUUID(), legacyRun = randomUUID();

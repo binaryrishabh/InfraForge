@@ -1,4 +1,5 @@
-import type { RunHistory, RunReport, RunComparison, RunSummary } from "@infraforge/contracts/reports";
+import type { RunHistory, RunReport, RunComparison, RunSummary, RerunOptions, RerunMode, RunFamily } from "@infraforge/contracts/reports";
+import type { Deployment } from "@infraforge/contracts/deployment";
 import { API_URL, http } from "../client/httpClient";
 
 export async function getRunHistory(limit = 50, before?: string): Promise<RunHistory> {
@@ -16,4 +17,13 @@ export async function getComparison(a: string, b: string): Promise<RunComparison
 }
 export async function getCompareOptions(id: string): Promise<RunSummary[]> {
   return (await http.get(`${API_URL}/deployments/${encodeURIComponent(id)}/compare-options`)).data.runs;
+}
+export async function getRerunOptions(id: string): Promise<RerunOptions> {
+  return (await http.get(`${API_URL}/deployments/${encodeURIComponent(id)}/rerun-options`)).data.options;
+}
+export async function createRerun(id: string, mode: RerunMode, matchedStop: boolean, expectedInputHash?: string): Promise<Deployment> {
+  return (await http.post(`${API_URL}/deployments/${encodeURIComponent(id)}/reruns`, { mode, matchedStop, expectedInputHash })).data.createdDeployment;
+}
+export async function getRunFamily(id: string): Promise<RunFamily> {
+  return (await http.get(`${API_URL}/deployments/${encodeURIComponent(id)}/family`)).data.family;
 }

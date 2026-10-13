@@ -83,6 +83,9 @@ apps/backend/reports/**
 !apps/backend/comparison/
 apps/backend/comparison/**
 !apps/backend/comparison/*.ts
+!apps/backend/reruns/
+apps/backend/reruns/**
+!apps/backend/reruns/*.ts
 !apps/backend/actions/
 apps/backend/actions/**
 !apps/backend/actions/*.ts

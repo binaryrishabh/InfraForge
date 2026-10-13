@@ -2,17 +2,16 @@ import { prisma } from "../lib/prisma";
 import { publishSimulationSnapshot } from "../infra/pubsub";
 import { Publish } from "@infraforge/contracts/events";
 import { redis } from "../infra/redis";
-import { createInitialState, tick } from "@infraforge/simulation/engine";
-import { computeHourlyBurnRateUsd } from "@infraforge/simulation/cost";
+import { createInitialState } from "@infraforge/simulation/engine";
 import { engineSeed, readRunInputs, assertSimulationContext } from "../deployments/runInputs";
 import type { WorkerOwnership } from "../infra/workerOwnership";
-import type { SimulationLog } from "@infraforge/contracts/telemetry";
 import { storedJson } from "../utils/json";
 import type { SimulationInstance } from "./instance";
 import { buildSnapshot, captureSnapshot } from "./snapshot";
 import { processRunActions, recordActionCompletions } from "./actions";
 import { flushAcknowledgement } from "./actionAcknowledgement";
-import { displaySimulationLogs } from "./logs";
+import { advanceTickBatch, reachedMatchedStop } from "./tickBatch";
+import { finishMatchedStop } from "./matchedStop";
 
 const registry = new Map<string, SimulationInstance>();
 const initializing = new Map<string, Promise<boolean>>();
@@ -38,7 +37,8 @@ async function initialize(deploymentId: string) {
   const instance: SimulationInstance = { state, tickCount: 0, pendingLogs: [], speed: 1,
     lastCheckpointAt: Date.now(), accumulatedCostUsd: 0,
     topology: { resources: input.resources, connectionLines: input.connectionLines }, topologyRevision: 0,
-    actions: new Map(), acknowledge: null, metricsComputedAt: null, metricsTopologyRevision: 0 };
+    actions: new Map(), acknowledge: null, metricsComputedAt: null, metricsTopologyRevision: 0,
+    autoStopAtSimulatedSeconds: deployment.autoStopAtSimulatedSeconds, finishMatchedStop: null };
   registry.set(deploymentId, instance);
   await publishSimulationSnapshot(buildSnapshot(deploymentId, instance));
   return true;
@@ -83,6 +83,11 @@ async function advanceSimulations() {
         await stopSimulation(deploymentId);
         continue;
       }
+      if (reachedMatchedStop(instance)) {
+        await recordActionCompletions(instance);
+        await finishMatchedStop(deploymentId, instance, () => registry.delete(deploymentId));
+        continue;
+      }
       const terminal = await processRunActions(deploymentId, instance, () => registry.delete(deploymentId));
       if (terminal) {
         await publishSimulationSnapshot(terminal).catch(() => {});
@@ -92,21 +97,13 @@ async function advanceSimulations() {
         continue;
       }
       if (runtimeStopped || registry.get(deploymentId) !== instance) continue;
-      const allLogs: SimulationLog[] = [];
       // Poll actions before considering speed. Pause never prevents resume or teardown.
-      for (let i = 0; i < instance.speed && !runtimeStopped; i++) {
-        const result = tick(instance.state, {});
-        instance.state = result.state;
-        instance.metricsComputedAt = new Date().toISOString();
-        instance.metricsTopologyRevision = instance.topologyRevision;
-        instance.tickCount += 1;
-        allLogs.push(...displaySimulationLogs(result.logs));
-        instance.accumulatedCostUsd += computeHourlyBurnRateUsd(instance.state) / 3600;
-        // Observe each simulated second, even when one wall interval advances sixty ticks.
-        await recordActionCompletions(instance);
+      if (await advanceTickBatch(instance, recordActionCompletions, () => runtimeStopped)) {
+        await finishMatchedStop(deploymentId, instance, () => registry.delete(deploymentId));
+        continue;
       }
       if (runtimeStopped || registry.get(deploymentId) !== instance) continue;
-      const snapshot = buildSnapshot(deploymentId, instance, [...instance.pendingLogs.splice(0), ...allLogs]);
+      const snapshot = buildSnapshot(deploymentId, instance, instance.pendingLogs.splice(0));
       // Notifications are optional; actions and evidence are already durable.
       await publishSimulationSnapshot(snapshot).catch(() => {});
       if (instance.speed > 0 && Date.now() - instance.lastCheckpointAt >= 60000) {

@@ -44,7 +44,7 @@ export function Modal({
     <Dialog.Root open={open} onOpenChange={handleOpenChange}>
       <Dialog.Portal>
         <Dialog.Overlay
-          className={`fixed inset-0 z-40 transition-opacity duration-150 ease-out ${
+          className={`fixed inset-0 z-40 transition-opacity duration-150 ease-out motion-reduce:transition-none ${
             destructive ? "bg-[#0A0B0D]/85" : "bg-[#0A0B0D]/75"
           }`}
         />

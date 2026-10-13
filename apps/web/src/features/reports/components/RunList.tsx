@@ -17,6 +17,7 @@ export function RunList({ runs, selected, onToggle }: { runs: RunSummary[]; sele
         </p>
         {run.workload && <p className="mt-1 text-xs text-[#8B909C]">{run.workload.targetThroughput.toLocaleString()} requests {run.workload.throughputUnit.replaceAll("-", " ")} · {run.workload.trafficShape} traffic</p>}
         {run.infrastructureId === null && <p className="mt-1 text-xs text-[#8B909C]">Saved design deleted; run history retained.</p>}
+        {run.sourceRunId && <p className="mt-1 text-xs text-[#8B909C]">Rerun of {run.sourceRunName ?? "a retained source run"} · {run.rerunMode}</p>}
         <p className="mt-2 text-sm text-[#4FA89B]">{run.hasReportData ? "Understand this run →" : "View inputs and evidence limits →"}</p>
       </Link>
     </li>)}

@@ -7,6 +7,7 @@ import { ConfirmModal } from "@/components/UI/ConfirmModal";
 import { teardownDeployment, getRunAction } from "@/api/deployment.api";
 import type { RunAction } from "@infraforge/contracts/actions";
 import { DeploymentStatus } from "@infraforge/contracts/deployment";
+import { LiveRerunContext } from "../../reports/components/LiveRerunContext";
 import {
   FLOATING_CHROME_SURFACE,
   FLOATING_CHROME_SHADOW,
@@ -91,6 +92,7 @@ export const LiveTopbar = memo(function LiveTopbar({ deploymentId, status }: Liv
             </button>
           )}
         </div>
+        <LiveRerunContext id={deploymentId} finished={!isLive && !["pending", "running"].includes(status)} />
       </div>
       {showTeardownConfirm && (
         <ConfirmModal

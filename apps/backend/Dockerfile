@@ -24,6 +24,7 @@ COPY apps/backend/cutover ./apps/backend/cutover/
 COPY apps/backend/deployments ./apps/backend/deployments/
 COPY apps/backend/reports ./apps/backend/reports/
 COPY apps/backend/comparison ./apps/backend/comparison/
+COPY apps/backend/reruns ./apps/backend/reruns/
 COPY apps/backend/actions ./apps/backend/actions/
 COPY apps/backend/scripts ./apps/backend/scripts/
 COPY apps/backend/lib/prisma.ts ./apps/backend/lib/

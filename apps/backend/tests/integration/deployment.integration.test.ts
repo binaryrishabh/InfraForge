@@ -15,6 +15,7 @@ import { checkUserIsolation } from "./securityChecks";
 import { checkRecordedReports } from "./reportChecks";
 import { checkReliableEvidence } from "./runEvidenceChecks";
 import { checkCompareAccess } from "./compareChecks";
+import { checkHonestReruns } from "./rerunChecks";
 
 type Event = Record<string, any>;
 type Snapshot = SimulationSnapshot & { publishType: string };
@@ -616,6 +617,8 @@ integration("local deployment lifecycle", () => {
       phase("durable run reports");
       evidence.reports = await checkRecordedReports(harness, id, invalidDeployment.createdDeployment.id);
       evidence.compare = await checkCompareAccess(harness, sessions, [id, invalidDeployment.createdDeployment.id]);
+      phase("honest reruns and exact matched stop");
+      evidence.reruns = await checkHonestReruns(harness, sessions, infrastructureIds, deploymentIds);
       evidence.result = "passed";
     } catch (error) {
       evidence.result = "failed";
@@ -653,5 +656,5 @@ integration("local deployment lifecycle", () => {
         if (cleanupErrors.length && evidence.result === "passed") throw new Error(cleanupErrors.join("; "));
       }
     }
-  }, 240000);
+  }, 420000);
 });

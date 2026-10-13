@@ -16,6 +16,10 @@ export interface RunSummary {
   topologyRevision: number | null;
   hasReportData: boolean;
   actionCount?: number;
+  sourceRunId?: string | null;
+  sourceRunName?: string | null;
+  rerunMode?: "exact" | "current-design" | null;
+  autoStopAtSimulatedSeconds?: number | null;
 }
 
 export interface ReportStatement {

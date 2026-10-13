@@ -5,8 +5,8 @@ import { captureSnapshot } from "./snapshot";
 import { flushAcknowledgement } from "./actionAcknowledgement";
 import type { SimulationInstance } from "./instance";
 
-export async function finishTeardown(deploymentId: string, instance: SimulationInstance, action: RunAction, remove: () => void) {
-  const snapshot = captureSnapshot(deploymentId, instance, "terminal");
+export async function finishTeardown(deploymentId: string, instance: SimulationInstance, action: RunAction, remove: () => void,
+  snapshot = captureSnapshot(deploymentId, instance, "terminal")) {
   const capturedAt = new Date(snapshot.capturedAt);
   instance.acknowledge = async () => {
     await prisma.$transaction(async (tx) => {

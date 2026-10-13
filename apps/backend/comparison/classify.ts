@@ -26,6 +26,9 @@ export function classifyComparison(first: StoredRun & { sourceRunId?: string | n
     fact("conduct", `Recorded outcome-affecting conduct: ${conduct.code}.`, ["RunAction.parameters", "RunAction.appliedSimulatedSeconds", "RunAction.outcome"]),
     fact("horizon", exact ? `Exact terminal duration: ${a!.simulatedSeconds} s / ${b!.simulatedSeconds} s.` : "Exact final duration is not established for both runs.", ["terminalSnapshot.simulatedSeconds"])];
   const interpreted: ReportStatement[] = [];
+  reports.forEach((r, i) => { if (r.run.autoStopAtSimulatedSeconds != null) observed.push(fact(`matched-stop-${i}`,
+    `Run ${i + 1} matched-stop target: ${r.run.autoStopAtSimulatedSeconds} s. ${r.terminal ? r.terminal.simulatedSeconds === r.run.autoStopAtSimulatedSeconds ? "The exact terminal capture reached that target." : `The exact terminal capture stopped at ${r.terminal.simulatedSeconds} s; matched stop was not reached.` : "Reaching it cannot be established without exact terminal evidence."}`,
+    ["autoStopAtSimulatedSeconds", "terminalSnapshot.simulatedSeconds", "RunAction.parameters.trigger"])); });
   if (strongest && starting.grade === "one-change-design") interpreted.push(fact("design-pair",
     `Within this pair, the design is the only recorded starting-input difference. For this seed, this simulated stop time and InfraForge model ${reports[0].provenance.simulationModelVersion}, these final-state differences followed that design change. Another seed may produce a somewhat different result.`, ["runInputs", "RunAction", "terminalSnapshot"]));
   if (deterministic) interpreted.push(fact("determinism", deterministicState === "matches" ? "The normalized final simulated state matches under InfraForge model 1." :
@@ -39,22 +42,22 @@ export function classifyComparison(first: StoredRun & { sourceRunId?: string | n
   const shared = [...new Set([...(a?.resources ?? []).map((r) => r.id), ...(b?.resources ?? []).map((r) => r.id)])].sort();
   const resources = shared.map((id) => { const x = a?.resources.find((r) => r.id === id), y = b?.resources.find((r) => r.id === id);
     return { id, earlierHealth: x?.health, laterHealth: y?.health, metrics: ([ ["cpu", "percentage points"], ["memory", "percentage points"], ["rps", "requests/s"], ["connections", "connections"] ] as const)
-      .map(([field, unit]) => metric(field, unit, x?.[field], y?.[field], exact)) }; });
+      .map(([field, unit]) => metric(field, unit, x?.[field], y?.[field], available && exact)) }; });
   const monthly = reports.map((r) => r.stages.find((s) => s.name === "CostEstimate")?.monthlyEstimateUsd);
-  const costs = [metric("Terminal simulated hourly burn rate", "USD/hour", a?.burnRatePerHourUsd, b?.burnRatePerHourUsd, exact),
-    metric("Accumulated simulated cost", "USD", a?.accumulatedCostUsd, b?.accumulatedCostUsd, exact && !!matchedDuration,
+  const costs = [metric("Terminal simulated hourly burn rate", "USD/hour", a?.burnRatePerHourUsd, b?.burnRatePerHourUsd, available && exact),
+    metric("Accumulated simulated cost", "USD", a?.accumulatedCostUsd, b?.accumulatedCostUsd, available && exact && !!matchedDuration,
       "Accumulated-cost delta requires exact matching simulated durations."),
     metric("Design monthly estimate (CostEstimate gate)", "USD/month", monthly[0], monthly[1], starting.facets.catalog === "same",
       "Monthly-estimate delta requires compatible captured catalog provenance.")];
   return { version: 1, runs: [reports[0].run, reports[1].run], available,
     unavailableReason: available ? null : "Both runs must be inactive before comparing final evidence. Stop the live run or wait for deployment gates.",
-    lineage: rows[1].sourceRunId === rows[0].id ? "source-and-rerun" : rows[0].sourceRunId && rows[0].sourceRunId === rows[1].sourceRunId ? "siblings" : "unrelated",
+    lineage: rows[1].sourceRunId === rows[0].id || rows[0].sourceRunId === rows[1].id ? "source-and-rerun" : rows[0].sourceRunId && rows[0].sourceRunId === rows[1].sourceRunId ? "siblings" : "unrelated",
     headline: !available || starting.grade === "side-by-side-only" ? "descriptive-only" : deterministicState === "differs" ? "determinism-mismatch" :
       deterministicState === "matches" ? "determinism-match" : strongest ? "matched-pair" : "starting-inputs-only",
     starting, conduct, evidence: { code: !a || !b ? "missing" : exact ? "both-exact" : reports.some((r) => r.terminal) ? "exact-and-checkpoint" : "checkpoints-only",
       states: [a ?? null, b ?? null], matchedDuration, deterministicState }, resources, costs,
-    outcomes: [metric("Simulated duration", "s", a?.simulatedSeconds, b?.simulatedSeconds, exact),
-      metric("Load", "fraction of declared target", a?.loadFraction, b?.loadFraction, exact),
-      metric("Target load", "fraction of declared target", a?.targetLoadFraction, b?.targetLoadFraction, exact)],
+    outcomes: [metric("Simulated duration", "s", a?.simulatedSeconds, b?.simulatedSeconds, available && exact),
+      metric("Load", "fraction of declared target", a?.loadFraction, b?.loadFraction, available && exact),
+      metric("Target load", "fraction of declared target", a?.targetLoadFraction, b?.targetLoadFraction, available && exact)],
     gates: [reports[0].stages, reports[1].stages], observed, interpreted, unknown };
 }

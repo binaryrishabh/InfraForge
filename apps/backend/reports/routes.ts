@@ -4,9 +4,12 @@ import { prisma } from "../lib/prisma";
 import { NotFoundError, ValidationError } from "../utils/errors";
 import { buildRunReport, summarizeRun } from "./report";
 import { classifyComparison } from "../comparison/classify";
+import { compareInputs } from "../comparison/inputs";
+import { readRunInputs } from "../deployments/runInputs";
 
 export const reportRouter = Router();
 export const reportSelection = { id: true, infrastructureId: true, runName: true, runtimeActive: true,
+  sourceRunId: true, rerunMode: true, autoStopAtSimulatedSeconds: true, sourceRun: { select: { runName: true } },
   status: true, createdAt: true, updatedAt: true, resourceCount: true, workloadProfile: true,
   seed: true, runInputs: true, liveTopology: true, topologyRevision: true, stages: true,
   timeline: true, chaosEvents: true, simulationState: true, terminalSnapshot: true, _count: { select: { actions: true } } } as const;
@@ -32,9 +35,28 @@ reportRouter.get("/:deploymentId/compare-options", async (req, res) => {
   const source = await prisma.deployment.findFirst({ where: { id: id.data, ownerId }, select: { infrastructureId: true } });
   if (!source) throw new NotFoundError("Run not found");
   const eligible = { ownerId, id: { not: id.data }, runtimeActive: false, status: { in: ["completed", "failed", "torn-down"] } };
-  const rows = await prisma.deployment.findMany({ where: eligible, select: selection, orderBy: [{ createdAt: "desc" }, { id: "desc" }], take: 100 });
-  rows.sort((a, b) => Number(b.infrastructureId !== null && b.infrastructureId === source.infrastructureId) - Number(a.infrastructureId !== null && a.infrastructureId === source.infrastructureId));
+  const original = await prisma.deployment.findFirstOrThrow({ where: { id: id.data, ownerId }, select: { sourceRunId: true } });
+  const relatedWhere = { OR: [{ id: original.sourceRunId ?? id.data }, { sourceRunId: id.data }, ...(original.sourceRunId ? [{ sourceRunId: original.sourceRunId }] : [])] };
+  const related = await prisma.deployment.findMany({ where: { ...eligible, ...relatedWhere }, select: selection, orderBy: [{ createdAt: "desc" }, { id: "desc" }], take: 100 });
+  const sameDesign = source.infrastructureId ? await prisma.deployment.findMany({ where: { ...eligible, infrastructureId: source.infrastructureId, id: { notIn: [id.data, ...related.map((r) => r.id)] } }, select: selection, orderBy: [{ createdAt: "desc" }, { id: "desc" }], take: 100 - related.length }) : [];
+  const rest = await prisma.deployment.findMany({ where: { ...eligible, id: { notIn: [id.data, ...related.map((r) => r.id), ...sameDesign.map((r) => r.id)] } }, select: selection, orderBy: [{ createdAt: "desc" }, { id: "desc" }], take: 100 - related.length - sameDesign.length });
+  const rows = [...related, ...sameDesign, ...rest];
   res.json({ success: true, runs: rows.map(summarizeRun), limit: 100 });
+});
+
+reportRouter.get("/:deploymentId/family", async (req, res) => {
+  const id = z.uuid().safeParse(req.params.deploymentId);
+  if (!id.success) throw new ValidationError("A valid run ID is required.");
+  const ownerId: string = res.locals.userId;
+  const family = await prisma.$transaction(async (tx) => {
+    const run = await tx.deployment.findFirst({ where: { id: id.data, ownerId }, select: selection });
+    if (!run) throw new NotFoundError("Run not found");
+    const source = run.sourceRunId ? await tx.deployment.findFirst({ where: { id: run.sourceRunId, ownerId }, select: selection }) : null;
+    const rows = await tx.deployment.findMany({ where: { sourceRunId: run.id, ownerId }, select: selection, orderBy: [{ createdAt: "asc" }, { id: "asc" }], take: 51 });
+    const read = (v: unknown) => { try { return readRunInputs(v); } catch { return null; } };
+    return { source: source ? summarizeRun(source) : null, reruns: rows.slice(0, 50).map((r) => ({ run: summarizeRun(r), starting: compareInputs(read(run.runInputs), read(r.runInputs)) })), limit: 50, truncated: rows.length > 50 };
+  }, { isolationLevel: "RepeatableRead" });
+  res.json({ success: true, family });
 });
 
 reportRouter.get("/history", async (req, res) => {

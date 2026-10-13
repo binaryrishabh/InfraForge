@@ -11,6 +11,14 @@ disposable volume and network, a unique run ID and four ownership labels. API po
 are not used. `pwsh ./scripts/test-integration.ps1 -SafetyGuardsOnly` runs only the
 six harness guard tests with the same resource lifecycle.
 
+When the host Bun runtime is unavailable, an exact-HEAD backend image can run the
+same authored suite on Linux Bun with `pwsh ./scripts/test-integration.ps1
+-RuntimeImage <owned-tag>`. The runner checks the image's repository/revision
+labels, copies authored tests only, and shares the disposable PostgreSQL network
+namespace so all service addresses remain loopback. No checkout, environment file
+or host credential is mounted. Its runtime container follows the same label checks
+and cleanup lifecycle. This alternative does not establish Windows Bun stability.
+
 Temporary resources follow **Create → Use → Capture Evidence → Verify → Remove →
 Confirm Cleanup**. Test evidence (`resources.json`, `stdout.log`, `stderr.log`) stays
 in the printed OS temporary directory, outside the containers. Normal completion,
@@ -58,7 +66,7 @@ These are example service addresses; provision the matching disposable services 
 
 API port 3100 is the default. Port 3000 requires `INTEGRATION_ALLOW_API_3000=yes` and a separately verified disposable setup. The current WebSocket entrypoint always binds port 3001. Both application ports must be free; the harness refuses to replace an existing process. Child processes receive only system path/temp variables and explicit local service settings. Automatic Bun env loading is disabled; dotenv receives a nonexistent temporary file path. Ambient PostgreSQL, dotenv, and runtime injection variables are excluded from child environments. The parent test shell must have no `PG*` environment variables: the harness rejects them before opening any connection, because the installed PostgreSQL client can use ambient settings when a supplied option is empty.
 
-The test takes about 140 seconds because it exercises the actual one-minute checkpoint schedule, durable controls and transient queue retries. It checks:
+The test takes several minutes because it exercises the actual one-minute checkpoint schedule, durable controls, transient queue retries and matched reruns. It checks:
 
 - Saved infrastructure create, read, and explicit update.
 - Real Better Auth database sessions for two users. Cross-user reads, updates,

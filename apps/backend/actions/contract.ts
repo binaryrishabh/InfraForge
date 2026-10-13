@@ -25,7 +25,7 @@ export const ActionRequestSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("vertical-scale"), parameters: z.object({ resourceId: id, skuId: id }).strict() }),
   z.object({ kind: z.literal("pool-scale"), parameters: z.object({ lbId: id, delta: z.union([z.literal(1), z.literal(-1)]) }).strict() }),
   z.object({ kind: z.literal("topology"), parameters: topology }),
-  z.object({ kind: z.literal("teardown"), parameters: z.object({}).strict() }),
+  z.object({ kind: z.literal("teardown"), parameters: z.object({ trigger: z.literal("matched-stop").optional() }).strict() }),
 ]);
 export function readActionRequest(value: unknown): ActionRequest {
   const request = ActionRequestSchema.parse(value);

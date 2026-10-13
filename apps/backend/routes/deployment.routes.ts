@@ -6,10 +6,12 @@ import { DeploymentCreateBodySchema, DeploymentIdSchema } from "../zod_schemas/d
 import { captureRunInputs } from "../deployments/runInputs";
 import { reportRouter } from "../reports/routes";
 import { actionRouter } from "../actions/routes";
+import { rerunRouter } from "../reruns/routes";
 
 export const deploymentRouter = Router();
 deploymentRouter.use(reportRouter);
 deploymentRouter.use(actionRouter);
+deploymentRouter.use(rerunRouter);
 
 deploymentRouter.post("/", async (req, res) => {
   const body = DeploymentCreateBodySchema.safeParse(req.body);

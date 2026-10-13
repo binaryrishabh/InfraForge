@@ -54,13 +54,13 @@ export async function checkSchemaGuards(db: Database) {
     WHERE NOT tgisinternal AND tgenabled = 'O' AND n.nspname = 'public' AND NOT p.prosecdef
     AND p.prorettype = 'trigger'::regtype AND p.proconfig IS NULL
     AND p.prolang = (SELECT oid FROM pg_language WHERE lanname='plpgsql') AND tgqual IS NULL
-    AND ((tgrelid = '"Deployment"'::regclass AND tgname IN ('deployment_inputs_immutable', 'deployment_active_delete_guard', 'deployment_identity_capture', 'deployment_evidence_guard'))
+    AND ((tgrelid = '"Deployment"'::regclass AND tgname IN ('deployment_inputs_immutable', 'deployment_active_delete_guard', 'deployment_identity_capture', 'deployment_evidence_guard', 'deployment_lineage_guard'))
       OR (tgrelid = '"Infrastructure"'::regclass AND tgname IN ('design_owner_guard', 'design_active_delete_guard'))
       OR (tgrelid = '"RunAction"'::regclass AND tgname = 'run_action_evidence_guard'))`);
-  if (result.rows.length !== 7) throw new Error("Required ownership/run-input database guards are missing or disabled");
-  const sources = (await Promise.all(["20261009000000_capture_run_inputs", "20261009010000_add_authentication", "20261013000000_reliable_run_evidence"].map((name) =>
+  if (result.rows.length !== 8) throw new Error("Required ownership/run-input database guards are missing or disabled");
+  const sources = (await Promise.all(["20261009000000_capture_run_inputs", "20261009010000_add_authentication", "20261013000000_reliable_run_evidence", "20261013010000_honest_reruns"].map((name) =>
     readFile(new URL(`../prisma/migrations/${name}/migration.sql`, import.meta.url), "utf8")))).join("\n");
-  const bodies = new Map([...sources.matchAll(/CREATE FUNCTION (\w+)\(\) RETURNS trigger LANGUAGE plpgsql AS \$\$([\s\S]*?)\$\$/g)]
+  const bodies = new Map([...sources.matchAll(/CREATE (?:OR REPLACE )?FUNCTION (\w+)\(\) RETURNS trigger LANGUAGE plpgsql AS \$\$([\s\S]*?)\$\$/g)]
     .map((match) => [match[1], match[2]!.replace(/\r\n/g, "\n").trim()]));
   const expected: Record<string, [string, number, string]> = {
     deployment_inputs_immutable: ["protect_deployment_inputs", 19, 'BEFORE UPDATE OF "runInputs", seed, "workloadProfile" ON public."Deployment"'],
@@ -70,13 +70,14 @@ export async function checkSchemaGuards(db: Database) {
     deployment_evidence_guard: ["protect_run_evidence", 19, 'BEFORE UPDATE OF "ownerId", "runName", "terminalSnapshot", "infrastructureId" ON public."Deployment"'],
     design_active_delete_guard: ["protect_design_history", 11, 'BEFORE DELETE ON public."Infrastructure"'],
     run_action_evidence_guard: ["protect_run_action", 19, 'BEFORE UPDATE ON public."RunAction"'],
+    deployment_lineage_guard: ["protect_run_lineage", 19, 'BEFORE UPDATE OF "sourceRunId", "rerunMode", "autoStopAtSimulatedSeconds" ON public."Deployment"'],
   };
   for (const row of result.rows) {
     const guard = expected[row.tgname];
     if (!guard || row.proname !== guard[0] || row.tgtype !== guard[1] || !row.definition.includes(guard[2]) ||
       row.prosrc.replace(/\r\n/g, "\n").trim() !== bodies.get(row.proname)) throw new Error("Database guard definition differs from this release");
   }
-  await db.query(`SELECT d."runInputs", d."liveTopology", d."topologyRevision", d."runtimeActive", d."ownerId", d."runName", d."terminalSnapshot", d."actionSequence", r.parameters, r.outcome, i."ownerId",
+  await db.query(`SELECT d."runInputs", d."liveTopology", d."topologyRevision", d."runtimeActive", d."ownerId", d."runName", d."terminalSnapshot", d."actionSequence", d."sourceRunId", d."rerunMode", d."autoStopAtSimulatedSeconds", r.parameters, r.outcome, i."ownerId",
     s."expiresAt", a."providerId", v.identifier FROM "Deployment" d CROSS JOIN "Infrastructure" i
     CROSS JOIN "Session" s CROSS JOIN "Account" a CROSS JOIN "Verification" v CROSS JOIN "RunAction" r LIMIT 0`);
 }
@@ -106,7 +107,7 @@ export async function migrationPreflight(db: Database) {
   } else if (history.count < 8) {
     throw new Error("Historical non-additive migration requires a separate data-preserving upgrade plan");
   }
-  const additive = new Set(["20261009000000_capture_run_inputs", "20261009010000_add_authentication", "20261013000000_reliable_run_evidence"]);
+  const additive = new Set(["20261009000000_capture_run_inputs", "20261009010000_add_authentication", "20261013000000_reliable_run_evidence", "20261013010000_honest_reruns"]);
   if (history.count > 0 && history.manifest.slice(history.count).some((migration) => !additive.has(migration.name))) {
     throw new Error("Pending migration compatibility has not been reviewed for this release path");
   }

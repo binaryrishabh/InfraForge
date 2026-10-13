@@ -10,6 +10,7 @@ export interface StoredRun {
   stages: unknown; timeline: unknown; chaosEvents: unknown; workloadProfile: unknown; seed: string | null;
   simulationState: unknown; runInputs: unknown; liveTopology: unknown;
   terminalSnapshot?: unknown; actions?: StoredAction[]; actionCount?: number; durableChaosCount?: number;
+  sourceRunId?: string | null; sourceRun?: { runName: string | null } | null; rerunMode?: string | null; autoStopAtSimulatedSeconds?: number | null;
 }
 
 function summary(row: StoredRun, records: ReturnType<typeof readRecords>): RunSummary {
@@ -20,6 +21,9 @@ function summary(row: StoredRun, records: ReturnType<typeof readRecords>): RunSu
     chaosEventCount: Array.isArray(row.chaosEvents) && row.chaosEvents.length === records.chaos.length ? records.chaos.length + (row.durableChaosCount ?? row.actions?.filter((a) => a.kind === "chaos").length ?? 0) : null,
     topologyRevision: Number.isSafeInteger(row.topologyRevision) && row.topologyRevision >= 0 ? row.topologyRevision : null,
     actionCount: row.actionCount ?? row.actions?.length ?? 0,
+    sourceRunId: row.sourceRunId ?? null, sourceRunName: row.sourceRun?.runName ?? null,
+    rerunMode: row.rerunMode === "exact" || row.rerunMode === "current-design" ? row.rerunMode : null,
+    autoStopAtSimulatedSeconds: row.autoStopAtSimulatedSeconds ?? null,
     hasReportData: !!(records.stages.length || records.timeline.length || records.chaos.length || records.checkpoint || records.terminal || row.actionCount || row.actions?.length) };
 }
 

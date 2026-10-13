@@ -8,7 +8,7 @@ export type ActionRequest =
   | { kind: "vertical-scale"; parameters: { resourceId: string; skuId: string } }
   | { kind: "pool-scale"; parameters: { lbId: string; delta: 1 | -1 } }
   | { kind: "topology"; parameters: RunTopology & { expectedRevision: number; acceptedRevision?: number } }
-  | { kind: "teardown"; parameters: Record<string, never> };
+  | { kind: "teardown"; parameters: { trigger?: "matched-stop" } };
 
 export interface ActionOutcome {
   previousTarget?: number; appliedTarget?: number;

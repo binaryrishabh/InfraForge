@@ -32,6 +32,11 @@ model Deployment {
   actionSequence        Int                         @default(0)
   actions               RunAction[]
   terminalSnapshot      Json?
+  sourceRunId           String?
+  sourceRun             Deployment?      @relation("RunLineage", fields: [sourceRunId], references: [id], onDelete: SetNull)
+  reruns                Deployment[]     @relation("RunLineage")
+  rerunMode             String?
+  autoStopAtSimulatedSeconds Int?
   status                String                      @default("pending") // pending, running, live, completed, failed, torn-down
   resourceCount         Int                         @default(0) // How many resources in this deployment
   stages                Json                        @default("[]") // Array of { timestamp, event, message }
@@ -48,6 +53,7 @@ model Deployment {
   updatedAt             DateTime                    @updatedAt
   @@index([ownerId, createdAt, id])
   @@index([infrastructureId])
+  @@index([sourceRunId, createdAt, id])
 }
 
 model RunAction {
