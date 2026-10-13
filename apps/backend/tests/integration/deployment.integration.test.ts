@@ -14,6 +14,7 @@ import { SessionFixtures } from "./sessionFixtures";
 import { checkUserIsolation } from "./securityChecks";
 import { checkRecordedReports } from "./reportChecks";
 import { checkReliableEvidence } from "./runEvidenceChecks";
+import { checkCompareAccess } from "./compareChecks";
 
 type Event = Record<string, any>;
 type Snapshot = SimulationSnapshot & { publishType: string };
@@ -614,6 +615,7 @@ integration("local deployment lifecycle", () => {
       evidence.websocketFailures = { pendingSubscriberCount: Number(pendingCounts[1]), oversizedCloseCode: 1009, serverHealth: 200 };
       phase("durable run reports");
       evidence.reports = await checkRecordedReports(harness, id, invalidDeployment.createdDeployment.id);
+      evidence.compare = await checkCompareAccess(harness, sessions, [id, invalidDeployment.createdDeployment.id]);
       evidence.result = "passed";
     } catch (error) {
       evidence.result = "failed";

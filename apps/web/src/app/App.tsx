@@ -12,6 +12,7 @@ import { SignUpPage } from "../features/auth/pages/SignUpPage";
 import { DashboardPage } from "../features/dashboard/pages/DashboardPage";
 import { RunHistoryPage } from "../features/reports/pages/RunHistoryPage";
 import { RunReportPage } from "../features/reports/pages/RunReportPage";
+import { ComparePage } from "../features/reports/pages/ComparePage";
 import { SettingsStubPage } from "../features/dashboard/pages/SettingsStubPage";
 import { NotFoundPage } from "../features/dashboard/pages/NotFoundPage";
 
@@ -68,6 +69,7 @@ function App() {
           <Route element={<AppShell />}>
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/reports" element={<RunHistoryPage />} />
+            <Route path="/reports/compare" element={<ComparePage />} />
             <Route path="/reports/:deploymentId" element={<RunReportPage />} />
             <Route path="/settings" element={<SettingsStubPage />} />
           </Route>

@@ -37,6 +37,13 @@ export function actionDto(row: StoredAction): RunAction {
   const request = readActionRequest({ kind: row.kind, parameters: row.parameters });
   const status = z.enum(["requested", "applying", "running", "completed", "failed", "cancelled"]).parse(row.status);
   const outcome = row.outcome == null ? null : outcomeSchema.parse(row.outcome);
+  z.number().int().positive().parse(row.sequence);
+  amount.int().nullable().parse(row.appliedSimulatedSeconds);
+  amount.int().nullable().parse(row.completedSimulatedSeconds);
+  if ((status === "running" || status === "completed") && (!row.appliedAt || row.appliedSimulatedSeconds === null)) throw new Error("Successful action lacks application evidence");
+  if (["completed", "failed", "cancelled"].includes(status) && !row.completedAt) throw new Error("Closed action lacks completion evidence");
+  if (status === "completed" && row.completedSimulatedSeconds === null) throw new Error("Completed action lacks simulated completion time");
+  if (row.appliedSimulatedSeconds !== null && row.completedSimulatedSeconds !== null && row.completedSimulatedSeconds < row.appliedSimulatedSeconds) throw new Error("Action completion precedes application");
   if (status === "running" || status === "completed") {
     // A successful phase needs its specific evidence, not an empty generic object.
     switch (request.kind) {

@@ -1,5 +1,6 @@
 import * as Dialog from "@radix-ui/react-dialog";
 import type React from "react";
+import { useRef } from "react";
 
 interface ModalProps {
   open: boolean;
@@ -26,6 +27,7 @@ export function Modal({
   loading = false,
   width = "440px",
 }: ModalProps) {
+  const opener = useRef<HTMLElement | null>(null);
   const handleOpenChange = (nextOpen: boolean) => {
     if (loading) return; // Lock dismissal while loading
     onOpenChange(nextOpen);
@@ -47,9 +49,11 @@ export function Modal({
           }`}
         />
         <Dialog.Content
+          onOpenAutoFocus={() => { opener.current = document.activeElement instanceof HTMLElement ? document.activeElement : null; }}
+          onCloseAutoFocus={(event) => { if (opener.current?.isConnected) { event.preventDefault(); opener.current.focus(); } }}
           onPointerDownOutside={handlePointerDownOutside}
           className={`fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 max-h-[calc(100vh-128px)] overflow-y-auto bg-[#1C1F26] border border-[#2A2E37] rounded-[14px] p-5 shadow-[0_24px_60px_rgba(0,0,0,0.55),0_8px_20px_rgba(0,0,0,0.35)] outline-none`}
-          style={{ width }}
+          style={{ width, maxWidth: "calc(100vw - 32px)" }}
         >
           {title && (
             <Dialog.Title className="text-[14px] font-semibold text-[#EDEEF0] leading-5 tracking-[-0.01em]">

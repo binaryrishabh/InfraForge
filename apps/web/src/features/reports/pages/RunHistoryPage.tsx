@@ -3,13 +3,15 @@ import { getRunHistory } from "../../../api/reports.api";
 import { useAuthStore } from "../../auth/store/auth.store";
 import { useReportRequest } from "../useReportRequest";
 import { HistoryContent } from "../components/RunList";
+import { CompareSelection } from "../components/RunSelection";
+import { toggleRun } from "../selection";
 
-function HistoryRequest({ cursor, onPage }: { cursor: string | undefined; onPage: (cursor: string | undefined) => void }) {
+function HistoryRequest({ cursor, onPage, selected, onToggle }: { cursor: string | undefined; onPage: (cursor: string | undefined) => void; selected: string[]; onToggle: (id: string) => void }) {
   const load = useCallback(() => getRunHistory(50, cursor), [cursor]);
   const request = useReportRequest(load);
   const nextCursor = request.data?.nextCursor;
   return <>
-    <HistoryContent {...request} runs={request.data?.runs ?? []} />
+    <HistoryContent {...request} runs={request.data?.runs ?? []} selected={selected} onToggle={onToggle} />
     <div className="flex flex-wrap gap-4 p-4">
       {cursor && <button className="text-[#4FA89B] underline" onClick={() => onPage(undefined)}>Newest runs</button>}
       {nextCursor && <button className="text-[#4FA89B] underline" onClick={() => onPage(nextCursor)}>Older runs</button>}
@@ -19,8 +21,9 @@ function HistoryRequest({ cursor, onPage }: { cursor: string | undefined; onPage
 
 function History() {
   const [cursor, setCursor] = useState<string>();
+  const [selected, setSelected] = useState<string[]>([]);
   // Each page starts empty; an older request cannot replace the current page.
-  return <HistoryRequest key={cursor ?? "newest"} cursor={cursor} onPage={setCursor} />;
+  return <><CompareSelection selected={selected} /><HistoryRequest key={cursor ?? "newest"} cursor={cursor} onPage={setCursor} selected={selected} onToggle={(id) => setSelected((s) => toggleRun(s, id))} /></>;
 }
 
 export function RunHistoryPage() {

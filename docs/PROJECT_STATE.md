@@ -1,6 +1,6 @@
 # InfraForge project state
 
-Verified locally 2026-10-13 on `develop`. **Reliable Run Evidence is implemented.**
+Verified locally 2026-10-13 on `develop`. **Reliable Run Evidence and read-only Compare are implemented.**
 Product development remains local-first; hosted production cutover is **PARKED**.
 This milestone did not access Neon, EC2/AWS, hosted Nginx, Vercel, DNS, OAuth settings,
 production secrets/databases or `main`.
@@ -180,6 +180,39 @@ Last historical hosted facts: legacy SHA `6b465c6`, Neon PostgreSQL 18.6, migrat
 was unknown. Public API/WS had maintenance containment while legacy writers remained.
 These are historical facts, not a fresh census. Future cutover needs renewed writer
 fencing, database/restore truth, session-preserving worker connections and OAuth/TLS.
+
+## Honest Rerun + Compare — first slice
+
+Owner-scoped `/api/deployments/compare` orders the pair by creation time/ID. One
+backend classifier separates starting-input grades, actual durable action conduct
+and exact-terminal/checkpoint/missing evidence. React renders source-backed facts;
+it does not classify comparability. Model/catalog differences or missing provenance
+permit descriptive comparison only. Same-start/no-outcome-action/matched-stop model-1
+pairs compare a normalized deterministic state and explicitly surface mismatches.
+Final deltas require both exact snapshots; accumulated cost additionally requires
+equal simulated durations, while gate monthly estimates require compatible catalog
+provenance. Units and later-minus-earlier signs never imply a winner.
+
+Model 1 reseeds per second and consumes jitter in resource iteration order. Only
+shared starting resources at equal captured positions are graded aligned. Appending
+preserves their draws; removal/insertion/reordering shifts displaced resources.
+Aligned draws do not mean identical measurements. Dynamically spawned resources and
+future models are ungraded; non-preserved numeric object-key ordering is unknown.
+An engine-level regression isolates jitter from traffic distribution without changing
+the engine or its thirty goldens. History supports exactly two keyboard selections;
+Reports offers an owner-scoped picker and responsive tables with disclosure/focus return.
+
+Focused comparison/report/engine checks: 35 tests, 235 assertions passed before the
+last small rendering additions. Frozen install, seven workspace typecheck tasks,
+five lint tasks, boundaries (1,233 imports), release compiler and workspace tests
+(144 tests/1,050 assertions) passed. PostgreSQL 18 migration proofs passed, but full
+Windows integration hit Bun native startup crashes in WS/worker/API across five
+attempts. Sequential startup, an alternate test launcher and a JIT-disabled diagnostic
+did not establish a fix; the speculative launcher/JIT changes were removed. Owned
+fixtures cleaned up after every attempt; failure evidence remains outside Git.
+The complete lifecycle still requires a Linux Docker verification before publication.
+Rerun/lineage and matched stopping follow
+in the next slice; no statistical, multi-seed or RNG architecture expansion is planned.
 
 ## Remaining limits and next product milestone
 

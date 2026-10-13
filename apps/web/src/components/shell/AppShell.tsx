@@ -15,7 +15,7 @@ export function AppShell() {
   const navItems = [
     { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
     { to: '/design', icon: Network, label: 'Designer' },
-    { to: '/reports', icon: FileText, label: 'Reports', soon: true },
+    { to: '/reports', icon: FileText, label: 'Reports' },
     { to: '/settings', icon: Settings, label: 'Settings', soon: true },
   ];
 

@@ -3,10 +3,16 @@ import type { ReportCheckpoint, ReportStage } from "@infraforge/contracts/report
 import { readRunInputs } from "../deployments/runInputs";
 import { LayoutSchema } from "../zod_schemas/layout.schema";
 import { WorkloadProfileSchema } from "../zod_schemas/deployment.schema";
+import { DeploymentChaosNames } from "@infraforge/domain/resource";
 
 const text = z.string().min(1).max(4000);
 const timestamp = z.iso.datetime({ offset: true });
 const amount = z.number().finite().nonnegative();
+const boundedId = z.string().min(1).max(256);
+const boundedMap = <T>(schema: z.ZodType<T>) => z.record(boundedId, schema).refine((v) => Object.keys(v).length <= 500);
+const pool = z.object({ lbId: boundedId, baseVmIds: z.array(boundedId).max(500), currentReplicas: amount.int(),
+  minReplicas: amount.int(), maxReplicas: amount.int(), targetCpu: amount.max(100),
+  pending: z.object({ action: z.enum(["up", "down"]), secondsRemaining: amount }).nullable() });
 const event = z.object({ timestamp, event: text, message: text });
 const chaos = z.object({ timestamp, type: text, resourceId: text, message: text });
 const stage = z.object({ name: text, status: z.enum(["pending", "running", "completed", "failed"]),
@@ -17,11 +23,16 @@ const checkpoint = z.object({ simulatedSeconds: amount.optional(), loadFraction:
   overallHealth: z.enum(["healthy", "degraded", "saturated", "critical"]).optional(), accumulatedCostUsd: amount.optional(),
   capturedAt: timestamp.optional(), topologyRevision: z.number().int().nonnegative().optional(), speed: amount.optional(),
   metricsComputedAt: timestamp.nullable().optional(), metricsTopologyRevision: z.number().int().nonnegative().optional(),
+  burnRatePerHourUsd: amount.optional(), targetLoadFraction: amount.max(2).optional(),
+  activeChaos: z.array(z.object({ chaosType: z.enum(DeploymentChaosNames),
+    resourceId: boundedId, durationTicks: amount.int(), remainingTicks: amount.int() })).max(500).optional(),
+  restarting: z.array(boundedId).max(500).optional(), pools: boundedMap(pool).optional(),
+  installedSkus: boundedMap(boundedId).optional(),
   metrics: z.unknown().optional() });
 const terminal = checkpoint.extend({ version: z.literal(1), kind: z.literal("terminal"), capturedAt: timestamp,
   topologyRevision: z.number().int().nonnegative(), simulatedSeconds: amount, accumulatedCostUsd: amount,
   overallHealth: z.enum(["healthy", "degraded", "saturated", "critical"]),
-  metrics: z.record(z.string(), metrics.extend({ cpu: amount.max(100), memory: amount.max(100),
+  metrics: boundedMap(metrics.extend({ cpu: amount.max(100), memory: amount.max(100),
     health: z.enum(["healthy", "degraded", "saturated", "failed"]) })) });
 
 export function readRecords(value: unknown, limits: string[]) {
@@ -86,7 +97,12 @@ function readCheckpoint(value: unknown, limits: string[]): ReportCheckpoint | nu
   return { resources, simulatedSeconds: data.simulatedSeconds, loadFraction: data.loadFraction,
     capturedAt: data.capturedAt, topologyRevision: data.topologyRevision, speed: data.speed,
     metricsComputedAt: data.metricsComputedAt, metricsTopologyRevision: data.metricsTopologyRevision,
-    health: data.overallHealth, accumulatedCostUsd: data.accumulatedCostUsd };
+    health: data.overallHealth, accumulatedCostUsd: data.accumulatedCostUsd,
+    burnRatePerHourUsd: data.burnRatePerHourUsd, targetLoadFraction: data.targetLoadFraction,
+    activeChaos: data.activeChaos, restarting: data.restarting, pools: data.pools, installedSkus: data.installedSkus,
+    measurementFreshness: data.metricsComputedAt === null ? "initialized" :
+      data.metricsTopologyRevision === undefined || data.topologyRevision === undefined || !data.metricsComputedAt ? "unknown" :
+        data.metricsTopologyRevision !== data.topologyRevision ? "previous-revision" : "current-revision" };
 }
 
 function readTerminal(value: unknown, limits: string[]): ReportCheckpoint | null {

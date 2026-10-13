@@ -1,9 +1,11 @@
 import { Link } from "react-router-dom";
 import type { RunSummary } from "@infraforge/contracts/reports";
+import { RunSelection } from "./RunSelection";
 
-export function RunList({ runs }: { runs: RunSummary[] }) {
+export function RunList({ runs, selected, onToggle }: { runs: RunSummary[]; selected?: string[]; onToggle?: (id: string) => void }) {
   return <ul className="divide-y divide-[#2A2E37]">
     {runs.map((run) => <li key={run.id}>
+      {selected && onToggle && <RunSelection run={run} selected={selected} onToggle={onToggle} />}
       <Link to={`/reports/${run.id}`} className="block p-4 rounded-lg hover:bg-[#2A2E37]/40 focus-visible:outline focus-visible:outline-[#4FA89B]">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <span className="font-medium text-[#EDEEF0]">{run.infrastructureName}</span>
@@ -21,9 +23,9 @@ export function RunList({ runs }: { runs: RunSummary[] }) {
   </ul>;
 }
 
-export function HistoryContent({ loading, error, runs, retry }: { loading: boolean; error: string | null; runs: RunSummary[]; retry: () => void }) {
+export function HistoryContent({ loading, error, runs, retry, selected, onToggle }: { loading: boolean; error: string | null; runs: RunSummary[]; retry: () => void; selected?: string[]; onToggle?: (id: string) => void }) {
   if (loading) return <p role="status" className="p-6 text-[#C3C7D0]">Loading run history…</p>;
   if (error) return <div role="alert" className="p-6 space-y-3"><p>{error}</p><button onClick={retry} className="text-[#4FA89B] underline">Try again</button></div>;
   if (!runs.length) return <div className="p-6 space-y-3"><p>No runs recorded yet.</p><p className="text-sm text-[#8B909C]">Deploy a saved design, observe it, then come back to understand the recorded outcome.</p><Link className="text-[#4FA89B] underline" to="/design">Open the designer</Link></div>;
-  return <RunList runs={runs} />;
+  return <RunList runs={runs} selected={selected} onToggle={onToggle} />;
 }

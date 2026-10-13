@@ -52,7 +52,7 @@ export function childEnvironment(settings: LocalSettings, inherited: Record<stri
   for (const name of ["PATH", "Path", "SystemRoot", "WINDIR", "ComSpec", "PATHEXT", "TEMP", "TMP", "TMPDIR"]) {
     if (inherited[name] !== undefined) env[name] = inherited[name];
   }
-  return { ...env, NODE_ENV: "test", DATABASE_URL: settings.databaseUrl,
+  return { ...env, NODE_ENV: "test", DATABASE_URL: settings.databaseUrl, DO_NOT_TRACK: "1",
     BETTER_AUTH_URL: `http://localhost:${settings.apiPort}`, APP_ORIGINS: "http://localhost:5173",
     BETTER_AUTH_SECRET: randomUUID() + randomUUID(),
     PORT: String(settings.apiPort), LISTEN_HOST: "127.0.0.1", REDIS_HOST: "127.0.0.1", REDIS_PORT: String(settings.redisPort),
@@ -157,11 +157,11 @@ export class LocalHarness {
     this.children.delete("migration");
     if (result !== 0) throw new Error(`Disposable migration failed: ${this.diagnostics.get("migration")}`);
     this.spawn("api", ["run", "index.ts"]);
-    this.spawn("ws", ["run", "ws-server.ts"]);
     await until(async () => {
       try { return (await fetch(`http://localhost:${this.settings.apiPort}/health`)).ok || undefined; }
       catch { return undefined; }
     }, "API health");
+    this.spawn("ws", ["run", "ws-server.ts"]);
     await until(async () => {
       try { return (await fetch("http://localhost:3001")).ok || undefined; }
       catch { return undefined; }
