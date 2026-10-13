@@ -120,7 +120,7 @@ remain request-only. No charts, LLM explanations, rerun or comparison UI were ad
 | Frozen install | 491 installs/545 packages checked; no lockfile changes |
 | Typecheck | Seven workspace tasks and release compiler passed; final run serialized after local memory pressure |
 | Lint/boundaries | Five ESLint tasks; 1,152 imports, no cycles/runtime leaks |
-| Workspace tests | 132 passed, 952 assertions; six DB cases executed separately below |
+| Workspace tests | 132 passed, 953 assertions; six DB cases executed separately below |
 | Engine goldens | All 30 passed; engine source/expectations unchanged |
 | Tooling | 23 passed, 279 assertions |
 | PostgreSQL 18/Redis integration | 12 passed, 1,047 expect calls across six files; cleanup confirmed |
@@ -153,6 +153,10 @@ the old migration-count assertion and new test enum literals were corrected. The
 first image command selected the wrong builder; the verified local engine build passed.
 A concurrent compiler attempt exhausted local memory; the final unchanged checks
 passed serially after owned stack cleanup.
+The first CI run passed eight jobs but its 50 ms action-status polls exhausted the
+unchanged API request budget on Linux. HTTP polling now uses 500 ms; the local full
+integration rerun passed. Final review also corrected the aggregated chaos fact's
+source references to include durable `RunAction` records as well as legacy requests.
 No golden, protection or validation requirement was weakened.
 
 ## Evidence, cleanup and parked hosted work

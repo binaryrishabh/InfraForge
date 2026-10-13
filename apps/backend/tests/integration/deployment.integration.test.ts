@@ -71,7 +71,7 @@ integration("local deployment lifecycle", () => {
       const applied = await until(async () => {
         const action = (await harness.request(`/deployments/${id}/actions/${response.action.id}`)).action;
         return ["running", "completed", "failed", "cancelled"].includes(action.status) ? action : undefined;
-      }, `${path} durable application`);
+      }, `${path} durable application`, 20_000, 500);
       expect(["running", "completed"]).toContain(applied.status);
       expect(applied.appliedAt).not.toBeNull();
       expect(evidence.redisEvents.filter((e: Event) => e.channel === "simulator:control")).toHaveLength(0);

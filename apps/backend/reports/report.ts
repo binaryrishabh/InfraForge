@@ -44,7 +44,7 @@ export function buildRunReport(row: StoredRun): RunReport {
     report.unknown.push("Duplicate resource identifiers or connections make the original/live topology comparison ambiguous; no edits were inferred.");
   }
   if (run.chaosEventCount !== null) report.observed.push({ id: "chaos-requests",
-    message: run.chaosEventCount === 1 ? "1 chaos request was recorded." : `${run.chaosEventCount} chaos requests were recorded.`, sources: ["chaosEvents"] });
+    message: run.chaosEventCount === 1 ? "1 chaos request was recorded." : `${run.chaosEventCount} chaos requests were recorded.`, sources: ["chaosEvents", "RunAction"] });
   if (run.topologyRevision !== null) report.observed.push({ id: "revision",
     message: `The last accepted live topology revision is ${run.topologyRevision}.`, sources: ["topologyRevision", "liveTopology"] });
   const failure = records.timeline.filter((event) => event.event === "Deployment Failed" || event.event === "Simulation Interrupted").at(-1);

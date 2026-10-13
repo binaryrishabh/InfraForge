@@ -33,6 +33,7 @@ describe("durable run reports", () => {
     expect(report.actions[0]?.appliedAt).toBeNull();
     expect(report.actions[1]?.completedAt).toBeNull();
     expect(report.actions[2]?.outcome?.appliedTarget).toBe(0.5);
+    expect(report.observed.find((fact) => fact.id === "chaos-requests")?.sources).toEqual(["chaosEvents", "RunAction"]);
     expect(buildRunReport(saved)).toEqual(report);
   });
 

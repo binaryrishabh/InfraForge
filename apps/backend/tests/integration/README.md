@@ -116,6 +116,8 @@ The test takes about 140 seconds because it exercises the actual one-minute chec
 
 Controls are accepted through the real HTTP routes, then checked against their
 PostgreSQL action records. No simulator-control Redis publication is required.
+Action-status HTTP polls use 500 ms spacing; they respect the unchanged production
+request budget even on a faster CI runner. SQL/Redis probes keep their own cadence.
 Most controls are issued while paused to make the logical application boundary
 explicit. Advancements check exact tick counts; high-speed completion checks run
 at each simulated second. Checkpoints retain their real capture timestamp and

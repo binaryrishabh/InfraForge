@@ -25,12 +25,12 @@ export async function checkReliableEvidence(harness: LocalHarness, sessions: Ses
   const applied = async (a: RunAction) => until(async () => {
     const current = await action(a.id);
     return ["running", "completed", "failed", "cancelled"].includes(current.status) ? current : undefined;
-  }, `${a.kind} application`);
+  }, `${a.kind} application`, 20_000, 500);
   const complete = async (a: RunAction) => until(async () => {
     const current = await action(a.id);
     return current.status === "completed" ? current : undefined;
-  }, `${a.kind} completion`);
-  await until(async () => (await run()).status === "live" || undefined, "evidence run live");
+  }, `${a.kind} completion`, 20_000, 500);
+  await until(async () => (await run()).status === "live" || undefined, "evidence run live", 20_000, 500);
   await complete(await requested("speed", { speed: 0 }));
   await harness.request(`/infrastructure/${design.id}`, { name: "Renamed saved design" }, "PUT");
   expect((await report()).run.infrastructureName).toBe(name);
@@ -183,7 +183,7 @@ export async function checkReliableEvidence(harness: LocalHarness, sessions: Ses
   designs.push(offlineDesign.id);
   const offline = (await harness.request("/deployments", { infrastructureId: offlineDesign.id }, "POST", 201)).createdDeployment;
   runs.push(offline.id);
-  await until(async () => (await harness.request(`/deployments/${offline.id}`)).deployment.status === "live" || undefined, "offline fixture live");
+  await until(async () => (await harness.request(`/deployments/${offline.id}`)).deployment.status === "live" || undefined, "offline fixture live", 20_000, 500);
   let uncertain!: RunAction;
   await probe("load", "completed", async () => {
     uncertain = (await harness.request(`/deployments/${offline.id}/load`, { targetLoadFraction: 0.77 }, "POST", 202)).action;
@@ -200,7 +200,7 @@ export async function checkReliableEvidence(harness: LocalHarness, sessions: Ses
   expect((await harness.request(`/deployments/${offline.id}/teardown`, {}, "POST", 202)).action.id).toBe(unavailable.action.id);
   await harness.request(`/infrastructure/${offlineDesign.id}`, undefined, "DELETE", 409);
   await harness.startWorker();
-  await until(async () => (await harness.request(`/deployments/${offline.id}`)).deployment.status === "failed" || undefined, "interrupted offline run");
+  await until(async () => (await harness.request(`/deployments/${offline.id}`)).deployment.status === "failed" || undefined, "interrupted offline run", 20_000, 500);
   const interrupted = (await harness.request(`/deployments/${offline.id}/actions/${unavailable.action.id}`)).action;
   expect(interrupted.status).toBe("failed");
   expect(interrupted.appliedAt).toBeNull();
