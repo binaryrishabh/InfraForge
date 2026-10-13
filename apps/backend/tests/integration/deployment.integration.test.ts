@@ -279,7 +279,7 @@ integration("local deployment lifecycle", () => {
       expect(live.stages[2].details.lineItems).toHaveLength(layout.resources.length);
       expect((await harness.request("/deployments/live")).deployments.find((d: Event) => d.id === id)).toEqual({
         id, infrastructureId, infrastructureName: "Integration saved layout", resourceCount: layout.resources.length,
-        status: "live", createdAt: live.createdAt, updatedAt: live.updatedAt,
+        status: "live", createdAt: live.createdAt, updatedAt: live.updatedAt, challengeId: null,
       });
       const validJob = await queue.getJob(id);
       expect(validJob?.id).toBe(id);
