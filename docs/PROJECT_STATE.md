@@ -1,229 +1,216 @@
 # InfraForge project state
 
-Verified locally 2026-10-13 on `develop`. **Reliable Run Evidence and read-only Compare are implemented.**
-Product development remains local-first; hosted production cutover is **PARKED**.
-This milestone did not access Neon, EC2/AWS, hosted Nginx, Vercel, DNS, OAuth settings,
-production secrets/databases or `main`.
+Verified locally 2026-10-13 on `develop`. **Reliable Run Evidence and Honest Rerun +
+Compare are implemented.** Hosted production cutover remains **PARKED**. This
+milestone did not access Neon, EC2/AWS, hosted PostgreSQL/Nginx, Vercel, DNS, OAuth
+settings, production secrets or `main`.
 
 See [local setup](../Readme.md), [authentication](AUTHENTICATION.md),
 [integration tests](../apps/backend/tests/integration/README.md) and the existing
-[release procedure](DEPLOYMENT.md). This document is the main project state;
-do not create executor memories or planning archives.
+[release procedure](DEPLOYMENT.md). This is the main project state; keep evidence
+outside Git and do not create executor memories or planning archives.
 
 ## Product direction and policy
 
-The learning loop is **Challenge → Build → Predict → Run → Break → Understand →
-Improve → Run again**. Complete it before expanding scope. Preserve the visual
-identity; deeper UX redesign comes later. Progressive disclosure should help
-beginners without slowing advanced workflows.
+Complete **Challenge → Build → Predict → Run → Break → Understand → Improve →
+Run again** before expanding scope. Preserve the visual identity and use progressive
+disclosure. **Observed / Interpreted / Unknown is permanent.** Interpretations need
+retained deterministic evidence. Results describe an educational model, not cloud
+bills, production sizing, recovery guarantees or statistical proof.
 
-**Observed / Interpreted / Unknown is permanent.** Results describe an educational
-model, not production sizing or cloud bills. Interpretations need deterministic
-retained evidence; never invent telemetry, causality, provider guarantees or recovery.
-Keep modules small, boundaries explicit, migrations additive and published history intact.
-One mutating executor uses the owner Git identity. Approved policy: GPT-6.1 Sol,
-Extra High; INNER NONE. External review requires scoped owner authorization.
-Normal develop work cannot promote/deploy main or operate on production data.
+Keep modules small, boundaries explicit, migrations additive and published history
+intact. One mutating executor uses the owner Git identity. Approved model policy:
+GPT-6.1 Sol, Extra High; INNER NONE. External review needs scoped owner authorization.
+Develop work cannot promote/deploy main or operate on production data.
 
-## Accepted architecture and local foundation
+## Accepted architecture and foundation
 
 | Workspace | Responsibility |
 | --- | --- |
 | `apps/web` | React 19/Vite/Zustand canvas, monitoring, history and reports |
-| `apps/backend` | Express, Prisma/PostgreSQL, outbox/BullMQ, worker/simulator, WS and report derivation |
+| `apps/backend` | Express, Prisma/PostgreSQL, outbox/BullMQ, worker, WS and report derivation |
 | `packages/domain` | Resource/workload types, graph/readiness rules and examples |
 | `packages/catalog` | Provider SKU data and lookup |
-| `packages/contracts` | Deployment, inputs, actions, telemetry/events and report DTOs |
+| `packages/contracts` | Inputs, deployment, actions, telemetry and report DTOs |
 | `packages/simulation` | Deterministic engine, runtime, cost, capacity and tuning |
 
 Bun 1.3.14/Turbo 2.11.6 own one root install/lockfile. Browser imports cannot reach
-engine/runtime/cost. Prisma 7.9.1 now has eleven migrations: the original ten are
-unchanged, followed by `20261013000000_reliable_run_evidence`. All 30 engine goldens,
-expectations, RNG consumption and simulation behavior remain unchanged.
+engine/runtime/cost. Prisma 7.9.1 has twelve migrations; the first eleven are
+unchanged. Migration 12 is `20261013010000_honest_reruns`. Simulation model remains
+`1`, catalog `2026-08`; engine source, RNG consumption and all 30 goldens are unchanged.
 
-Better Auth 1.7.7 uses database sessions and exact HTTP/WS ownership and Origins.
-Cookies are host-only, HttpOnly, SameSite=Lax and Secure on HTTPS. WS checks expiry,
-revocation and run ownership. Ownerless history stays quarantined; dry-run-first
-recovery requires independent evidence and assigns only linked inactive unassigned
-runs alongside their verified design. Detached ownerless runs remain quarantined.
-Google/GitHub OAuth still requires owner credentials and end-to-end verification.
-There is no public fixture-login endpoint or browser identity bypass.
+Better Auth 1.7.7 uses database sessions, exact HTTP/WS ownership and permitted
+Origins. Cookies are host-only, HttpOnly, SameSite=Lax and Secure on HTTPS. WS checks
+expiry, revocation and run ownership before subscription/delivery. Ownerless legacy
+history stays quarantined. Dry-run-first ownership recovery needs independent
+evidence, a verified design owner and inactive unassigned linked runs; detached
+ownerless runs remain quarantined. Google/GitHub OAuth still requires owner
+credentials and end-to-end verification. No fixture-login endpoint is public.
 
 `bun run dev:setup` prepares labelled PostgreSQL 18/Redis 8 resources. `bun run dev`
-migrates/generates and supervises API, worker, WS and frontend using generated local
-configuration, ignoring app dotenv/hosted settings. Ports 55432/56379 and
-3000/3001/3002/5173 bind to loopback. Unknown resource/port collisions are refused.
-The accepted four-process and listener smokes preserve persistent developer storage;
-a dedicated bridge supports Docker Desktop host probes. These are completed local
-foundation checks, not an ongoing hosted-release milestone.
+migrates/generates and supervises API, worker, WS and frontend with generated local
+configuration, ignoring app dotenv/hosted settings. Database/Redis ports 55432/56379
+and application ports 3000/3001/3002/5173 bind to loopback. Unknown resource/port
+collisions are refused. Accepted listener/four-process smokes preserve developer
+storage. Worker ownership requires a session-preserving PostgreSQL connection;
+restart explicitly fails interrupted runs/actions rather than resuming checkpoints.
 
-## Reliable Run Evidence
+## Reliable inputs, controls and evidence
 
-Creation captures RunInputs V2: validated topology, fully resolved workload, seed,
-model version `1` and catalog snapshot `2026-08`. Gates, initialization and retries
-use those immutable inputs. V1 remains readable without reconstructed metadata.
-A V2 model/catalog mismatch refuses execution rather than silently changing context.
-Saved design, original input and revisioned accepted/applied live topology stay separate.
+Creation captures validated topology, fully resolved workload, seed and V2
+model/catalog provenance. Gates, initialization and retries use those immutable
+inputs. V1 remains readable without invented metadata; incompatible V2 execution
+is refused. Saved design, original input and revisioned accepted/applied live
+topology stay separate. Duplicate initialization/jobs cannot replace inputs.
 
-`RunAction` is a bounded, deployment-specific record for load, speed, chaos, vertical
-scale, pool scale, topology and teardown. Owner/live/target/SKU/pool/revision checks
-precede insertion. PostgreSQL row locking allocates a unique per-run sequence;
-HTTP returns 202 with the requested action ID. The worker polls PostgreSQL on its
-one-second cycle, including while paused. Redis carries optional notifications,
-not simulator control truth. Reports show the latest 500 actions with an omission
-notice; earlier records remain in the database.
+Runs own nullable `ownerId` and captured `runName`. Verified linked ownership/name
+was backfilled without assigning ownerless history. Backfilled legacy names are
+not claimed as original names. SQL/HTTP block design deletion while runs are active;
+inactive design deletion uses SET NULL and preserves run/report/action ownership.
 
-Lifecycle: **requested → applying → running/completed**, or **failed/cancelled**.
-Claiming precedes memory application. An acknowledgement write failure freezes that
-exact memory state and retries its write, never reapplies the action. SQL guards
-protect request identity/parameters and closed outcomes. A session advisory lock
-still permits one worker. Restart atomically fails interrupted runs and unfinished
-actions; uncertain effects remain unverified. There is no replay or checkpoint resume.
+`RunAction` durably records load, speed, chaos, vertical/pool scale, topology and
+teardown. Owner/live/target/SKU/pool/revision checks precede insertion. A row lock
+allocates unique per-run sequence. The worker polls PostgreSQL each second, even
+while paused; Redis notifications are optional. Lifecycle is requested → applying
+→ running/completed, or failed/cancelled. Failed acknowledgements freeze the exact
+memory state and retry its write without reapplying effects. SQL protects request
+identity and closed outcomes. Reports bound action disclosure to 500 with omissions
+labelled; earlier records remain stored.
 
-Load/speed outcomes retain previous and applied values. Chaos retains actual start,
-logical duration/end and observed end health; **fault ended is not system recovery**.
-Vertical scaling completes only after the requested SKU is installed and observed
-online. Pool scaling records the actual replica transition and final count.
-Topology retains both accepted and simulator-applied revision. Successful action
-phases lacking their required outcome evidence are omitted as malformed in reports.
+Outcomes retain actual application/completion times, values, installed SKU/online
+state, replica transition and accepted/applied topology revisions. Fault end is
+not system recovery. Legacy chaos requests remain request-only. Exact teardown
+captures state once, then atomically commits terminal evidence, action completion,
+unfinished-action cancellation and runtime retirement before removing memory.
+Failed writes freeze/retry the same capture. Offline teardown stays requested;
+restart fails interrupted work explicitly. No replay or checkpoint recovery exists.
 
-Teardown is durable and idempotent. The simulator deep-captures its current state
-once, then atomically persists the terminal snapshot, action completion, cancellation
-of unfinished controls, `torn-down` and `runtimeActive=false`. Only after commit does
-it remove memory. Failed writes freeze/retry that capture. An unavailable worker
-leaves teardown requested and has no terminal snapshot; restart fails it explicitly.
-The frontend says **Stopping…** until confirmed completion.
+Terminal evidence includes simulated seconds, costs, load, health, measurements,
+topology revision, installed SKUs, pools, faults/restarts and measurement time/revision.
+Exact state may contain initialized or older measurements; freshness is labelled.
+Diagnostic checkpoints retain actual capture time when available; `updatedAt` never
+stands in for measurement time. Timestamp-less legacy checkpoints remain unknown.
 
-New wall-minute checkpoints include actual `capturedAt` and applied topology revision.
-Terminal captures also retain simulated seconds, cost, health, resource measurements,
-load/speed, live topology, installed SKUs, pool/fault/restart state and measurement
-computation time/revision. Exact state can contain initialized or older measurements;
-reports label that explicitly. `updatedAt` is never treated as measurement time.
-Old timestamp-less checkpoints remain unknown and are never called final state.
+## Honest Rerun + Compare
 
-Runs own their nullable `ownerId` and captured `runName`. Migration backfills only
-from the linked design's already verified owner/name, preserving unassigned legacy
-ownership and all previous fields. Legacy backfilled names are not claimed to be
-original creation names. The nullable design FK uses SET NULL. Active deletion is
-blocked through HTTP and SQL; inactive design deletion preserves run/report/action
-history and its original owner. Run/control/report/WS authorization uses run ownership.
+One backend classifier separates starting inputs, durable action conduct and
+exact-terminal/checkpoint/missing evidence; React renders its source-backed facts.
+Grades are **same starting point**, **one design change**, **one workload change**,
+**same setup/different seed**, **several changes**, or **side-by-side only**. Missing
+or different input/model/catalog provenance and ambiguous topology allow descriptive
+comparison only. Conduct compares actual simulated application/completion and
+outcomes; malformed, truncated or uncertain effects cannot establish equality.
+Speed is displayed separately: it does not change tick math by itself but can change
+when later human actions land in simulated time.
 
-Existing reports retain Observed / Interpreted / Unknown and add action phase,
-parameter, wall/logical timing and outcome disclosure, V2 provenance and clearly
-separate exact terminal vs diagnostic checkpoint evidence. Legacy chaos arrays
-remain request-only. No charts, LLM explanations, rerun or comparison UI were added.
+Final deltas require two exact terminal captures. Accumulated-cost delta additionally
+requires equal simulated duration; gate monthly estimates require compatible catalog
+provenance. Hourly burn, accumulated cost and monthly estimate stay distinct. Units
+and later-minus-earlier signs imply no winner. Same-start/no-affecting-action/equal-stop
+model-1 pairs compare normalized deterministic state and surface mismatches explicitly.
 
-## Verification and local QA
+Model 1 reseeds each simulated second and consumes jitter in resource iteration
+order. Shared starting resources at equal captured positions have aligned draws;
+appending preserves them, while insertion/removal/reordering shifts displaced
+resources. Alignment does not imply identical measurements or controlled causality.
+Dynamic resources/future models are ungraded; non-preserved numeric object-key order
+is unknown. An engine regression isolates jitter from traffic distribution.
 
-| Check | Actual local result |
+Exact rerun copies supported V2 input in the current model/catalog, even after design
+deletion. Current-design rerun requires the original owned design and captures its
+current topology with source workload/seed and current provenance. Neither replays
+original actions. Server preview/hash verification refuses a changed design before
+creation. Migration 12 adds immutable source/mode/stop target and a bounded one-hop
+family, verifies inactive same-owner sources and permits owned designless creation
+only for verified identical-input exact reruns. Legacy records stay untouched; source
+deletion clears its FK without deleting child evidence. No family graph table exists.
+
+Matched stop defaults on for exact source duration 1–604,800 seconds. The worker
+checks every simulated tick, records action completions first and never overshoots
+inside 1×/10×/60× batches. At the target it captures once, creates an audited
+`trigger: matched-stop` teardown and uses the existing terminal transaction. An earlier
+user stop remains valid; later requests cannot relabel a frozen capture or occupy
+the unique open-teardown slot. Failed action/terminal writes retain the original
+capture while frozen. Retry also emits terminal notifications; HTTP terminal polling
+supports the UI when Redis delivery is unavailable.
+
+History selects exactly two eligible runs; report picker prioritizes related runs,
+then the surviving design, then other owned history. Reports show source/direct
+reruns and offer Run again/Open design to improve. Live context shows source, mode
+and stop countdown; finished runs retain comparison/report links until deliberate
+return to Designer. Improve previews the actual unsaved canvas, explicitly saves
+that canvas first and then verifies its hash before capturing the rerun. Source
+workload/seed are fixed. Changed context/preview or account is refused. Keyboard
+selection, native disclosures, real table headers/captions, focus return, readable
+portal text, reduced motion and narrow metric blocks preserve the existing design.
+
+## Verification, failures and cleanup
+
+| Check | Actual result |
 | --- | --- |
-| Frozen install | 491 installs/545 packages checked; no lockfile changes |
-| Typecheck | Seven workspace tasks and release compiler passed; final run serialized after local memory pressure |
-| Lint/boundaries | Five ESLint tasks; 1,152 imports, no cycles/runtime leaks |
-| Workspace tests | 132 passed, 953 assertions; six DB cases executed separately below |
-| Engine goldens | All 30 passed; engine source/expectations unchanged |
+| Frozen install | 491 installs/545 packages checked; lockfile unchanged |
+| Typecheck | Seven workspace tasks and release compiler passed; correction recheck passed |
+| Lint/boundaries | Five ESLint tasks; 1,388 imports, no cycles/runtime leaks |
+| Workspace unit tests | 159 passed, 1,136 assertions in Linux; seven DB cases skipped here and executed below |
+| Engine | All 30 goldens plus jitter-alignment regression passed; source/goldens unchanged |
 | Tooling | 23 passed, 279 assertions |
-| PostgreSQL 18/Redis integration | 12 passed, 1,047 expect calls across six files; cleanup confirmed |
+| PostgreSQL 18/Redis integration | 13 passed, 1,123 assertions across seven files; no cleanup errors |
+| Docker | Commit-labelled image, five entrypoints compiled and explicit fixture Compose config passed |
 | Frontend build | Passed; existing bundle-size warning remains |
-| Final report rendering | Seven SSR tests, 50 assertions passed after final wording |
 | Dependency audit | Exit zero, `{}` |
-| Committed Docker packaging | Image `f2de3dc`; five entrypoints compiled, all 27 disposable compatibility phases passed |
 
-Real database-backed session HTTP/WS scenarios covered normal runs, load, all scaling,
-chaos, topology, pause/resume, teardown, restart, two-user/ownerless denial and zero
-unauthorized actions/mutations. Redis PUBLISH denial did not lose a load action.
-Concurrent requests retained stable sequence; two forced acknowledgement failures
-after memory application did not apply load twice. A topology claim failure retained
-acceptance without falsely claiming application. Two failed terminal writes left the
-run live with no terminal record; retry committed the original capture timestamp.
-Offline teardown/restart stayed honest.
+Real database sessions prove two-user/ownerless HTTP/WS denial, expiry/revocation/
+sign-out, no unauthorized control event or mutation, and legacy quarantine/recovery.
+Full existing lifecycle also covers gates, duplicate jobs, live controls, pause,
+topology, optional Redis delivery, exact teardown, restart and ownership loss.
+Rerun proof records five exact stops at 620, identical-input normalized state,
+current-design changes, detached exact rerun, manual early stop, frozen insertion/
+terminal failures, original capture retention and retry notifications. Unsaved
+canvas preview writes nothing; creation before save is refused, and saving that
+exact canvas permits the matching rerun. Migration proofs preserve legacy fields,
+ownerless records, identity/lineage immutability and normal designless refusal.
 
-The recorded example had 18 actions: crash at second 0 ended at 30 while overall
-health was still critical; vertical scaling was observed online at 21; pool count
-went 2→3 at 60 and 3→2 at 75. Teardown captured healthy state at second 80, revision 1,
-with the real wall timestamp. Renaming/deleting the design retained its original run
-name, report and owner-only HTTP/WS access. The browser inspected the actual recorded
-report using application components/CSS, keyboard disclosures and retained history.
-This verifies report rendering, not authenticated SPA/OAuth sign-in without credentials.
+Browser QA used actual components/CSS and retained disposable integration evidence:
+keyboard selection/max-two, rerun controls, default matched stop, focus return,
+native disclosure, desktop headers and 375 px blocks/dialog without page overflow.
+The rerun UI was explicitly a fixture with no creation/OAuth API. Authenticated SPA
+and external OAuth flows were not browser-verified; API/WS creation/session evidence
+comes from the real database-backed integration suite.
 
-Failed attempts were retained separately: Docker initially stopped; Bun's native
-SQL rejection matcher stalled and was replaced by Node's awaited assertion; restart
-retirement initially exposed run failure before action failure and is now atomic;
-the old migration-count assertion and new test enum literals were corrected. The
-first image command selected the wrong builder; the verified local engine build passed.
-A concurrent compiler attempt exhausted local memory; the final unchanged checks
-passed serially after owned stack cleanup.
-The first CI run passed eight jobs but its 50 ms action-status polls exhausted the
-unchanged API request budget on Linux. HTTP polling now uses 500 ms; the local full
-integration rerun passed. Final review also corrected the aggregated chaos fact's
-source references to include durable `RunAction` records as well as legacy requests.
-No golden, protection or validation requirement was weakened.
+Failed attempts remain separately recorded. Windows Bun 1.3.14 repeatedly crashed
+in native startup/generation/tests; some attempts explicitly reported memory
+exhaustion. Earlier serialized checks passed, but Windows integration stability is
+not established. Speculative launch/JIT changes were removed. Linux Docker runs
+passed. Final QA found and fixed late teardown contention during a frozen matched
+stop and low-contrast portalled text. The security test now asserts no delivery
+from confirmed invalidation onward, excluding legitimate telemetry during the
+in-flight invalidation request. No authorization or golden requirement was weakened.
 
-## Evidence, cleanup and parked hosted work
+Sanitized final/failed evidence and browser screenshot stay outside Git under OS
+temporary `infraforge-compare-20261013` and labelled integration run records; final
+integration run is `10151e0558b84d2484109e757a0dd4b6`. Owned test containers, volumes,
+networks, sessions and child processes were removed. The temporary unit source bundle
+was removed. Shared caches, persistent developer storage/configuration and owner files
+remain intentionally. No agent-memory folder or permanent scratch archive was added.
 
-Sanitized evidence stays outside Git in OS temporary storage:
-`infraforge-run-evidence-c943b5fd14674aad` plus owned integration run records.
-Disposable PostgreSQL/Redis containers, volumes/networks, fixture rows/sessions and
-child processes were removed. The temporary report server/tab, its script, three
-superseded successful check logs (9,711 bytes total scratch) and unused labelled test
-image were removed. Unique final/failed evidence and the inspection screenshot remain.
-Developer storage/configuration and shared caches
-remain intentionally, with unknown resources and owner files preserved. No agent
-memory folder or permanent scratch archive was added.
+## Parked hosted work and remaining limits
 
-B0.6E remains stopped before database access, with identity/reset-credential gates
-unfinished. A retained hosted rehearsal child and existing private operator record
-need future authorized inspection/cleanup; this task did not reopen them.
-Last historical hosted facts: legacy SHA `6b465c6`, Neon PostgreSQL 18.6, migrations
-1–8, 28 `test-user` designs, 331 deployments (223 completed, 8 failed, 4 live,
-96 torn-down), 348 completed outbox rows. Three simulations advanced; the fourth
-was unknown. Public API/WS had maintenance containment while legacy writers remained.
-These are historical facts, not a fresh census. Future cutover needs renewed writer
-fencing, database/restore truth, session-preserving worker connections and OAuth/TLS.
+B0.6E stopped before database access with identity/reset-credential gates unfinished.
+A retained hosted rehearsal child/private operator record needs future authorized
+inspection/cleanup. Historical hosted facts: legacy SHA `6b465c6`, Neon PostgreSQL
+18.6, migrations 1–8, 28 `test-user` designs, 331 deployments (223 completed, 8 failed,
+4 live, 96 torn-down), 348 completed outbox rows; three simulations advanced and the
+fourth was unknown. Public API/WS had maintenance containment while legacy writers
+remained. This is historical evidence, not a fresh census. Future cutover requires
+renewed writer fencing, database/restore truth, session-preserving worker connections
+and verified OAuth/TLS configuration.
 
-## Honest Rerun + Compare — first slice
+A single pair establishes no statistical significance, production reliability, real
+cloud behavior or general superiority across seeds. Continuous telemetry, all
+automatic scaling events, replay/checkpoint recovery and multi-seed experiments
+remain absent. Model-2 resource-keyed RNG is deferred to an explicit simulation
+milestone. Windows runtime stability, authenticated browser/OAuth QA, broader
+beginner UX and bundle size remain open. Local/CI proof is not production readiness.
 
-Owner-scoped `/api/deployments/compare` orders the pair by creation time/ID. One
-backend classifier separates starting-input grades, actual durable action conduct
-and exact-terminal/checkpoint/missing evidence. React renders source-backed facts;
-it does not classify comparability. Model/catalog differences or missing provenance
-permit descriptive comparison only. Same-start/no-outcome-action/matched-stop model-1
-pairs compare a normalized deterministic state and explicitly surface mismatches.
-Final deltas require both exact snapshots; accumulated cost additionally requires
-equal simulated durations, while gate monthly estimates require compatible catalog
-provenance. Units and later-minus-earlier signs never imply a winner.
-
-Model 1 reseeds per second and consumes jitter in resource iteration order. Only
-shared starting resources at equal captured positions are graded aligned. Appending
-preserves their draws; removal/insertion/reordering shifts displaced resources.
-Aligned draws do not mean identical measurements. Dynamically spawned resources and
-future models are ungraded; non-preserved numeric object-key ordering is unknown.
-An engine-level regression isolates jitter from traffic distribution without changing
-the engine or its thirty goldens. History supports exactly two keyboard selections;
-Reports offers an owner-scoped picker and responsive tables with disclosure/focus return.
-
-Focused comparison/report/engine checks: 35 tests, 235 assertions passed before the
-last small rendering additions. Frozen install, seven workspace typecheck tasks,
-five lint tasks, boundaries (1,233 imports), release compiler and workspace tests
-(144 tests/1,050 assertions) passed. PostgreSQL 18 migration proofs passed, but full
-Windows integration hit Bun native startup crashes in WS/worker/API across five
-attempts. Sequential startup, an alternate test launcher and a JIT-disabled diagnostic
-did not establish a fix; the speculative launcher/JIT changes were removed. Owned
-fixtures cleaned up after every attempt; failure evidence remains outside Git.
-The complete lifecycle still requires a Linux Docker verification before publication.
-Rerun/lineage and matched stopping follow
-in the next slice; no statistical, multi-seed or RNG architecture expansion is planned.
-
-## Remaining limits and next product milestone
-
-Next: **honest Rerun + Compare**, using trustworthy original inputs, actions and
-snapshots. Same seed alone does **not** establish a perfectly controlled comparison
-across changed topologies: the engine consumes seeded jitter sequentially across
-resources. Future comparison must address or explicitly grade that comparability;
-do not change RNG/goldens merely to claim fairness.
-
-Continuous telemetry, all automatic scaling events, causal effects and checkpoint
-recovery remain absent. Exact terminal state is an educational-model observation,
-not production recovery or sizing proof. Browser OAuth/complete authenticated SPA
-QA, beginner/narrow-screen UX and bundle size remain separate work. Local tests do
-not establish production readiness; hosted work stays parked.
+Next product milestone: **Challenge + Predict**, completing the learning loop while
+hosted production work stays parked.

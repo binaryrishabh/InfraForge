@@ -204,6 +204,9 @@ export async function checkUserIsolation(harness: LocalHarness, fixtures: Sessio
         await harness.request("/auth/sign-out", {});
         expect(await fixtures.prisma.session.findUnique({ where: { id: session.session.id } })).toBeNull();
       }
+      // Live telemetry can legitimately arrive while invalidation is still in flight.
+      // Keep the no-delivery assertion strict from confirmed invalidation onward.
+      messages.length = 0;
       await harness.redis.publish(`deployment:${runId}:updates`, JSON.stringify({ private: "must-not-deliver" }));
       expect(await until(async () => closed, `${mode} session close`, 5000)).toBe(1008);
       expect(messages).toEqual([]);
