@@ -16,7 +16,7 @@ import { checkRecordedReports } from "./reportChecks";
 import { checkReliableEvidence } from "./runEvidenceChecks";
 import { checkCompareAccess } from "./compareChecks";
 import { checkHonestReruns } from "./rerunChecks";
-import { checkChallengeAttempts } from "./challengeChecks";
+import { checkChallengeAttempts, checkResilienceAttempt } from "./challengeChecks";
 
 type Event = Record<string, any>;
 type Snapshot = SimulationSnapshot & { publishType: string };
@@ -623,6 +623,8 @@ integration("local deployment lifecycle", () => {
         (id) => evidence.redisEvents.filter((item: Event) => item.channel === `deployment:${id}:updates`).map((item: Event) => item.event));
       phase("challenge attempts and evaluation stop");
       evidence.challenges = await checkChallengeAttempts(harness, sessions, infrastructureIds, deploymentIds);
+      phase("resilience experiment scheduled exactly and judged");
+      evidence.resilience = await checkResilienceAttempt(harness, infrastructureIds, deploymentIds);
       evidence.result = "passed";
     } catch (error) {
       evidence.result = "failed";

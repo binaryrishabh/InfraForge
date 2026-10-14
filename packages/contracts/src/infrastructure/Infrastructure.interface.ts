@@ -6,6 +6,8 @@ export interface Infrastructure {
   userId: string;
   name: string;
   challengeId?: string | null;
+  // A challenge workspace belongs to one version of its challenge.
+  challengeVersion?: number | null;
   layout: {
     resources: Resource[],
     connectionLines: ConnectionLine[],

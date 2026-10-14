@@ -1,88 +1,80 @@
 import { describe, expect, test } from "bun:test";
 import { resolveWorkload } from "@infraforge/domain/workload";
-import { validateConnection, validateDeploymentReadiness, validateInfrastructureName } from "@infraforge/domain/validation";
-import { PREDICTION_CHOICES } from "@infraforge/contracts/challenges";
-import type { ResourceType } from "@infraforge/domain/resource";
-import { CHALLENGES } from "../challenges/definitions";
-import { challengeSeed, findChallenge, specHash } from "../challenges/registry";
+import { validateInfrastructureName } from "@infraforge/domain/validation";
+import { PREDICTION_CHOICES, type ChallengeDefinition } from "@infraforge/contracts/challenges";
+import { CHALLENGE_VERSIONS } from "../challenges/definitions";
+import { buildRegistry, categoryOf, challengeSeed, findChallenge, latestChallenge, listLatestChallenges, specHash } from "../challenges/registry";
 import { readPrediction } from "../challenges/prediction";
 import { preflight } from "../challenges/preflight";
-import { LayoutSchema } from "../zod_schemas/layout.schema";
+import { experimentReadiness, recordedExperiment } from "../challenges/experiment";
+import { captureRunInputs } from "../deployments/runInputs";
 import { WorkloadProfileSchema } from "../zod_schemas/deployment.schema";
 import { REFERENCE, answers, attemptReport, definition, tier } from "./challengeHarness";
 
-// Changing any authored field changes its hash. Bump the version, then update the pin.
-const PINNED: Record<string, string> = {
-  "first-production-api@1": "515c84a6da8a78c5b4c30269e0c20dff5f934e8f98608fbac572f3782dd33888",
-  "secure-the-edge@1": "4166582eef18e35bee1b554c764a1debbf6d324c28cc87f5d56c7f0e02b50849",
-  "cache-matters@1": "848a196cdcfe6f368690575f46384a4123e7e96af9eedc6469f442db6707c4b1",
-  "write-heavy@1": "728d1ad3cf9b44b324fad21dad4e480679c495d0c1968f89ee383eed9905c292",
-  "scale-out-safely@1": "718049a66d5f3147f9319f765726c5aaf687e9c254058159bacb47e19f991c23",
-  "peak-traffic@1": "07bbee27be116c2f4ec0cac8382bddd1ca51aca0dde44794135e05eb5d6c5388",
-};
+describe("versioned registry", () => {
+  const v1 = findChallenge("cache-matters", 1)!.definition;
+  // A materially different second version: a tighter budget is a different task.
+  const v2: ChallengeDefinition = { ...v1, version: 2, objective: "Same, for $350 a month or less.",
+    criteria: v1.criteria.map((c) => c.kind === "monthly-budget" ? { ...c, label: "Monthly estimate is $350 or less", maxUsd: 350 } : c) };
+  const registry = buildRegistry([...CHALLENGE_VERSIONS, v2]);
 
-describe("challenge definitions", () => {
-  test("are well-formed, unique and use only valid, deployable starters", () => {
-    expect(CHALLENGES.length).toBeGreaterThanOrEqual(4);
-    expect(CHALLENGES.length).toBeLessThanOrEqual(6);
-    expect(new Set(CHALLENGES.map((c) => c.id)).size).toBe(CHALLENGES.length);
-    for (const c of CHALLENGES) {
-      expect(c.id).toMatch(/^[a-z0-9-]{1,64}$/);
-      expect(Number.isInteger(c.version) && c.version > 0).toBe(true);
-      expect(validateInfrastructureName(c.title)).toBeNull();
-      expect(WorkloadProfileSchema.safeParse(c.workload).success).toBe(true);
-      expect(resolveWorkload(c.workload)).toEqual(c.workload);
-      expect(Number.isInteger(c.evaluationSeconds) && c.evaluationSeconds > 60 && c.evaluationSeconds <= 3600).toBe(true);
-      expect(new Set(c.criteria.map((r) => r.id)).size).toBe(c.criteria.length);
-      expect(c.criteria[0]?.kind).toBe("deployment-checks");
-      expect(c.predictions.length).toBeGreaterThanOrEqual(1);
-      expect(c.predictions.length).toBeLessThanOrEqual(3);
-      expect(new Set(c.predictions.map((p) => p.id)).size).toBe(c.predictions.length);
-      expect(c.hints.length).toBeGreaterThanOrEqual(2);
-      expect(c.debrief.length).toBeGreaterThanOrEqual(2);
-      if (c.starter) {
-        expect(LayoutSchema.safeParse(c.starter).success).toBe(true);
-        expect(validateDeploymentReadiness(c.starter.resources, c.starter.connectionLines).valid).toBe(true);
-        for (const line of c.starter.connectionLines) expect(validateConnection(line.sourceType as ResourceType, line.targetType as ResourceType).valid).toBe(true);
-      }
+  test("every challenge is listed once, at its latest version, with its category", () => {
+    const listed = listLatestChallenges().map((e) => e.definition);
+    expect(new Set(listed.map((d) => d.id)).size).toBe(listed.length);
+    expect(listed.map((d) => [d.id, categoryOf(d)]).filter(([, c]) => c === "resilience")).toEqual([["lose-an-app-server", "resilience"], ["cache-failure", "resilience"]]);
+    for (const d of listed) {
+      expect(validateInfrastructureName(d.title)).toBeNull();
+      expect(WorkloadProfileSchema.safeParse(d.workload).success).toBe(true);
+      expect(resolveWorkload(d.workload)).toEqual(d.workload);
     }
+    expect(registry.latest("cache-matters")?.definition.version).toBe(2);
+    expect(registry.listLatest().filter((e) => e.definition.id === "cache-matters").map((e) => e.definition.version)).toEqual([2]);
+    expect(registry.find("cache-matters", 1)?.hash).toBe(specHash(v1));
+    expect(registry.find("cache-matters", 3)).toBeNull();
+    expect(() => buildRegistry([v1, { ...v1 }])).toThrow("Duplicate challenge version cache-matters@1");
   });
 
-  test("spec hashes are stable and pinned to their versions", () => {
-    for (const c of CHALLENGES) {
-      expect(specHash(c)).toBe(specHash(structuredClone(c)));
-      expect(specHash(c)).toBe(findChallenge(c.id)!.hash);
-      expect({ id: c.id, version: c.version, hash: specHash(c) }).toEqual({ id: c.id, version: c.version, hash: PINNED[`${c.id}@${c.version}`]! });
-    }
-    const changed = { ...CHALLENGES[0]!, criteria: CHALLENGES[0]!.criteria.map((r) => r.kind === "monthly-budget" ? { ...r, maxUsd: r.maxUsd + 1 } : r) };
-    expect(specHash(changed)).not.toBe(specHash(CHALLENGES[0]!));
-    expect(challengeSeed(CHALLENGES[0]!)).toBe(`challenge:${CHALLENGES[0]!.id}:v${CHALLENGES[0]!.version}`);
+  test("seeds are per version, so a new version never reuses an old version's randomness", () => {
+    expect(challengeSeed(v1)).toBe("challenge:cache-matters:v1");
+    expect(challengeSeed(v2)).toBe("challenge:cache-matters:v2");
+    expect(captureRunInputs({ ...v1.starter!, layoutVersion: 3 }, v2.workload, challengeSeed(v2)).seed).toBe("challenge:cache-matters:v2");
+  });
+
+  test("a version 1 attempt is judged by version 1 after version 2 becomes latest, and fails safe without it", () => {
+    const design = tier(4, { cache: true });
+    const historical = attemptReport(v1, design, answers(v1, { database: "healthy", busiest: "Database" }), { registry });
+    expect(historical.challenge).toMatchObject({ version: 1, status: "met", definitionMatches: true });
+    expect(historical.challenge?.criteria.find((c) => c.id === "budget")?.label).toBe("Monthly estimate is $400 or less");
+    // The same design under version 2's tighter budget is a different verdict, recorded only by a version 2 attempt.
+    const current = attemptReport(v2, design, answers(v2, { database: "healthy", busiest: "Database" }), { registry });
+    expect(current.challenge).toMatchObject({ version: 2, status: "met" });
+    expect(current.challenge?.criteria.find((c) => c.id === "budget")?.label).toBe("Monthly estimate is $350 or less");
+    const missing = attemptReport(v1, design, answers(v1, { database: "healthy", busiest: "Database" }), { registry: buildRegistry([v2]) });
+    expect(missing.challenge).toMatchObject({ status: "unavailable", definitionMatches: false, criteria: [] });
+    const wrongHash = attemptReport(v1, design, answers(v1, { database: "healthy", busiest: "Database" }), { hash: "0".repeat(64), registry });
+    expect(wrongHash.challenge).toMatchObject({ status: "unavailable", definitionMatches: false });
+  });
+
+  test("an attempt whose recorded experiment differs from its version's plan is not re-judged", () => {
+    const d = definition("lose-an-app-server");
+    const moved = attemptReport(d, REFERENCE[d.id]!, answers(d, { baseline: "healthy", survivors: "degraded", scale: "no" }),
+      { plan: { ...recordedExperiment(d)!, atSimulatedSecond: 61 } });
+    expect(moved.challenge).toMatchObject({ status: "unavailable", definitionMatches: false });
+    const dropped = attemptReport(d, REFERENCE[d.id]!, answers(d, { baseline: "healthy", survivors: "degraded", scale: "no" }), { plan: null });
+    expect(dropped.challenge?.status).toBe("unavailable");
+    const design = definition("cache-matters");
+    expect(attemptReport(design, REFERENCE[design.id]!, answers(design, { database: "healthy", busiest: "Database" }), { plan: recordedExperiment(d) }).challenge?.status).toBe("unavailable");
   });
 });
 
-describe("evaluation against the real engine", () => {
-  for (const c of CHALLENGES) {
-    test(`${c.id}: the reference design meets every requirement`, () => {
-      const report = attemptReport(c, REFERENCE[c.id]!, answers(c, { "overall-health": "healthy", "database-health": "healthy", "busiest-type": "Database", "security-clean": "yes", "scale-out": "no" }));
-      expect(report.challenge?.criteria.filter((r) => r.status !== "met")).toEqual([]);
-      expect(report.challenge?.status).toBe("met");
-      expect(report.run.challenge).toEqual({ id: c.id, version: c.version, title: c.title, status: "met", metCount: c.criteria.length, total: c.criteria.length });
-      expect(report.terminal?.simulatedSeconds).toBe(c.evaluationSeconds);
-    });
-    test(`${c.id}: the starting point does not`, () => {
-      const start = c.starter ?? tier(1);
-      const report = attemptReport(c, start, answers(c, { "overall-health": "healthy", "database-health": "healthy", "busiest-type": "Virtual Machine", "security-clean": "yes", "scale-out": "no" }));
-      expect(report.challenge?.status).toBe("not-met");
-      expect(report.challenge!.metCount).toBeLessThan(report.challenge!.total);
-    });
-  }
-
+describe("design challenge evaluation", () => {
   test("a failed challenge can still hold a correct prediction, kept separate from the result", () => {
     const c = definition("cache-matters");
     const report = attemptReport(c, c.starter!, answers(c, { database: "saturated", busiest: "Database" }));
     expect(report.challenge?.status).toBe("not-met");
     expect(report.challenge?.predictions.map((p) => p.outcome)).toEqual(["matched", "matched"]);
     expect(report.challenge?.criteria.find((r) => r.id === "database")).toMatchObject({ status: "not-met", sources: ["terminalSnapshot.metrics"] });
+    expect(report.challenge?.experiment).toBeNull();
   });
 
   test("a passed challenge can hold a wrong prediction", () => {
@@ -119,11 +111,72 @@ describe("evaluation against the real engine", () => {
     expect(report.challenge?.criteria.find((r) => r.id === "servers")?.status).toBe("not-met");
     expect(report.challenge?.criteria.find((r) => r.id === "health")?.status).toBe("pending");
   });
+});
 
-  test("attempts recorded under different rules are not re-judged", () => {
-    const c = definition("first-production-api");
-    const report = attemptReport(c, REFERENCE[c.id]!, answers(c, { health: "healthy", busiest: "Database" }), { hash: "0".repeat(64) });
-    expect(report.challenge).toMatchObject({ status: "unavailable", definitionMatches: false, criteria: [], predictions: [] });
+describe("resilience challenge evaluation", () => {
+  const d = definition("lose-an-app-server");
+  const prediction = answers(d, { baseline: "healthy", survivors: "saturated", scale: "yes" });
+
+  test("the starter's survivor saturates while app-2 is down; predictions are judged from the fault's own evidence", () => {
+    const report = attemptReport(d, d.starter!, prediction);
+    expect(report.challenge?.status).toBe("not-met");
+    expect(report.challenge?.criteria.find((c) => c.id === "survivors")).toMatchObject({ status: "not-met", sources: ["terminalSnapshot.metrics", "RunAction.parameters"] });
+    expect(report.challenge?.criteria.find((c) => c.id === "survivors")?.detail).toMatch(/^Besides app-2, at second 90: app-1 \(saturated/);
+    expect(report.challenge?.predictions.map((p) => [p.id, p.actual, p.outcome])).toEqual([
+      ["baseline", "healthy", "matched"], ["survivors", "saturated", "matched"], ["scale", "no", "different"]]);
+    expect(report.challenge?.predictions[0]?.sources).toEqual(["RunAction.outcome.baselineOverallHealth"]);
+    expect(report.challenge?.experiment).toMatchObject({ fault: "crash", targetResourceId: "app-2", atSimulatedSecond: 60, durationSimulatedSeconds: 30,
+      state: "ended", appliedSimulatedSeconds: 60, endedSimulatedSeconds: 90, targetHealthAtEvaluation: "failed" });
+    expect(report.challenge?.experiment?.detail).toContain("A fault ending is not the same as recovery.");
+    const fault = report.actions.find((a) => a.kind === "chaos")!;
+    expect(fault).toMatchObject({ parameters: { type: "crash", resourceId: "app-2", trigger: "challenge-experiment" }, status: "completed",
+      appliedSimulatedSeconds: 60, completedSimulatedSeconds: 90, outcome: { durationSimulatedSeconds: 30, faultEnded: true, baselineOverallHealth: "healthy" } });
+  });
+
+  test("redundancy passes; the target's own failure is the experiment, not a failed requirement", () => {
+    const report = attemptReport(d, REFERENCE[d.id]!, answers(d, { baseline: "healthy", survivors: "degraded", scale: "no" }));
+    expect(report.challenge?.status).toBe("met");
+    expect(report.challenge?.predictions.every((p) => p.outcome === "matched")).toBe(true);
+    expect(report.terminal?.resources.find((r) => r.id === "app-2")?.health).toBe("failed");
+  });
+
+  test("a fault that never happened leaves the attempt unjudged rather than pretending", () => {
+    const missing = attemptReport(d, REFERENCE[d.id]!, prediction, { skipExperiment: true });
+    expect(missing.challenge).toMatchObject({ status: "not-evaluated", experiment: { state: "not-applied" } });
+    expect(missing.challenge?.criteria.find((c) => c.id === "survivors")).toMatchObject({ status: "not-evaluated" });
+    expect(missing.challenge?.predictions.slice(0, 2).every((p) => p.outcome === "unknown")).toBe(true);
+    const early = attemptReport(d, REFERENCE[d.id]!, prediction, { stopAt: 50 });
+    expect(early.challenge?.experiment).toMatchObject({ state: "not-applied" });
+    expect(early.challenge?.experiment?.detail).toContain("stopped at second 50, before the fault was due");
+    expect(early.challenge?.status).toBe("not-evaluated");
+  });
+
+  test("a live attempt shows the fault as scheduled, then active", () => {
+    const before = attemptReport(d, REFERENCE[d.id]!, prediction, { stopAt: 30, status: "live", runtimeActive: true });
+    expect(before.challenge).toMatchObject({ status: "in-progress", experiment: { state: "scheduled", appliedSimulatedSeconds: null } });
+    const during = attemptReport(d, REFERENCE[d.id]!, prediction, { stopAt: 75, status: "live", runtimeActive: true });
+    expect(during.challenge).toMatchObject({ status: "in-progress", experiment: { state: "active", appliedSimulatedSeconds: 60, baselineOverallHealth: "healthy" } });
+  });
+
+  test("cache failure: the starter's database saturates without its cache", () => {
+    const c = definition("cache-failure");
+    const report = attemptReport(c, c.starter!, answers(c, { baseline: "healthy", database: "saturated" }));
+    expect(report.challenge?.status).toBe("not-met");
+    expect(report.challenge?.predictions.map((p) => p.outcome)).toEqual(["matched", "matched"]);
+    expect(report.challenge?.criteria.find((x) => x.id === "survivors")?.detail).toContain("db (saturated");
+  });
+
+  test("the target must stay in the serving path, behind a pool, or the experiment cannot run", () => {
+    const e = d.experiment!;
+    const without = { ...d.starter!, resources: d.starter!.resources.filter((r) => r.id !== "app-2"), connectionLines: d.starter!.connectionLines.filter((l) => l.sourceId !== "app-2" && l.targetId !== "app-2") };
+    expect(experimentReadiness(e, without)).toMatchObject({ ready: false });
+    expect(experimentReadiness(e, without).detail).toContain("no longer in this design");
+    const unpooled = { ...d.starter!, resources: d.starter!.resources.map((r) => r.id === "lb" ? { ...r, autoscaling: { enabled: false } } : r) };
+    expect(experimentReadiness(e, unpooled).detail).toContain("only a pool sends requests away from a crashed server");
+    const sidelined = { ...d.starter!, connectionLines: d.starter!.connectionLines.filter((l) => l.targetId !== "app-2") };
+    expect(experimentReadiness(e, sidelined).detail).toContain("must stay connected to traffic");
+    expect(preflight(d, without)).toMatchObject({ valid: false, experiment: { ready: false } });
+    expect(preflight(d, d.starter!)).toMatchObject({ valid: true, experiment: { ready: true } });
   });
 });
 
@@ -147,8 +200,11 @@ describe("predictions", () => {
       null,
     ]) expect(() => readPrediction(bad, c, types)).toThrow();
   });
-  test("fixed choice sets cover every non-design question kind", () => {
-    expect(Object.keys(PREDICTION_CHOICES).sort()).toEqual(["database-health", "overall-health", "scale-out", "security-clean"]);
+  test("fixed choice sets cover every non-design question kind, including the experiment's", () => {
+    expect(Object.keys(PREDICTION_CHOICES).sort()).toEqual(["baseline-health", "database-health", "overall-health", "scale-out", "security-clean", "survivor-health"]);
+    const r = definition("lose-an-app-server");
+    expect(readPrediction({ answers: { baseline: "healthy", survivors: "failed", scale: "no" } }, r, types).answers.survivors).toBe("failed");
+    expect(() => readPrediction({ answers: { baseline: "failed", survivors: "failed", scale: "no" } }, r, types)).toThrow();
   });
 });
 
@@ -157,10 +213,12 @@ describe("preflight", () => {
     const c = definition("secure-the-edge");
     const result = preflight(c, c.starter!);
     expect(result.valid).toBe(true);
+    expect(result.experiment).toBeNull();
     expect(result.checks.map((check) => [check.id, check.status])).toEqual([["checks", "ok"], ["security", "during-run"], ["capacity", "during-run"]]);
     expect(JSON.stringify(result)).not.toContain("SSH");
     const sizes = preflight(definition("write-heavy"), definition("write-heavy").starter!);
     expect(sizes.checks.find((check) => check.id === "sizes")).toMatchObject({ status: "problem" });
     expect(sizes.checks.find((check) => check.id === "budget")).toMatchObject({ status: "ok" });
+    expect(latestChallenge("not-a-challenge")).toBeNull();
   });
 });

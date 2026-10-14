@@ -92,6 +92,10 @@ apps/backend/actions/**
 !apps/backend/challenges/
 apps/backend/challenges/**
 !apps/backend/challenges/*.ts
+!apps/backend/challenges/definitions/
+!apps/backend/challenges/definitions/*.ts
+!apps/backend/challenges/definitions/*/
+!apps/backend/challenges/definitions/*/*.ts
 !apps/backend/scripts/
 apps/backend/scripts/**
 !apps/backend/scripts/recover-ownership.ts

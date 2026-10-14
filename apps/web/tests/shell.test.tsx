@@ -36,7 +36,7 @@ test("home recommends one next step in a fixed priority order", () => {
   const base: HomeData = { live: [], challenges: [summary, { ...summary, id: "b" }], runs: [], designs: [] };
   expect(nextStep(base)).toMatchObject({ kind: "start", challenge: { id: summary.id } });
   expect(nextStep({ ...base, challenges: [{ ...summary, workspaceDesignId: "d" }] })).toMatchObject({ kind: "continue" });
-  const failed = { ...summary, attempts: 1, latest: { runId: "r", createdAt: "", status: "not-met" as const, metCount: 1, total: 3 } };
+  const failed = { ...summary, attempts: 1, latest: { runId: "r", version: 1, createdAt: "", status: "not-met" as const, metCount: 1, total: 3 } };
   expect(nextStep({ ...base, challenges: [summary, failed] })).toMatchObject({ kind: "improve" });
   const live = { id: "l", infrastructureId: "d", infrastructureName: "Live", resourceCount: 2, status: "live", createdAt: "", updatedAt: "", challengeId: null };
   expect(nextStep({ ...base, live: [live] })).toMatchObject({ kind: "live" });

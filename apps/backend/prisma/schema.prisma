@@ -16,11 +16,12 @@ model Infrastructure {
   name                  String
   layout                Json
   challengeId           String?
+  challengeVersion      Int?
   deployments           Deployment[] // One infrastructure has many deployments
   createdAt             DateTime                    @default(now())
   updatedAt             DateTime                    @updatedAt
   @@index([ownerId])
-  @@index([ownerId, challengeId])
+  @@index([ownerId, challengeId, challengeVersion])
 }
 
 
@@ -45,6 +46,7 @@ model Deployment {
   challengePrediction   Json?
   predictionSubmittedAt DateTime?
   evaluationStopAtSimulatedSeconds Int?
+  challengeExperiment              Json?
   status                String                      @default("pending") // pending, running, live, completed, failed, torn-down
   resourceCount         Int                         @default(0) // How many resources in this deployment
   stages                Json                        @default("[]") // Array of { timestamp, event, message }

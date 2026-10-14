@@ -11,6 +11,8 @@ export const OPEN_ACTION_STATUSES = ["requested", "applying", "running"];
 export async function requestRunAction(deploymentId: string, ownerId: string, input: ActionRequest) {
   let request: ActionRequest;
   try { request = readActionRequest(input); } catch { throw new ValidationError("Invalid or oversized action parameters."); }
+  // Only the worker records a challenge's scheduled fault; a person's request can never claim that origin.
+  if (request.kind === "chaos" && request.parameters.trigger !== undefined) throw new ValidationError("Faults requested here cannot carry a system trigger.");
   return prisma.$transaction(async (tx) => {
     await tx.$queryRaw`SELECT id FROM "Deployment" WHERE id = ${deploymentId} AND "ownerId" = ${ownerId} FOR UPDATE`;
     const run = await tx.deployment.findUnique({ where: { id: deploymentId, ownerId } });

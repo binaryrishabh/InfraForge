@@ -11,7 +11,9 @@ export const reportRouter = Router();
 export const reportSelection = { id: true, infrastructureId: true, runName: true, runtimeActive: true,
   sourceRunId: true, rerunMode: true, autoStopAtSimulatedSeconds: true, sourceRun: { select: { runName: true } },
   challengeId: true, challengeVersion: true, challengeSpecHash: true, challengePrediction: true, predictionSubmittedAt: true,
-  evaluationStopAtSimulatedSeconds: true,
+  evaluationStopAtSimulatedSeconds: true, challengeExperiment: true,
+  // Summaries need only a resilience attempt's scheduled fault; full reports select every action.
+  actions: { where: { kind: "chaos", parameters: { path: ["trigger"], equals: "challenge-experiment" } }, orderBy: { sequence: "asc" }, take: 1 },
   status: true, createdAt: true, updatedAt: true, resourceCount: true, workloadProfile: true,
   seed: true, runInputs: true, liveTopology: true, topologyRevision: true, stages: true,
   timeline: true, chaosEvents: true, simulationState: true, terminalSnapshot: true, _count: { select: { actions: true } } } as const;

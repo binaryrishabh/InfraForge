@@ -4,7 +4,8 @@ import type { RunTopology } from "../run-inputs/RunInputs.interface";
 export type ActionRequest =
   | { kind: "load"; parameters: { targetLoadFraction: number } }
   | { kind: "speed"; parameters: { speed: 0 | 1 | 10 | 60 } }
-  | { kind: "chaos"; parameters: { type: ChaosType; resourceId: string } }
+  // `trigger` marks the one fault a resilience challenge schedules itself; people never set it.
+  | { kind: "chaos"; parameters: { type: ChaosType; resourceId: string; trigger?: "challenge-experiment" } }
   | { kind: "vertical-scale"; parameters: { resourceId: string; skuId: string } }
   | { kind: "pool-scale"; parameters: { lbId: string; delta: 1 | -1 } }
   | { kind: "topology"; parameters: RunTopology & { expectedRevision: number; acceptedRevision?: number } }
@@ -14,6 +15,8 @@ export interface ActionOutcome {
   previousTarget?: number; appliedTarget?: number;
   previousSpeed?: number; appliedSpeed?: number;
   durationSimulatedSeconds?: number; faultEnded?: boolean; observedOverallHealth?: string;
+  // Recorded only for a challenge experiment: overall health at the moment the fault was applied.
+  baselineOverallHealth?: string;
   fromSkuId?: string | null; requestedSkuId?: string; installedSkuId?: string; online?: boolean;
   delta?: number; previousReplicaCount?: number; finalReplicaCount?: number; replicaId?: string;
   acceptedRevision?: number; appliedRevision?: number; capturedAt?: string;

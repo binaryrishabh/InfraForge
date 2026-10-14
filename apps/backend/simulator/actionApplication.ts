@@ -3,6 +3,7 @@ import { SIMULATION_CONSTANTS } from "@infraforge/simulation/tuning";
 import { findSku } from "@infraforge/catalog";
 import type { ActionOutcome, ActionRequest } from "@infraforge/contracts/actions";
 import { ActionExecutionError, type SimulationInstance, type RunningAction } from "./instance";
+import { FAULT_DURATIONS } from "./faults";
 
 export function applyAction(instance: SimulationInstance, id: string, request: ActionRequest): { status: "running" | "completed"; outcome: ActionOutcome } {
   const state = instance.state;
@@ -22,12 +23,11 @@ export function applyAction(instance: SimulationInstance, id: string, request: A
     case "chaos": {
       const { type, resourceId } = request.parameters;
       if (!Object.hasOwn(state.resourceTypes, resourceId)) throw new ActionExecutionError("Chaos target was removed before application.");
-      const durations = { crash: SIMULATION_CONSTANTS.CHAOS.CRASH_DURATION, "cpu-spike": SIMULATION_CONSTANTS.CHAOS.CPU_SPIKE_DURATION,
-        "memory-leak": SIMULATION_CONSTANTS.CHAOS.MEMORY_LEAK_DURATION, "network-delay": SIMULATION_CONSTANTS.CHAOS.NETWORK_DELAY_DURATION,
-        "disk-failure": SIMULATION_CONSTANTS.CHAOS.DISK_FAILURE_DURATION };
-      const duration = durations[type];
+      const duration = FAULT_DURATIONS[type];
+      // A scheduled experiment also records the overall health it interrupted, its baseline.
+      const baseline = request.parameters.trigger === "challenge-experiment" ? { baselineOverallHealth: state.overallHealth } : {};
       state.activeChaos.push({ chaosType: type, resourceId, durationTicks: duration, remainingTicks: duration });
-      outcome = { durationSimulatedSeconds: duration };
+      outcome = { durationSimulatedSeconds: duration, ...baseline };
       running = { id, request, outcome, endSecond: state.simulatedSeconds + duration };
       break;
     }

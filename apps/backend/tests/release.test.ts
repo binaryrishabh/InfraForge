@@ -5,10 +5,10 @@ import { requireProductionEndpoints } from "../release/runtime";
 
 test("release accepts only an unchanged ordered migration prefix", async () => {
   const manifest = await migrationManifest();
-  expect(manifest).toHaveLength(13);
-  expect(manifest.at(-1)?.name).toBe("20261014000000_challenge_attempts");
+  expect(manifest).toHaveLength(14);
+  expect(manifest.at(-1)?.name).toBe("20261015000000_challenge_versions_experiments");
   const rows = manifest.map((item) => ({ migration_name: item.name, checksum: item.checksum, finished_at: "done", rolled_back_at: null }));
-  expect(inspectHistory(manifest, rows)).toBe(13);
+  expect(inspectHistory(manifest, rows)).toBe(14);
   expect(inspectHistory(manifest, rows.slice(0, 8))).toBe(8);
   for (const invalid of [rows.slice(1), [...rows, rows[0]!], [{ ...rows[0]!, checksum: "edited" }],
     [{ ...rows[0]!, finished_at: null }], [{ ...rows[0]!, migration_name: "future" }]]) {

@@ -2,6 +2,7 @@ import { validateDeploymentReadiness } from "@infraforge/domain/validation";
 import type { ChallengeDefinition, ChallengePreflight, PreflightCheck } from "@infraforge/contracts/challenges";
 import { runCostEstimation } from "../stages/costEstimation.stages";
 import { appServersBehindBalancer, genericSized, list, type Topology } from "./criteria";
+import { experimentReadiness } from "./experiment";
 
 /* Advisory readiness for the challenge workspace. It uses the same gate code the
 worker runs, and it never reveals what the run itself will measure, including the
@@ -26,10 +27,14 @@ export function preflight(definition: ChallengeDefinition, topology: Topology): 
         return { ...base, status: monthly.monthlyEstimate <= c.maxUsd ? "ok" : "problem", detail: `Currently $${monthly.monthlyEstimate.toFixed(2)} a month.` };
       case "security-clean":
         return { ...base, status: "during-run", detail: "Checked by the security scan when the attempt runs." };
+      case "survivors-unsaturated":
+        return { ...base, status: "during-run", detail: `Measured at simulated second ${definition.evaluationSeconds}, while the scheduled fault is still active.` };
       default:
         return { ...base, status: "during-run", detail: `Measured at simulated second ${definition.evaluationSeconds}.` };
     }
   });
-  return { valid: readiness.valid, errors: readiness.errors, warnings: readiness.warnings,
-    monthlyEstimateUsd: monthly.monthlyEstimate, checks, resourceTypes: [...new Set(topology.resources.map((r) => r.type))] };
+  const experiment = definition.experiment ? experimentReadiness(definition.experiment, topology) : null;
+  return { valid: readiness.valid && experiment?.ready !== false, errors: [...readiness.errors, ...(experiment && !experiment.ready ? [experiment.detail] : [])],
+    warnings: readiness.warnings, monthlyEstimateUsd: monthly.monthlyEstimate, checks,
+    resourceTypes: [...new Set(topology.resources.map((r) => r.type))], experiment };
 }

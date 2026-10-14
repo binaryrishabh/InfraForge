@@ -1,19 +1,23 @@
 import { PREDICTION_CHOICES } from "@infraforge/contracts/challenges";
 import { RESOURCE_TYPES } from "@infraforge/domain/resource";
+import type { RunAction } from "@infraforge/contracts/actions";
 import type { ChallengeCriterion, ChallengeCriterionResult, ChallengeDefinition, ChallengeEvaluation, ChallengeStatus,
-  PredictionQuestion, PredictionResult } from "@infraforge/contracts/challenges";
+  ExperimentResult, PredictionQuestion, PredictionResult, RecordedExperiment } from "@infraforge/contracts/challenges";
 import type { ReportCheckpoint, ReportStage } from "@infraforge/contracts/reports";
 import { appServersBehindBalancer, busiestTypes, databaseConnections, genericSized, label, list, scaledOut, worstHealth, type Topology } from "./criteria";
-import { findChallenge } from "./registry";
+import { REGISTRY, type ChallengeRegistry } from "./registry";
 import { readStoredPrediction } from "./prediction";
+import { FAULT_LABEL, isExperimentAction, readRecordedExperiment, recordedExperiment } from "./experiment";
 
 export interface ChallengeAttemptRecord {
   challengeId: string; challengeVersion: number | null; challengeSpecHash: string | null;
   challengePrediction: unknown; predictionSubmittedAt: Date | null; evaluationStopAtSimulatedSeconds: number | null;
+  challengeExperiment?: unknown;
 }
 export interface ChallengeEvidence {
   status: string; runtimeActive: boolean; input: Topology | null;
   stages: ReportStage[]; terminal: ReportCheckpoint | null; failure: string | null;
+  actions?: RunAction[];
 }
 
 const GATES = ["Validate", "SecurityScan", "CostEstimate"] as const;
@@ -22,10 +26,47 @@ const usd = (n: number) => `$${n.toFixed(2)}`;
 class Judge {
   readonly active: boolean;
   readonly atEvaluation: ReportCheckpoint | null;
-  constructor(readonly definition: ChallengeDefinition, readonly evidence: ChallengeEvidence) {
+  readonly experiment: ExperimentResult | null;
+  constructor(readonly definition: ChallengeDefinition, readonly evidence: ChallengeEvidence, readonly plan: RecordedExperiment | null) {
     this.active = evidence.runtimeActive || ["pending", "running", "live"].includes(evidence.status);
     const terminal = evidence.terminal;
     this.atEvaluation = terminal && terminal.simulatedSeconds === definition.evaluationSeconds ? terminal : null;
+    this.experiment = plan ? this.experimentResult(plan) : null;
+  }
+
+  /* The scheduled fault, established only from its durable action: when it was
+  applied, to what, and whether the model's fault window closed. */
+  experimentResult(plan: RecordedExperiment): ExperimentResult {
+    const action = this.evidence.actions?.find(isExperimentAction) ?? null;
+    const base = { fault: plan.fault, targetResourceId: plan.targetResourceId, targetType: plan.targetType, atSimulatedSecond: plan.atSimulatedSecond,
+      durationSimulatedSeconds: plan.durationSimulatedSeconds, appliedSimulatedSeconds: action?.appliedSimulatedSeconds ?? null,
+      appliedAt: action?.appliedAt ?? null, endedSimulatedSeconds: null, baselineOverallHealth: action?.outcome?.baselineOverallHealth ?? null,
+      targetHealthAtEvaluation: this.atEvaluation?.resources.find((r) => r.id === plan.targetResourceId)?.health ?? null,
+      actionId: action?.id ?? null, sources: ["RunAction.parameters.trigger", "RunAction.appliedSimulatedSeconds", "RunAction.outcome"] };
+    const what = `${FAULT_LABEL[plan.fault]} on ${plan.targetResourceId}`;
+    if (!action || action.appliedSimulatedSeconds === null) {
+      if (this.active && !action?.failureReason) return { ...base, state: "scheduled", detail: `${what} is scheduled for simulated second ${plan.atSimulatedSecond}.` };
+      const reason = action?.failureReason ?? (this.evidence.failure ? `The run failed first: ${this.evidence.failure}` :
+        this.evidence.terminal ? `The run stopped at second ${this.evidence.terminal.simulatedSeconds}, before the fault was due.` : "No application of the fault was recorded.");
+      return { ...base, state: "not-applied", detail: `${what} was not applied. ${reason}` };
+    }
+    const params = action.parameters as { type?: string; resourceId?: string };
+    if (action.appliedSimulatedSeconds !== plan.atSimulatedSecond || params.type !== plan.fault || params.resourceId !== plan.targetResourceId) {
+      return { ...base, state: "not-applied", detail: `${what} was recorded at second ${action.appliedSimulatedSeconds}, which does not match the plan.` };
+    }
+    if (action.status === "completed" && action.outcome?.faultEnded) {
+      return { ...base, state: "ended", endedSimulatedSeconds: action.completedSimulatedSeconds,
+        detail: `${what} was applied at second ${action.appliedSimulatedSeconds}; the model's ${plan.durationSimulatedSeconds}-second fault window ended at second ${action.completedSimulatedSeconds}. A fault ending is not the same as recovery.` };
+    }
+    const stopped = !this.active && this.evidence.terminal ? ` The run stopped at second ${this.evidence.terminal.simulatedSeconds} while it was still active.` : "";
+    // An interruption after application (a worker restart, a stop) is recorded on the action itself.
+    const closed = (action.status === "failed" || action.status === "cancelled") && action.failureReason ? ` ${action.failureReason}` : "";
+    return { ...base, state: "active", detail: `${what} was applied at second ${action.appliedSimulatedSeconds} for ${plan.durationSimulatedSeconds} simulated seconds.${stopped}${closed}` };
+  }
+
+  // A resilience attempt is judged on runtime evidence only if its fault happened exactly as planned.
+  experimentMissing() {
+    return this.experiment?.state === "not-applied" ? `${this.experiment.detail} This attempt is not judged as a resilience experiment.` : null;
   }
   stage(name: string) { return this.evidence.stages.find((s) => s.name === name && s.status === "completed") ?? null; }
 
@@ -69,6 +110,14 @@ class Judge {
         const estimate = this.stage("CostEstimate")?.monthlyEstimateUsd;
         if (estimate === undefined) return pending("The cost estimate has not completed.", ["stages.CostEstimate"]);
         return decided(estimate <= c.maxUsd, `Estimated ${usd(estimate)} a month; the limit is ${usd(c.maxUsd)}.`, ["stages.CostEstimate.monthlyEstimate"]);
+      }
+      case "survivors-unsaturated": {
+        const t = this.atEvaluation, target = this.plan?.targetResourceId;
+        const missing = this.experimentMissing();
+        if (missing || !target) return { ...base, status: "not-evaluated" as const, detail: missing ?? "This challenge has no recorded experiment.", sources: ["RunAction"] };
+        if (!t) return pending(this.missingMeasurement(), ["terminalSnapshot"]);
+        const hot = t.resources.filter((r) => r.id !== target && (r.health === "saturated" || r.health === "failed")).map((r) => `${r.id} (${r.health}, ${r.cpu}% CPU)`);
+        return decided(!hot.length, hot.length ? `Besides ${target}, at second ${t.simulatedSeconds}: ${list(hot)}.` : `Apart from ${target}, no resource was saturated or failed at second ${t.simulatedSeconds}.`, ["terminalSnapshot.metrics", "RunAction.parameters"]);
       }
       case "overall-health": {
         const t = this.atEvaluation;
@@ -134,6 +183,20 @@ class Judge {
         if (!top.types.length) return unknown("No CPU measurement was recorded.", ["terminalSnapshot.metrics"]);
         return compare(top.types.join(" / "), top.types.includes(predicted), `Highest CPU at second ${t.simulatedSeconds}: ${list(top.types)} at ${top.cpu}%${top.types.length > 1 ? " (tied)" : ""}. Autoscaled replicas count as Virtual Machines.`, ["terminalSnapshot.metrics"]);
       }
+      case "baseline-health": {
+        const e = this.experiment;
+        if (!e || e.state === "not-applied") return unknown(e?.detail ?? "This challenge has no recorded experiment.", ["RunAction"]);
+        if (!e.baselineOverallHealth) return unknown(e.state === "scheduled" ? e.detail : "The overall health at the moment of the fault was not recorded.", ["RunAction.outcome.baselineOverallHealth"]);
+        return compare(e.baselineOverallHealth, e.baselineOverallHealth === predicted, `Overall health when the fault was applied at second ${e.appliedSimulatedSeconds}: ${choice(e.baselineOverallHealth)}.`, ["RunAction.outcome.baselineOverallHealth"]);
+      }
+      case "survivor-health": {
+        const missing = this.experimentMissing(), target = this.plan?.targetResourceId;
+        if (missing || !target) return unknown(missing ?? "This challenge has no recorded experiment.", ["RunAction"]);
+        if (!t) return unknown(this.missingMeasurement(), ["terminalSnapshot"]);
+        const worst = worstHealth(t.resources.filter((r) => r.id !== target).map((r) => r.health));
+        if (!worst) return unknown("No measurement besides the target was recorded.", ["terminalSnapshot.metrics"]);
+        return compare(worst, worst === predicted, `The least healthy resource other than ${target} was ${worst} at second ${t.simulatedSeconds}.`, ["terminalSnapshot.metrics"]);
+      }
       case "scale-out": {
         if (!t) return unknown(this.missingMeasurement(), ["terminalSnapshot"]);
         const actual = scaledOut(t) ? "yes" : "no";
@@ -158,23 +221,30 @@ const STATUS_DETAIL: Record<ChallengeStatus, string> = {
   unavailable: "This attempt's challenge definition is not part of this build, so it is not judged against different rules.",
 };
 
-export function evaluateAttempt(attempt: ChallengeAttemptRecord, evidence: ChallengeEvidence): ChallengeEvaluation {
-  const entry = findChallenge(attempt.challengeId);
+/* Resolves the exact recorded version. A missing version, a different spec hash or a
+different recorded plan leaves the attempt unavailable rather than re-judged. */
+export function evaluateAttempt(attempt: ChallengeAttemptRecord, evidence: ChallengeEvidence, registry: ChallengeRegistry = REGISTRY): ChallengeEvaluation {
+  const entry = attempt.challengeVersion === null ? null : registry.find(attempt.challengeId, attempt.challengeVersion);
   const prediction = readStoredPrediction(attempt.challengePrediction);
-  const definitionMatches = !!entry && entry.definition.version === attempt.challengeVersion && entry.hash === attempt.challengeSpecHash &&
-    entry.definition.evaluationSeconds === attempt.evaluationStopAtSimulatedSeconds;
+  const plan = attempt.challengeExperiment == null ? null : readRecordedExperiment(attempt.challengeExperiment);
+  const expected = entry ? recordedExperiment(entry.definition) : null;
+  const planMatches = (attempt.challengeExperiment == null) === (expected === null) && JSON.stringify(plan) === JSON.stringify(expected);
+  const definitionMatches = !!entry && entry.hash === attempt.challengeSpecHash &&
+    entry.definition.evaluationSeconds === attempt.evaluationStopAtSimulatedSeconds && planMatches;
   const submittedAt = attempt.predictionSubmittedAt?.toISOString() ?? "";
   if (!entry || !definitionMatches || !prediction) {
     return { challengeId: attempt.challengeId, version: attempt.challengeVersion ?? 0, title: entry?.definition.title ?? attempt.challengeId,
       evaluationSeconds: attempt.evaluationStopAtSimulatedSeconds ?? 0, status: "unavailable",
       statusDetail: prediction ? STATUS_DETAIL.unavailable : "The recorded prediction is unreadable, so this attempt is not judged.",
       definitionMatches, criteria: [], metCount: 0, total: 0, predictions: [], reasoning: prediction?.reasoning ?? null,
-      predictionSubmittedAt: submittedAt, inspectNext: [] };
+      predictionSubmittedAt: submittedAt, inspectNext: [], experiment: null };
   }
   const { definition } = entry;
-  const judge = new Judge(definition, evidence);
+  const judge = new Judge(definition, evidence, plan);
   const criteria = definition.criteria.map((c) => judge.criterion(c));
-  const status = overall(judge.active, criteria);
+  let status = overall(judge.active, criteria);
+  // A resilience attempt whose fault never happened as planned has nothing to be judged against.
+  if (judge.experimentMissing() && !judge.active && status !== "not-met") status = "not-evaluated";
   const inspectNext: string[] = [];
   const hot = judge.atEvaluation?.resources.filter((r) => r.health === "saturated" || r.health === "failed").map((r) => r.id) ?? [];
   if (hot.length) inspectNext.push(`Open ${list(hot)} in the final-state table and follow their upstream connections.`);
@@ -184,5 +254,5 @@ export function evaluateAttempt(attempt: ChallengeAttemptRecord, evidence: Chall
     status, statusDetail: STATUS_DETAIL[status], definitionMatches, criteria,
     metCount: criteria.filter((c) => c.status === "met").length, total: criteria.length,
     predictions: definition.predictions.map((q) => judge.prediction(q, prediction.answers[q.id] ?? "")),
-    reasoning: prediction.reasoning, predictionSubmittedAt: submittedAt, inspectNext };
+    reasoning: prediction.reasoning, predictionSubmittedAt: submittedAt, inspectNext, experiment: judge.experiment };
 }

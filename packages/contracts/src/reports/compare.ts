@@ -30,5 +30,7 @@ export interface RunComparison {
   resources: Array<{ id: string; earlierHealth?: string; laterHealth?: string; metrics: CompareMetric[] }>;
   costs: CompareMetric[];
   gates: [ReportStage[], ReportStage[]];
+  // Both runs are challenge attempts: whether they ran under identical recorded challenge conditions.
+  challengeConditions: "same" | "different" | null;
   observed: ReportStatement[]; interpreted: ReportStatement[]; unknown: ReportStatement[];
 }

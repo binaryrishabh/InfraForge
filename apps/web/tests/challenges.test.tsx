@@ -19,7 +19,7 @@ test("the challenge list reads as assignments: brief, conditions and factual sta
   expect(html).toContain("3 requirements · judged at second 150");
   expect(html).toContain("Not started");
   for (const word of ["XP", "streak", "badge", "leaderboard", "points", "rank"]) expect(html.toLowerCase()).not.toContain(word.toLowerCase());
-  const attempted = render(<ol><ChallengeRow challenge={{ ...summary, attempts: 2, latest: { runId: "r", createdAt: "", status: "not-met", metCount: 1, total: 3 } }} index={1} /></ol>);
+  const attempted = render(<ol><ChallengeRow challenge={{ ...summary, attempts: 2, latest: { runId: "r", version: 1, createdAt: "", status: "not-met", metCount: 1, total: 3 } }} index={1} /></ol>);
   expect(attempted).toContain("Not met yet"); expect(attempted).toContain("2 attempts"); expect(attempted).toContain("Continue");
 });
 
@@ -46,7 +46,7 @@ test("the evaluation note is shown for what it adds, without repeating the secon
 });
 
 test("in the designer, requirements carry readiness and runtime checks are deferred to the run", () => {
-  const html = render(<ChallengeBriefPanel brief={brief} preflightError={false} preflight={{ valid: true, errors: [], warnings: [], monthlyEstimateUsd: 108, resourceTypes: ["DNS"],
+  const html = render(<ChallengeBriefPanel brief={brief} preflightError={false} preflight={{ valid: true, errors: [], warnings: [], monthlyEstimateUsd: 108, resourceTypes: ["DNS"], experiment: null,
     checks: [{ id: "checks", label: "", status: "ok", detail: "The design passes validation." }, { id: "database", label: "", status: "during-run", detail: "Measured at simulated second 150." },
       { id: "budget", label: "", status: "problem", detail: "Currently $512.00 a month." }] }} />);
   expect(html).toContain("Fixed conditions");

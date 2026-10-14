@@ -5,6 +5,12 @@ import { actionCompletion } from "./actionCompletion";
 import { acknowledgeAction, flushAcknowledgement } from "./actionAcknowledgement";
 import { finishTeardown } from "./terminal";
 import { ActionExecutionError, type SimulationInstance } from "./instance";
+import { isExperimentAction } from "../challenges/experiment";
+
+// The experiment's phase follows its one durable row; a failed row is final and is never retried.
+function settleExperiment(instance: SimulationInstance, action: { kind: string; parameters: unknown }, applied: boolean) {
+  if (instance.experiment && isExperimentAction(action as never)) instance.experiment.phase = applied ? "applied" : "failed";
+}
 
 export async function processRunActions(deploymentId: string, instance: SimulationInstance, remove: () => void) {
   await flushAcknowledgement(instance);
@@ -12,6 +18,7 @@ export async function processRunActions(deploymentId: string, instance: Simulati
     orderBy: { sequence: "asc" }, take: 128 });
   for (const action of actions) {
     if (action.status === "applying") {
+      settleExperiment(instance, action, false);
       await acknowledgeAction(instance, action.id, { status: "failed", completedAt: new Date(),
         failureReason: "Application acknowledgement is unavailable; this action was not replayed." });
       continue;
@@ -22,6 +29,7 @@ export async function processRunActions(deploymentId: string, instance: Simulati
     let request;
     try { request = readActionRequest({ kind: action.kind, parameters: action.parameters }); }
     catch {
+      settleExperiment(instance, action, false);
       await acknowledgeAction(instance, action.id, { status: "failed", completedAt: new Date(), failureReason: "Stored action parameters are invalid." });
       continue;
     }
@@ -29,11 +37,14 @@ export async function processRunActions(deploymentId: string, instance: Simulati
     let result;
     try { result = applyAction(instance, action.id, request); }
     catch (error) {
+      settleExperiment(instance, action, false);
       await acknowledgeAction(instance, action.id, { status: "failed", completedAt: new Date(),
         completedSimulatedSeconds: instance.state.simulatedSeconds,
         failureReason: error instanceof ActionExecutionError ? error.message : "Action application could not be established; it will not be replayed." });
       continue;
     }
+    // Applied in memory now; a failed acknowledgement freezes this state and is retried, never replayed.
+    settleExperiment(instance, action, true);
     const appliedAt = new Date();
     await acknowledgeAction(instance, action.id, { ...result, appliedAt, appliedSimulatedSeconds: instance.state.simulatedSeconds,
       ...(result.status === "completed" ? { completedAt: appliedAt, completedSimulatedSeconds: instance.state.simulatedSeconds } : {}) });

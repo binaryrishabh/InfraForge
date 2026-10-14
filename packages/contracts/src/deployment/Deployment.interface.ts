@@ -4,7 +4,7 @@ import type { DeploymentStatus } from "./DeploymentStatus.enum";
 import type { DeploymentTimeline } from "./DeploymentTimeline.interface";
 import type { WorkloadProfile } from "@infraforge/domain/workload";
 import type { RunInputs, RunTopology } from "../run-inputs/RunInputs.interface";
-import type { ChallengePrediction } from "../challenges";
+import type { ChallengePrediction, RecordedExperiment } from "../challenges";
 
 export interface Deployment {
   id: string,
@@ -18,6 +18,8 @@ export interface Deployment {
   evaluationStopAtSimulatedSeconds?: number | null,
   challengePrediction?: ChallengePrediction | null,
   predictionSubmittedAt?: string | null,
+  // A resilience attempt's scheduled fault, recorded when the attempt was created.
+  challengeExperiment?: RecordedExperiment | null,
   status: DeploymentStatus,
   resourceCount: number,
   stages: DeploymentStages[],

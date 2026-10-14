@@ -4,6 +4,7 @@ import { topologyChanges, topologySummary } from "./topology";
 import { readReportActions } from "./actions";
 import type { RunAction as StoredAction } from "../lib/generated/prisma/client";
 import { evaluateAttempt } from "../challenges/evaluate";
+import type { ChallengeRegistry } from "../challenges/registry";
 
 export interface StoredRun {
   id: string; infrastructureId: string | null; runName?: string | null; status: string; resourceCount: number;
@@ -14,19 +15,22 @@ export interface StoredRun {
   sourceRunId?: string | null; sourceRun?: { runName: string | null } | null; rerunMode?: string | null; autoStopAtSimulatedSeconds?: number | null;
   runtimeActive?: boolean; challengeId?: string | null; challengeVersion?: number | null; challengeSpecHash?: string | null;
   challengePrediction?: unknown; predictionSubmittedAt?: Date | null; evaluationStopAtSimulatedSeconds?: number | null;
+  challengeExperiment?: unknown;
 }
 
 type Records = ReturnType<typeof readRecords>;
 const failureOf = (records: Records) => records.timeline.filter((e) => e.event === "Deployment Failed" || e.event === "Simulation Interrupted").at(-1);
 
 // Challenge results are derived from the run's own evidence on every read; nothing is stored as a score.
-function challengeOf(row: StoredRun, records: Records) {
+function challengeOf(row: StoredRun, records: Records, registry?: ChallengeRegistry) {
   if (!row.challengeId) return null;
   return evaluateAttempt({ challengeId: row.challengeId, challengeVersion: row.challengeVersion ?? null,
     challengeSpecHash: row.challengeSpecHash ?? null, challengePrediction: row.challengePrediction,
-    predictionSubmittedAt: row.predictionSubmittedAt ?? null, evaluationStopAtSimulatedSeconds: row.evaluationStopAtSimulatedSeconds ?? null },
+    predictionSubmittedAt: row.predictionSubmittedAt ?? null, evaluationStopAtSimulatedSeconds: row.evaluationStopAtSimulatedSeconds ?? null,
+    challengeExperiment: row.challengeExperiment ?? null },
   { status: row.status, runtimeActive: !!row.runtimeActive, input: records.input, stages: records.stages, terminal: records.terminal,
-    failure: row.status === "failed" ? failureOf(records)?.message ?? "The run failed without a recorded message." : null });
+    actions: readReportActions(row.actions, []),
+    failure: row.status === "failed" ? failureOf(records)?.message ?? "The run failed without a recorded message." : null }, registry);
 }
 
 function summary(row: StoredRun, records: Records, challenge = challengeOf(row, records)): RunSummary {
@@ -47,10 +51,10 @@ function summary(row: StoredRun, records: Records, challenge = challengeOf(row, 
 
 export function summarizeRun(row: StoredRun): RunSummary { return summary(row, readRecords(row, [])); }
 
-export function buildRunReport(row: StoredRun): RunReport {
+export function buildRunReport(row: StoredRun, registry?: ChallengeRegistry): RunReport {
   const limits: string[] = [];
   const records = readRecords(row, limits);
-  const challenge = challengeOf(row, records);
+  const challenge = challengeOf(row, records, registry);
   const run = summary(row, records, challenge);
   const report: RunReport = { version: 1, run, originalSeed: records.input?.seed ?? null,
     legacySeed: !records.input && typeof row.seed === "string" ? row.seed : null,

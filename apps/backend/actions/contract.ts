@@ -9,6 +9,7 @@ const amount = z.number().finite().nonnegative();
 const outcomeSchema = z.object({ previousTarget: amount.optional(), appliedTarget: amount.optional(),
   previousSpeed: amount.optional(), appliedSpeed: amount.optional(), durationSimulatedSeconds: amount.optional(),
   faultEnded: z.boolean().optional(), observedOverallHealth: z.enum(["healthy", "degraded", "saturated", "critical"]).optional(),
+  baselineOverallHealth: z.enum(["healthy", "degraded", "saturated", "critical"]).optional(),
   fromSkuId: id.nullable().optional(), requestedSkuId: id.optional(), installedSkuId: id.optional(), online: z.boolean().optional(),
   delta: z.union([z.literal(1), z.literal(-1)]).optional(), previousReplicaCount: amount.optional(), finalReplicaCount: amount.optional(),
   replicaId: id.optional(), acceptedRevision: amount.optional(), appliedRevision: amount.optional(),
@@ -21,7 +22,8 @@ const topology = LiveTopologySchema.extend({
 export const ActionRequestSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("load"), parameters: z.object({ targetLoadFraction: z.number().min(0).max(2) }).strict() }),
   z.object({ kind: z.literal("speed"), parameters: z.object({ speed: z.union([z.literal(0), z.literal(1), z.literal(10), z.literal(60)]) }).strict() }),
-  z.object({ kind: z.literal("chaos"), parameters: z.object({ type: z.enum(DeploymentChaosNames), resourceId: id }).strict() }),
+  z.object({ kind: z.literal("chaos"), parameters: z.object({ type: z.enum(DeploymentChaosNames), resourceId: id,
+    trigger: z.literal("challenge-experiment").optional() }).strict() }),
   z.object({ kind: z.literal("vertical-scale"), parameters: z.object({ resourceId: id, skuId: id }).strict() }),
   z.object({ kind: z.literal("pool-scale"), parameters: z.object({ lbId: id, delta: z.union([z.literal(1), z.literal(-1)]) }).strict() }),
   z.object({ kind: z.literal("topology"), parameters: topology }),

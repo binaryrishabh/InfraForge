@@ -3,6 +3,7 @@ import type { RunComparison, RunReport } from "@infraforge/contracts/reports";
 import type { StoredRun } from "../reports/report";
 import type { RunTopology } from "@infraforge/contracts/run-inputs";
 import { canonical, normalizedTopology } from "./design";
+import { isExperimentAction } from "../challenges/experiment";
 
 export const SPEED_NOTE = "Simulation speed does not change tick math by itself. It can change when later human actions land in simulated time.";
 export function affectingActions(actions: RunAction[]) { return actions.filter((a) => a.kind !== "speed" && a.kind !== "teardown"); }
@@ -14,6 +15,8 @@ function normalizedAction(action: RunAction) {
       expectedRevision: topology.expectedRevision, acceptedRevision: topology.acceptedRevision };
   }
   const { capturedAt: _capture, replicaId: _replica, ...outcome } = action.outcome ?? {};
+  // A challenge's scheduled fault is the same intervention in both runs; the health it observed is a result, compared elsewhere.
+  if (isExperimentAction(action)) { delete outcome.observedOverallHealth; delete outcome.baselineOverallHealth; }
   return { kind: action.kind, parameters, appliedSimulatedSeconds: action.appliedSimulatedSeconds,
     status: action.status, completedSimulatedSeconds: action.completedSimulatedSeconds, outcome };
 }

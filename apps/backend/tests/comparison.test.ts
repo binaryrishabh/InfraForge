@@ -1,4 +1,4 @@
-import { expect, test } from "bun:test";
+import { describe, expect, test } from "bun:test";
 import { captureRunInputs } from "../deployments/runInputs";
 import { classifyComparison } from "../comparison/classify";
 import { compareInputs } from "../comparison/inputs";
@@ -6,6 +6,7 @@ import { normalizedFinalState } from "../comparison/outcomes";
 import type { StoredRun } from "../reports/report";
 import type { RunAction } from "../lib/generated/prisma/client";
 import { layout, workload } from "./integration/scenario";
+import { REFERENCE, answers, attemptRow, definition } from "./challengeHarness";
 
 const at = new Date("2026-10-13T10:00:00.000Z");
 const captured = { ...captureRunInputs(layout, workload), seed: "comparison-seed" };
@@ -128,4 +129,27 @@ test("monthly catalog delta and final measurement freshness are independently la
   expect(pair({ stages: [stage] }, { stages: [{ ...stage, details: { monthlyEstimate: 30 } }] }).costs[2]?.delta).toBe(5);
   expect(pair({ stages: [stage] }, { runInputs: { ...captured, catalogSnapshot: "other" }, stages: [stage] }).costs[2]?.delta).toBeNull();
   expect(pair({}, { terminalSnapshot: { ...terminal, metricsTopologyRevision: 0, topologyRevision: 2 } }).evidence.states[1]?.measurementFreshness).toBe("previous-revision");
+});
+
+describe("challenge attempts", () => {
+  const d = definition("lose-an-app-server");
+  const guess = answers(d, { baseline: "healthy", survivors: "degraded", scale: "no" });
+  test("two attempts under one version share their recorded conditions; the design change is the only starting difference", () => {
+    const c = classifyComparison(attemptRow(d, d.starter!, guess), attemptRow(d, REFERENCE[d.id]!, guess));
+    expect(c.challengeConditions).toBe("same");
+    expect(c.conduct.code).toBe("same");
+    expect(c.starting.grade).toBe("one-change-design");
+    expect(c.headline).toBe("matched-pair");
+    expect(c.observed.find((s) => s.id === "challenge-conditions")?.message).toContain("Lose an app server version 1 under the same recorded challenge conditions");
+  });
+  test("different versions, different challenges or a freeform run are never claimed identical", () => {
+    const v2 = { ...d, version: 2, hints: [...d.hints.slice(0, -1), "A rewritten hint."] };
+    const versions = classifyComparison(attemptRow(d, d.starter!, guess), attemptRow(v2, d.starter!, guess));
+    expect(versions.challengeConditions).toBe("different");
+    expect(versions.unknown.find((s) => s.id === "challenge-conditions")?.message).toContain("version 1 and version 2");
+    const other = definition("cache-failure");
+    expect(classifyComparison(attemptRow(d, d.starter!, guess), attemptRow(other, other.starter!, answers(other, { baseline: "healthy", database: "saturated" }))).challengeConditions).toBe("different");
+    const freeform = { ...attemptRow(d, d.starter!, guess), challengeId: null, challengeExperiment: null };
+    expect(classifyComparison(attemptRow(d, d.starter!, guess), freeform).challengeConditions).toBeNull();
+  });
 });

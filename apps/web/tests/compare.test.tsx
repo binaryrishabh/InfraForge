@@ -17,7 +17,7 @@ const comparison: RunComparison = { version: 1, runs: [run, { ...run, id: "b" }]
   conduct: { code: "unknown", actions: [[], []], speedNote: "Simulation speed can change when later human actions land.", reasons: [] },
   evidence: { code: "missing", states: [null, null], matchedDuration: null, deterministicState: "not-established" },
   outcomes: [], resources: [], costs: [{ field: "Accumulated simulated cost", unit: "USD", earlier: 0.01, later: 0.02, delta: null, withheldReason: "Matching exact durations required." }], gates: [[], []],
-  observed: [{ id: "recorded", message: "Only recorded facts.", sources: ["runInputs"] }], interpreted: [], unknown: [{ id: "legacy", message: "Legacy provenance unknown.", sources: ["runInputs"] }] };
+  challengeConditions: null, observed: [{ id: "recorded", message: "Only recorded facts.", sources: ["runInputs"] }], interpreted: [], unknown: [{ id: "legacy", message: "Legacy provenance unknown.", sources: ["runInputs"] }] };
 const render = (v: React.ReactNode) => renderToStaticMarkup(<MemoryRouter>{v}</MemoryRouter>);
 test("compare loading/errors/legacy evidence do not invent final-state deltas", () => {
   expect(render(<CompareContent loading error={null} data={null} retry={() => {}} />)).toContain('role="status"');

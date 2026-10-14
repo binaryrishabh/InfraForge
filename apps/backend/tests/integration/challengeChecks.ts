@@ -4,12 +4,12 @@ import type { RunReport } from "@infraforge/contracts/reports";
 import { LocalHarness, until } from "./localHarness";
 import { SessionFixtures } from "./sessionFixtures";
 import { layout } from "./scenario";
-import { challengeSeed, findChallenge } from "../../challenges/registry";
+import { challengeSeed, latestChallenge } from "../../challenges/registry";
 import { REFERENCE } from "../challengeHarness";
 
 export async function checkChallengeAttempts(harness: LocalHarness, sessions: SessionFixtures, designs: string[], runs: string[]) {
   const cookie = harness.cookie;
-  const { definition, hash } = findChallenge("first-production-api")!;
+  const { definition, hash } = latestChallenge("first-production-api")!;
   const read = async (id: string) => (await harness.sql.query('SELECT * FROM "Deployment" WHERE id=$1', [id])).rows[0];
   const counts = async () => (await harness.sql.query('SELECT (SELECT count(*) FROM "Deployment") AS runs, (SELECT count(*) FROM "Outbox") AS events')).rows[0];
   const brief = async (): Promise<ChallengeBrief> => (await harness.request(`/challenges/${definition.id}`)).challenge;
@@ -112,4 +112,66 @@ export async function checkChallengeAttempts(harness: LocalHarness, sessions: Se
   const summary = ((await harness.request("/challenges")).challenges as ChallengeSummary[]).find((c) => c.id === definition.id)!;
   expect(summary).toMatchObject({ attempts: 2, met: true });
   return { attempt: run.id, rerun: rerun.id, early: early.id };
+}
+
+/* A resilience attempt end to end: the target is required, the fault cannot be
+supplied or spoofed, and the worker applies exactly one durable fault at its
+second inside 10x and 60x batches, then judges the attempt at the fault's last second. */
+export async function checkResilienceAttempt(harness: LocalHarness, designs: string[], runs: string[]) {
+  const { definition, hash } = latestChallenge("lose-an-app-server")!;
+  const read = async (id: string) => (await harness.sql.query('SELECT * FROM "Deployment" WHERE id=$1', [id])).rows[0];
+  const starter = { ...definition.starter!, layoutVersion: 3 };
+  const prediction = { answers: { baseline: "healthy", survivors: "saturated", scale: "no" }, reasoning: null };
+  const attempt = (body: unknown, status: number) => harness.request(`/challenges/${definition.id}/attempts`, body, "POST", status);
+
+  const workspace = (await harness.request(`/challenges/${definition.id}/workspace`, {}, "POST", 201)).designId;
+  designs.push(workspace);
+  expect((await harness.sql.query('SELECT "challengeId","challengeVersion" FROM "Infrastructure" WHERE id=$1', [workspace])).rows[0])
+    .toEqual({ challengeId: definition.id, challengeVersion: definition.version });
+  const brief: ChallengeBrief = (await harness.request(`/challenges/${definition.id}`)).challenge;
+  expect(brief).toMatchObject({ category: "resilience", latestVersion: 1, workspaceDesignId: workspace, earlierWorkspace: null, experiment: definition.experiment });
+  await harness.request(`/challenges/${definition.id}?version=9`, undefined, "GET", 404);
+
+  // Without its target the experiment cannot run, and nothing else is substituted.
+  const without = { ...starter, resources: starter.resources.filter((r) => r.id !== "app-2"),
+    connectionLines: starter.connectionLines.filter((l) => l.sourceId !== "app-2" && l.targetId !== "app-2") };
+  const blocked = (await harness.request(`/challenges/${definition.id}/preflight`, { layout: without }, "POST")).preflight;
+  expect(blocked).toMatchObject({ valid: false, experiment: { ready: false } });
+  await harness.request(`/infrastructure/${workspace}`, { layout: without }, "PUT");
+  expect((await attempt({ infrastructureId: workspace, prediction }, 400)).message).toContain("The experiment cannot run");
+  await attempt({ infrastructureId: workspace, prediction, experiment: { fault: "crash", atSimulatedSecond: 61 } }, 400);
+  await harness.request(`/infrastructure/${workspace}`, { layout: starter }, "PUT");
+
+  const ids: string[] = [];
+  for (const speed of [10, 60] as const) {
+    const run = (await attempt({ infrastructureId: workspace, prediction }, 201)).createdDeployment;
+    runs.push(run.id); ids.push(run.id);
+    expect(await read(run.id)).toMatchObject({ challengeVersion: definition.version, challengeSpecHash: hash, evaluationStopAtSimulatedSeconds: 90,
+      challengeExperiment: { version: 1, fault: "crash", atSimulatedSecond: 60, durationSimulatedSeconds: 30, targetResourceId: "app-2", targetType: "Virtual Machine" } });
+    await until(async () => (await read(run.id)).status === "live" || undefined, "resilience attempt live", 30000, 500);
+    // People cannot schedule, spoof or add faults during an attempt.
+    await harness.request(`/deployments/${run.id}/chaos`, { type: "crash", resourceId: "app-1", trigger: "challenge-experiment" }, "POST", 400);
+    await harness.request(`/deployments/${run.id}/chaos`, { type: "crash", resourceId: "app-1" }, "POST", 409);
+    await harness.request(`/deployments/${run.id}/speed`, { speed }, "POST", 202);
+    const done = await until(async () => { const r = await read(run.id); return r.status === "torn-down" ? r : undefined; }, `resilience attempt at ${speed}x`, 60000, 500);
+    expect(done.terminalSnapshot.simulatedSeconds).toBe(90);
+    const actions = (await harness.sql.query('SELECT * FROM "RunAction" WHERE "deploymentId"=$1 ORDER BY sequence', [run.id])).rows;
+    const faults = actions.filter((a) => a.kind === "chaos");
+    expect(faults).toHaveLength(1);
+    expect(faults[0]).toMatchObject({ parameters: { type: "crash", resourceId: "app-2", trigger: "challenge-experiment" }, status: "completed",
+      appliedSimulatedSeconds: 60, completedSimulatedSeconds: 90,
+      outcome: { durationSimulatedSeconds: 30, faultEnded: true, observedOverallHealth: "critical", baselineOverallHealth: "healthy" } });
+    expect(actions.at(-1)).toMatchObject({ kind: "teardown", parameters: { trigger: "challenge-evaluation" }, appliedSimulatedSeconds: 90 });
+    const report: RunReport = (await harness.request(`/deployments/${run.id}/report`)).report;
+    expect(report.challenge).toMatchObject({ status: "not-met", definitionMatches: true,
+      experiment: { state: "ended", appliedSimulatedSeconds: 60, endedSimulatedSeconds: 90, baselineOverallHealth: "healthy", targetHealthAtEvaluation: "failed" } });
+    expect(report.challenge?.predictions.map((p) => p.outcome)).toEqual(["matched", "matched", "matched"]);
+    expect(report.actions.find((a) => a.kind === "chaos")?.parameters).toMatchObject({ trigger: "challenge-experiment" });
+  }
+  const comparison = (await harness.request(`/deployments/compare?a=${ids[0]}&b=${ids[1]}`)).comparison;
+  expect(comparison).toMatchObject({ challengeConditions: "same", headline: "determinism-match" });
+  expect(comparison.conduct.code).toBe("same");
+  const listed = ((await harness.request("/challenges")).challenges as ChallengeSummary[]).find((c) => c.id === definition.id)!;
+  expect(listed).toMatchObject({ category: "resilience", attempts: 2, workspaceDesignId: workspace });
+  return ids;
 }
