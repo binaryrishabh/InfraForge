@@ -169,7 +169,9 @@ export async function checkResilienceAttempt(harness: LocalHarness, designs: str
     expect(report.actions.find((a) => a.kind === "chaos")?.parameters).toMatchObject({ trigger: "challenge-experiment" });
   }
   const comparison = (await harness.request(`/deployments/compare?a=${ids[0]}&b=${ids[1]}`)).comparison;
-  expect(comparison).toMatchObject({ challengeConditions: "same", headline: "determinism-match" });
+  // Identical experiment conditions and conduct make a matched pair. The fault is an
+  // affecting action, so the deterministic-state check (no affecting actions) does not apply.
+  expect(comparison).toMatchObject({ challengeConditions: "same", headline: "matched-pair" });
   expect(comparison.conduct.code).toBe("same");
   const listed = ((await harness.request("/challenges")).challenges as ChallengeSummary[]).find((c) => c.id === definition.id)!;
   expect(listed).toMatchObject({ category: "resilience", attempts: 2, workspaceDesignId: workspace });

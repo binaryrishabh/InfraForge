@@ -63,7 +63,7 @@ integration("migration 14 versions existing workspaces and guards each attempt's
     const plan = { version: 1, fault: "crash", atSimulatedSecond: 60, durationSimulatedSeconds: 30, targetResourceId: "vm-a", targetType: "Virtual Machine" };
     const withPlan = (p: unknown) => ({ infrastructureId: resilience, challengeId: "lose-an-app-server", challengeExperiment: p });
     await rejects(insertAttempt(randomUUID(), withPlan({ ...plan, atSimulatedSecond: 90 })), /check constraint/);
-    await rejects(insertAttempt(randomUUID(), withPlan(["not", "an", "object"])), /check constraint/);
+    await rejects(insertAttempt(randomUUID(), withPlan(JSON.stringify(["not", "an", "object"]))), /check constraint/);
     await rejects(insertAttempt(randomUUID(), withPlan({ ...plan, targetResourceId: 7 })), /check constraint/);
     await rejects(db.query('UPDATE "Deployment" SET "challengeExperiment"=$1 WHERE id=$2', [plan, freeformRun]), /immutable|check constraint/);
     await insertAttempt(resilienceAttempt, withPlan(plan));
