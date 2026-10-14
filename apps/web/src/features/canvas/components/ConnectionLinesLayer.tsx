@@ -14,6 +14,7 @@ export const ConnectionLinesLayer = memo(function ConnectionLinesLayer({ resourc
   const locked = useCanvasStore((s) => s.liveLocked || s.isDeploying);
   const cardHeights = useCanvasStore((s) => s.cardHeights);
   const running = useSimulationStore((s) => s.simulatedSeconds > 0 && s.speed > 0);
+  const metrics = useSimulationStore((s) => (liveMode ? s.metrics : null));
   const nodeHeight = liveMode ? NODE_CARD_HEIGHT : DESIGN_CARD_HEIGHT;
   const byId = new Map(resources.map((r) => [r.id, r]));
   return (
@@ -22,10 +23,14 @@ export const ConnectionLinesLayer = memo(function ConnectionLinesLayer({ resourc
         const source = byId.get(line.sourceId), target = byId.get(line.targetId);
         if (!source || !target) return null;
         const selected = selectedConnectionId === line.id;
+        // Qualitative only: a line takes the health recorded for the resource it feeds. A failed resource
+        // serves no requests in this model, so its incoming lines stop moving.
+        const health = metrics?.[target.id]?.health;
+        const tone = health === "failed" || health === "saturated" ? "fail" : health === "degraded" ? "warn" : null;
         return (
           <BezierConnectionLine key={line.id} source={source} target={target} port={line.port} isSelected={selected} scale={scale}
             nodeWidth={NODE_CARD_WIDTH} sourceHeight={cardHeights[source.id] ?? nodeHeight} targetHeight={cardHeights[target.id] ?? nodeHeight}
-            showPackets={liveMode} animatePackets={running} label={`${source.name || source.id} to ${target.name || target.id}`}
+            showPackets={liveMode} animatePackets={running && health !== "failed"} tone={tone} label={`${source.name || source.id} to ${target.name || target.id}`}
             onSelect={() => { const store = useCanvasStore.getState(); store.setSelectedConnectionId(selected ? null : line.id); store.setSelectedResourceId(null); }}
             onRemove={locked ? undefined : () => deleteConnection(line.id)} />
         );

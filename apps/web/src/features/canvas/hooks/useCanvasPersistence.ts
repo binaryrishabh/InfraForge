@@ -10,7 +10,7 @@ import {
 
 interface Draft {
   canvasResources?: Resource[]; connectionLines?: ConnectionLine[]; currentLayoutId?: string | null; currentLayoutName?: string | null;
-  saved?: boolean; currentChallengeId?: unknown; layoutVersion?: number;
+  saved?: boolean; currentChallengeId?: unknown; currentChallengeVersion?: unknown; layoutVersion?: number;
 }
 
 function readDraft(userId: string): Draft | null {
@@ -40,7 +40,8 @@ export function useCanvasPersistence() {
       store.setCurrentLayoutName(parsed.currentLayoutName ?? null);
       store.setCurrentLayoutSaved(parsed.saved ?? true);
       // Only a UI hint; attempts are verified by the server against the saved design.
-      store.setCurrentChallengeId(typeof parsed.currentChallengeId === "string" ? parsed.currentChallengeId : null);
+      store.setCurrentChallengeId(typeof parsed.currentChallengeId === "string" ? parsed.currentChallengeId : null,
+        typeof parsed.currentChallengeVersion === "number" ? parsed.currentChallengeVersion : null);
     }
     useCanvasStore.getState().setIsInitialized(true);
   }, [userId]);
@@ -66,6 +67,7 @@ export function useCanvasPersistence() {
             currentLayoutName: state.currentLayoutName,
             saved: state.currentLayoutSaved,
             currentChallengeId: state.currentChallengeId,
+            currentChallengeVersion: state.currentChallengeVersion,
             layoutVersion: CARD_LAYOUT_VERSION,
           }),
         ); } catch { /* storage unavailable: the canvas still works */ }

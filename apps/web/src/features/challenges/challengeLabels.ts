@@ -36,4 +36,10 @@ export const EVIDENCE_LABEL: Record<string, string> = {
   "terminalSnapshot.installedSkus": "final instance sizes",
   "terminalSnapshot.pools": "final pool sizes",
   timeline: "run timeline",
+  RunAction: "durable actions",
+  "RunAction.parameters": "the scheduled fault's target",
+  "RunAction.parameters.trigger": "the scheduled fault's action",
+  "RunAction.appliedSimulatedSeconds": "when the fault was applied",
+  "RunAction.outcome": "the fault's recorded outcome",
+  "RunAction.outcome.baselineOverallHealth": "overall health when the fault was applied",
 };

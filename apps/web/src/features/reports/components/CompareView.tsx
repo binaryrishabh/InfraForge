@@ -63,6 +63,9 @@ export function CompareView({ comparison: c }: { comparison: RunComparison }) {
           <div><dt className="text-xs text-ink-3">Final evidence</dt><dd className="text-ink">{EVIDENCE[c.evidence.code]}</dd></div>
           <div><dt className="text-xs text-ink-3">Conduct (actions)</dt><dd className="text-ink">{c.conduct.code === "same" ? "Same recorded actions." : c.conduct.code === "different" ? "Different recorded actions." : "Cannot be established."}</dd></div>
           <div><dt className="text-xs text-ink-3">Lineage</dt><dd className="text-ink">{LINEAGE[c.lineage]}</dd></div>
+          {c.challengeConditions && <div className="sm:col-span-3"><dt className="text-xs text-ink-3">Challenge conditions</dt><dd className="text-ink">{c.challengeConditions === "same"
+            ? "Same challenge version, rules, workload, seed, evaluation second and scheduled fault."
+            : "Different challenge versions or recorded conditions; their results were judged by different rules."}</dd></div>}
         </dl>
         <p className="mt-2 text-xs text-ink-3">{c.conduct.speedNote}</p>
         {!c.available && <p role="status" className="mt-2 text-sm text-warn">{c.unavailableReason}</p>}

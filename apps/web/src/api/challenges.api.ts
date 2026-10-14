@@ -8,12 +8,14 @@ const path = (id: string) => `${base}/${encodeURIComponent(id)}`;
 export async function listChallenges(): Promise<ChallengeSummary[]> {
   return (await http.get(base)).data.challenges;
 }
-export async function getChallenge(id: string): Promise<ChallengeBrief> {
-  return (await http.get(path(id))).data.challenge;
+// The latest version, or an exact earlier version for reading what a past attempt was judged by.
+export async function getChallenge(id: string, version?: number): Promise<ChallengeBrief> {
+  return (await http.get(path(id), { params: version ? { version } : undefined })).data.challenge;
 }
-// Returns the learner's existing workspace for the challenge, or creates one from the starter.
-export async function openChallengeWorkspace(id: string, fresh = false): Promise<{ designId: string; created: boolean }> {
-  const data = (await http.post(`${path(id)}/workspace`, { fresh })).data;
+/* Returns the learner's workspace for the latest version, or creates one: from the
+starter, or (only when asked) as a copy of an earlier version's workspace. */
+export async function openChallengeWorkspace(id: string, options: { fresh?: boolean; copyFrom?: string } = {}): Promise<{ designId: string; created: boolean }> {
+  const data = (await http.post(`${path(id)}/workspace`, { fresh: options.fresh ?? false, ...(options.copyFrom ? { copyFrom: options.copyFrom } : {}) })).data;
   return { designId: data.designId, created: data.created };
 }
 export async function challengePreflight(id: string, layout: object): Promise<ChallengePreflight> {

@@ -17,6 +17,8 @@ export function SidePanel({ tab, onTab, brief, preflight, preflightError, idBase
   tab: SideTab; onTab: (tab: SideTab) => void; brief: BriefState | null; preflight: ChallengePreflight | null; preflightError: boolean; idBase: string;
 }) {
   const selected = useCanvasStore((s) => s.resources.find((r) => r.id === s.selectedResourceForConfigId));
+  const workspaceVersion = useCanvasStore((s) => s.currentChallengeVersion);
+  const designId = useCanvasStore((s) => s.currentLayoutId);
   const items = [
     ...(brief ? [{ id: "brief" as const, label: "Brief" }] : []),
     { id: "inspect" as const, label: "Inspect" },
@@ -31,7 +33,7 @@ export function SidePanel({ tab, onTab, brief, preflight, preflightError, idBase
           {active === "brief" && brief && (
             brief.loading ? <div className="px-4"><Loading label="Loading the brief…" /></div>
               : brief.error || !brief.data ? <div className="p-4"><Notice tone="fail" role="alert" title="The brief could not be loaded">{brief.error}</Notice><Button className="mt-3" size="sm" onClick={brief.retry}>Try again</Button></div>
-              : <ChallengeBriefPanel brief={brief.data} preflight={preflight} preflightError={preflightError} />
+              : <ChallengeBriefPanel brief={brief.data} preflight={preflight} preflightError={preflightError} workspaceVersion={workspaceVersion} designId={designId} />
           )}
           {active === "inspect" && <Inspector resource={selected} />}
           {active === "checks" && <ChecksPanel />}

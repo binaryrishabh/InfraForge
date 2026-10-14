@@ -22,10 +22,11 @@ import { STAGE_LABEL, STAGE_STATUS_LABEL } from "../labels";
 const active = (status: string) => ["pending", "running", "live"].includes(status);
 
 function Debrief({ report }: { report: RunReport }) {
-  const id = report.challenge!.challengeId;
-  const load = useCallback(() => getChallenge(id), [id]);
+  const { challengeId: id, version } = report.challenge!;
+  // The exact version this attempt was judged by, so labels and the explanation match its rules.
+  const load = useCallback(() => getChallenge(id, version || undefined), [id, version]);
   const { data } = useRequest(load);
-  return <ChallengeDebrief evaluation={report.challenge!} brief={data} />;
+  return <ChallengeDebrief evaluation={report.challenge!} brief={data} runId={report.run.id} />;
 }
 
 /* A lab report: what ran, the challenge verdict if any, what was recorded,
@@ -60,7 +61,7 @@ export function ReportView({ report }: { report: RunReport }) {
           <span className="text-ink-3">Last record update <time dateTime={run.updatedAt}>{formatDate(run.updatedAt)}</time></span>
         </p>
         <div className="mt-5 flex flex-wrap items-center gap-2">
-          <RerunDialog id={run.id} eligible={eligible} />
+          <RerunDialog id={run.id} eligible={eligible} experimentChallenge={report.challenge?.experiment ? report.challenge.challengeId : null} />
           <ComparePicker id={run.id} eligible={eligible} />
           {!run.challenge && <OpenDesignToImprove sourceId={run.id} designId={run.infrastructureId} eligible={eligible} />}
           {run.sourceRunId && eligible && <ButtonLink to={`/runs/compare?a=${run.sourceRunId}&b=${run.id}`} variant="ghost" size="sm" icon={<GitCompareArrows size={14} aria-hidden="true" />}>Compare with source run</ButtonLink>}

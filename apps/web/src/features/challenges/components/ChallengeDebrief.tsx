@@ -7,6 +7,7 @@ import { StatusMark } from "@/ui/StatusMark";
 import { cx } from "@/ui/cx";
 import { RESULT_LABEL, EVIDENCE_LABEL } from "../challengeLabels";
 import { useOpenChallenge } from "../useOpenChallenge";
+import { ExperimentDebrief } from "./ExperimentDebrief";
 
 const VERDICT: Record<ChallengeEvaluation["status"], string> = {
   met: "Every requirement was met.",
@@ -23,6 +24,12 @@ function label(brief: ChallengeBrief | null, p: PredictionResult, value: string 
   return value.split(" / ").map((v) => PREDICTION_CHOICES[kind].find((c) => c.value === v)?.label ?? v).join(" / ");
 }
 
+// For a resilience challenge, which side of the fault a question was about.
+function phase(brief: ChallengeBrief | null, p: PredictionResult) {
+  if (!brief?.experiment) return null;
+  return brief.predictions.find((q) => q.id === p.id)?.kind === "baseline-health" ? "Before the fault" : "While it was active";
+}
+
 function Sources({ sources }: { sources: string[] }) {
   return <p className="mt-1 text-xs text-ink-3">Evidence: {sources.map((s, i) => <span key={s} title={s}>{i ? ", " : ""}{EVIDENCE_LABEL[s] ?? s}</span>)}</p>;
 }
@@ -30,9 +37,14 @@ function Sources({ sources }: { sources: string[] }) {
 /* Two separate verdicts. The challenge result says whether the design met its
 requirements; the prediction says whether you foresaw what was recorded. A
 failed design can carry an accurate prediction and the reverse. */
-export function ChallengeDebrief({ evaluation, brief }: { evaluation: ChallengeEvaluation; brief: ChallengeBrief | null }) {
+export function ChallengeDebrief({ evaluation, brief, runId }: { evaluation: ChallengeEvaluation; brief: ChallengeBrief | null; runId?: string }) {
   const { open, busy } = useOpenChallenge();
   const matched = evaluation.predictions.filter((p) => p.outcome === "matched").length;
+  // The attempt before this one at the same version: the natural pair for Compare.
+  const attempts = brief?.attempts ?? [];
+  const index = runId ? attempts.findIndex((a) => a.runId === runId) : -1;
+  const previous = index >= 0 ? attempts.slice(index + 1).find((a) => a.version === evaluation.version) : undefined;
+  const briefLink = brief && brief.version < brief.latestVersion ? `/challenges/${evaluation.challengeId}?version=${brief.version}` : `/challenges/${evaluation.challengeId}`;
   return (
     <section aria-labelledby="debrief-title" className="mt-8">
       <p className="if-eyebrow">Judged against {evaluation.title}, version {evaluation.version}</p>
@@ -51,6 +63,8 @@ export function ChallengeDebrief({ evaluation, brief }: { evaluation: ChallengeE
           {evaluation.reasoning && <p className="mt-2 border-l-2 border-line-strong pl-2.5 text-sm italic text-ink-2">“{evaluation.reasoning}”</p>}
         </div>
       </div>
+
+      {evaluation.experiment && <ExperimentDebrief experiment={evaluation.experiment} evaluationSeconds={evaluation.evaluationSeconds} />}
 
       {evaluation.criteria.length > 0 && (
         <div className="mt-6">
@@ -74,6 +88,7 @@ export function ChallengeDebrief({ evaluation, brief }: { evaluation: ChallengeE
           <ul className="mt-2 divide-y divide-line rounded-md border border-line sm:hidden">
             {evaluation.predictions.map((p) => (
               <li key={p.id} className="px-3 py-3 text-sm">
+                {phase(brief, p) && <p className="if-eyebrow mb-1">{phase(brief, p)}</p>}
                 <p className="text-ink">{p.prompt}</p>
                 <p className="mt-0.5 text-xs text-ink-3">{p.detail}</p>
                 <dl className="mt-2 grid grid-cols-[auto_minmax(0,1fr)] items-baseline gap-x-3 gap-y-1.5">
@@ -96,7 +111,7 @@ export function ChallengeDebrief({ evaluation, brief }: { evaluation: ChallengeE
               <tbody>
                 {evaluation.predictions.map((p) => (
                   <tr key={p.id} className="border-t border-line align-top">
-                    <th scope="row" className="px-3 py-2.5 text-left font-normal text-ink">{p.prompt}<span className="mt-0.5 block text-xs text-ink-3">{p.detail}</span></th>
+                    <th scope="row" className="px-3 py-2.5 text-left font-normal text-ink">{phase(brief, p) && <span className="if-eyebrow mb-0.5 block">{phase(brief, p)}</span>}{p.prompt}<span className="mt-0.5 block text-xs text-ink-3">{p.detail}</span></th>
                     <td className="px-3 py-2.5"><span className="rounded-xs bg-marker px-1.5 font-semibold text-[#17191D]">{label(brief, p, p.predicted)}</span></td>
                     <td className={cx("px-3 py-2.5 font-semibold", p.actual === null ? "text-ink-3" : "text-ink")}>{label(brief, p, p.actual)}</td>
                     <td className="px-3 py-2.5"><StatusMark size="sm" kind={p.outcome} /></td>
@@ -116,9 +131,11 @@ export function ChallengeDebrief({ evaluation, brief }: { evaluation: ChallengeE
           <div><h3 className="text-[15px] font-semibold text-ink">Why the model behaves this way</h3><div className="mt-2 space-y-2 text-sm leading-relaxed text-ink-2">{brief.debrief.map((p) => <p key={p}>{p}</p>)}</div></div>
         )}
       </div>
-      <div className="mt-6 flex flex-wrap items-center gap-3">
+      {evaluation.experiment && <p className="mt-6 max-w-[70ch] text-sm text-ink-2">Every new attempt runs the same experiment: the same fault, target, second, workload and seed. Change the design, predict again, and compare the two attempts.</p>}
+      <div className="mt-3 flex flex-wrap items-center gap-3">
         <Button variant="primary" icon={<PenTool size={15} aria-hidden="true" />} loading={busy === evaluation.challengeId} onClick={() => void open(evaluation.challengeId)}>Improve the design</Button>
-        <Link to={`/challenges/${evaluation.challengeId}`} className="text-sm font-medium text-accent hover:underline">Brief and all attempts</Link>
+        {previous && runId && <Link to={`/runs/compare?a=${previous.runId}&b=${runId}`} className="text-sm font-medium text-accent hover:underline">Compare with your previous attempt</Link>}
+        <Link to={briefLink} className="text-sm font-medium text-accent hover:underline">Brief and all attempts</Link>
       </div>
     </section>
   );

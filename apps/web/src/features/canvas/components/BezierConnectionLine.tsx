@@ -13,6 +13,8 @@ interface BezierConnectionLineProps {
   targetHeight: number;
   showPackets?: boolean;
   animatePackets?: boolean;
+  // The recorded health of the resource this line feeds; never a per-line measurement.
+  tone?: "warn" | "fail" | null;
   label?: string;
 }
 
@@ -44,9 +46,9 @@ function geometry(source: { x: number; y: number }, target: { x: number; y: numb
 
 /* An ink line between two cards: direction chevrons, the target's listening port
 at the midpoint, and moving dashes only while a run is advancing. */
-export function BezierConnectionLine({ source, target, port, isSelected = false, onSelect, onRemove, scale = 1, nodeWidth, sourceHeight, targetHeight, showPackets = false, animatePackets = false, label }: BezierConnectionLineProps) {
+export function BezierConnectionLine({ source, target, port, isSelected = false, onSelect, onRemove, scale = 1, nodeWidth, sourceHeight, targetHeight, showPackets = false, animatePackets = false, tone = null, label }: BezierConnectionLineProps) {
   const { path, distance, at, angle } = geometry(source, target, nodeWidth, sourceHeight, targetHeight);
-  const color = isSelected ? "var(--if-accent)" : "var(--if-ink-3)";
+  const color = isSelected ? "var(--if-accent)" : tone === "fail" ? "var(--if-fail)" : tone === "warn" ? "var(--if-warn)" : "var(--if-ink-3)";
   const mid = at(0.5);
   const badge = scale >= 0.6;
   const text = `:${port}`;
@@ -54,7 +56,7 @@ export function BezierConnectionLine({ source, target, port, isSelected = false,
   return (
     <g>
       <path d={path} fill="none" stroke={color} strokeWidth={isSelected ? 2.4 : 1.6} strokeLinecap="round" />
-      {showPackets && <path d={path} fill="none" stroke="var(--if-accent)" strokeWidth={2} strokeDasharray="6 14" strokeLinecap="round" className={animatePackets ? "if-flow" : undefined} opacity={0.85} />}
+      {showPackets && <path d={path} fill="none" stroke={tone ? color : "var(--if-accent)"} strokeWidth={2} strokeDasharray="6 14" strokeLinecap="round" className={animatePackets ? "if-flow" : undefined} opacity={0.85} />}
       {distance > 110 && (badge ? [0.2, 0.8] : [0.5]).map((t) => {
         const p = at(t);
         return <path key={t} d={CHEVRON} transform={`translate(${p.x} ${p.y}) rotate(${angle(t)})`} fill="none" stroke={color} strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round" />;

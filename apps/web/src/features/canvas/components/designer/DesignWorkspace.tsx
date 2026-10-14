@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Dialog } from "@/ui/Dialog";
 import { useMediaQuery } from "@/lib/useMediaQuery";
 import { ConfirmDialog } from "@/ui/ConfirmDialogs";
 import { useChallengeBrief } from "@/features/challenges/useChallengeBrief";
 import { useChallengePreflight } from "@/features/challenges/useChallengePreflight";
 import { AttemptDialog } from "@/features/challenges/components/AttemptDialog";
+import { useExperimentPlan } from "@/features/challenges/experimentPlanStore";
+import { planOf } from "@/features/challenges/experiment";
 import { useCanvasStore } from "../../store/canvasStore";
 import { useDesignRoute } from "../../hooks/useDesignRoute";
 import { CanvasDnd } from "../CanvasDnd";
@@ -31,6 +33,13 @@ export function DesignWorkspace() {
   const selection = useCanvasStore((s) => s.selectedResourceForConfigId);
   const modal = useCanvasStore((s) => s.modalState);
   const brief = useChallengeBrief(challengeId);
+  // The experiment's target is marked on its card while designing.
+  const experiment = brief?.data?.experiment ?? null;
+  const experimentKey = experiment ? JSON.stringify(experiment) : null;
+  useEffect(() => {
+    useExperimentPlan.getState().setPlan(experimentKey ? planOf(JSON.parse(experimentKey)) : null);
+    return () => useExperimentPlan.getState().setPlan(null);
+  }, [experimentKey]);
   const preflight = useChallengePreflight(challengeId);
   const [tab, setTab] = useState<SideTab>(challengeId ? "brief" : "inspect");
   const [paletteOpen, setPaletteOpen] = useState(false);

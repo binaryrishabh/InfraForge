@@ -3,6 +3,7 @@ import { formatDate, plural } from "@/lib/format";
 import { StatusMark } from "@/ui/StatusMark";
 import type { StatusKind } from "@/ui/status";
 import { FAULTS } from "@/features/live/faults";
+import { isChallengeExperiment } from "../labels";
 
 function describe(action: RunAction) {
   const p = action.parameters;
@@ -36,8 +37,9 @@ export function ActionTimeline({ actions }: { actions: RunAction[] }) {
             <li key={action.id} className="grid grid-cols-[2.5rem_minmax(0,1fr)] gap-x-3">
               <span className="if-num pt-0.5 text-right text-xs text-ink-3">#{action.sequence}</span>
               <div className="min-w-0 border-l border-line pl-3">
-                <p className="flex flex-wrap items-center gap-x-3 gap-y-1"><span className="font-semibold text-ink">{ACTION_LABEL[action.kind] ?? action.kind}</span><StatusMark size="sm" kind={KIND[action.status]} label={STATUS_LABEL[action.status] ?? action.status} /></p>
+                <p className="flex flex-wrap items-center gap-x-3 gap-y-1"><span className="font-semibold text-ink">{isChallengeExperiment(action) ? "Challenge experiment" : ACTION_LABEL[action.kind] ?? action.kind}</span><StatusMark size="sm" kind={KIND[action.status]} label={STATUS_LABEL[action.status] ?? action.status} /></p>
                 <p className="mt-0.5 text-ink">{describe(action)}</p>
+                {isChallengeExperiment(action) && <p className="mt-0.5 text-xs text-ink-3">Scheduled by the challenge definition and applied by InfraForge, not requested from the controls.</p>}
                 <p className="mt-0.5 text-xs text-ink-3">Requested <time dateTime={action.requestedAt}>{formatDate(action.requestedAt)}</time></p>
                 {action.appliedAt ? <p className="text-xs text-ink-2">Applied / started <time dateTime={action.appliedAt}>{formatDate(action.appliedAt)}</time> · simulated second {action.appliedSimulatedSeconds}</p>
                   : <p className="text-xs text-ink-3">No simulator application is recorded.</p>}
@@ -45,6 +47,7 @@ export function ActionTimeline({ actions }: { actions: RunAction[] }) {
                 {o?.appliedTarget !== undefined && <p className="mt-1">Target changed from {Math.round(o.previousTarget! * 100)}% to {Math.round(o.appliedTarget * 100)}%. This records the target, not completion of the load ramp.</p>}
                 {o?.appliedSpeed !== undefined && <p className="mt-1">Speed changed from {o.previousSpeed}× to {o.appliedSpeed}×.</p>}
                 {o?.durationSimulatedSeconds !== undefined && <p className="mt-1">Injected duration: {o.durationSimulatedSeconds} simulated seconds.</p>}
+                {o?.baselineOverallHealth && <p className="mt-1">Overall health when the fault was applied: {o.baselineOverallHealth}.</p>}
                 {o?.faultEnded && <p className="mt-1">Injected fault ended. Overall health recorded at its end: {o.observedOverallHealth}. This does not establish full system recovery.</p>}
                 {o?.installedSkuId && <p className="mt-1">Observed online on {o.installedSkuId}.</p>}
                 {o?.previousReplicaCount !== undefined && <p className="mt-1">Pool replicas at application: {o.previousReplicaCount}.</p>}

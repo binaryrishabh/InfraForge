@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { RotateCw } from "lucide-react";
 import type { RerunMode, RerunOptions } from "@infraforge/contracts/reports";
 import { createRerun, getRerunOptions } from "@/api/reports.api";
@@ -95,13 +95,20 @@ function Request({ id, close, onBusy }: { id: string; close: () => void; onBusy:
   return <Form id={id} options={data} close={close} onBusy={onBusy} />;
 }
 
-export function RerunDialog({ id, eligible }: { id: string; eligible: boolean }) {
+export function RerunDialog({ id, eligible, experimentChallenge = null }: { id: string; eligible: boolean; experimentChallenge?: string | null }) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   return (
     <>
       <Button variant="primary" size="sm" disabled={!eligible} icon={<RotateCw size={14} aria-hidden="true" />} onClick={() => setOpen(true)}>Run again…</Button>
       <Dialog open={open} onOpenChange={setOpen} busy={busy} size="lg" title="Run again" description="Start a new run from this run's captured inputs or from your current saved design.">
+        {open && experimentChallenge && (
+          // A rerun replays captured inputs, not actions: the challenge's scheduled fault is not part of it.
+          <Notice tone="info" className="mb-4" title="A rerun does not include the scheduled fault">
+            A rerun is a freeform run of the captured inputs, without the challenge's experiment, and it is not judged.
+            To repeat the experiment, <Link to={`/challenges/${experimentChallenge}`} className="font-medium text-accent underline-offset-4 hover:underline">start a new attempt</Link>.
+          </Notice>
+        )}
         {open && <Request id={id} close={() => setOpen(false)} onBusy={setBusy} />}
       </Dialog>
     </>

@@ -38,6 +38,8 @@ interface CanvasStoreState {
   currentLayoutSaved: boolean;
   // Server-assigned challenge identity of the loaded design; never set by the client for new designs.
   currentChallengeId: string | null;
+  // The challenge version this workspace belongs to; a newer version never reuses it silently.
+  currentChallengeVersion: number | null;
   // Challenge attempts run under fixed conditions: the live canvas is read-only.
   liveLocked: boolean;
   selectedResourceId: string | null;
@@ -73,7 +75,7 @@ interface CanvasStoreState {
   setCurrentLayoutId: (id: string | null) => void;
   setCurrentLayoutName: (name: string | null) => void;
   setCurrentLayoutSaved: (saved: boolean) => void;
-  setCurrentChallengeId: (id: string | null) => void;
+  setCurrentChallengeId: (id: string | null, version?: number | null) => void;
   setLiveLocked: (locked: boolean) => void;
   setSelectedResourceId: (id: string | null) => void;
   setSelectedResourceForConfigId: (id: string | null) => void;
@@ -98,7 +100,7 @@ interface CanvasStoreState {
   setUndoStack: (updater: Updater<CanvasUndoAction[]>) => void;
   setRedoStack: (updater: Updater<CanvasUndoAction[]>) => void;
   setIsInitialized: (initialized: boolean) => void;
-  loadLayout: (resources: Resource[], connectionLines: ConnectionLine[], id: string | null, name: string | null, challengeId?: string | null) => void;
+  loadLayout: (resources: Resource[], connectionLines: ConnectionLine[], id: string | null, name: string | null, challengeId?: string | null, challengeVersion?: number | null) => void;
   loadRunTopology: (deploymentId: string, topology: RunTopology, revision: number, layoutId: string | null, name: string | null) => void;
   applyLiveTopology: (deploymentId: string, topology: RunTopology, revision: number) => void;
   acknowledgeLiveTopology: (deploymentId: string, topology: RunTopology, revision: number) => void;
@@ -112,6 +114,7 @@ export const useCanvasStore = create<CanvasStoreState>()((set) => ({
   currentLayoutName: null,
   currentLayoutSaved: true,
   currentChallengeId: null,
+  currentChallengeVersion: null,
   liveLocked: false,
   selectedResourceId: null,
   selectedResourceForConfigId: null,
@@ -143,7 +146,7 @@ export const useCanvasStore = create<CanvasStoreState>()((set) => ({
   setCurrentLayoutId: (id) => set({ currentLayoutId: id }),
   setCurrentLayoutName: (name) => set({ currentLayoutName: name }),
   setCurrentLayoutSaved: (saved) => set({ currentLayoutSaved: saved }),
-  setCurrentChallengeId: (id) => set({ currentChallengeId: id }),
+  setCurrentChallengeId: (id, version = null) => set({ currentChallengeId: id, currentChallengeVersion: id ? version : null }),
   setLiveLocked: (locked) => set({ liveLocked: locked }),
   setSelectedResourceId: (id) => set({ selectedResourceId: id }),
   setSelectedResourceForConfigId: (id) => set({ selectedResourceForConfigId: id }),
@@ -188,8 +191,9 @@ export const useCanvasStore = create<CanvasStoreState>()((set) => ({
   setUndoStack: (updater) => set((s) => ({ undoStack: typeof updater === "function" ? updater(s.undoStack) : updater })),
   setRedoStack: (updater) => set((s) => ({ redoStack: typeof updater === "function" ? updater(s.redoStack) : updater })),
   setIsInitialized: (isInitialized) => set({ isInitialized }),
-  loadLayout: (resources, connectionLines, id, name, challengeId = null) => set({
+  loadLayout: (resources, connectionLines, id, name, challengeId = null, challengeVersion = null) => set({
     resources, connectionLines, currentLayoutId: id, currentLayoutName: name, currentChallengeId: challengeId,
+    currentChallengeVersion: challengeId ? challengeVersion : null,
     currentLayoutSaved: true, selectedResourceId: null, selectedResourceForConfigId: null, selectedConnectionId: null,
     undoStack: [], redoStack: [],
   }),
@@ -209,7 +213,7 @@ export const useCanvasStore = create<CanvasStoreState>()((set) => ({
     return { topologyRevision: revision, liveTopologyDirty: s.resources !== topology.resources || s.connectionLines !== topology.connectionLines };
   }),
   clearCanvas: () => set({
-    resources: [], connectionLines: [], currentLayoutId: null, currentLayoutName: null, currentChallengeId: null, liveLocked: false,
+    resources: [], connectionLines: [], currentLayoutId: null, currentLayoutName: null, currentChallengeId: null, currentChallengeVersion: null, liveLocked: false,
     currentLayoutSaved: true, selectedResourceId: null, selectedResourceForConfigId: null,
     selectedConnectionId: null, pendingConnection: null,
     scale: 1, translateX: 0, translateY: 0,

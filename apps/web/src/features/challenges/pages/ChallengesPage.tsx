@@ -4,7 +4,7 @@ import { ArrowRight } from "lucide-react";
 import type { ChallengeSummary } from "@infraforge/contracts/challenges";
 import { listChallenges } from "@/api/challenges.api";
 import { useRequest } from "@/api/useRequest";
-import { Page, PageHeader, Loading, Notice } from "@/ui/Page";
+import { Page, PageHeader, Loading, Notice, Section } from "@/ui/Page";
 import { Button } from "@/ui/Button";
 import { StatusMark } from "@/ui/StatusMark";
 import { DIFFICULTY_LABEL, RESULT_LABEL } from "../challengeLabels";
@@ -16,11 +16,11 @@ export function ChallengeRow({ challenge, index }: { challenge: ChallengeSummary
       <span className="if-num text-[13px] text-ink-3">{String(index + 1).padStart(2, "0")}</span>
       <div className="min-w-0">
         <p className="if-eyebrow">{DIFFICULTY_LABEL[challenge.difficulty]} · {challenge.concepts.join(" · ")}</p>
-        <h2 className="if-title mt-1 text-[22px]">
+        <h3 className="if-title mt-1 text-[22px]">
           <Link to={`/challenges/${challenge.id}`} className="rounded-sm text-ink underline-offset-4 hover:underline">{challenge.title}</Link>
-        </h2>
+        </h3>
         <p className="mt-1 max-w-[62ch] text-[15px] text-ink-2">{challenge.summary}</p>
-        <p className="if-num mt-2 text-xs text-ink-3">{challenge.requirementCount} requirements · judged at second {challenge.evaluationSeconds}</p>
+        <p className="if-num mt-2 text-xs text-ink-3">{challenge.requirementCount} requirements · {challenge.category === "resilience" ? "one scheduled fault · " : ""}judged at second {challenge.evaluationSeconds}</p>
       </div>
       <div className="flex flex-col items-start gap-1.5 sm:items-end sm:text-right">
         {challenge.met ? <StatusMark kind="met" label="Met at least once" /> : latest ? <StatusMark kind={latest.status} label={RESULT_LABEL[latest.status]} /> : <StatusMark kind="not-started" />}
@@ -33,6 +33,11 @@ export function ChallengeRow({ challenge, index }: { challenge: ChallengeSummary
   );
 }
 
+const GROUP = {
+  design: { title: "Design", lede: "Build a design that meets fixed requirements under fixed traffic." },
+  resilience: { title: "Resilience", lede: "InfraForge breaks one named part of the design at a set second. Predict what happens before the fault and while it lasts, then see whether the rest of the system copes." },
+} as const;
+
 export function ChallengesPage() {
   const load = useCallback(() => listChallenges(), []);
   const { data, loading, error, retry } = useRequest(load, "The challenge list could not be loaded.");
@@ -42,9 +47,17 @@ export function ChallengesPage() {
         lede="Each challenge fixes the traffic, the moment it is judged and the requirements. You design, commit to a prediction, run once, and compare what you expected with what was recorded." />
       {loading ? <Loading label="Loading challenges…" /> : error || !data ? (
         <div className="mt-8"><Notice tone="fail" role="alert">{error}</Notice><Button className="mt-3" size="sm" onClick={retry}>Try again</Button></div>
-      ) : (
-        <ol className="mt-2 border-b border-line">{data.map((challenge, index) => <ChallengeRow key={challenge.id} challenge={challenge} index={index} />)}</ol>
-      )}
+      ) : (["design", "resilience"] as const).map((category, n) => {
+        const items = data.filter((c) => c.category === category);
+        if (!items.length) return null;
+        const offset = category === "design" ? 0 : data.filter((c) => c.category === "design").length;
+        return (
+          <Section key={category} id={`group-${category}`} number={n + 1} title={GROUP[category].title} className="mt-8">
+            <p className="max-w-[70ch] text-[15px] text-ink-2">{GROUP[category].lede}</p>
+            <ol className="mt-3 border-b border-line">{items.map((challenge, index) => <ChallengeRow key={challenge.id} challenge={challenge} index={offset + index} />)}</ol>
+          </Section>
+        );
+      })}
       <p className="mt-6 max-w-[70ch] text-sm text-ink-3">Results come from fixed rules applied to recorded run evidence. There are no scores or rankings: a requirement is met or it is not, and a prediction matches what was recorded or it does not.</p>
     </Page>
   );

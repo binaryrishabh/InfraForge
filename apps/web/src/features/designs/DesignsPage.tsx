@@ -62,7 +62,7 @@ export function DesignsPage() {
                 <div className="min-w-0 flex-1">
                   <p className="flex flex-wrap items-center gap-2">
                     <Link to={`/design?design=${design.id}`} className="truncate text-[16px] font-semibold text-ink underline-offset-4 hover:underline">{design.name}</Link>
-                    {design.challengeId && <Tag tone="marker">Challenge workspace</Tag>}
+                    {design.challengeId && <Tag tone="marker">Challenge workspace{design.challengeVersion ? ` · v${design.challengeVersion}` : ""}</Tag>}
                   </p>
                   <p className="mt-0.5 text-[13px] text-ink-3">{count} {count === 1 ? "resource" : "resources"} · {links} {links === 1 ? "connection" : "connections"} · updated <time dateTime={design.updatedAt} title={formatDate(design.updatedAt)}>{relativeTime(design.updatedAt)}</time></p>
                 </div>

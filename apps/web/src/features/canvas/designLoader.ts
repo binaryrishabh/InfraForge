@@ -10,7 +10,7 @@ export function installDesign(design: Infrastructure) {
   const store = useCanvasStore.getState();
   store.clearCanvas();
   store.loadLayout(migrateLayoutToCardScale(design.layout.resources, design.layout.layoutVersion), design.layout.connectionLines,
-    design.id, design.name, design.challengeId ?? null);
+    design.id, design.name, design.challengeId ?? null, design.challengeVersion ?? null);
   store.setIsInitialized(true);
   store.setEmptyCanvasStateDismissed(false);
   useSimulationStore.getState().reset();

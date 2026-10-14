@@ -4,6 +4,7 @@ import type { ChallengeBrief } from "@infraforge/contracts/challenges";
 import type { Deployment, DeploymentTimeline } from "@infraforge/contracts/deployment";
 import type { Resource } from "@infraforge/domain/resource";
 import { describeWorkload } from "@/lib/format";
+import { faultLabel } from "@/features/challenges/experiment";
 import { Tabs, TabPanel } from "@/ui/Tabs";
 import { RequirementList } from "@/features/challenges/components/RequirementList";
 import { LoadControl } from "./controls/LoadControl";
@@ -23,6 +24,7 @@ function ChallengeConditions({ run, brief }: { run: Deployment; brief: Challenge
       <section className="border-b border-line px-4 py-4">
         <h3 className="flex items-center gap-1.5 text-[13px] font-semibold text-ink"><Lock size={13} aria-hidden="true" /> Fixed conditions</h3>
         <p className="mt-1.5 text-sm text-ink-2">This attempt runs exactly as briefed. Load, faults, scaling and design edits are unavailable because they would change what is judged. You can change the speed or stop.</p>
+        {run.challengeExperiment && <p className="mt-1.5 text-sm text-ink-2">The one exception is the challenge's own experiment: InfraForge applies a {faultLabel(run.challengeExperiment.fault).toLowerCase()} to {run.challengeExperiment.targetResourceId} at second {run.challengeExperiment.atSimulatedSecond}, active for {run.challengeExperiment.durationSimulatedSeconds} seconds.</p>}
         {brief && <p className="mt-2 text-xs text-ink-3">{describeWorkload(brief.workload)}. Stops by itself at second {brief.evaluationSeconds}.</p>}
       </section>
       {brief && run.challengePrediction && <LockedPrediction brief={brief} prediction={run.challengePrediction} />}

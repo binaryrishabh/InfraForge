@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { PanelRight, Plus } from "lucide-react";
 import { DeploymentStatus } from "@infraforge/contracts/deployment";
-import { getSpecificInfrastructure } from "@/api/infrastructure.api";
 import { useDeploymentSocket } from "@/features/deployment/hooks/useDeploymentSocket";
 import { useCanvasStore } from "@/features/canvas/store/canvasStore";
 import { useLiveTopologySync } from "@/features/canvas/hooks/useLiveTopologySync";
@@ -21,19 +20,11 @@ import { LivePanel, type LiveTab } from "./LivePanel";
 import { GateList } from "./GatesPanel";
 import { useStopRun } from "./useStopRun";
 import { runPhase } from "./runState";
+import { leaveRun } from "./leaveRun";
+import { ExperimentStrip } from "./ExperimentStrip";
+import { useExperimentPlan } from "@/features/challenges/experimentPlanStore";
+import { recordedPlan } from "@/features/challenges/experiment";
 import { plural } from "@/lib/format";
-
-const leaveRun = () => {
-  const store = useCanvasStore.getState();
-  store.setActiveDeploymentId(null); store.setIsDeploying(false); store.setLiveLocked(false); store.setLiveMode(false);
-  // A freeform rerun can start from a challenge workspace; back in the designer the
-  // canvas takes its challenge identity from the saved record, as a loaded design does.
-  const layoutId = store.currentLayoutId;
-  if (layoutId) void getSpecificInfrastructure(layoutId).then((design) => {
-    const current = useCanvasStore.getState();
-    if (current.currentLayoutId === layoutId && !current.activeDeploymentId) current.setCurrentChallengeId(design.challengeId ?? null);
-  }).catch(() => undefined);
-};
 
 /* The live run: always in the ink theme so it reads as an instrument, distinct
 from the paper design sheet. The architecture stays in the middle; state and
@@ -46,7 +37,7 @@ export function LiveWorkspace({ deploymentId }: { deploymentId: string }) {
   const overall = useSimulationStore((s) => s.health);
   const seconds = useSimulationStore((s) => s.simulatedSeconds);
   const challenge = deployment?.challengeId ?? null;
-  const brief = useChallengeBrief(challenge);
+  const brief = useChallengeBrief(challenge, deployment?.challengeVersion);
   const phase = runPhase(stopped ? "torn-down" : status, stopping);
   const isLive = status === DeploymentStatus.LIVE && !stopped;
   const wide = useMediaQuery("(min-width: 768px)");
@@ -60,6 +51,14 @@ export function LiveWorkspace({ deploymentId }: { deploymentId: string }) {
     root.dataset.theme = "ink";
     return () => { if (previous) root.dataset.theme = previous; else delete root.dataset.theme; };
   }, []);
+  // A resilience attempt's recorded fault, for the strip and the node cards.
+  const recorded = deployment?.challengeExperiment ?? null;
+  const plan = recorded ? recordedPlan(recorded) : null;
+  const planKey = recorded ? JSON.stringify(recorded) : null;
+  useEffect(() => {
+    useExperimentPlan.getState().setPlan(planKey ? recordedPlan(JSON.parse(planKey)) : null);
+    return () => useExperimentPlan.getState().setPlan(null);
+  }, [planKey]);
   // Challenge attempts are read-only for the whole run; freeform runs sync accepted canvas edits.
   useEffect(() => { useCanvasStore.getState().setLiveLocked(!!challenge); }, [challenge]);
   useLiveTopologySync(isLive && deployment !== null && !challenge, deploymentId);
@@ -79,6 +78,7 @@ export function LiveWorkspace({ deploymentId }: { deploymentId: string }) {
   return (
     <div data-theme="ink" className="flex h-dvh flex-col overflow-hidden bg-bg text-ink">
       <RunBar run={deployment} deploymentId={deploymentId} phase={phase} challengeTitle={brief?.data?.title ?? null} onStop={stop} stopping={stopping} />
+      {plan && deployment?.evaluationStopAtSimulatedSeconds != null && <ExperimentStrip plan={plan} evaluationSeconds={deployment.evaluationStopAtSimulatedSeconds} />}
       <CanvasDnd>
         <div className="relative flex min-h-0 flex-1">
           <main id="main" tabIndex={-1} className="relative flex min-w-0 flex-1 flex-col outline-none" aria-label="Live architecture">
@@ -112,7 +112,8 @@ export function LiveWorkspace({ deploymentId }: { deploymentId: string }) {
               </div>
             )}
             <div className="flex h-10 shrink-0 items-center justify-between border-t border-line bg-surface px-3 text-xs text-ink-3">
-              <span className="if-num">{plural(resources.length, "resource")} · revision {deployment?.topologyRevision ?? 0}{challenge ? " · design locked for this attempt" : ""}</span>
+              <span className="min-w-0 truncate"><span className="if-num">{plural(resources.length, "resource")} · revision {deployment?.topologyRevision ?? 0}{challenge ? " · design locked for this attempt" : ""}</span>
+                {isLive && <span className="max-md:hidden"> · Moving lines show direction while the run advances, not traffic volume.</span>}</span>
               <div className="flex items-center gap-1">
                 {!wide && <Button size="sm" variant="ghost" icon={<PanelRight size={14} aria-hidden="true" />} onClick={() => setPanelOpen(true)}>Details</Button>}
                 <ZoomControls />

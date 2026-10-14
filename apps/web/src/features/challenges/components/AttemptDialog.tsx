@@ -12,7 +12,9 @@ import { cx } from "@/ui/cx";
 import { useCanvasStore } from "@/features/canvas/store/canvasStore";
 import { startAttempt } from "../startAttempt";
 import { RequirementList } from "./RequirementList";
-import { predictionChoices } from "../predictionChoices";
+import { ExperimentBrief } from "./ExperimentBrief";
+import { predictionChoices, predictionPhases } from "../predictionChoices";
+import { planOf } from "../experiment";
 
 export function PredictionQuestionField({ question, index, value, onChange, designTypes }: { question: PredictionQuestion; index: number; value: string; onChange: (v: string) => void; designTypes: string[] }) {
   return (
@@ -42,8 +44,17 @@ export function AttemptDialog({ brief, preflight, open, onOpenChange }: { brief:
   const [reasoning, setReasoning] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const valid = (preflight?.valid ?? true) && resources.length > 0;
+  const workspaceVersion = useCanvasStore((s) => s.currentChallengeVersion);
+  // An earlier version's workspace cannot start an attempt at the current version; the server refuses it too.
+  const olderWorkspace = workspaceVersion !== null && workspaceVersion < brief.latestVersion;
+  const valid = (preflight?.valid ?? true) && resources.length > 0 && !olderWorkspace;
   const answered = brief.predictions.every((q) => predictionChoices(q, designTypes).some((c) => c.value === answers[q.id]));
+  const plan = brief.experiment ? planOf(brief.experiment) : null;
+  const phases = predictionPhases(brief.predictions);
+  const field = (question: PredictionQuestion) => (
+    <PredictionQuestionField key={question.id} question={question} index={brief.predictions.indexOf(question)} value={answers[question.id] ?? ""} designTypes={designTypes}
+      onChange={(value) => setAnswers((prev) => ({ ...prev, [question.id]: value }))} />
+  );
   const submit = async (event: FormEvent) => {
     event.preventDefault();
     if (!answered || !valid || busy) return;
@@ -67,19 +78,26 @@ export function AttemptDialog({ brief, preflight, open, onOpenChange }: { brief:
         <section aria-labelledby="attempt-conditions" className="rounded-md bg-surface px-4 py-3">
           <h3 id="attempt-conditions" className="flex items-center gap-1.5 text-[13px] font-semibold text-ink"><Lock size={13} aria-hidden="true" /> Fixed for every attempt</h3>
           <p className="mt-1 text-sm text-ink-2">{describeWorkload(brief.workload)}. Evaluated at simulated second {brief.evaluationSeconds}; the run stops there automatically.</p>
-          <p className="mt-1 text-xs text-ink-3">During the attempt only speed and stop are available: load, faults, scaling and live edits would change what is being judged.</p>
+          <p className="mt-1 text-xs text-ink-3">{plan ? "Besides the scheduled fault, only speed and stop are available" : "During the attempt only speed and stop are available"}: load, faults, scaling and live edits would change what is being judged.</p>
         </section>
-        {!valid && <Notice tone="fail" title="The design cannot run yet">{preflight?.errors.join(" ") || "Add resources to the canvas first."}</Notice>}
+        {brief.experiment && (
+          <section aria-labelledby="attempt-hypothesis">
+            <h3 id="attempt-hypothesis" className="mb-1 text-[13px] font-semibold text-ink">The experiment</h3>
+            <ExperimentBrief experiment={brief.experiment} evaluationSeconds={brief.evaluationSeconds} readiness={preflight?.experiment} compact />
+          </section>
+        )}
+        {olderWorkspace ? <Notice tone="warn" title={`This design is a version ${workspaceVersion} workspace`}>Version {brief.latestVersion} is current. Start it, or copy this design into it, from the Brief tab before attempting.</Notice>
+          : !valid && <Notice tone="fail" title="The design cannot run yet">{preflight?.errors.join(" ") || "Add resources to the canvas first."}</Notice>}
         {preflight && (
           <details className="rounded-md border border-line px-4 py-2.5">
             <summary className="text-sm font-medium text-ink">Requirements and readiness</summary>
             <div className="mt-3"><RequirementList criteria={brief.criteria} checks={preflight.checks} compact /></div>
           </details>
         )}
-        {brief.predictions.map((question, index) => (
-          <PredictionQuestionField key={question.id} question={question} index={index} value={answers[question.id] ?? ""} designTypes={designTypes}
-            onChange={(value) => setAnswers((prev) => ({ ...prev, [question.id]: value }))} />
-        ))}
+        {phases ? <>
+          <div className="flex flex-col gap-3"><h3 className="if-eyebrow">Before the fault</h3>{phases.before.map(field)}</div>
+          <div className="flex flex-col gap-3"><h3 className="if-eyebrow">While it is active</h3>{phases.during.map(field)}</div>
+        </> : brief.predictions.map(field)}
         <Field label="Why do you expect this?" optional hint={`${reasoning.length}/${PREDICTION_REASONING_MAX} characters. Shown next to the result.`}>
           {({ id, describedBy }) => <Textarea id={id} aria-describedby={describedBy} value={reasoning} maxLength={PREDICTION_REASONING_MAX} onChange={(e) => setReasoning(e.target.value)} rows={3} />}
         </Field>

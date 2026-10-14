@@ -24,7 +24,7 @@ export function DesignMenu() {
   const modal = (type: "rename" | "save" | "delete") => useCanvasStore.getState().setModalState({ type });
   const restart = async () => {
     if (!challenge) return;
-    try { navigate(`/design?design=${(await openChallengeWorkspace(challenge, true)).designId}`); }
+    try { navigate(`/design?design=${(await openChallengeWorkspace(challenge, { fresh: true })).designId}`); }
     catch { toast.error("A fresh copy of the starter could not be created."); }
   };
   const recent = designs.filter((d) => d.id !== id).slice(0, 6);
