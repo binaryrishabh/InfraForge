@@ -1,8 +1,7 @@
 # InfraForge project state
 
-Verified locally 2026-10-14 on `develop`. **Immutable challenge versions and
-resilience experiments are implemented**, completing Challenge → Predict → Run → Break →
-Understand on top of Challenge + Predict, Reliable Run Evidence and Honest Rerun + Compare.
+Verified locally 2026-10-14 on `develop`. **Bounded experiment evidence over time**
+extends immutable challenge versions, resilience experiments and Honest Rerun + Compare.
 Hosted production cutover remains **PARKED**. These milestones did not access Neon,
 EC2/AWS, hosted PostgreSQL/Nginx, Vercel, DNS, OAuth settings, production secrets or
 `main`.
@@ -37,8 +36,8 @@ Develop work cannot promote/deploy main or operate on production data.
 | `packages/simulation` | Deterministic engine, runtime, cost, capacity and tuning |
 
 Bun 1.3.14/Turbo 2.11.6 own one root install/lockfile. Browser imports cannot reach
-engine/runtime/cost. Prisma 7.9.1 has fourteen migrations; the first thirteen are
-unchanged. Migration 14 is `20261015000000_challenge_versions_experiments`. Simulation model remains
+engine/runtime/cost. Prisma 7.9.1 has fifteen migrations; migrations 1–14 are
+unchanged. Migration 15 is `20261016000000_experiment_evidence`. Simulation model remains
 `1`, catalog `2026-08`; engine source, RNG consumption and all 30 goldens are unchanged.
 
 Better Auth 1.7.7 uses database sessions, exact HTTP/WS ownership and permitted
@@ -152,8 +151,8 @@ portal text, reduced motion and narrow metric blocks preserve the existing desig
 
 ## Challenge + Predict
 
-Eight challenges live in `apps/backend/challenges`: six Design challenges (two
-starter, two core, two advanced) and two Resilience challenges, calibrated against
+Nine challenges live in `apps/backend/challenges`: six Design challenges (two
+starter, two core, two advanced) and three Resilience challenges, calibrated against
 model 1/catalog 2026-08. A learner opens a per-challenge workspace (a saved design
 marked with its challenge and version), designs, answers fixed prediction questions and
 starts an attempt. The prediction is written in the same insert as the run and is
@@ -184,7 +183,7 @@ bounded text, timings, starter graph, allowed types, workload, fault plan,
 starter-fails/reference-passes calibration and that references are not shipped.
 
 **Resilience experiments.** A Resilience challenge adds one bounded experiment: one
-supported fault (Crash) at an authored simulated second on an explicit starter
+supported fault (Crash or CPU spike) at an authored simulated second on an explicit starter
 resource id and type. The server checks that the target exists, is reachable from an
 entry point and, for a server, sits behind a pooled load balancer; otherwise preflight
 and attempt creation explain why, and nothing is substituted. The plan is stored with
@@ -198,9 +197,68 @@ stop before the fault is established is not evaluated. Predictions are split int
 before-fault (baseline health) and while-active questions, judged from the retained
 action outcome and terminal capture. Initial pack: Lose an app server (crash `app-2`
 at 60 s) and Cache failure (crash the cache at 60 s). The debrief adds the experiment,
-its evidence, what it cannot show (no continuous series; fault end is not recovery) and
+its retained evidence, what it cannot show (gaps, outside the window; fault end is not recovery) and
 how to improve; compare states whether two attempts ran identical challenge conditions.
 Freeform manual chaos is unchanged.
+
+## Bounded experiment evidence
+
+Only resilience attempts retain completed-tick measurements. The fixed window is
+`max(0, faultSecond - 30)` through evaluation, inclusive, with at most 121 points,
+128 resources (including possible autoscaled replicas), 128 pool summaries and
+65,536 serialized payload bytes per sample. Authoring and attempt readiness refuse
+unsupported windows/designs. Capture keeps simulated second, actual measurement time,
+topology revision, overall health/load, resource health/CPU/memory and available
+RPS/connections, plus current/base replicas and pending provisioning/draining. Current
+replicas include placed crashed servers; the count does not establish serving health.
+No logs, topology copies, edge throughput, latency or error rates are sampled.
+
+`RunEvidenceSample` has a run/second primary key and run FK with cascade on run
+deletion. Inactive design deletion preserves the run and samples. SQL guards bound
+the window, payload, timestamps and identities and prevent updates. Run ownership
+scopes reports; ownerless legacy history remains quarantined. The additive migration
+also indexes bounded per-challenge latest-attempt queries and preserves existing rows.
+
+Ticks capture small points in memory; batches persist before another batch, fault
+application or terminal capture. A failed transaction/reply freezes advancement and
+retries the original captures. Canonical payload hashes accept identical retries
+without overwriting the first timestamp and reject conflicting seconds atomically.
+Capture-contract failure also freezes. Restart retains durable partial evidence and
+fails interrupted work; there is no checkpoint resume. Tick 60 measures the state
+before the scheduled fault applies at 60; tick 61 can first measure its effect.
+
+RunReport derives complete/incomplete/unavailable/not-applicable, expected/actual
+bounds, missing ranges and bounded key facts on the server. Old runs have no invented
+series. Normal Design/freeform runs retain no trace. Debriefs show a discrete health
+track and CPU/memory for one selected resource, applied/evaluation markers, gaps,
+key-moment table and keyboard-selectable individual seconds with equivalent text.
+Straight lines join adjacent retained seconds only; there is no interpolation,
+smoothing or value animation. Live WebSocket snapshots do not become a per-second
+chart. Existing Compare adds completeness and retained-window target peaks without
+another classifier, curve overlays, rankings or statistical claims.
+
+Research principles: bounded context and action annotations ([AWS FIS](https://docs.aws.amazon.com/fis/latest/userguide/experiment-report-configuration.html)),
+fault timing distinct from resource monitoring ([Azure Chaos Studio](https://learn.microsoft.com/en-us/azure/chaos-studio/chaos-studio-set-up-azure-monitor)),
+experiment-relevant health observations ([Gremlin](https://www.gremlin.com/docs/platform-health-checks))
+and explicitly timed measurements/gaps ([OpenTelemetry](https://opentelemetry.io/docs/specs/otel/metrics/data-model/)). No external telemetry infrastructure was added.
+
+**Headroom under CPU pressure@1** adds the single new fault challenge: 143 RPS,
+app-2 CPU spike at 60 for 20 seconds, evaluation at 80. Real-engine calibration
+compared CPU spike, memory leak, disk full and network delay. The published starter
+fails; a hidden reference sizing app-2 to c5.xlarge passes, with all predictions
+matched. Starter app-2 records 48.2% CPU at 60, 93.3% at 61 and 90.9% at 80;
+reference records 24.1%, 69.3% and 67.6%. Scaling remains pending at evaluation.
+The eight previously published definitions/hashes and engine model 1 are unchanged.
+
+**Recent learning** uses owner-scoped cursor pagination (maximum 50 rows), raw
+requirement/prediction counts, version/fault, report and Improve links. One indexed
+query per challenge selects its latest 20 attempts, so activity in another challenge
+cannot evict its latest attempt. The Met indicator explicitly means met in this
+recent window. Unknown/future versions remain unavailable and cannot silently retry
+as another version. Freeform reruns stay outside learning history. Reopening an
+already loaded workspace refreshes server-owned challenge identity after a freeform
+rerun without replacing unsaved canvas edits; late responses cannot relabel another
+account, design or live run.
 
 ## Web interface
 
@@ -214,7 +272,7 @@ Unknown, debrief first), `/runs/compare` (no winner), `/settings` and `/design`.
 rail, a keyboard-complete canvas, brief/inspector/checks panel and sheets below 768 px.
 Live runs always use Ink; attempts show only speed and stop and say why; freeform runs
 keep load, fault, resize, pool and live edits. Designer, report and compare load on
-demand (main chunk 248 kB). Resilience attempts add an experiment timeline (keyboard
+demand (main chunk 251 kB). Resilience attempts add an experiment timeline (keyboard
 and screen-reader readable, announced once per phase), text states such as "Crash on
 app-2 active · 14 simulated seconds remaining" and "Fault ended at second 90", the
 target marked on its card and a static failed tone on edges into failed resources;
@@ -222,51 +280,52 @@ no edge metrics are invented and reduced motion removes the fault outline animat
 
 ## Verification, failures and cleanup
 
-Code SHA `d9c943a` was validated exactly (`git archive HEAD` in Linux, CI commands).
-Tests, tooling, challenge checks, build and audit ran on its parent `54158c4`, which
-differs only in two integration-test expectations corrected after the first
-integration run.
+Started from `b397da0`. Evidence logs, integration JSON and browser screenshots stay
+in the OS temporary evidence directory outside Git; no agent memory or scratch archive
+was added.
 
 | Check | Actual result |
 | --- | --- |
-| Frozen install | 491 packages; lockfile unchanged |
-| Typecheck | Seven workspace tasks and release compiler passed |
-| Lint/boundaries | Five ESLint tasks; 1,993 imports, no cycles/runtime leaks |
-| Workspace tests | 230 passed: catalog 9, domain 15, simulation 32, web 59, backend 115 (9 DB cases run below) |
+| Frozen install | 498 installs across 548 packages; lockfile unchanged |
+| Typecheck | Seven workspace tasks and release compiler passed, including the navigation correction |
+| Lint/boundaries | Five ESLint tasks; 2,152 imports, no cycles/runtime leaks |
+| Workspace tests | 255 passed: catalog 9, domain 15, simulation 32, web 65, backend 134; 10 DB cases run below |
 | Engine | All 30 goldens plus jitter/connection-order regressions passed; engine and goldens unchanged |
-| `check:challenges` | 39 tests: every published hash pinned, validator refusals, no shipped references, starters fail and references pass for every latest version, exact versions judged, fault applied exactly at 1×/10×/60× |
-| Tooling | 23 passed |
-| PostgreSQL 18/Redis integration | 15 passed, 1,190 assertions across nine files on the commit image, including migration 14 guards and resilience attempts at 10× and 60×; no cleanup errors |
-| Docker | Normal-context image built, Compose fixture config passed, five entrypoints compiled |
-| Release rehearsal | All 27 stages passed on the commit image (migration, rollback, isolation, fail-closed); own resources removed |
-| Frontend build | Passed without chunk warning; main chunk 248 kB |
+| `check:challenges` | 56 passed across six files, including immutable hashes, all nine calibrated challenges, four-fault research, trace ordering and exact 1×/10×/60× scheduling |
+| Tooling | 23 passed, 279 assertions |
+| PostgreSQL 18/Redis | 16 passed, 1,253 assertions across ten files; real sessions/ownership, all migration proofs, 1×/10×/60× traces, frozen writes, terminal retry, restart prefixes, gaps and 302-record mixed-version history; no harness cleanup errors |
+| Docker | Normal-context code image built; Compose fixture and all five packaged entrypoints passed |
+| Release rehearsal | All 27 stages passed on the backend code image: migration/postchecks, real sessions, worker replacement, pooling, TLS/Origin, dependency loss and compatible rollback; owned rehearsal resources removed |
+| Frontend build | Passed without chunk warning; main chunk 251 kB |
 | Dependency audit | `{}` |
 
-The first integration run failed two new tests, both test errors: a JSON array sent
-as a PostgreSQL array literal never reached the CHECK constraint, and identical
-resilience attempts were expected to be a deterministic-state match although the
-fault is an affecting action (they are a matched pair).
+Validation exposed and repaired an import cycle, fixture typing and a real new-migration
+SQL operator-precedence error that rejected samples containing pool summaries. A real
+PostgreSQL pending-pool regression now exercises that path. The initial full integration
+suite stalled at its first 1× trace; the corrected full suite above passed. Docker image
+installation initially failed extracting TypeScript, then succeeded unchanged on retry.
+Windows paging pressure subsequently stopped Docker and interrupted source copies in
+owned containers. The owner recovered Docker; copied sources are refreshed and checked,
+and final validation runs sequentially. No machine settings or unrelated apps changed.
 
-Authenticated browser QA ran the real SPA against a disposable local stack (API, WS,
-worker, PostgreSQL 18, Redis 8 in labelled containers) with a fixture session created
-through Better Auth's adapter on localhost only. It covered the Design/Resilience list,
-resilience briefs and timeline, the target marked in the designer, a removed target
-blocking the attempt with its reason, the phased predict dialog, live baseline, active
-and ended states with the fault applied at exactly second 60 inside a 10× batch,
-debriefs for a failed and a passed attempt, a stop during the fault (not evaluated),
-the action timeline label, compare of identical attempts and an unchanged freeform
-fault, at 375, 768, 1280 and 1920 px with no horizontal page overflow. Reduced motion
-is covered by a CSS test; the browser pane cannot emulate it. QA found and fixed a
-misaligned timeline legend, a wrapping target label, a duplicated schedule line, a
-tall live strip on phones and Improve reopening a finished run. Earlier milestones'
-route, theme and contrast sweeps are unchanged.
+Authenticated browser QA used the actual SPA/API/WS/worker with disposable PostgreSQL
+18/Redis 8 and real Better Auth adapter sessions. Lose an app server at 10× and Cache
+failure at 60× retained 61 samples (30–90); early stop at 70 retained 41 samples and
+remained not evaluated; CPU starter/reference at 60× retained 51 samples (30–80) and
+failed/passed respectively, with every prediction matched. Fault markers and values at
+59/60/61/evaluation agree with server evidence. A deliberate fixture gap at 42–43 breaks
+both pressure paths and is labelled incomplete. Resource/second keyboard selectors,
+focus outlines, table/text equivalents, Compare with complete/absent traces and a real
+freeform Run again (matched stop 80, no fault/trace) were exercised. Improve exposed the
+same-workspace identity defect described above; the repaired browser flow completed a new CPU attempt at 1× with 51 exact samples, all predictions matched and the same calibrated result.
+Paper trace layouts passed at 375/768/1280/1920 px without horizontal page overflow;
+Ink trace/gap and live-rerun layouts passed at narrow/wide sizes. Trace nodes have no
+animations/transitions; reduced-motion CSS tests pass, but this browser cannot emulate
+an OS reduced-motion setting. OAuth provider sign-in was not claimed from fixture login.
 
-Earlier milestones' database proofs (ownership, sessions, exact teardown, reruns,
-matched stops, migrations) still run in the integration suite above. Windows Bun
-remains unreliable on this host (native crashes), so final checks ran in Linux
-containers. Owned QA containers, network, images, volumes and scratch were removed;
-evidence stays outside Git. No agent-memory folder or scratch archive was added.
-
+Owned fixtures are removed after their proofs complete; only unique evidence is retained.
+Earlier ownership, session, run-input, action, exact teardown, rerun and migration proofs
+remain in the full integration suite. Local and CI verification is not production proof.
 ## Parked hosted work and remaining limits
 
 B0.6E stopped before database access with identity/reset-credential gates unfinished.
@@ -289,14 +348,15 @@ QA used a local fixture session. The sample design deliberately keeps the two re
 warnings its domain tests pin (vm-2 has no data path, monitor-1 is unreachable).
 Every challenge is still at version 1, so the upgrade path (older-workspace notice,
 fresh or copied workspace) is proven by registry fixtures, server-rendered tests and
-SQL guards, not by a real second version in the browser. An experiment keeps only the
-fault action outcome and the terminal capture: there is no per-second series between
-the fault and evaluation, no recovery measurement, one fault type and one fault per
-attempt. Freeze on a failed experiment write is unit-tested, not fault-injected
-against PostgreSQL. Local/CI proof is not production readiness.
+SQL guards, not by a real second version in the browser. Experiments retain one fault
+and a bounded tick window, not continuous monitoring. Evidence before the window,
+missing points and actual recovery remain unknown. Published evaluation stops occur
+on the last active fault tick, so these traces cannot establish post-fault recovery.
+Restart fails interrupted work; it never resumes a checkpoint. Recent Met indicators
+cover the latest 20 attempts rather than an invented lifetime achievement. Local/CI
+proof is not production readiness.
 
-Next product milestone: **Experiment evidence over time**: a bounded, retained
-per-second health series for attempt windows so debriefs can show how the system moved
-between the fault and evaluation, a second fault type in the pack, and a factual
-cross-challenge attempt history with no scores, while hosted production work stays
-parked.
+Next product milestone: guided evidence reading and deliberate single-change
+improvements. Any recovery challenge needs an explicitly authored and calibrated
+post-fault observation window; recovery must not be inferred from fault completion.
+Hosted production remains parked.
