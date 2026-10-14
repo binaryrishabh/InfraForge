@@ -4,13 +4,16 @@ import { clearOldBrowserAccounts } from "../drafts";
 import { useCanvasStore } from "../../canvas/store/canvasStore";
 import { useSimulationStore } from "../../monitoring/store/simulationStore";
 import { cancelUserRequests } from "../../../client/httpClient";
+import { credentialBody, CredentialError, type CredentialFields } from "../credentials";
 
-export interface SessionUser { id: string; name: string; email: string; createdAt: string }
+export interface SessionUser { id: string; name: string; username: string | null; email: string; emailVerified: boolean; createdAt: string }
 interface AuthState {
   user: SessionUser | null;
   status: "hydrating" | "authenticated" | "guest" | "error";
   hydrate: () => Promise<void>;
   signIn: (provider: "google" | "github") => Promise<void>;
+  signInCredentials: (identifier: string, password: string) => Promise<void>;
+  signUp: (fields: CredentialFields) => Promise<void>;
   signOut: () => Promise<void>;
   expire: () => void;
 }
@@ -38,6 +41,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         resetUserState();
       }
       set({ user: data ? { id: data.user.id, name: data.user.name, email: data.user.email,
+        username: data.user.username ?? null, emailVerified: data.user.emailVerified,
         createdAt: new Date(data.user.createdAt).toISOString() } : null,
         status: data ? "authenticated" : "guest" });
     } catch {
@@ -50,6 +54,18 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const { error } = await authClient.signIn.social({ provider,
       callbackURL: `${window.location.origin}/home`, errorCallbackURL: `${window.location.origin}/signin` });
     if (error) throw new Error("Sign-in could not be started. Try again.");
+  },
+  signInCredentials: async (identifier, password) => {
+    const { error } = await authClient.$fetch("/sign-in/identifier", { method: "POST", body: credentialBody(identifier, password) });
+    if (error) throw new CredentialError(undefined, error.status);
+    await get().hydrate();
+    if (get().status !== "authenticated") throw new Error("Your session could not be loaded. Try signing in again.");
+  },
+  signUp: async ({ username, email, password }) => {
+    const { error } = await authClient.signUp.email({ username, name: username, email: email.trim().toLowerCase(), password });
+    if (error) throw new CredentialError(error.code, error.status);
+    await get().hydrate();
+    if (get().status !== "authenticated") throw new Error("Your session could not be loaded. Try signing in again.");
   },
   signOut: async () => {
     const { error } = await authClient.signOut();

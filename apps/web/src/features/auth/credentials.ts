@@ -1,0 +1,24 @@
+import { LOGIN_ERROR, PASSWORD_MIN, PASSWORD_MAX, validUsername } from "@infraforge/contracts/auth";
+
+export type CredentialFields = { username: string; email: string; password: string };
+export type FieldErrors = Partial<Record<keyof CredentialFields | "identifier", string>>;
+export function signupErrors(fields: CredentialFields): FieldErrors {
+  const errors: FieldErrors = {};
+  if (!validUsername(fields.username)) errors.username = "Use 3–30 letters, numbers or underscores, starting with a letter.";
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(fields.email.trim())) errors.email = "Enter a valid email address.";
+  if (fields.password.length < PASSWORD_MIN || fields.password.length > PASSWORD_MAX) errors.password = `Use ${PASSWORD_MIN}–${PASSWORD_MAX} characters.`;
+  return errors;
+}
+export function signupFailure(code?: string): FieldErrors & { message?: string } {
+  if (code === "USERNAME_IS_ALREADY_TAKEN") return { username: "That username is unavailable. Choose another." };
+  if (code === "INVALID_USERNAME" || code === "USERNAME_TOO_SHORT" || code === "USERNAME_TOO_LONG") return { username: "Use 3–30 letters, numbers or underscores, starting with a letter." };
+  if (code === "INVALID_EMAIL") return { email: "Enter a valid email address." };
+  if (code === "PASSWORD_TOO_SHORT" || code === "PASSWORD_TOO_LONG") return { password: `Use ${PASSWORD_MIN}–${PASSWORD_MAX} characters.` };
+  return { message: "An account could not be created with these details. If you have an account, sign in using your original method; otherwise try another username or email." };
+}
+export function credentialBody(identifier: string, password: string) {
+  return { identifier: identifier.trim(), password };
+}
+export class CredentialError extends Error {
+  constructor(readonly code?: string, readonly status?: number) { super(LOGIN_ERROR); }
+}

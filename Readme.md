@@ -101,17 +101,22 @@ session. To stop these owned data services without deleting developer data:
 docker compose --env-file .env.development.local -f ops/compose.dev.yml stop
 ```
 
-OAuth is intentionally unconfigured in this isolated workflow. Authentication still
-uses real database sessions; it has no public test-login endpoint or browser-only
-identity bypass. Disposable integration tests create fixture users/sessions through
-Better Auth's adapter, separate from developer data. Provider configuration is
+OAuth is intentionally unconfigured in this isolated workflow. Open
+`http://localhost:5173/signup` and create a username, email and password (15–128
+characters). Sign out from the account menu, then sign in with either your username
+or email and the same password. These are real Better Auth database sessions,
+with no test-login endpoint or browser identity bypass. Disposable integration
+tests register credential users through public routes, separate from developer data.
+Provider configuration is
 described in [authentication setup](docs/AUTHENTICATION.md); hosted settings and
 production cutover are currently parked.
 
 ## Quick tour
 
-1. Open http://localhost:5173 and sign in with a configured Google/GitHub provider.
-2. Open the **Designer** and click *Load sample architecture*.
+1. Open http://localhost:5173/signup and create an account; later use username/email
+   and password at `/signin`. Google/GitHub appear only when configured.
+2. Open the **Designer** on a window at least 1100px wide. Smaller windows show a
+   deliberate larger-workspace page; other pages remain usable on phones.
 3. **Save**, then **Deploy** — pick a scenario preset (try *Peak Hours*).
 4. Watch the pipeline run, then the canvas go **LIVE** with telemetry cards.
 5. Push the load slider past 100%, inject a **Crash** on the cache, and

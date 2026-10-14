@@ -62,8 +62,8 @@ function App() {
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route element={<PublicOnlyRoute />}>
-          <Route path="/signin" element={<SignInPage />} />
-          <Route path="/signup" element={<SignInPage />} />
+          <Route path="/signin" element={<SignInPage key="signin" />} />
+          <Route path="/signup" element={<SignInPage key="signup" mode="signup" />} />
         </Route>
         <Route element={<ProtectedRoute />}>
           <Route element={<AppShell />}>

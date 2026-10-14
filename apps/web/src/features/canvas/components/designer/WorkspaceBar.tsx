@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
-import { Undo2, Redo2, Save, Play, Lock, PanelLeft, PanelRight } from "lucide-react";
+import { Undo2, Redo2, Save, Play, Lock } from "lucide-react";
 import { errorMessage } from "@/api/errorMessage";
 import { BrandMark } from "@/ui/Brand";
 import { Button } from "@/ui/Button";
@@ -19,7 +19,7 @@ async function save() {
 
 /* The designer's single bar: where you are, what this design is, its save state,
 history, and the one primary action (run, or start a challenge attempt). */
-export function WorkspaceBar({ challengeTitle, onPalette, onPanel }: { challengeTitle: string | null; onPalette: () => void; onPanel: () => void }) {
+export function WorkspaceBar({ challengeTitle }: { challengeTitle: string | null }) {
   const canUndo = useCanvasStore((s) => s.undoStack.length > 0);
   const canRedo = useCanvasStore((s) => s.redoStack.length > 0);
   const saved = useCanvasStore((s) => s.currentLayoutSaved);
@@ -38,12 +38,10 @@ export function WorkspaceBar({ challengeTitle, onPalette, onPanel }: { challenge
         </Tag>
       )}
       <div className="ml-auto flex shrink-0 items-center gap-0.5 sm:gap-1">
-        <IconButton label="Resources" icon={<PanelLeft size={16} />} onClick={onPalette} className="lg:hidden" />
         <IconButton label="Undo (Ctrl+Z)" icon={<Undo2 size={16} />} onClick={undo} disabled={!canUndo || busy} className="max-sm:hidden" />
         <IconButton label="Redo (Ctrl+Shift+Z)" icon={<Redo2 size={16} />} onClick={redo} disabled={!canRedo || busy} className="max-sm:hidden" />
         <Button variant="secondary" size="sm" className="max-sm:hidden" icon={<Save size={14} aria-hidden="true" />}
           onClick={() => void save()} disabled={busy || empty || (hasId && saved)}>{hasId && saved ? "Saved" : "Save"}</Button>
-        <IconButton label="Details panel" icon={<PanelRight size={16} />} onClick={onPanel} className="md:hidden" />
         <Button variant="primary" size="sm" onClick={requestRun} disabled={busy || empty} aria-label={challenge ? "Predict and run" : undefined}
           icon={challenge ? <Lock size={14} aria-hidden="true" /> : <Play size={14} aria-hidden="true" />}>
           {challenge ? <><span className="hidden sm:inline">Predict and run</span><span className="sm:hidden">Run</span></> : "Run"}

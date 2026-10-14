@@ -38,9 +38,10 @@ export function SettingsPage() {
         {user && (
           <dl className="grid gap-3 text-sm sm:grid-cols-2">
             <div><dt className="text-xs text-ink-3">Name</dt><dd className="text-ink">{user.name}</dd></div>
+            <div><dt className="text-xs text-ink-3">Username</dt><dd className="text-ink">{user.username ?? "Not set"}</dd></div>
             <div><dt className="text-xs text-ink-3">Email</dt><dd className="break-all text-ink">{user.email}</dd></div>
             <div><dt className="text-xs text-ink-3">Member since</dt><dd className="text-ink">{formatDate(user.createdAt)}</dd></div>
-            <div><dt className="text-xs text-ink-3">Sign-in</dt><dd className="text-ink">Through your Google or GitHub account</dd></div>
+            <div><dt className="text-xs text-ink-3">Email verification</dt><dd className="text-ink">{user.emailVerified ? "Verified" : "Not verified"}</dd></div>
           </dl>
         )}
         <Button className="mt-5" variant="secondary" icon={<LogOut size={15} aria-hidden="true" />} onClick={() => void leave()}>Sign out</Button>

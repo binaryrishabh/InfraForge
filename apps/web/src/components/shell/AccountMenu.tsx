@@ -14,15 +14,15 @@ export function AccountMenu({ compact = false }: { compact?: boolean }) {
     catch { toast.error("Sign-out could not be confirmed. Try again."); }
   };
   return (
-    <Menu triggerLabel={`Account: ${user.name}`} width="w-64"
+    <Menu triggerLabel={`Account: ${user.username ?? user.name}`} width="w-64"
       triggerClassName={compact ? "inline-flex size-8 items-center justify-center rounded-full border border-line-strong bg-surface text-[13px] font-semibold text-ink hover:border-ink-3"
         : "inline-flex h-9 items-center gap-2 rounded-md border border-transparent px-1.5 text-sm text-ink-2 hover:bg-sunken hover:text-ink"}
       trigger={<>
         <span aria-hidden="true" className={compact ? "" : "inline-flex size-7 items-center justify-center rounded-full border border-line-strong bg-surface text-[13px] font-semibold text-ink"}>{initial}</span>
-        {!compact && <span className="hidden max-w-[14ch] truncate lg:inline">{user.name}</span>}
+        {!compact && <span className="hidden max-w-[14ch] truncate lg:inline">{user.username ?? user.name}</span>}
       </>}
       header={<div className="mb-1 border-b border-line px-2.5 pt-1.5 pb-2.5">
-        <p className="truncate text-sm font-semibold text-ink">{user.name}</p>
+        <p className="truncate text-sm font-semibold text-ink">{user.username ?? user.name}</p>
         <p className="truncate text-xs text-ink-3">{user.email}</p>
       </div>}
       items={[

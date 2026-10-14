@@ -1,18 +1,23 @@
 import { useCanvasPersistence } from "../hooks/useCanvasPersistence";
-import { useCanvasKeyboardShortcuts } from "../hooks/useCanvasKeyboardShortcuts";
+import { lazy, Suspense } from "react";
+import { useMediaQuery } from "@/lib/useMediaQuery";
+import { DESIGNER_QUERY } from "../designerViewport";
+import { WorkspaceRequired } from "./WorkspaceRequired";
 import { useCanvasStore } from "../store/canvasStore";
-import { DesignWorkspace } from "./designer/DesignWorkspace";
-import { LiveWorkspace } from "@/features/live/LiveWorkspace";
 import { SkipLink } from "@/components/shell/AppShell";
+const DesignWorkspace = lazy(() => import("./designer/DesignWorkspace").then((m) => ({ default: m.DesignWorkspace })));
+const LiveWorkspace = lazy(() => import("@/features/live/LiveWorkspace").then((m) => ({ default: m.LiveWorkspace })));
 
 export function CanvasDesignerPage() {
   useCanvasPersistence();
-  useCanvasKeyboardShortcuts();
+  const supported = useMediaQuery(DESIGNER_QUERY);
   const activeRun = useCanvasStore((s) => s.activeDeploymentId);
   return (
     <>
       <SkipLink />
-      {activeRun ? <LiveWorkspace key={activeRun} deploymentId={activeRun} /> : <DesignWorkspace />}
+      <Suspense fallback={<p role="status" className="p-6 text-sm">Opening workspace…</p>}>
+        {supported ? activeRun ? <LiveWorkspace key={activeRun} deploymentId={activeRun} /> : <DesignWorkspace /> : <WorkspaceRequired />}
+      </Suspense>
     </>
   );
 }

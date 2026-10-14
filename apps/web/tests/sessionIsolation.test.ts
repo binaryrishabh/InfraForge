@@ -10,8 +10,11 @@ const user = (id: string) => ({ id, name: id, email: `${id}@infraforge.test`, cr
 const response = (id: string) => ({ data: { user: user(id) }, error: null });
 let readSession = async (): Promise<unknown> => response("alice");
 let logout = async (): Promise<unknown> => ({ error: null });
+let credentialResult = { error: null as { code: string; status: number } | null };
+const credentialSignIn = mock(async () => credentialResult);
+const emailSignUp = mock(async () => credentialResult);
 mock.module("../src/features/auth/sessionClient", () => ({ authClient: {
-  getSession: () => readSession(), signOut: () => logout(), signIn: { social: mock() },
+  getSession: () => readSession(), signOut: () => logout(), $fetch: credentialSignIn, signIn: { social: mock() }, signUp: { email: emailSignUp },
 } }));
 const { useAuthStore } = await import("../src/features/auth/store/auth.store");
 const { useCanvasStore } = await import("../src/features/canvas/store/canvasStore");
@@ -20,6 +23,20 @@ const { draftKey } = await import("../src/features/auth/drafts");
 const { http } = await import("../src/client/httpClient");
 
 afterEach(() => { useAuthStore.getState().expire(); storage.clear(); });
+
+test("native credential success hydrates the real session and both namespaces share isolation", async () => {
+  credentialResult = { error: null };
+  readSession = async () => response("credential-user");
+  await useAuthStore.getState().signUp({ username: "Learner", email: "learner@example.test", password: "opaque-test-value" });
+  expect(useAuthStore.getState().user?.id).toBe("credential-user");
+  await useAuthStore.getState().signInCredentials("LEARNER@example.test", "opaque-test-value");
+  expect(credentialSignIn).toHaveBeenCalled();
+  await useAuthStore.getState().signInCredentials("Learner", "opaque-test-value");
+  expect(credentialSignIn).toHaveBeenCalledTimes(2);
+  credentialResult = { error: { code: "INVALID_USERNAME_OR_PASSWORD", status: 401 } };
+  await expect(useAuthStore.getState().signInCredentials("Absent", "opaque-test-value")).rejects.toThrow("Username, email or password is incorrect.");
+  credentialResult = { error: null };
+});
 
 test("changing server identity clears canvas, saved layouts, modals and telemetry", async () => {
   readSession = async () => response("alice");

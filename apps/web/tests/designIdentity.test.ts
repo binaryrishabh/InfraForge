@@ -5,7 +5,7 @@ import { useAuthStore } from "../src/features/auth/store/auth.store";
 import { useCanvasStore } from "../src/features/canvas/store/canvasStore";
 import { refreshDesignIdentity } from "../src/features/canvas/designIdentity";
 
-const owner = (id: string) => ({ id, name: id, email: `${id}@infraforge.test`, createdAt: new Date(0).toISOString() });
+const owner = (id: string) => ({ id, name: id, username: null, email: `${id}@infraforge.test`, emailVerified: true, createdAt: new Date(0).toISOString() });
 const design = { id: "workspace", challengeId: "headroom-under-cpu-pressure", challengeVersion: 1 };
 afterEach(() => { useCanvasStore.getState().clearCanvas(); useAuthStore.setState({ user: null, status: "guest" }); });
 

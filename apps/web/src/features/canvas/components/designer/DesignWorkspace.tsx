@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import { Dialog } from "@/ui/Dialog";
-import { useMediaQuery } from "@/lib/useMediaQuery";
+import { useCanvasKeyboardShortcuts } from "../../hooks/useCanvasKeyboardShortcuts";
 import { ConfirmDialog } from "@/ui/ConfirmDialogs";
 import { useChallengeBrief } from "@/features/challenges/useChallengeBrief";
 import { useChallengePreflight } from "@/features/challenges/useChallengePreflight";
@@ -20,14 +19,13 @@ import { SidePanel, type SideTab } from "./SidePanel";
 import { StatusBar } from "./StatusBar";
 import { ImprovementNotice } from "./ImprovementNotice";
 
-/* Designer layout: one bar, a docked resource list, the drafting sheet in the
-centre and a context column. Below the large breakpoint the list becomes a
-sheet; below medium the context column does too. The canvas is never covered
-by a permanent panel. */
+/* One desktop Designer: palette, drafting sheet and details. The page gate
+mounts this implementation only when all three have usable space. */
 const RAIL_KEY = "infraforge:palette-rail";
 const readRail = () => { try { return localStorage.getItem(RAIL_KEY) === "1"; } catch { return false; } };
 
 export function DesignWorkspace() {
+  useCanvasKeyboardShortcuts();
   const route = useDesignRoute();
   const challengeId = useCanvasStore((s) => s.currentChallengeId);
   const selection = useCanvasStore((s) => s.selectedResourceForConfigId);
@@ -42,9 +40,6 @@ export function DesignWorkspace() {
   }, [experimentKey]);
   const preflight = useChallengePreflight(challengeId);
   const [tab, setTab] = useState<SideTab>(challengeId ? "brief" : "inspect");
-  const [paletteOpen, setPaletteOpen] = useState(false);
-  const [panelOpen, setPanelOpen] = useState(false);
-  const wide = useMediaQuery("(min-width: 768px)");
   const [railOnly, setRailOnly] = useState(readRail);
   const setRail = (value: boolean) => { setRailOnly(value); try { localStorage.setItem(RAIL_KEY, value ? "1" : "0"); } catch { /* storage unavailable */ } };
 
@@ -61,10 +56,10 @@ export function DesignWorkspace() {
   return (
     <CanvasDnd>
       <div className="flex h-dvh flex-col overflow-hidden bg-bg text-ink">
-        <WorkspaceBar challengeTitle={title} onPalette={() => setPaletteOpen(true)} onPanel={() => setPanelOpen(true)} />
+        <WorkspaceBar challengeTitle={title} />
         <ImprovementNotice />
         <div className="relative flex min-h-0 flex-1">
-          <aside className={`hidden shrink-0 border-r border-line bg-surface lg:block ${railOnly ? "w-14" : "w-64"}`}>
+          <aside className={`shrink-0 border-r border-line bg-surface ${railOnly ? "w-14" : "w-64"}`}>
             {railOnly ? <PaletteRail onExpand={() => setRail(false)} /> : <PalettePanel onCollapse={() => setRail(true)} />}
           </aside>
           <main id="main" tabIndex={-1} className="relative flex min-w-0 flex-1 flex-col outline-none" aria-label="Design canvas">
@@ -72,19 +67,10 @@ export function DesignWorkspace() {
             <CanvasEmptyState />
             {route.loading && <p role="status" className="absolute top-3 left-1/2 z-30 -translate-x-1/2 rounded-md border border-line bg-raised px-3 py-1.5 text-sm shadow-e2">Opening design…</p>}
           </main>
-          <aside className="hidden w-[340px] shrink-0 border-l border-line bg-surface md:block" aria-label="Design details">{panel("side")}</aside>
+          <aside className="w-[340px] shrink-0 border-l border-line bg-surface" aria-label="Design details">{panel("side")}</aside>
         </div>
-        <StatusBar onChecks={() => { setTab("checks"); if (!wide) setPanelOpen(true); }} />
+        <StatusBar onChecks={() => setTab("checks")} />
       </div>
-
-      <Dialog open={paletteOpen} onOpenChange={setPaletteOpen} title="Add a resource" size="sm">
-        <div className="-mx-5 -my-4 h-[60dvh]"><PalettePanel draggable={false} onAdded={() => setPaletteOpen(false)} /></div>
-      </Dialog>
-      {!wide && (
-        <Dialog open={panelOpen} onOpenChange={setPanelOpen} title={tab === "brief" ? "Challenge brief" : tab === "checks" ? "Checks" : "Inspector"} size="md">
-          <div className="-mx-5 -my-4 h-[70dvh]">{panel("sheet")}</div>
-        </Dialog>
-      )}
 
       <DesignDialogs />
       {brief?.data && modal?.type === "attempt" && (
