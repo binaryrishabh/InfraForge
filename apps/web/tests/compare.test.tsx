@@ -27,8 +27,8 @@ test("compare loading/errors/legacy evidence do not invent final-state deltas", 
   expect(html).toContain("Side-by-side only"); expect(html).toContain("Legacy provenance unknown");
   expect(html).toContain("withheld"); expect(html).toContain("not a cloud bill");
   expect(html).toContain("later minus earlier"); expect(html).toContain('<th scope="col"'); expect(html).toContain('<th scope="row"');
-  expect(html).toContain('sm:hidden'); expect(html).toContain('hidden sm:table'); expect(html).not.toContain("overflow-x");
-  expect(html).toContain('href="/reports/a"'); expect(html).toContain('href="/reports/b"');
+  expect(html).toContain('sm:hidden'); expect(html).toContain('sm:table'); expect(html).not.toContain("overflow-x");
+  expect(html).toContain('href="/runs/a"'); expect(html).toContain('href="/runs/b"');
   expect(html).toContain("No usable final evidence"); expect(html).not.toContain("winner");
 });
 test("two-run selection is keyboard-native, bounded and gives live/pending reasons", () => {

@@ -1,0 +1,131 @@
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { PanelRight, Plus } from "lucide-react";
+import { DeploymentStatus } from "@infraforge/contracts/deployment";
+import { getSpecificInfrastructure } from "@/api/infrastructure.api";
+import { useDeploymentSocket } from "@/features/deployment/hooks/useDeploymentSocket";
+import { useCanvasStore } from "@/features/canvas/store/canvasStore";
+import { useLiveTopologySync } from "@/features/canvas/hooks/useLiveTopologySync";
+import { CanvasDnd } from "@/features/canvas/components/CanvasDnd";
+import { CanvasBoard } from "@/features/canvas/components/CanvasBoard";
+import { PalettePanel } from "@/features/canvas/components/palette/PalettePanel";
+import { ZoomControls } from "@/features/canvas/components/ZoomControls";
+import { useChallengeBrief } from "@/features/challenges/useChallengeBrief";
+import { useSimulationStore } from "@/features/monitoring/store/simulationStore";
+import { useMediaQuery } from "@/lib/useMediaQuery";
+import { Button, ButtonLink } from "@/ui/Button";
+import { Dialog } from "@/ui/Dialog";
+import { HealthMark } from "@/ui/HealthMark";
+import { RunBar } from "./RunBar";
+import { LivePanel, type LiveTab } from "./LivePanel";
+import { GateList } from "./GatesPanel";
+import { useStopRun } from "./useStopRun";
+import { runPhase } from "./runState";
+import { plural } from "@/lib/format";
+
+const leaveRun = () => {
+  const store = useCanvasStore.getState();
+  store.setActiveDeploymentId(null); store.setIsDeploying(false); store.setLiveLocked(false); store.setLiveMode(false);
+  // A freeform rerun can start from a challenge workspace; back in the designer the
+  // canvas takes its challenge identity from the saved record, as a loaded design does.
+  const layoutId = store.currentLayoutId;
+  if (layoutId) void getSpecificInfrastructure(layoutId).then((design) => {
+    const current = useCanvasStore.getState();
+    if (current.currentLayoutId === layoutId && !current.activeDeploymentId) current.setCurrentChallengeId(design.challengeId ?? null);
+  }).catch(() => undefined);
+};
+
+/* The live run: always in the ink theme so it reads as an instrument, distinct
+from the paper design sheet. The architecture stays in the middle; state and
+controls live in one bar and one column. */
+export function LiveWorkspace({ deploymentId }: { deploymentId: string }) {
+  const { deployment, status, completedStages, timeline } = useDeploymentSocket(deploymentId);
+  const { stop, stopping, stopped } = useStopRun(deploymentId);
+  const resources = useCanvasStore((s) => s.resources);
+  const selected = useCanvasStore((s) => s.resources.find((r) => r.id === s.selectedResourceForConfigId));
+  const overall = useSimulationStore((s) => s.health);
+  const seconds = useSimulationStore((s) => s.simulatedSeconds);
+  const challenge = deployment?.challengeId ?? null;
+  const brief = useChallengeBrief(challenge);
+  const phase = runPhase(stopped ? "torn-down" : status, stopping);
+  const isLive = status === DeploymentStatus.LIVE && !stopped;
+  const wide = useMediaQuery("(min-width: 768px)");
+  const [tab, setTab] = useState<LiveTab>("controls");
+  const [panelOpen, setPanelOpen] = useState(false);
+  const [paletteOpen, setPaletteOpen] = useState(false);
+
+  // Portalled dialogs and toasts read the theme from the document root, so the whole page switches to ink.
+  useEffect(() => {
+    const root = document.documentElement, previous = root.dataset.theme;
+    root.dataset.theme = "ink";
+    return () => { if (previous) root.dataset.theme = previous; else delete root.dataset.theme; };
+  }, []);
+  // Challenge attempts are read-only for the whole run; freeform runs sync accepted canvas edits.
+  useEffect(() => { useCanvasStore.getState().setLiveLocked(!!challenge); }, [challenge]);
+  useLiveTopologySync(isLive && deployment !== null && !challenge, deploymentId);
+  useEffect(() => {
+    const store = useCanvasStore.getState();
+    store.setLiveMode(isLive);
+    if (isLive || ["failed", "torn-down", "completed"].includes(status)) store.setIsDeploying(false);
+    return () => store.setLiveMode(false);
+  }, [isLive, status]);
+  // Selecting a resource on the canvas brings its live view forward.
+  const [seenSelection, setSeenSelection] = useState(selected?.id);
+  if (seenSelection !== selected?.id) { setSeenSelection(selected?.id); if (selected) setTab("resource"); }
+
+  const panel = <LivePanel tab={tab} onTab={setTab} deploymentId={deploymentId} run={deployment} status={status} completed={completedStages} timeline={timeline}
+    resources={resources} selected={selected} brief={brief?.data ?? null} isLive={isLive} />;
+  const finished = phase === "finished" || phase === "failed";
+  return (
+    <div data-theme="ink" className="flex h-dvh flex-col overflow-hidden bg-bg text-ink">
+      <RunBar run={deployment} deploymentId={deploymentId} phase={phase} challengeTitle={brief?.data?.title ?? null} onStop={stop} stopping={stopping} />
+      <CanvasDnd>
+        <div className="relative flex min-h-0 flex-1">
+          <main id="main" tabIndex={-1} className="relative flex min-w-0 flex-1 flex-col outline-none" aria-label="Live architecture">
+            <CanvasBoard label="Live architecture. Tab through resources; Enter shows live measurements." />
+            <div className="pointer-events-none absolute inset-x-3 top-3 z-20 flex flex-wrap items-start justify-between gap-2">
+              <div className="pointer-events-auto flex items-center gap-2 rounded-md border border-line bg-surface/95 px-3 py-1.5 shadow-e2">
+                <span className="text-xs text-ink-3">Overall</span>{overall ? <HealthMark value={overall} /> : <span className="text-sm text-ink-3">no measurement yet</span>}
+              </div>
+              {isLive && !challenge && (
+                <Button className="pointer-events-auto" size="sm" variant="secondary" icon={<Plus size={14} aria-hidden="true" />} onClick={() => setPaletteOpen(true)}>Add resource</Button>
+              )}
+            </div>
+            {(phase === "starting" || phase === "connection" || (phase === "failed" && !deployment?.liveTopology)) && (
+              <div className="absolute inset-0 z-20 flex items-center justify-center bg-scrim/40 p-4">
+                <section aria-labelledby="starting-title" className="w-full max-w-[380px] rounded-lg border border-line bg-surface p-5 shadow-e3" aria-live="polite">
+                  <h2 id="starting-title" className="if-title text-[20px]">{phase === "connection" ? "Reconnecting to the run…" : phase === "failed" ? "The run did not start" : "Starting the run"}</h2>
+                  <p className="mt-1 text-sm text-ink-2">{phase === "failed" ? "A gate stopped it. The recorded reason is below." : "Three gates record evidence before the simulation goes live."}</p>
+                  <div className="mt-4"><GateList status={status} completed={completedStages} /></div>
+                  {phase === "failed" && <p role="alert" className="mt-3 border-l-2 border-fail pl-2.5 text-sm">{timeline.at(-1)?.message ?? "No failure message was recorded."}</p>}
+                  {phase === "failed" && <Button className="mt-4" variant="secondary" size="sm" onClick={leaveRun}>Back to the designer</Button>}
+                </section>
+              </div>
+            )}
+            {finished && deployment?.liveTopology && (
+              <div role="status" className="absolute inset-x-3 bottom-14 z-20 mx-auto flex max-w-[640px] flex-wrap items-center gap-3 rounded-lg border border-line bg-surface px-4 py-3 shadow-e3">
+                <p className="min-w-0 flex-1 text-sm text-ink">{phase === "failed" ? "This run failed." : `This run stopped at simulated second ${seconds}.`}
+                  {challenge && phase !== "failed" && " The result compares your design and your prediction with what was recorded."}</p>
+                <ButtonLink to={`/runs/${deploymentId}`} variant="primary" size="sm">{challenge ? "See the result" : "Open the report"}</ButtonLink>
+                {deployment.sourceRunId && <Link className="text-sm font-medium text-accent hover:underline" to={`/runs/compare?a=${deployment.sourceRunId}&b=${deploymentId}`}>Compare with source</Link>}
+                <Button variant="ghost" size="sm" onClick={leaveRun}>Back to the designer</Button>
+              </div>
+            )}
+            <div className="flex h-10 shrink-0 items-center justify-between border-t border-line bg-surface px-3 text-xs text-ink-3">
+              <span className="if-num">{plural(resources.length, "resource")} · revision {deployment?.topologyRevision ?? 0}{challenge ? " · design locked for this attempt" : ""}</span>
+              <div className="flex items-center gap-1">
+                {!wide && <Button size="sm" variant="ghost" icon={<PanelRight size={14} aria-hidden="true" />} onClick={() => setPanelOpen(true)}>Details</Button>}
+                <ZoomControls />
+              </div>
+            </div>
+          </main>
+          {wide && <aside className="w-[360px] shrink-0 border-l border-line bg-surface" aria-label="Run details">{panel}</aside>}
+        </div>
+        {!wide && <Dialog open={panelOpen} onOpenChange={setPanelOpen} title="Run details" size="md"><div className="-mx-5 -my-4 h-[70dvh]">{panel}</div></Dialog>}
+        <Dialog open={paletteOpen} onOpenChange={setPaletteOpen} title="Add a resource to the live run" description="Accepted edits are sent to the running simulation." size="sm">
+          <div className="-mx-5 -my-4 h-[60dvh]"><PalettePanel draggable={false} onAdded={() => setPaletteOpen(false)} /></div>
+        </Dialog>
+      </CanvasDnd>
+    </div>
+  );
+}

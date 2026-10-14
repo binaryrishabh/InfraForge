@@ -1,31 +1,29 @@
-import { Navigate, useLocation, Outlet } from 'react-router-dom';
-import { useAuthStore } from '@/features/auth/store/auth.store';
+import { Navigate, Outlet, useLocation } from "react-router-dom";
+import { useAuthStore } from "@/features/auth/store/auth.store";
+import { BrandMark } from "@/ui/Brand";
+import { Button } from "@/ui/Button";
+
+export function SessionCheck() {
+  return (
+    <div role="status" aria-live="polite" className="flex min-h-dvh flex-col items-center justify-center gap-3 bg-bg text-ink-3">
+      <BrandMark size={28} className="text-ink if-pulse" />
+      <span className="text-sm">Checking your session…</span>
+    </div>
+  );
+}
 
 export function ProtectedRoute() {
   const { status, user } = useAuthStore();
   const location = useLocation();
-
-  if (status === 'error') {
-    return <div className="min-h-screen bg-[#0f1117] text-[#EDF1F7] flex flex-col items-center justify-center gap-4">
-      <p role="alert">Your session could not be checked.</p>
-      <button className="text-[#5B8CFF] underline" onClick={() => void useAuthStore.getState().hydrate()}>Try again</button>
-    </div>;
-  }
-
-  if (status === 'hydrating') {
+  if (status === "error") {
     return (
-      <div className="h-screen w-screen bg-[#0f1117] flex items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <span className="text-2xl">⚡</span>
-          <span className="text-sm text-[#677185] tracking-wide">InfraForge</span>
-        </div>
+      <div className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-bg px-4 text-center text-ink">
+        <p role="alert" className="text-[15px]">Your session could not be checked. The server may be unavailable.</p>
+        <Button variant="primary" onClick={() => void useAuthStore.getState().hydrate()}>Try again</Button>
       </div>
     );
   }
-
-  if (status === 'guest') {
-    return <Navigate to="/signin" state={{ returnTo: location.pathname }} replace />;
-  }
-
+  if (status === "hydrating") return <SessionCheck />;
+  if (status === "guest") return <Navigate to="/signin" state={{ returnTo: location.pathname + location.search }} replace />;
   return <Outlet key={user?.id} />;
 }

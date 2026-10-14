@@ -1,18 +1,18 @@
 import { useCallback } from "react";
 import { useParams } from "react-router-dom";
-import { getRunReport } from "../../../api/reports.api";
-import { useAuthStore } from "../../auth/store/auth.store";
-import { useReportRequest } from "../useReportRequest";
+import { getRunReport } from "@/api/reports.api";
+import { useRequest } from "@/api/useRequest";
+import { useAuthStore } from "@/features/auth/store/auth.store";
+import { Page } from "@/ui/Page";
 import { ReportContent } from "../components/ReportContent";
 
 function Report({ id }: { id: string }) {
   const load = useCallback(() => getRunReport(id), [id]);
-  const request = useReportRequest(load);
-  return <ReportContent {...request} />;
+  return <ReportContent {...useRequest(load, "The recorded run could not be loaded. It may not exist, or your session may have ended.")} />;
 }
 
 export function RunReportPage() {
   const { deploymentId = "" } = useParams();
   const userId = useAuthStore((s) => s.user?.id);
-  return <main className="flex-1 overflow-y-auto bg-[#14161A] p-5 sm:p-8 text-[#EDEEF0]"><div className="max-w-4xl mx-auto"><Report key={`${userId}:${deploymentId}`} id={deploymentId} /></div></main>;
+  return <Page width="narrow" className="!max-w-[920px]"><Report key={`${userId}:${deploymentId}`} id={deploymentId} /></Page>;
 }

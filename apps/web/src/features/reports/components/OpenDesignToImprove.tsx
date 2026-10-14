@@ -1,13 +1,19 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getSpecificInfrastructure } from "../../../api/infrastructure.api";
-import { Modal } from "../../../components/UI/Modal";
-import { useAuthStore } from "../../auth/store/auth.store";
-import { useCanvasStore } from "../../canvas/store/canvasStore";
-import { installImprovementDesign } from "../../canvas/improvement";
+import { PenTool } from "lucide-react";
+import { getSpecificInfrastructure } from "@/api/infrastructure.api";
+import { Button } from "@/ui/Button";
+import { ConfirmDialog } from "@/ui/ConfirmDialogs";
+import { useAuthStore } from "@/features/auth/store/auth.store";
+import { useCanvasStore } from "@/features/canvas/store/canvasStore";
+import { installImprovementDesign } from "@/features/canvas/improvement";
 
+/* Opens the run's saved design with the run as improvement context, so the
+next run reuses its workload and seed and can be compared with it. */
 export function OpenDesignToImprove({ sourceId, designId, eligible }: { sourceId: string; designId: string | null; eligible: boolean }) {
-  const [confirm, setConfirm] = useState(false), [busy, setBusy] = useState(false), [error, setError] = useState<string | null>(null);
+  const [confirm, setConfirm] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
   const open = async () => {
     if (!designId || busy) return;
@@ -21,14 +27,18 @@ export function OpenDesignToImprove({ sourceId, designId, eligible }: { sourceId
     } catch { setError("The original design is unavailable or your session ended."); }
     finally { setBusy(false); setConfirm(false); }
   };
-  return <><button className="text-[#4FA89B] underline disabled:opacity-50" disabled={!designId || !eligible || busy} onClick={() => {
-    const canvas = useCanvasStore.getState();
-    if (canvas.activeDeploymentId || (!canvas.currentLayoutSaved && canvas.resources.length)) setConfirm(true);
-    else void open();
-  }}>{busy ? "Opening design…" : "Open design to improve"}</button>
-    {!designId && <p className="text-sm text-[#8B909C]">Editable design deleted; exact rerun remains available when its inputs are supported.</p>}
-    {error && <p role="alert">{error}</p>}
-    <Modal open={confirm} onOpenChange={setConfirm} loading={busy} title="Open the saved design?" description="This replaces the current local canvas, including unsaved edits. Existing server runs continue; reattach through the dashboard.">
-      <div className="flex gap-4 justify-end"><button disabled={busy} onClick={() => setConfirm(false)}>Cancel</button><button disabled={busy} onClick={() => void open()}>Open saved design</button></div>
-    </Modal></>;
+  return (
+    <>
+      <Button variant="secondary" size="sm" disabled={!designId || !eligible || busy} loading={busy} icon={<PenTool size={14} aria-hidden="true" />} onClick={() => {
+        const canvas = useCanvasStore.getState();
+        if (canvas.activeDeploymentId || (!canvas.currentLayoutSaved && canvas.resources.length)) setConfirm(true);
+        else void open();
+      }}>Open design to improve</Button>
+      {!designId && <p className="w-full text-xs text-ink-3">Editable design deleted; an exact rerun remains available when its inputs are supported.</p>}
+      {error && <p role="alert" className="w-full text-sm text-fail">{error}</p>}
+      <ConfirmDialog open={confirm} onOpenChange={setConfirm} loading={busy} title="Open the saved design?" confirmLabel="Open saved design"
+        description="This replaces the current canvas." consequences={["Unsaved canvas edits are lost.", "Runs already on the server continue; reopen them from Home or Runs."]}
+        onConfirm={() => void open()} />
+    </>
+  );
 }

@@ -48,7 +48,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
   signIn: async (provider) => {
     const { error } = await authClient.signIn.social({ provider,
-      callbackURL: `${window.location.origin}/dashboard`, errorCallbackURL: `${window.location.origin}/signin` });
+      callbackURL: `${window.location.origin}/home`, errorCallbackURL: `${window.location.origin}/signin` });
     if (error) throw new Error("Sign-in could not be started. Try again.");
   },
   signOut: async () => {

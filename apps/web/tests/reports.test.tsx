@@ -34,8 +34,9 @@ test("history loading, empty and retry states are distinct and expose navigation
 
 test("history links actual runs with status and summary, and escapes historical names", () => {
   const html = render(<HistoryContent loading={false} error={null} runs={[{ ...run, infrastructureName: "<script>bad</script>" }]} retry={retry} />);
-  expect(html).toContain(`href="/reports/${run.id}"`);
-  expect(html).toContain("torn-down");
+  expect(html).toContain(`href="/runs/${run.id}"`);
+  expect(html).toContain("Stopped");
+  expect(html).toContain("Freeform run");
   expect(html).toContain("2 resources recorded");
   expect(html).toContain("0 chaos requests");
   expect(html).toContain("View inputs and evidence limits");
@@ -47,7 +48,7 @@ test("report loading and safe unavailable states offer retry and history", () =>
   const error = render(<ReportContent loading={false} error="Run not available" data={null} retry={retry} />);
   expect(error).toContain('role="alert"');
   expect(error).toContain("Run not available");
-  expect(error).toContain('href="/reports"');
+  expect(error).toContain('href="/runs"');
   expect(error).toContain("Try again");
 });
 
@@ -62,7 +63,7 @@ test("no-data reports show observations and limits without invented charts, heal
   expect(html).not.toContain("Recorded cost estimates");
   expect(html).not.toContain("Interpreted —");
   expect(html).not.toContain("<table");
-  expect(html).not.toContain("<svg");
+  expect(html).not.toContain("<polyline");
 });
 
 test("checkpoint measurements, cost measures and chaos request limits are clearly separated", () => {
@@ -83,8 +84,7 @@ test("checkpoint measurements, cost measures and chaos request limits are clearl
   expect(html).toContain("$0.0040");
   expect(html).toContain("Neither is a cloud bill");
   expect(html).toContain("Full impact and recovery are not proven");
-  expect(html).toContain("<details");
-  expect(html).toContain("<summary");
+  expect(html).toContain("Recorded resource measurements");
   expect(html).not.toContain("final health");
 });
 
@@ -104,6 +104,11 @@ test("durable timeline distinguishes requests, running faults, completion and un
   expect(html).toContain("simulated second 30");
   expect(html).toContain("Injected fault ended");
   expect(html).toContain("does not establish full system recovery");
+  // Actions, states and faults read as words, not stored identifiers.
+  expect(html).toContain("Load change");
+  expect(html).toContain("Requested");
+  expect(html).toContain("Crash on db");
+  expect(html).not.toContain(">requested<");
 });
 
 test("exact terminal snapshot and deleted-design history are labelled honestly", () => {

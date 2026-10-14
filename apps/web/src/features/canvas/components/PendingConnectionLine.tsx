@@ -39,14 +39,13 @@ export const PendingConnectionLine = memo(function PendingConnectionLine({
       <path
         d={path}
         fill="none"
-        stroke="#4FA89B"
+        stroke="var(--if-accent)"
         strokeWidth={2}
         strokeDasharray="6 4"
         pointerEvents="none"
       />
-      {/* Calm origin socket at the port the drag started from */}
-      <circle cx={x1} cy={y1} r={5} fill="#14161A" stroke="#4FA89B" strokeWidth={2} pointerEvents="none" />
-      <circle cx={x1} cy={y1} r={2} fill="#4FA89B" pointerEvents="none" />
+      <circle cx={x1} cy={y1} r={5} fill="var(--if-raised)" stroke="var(--if-accent)" strokeWidth={2} pointerEvents="none" />
+      <circle cx={x1} cy={y1} r={2} fill="var(--if-accent)" pointerEvents="none" />
     </g>
   );
 });

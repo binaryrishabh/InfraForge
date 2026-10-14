@@ -2,7 +2,7 @@ import {
   NODE_CARD_WIDTH,
   NODE_CARD_HEIGHT,
   DESIGN_CARD_HEIGHT,
-} from "@/features/monitoring/components/MonitoringDashboardCard";
+} from "./nodeGeometry";
 import { useCanvasStore } from "../store/canvasStore";
 
 // Breathing room kept between cards so port rings and card shadows never

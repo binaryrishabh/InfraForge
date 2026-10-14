@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import type { ConnectionLine, Resource } from "@infraforge/domain/resource";
 import { useAuthStore } from "../../auth/store/auth.store";
 import { draftKey } from "../../auth/drafts";
 import { useCanvasStore } from "../store/canvasStore";
@@ -6,6 +7,15 @@ import {
   CARD_LAYOUT_VERSION,
   migrateLayoutToCardScale,
 } from "../utils/layoutMigration";
+
+interface Draft {
+  canvasResources?: Resource[]; connectionLines?: ConnectionLine[]; currentLayoutId?: string | null; currentLayoutName?: string | null;
+  saved?: boolean; currentChallengeId?: unknown; layoutVersion?: number;
+}
+
+function readDraft(userId: string): Draft | null {
+  try { return JSON.parse(localStorage.getItem(draftKey(userId)) ?? "null"); } catch { return null; }
+}
 
 // Zero-subscription persistence: restore once on mount via getState(), then
 // persist via store.subscribe() so this hook never re-renders its host.
@@ -17,9 +27,8 @@ export function useCanvasPersistence() {
   useEffect(() => {
     if (!userId || useCanvasStore.getState().isInitialized) return;
 
-    const infra = localStorage.getItem(draftKey(userId));
-    if (infra) {
-      const parsed = JSON.parse(infra);
+    const parsed = readDraft(userId);
+    if (parsed) {
       const store = useCanvasStore.getState();
       const migratedResources = migrateLayoutToCardScale(
         parsed.canvasResources || [],
@@ -27,9 +36,11 @@ export function useCanvasPersistence() {
       );
       store.setResources(migratedResources);
       store.setConnectionLines(parsed.connectionLines || []);
-      store.setCurrentLayoutId(parsed.currentLayoutId);
-      store.setCurrentLayoutName(parsed.currentLayoutName);
-      store.setCurrentLayoutSaved(parsed.saved);
+      store.setCurrentLayoutId(parsed.currentLayoutId ?? null);
+      store.setCurrentLayoutName(parsed.currentLayoutName ?? null);
+      store.setCurrentLayoutSaved(parsed.saved ?? true);
+      // Only a UI hint; attempts are verified by the server against the saved design.
+      store.setCurrentChallengeId(typeof parsed.currentChallengeId === "string" ? parsed.currentChallengeId : null);
     }
     useCanvasStore.getState().setIsInitialized(true);
   }, [userId]);
@@ -46,7 +57,7 @@ export function useCanvasPersistence() {
       if (saveTimeout) clearTimeout(saveTimeout);
       saveTimeout = setTimeout(() => {
         if (useAuthStore.getState().user?.id !== userId) return;
-        localStorage.setItem(
+        try { localStorage.setItem(
           draftKey(userId),
           JSON.stringify({
             canvasResources: state.resources,
@@ -54,9 +65,10 @@ export function useCanvasPersistence() {
             currentLayoutId: state.currentLayoutId,
             currentLayoutName: state.currentLayoutName,
             saved: state.currentLayoutSaved,
+            currentChallengeId: state.currentChallengeId,
             layoutVersion: CARD_LAYOUT_VERSION,
           }),
-        );
+        ); } catch { /* storage unavailable: the canvas still works */ }
       }, 300);
     });
 

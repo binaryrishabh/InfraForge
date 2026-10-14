@@ -2,8 +2,9 @@ import type { RunHistory, RunReport, RunComparison, RunSummary, RerunOptions, Re
 import type { Deployment } from "@infraforge/contracts/deployment";
 import { API_URL, http } from "../client/httpClient";
 
-export async function getRunHistory(limit = 50, before?: string): Promise<RunHistory> {
-  const response = await http.get(`${API_URL}/deployments/history`, { params: { limit, ...(before ? { before } : {}) } });
+export type RunKind = "all" | "challenge" | "freeform";
+export async function getRunHistory(limit = 50, before?: string, kind: RunKind = "all"): Promise<RunHistory> {
+  const response = await http.get(`${API_URL}/deployments/history`, { params: { limit, kind, ...(before ? { before } : {}) } });
   return { runs: response.data.runs, nextCursor: response.data.nextCursor };
 }
 

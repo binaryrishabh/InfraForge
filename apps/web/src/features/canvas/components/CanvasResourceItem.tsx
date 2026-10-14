@@ -1,182 +1,95 @@
-import { memo, useEffect, useRef, type PointerEvent as ReactPointerEvent } from "react";
-import { X } from "lucide-react";
+import { memo, useEffect, useRef, type KeyboardEvent, type PointerEvent as ReactPointerEvent } from "react";
+import type { Resource } from "@infraforge/domain/resource";
+import { cx } from "@/ui/cx";
 import { CanvasResourcePorts } from "./CanvasResourcePorts";
+import { NodeCard } from "./node/NodeCard";
 import { useCanvasStore } from "../store/canvasStore";
 import { useCardHeight } from "../hooks/useCardHeight";
 import { startConnectionFromPort } from "../hooks/useCanvasConnectionDrag";
 import { occupiedSidesFor } from "../utils/connectionSides";
 import { setGlobalDragCursor } from "../utils/dragCursor";
-import {
-  MonitoringDashboardCard,
-  NODE_CARD_WIDTH,
-} from "@/features/monitoring/components/MonitoringDashboardCard";
-import type { Resource } from "@infraforge/domain/resource";
+import { NODE_CARD_WIDTH, GRID_SIZE } from "../utils/nodeGeometry";
+import { commitMove, deleteResource, moveResource, nudgeResource, selectResource } from "../actions";
 
-interface CanvasResourceItemProps {
-  resource: Resource;
-  scale: number;
-  onDeleteResource: (resourceId: string) => void;
-  onMoveResource: (resourceId: string, x: number, y: number) => void;
-  onCommitMove: (resourceId: string, fromX: number, fromY: number, toX: number, toY: number) => void;
-}
+const toCanvas = (clientX: number, clientY: number) => {
+  const rect = document.getElementById("canvas")?.getBoundingClientRect();
+  const { scale, translateX, translateY } = useCanvasStore.getState();
+  return rect ? { x: (clientX - rect.left - translateX) / scale, y: (clientY - rect.top - translateY) / scale } : null;
+};
 
-const GRID_SIZE = 24;
-
-export const CanvasResourceItem = memo(function CanvasResourceItem({
-  resource,
-  onDeleteResource,
-  onMoveResource,
-  onCommitMove,
-}: CanvasResourceItemProps) {
-  const isSelected = useCanvasStore((s) => s.selectedResourceId === resource.id);
+/* A node on the canvas. Pointer: drag to move, drag a port to connect, click to
+inspect. Keyboard: Tab to focus, Enter to inspect, arrows to move (Shift for
+larger steps), Delete to remove. In a locked live run it can only be inspected. */
+export const CanvasResourceItem = memo(function CanvasResourceItem({ resource }: { resource: Resource }) {
+  const selected = useCanvasStore((s) => s.selectedResourceId === resource.id);
   const liveMode = useCanvasStore((s) => s.liveMode);
-  const occupiedSides = useCanvasStore((s) =>
-    occupiedSidesFor(s.resources, s.connectionLines, resource.id)
-  );
-  // Feed the wrapper's real rendered height into the store so connection
-  // anchors land exactly on the port dots at any card height.
-  const cardHeightRef = useCardHeight(resource.id);
-  const isDraggingRef = useRef(false);
-  const wasDragRef = useRef(false);
-  const dragCursorActiveRef = useRef(false);
-  const dragOffsetRef = useRef({ x: 0, y: 0 });
-  const startPosRef = useRef({ x: 0, y: 0 });
+  const locked = useCanvasStore((s) => s.liveLocked || s.isDeploying);
+  const occupiedSides = useCanvasStore((s) => occupiedSidesFor(s.resources, s.connectionLines, resource.id));
+  const heightRef = useCardHeight(resource.id);
+  const drag = useRef<{ offsetX: number; offsetY: number; startX: number; startY: number; moved: boolean } | null>(null);
+  const suppressClick = useRef(false);
 
-  // Safety net: never leave the global grabbing cursor stuck if this item
-  // unmounts mid-drag (e.g. a live topology sync removes it).
-  useEffect(() => {
-    return () => {
-      if (dragCursorActiveRef.current) {
-        dragCursorActiveRef.current = false;
-        setGlobalDragCursor(false);
-      }
-    };
-  }, []);
+  useEffect(() => () => { if (drag.current?.moved) setGlobalDragCursor(false); }, []);
 
-  const handlePointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
-    if (e.button !== 0) return;
-    isDraggingRef.current = true;
-    wasDragRef.current = false;
-    startPosRef.current = { x: resource.x, y: resource.y };
-    const canvas = document.getElementById("canvas");
-    if (canvas) {
-      const rect = canvas.getBoundingClientRect();
-      const { scale: viewScale, translateX, translateY } = useCanvasStore.getState();
-      dragOffsetRef.current = {
-        x: (e.clientX - rect.left - translateX) / viewScale - resource.x,
-        y: (e.clientY - rect.top - translateY) / viewScale - resource.y,
-      };
-    }
-    e.currentTarget.setPointerCapture(e.pointerId);
+  const onPointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (event.button !== 0 || locked) return;
+    const point = toCanvas(event.clientX, event.clientY);
+    if (!point) return;
+    drag.current = { offsetX: point.x - resource.x, offsetY: point.y - resource.y, startX: resource.x, startY: resource.y, moved: false };
+    event.currentTarget.setPointerCapture(event.pointerId);
   };
-
-  const handlePointerMove = (e: ReactPointerEvent<HTMLDivElement>) => {
-    if (!isDraggingRef.current) return;
-    const canvas = document.getElementById("canvas");
-    if (!canvas) return;
-    const rect = canvas.getBoundingClientRect();
-    const { scale: viewScale, translateX, translateY } = useCanvasStore.getState();
-    const pointerCanvasX = (e.clientX - rect.left - translateX) / viewScale;
-    const pointerCanvasY = (e.clientY - rect.top - translateY) / viewScale;
-    const startPointerX = startPosRef.current.x + dragOffsetRef.current.x;
-    const startPointerY = startPosRef.current.y + dragOffsetRef.current.y;
-    // Grabbing cursor only once real movement begins, so plain clicks on a
-    // card never flash the dragging cursor.
-    if (
-      !wasDragRef.current &&
-      Math.hypot(pointerCanvasX - startPointerX, pointerCanvasY - startPointerY) > 3
-    ) {
-      wasDragRef.current = true;
-      dragCursorActiveRef.current = true;
-      setGlobalDragCursor(true);
-    }
-    onMoveResource(
-      resource.id,
-      pointerCanvasX - dragOffsetRef.current.x,
-      pointerCanvasY - dragOffsetRef.current.y,
-    );
+  const onPointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const state = drag.current;
+    const point = state && toCanvas(event.clientX, event.clientY);
+    if (!state || !point) return;
+    const x = point.x - state.offsetX, y = point.y - state.offsetY;
+    if (!state.moved && Math.hypot(x - state.startX, y - state.startY) > 3) { state.moved = true; setGlobalDragCursor(true); }
+    if (state.moved) moveResource(resource.id, x, y);
   };
-
-  const handlePointerUp = (e: ReactPointerEvent<HTMLDivElement>) => {
-    if (!isDraggingRef.current) return;
-    isDraggingRef.current = false;
-    e.currentTarget.releasePointerCapture(e.pointerId);
-    if (dragCursorActiveRef.current) {
-      dragCursorActiveRef.current = false;
-      setGlobalDragCursor(false);
-    }
-    if (wasDragRef.current) {
-      const canvas = document.getElementById("canvas");
-      if (!canvas) return;
-      const rect = canvas.getBoundingClientRect();
-      const { scale: viewScale, translateX, translateY } = useCanvasStore.getState();
-      const x = (e.clientX - rect.left - translateX) / viewScale - dragOffsetRef.current.x;
-      const y = (e.clientY - rect.top - translateY) / viewScale - dragOffsetRef.current.y;
-      const snappedX = Math.round(x / GRID_SIZE) * GRID_SIZE;
-      const snappedY = Math.round(y / GRID_SIZE) * GRID_SIZE;
-      onMoveResource(resource.id, snappedX, snappedY);
-      onCommitMove(resource.id, startPosRef.current.x, startPosRef.current.y, snappedX, snappedY);
-    }
+  const onPointerUp = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const state = drag.current;
+    drag.current = null;
+    if (!state) return;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+    if (!state.moved) return;
+    setGlobalDragCursor(false);
+    suppressClick.current = true;
+    const current = useCanvasStore.getState().resources.find((r) => r.id === resource.id);
+    if (!current) return;
+    const x = Math.round(current.x / GRID_SIZE) * GRID_SIZE, y = Math.round(current.y / GRID_SIZE) * GRID_SIZE;
+    moveResource(resource.id, x, y);
+    commitMove(resource.id, state.startX, state.startY, x, y);
   };
-
-  // Single click: select AND open the inspector. The wasDragRef guard keeps
-  // drags from triggering it; the shell ignores node pointerdowns for its
-  // outside-click dismissal, so clicking nodes switches instead of closing.
-  const handleClick = () => {
-    if (wasDragRef.current) {
-      wasDragRef.current = false;
-      return;
+  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.target !== event.currentTarget) return;
+    const step = event.shiftKey ? 4 : 1;
+    const moves: Record<string, [number, number]> = { ArrowLeft: [-step, 0], ArrowRight: [step, 0], ArrowUp: [0, -step], ArrowDown: [0, step] };
+    if (event.key === "Enter" || event.key === " ") { event.preventDefault(); selectResource(resource.id); }
+    else if (moves[event.key] && !locked) { event.preventDefault(); nudgeResource(resource.id, ...moves[event.key]!); }
+    else if ((event.key === "Delete" || event.key === "Backspace") && !locked) {
+      event.preventDefault();
+      // Keep keyboard focus on the canvas: the neighbouring resource, or the canvas itself.
+      const all = [...document.querySelectorAll<HTMLElement>("[data-resource-id][role=button]")];
+      const index = all.indexOf(event.currentTarget);
+      const next = all[index + 1] ?? all[index - 1];
+      deleteResource(resource.id);
+      setTimeout(() => (next?.isConnected ? next : document.getElementById("main"))?.focus(), 0);
     }
-    const store = useCanvasStore.getState();
-    store.setSelectedResourceId(resource.id);
-    store.setSelectedResourceForConfigId(resource.id);
+    else if (event.key === "Escape") { event.preventDefault(); selectResource(null); }
   };
 
   return (
-    // z-10 makes this wrapper a stacking context: its ports (z-20) and delete
-    // button stay INSIDE it, so they can never paint above a sibling card.
-    <div
-      ref={cardHeightRef}
-      data-resource-id={resource.id}
-      title={resource.type}
-      className="absolute group rounded-md pointer-events-auto cursor-grab select-none z-10"
-      style={{
-        left: resource.x,
-        top: resource.y,
-        width: NODE_CARD_WIDTH,
-        // Selection = active state = muted teal ring, never a glow.
-        boxShadow: isSelected ? "0 0 0 2px rgba(79, 168, 155, 0.45)" : undefined,
-      }}
-      onPointerDown={handlePointerDown}
-      onPointerMove={handlePointerMove}
-      onPointerUp={handlePointerUp}
-      onClick={handleClick}
-    >
-      <MonitoringDashboardCard
-        resource={resource}
-        mode={liveMode ? "live" : "design"}
-        asContent
-      />
-      <CanvasResourcePorts
-        resourceId={resource.id}
-        resourceType={resource.type}
-        occupiedSides={occupiedSides}
-        onStartConnection={startConnectionFromPort}
-      />
-      {/* Delete chip: brick ghost at rest, solid brick on its own hover. */}
-      <button
-        type="button"
-        title="Delete node"
-        aria-label={`Delete ${resource.id}`}
-        className="absolute -top-2 -right-2 w-6 h-6 rounded-full flex items-center justify-center opacity-0 scale-75 group-hover:opacity-100 group-hover:scale-100 active:scale-90 transition-all duration-150 cursor-pointer bg-[#1C1F26] border border-[#C4574A]/40 text-[#C4574A] hover:bg-[#C4574A] hover:border-[#C4574A] hover:text-[#14161A] shadow-[0_4px_12px_rgba(0,0,0,0.35)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C4574A]/50"
-        onPointerDown={(e) => e.stopPropagation()}
-        onClick={(e) => {
-          e.stopPropagation();
-          onDeleteResource(resource.id);
-        }}
-      >
-        <X size={12} strokeWidth={2.25} />
-      </button>
+    <div ref={heightRef} data-resource-id={resource.id} role="button" tabIndex={0} aria-pressed={selected}
+      aria-label={`${resource.name || resource.id}, ${resource.type}${locked ? "" : ". Arrow keys move, Delete removes, Enter inspects"}`}
+      className={cx("group absolute z-10 rounded-md outline-none pointer-events-auto select-none",
+        locked ? "cursor-pointer" : "cursor-grab",
+        "focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-canvas",
+        selected && "ring-2 ring-ink ring-offset-2 ring-offset-canvas")}
+      style={{ left: resource.x, top: resource.y, width: NODE_CARD_WIDTH }}
+      onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onKeyDown={onKeyDown}
+      onClick={() => { if (suppressClick.current) { suppressClick.current = false; return; } selectResource(resource.id); }}>
+      <NodeCard resource={resource} mode={liveMode ? "live" : "design"} />
+      {!locked && <CanvasResourcePorts resourceId={resource.id} resourceType={resource.type} occupiedSides={occupiedSides} onStartConnection={startConnectionFromPort} />}
     </div>
   );
 });

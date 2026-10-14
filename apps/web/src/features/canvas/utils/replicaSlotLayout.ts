@@ -1,7 +1,7 @@
 import {
   NODE_CARD_WIDTH,
   NODE_CARD_HEIGHT,
-} from "@/features/monitoring/components/MonitoringDashboardCard";
+} from "./nodeGeometry";
 
 /* Canvas-slot placement for engine-owned autoscaled replicas. The engine
 emits a fixed downward stack (spawnOrigin + SPAWN_Y_GAP * n); here each

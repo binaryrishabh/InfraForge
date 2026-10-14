@@ -1,15 +1,17 @@
 import { Link } from "react-router-dom";
 import type { RunReport } from "@infraforge/contracts/reports";
+import { Button } from "@/ui/Button";
+import { Loading, Notice } from "@/ui/Page";
 import { ReportView } from "./ReportView";
 
-export function ReportContent({ loading, error, data, retry }: {
-  loading: boolean; error: string | null; data: RunReport | null; retry: () => void;
-}) {
-  if (loading) return <p role="status">Loading recorded report…</p>;
-  if (error || !data) return <div role="alert" className="space-y-4">
-    <p>{error ?? "This report is unavailable."}</p>
-    <button className="text-[#4FA89B] underline" onClick={retry}>Try again</button>
-    <p><Link className="text-[#4FA89B] underline" to="/reports">Back to run history</Link></p>
-  </div>;
+export function ReportContent({ loading, error, data, retry }: { loading: boolean; error: string | null; data: RunReport | null; retry: () => void }) {
+  if (loading) return <Loading label="Loading recorded report…" />;
+  if (error || !data) return (
+    <div role="alert" className="mt-10 flex flex-col items-start gap-3">
+      <Notice tone="fail">{error ?? "This report is unavailable."}</Notice>
+      <Button size="sm" onClick={retry}>Try again</Button>
+      <Link className="text-sm font-medium text-accent hover:underline" to="/runs">Back to runs</Link>
+    </div>
+  );
   return <ReportView report={data} />;
 }

@@ -1,30 +1,45 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { lazy, Suspense, useEffect } from "react";
+import { BrowserRouter, Navigate, Route, Routes, useLocation, useParams } from "react-router-dom";
 import { Toaster } from "sonner";
-import { useEffect } from "react";
-
-// Existing Pages
-import { CanvasDesignerPage } from "../features/canvas/components/CanvasDesignerPage";
-
-// New Pages & Components
 import { LandingPage } from "../features/landing/pages/LandingPage";
 import { SignInPage } from "../features/auth/pages/SignInPage";
-import { SignUpPage } from "../features/auth/pages/SignUpPage";
-import { DashboardPage } from "../features/dashboard/pages/DashboardPage";
-import { RunHistoryPage } from "../features/reports/pages/RunHistoryPage";
-import { RunReportPage } from "../features/reports/pages/RunReportPage";
-import { ComparePage } from "../features/reports/pages/ComparePage";
-import { SettingsStubPage } from "../features/dashboard/pages/SettingsStubPage";
+import { HomePage } from "../features/dashboard/pages/HomePage";
 import { NotFoundPage } from "../features/dashboard/pages/NotFoundPage";
-
-// Shell & Guards
+import { ChallengesPage } from "../features/challenges/pages/ChallengesPage";
+import { ChallengeDetailPage } from "../features/challenges/pages/ChallengeDetailPage";
+import { DesignsPage } from "../features/designs/DesignsPage";
+import { RunHistoryPage } from "../features/reports/pages/RunHistoryPage";
+import { SettingsPage } from "../features/settings/SettingsPage";
 import { AppShell } from "../components/shell/AppShell";
 import { ProtectedRoute } from "../components/shell/ProtectedRoute";
 import { PublicOnlyRoute } from "../components/shell/PublicOnlyRoute";
 import { useAuthStore } from "../features/auth/store/auth.store";
+import { resolvedTheme, usePreferences } from "./preferences";
+import { Loading } from "../ui/Page";
+
+// The designer and the evidence views carry most of the code; they load on first visit.
+const CanvasDesignerPage = lazy(() => import("../features/canvas/components/CanvasDesignerPage").then((m) => ({ default: m.CanvasDesignerPage })));
+const RunReportPage = lazy(() => import("../features/reports/pages/RunReportPage").then((m) => ({ default: m.RunReportPage })));
+const ComparePage = lazy(() => import("../features/reports/pages/ComparePage").then((m) => ({ default: m.ComparePage })));
+
+// Older links keep working: /dashboard and /reports moved to /home and /runs.
+function LegacyReport() {
+  const { deploymentId = "" } = useParams();
+  return <Navigate to={`/runs/${encodeURIComponent(deploymentId)}`} replace />;
+}
+function LegacyCompare() {
+  const { search } = useLocation();
+  return <Navigate to={`/runs/compare${search}`} replace />;
+}
+
+function ThemedToaster() {
+  const theme = usePreferences((s) => s.theme);
+  return <Toaster position="bottom-right" theme={resolvedTheme(theme) === "ink" ? "dark" : "light"} closeButton
+    toastOptions={{ style: { background: "var(--if-raised)", border: "1px solid var(--if-line-strong)", color: "var(--if-ink)", borderRadius: "6px", fontFamily: "var(--font-sans)" } }} />;
+}
 
 function App() {
-  const hydrate = useAuthStore(s => s.hydrate);
-
+  const hydrate = useAuthStore((s) => s.hydrate);
   useEffect(() => {
     void hydrate();
     const refresh = () => { void hydrate(); };
@@ -43,43 +58,31 @@ function App() {
 
   return (
     <BrowserRouter>
-      <Toaster
-        position="top-right"
-        offset={64}
-        theme="dark"
-        toastOptions={{
-          style: {
-            background: "#1C1F26",
-            border: "1px solid #2A2E37",
-            color: "#EDEEF0"
-          }
-        }}
-      />
+      <ThemedToaster />
       <Routes>
-        {/* Public Routes */}
         <Route path="/" element={<LandingPage />} />
         <Route element={<PublicOnlyRoute />}>
           <Route path="/signin" element={<SignInPage />} />
-          <Route path="/signup" element={<SignUpPage />} />
+          <Route path="/signup" element={<SignInPage />} />
         </Route>
-
-        {/* Protected Routes */}
         <Route element={<ProtectedRoute />}>
-          {/* App Shell Routes (left rail) */}
           <Route element={<AppShell />}>
-            <Route path="/dashboard" element={<DashboardPage />} />
-            <Route path="/reports" element={<RunHistoryPage />} />
-            <Route path="/reports/compare" element={<ComparePage />} />
-            <Route path="/reports/:deploymentId" element={<RunReportPage />} />
-            <Route path="/settings" element={<SettingsStubPage />} />
+            <Route path="/home" element={<HomePage />} />
+            <Route path="/challenges" element={<ChallengesPage />} />
+            <Route path="/challenges/:challengeId" element={<ChallengeDetailPage />} />
+            <Route path="/designs" element={<DesignsPage />} />
+            <Route path="/runs" element={<RunHistoryPage />} />
+            <Route path="/runs/compare" element={<ComparePage />} />
+            <Route path="/runs/:deploymentId" element={<RunReportPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
           </Route>
-
-          {/* Designer is fullscreen and chrome-free: its shell navigation
-              lives in the top-right ShellMenu, not the rail. */}
-          <Route path="/design" element={<CanvasDesignerPage />} />
+          {/* The designer and live runs are full-screen workspaces with their own bar. */}
+          <Route path="/design" element={<Suspense fallback={<div className="grid h-dvh place-items-center bg-canvas"><Loading label="Opening the designer…" /></div>}><CanvasDesignerPage /></Suspense>} />
+          <Route path="/dashboard" element={<Navigate to="/home" replace />} />
+          <Route path="/reports" element={<Navigate to="/runs" replace />} />
+          <Route path="/reports/compare" element={<LegacyCompare />} />
+          <Route path="/reports/:deploymentId" element={<LegacyReport />} />
         </Route>
-
-        {/* 404 */}
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </BrowserRouter>

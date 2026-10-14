@@ -1,7 +1,6 @@
 import { memo, useEffect, useRef } from "react";
 import { useDroppable } from "@dnd-kit/core";
 import { useCanvasStore } from "../store/canvasStore";
-import { useCanvasResourceActions } from "../hooks/useCanvasResourceActions";
 import { useCanvasViewport, fitCanvasView } from "../hooks/useCanvasViewport";
 import { useCanvasConnectionDrag } from "../hooks/useCanvasConnectionDrag";
 import { canvasGridStyle } from "../utils/canvasGridStyle";
@@ -10,98 +9,48 @@ import { ConnectionLinesLayer } from "./ConnectionLinesLayer";
 import { PendingConnectionLayer } from "./PendingConnectionLayer";
 import { SpawnedReplicaLayer } from "./SpawnedReplicaLayer";
 
-export const CanvasBoard = memo(function CanvasBoard() {
+export const CanvasBoard = memo(function CanvasBoard({ label }: { label: string }) {
   const resources = useCanvasStore((s) => s.resources);
   const connectionLines = useCanvasStore((s) => s.connectionLines);
   const scale = useCanvasStore((s) => s.scale);
   const translateX = useCanvasStore((s) => s.translateX);
   const translateY = useCanvasStore((s) => s.translateY);
   const currentLayoutId = useCanvasStore((s) => s.currentLayoutId);
-  const resourceCount = useCanvasStore((s) => s.resources.length);
-  const {
-    handleDeleteCanvasResource,
-    handleMoveCanvasResource,
-    commitMoveCanvasResource,
-    handleDeleteConnectionLine,
-  } = useCanvasResourceActions();
+  const resourceCount = resources.length;
   const viewport = useCanvasViewport();
   useCanvasConnectionDrag();
   const { setNodeRef } = useDroppable({ id: "canvas" });
 
-  // Auto-fit triggers: first mount with nodes, switching saved layouts, and
-  // the canvas going from empty to non-empty (sample load / restore).
-  // Single-node adds/deletes deliberately do NOT reframe — that would yank
-  // the view mid-design; the fit button stays the manual reframe.
-  const prevLayoutIdRef = useRef<string | null | undefined>(undefined);
-  const prevResourceCountRef = useRef(0);
-
+  // Reframe on first mount, design switches and the first node; never on single edits.
+  const previousLayout = useRef<string | null | undefined>(undefined);
+  const previousCount = useRef(0);
   useEffect(() => {
-    const isInitialMount = prevLayoutIdRef.current === undefined;
-    const layoutChanged =
-      !isInitialMount && prevLayoutIdRef.current !== currentLayoutId;
-    const canvasBecameNotEmpty =
-      prevResourceCountRef.current === 0 && resourceCount > 0;
-    prevLayoutIdRef.current = currentLayoutId;
-    prevResourceCountRef.current = resourceCount;
-    const shouldFit =
-      resourceCount > 0 && (isInitialMount || layoutChanged || canvasBecameNotEmpty);
-    if (!shouldFit) return;
-    // rAF so the container is laid out and measurable before fitting.
+    const first = previousLayout.current === undefined;
+    const switched = !first && previousLayout.current !== currentLayoutId;
+    const populated = previousCount.current === 0 && resourceCount > 0;
+    previousLayout.current = currentLayoutId;
+    previousCount.current = resourceCount;
+    if (resourceCount === 0 || !(first || switched || populated)) return;
     const frame = requestAnimationFrame(() => fitCanvasView());
     return () => cancelAnimationFrame(frame);
   }, [currentLayoutId, resourceCount]);
 
   return (
-    <div
-      id="canvas"
-      ref={(el) => {
-        setNodeRef(el);
-        viewport.containerRef.current = el;
-      }}
-      className="flex-1 h-full relative overflow-hidden cursor-default"
+    <div id="canvas" role="group" aria-label={label}
+      ref={(el) => { setNodeRef(el); viewport.containerRef.current = el; }}
+      className="relative h-full min-w-0 flex-1 cursor-default overflow-hidden"
       style={canvasGridStyle(scale, translateX, translateY)}
-      onPointerDown={viewport.handlePanStart}
-      onPointerMove={viewport.handlePanMove}
-      onPointerUp={viewport.handlePanEnd}
-      onClick={(e) => {
-        if (e.target === e.currentTarget) {
-          useCanvasStore.getState().setSelectedConnectionId(null);
-          useCanvasStore.getState().setSelectedResourceId(null);
-        }
-      }}
-    >
-      <div
-        style={{
-          transform: `translate(${translateX}px, ${translateY}px) scale(${scale})`,
-          transformOrigin: "0 0",
-          position: "absolute",
-          top: 0,
-          left: 0,
-          width: "100%",
-          height: "100%",
-          pointerEvents: "none",
-        }}
-      >
-        <ConnectionLinesLayer
-          resources={resources}
-          connectionLines={connectionLines}
-          onDeleteConnection={handleDeleteConnectionLine}
-          scale={scale}
-        />
-        {/* Engine-owned autoscaled replicas: link tubes, live cards, ghosts.
-            Sits under the designer cards so user nodes stay on top. */}
+      onPointerDown={viewport.handlePanStart} onPointerMove={viewport.handlePanMove} onPointerUp={viewport.handlePanEnd}
+      onClick={(event) => {
+        if (event.target !== event.currentTarget) return;
+        const store = useCanvasStore.getState();
+        store.setSelectedConnectionId(null); store.setSelectedResourceId(null);
+      }}>
+      <div className="pointer-events-none absolute top-0 left-0 h-full w-full"
+        style={{ transform: `translate(${translateX}px, ${translateY}px) scale(${scale})`, transformOrigin: "0 0" }}>
+        <ConnectionLinesLayer resources={resources} connectionLines={connectionLines} scale={scale} />
         <SpawnedReplicaLayer />
-        {resources.map((resource) => (
-          <CanvasResourceItem
-            key={resource.id}
-            resource={resource}
-            scale={scale}
-            onDeleteResource={handleDeleteCanvasResource}
-            onMoveResource={handleMoveCanvasResource}
-            onCommitMove={commitMoveCanvasResource}
-          />
-        ))}
-        {/* Top-most world layer: the pending drag line over every node. */}
+        {resources.map((resource) => <CanvasResourceItem key={resource.id} resource={resource} />)}
         <PendingConnectionLayer />
       </div>
     </div>

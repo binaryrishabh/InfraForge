@@ -11,17 +11,14 @@ import {
   type DragStartEvent,
   type DragEndEvent,
 } from "@dnd-kit/core";
-import { toast } from "sonner";
 import { useCanvasStore } from "../store/canvasStore";
-import { positionIsOccupied } from "../utils/cardFootprint";
+import { addResource } from "../actions";
 import {
   NODE_CARD_WIDTH,
   NODE_CARD_HEIGHT,
   DESIGN_CARD_HEIGHT,
-} from "@/features/monitoring/components/MonitoringDashboardCard";
+} from "../utils/nodeGeometry";
 import type { ResourceType } from "@infraforge/domain/resource";
-
-const GRID_SIZE = 24;
 
 /* Pointer-first collision: the drop target is whichever droppable actually
 contains the pointer; fall back to rect overlap when the pointer sits over
@@ -113,8 +110,6 @@ export function useCanvasDragDrop() {
       const store = useCanvasStore.getState();
       store.setActiveDrag(null);
       if (event.over?.id === "canvas") {
-        store.setCurrentLayoutSaved(false);
-        store.setIsInitialized(true);
         const { active, delta } = event;
         const canvas = document.querySelector("#canvas") as HTMLElement;
         const canvasRect = canvas?.getBoundingClientRect();
@@ -138,37 +133,8 @@ export function useCanvasDragDrop() {
           y =
             (finalClientY - canvasRect.top - translateY) / scale -
             cardHeight / 2;
-          x = Math.round(x / GRID_SIZE) * GRID_SIZE;
-          y = Math.round(y / GRID_SIZE) * GRID_SIZE;
         }
-        // Only a REAL rectangle overlap rejects — and engine-owned replicas
-        // occupy space exactly like designer cards, so dropping onto an ASG
-        // replica warns instead of stacking.
-        const obstacles = [
-          ...store.resources.map((r) => ({ id: r.id, x: r.x, y: r.y })),
-          ...Object.entries(store.replicaPositions).map(([id, pos]) => ({ id, x: pos.x, y: pos.y })),
-        ];
-        if (positionIsOccupied(obstacles, x, y)) {
-          toast.warning("Space already occupied!");
-          return;
-        }
-        const newResource = {
-          id: `${active.id}-${Date.now()}`,
-          type: active.id as ResourceType,
-          x,
-          y,
-        };
-        store.setResources((prev) => [...prev, newResource]);
-        store.setUndoStack((prev) => [
-          ...prev,
-          {
-            type: "add",
-            resource: newResource,
-            connectionLines: [],
-            savedState: store.currentLayoutSaved,
-          },
-        ]);
-        store.setRedoStack([]);
+        addResource(active.id as ResourceType, { x, y });
       }
       // Reset so a stale pointer never leaks into the next drag.
       lastPointerRef.current = null;

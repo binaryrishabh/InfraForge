@@ -1,237 +1,84 @@
-import type { ResourceType } from "@infraforge/domain/resource";
+import { X } from "lucide-react";
 
 interface BezierConnectionLineProps {
-  source: { x: number; y: number; type: ResourceType };
-  target: { x: number; y: number; type: ResourceType };
+  source: { x: number; y: number };
+  target: { x: number; y: number };
   port: number;
   isSelected?: boolean;
   onSelect?: () => void;
+  onRemove?: () => void;
   scale?: number;
-  nodeWidth?: number;
-  nodeHeight?: number;
-  // Measured rendered heights of each end's card. Cards stretch when live
-  // content (chaos strip, restart line) lands on them, so anchors must use
-  // the real height or the tube leaves the card off the port dot.
-  sourceHeight?: number;
-  targetHeight?: number;
+  nodeWidth: number;
+  sourceHeight: number;
+  targetHeight: number;
   showPackets?: boolean;
   animatePackets?: boolean;
+  label?: string;
 }
 
-// Tube family: casing sits at the divider tone, core lifted to secondary
-// text grey so the graph reads clearly against #14161A at a glance.
-const TUBE_CASING_WIDTH = 4.5;
-const TUBE_CORE_WIDTH = 2.5;
-const PACKET_WIDTH = 1.6;
-// Dash period 24 matches the -24 flow keyframe offset for a seamless loop.
-const PACKET_DASH = "7 17";
-// Flow chevrons sit in the node-side half of each gap (between the node edge
-// and the mid-line port badge), biased toward the nodes per owner feedback.
-const CHEVRON_TS = [0.18, 0.82];
-// Zoomed out (port badge hidden): the pair merges into one center marker.
-const CENTER_CHEVRON_TS = [0.5];
-const CHEVRON_PATH = "M -6.1 -3.5 L 0 0 L -6.1 3.5";
-// Chevron strokes thinned with the tube so the whole line family matches.
-const CHEVRON_HALO_WIDTH = 3.25;
-const CHEVRON_CORE_WIDTH = 1.5;
-// Stubby lines skip the chevrons so short connections never look cluttered.
-const CHEVRON_MIN_DISTANCE = 110;
-// Port badge typography: font lifted ~25% (10 -> 12.5) per owner ask; the
-// pill geometry scales with it so the label keeps its breathing room.
-const PORT_FONT_SIZE = 12.5;
-const PORT_BADGE_HEIGHT = 20;
-const PORT_BADGE_PADDING = 18;
-const PORT_CHAR_ADVANCE = 8.5;
+const CHEVRON = "M -5 -3 L 0 0 L -5 3";
 
-export function BezierConnectionLine({
-  source,
-  target,
-  port,
-  isSelected = false,
-  onSelect,
-  scale = 1,
-  nodeWidth = 48,
-  nodeHeight = 48,
-  sourceHeight = nodeHeight,
-  targetHeight = nodeHeight,
-  showPackets = false,
-  animatePackets = false,
-}: BezierConnectionLineProps) {
-  const centerXOffset = nodeWidth / 2;
-  const cx1 = source.x + centerXOffset;
-  const cy1 = source.y + sourceHeight / 2;
-  const cx2 = target.x + centerXOffset;
-  const cy2 = target.y + targetHeight / 2;
-
-  const dx = cx2 - cx1;
-  const dy = cy2 - cy1;
-  const distance = Math.sqrt(dx * dx + dy * dy);
-  const isHorizontal = Math.abs(dx) >= Math.abs(dy);
-
-  // Anchor per axis so tubes emerge from the card border they leave/enter by.
-  const horizontalHalf = nodeWidth / 2 - 4;
-  const verticalHalfSource = sourceHeight / 2 - 4;
-  const verticalHalfTarget = targetHeight / 2 - 4;
-
-  let x1: number, y1: number, x2: number, y2: number;
-  if (isHorizontal) {
-    const dir = dx >= 0 ? 1 : -1;
-    x1 = cx1 + horizontalHalf * dir;
-    y1 = cy1;
-    x2 = cx2 - horizontalHalf * dir;
-    y2 = cy2;
-  } else {
-    const dir = dy >= 0 ? 1 : -1;
-    x1 = cx1;
-    y1 = cy1 + verticalHalfSource * dir;
-    x2 = cx2;
-    y2 = cy2 - verticalHalfTarget * dir;
-  }
-
+function geometry(source: { x: number; y: number }, target: { x: number; y: number }, nodeWidth: number, sourceHeight: number, targetHeight: number) {
+  const cx1 = source.x + nodeWidth / 2, cy1 = source.y + sourceHeight / 2;
+  const cx2 = target.x + nodeWidth / 2, cy2 = target.y + targetHeight / 2;
+  const dx = cx2 - cx1, dy = cy2 - cy1;
+  const distance = Math.hypot(dx, dy);
+  const horizontal = Math.abs(dx) >= Math.abs(dy);
+  let x1 = cx1, y1 = cy1, x2 = cx2, y2 = cy2;
+  if (horizontal) { const dir = dx >= 0 ? 1 : -1; x1 += (nodeWidth / 2 - 2) * dir; x2 -= (nodeWidth / 2 - 2) * dir; }
+  else { const dir = dy >= 0 ? 1 : -1; y1 += (sourceHeight / 2 - 2) * dir; y2 -= (targetHeight / 2 - 2) * dir; }
   const pull = distance * 0.4;
-  let c1x: number, c1y: number, c2x: number, c2y: number;
-  if (isHorizontal) {
-    const dir = dx >= 0 ? 1 : -1;
-    c1x = x1 + pull * dir;
-    c1y = y1;
-    c2x = x2 - pull * dir;
-    c2y = y2;
-  } else {
-    const dir = dy >= 0 ? 1 : -1;
-    c1x = x1;
-    c1y = y1 + pull * dir;
-    c2x = x2;
-    c2y = y2 - pull * dir;
-  }
-
-  const path = `M ${x1} ${y1} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${x2} ${y2}`;
-
-  // Exact curve midpoint (t = 0.5) — where the badge rides.
-  const midX = (x1 + 3 * c1x + 3 * c2x + x2) / 8;
-  const midY = (y1 + 3 * c1y + 3 * c2y + y2) / 8;
-
-  // Point along the cubic Bezier (chevron placement).
-  const pointAt = (t: number) => {
-    const mt = 1 - t;
-    return {
-      x: mt * mt * mt * x1 + 3 * mt * mt * t * c1x + 3 * mt * t * t * c2x + t * t * t * x2,
-      y: mt * mt * mt * y1 + 3 * mt * mt * t * c1y + 3 * mt * t * t * c2y + t * t * t * y2,
-    };
+  const [c1x, c1y, c2x, c2y] = horizontal
+    ? [x1 + pull * Math.sign(dx || 1), y1, x2 - pull * Math.sign(dx || 1), y2]
+    : [x1, y1 + pull * Math.sign(dy || 1), x2, y2 - pull * Math.sign(dy || 1)];
+  const at = (t: number) => {
+    const m = 1 - t;
+    return { x: m ** 3 * x1 + 3 * m * m * t * c1x + 3 * m * t * t * c2x + t ** 3 * x2, y: m ** 3 * y1 + 3 * m * m * t * c1y + 3 * m * t * t * c2y + t ** 3 * y2 };
   };
-
-  // Tangent direction of the curve at t, in degrees (chevron rotation).
-  const tangentAngleAt = (t: number) => {
-    const mt = 1 - t;
-    const tangentX =
-      3 * mt * mt * (c1x - x1) + 6 * mt * t * (c2x - c1x) + 3 * t * t * (x2 - c2x);
-    const tangentY =
-      3 * mt * mt * (c1y - y1) + 6 * mt * t * (c2y - c1y) + 3 * t * t * (y2 - c2y);
-    return (Math.atan2(tangentY, tangentX) * 180) / Math.PI;
+  const angle = (t: number) => {
+    const m = 1 - t;
+    return Math.atan2(3 * m * m * (c1y - y1) + 6 * m * t * (c2y - c1y) + 3 * t * t * (y2 - c2y), 3 * m * m * (c1x - x1) + 6 * m * t * (c2x - c1x) + 3 * t * t * (x2 - c2x)) * 180 / Math.PI;
   };
+  return { path: `M ${x1} ${y1} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${x2} ${y2}`, distance, at, angle };
+}
 
-  const casingColor = isSelected ? "#3A3F4A" : "#2A2E37";
-  const coreColor = isSelected ? "#4FA89B" : "#8B909C";
-  const packetColor = isSelected ? "#EDEEF0" : showPackets ? "#4FA89B" : "#8B909C";
-  const arrowColor = isSelected ? "#EDEEF0" : showPackets ? "#4FA89B" : "#8B909C";
-
-  const showPortBadge = scale >= 0.65;
-  const showChevrons = distance > CHEVRON_MIN_DISTANCE;
-  // Badge visible: two chevrons flank it in the node-side gaps.
-  // Badge hidden (zoomed out): the pair merges into ONE center marker.
-  const chevronTs = showPortBadge ? CHEVRON_TS : CENTER_CHEVRON_TS;
-  const label = ":" + port;
-  const badgeWidth = label.length * PORT_CHAR_ADVANCE + PORT_BADGE_PADDING;
-
-  const hitScale = scale < 1 ? Math.min(1 / scale, 2) : 1;
-
+/* An ink line between two cards: direction chevrons, the target's listening port
+at the midpoint, and moving dashes only while a run is advancing. */
+export function BezierConnectionLine({ source, target, port, isSelected = false, onSelect, onRemove, scale = 1, nodeWidth, sourceHeight, targetHeight, showPackets = false, animatePackets = false, label }: BezierConnectionLineProps) {
+  const { path, distance, at, angle } = geometry(source, target, nodeWidth, sourceHeight, targetHeight);
+  const color = isSelected ? "var(--if-accent)" : "var(--if-ink-3)";
+  const mid = at(0.5);
+  const badge = scale >= 0.6;
+  const text = `:${port}`;
+  const width = text.length * 7.6 + 14;
   return (
     <g>
-      {/* Tube casing (outer wall) */}
-      <path d={path} fill="none" stroke={casingColor} strokeWidth={TUBE_CASING_WIDTH} strokeLinecap="round" strokeLinejoin="round" />
-      {/* Tube core (inner channel) */}
-      <path d={path} fill="none" stroke={coreColor} strokeWidth={TUBE_CORE_WIDTH} strokeLinecap="round" strokeLinejoin="round" />
-      {/* Packets: flowing while running, stagnant while paused */}
-      {showPackets && (
-        <path
-          d={path}
-          fill="none"
-          stroke={packetColor}
-          strokeWidth={PACKET_WIDTH}
-          strokeDasharray={PACKET_DASH}
-          strokeLinecap="round"
-          opacity={0.9}
-          className={animatePackets ? "infraforge-flow-packets" : undefined}
-        />
-      )}
-      {/* Flow chevrons: two flanking the port badge while it is visible, or a
-          single direction marker at the exact line center once zoom-out
-          hides the badge. The old filled arrowhead at the target end is
-          retired — the chevrons carry direction now. */}
-      {showChevrons &&
-        chevronTs.map((t) => {
-          const p = pointAt(t);
-          const angle = tangentAngleAt(t);
-          return (
-            <g key={t} transform={`translate(${p.x} ${p.y}) rotate(${angle})`}>
-              <path
-                d={CHEVRON_PATH}
-                fill="none"
-                stroke={arrowColor}
-                strokeWidth={CHEVRON_HALO_WIDTH}
-                opacity={0.18}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <path
-                d={CHEVRON_PATH}
-                fill="none"
-                stroke={arrowColor}
-                strokeWidth={CHEVRON_CORE_WIDTH}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </g>
-          );
-        })}
-      {/* Port badge: flat pill riding the curve midpoint */}
-      {showPortBadge && (
+      <path d={path} fill="none" stroke={color} strokeWidth={isSelected ? 2.4 : 1.6} strokeLinecap="round" />
+      {showPackets && <path d={path} fill="none" stroke="var(--if-accent)" strokeWidth={2} strokeDasharray="6 14" strokeLinecap="round" className={animatePackets ? "if-flow" : undefined} opacity={0.85} />}
+      {distance > 110 && (badge ? [0.2, 0.8] : [0.5]).map((t) => {
+        const p = at(t);
+        return <path key={t} d={CHEVRON} transform={`translate(${p.x} ${p.y}) rotate(${angle(t)})`} fill="none" stroke={color} strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round" />;
+      })}
+      {badge && (
         <g>
-          <rect
-            x={midX - badgeWidth / 2}
-            y={midY - PORT_BADGE_HEIGHT / 2}
-            width={badgeWidth}
-            height={PORT_BADGE_HEIGHT}
-            rx={PORT_BADGE_HEIGHT / 2}
-            fill="#1C1F26"
-            stroke={isSelected ? "#4FA89B" : "#2A2E37"}
-            strokeWidth={1}
-          />
-          <text
-            x={midX}
-            y={midY + PORT_FONT_SIZE * 0.35}
-            textAnchor="middle"
-            fill={isSelected ? "#EDEEF0" : "#8B909C"}
-            fontSize={PORT_FONT_SIZE}
-            fontFamily="ui-monospace, SFMono-Regular, monospace"
-            fontWeight={600}
-          >
-            {label}
-          </text>
+          <rect x={mid.x - width / 2} y={mid.y - 9} width={width} height={18} rx={3} fill="var(--if-raised)" stroke={isSelected ? "var(--if-accent)" : "var(--if-line-strong)"} />
+          <text x={mid.x} y={mid.y + 4} textAnchor="middle" fontSize={11.5} fontFamily="var(--font-mono)" fill="var(--if-ink-2)">{text}</text>
         </g>
       )}
-      {/* Invisible fat hit path — deliberately NOT thinned, keeps clicks easy */}
-      <path
-        d={path}
-        fill="none"
-        stroke="transparent"
-        strokeWidth={16 * hitScale}
-        style={{ cursor: "pointer" }}
-        pointerEvents="stroke"
-        onClick={(e) => {
-          e.stopPropagation();
-          onSelect?.();
-        }}
-      />
+      {onSelect && (
+        <path d={path} fill="none" stroke="transparent" strokeWidth={16 * (scale < 1 ? Math.min(1 / scale, 2) : 1)} pointerEvents="stroke" style={{ cursor: "pointer" }}
+          onClick={(event) => { event.stopPropagation(); onSelect(); }}>
+          {label && <title>{label}</title>}
+        </path>
+      )}
+      {isSelected && onRemove && (
+        <foreignObject x={mid.x + width / 2 + 4} y={mid.y - 14} width={132} height={28} style={{ overflow: "visible", pointerEvents: "auto" }}>
+          <button type="button" onPointerDown={(event) => event.stopPropagation()} onClick={(event) => { event.stopPropagation(); onRemove(); }}
+            className="inline-flex h-7 items-center gap-1 rounded-md border border-line-strong bg-raised px-2 text-xs font-medium text-fail shadow-e2 hover:bg-fail-soft">
+            <X size={12} aria-hidden="true" /> Remove link
+          </button>
+        </foreignObject>
+      )}
     </g>
   );
 }

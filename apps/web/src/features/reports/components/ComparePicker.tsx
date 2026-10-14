@@ -1,21 +1,43 @@
 import { useCallback, useState } from "react";
 import { Link } from "react-router-dom";
-import { Modal } from "../../../components/UI/Modal";
-import { getCompareOptions } from "../../../api/reports.api";
-import { useReportRequest } from "../useReportRequest";
+import { GitCompareArrows } from "lucide-react";
+import { getCompareOptions } from "@/api/reports.api";
+import { useRequest } from "@/api/useRequest";
+import { formatDate } from "@/lib/format";
+import { Button } from "@/ui/Button";
+import { Dialog } from "@/ui/Dialog";
+import { Loading } from "@/ui/Page";
+import { runKind, runStatus } from "../runKind";
 
 function Options({ id }: { id: string }) {
   const load = useCallback(() => getCompareOptions(id), [id]);
-  const { data, loading, error, retry } = useReportRequest(load);
-  if (loading) return <p role="status">Loading eligible runs…</p>;
-  if (error) return <div role="alert"><p>{error}</p><button onClick={retry}>Try again</button></div>;
-  return <><p className="text-sm text-[#8B909C]">Related runs first, then the same surviving design. Up to 100 eligible runs; use history for older runs.</p>
-    <ul className="mt-4 space-y-3">{data?.map((r) => <li key={r.id}><Link className="text-[#4FA89B] underline" to={`/reports/compare?a=${id}&b=${r.id}`}>{r.infrastructureName} · {r.status} · {new Date(r.createdAt).toLocaleString()}</Link></li>)}</ul>
-    {!data?.length && <p>No other finished runs are available yet.</p>}</>;
+  const { data, loading, error, retry } = useRequest(load, "Eligible runs could not be loaded.");
+  if (loading) return <Loading label="Loading eligible runs…" />;
+  if (error) return <div role="alert"><p>{error}</p><Button className="mt-2" size="sm" onClick={retry}>Try again</Button></div>;
+  return (
+    <>
+      <p className="text-sm text-ink-3">Related runs first, then runs of the same design, then other finished runs (up to 100).</p>
+      {!data?.length ? <p className="mt-4 text-sm text-ink-2">No other finished runs are available yet.</p> : (
+        <ul className="mt-3 divide-y divide-line border-y border-line">
+          {data.map((r) => (
+            <li key={r.id}><Link className="block py-2.5 hover:bg-sunken" to={`/runs/compare?a=${id}&b=${r.id}`}>
+              <span className="block font-medium text-ink">{r.infrastructureName}</span>
+              <span className="block text-xs text-ink-3">{runKind(r).label} · {runStatus(r.status).label} · {formatDate(r.createdAt)}</span>
+            </Link></li>
+          ))}
+        </ul>
+      )}
+    </>
+  );
 }
+
 export function ComparePicker({ id, eligible }: { id: string; eligible: boolean }) {
   const [open, setOpen] = useState(false);
-  return <><button className="text-[#4FA89B] underline disabled:text-[#8B909C]" disabled={!eligible} onClick={() => setOpen(true)}>Compare with…</button>
-    {!eligible && <span className="text-xs text-[#8B909C]">Stop this run or wait for gates before comparing.</span>}
-    <Modal open={open} onOpenChange={setOpen} title="Compare with another run" description="Choose one of your finished runs." footer={<button onClick={() => setOpen(false)}>Close</button>}>{open && <Options id={id} />}</Modal></>;
+  return (
+    <>
+      <Button variant="secondary" size="sm" disabled={!eligible} icon={<GitCompareArrows size={14} aria-hidden="true" />} onClick={() => setOpen(true)}
+        title={eligible ? undefined : "Stop this run or wait for gates before comparing."}>Compare with…</Button>
+      <Dialog open={open} onOpenChange={setOpen} title="Compare with another run" description="Choose one of your finished runs.">{open && <Options id={id} />}</Dialog>
+    </>
+  );
 }

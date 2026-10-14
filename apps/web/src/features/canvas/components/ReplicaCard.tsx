@@ -2,10 +2,8 @@ import { memo, useRef, type PointerEvent as ReactPointerEvent } from "react";
 import { toast } from "sonner";
 import { useCanvasStore } from "../store/canvasStore";
 import { useCardHeight } from "../hooks/useCardHeight";
-import {
-  MonitoringDashboardCard,
-  NODE_CARD_WIDTH,
-} from "@/features/monitoring/components/MonitoringDashboardCard";
+import { NodeCard } from "./node/NodeCard";
+import { NODE_CARD_WIDTH } from "../utils/nodeGeometry";
 import { positionIsOccupied } from "../utils/cardFootprint";
 import { RESOURCE_TYPES } from "@infraforge/domain/resource";
 
@@ -85,23 +83,14 @@ export const ReplicaCard = memo(function ReplicaCard({ replicaId, x, y }: Replic
   return (
     <div
       ref={cardHeightRef}
-      className="absolute group rounded-xl pointer-events-auto cursor-grab active:cursor-grabbing select-none z-10"
+      className="absolute group rounded-md pointer-events-auto cursor-grab active:cursor-grabbing select-none z-10"
       style={{ left: x, top: y, width: NODE_CARD_WIDTH }}
-      title={replicaId}
+      title={`${replicaId}: added by the autoscaler`}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
     >
-      <MonitoringDashboardCard
-        mode="live"
-        asContent
-        resource={{
-          id: replicaId,
-          type: RESOURCE_TYPES.VirtualMachine,
-          x,
-          y,
-        }}
-      />
+      <NodeCard mode="live" resource={{ id: replicaId, type: RESOURCE_TYPES.VirtualMachine, x, y, name: "Autoscaled replica" }} />
     </div>
   );
 });

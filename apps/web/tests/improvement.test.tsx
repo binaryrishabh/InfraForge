@@ -6,7 +6,7 @@ import type { RerunOptions } from "@infraforge/contracts/reports";
 import { useCanvasStore } from "../src/features/canvas/store/canvasStore";
 import { useSimulationStore } from "../src/features/monitoring/store/simulationStore";
 import { installImprovementDesign, readImprovementContext } from "../src/features/canvas/improvement";
-import { CanvasMatchPreview } from "../src/features/deployment/components/ImproveDeployModal";
+import { CanvasMatchPreview } from "../src/features/deployment/components/ImproveDialog";
 import { OpenDesignToImprove } from "../src/features/reports/components/OpenDesignToImprove";
 
 afterEach(() => { useCanvasStore.getState().clearCanvas(); useSimulationStore.getState().reset(); });
@@ -29,7 +29,7 @@ test("canvas matching copy distinguishes unsaved actual deployment, source input
     exact: { available: false, reason: "Legacy" }, currentDesign: { available: true, reason: null, preview: null, inputHash: "hash", modelCatalogCompatible: false }, matchedStop: { available: false, target: null, defaultEnabled: false, reason: "No exact duration" } };
   const html = renderToStaticMarkup(<CanvasMatchPreview options={options} />);
   expect(html).toContain("Match Source name"); expect(html).toContain("including unsaved edits");
-  expect(html).toContain("Deploy saves this canvas"); expect(html).toContain("changed preview is refused");
+  expect(html).toContain("Running saves this canvas"); expect(html).toContain("changed preview is refused");
   expect(html).toContain("original-seed"); expect(html).toContain("123,456"); expect(html).toContain("70%"); expect(html).toContain("Peak multiplier: 4");
   expect(html).toContain("descriptive only"); expect(html).toContain("NOT replayed");
   const deleted = renderToStaticMarkup(<MemoryRouter><OpenDesignToImprove sourceId="source" designId={null} eligible /></MemoryRouter>);

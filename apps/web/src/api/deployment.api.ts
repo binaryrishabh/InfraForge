@@ -11,6 +11,7 @@ export interface LiveDeploymentSummary {
   infrastructureId: string;
   infrastructureName: string;
   resourceCount: number;
+  challengeId: string | null;
   status: string;
   createdAt: string;
   updatedAt: string;
@@ -30,7 +31,6 @@ export const createDeployment = async(infrastructureId: string, workloadProfile?
     infrastructureId,
     workloadProfile
   });
-  console.log(response.data.createdDeployment.id);
   return response.data.createdDeployment;
 }
 

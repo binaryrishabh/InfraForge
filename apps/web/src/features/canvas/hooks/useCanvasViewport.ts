@@ -7,11 +7,12 @@ import {
   NODE_CARD_WIDTH,
   NODE_CARD_HEIGHT,
   DESIGN_CARD_HEIGHT,
-} from "@/features/monitoring/components/MonitoringDashboardCard";
+} from "../utils/nodeGeometry";
 
 export const MIN_SCALE = 0.2;
 export const MAX_SCALE = 2.0;
-const FIT_MIN_SCALE = 0.2;
+// Below this the cards are unreadable; panning is the better trade on narrow screens.
+const FIT_MIN_SCALE = 0.45;
 const FIT_MAX_SCALE = 1.5;
 const FIT_PADDING = 64;
 // Wheel zoom speed — doubled from 0.001 after the "zoom is slow" report.
@@ -154,3 +155,16 @@ export function useCanvasViewport() {
     fitView: fitCanvasView,
   };
 }
+
+export function zoomBy(factor: number) {
+  const store = useCanvasStore.getState();
+  const rect = document.getElementById("canvas")?.getBoundingClientRect();
+  if (!rect) return;
+  const next = Math.min(MAX_SCALE, Math.max(MIN_SCALE, store.scale * factor));
+  // Zoom around the centre of the visible canvas.
+  const cx = rect.width / 2, cy = rect.height / 2;
+  const wx = (cx - store.translateX) / store.scale, wy = (cy - store.translateY) / store.scale;
+  store.setViewport(next, cx - wx * next, cy - wy * next);
+}
+export const zoomIn = () => zoomBy(1.2);
+export const zoomOut = () => zoomBy(1 / 1.2);

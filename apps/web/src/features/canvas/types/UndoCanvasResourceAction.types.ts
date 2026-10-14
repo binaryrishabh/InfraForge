@@ -7,4 +7,5 @@ export type UndoCanvasResourceAction =
   | { type: "add"; resource: Resource; connectionLines: ConnectionLine[]; savedState: boolean }
   | { type: "move"; resourceId: string; fromX: number; fromY: number; toX: number; toY: number; savedState: boolean }
   | { type: "delete-connection"; connectionLine: ConnectionLine; savedState: boolean }
+  | { type: "add-connection"; connectionLine: ConnectionLine; savedState: boolean }
   | { type: "config"; resourceId: string; before: Partial<Resource>; after: Partial<Resource>; savedState: boolean };

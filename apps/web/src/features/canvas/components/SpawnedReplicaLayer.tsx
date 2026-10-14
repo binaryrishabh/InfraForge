@@ -3,13 +3,9 @@ import { useCanvasStore } from "../store/canvasStore";
 import { useSimulationStore } from "@/features/monitoring/store/simulationStore";
 import { BezierConnectionLine } from "./BezierConnectionLine";
 import { ReplicaCard } from "./ReplicaCard";
-import { ProvisioningNode } from "@/features/monitoring/components/ProvisioningNode";
+import { ProvisioningNode } from "./node/ProvisioningNode";
 import { findFreeReplicaSlot } from "../utils/replicaSlotLayout";
-import {
-  NODE_CARD_WIDTH,
-  NODE_CARD_HEIGHT,
-} from "@/features/monitoring/components/MonitoringDashboardCard";
-import { RESOURCE_TYPES } from "@infraforge/domain/resource";
+import { NODE_CARD_WIDTH, NODE_CARD_HEIGHT } from "../utils/nodeGeometry";
 import type { Resource } from "@infraforge/domain/resource";
 import type { SpawnedVmInfo } from "@infraforge/contracts/telemetry";
 
@@ -108,11 +104,10 @@ export const SpawnedReplicaLayer = memo(function SpawnedReplicaLayer() {
           <BezierConnectionLine
             key={`replica-link-${vm.id}`}
             source={lb}
-            target={{ x, y, type: RESOURCE_TYPES.VirtualMachine }}
+            target={{ x, y }}
             port={80}
             scale={scale}
             nodeWidth={NODE_CARD_WIDTH}
-            nodeHeight={NODE_CARD_HEIGHT}
             sourceHeight={sourceHeight}
             targetHeight={targetHeight}
             showPackets={liveMode}

@@ -143,6 +143,10 @@ export function useDeploymentSocket(deploymentId: string) {
                             message: data.message,
                             timestamp: data.timestamp
                         }]);
+                        // The gates have finished: pick up their recorded evidence (scan findings, cost estimate).
+                        void getSpecificDeployment(deploymentId).then((current) => {
+                            if (!isClose && owner && useAuthStore.getState().user?.id === owner) setDeployment(current);
+                        }).catch(() => {});
                         break;
                     case Publish.publishDeploymentTornDown:
                         setStatus(DeploymentStatus.TORN_DOWN);

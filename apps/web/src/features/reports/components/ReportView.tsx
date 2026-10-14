@@ -1,90 +1,165 @@
+import { useCallback } from "react";
 import { Link } from "react-router-dom";
+import { ArrowLeft, GitCompareArrows } from "lucide-react";
 import type { RunReport } from "@infraforge/contracts/reports";
-import { ReportSection as Section } from "./ReportSection";
+import { getChallenge } from "@/api/challenges.api";
+import { useRequest } from "@/api/useRequest";
+import { describeWorkload, formatDate, plural } from "@/lib/format";
+import { ButtonLink } from "@/ui/Button";
+import { Notice } from "@/ui/Page";
+import { StatusMark } from "@/ui/StatusMark";
+import { ChallengeDebrief } from "@/features/challenges/components/ChallengeDebrief";
+import { ReportSection, Statement } from "./ReportSection";
 import { ReportMeasurements } from "./ReportMeasurements";
 import { ActionTimeline } from "./ActionTimeline";
 import { ComparePicker } from "./ComparePicker";
 import { RerunDialog } from "./RerunDialog";
 import { RunFamily } from "./RunFamily";
 import { OpenDesignToImprove } from "./OpenDesignToImprove";
+import { runKind, runStatus } from "../runKind";
+import { STAGE_LABEL, STAGE_STATUS_LABEL } from "../labels";
 
+const active = (status: string) => ["pending", "running", "live"].includes(status);
+
+function Debrief({ report }: { report: RunReport }) {
+  const id = report.challenge!.challengeId;
+  const load = useCallback(() => getChallenge(id), [id]);
+  const { data } = useRequest(load);
+  return <ChallengeDebrief evaluation={report.challenge!} brief={data} />;
+}
+
+/* A lab report: what ran, the challenge verdict if any, what was recorded,
+the final state, the gates, the actions, lineage, and the limits of the evidence. */
 export function ReportView({ report }: { report: RunReport }) {
   const { run, topology } = report;
-  return <div className="space-y-5">
-    <Link to="/reports" className="text-sm text-[#4FA89B] hover:underline">← Run history</Link>
-    <div>
-      <h1 className="text-2xl font-semibold">{run.infrastructureName}</h1>
-      <p className="mt-2 text-[#C3C7D0]">{run.status} · {run.resourceCount} {run.resourceCount === 1 ? "resource" : "resources"} recorded</p>
-      <p className="mt-1 text-sm text-[#8B909C]">Created <time dateTime={run.createdAt}>{new Date(run.createdAt).toLocaleString()}</time></p>
-      <p className="text-sm text-[#8B909C]">Last run record update <time dateTime={run.updatedAt}>{new Date(run.updatedAt).toLocaleString()}</time></p>
-      {run.status === "live" && <p className="mt-3 text-sm text-[#C3C7D0]">This run is still live. This report shows retained evidence, not a live monitor.</p>}
-      {!run.hasReportData && <p className="mt-3 text-sm text-[#C3C7D0]">No usable stages, events or checkpoint data were retained for this run.</p>}
-    </div>
-    <div className="flex flex-wrap gap-3 items-center"><RerunDialog id={run.id} eligible={!["pending", "running", "live"].includes(run.status)} /><ComparePicker id={run.id} eligible={!["pending", "running", "live"].includes(run.status)} />
-      <OpenDesignToImprove sourceId={run.id} designId={run.infrastructureId} eligible={!["pending", "running", "live"].includes(run.status)} />
-      {run.sourceRunId && !["pending", "running", "live"].includes(run.status) && <Link className="text-[#4FA89B] underline" to={`/reports/compare?a=${run.sourceRunId}&b=${run.id}`}>Compare with source run</Link>}
-    </div>
-    <RunFamily id={run.id} />
-    <Section title="Observed — recorded facts" open>
-      <ul className="space-y-3">{report.observed.map((fact) => <li key={fact.id}>
-        <p>{fact.message}</p><p className="text-xs text-[#8B909C]">Source: {fact.sources.join(", ")}</p>
-      </li>)}</ul>
-    </Section>
-    {!!report.interpreted.length && <Section title="Interpreted — what the evidence supports" open>
-      <ul className="space-y-3">{report.interpreted.map((fact) => <li key={fact.id}>
-        <p>{fact.message}</p><p className="text-xs text-[#8B909C]">Derived from: {fact.sources.join(", ")}</p>
-      </li>)}</ul>
-    </Section>}
-    {run.workload && <Section title="Workload and original run input">
-      <p>{run.workload.targetThroughput.toLocaleString()} requests {run.workload.throughputUnit.replaceAll("-", " ")} · {run.workload.trafficShape} traffic · {run.workload.payloadSize} payload</p>
-      {run.workload.peakMultiplier !== undefined && <p>Peak multiplier: {run.workload.peakMultiplier}×</p>}
-      {run.workload.readWriteRatio !== undefined && <p>Read share: {Math.round(run.workload.readWriteRatio * 100)}%</p>}
-      <p className="text-[#8B909C]">{run.workloadSource === "captured" ? "Workload captured when this run was created." : "Legacy workload record; full resolved original input is unavailable."}</p>
-      {report.originalSeed && <p className="break-all">Original seed: {report.originalSeed}</p>}
-      <p>Simulation model: {report.provenance.simulationModelVersion ?? "not captured (legacy input)"} · catalog snapshot: {report.provenance.catalogSnapshot ?? "not captured"}</p>
-      {report.legacySeed && <p className="break-all">Legacy seed record: {report.legacySeed} (original input unavailable)</p>}
-      {topology.original && <>
-        <p>Original architecture: {topology.original.resources.length} resources, {topology.original.connectionCount} connections</p>
-        <ul className="space-y-1">{topology.original.resources.map((resource) => <li key={resource.id}>
-          {resource.name} · {resource.type}{resource.skuId && ` · ${resource.skuId}`}
-        </li>)}</ul>
-      </>}
-    </Section>}
-    <ActionTimeline actions={report.actions} />
-    {!!report.stages.length && <Section title="Deployment stages">
-      <ol className="space-y-4">{report.stages.map((stage, i) => <li key={`${stage.name}:${i}`}>
-        <p className="font-medium">{stage.name} · {stage.status}</p>
-        <p>{stage.message}</p>
-        <time className="text-xs text-[#8B909C]" dateTime={stage.completedAt}>{new Date(stage.completedAt).toLocaleString()}</time>
-        {[...stage.warnings, ...stage.issues].map((message, j) => <p key={j} className="mt-1 text-[#E5BE78]">{message}</p>)}
-      </li>)}</ol>
-    </Section>}
-    {!!report.timeline.length && <Section title="Recorded timeline">
-      <ol className="space-y-4">{report.timeline.map((event, i) => <li key={i}>
-        <p className="font-medium">{event.event}</p><p>{event.message}</p>
-        <time className="text-xs text-[#8B909C]" dateTime={event.timestamp}>{new Date(event.timestamp).toLocaleString()}</time>
-      </li>)}</ol>
-    </Section>}
-    {!!report.chaosEvents.length && <Section title="Chaos requests">
-      <p className="text-[#8B909C]">These are recorded requests. Full impact and recovery are not proven by a request alone.</p>
-      <ol className="space-y-4">{report.chaosEvents.map((event, i) => <li key={i}>
-        <p>{event.type} on {event.resourceId}</p><p>{event.message}</p>
-        <time className="text-xs text-[#8B909C]" dateTime={event.timestamp}>{new Date(event.timestamp).toLocaleString()}</time>
-      </li>)}</ol>
-    </Section>}
-    {!!run.topologyRevision && topology.changes && <Section title="Last accepted topology changes">
-      <p>Revision {run.topologyRevision}, compared with the original input. Use the action timeline and snapshot revision for retained evidence of simulator application.</p>
-      <p>Added: {topology.changes.added.join(", ") || "none"}</p>
-      <p>Removed: {topology.changes.removed.join(", ") || "none"}</p>
-      <p>Reconfigured: {topology.changes.reconfigured.join(", ") || "none"}</p>
-      <p>Connections: {topology.changes.addedConnections} added, {topology.changes.removedConnections} removed</p>
-    </Section>}
-    <ReportMeasurements report={report} />
-    <Section title="Unknown — evidence limits" open>
-      <ul className="list-disc pl-5 space-y-3">{report.unknown.map((limit) => <li key={limit}>{limit}</li>)}</ul>
-    </Section>
-    <Section title="What to inspect next" open>
-      <ul className="list-disc pl-5 space-y-3">{report.inspectNext.map((step) => <li key={step}>{step}</li>)}</ul>
-    </Section>
-  </div>;
+  const status = runStatus(run.status);
+  const kind = runKind(run);
+  const eligible = !active(run.status);
+  const snapshot = report.terminal ?? report.checkpoint;
+  const hasCost = report.stages.some((st) => st.monthlyEstimateUsd !== undefined) || snapshot?.accumulatedCostUsd !== undefined;
+  // Section numbers follow only the sections this report actually shows.
+  let n = 0;
+  const head = { ran: ++n, observed: ++n, interpreted: report.interpreted.length ? ++n : 0, measurements: n + 1 };
+  n += (snapshot ? 1 : 0) + (hasCost ? 1 : 0);
+  const num = {
+    ...head,
+    stages: report.stages.length ? ++n : 0, actions: report.actions.length ? ++n : 0, chaos: report.chaosEvents.length ? ++n : 0,
+    topology: run.topologyRevision && topology.changes ? ++n : 0, timeline: report.timeline.length ? ++n : 0,
+    lineage: ++n, unknown: ++n, next: n + 1,
+  };
+  return (
+    <article className="pt-6">
+      <Link to="/runs" className="inline-flex items-center gap-1 text-sm font-medium text-ink-2 hover:text-ink"><ArrowLeft size={14} aria-hidden="true" /> Runs</Link>
+      <header className="mt-4">
+        <p className="if-eyebrow">{kind.label}{kind.detail ? ` · ${kind.detail}` : ""}</p>
+        <h1 className="if-display mt-2 text-[34px] sm:text-[42px]">{run.infrastructureName}</h1>
+        <p className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-ink-2">
+          <StatusMark kind={status.kind} label={status.label} />
+          <span>Started <time dateTime={run.createdAt}>{formatDate(run.createdAt)}</time></span>
+          <span>{run.resourceCount} {run.resourceCount === 1 ? "resource" : "resources"} recorded</span>
+          <span className="text-ink-3">Last record update <time dateTime={run.updatedAt}>{formatDate(run.updatedAt)}</time></span>
+        </p>
+        <div className="mt-5 flex flex-wrap items-center gap-2">
+          <RerunDialog id={run.id} eligible={eligible} />
+          <ComparePicker id={run.id} eligible={eligible} />
+          {!run.challenge && <OpenDesignToImprove sourceId={run.id} designId={run.infrastructureId} eligible={eligible} />}
+          {run.sourceRunId && eligible && <ButtonLink to={`/runs/compare?a=${run.sourceRunId}&b=${run.id}`} variant="ghost" size="sm" icon={<GitCompareArrows size={14} aria-hidden="true" />}>Compare with source run</ButtonLink>}
+        </div>
+        {run.status === "live" && <Notice className="mt-4" tone="info">This run is still live. The report shows retained evidence, not a live monitor.</Notice>}
+        {!run.hasReportData && <Notice className="mt-4" tone="warn">No usable stages, events or checkpoint data were retained for this run.</Notice>}
+      </header>
+
+      {report.challenge && <Debrief report={report} />}
+
+      <ReportSection number={num.ran} title="What ran">
+        <div className="grid gap-6 md:grid-cols-2">
+          <div>
+            <h3 className="text-[13px] font-semibold text-ink">Workload</h3>
+            {run.workload ? <p className="mt-1 text-[15px] text-ink">{describeWorkload(run.workload)}</p> : <p className="mt-1">Not recorded.</p>}
+            <p className="mt-1 text-xs text-ink-3">{run.workloadSource === "captured" ? "Captured when the run was created." : run.workloadSource === "legacy" ? "Legacy workload record; the full resolved input is unavailable." : "Unavailable."}</p>
+            <dl className="mt-3 grid gap-1 text-xs">
+              {report.originalSeed && <div className="flex gap-2"><dt className="text-ink-3">Seed</dt><dd className="if-num break-all text-ink-2">{report.originalSeed}</dd></div>}
+              {report.legacySeed && <div className="flex gap-2"><dt className="text-ink-3">Legacy seed record</dt><dd className="if-num break-all text-ink-2">{report.legacySeed} (original input unavailable)</dd></div>}
+              <div className="flex gap-2"><dt className="text-ink-3">Model · catalog</dt><dd className="if-num text-ink-2">{report.provenance.simulationModelVersion ?? "not captured (legacy input)"} · {report.provenance.catalogSnapshot ?? "not captured"}</dd></div>
+            </dl>
+          </div>
+          <div>
+            <h3 className="text-[13px] font-semibold text-ink">Original architecture</h3>
+            {topology.original ? <>
+              <p className="mt-1 text-xs text-ink-3">{plural(topology.original.resources.length, "resource")}, {plural(topology.original.connectionCount, "connection")}</p>
+              <ul className="mt-2 divide-y divide-line border-y border-line">
+                {topology.original.resources.map((r) => <li key={r.id} className="flex justify-between gap-3 py-1.5"><span className="text-ink">{r.name}</span><span className="if-num text-xs text-ink-3">{r.type}{r.skuId && ` · ${r.skuId}`}</span></li>)}
+              </ul>
+            </> : <p className="mt-1">No immutable run input was retained.</p>}
+          </div>
+        </div>
+      </ReportSection>
+
+      <ReportSection number={num.observed} title="Observed — recorded facts">
+        <ul className="flex flex-col gap-3">{report.observed.map((f) => <Statement key={f.id} message={f.message} sources={f.sources} />)}</ul>
+      </ReportSection>
+      {report.interpreted.length > 0 && (
+        <ReportSection number={num.interpreted} title="Interpreted — what the evidence supports">
+          <ul className="flex flex-col gap-3">{report.interpreted.map((f) => <Statement key={f.id} message={f.message} sources={f.sources} verb="Derived from" />)}</ul>
+        </ReportSection>
+      )}
+
+      <ReportMeasurements report={report} number={num.measurements} />
+
+      {report.stages.length > 0 && (
+        <ReportSection number={num.stages} title="Deployment stages">
+          <ol className="flex flex-col gap-3">
+            {report.stages.map((stage, i) => (
+              <li key={`${stage.name}:${i}`} className="border-l-2 border-line-strong pl-3">
+                <p className="flex flex-wrap items-center gap-3"><span className="font-semibold text-ink">{STAGE_LABEL[stage.name] ?? stage.name}</span><StatusMark size="sm" kind={stage.status === "completed" ? "finished" : stage.status === "failed" ? "failed" : "pending"} label={STAGE_STATUS_LABEL[stage.status] ?? stage.status} /></p>
+                <p className="text-ink">{stage.message}</p>
+                {[...stage.warnings, ...stage.issues].map((m, j) => <p key={j} className="mt-0.5 text-warn">{m}</p>)}
+                <time className="text-xs text-ink-3" dateTime={stage.completedAt}>{formatDate(stage.completedAt)}</time>
+              </li>
+            ))}
+          </ol>
+        </ReportSection>
+      )}
+
+      {report.actions.length > 0 && (
+        <ReportSection number={num.actions} title="Actions" aside={`${report.actions.length} shown`} fold={report.actions.length > 5 ? { summary: `Show all ${report.actions.length} actions`, open: false } : undefined}>
+          <ActionTimeline actions={report.actions} />
+        </ReportSection>
+      )}
+
+      {report.chaosEvents.length > 0 && (
+        <ReportSection number={num.chaos} title="Chaos requests">
+          <p className="text-ink-3">These are recorded requests. Full impact and recovery are not proven by a request alone.</p>
+          <ol className="mt-3 flex flex-col gap-2">{report.chaosEvents.map((e, i) => <li key={i} className="border-l-2 border-line-strong pl-3"><p className="text-ink">{e.type} on {e.resourceId}</p><p>{e.message}</p><time className="text-xs text-ink-3" dateTime={e.timestamp}>{formatDate(e.timestamp)}</time></li>)}</ol>
+        </ReportSection>
+      )}
+
+      {!!run.topologyRevision && topology.changes && (
+        <ReportSection number={num.topology} title="Last accepted topology changes">
+          <p>Revision {run.topologyRevision}, compared with the original input. The action list and snapshot revision show whether the simulator had applied it.</p>
+          <dl className="mt-2 grid gap-1 sm:grid-cols-2">
+            <div><dt className="text-xs text-ink-3">Added</dt><dd className="text-ink">{topology.changes.added.join(", ") || "none"}</dd></div>
+            <div><dt className="text-xs text-ink-3">Removed</dt><dd className="text-ink">{topology.changes.removed.join(", ") || "none"}</dd></div>
+            <div><dt className="text-xs text-ink-3">Reconfigured</dt><dd className="text-ink">{topology.changes.reconfigured.join(", ") || "none"}</dd></div>
+            <div><dt className="text-xs text-ink-3">Connections</dt><dd className="text-ink">{topology.changes.addedConnections} added, {topology.changes.removedConnections} removed</dd></div>
+          </dl>
+        </ReportSection>
+      )}
+
+      {report.timeline.length > 0 && (
+        <ReportSection number={num.timeline} title="Recorded timeline" fold={{ summary: `${report.timeline.length} recorded lifecycle events`, open: report.timeline.length <= 6 }}>
+          <ol className="flex flex-col gap-2">{report.timeline.map((e, i) => <li key={i}><p className="font-medium text-ink">{e.event}</p><p>{e.message}</p><time className="text-xs text-ink-3" dateTime={e.timestamp}>{formatDate(e.timestamp)}</time></li>)}</ol>
+        </ReportSection>
+      )}
+
+      <ReportSection number={num.lineage} title="Lineage"><RunFamily id={run.id} /></ReportSection>
+
+      <ReportSection number={num.unknown} title="Unknown — evidence limits">
+        <ul className="list-disc space-y-2 pl-5">{report.unknown.map((limit) => <li key={limit}>{limit}</li>)}</ul>
+      </ReportSection>
+      <ReportSection number={num.next} title="What to inspect next">
+        <ul className="list-disc space-y-2 pl-5">{report.inspectNext.map((step) => <li key={step}>{step}</li>)}</ul>
+      </ReportSection>
+    </article>
+  );
 }

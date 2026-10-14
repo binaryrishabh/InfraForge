@@ -1,41 +1,23 @@
-import type { ReactNode } from 'react';
+import type { ReactNode } from "react";
+import { Link } from "react-router-dom";
+import { Wordmark } from "@/ui/Brand";
+import { SkipLink } from "@/components/shell/AppShell";
 
-interface AuthLayoutProps {
-  children: ReactNode;
-}
-
-export function AuthLayout({ children }: AuthLayoutProps) {
+export function AuthLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="flex min-h-screen bg-[#0f1117] text-[#EDF1F7]">
-      {/* Left Panel */}
-      <div className="hidden lg:flex w-1/2 flex-col justify-between p-12 bg-[#0B0E14] border-r border-[#1F2633] relative overflow-hidden">
-        <div 
-          className="absolute inset-0 opacity-30"
-          style={{
-            backgroundImage: `radial-gradient(circle, #1e293b 1px, transparent 1px)`,
-            backgroundSize: "24px 24px",
-          }}
-        />
-        <div className="relative z-10 flex items-center gap-2">
-          <span className="text-xl">⚡</span>
-          <span className="text-lg font-semibold tracking-wide">InfraForge</span>
-        </div>
-        <div className="relative z-10 max-w-md">
-          <p className="font-mono text-sm text-[#AAB4C5] leading-relaxed tracking-tight">
-            "The canvas is the blueprint. The pipeline is the engine. Chaos is the test. Monitoring is the truth."
-          </p>
-        </div>
-        <div className="relative z-10 text-xs text-[#677185]">
-          Simulation theater — educational, never production sizing advice.
-        </div>
-      </div>
-      
-      {/* Right Panel */}
-      <div className="flex-1 flex items-center justify-center p-6">
-        <div className="w-full max-w-md">
-          {children}
-        </div>
-      </div>
+    <div className="grid min-h-dvh bg-bg text-ink lg:grid-cols-[1fr_minmax(0,560px)]">
+      <SkipLink />
+      <aside aria-hidden="true" className="if-paper-grid relative hidden border-r border-line [background-size:24px_24px] lg:block">
+        <div className="absolute inset-x-12 top-12"><Wordmark /></div>
+        <blockquote className="absolute inset-x-12 bottom-14 max-w-[42ch]">
+          <p className="if-title text-[30px] leading-snug text-ink">“Write down what you expect before you run it. The surprise is the lesson.”</p>
+          <p className="mt-4 text-sm text-ink-3">The InfraForge loop: challenge, build, predict, run, understand, improve.</p>
+        </blockquote>
+      </aside>
+      <main id="main" tabIndex={-1} className="flex flex-col px-4 py-8 outline-none sm:px-10">
+        <Link to="/" className="mb-10 self-start rounded-md lg:hidden"><Wordmark /></Link>
+        <div className="my-auto w-full max-w-[400px] self-center">{children}</div>
+      </main>
     </div>
   );
 }

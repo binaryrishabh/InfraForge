@@ -1,8 +1,6 @@
 import { useEffect } from "react";
-import { toast } from "sonner";
 import { useCanvasStore } from "../store/canvasStore";
-import { validateConnection } from "@infraforge/domain/validation";
-import { RESOURCE_PORTS } from "@infraforge/domain/resource";
+import { connectResources } from "../actions";
 import type { ResourceType } from "@infraforge/domain/resource";
 
 /* clientX/clientY are the port dot's center (sent by CanvasResourcePorts),
@@ -14,6 +12,7 @@ export function startConnectionFromPort(
   clientY: number
 ) {
   const store = useCanvasStore.getState();
+  if (store.liveLocked || store.isDeploying) return;
   const canvas = document.getElementById("canvas");
   if (!canvas) return;
   const rect = canvas.getBoundingClientRect();
@@ -66,45 +65,9 @@ function finalizeConnection(clientX: number, clientY: number) {
   const store = useCanvasStore.getState();
   const pending = store.pendingConnection;
   store.cancelPendingConnection();
-
   if (!pending) return;
-
-  const targetElement = document.elementFromPoint(clientX, clientY);
-  const targetNode = targetElement?.closest("[data-resource-id]");
-  if (!targetNode) return; // empty space: silent cancel
-
-  const targetId = targetNode.getAttribute("data-resource-id");
-  if (!targetId || targetId === pending.sourceId) return; // self: silent
-
-  const targetResource = store.resources.find((r) => r.id === targetId);
-  if (!targetResource) return;
-
-  const duplicate = store.connectionLines.some(
-    (l) => l.sourceId === pending.sourceId && l.targetId === targetId
-  );
-  if (duplicate) {
-    toast.warning("Connection already exists!");
-    return;
-  }
-
-  const verdict = validateConnection(pending.sourceType, targetResource.type);
-  if (!verdict.valid) {
-    toast.warning(verdict.message);
-    return;
-  }
-
-  const port = RESOURCE_PORTS[targetResource.type] || 80;
-  store.setConnectionLines((prev) => [
-    ...prev,
-    {
-      id: `connection-${Date.now()}`,
-      sourceId: pending.sourceId,
-      targetId,
-      sourceType: pending.sourceType,
-      targetType: targetResource.type,
-      port,
-    },
-  ]);
-  store.setRedoStack([]);
-  store.setCurrentLayoutSaved(false);
+  const targetId = document.elementFromPoint(clientX, clientY)?.closest("[data-resource-id]")?.getAttribute("data-resource-id");
+  // Releasing over empty space or the source itself cancels quietly.
+  if (!targetId || targetId === pending.sourceId) return;
+  connectResources(pending.sourceId, targetId);
 }
