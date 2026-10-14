@@ -24,7 +24,7 @@ export function useDeploymentSocket(deploymentId: string) {
     const [ timeline, setTimeline ] = useState<Array<DeploymentTimeline>>([]);
 
     useEffect(() => {
-        useSimulationStore.getState().reset();
+        useSimulationStore.getState().prepareRun(deploymentId);
         let isClose = false; // Component unmounted cleanup the ws connection
         let isServerStateFailed = false; // Deployment done or failed, so stop reconnecting and close wx connection.
         let ws: WebSocket;
@@ -63,7 +63,7 @@ export function useDeploymentSocket(deploymentId: string) {
             }
 
             // Check isClose before creating WebSocket
-            if(isClose) {
+            if(isClose || !owner || useAuthStore.getState().user?.id !== owner) {
                 return;
             }
 
@@ -78,7 +78,7 @@ export function useDeploymentSocket(deploymentId: string) {
             }
 
             ws.onmessage = (event) => {
-                if (isClose) {
+                if (isClose || !owner || useAuthStore.getState().user?.id !== owner) {
                     return;
                 }
                 const data = JSON.parse(event.data);

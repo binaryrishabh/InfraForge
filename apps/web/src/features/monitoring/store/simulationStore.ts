@@ -11,6 +11,7 @@ const MAX_CPU_HISTORY = 30;
 const EMPTY_ACTIVE_CHAOS: ChaosEffect[] = [];
 
 interface SimulationStoreState {
+  deploymentId: string | null;
   metrics: Record<string, ResourceMetrics>;
   logs: SimulationLog[];
   health: SimulationSnapshot["health"] | null;
@@ -28,9 +29,11 @@ interface SimulationStoreState {
   applySnapshot: (snapshot: SimulationSnapshot) => void;
   setSpeed: (speed: number) => () => void;
   reset: () => void;
+  prepareRun: (deploymentId: string) => void;
 }
 
 const initialState = {
+  deploymentId: null as string | null,
   metrics: {} as Record<string, ResourceMetrics>,
   logs: [] as SimulationLog[],
   health: null as SimulationSnapshot["health"] | null,
@@ -51,6 +54,7 @@ export const useSimulationStore = create<SimulationStoreState>()((set, get) => (
   ...initialState,
   applySnapshot: (snapshot) =>
     set((prev) => {
+      if (prev.deploymentId && prev.deploymentId !== snapshot.deploymentId) return prev;
       const nextCpuHistory: Record<string, number[]> = { ...prev.cpuHistory };
       const metricKeys = Object.keys(snapshot.metrics);
       
@@ -84,6 +88,7 @@ export const useSimulationStore = create<SimulationStoreState>()((set, get) => (
       }
 
       return {
+        deploymentId: snapshot.deploymentId,
         metrics: snapshot.metrics,
         logs: [...prev.logs, ...snapshot.logs].slice(-MAX_LOGS),
         health: snapshot.health,
@@ -108,6 +113,11 @@ export const useSimulationStore = create<SimulationStoreState>()((set, get) => (
       // A late failure must preserve newer snapshots and reset sessions.
       if (get() === pendingState) set({ speed: previousSpeed });
     };
+  },
+  prepareRun: (deploymentId) => {
+    if (get().deploymentId === deploymentId) return;
+    get().reset();
+    set({ deploymentId });
   },
   reset: () =>
     set({
