@@ -5,7 +5,7 @@ type Node = [id: string, type: ResourceType, column: number, row: number, extra?
 
 // Lays starter nodes on the canvas's 24px grid; a connection's port is its target's listening port.
 export function starter(nodes: Node[], edges: Array<[string, string]>): ChallengeStarter {
-  const resources: Resource[] = nodes.map(([id, type, column, row, extra]) => ({ id, type, x: 72 + column * 288, y: 72 + row * 192, ...extra }));
+  const resources: Resource[] = nodes.map(([id, type, column, row, extra]) => ({ id, type, x: 48 + column * 256, y: 48 + row * 168, ...extra }));
   const byId = new Map(resources.map((resource) => [resource.id, resource]));
   const connectionLines = edges.map(([sourceId, targetId]) => {
     const source = byId.get(sourceId), target = byId.get(targetId);

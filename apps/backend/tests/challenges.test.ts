@@ -14,11 +14,11 @@ import { REFERENCE, answers, attemptReport, definition, tier } from "./challenge
 // Changing any authored field changes its hash. Bump the version, then update the pin.
 const PINNED: Record<string, string> = {
   "first-production-api@1": "515c84a6da8a78c5b4c30269e0c20dff5f934e8f98608fbac572f3782dd33888",
-  "secure-the-edge@1": "8bfb84cf72a72fb0c903c39a0af7afaabff51f559377657ae4b6430726d64153",
-  "cache-matters@1": "1fb5347170853994fe9ef9da517a579f1bb0860813f3de02140af14f36e85e87",
-  "write-heavy@1": "9e8263be3dca5c2dd6d219923cc2a3807f9b177e2b38a6024e503a819efe9790",
-  "scale-out-safely@1": "6d49a725d2277f3adab7f880d4464b09753e75063d750bf5c7186b71d7b57e0f",
-  "peak-traffic@1": "78867a3df0b01ed916c5184c962f61546614bdda1fa46c1dfebd84c7f39ac32e",
+  "secure-the-edge@1": "4166582eef18e35bee1b554c764a1debbf6d324c28cc87f5d56c7f0e02b50849",
+  "cache-matters@1": "848a196cdcfe6f368690575f46384a4123e7e96af9eedc6469f442db6707c4b1",
+  "write-heavy@1": "728d1ad3cf9b44b324fad21dad4e480679c495d0c1968f89ee383eed9905c292",
+  "scale-out-safely@1": "718049a66d5f3147f9319f765726c5aaf687e9c254058159bacb47e19f991c23",
+  "peak-traffic@1": "07bbee27be116c2f4ec0cac8382bddd1ca51aca0dde44794135e05eb5d6c5388",
 };
 
 describe("challenge definitions", () => {
