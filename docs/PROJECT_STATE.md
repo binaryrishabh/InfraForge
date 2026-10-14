@@ -1,9 +1,10 @@
 # InfraForge project state
 
-Verified locally 2026-10-13 on `develop`. **Reliable Run Evidence and Honest Rerun +
-Compare are implemented.** Hosted production cutover remains **PARKED**. This
-milestone did not access Neon, EC2/AWS, hosted PostgreSQL/Nginx, Vercel, DNS, OAuth
-settings, production secrets or `main`.
+Verified locally 2026-10-14 on `develop`. **Challenge + Predict and the rebuilt web
+interface are implemented**, on top of Reliable Run Evidence and Honest Rerun + Compare.
+Hosted production cutover remains **PARKED**. These milestones did not access Neon,
+EC2/AWS, hosted PostgreSQL/Nginx, Vercel, DNS, OAuth settings, production secrets or
+`main`.
 
 See [local setup](../Readme.md), [authentication](AUTHENTICATION.md),
 [integration tests](../apps/backend/tests/integration/README.md) and the existing
@@ -27,7 +28,7 @@ Develop work cannot promote/deploy main or operate on production data.
 
 | Workspace | Responsibility |
 | --- | --- |
-| `apps/web` | React 19/Vite/Zustand canvas, monitoring, history and reports |
+| `apps/web` | React 19/Vite/Zustand: challenges, designer, live runs, runs, reports and compare |
 | `apps/backend` | Express, Prisma/PostgreSQL, outbox/BullMQ, worker, WS and report derivation |
 | `packages/domain` | Resource/workload types, graph/readiness rules and examples |
 | `packages/catalog` | Provider SKU data and lookup |
@@ -35,8 +36,8 @@ Develop work cannot promote/deploy main or operate on production data.
 | `packages/simulation` | Deterministic engine, runtime, cost, capacity and tuning |
 
 Bun 1.3.14/Turbo 2.11.6 own one root install/lockfile. Browser imports cannot reach
-engine/runtime/cost. Prisma 7.9.1 has twelve migrations; the first eleven are
-unchanged. Migration 12 is `20261013010000_honest_reruns`. Simulation model remains
+engine/runtime/cost. Prisma 7.9.1 has thirteen migrations; the first twelve are
+unchanged. Migration 13 is `20261014000000_challenge_attempts`. Simulation model remains
 `1`, catalog `2026-08`; engine source, RNG consumption and all 30 goldens are unchanged.
 
 Better Auth 1.7.7 uses database sessions, exact HTTP/WS ownership and permitted
@@ -148,56 +149,78 @@ workload/seed are fixed. Changed context/preview or account is refused. Keyboard
 selection, native disclosures, real table headers/captions, focus return, readable
 portal text, reduced motion and narrow metric blocks preserve the existing design.
 
+## Challenge + Predict
+
+Six versioned challenges (two starter, two core, two advanced) live in
+`apps/backend/challenges`, calibrated against model 1/catalog 2026-08 and pinned by
+version-1 spec hashes in tests. A learner opens a per-challenge workspace (a saved
+design marked with its challenge), designs, answers fixed prediction questions and
+starts an attempt. The prediction is written in the same insert as the run and is
+immutable. Migration 13 adds the workspace link, a separate evaluation-stop column,
+completeness/immutability guards and an insert guard that accepts only speed and stop
+actions during an attempt. The worker stops exactly at the evaluation second
+(`trigger: challenge-evaluation`). Criteria and prediction outcomes are derived from
+recorded evidence on every read and are reported as two separate verdicts; early
+stops or other rule versions are not re-judged. The debrief explanation is withheld
+by the server until a first attempt. Passing reference designs exist only as backend
+test fixtures (`tests/challengeHarness.ts`); the image, API and web bundle carry only
+starters. Reruns of attempts are freeform.
+
+## Web interface
+
+One design system replaces the previous UI: Paper and Ink themes, comfortable/compact
+density and reduced motion as CSS tokens; Atkinson Hyperlegible Next/Mono and
+Newsreader (OFL-1.1); small primitives in `apps/web/src/ui`; health and status always
+pair a glyph with a word. Routes: landing, sign-in, `/home` (next step), `/challenges`
+and briefs, `/designs`, `/runs` with kind filter, `/runs/:id` (Observed / Interpreted /
+Unknown, debrief first), `/runs/compare` (no winner), `/settings` and `/design`.
+`/dashboard` and `/reports/*` redirect. The designer has one workspace bar, palette and
+rail, a keyboard-complete canvas, brief/inspector/checks panel and sheets below 768 px.
+Live runs always use Ink; attempts show only speed and stop and say why; freeform runs
+keep load, fault, resize, pool and live edits. Designer, report and compare load on
+demand (main chunk 242 kB).
+
 ## Verification, failures and cleanup
+
+Code SHA `2eb7c5f` was validated exactly (`git archive HEAD` in Linux, CI commands):
 
 | Check | Actual result |
 | --- | --- |
-| Frozen install | 491 installs/545 packages checked; lockfile unchanged |
-| Typecheck | Seven workspace tasks and release compiler passed; correction recheck passed |
-| Lint/boundaries | Five ESLint tasks; 1,389 imports, no cycles/runtime leaks |
-| Workspace unit tests | 162 passed, 1,151 assertions in final serialized run; seven DB cases skipped here and executed below |
-| Engine | All 30 goldens plus jitter/connection-order regressions passed; source/goldens unchanged |
-| Tooling | 23 passed, 279 assertions |
-| PostgreSQL 18/Redis integration | 13 passed, 1,123 assertions across seven files; no cleanup errors |
-| Docker | Commit-labelled image, five entrypoints compiled and explicit fixture Compose config passed |
-| Frontend build | Passed; existing bundle-size warning remains |
-| Dependency audit | Exit zero, `{}` |
+| Frozen install | 491 packages; lockfile unchanged |
+| Typecheck | Seven workspace tasks and release compiler passed |
+| Lint/boundaries | Five ESLint tasks; 1,835 imports, no cycles/runtime leaks |
+| Workspace tests | 206 passed: catalog 9, domain 15, simulation 32, web 52, backend 98 (8 DB cases run below) |
+| Engine | All 30 goldens plus jitter/connection-order regressions passed; engine and goldens unchanged |
+| Challenges | 24 tests: reference designs meet, starters fail, verdicts separate, hashes pinned |
+| Tooling | 23 passed |
+| PostgreSQL 18/Redis integration | 14 passed, 1,161 assertions across eight files on the commit image; no cleanup errors |
+| Docker | Normal-context image built, Compose fixture config passed, five entrypoints compiled |
+| Release rehearsal | All 27 stages passed on the commit image (migration, rollback, isolation, fail-closed); own resources removed |
+| Frontend build | Passed without chunk warning; main chunk 242 kB |
+| Dependency audit | `{}` |
 
-Real database sessions prove two-user/ownerless HTTP/WS denial, expiry/revocation/
-sign-out, no unauthorized control event or mutation, and legacy quarantine/recovery.
-Full existing lifecycle also covers gates, duplicate jobs, live controls, pause,
-topology, optional Redis delivery, exact teardown, restart and ownership loss.
-Rerun proof records five exact stops at 620, identical-input normalized state,
-current-design changes, detached exact rerun, manual early stop, frozen insertion/
-terminal failures, original capture retention and retry notifications. Unsaved
-canvas preview writes nothing; creation before save is refused, and saving that
-exact canvas permits the matching rerun. Migration proofs preserve legacy fields,
-ownerless records, identity/lineage immutability and normal designless refusal.
+Authenticated browser QA ran the real SPA against a disposable local stack (API, WS,
+worker, PostgreSQL 18, Redis 8 in labelled containers) with a fixture session created
+through Better Auth's adapter on localhost only. It covered landing, sign-in, Home,
+all six briefs, designer (palette, rail, keyboard, inspector, connections, undo),
+predict dialog, live attempts and freeform runs (load, fault, resize, pool, stop),
+debriefs for a failed attempt with a correct prediction and a passed attempt with a
+wrong one, runs, reports, compare, reruns, Designs, Settings and not-found. Every route
+was swept at 375, 768, 1280 and 1920 px with no horizontal page overflow, mostly in Ink;
+the designer and Runs were also checked in Paper. Text tokens measure at least 4.5:1 on
+every surface in both themes. QA found and fixed: a draft
+overwritten by `/design?design=` on a fresh load, challenge identity lost after a
+rerun, stale gate evidence in live runs, focus lost after deletes and dialogs, a
+clipped prediction table on phones, select labels that absorbed option text, an
+inert density setting, raw status words, a landing illustration that matched a
+challenge outcome, and the `.dockerignore` gap that broke image builds.
 
-Browser QA used actual components/CSS and retained disposable integration evidence:
-keyboard selection/max-two, rerun controls, default matched stop, focus return,
-native disclosure, desktop headers and 375 px blocks/dialog without page overflow.
-The rerun UI was explicitly a fixture with no creation/OAuth API. Authenticated SPA
-and external OAuth flows were not browser-verified; API/WS creation/session evidence
-comes from the real database-backed integration suite.
-
-Failed attempts remain separately recorded. Windows Bun 1.3.14 repeatedly crashed
-in native startup/generation/tests; some attempts explicitly reported memory
-exhaustion. Final serialized checks passed, but Windows integration stability is
-not established. Speculative launch/JIT changes were removed. Linux Docker runs
-passed. Final QA found and fixed late teardown contention during a frozen matched
-stop, low-contrast portalled text and sorting away meaningful connection order.
-The security test now asserts no delivery
-from confirmed invalidation onward, excluding legitimate telemetry during the
-in-flight invalidation request. No authorization or golden requirement was weakened.
-
-Sanitized final/failed evidence and browser screenshot stay outside Git under OS
-temporary `infraforge-compare-20261013` and labelled integration run records; final
-integration run is `10151e0558b84d2484109e757a0dd4b6`. Owned test containers, volumes,
-networks, sessions and child processes were removed. The temporary unit source bundle
-and QA folder were removed (1,018,993 bytes of QA scratch), along with four unused
-owned test image tags. Shared caches, persistent developer storage/configuration and owner files
-remain intentionally. No agent-memory folder or permanent scratch archive was added.
+Earlier milestones' database proofs (ownership, sessions, exact teardown, reruns,
+matched stops, migrations) still run in the integration suite above. Windows Bun and
+`tsc` remain unreliable on this host (native crashes, out of memory), so final checks
+ran in Linux containers. Owned QA containers, network, images, volumes and scratch
+were removed; evidence stays outside Git. No agent-memory folder or scratch archive
+was added.
 
 ## Parked hosted work and remaining limits
 
@@ -215,8 +238,14 @@ A single pair establishes no statistical significance, production reliability, r
 cloud behavior or general superiority across seeds. Continuous telemetry, all
 automatic scaling events, replay/checkpoint recovery and multi-seed experiments
 remain absent. Model-2 resource-keyed RNG is deferred to an explicit simulation
-milestone. Windows runtime stability, authenticated browser/OAuth QA, broader
-beginner UX and bundle size remain open. Local/CI proof is not production readiness.
+milestone. Windows runtime stability (native Bun crashes, `tsc` out of memory on this
+host) and external OAuth sign-in in a browser remain unverified; authenticated browser
+QA used a local fixture session. The sample design deliberately keeps the two readiness
+warnings its domain tests pin (vm-2 has no data path, monitor-1 is unreachable).
+Challenges have one version each and no authoring tool. Local/CI proof is not
+production readiness.
 
-Next product milestone: **Challenge + Predict**, completing the learning loop while
-hosted production work stays parked.
+Next product milestone: **Challenge authoring and versioning**: a reviewed workflow for
+a second definition version (recalibration, hash pinning, old attempts kept under their
+own rules), a factual cross-challenge attempt history with no scores, and broader
+beginner guidance in the designer, while hosted production work stays parked.
