@@ -89,6 +89,9 @@ apps/backend/reruns/**
 !apps/backend/actions/
 apps/backend/actions/**
 !apps/backend/actions/*.ts
+!apps/backend/challenges/
+apps/backend/challenges/**
+!apps/backend/challenges/*.ts
 !apps/backend/scripts/
 apps/backend/scripts/**
 !apps/backend/scripts/recover-ownership.ts
