@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { getSpecificInfrastructure } from "@/api/infrastructure.api";
 import { useCanvasStore } from "../store/canvasStore";
 import { installDesign } from "../designLoader";
+import { refreshDesignIdentity } from "../designIdentity";
 
 /* `/design?design=<id>` is a request to open a saved design. It stays in the
 URL while the design loads and is removed once handled. A request that would
@@ -25,7 +26,10 @@ export function useDesignRoute() {
   useEffect(() => {
     if (!requested || !ready || pending) return;
     if (live) { toast.info("Leave the current run before opening another design."); consume(); return; }
-    if (requested === currentId) { consume(); return; }
+    if (requested === currentId) {
+      void refreshDesignIdentity(requested).catch(() => toast.error("That design's challenge identity could not be checked.")).finally(consume);
+      return;
+    }
     void open(requested);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- runs once per request
   }, [requested, ready, pending]);
