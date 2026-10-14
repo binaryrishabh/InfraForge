@@ -1,6 +1,8 @@
 import type { ExperimentResult } from "@infraforge/contracts/challenges";
 import { StatusMark } from "@/ui/StatusMark";
 import { faultLabel } from "../experiment";
+import type { ExperimentTrace } from "@infraforge/contracts/reports";
+import { ExperimentTraceView } from "./ExperimentTraceView";
 
 const STATE = {
   scheduled: { kind: "pending", label: "Scheduled" },
@@ -13,7 +15,7 @@ const health = (value: string | null) => value ? value[0]!.toUpperCase() + value
 /* What InfraForge did to the design and what is recorded about it. Only the
 intervention is stated; nothing here claims why the rest of the system behaved
 as it did, or that it recovered. */
-export function ExperimentDebrief({ experiment, evaluationSeconds }: { experiment: ExperimentResult; evaluationSeconds: number }) {
+export function ExperimentDebrief({ experiment, evaluationSeconds, trace, showTrace = true }: { experiment: ExperimentResult; evaluationSeconds: number; trace?: ExperimentTrace; showTrace?: boolean }) {
   const state = STATE[experiment.state];
   return (
     <div className="mt-6">
@@ -32,19 +34,20 @@ export function ExperimentDebrief({ experiment, evaluationSeconds }: { experimen
         </dl>
         <p className="mt-3 text-sm text-ink-2">{experiment.detail}</p>
       </div>
+      {showTrace ? <ExperimentTraceView trace={trace} experiment={experiment} /> : <p className="mt-3 text-sm text-ink-3">The live timeline shows wall-cycle snapshots. The retained per-second experiment trace opens here after the attempt stops.</p>}
       <div className="mt-4 grid gap-6 lg:grid-cols-2">
         <div>
           <h4 className="text-[13px] font-semibold text-ink">Evidence</h4>
           <ul className="mt-1.5 list-disc space-y-1 pl-5 text-sm text-ink-2">
             <li>The fault is a durable action, listed under Actions in this report and marked as the challenge experiment, with the second it was requested, applied and closed.</li>
-            <li>The state at second {evaluationSeconds} is the exact terminal snapshot captured when the attempt stopped.</li>
+            <li>The exact terminal snapshot records the second the attempt actually stopped. Runtime judging requires reaching evaluation second {evaluationSeconds}.</li>
             <li>The design, workload and seed are the inputs captured when the attempt was created.</li>
           </ul>
         </div>
         <div>
           <h4 className="text-[13px] font-semibold text-ink">What this experiment cannot show</h4>
           <ul className="mt-1.5 list-disc space-y-1 pl-5 text-sm text-ink-2">
-            <li>How the system moved between second {experiment.atSimulatedSecond} and second {evaluationSeconds}: only the moment of the fault and the final state are kept, not a continuous series.</li>
+            <li>{trace?.points.length ? "Behaviour outside the bounded retained window, or within missing measurements. No values are reconstructed across a gap." : `How the system moved between second ${experiment.atSimulatedSecond} and second ${evaluationSeconds}: this attempt has no retained per-second series.`}</li>
             <li>Recovery. A fault window ending says the model stopped applying the fault, not that anything recovered.</li>
             <li>A production or real-cloud result. InfraForge's simulator is an educational model with fixed rules.</li>
           </ul>

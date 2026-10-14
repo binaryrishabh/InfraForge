@@ -26,7 +26,7 @@ function Debrief({ report }: { report: RunReport }) {
   // The exact version this attempt was judged by, so labels and the explanation match its rules.
   const load = useCallback(() => getChallenge(id, version || undefined), [id, version]);
   const { data } = useRequest(load);
-  return <ChallengeDebrief evaluation={report.challenge!} brief={data} runId={report.run.id} />;
+  return <ChallengeDebrief evaluation={report.challenge!} brief={data} runId={report.run.id} trace={report.experimentTrace} />;
 }
 
 /* A lab report: what ran, the challenge verdict if any, what was recorded,

@@ -1,4 +1,4 @@
-import type { ChallengeBrief, ChallengePrediction, ChallengePreflight, ChallengeSummary } from "@infraforge/contracts/challenges";
+import type { ChallengeBrief, ChallengePrediction, ChallengePreflight, ChallengeSummary, LearningHistory } from "@infraforge/contracts/challenges";
 import type { Deployment } from "@infraforge/contracts/deployment";
 import { API_URL, http } from "../client/httpClient";
 
@@ -7,6 +7,9 @@ const path = (id: string) => `${base}/${encodeURIComponent(id)}`;
 
 export async function listChallenges(): Promise<ChallengeSummary[]> {
   return (await http.get(base)).data.challenges;
+}
+export async function getLearningHistory(limit = 20, before?: string): Promise<LearningHistory> {
+  return (await http.get(`${base}/attempt-history`, { params: { limit, ...(before ? { before } : {}) } })).data.history;
 }
 // The latest version, or an exact earlier version for reading what a past attempt was judged by.
 export async function getChallenge(id: string, version?: number): Promise<ChallengeBrief> {

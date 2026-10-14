@@ -17,6 +17,7 @@ import { nextStep, type HomeData, type Next } from "../nextStep";
 import { Button, ButtonLink } from "@/ui/Button";
 import { Loading, Page, Section } from "@/ui/Page";
 import { StatusMark } from "@/ui/StatusMark";
+import { LearningHistory } from "@/features/challenges/components/LearningHistory";
 
 function NextStep({ next }: { next: Next }) {
   const navigate = useNavigate();
@@ -35,7 +36,7 @@ function NextStep({ next }: { next: Next }) {
   );
   if (next.kind === "live") return frame("A run is live", next.run.infrastructureName, `${plural(next.run.resourceCount, "resource")}, live since ${relativeTime(next.run.createdAt)}. It keeps running on the server until it is stopped${next.run.challengeId ? " or reaches its evaluation second" : ""}.`,
     <Button variant="primary" size="lg" loading={entering} icon={<Radio size={16} aria-hidden="true" />} onClick={() => void enter(next.run)}>Return to the run</Button>);
-  if (next.kind === "free") return frame("Next step", "Every challenge has been met.", "Design something of your own, run it against the traffic you choose, and compare runs as you change one thing at a time.",
+  if (next.kind === "free") return frame("Next step", "Every challenge has a recent met attempt.", "Design something of your own, run it against the traffic you choose, and compare runs as you change one thing at a time.",
     <ButtonLink to="/design" variant="primary" size="lg">Open the designer</ButtonLink>);
   const c = next.challenge;
   const copy = next.kind === "improve"
@@ -70,12 +71,13 @@ export function HomePage() {
         <NextStep next={nextStep(data)} />
         <div className="mt-4 grid gap-x-12 lg:grid-cols-[minmax(0,1fr)_320px]">
           <div className="min-w-0">
+            <LearningHistory limit={5} />
             <Section title="Recent runs" className="mt-8" aside={<Link to="/runs" className="text-sm font-medium text-accent hover:underline">All runs</Link>}>
               {data.runs.length ? <RunList runs={data.runs} /> : <p className="text-sm text-ink-3">No runs yet. Attempt a challenge or run a design.</p>}
             </Section>
           </div>
           <div>
-            <Section title="Challenges" className="mt-8" aside={<span className="if-num">{met} of {data.challenges.length} met</span>}>
+            <Section title="Challenges" className="mt-8" aside={<span className="if-num">{met} of {data.challenges.length} met recently</span>}>
               <ul className="divide-y divide-line border-y border-line">
                 {data.challenges.map((c) => (
                   <li key={c.id}><Link to={`/challenges/${c.id}`} className="flex items-center justify-between gap-3 py-2.5 hover:bg-sunken">

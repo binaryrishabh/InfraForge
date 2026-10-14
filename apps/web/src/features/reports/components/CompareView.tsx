@@ -72,6 +72,7 @@ export function CompareView({ comparison: c }: { comparison: RunComparison }) {
       </section>
 
       <ReportSection number={k()} title="What stayed the same, what changed"><StartingInputs starting={c.starting} /></ReportSection>
+      <ExperimentCompare evidence={c.experimentEvidence} />
       <ReportSection number={k()} title="Observed — recorded facts"><ul className="flex flex-col gap-3">{c.observed.map((f) => <Statement key={f.id} message={f.message} sources={f.sources} />)}</ul></ReportSection>
       {c.interpreted.length > 0 && <ReportSection number={k()} title="Interpreted — what the evidence supports"><ul className="flex flex-col gap-3">{c.interpreted.map((f) => <Statement key={f.id} message={f.message} sources={f.sources} verb="Derived from" />)}</ul></ReportSection>}
       <ReportSection number={k()} title="Final-state differences">
@@ -126,3 +127,4 @@ export function CompareView({ comparison: c }: { comparison: RunComparison }) {
     </article>
   );
 }
+import { ExperimentCompare } from "./ExperimentCompare";

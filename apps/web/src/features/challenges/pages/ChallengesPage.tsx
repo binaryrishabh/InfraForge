@@ -8,6 +8,7 @@ import { Page, PageHeader, Loading, Notice, Section } from "@/ui/Page";
 import { Button } from "@/ui/Button";
 import { StatusMark } from "@/ui/StatusMark";
 import { DIFFICULTY_LABEL, RESULT_LABEL } from "../challengeLabels";
+import { LearningHistory } from "../components/LearningHistory";
 
 export function ChallengeRow({ challenge, index }: { challenge: ChallengeSummary; index: number }) {
   const latest = challenge.latest;
@@ -23,7 +24,7 @@ export function ChallengeRow({ challenge, index }: { challenge: ChallengeSummary
         <p className="if-num mt-2 text-xs text-ink-3">{challenge.requirementCount} requirements · {challenge.category === "resilience" ? "one scheduled fault · " : ""}judged at second {challenge.evaluationSeconds}</p>
       </div>
       <div className="flex flex-col items-start gap-1.5 sm:items-end sm:text-right">
-        {challenge.met ? <StatusMark kind="met" label="Met at least once" /> : latest ? <StatusMark kind={latest.status} label={RESULT_LABEL[latest.status]} /> : <StatusMark kind="not-started" />}
+        {challenge.met ? <StatusMark kind="met" label={challenge.recentAttemptLimit ? `Met in latest ${challenge.recentAttemptLimit} attempts` : "Met at least once"} /> : latest ? <StatusMark kind={latest.status} label={RESULT_LABEL[latest.status]} /> : <StatusMark kind="not-started" />}
         <span className="text-xs text-ink-3">{challenge.attempts === 0 ? (challenge.workspaceDesignId ? "Design started, no attempts yet" : "No attempts yet") : `${challenge.attempts} ${challenge.attempts === 1 ? "attempt" : "attempts"}`}</span>
         <Link to={`/challenges/${challenge.id}`} className="mt-1 inline-flex items-center gap-1 text-sm font-medium text-accent hover:underline">
           {challenge.attempts || challenge.workspaceDesignId ? "Continue" : "Read the brief"} <ArrowRight size={14} aria-hidden="true" />
@@ -59,6 +60,7 @@ export function ChallengesPage() {
         );
       })}
       <p className="mt-6 max-w-[70ch] text-sm text-ink-3">Results come from fixed rules applied to recorded run evidence. There are no scores or rankings: a requirement is met or it is not, and a prediction matches what was recorded or it does not.</p>
+      <LearningHistory />
     </Page>
   );
 }

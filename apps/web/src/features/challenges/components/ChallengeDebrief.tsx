@@ -8,6 +8,7 @@ import { cx } from "@/ui/cx";
 import { RESULT_LABEL, EVIDENCE_LABEL } from "../challengeLabels";
 import { useOpenChallenge } from "../useOpenChallenge";
 import { ExperimentDebrief } from "./ExperimentDebrief";
+import type { ExperimentTrace } from "@infraforge/contracts/reports";
 
 const VERDICT: Record<ChallengeEvaluation["status"], string> = {
   met: "Every requirement was met.",
@@ -37,7 +38,7 @@ function Sources({ sources }: { sources: string[] }) {
 /* Two separate verdicts. The challenge result says whether the design met its
 requirements; the prediction says whether you foresaw what was recorded. A
 failed design can carry an accurate prediction and the reverse. */
-export function ChallengeDebrief({ evaluation, brief, runId }: { evaluation: ChallengeEvaluation; brief: ChallengeBrief | null; runId?: string }) {
+export function ChallengeDebrief({ evaluation, brief, runId, trace }: { evaluation: ChallengeEvaluation; brief: ChallengeBrief | null; runId?: string; trace?: ExperimentTrace }) {
   const { open, busy } = useOpenChallenge();
   const matched = evaluation.predictions.filter((p) => p.outcome === "matched").length;
   // The attempt before this one at the same version: the natural pair for Compare.
@@ -64,7 +65,7 @@ export function ChallengeDebrief({ evaluation, brief, runId }: { evaluation: Cha
         </div>
       </div>
 
-      {evaluation.experiment && <ExperimentDebrief experiment={evaluation.experiment} evaluationSeconds={evaluation.evaluationSeconds} />}
+      {evaluation.experiment && <ExperimentDebrief experiment={evaluation.experiment} evaluationSeconds={evaluation.evaluationSeconds} trace={trace} showTrace={evaluation.status !== "in-progress"} />}
 
       {evaluation.criteria.length > 0 && (
         <div className="mt-6">
