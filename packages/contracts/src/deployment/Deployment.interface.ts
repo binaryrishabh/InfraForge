@@ -4,6 +4,7 @@ import type { DeploymentStatus } from "./DeploymentStatus.enum";
 import type { DeploymentTimeline } from "./DeploymentTimeline.interface";
 import type { WorkloadProfile } from "@infraforge/domain/workload";
 import type { RunInputs, RunTopology } from "../run-inputs/RunInputs.interface";
+import type { ChallengePrediction } from "../challenges";
 
 export interface Deployment {
   id: string,
@@ -15,6 +16,8 @@ export interface Deployment {
   challengeId?: string | null,
   challengeVersion?: number | null,
   evaluationStopAtSimulatedSeconds?: number | null,
+  challengePrediction?: ChallengePrediction | null,
+  predictionSubmittedAt?: string | null,
   status: DeploymentStatus,
   resourceCount: number,
   stages: DeploymentStages[],
