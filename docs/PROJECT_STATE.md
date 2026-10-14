@@ -1,7 +1,7 @@
 # InfraForge project state
 
-Verified locally 2026-10-14 on `develop`. **Bounded experiment evidence over time**
-extends immutable challenge versions, resilience experiments and Honest Rerun + Compare.
+Verified locally 2026-10-15 on `develop`. **Local credential authentication and
+manual browser testing** extends the accepted experiments and run evidence.
 Hosted production cutover remains **PARKED**. These milestones did not access Neon,
 EC2/AWS, hosted PostgreSQL/Nginx, Vercel, DNS, OAuth settings, production secrets or
 `main`.
@@ -24,6 +24,12 @@ intact. One mutating executor uses the owner Git identity. Approved model policy
 GPT-6.1 Sol, Extra High; INNER NONE. External review needs scoped owner authorization.
 Develop work cannot promote/deploy main or operate on production data.
 
+Research is independent: the Lead specifies what to investigate; the executor
+chooses where and how. Use progressive validation: smallest relevant tests while
+coding, affected/security suites after a slice, then full validation at the final
+checkpoint. Schema/runtime changes also require the release rehearsal. Never
+create executor memories or permanent scratch archives.
+
 ## Accepted architecture and foundation
 
 | Workspace | Responsibility |
@@ -36,17 +42,33 @@ Develop work cannot promote/deploy main or operate on production data.
 | `packages/simulation` | Deterministic engine, runtime, cost, capacity and tuning |
 
 Bun 1.3.14/Turbo 2.11.6 own one root install/lockfile. Browser imports cannot reach
-engine/runtime/cost. Prisma 7.9.1 has fifteen migrations; migrations 1–14 are
-unchanged. Migration 15 is `20261016000000_experiment_evidence`. Simulation model remains
+engine/runtime/cost. Prisma 7.9.1 has sixteen migrations; migrations 1–15 are
+unchanged. Migration 16 is `20261017000000_credential_usernames`. Simulation model remains
 `1`, catalog `2026-08`; engine source, RNG consumption and all 30 goldens are unchanged.
 
-Better Auth 1.7.7 uses database sessions, exact HTTP/WS ownership and permitted
+Better Auth 1.7.7 uses native credentials/username support, database sessions, exact HTTP/WS ownership and permitted
 Origins. Cookies are host-only, HttpOnly, SameSite=Lax and Secure on HTTPS. WS checks
 expiry, revocation and run ownership before subscription/delivery. Ownerless legacy
-history stays quarantined. Dry-run-first ownership recovery needs independent
+history stays quarantined. Username/email/password works without OAuth configuration;
+the bounded server identifier adapter delegates to the original auth handlers.
+Usernames are immutable normalized lowercase ASCII (3–30 characters, starting
+with a letter; letters/digits/underscores), unique and format-checked in PostgreSQL.
+Old users keep NULL usernames. New emails are trimmed/lowercased, with an additional
+case-fold unique index; ambiguous legacy collisions abort migration, never merge
+accounts. Passwords use native salted scrypt, 15–128 library string-length bounds,
+no composition rules, and bounded credential bodies. Credential email remains
+truthfully unverified; no delivery/reset flow or automatic linking is added.
+Session UI exposes username and email verification without internal account/password data.
+Dry-run-first ownership recovery needs independent
 evidence, a verified design owner and inactive unassigned linked runs; detached
 ownerless runs remain quarantined. Google/GitHub OAuth still requires owner
 credentials and end-to-end verification. No fixture-login endpoint is public.
+
+Manual path: `bun run dev:setup`, `bun run dev`, open
+`http://localhost:5173/signup`, create an account, then sign out and return through
+`/signin` with either identifier. Future auth methods are **email OTP/magic link**
+and **phone number**, not implemented. They require real delivery and a reviewed
+identity/linking/revocation policy using the existing user/ownership model.
 
 `bun run dev:setup` prepares labelled PostgreSQL 18/Redis 8 resources. `bun run dev`
 migrates/generates and supervises API, worker, WS and frontend with generated local
@@ -269,10 +291,19 @@ pair a glyph with a word. Routes: landing, sign-in, `/home` (next step), `/chall
 and briefs, `/designs`, `/runs` with kind filter, `/runs/:id` (Observed / Interpreted /
 Unknown, debrief first), `/runs/compare` (no winner), `/settings` and `/design`.
 `/dashboard` and `/reports/*` redirect. The designer has one workspace bar, palette and
-rail, a keyboard-complete canvas, brief/inspector/checks panel and sheets below 768 px.
+rail, a keyboard-complete canvas and brief/inspector/checks panel. Architecture
+editing/live spatial work is desktop-class: minimum **1100 CSS px**, comprising a
+256px palette, 340px details and 504px drafting area (two 208px cards, 40px gap,
+48px margins). Below that width an original accessible larger-workspace page
+replaces the canvas; no separate mobile geometry/palette/inspector is introduced.
+The heavy workspace is lazy and not mounted on unsupported screens. Resizing
+retains unsaved design state and run-bound last-observed telemetry; new runs and
+account/session reset clear telemetry, and prior-run/other-account frames are
+rejected. This is a browser cache, not simulator checkpoint recovery. At 375px,
+Designer QA verifies the fallback. Other product pages remain responsive.
 Live runs always use Ink; attempts show only speed and stop and say why; freeform runs
 keep load, fault, resize, pool and live edits. Designer, report and compare load on
-demand (main chunk 251 kB). Resilience attempts add an experiment timeline (keyboard
+demand (main chunk about 253 kB). Resilience attempts add an experiment timeline (keyboard
 and screen-reader readable, announced once per phase), text states such as "Crash on
 app-2 active · 14 simulated seconds remaining" and "Fault ended at second 90", the
 target marked on its card and a static failed tone on edges into failed resources;
@@ -280,52 +311,62 @@ no edge metrics are invented and reduced motion removes the fault outline animat
 
 ## Verification, failures and cleanup
 
-Started from `b397da0`. Evidence logs, integration JSON and browser screenshots stay
-in the OS temporary evidence directory outside Git; no agent memory or scratch archive
-was added.
+Started clean at `d26921ff336cb936a115434b5badef9eca6a1ef0`. Auth/backend code is
+verified in the commit-tagged `f33c531` image; the browser-reproduced telemetry
+reattachment repair has its own affected-package checks. Owner identity/history,
+all first fifteen migrations, lockfile, engine source and goldens are preserved.
+Unique logs/JSON/screenshots stay outside Git in the OS temporary directory
+`infraforge-credentials-20261015`; earlier experiment evidence remains separately
+retained. No agent folders or executor memories were created.
 
 | Check | Actual result |
 | --- | --- |
-| Frozen install | 498 installs across 548 packages; lockfile unchanged |
-| Typecheck | Seven workspace tasks and release compiler passed, including the navigation correction |
-| Lint/boundaries | Five ESLint tasks; 2,152 imports, no cycles/runtime leaks |
-| Workspace tests | 255 passed: catalog 9, domain 15, simulation 32, web 65, backend 134; 10 DB cases run below |
-| Engine | All 30 goldens plus jitter/connection-order regressions passed; engine and goldens unchanged |
-| `check:challenges` | 56 passed across six files, including immutable hashes, all nine calibrated challenges, four-fault research, trace ordering and exact 1×/10×/60× scheduling |
+| Frozen install | Passed on Linux Bun 1.3.14; lockfile unchanged |
+| Typecheck | Seven workspace tasks and release compiler passed; final affected web/test compiler passed after the resize repair |
+| Lint/boundaries | Five ESLint tasks plus final web lint; 2,201 imports, no cycles/runtime leaks |
+| Workspace tests | 264 passed: catalog 9, domain 15, simulation 32, web 74, backend 134; 11 DB cases skipped here and exercised below |
+| Engine | All 30 unchanged goldens plus jitter/connection-order regressions passed |
+| Challenges | 56 passed, 494 assertions; all nine published definitions/hashes unchanged |
 | Tooling | 23 passed, 279 assertions |
-| PostgreSQL 18/Redis | 16 passed, 1,253 assertions across ten files; real sessions/ownership, all migration proofs, 1×/10×/60× traces, frozen writes, terminal retry, restart prefixes, gaps and 302-record mixed-version history; no harness cleanup errors |
-| Docker | Normal-context code image built; Compose fixture and all five packaged entrypoints passed |
-| Release rehearsal | All 27 stages passed on the backend code image: migration/postchecks, real sessions, worker replacement, pooling, TLS/Origin, dependency loss and compatible rollback; owned rehearsal resources removed |
-| Frontend build | Passed without chunk warning; main chunk 251 kB |
-| Dependency audit | `{}` |
+| Focused auth | Public signup, both server-resolved identifiers, DB sessions, duplicate races, 189 assertions including two-user HTTP/WS denial, expiry/revocation and shared native rate limits |
+| PostgreSQL 18/Redis | Exact backend image: 17 passed, 1,384 assertions across eleven files; lifecycle/retries/teardown/reruns/traces/history/security/migrations and cleanup passed |
+| Migration 16 | Schema-15 upgrade preserves OAuth users/accounts; case collision rolls back all DDL; nullable usernames, format/unique guards and release index drift rejection passed |
+| Docker | Normal-context commit-tagged image, fictional-settings Compose check and all five packaged entrypoints passed |
+| Release rehearsal | Windows Bun failed at its first Docker subprocess with `EUNKNOWN/uv_spawn`, before fixtures were created; exact-SHA Linux CI packaging runs the full rehearsal and must pass before completion |
+| Frontend build | Passed; main chunk about 253 kB, no chunk warning |
+| Dependency audit | `{}`; no dependency upgrade |
 
-Validation exposed and repaired an import cycle, fixture typing and a real new-migration
-SQL operator-precedence error that rejected samples containing pool summaries. A real
-PostgreSQL pending-pool regression now exercises that path. The initial full integration
-suite stalled at its first 1× trace; the corrected full suite above passed. Docker image
-installation initially failed extracting TypeScript, then succeeded unchanged on retry.
-Windows paging pressure subsequently stopped Docker and interrupted source copies in
-owned containers. The owner recovered Docker; copied sources are refreshed and checked,
-and final validation runs sequentially. No machine settings or unrelated apps changed.
+Real browser QA registered two disposable accounts through the public form with
+zero OAuth providers. User A saved designs, ran CPU-pressure attempts, received
+actual WS measurements, paused/changed speed and read complete 51-sample reports
+with recorded predictions/actions. Sign-out redirected protected routes; email
+and case-insensitive username sign-ins (rechecked through the final server adapter)
+restored the same owned data. User B had empty design/run lists and was denied
+User A's report; HTTP mutation/control/WS denial is additionally proven by the
+real-session integration suite. Account facts showed normalized username and
+truthful unverified email. Field errors, first-invalid focus, autocomplete and
+keyboard use were exercised. OAuth callbacks remain unverified without credentials.
 
-Authenticated browser QA used the actual SPA/API/WS/worker with disposable PostgreSQL
-18/Redis 8 and real Better Auth adapter sessions. Lose an app server at 10× and Cache
-failure at 60× retained 61 samples (30–90); early stop at 70 retained 41 samples and
-remained not evaluated; CPU starter/reference at 60× retained 51 samples (30–80) and
-failed/passed respectively, with every prediction matched. Fault markers and values at
-59/60/61/evaluation agree with server evidence. A deliberate fixture gap at 42–43 breaks
-both pressure paths and is labelled incomplete. Resource/second keyboard selectors,
-focus outlines, table/text equivalents, Compare with complete/absent traces and a real
-freeform Run again (matched stop 80, no fault/trace) were exercised. Improve exposed the
-same-workspace identity defect described above; the repaired browser flow completed a new CPU attempt at 1× with 51 exact samples, all predictions matched and the same calibrated result.
-Paper trace layouts passed at 375/768/1280/1920 px without horizontal page overflow;
-Ink trace/gap and live-rerun layouts passed at narrow/wide sizes. Trace nodes have no
-animations/transitions; reduced-motion CSS tests pass, but this browser cannot emulate
-an OS reduced-motion setting. OAuth provider sign-in was not claimed from fixture login.
+Designer boundaries at 1099/1100/1101px have no overflow/half-layout; the exact
+boundary has a 504px drafting area even with the long challenge toolbar. The
+375/768px states mount no canvas; saved/unsaved state survives resizing. Auth forms
+passed at 375/768/1280/1920px in Paper, with correct password autocomplete/type and
+no overflow; Ink form/fallback/validation and mobile normal-page/report checks also
+passed. Paper Compare was exercised at 375px. A paused live
+run returned at the same second 16 with Pause selected and the same five resources
+after the telemetry repair. Browser cache retention does not establish server
+checkpoint recovery. Normal mobile pages continue to show their real content.
 
-Owned fixtures are removed after their proofs complete; only unique evidence is retained.
-Earlier ownership, session, run-input, action, exact teardown, rerun and migration proofs
-remain in the full integration suite. Local and CI verification is not production proof.
+Validation also corrected older session test fixtures and a migration-15 test
+that incorrectly assumed it was latest. Revocation tests use a valid-session
+barrier and a unique probe published after database invalidation: new delivery is
+refused and the connection closes 1008. Already-authorized TCP frames cannot be
+recalled. Earlier ordinary telemetry was not evidence of a newly authorized
+post-revocation message. Disposable QA proxy errors were isolated to test tooling;
+API/WS direct-port behavior and native authentication stayed enabled throughout.
+Owned test resources are removed after evidence capture; referenced/unknown work
+and developer storage are preserved. Local/CI verification is not production proof.
+
 ## Parked hosted work and remaining limits
 
 B0.6E stopped before database access with identity/reset-credential gates unfinished.
@@ -344,7 +385,7 @@ automatic scaling events, replay/checkpoint recovery and multi-seed experiments
 remain absent. Model-2 resource-keyed RNG is deferred to an explicit simulation
 milestone. Windows runtime stability (native Bun crashes, `tsc` out of memory on this
 host) and external OAuth sign-in in a browser remain unverified; authenticated browser
-QA used a local fixture session. The sample design deliberately keeps the two readiness
+QA now uses real public credentials in disposable local data. The sample design keeps the two readiness
 warnings its domain tests pin (vm-2 has no data path, monitor-1 is unreachable).
 Every challenge is still at version 1, so the upgrade path (older-workspace notice,
 fresh or copied workspace) is proven by registry fixtures, server-rendered tests and
