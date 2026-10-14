@@ -27,6 +27,7 @@ jobs:
           - test
           - check:boundaries
           - test:tooling
+          - check:challenges
           - audit
     steps:
       - uses: actions/checkout@v4

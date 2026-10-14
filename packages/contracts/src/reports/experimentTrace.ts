@@ -1,0 +1,45 @@
+import type { RecordedExperiment } from "../challenges";
+
+export const EXPERIMENT_BASELINE_SECONDS = 30;
+export const EXPERIMENT_MAX_POINTS = 121;
+export const EXPERIMENT_MAX_RESOURCES = 128;
+export const EXPERIMENT_MAX_SAMPLE_BYTES = 65536;
+
+export function experimentWindow(plan: RecordedExperiment, evaluationSecond: number | null | undefined) {
+  const start = Math.max(0, plan.atSimulatedSecond - EXPERIMENT_BASELINE_SECONDS);
+  if (!Number.isInteger(evaluationSecond) || evaluationSecond! < plan.atSimulatedSecond ||
+      evaluationSecond! - start + 1 > EXPERIMENT_MAX_POINTS) return null;
+  return { start, end: evaluationSecond! };
+}
+
+export interface ExperimentEvidencePayload {
+  version: 1;
+  topologyRevision: number;
+  overallHealth: "healthy" | "degraded" | "saturated" | "critical";
+  loadFraction: number;
+  targetLoadFraction: number;
+  resources: Array<{ id: string; health: "healthy" | "degraded" | "saturated" | "failed";
+    cpu: number; memory: number; rps?: number; connections?: number }>;
+  pools: Array<{ id: string; currentReplicas: number; baseReplicas: number;
+    pending: { action: "up" | "down"; secondsRemaining: number } | null }>;
+}
+export interface ExperimentEvidenceSample extends ExperimentEvidencePayload {
+  simulatedSeconds: number;
+  sampledAt: string; // Wall time when the tick computed metrics, not the later database write.
+}
+export interface ExperimentTrace {
+  status: "not-applicable" | "unavailable" | "complete" | "incomplete";
+  reason: string;
+  expectedStart: number | null;
+  expectedEnd: number | null;
+  actualFirst: number | null;
+  actualLast: number | null;
+  sampleCount: number;
+  missingRanges: Array<{ start: number; end: number }>;
+  points: ExperimentEvidenceSample[];
+  moments: { beforeFault: number | null; atFault: number | null; firstAfterFault: number | null;
+    firstOverallHealthChange: number | null; evaluation: number | null } | null;
+  resourceFacts: Array<{ id: string; highestCpu: { second: number; value: number };
+    highestMemory: { second: number; value: number }; firstHealthChange: number | null; firstHealthyAfterFault: number | null }>;
+  resourceFactsOmitted: number;
+}

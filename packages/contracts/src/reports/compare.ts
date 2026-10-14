@@ -19,6 +19,10 @@ export interface StartingComparison {
 }
 export interface CompareMetric { field: string; unit: string; earlier: number | null; later: number | null; delta: number | null; withheldReason?: string }
 export interface RunComparison {
+  experimentEvidence?: { comparable: boolean; reason: string; traces: [
+    { status: import("./experimentTrace").ExperimentTrace["status"]; start: number | null; end: number | null; count: number; target: string | null; highestCpu: { second: number; value: number } | null },
+    { status: import("./experimentTrace").ExperimentTrace["status"]; start: number | null; end: number | null; count: number; target: string | null; highestCpu: { second: number; value: number } | null }
+  ] };
   version: 1; runs: [RunSummary, RunSummary];
   available: boolean; unavailableReason: string | null;
   lineage: "source-and-rerun" | "siblings" | "unrelated";

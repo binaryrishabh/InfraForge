@@ -1,6 +1,7 @@
 import { prisma } from "../lib/prisma";
 import { EXPERIMENT_TRIGGER } from "../challenges/experiment";
 import type { SimulationInstance } from "./instance";
+import { flushEvidence } from "../evidence/persist";
 
 /* Makes a resilience attempt's scheduled fault durable at exactly its second. The
 row is written once (a unique index allows only one per attempt), then the normal
@@ -10,6 +11,7 @@ past the experiment point or applies the fault without its record. */
 export async function establishExperiment(deploymentId: string, instance: SimulationInstance) {
   const experiment = instance.experiment;
   if (!experiment || experiment.phase !== "scheduled" || instance.state.simulatedSeconds < experiment.plan.atSimulatedSecond) return;
+  await flushEvidence(deploymentId, instance);
   const { plan } = experiment;
   const status = await prisma.$transaction(async (tx) => {
     await tx.$queryRaw`SELECT id FROM "Deployment" WHERE id = ${deploymentId} FOR UPDATE`;

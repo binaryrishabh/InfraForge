@@ -13,6 +13,7 @@ A published version never changes and is never removed. To change a challenge, a
 the next version file, register it in definitions/index.ts and pin it here. Run with
 `bun run check:challenges`. */
 export const PUBLISHED: Record<string, string> = {
+  "headroom-under-cpu-pressure@1": "ca4b7cc902a9515b7cdb5251cfc27cd964172a917a5b75ccd64cfa6f7c96b10a",
   "first-production-api@1": "515c84a6da8a78c5b4c30269e0c20dff5f934e8f98608fbac572f3782dd33888",
   "secure-the-edge@1": "4166582eef18e35bee1b554c764a1debbf6d324c28cc87f5d56c7f0e02b50849",
   "cache-matters@1": "848a196cdcfe6f368690575f46384a4123e7e96af9eedc6469f442db6707c4b1",
@@ -24,7 +25,7 @@ export const PUBLISHED: Record<string, string> = {
 };
 
 const ANSWERS = { "overall-health": "healthy", "database-health": "healthy", "busiest-type": "Database", "security-clean": "yes",
-  "scale-out": "no", "baseline-health": "healthy", "survivor-health": "degraded" };
+  "scale-out": "no", "baseline-health": "healthy", "survivor-health": "degraded", "target-health": "healthy" };
 const cache = CHALLENGE_VERSIONS.find((d) => d.id === "cache-failure")!;
 const withEdit = (edit: (d: ChallengeDefinition) => ChallengeDefinition) => CHALLENGE_VERSIONS.map((d) => d === cache ? edit(structuredClone(d)) : d);
 
@@ -69,6 +70,8 @@ describe("challenge authoring", () => {
     expect(problems((d) => ({ ...d, experiment: { ...d.experiment!, atSimulatedSecond: 30 }, evaluationSeconds: 60 })))
       .toContain("cache-failure@1: the fault must not start before the 60-second ramp ends");
     expect(problems((d) => ({ ...d, evaluationSeconds: 120 }))).toContain("cache-failure@1: evaluation must be at second 90, the fault's last active second");
+    expect(problems((d) => ({ ...d, evaluationSeconds: 200 }))).toContain("cache-failure@1: evidence window exceeds 121 retained points");
+    expect(problems((d) => ({ ...d, workload: { ...d.workload, throughputUnit: "per-second" as never } }))).toContainEqual(expect.stringContaining("workload.throughputUnit"));
   });
 
   test("the hidden reference designs never ship: no runtime module imports them and the image excludes tests", async () => {

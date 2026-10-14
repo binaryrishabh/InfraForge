@@ -17,6 +17,8 @@ import { checkReliableEvidence } from "./runEvidenceChecks";
 import { checkCompareAccess } from "./compareChecks";
 import { checkHonestReruns } from "./rerunChecks";
 import { checkChallengeAttempts, checkResilienceAttempt } from "./challengeChecks";
+import { checkExperimentTraces } from "./experimentTraceChecks";
+import { checkLearningHistory } from "./learningHistoryChecks";
 
 type Event = Record<string, any>;
 type Snapshot = SimulationSnapshot & { publishType: string };
@@ -625,6 +627,10 @@ integration("local deployment lifecycle", () => {
       evidence.challenges = await checkChallengeAttempts(harness, sessions, infrastructureIds, deploymentIds);
       phase("resilience experiment scheduled exactly and judged");
       evidence.resilience = await checkResilienceAttempt(harness, infrastructureIds, deploymentIds);
+      phase("bounded experiment traces");
+      evidence.experimentTraces = await checkExperimentTraces(harness, sessions, infrastructureIds, deploymentIds);
+      phase("cross-challenge learning history");
+      evidence.learningHistory = await checkLearningHistory(harness, sessions, infrastructureIds, deploymentIds);
       evidence.result = "passed";
     } catch (error) {
       evidence.result = "failed";
@@ -662,5 +668,5 @@ integration("local deployment lifecycle", () => {
         if (cleanupErrors.length && evidence.result === "passed") throw new Error(cleanupErrors.join("; "));
       }
     }
-  }, 420000);
+  }, 600000);
 });

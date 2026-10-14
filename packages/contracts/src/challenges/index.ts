@@ -30,13 +30,16 @@ export type PredictionQuestion =
   // Overall health at the moment the experiment's fault was applied.
   | { id: string; kind: "baseline-health"; prompt: string }
   // The worst health among every resource except the experiment's target.
-  | { id: string; kind: "survivor-health"; prompt: string };
+  | { id: string; kind: "survivor-health"; prompt: string }
+  | { id: string; kind: "target-health"; prompt: string };
 
 export interface PredictionChoice { value: string; label: string }
 
 /* Fixed answer sets. A busiest-type prediction instead chooses among the
 resource types present in the design being attempted. */
 export const PREDICTION_CHOICES: Record<Exclude<PredictionQuestion["kind"], "busiest-type">, PredictionChoice[]> = {
+  "target-health": [{ value: "healthy", label: "Healthy" }, { value: "degraded", label: "Degraded" },
+    { value: "saturated", label: "Saturated" }, { value: "failed", label: "Failed" }],
   "overall-health": [
     { value: "healthy", label: "Healthy" }, { value: "degraded", label: "Degraded" },
     { value: "saturated", label: "Saturated" }, { value: "critical", label: "Critical" },
@@ -113,6 +116,7 @@ export interface ChallengeAttemptSummary {
 }
 
 export interface ChallengeSummary {
+  recentAttemptLimit?: number;
   id: string;
   version: number;
   category: ChallengeCategory;
@@ -139,6 +143,19 @@ export interface ChallengeBrief extends Omit<ChallengeDefinition, "debrief"> {
   workspaceDesignId: string | null;
   earlierWorkspace: { designId: string; version: number } | null;
 }
+
+export interface LearningAttempt extends ChallengeAttemptSummary {
+  challengeId: string;
+  title: string;
+  category: ChallengeCategory;
+  fault: ChaosType | null;
+  predictionMatched: number;
+  predictionKnown: number;
+  predictionTotal: number;
+  latestVersion: number | null;
+  canRetry: boolean;
+}
+export interface LearningHistory { attempts: LearningAttempt[]; nextCursor: string | null }
 
 export interface ChallengePrediction {
   answers: Record<string, string>;

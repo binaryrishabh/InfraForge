@@ -15,6 +15,7 @@ import type { RunAction as StoredAction } from "../lib/generated/prisma/client";
 import { fanIn, fanOut, starter } from "../challenges/starter";
 import { storedJson } from "../utils/json";
 import type { SimulationInstance } from "../simulator/instance";
+import { captureEvidenceTick, createEvidenceBuffer } from "../evidence/capture";
 
 export const definition = (id: string) => latestChallenge(id)!.definition;
 
@@ -31,6 +32,9 @@ export function tier(n: number, opts: { vmSku?: string; dbSku?: string; cache?: 
 
 // Passing designs found during calibration; every one stays inside its challenge's budget.
 export const REFERENCE: Record<string, ChallengeStarter> = {
+  "headroom-under-cpu-pressure": starter([["dns", T.DNS, 0, 1], ["lb", T.LoadBalancer, 1, 1, { autoscaling: { enabled: true, minReplicas: 2, maxReplicas: 4, targetCpu: 60 } }],
+    ["app-1", T.VirtualMachine, 2, 0], ["app-2", T.VirtualMachine, 2, 2, { skuId: "c5.xlarge" }], ["db", T.Database, 3, 1]],
+  [["dns", "lb"], ...fanOut("lb", ["app-1", "app-2"]), ...fanIn(["app-1", "app-2"], "db")]),
   "first-production-api": tier(2),
   "secure-the-edge": starter([["dns", T.DNS, 0, 1], ["lb", T.LoadBalancer, 1, 1, { public: true, encryption: true }],
     ["vm1", T.VirtualMachine, 2, 0, { openPorts: [8080] }], ["vm2", T.VirtualMachine, 2, 2], ["db", T.Database, 3, 1]],
@@ -67,10 +71,13 @@ export function attemptRow(def: ChallengeDefinition, design: ChallengeStarter, p
     accumulatedCostUsd: 0, topology: runInputs, topologyRevision: 0, actions: new Map(), acknowledge: null,
     metricsComputedAt: new Date().toISOString(), metricsTopologyRevision: 0 };
   const plan = recordedExperiment(def);
+  instance.evidence = createEvidenceBuffer(plan, def.evaluationSeconds);
   const actions: StoredAction[] = [];
   const deploymentId = randomUUID();
   for (let i = 0; i < (options.stopAt ?? def.evaluationSeconds); i++) {
     instance.state = tick(instance.state, {}).state;
+    instance.metricsComputedAt = new Date().toISOString();
+    captureEvidenceTick(instance);
     const second = instance.state.simulatedSeconds;
     for (const [id, running] of instance.actions) {
       const done = actionCompletion(instance, running);
@@ -93,6 +100,7 @@ export function attemptRow(def: ChallengeDefinition, design: ChallengeStarter, p
     ({ name, status: "completed", startedAt: now, completedAt: now, message: result.summary, details: result.details });
   const active = options.runtimeActive ?? false;
   const row: StoredRun = { id: deploymentId, infrastructureId: null, runName: def.title, status: options.status ?? "torn-down",
+    evidenceSamples: instance.evidence?.pending,
     resourceCount: runInputs.resources.length, createdAt: new Date(), updatedAt: new Date(), topologyRevision: 0,
     stages: [stage("Validate", { summary: "ready", details: { warnings: [] } }), stage("SecurityScan", runSecurityScan(runInputs.resources)),
       stage("CostEstimate", runCostEstimation(runInputs.resources))],

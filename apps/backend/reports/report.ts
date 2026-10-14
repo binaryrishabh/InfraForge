@@ -5,8 +5,10 @@ import { readReportActions } from "./actions";
 import type { RunAction as StoredAction } from "../lib/generated/prisma/client";
 import { evaluateAttempt } from "../challenges/evaluate";
 import type { ChallengeRegistry } from "../challenges/registry";
+import { buildExperimentTrace, type StoredEvidenceSample } from "../evidence/report";
 
 export interface StoredRun {
+  evidenceSamples?: StoredEvidenceSample[];
   id: string; infrastructureId: string | null; runName?: string | null; status: string; resourceCount: number;
   createdAt: Date; updatedAt: Date; topologyRevision: number;
   stages: unknown; timeline: unknown; chaosEvents: unknown; workloadProfile: unknown; seed: string | null;
@@ -57,6 +59,7 @@ export function buildRunReport(row: StoredRun, registry?: ChallengeRegistry): Ru
   const challenge = challengeOf(row, records, registry);
   const run = summary(row, records, challenge);
   const report: RunReport = { version: 1, run, originalSeed: records.input?.seed ?? null,
+    experimentTrace: buildExperimentTrace({ ...row, inputVersion: records.input?.version ?? null }),
     legacySeed: !records.input && typeof row.seed === "string" ? row.seed : null,
     stages: records.stages, timeline: records.timeline, chaosEvents: records.chaos,
     provenance: { inputVersion: records.input?.version ?? null,
@@ -105,7 +108,7 @@ export function buildRunReport(row: StoredRun, registry?: ChallengeRegistry): Ru
     message: `Compared with the original input, resource changes in the last accepted topology are: ${report.topology.changes.added.length} added, ${report.topology.changes.removed.length} removed and ${report.topology.changes.reconfigured.length} reconfigured. Acceptance does not prove the simulator had applied that revision at the checkpoint.`,
     sources: ["runInputs", "liveTopology", "topologyRevision"] });
   if (records.input?.version !== 2) report.unknown.push("This legacy input has no captured simulation-model/catalog provenance. Its recorded name may have been backfilled from the design at migration.");
-  report.unknown.push(records.input?.version === 2 ? "Durable actions record request, application and outcome; continuous telemetry and all automatic scaling events are not retained."
+  report.unknown.push(report.experimentTrace?.points.length ? "Only the bounded experiment window retains completed-tick measurements. Outside that window, continuous telemetry and all automatic scaling events remain unavailable." : records.input?.version === 2 ? "Durable actions record request, application and outcome; continuous telemetry and all automatic scaling events are not retained."
     : "A full historical telemetry series and intermediate topology revisions are not retained. Streamed scaling, restart, load and speed changes may be absent from this report.");
   report.unknown.push("Monthly estimates and checkpoint cost are educational model values, not cloud bills. A cost change caused by chaos cannot be established from these records.");
   report.inspectNext.push("Compare the recorded workload and original architecture, make one deliberate change, then rerun with the same workload to compare outcomes.");

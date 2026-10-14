@@ -23,6 +23,7 @@ COPY apps/backend/release ./apps/backend/release/
 COPY apps/backend/cutover ./apps/backend/cutover/
 COPY apps/backend/deployments ./apps/backend/deployments/
 COPY apps/backend/reports ./apps/backend/reports/
+COPY apps/backend/evidence ./apps/backend/evidence/
 COPY apps/backend/comparison ./apps/backend/comparison/
 COPY apps/backend/reruns ./apps/backend/reruns/
 COPY apps/backend/actions ./apps/backend/actions/

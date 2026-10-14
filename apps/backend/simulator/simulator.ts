@@ -12,6 +12,8 @@ import { advanceTickBatch, experimentDue, reachedMatchedStop } from "./tickBatch
 import { finishMatchedStop } from "./matchedStop";
 import { establishExperiment } from "./experiment";
 import { readRecordedExperiment } from "../challenges/experiment";
+import { createEvidenceBuffer } from "../evidence/capture";
+import { flushEvidence } from "../evidence/persist";
 
 const registry = new Map<string, SimulationInstance>();
 const initializing = new Map<string, Promise<boolean>>();
@@ -42,7 +44,8 @@ async function initialize(deploymentId: string) {
     actions: new Map(), acknowledge: null, metricsComputedAt: null, metricsTopologyRevision: 0,
     autoStopAtSimulatedSeconds: deployment.autoStopAtSimulatedSeconds ?? deployment.evaluationStopAtSimulatedSeconds,
     stopTrigger: deployment.evaluationStopAtSimulatedSeconds != null ? "challenge-evaluation" : "matched-stop", finishMatchedStop: null,
-    experiment: plan ? { plan, phase: "scheduled" } : null };
+    experiment: plan ? { plan, phase: "scheduled" } : null,
+    evidence: deployment.challengeId ? createEvidenceBuffer(plan, deployment.evaluationStopAtSimulatedSeconds) : null };
   registry.set(deploymentId, instance);
   await publishSimulationSnapshot(buildSnapshot(deploymentId, instance));
   return true;
@@ -80,6 +83,7 @@ async function advanceSimulations() {
   for (const [deploymentId, instance] of registry) {
     try {
       // A failed acknowledgement freezes this exact state, including terminal captures.
+      await flushEvidence(deploymentId, instance);
       await flushAcknowledgement(instance);
       if (runtimeStopped || registry.get(deploymentId) !== instance) continue;
       const deployment = await prisma.deployment.findUnique({ where: { id: deploymentId } });
@@ -101,7 +105,7 @@ async function advanceSimulations() {
       }
       if (runtimeStopped || registry.get(deploymentId) !== instance) continue;
       // Poll actions before considering speed. Pause never prevents resume or teardown.
-      if (await advanceTickBatch(instance, recordActionCompletions, () => runtimeStopped)) {
+      if (await advanceTickBatch(instance, recordActionCompletions, () => runtimeStopped, (run) => flushEvidence(deploymentId, run))) {
         await finishMatchedStop(deploymentId, instance, () => registry.delete(deploymentId));
         continue;
       }

@@ -3,11 +3,13 @@ import type { RunTopology } from "@infraforge/contracts/run-inputs";
 import type { RecordedExperiment } from "@infraforge/contracts/challenges";
 import type { SimulationLog } from "@infraforge/contracts/telemetry";
 import type { SimulationState } from "@infraforge/simulation/types";
+import type { EvidenceBuffer } from "../evidence/contract";
 
 export interface RunningAction {
   id: string; request: ActionRequest; outcome: ActionOutcome; endSecond?: number; replicaId?: string;
 }
 export interface SimulationInstance {
+  evidence?: EvidenceBuffer | null;
   state: SimulationState; tickCount: number; pendingLogs: SimulationLog[]; speed: number;
   lastCheckpointAt: number; accumulatedCostUsd: number; topology: RunTopology; topologyRevision: number;
   actions: Map<string, RunningAction>;

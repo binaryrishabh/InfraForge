@@ -96,6 +96,7 @@ export interface ReportCheckpoint {
 }
 
 export interface RunReport {
+  experimentTrace?: import("./experimentTrace").ExperimentTrace;
   version: 1;
   run: RunSummary;
   originalSeed: string | null;

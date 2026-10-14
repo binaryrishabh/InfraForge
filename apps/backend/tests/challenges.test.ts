@@ -21,7 +21,7 @@ describe("versioned registry", () => {
   test("every challenge is listed once, at its latest version, with its category", () => {
     const listed = listLatestChallenges().map((e) => e.definition);
     expect(new Set(listed.map((d) => d.id)).size).toBe(listed.length);
-    expect(listed.map((d) => [d.id, categoryOf(d)]).filter(([, c]) => c === "resilience")).toEqual([["lose-an-app-server", "resilience"], ["cache-failure", "resilience"]]);
+    expect(listed.map((d) => [d.id, categoryOf(d)]).filter(([, c]) => c === "resilience")).toEqual([["lose-an-app-server", "resilience"], ["cache-failure", "resilience"], ["headroom-under-cpu-pressure", "resilience"]]);
     for (const d of listed) {
       expect(validateInfrastructureName(d.title)).toBeNull();
       expect(WorkloadProfileSchema.safeParse(d.workload).success).toBe(true);
@@ -201,7 +201,7 @@ describe("predictions", () => {
     ]) expect(() => readPrediction(bad, c, types)).toThrow();
   });
   test("fixed choice sets cover every non-design question kind, including the experiment's", () => {
-    expect(Object.keys(PREDICTION_CHOICES).sort()).toEqual(["baseline-health", "database-health", "overall-health", "scale-out", "security-clean", "survivor-health"]);
+    expect(Object.keys(PREDICTION_CHOICES).sort()).toEqual(["baseline-health", "database-health", "overall-health", "scale-out", "security-clean", "survivor-health", "target-health"]);
     const r = definition("lose-an-app-server");
     expect(readPrediction({ answers: { baseline: "healthy", survivors: "failed", scale: "no" } }, r, types).answers.survivors).toBe("failed");
     expect(() => readPrediction({ answers: { baseline: "failed", survivors: "failed", scale: "no" } }, r, types)).toThrow();

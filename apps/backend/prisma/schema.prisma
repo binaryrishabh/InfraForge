@@ -34,6 +34,7 @@ model Deployment {
   runName               String?
   actionSequence        Int                         @default(0)
   actions               RunAction[]
+  evidenceSamples       RunEvidenceSample[]
   terminalSnapshot      Json?
   sourceRunId           String?
   sourceRun             Deployment?      @relation("RunLineage", fields: [sourceRunId], references: [id], onDelete: SetNull)
@@ -65,6 +66,7 @@ model Deployment {
   @@index([infrastructureId])
   @@index([sourceRunId, createdAt, id])
   @@index([ownerId, challengeId, createdAt])
+  @@index([ownerId, challengeId, createdAt, id])
 }
 
 model RunAction {
@@ -84,6 +86,16 @@ model RunAction {
   failureReason             String?  @db.VarChar(500)
   @@unique([deploymentId, sequence])
   @@index([deploymentId, status, sequence])
+}
+
+model RunEvidenceSample {
+  deploymentId     String
+  deployment       Deployment @relation(fields: [deploymentId], references: [id], onDelete: Cascade)
+  simulatedSeconds Int
+  sampledAt        DateTime @db.Timestamptz(3)
+  payload          Json
+  hash             String @db.VarChar(64)
+  @@id([deploymentId, simulatedSeconds])
 }
 
 // Transactional delivery of deployment creation to BullMQ. Live controls use RunAction.

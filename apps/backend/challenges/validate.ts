@@ -6,6 +6,8 @@ import type { ChallengeDefinition } from "@infraforge/contracts/challenges";
 import { FAULT_DURATIONS } from "../simulator/faults";
 import { buildRegistry, specHash } from "./registry";
 import { experimentReadiness } from "./experiment";
+import { experimentWindow, EXPERIMENT_MAX_POINTS } from "@infraforge/contracts/reports";
+import { recordedExperiment } from "./experiment";
 
 /* Authoring checks for source-controlled challenges. Everything here is static and
 deterministic; calibration (the starter fails, a hidden reference passes) runs the
@@ -15,7 +17,7 @@ const text = (max: number) => z.string().trim().min(1).max(max);
 const id = z.string().regex(/^[a-z0-9-]{1,64}$/);
 const types = Object.values(RESOURCE_TYPES) as [string, ...string[]];
 const workload = z.object({
-  targetThroughput: z.number().int().positive().max(100_000_000), throughputUnit: z.enum(["per-second", "per-minute", "per-hour", "per-day"]),
+  targetThroughput: z.number().int().positive().max(100_000_000), throughputUnit: z.enum(["per-minute", "per-hour"]),
   trafficShape: z.enum(["steady", "peak"]), peakMultiplier: z.number().min(1).max(10), readWriteRatio: z.number().min(0).max(1),
   payloadSize: z.enum(["light", "medium", "heavy"]),
 }).strict();
@@ -35,8 +37,8 @@ const definition = z.object({
 
 const CRITERIA = ["deployment-checks", "min-app-servers", "catalog-sizes", "security-clean", "monthly-budget", "overall-health",
   "no-saturation", "database-healthy", "database-connections", "survivors-unsaturated"];
-const PREDICTIONS = ["overall-health", "database-health", "busiest-type", "security-clean", "scale-out", "baseline-health", "survivor-health"];
-const NEEDS_EXPERIMENT = new Set(["survivors-unsaturated", "baseline-health", "survivor-health"]);
+const PREDICTIONS = ["overall-health", "database-health", "busiest-type", "security-clean", "scale-out", "baseline-health", "survivor-health", "target-health"];
+const NEEDS_EXPERIMENT = new Set(["survivors-unsaturated", "baseline-health", "survivor-health", "target-health"]);
 
 function checkDefinition(d: ChallengeDefinition): string[] {
   const where = `${d.id}@${d.version}`;
@@ -68,6 +70,7 @@ function checkDefinition(d: ChallengeDefinition): string[] {
   }
   const e = d.experiment;
   if (e) {
+    if (!experimentWindow(recordedExperiment(d)!, d.evaluationSeconds)) problems.push(`${where}: evidence window exceeds ${EXPERIMENT_MAX_POINTS} retained points`);
     if (!d.starter) problems.push(`${where}: an experiment needs a starter that contains its target`);
     else {
       const ready = experimentReadiness(e, d.starter);

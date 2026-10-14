@@ -6,6 +6,7 @@ import { buildRunReport, summarizeRun } from "./report";
 import { classifyComparison } from "../comparison/classify";
 import { compareInputs } from "../comparison/inputs";
 import { readRunInputs } from "../deployments/runInputs";
+import { EXPERIMENT_MAX_POINTS } from "@infraforge/contracts/reports";
 
 export const reportRouter = Router();
 export const reportSelection = { id: true, infrastructureId: true, runName: true, runtimeActive: true,
@@ -18,6 +19,8 @@ export const reportSelection = { id: true, infrastructureId: true, runName: true
   seed: true, runInputs: true, liveTopology: true, topologyRevision: true, stages: true,
   timeline: true, chaosEvents: true, simulationState: true, terminalSnapshot: true, _count: { select: { actions: true } } } as const;
 const selection = reportSelection;
+const evidenceSelection = { orderBy: { simulatedSeconds: "asc" }, take: EXPERIMENT_MAX_POINTS + 1,
+  select: { simulatedSeconds: true, sampledAt: true, payload: true, hash: true } } as const;
 const querySchema = z.object({ limit: z.coerce.number().int().min(1).max(100).default(50), before: z.uuid().optional(),
   kind: z.enum(["all", "challenge", "freeform"]).default("all") }).strict();
 
@@ -26,7 +29,7 @@ reportRouter.get("/compare", async (req, res) => {
   if (!query.success || query.data.a === query.data.b) throw new ValidationError("Select two distinct run IDs.");
   const comparison = await prisma.$transaction(async (tx) => {
     const rows = await tx.deployment.findMany({ where: { id: { in: [query.data.a, query.data.b] }, ownerId: res.locals.userId },
-      select: { ...selection, actions: { orderBy: { sequence: "asc" }, take: 501 } } });
+      select: { ...selection, evidenceSamples: evidenceSelection, actions: { orderBy: { sequence: "asc" }, take: 501 } } });
     if (rows.length !== 2) throw new NotFoundError("Run not found");
     return classifyComparison({ ...rows[0]!, actionCount: rows[0]!._count.actions }, { ...rows[1]!, actionCount: rows[1]!._count.actions });
   }, { isolationLevel: "RepeatableRead" });
@@ -88,7 +91,7 @@ reportRouter.get("/:deploymentId/report", async (req, res) => {
   if (!parsed.success) throw new ValidationError("A valid deployment ID is required.");
   const report = await prisma.$transaction(async (tx) => {
     const row = await tx.deployment.findFirst({ where: { id: parsed.data, ownerId: res.locals.userId },
-      select: { ...selection, actions: { orderBy: { sequence: "desc" }, take: 501 } } });
+      select: { ...selection, evidenceSamples: evidenceSelection, actions: { orderBy: { sequence: "desc" }, take: 501 } } });
     if (!row) throw new NotFoundError("Run not found");
     const durableChaosCount = await tx.runAction.count({ where: { deploymentId: row.id, kind: "chaos" } });
     return buildRunReport({ ...row, actionCount: row._count.actions, durableChaosCount });

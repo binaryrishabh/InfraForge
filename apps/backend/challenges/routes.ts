@@ -14,10 +14,11 @@ import { categoryOf, challengeSeed, findChallenge, latestChallenge, listLatestCh
 import { readPrediction } from "./prediction";
 import { preflight } from "./preflight";
 import { experimentReadiness, recordedExperiment } from "./experiment";
+import { learningAttempt } from "./history";
 
 export const challengeRouter = Router();
 const STARTER_LAYOUT_VERSION = 3;
-const ATTEMPT_WINDOW = 300;
+const ATTEMPT_WINDOW = 20;
 const challengeId = z.string().regex(/^[a-z0-9-]{1,64}$/);
 
 // The latest version, or an exact earlier one for reading a historical brief.
@@ -36,8 +37,8 @@ function attemptSummary(row: StoredRun): ChallengeAttemptSummary {
     metCount: run.challenge?.metCount ?? 0, total: run.challenge?.total ?? 0 };
 }
 
-async function attemptsOf(ownerId: string, id?: string) {
-  const rows = await prisma.deployment.findMany({ where: { ownerId, challengeId: id ?? { not: null } }, select: reportSelection,
+async function attemptsOf(ownerId: string, id: string, database: Pick<typeof prisma, "deployment"> = prisma, version?: number) {
+  const rows = await database.deployment.findMany({ where: { ownerId, challengeId: id, ...(version ? { challengeVersion: version } : {}) }, select: reportSelection,
     orderBy: [{ createdAt: "desc" }, { id: "desc" }], take: ATTEMPT_WINDOW });
   return rows.map((row) => ({ challengeId: row.challengeId!, summary: attemptSummary(row) }));
 }
@@ -50,14 +51,19 @@ function workspacesOf(ownerId: string, id?: string) {
 
 challengeRouter.get("/", async (_req, res) => {
   const ownerId: string = res.locals.userId;
-  const [attempts, counts, workspaces] = await Promise.all([
-    attemptsOf(ownerId),
-    prisma.deployment.groupBy({ by: ["challengeId"], where: { ownerId, challengeId: { not: null } }, _count: { _all: true } }),
-    workspacesOf(ownerId),
-  ]);
-  const challenges: ChallengeSummary[] = listLatestChallenges().map(({ definition }) => {
-    const mine = attempts.filter((a) => a.challengeId === definition.id).map((a) => a.summary);
+  const entries = listLatestChallenges();
+  // One bounded indexed query per challenge, in the counts' snapshot. Activity in
+  // another challenge can never evict this challenge's actual latest attempt.
+  const { attempts, counts } = await prisma.$transaction(async (tx) => {
+    const [attempts, counts] = await Promise.all([Promise.all(entries.map(({ definition }) => attemptsOf(ownerId, definition.id, tx))),
+      tx.deployment.groupBy({ by: ["challengeId"], where: { ownerId, challengeId: { in: entries.map((e) => e.definition.id) } }, _count: { _all: true } })]);
+    return { attempts, counts };
+  }, { isolationLevel: "RepeatableRead" });
+  const workspaces = await workspacesOf(ownerId);
+  const challenges: ChallengeSummary[] = entries.map(({ definition }, i) => {
+    const mine = attempts[i]!.map((a) => a.summary);
     return { id: definition.id, version: definition.version, category: categoryOf(definition), title: definition.title,
+      recentAttemptLimit: ATTEMPT_WINDOW,
       difficulty: definition.difficulty, summary: definition.summary, concepts: definition.concepts, evaluationSeconds: definition.evaluationSeconds,
       requirementCount: definition.criteria.length, attempts: counts.find((c) => c.challengeId === definition.id)?._count._all ?? 0,
       met: mine.some((a) => a.status === "met"), latest: mine[0] ?? null,
@@ -66,11 +72,24 @@ challengeRouter.get("/", async (_req, res) => {
   res.json({ success: true, challenges });
 });
 
+challengeRouter.get("/attempt-history", async (req, res) => {
+  const query = z.object({ limit: z.coerce.number().int().min(1).max(50).default(20), before: z.uuid().optional() }).strict().safeParse(req.query);
+  if (!query.success) throw new ValidationError("Use a history limit from 1 to 50 and an optional attempt cursor.");
+  const ownerId: string = res.locals.userId, { limit, before } = query.data;
+  const history = await prisma.$transaction(async (tx) => {
+    if (before && !await tx.deployment.findFirst({ where: { id: before, ownerId, challengeId: { not: null } }, select: { id: true } })) throw new NotFoundError("Attempt not found");
+    const rows = await tx.deployment.findMany({ where: { ownerId, challengeId: { not: null } }, select: reportSelection,
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }], take: limit + 1, ...(before ? { cursor: { id: before }, skip: 1 } : {}) });
+    return { attempts: rows.slice(0, limit).map(learningAttempt), nextCursor: rows.length > limit ? rows[limit - 1]!.id : null };
+  }, { isolationLevel: "RepeatableRead" });
+  res.json({ success: true, history });
+});
+
 challengeRouter.get("/:id", async (req, res) => {
   const { definition, hash } = entryFor(req.params.id, req.query.version);
   const latest = latestChallenge(definition.id)!.definition.version;
   const ownerId: string = res.locals.userId;
-  const [attempts, workspaces] = await Promise.all([attemptsOf(ownerId, definition.id), workspacesOf(ownerId, definition.id)]);
+  const [attempts, workspaces] = await Promise.all([attemptsOf(ownerId, definition.id, prisma, definition.version), workspacesOf(ownerId, definition.id)]);
   const summaries = attempts.map((a) => a.summary);
   // The deeper explanation opens only after the learner has a judged attempt at this version.
   const judged = summaries.some((a) => a.version === definition.version && (a.status === "met" || a.status === "not-met"));

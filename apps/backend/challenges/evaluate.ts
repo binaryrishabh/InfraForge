@@ -197,6 +197,13 @@ class Judge {
         if (!worst) return unknown("No measurement besides the target was recorded.", ["terminalSnapshot.metrics"]);
         return compare(worst, worst === predicted, `The least healthy resource other than ${target} was ${worst} at second ${t.simulatedSeconds}.`, ["terminalSnapshot.metrics"]);
       }
+      case "target-health": {
+        const missing = this.experimentMissing(), target = this.plan?.targetResourceId;
+        if (missing || !target || !t) return unknown(missing ?? this.missingMeasurement(), ["RunAction", "terminalSnapshot"]);
+        const actual = t.resources.find((r) => r.id === target)?.health;
+        return actual ? compare(actual, actual === predicted, `${target} was ${actual} at second ${t.simulatedSeconds}.`, ["terminalSnapshot.metrics"])
+          : unknown("The experiment target has no retained evaluation measurement.", ["terminalSnapshot.metrics"]);
+      }
       case "scale-out": {
         if (!t) return unknown(this.missingMeasurement(), ["terminalSnapshot"]);
         const actual = scaledOut(t) ? "yes" : "no";

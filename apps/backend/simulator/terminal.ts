@@ -7,9 +7,12 @@ import type { SimulationInstance } from "./instance";
 import { publishSimulationSnapshot } from "../infra/pubsub";
 import { redis } from "../infra/redis";
 import { Publish } from "@infraforge/contracts/events";
+import { flushEvidence } from "../evidence/persist";
 
 export async function finishTeardown(deploymentId: string, instance: SimulationInstance, action: RunAction, remove: () => void,
-  snapshot = captureSnapshot(deploymentId, instance, "terminal")) {
+  providedSnapshot?: ReturnType<typeof captureSnapshot>) {
+  await flushEvidence(deploymentId, instance);
+  const snapshot = providedSnapshot ?? captureSnapshot(deploymentId, instance, "terminal");
   const capturedAt = new Date(snapshot.capturedAt);
   instance.acknowledge = async () => {
     await prisma.$transaction(async (tx) => {

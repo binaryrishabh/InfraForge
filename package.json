@@ -19,7 +19,7 @@
     "test:integration:local": "pwsh ./scripts/test-integration.ps1",
     "check:boundaries": "turbo run db:generate --filter=@infraforge/backend && bun scripts/check-boundaries.ts",
     "test:tooling": "bun test scripts/tests",
-    "check:challenges": "bun --cwd apps/backend --no-env-file --no-install test tests/challengeAuthoring.test.ts tests/challenges.test.ts tests/experiment.test.ts",
+    "check:challenges": "bun --cwd apps/backend --no-env-file --no-install test tests/challengeAuthoring.test.ts tests/challenges.test.ts tests/experiment.test.ts tests/experimentEvidence.test.ts tests/faultCalibration.test.ts tests/cpuHeadroomCalibration.test.ts",
     "audit": "bun audit --json"
   },
   "devDependencies": {

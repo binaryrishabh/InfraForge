@@ -27,6 +27,13 @@ export function classifyComparison(first: StoredRun & { sourceRunId?: string | n
   const fact = (id: string, message: string, sources: string[]): ReportStatement => ({ id, message, sources });
   const attempts = rows.every((r) => r.challengeId);
   const challengeConditions = !attempts ? null : conditions(rows[0]) === conditions(rows[1]) ? "same" as const : "different" as const;
+  const traceFacts = reports.map((r) => {
+    const trace = r.experimentTrace!, target = r.challenge?.experiment?.targetResourceId ?? null;
+    return { status: trace.status, start: trace.expectedStart, end: trace.expectedEnd, count: trace.sampleCount, target,
+      highestCpu: trace.resourceFacts.find((f) => f.id === target)?.highestCpu ?? null };
+  }) as NonNullable<RunComparison["experimentEvidence"]>["traces"];
+  const traceComparable = challengeConditions === "same" && reports.every((r) => r.provenance.simulationModelVersion === "1") &&
+    starting.facets.catalog === "same" && traceFacts.every((t) => t.status === "complete");
   const observed = [fact("starting", `Starting inputs: ${starting.grade}.`, ["runInputs"]),
     fact("conduct", `Recorded outcome-affecting conduct: ${conduct.code}.`, ["RunAction.parameters", "RunAction.appliedSimulatedSeconds", "RunAction.outcome"]),
     fact("horizon", exact ? `Exact terminal duration: ${a!.simulatedSeconds} s / ${b!.simulatedSeconds} s.` : "Exact final duration is not established for both runs.", ["terminalSnapshot.simulatedSeconds"])];
@@ -41,7 +48,7 @@ export function classifyComparison(first: StoredRun & { sourceRunId?: string | n
   if (deterministic) interpreted.push(fact("determinism", deterministicState === "matches" ? "The normalized final simulated state matches under InfraForge model 1." :
     "These runs should match under InfraForge model 1, but they do not. This may indicate an InfraForge determinism defect.", ["runInputs", "RunAction", "terminalSnapshot"]));
   const unknown = [fact("single-pair", "A single pair cannot establish statistical significance, production reliability, real cloud behavior or general superiority across seeds.", ["comparison.scope"]),
-    fact("series", "Continuous telemetry and all automatic scaling events are not retained. Dynamic resources have no starting-jitter alignment claim.", ["RunAction", "terminalSnapshot"])];
+    fact("series", "Only bounded resilience experiment windows may retain per-second measurements. Outside those windows, telemetry and all automatic scaling events are unavailable. Dynamic resources have no starting-jitter alignment claim.", ["RunEvidenceSample", "RunAction", "terminalSnapshot"])];
   if (starting.alignment.code === "shifted") unknown.push(fact("jitter-shift", "Random variation shifted for some shared resources. Treat final differences as evidence to investigate, not proof that the design change alone produced every difference.", ["runInputs.resources", "runInputs.seed", "runInputs.simulationModelVersion"]));
   if (challengeConditions === "different") unknown.push(fact("challenge-conditions", rows[0].challengeId === rows[1].challengeId
     ? `These attempts ran under different versions or recorded conditions of the same challenge (version ${rows[0].challengeVersion} and version ${rows[1].challengeVersion}). Their challenge results were judged by different rules.`
@@ -60,6 +67,9 @@ export function classifyComparison(first: StoredRun & { sourceRunId?: string | n
     metric("Design monthly estimate (CostEstimate gate)", "USD/month", monthly[0], monthly[1], starting.facets.catalog === "same",
       "Monthly-estimate delta requires compatible captured catalog provenance.")];
   return { version: 1, runs: [reports[0].run, reports[1].run], available,
+    experimentEvidence: { comparable: traceComparable, traces: traceFacts, reason: traceComparable ?
+      "Both complete retained windows share recorded experiment conditions. These are facts from one model-1 pair, not a controlled or statistical claim." :
+      "Different, missing or incomplete experiment evidence permits descriptive retained-window facts only. A partial-window peak is not a full-window maximum." },
     unavailableReason: available ? null : "Both runs must be inactive before comparing final evidence. Stop the live run or wait for deployment gates.",
     lineage: rows[1].sourceRunId === rows[0].id || rows[0].sourceRunId === rows[1].id ? "source-and-rerun" : rows[0].sourceRunId && rows[0].sourceRunId === rows[1].sourceRunId ? "siblings" : "unrelated",
     headline: !available || starting.grade === "side-by-side-only" ? "descriptive-only" : deterministicState === "differs" ? "determinism-mismatch" :

@@ -5,6 +5,7 @@ import type { RunAction } from "@infraforge/contracts/actions";
 import type { ChallengeDefinition, ChallengeExperiment, RecordedExperiment } from "@infraforge/contracts/challenges";
 import { FAULT_DURATIONS } from "../simulator/faults";
 import type { Topology } from "./criteria";
+import { evidenceResourceLimit } from "../evidence/readiness";
 
 export const FAULT_LABEL: Record<ChaosType, string> = {
   crash: "Crash", "cpu-spike": "CPU spike", "memory-leak": "Memory leak", "network-delay": "Network delay", "disk-failure": "Disk failure",
@@ -33,6 +34,8 @@ export function readRecordedExperiment(value: unknown): RecordedExperiment | nul
 and when the attempt is created. The target is a named resource kept from the
 starter; when it is missing nothing else is substituted. */
 export function experimentReadiness(experiment: ChallengeExperiment, topology: Topology): { ready: boolean; detail: string } {
+  const limit = evidenceResourceLimit(topology);
+  if (limit) return { ready: false, detail: limit };
   const { resourceId, type } = experiment.target;
   const target = topology.resources.find((r) => r.id === resourceId);
   if (!target) return { ready: false, detail: `The experiment targets ${resourceId} (${type}), which is no longer in this design. Keep it, or start over from the starter.` };

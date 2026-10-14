@@ -8,7 +8,7 @@ const hash = (value: string) => createHash("sha256").update(value).digest("hex")
 // Reviewed additive migrations: safe to apply to a populated, idle database. They also define the guarded triggers.
 const ADDITIVE_MIGRATIONS = new Set(["20261009000000_capture_run_inputs", "20261009010000_add_authentication",
   "20261013000000_reliable_run_evidence", "20261013010000_honest_reruns", "20261014000000_challenge_attempts",
-  "20261015000000_challenge_versions_experiments"]);
+  "20261015000000_challenge_versions_experiments", "20261016000000_experiment_evidence"]);
 
 export async function migrationManifest(): Promise<Migration[]> {
   const directory = new URL("../prisma/migrations/", import.meta.url);
@@ -60,13 +60,15 @@ export async function checkSchemaGuards(db: Database) {
     AND p.prolang = (SELECT oid FROM pg_language WHERE lanname='plpgsql') AND tgqual IS NULL
     AND ((tgrelid = '"Deployment"'::regclass AND tgname IN ('deployment_inputs_immutable', 'deployment_active_delete_guard', 'deployment_identity_capture', 'deployment_evidence_guard', 'deployment_lineage_guard', 'deployment_challenge_attempt', 'deployment_challenge_guard'))
       OR (tgrelid = '"Infrastructure"'::regclass AND tgname IN ('design_owner_guard', 'design_active_delete_guard', 'infrastructure_challenge_guard'))
-      OR (tgrelid = '"RunAction"'::regclass AND tgname IN ('run_action_evidence_guard', 'run_action_challenge_guard')))`);
-  if (result.rows.length !== 12) throw new Error("Required ownership/run-input database guards are missing or disabled");
+      OR (tgrelid = '"RunAction"'::regclass AND tgname IN ('run_action_evidence_guard', 'run_action_challenge_guard'))
+      OR (tgrelid = '"RunEvidenceSample"'::regclass AND tgname = 'run_experiment_evidence_guard'))`);
+  if (result.rows.length !== 13) throw new Error("Required ownership/run-input database guards are missing or disabled");
   const sources = (await Promise.all([...ADDITIVE_MIGRATIONS].map((name) =>
     readFile(new URL(`../prisma/migrations/${name}/migration.sql`, import.meta.url), "utf8")))).join("\n");
   const bodies = new Map([...sources.matchAll(/CREATE (?:OR REPLACE )?FUNCTION (\w+)\(\) RETURNS trigger LANGUAGE plpgsql AS \$\$([\s\S]*?)\$\$/g)]
     .map((match) => [match[1], match[2]!.replace(/\r\n/g, "\n").trim()]));
   const expected: Record<string, [string, number, string]> = {
+    run_experiment_evidence_guard: ["protect_experiment_evidence", 23, 'BEFORE INSERT OR UPDATE ON public."RunEvidenceSample"'],
     deployment_inputs_immutable: ["protect_deployment_inputs", 19, 'BEFORE UPDATE OF "runInputs", seed, "workloadProfile" ON public."Deployment"'],
     deployment_active_delete_guard: ["protect_active_deployment", 11, 'BEFORE DELETE ON public."Deployment"'],
     design_owner_guard: ["protect_design_owner", 19, 'BEFORE UPDATE OF "ownerId" ON public."Infrastructure"'],
@@ -89,6 +91,7 @@ export async function checkSchemaGuards(db: Database) {
     d."challengePrediction", d."predictionSubmittedAt", d."evaluationStopAtSimulatedSeconds", d."challengeExperiment", r.parameters, r.outcome, i."ownerId", i."challengeId", i."challengeVersion",
     s."expiresAt", a."providerId", v.identifier FROM "Deployment" d CROSS JOIN "Infrastructure" i
     CROSS JOIN "Session" s CROSS JOIN "Account" a CROSS JOIN "Verification" v CROSS JOIN "RunAction" r LIMIT 0`);
+  await db.query('SELECT "deploymentId", "simulatedSeconds", "sampledAt", payload, hash FROM "RunEvidenceSample" LIMIT 0');
 }
 
 export async function assertReleaseIdle(db: Database) {

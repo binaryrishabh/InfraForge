@@ -2,6 +2,7 @@ import { prisma } from "../lib/prisma";
 import type { SimulationInstance } from "./instance";
 import { captureSnapshot } from "./snapshot";
 import { finishTeardown } from "./terminal";
+import { flushEvidence } from "../evidence/persist";
 
 async function claimTeardown(deploymentId: string, capturedAt: string, simulatedSeconds: number, trigger: "matched-stop" | "challenge-evaluation") {
   return prisma.$transaction(async (tx) => {
@@ -21,6 +22,7 @@ async function claimTeardown(deploymentId: string, capturedAt: string, simulated
   });
 }
 export async function finishMatchedStop(deploymentId: string, instance: SimulationInstance, remove: () => void) {
+  await flushEvidence(deploymentId, instance);
   if (!instance.finishMatchedStop) {
     // Capture once even if creating the system action fails. Retain this closure while frozen.
     const snapshot = captureSnapshot(deploymentId, instance, "terminal");

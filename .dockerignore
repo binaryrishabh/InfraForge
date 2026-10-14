@@ -80,6 +80,9 @@ apps/backend/deployments/**
 !apps/backend/reports/
 apps/backend/reports/**
 !apps/backend/reports/*.ts
+!apps/backend/evidence/
+apps/backend/evidence/**
+!apps/backend/evidence/*.ts
 !apps/backend/comparison/
 apps/backend/comparison/**
 !apps/backend/comparison/*.ts
