@@ -1,17 +1,84 @@
 # Authentication and ownership
 
 InfraForge uses Better Auth 1.7.7 with its Prisma adapter and PostgreSQL sessions.
-Google and GitHub OAuth are the supported sign-in direction. Password sign-in,
-automatic account linking, cookie session caching and optional auth plugins are
-disabled. An unconfigured provider never appears as a working sign-in option.
+Username/email/password is available without OAuth credentials. The native
+username plugin is the only auth plugin; Google and GitHub remain optional.
+Automatic account linking and cookie session caching stay disabled. An
+unconfigured provider never appears as a working sign-in option.
 
 The [1.7.7 release](https://github.com/better-auth/better-auth/releases/tag/v1.7.7)
 includes September 30 security fixes, including OAuth-state handling. Consult the
 [official advisories](https://github.com/better-auth/better-auth/security/advisories)
 before changing the pinned version. The installed Prisma adapter declares Prisma
-7 support. The Express 5 auth handler runs before JSON parsing, following the
+7 support. The Express 5 auth handler owns its parsing, following the
 [Express integration](https://better-auth.com/docs/integrations/express) and
 [Prisma adapter](https://better-auth.com/docs/adapters/prisma) documentation.
+
+## Local credentials
+
+Start `bun run dev:setup`, then `bun run dev`, and open
+`http://localhost:5173/signup`. Create a username, email and password. Sign-up
+creates the ordinary Better Auth database session; `/signin` accepts one
+**Username or email** field. Sign out through the account menu and use either
+identifier to return to the same owned designs/runs. The isolated launcher
+generates local session configuration and needs no provider credentials.
+
+Usernames are 3–30 ASCII letters, digits or underscores, starting with a letter.
+The server requires one on credential sign-up. Stored usernames are lowercase;
+case variants identify the same account. Sign-in trims the identifier; sign-up
+rejects surrounding whitespace. `User.name` supplies the display name and the
+session exposes the normalized username. There is no second display-username
+column. Usernames are immutable after assignment through the native plugin;
+historical/OAuth users retain NULL unless they explicitly choose one. The
+database enforces format and uniqueness, including concurrent registration.
+
+New emails are trimmed/lowercased; the library validates them and the server
+bounds them to 254 characters. No provider-specific dot/plus aliases are invented.
+The existing unique email key remains, with an additional unique `lower(email)`
+index protecting historical case collisions. Credential sign-up leaves
+`emailVerified=false`. Email verification is not required for this local milestone,
+and no delivery service, reset button, fake verification or automatic linking is
+added. Registering an existing OAuth email does not add a credential account or
+merge identities: use the original sign-in method.
+
+Passwords use Better Auth's salted scrypt implementation and verification, with
+explicit 15–128 library string-length bounds and no composition rules. The
+[native credential flow](https://better-auth.com/docs/authentication/email-password)
+and [username plugin](https://better-auth.com/docs/plugins/username) are supported
+by pinned 1.7.7; InfraForge does not duplicate hashing or credential verification.
+The one identifier field goes to a bounded server adapter. It selects the native
+email handler when the identifier contains `@`, and the native username handler
+otherwise. The original Better Auth Node handler still performs all verification,
+rate limiting and cookie/session creation; the adapter performs no user lookup or
+password verification. Both namespaces validate on the server.
+
+Credential POST bodies accept bounded JSON/form data (8 KiB, including chunked
+requests) before hashing. Pinned Better Call's Node adapter supports parsed bodies;
+only credential routes use these parsers. OAuth callbacks retain the
+raw-handler path. Origin and rate checks run first. Auth logs retain operational
+errors and omit routine login/signup messages; passwords are never logged, returned or persisted
+in browser storage. Forms use password-manager autocomplete and keep passwords
+only in transient input state. Sign-in failures use a common message; rate limits
+have a separate retry message. The username-availability endpoint is disabled.
+Native registration still returns a failure for duplicate email/username, as
+permitted for this milestone; automatic sign-in cannot provide the library's
+sessionless synthetic duplicate response. Do not claim zero registration enumeration.
+
+Migration 16 adds nullable `User.username`, its format/unique guards and the email
+case-fold index. Migrations 1–15 are unchanged. Existing users/accounts/ownership
+are preserved with no backfill. Historical case collisions abort the entire SQL
+transaction and require explicit operator investigation, never account merging.
+Release postchecks verify the credential identity indexes/constraint. Prisma 7
+cannot express the functional email index in its schema: preserve this reviewed
+[custom SQL migration](https://www.prisma.io/docs/orm/v7/prisma-migrate/workflows/unsupported-database-features).
+The controlled release refuses image rollback across differing migration
+fingerprints. It does not drop usernames or credential accounts to downgrade;
+use a reviewed forward fix or the established authorized backup/restore procedure.
+
+Future methods, **not implemented**: email OTP/magic link and phone-number auth.
+They must reuse the same user ID/ownership model, require real delivery and
+verified linking decisions, and cannot adopt an existing account merely from an
+unverified email/phone claim. Password reset also waits for real email delivery.
 
 ## Configuration
 
@@ -52,7 +119,7 @@ Register exact provider redirect URLs:
 
 Provider consent configuration and externally registered credentials belong to the
 owner. No OAuth login is verified merely by installing the library or creating a
-session fixture. Without credentials, the UI reports that sign-in is unconfigured.
+session fixture. Without OAuth credentials, password sign-in remains available.
 With account linking disabled, using another provider for an existing email may
 require the original provider; InfraForge does not silently merge identities.
 
@@ -142,7 +209,8 @@ development task authorization does not grant it.
 ## Tests
 
 `bun run test:integration:local` uses fresh owned PostgreSQL/Redis fixtures. Users
-and signed sessions are created through Better Auth's actual database adapter;
+and signed sessions are created through Better Auth's public credential endpoints
+for credential/HTTP/WS isolation, and its actual database adapter for explicit legacy fixtures;
 the HTTP and WebSocket services enforce their normal checks. There is no test login
 endpoint, fake provider or disabled protection. Tests cover two users, forbidden
 reads/writes/controls/subscriptions, rejected origins, expiry, revocation, actual

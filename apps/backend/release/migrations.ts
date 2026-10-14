@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { readdir, readFile } from "node:fs/promises";
 import type { Client, Pool } from "pg";
+import { checkCredentialSchema } from "./credentialSchema";
 
 type Database = Pick<Client | Pool, "query">;
 export type Migration = { name: string; checksum: string; checksums: string[] };
@@ -8,7 +9,8 @@ const hash = (value: string) => createHash("sha256").update(value).digest("hex")
 // Reviewed additive migrations: safe to apply to a populated, idle database. They also define the guarded triggers.
 const ADDITIVE_MIGRATIONS = new Set(["20261009000000_capture_run_inputs", "20261009010000_add_authentication",
   "20261013000000_reliable_run_evidence", "20261013010000_honest_reruns", "20261014000000_challenge_attempts",
-  "20261015000000_challenge_versions_experiments", "20261016000000_experiment_evidence"]);
+  "20261015000000_challenge_versions_experiments", "20261016000000_experiment_evidence",
+  "20261017000000_credential_usernames"]);
 
 export async function migrationManifest(): Promise<Migration[]> {
   const directory = new URL("../prisma/migrations/", import.meta.url);
@@ -92,6 +94,8 @@ export async function checkSchemaGuards(db: Database) {
     s."expiresAt", a."providerId", v.identifier FROM "Deployment" d CROSS JOIN "Infrastructure" i
     CROSS JOIN "Session" s CROSS JOIN "Account" a CROSS JOIN "Verification" v CROSS JOIN "RunAction" r LIMIT 0`);
   await db.query('SELECT "deploymentId", "simulatedSeconds", "sampledAt", payload, hash FROM "RunEvidenceSample" LIMIT 0');
+  await db.query('SELECT username FROM "User" LIMIT 0');
+  await checkCredentialSchema(db);
 }
 
 export async function assertReleaseIdle(db: Database) {

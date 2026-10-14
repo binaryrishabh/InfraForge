@@ -3,6 +3,7 @@
   "private": true,
   "type": "module",
   "exports": {
+    "./auth": "./src/auth/index.ts",
     "./actions": {
       "types": "./src/actions/index.ts",
       "default": "./src/actions/index.ts"

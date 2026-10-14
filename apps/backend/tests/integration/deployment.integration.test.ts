@@ -19,6 +19,7 @@ import { checkHonestReruns } from "./rerunChecks";
 import { checkChallengeAttempts, checkResilienceAttempt } from "./challengeChecks";
 import { checkExperimentTraces } from "./experimentTraceChecks";
 import { checkLearningHistory } from "./learningHistoryChecks";
+import { checkCredentials } from "./credentialChecks";
 
 type Event = Record<string, any>;
 type Snapshot = SimulationSnapshot & { publishType: string };
@@ -106,7 +107,19 @@ integration("local deployment lifecycle", () => {
       await harness.prepare();
       schemaReady = true;
       sessions = new SessionFixtures(harness);
-      harness.cookie = (await sessions.create()).cookie;
+      phase("public credential authentication");
+      evidence.credentials = await checkCredentials(harness, sessions);
+      if (process.env.INTEGRATION_AUTH_ONLY === "1") {
+        const design = await harness.request("/infrastructure", { name: "Credential isolation", layout }, "POST", 201);
+        infrastructureIds.push(design.createdInfrastructure.id);
+        const run = await harness.request("/deployments", { infrastructureId: infrastructureIds[0], workloadProfile: workload }, "POST", 201);
+        deploymentIds.push(run.createdDeployment.id);
+        await harness.startWorker(); workerStarted = true;
+        await until(async () => (await deployment(deploymentIds[0]!)).status === "live" || undefined, "credential user live run", 60000);
+        phase("credential user HTTP and WS isolation");
+        await checkUserIsolation(harness, sessions, infrastructureIds[0]!, deploymentIds[0]!);
+        evidence.result = "passed"; return;
+      }
       const invalidJson = await fetch(harness.api + "/infrastructure", {
         method: "POST", headers: harness.headers, body: "{",
       });

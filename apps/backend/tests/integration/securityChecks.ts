@@ -12,7 +12,7 @@ import { captureRunInputs } from "../../deployments/runInputs";
 export async function checkUserIsolation(harness: LocalHarness, fixtures: SessionFixtures, designId: string, runId: string) {
   const aliceCookie = harness.cookie;
   const alice = await harness.request("/auth/get-session");
-  const bob = await fixtures.create();
+  const bob = await fixtures.createCredential();
   const context = await fixtures.auth.$context;
   expect(context.authCookies.sessionToken.attributes).toMatchObject({ httpOnly: true, sameSite: "lax", path: "/", secure: false });
   const designIds: string[] = [];
@@ -149,6 +149,9 @@ export async function checkUserIsolation(harness: LocalHarness, fixtures: Sessio
       await deniedSubscription(cookie, legacyRun);
     }
     const recovery = { designId: legacyId, userId: bob.user.id, expectedLegacyUserId: "test-user", evidence: "disposable-fixture-owner-proof", apply: false };
+    // Recovery tests explicitly prepare verified-email evidence in this fixture.
+    // Public credential signup above correctly left this user's email unverified.
+    await fixtures.prisma.user.update({ where: { id: bob.user.id }, data: { emailVerified: true } });
     const rejectedRecovery = async (input: typeof recovery, message: string) => {
       // Await I/O normally; Bun's native rejects matcher can stall pg BEGIN replies.
       const error = await recoverOwnership(fixtures.prisma, input).then(() => null, (failure: unknown) => failure);
@@ -194,7 +197,12 @@ export async function checkUserIsolation(harness: LocalHarness, fixtures: Sessio
       const socket = await connect(session.cookie);
       socket.send(JSON.stringify({ type: "subscribe", deploymentId: runId }));
       await until(async () => Number((await harness.redis.pubsub("NUMSUB", `deployment:${runId}:updates`) as Array<string | number>)[1]) > Number((subscriberCount as Array<string | number>)[1]) || undefined, "session fixture subscription");
-      const messages: unknown[] = []; socket.on("message", (message) => messages.push(JSON.parse(message.toString())));
+      const messages: Array<{ securityProbe?: string }> = [];
+      socket.on("message", (message) => messages.push(JSON.parse(message.toString())));
+      const beforeProbe = randomUUID(), afterProbe = randomUUID();
+      await harness.redis.publish(`deployment:${runId}:updates`, JSON.stringify({ securityProbe: beforeProbe }));
+      await until(async () => messages.some((message) => message.securityProbe === beforeProbe) || undefined,
+        "valid-session probe delivery", 5000);
       let closed: number | undefined;
       socket.once("close", (code) => { closed = code; });
       if (mode === "expired") await fixtures.prisma.session.update({ where: { id: session.session.id }, data: { expiresAt: new Date(0) } });
@@ -204,12 +212,13 @@ export async function checkUserIsolation(harness: LocalHarness, fixtures: Sessio
         await harness.request("/auth/sign-out", {});
         expect(await fixtures.prisma.session.findUnique({ where: { id: session.session.id } })).toBeNull();
       }
-      // Live telemetry can legitimately arrive while invalidation is still in flight.
-      // Keep the no-delivery assertion strict from confirmed invalidation onward.
-      messages.length = 0;
-      await harness.redis.publish(`deployment:${runId}:updates`, JSON.stringify({ private: "must-not-deliver" }));
+      // A frame already authorized/sent cannot be recalled from the TCP receive
+      // buffer. The unique probe is published only after DB invalidation returns,
+      // so its absence proves new unauthorized delivery is blocked, without
+      // confusing earlier in-flight telemetry with a new session authorization.
+      await harness.redis.publish(`deployment:${runId}:updates`, JSON.stringify({ securityProbe: afterProbe }));
       expect(await until(async () => closed, `${mode} session close`, 5000)).toBe(1008);
-      expect(messages).toEqual([]);
+      expect(messages.some((message) => message.securityProbe === afterProbe)).toBe(false);
       expect(await rejectedUpgrade(session.cookie, harness.origin)).toBe(401);
       harness.cookie = session.cookie;
       await harness.request(`/deployments/${runId}/speed`, { speed: 60 }, "POST", 401);

@@ -5,6 +5,7 @@ import { config } from "./utils/config";
 import { rateLimiter } from "./utils/rateLimiter";
 import { toNodeHandler } from "better-auth/node";
 import { auth, authSettings } from "./auth/auth";
+import { identifierSignIn } from "./auth/credentials";
 import { checkOrigin, requireSession } from "./auth/httpSecurity";
 import { infrastructureRouter } from "./routes/infrastructure.routes";
 import { deploymentRouter } from "./routes/deployment.routes";
@@ -25,8 +26,20 @@ app.get(["/health", "/health/ready"], async (_req, res) => {
 app.use(rateLimiter);
 app.use("/api", checkOrigin);
 app.use(cors({ origin: authSettings.origins, credentials: true }));
-app.get("/api/auth/providers", (_req, res) => res.json({ providers: Object.keys(authSettings.socialProviders) }));
-app.all("/api/auth/*splat", toNodeHandler(auth));
+app.get("/api/auth/providers", (_req, res) => res.json({ credentials: true, providers: Object.keys(authSettings.socialProviders) }));
+// Bound credential bodies before password hashing, including chunked requests.
+// The pinned Better Call Node adapter supports parsed JSON/form bodies. OAuth
+// callbacks keep the library's original raw-body handling.
+app.post(["/api/auth/sign-up/email", "/api/auth/sign-in/email", "/api/auth/sign-in/username", "/api/auth/sign-in/identifier"],
+  (req, res, next) => {
+    if (!req.is("application/json") && !req.is("application/x-www-form-urlencoded")) {
+      res.status(415).json({ success: false, message: "Use JSON or form data" }); return;
+    }
+    next();
+  }, express.json({ limit: "8kb" }), express.urlencoded({ extended: false, limit: "8kb" }));
+const authHandler = toNodeHandler(auth);
+app.post("/api/auth/sign-in/identifier", identifierSignIn(authHandler));
+app.all("/api/auth/*splat", authHandler);
 app.use("/api/infrastructure", requireSession);
 app.use("/api/deployments", requireSession);
 app.use("/api/challenges", requireSession);

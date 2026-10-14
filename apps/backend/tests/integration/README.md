@@ -11,6 +11,13 @@ disposable volume and network, a unique run ID and four ownership labels. API po
 are not used. `pwsh ./scripts/test-integration.ps1 -SafetyGuardsOnly` runs only the
 six harness guard tests with the same resource lifecycle.
 
+`pwsh ./scripts/test-integration.ps1 -AuthOnly` exercises public credential
+registration, both login identifiers, duplicate races, real sessions and two-user
+HTTP/WS ownership with a running worker. It uses the same disposable resources and
+cleanup, and can be combined with `-RuntimeImage`. Migration 16's PostgreSQL proof
+is part of the full suite: schema-15 upgrade, OAuth preservation, case-collision
+transaction rollback, uniqueness and release-postcheck drift rejection.
+
 When the host Bun runtime is unavailable, an exact-HEAD backend image can run the
 same authored suite on Linux Bun with `pwsh ./scripts/test-integration.ps1
 -RuntimeImage <owned-tag>`. The runner checks the image's repository/revision
