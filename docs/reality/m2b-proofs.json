@@ -1,0 +1,338 @@
+[
+  {
+    "name": "overload",
+    "status": "internal mechanism proof; measured demand plus authored queue/deadline/fault assumptions",
+    "counts": {
+      "offered": 80,
+      "admitted": 50,
+      "completed": 6,
+      "rejected": 30,
+      "deadlineExceeded": 44,
+      "abandoned": 0,
+      "remoteOutcomesAfterCallerStop": 44,
+      "cancellationRequested": 0,
+      "cancellationConfirmedAtEntry": 0,
+      "inFlight": 0
+    },
+    "resources": [
+      {
+        "id": "service",
+        "paused": false,
+        "received": 80,
+        "admitted": 50,
+        "rejected": 30,
+        "completed": 50,
+        "failed": 0,
+        "cancelled": 0,
+        "queued": 0,
+        "serving": 0,
+        "waiting": 0,
+        "consumedCoreUs": 1175000,
+        "busySlotUs": 1175000
+      }
+    ],
+    "at500000Us": {
+      "at": 500000,
+      "counts": {
+        "offered": 51,
+        "admitted": 38,
+        "completed": 6,
+        "rejected": 13,
+        "deadlineExceeded": 27,
+        "abandoned": 0,
+        "remoteOutcomesAfterCallerStop": 15,
+        "cancellationRequested": 0,
+        "cancellationConfirmedAtEntry": 0,
+        "inFlight": 5
+      },
+      "resources": [
+        {
+          "id": "service",
+          "paused": false,
+          "received": 51,
+          "admitted": 38,
+          "rejected": 13,
+          "completed": 21,
+          "failed": 0,
+          "cancelled": 0,
+          "queued": 16,
+          "serving": 1,
+          "waiting": 0,
+          "consumedCoreUs": 500000,
+          "busySlotUs": 500000
+        }
+      ]
+    },
+    "at700000Us": {
+      "at": 700000,
+      "counts": {
+        "offered": 71,
+        "admitted": 46,
+        "completed": 6,
+        "rejected": 25,
+        "deadlineExceeded": 36,
+        "abandoned": 0,
+        "remoteOutcomesAfterCallerStop": 23,
+        "cancellationRequested": 0,
+        "cancellationConfirmedAtEntry": 0,
+        "inFlight": 4
+      },
+      "resources": [
+        {
+          "id": "service",
+          "paused": false,
+          "received": 71,
+          "admitted": 46,
+          "rejected": 25,
+          "completed": 29,
+          "failed": 0,
+          "cancelled": 0,
+          "queued": 16,
+          "serving": 1,
+          "waiting": 0,
+          "consumedCoreUs": 700000,
+          "busySlotUs": 700000
+        }
+      ]
+    },
+    "execution": {
+      "processed": 265,
+      "cancelled": 36,
+      "pending": 0,
+      "peakPending": 14
+    },
+    "profiles": [
+      "m2b.local.light",
+      "m2b.local.heavy"
+    ],
+    "resultRetention": {
+      "terminal": 80,
+      "retained": 80,
+      "omitted": 0
+    }
+  },
+  {
+    "name": "pause-detach",
+    "status": "internal mechanism proof; measured demand plus authored queue/deadline/fault assumptions",
+    "counts": {
+      "offered": 80,
+      "admitted": 33,
+      "completed": 6,
+      "rejected": 47,
+      "deadlineExceeded": 27,
+      "abandoned": 0,
+      "remoteOutcomesAfterCallerStop": 27,
+      "cancellationRequested": 0,
+      "cancellationConfirmedAtEntry": 0,
+      "inFlight": 0
+    },
+    "resources": [
+      {
+        "id": "service",
+        "paused": false,
+        "received": 80,
+        "admitted": 33,
+        "rejected": 47,
+        "completed": 33,
+        "failed": 0,
+        "cancelled": 0,
+        "queued": 0,
+        "serving": 0,
+        "waiting": 0,
+        "consumedCoreUs": 775500,
+        "busySlotUs": 775500
+      }
+    ],
+    "at500000Us": {
+      "at": 500000,
+      "counts": {
+        "offered": 51,
+        "admitted": 25,
+        "completed": 6,
+        "rejected": 26,
+        "deadlineExceeded": 19,
+        "abandoned": 0,
+        "remoteOutcomesAfterCallerStop": 2,
+        "cancellationRequested": 0,
+        "cancellationConfirmedAtEntry": 0,
+        "inFlight": 0
+      },
+      "resources": [
+        {
+          "id": "service",
+          "paused": true,
+          "received": 51,
+          "admitted": 25,
+          "rejected": 26,
+          "completed": 8,
+          "failed": 0,
+          "cancelled": 0,
+          "queued": 16,
+          "serving": 1,
+          "waiting": 0,
+          "consumedCoreUs": 200000,
+          "busySlotUs": 200000
+        }
+      ]
+    },
+    "at700000Us": {
+      "at": 700000,
+      "counts": {
+        "offered": 71,
+        "admitted": 29,
+        "completed": 6,
+        "rejected": 42,
+        "deadlineExceeded": 19,
+        "abandoned": 0,
+        "remoteOutcomesAfterCallerStop": 6,
+        "cancellationRequested": 0,
+        "cancellationConfirmedAtEntry": 0,
+        "inFlight": 4
+      },
+      "resources": [
+        {
+          "id": "service",
+          "paused": false,
+          "received": 71,
+          "admitted": 29,
+          "rejected": 42,
+          "completed": 12,
+          "failed": 0,
+          "cancelled": 0,
+          "queued": 16,
+          "serving": 1,
+          "waiting": 0,
+          "consumedCoreUs": 300000,
+          "busySlotUs": 300000
+        }
+      ]
+    },
+    "execution": {
+      "processed": 216,
+      "cancelled": 54,
+      "pending": 0,
+      "peakPending": 16
+    },
+    "profiles": [
+      "m2b.local.light",
+      "m2b.local.heavy"
+    ],
+    "resultRetention": {
+      "terminal": 80,
+      "retained": 80,
+      "omitted": 0
+    }
+  },
+  {
+    "name": "pause-cancel",
+    "status": "internal mechanism proof; measured demand plus authored queue/deadline/fault assumptions",
+    "counts": {
+      "offered": 80,
+      "admitted": 80,
+      "completed": 6,
+      "rejected": 0,
+      "deadlineExceeded": 74,
+      "abandoned": 0,
+      "remoteOutcomesAfterCallerStop": 74,
+      "cancellationRequested": 74,
+      "cancellationConfirmedAtEntry": 74,
+      "inFlight": 0
+    },
+    "resources": [
+      {
+        "id": "service",
+        "paused": false,
+        "received": 80,
+        "admitted": 80,
+        "rejected": 0,
+        "completed": 6,
+        "failed": 0,
+        "cancelled": 74,
+        "queued": 0,
+        "serving": 0,
+        "waiting": 0,
+        "consumedCoreUs": 487472,
+        "busySlotUs": 487472
+      }
+    ],
+    "at500000Us": {
+      "at": 500000,
+      "counts": {
+        "offered": 51,
+        "admitted": 51,
+        "completed": 6,
+        "rejected": 0,
+        "deadlineExceeded": 35,
+        "abandoned": 0,
+        "remoteOutcomesAfterCallerStop": 35,
+        "cancellationRequested": 35,
+        "cancellationConfirmedAtEntry": 35,
+        "inFlight": 10
+      },
+      "resources": [
+        {
+          "id": "service",
+          "paused": true,
+          "received": 51,
+          "admitted": 51,
+          "rejected": 0,
+          "completed": 6,
+          "failed": 0,
+          "cancelled": 35,
+          "queued": 10,
+          "serving": 0,
+          "waiting": 0,
+          "consumedCoreUs": 200000,
+          "busySlotUs": 200000
+        }
+      ]
+    },
+    "at700000Us": {
+      "at": 700000,
+      "counts": {
+        "offered": 71,
+        "admitted": 71,
+        "completed": 6,
+        "rejected": 0,
+        "deadlineExceeded": 55,
+        "abandoned": 0,
+        "remoteOutcomesAfterCallerStop": 55,
+        "cancellationRequested": 55,
+        "cancellationConfirmedAtEntry": 55,
+        "inFlight": 10
+      },
+      "resources": [
+        {
+          "id": "service",
+          "paused": false,
+          "received": 71,
+          "admitted": 71,
+          "rejected": 0,
+          "completed": 6,
+          "failed": 0,
+          "cancelled": 55,
+          "queued": 9,
+          "serving": 1,
+          "waiting": 0,
+          "consumedCoreUs": 300000,
+          "busySlotUs": 300000
+        }
+      ]
+    },
+    "execution": {
+      "processed": 209,
+      "cancelled": 41,
+      "pending": 0,
+      "peakPending": 16
+    },
+    "profiles": [
+      "m2b.local.light",
+      "m2b.local.heavy"
+    ],
+    "resultRetention": {
+      "terminal": 80,
+      "retained": 80,
+      "omitted": 0
+    }
+  }
+]
