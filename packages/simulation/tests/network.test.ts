@@ -21,7 +21,14 @@ export function networkConservation(e: ReturnType<typeof networkRun>) {
     if (pool.acquired !== pool.released + pool.failedStreams + pool.activeStreams) throw new Error("Pool stream conservation");
   }
   for (const lb of e.network.loadBalancers) if (lb.received !== lb.completed + lb.rejected + lb.cancelled + lb.active + lb.pending || lb.activeRetries < 0 || lb.backends.some((b) => b.outstanding < 0)) throw new Error("LB conservation");
-  for (const r of e.resources) if (r.admitted !== r.completed + r.failed + r.cancelled + r.queued + r.serving + r.waiting) throw new Error("Compute invocation conservation");
+  for (const r of e.resources) {
+    if (r.admitted !== r.completed + r.failed + r.cancelled + r.queued + r.serving + r.waiting) throw new Error("Compute invocation conservation");
+    if (!r.compute) continue;
+    const { cpu, workers, memory } = r.compute;
+    if (cpu.appCoreUs + cpu.competitorCoreUs > cpu.availableCoreUs + 1e-5 || cpu.appCoreUs < 0 || cpu.allocations.some((a) => a.remainingCoreUs < 0)) throw new Error("Composed CPU conservation");
+    if (workers.configured !== workers.idle + workers.runnable + workers.blockedWait + workers.blockedDependency) throw new Error("Composed worker conservation");
+    if (memory.ownership.requests !== r.queued + r.serving + r.waiting || memory.ownership.active !== r.serving + r.waiting || (memory.totalResidentBytes.kind === "known" && memory.totalResidentBytes.value !== memory.knownSubtotalBytes)) throw new Error("Composed resident ownership");
+  }
 }
 test("request/response serialization, propagation, setup and compute compose analytically", () => {
   const e = networkRun(networkFixture({ count: 1, cpu: 100 })); expect(e.results[0]!.responseUs).toBe(470);
@@ -135,6 +142,9 @@ test("3000 generated network cases conserve bytes, streams, calls and retries", 
     if (i % 2 === 0) {
       const lb = input.resources.find((r) => r.kind === "load-balancer") as LoadBalancer;
       lb.policy = i % 4 ? "least-outstanding" : "round-robin";
+      const healthInterval = 250 + n("healthInterval", 2250);
+      lb.health.interval = q.q("sweep.health.interval", healthInterval, "us"); lb.health.timeout = q.q("sweep.health.timeout", n("healthTimeout", healthInterval), "us");
+      lb.health.healthy = q.q("sweep.health.healthy", n("healthyThreshold", 3), "count"); lb.health.unhealthy = q.q("sweep.health.unhealthy", n("unhealthyThreshold", 3), "count");
       lb.maxOutstanding = q.q("sweep.lb.outstanding", n("lbActive", 6), "count"); lb.maxPending = q.q("sweep.lb.pending", n("lbPending", 5) - 1, "count");
       lb.retry = { maxAttempts: q.q("sweep.retry.attempts", n("attempts", 3), "count"), maxConcurrentRetries: q.q("sweep.retry.concurrent", n("retryBudget", 4), "count"), backoff: q.q("sweep.retry.backoff", n("backoff", 300), "us"), jitter: q.q("sweep.retry.jitter", 0.3, "ratio"), retryOn: ["response-timeout", "connect-timeout", "reset", "link-overflow", "pool-overflow"], allowAmbiguousNonIdempotent: false };
       if (i % 6 === 0) input.networkInterventions.push({ id: "drain", kind: "drain", target: "lb", backend: "a", at: q.q("sweep.drain.at", 2000, "us"), grace: q.q("sweep.drain.grace", n("grace", 2000), "us") });
