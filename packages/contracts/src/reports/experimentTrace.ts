@@ -27,7 +27,27 @@ export interface ExperimentEvidenceSample extends ExperimentEvidencePayload {
   simulatedSeconds: number;
   sampledAt: string; // Wall time when the tick computed metrics, not the later database write.
 }
+export interface ObservedHealthSample {
+  second: number;
+  health: string;
+  // Includes the expiry tick and each later second through this sample, for this subject.
+  completeSinceFaultEnd: boolean;
+}
+export interface PostFaultObservation {
+  status: "not-applicable" | "fault-end-unverified" | "no-samples" | "samples-retained";
+  scheduledFaultEndSecond: number;
+  faultEndSecond: number | null;
+  evaluationSecond: number;
+  sampleCount: number;
+  target: { status: "healthy-observed" | "unhealthy-through-window" | "unknown";
+    firstSample: ObservedHealthSample | null; firstHealthy: ObservedHealthSample | null; healthAtEvaluation: string | null };
+  system: { status: "healthy-observed" | "unhealthy-through-window" | "unknown";
+    firstHealthy: ObservedHealthSample | null; healthAtEvaluation: string | null };
+  pendingPoolsAtEvaluation: ExperimentEvidencePayload["pools"];
+}
 export interface ExperimentTrace {
+  // Optional for reports produced before post-fault observation was supported.
+  observation?: PostFaultObservation;
   status: "not-applicable" | "unavailable" | "complete" | "incomplete";
   reason: string;
   expectedStart: number | null;
@@ -38,8 +58,11 @@ export interface ExperimentTrace {
   missingRanges: Array<{ start: number; end: number }>;
   points: ExperimentEvidenceSample[];
   moments: { beforeFault: number | null; atFault: number | null; firstAfterFault: number | null;
+    lastActiveFault?: number | null; firstPostFault?: number | null;
+    firstTargetHealthy?: number | null; firstOverallHealthy?: number | null;
     firstOverallHealthChange: number | null; evaluation: number | null } | null;
   resourceFacts: Array<{ id: string; highestCpu: { second: number; value: number };
-    highestMemory: { second: number; value: number }; firstHealthChange: number | null; firstHealthyAfterFault: number | null }>;
+    highestMemory: { second: number; value: number }; firstHealthChange: number | null; firstHealthyAfterFault: number | null;
+    firstHealthyAfterFaultComplete?: boolean }>;
   resourceFactsOmitted: number;
 }

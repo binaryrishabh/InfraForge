@@ -16,6 +16,7 @@ import { fanIn, fanOut, starter } from "../challenges/starter";
 import { storedJson } from "../utils/json";
 import type { SimulationInstance } from "../simulator/instance";
 import { captureEvidenceTick, createEvidenceBuffer } from "../evidence/capture";
+import { afterTheCacheReturnsV1 } from "../challenges/definitions/after-the-cache-returns/v1";
 
 export const definition = (id: string) => latestChallenge(id)!.definition;
 
@@ -32,6 +33,8 @@ export function tier(n: number, opts: { vmSku?: string; dbSku?: string; cache?: 
 
 // Passing designs found during calibration; every one stays inside its challenge's budget.
 export const REFERENCE: Record<string, ChallengeStarter> = {
+  "after-the-cache-returns": { ...afterTheCacheReturnsV1.starter!, resources: afterTheCacheReturnsV1.starter!.resources.map((r) =>
+    r.id === "db" ? { ...r, skuId: "db.m5.large" } : r) },
   "headroom-under-cpu-pressure": starter([["dns", T.DNS, 0, 1], ["lb", T.LoadBalancer, 1, 1, { autoscaling: { enabled: true, minReplicas: 2, maxReplicas: 4, targetCpu: 60 } }],
     ["app-1", T.VirtualMachine, 2, 0], ["app-2", T.VirtualMachine, 2, 2, { skuId: "c5.xlarge" }], ["db", T.Database, 3, 1]],
   [["dns", "lb"], ...fanOut("lb", ["app-1", "app-2"]), ...fanIn(["app-1", "app-2"], "db")]),

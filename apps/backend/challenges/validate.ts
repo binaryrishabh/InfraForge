@@ -32,6 +32,7 @@ const definition = z.object({
   hints: z.array(text(300)).min(1).max(5), debrief: z.array(text(600)).min(1).max(6),
   starter: z.object({ resources: z.array(resource).max(40), connectionLines: z.array(line).max(80) }).strict().nullable(),
   experiment: z.object({ fault: z.enum(DeploymentChaosNames), atSimulatedSecond: z.number().int(), hypothesis: text(240),
+    postFaultObservationSeconds: z.number().int().min(1).max(60).optional(),
     target: z.object({ resourceId: z.string().min(1).max(64), type: z.enum(types) }).strict() }).strict().optional(),
 }).strict();
 
@@ -78,9 +79,12 @@ function checkDefinition(d: ChallengeDefinition): string[] {
     }
     // The baseline is measured at full traffic, so the fault waits for the ramp to finish.
     if (e.atSimulatedSecond < SIMULATION_CONSTANTS.RAMP_SECONDS) problems.push(`${where}: the fault must not start before the ${SIMULATION_CONSTANTS.RAMP_SECONDS}-second ramp ends`);
-    // Judged on the fault's last active second, so the scheduled action closes with "fault ended" before the capture.
+    // The expiry tick still measures the fault. Observation starts with the next completed tick.
     const last = e.atSimulatedSecond + FAULT_DURATIONS[e.fault];
-    if (d.evaluationSeconds !== last) problems.push(`${where}: evaluation must be at second ${last}, the fault's last active second`);
+    const evaluation = last + (e.postFaultObservationSeconds ?? 0);
+    if (d.evaluationSeconds !== evaluation) problems.push(e.postFaultObservationSeconds === undefined
+      ? `${where}: evaluation must be at second ${last}, the fault's last active second`
+      : `${where}: evaluation must be at second ${evaluation}: fault ends at ${last} plus ${e.postFaultObservationSeconds} observation seconds`);
   }
   return problems;
 }

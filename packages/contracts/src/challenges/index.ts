@@ -66,13 +66,15 @@ export interface ChallengeStarter { resources: Resource[]; connectionLines: Conn
 
 /* A resilience challenge's controlled experiment: one fault InfraForge applies
 itself, at an exact simulated second, to a named resource from the starter. The
-fault lasts the model's fixed duration; the attempt is judged on its last active
-second. The browser never chooses the fault, the second or the target. */
+fault lasts the model's fixed duration. Without an observation duration the attempt
+is judged on its last active tick. The browser never chooses these conditions. */
 export interface ChallengeExperiment {
   fault: ChaosType;
   atSimulatedSecond: number;
   target: { resourceId: string; type: ResourceType };
   hypothesis: string;
+  // Omitted on legacy versions. Evaluation must equal start + model duration + this duration.
+  postFaultObservationSeconds?: number;
 }
 
 // The plan as recorded on an attempt when it is created. The worker and the report read only this.

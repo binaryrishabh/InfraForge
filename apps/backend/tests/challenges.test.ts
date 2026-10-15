@@ -21,7 +21,7 @@ describe("versioned registry", () => {
   test("every challenge is listed once, at its latest version, with its category", () => {
     const listed = listLatestChallenges().map((e) => e.definition);
     expect(new Set(listed.map((d) => d.id)).size).toBe(listed.length);
-    expect(listed.map((d) => [d.id, categoryOf(d)]).filter(([, c]) => c === "resilience")).toEqual([["lose-an-app-server", "resilience"], ["cache-failure", "resilience"], ["headroom-under-cpu-pressure", "resilience"]]);
+    expect(listed.map((d) => [d.id, categoryOf(d)]).filter(([, c]) => c === "resilience")).toEqual([["lose-an-app-server", "resilience"], ["cache-failure", "resilience"], ["headroom-under-cpu-pressure", "resilience"], ["after-the-cache-returns", "resilience"]]);
     for (const d of listed) {
       expect(validateInfrastructureName(d.title)).toBeNull();
       expect(WorkloadProfileSchema.safeParse(d.workload).success).toBe(true);

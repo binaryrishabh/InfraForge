@@ -21,6 +21,7 @@ import { checkExperimentTraces } from "./experimentTraceChecks";
 import { checkLearningHistory } from "./learningHistoryChecks";
 import { checkCredentials } from "./credentialChecks";
 import { checkLearningExperiments } from "./learningChecks";
+import { checkPostFaultObservation } from "./postFaultChecks";
 
 type Event = Record<string, any>;
 type Snapshot = SimulationSnapshot & { publishType: string };
@@ -648,6 +649,8 @@ integration("local deployment lifecycle", () => {
       evidence.resilience = await checkResilienceAttempt(harness, infrastructureIds, deploymentIds);
       phase("bounded experiment traces");
       evidence.experimentTraces = await checkExperimentTraces(harness, sessions, infrastructureIds, deploymentIds);
+      phase("post-fault observation, improvement and interruption");
+      evidence.postFaultObservation = await checkPostFaultObservation(harness, sessions, infrastructureIds, deploymentIds);
       phase("cross-challenge learning history");
       evidence.learningHistory = await checkLearningHistory(harness, sessions, infrastructureIds, deploymentIds);
       phase("deliberate challenge improvements");

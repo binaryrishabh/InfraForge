@@ -32,6 +32,7 @@ export function classifyComparison(first: StoredRun & { sourceRunId?: string | n
   const traceFacts = reports.map((r) => {
     const trace = r.experimentTrace!, target = r.challenge?.experiment?.targetResourceId ?? null;
     return { status: trace.status, start: trace.expectedStart, end: trace.expectedEnd, count: trace.sampleCount, target,
+      observation: trace.observation,
       highestCpu: trace.resourceFacts.find((f) => f.id === target)?.highestCpu ?? null };
   }) as NonNullable<RunComparison["experimentEvidence"]>["traces"];
   const traceComparable = challengeConditions === "same" && reports.every((r) => r.provenance.simulationModelVersion === "1") &&

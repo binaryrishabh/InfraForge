@@ -8,6 +8,7 @@ import { peakTrafficV1 } from "./peak-traffic/v1";
 import { loseAnAppServerV1 } from "./lose-an-app-server/v1";
 import { cacheFailureV1 } from "./cache-failure/v1";
 import { headroomUnderCpuPressureV1 } from "./headroom-under-cpu-pressure/v1";
+import { afterTheCacheReturnsV1 } from "./after-the-cache-returns/v1";
 
 /* Every published version of every challenge, calibrated against simulation model
 "1" and catalog "2026-08". Versions are immutable and never removed: historical
@@ -23,4 +24,5 @@ export const CHALLENGE_VERSIONS: readonly ChallengeDefinition[] = [
   loseAnAppServerV1,
   cacheFailureV1,
   headroomUnderCpuPressureV1,
+  afterTheCacheReturnsV1,
 ];

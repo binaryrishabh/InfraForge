@@ -37,11 +37,63 @@ An optional `experiment` makes a resilience challenge: one fault InfraForge appl
 - `target`: a named starter resource and its type. The learner must keep it, in the serving path
   (and for an app server, behind a load balancer that manages a pool). Nothing is substituted.
 - `atSimulatedSecond`: no earlier than the end of the 60-second ramp.
-- `evaluationSeconds` must be the fault's last active second (`at + model duration`), so the fault's
-  durable action closes with "fault ended" before the terminal capture.
+- Without `postFaultObservationSeconds`, `evaluationSeconds` stays the fault's last active tick
+  (`at + model duration`). Existing published definitions omit the property and stay unchanged.
+- New exercises may explicitly author `postFaultObservationSeconds` (integer 1–60). Evaluation
+  must equal `at + model duration + observation`. The whole inclusive trace must still fit
+  `max(0, at - 30)` through evaluation in **121 points**; some fault durations allow less than 60.
+  The run already stores the immutable evaluation stop, plan and definition hash; no schema
+  change or extra recorded-plan key is needed. Browsers cannot override the period.
+- Tick `at` measures before application; `at + 1` first measures the fault. Tick `at + duration`
+  still measures its effect, then removes it and completes its durable action. Post-fault
+  measurements are strictly later. Previous-tick cascades, provisioning and restarts can persist.
 - Only ask predictions the retained evidence proves: `baseline-health` (recorded when the fault is
-  applied), `survivor-health`, `database-health`, `busiest-type`, `scale-out`. Overall health during
-  a crash is always critical in this model, so do not ask it.
+  applied), `target-health`, `survivor-health`, `database-health`, `busiest-type`, `scale-out`,
+  `overall-health`. A post-fault overall-health prediction is useful; during a crash it is always
+  critical. Use later-evaluation criteria before inventing a recovery criterion.
+
+## Post-fault evidence and calibration
+
+`evidence/observation.ts` derives target and whole-system facts independently, only after the
+scheduled action confirms its exact end. `healthy-observed` means at least one retained Healthy
+sample, even if evaluation is unhealthy. `unhealthy-through-window` requires every post-fault
+second for that subject through evaluation and no Healthy sample. Otherwise the answer is
+`unknown`. `no-samples` differs from `fault-end-unverified` and from a legacy `not-applicable`
+window. Evaluation health requires its own retained measurement.
+
+First Healthy facts carry continuity from the expiry tick through that sample. A missing sample
+or missing subject qualifies the wording as **after missing evidence**. A later gap does not erase
+an earlier observation. Never say Healthy since, recovered by, faster recovery, MTTR or production
+availability. First retained Healthy sample and health at evaluation are different facts. Compare
+shows these values side by side, under its existing conditions classifier, without ranking designs.
+
+`bun --cwd apps/backend --no-env-file tests/recoveryExploration.ts` explores **3,240 deterministic
+candidates** across five faults, target types, workloads, database sizes, redundancy, pool limits,
+CPU thresholds, fault timings and observation horizons. This is offline calibration, excluded from
+the runtime. Initial cache candidates settle; the selected `after-the-cache-returns@1` retains a
+second lesson: delayed scale-out changes later database connection pressure. Its starter fails,
+its hidden one-change reference passes, and its 106 samples fit the existing bound.
+
+Research applied to model 1 (not imported as real-cloud guarantees):
+
+- [Principles of Chaos Engineering](https://principlesofchaos.org/): explicit measurable hypotheses;
+  model health is only an internal educational proxy, not user-visible steady-state output.
+- [Chaos Toolkit experiment specification](https://chaostoolkit.org/reference/api/experiment/):
+  actions, pauses and subsequent probes distinguish intervention from later observation. InfraForge
+  needs one authored horizon, not a workflow language or an adaptive wait-until-healthy stop.
+- [Google SRE cascading failures](https://sre.google/sre-book/addressing-cascading-failures/):
+  interacting resource pressure can outlast the trigger. Model 1 uses previous-tick health and
+  discrete provisioning; it has no real retry queue, cache warm-up or persistent leaked memory.
+- [OpenTelemetry metrics data model](https://opentelemetry.io/docs/specs/otel/metrics/data-model/):
+  timestamps and gaps matter. Retained point measurements cannot establish continuous health.
+- [W3C complex images](https://www.w3.org/WAI/tutorials/images/complex/): phase labels, native
+  sample selectors, key-moment tables and text alternatives accompany the unsmoothed charts.
+- [DORA metrics](https://dora.dev/guides/dora-metrics/): recovery-time metrics depend on a defined
+  failure population and endpoint. A first Healthy simulator sample is neither deployment
+  recovery time nor a mean across incidents; an unfinished window is not an infinite duration.
+- [PhET guided inquiry](https://phet.colorado.edu/files/guides/UG-Guide-HW_en.pdf): predictions,
+  exploration and explanation support inquiry. InfraForge keeps a short prediction, an evidence
+  review and a learner-owned one-change hypothesis, without asking for an exact recovery second.
 
 ## Check
 

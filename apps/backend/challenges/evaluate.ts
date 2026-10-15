@@ -55,6 +55,9 @@ class Judge {
       return { ...base, state: "not-applied", detail: `${what} was recorded at second ${action.appliedSimulatedSeconds}, which does not match the plan.` };
     }
     if (action.status === "completed" && action.outcome?.faultEnded) {
+      if (action.completedSimulatedSeconds !== plan.atSimulatedSecond + plan.durationSimulatedSeconds) {
+        return { ...base, state: "not-applied", detail: `${what} has no verified completion at its planned fault-end second.` };
+      }
       return { ...base, state: "ended", endedSimulatedSeconds: action.completedSimulatedSeconds,
         detail: `${what} was applied at second ${action.appliedSimulatedSeconds}; the model's ${plan.durationSimulatedSeconds}-second fault window ended at second ${action.completedSimulatedSeconds}. A fault ending is not the same as recovery.` };
     }
@@ -252,6 +255,9 @@ export function evaluateAttempt(attempt: ChallengeAttemptRecord, evidence: Chall
   let status = overall(judge.active, criteria);
   // A resilience attempt whose fault never happened as planned has nothing to be judged against.
   if (judge.experimentMissing() && !judge.active && status !== "not-met") status = "not-evaluated";
+  // New observation exercises require their later evaluation even when a static
+  // requirement already failed. Preserve the earlier versions' judging behavior.
+  if (definition.experiment?.postFaultObservationSeconds && !judge.active && (!judge.atEvaluation || judge.experimentMissing())) status = "not-evaluated";
   const inspectNext: string[] = [];
   const hot = judge.atEvaluation?.resources.filter((r) => r.health === "saturated" || r.health === "failed").map((r) => r.id) ?? [];
   if (hot.length) inspectNext.push(`Open ${list(hot)} in the final-state table and follow their upstream connections.`);

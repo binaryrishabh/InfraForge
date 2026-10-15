@@ -13,6 +13,7 @@ A published version never changes and is never removed. To change a challenge, a
 the next version file, register it in definitions/index.ts and pin it here. Run with
 `bun run check:challenges`. */
 export const PUBLISHED: Record<string, string> = {
+  "after-the-cache-returns@1": "4511ec082bcd0127140ea1689ccdc0fb5179362f891645ccef6008dde0e645e6",
   "headroom-under-cpu-pressure@1": "ca4b7cc902a9515b7cdb5251cfc27cd964172a917a5b75ccd64cfa6f7c96b10a",
   "first-production-api@1": "515c84a6da8a78c5b4c30269e0c20dff5f934e8f98608fbac572f3782dd33888",
   "secure-the-edge@1": "4166582eef18e35bee1b554c764a1debbf6d324c28cc87f5d56c7f0e02b50849",
@@ -110,7 +111,7 @@ describe("calibration against the real engine", () => {
       expect(failed.challenge!.metCount).toBeLessThan(failed.challenge!.total);
       if (d.experiment) for (const report of [passed, failed]) {
         expect(report.challenge?.experiment).toMatchObject({ state: "ended", appliedSimulatedSeconds: d.experiment.atSimulatedSecond,
-          endedSimulatedSeconds: d.evaluationSeconds, baselineOverallHealth: "healthy" });
+          endedSimulatedSeconds: d.evaluationSeconds - (d.experiment.postFaultObservationSeconds ?? 0), baselineOverallHealth: "healthy" });
       }
     });
   }

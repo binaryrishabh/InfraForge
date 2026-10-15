@@ -64,7 +64,7 @@ export function buildRunReport(row: StoredRun, registry?: ChallengeRegistry): Ru
   const challenge = challengeOf(row, records, registry);
   const run = summary(row, records, challenge);
   const report: RunReport = { version: 1, run, originalSeed: records.input?.seed ?? null,
-    experimentTrace: buildExperimentTrace({ ...row, inputVersion: records.input?.version ?? null }),
+    experimentTrace: buildExperimentTrace({ ...row, inputVersion: records.input?.version ?? null, experiment: challenge?.experiment }),
     legacySeed: !records.input && typeof row.seed === "string" ? row.seed : null,
     stages: records.stages, timeline: records.timeline, chaosEvents: records.chaos,
     provenance: { inputVersion: records.input?.version ?? null,

@@ -1,10 +1,13 @@
 import type { EvidenceCue, GuidedReview } from "@infraforge/contracts/challenges";
 import type { RunReport } from "@infraforge/contracts/reports";
+import { observationReview } from "./observationReview";
 
 // Reuse the evaluator's facts/sources. No second judge, advice or inferred cause.
 export function guidedReview(report: RunReport, canImprove: boolean, unavailableReason: string | null): GuidedReview | null {
   const e = report.challenge;
   if (!e) return null;
+  const observation = observationReview(report, canImprove, unavailableReason);
+  if (observation) return observation;
   const cues: EvidenceCue[] = [];
   for (const c of e.criteria.filter((c) => c.status === "not-met").slice(0, 2)) {
     cues.push({ id: `requirement:${c.id}`, kind: "requirement", title: c.label, statement: c.detail, sources: c.sources,

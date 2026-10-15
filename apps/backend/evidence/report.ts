@@ -1,10 +1,13 @@
 import { experimentWindow, EXPERIMENT_MAX_POINTS, EXPERIMENT_MAX_RESOURCES, type ExperimentTrace, type ExperimentEvidenceSample } from "@infraforge/contracts/reports";
 import { readRecordedExperiment } from "../challenges/experiment";
 import { evidencePayload, sampleHash } from "./contract";
+import { postFaultObservation } from "./observation";
+import type { ExperimentResult } from "@infraforge/contracts/challenges";
 
 export interface StoredEvidenceSample { simulatedSeconds: number; sampledAt: Date; payload: unknown; hash: string }
 export function buildExperimentTrace(row: { challengeExperiment?: unknown; evaluationStopAtSimulatedSeconds?: number | null;
   inputVersion?: 1 | 2 | null;
+  experiment?: ExperimentResult | null;
   evidenceSamples?: StoredEvidenceSample[] }): ExperimentTrace {
   const empty = (status: ExperimentTrace["status"], reason: string): ExperimentTrace => ({ status, reason,
     expectedStart: null, expectedEnd: null, actualFirst: null, actualLast: null, sampleCount: 0,
@@ -38,20 +41,27 @@ export function buildExperimentTrace(row: { challengeExperiment?: unknown; evalu
   const resourceIds = [...new Set(points.flatMap((p) => p.resources.map((r) => r.id)))].sort();
   const targetIndex = resourceIds.indexOf(plan!.targetResourceId);
   if (targetIndex >= 0) resourceIds.unshift(...resourceIds.splice(targetIndex, 1));
+  const observation = postFaultObservation(plan!, window.end, points, row.experiment);
   const resourceFacts = resourceIds.slice(0, EXPERIMENT_MAX_RESOURCES).map((id) => {
     const values = points.flatMap((p) => { const r = p.resources.find((r) => r.id === id); return r ? [{ ...r, second: p.simulatedSeconds }] : []; });
     const cpu = values.reduce((a, b) => b.cpu > a.cpu ? b : a);
     const memory = values.reduce((a, b) => b.memory > a.memory ? b : a);
+    const end = plan!.atSimulatedSecond + plan!.durationSimulatedSeconds;
+    const healthy = observation.faultEndSecond !== null ? values.find((v) => v.second > end && v.health === "healthy") : undefined;
+    const retained = new Set(values.map((v) => v.second));
     return { id, highestCpu: { second: cpu.second, value: cpu.cpu }, highestMemory: { second: memory.second, value: memory.memory },
-      firstHealthChange: firstChange(values), firstHealthyAfterFault: values.find((v) =>
-        v.second > plan!.atSimulatedSecond + plan!.durationSimulatedSeconds && v.health === "healthy")?.second ?? null };
+      firstHealthChange: firstChange(values), firstHealthyAfterFault: healthy?.second ?? null,
+      firstHealthyAfterFaultComplete: !!healthy && Array.from({ length: healthy.second - end + 1 }, (_, i) => end + i).every((s) => retained.has(s)) };
   });
   return { status, reason: status === "complete" ? "Every expected completed-tick sample in this bounded window is retained." :
     !points.length ? "No durable samples are retained. Older attempts and stops before the window have no series." :
       `Some expected measurements are missing${invalid ? " or invalid" : ""}. Missing evidence remains missing; the run was not resumed.`,
-    expectedStart: window.start, expectedEnd: window.end, actualFirst: points[0]?.simulatedSeconds ?? null,
+    observation, expectedStart: window.start, expectedEnd: window.end, actualFirst: points[0]?.simulatedSeconds ?? null,
     actualLast: points.at(-1)?.simulatedSeconds ?? null, sampleCount: points.length, missingRanges, points,
     moments: { beforeFault: seconds.has(plan!.atSimulatedSecond - 1) ? plan!.atSimulatedSecond - 1 : null,
+      lastActiveFault: observation.faultEndSecond !== null && seconds.has(observation.faultEndSecond) ? observation.faultEndSecond : null,
+      firstPostFault: observation.faultEndSecond !== null ? points.find((p) => p.simulatedSeconds > observation.faultEndSecond!)?.simulatedSeconds ?? null : null,
+      firstTargetHealthy: observation.target.firstHealthy?.second ?? null, firstOverallHealthy: observation.system.firstHealthy?.second ?? null,
       atFault: seconds.has(plan!.atSimulatedSecond) ? plan!.atSimulatedSecond : null,
       firstAfterFault: points.find((p) => p.simulatedSeconds > plan!.atSimulatedSecond)?.simulatedSeconds ?? null,
       firstOverallHealthChange: firstChange(points.map((p) => ({ second: p.simulatedSeconds, health: p.overallHealth }))),

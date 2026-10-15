@@ -28,7 +28,7 @@ export function preflight(definition: ChallengeDefinition, topology: Topology): 
       case "security-clean":
         return { ...base, status: "during-run", detail: "Checked by the security scan when the attempt runs." };
       case "survivors-unsaturated":
-        return { ...base, status: "during-run", detail: `Measured at simulated second ${definition.evaluationSeconds}, while the scheduled fault is still active.` };
+        return { ...base, status: "during-run", detail: `Measured at simulated second ${definition.evaluationSeconds}, ${definition.experiment?.postFaultObservationSeconds ? "after the scheduled fault ends" : "while the scheduled fault is still active"}.` };
       default:
         return { ...base, status: "during-run", detail: `Measured at simulated second ${definition.evaluationSeconds}.` };
     }

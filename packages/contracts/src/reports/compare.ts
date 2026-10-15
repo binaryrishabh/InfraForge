@@ -28,8 +28,7 @@ export interface CompareMetric { field: string; unit: string; earlier: number | 
 export interface RunComparison {
   designChangeReview?: DesignChangeReview | null;
   experimentEvidence?: { comparable: boolean; reason: string; traces: [
-    { status: import("./experimentTrace").ExperimentTrace["status"]; start: number | null; end: number | null; count: number; target: string | null; highestCpu: { second: number; value: number } | null },
-    { status: import("./experimentTrace").ExperimentTrace["status"]; start: number | null; end: number | null; count: number; target: string | null; highestCpu: { second: number; value: number } | null }
+    ExperimentCompareTrace, ExperimentCompareTrace
   ] };
   version: 1; runs: [RunSummary, RunSummary];
   available: boolean; unavailableReason: string | null;
@@ -45,4 +44,10 @@ export interface RunComparison {
   // Both runs are challenge attempts: whether they ran under identical recorded challenge conditions.
   challengeConditions: "same" | "different" | null;
   observed: ReportStatement[]; interpreted: ReportStatement[]; unknown: ReportStatement[];
+}
+export interface ExperimentCompareTrace {
+  status: import("./experimentTrace").ExperimentTrace["status"];
+  start: number | null; end: number | null; count: number; target: string | null;
+  highestCpu: { second: number; value: number } | null;
+  observation?: import("./experimentTrace").PostFaultObservation;
 }
