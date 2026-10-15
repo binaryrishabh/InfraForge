@@ -34,7 +34,7 @@ export function TraceCharts({ trace, experiment, resourceId }: { trace: Experime
       <svg role="img" aria-label={`Discrete overall health samples, seconds ${start}–${end}. Missing measurements are hatched gaps. Equivalent key-moment values follow.`} viewBox={`0 0 ${width} 170`} className="mt-1 h-[170px] w-full">
         {pattern()}{context()}
         {BANDS.map((band, i) => <g key={band}><text x="0" y={35 + i * 30} fill="currentColor" fontSize="10">{band}</text><line x1="62" x2={width - 16} y1={31 + i * 30} y2={31 + i * 30} stroke="currentColor" opacity="0.12" /></g>)}
-        {trace.points.map((p) => <circle key={p.simulatedSeconds} cx={x(p.simulatedSeconds)} cy={31 + BANDS.indexOf(p.overallHealth) * 30} r="2.5" fill="currentColor" className={COLOR[p.overallHealth]}><title>Second {p.simulatedSeconds}: {p.overallHealth}</title></circle>)}
+        {trace.points.map((p) => <circle key={p.simulatedSeconds} cx={x(p.simulatedSeconds)} cy={31 + BANDS.indexOf(p.overallHealth) * 30} r="2.5" fill="currentColor" className={COLOR[p.overallHealth]}><title>{`Second ${p.simulatedSeconds}: ${p.overallHealth}`}</title></circle>)}
       </svg>
     </figure>
     <figure>
@@ -45,7 +45,7 @@ export function TraceCharts({ trace, experiment, resourceId }: { trace: Experime
         {(["cpu", "memory"] as const).map((field) => <g key={field} className={field === "cpu" ? "text-accent" : "text-ink-2"}>
           {pressureSegments(trace.points, resourceId, field).map((segment, i) => <g key={i}>
             <polyline points={segment.map((p) => `${x(p.second)},${y(p.value)}`).join(" ")} fill="none" stroke="currentColor" strokeWidth="2" strokeDasharray={field === "memory" ? "4 3" : undefined} />
-            {segment.map((p) => <circle key={p.second} cx={x(p.second)} cy={y(p.value)} r="1.7" fill="currentColor"><title>Second {p.second}: {field} {p.value}%</title></circle>)}
+            {segment.map((p) => <circle key={p.second} cx={x(p.second)} cy={y(p.value)} r="1.7" fill="currentColor"><title>{`Second ${p.second}: ${field} ${p.value}%`}</title></circle>)}
           </g>)}
         </g>)}
       </svg>

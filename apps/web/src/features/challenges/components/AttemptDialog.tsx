@@ -15,6 +15,9 @@ import { RequirementList } from "./RequirementList";
 import { ExperimentBrief } from "./ExperimentBrief";
 import { predictionChoices, predictionPhases } from "../predictionChoices";
 import { planOf } from "../experiment";
+import { useChallengeImprovement } from "../learningContext";
+import { useImprovementReview } from "../useImprovementReview";
+import { ImprovementReview } from "./ImprovementReview";
 
 export function PredictionQuestionField({ question, index, value, onChange, designTypes }: { question: PredictionQuestion; index: number; value: string; onChange: (v: string) => void; designTypes: string[] }) {
   return (
@@ -45,8 +48,13 @@ export function AttemptDialog({ brief, preflight, open, onOpenChange }: { brief:
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const workspaceVersion = useCanvasStore((s) => s.currentChallengeVersion);
+  const learning = useChallengeImprovement();
+  const reviewed = useImprovementReview(learning);
+  const [acceptedHash, setAcceptedHash] = useState<string | null>(null);
+  const needsConsent = reviewed.review?.classification === "no-change" || reviewed.review?.classification === "several-changes";
+  const reviewedReady = !learning || (!!reviewed.review && reviewed.review.classification !== "unavailable" && (!needsConsent || acceptedHash === reviewed.review.inputHash));
   // An earlier version's workspace cannot start an attempt at the current version; the server refuses it too.
-  const olderWorkspace = workspaceVersion !== null && workspaceVersion < brief.latestVersion;
+  const olderWorkspace = !learning && workspaceVersion !== null && workspaceVersion < brief.latestVersion;
   const valid = (preflight?.valid ?? true) && resources.length > 0 && !olderWorkspace;
   const answered = brief.predictions.every((q) => predictionChoices(q, designTypes).some((c) => c.value === answers[q.id]));
   const plan = brief.experiment ? planOf(brief.experiment) : null;
@@ -57,10 +65,13 @@ export function AttemptDialog({ brief, preflight, open, onOpenChange }: { brief:
   );
   const submit = async (event: FormEvent) => {
     event.preventDefault();
-    if (!answered || !valid || busy) return;
+    if (!answered || !valid || busy || !reviewedReady) return;
     setBusy(true); setError(null);
     try {
-      await startAttempt(brief, { answers, reasoning: reasoning.trim() || null });
+      await startAttempt(brief, { answers, reasoning: reasoning.trim() || null }, learning && reviewed.review ? {
+        sourceRunId: learning.sourceRunId, hypothesis: learning.hypothesis, inputHash: reviewed.review.inputHash,
+        intent: reviewed.review.classification === "no-change" ? "repeat" : "improvement", acknowledgeMultiple: acceptedHash === reviewed.review.inputHash,
+      } : undefined);
       toast.success("Prediction locked. The attempt is starting.");
       onOpenChange(false);
     } catch (err) {
@@ -72,9 +83,10 @@ export function AttemptDialog({ brief, preflight, open, onOpenChange }: { brief:
       description="Commit to what you expect before the simulator runs. Your answers are locked when the attempt starts."
       footer={<>
         <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={busy}>Keep designing</Button>
-        <Button type="submit" form="attempt-form" variant="primary" loading={busy} disabled={!answered || !valid} icon={<Lock size={14} aria-hidden="true" />}>Lock prediction and run</Button>
+        <Button type="submit" form="attempt-form" variant="primary" loading={busy} disabled={!answered || !valid || !reviewedReady} icon={<Lock size={14} aria-hidden="true" />}>Lock prediction and run</Button>
       </>}>
       <form id="attempt-form" onSubmit={submit} className="flex flex-col gap-5">
+        {learning && <ImprovementReview context={learning} review={reviewed.review} error={reviewed.error} acceptedHash={acceptedHash} onAccept={setAcceptedHash} />}
         <section aria-labelledby="attempt-conditions" className="rounded-md bg-surface px-4 py-3">
           <h3 id="attempt-conditions" className="flex items-center gap-1.5 text-[13px] font-semibold text-ink"><Lock size={13} aria-hidden="true" /> Fixed for every attempt</h3>
           <p className="mt-1 text-sm text-ink-2">{describeWorkload(brief.workload)}. Evaluated at simulated second {brief.evaluationSeconds}; the run stops there automatically.</p>

@@ -20,7 +20,7 @@ export function ExperimentTraceView({ trace, experiment }: { trace?: ExperimentT
     { label: "At evaluation", second: trace.expectedEnd }];
   const selected = trace.points.find((p) => p.simulatedSeconds === second) ?? trace.points.at(-1)!;
   const selectedResource = selected.resources.find((r) => r.id === resourceId);
-  return <section aria-labelledby={`${id}-title`} className="mt-5 min-w-0">
+  return <section id="recorded-experiment-window" tabIndex={-1} aria-labelledby={`${id}-title`} className="mt-5 min-w-0">
     <h4 id={`${id}-title`} className="text-[15px] font-semibold text-ink">Recorded experiment window</h4>
     <p className="mt-1 text-sm text-ink-2">Seconds {trace.expectedStart}–{trace.expectedEnd} · {trace.sampleCount} durable samples · <strong>{trace.status === "complete" ? "Complete" : "Incomplete"}</strong>. {trace.reason}</p>
     <p className="mt-1 text-sm text-ink-2">{experiment.appliedSimulatedSeconds == null ? "Fault application was not recorded." : `Fault applied at second ${experiment.appliedSimulatedSeconds}. That tick's measurements precede application; the next tick can first measure its effect.`}</p>

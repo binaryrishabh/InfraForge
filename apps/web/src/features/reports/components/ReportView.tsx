@@ -9,6 +9,7 @@ import { ButtonLink } from "@/ui/Button";
 import { Notice } from "@/ui/Page";
 import { StatusMark } from "@/ui/StatusMark";
 import { ChallengeDebrief } from "@/features/challenges/components/ChallengeDebrief";
+import { GuidedReview } from "@/features/challenges/components/GuidedReview";
 import { ReportSection, Statement } from "./ReportSection";
 import { ReportMeasurements } from "./ReportMeasurements";
 import { ActionTimeline } from "./ActionTimeline";
@@ -26,7 +27,7 @@ function Debrief({ report }: { report: RunReport }) {
   // The exact version this attempt was judged by, so labels and the explanation match its rules.
   const load = useCallback(() => getChallenge(id, version || undefined), [id, version]);
   const { data } = useRequest(load);
-  return <ChallengeDebrief evaluation={report.challenge!} brief={data} runId={report.run.id} trace={report.experimentTrace} />;
+  return <><GuidedReview report={report} /><ChallengeDebrief evaluation={report.challenge!} brief={data} trace={report.experimentTrace} /></>;
 }
 
 /* A lab report: what ran, the challenge verdict if any, what was recorded,
@@ -49,7 +50,7 @@ export function ReportView({ report }: { report: RunReport }) {
     lineage: ++n, unknown: ++n, next: n + 1,
   };
   return (
-    <article className="pt-6">
+    <article className="min-w-0 break-words pt-6">
       <Link to="/runs" className="inline-flex items-center gap-1 text-sm font-medium text-ink-2 hover:text-ink"><ArrowLeft size={14} aria-hidden="true" /> Runs</Link>
       <header className="mt-4">
         <p className="if-eyebrow">{kind.label}{kind.detail ? ` · ${kind.detail}` : ""}</p>
@@ -65,10 +66,15 @@ export function ReportView({ report }: { report: RunReport }) {
           <ComparePicker id={run.id} eligible={eligible} />
           {!run.challenge && <OpenDesignToImprove sourceId={run.id} designId={run.infrastructureId} eligible={eligible} />}
           {run.sourceRunId && eligible && <ButtonLink to={`/runs/compare?a=${run.sourceRunId}&b=${run.id}`} variant="ghost" size="sm" icon={<GitCompareArrows size={14} aria-hidden="true" />}>Compare with source run</ButtonLink>}
+          {run.learning?.sourceRunId && eligible && <ButtonLink to={`/runs/compare?a=${run.learning.sourceRunId}&b=${run.id}`} variant="secondary" size="sm" icon={<GitCompareArrows size={14} aria-hidden="true" />}>Compare with the attempt you {run.learning.intent === "repeat" ? "repeated" : "improved"}</ButtonLink>}
         </div>
         {run.status === "live" && <Notice className="mt-4" tone="info">This run is still live. The report shows retained evidence, not a live monitor.</Notice>}
         {!run.hasReportData && <Notice className="mt-4" tone="warn">No usable stages, events or checkpoint data were retained for this run.</Notice>}
       </header>
+      {run.learning && <aside aria-label="Your experiment hypothesis" className="mt-5 border-l-2 border-accent pl-4 text-sm">
+        <p className="font-semibold">{run.learning.intent === "repeat" ? "Deliberate repeat" : "Improvement experiment"}</p><p className="mt-1">Your hypothesis: {run.learning.hypothesis}</p>
+        {run.learning.sourceRunId ? <Link to={`/runs/${run.learning.sourceRunId}`} className="mt-1 inline-block text-accent underline">Read the source attempt</Link> : <p className="mt-1 text-ink-3">The source attempt was deleted. Your hypothesis is retained; its comparison is unavailable.</p>}
+      </aside>}
 
       {report.challenge && <Debrief report={report} />}
 

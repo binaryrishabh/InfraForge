@@ -1,12 +1,9 @@
 import { Link } from "react-router-dom";
-import { PenTool } from "lucide-react";
 import { PREDICTION_CHOICES, type ChallengeBrief, type ChallengeEvaluation, type PredictionResult } from "@infraforge/contracts/challenges";
 import { formatDate } from "@/lib/format";
-import { Button } from "@/ui/Button";
 import { StatusMark } from "@/ui/StatusMark";
 import { cx } from "@/ui/cx";
 import { RESULT_LABEL, EVIDENCE_LABEL } from "../challengeLabels";
-import { useOpenChallenge } from "../useOpenChallenge";
 import { ExperimentDebrief } from "./ExperimentDebrief";
 import type { ExperimentTrace } from "@infraforge/contracts/reports";
 
@@ -38,13 +35,8 @@ function Sources({ sources }: { sources: string[] }) {
 /* Two separate verdicts. The challenge result says whether the design met its
 requirements; the prediction says whether you foresaw what was recorded. A
 failed design can carry an accurate prediction and the reverse. */
-export function ChallengeDebrief({ evaluation, brief, runId, trace }: { evaluation: ChallengeEvaluation; brief: ChallengeBrief | null; runId?: string; trace?: ExperimentTrace }) {
-  const { open, busy } = useOpenChallenge();
+export function ChallengeDebrief({ evaluation, brief, trace }: { evaluation: ChallengeEvaluation; brief: ChallengeBrief | null; trace?: ExperimentTrace }) {
   const matched = evaluation.predictions.filter((p) => p.outcome === "matched").length;
-  // The attempt before this one at the same version: the natural pair for Compare.
-  const attempts = brief?.attempts ?? [];
-  const index = runId ? attempts.findIndex((a) => a.runId === runId) : -1;
-  const previous = index >= 0 ? attempts.slice(index + 1).find((a) => a.version === evaluation.version) : undefined;
   const briefLink = brief && brief.version < brief.latestVersion ? `/challenges/${evaluation.challengeId}?version=${brief.version}` : `/challenges/${evaluation.challengeId}`;
   return (
     <section aria-labelledby="debrief-title" className="mt-8">
@@ -134,8 +126,6 @@ export function ChallengeDebrief({ evaluation, brief, runId, trace }: { evaluati
       </div>
       {evaluation.experiment && <p className="mt-6 max-w-[70ch] text-sm text-ink-2">Every new attempt runs the same experiment: the same fault, target, second, workload and seed. Change the design, predict again, and compare the two attempts.</p>}
       <div className="mt-3 flex flex-wrap items-center gap-3">
-        <Button variant="primary" icon={<PenTool size={15} aria-hidden="true" />} loading={busy === evaluation.challengeId} onClick={() => void open(evaluation.challengeId)}>Improve the design</Button>
-        {previous && runId && <Link to={`/runs/compare?a=${previous.runId}&b=${runId}`} className="text-sm font-medium text-accent hover:underline">Compare with your previous attempt</Link>}
         <Link to={briefLink} className="text-sm font-medium text-accent hover:underline">Brief and all attempts</Link>
       </div>
     </section>

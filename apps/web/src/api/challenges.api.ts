@@ -1,4 +1,6 @@
-import type { ChallengeBrief, ChallengePrediction, ChallengePreflight, ChallengeSummary, LearningHistory } from "@infraforge/contracts/challenges";
+import type { ChallengeBrief, ChallengePrediction, ChallengePreflight, ChallengeSummary, LearningHistory, ImprovementSubmission } from "@infraforge/contracts/challenges";
+import type { DesignChangeReview } from "@infraforge/contracts/reports";
+import type { Infrastructure } from "@infraforge/contracts/infrastructure";
 import type { Deployment } from "@infraforge/contracts/deployment";
 import { API_URL, http } from "../client/httpClient";
 
@@ -21,10 +23,16 @@ export async function openChallengeWorkspace(id: string, options: { fresh?: bool
   const data = (await http.post(`${path(id)}/workspace`, { fresh: options.fresh ?? false, ...(options.copyFrom ? { copyFrom: options.copyFrom } : {}) })).data;
   return { designId: data.designId, created: data.created };
 }
-export async function challengePreflight(id: string, layout: object): Promise<ChallengePreflight> {
-  return (await http.post(`${path(id)}/preflight`, { layout })).data.preflight;
+export async function challengePreflight(id: string, layout: object, version?: number): Promise<ChallengePreflight> {
+  return (await http.post(`${path(id)}/preflight`, { layout }, { params: version ? { version } : undefined })).data.preflight;
 }
 // The server supplies the workload, seed, evaluation time and rules; only the design and prediction are sent.
-export async function startChallengeAttempt(id: string, infrastructureId: string, prediction: ChallengePrediction): Promise<Deployment> {
-  return (await http.post(`${path(id)}/attempts`, { infrastructureId, prediction })).data.createdDeployment;
+export async function startChallengeAttempt(id: string, infrastructureId: string, prediction: ChallengePrediction, improvement?: ImprovementSubmission, version?: number): Promise<Deployment> {
+  return (await http.post(`${path(id)}/attempts`, { infrastructureId, prediction, ...(improvement ? { improvement } : {}) }, { params: improvement ? { version } : undefined })).data.createdDeployment;
+}
+export async function openImprovementWorkspace(id: string, sourceRunId: string): Promise<Infrastructure> {
+  return (await http.post(`${path(id)}/improvement-workspace`, { sourceRunId })).data.infrastructure;
+}
+export async function previewImprovement(id: string, sourceRunId: string, infrastructureId: string, layout: object): Promise<DesignChangeReview> {
+  return (await http.post(`${path(id)}/improvement-preview`, { sourceRunId, infrastructureId, layout })).data.review;
 }

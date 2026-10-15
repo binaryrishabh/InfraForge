@@ -85,5 +85,6 @@ test("a passed challenge with a wrong prediction shows what differed", () => {
   expect(html).toContain("sm:hidden");
   expect(html).toContain("<dt class=\"text-xs text-ink-3\">You predicted</dt>");
   expect(html).toContain("Judged against");
-  expect(html).toContain("Improve the design");
+  expect(html).toContain("Brief and all attempts");
+  expect(html).not.toContain("Compare with your previous attempt");
 });

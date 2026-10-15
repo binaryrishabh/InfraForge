@@ -11,6 +11,7 @@ import { ActionTimeline } from "./ActionTimeline";
 import { ReportSection, Statement } from "./ReportSection";
 import { runKind, runStatus } from "../runKind";
 import { STAGE_LABEL, STAGE_STATUS_LABEL } from "../labels";
+import { DesignChangeSummary } from "@/features/challenges/components/DesignChangeSummary";
 
 const HEADLINE: Record<RunComparison["headline"], { title: string; body: string }> = {
   "descriptive-only": { title: "Side by side only", body: "These runs can be read next to each other, but differences in their inputs or evidence mean they are not a controlled pair." },
@@ -25,7 +26,7 @@ const EVIDENCE: Record<RunComparison["evidence"]["code"], string> = {
   "checkpoints-only": "Only diagnostic checkpoints exist; they may predate the stop.",
   missing: "Final evidence is missing for at least one run.",
 };
-const LINEAGE: Record<RunComparison["lineage"], string> = { "source-and-rerun": "One run is a rerun of the other.", siblings: "Both are reruns of the same source.", unrelated: "No recorded lineage between them." };
+const LINEAGE: Record<RunComparison["lineage"], string> = { "source-and-improvement": "One attempt records the other as its learning source.", "source-and-rerun": "One run is a rerun of the other.", siblings: "Both are reruns of the same source.", unrelated: "No recorded lineage between them." };
 
 export function CompareContent({ loading, error, data, retry }: { loading: boolean; error: string | null; data: RunComparison | null; retry: () => void }) {
   if (loading) return <Loading label="Loading comparison…" />;
@@ -72,6 +73,12 @@ export function CompareView({ comparison: c }: { comparison: RunComparison }) {
       </section>
 
       <ReportSection number={k()} title="What stayed the same, what changed"><StartingInputs starting={c.starting} /></ReportSection>
+      {c.designChangeReview && <section aria-labelledby="learning-pair" className="mt-6 rounded-md border border-line p-4">
+        <h2 id="learning-pair" className="font-semibold">{c.designChangeReview.classification === "one-change" ? "One simulation-relevant design change" : c.designChangeReview.classification === "no-change" ? "No simulation-relevant design change" : c.designChangeReview.classification === "several-changes" ? "Several design facts changed" : "Design change count unavailable"}</h2>
+        <DesignChangeSummary review={c.designChangeReview} />
+        {c.runs.map((r) => r.learning && <p key={r.id} className="mt-2 text-sm text-ink-2">Your hypothesis: {r.learning.hypothesis}</p>)}
+        <p className="mt-2 text-sm text-ink-3">{c.designChangeReview.count === 1 && c.headline === "matched-pair" && c.starting.alignment.code === "aligned" ? "With the same challenge conditions, matched exact evidence and one design fact changed, this pair is easier to interpret. " : "Read the comparability and evidence limits before relating these results to the design edits. "}One pair still cannot establish a general effect; model-1 ordering and random-draw alignment limits still apply.</p>
+      </section>}
       <ExperimentCompare evidence={c.experimentEvidence} />
       <ReportSection number={k()} title="Observed — recorded facts"><ul className="flex flex-col gap-3">{c.observed.map((f) => <Statement key={f.id} message={f.message} sources={f.sources} />)}</ul></ReportSection>
       {c.interpreted.length > 0 && <ReportSection number={k()} title="Interpreted — what the evidence supports"><ul className="flex flex-col gap-3">{c.interpreted.map((f) => <Statement key={f.id} message={f.message} sources={f.sources} verb="Derived from" />)}</ul></ReportSection>}

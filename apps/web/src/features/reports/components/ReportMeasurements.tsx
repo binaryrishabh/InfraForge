@@ -2,6 +2,7 @@ import type { RunReport } from "@infraforge/contracts/reports";
 import { formatDate, formatUsd } from "@/lib/format";
 import { HealthMark } from "@/ui/HealthMark";
 import { ReportSection } from "./ReportSection";
+import { measurementId } from "../resourceFocus";
 
 /* Final state: the exact terminal capture when one exists, otherwise the
 latest diagnostic checkpoint, labelled as such. */
@@ -36,7 +37,7 @@ export function ReportMeasurements({ report, number }: { report: RunReport; numb
                 </thead>
                 <tbody>
                   {checkpoint.resources.map((r) => (
-                    <tr key={r.id} className="border-b border-line">
+                    <tr key={r.id} id={measurementId(r.id)} tabIndex={-1} className="border-b border-line focus:outline-2 focus:outline-accent">
                       <th scope="row" className="py-2 pr-4 text-left font-medium text-ink">{r.id}</th>
                       <td className="py-2 pr-4">{r.health ? <HealthMark value={r.health} size="sm" /> : "—"}</td>
                       <td className="if-num py-2 pr-4 text-ink">{r.cpu === undefined ? "—" : `${r.cpu.toFixed(1)}%`}</td>
@@ -49,12 +50,13 @@ export function ReportMeasurements({ report, number }: { report: RunReport; numb
               </table>
               <ul className="flex flex-col divide-y divide-line border-y border-line sm:hidden">
                 {checkpoint.resources.map((r) => (
-                  <li key={r.id} className="py-2.5">
+                  <li key={r.id} id={measurementId(r.id, true)} tabIndex={-1} className="py-2.5 focus:outline-2 focus:outline-accent">
                     <p className="flex items-center justify-between gap-2"><span className="font-medium text-ink">{r.id}</span>{r.health ? <HealthMark value={r.health} size="sm" /> : <span>—</span>}</p>
                     <p className="if-num mt-0.5 text-xs text-ink-2">CPU {r.cpu === undefined ? "—" : `${r.cpu.toFixed(1)}%`} · Memory {r.memory === undefined ? "—" : `${r.memory.toFixed(1)}%`} · {r.rps?.toFixed(1) ?? "—"} req/s · {r.connections?.toLocaleString() ?? "—"} conn</p>
                   </li>
                 ))}
               </ul>
+              {report.guidedReview && <a href="#guided-review" className="mt-3 inline-block text-sm font-medium text-accent underline">Back to guided review</a>}
             </div>
           )}
         </ReportSection>

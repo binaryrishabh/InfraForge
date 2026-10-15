@@ -82,11 +82,12 @@ test("the debrief separates the experiment from both verdicts and states what it
       outcome: (i ? "different" : "matched") as "matched" | "different", detail: "recorded", sources: ["RunAction.outcome.baselineOverallHealth"] })) };
   const attempted = { ...resilienceBrief, attempts: [{ runId: "now", version: 1, createdAt: "", status: "not-met" as const, metCount: 1, total: 2 },
     { runId: "before", version: 1, createdAt: "", status: "not-met" as const, metCount: 1, total: 2 }] };
-  const html = render(<ChallengeDebrief evaluation={evaluated} brief={attempted} runId="now" />);
+  const html = render(<ChallengeDebrief evaluation={evaluated} brief={attempted} />);
   expect(html.indexOf("Your prediction")).toBeLessThan(html.indexOf("The experiment"));
   for (const text of ["Crash on app-2", "Applied; fault window ended", "second 60", "second 90", "(the model&#x27;s duration)", "Overall health when applied",
     "What this experiment cannot show", "not that anything recovered", "Before the fault", "While it was active",
-    "Every new attempt runs the same experiment", 'href="/runs/compare?a=before&amp;b=now"', "app-2 at second 90"]) expect(html).toContain(text);
+    "Every new attempt runs the same experiment", "Brief and all attempts", "app-2 at second 90"]) expect(html).toContain(text);
+  expect(html).not.toContain('href="/runs/compare?a=before&amp;b=now"');
   expect(html).not.toMatch(/(?<!not that anything )recovered\b/);
 });
 

@@ -18,6 +18,8 @@ import { WorkspaceBar } from "./WorkspaceBar";
 import { SidePanel, type SideTab } from "./SidePanel";
 import { StatusBar } from "./StatusBar";
 import { ImprovementNotice } from "./ImprovementNotice";
+import { LearningContextNotice } from "@/features/challenges/components/LearningContextNotice";
+import { useChallengeImprovement } from "@/features/challenges/learningContext";
 
 /* One desktop Designer: palette, drafting sheet and details. The page gate
 mounts this implementation only when all three have usable space. */
@@ -30,7 +32,8 @@ export function DesignWorkspace() {
   const challengeId = useCanvasStore((s) => s.currentChallengeId);
   const selection = useCanvasStore((s) => s.selectedResourceForConfigId);
   const modal = useCanvasStore((s) => s.modalState);
-  const brief = useChallengeBrief(challengeId);
+  const learning = useChallengeImprovement();
+  const brief = useChallengeBrief(challengeId, learning?.version);
   // The experiment's target is marked on its card while designing.
   const experiment = brief?.data?.experiment ?? null;
   const experimentKey = experiment ? JSON.stringify(experiment) : null;
@@ -38,8 +41,8 @@ export function DesignWorkspace() {
     useExperimentPlan.getState().setPlan(experimentKey ? planOf(JSON.parse(experimentKey)) : null);
     return () => useExperimentPlan.getState().setPlan(null);
   }, [experimentKey]);
-  const preflight = useChallengePreflight(challengeId);
-  const [tab, setTab] = useState<SideTab>(challengeId ? "brief" : "inspect");
+  const preflight = useChallengePreflight(challengeId, learning?.version);
+  const [tab, setTab] = useState<SideTab>(selection ? "inspect" : challengeId ? "brief" : "inspect");
   const [railOnly, setRailOnly] = useState(readRail);
   const setRail = (value: boolean) => { setRailOnly(value); try { localStorage.setItem(RAIL_KEY, value ? "1" : "0"); } catch { /* storage unavailable */ } };
 
@@ -58,6 +61,7 @@ export function DesignWorkspace() {
       <div className="flex h-dvh flex-col overflow-hidden bg-bg text-ink">
         <WorkspaceBar challengeTitle={title} />
         <ImprovementNotice />
+        <LearningContextNotice />
         <div className="relative flex min-h-0 flex-1">
           <aside className={`shrink-0 border-r border-line bg-surface ${railOnly ? "w-14" : "w-64"}`}>
             {railOnly ? <PaletteRail onExpand={() => setRail(false)} /> : <PalettePanel onCollapse={() => setRail(true)} />}

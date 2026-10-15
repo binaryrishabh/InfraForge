@@ -1,4 +1,4 @@
-import type { ChallengeBrief, ChallengePrediction } from "@infraforge/contracts/challenges";
+import type { ChallengeBrief, ChallengePrediction, ImprovementSubmission } from "@infraforge/contracts/challenges";
 import { startChallengeAttempt } from "@/api/challenges.api";
 import { updateInfrastructure } from "@/api/infrastructure.api";
 import { useAuthStore } from "@/features/auth/store/auth.store";
@@ -8,7 +8,7 @@ import { CARD_LAYOUT_VERSION } from "@/features/canvas/utils/layoutMigration";
 /* Saves the exact canvas to the challenge workspace, then asks the server to
 create the attempt. The server supplies the workload, seed, evaluation time and
 rules; the client sends only the design id and the prediction. */
-export async function startAttempt(brief: ChallengeBrief, prediction: ChallengePrediction) {
+export async function startAttempt(brief: ChallengeBrief, prediction: ChallengePrediction, improvement?: ImprovementSubmission) {
   const store = useCanvasStore.getState();
   const owner = useAuthStore.getState().user?.id;
   const designId = store.currentLayoutId;
@@ -17,12 +17,15 @@ export async function startAttempt(brief: ChallengeBrief, prediction: ChallengeP
   if (!store.currentLayoutSaved) {
     await updateInfrastructure(designId, { layout: { resources, connectionLines, layoutVersion: CARD_LAYOUT_VERSION } });
     if (useAuthStore.getState().user?.id !== owner) throw new Error("Your session changed.");
-    useCanvasStore.getState().setCurrentLayoutSaved(true);
+    const current = useCanvasStore.getState();
+    if (current.currentLayoutId !== designId || current.resources !== resources || current.connectionLines !== connectionLines) throw new Error("The canvas changed while saving. Review it again.");
+    current.setCurrentLayoutSaved(true);
   }
-  const run = await startChallengeAttempt(brief.id, designId, prediction);
+  const run = await startChallengeAttempt(brief.id, designId, prediction, improvement, brief.version);
   if (useAuthStore.getState().user?.id !== owner) throw new Error("Your session changed.");
   if (!run.liveTopology) throw new Error("The attempt has no captured topology.");
   const current = useCanvasStore.getState();
+  if (current.currentLayoutId !== designId || current.resources !== resources || current.connectionLines !== connectionLines) throw new Error("The attempt started on the server, but your canvas changed. Open Runs to find it.");
   current.loadRunTopology(run.id, run.liveTopology, run.topologyRevision, designId, current.currentLayoutName);
   // The attempt captured exactly the saved workspace layout.
   current.setCurrentLayoutSaved(true);
