@@ -1,5 +1,13 @@
 # Reality Engine
 
+M2G: [research](m2g-research.md), [architecture](m2g-architecture.md),
+[cross-resource recovery](m2g-recovery.md), [measurements/boundary](m2g-measurements.md)
+and [validation](m2g-validation.md). Retained artifacts: `m2g-measurements.json`,
+`m2g-calibration.json`, `m2g-proofs.json`, `m2g-performance.json` and
+[shipping inventory](shipping-reality.json). `debug:systems`, `check:systems`,
+`measure:systems`, `perf:systems` and `check:shipping` are explicit internal CLIs.
+`check:model2-shipping` is intentionally closed while visible controls remain partial.
+
 Model 1 remains the only active published physics. Model 2 is internal.
 See [audit](audit.md), [resource depth](resource-depth.md), [architecture](model2.md)
 and [research](research.md). The machine-readable [ledger](model1-ledger.json) is

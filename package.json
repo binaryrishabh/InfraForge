@@ -42,6 +42,12 @@
     "check:async": "bun --no-env-file scripts/reality/async-calibration.ts",
     "measure:async": "node scripts/reality/async-benchmark.mjs",
     "perf:async": "bun --no-env-file scripts/reality/async-performance.ts",
+    "debug:systems": "bun --no-env-file scripts/reality/systems-proofs.ts",
+    "check:systems": "bun --no-env-file scripts/reality/systems-calibration.ts",
+    "measure:systems": "node scripts/reality/systems-benchmark.mjs",
+    "perf:systems": "bun --no-env-file scripts/reality/systems-performance.ts",
+    "check:shipping": "bun --no-env-file scripts/reality/shipping-inventory.ts",
+    "check:model2-shipping": "bun --no-env-file scripts/reality/shipping-inventory.ts --ready",
     "audit": "bun audit --json"
   },
   "devDependencies": {
