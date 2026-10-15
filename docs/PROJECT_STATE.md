@@ -1,7 +1,7 @@
 # InfraForge project state
 
-Verified locally 2026-10-15 on `develop`. **Local credential authentication and
-manual browser testing** extends the accepted experiments and run evidence.
+Verified locally 2026-10-15 on `develop`. **Guided evidence reading and deliberate
+one-change improvements** extends the accepted credentials and experiment evidence.
 Hosted production cutover remains **PARKED**. These milestones did not access Neon,
 EC2/AWS, hosted PostgreSQL/Nginx, Vercel, DNS, OAuth settings, production secrets or
 `main`.
@@ -42,8 +42,8 @@ create executor memories or permanent scratch archives.
 | `packages/simulation` | Deterministic engine, runtime, cost, capacity and tuning |
 
 Bun 1.3.14/Turbo 2.11.6 own one root install/lockfile. Browser imports cannot reach
-engine/runtime/cost. Prisma 7.9.1 has sixteen migrations; migrations 1–15 are
-unchanged. Migration 16 is `20261017000000_credential_usernames`. Simulation model remains
+engine/runtime/cost. Prisma 7.9.1 has seventeen migrations; migrations 1–16 are
+unchanged. Migration 17 is `20261018000000_challenge_learning`. Simulation model remains
 `1`, catalog `2026-08`; engine source, RNG consumption and all 30 goldens are unchanged.
 
 Better Auth 1.7.7 uses native credentials/username support, database sessions, exact HTTP/WS ownership and permitted
@@ -69,6 +69,10 @@ Manual path: `bun run dev:setup`, `bun run dev`, open
 `/signin` with either identifier. Future auth methods are **email OTP/magic link**
 and **phone number**, not implemented. They require real delivery and a reviewed
 identity/linking/revocation policy using the existing user/ownership model.
+
+Accepted credential checkpoint: `6d455be28994043251eed11bb3abe92ed1e97db7`,
+[exact-SHA CI 38689363016](https://github.com/binaryrishabh/InfraForge/actions/runs/38689363016),
+10/10 jobs green. Credential behavior remains accepted and unchanged in this milestone.
 
 `bun run dev:setup` prepares labelled PostgreSQL 18/Redis 8 resources. `bun run dev`
 migrates/generates and supervises API, worker, WS and frontend with generated local
@@ -282,6 +286,54 @@ already loaded workspace refreshes server-owned challenge identity after a freef
 rerun without replacing unsaved canvas edits; late responses cannot relabel another
 account, design or live run.
 
+## Guided reading and deliberate improvements
+
+The report remains the canonical record. Its short guided layer recalls the
+learner's prediction/reasoning, selects a few recorded facts, states limits and
+asks for the learner's own next hypothesis. Server-derived deterministic cues reuse
+the existing evaluator: failed requirements first (up to two), one prediction
+mismatch, selected exact terminal evidence or two actual fault-boundary samples,
+and an explicit unknown. Each fact carries its source and interpretation limit.
+Missing definitions/evidence produce unknowns, never reconstructed measurements,
+causal advice, hidden reference designs or automatic fixes. Full debrief/trace and
+Observed / Interpreted / Unknown remain available. Resource links move keyboard
+focus to the recorded measurement, with a return to the guided section.
+
+Plan one change creates a separate owned workspace from the source attempt's
+immutable starting input, even when its old saved design is gone. It preserves
+existing designs and confirms unsaved-canvas replacement. A bounded 400-character
+learner-authored hypothesis/source context accompanies editing; the browser-history
+draft is checked against owner/design and is not a cross-device journal. Home does
+not invent an unfinished-workflow task. On creation, migration 17 durably captures
+the source FK, hypothesis and improvement/repeat intent with the new deployment.
+SQL enforces an inactive same-owner source, matching challenge conditions and
+immutable provenance; append-only links cannot form cycles. Source deletion nulls
+the FK while preserving the child's hypothesis and evidence.
+
+Before a new prediction, the server reuses Honest Compare's canonical input/design
+diff to count config-field, resource and connection edits, including model-1 relative
+ordering changes. Membership changes are not counted twice as order edits. Names
+and canvas positions remain visual only. One change proceeds normally; multiple
+changes require acknowledgement; no change requires an explicit repeat. A reviewed
+input hash rejects stale saved designs. Neither case changes the challenge into a
+freeform rerun: id/version/spec hash, workload, seed, experiment and evaluation
+remain fixed, with a fresh prediction inserted before work can start. Late browser
+responses cannot replace another account/design or newer canvas edits.
+
+Finished attempts offer an explicit source comparison. History and source reports
+show direct learning relationships; no previous attempt is guessed by array order.
+Compare keeps its existing evidence/conduct classifier and adds the same factual
+change summary/hypothesis. One fact plus matching exact conditions/evidence can make
+the pair easier to interpret; it does not eliminate RNG alignment, interaction,
+single-pair or educational-model limits. All nine published challenge definitions
+and engine model 1 remain unchanged. Designer still requires 1100 CSS px.
+
+Research informed the scaffold: [CMU targeted practice/reflection](https://www.cmu.edu/teaching/principles/learning.html),
+[IES explanatory prompts](https://ies.ed.gov/ncee/wwc/PracticeGuide/1),
+[Google SRE hypothesis testing](https://sre.google/sre-book/effective-troubleshooting/)
+and [NIST's one-factor interaction limits](https://www.itl.nist.gov/div898/handbook/pri/section2/pri212.htm).
+These are design principles, not a claim that this UI's learning effectiveness was experimentally established.
+
 ## Web interface
 
 One design system replaces the previous UI: Paper and Ink themes, comfortable/compact
@@ -303,7 +355,7 @@ rejected. This is a browser cache, not simulator checkpoint recovery. At 375px,
 Designer QA verifies the fallback. Other product pages remain responsive.
 Live runs always use Ink; attempts show only speed and stop and say why; freeform runs
 keep load, fault, resize, pool and live edits. Designer, report and compare load on
-demand (main chunk about 253 kB). Resilience attempts add an experiment timeline (keyboard
+demand (main chunk about 254 kB). Resilience attempts add an experiment timeline (keyboard
 and screen-reader readable, announced once per phase), text states such as "Crash on
 app-2 active · 14 simulated seconds remaining" and "Fault ended at second 90", the
 target marked on its card and a static failed tone on edges into failed resources;
@@ -311,66 +363,56 @@ no edge metrics are invented and reduced motion removes the fault outline animat
 
 ## Verification, failures and cleanup
 
-Started clean at `d26921ff336cb936a115434b5badef9eca6a1ef0`. Auth/backend code is
-verified in the commit-tagged `f33c531` image; the browser-reproduced telemetry
-reattachment repair has its own affected-package checks. Owner identity/history,
-all first fifteen migrations, lockfile, engine source and goldens are preserved.
-Unique logs/JSON/screenshots stay outside Git in the OS temporary directory
-`infraforge-credentials-20261015`; earlier experiment evidence remains separately
-retained. No agent folders or executor memories were created.
+Started clean at `6d455be28994043251eed11bb3abe92ed1e97db7`. The backend was
+verified in the normal-context, commit-tagged `ce23f9d` image. Owner identity/history,
+migrations 1–16, lockfile, all nine challenge definitions/hashes, engine source and
+goldens are preserved. Unique logs/JSON/screenshots stay outside Git in the OS
+temporary directory `infraforge-guided-evidence-20261015`; accepted credential and
+earlier experiment evidence remains separately retained. No agent folders or
+executor memories were created.
 
 | Check | Actual result |
 | --- | --- |
 | Frozen install | Passed on Linux Bun 1.3.14; lockfile unchanged |
-| Typecheck | Seven workspace tasks and release compiler passed; final affected web/test compiler passed after the resize repair |
-| Lint/boundaries | Five ESLint tasks plus final web lint; 2,201 imports, no cycles/runtime leaks |
-| Workspace tests | 264 passed: catalog 9, domain 15, simulation 32, web 74, backend 134; 11 DB cases skipped here and exercised below |
+| Typecheck | All Linux workspace tasks and release compiler passed; native Windows Prisma process exited 9, so Linux is the full validation evidence |
+| Lint/boundaries | All lint tasks; 2,308 imports, no file/workspace cycles or runtime leaks |
+| Workspace tests | 273 passed: catalog 9, domain 15, simulation 32, web 78, backend 139; 12 DB cases skipped here and exercised with disposable databases |
 | Engine | All 30 unchanged goldens plus jitter/connection-order regressions passed |
-| Challenges | 56 passed, 494 assertions; all nine published definitions/hashes unchanged |
+| Challenges | 56 passed, 502 assertions; all nine published definitions/hashes unchanged |
 | Tooling | 23 passed, 279 assertions |
-| Focused auth | Public signup, both server-resolved identifiers, DB sessions, duplicate races, 189 assertions including two-user HTTP/WS denial, expiry/revocation and shared native rate limits |
-| PostgreSQL 18/Redis | Exact backend image: 17 passed, 1,384 assertions across eleven files; lifecycle/retries/teardown/reruns/traces/history/security/migrations and cleanup passed |
-| Migration 16 | Schema-15 upgrade preserves OAuth users/accounts; case collision rolls back all DDL; nullable usernames, format/unique guards and release index drift rejection passed |
-| Docker | Normal-context commit-tagged image, fictional-settings Compose check and all five packaged entrypoints passed |
-| Release rehearsal | All 27 Linux CI rehearsal stages passed, including migration failure, restore, ownership, TLS/session security, dependency failure, rollback and cleanup. Windows Bun failed at its first Docker subprocess with `EUNKNOWN/uv_spawn`, before fixtures were created |
-| Frontend build | Passed; main chunk about 253 kB, no chunk warning |
+| Focused learning | 148 real-session integration assertions: source inputs after design deletion, owner isolation/no mutation, fixed conditions, fresh prediction, stale hash, multi-change acknowledgement, repeat intent, lineage and immutable SQL guards |
+| PostgreSQL 18/Redis | Exact backend image: 18 passed, 1,419 assertions across twelve files; lifecycle/retries/teardown/reruns/traces/history/security/migrations and cleanup passed |
+| Migration 17 | Populated schema-16 upgrade: 11 assertions; legacy fields stay NULL, source/conditions/completeness and immutability guards, source deletion and release guard drift checks passed |
+| Docker/release | Normal-context commit-tagged backend image built. Because migration 17 is new, publication closure requires final exact-SHA CI packaging and the full Linux release rehearsal; the accepted credential checkpoint's rehearsal is not evidence for this migration |
+| Frontend build | Passed; production main chunk 254.02 kB, no chunk warning |
 | Dependency audit | `{}`; no dependency upgrade |
 
-All ten [CI jobs](https://github.com/binaryrishabh/InfraForge/actions/runs/38633719645)
-passed at `80a34c68fae39e1aaf56a4f5103092a24627b410`, covering the complete implementation.
+Step-by-step local Chromium UI QA used public credential signup with no OAuth or
+fixture login. A failed Design attempt led to one encryption edit, a fresh
+prediction, another challenge attempt and explicit source comparison: scan findings
+changed from five to four. A failed CPU-pressure attempt led through its actual
+51-sample trace to one app-2 size edit and another fresh prediction/run/compare:
+CPU at second 61 changed from 93.3% to 69.3%. These are observations of the tested
+pair, not general causal conclusions. Both pairs retained identical challenge
+conditions and matched comparison evidence. No-change repeat and multi-change
+acknowledgement, source/child history, resource focus/return, 375px report/compare
+and 1099/1100/1101px Designer boundaries passed. Unsaved edits survived resizing;
+no browser page errors were recorded. The desktop browser controller was unavailable,
+so this evidence is from local headless Chromium, not native Windows manual browsing.
+Existing credential sign-in/isolation and telemetry reattachment behavior remains
+accepted at the checkpoint above and covered by the full regression suite.
 
-Real browser QA registered two disposable accounts through the public form with
-zero OAuth providers. User A saved designs, ran CPU-pressure attempts, received
-actual WS measurements, paused/changed speed and read complete 51-sample reports
-with recorded predictions/actions. Sign-out redirected protected routes; email
-and case-insensitive username sign-ins (rechecked through the final server adapter)
-restored the same owned data. User B had empty design/run lists and was denied
-User A's report; HTTP mutation/control/WS denial is additionally proven by the
-real-session integration suite. Account facts showed normalized username and
-truthful unverified email. Field errors, first-invalid focus, autocomplete and
-keyboard use were exercised. OAuth callbacks remain unverified without credentials.
+Validation found and removed two new type-import cycles rather than suppressing
+boundary checks. The earlier credential-migration regression now pins schema 16
+explicitly, preserving its historical upgrade proof after migration 17. No auth,
+engine, challenge definition or dependency change was required. OAuth callbacks
+remain unverified without credentials. Local/CI verification is not production proof.
 
-Designer boundaries at 1099/1100/1101px have no overflow/half-layout; the exact
-boundary has a 504px drafting area even with the long challenge toolbar. The
-375/768px states mount no canvas; saved/unsaved state survives resizing. Auth forms
-passed at 375/768/1280/1920px in Paper, with correct password autocomplete/type and
-no overflow; Ink form/fallback/validation and mobile normal-page/report checks also
-passed. Paper Compare was exercised at 375px. A paused live
-run returned at the same second 16 with Pause selected and the same five resources
-after the telemetry repair. Browser cache retention does not establish server
-checkpoint recovery. Normal mobile pages continue to show their real content.
-
-Validation also corrected older session test fixtures and a migration-15 test
-that incorrectly assumed it was latest. Revocation tests use a valid-session
-barrier and a unique probe published after database invalidation: new delivery is
-refused and the connection closes 1008. Already-authorized TCP frames cannot be
-recalled. Earlier ordinary telemetry was not evidence of a newly authorized
-post-revocation message. Disposable QA proxy errors were isolated to test tooling;
-API/WS direct-port behavior and native authentication stayed enabled throughout.
-Owned QA containers and temporary image tags were removed after evidence capture;
-their disposable data is gone. Eight unused source/helper files were removed,
-recovering 2,325,687 bytes. Unique evidence, referenced/unknown work and developer
-storage are preserved. Local/CI verification is not production proof.
+Both managed integration runs reported no cleanup errors. After browser evidence
+capture, all five owned QA containers and three unused task image tags were removed;
+no QA volumes or networks were created. Six disposable source/helper/configuration
+files were removed (2,429,136 bytes). Unique logs/screenshots, unknown resources and
+developer storage were preserved; no task-owned QA containers remain.
 
 ## Parked hosted work and remaining limits
 
@@ -402,7 +444,10 @@ Restart fails interrupted work; it never resumes a checkpoint. Recent Met indica
 cover the latest 20 attempts rather than an invented lifetime achievement. Local/CI
 proof is not production readiness.
 
-Next product milestone: guided evidence reading and deliberate single-change
-improvements. Any recovery challenge needs an explicitly authored and calibrated
-post-fault observation window; recovery must not be inferred from fault completion.
-Hosted production remains parked.
+Improvement drafts are browser-history context, not durable unfinished tasks; a
+new attempt durably retains its hypothesis. Deleting its source removes the ability
+to compare with that source but preserves the child's own evidence/hypothesis.
+
+Next product milestone: an explicitly authored and calibrated post-fault recovery
+exercise with its own observation window. Recovery must not be inferred from fault
+completion. Hosted production remains parked.

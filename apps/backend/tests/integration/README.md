@@ -18,6 +18,12 @@ cleanup, and can be combined with `-RuntimeImage`. Migration 16's PostgreSQL pro
 is part of the full suite: schema-15 upgrade, OAuth preservation, case-collision
 transaction rollback, uniqueness and release-postcheck drift rejection.
 
+`pwsh ./scripts/test-integration.ps1 -LearningOnly` runs the source/improvement
+HTTP lifecycle with real sessions and a worker using the same owned fixtures and
+cleanup. It covers fixed inputs, fresh predictions, one/multi/no-change consent,
+owner isolation and immutable lineage. The full suite also exercises migration 17
+over populated schema 16; `-LearningOnly` does not replace that migration proof.
+
 When the host Bun runtime is unavailable, an exact-HEAD backend image can run the
 same authored suite on Linux Bun with `pwsh ./scripts/test-integration.ps1
 -RuntimeImage <owned-tag>`. The runner checks the image's repository/revision
