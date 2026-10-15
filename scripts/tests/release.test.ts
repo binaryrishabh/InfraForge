@@ -2,8 +2,23 @@ import { expect, test } from "bun:test";
 import { releaseSequence, rollbackSequence, type Release, type ReleaseOperations } from "../release/sequence";
 import { webRelease } from "../../apps/web/releaseConfig";
 import { cancelCommands, command } from "../release/process";
+import { applicationStopBlockers } from "../release/compose";
 
 const release = (sha: string): Release => ({ sha, image: `image:${sha}`, imageId: sha, authContract: 1, migrationFingerprint: "same-schema", settingsFingerprint: "same-settings" });
+test("shutdown inspects actual owned states and rejects paused, restarting and unknown containers", () => {
+  const container = (status: string, running = false, restarting = false, service = "worker", project = "owned") => ({
+    Name: `${project}-${service}-1`, Config: { Labels: { "com.docker.compose.project": project, "com.docker.compose.service": service } },
+    State: { Status: status, Running: running, Restarting: restarting },
+  });
+  expect(applicationStopBlockers([], "owned")).toEqual([]);
+  expect(applicationStopBlockers([container("exited"), container("created"), container("dead")], "owned")).toEqual([]);
+  for (const state of [container("running", true), container("paused", true), container("restarting", false, true), container("removing"), container("unexpected")]) {
+    expect(applicationStopBlockers([container("exited"), state], "owned")).toEqual([`${state.Name}: ${state.State.Status}`]);
+  }
+  expect(applicationStopBlockers([container("exited", true)], "owned")).toHaveLength(1);
+  expect(() => applicationStopBlockers([container("exited", false, false, "worker", "other")], "owned")).toThrow("ownership");
+  expect(() => applicationStopBlockers([container("exited", false, false, "redis")], "owned")).toThrow("ownership");
+});
 function fixture(failure?: string) {
   const events: string[] = [];
   const operations: ReleaseOperations = {

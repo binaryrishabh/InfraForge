@@ -3,6 +3,17 @@ import { command, waitFor } from "./process";
 import type { Release, ReleaseOperations } from "./sequence";
 
 const services = ["api", "worker", "ws-server"];
+type ContainerState = { Name: string; Config: { Labels: Record<string, string> };
+  State: { Status: string; Running: boolean; Restarting: boolean } };
+
+export function applicationStopBlockers(records: ContainerState[], project: string) {
+  return records.flatMap((record) => {
+    if (record.Config.Labels["com.docker.compose.project"] !== project ||
+        !services.includes(record.Config.Labels["com.docker.compose.service"] ?? "")) throw new Error("Application container ownership mismatch");
+    return !record.State.Running && !record.State.Restarting && ["created", "exited", "dead"].includes(record.State.Status)
+      ? [] : [`${record.Name}: ${record.State.Status}`];
+  });
+}
 export class ComposeRelease implements ReleaseOperations {
   private active: Release;
   constructor(readonly root: string, readonly envFile: string, readonly project: string, readonly next: Release,
@@ -36,7 +47,16 @@ export class ComposeRelease implements ReleaseOperations {
       throw error;
     }
     await this.compose(["stop", "--timeout", "30", "worker"]);
-    if ((await this.compose(["ps", "--status", "running", "-q", ...services])).trim()) throw new Error("Application containers did not stop");
+    // Inspect every application container, including paused/restarting states.
+    // Allow a bounded engine-state transition after stop; never migrate on timeout.
+    let blockers: string[] = [];
+    try {
+      await waitFor(async () => {
+        const ids = (await this.compose(["ps", "-aq", ...services])).split(/\s+/).filter(Boolean);
+        blockers = ids.length ? applicationStopBlockers(JSON.parse(await command(["docker", "inspect", ...ids], this.root, this.environment)), this.project) : [];
+        return blockers.length === 0;
+      }, 5000);
+    } catch (error) { throw new Error(`Application shutdown not verified${blockers.length ? ` (${blockers.join(", ")})` : ""}`, { cause: error }); }
   }
   async migrate() { await this.compose(["run", "--rm", "--no-deps", "migration", "bun", "release/cli.ts", "migrate"], this.next); }
   async postcheck() { await this.compose(["run", "--rm", "--no-deps", "migration", "bun", "release/cli.ts", "postcheck"], this.next); }

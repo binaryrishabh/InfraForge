@@ -379,7 +379,7 @@ executor memories were created.
 | Workspace tests | 273 passed: catalog 9, domain 15, simulation 32, web 78, backend 139; 12 DB cases skipped here and exercised with disposable databases |
 | Engine | All 30 unchanged goldens plus jitter/connection-order regressions passed |
 | Challenges | 56 passed, 502 assertions; all nine published definitions/hashes unchanged |
-| Tooling | 23 passed, 279 assertions |
+| Tooling | 24 passed, 289 assertions after the release shutdown correction; release TypeScript compiler also passed |
 | Focused learning | 148 real-session integration assertions: source inputs after design deletion, owner isolation/no mutation, fixed conditions, fresh prediction, stale hash, multi-change acknowledgement, repeat intent, lineage and immutable SQL guards |
 | PostgreSQL 18/Redis | Exact backend image: 18 passed, 1,419 assertions across twelve files; lifecycle/retries/teardown/reruns/traces/history/security/migrations and cleanup passed |
 | Migration 17 | Populated schema-16 upgrade: 11 assertions; legacy fields stay NULL, source/conditions/completeness and immutability guards, source deletion and release guard drift checks passed |
@@ -413,6 +413,16 @@ capture, all five owned QA containers and three unused task image tags were remo
 no QA volumes or networks were created. Six disposable source/helper/configuration
 files were removed (2,429,136 bytes). Unique logs/screenshots, unknown resources and
 developer storage were preserved; no task-owned QA containers remain.
+
+The first new exact-SHA CI run (`38700026578`, `80dceff`) passed all eight standard
+checks and full integration, but its release rehearsal stopped at the application
+shutdown guard after migration/security/worker checks passed. An isolated local
+Compose stop/replacement proof did not reproduce it; its services/helpers/network
+were removed. Shutdown now inspects all owned application container states, rejects
+paused/restarting/unknown states and waits at most five seconds for an engine-state
+transition. Failure still prevents migration and reports the blocking state. The
+original transition cause was not established; final exact-SHA CI must repeat the
+entire rehearsal before closing this milestone.
 
 ## Parked hosted work and remaining limits
 
