@@ -26,8 +26,8 @@ export function conserved(e: ReturnType<typeof execute>) {
   }
 }
 test("explicit internal Model-2 dispatch uses the versioned M2B workload core", () => {
-  const entry = resolveModel("2", { internal: true });
-  if (entry.version !== "2") throw new Error("Wrong dispatch");
+  const entry = resolveModel("2", { internal: true, workloadVersion: "m2b/1" });
+  if (entry.version !== "2" || entry.workloadVersion !== "m2b/1") throw new Error("Wrong dispatch");
   expect(entry.workloadVersion).toBe("m2b/1"); expect(entry.published).toBe(false);
   const model = entry.create(workloadFixture()); model.advanceTo(model.horizon);
   expect(model.evidence().counts.completed).toBe(10);

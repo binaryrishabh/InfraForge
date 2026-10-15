@@ -5,10 +5,25 @@ import { ResultBook } from "./evidence";
 import { validateWorkload } from "./validate";
 import { workloadStation } from "./station";
 import { WORKLOAD_POLICY_LEDGER } from "./policy";
-import type { CallerOutcome, Invocation, Receipt, RemoteOutcome, TraceRow, WorkloadInput } from "./contracts";
+import type { CallerOutcome, Invocation, Receipt, RemoteOutcome, TraceRow, WorkloadInput, WorkStation, StationState } from "./contracts";
+
+export interface WorkEndpoint<M extends StationState> {
+  accept(work: Invocation, done: (outcome: RemoteOutcome) => void): Receipt;
+  pause(value: boolean): void;
+  measure(): M;
+}
+export interface RuntimeModules<M extends StationState> {
+  station(config: WorkStation, demands: Map<string, { cpuUs: number; ioUs: number }>, kernel: EventKernel, send: (target: string, work: Invocation, done: (outcome: RemoteOutcome) => void) => Receipt): WorkEndpoint<M>;
+  install?(kernel: EventKernel, stations: Map<string, WorkEndpoint<M>>): void;
+}
 
 // Separate internal workload revision; no public export, HTTP route or Model-1 dispatch.
 export function createWorkloadModel2(authored: WorkloadInput) {
+  return createWorkloadRuntime(authored, { station: workloadStation });
+}
+
+// Resource modules share arrival/identity/caller/evidence ownership, not physics.
+export function createWorkloadRuntime<M extends StationState>(authored: WorkloadInput, modules: RuntimeModules<M>) {
   const copy = <T>(value: T): T => JSON.parse(JSON.stringify(value));
   // Enforce structural budgets before duplicating a potentially large authored trace.
   const demands = validateWorkload(authored), input = copy(authored);
@@ -16,14 +31,15 @@ export function createWorkloadModel2(authored: WorkloadInput) {
   for (const r of input.resources) if (r.kind === "router") r.backends.sort(lexical);
   for (const a of input.arrivals) if (a.kind === "trace") a.trace = ingestTrace(a.trace, a.trace.rows, input.limits.maxTraceRows, new Set(input.operations.map((o) => o.id)));
   const kernel = new EventKernel(input.limits.maxEvents), horizon = requireKnown(input.horizon, "us"), step = requireKnown(input.sampleInterval, "us");
-  const stations = new Map<string, ReturnType<typeof workloadStation>>();
+  const stations = new Map<string, WorkEndpoint<M>>();
   const routers = new Map(input.resources.filter((r) => r.kind === "router").map((r) => [r.id, { backends: r.backends, next: 0 }]));
   const send = (target: string, work: Invocation, done: (outcome: RemoteOutcome) => void): Receipt => {
     const router = routers.get(target);
     if (router) return send(router.backends[router.next++ % router.backends.length]!, work, done);
     return stations.get(target)!.accept(work, done);
   };
-  for (const r of input.resources) if (r.kind !== "router") stations.set(r.id, workloadStation(r, demands.get(r.id)!, kernel, send));
+  for (const r of input.resources) if (r.kind !== "router") stations.set(r.id, modules.station(r, demands.get(r.id)!, kernel, send));
+  modules.install?.(kernel, stations);
   const operations = new Map(input.operations.map((o) => [o.id, o]));
   const live = new Map<string, { work: Invocation; receipt?: Receipt }>();
   const book = new ResultBook(input.limits.maxRawResults);
