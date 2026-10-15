@@ -1,7 +1,7 @@
 # InfraForge project state
 
-Verified locally 2026-10-15 on `develop`. **Reality Engine M2B** extends the separate
-internal workload foundation; the accepted post-fault learning product stays on Model 1.
+Verified locally 2026-10-15 on `develop`. **Reality Engine M2C** adds internal compute
+scheduling and resident ownership; the accepted post-fault learning product stays on Model 1.
 Hosted production cutover remains **PARKED**. These milestones did not access Neon,
 EC2/AWS, hosted PostgreSQL/Nginx, Vercel, DNS, OAuth settings, production secrets or
 `main`.
@@ -525,6 +525,10 @@ link, then phone. Production remains **PARKED**.
 
 ## Reality Engine M2B
 
+Accepted final M2B checkpoint: `62b277fc92d8b0630b488539f5bff0996f04b7d5`,
+[CI 38733042083](https://github.com/binaryrishabh/InfraForge/actions/runs/38733042083),
+10/10 green.
+
 Model 1 remains active, with all historical physics/goldens and ten published
 challenge definitions preserved. Model 2 remains internal. `m2b/1` separates
 operation classes, open/closed/trace arrivals and versioned service-demand profiles.
@@ -538,9 +542,36 @@ held-out traces. It proves the calibration pipeline and mix-dependent work press
 with visible latency discrepancy; it establishes no cloud SKU or universal RPS.
 All profiles remain forbidden from Free Mode. [M2B architecture/research/calibration/
 validation](reality/README.md) contains the details and reproducible benchmark data.
-Next: compute scheduling/worker contention and workload-specific measurement depth.
 No schema, runtime activation, challenge migration, UI redesign or production work.
 Production remains **PARKED**.
+
+## Reality Engine M2C
+
+The internal default is `m2c/1`; explicit M2B and direct M2A replay remain. A dedicated
+compute module composes M2B arrivals/caller ownership. Workers bound application
+concurrency; capped equal fluid sharing distributes authored CPU capacity among
+runnable invocations. Blocking/dependency waits occupy workers without local CPU.
+Service pause, cancellation, finite CPU competitors and capacity changes settle
+core-time at event boundaries. Optional fixed-period quota has separate throttle
+evidence. Observation is pure; utilization uses consumed/integrated available core-time.
+
+Application-specific modeled resident components have process/worker/admitted/active
+owners and explicit complete/partial coverage. Detached remote work retains ownership.
+Partial totals stay Unknown. Optional allocation rejection requires complete known
+components; no reclaim, swap, GC, OOM killer or universal RAM threshold is invented.
+
+The local warm PBKDF2 campaign has 48 batches / 6,144 calls at 1/2/4/8/16/32 workers:
+16 fitting and 32 held-out batches, including wholly held-out 2/8-worker configurations.
+Eight candidate CPU means apply only at discrete fitting points; unseen-point transfer
+is an unsupported diagnostic. Held-out CPU/throughput mean absolute relative errors
+are 9.54%/12.74%; capacity/physical scaling and service variance remain unvalidated.
+Touched-buffer experiments do not identify universal RSS coefficients; real candidate
+resident mapping stays Unknown. Profiles remain forbidden from Free Mode.
+
+[M2C research, architecture, calibration and validation](reality/README.md) record
+synthetic A–F/pause proofs, 3,000 generated conservation cases and bounded 10,000-call
+performance runs. Model 1/goldens/challenges, schema, UI and runtime activation remain
+unchanged. Next: M2D network/load balancing/connections, internal only. Production PARKED.
 
 ## Parked hosted work and remaining limits
 
@@ -577,8 +608,8 @@ Improvement drafts are browser-history context, not durable unfinished tasks; a
 new attempt durably retains its hypothesis. Deleting its source removes the ability
 to compare with that source but preserves the child's own evidence/hypothesis.
 
-Next product milestone: **M2B — workload/request/service-demand engine** with measured
-profiles, explicit arrival/deadline ownership and reproducible calibration/validation.
+Next engine milestone: **M2D — network/load-balancing/connection mechanisms** on the
+internal workload/compute foundation, with measured demand and explicit Unknowns.
 Deepen existing resources before expansion or Free Mode/challenge migration. Real
 availability, latency, request success, cache warm-up, data recovery and statistical
 conclusions remain outside Model 1. Hosted production remains parked.

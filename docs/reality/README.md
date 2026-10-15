@@ -20,3 +20,13 @@ bounded held-out traces are source-controlled research artifacts, not runtime da
 `bun run check:calibration` replays them; `bun run debug:workload` inspects overload,
 continued remote work, service pause and explicit cancellation. All local profiles
 are narrow host-specific candidates forbidden from Free Mode.
+
+M2C adds the dedicated [compute mechanism](m2c-compute.md), [scheduler/memory
+research](m2c-research.md), [multi-worker calibration](m2c-calibration.md), and
+[proofs, conservation and performance validation](m2c-validation.md). The internal
+registry now defaults to `m2c/1`; explicit `m2b/1` and direct M2A replay are preserved.
+`bun run check:compute` checks committed measurements/derived profiles;
+`bun run debug:compute` inspects synthetic A–F and pause cases. `measure:compute`
+replaces local observations and `perf:compute` records separate executor timings.
+The measured CPU candidates and abstract resident components are not published
+provider physics. Model 2 remains internal; Model 1 remains active.
