@@ -1,7 +1,7 @@
 # InfraForge project state
 
-Verified locally 2026-10-15 on `develop`. **Reality Engine M2E** adds internal relational
-transactions and keyed caching; the accepted learning product stays on Model 1.
+Verified locally 2026-10-15 on `develop`. **Reality Engine M2F** adds internal messaging,
+object storage and asynchronous pipelines; the accepted learning product stays on Model 1.
 Hosted production cutover remains **PARKED**. These milestones did not access Neon,
 EC2/AWS, hosted PostgreSQL/Nginx, Vercel, DNS, OAuth settings, production secrets or
 `main`.
@@ -613,6 +613,11 @@ transport/runtime accuracy remains unresolved. Production stays **PARKED**.
 
 ## Reality Engine M2E
 
+Accepted M2E SHA: `46c76afc1da4220b9a497d34d6ff3db70e647c7d`, Actions
+`38757001023`: **10/10 successful**. The separate Vercel deployment status **FAILED**;
+its successful Preview Comments check does not change that. The complete M2E timing
+predictor remains **REJECTED**. GitHub metadata, not the Vercel account, was inspected.
+
 Explicit internal `m2e/1` composes M2B identity, M2C CPU and M2D transport/pools with
 separate relational sessions, bounded transaction admission/programs, statement
 snapshots, actual shared/exclusive lock queues, deterministic cycle victims,
@@ -640,6 +645,35 @@ resource-specific recovery, with measurement-layer separation still unresolved.
 deployment status failures must be diagnosed separately from successful GitHub
 Actions. Do not repair Vercel during M2E or call a failing external-status checkpoint
 fully green. Production remains **PARKED**.
+
+## Reality Engine M2F
+
+Explicit internal `m2f/1` adds separate `visibility-work-queue/1` and
+`atomic-current-object/1` profiles. Queue messages, publish attempts, lease receipts
+and processing attempts have distinct identities. Actual ready/scheduled/in-flight
+ownership, ACK/NACK, credit, lease redelivery, retention and bounded DLQ replace
+pass-through queue behavior in this internal profile. Generic queue semantics are
+not labelled Kafka/RabbitMQ/SQS. Broker pause retains logical state; consumer loss
+leaves lease-owned work for actual redelivery.
+
+Objects own namespace/key/current generation/bytes. PUT is atomic at commit;
+GET/HEAD/DELETE and conditions operate on current state. Payload sizes feed real
+M2D transport without giant simulator buffers. Temporary outage preserves objects.
+No LIST/multipart/physical durability/device timing is invented. Producer/worker
+pipelines compose compute, pools, broker, object and optional DB calls. Conditional
+object effects prevent repeated mutation only at that object; no cross-resource
+exactly-once claim. Faults create real backlog, retries and duplicate effects.
+
+Local disposable RabbitMQ HTTP and Node object-reference measurements produced
+54 broker + 108 object batches with cleanup confirmed. The complete timing
+predictor is **REJECTED** (broker fit/holdout MARE 21.98%/22.99%); protocol/CPU/runtime
+attribution remains unresolved. Object timing is Unknown; all 108 logical/byte
+populations replay. No cloud/AMQP/SKU/Free Mode promotion or latency correction.
+M2D/M2E timing rejections remain preserved. [Research/design/validation](reality/README.md)
+retain 3,000 generated cases and backlog, poison, duplicate/ACK-window, atomicity,
+outage and large-state executor proofs. Model 1/goldens/challenges remain unchanged.
+Next: deeper storage/durability and recovery, with separate registry/log resources
+using these seams. Vercel remains queued before hosted/public-preview work resumes.
 
 ## Parked hosted work and remaining limits
 

@@ -1,0 +1,3279 @@
+{
+  "schema": "infraforge-async-calibration/1",
+  "sourceHash": "e3738fefcde92bb0f78cbed4f09e44bdf6c72f546b2bc82a48e8c5c1b35e3d06",
+  "environment": "1c9a0e041a8e65874500435f4ec069fdd0b1ec1fc5e1ee636ecfb04af9ef4b1f",
+  "acceptance": "Complete timing predictor REJECTED; protocol/runtime/CPU attribution unresolved. Object timing Unknown. Semantic/byte ownership replay only.",
+  "candidates": [
+    {
+      "id": "64/1/publish",
+      "bytes": 64,
+      "concurrency": 1,
+      "kind": "publish",
+      "cpu": {
+        "kind": "known",
+        "value": 10089,
+        "unit": "cpu-us",
+        "provenance": [
+          "m2f.candidate.64/1/publish.cpu"
+        ]
+      },
+      "fitIds": [
+        "64/1/publish/0",
+        "64/1/publish/1"
+      ],
+      "acceptance": "aggregate-CPU surrogate only; not identified broker command CPU",
+      "freeMode": "forbidden"
+    },
+    {
+      "id": "64/1/consume",
+      "bytes": 64,
+      "concurrency": 1,
+      "kind": "consume",
+      "cpu": {
+        "kind": "known",
+        "value": 8628,
+        "unit": "cpu-us",
+        "provenance": [
+          "m2f.candidate.64/1/consume.cpu"
+        ]
+      },
+      "fitIds": [
+        "64/1/consume/0",
+        "64/1/consume/1"
+      ],
+      "acceptance": "aggregate-CPU surrogate only; not identified broker command CPU",
+      "freeMode": "forbidden"
+    },
+    {
+      "id": "64/8/publish",
+      "bytes": 64,
+      "concurrency": 8,
+      "kind": "publish",
+      "cpu": {
+        "kind": "known",
+        "value": 9077,
+        "unit": "cpu-us",
+        "provenance": [
+          "m2f.candidate.64/8/publish.cpu"
+        ]
+      },
+      "fitIds": [
+        "64/8/publish/0",
+        "64/8/publish/1"
+      ],
+      "acceptance": "aggregate-CPU surrogate only; not identified broker command CPU",
+      "freeMode": "forbidden"
+    },
+    {
+      "id": "64/8/consume",
+      "bytes": 64,
+      "concurrency": 8,
+      "kind": "consume",
+      "cpu": {
+        "kind": "known",
+        "value": 8537,
+        "unit": "cpu-us",
+        "provenance": [
+          "m2f.candidate.64/8/consume.cpu"
+        ]
+      },
+      "fitIds": [
+        "64/8/consume/0",
+        "64/8/consume/1"
+      ],
+      "acceptance": "aggregate-CPU surrogate only; not identified broker command CPU",
+      "freeMode": "forbidden"
+    },
+    {
+      "id": "65536/1/publish",
+      "bytes": 65536,
+      "concurrency": 1,
+      "kind": "publish",
+      "cpu": {
+        "kind": "known",
+        "value": 14283,
+        "unit": "cpu-us",
+        "provenance": [
+          "m2f.candidate.65536/1/publish.cpu"
+        ]
+      },
+      "fitIds": [
+        "65536/1/publish/0",
+        "65536/1/publish/1"
+      ],
+      "acceptance": "aggregate-CPU surrogate only; not identified broker command CPU",
+      "freeMode": "forbidden"
+    },
+    {
+      "id": "65536/1/consume",
+      "bytes": 65536,
+      "concurrency": 1,
+      "kind": "consume",
+      "cpu": {
+        "kind": "known",
+        "value": 9726,
+        "unit": "cpu-us",
+        "provenance": [
+          "m2f.candidate.65536/1/consume.cpu"
+        ]
+      },
+      "fitIds": [
+        "65536/1/consume/0",
+        "65536/1/consume/1"
+      ],
+      "acceptance": "aggregate-CPU surrogate only; not identified broker command CPU",
+      "freeMode": "forbidden"
+    },
+    {
+      "id": "65536/8/publish",
+      "bytes": 65536,
+      "concurrency": 8,
+      "kind": "publish",
+      "cpu": {
+        "kind": "known",
+        "value": 12494,
+        "unit": "cpu-us",
+        "provenance": [
+          "m2f.candidate.65536/8/publish.cpu"
+        ]
+      },
+      "fitIds": [
+        "65536/8/publish/0",
+        "65536/8/publish/1"
+      ],
+      "acceptance": "aggregate-CPU surrogate only; not identified broker command CPU",
+      "freeMode": "forbidden"
+    },
+    {
+      "id": "65536/8/consume",
+      "bytes": 65536,
+      "concurrency": 8,
+      "kind": "consume",
+      "cpu": {
+        "kind": "known",
+        "value": 11786,
+        "unit": "cpu-us",
+        "provenance": [
+          "m2f.candidate.65536/8/consume.cpu"
+        ]
+      },
+      "fitIds": [
+        "65536/8/consume/0",
+        "65536/8/consume/1"
+      ],
+      "acceptance": "aggregate-CPU surrogate only; not identified broker command CPU",
+      "freeMode": "forbidden"
+    }
+  ],
+  "summaries": [
+    {
+      "split": "fit",
+      "batches": 16,
+      "throughputMARE": 0.21981178761796755,
+      "responseMAEUs": 13834.849999710917
+    },
+    {
+      "split": "holdout",
+      "batches": 38,
+      "throughputMARE": 0.22991835768311647,
+      "responseMAEUs": 13138.78963814911
+    }
+  ],
+  "results": [
+    {
+      "id": "64/1/publish/0",
+      "split": "fit",
+      "configurationHoldout": false,
+      "claim": "discrete aggregate CPU surrogate; receive replays ownership without management auto-ack",
+      "measuredThroughput": 83.67371539241357,
+      "modeledThroughput": 99.11785112498761,
+      "throughputRelativeError": 0.18457571365325448,
+      "responseMAEUs": 3532.315624475479,
+      "logicalPopulationMatched": true
+    },
+    {
+      "id": "64/1/publish/1",
+      "split": "fit",
+      "configurationHoldout": false,
+      "claim": "discrete aggregate CPU surrogate; receive replays ownership without management auto-ack",
+      "measuredThroughput": 108.06513761362388,
+      "modeledThroughput": 99.11785112498761,
+      "throughputRelativeError": 0.08279530925714819,
+      "responseMAEUs": 1000.1374998092651,
+      "logicalPopulationMatched": true
+    },
+    {
+      "id": "64/1/publish/2",
+      "split": "holdout",
+      "configurationHoldout": false,
+      "claim": "discrete aggregate CPU surrogate; receive replays ownership without management auto-ack",
+      "measuredThroughput": 99.4745567388772,
+      "modeledThroughput": 99.11785112498761,
+      "throughputRelativeError": 0.003585897998278571,
+      "responseMAEUs": 1890.0375010967255,
+      "logicalPopulationMatched": true
+    },
+    {
+      "id": "64/1/consume/0",
+      "split": "fit",
+      "configurationHoldout": false,
+      "claim": "discrete aggregate CPU surrogate; receive replays ownership without management auto-ack",
+      "measuredThroughput": 105.42778476944956,
+      "modeledThroughput": 115.90171534538712,
+      "throughputRelativeError": 0.09934696625602107,
+      "responseMAEUs": 762.8156242370605,
+      "logicalPopulationMatched": true
+    },
+    {
+      "id": "64/1/consume/1",
+      "split": "fit",
+      "configurationHoldout": false,
+      "claim": "discrete aggregate CPU surrogate; receive replays ownership without management auto-ack",
+      "measuredThroughput": 111.57717828289697,
+      "modeledThroughput": 115.90171534538712,
+      "throughputRelativeError": 0.03875825799721837,
+      "responseMAEUs": 380.1624994277954,
+      "logicalPopulationMatched": true
+    },
+    {
+      "id": "64/1/consume/2",
+      "split": "holdout",
+      "configurationHoldout": false,
+      "claim": "discrete aggregate CPU surrogate; receive replays ownership without management auto-ack",
+      "measuredThroughput": 111.98976413495997,
+      "modeledThroughput": 115.90171534538712,
+      "throughputRelativeError": 0.03493132823918458,
+      "responseMAEUs": 344.38749957084656,
+      "logicalPopulationMatched": true
+    },
+    {
+      "id": "64/4/publish/0",
+      "split": "holdout",
+      "configurationHoldout": true,
+      "claim": "unsupported size/concurrency transfer diagnostic",
+      "measuredThroughput": 199.60677465773148,
+      "modeledThroughput": 87.06251088281385,
+      "throughputRelativeError": 0.5638298798620379,
+      "responseMAEUs": 26649.025000095367,
+      "logicalPopulationMatched": true
+    },
+    {
+      "id": "64/4/publish/1",
+      "split": "holdout",
+      "configurationHoldout": true,
+      "claim": "unsupported size/concurrency transfer diagnostic",
+      "measuredThroughput": 170.79246100588963,
+      "modeledThroughput": 87.06251088281385,
+      "throughputRelativeError": 0.4902438294403898,
+      "responseMAEUs": 22967.78749871254,
+      "logicalPopulationMatched": true
+    },
+    {
+      "id": "64/4/publish/2",
+      "split": "holdout",
+      "configurationHoldout": true,
+      "claim": "unsupported size/concurrency transfer diagnostic",
+      "measuredThroughput": 160.44209820036704,
+      "modeledThroughput": 87.06251088281385,
+      "throughputRelativeError": 0.45735868665787194,
+      "responseMAEUs": 21594.212500095367,
+      "logicalPopulationMatched": true
+    },
+    {
+      "id": "64/4/consume/0",
+      "split": "holdout",
+      "configurationHoldout": true,
+      "claim": "unsupported size/concurrency transfer diagnostic",
+      "measuredThroughput": 164.54159482581878,
+      "modeledThroughput": 103.41261633919338,
+      "throughputRelativeError": 0.37151079367703715,
+      "responseMAEUs": 14748.100000143051,
+      "logicalPopulationMatched": true
+    },
+    {
+      "id": "64/4/consume/1",
+      "split": "holdout",
+      "configurationHoldout": true,
+      "claim": "unsupported size/concurrency transfer diagnostic",
+      "measuredThroughput": 166.80941034702644,
+      "modeledThroughput": 103.41261633919338,
+      "throughputRelativeError": 0.38005526112671845,
+      "responseMAEUs": 15113.084374427795,
+      "logicalPopulationMatched": true
+    },
+    {
+      "id": "64/4/consume/2",
+      "split": "holdout",
+      "configurationHoldout": true,
+      "claim": "unsupported size/concurrency transfer diagnostic",
+      "measuredThroughput": 162.87598266388758,
+      "modeledThroughput": 103.41261633919338,
+      "throughputRelativeError": 0.3650836995863495,
+      "responseMAEUs": 15607.39999961853,
+      "logicalPopulationMatched": true
+    },
+    {
+      "id": "64/8/publish/0",
+      "split": "fit",
+      "configurationHoldout": false,
+      "claim": "discrete aggregate CPU surrogate; receive replays ownership without management auto-ack",
+      "measuredThroughput": 157.680674949758,
+      "modeledThroughput": 110.16855789357717,
+      "throughputRelativeError": 0.30131857991678224,
+      "responseMAEUs": 25353.940625190735,
+      "logicalPopulationMatched": true
+    },
+    {
+      "id": "64/8/publish/1",
+      "split": "fit",
+      "configurationHoldout": false,
+      "claim": "discrete aggregate CPU surrogate; receive replays ownership without management auto-ack",
+      "measuredThroughput": 145.17541272916165,
+      "modeledThroughput": 110.16855789357717,
+      "throughputRelativeError": 0.24113487385700116,
+      "responseMAEUs": 19748.574999809265,
+      "logicalPopulationMatched": true
+    },
+    {
+      "id": "64/8/publish/2",
+      "split": "holdout",
+      "configurationHoldout": false,
+      "claim": "discrete aggregate CPU surrogate; receive replays ownership without management auto-ack",
+      "measuredThroughput": 159.29678435034674,
+      "modeledThroughput": 110.16855789357717,
+      "throughputRelativeError": 0.30840689381852315,
+      "responseMAEUs": 24290.82500052452,
+      "logicalPopulationMatched": true
+    },
+    {
+      "id": "64/8/consume/0",
+      "split": "fit",
+      "configurationHoldout": false,
+      "claim": "discrete aggregate CPU surrogate; receive replays ownership without management auto-ack",
+      "measuredThroughput": 167.98491075942815,
+      "modeledThroughput": 117.13716762328687,
+      "throughputRelativeError": 0.3026923246038481,
+      "responseMAEUs": 22474.54062461853,
+      "logicalPopulationMatched": true
+    },
+    {
+      "id": "64/8/consume/1",
+      "split": "fit",
+      "configurationHoldout": false,
+      "claim": "discrete aggregate CPU surrogate; receive replays ownership without management auto-ack",
+      "measuredThroughput": 142.74676901804332,
+      "modeledThroughput": 117.13716762328687,
+      "throughputRelativeError": 0.17940582172840197,
+      "responseMAEUs": 15764.140624046326,
+      "logicalPopulationMatched": true
+    },
+    {
+      "id": "64/8/consume/2",
+      "split": "holdout",
+      "configurationHoldout": false,
+      "claim": "discrete aggregate CPU surrogate; receive replays ownership without management auto-ack",
+      "measuredThroughput": 162.39590803288004,
+      "modeledThroughput": 117.13716762328687,
+      "throughputRelativeError": 0.2786938473870272,
+      "responseMAEUs": 21638.028125047684,
+      "logicalPopulationMatched": true
+    },
+    {
+      "id": "4096/1/publish/0",
+      "split": "holdout",
+      "configurationHoldout": true,
+      "claim": "unsupported size/concurrency transfer diagnostic",
+      "measuredThroughput": 108.24315607108633,
+      "modeledThroughput": 87.06251088281385,
+      "throughputRelativeError": 0.19567653011117445,
+      "responseMAEUs": 2404.112500190735,
+      "logicalPopulationMatched": true
+    },
+    {
+      "id": "4096/1/publish/1",
+      "split": "holdout",
+      "configurationHoldout": true,
+      "claim": "unsupported size/concurrency transfer diagnostic",
+      "measuredThroughput": 106.9773645936564,
+      "modeledThroughput": 87.06251088281385,
+      "throughputRelativeError": 0.18615950941105414,
+      "responseMAEUs": 2292.784375190735,
+      "logicalPopulationMatched": true
+    },
+    {
+      "id": "4096/1/publish/2",
+      "split": "holdout",
+      "configurationHoldout": true,
+      "claim": "unsupported size/concurrency transfer diagnostic",
+      "measuredThroughput": 104.38144372139776,
+      "modeledThroughput": 87.06251088281385,
+      "throughputRelativeError": 0.165919652201875,
+      "responseMAEUs": 2057.6062507629395,
+      "logicalPopulationMatched": true
+    },
+    {
+      "id": "4096/1/consume/0",
+      "split": "holdout",
+      "configurationHoldout": true,
+      "claim": "unsupported size/concurrency transfer diagnostic",
+      "measuredThroughput": 112.40237239257232,
+      "modeledThroughput": 103.41261633919338,
+      "throughputRelativeError": 0.07997834798345407,
+      "responseMAEUs": 906.0187494754791,
+      "logicalPopulationMatched": true
+    },
+    {
+      "id": "4096/1/consume/1",
+      "split": "holdout",
+      "configurationHoldout": true,
+      "claim": "unsupported size/concurrency transfer diagnostic",
+      "measuredThroughput": 106.48114102366499,
+      "modeledThroughput": 103.41261633919338,
+      "throughputRelativeError": 0.028817541350253235,
+      "responseMAEUs": 723.3968749046326,
+      "logicalPopulationMatched": true
+    },
+    {
+      "id": "4096/1/consume/2",
+      "split": "holdout",
+      "configurationHoldout": true,
+      "claim": "unsupported size/concurrency transfer diagnostic",
+      "measuredThroughput": 109.65047540563567,
+      "modeledThroughput": 103.41261633919338,
+      "throughputRelativeError": 0.056888572925618996,
+      "responseMAEUs": 703.9749999046326,
+      "logicalPopulationMatched": true
+    },
+    {
+      "id": "4096/4/publish/0",
+      "split": "holdout",
+      "configurationHoldout": true,
+      "claim": "unsupported size/concurrency transfer diagnostic",
+      "measuredThroughput": 137.24651747774107,
+      "modeledThroughput": 87.06251088281385,
+      "throughputRelativeError": 0.36564867012429775,
+      "responseMAEUs": 17365.100000858307,
+      "logicalPopulationMatched": true
+    },
+    {
+      "id": "4096/4/publish/1",
+      "split": "holdout",
+      "configurationHoldout": true,
+      "claim": "unsupported size/concurrency transfer diagnostic",
+      "measuredThroughput": 157.93835172217962,
+      "modeledThroughput": 87.06251088281385,
+      "throughputRelativeError": 0.448756366433654,
+      "responseMAEUs": 21089.425000667572,
+      "logicalPopulationMatched": true
+    },
+    {
+      "id": "4096/4/publish/2",
+      "split": "holdout",
+      "configurationHoldout": true,
+      "claim": "unsupported size/concurrency transfer diagnostic",
+      "measuredThroughput": 157.3793969689698,
+      "modeledThroughput": 87.06251088281385,
+      "throughputRelativeError": 0.4467985482243282,
+      "responseMAEUs": 21018.52499985695,
+      "logicalPopulationMatched": true
+    },
+    {
+      "id": "4096/4/consume/0",
+      "split": "holdout",
+      "configurationHoldout": true,
+      "claim": "unsupported size/concurrency transfer diagnostic",
+      "measuredThroughput": 167.87123017342512,
+      "modeledThroughput": 103.41261633919338,
+      "throughputRelativeError": 0.3839765382528058,
+      "responseMAEUs": 15256.731249332428,
+      "logicalPopulationMatched": true
+    },
+    {
+      "id": "4096/4/consume/1",
+      "split": "holdout",
+      "configurationHoldout": true,
+      "claim": "unsupported size/concurrency transfer diagnostic",
+      "measuredThroughput": 171.2210576203737,
+      "modeledThroughput": 103.41261633919338,
+      "throughputRelativeError": 0.3960286323632179,
+      "responseMAEUs": 15736.000000238419,
+      "logicalPopulationMatched": true
+    },
+    {
+      "id": "4096/4/consume/2",
+      "split": "holdout",
+      "configurationHoldout": true,
+      "claim": "unsupported size/concurrency transfer diagnostic",
+      "measuredThroughput": 105.04463740508139,
+      "modeledThroughput": 103.41261633919338,
+      "throughputRelativeError": 0.01553645294232854,
+      "responseMAEUs": 8641.778125047684,
+      "logicalPopulationMatched": true
+    },
+    {
+      "id": "4096/8/publish/0",
+      "split": "holdout",
+      "configurationHoldout": true,
+      "claim": "unsupported size/concurrency transfer diagnostic",
+      "measuredThroughput": 130.00472486244274,
+      "modeledThroughput": 87.06251088281385,
+      "throughputRelativeError": 0.33031271767288306,
+      "responseMAEUs": 32446.46874976158,
+      "logicalPopulationMatched": true
+    },
+    {
+      "id": "4096/8/publish/1",
+      "split": "holdout",
+      "configurationHoldout": true,
+      "claim": "unsupported size/concurrency transfer diagnostic",
+      "measuredThroughput": 100.00043750239091,
+      "modeledThroughput": 87.06251088281385,
+      "throughputRelativeError": 0.12937870016086403,
+      "responseMAEUs": 16384.275000095367,
+      "logicalPopulationMatched": true
+    },
+    {
+      "id": "4096/8/publish/2",
+      "split": "holdout",
+      "configurationHoldout": true,
+      "claim": "unsupported size/concurrency transfer diagnostic",
+      "measuredThroughput": 94.00224547821752,
+      "modeledThroughput": 87.06251088281385,
+      "throughputRelativeError": 0.07382520023962363,
+      "responseMAEUs": 12564.884375333786,
+      "logicalPopulationMatched": true
+    },
+    {
+      "id": "4096/8/consume/0",
+      "split": "holdout",
+      "configurationHoldout": true,
+      "claim": "unsupported size/concurrency transfer diagnostic",
+      "measuredThroughput": 133.78278775480956,
+      "modeledThroughput": 103.41261633919338,
+      "throughputRelativeError": 0.227011052208578,
+      "responseMAEUs": 23304.215625047684,
+      "logicalPopulationMatched": true
+    },
+    {
+      "id": "4096/8/consume/1",
+      "split": "holdout",
+      "configurationHoldout": true,
+      "claim": "unsupported size/concurrency transfer diagnostic",
+      "measuredThroughput": 134.87722800581244,
+      "modeledThroughput": 103.41261633919338,
+      "throughputRelativeError": 0.2332833505835627,
+      "responseMAEUs": 20426.278125047684,
+      "logicalPopulationMatched": true
+    },
+    {
+      "id": "4096/8/consume/2",
+      "split": "holdout",
+      "configurationHoldout": true,
+      "claim": "unsupported size/concurrency transfer diagnostic",
+      "measuredThroughput": 150.47861605140744,
+      "modeledThroughput": 103.41261633919338,
+      "throughputRelativeError": 0.3127753361057965,
+      "responseMAEUs": 26145.343750476837,
+      "logicalPopulationMatched": true
+    },
+    {
+      "id": "65536/1/publish/0",
+      "split": "fit",
+      "configurationHoldout": false,
+      "claim": "discrete aggregate CPU surrogate; receive replays ownership without management auto-ack",
+      "measuredThroughput": 49.547553418879026,
+      "modeledThroughput": 70.01330252748022,
+      "throughputRelativeError": 0.4130526675168418,
+      "responseMAEUs": 7866.481250047684,
+      "logicalPopulationMatched": true
+    },
+    {
+      "id": "65536/1/publish/1",
+      "split": "fit",
+      "configurationHoldout": false,
+      "claim": "discrete aggregate CPU surrogate; receive replays ownership without management auto-ack",
+      "measuredThroughput": 40.903240699929114,
+      "modeledThroughput": 70.01330252748022,
+      "throughputRelativeError": 0.7116810631486604,
+      "responseMAEUs": 10082.41874885559,
+      "logicalPopulationMatched": true
+    },
+    {
+      "id": "65536/1/publish/2",
+      "split": "holdout",
+      "configurationHoldout": false,
+      "claim": "discrete aggregate CPU surrogate; receive replays ownership without management auto-ack",
+      "measuredThroughput": 77.75225991831795,
+      "modeledThroughput": 70.01330252748022,
+      "throughputRelativeError": 0.09953353637524914,
+      "responseMAEUs": 2176.4031250476837,
+      "logicalPopulationMatched": true
+    },
+    {
+      "id": "65536/1/consume/0",
+      "split": "fit",
+      "configurationHoldout": false,
+      "claim": "discrete aggregate CPU surrogate; receive replays ownership without management auto-ack",
+      "measuredThroughput": 87.99193334024949,
+      "modeledThroughput": 102.81719103434094,
+      "throughputRelativeError": 0.16848428181211517,
+      "responseMAEUs": 1279.8125002384186,
+      "logicalPopulationMatched": true
+    },
+    {
+      "id": "65536/1/consume/1",
+      "split": "fit",
+      "configurationHoldout": false,
+      "claim": "discrete aggregate CPU surrogate; receive replays ownership without management auto-ack",
+      "measuredThroughput": 89.87491658445788,
+      "modeledThroughput": 102.81719103434094,
+      "throughputRelativeError": 0.14400318733782472,
+      "responseMAEUs": 1168.8281254768372,
+      "logicalPopulationMatched": true
+    },
+    {
+      "id": "65536/1/consume/2",
+      "split": "holdout",
+      "configurationHoldout": false,
+      "claim": "discrete aggregate CPU surrogate; receive replays ownership without management auto-ack",
+      "measuredThroughput": 87.62581149789592,
+      "modeledThroughput": 102.81719103434094,
+      "throughputRelativeError": 0.1733664918676364,
+      "responseMAEUs": 1414.5499999523163,
+      "logicalPopulationMatched": true
+    },
+    {
+      "id": "65536/4/publish/0",
+      "split": "holdout",
+      "configurationHoldout": true,
+      "claim": "unsupported size/concurrency transfer diagnostic",
+      "measuredThroughput": 103.61905748752929,
+      "modeledThroughput": 87.06251088281385,
+      "throughputRelativeError": 0.1597828334494168,
+      "responseMAEUs": 8635.618749380112,
+      "logicalPopulationMatched": true
+    },
+    {
+      "id": "65536/4/publish/1",
+      "split": "holdout",
+      "configurationHoldout": true,
+      "claim": "unsupported size/concurrency transfer diagnostic",
+      "measuredThroughput": 93.0004382641529,
+      "modeledThroughput": 87.06251088281385,
+      "throughputRelativeError": 0.06384838063314623,
+      "responseMAEUs": 6448.759375333786,
+      "logicalPopulationMatched": true
+    },
+    {
+      "id": "65536/4/publish/2",
+      "split": "holdout",
+      "configurationHoldout": true,
+      "claim": "unsupported size/concurrency transfer diagnostic",
+      "measuredThroughput": 96.69853084668765,
+      "modeledThroughput": 87.06251088281385,
+      "throughputRelativeError": 0.09965011753023825,
+      "responseMAEUs": 6884.625,
+      "logicalPopulationMatched": true
+    },
+    {
+      "id": "65536/4/consume/0",
+      "split": "holdout",
+      "configurationHoldout": true,
+      "claim": "unsupported size/concurrency transfer diagnostic",
+      "measuredThroughput": 112.5657498321725,
+      "modeledThroughput": 103.41261633919338,
+      "throughputRelativeError": 0.0813136634067271,
+      "responseMAEUs": 5783.443749904633,
+      "logicalPopulationMatched": true
+    },
+    {
+      "id": "65536/4/consume/1",
+      "split": "holdout",
+      "configurationHoldout": true,
+      "claim": "unsupported size/concurrency transfer diagnostic",
+      "measuredThroughput": 117.15209123608534,
+      "modeledThroughput": 103.41261633919338,
+      "throughputRelativeError": 0.11727895551778177,
+      "responseMAEUs": 6373.406248807907,
+      "logicalPopulationMatched": true
+    },
+    {
+      "id": "65536/4/consume/2",
+      "split": "holdout",
+      "configurationHoldout": true,
+      "claim": "unsupported size/concurrency transfer diagnostic",
+      "measuredThroughput": 128.2342583454936,
+      "modeledThroughput": 103.41261633919338,
+      "throughputRelativeError": 0.19356482679866105,
+      "responseMAEUs": 8333.71562385559,
+      "logicalPopulationMatched": true
+    },
+    {
+      "id": "65536/8/publish/0",
+      "split": "fit",
+      "configurationHoldout": false,
+      "claim": "discrete aggregate CPU surrogate; receive replays ownership without management auto-ack",
+      "measuredThroughput": 94.08986287536395,
+      "modeledThroughput": 80.03841844085161,
+      "throughputRelativeError": 0.14934068352427685,
+      "responseMAEUs": 20989.856249332428,
+      "logicalPopulationMatched": true
+    },
+    {
+      "id": "65536/8/publish/1",
+      "split": "fit",
+      "configurationHoldout": false,
+      "claim": "discrete aggregate CPU surrogate; receive replays ownership without management auto-ack",
+      "measuredThroughput": 91.42112713679029,
+      "modeledThroughput": 80.03841844085161,
+      "throughputRelativeError": 0.12450851408676157,
+      "responseMAEUs": 18668.334374904633,
+      "logicalPopulationMatched": true
+    },
+    {
+      "id": "65536/8/publish/2",
+      "split": "holdout",
+      "configurationHoldout": false,
+      "claim": "discrete aggregate CPU surrogate; receive replays ownership without management auto-ack",
+      "measuredThroughput": 75.03300279732413,
+      "modeledThroughput": 80.03841844085161,
+      "throughputRelativeError": 0.0667095205698737,
+      "responseMAEUs": 12920.015625476837,
+      "logicalPopulationMatched": true
+    },
+    {
+      "id": "65536/8/consume/0",
+      "split": "fit",
+      "configurationHoldout": false,
+      "claim": "discrete aggregate CPU surrogate; receive replays ownership without management auto-ack",
+      "measuredThroughput": 85.81308569107021,
+      "modeledThroughput": 84.84642796538266,
+      "throughputRelativeError": 0.011264689037841526,
+      "responseMAEUs": 35502.37500047684,
+      "logicalPopulationMatched": true
+    },
+    {
+      "id": "65536/8/consume/1",
+      "split": "fit",
+      "configurationHoldout": false,
+      "claim": "discrete aggregate CPU surrogate; receive replays ownership without management auto-ack",
+      "measuredThroughput": 133.53770165502752,
+      "modeledThroughput": 84.84642796538266,
+      "throughputRelativeError": 0.36462566815348285,
+      "responseMAEUs": 36782.865624427795,
+      "logicalPopulationMatched": true
+    },
+    {
+      "id": "65536/8/consume/2",
+      "split": "holdout",
+      "configurationHoldout": false,
+      "claim": "discrete aggregate CPU surrogate; receive replays ownership without management auto-ack",
+      "measuredThroughput": 130.8101686903441,
+      "modeledThroughput": 84.84642796538266,
+      "throughputRelativeError": 0.3513774287209089,
+      "responseMAEUs": 35993.66250038147,
+      "logicalPopulationMatched": true
+    }
+  ],
+  "objectResults": [
+    {
+      "id": "64/1/PUT/false/0",
+      "split": "fit",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 2048,
+      "responseBodyBytes": 0,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "64/1/PUT/false/1",
+      "split": "fit",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 2048,
+      "responseBodyBytes": 0,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "64/1/PUT/false/2",
+      "split": "holdout",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 2048,
+      "responseBodyBytes": 0,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "64/1/PUT/true/0",
+      "split": "fit",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 2048,
+      "responseBodyBytes": 0,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "64/1/PUT/true/1",
+      "split": "fit",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 2048,
+      "responseBodyBytes": 0,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "64/1/PUT/true/2",
+      "split": "holdout",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 2048,
+      "responseBodyBytes": 0,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "64/1/GET/false/0",
+      "split": "fit",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 2048,
+      "responseBodyBytes": 2048,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "64/1/GET/false/1",
+      "split": "fit",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 2048,
+      "responseBodyBytes": 2048,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "64/1/GET/false/2",
+      "split": "holdout",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 2048,
+      "responseBodyBytes": 2048,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "64/1/GET/true/0",
+      "split": "fit",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 2048,
+      "responseBodyBytes": 2048,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "64/1/GET/true/1",
+      "split": "fit",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 2048,
+      "responseBodyBytes": 2048,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "64/1/GET/true/2",
+      "split": "holdout",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 2048,
+      "responseBodyBytes": 2048,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "64/4/PUT/false/0",
+      "split": "holdout",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 2048,
+      "responseBodyBytes": 0,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "64/4/PUT/false/1",
+      "split": "holdout",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 2048,
+      "responseBodyBytes": 0,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "64/4/PUT/false/2",
+      "split": "holdout",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 2048,
+      "responseBodyBytes": 0,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "64/4/PUT/true/0",
+      "split": "holdout",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 2048,
+      "responseBodyBytes": 0,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "64/4/PUT/true/1",
+      "split": "holdout",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 2048,
+      "responseBodyBytes": 0,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "64/4/PUT/true/2",
+      "split": "holdout",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 2048,
+      "responseBodyBytes": 0,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "64/4/GET/false/0",
+      "split": "holdout",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 2048,
+      "responseBodyBytes": 2048,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "64/4/GET/false/1",
+      "split": "holdout",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 2048,
+      "responseBodyBytes": 2048,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "64/4/GET/false/2",
+      "split": "holdout",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 2048,
+      "responseBodyBytes": 2048,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "64/4/GET/true/0",
+      "split": "holdout",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 2048,
+      "responseBodyBytes": 2048,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "64/4/GET/true/1",
+      "split": "holdout",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 2048,
+      "responseBodyBytes": 2048,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "64/4/GET/true/2",
+      "split": "holdout",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 2048,
+      "responseBodyBytes": 2048,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "64/8/PUT/false/0",
+      "split": "fit",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 2048,
+      "responseBodyBytes": 0,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "64/8/PUT/false/1",
+      "split": "fit",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 2048,
+      "responseBodyBytes": 0,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "64/8/PUT/false/2",
+      "split": "holdout",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 2048,
+      "responseBodyBytes": 0,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "64/8/PUT/true/0",
+      "split": "fit",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 2048,
+      "responseBodyBytes": 0,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "64/8/PUT/true/1",
+      "split": "fit",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 2048,
+      "responseBodyBytes": 0,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "64/8/PUT/true/2",
+      "split": "holdout",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 2048,
+      "responseBodyBytes": 0,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "64/8/GET/false/0",
+      "split": "fit",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 2048,
+      "responseBodyBytes": 2048,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "64/8/GET/false/1",
+      "split": "fit",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 2048,
+      "responseBodyBytes": 2048,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "64/8/GET/false/2",
+      "split": "holdout",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 2048,
+      "responseBodyBytes": 2048,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "64/8/GET/true/0",
+      "split": "fit",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 2048,
+      "responseBodyBytes": 2048,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "64/8/GET/true/1",
+      "split": "fit",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 2048,
+      "responseBodyBytes": 2048,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "64/8/GET/true/2",
+      "split": "holdout",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 2048,
+      "responseBodyBytes": 2048,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "4096/1/PUT/false/0",
+      "split": "holdout",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 131072,
+      "responseBodyBytes": 0,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "4096/1/PUT/false/1",
+      "split": "holdout",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 131072,
+      "responseBodyBytes": 0,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "4096/1/PUT/false/2",
+      "split": "holdout",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 131072,
+      "responseBodyBytes": 0,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "4096/1/PUT/true/0",
+      "split": "holdout",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 131072,
+      "responseBodyBytes": 0,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "4096/1/PUT/true/1",
+      "split": "holdout",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 131072,
+      "responseBodyBytes": 0,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "4096/1/PUT/true/2",
+      "split": "holdout",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 131072,
+      "responseBodyBytes": 0,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "4096/1/GET/false/0",
+      "split": "holdout",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 131072,
+      "responseBodyBytes": 131072,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "4096/1/GET/false/1",
+      "split": "holdout",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 131072,
+      "responseBodyBytes": 131072,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "4096/1/GET/false/2",
+      "split": "holdout",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 131072,
+      "responseBodyBytes": 131072,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "4096/1/GET/true/0",
+      "split": "holdout",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 131072,
+      "responseBodyBytes": 131072,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "4096/1/GET/true/1",
+      "split": "holdout",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 131072,
+      "responseBodyBytes": 131072,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "4096/1/GET/true/2",
+      "split": "holdout",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 131072,
+      "responseBodyBytes": 131072,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "4096/4/PUT/false/0",
+      "split": "holdout",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 131072,
+      "responseBodyBytes": 0,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "4096/4/PUT/false/1",
+      "split": "holdout",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 131072,
+      "responseBodyBytes": 0,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "4096/4/PUT/false/2",
+      "split": "holdout",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 131072,
+      "responseBodyBytes": 0,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "4096/4/PUT/true/0",
+      "split": "holdout",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 131072,
+      "responseBodyBytes": 0,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "4096/4/PUT/true/1",
+      "split": "holdout",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 131072,
+      "responseBodyBytes": 0,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "4096/4/PUT/true/2",
+      "split": "holdout",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 131072,
+      "responseBodyBytes": 0,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "4096/4/GET/false/0",
+      "split": "holdout",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 131072,
+      "responseBodyBytes": 131072,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "4096/4/GET/false/1",
+      "split": "holdout",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 131072,
+      "responseBodyBytes": 131072,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "4096/4/GET/false/2",
+      "split": "holdout",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 131072,
+      "responseBodyBytes": 131072,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "4096/4/GET/true/0",
+      "split": "holdout",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 131072,
+      "responseBodyBytes": 131072,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "4096/4/GET/true/1",
+      "split": "holdout",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 131072,
+      "responseBodyBytes": 131072,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "4096/4/GET/true/2",
+      "split": "holdout",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 131072,
+      "responseBodyBytes": 131072,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "4096/8/PUT/false/0",
+      "split": "holdout",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 131072,
+      "responseBodyBytes": 0,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "4096/8/PUT/false/1",
+      "split": "holdout",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 131072,
+      "responseBodyBytes": 0,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "4096/8/PUT/false/2",
+      "split": "holdout",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 131072,
+      "responseBodyBytes": 0,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "4096/8/PUT/true/0",
+      "split": "holdout",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 131072,
+      "responseBodyBytes": 0,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "4096/8/PUT/true/1",
+      "split": "holdout",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 131072,
+      "responseBodyBytes": 0,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "4096/8/PUT/true/2",
+      "split": "holdout",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 131072,
+      "responseBodyBytes": 0,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "4096/8/GET/false/0",
+      "split": "holdout",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 131072,
+      "responseBodyBytes": 131072,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "4096/8/GET/false/1",
+      "split": "holdout",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 131072,
+      "responseBodyBytes": 131072,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "4096/8/GET/false/2",
+      "split": "holdout",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 131072,
+      "responseBodyBytes": 131072,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "4096/8/GET/true/0",
+      "split": "holdout",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 131072,
+      "responseBodyBytes": 131072,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "4096/8/GET/true/1",
+      "split": "holdout",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 131072,
+      "responseBodyBytes": 131072,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "4096/8/GET/true/2",
+      "split": "holdout",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 131072,
+      "responseBodyBytes": 131072,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "65536/1/PUT/false/0",
+      "split": "fit",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 2097152,
+      "responseBodyBytes": 0,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "65536/1/PUT/false/1",
+      "split": "fit",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 2097152,
+      "responseBodyBytes": 0,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "65536/1/PUT/false/2",
+      "split": "holdout",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 2097152,
+      "responseBodyBytes": 0,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "65536/1/PUT/true/0",
+      "split": "fit",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 2097152,
+      "responseBodyBytes": 0,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "65536/1/PUT/true/1",
+      "split": "fit",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 2097152,
+      "responseBodyBytes": 0,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "65536/1/PUT/true/2",
+      "split": "holdout",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 2097152,
+      "responseBodyBytes": 0,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "65536/1/GET/false/0",
+      "split": "fit",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 2097152,
+      "responseBodyBytes": 2097152,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "65536/1/GET/false/1",
+      "split": "fit",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 2097152,
+      "responseBodyBytes": 2097152,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "65536/1/GET/false/2",
+      "split": "holdout",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 2097152,
+      "responseBodyBytes": 2097152,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "65536/1/GET/true/0",
+      "split": "fit",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 2097152,
+      "responseBodyBytes": 2097152,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "65536/1/GET/true/1",
+      "split": "fit",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 2097152,
+      "responseBodyBytes": 2097152,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "65536/1/GET/true/2",
+      "split": "holdout",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 2097152,
+      "responseBodyBytes": 2097152,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "65536/4/PUT/false/0",
+      "split": "holdout",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 2097152,
+      "responseBodyBytes": 0,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "65536/4/PUT/false/1",
+      "split": "holdout",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 2097152,
+      "responseBodyBytes": 0,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "65536/4/PUT/false/2",
+      "split": "holdout",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 2097152,
+      "responseBodyBytes": 0,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "65536/4/PUT/true/0",
+      "split": "holdout",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 2097152,
+      "responseBodyBytes": 0,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "65536/4/PUT/true/1",
+      "split": "holdout",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 2097152,
+      "responseBodyBytes": 0,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "65536/4/PUT/true/2",
+      "split": "holdout",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 2097152,
+      "responseBodyBytes": 0,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "65536/4/GET/false/0",
+      "split": "holdout",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 2097152,
+      "responseBodyBytes": 2097152,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "65536/4/GET/false/1",
+      "split": "holdout",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 2097152,
+      "responseBodyBytes": 2097152,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "65536/4/GET/false/2",
+      "split": "holdout",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 2097152,
+      "responseBodyBytes": 2097152,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "65536/4/GET/true/0",
+      "split": "holdout",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 2097152,
+      "responseBodyBytes": 2097152,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "65536/4/GET/true/1",
+      "split": "holdout",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 2097152,
+      "responseBodyBytes": 2097152,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "65536/4/GET/true/2",
+      "split": "holdout",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 2097152,
+      "responseBodyBytes": 2097152,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "65536/8/PUT/false/0",
+      "split": "fit",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 2097152,
+      "responseBodyBytes": 0,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "65536/8/PUT/false/1",
+      "split": "fit",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 2097152,
+      "responseBodyBytes": 0,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "65536/8/PUT/false/2",
+      "split": "holdout",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 2097152,
+      "responseBodyBytes": 0,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "65536/8/PUT/true/0",
+      "split": "fit",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 2097152,
+      "responseBodyBytes": 0,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "65536/8/PUT/true/1",
+      "split": "fit",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 2097152,
+      "responseBodyBytes": 0,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "65536/8/PUT/true/2",
+      "split": "holdout",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 2097152,
+      "responseBodyBytes": 0,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "65536/8/GET/false/0",
+      "split": "fit",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 2097152,
+      "responseBodyBytes": 2097152,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "65536/8/GET/false/1",
+      "split": "fit",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 2097152,
+      "responseBodyBytes": 2097152,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "65536/8/GET/false/2",
+      "split": "holdout",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 2097152,
+      "responseBodyBytes": 2097152,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "65536/8/GET/true/0",
+      "split": "fit",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 2097152,
+      "responseBodyBytes": 2097152,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "65536/8/GET/true/1",
+      "split": "fit",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 2097152,
+      "responseBodyBytes": 2097152,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    },
+    {
+      "id": "65536/8/GET/true/2",
+      "split": "holdout",
+      "logicalPopulationMatched": true,
+      "objects": 32,
+      "storedBytes": 2097152,
+      "responseBodyBytes": 2097152,
+      "timing": "Unknown; combined client/server CPU with zero-resolution samples cannot identify storage service demand"
+    }
+  ],
+  "semantics": {
+    "broker": {
+      "firstId": "redelivery",
+      "secondId": "redelivery",
+      "redelivered": true,
+      "emptyAfterAck": true,
+      "acknowledgementBoundary": "HTTP get endpoint performs ack/requeue action; no consumer prefetch/connection-crash lease claim"
+    },
+    "objects": {
+      "old": "old",
+      "replacement": "new-complete",
+      "conditionalStatuses": [
+        200,
+        412
+      ],
+      "absentAfterDelete": true,
+      "physicalPersistence": "Unknown; logical reference only"
+    }
+  },
+  "objectCpuZeroSamples": 6,
+  "ledger": [
+    {
+      "id": "m2f.replay.cores",
+      "concept": "m2f.replay.cores",
+      "modelVersion": "2",
+      "scope": "Exact owner-local M2F finite campaign replay",
+      "validityDomain": "e3738fefcde92bb0f78cbed4f09e44bdf6c72f546b2bc82a48e8c5c1b35e3d06/1c9a0e041a8e65874500435f4ec069fdd0b1ec1fc5e1ee636ecfb04af9ef4b1f; not AMQP, S3 or managed service performance",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "cores",
+        "provenance": [
+          "m2f.replay.cores"
+        ]
+      },
+      "classification": "user-input",
+      "confidence": "conditional",
+      "formula": "Explicit finite replay/experiment input; no physical latency inference",
+      "provenance": [
+        {
+          "source": "scripts/reality/async-calibration.ts",
+          "supports": "implementation",
+          "detail": "Fit-only conditional aggregate CPU; raw observations retained"
+        }
+      ],
+      "assumptions": [
+        "RabbitMQ HTTP management operations are not the generic queue protocol",
+        "Object process CPU includes client/server and may be below timer resolution",
+        "Transport/runtime/storage residual remains unresolved; no latency correction"
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "Separate protocol/server CPU and physical service measurement"
+    },
+    {
+      "id": "m2f.replay.adapterWorkers",
+      "concept": "m2f.replay.adapterWorkers",
+      "modelVersion": "2",
+      "scope": "Exact owner-local M2F finite campaign replay",
+      "validityDomain": "e3738fefcde92bb0f78cbed4f09e44bdf6c72f546b2bc82a48e8c5c1b35e3d06/1c9a0e041a8e65874500435f4ec069fdd0b1ec1fc5e1ee636ecfb04af9ef4b1f; not AMQP, S3 or managed service performance",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "count",
+        "provenance": [
+          "m2f.replay.adapterWorkers"
+        ]
+      },
+      "classification": "user-input",
+      "confidence": "conditional",
+      "formula": "Explicit finite replay/experiment input; no physical latency inference",
+      "provenance": [
+        {
+          "source": "scripts/reality/async-calibration.ts",
+          "supports": "implementation",
+          "detail": "Fit-only conditional aggregate CPU; raw observations retained"
+        }
+      ],
+      "assumptions": [
+        "RabbitMQ HTTP management operations are not the generic queue protocol",
+        "Object process CPU includes client/server and may be below timer resolution",
+        "Transport/runtime/storage residual remains unresolved; no latency correction"
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "Separate protocol/server CPU and physical service measurement"
+    },
+    {
+      "id": "m2f.replay.adapterQueue",
+      "concept": "m2f.replay.adapterQueue",
+      "modelVersion": "2",
+      "scope": "Exact owner-local M2F finite campaign replay",
+      "validityDomain": "e3738fefcde92bb0f78cbed4f09e44bdf6c72f546b2bc82a48e8c5c1b35e3d06/1c9a0e041a8e65874500435f4ec069fdd0b1ec1fc5e1ee636ecfb04af9ef4b1f; not AMQP, S3 or managed service performance",
+      "quantity": {
+        "kind": "known",
+        "value": 32,
+        "unit": "count",
+        "provenance": [
+          "m2f.replay.adapterQueue"
+        ]
+      },
+      "classification": "user-input",
+      "confidence": "conditional",
+      "formula": "Explicit finite replay/experiment input; no physical latency inference",
+      "provenance": [
+        {
+          "source": "scripts/reality/async-calibration.ts",
+          "supports": "implementation",
+          "detail": "Fit-only conditional aggregate CPU; raw observations retained"
+        }
+      ],
+      "assumptions": [
+        "RabbitMQ HTTP management operations are not the generic queue protocol",
+        "Object process CPU includes client/server and may be below timer resolution",
+        "Transport/runtime/storage residual remains unresolved; no latency correction"
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "Separate protocol/server CPU and physical service measurement"
+    },
+    {
+      "id": "m2f.replay.bound",
+      "concept": "m2f.replay.bound",
+      "modelVersion": "2",
+      "scope": "Exact owner-local M2F finite campaign replay",
+      "validityDomain": "e3738fefcde92bb0f78cbed4f09e44bdf6c72f546b2bc82a48e8c5c1b35e3d06/1c9a0e041a8e65874500435f4ec069fdd0b1ec1fc5e1ee636ecfb04af9ef4b1f; not AMQP, S3 or managed service performance",
+      "quantity": {
+        "kind": "known",
+        "value": 100000000,
+        "unit": "us",
+        "provenance": [
+          "m2f.replay.bound"
+        ]
+      },
+      "classification": "user-input",
+      "confidence": "conditional",
+      "formula": "Explicit finite replay/experiment input; no physical latency inference",
+      "provenance": [
+        {
+          "source": "scripts/reality/async-calibration.ts",
+          "supports": "implementation",
+          "detail": "Fit-only conditional aggregate CPU; raw observations retained"
+        }
+      ],
+      "assumptions": [
+        "RabbitMQ HTTP management operations are not the generic queue protocol",
+        "Object process CPU includes client/server and may be below timer resolution",
+        "Transport/runtime/storage residual remains unresolved; no latency correction"
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "Separate protocol/server CPU and physical service measurement"
+    },
+    {
+      "id": "m2f.replay.authoredWait",
+      "concept": "m2f.replay.authoredWait",
+      "modelVersion": "2",
+      "scope": "Exact owner-local M2F finite campaign replay",
+      "validityDomain": "e3738fefcde92bb0f78cbed4f09e44bdf6c72f546b2bc82a48e8c5c1b35e3d06/1c9a0e041a8e65874500435f4ec069fdd0b1ec1fc5e1ee636ecfb04af9ef4b1f; not AMQP, S3 or managed service performance",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "us",
+        "provenance": [
+          "m2f.replay.authoredWait"
+        ]
+      },
+      "classification": "educational-assumption",
+      "confidence": "conditional",
+      "formula": "Explicit finite replay/experiment input; no physical latency inference",
+      "provenance": [
+        {
+          "source": "scripts/reality/async-calibration.ts",
+          "supports": "implementation",
+          "detail": "Fit-only conditional aggregate CPU; raw observations retained"
+        }
+      ],
+      "assumptions": [
+        "RabbitMQ HTTP management operations are not the generic queue protocol",
+        "Object process CPU includes client/server and may be below timer resolution",
+        "Transport/runtime/storage residual remains unresolved; no latency correction"
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "Separate protocol/server CPU and physical service measurement"
+    },
+    {
+      "id": "m2f.candidate.64/1/publish.cpu",
+      "concept": "m2f.candidate.64/1/publish.cpu",
+      "modelVersion": "2",
+      "scope": "Exact owner-local M2F finite campaign replay",
+      "validityDomain": "e3738fefcde92bb0f78cbed4f09e44bdf6c72f546b2bc82a48e8c5c1b35e3d06/1c9a0e041a8e65874500435f4ec069fdd0b1ec1fc5e1ee636ecfb04af9ef4b1f; not AMQP, S3 or managed service performance",
+      "quantity": {
+        "kind": "known",
+        "value": 10089,
+        "unit": "cpu-us",
+        "provenance": [
+          "m2f.candidate.64/1/publish.cpu"
+        ]
+      },
+      "classification": "calibrated-model",
+      "confidence": "conditional",
+      "formula": "Ceiling mean fitting container CPU delta / operation; aggregate surrogate only",
+      "provenance": [
+        {
+          "source": "docs/reality/m2f-measurements.json",
+          "supports": "exact",
+          "detail": "Fit-only conditional aggregate CPU; raw observations retained"
+        }
+      ],
+      "assumptions": [
+        "RabbitMQ HTTP management operations are not the generic queue protocol",
+        "Object process CPU includes client/server and may be below timer resolution",
+        "Transport/runtime/storage residual remains unresolved; no latency correction"
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "Separate protocol/server CPU and physical service measurement"
+    },
+    {
+      "id": "m2f.candidate.64/1/consume.cpu",
+      "concept": "m2f.candidate.64/1/consume.cpu",
+      "modelVersion": "2",
+      "scope": "Exact owner-local M2F finite campaign replay",
+      "validityDomain": "e3738fefcde92bb0f78cbed4f09e44bdf6c72f546b2bc82a48e8c5c1b35e3d06/1c9a0e041a8e65874500435f4ec069fdd0b1ec1fc5e1ee636ecfb04af9ef4b1f; not AMQP, S3 or managed service performance",
+      "quantity": {
+        "kind": "known",
+        "value": 8628,
+        "unit": "cpu-us",
+        "provenance": [
+          "m2f.candidate.64/1/consume.cpu"
+        ]
+      },
+      "classification": "calibrated-model",
+      "confidence": "conditional",
+      "formula": "Ceiling mean fitting container CPU delta / operation; aggregate surrogate only",
+      "provenance": [
+        {
+          "source": "docs/reality/m2f-measurements.json",
+          "supports": "exact",
+          "detail": "Fit-only conditional aggregate CPU; raw observations retained"
+        }
+      ],
+      "assumptions": [
+        "RabbitMQ HTTP management operations are not the generic queue protocol",
+        "Object process CPU includes client/server and may be below timer resolution",
+        "Transport/runtime/storage residual remains unresolved; no latency correction"
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "Separate protocol/server CPU and physical service measurement"
+    },
+    {
+      "id": "m2f.candidate.64/8/publish.cpu",
+      "concept": "m2f.candidate.64/8/publish.cpu",
+      "modelVersion": "2",
+      "scope": "Exact owner-local M2F finite campaign replay",
+      "validityDomain": "e3738fefcde92bb0f78cbed4f09e44bdf6c72f546b2bc82a48e8c5c1b35e3d06/1c9a0e041a8e65874500435f4ec069fdd0b1ec1fc5e1ee636ecfb04af9ef4b1f; not AMQP, S3 or managed service performance",
+      "quantity": {
+        "kind": "known",
+        "value": 9077,
+        "unit": "cpu-us",
+        "provenance": [
+          "m2f.candidate.64/8/publish.cpu"
+        ]
+      },
+      "classification": "calibrated-model",
+      "confidence": "conditional",
+      "formula": "Ceiling mean fitting container CPU delta / operation; aggregate surrogate only",
+      "provenance": [
+        {
+          "source": "docs/reality/m2f-measurements.json",
+          "supports": "exact",
+          "detail": "Fit-only conditional aggregate CPU; raw observations retained"
+        }
+      ],
+      "assumptions": [
+        "RabbitMQ HTTP management operations are not the generic queue protocol",
+        "Object process CPU includes client/server and may be below timer resolution",
+        "Transport/runtime/storage residual remains unresolved; no latency correction"
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "Separate protocol/server CPU and physical service measurement"
+    },
+    {
+      "id": "m2f.candidate.64/8/consume.cpu",
+      "concept": "m2f.candidate.64/8/consume.cpu",
+      "modelVersion": "2",
+      "scope": "Exact owner-local M2F finite campaign replay",
+      "validityDomain": "e3738fefcde92bb0f78cbed4f09e44bdf6c72f546b2bc82a48e8c5c1b35e3d06/1c9a0e041a8e65874500435f4ec069fdd0b1ec1fc5e1ee636ecfb04af9ef4b1f; not AMQP, S3 or managed service performance",
+      "quantity": {
+        "kind": "known",
+        "value": 8537,
+        "unit": "cpu-us",
+        "provenance": [
+          "m2f.candidate.64/8/consume.cpu"
+        ]
+      },
+      "classification": "calibrated-model",
+      "confidence": "conditional",
+      "formula": "Ceiling mean fitting container CPU delta / operation; aggregate surrogate only",
+      "provenance": [
+        {
+          "source": "docs/reality/m2f-measurements.json",
+          "supports": "exact",
+          "detail": "Fit-only conditional aggregate CPU; raw observations retained"
+        }
+      ],
+      "assumptions": [
+        "RabbitMQ HTTP management operations are not the generic queue protocol",
+        "Object process CPU includes client/server and may be below timer resolution",
+        "Transport/runtime/storage residual remains unresolved; no latency correction"
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "Separate protocol/server CPU and physical service measurement"
+    },
+    {
+      "id": "m2f.candidate.65536/1/publish.cpu",
+      "concept": "m2f.candidate.65536/1/publish.cpu",
+      "modelVersion": "2",
+      "scope": "Exact owner-local M2F finite campaign replay",
+      "validityDomain": "e3738fefcde92bb0f78cbed4f09e44bdf6c72f546b2bc82a48e8c5c1b35e3d06/1c9a0e041a8e65874500435f4ec069fdd0b1ec1fc5e1ee636ecfb04af9ef4b1f; not AMQP, S3 or managed service performance",
+      "quantity": {
+        "kind": "known",
+        "value": 14283,
+        "unit": "cpu-us",
+        "provenance": [
+          "m2f.candidate.65536/1/publish.cpu"
+        ]
+      },
+      "classification": "calibrated-model",
+      "confidence": "conditional",
+      "formula": "Ceiling mean fitting container CPU delta / operation; aggregate surrogate only",
+      "provenance": [
+        {
+          "source": "docs/reality/m2f-measurements.json",
+          "supports": "exact",
+          "detail": "Fit-only conditional aggregate CPU; raw observations retained"
+        }
+      ],
+      "assumptions": [
+        "RabbitMQ HTTP management operations are not the generic queue protocol",
+        "Object process CPU includes client/server and may be below timer resolution",
+        "Transport/runtime/storage residual remains unresolved; no latency correction"
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "Separate protocol/server CPU and physical service measurement"
+    },
+    {
+      "id": "m2f.candidate.65536/1/consume.cpu",
+      "concept": "m2f.candidate.65536/1/consume.cpu",
+      "modelVersion": "2",
+      "scope": "Exact owner-local M2F finite campaign replay",
+      "validityDomain": "e3738fefcde92bb0f78cbed4f09e44bdf6c72f546b2bc82a48e8c5c1b35e3d06/1c9a0e041a8e65874500435f4ec069fdd0b1ec1fc5e1ee636ecfb04af9ef4b1f; not AMQP, S3 or managed service performance",
+      "quantity": {
+        "kind": "known",
+        "value": 9726,
+        "unit": "cpu-us",
+        "provenance": [
+          "m2f.candidate.65536/1/consume.cpu"
+        ]
+      },
+      "classification": "calibrated-model",
+      "confidence": "conditional",
+      "formula": "Ceiling mean fitting container CPU delta / operation; aggregate surrogate only",
+      "provenance": [
+        {
+          "source": "docs/reality/m2f-measurements.json",
+          "supports": "exact",
+          "detail": "Fit-only conditional aggregate CPU; raw observations retained"
+        }
+      ],
+      "assumptions": [
+        "RabbitMQ HTTP management operations are not the generic queue protocol",
+        "Object process CPU includes client/server and may be below timer resolution",
+        "Transport/runtime/storage residual remains unresolved; no latency correction"
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "Separate protocol/server CPU and physical service measurement"
+    },
+    {
+      "id": "m2f.candidate.65536/8/publish.cpu",
+      "concept": "m2f.candidate.65536/8/publish.cpu",
+      "modelVersion": "2",
+      "scope": "Exact owner-local M2F finite campaign replay",
+      "validityDomain": "e3738fefcde92bb0f78cbed4f09e44bdf6c72f546b2bc82a48e8c5c1b35e3d06/1c9a0e041a8e65874500435f4ec069fdd0b1ec1fc5e1ee636ecfb04af9ef4b1f; not AMQP, S3 or managed service performance",
+      "quantity": {
+        "kind": "known",
+        "value": 12494,
+        "unit": "cpu-us",
+        "provenance": [
+          "m2f.candidate.65536/8/publish.cpu"
+        ]
+      },
+      "classification": "calibrated-model",
+      "confidence": "conditional",
+      "formula": "Ceiling mean fitting container CPU delta / operation; aggregate surrogate only",
+      "provenance": [
+        {
+          "source": "docs/reality/m2f-measurements.json",
+          "supports": "exact",
+          "detail": "Fit-only conditional aggregate CPU; raw observations retained"
+        }
+      ],
+      "assumptions": [
+        "RabbitMQ HTTP management operations are not the generic queue protocol",
+        "Object process CPU includes client/server and may be below timer resolution",
+        "Transport/runtime/storage residual remains unresolved; no latency correction"
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "Separate protocol/server CPU and physical service measurement"
+    },
+    {
+      "id": "m2f.candidate.65536/8/consume.cpu",
+      "concept": "m2f.candidate.65536/8/consume.cpu",
+      "modelVersion": "2",
+      "scope": "Exact owner-local M2F finite campaign replay",
+      "validityDomain": "e3738fefcde92bb0f78cbed4f09e44bdf6c72f546b2bc82a48e8c5c1b35e3d06/1c9a0e041a8e65874500435f4ec069fdd0b1ec1fc5e1ee636ecfb04af9ef4b1f; not AMQP, S3 or managed service performance",
+      "quantity": {
+        "kind": "known",
+        "value": 11786,
+        "unit": "cpu-us",
+        "provenance": [
+          "m2f.candidate.65536/8/consume.cpu"
+        ]
+      },
+      "classification": "calibrated-model",
+      "confidence": "conditional",
+      "formula": "Ceiling mean fitting container CPU delta / operation; aggregate surrogate only",
+      "provenance": [
+        {
+          "source": "docs/reality/m2f-measurements.json",
+          "supports": "exact",
+          "detail": "Fit-only conditional aggregate CPU; raw observations retained"
+        }
+      ],
+      "assumptions": [
+        "RabbitMQ HTTP management operations are not the generic queue protocol",
+        "Object process CPU includes client/server and may be below timer resolution",
+        "Transport/runtime/storage residual remains unresolved; no latency correction"
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "Separate protocol/server CPU and physical service measurement"
+    },
+    {
+      "id": "m2f.replay.concurrency.1",
+      "concept": "m2f.replay.concurrency.1",
+      "modelVersion": "2",
+      "scope": "Exact owner-local M2F finite campaign replay",
+      "validityDomain": "e3738fefcde92bb0f78cbed4f09e44bdf6c72f546b2bc82a48e8c5c1b35e3d06/1c9a0e041a8e65874500435f4ec069fdd0b1ec1fc5e1ee636ecfb04af9ef4b1f; not AMQP, S3 or managed service performance",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "count",
+        "provenance": [
+          "m2f.replay.concurrency.1"
+        ]
+      },
+      "classification": "user-input",
+      "confidence": "conditional",
+      "formula": "Explicit finite replay/experiment input; no physical latency inference",
+      "provenance": [
+        {
+          "source": "scripts/reality/async-calibration.ts",
+          "supports": "implementation",
+          "detail": "Fit-only conditional aggregate CPU; raw observations retained"
+        }
+      ],
+      "assumptions": [
+        "RabbitMQ HTTP management operations are not the generic queue protocol",
+        "Object process CPU includes client/server and may be below timer resolution",
+        "Transport/runtime/storage residual remains unresolved; no latency correction"
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "Separate protocol/server CPU and physical service measurement"
+    },
+    {
+      "id": "m2f.replay.queue",
+      "concept": "m2f.replay.queue",
+      "modelVersion": "2",
+      "scope": "Exact owner-local M2F finite campaign replay",
+      "validityDomain": "e3738fefcde92bb0f78cbed4f09e44bdf6c72f546b2bc82a48e8c5c1b35e3d06/1c9a0e041a8e65874500435f4ec069fdd0b1ec1fc5e1ee636ecfb04af9ef4b1f; not AMQP, S3 or managed service performance",
+      "quantity": {
+        "kind": "known",
+        "value": 32,
+        "unit": "count",
+        "provenance": [
+          "m2f.replay.queue"
+        ]
+      },
+      "classification": "user-input",
+      "confidence": "conditional",
+      "formula": "Explicit finite replay/experiment input; no physical latency inference",
+      "provenance": [
+        {
+          "source": "scripts/reality/async-calibration.ts",
+          "supports": "implementation",
+          "detail": "Fit-only conditional aggregate CPU; raw observations retained"
+        }
+      ],
+      "assumptions": [
+        "RabbitMQ HTTP management operations are not the generic queue protocol",
+        "Object process CPU includes client/server and may be below timer resolution",
+        "Transport/runtime/storage residual remains unresolved; no latency correction"
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "Separate protocol/server CPU and physical service measurement"
+    },
+    {
+      "id": "m2f.replay.messages",
+      "concept": "m2f.replay.messages",
+      "modelVersion": "2",
+      "scope": "Exact owner-local M2F finite campaign replay",
+      "validityDomain": "e3738fefcde92bb0f78cbed4f09e44bdf6c72f546b2bc82a48e8c5c1b35e3d06/1c9a0e041a8e65874500435f4ec069fdd0b1ec1fc5e1ee636ecfb04af9ef4b1f; not AMQP, S3 or managed service performance",
+      "quantity": {
+        "kind": "known",
+        "value": 32,
+        "unit": "count",
+        "provenance": [
+          "m2f.replay.messages"
+        ]
+      },
+      "classification": "user-input",
+      "confidence": "conditional",
+      "formula": "Explicit finite replay/experiment input; no physical latency inference",
+      "provenance": [
+        {
+          "source": "scripts/reality/async-calibration.ts",
+          "supports": "implementation",
+          "detail": "Fit-only conditional aggregate CPU; raw observations retained"
+        }
+      ],
+      "assumptions": [
+        "RabbitMQ HTTP management operations are not the generic queue protocol",
+        "Object process CPU includes client/server and may be below timer resolution",
+        "Transport/runtime/storage residual remains unresolved; no latency correction"
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "Separate protocol/server CPU and physical service measurement"
+    },
+    {
+      "id": "m2f.replay.messageBytes.64",
+      "concept": "m2f.replay.messageBytes.64",
+      "modelVersion": "2",
+      "scope": "Exact owner-local M2F finite campaign replay",
+      "validityDomain": "e3738fefcde92bb0f78cbed4f09e44bdf6c72f546b2bc82a48e8c5c1b35e3d06/1c9a0e041a8e65874500435f4ec069fdd0b1ec1fc5e1ee636ecfb04af9ef4b1f; not AMQP, S3 or managed service performance",
+      "quantity": {
+        "kind": "known",
+        "value": 2048,
+        "unit": "bytes",
+        "provenance": [
+          "m2f.replay.messageBytes.64"
+        ]
+      },
+      "classification": "user-input",
+      "confidence": "conditional",
+      "formula": "Explicit finite replay/experiment input; no physical latency inference",
+      "provenance": [
+        {
+          "source": "scripts/reality/async-calibration.ts",
+          "supports": "implementation",
+          "detail": "Fit-only conditional aggregate CPU; raw observations retained"
+        }
+      ],
+      "assumptions": [
+        "RabbitMQ HTTP management operations are not the generic queue protocol",
+        "Object process CPU includes client/server and may be below timer resolution",
+        "Transport/runtime/storage residual remains unresolved; no latency correction"
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "Separate protocol/server CPU and physical service measurement"
+    },
+    {
+      "id": "m2f.replay.attempts",
+      "concept": "m2f.replay.attempts",
+      "modelVersion": "2",
+      "scope": "Exact owner-local M2F finite campaign replay",
+      "validityDomain": "e3738fefcde92bb0f78cbed4f09e44bdf6c72f546b2bc82a48e8c5c1b35e3d06/1c9a0e041a8e65874500435f4ec069fdd0b1ec1fc5e1ee636ecfb04af9ef4b1f; not AMQP, S3 or managed service performance",
+      "quantity": {
+        "kind": "known",
+        "value": 3,
+        "unit": "count",
+        "provenance": [
+          "m2f.replay.attempts"
+        ]
+      },
+      "classification": "user-input",
+      "confidence": "conditional",
+      "formula": "Explicit finite replay/experiment input; no physical latency inference",
+      "provenance": [
+        {
+          "source": "scripts/reality/async-calibration.ts",
+          "supports": "implementation",
+          "detail": "Fit-only conditional aggregate CPU; raw observations retained"
+        }
+      ],
+      "assumptions": [
+        "RabbitMQ HTTP management operations are not the generic queue protocol",
+        "Object process CPU includes client/server and may be below timer resolution",
+        "Transport/runtime/storage residual remains unresolved; no latency correction"
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "Separate protocol/server CPU and physical service measurement"
+    },
+    {
+      "id": "m2f.replay.dlq",
+      "concept": "m2f.replay.dlq",
+      "modelVersion": "2",
+      "scope": "Exact owner-local M2F finite campaign replay",
+      "validityDomain": "e3738fefcde92bb0f78cbed4f09e44bdf6c72f546b2bc82a48e8c5c1b35e3d06/1c9a0e041a8e65874500435f4ec069fdd0b1ec1fc5e1ee636ecfb04af9ef4b1f; not AMQP, S3 or managed service performance",
+      "quantity": {
+        "kind": "known",
+        "value": 32,
+        "unit": "count",
+        "provenance": [
+          "m2f.replay.dlq"
+        ]
+      },
+      "classification": "user-input",
+      "confidence": "conditional",
+      "formula": "Explicit finite replay/experiment input; no physical latency inference",
+      "provenance": [
+        {
+          "source": "scripts/reality/async-calibration.ts",
+          "supports": "implementation",
+          "detail": "Fit-only conditional aggregate CPU; raw observations retained"
+        }
+      ],
+      "assumptions": [
+        "RabbitMQ HTTP management operations are not the generic queue protocol",
+        "Object process CPU includes client/server and may be below timer resolution",
+        "Transport/runtime/storage residual remains unresolved; no latency correction"
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "Separate protocol/server CPU and physical service measurement"
+    },
+    {
+      "id": "m2f.replay.credit",
+      "concept": "m2f.replay.credit",
+      "modelVersion": "2",
+      "scope": "Exact owner-local M2F finite campaign replay",
+      "validityDomain": "e3738fefcde92bb0f78cbed4f09e44bdf6c72f546b2bc82a48e8c5c1b35e3d06/1c9a0e041a8e65874500435f4ec069fdd0b1ec1fc5e1ee636ecfb04af9ef4b1f; not AMQP, S3 or managed service performance",
+      "quantity": {
+        "kind": "known",
+        "value": 32,
+        "unit": "count",
+        "provenance": [
+          "m2f.replay.credit"
+        ]
+      },
+      "classification": "user-input",
+      "confidence": "conditional",
+      "formula": "Explicit finite replay/experiment input; no physical latency inference",
+      "provenance": [
+        {
+          "source": "scripts/reality/async-calibration.ts",
+          "supports": "implementation",
+          "detail": "Fit-only conditional aggregate CPU; raw observations retained"
+        }
+      ],
+      "assumptions": [
+        "RabbitMQ HTTP management operations are not the generic queue protocol",
+        "Object process CPU includes client/server and may be below timer resolution",
+        "Transport/runtime/storage residual remains unresolved; no latency correction"
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "Separate protocol/server CPU and physical service measurement"
+    },
+    {
+      "id": "m2f.unsupportedTransfer.64.4.publish",
+      "concept": "m2f.unsupportedTransfer.64.4.publish",
+      "modelVersion": "2",
+      "scope": "Exact owner-local M2F finite campaign replay",
+      "validityDomain": "e3738fefcde92bb0f78cbed4f09e44bdf6c72f546b2bc82a48e8c5c1b35e3d06/1c9a0e041a8e65874500435f4ec069fdd0b1ec1fc5e1ee636ecfb04af9ef4b1f; not AMQP, S3 or managed service performance",
+      "quantity": {
+        "kind": "known",
+        "value": 11486,
+        "unit": "cpu-us",
+        "provenance": [
+          "m2f.unsupportedTransfer.64.4.publish"
+        ]
+      },
+      "classification": "educational-assumption",
+      "confidence": "conditional",
+      "formula": "Explicit finite replay/experiment input; no physical latency inference",
+      "provenance": [
+        {
+          "source": "scripts/reality/async-calibration.ts",
+          "supports": "implementation",
+          "detail": "Fit-only conditional aggregate CPU; raw observations retained"
+        }
+      ],
+      "assumptions": [
+        "RabbitMQ HTTP management operations are not the generic queue protocol",
+        "Object process CPU includes client/server and may be below timer resolution",
+        "Transport/runtime/storage residual remains unresolved; no latency correction"
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "Separate protocol/server CPU and physical service measurement"
+    },
+    {
+      "id": "m2f.replay.concurrency.4",
+      "concept": "m2f.replay.concurrency.4",
+      "modelVersion": "2",
+      "scope": "Exact owner-local M2F finite campaign replay",
+      "validityDomain": "e3738fefcde92bb0f78cbed4f09e44bdf6c72f546b2bc82a48e8c5c1b35e3d06/1c9a0e041a8e65874500435f4ec069fdd0b1ec1fc5e1ee636ecfb04af9ef4b1f; not AMQP, S3 or managed service performance",
+      "quantity": {
+        "kind": "known",
+        "value": 4,
+        "unit": "count",
+        "provenance": [
+          "m2f.replay.concurrency.4"
+        ]
+      },
+      "classification": "user-input",
+      "confidence": "conditional",
+      "formula": "Explicit finite replay/experiment input; no physical latency inference",
+      "provenance": [
+        {
+          "source": "scripts/reality/async-calibration.ts",
+          "supports": "implementation",
+          "detail": "Fit-only conditional aggregate CPU; raw observations retained"
+        }
+      ],
+      "assumptions": [
+        "RabbitMQ HTTP management operations are not the generic queue protocol",
+        "Object process CPU includes client/server and may be below timer resolution",
+        "Transport/runtime/storage residual remains unresolved; no latency correction"
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "Separate protocol/server CPU and physical service measurement"
+    },
+    {
+      "id": "m2f.unsupportedTransfer.64.4.consume",
+      "concept": "m2f.unsupportedTransfer.64.4.consume",
+      "modelVersion": "2",
+      "scope": "Exact owner-local M2F finite campaign replay",
+      "validityDomain": "e3738fefcde92bb0f78cbed4f09e44bdf6c72f546b2bc82a48e8c5c1b35e3d06/1c9a0e041a8e65874500435f4ec069fdd0b1ec1fc5e1ee636ecfb04af9ef4b1f; not AMQP, S3 or managed service performance",
+      "quantity": {
+        "kind": "known",
+        "value": 9670,
+        "unit": "cpu-us",
+        "provenance": [
+          "m2f.unsupportedTransfer.64.4.consume"
+        ]
+      },
+      "classification": "educational-assumption",
+      "confidence": "conditional",
+      "formula": "Explicit finite replay/experiment input; no physical latency inference",
+      "provenance": [
+        {
+          "source": "scripts/reality/async-calibration.ts",
+          "supports": "implementation",
+          "detail": "Fit-only conditional aggregate CPU; raw observations retained"
+        }
+      ],
+      "assumptions": [
+        "RabbitMQ HTTP management operations are not the generic queue protocol",
+        "Object process CPU includes client/server and may be below timer resolution",
+        "Transport/runtime/storage residual remains unresolved; no latency correction"
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "Separate protocol/server CPU and physical service measurement"
+    },
+    {
+      "id": "m2f.replay.concurrency.8",
+      "concept": "m2f.replay.concurrency.8",
+      "modelVersion": "2",
+      "scope": "Exact owner-local M2F finite campaign replay",
+      "validityDomain": "e3738fefcde92bb0f78cbed4f09e44bdf6c72f546b2bc82a48e8c5c1b35e3d06/1c9a0e041a8e65874500435f4ec069fdd0b1ec1fc5e1ee636ecfb04af9ef4b1f; not AMQP, S3 or managed service performance",
+      "quantity": {
+        "kind": "known",
+        "value": 8,
+        "unit": "count",
+        "provenance": [
+          "m2f.replay.concurrency.8"
+        ]
+      },
+      "classification": "user-input",
+      "confidence": "conditional",
+      "formula": "Explicit finite replay/experiment input; no physical latency inference",
+      "provenance": [
+        {
+          "source": "scripts/reality/async-calibration.ts",
+          "supports": "implementation",
+          "detail": "Fit-only conditional aggregate CPU; raw observations retained"
+        }
+      ],
+      "assumptions": [
+        "RabbitMQ HTTP management operations are not the generic queue protocol",
+        "Object process CPU includes client/server and may be below timer resolution",
+        "Transport/runtime/storage residual remains unresolved; no latency correction"
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "Separate protocol/server CPU and physical service measurement"
+    },
+    {
+      "id": "m2f.unsupportedTransfer.4096.1.publish",
+      "concept": "m2f.unsupportedTransfer.4096.1.publish",
+      "modelVersion": "2",
+      "scope": "Exact owner-local M2F finite campaign replay",
+      "validityDomain": "e3738fefcde92bb0f78cbed4f09e44bdf6c72f546b2bc82a48e8c5c1b35e3d06/1c9a0e041a8e65874500435f4ec069fdd0b1ec1fc5e1ee636ecfb04af9ef4b1f; not AMQP, S3 or managed service performance",
+      "quantity": {
+        "kind": "known",
+        "value": 11486,
+        "unit": "cpu-us",
+        "provenance": [
+          "m2f.unsupportedTransfer.4096.1.publish"
+        ]
+      },
+      "classification": "educational-assumption",
+      "confidence": "conditional",
+      "formula": "Explicit finite replay/experiment input; no physical latency inference",
+      "provenance": [
+        {
+          "source": "scripts/reality/async-calibration.ts",
+          "supports": "implementation",
+          "detail": "Fit-only conditional aggregate CPU; raw observations retained"
+        }
+      ],
+      "assumptions": [
+        "RabbitMQ HTTP management operations are not the generic queue protocol",
+        "Object process CPU includes client/server and may be below timer resolution",
+        "Transport/runtime/storage residual remains unresolved; no latency correction"
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "Separate protocol/server CPU and physical service measurement"
+    },
+    {
+      "id": "m2f.replay.messageBytes.4096",
+      "concept": "m2f.replay.messageBytes.4096",
+      "modelVersion": "2",
+      "scope": "Exact owner-local M2F finite campaign replay",
+      "validityDomain": "e3738fefcde92bb0f78cbed4f09e44bdf6c72f546b2bc82a48e8c5c1b35e3d06/1c9a0e041a8e65874500435f4ec069fdd0b1ec1fc5e1ee636ecfb04af9ef4b1f; not AMQP, S3 or managed service performance",
+      "quantity": {
+        "kind": "known",
+        "value": 131072,
+        "unit": "bytes",
+        "provenance": [
+          "m2f.replay.messageBytes.4096"
+        ]
+      },
+      "classification": "user-input",
+      "confidence": "conditional",
+      "formula": "Explicit finite replay/experiment input; no physical latency inference",
+      "provenance": [
+        {
+          "source": "scripts/reality/async-calibration.ts",
+          "supports": "implementation",
+          "detail": "Fit-only conditional aggregate CPU; raw observations retained"
+        }
+      ],
+      "assumptions": [
+        "RabbitMQ HTTP management operations are not the generic queue protocol",
+        "Object process CPU includes client/server and may be below timer resolution",
+        "Transport/runtime/storage residual remains unresolved; no latency correction"
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "Separate protocol/server CPU and physical service measurement"
+    },
+    {
+      "id": "m2f.unsupportedTransfer.4096.1.consume",
+      "concept": "m2f.unsupportedTransfer.4096.1.consume",
+      "modelVersion": "2",
+      "scope": "Exact owner-local M2F finite campaign replay",
+      "validityDomain": "e3738fefcde92bb0f78cbed4f09e44bdf6c72f546b2bc82a48e8c5c1b35e3d06/1c9a0e041a8e65874500435f4ec069fdd0b1ec1fc5e1ee636ecfb04af9ef4b1f; not AMQP, S3 or managed service performance",
+      "quantity": {
+        "kind": "known",
+        "value": 9670,
+        "unit": "cpu-us",
+        "provenance": [
+          "m2f.unsupportedTransfer.4096.1.consume"
+        ]
+      },
+      "classification": "educational-assumption",
+      "confidence": "conditional",
+      "formula": "Explicit finite replay/experiment input; no physical latency inference",
+      "provenance": [
+        {
+          "source": "scripts/reality/async-calibration.ts",
+          "supports": "implementation",
+          "detail": "Fit-only conditional aggregate CPU; raw observations retained"
+        }
+      ],
+      "assumptions": [
+        "RabbitMQ HTTP management operations are not the generic queue protocol",
+        "Object process CPU includes client/server and may be below timer resolution",
+        "Transport/runtime/storage residual remains unresolved; no latency correction"
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "Separate protocol/server CPU and physical service measurement"
+    },
+    {
+      "id": "m2f.unsupportedTransfer.4096.4.publish",
+      "concept": "m2f.unsupportedTransfer.4096.4.publish",
+      "modelVersion": "2",
+      "scope": "Exact owner-local M2F finite campaign replay",
+      "validityDomain": "e3738fefcde92bb0f78cbed4f09e44bdf6c72f546b2bc82a48e8c5c1b35e3d06/1c9a0e041a8e65874500435f4ec069fdd0b1ec1fc5e1ee636ecfb04af9ef4b1f; not AMQP, S3 or managed service performance",
+      "quantity": {
+        "kind": "known",
+        "value": 11486,
+        "unit": "cpu-us",
+        "provenance": [
+          "m2f.unsupportedTransfer.4096.4.publish"
+        ]
+      },
+      "classification": "educational-assumption",
+      "confidence": "conditional",
+      "formula": "Explicit finite replay/experiment input; no physical latency inference",
+      "provenance": [
+        {
+          "source": "scripts/reality/async-calibration.ts",
+          "supports": "implementation",
+          "detail": "Fit-only conditional aggregate CPU; raw observations retained"
+        }
+      ],
+      "assumptions": [
+        "RabbitMQ HTTP management operations are not the generic queue protocol",
+        "Object process CPU includes client/server and may be below timer resolution",
+        "Transport/runtime/storage residual remains unresolved; no latency correction"
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "Separate protocol/server CPU and physical service measurement"
+    },
+    {
+      "id": "m2f.unsupportedTransfer.4096.4.consume",
+      "concept": "m2f.unsupportedTransfer.4096.4.consume",
+      "modelVersion": "2",
+      "scope": "Exact owner-local M2F finite campaign replay",
+      "validityDomain": "e3738fefcde92bb0f78cbed4f09e44bdf6c72f546b2bc82a48e8c5c1b35e3d06/1c9a0e041a8e65874500435f4ec069fdd0b1ec1fc5e1ee636ecfb04af9ef4b1f; not AMQP, S3 or managed service performance",
+      "quantity": {
+        "kind": "known",
+        "value": 9670,
+        "unit": "cpu-us",
+        "provenance": [
+          "m2f.unsupportedTransfer.4096.4.consume"
+        ]
+      },
+      "classification": "educational-assumption",
+      "confidence": "conditional",
+      "formula": "Explicit finite replay/experiment input; no physical latency inference",
+      "provenance": [
+        {
+          "source": "scripts/reality/async-calibration.ts",
+          "supports": "implementation",
+          "detail": "Fit-only conditional aggregate CPU; raw observations retained"
+        }
+      ],
+      "assumptions": [
+        "RabbitMQ HTTP management operations are not the generic queue protocol",
+        "Object process CPU includes client/server and may be below timer resolution",
+        "Transport/runtime/storage residual remains unresolved; no latency correction"
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "Separate protocol/server CPU and physical service measurement"
+    },
+    {
+      "id": "m2f.unsupportedTransfer.4096.8.publish",
+      "concept": "m2f.unsupportedTransfer.4096.8.publish",
+      "modelVersion": "2",
+      "scope": "Exact owner-local M2F finite campaign replay",
+      "validityDomain": "e3738fefcde92bb0f78cbed4f09e44bdf6c72f546b2bc82a48e8c5c1b35e3d06/1c9a0e041a8e65874500435f4ec069fdd0b1ec1fc5e1ee636ecfb04af9ef4b1f; not AMQP, S3 or managed service performance",
+      "quantity": {
+        "kind": "known",
+        "value": 11486,
+        "unit": "cpu-us",
+        "provenance": [
+          "m2f.unsupportedTransfer.4096.8.publish"
+        ]
+      },
+      "classification": "educational-assumption",
+      "confidence": "conditional",
+      "formula": "Explicit finite replay/experiment input; no physical latency inference",
+      "provenance": [
+        {
+          "source": "scripts/reality/async-calibration.ts",
+          "supports": "implementation",
+          "detail": "Fit-only conditional aggregate CPU; raw observations retained"
+        }
+      ],
+      "assumptions": [
+        "RabbitMQ HTTP management operations are not the generic queue protocol",
+        "Object process CPU includes client/server and may be below timer resolution",
+        "Transport/runtime/storage residual remains unresolved; no latency correction"
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "Separate protocol/server CPU and physical service measurement"
+    },
+    {
+      "id": "m2f.unsupportedTransfer.4096.8.consume",
+      "concept": "m2f.unsupportedTransfer.4096.8.consume",
+      "modelVersion": "2",
+      "scope": "Exact owner-local M2F finite campaign replay",
+      "validityDomain": "e3738fefcde92bb0f78cbed4f09e44bdf6c72f546b2bc82a48e8c5c1b35e3d06/1c9a0e041a8e65874500435f4ec069fdd0b1ec1fc5e1ee636ecfb04af9ef4b1f; not AMQP, S3 or managed service performance",
+      "quantity": {
+        "kind": "known",
+        "value": 9670,
+        "unit": "cpu-us",
+        "provenance": [
+          "m2f.unsupportedTransfer.4096.8.consume"
+        ]
+      },
+      "classification": "educational-assumption",
+      "confidence": "conditional",
+      "formula": "Explicit finite replay/experiment input; no physical latency inference",
+      "provenance": [
+        {
+          "source": "scripts/reality/async-calibration.ts",
+          "supports": "implementation",
+          "detail": "Fit-only conditional aggregate CPU; raw observations retained"
+        }
+      ],
+      "assumptions": [
+        "RabbitMQ HTTP management operations are not the generic queue protocol",
+        "Object process CPU includes client/server and may be below timer resolution",
+        "Transport/runtime/storage residual remains unresolved; no latency correction"
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "Separate protocol/server CPU and physical service measurement"
+    },
+    {
+      "id": "m2f.replay.messageBytes.65536",
+      "concept": "m2f.replay.messageBytes.65536",
+      "modelVersion": "2",
+      "scope": "Exact owner-local M2F finite campaign replay",
+      "validityDomain": "e3738fefcde92bb0f78cbed4f09e44bdf6c72f546b2bc82a48e8c5c1b35e3d06/1c9a0e041a8e65874500435f4ec069fdd0b1ec1fc5e1ee636ecfb04af9ef4b1f; not AMQP, S3 or managed service performance",
+      "quantity": {
+        "kind": "known",
+        "value": 2097152,
+        "unit": "bytes",
+        "provenance": [
+          "m2f.replay.messageBytes.65536"
+        ]
+      },
+      "classification": "user-input",
+      "confidence": "conditional",
+      "formula": "Explicit finite replay/experiment input; no physical latency inference",
+      "provenance": [
+        {
+          "source": "scripts/reality/async-calibration.ts",
+          "supports": "implementation",
+          "detail": "Fit-only conditional aggregate CPU; raw observations retained"
+        }
+      ],
+      "assumptions": [
+        "RabbitMQ HTTP management operations are not the generic queue protocol",
+        "Object process CPU includes client/server and may be below timer resolution",
+        "Transport/runtime/storage residual remains unresolved; no latency correction"
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "Separate protocol/server CPU and physical service measurement"
+    },
+    {
+      "id": "m2f.unsupportedTransfer.65536.4.publish",
+      "concept": "m2f.unsupportedTransfer.65536.4.publish",
+      "modelVersion": "2",
+      "scope": "Exact owner-local M2F finite campaign replay",
+      "validityDomain": "e3738fefcde92bb0f78cbed4f09e44bdf6c72f546b2bc82a48e8c5c1b35e3d06/1c9a0e041a8e65874500435f4ec069fdd0b1ec1fc5e1ee636ecfb04af9ef4b1f; not AMQP, S3 or managed service performance",
+      "quantity": {
+        "kind": "known",
+        "value": 11486,
+        "unit": "cpu-us",
+        "provenance": [
+          "m2f.unsupportedTransfer.65536.4.publish"
+        ]
+      },
+      "classification": "educational-assumption",
+      "confidence": "conditional",
+      "formula": "Explicit finite replay/experiment input; no physical latency inference",
+      "provenance": [
+        {
+          "source": "scripts/reality/async-calibration.ts",
+          "supports": "implementation",
+          "detail": "Fit-only conditional aggregate CPU; raw observations retained"
+        }
+      ],
+      "assumptions": [
+        "RabbitMQ HTTP management operations are not the generic queue protocol",
+        "Object process CPU includes client/server and may be below timer resolution",
+        "Transport/runtime/storage residual remains unresolved; no latency correction"
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "Separate protocol/server CPU and physical service measurement"
+    },
+    {
+      "id": "m2f.unsupportedTransfer.65536.4.consume",
+      "concept": "m2f.unsupportedTransfer.65536.4.consume",
+      "modelVersion": "2",
+      "scope": "Exact owner-local M2F finite campaign replay",
+      "validityDomain": "e3738fefcde92bb0f78cbed4f09e44bdf6c72f546b2bc82a48e8c5c1b35e3d06/1c9a0e041a8e65874500435f4ec069fdd0b1ec1fc5e1ee636ecfb04af9ef4b1f; not AMQP, S3 or managed service performance",
+      "quantity": {
+        "kind": "known",
+        "value": 9670,
+        "unit": "cpu-us",
+        "provenance": [
+          "m2f.unsupportedTransfer.65536.4.consume"
+        ]
+      },
+      "classification": "educational-assumption",
+      "confidence": "conditional",
+      "formula": "Explicit finite replay/experiment input; no physical latency inference",
+      "provenance": [
+        {
+          "source": "scripts/reality/async-calibration.ts",
+          "supports": "implementation",
+          "detail": "Fit-only conditional aggregate CPU; raw observations retained"
+        }
+      ],
+      "assumptions": [
+        "RabbitMQ HTTP management operations are not the generic queue protocol",
+        "Object process CPU includes client/server and may be below timer resolution",
+        "Transport/runtime/storage residual remains unresolved; no latency correction"
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "Separate protocol/server CPU and physical service measurement"
+    },
+    {
+      "id": "m2f.object.semanticClock",
+      "concept": "m2f.object.semanticClock",
+      "modelVersion": "2",
+      "scope": "Exact owner-local M2F finite campaign replay",
+      "validityDomain": "e3738fefcde92bb0f78cbed4f09e44bdf6c72f546b2bc82a48e8c5c1b35e3d06/1c9a0e041a8e65874500435f4ec069fdd0b1ec1fc5e1ee636ecfb04af9ef4b1f; not AMQP, S3 or managed service performance",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "cpu-us",
+        "provenance": [
+          "m2f.object.semanticClock"
+        ]
+      },
+      "classification": "educational-assumption",
+      "confidence": "conditional",
+      "formula": "Explicit finite replay/experiment input; no physical latency inference",
+      "provenance": [
+        {
+          "source": "scripts/reality/async-calibration.ts",
+          "supports": "implementation",
+          "detail": "Fit-only conditional aggregate CPU; raw observations retained"
+        }
+      ],
+      "assumptions": [
+        "RabbitMQ HTTP management operations are not the generic queue protocol",
+        "Object process CPU includes client/server and may be below timer resolution",
+        "Transport/runtime/storage residual remains unresolved; no latency correction"
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "Separate protocol/server CPU and physical service measurement"
+    },
+    {
+      "id": "m2f.object.bytes.64",
+      "concept": "m2f.object.bytes.64",
+      "modelVersion": "2",
+      "scope": "Exact owner-local M2F finite campaign replay",
+      "validityDomain": "e3738fefcde92bb0f78cbed4f09e44bdf6c72f546b2bc82a48e8c5c1b35e3d06/1c9a0e041a8e65874500435f4ec069fdd0b1ec1fc5e1ee636ecfb04af9ef4b1f; not AMQP, S3 or managed service performance",
+      "quantity": {
+        "kind": "known",
+        "value": 64,
+        "unit": "bytes",
+        "provenance": [
+          "m2f.object.bytes.64"
+        ]
+      },
+      "classification": "user-input",
+      "confidence": "conditional",
+      "formula": "Explicit finite replay/experiment input; no physical latency inference",
+      "provenance": [
+        {
+          "source": "scripts/reality/async-calibration.ts",
+          "supports": "implementation",
+          "detail": "Fit-only conditional aggregate CPU; raw observations retained"
+        }
+      ],
+      "assumptions": [
+        "RabbitMQ HTTP management operations are not the generic queue protocol",
+        "Object process CPU includes client/server and may be below timer resolution",
+        "Transport/runtime/storage residual remains unresolved; no latency correction"
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "Separate protocol/server CPU and physical service measurement"
+    },
+    {
+      "id": "m2f.object.bytes.4096",
+      "concept": "m2f.object.bytes.4096",
+      "modelVersion": "2",
+      "scope": "Exact owner-local M2F finite campaign replay",
+      "validityDomain": "e3738fefcde92bb0f78cbed4f09e44bdf6c72f546b2bc82a48e8c5c1b35e3d06/1c9a0e041a8e65874500435f4ec069fdd0b1ec1fc5e1ee636ecfb04af9ef4b1f; not AMQP, S3 or managed service performance",
+      "quantity": {
+        "kind": "known",
+        "value": 4096,
+        "unit": "bytes",
+        "provenance": [
+          "m2f.object.bytes.4096"
+        ]
+      },
+      "classification": "user-input",
+      "confidence": "conditional",
+      "formula": "Explicit finite replay/experiment input; no physical latency inference",
+      "provenance": [
+        {
+          "source": "scripts/reality/async-calibration.ts",
+          "supports": "implementation",
+          "detail": "Fit-only conditional aggregate CPU; raw observations retained"
+        }
+      ],
+      "assumptions": [
+        "RabbitMQ HTTP management operations are not the generic queue protocol",
+        "Object process CPU includes client/server and may be below timer resolution",
+        "Transport/runtime/storage residual remains unresolved; no latency correction"
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "Separate protocol/server CPU and physical service measurement"
+    },
+    {
+      "id": "m2f.object.bytes.65536",
+      "concept": "m2f.object.bytes.65536",
+      "modelVersion": "2",
+      "scope": "Exact owner-local M2F finite campaign replay",
+      "validityDomain": "e3738fefcde92bb0f78cbed4f09e44bdf6c72f546b2bc82a48e8c5c1b35e3d06/1c9a0e041a8e65874500435f4ec069fdd0b1ec1fc5e1ee636ecfb04af9ef4b1f; not AMQP, S3 or managed service performance",
+      "quantity": {
+        "kind": "known",
+        "value": 65536,
+        "unit": "bytes",
+        "provenance": [
+          "m2f.object.bytes.65536"
+        ]
+      },
+      "classification": "user-input",
+      "confidence": "conditional",
+      "formula": "Explicit finite replay/experiment input; no physical latency inference",
+      "provenance": [
+        {
+          "source": "scripts/reality/async-calibration.ts",
+          "supports": "implementation",
+          "detail": "Fit-only conditional aggregate CPU; raw observations retained"
+        }
+      ],
+      "assumptions": [
+        "RabbitMQ HTTP management operations are not the generic queue protocol",
+        "Object process CPU includes client/server and may be below timer resolution",
+        "Transport/runtime/storage residual remains unresolved; no latency correction"
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "Separate protocol/server CPU and physical service measurement"
+    }
+  ],
+  "policyLedger": [
+    {
+      "id": "m2f.policy.messages",
+      "concept": "messages",
+      "modelVersion": "2",
+      "scope": "Bounded internal messaging/object executor",
+      "validityDomain": "m2f/1 only; not provider capacity",
+      "quantity": {
+        "kind": "known",
+        "value": 100000,
+        "unit": "count",
+        "provenance": [
+          "m2f.policy.messages"
+        ]
+      },
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "formula": "Explicit executor/retention budget",
+      "provenance": [
+        {
+          "source": "packages/simulation/src/model2/async/policy.ts",
+          "supports": "implementation",
+          "detail": "Finite internal mechanism and evidence budgets"
+        }
+      ],
+      "assumptions": [
+        "No physical durability or cloud performance claim"
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "Review against executor measurements"
+    },
+    {
+      "id": "m2f.policy.objects",
+      "concept": "objects",
+      "modelVersion": "2",
+      "scope": "Bounded internal messaging/object executor",
+      "validityDomain": "m2f/1 only; not provider capacity",
+      "quantity": {
+        "kind": "known",
+        "value": 100000,
+        "unit": "count",
+        "provenance": [
+          "m2f.policy.objects"
+        ]
+      },
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "formula": "Explicit executor/retention budget",
+      "provenance": [
+        {
+          "source": "packages/simulation/src/model2/async/policy.ts",
+          "supports": "implementation",
+          "detail": "Finite internal mechanism and evidence budgets"
+        }
+      ],
+      "assumptions": [
+        "No physical durability or cloud performance claim"
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "Review against executor measurements"
+    },
+    {
+      "id": "m2f.policy.consumers",
+      "concept": "consumers",
+      "modelVersion": "2",
+      "scope": "Bounded internal messaging/object executor",
+      "validityDomain": "m2f/1 only; not provider capacity",
+      "quantity": {
+        "kind": "known",
+        "value": 512,
+        "unit": "count",
+        "provenance": [
+          "m2f.policy.consumers"
+        ]
+      },
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "formula": "Explicit executor/retention budget",
+      "provenance": [
+        {
+          "source": "packages/simulation/src/model2/async/policy.ts",
+          "supports": "implementation",
+          "detail": "Finite internal mechanism and evidence budgets"
+        }
+      ],
+      "assumptions": [
+        "No physical durability or cloud performance claim"
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "Review against executor measurements"
+    },
+    {
+      "id": "m2f.policy.concurrency",
+      "concept": "concurrency",
+      "modelVersion": "2",
+      "scope": "Bounded internal messaging/object executor",
+      "validityDomain": "m2f/1 only; not provider capacity",
+      "quantity": {
+        "kind": "known",
+        "value": 512,
+        "unit": "count",
+        "provenance": [
+          "m2f.policy.concurrency"
+        ]
+      },
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "formula": "Explicit executor/retention budget",
+      "provenance": [
+        {
+          "source": "packages/simulation/src/model2/async/policy.ts",
+          "supports": "implementation",
+          "detail": "Finite internal mechanism and evidence budgets"
+        }
+      ],
+      "assumptions": [
+        "No physical durability or cloud performance claim"
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "Review against executor measurements"
+    },
+    {
+      "id": "m2f.policy.keyCharacters",
+      "concept": "keyCharacters",
+      "modelVersion": "2",
+      "scope": "Bounded internal messaging/object executor",
+      "validityDomain": "m2f/1 only; not provider capacity",
+      "quantity": {
+        "kind": "known",
+        "value": 1024,
+        "unit": "count",
+        "provenance": [
+          "m2f.policy.keyCharacters"
+        ]
+      },
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "formula": "Explicit executor/retention budget",
+      "provenance": [
+        {
+          "source": "packages/simulation/src/model2/async/policy.ts",
+          "supports": "implementation",
+          "detail": "Finite internal mechanism and evidence budgets"
+        }
+      ],
+      "assumptions": [
+        "No physical durability or cloud performance claim"
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "Review against executor measurements"
+    },
+    {
+      "id": "m2f.policy.evidenceRows",
+      "concept": "evidenceRows",
+      "modelVersion": "2",
+      "scope": "Bounded internal messaging/object executor",
+      "validityDomain": "m2f/1 only; not provider capacity",
+      "quantity": {
+        "kind": "known",
+        "value": 1000,
+        "unit": "count",
+        "provenance": [
+          "m2f.policy.evidenceRows"
+        ]
+      },
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "formula": "Explicit executor/retention budget",
+      "provenance": [
+        {
+          "source": "packages/simulation/src/model2/async/policy.ts",
+          "supports": "implementation",
+          "detail": "Finite internal mechanism and evidence budgets"
+        }
+      ],
+      "assumptions": [
+        "No physical durability or cloud performance claim"
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "Review against executor measurements"
+    },
+    {
+      "id": "m2f.policy.interventions",
+      "concept": "interventions",
+      "modelVersion": "2",
+      "scope": "Bounded internal messaging/object executor",
+      "validityDomain": "m2f/1 only; not provider capacity",
+      "quantity": {
+        "kind": "known",
+        "value": 1024,
+        "unit": "count",
+        "provenance": [
+          "m2f.policy.interventions"
+        ]
+      },
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "formula": "Explicit executor/retention budget",
+      "provenance": [
+        {
+          "source": "packages/simulation/src/model2/async/policy.ts",
+          "supports": "implementation",
+          "detail": "Finite internal mechanism and evidence budgets"
+        }
+      ],
+      "assumptions": [
+        "No physical durability or cloud performance claim"
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "Review against executor measurements"
+    },
+    {
+      "id": "m2f.policy.attempts",
+      "concept": "attempts",
+      "modelVersion": "2",
+      "scope": "Bounded internal messaging/object executor",
+      "validityDomain": "m2f/1 only; not provider capacity",
+      "quantity": {
+        "kind": "known",
+        "value": 1000,
+        "unit": "count",
+        "provenance": [
+          "m2f.policy.attempts"
+        ]
+      },
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "formula": "Explicit executor/retention budget",
+      "provenance": [
+        {
+          "source": "packages/simulation/src/model2/async/policy.ts",
+          "supports": "implementation",
+          "detail": "Finite internal mechanism and evidence budgets"
+        }
+      ],
+      "assumptions": [
+        "No physical durability or cloud performance claim"
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "Review against executor measurements"
+    }
+  ],
+  "scope": "RabbitMQ HTTP management and independent local Node object reference; no AMQP/cloud/product equivalence or Free Mode validity"
+}

@@ -38,6 +38,10 @@
     "check:data": "bun --no-env-file scripts/reality/data-calibration.ts",
     "measure:data": "node scripts/reality/data-benchmark.mjs",
     "perf:data": "bun --no-env-file scripts/reality/data-performance.ts",
+    "debug:async": "bun --no-env-file scripts/reality/async-proofs.ts",
+    "check:async": "bun --no-env-file scripts/reality/async-calibration.ts",
+    "measure:async": "node scripts/reality/async-benchmark.mjs",
+    "perf:async": "bun --no-env-file scripts/reality/async-performance.ts",
     "audit": "bun audit --json"
   },
   "devDependencies": {

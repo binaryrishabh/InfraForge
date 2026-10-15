@@ -48,3 +48,11 @@ through the internal registry. Use `check:data` and `debug:data` for committed r
 `perf:data` measures the executor. The complete data timing predictor is rejected;
 all 54 cache logical sequences match, without claiming calibrated cache latency.
 Model 1 remains active, Model 2 internal and production parked.
+
+M2F adds [messaging/object architecture](m2f-async.md), [primary research and profile
+decisions](m2f-research.md), [local semantic/calibration campaign](m2f-calibration.md)
+and [proofs/sweep/performance](m2f-validation.md). Select internal `m2f/1` explicitly.
+`debug:async` and `check:async` replay committed artifacts. `measure:async` creates
+and cleans isolated local broker/reference fixtures; `perf:async` measures the
+executor. Queue and object timing are not accepted physical predictors. Model 1
+remains active, Model 2 internal and production parked.
