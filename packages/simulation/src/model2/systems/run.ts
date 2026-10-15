@@ -13,7 +13,12 @@ import { eventRows, SYSTEM_LIMITS, SYSTEM_POLICY_LEDGER } from "./policy";
 import type { NetworkContext } from "../network/run";
 import type { EventKernel } from "../time";
 const copy = <T>(v: T): T => JSON.parse(JSON.stringify(v));
-export function createSystemsModel2(authored: SystemsInput) {
+export interface SystemsExtension {
+  deferredClients: string[];
+  crashes?: Array<{ target: string; at: number; restartAt: number }>;
+  install(kernel: EventKernel, context: NetworkContext, controls: { artifacts(client: string, replica: string, done: (ok: boolean) => void): void; samples(backend: string, target: string): Array<{ measurementAt: number; arrivedAt: number; values: unknown }> }): void;
+}
+export function createSystemsModel2(authored: SystemsInput, extension?: SystemsExtension) {
   validateSystems(authored); const i = copy(authored); i.resources.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
   const authorities = new Map<string, ReturnType<typeof dnsAuthority>>(), resolvers = new Map<string, ReturnType<typeof dnsResolver>>(), cdns = new Map<string, ReturnType<typeof objectCdn>>(), registries = new Map<string, ReturnType<typeof artifactRegistry>>(), clients = new Map<string, ReturnType<typeof artifactClient>>(), monitors = new Map<string, ReturnType<typeof monitoringAgent>>(), backends = new Map<string, ReturnType<typeof telemetryBackend>>();
   let security: ReturnType<typeof securityPlane>, context: NetworkContext, clock: EventKernel;
@@ -34,7 +39,13 @@ export function createSystemsModel2(authored: SystemsInput) {
     install(kernel, _trace, network) {
       context = network; clock = kernel; security = securityPlane(i, kernel, network, (id, name) => resolvers.get(id)?.peek(name));
       const horizon = requireKnown(i.horizon, "us");
-      for (const client of clients.values()) client.start(network, horizon);
+      for (const [id, client] of clients) client.start(network, horizon, extension?.deferredClients.includes(id));
+      for (const [index, crash] of (extension?.crashes ?? []).entries()) {
+        const owner = `restart-${index}`;
+        kernel.schedule(crash.at, 0, JSON.stringify(["product-crash", crash.target, index]), () => { network.setReady(crash.target, false, owner); network.abortOwned(crash.target); resolvers.get(crash.target)?.clear(); });
+        kernel.schedule(crash.restartAt, 0, JSON.stringify(["product-restart", crash.target, index]), () => network.setReady(crash.target, true, owner));
+      }
+      extension?.install(kernel, network, { artifacts(client, replica, done) { clients.get(client)!.launch(replica, done); }, samples(backend, target) { return backends.get(backend)?.recent(target) ?? []; } });
       for (const monitor of monitors.values()) monitor.start(horizon);
       for (const f of [...i.systems.interventions].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))) kernel.schedule(requireKnown(f.at, "us"), 0, JSON.stringify(["systems-intervention", f.id]), () => {
         if (f.kind === "dns-record") authorities.get(f.target)!.update(f.record);
@@ -54,6 +65,7 @@ export function createSystemsModel2(authored: SystemsInput) {
     receive(target, work, done) {
       const probe = instrumentation.get(target); if (!probe || (work.message?.request as { kind?: string } | undefined)?.kind !== "observe") return;
       const state = context.observe(target) as Record<string, unknown>, values = Object.fromEntries(["paused", "received", "admitted", "rejected", "completed", "failed", "queued", "serving", "waiting", "consumedCoreUs"].map((key) => [key, state[key]]));
+      if (extension) { const cpu = (state.compute as { cpu?: { availableCoreUs: number; appCoreUs: number; competitorCoreUs: number } } | undefined)?.cpu; if (cpu) { values.availableCoreUs = cpu.availableCoreUs; values.totalCoreUs = cpu.appCoreUs + cpu.competitorCoreUs; } }
       const measuredAt = runtimeNow(); probe.produced++; observations.add(measuredAt, "measurement", target, "actual instrumented station snapshot");
       work.message!.response = { ok: true, measurementAt: measuredAt, values: { ...values, endpoint: context.endpoint(target) } }; work.message!.bodyBytes = { response: probe.bytes }; done("completed");
       return { admitted: true, state: () => "finished", cancel: () => "already-finished" } satisfies Receipt;

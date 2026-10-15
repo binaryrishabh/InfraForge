@@ -40,6 +40,7 @@ export function validateSystems(i: SystemsInput) {
     if (r.kind === "registry") { if (resources.get(r.store)?.kind !== "object-store" || !key(r.namespace)) throw Error("Registry object owner"); path(r.id, r.store); }
     if (r.kind === "artifact-client") {
       if (resources.get(r.registry)?.kind !== "registry" || r.replicas.length > caps.targets || !unique(r.replicas.map((x) => x.id)) || !unique(r.replicas.map((x) => x.target))) throw Error("Registry startup contract"); path(r.id, r.registry); n(r.cacheBytes, "bytes"); n(r.attempts, "count", 1, caps.attempts); micros(horizon + n(r.backoff, "us", 1));
+      const initial = r.initialLayers ?? []; if (initial.length > caps.entries || !unique(initial.map((b) => b.digest)) || initial.some((b) => !/^sha256:[a-f0-9]{64}$/.test(b.digest)) || initial.reduce((sum, b) => sum + n(b.bytes, "bytes"), 0) > n(r.cacheBytes, "bytes")) throw Error("Invalid authored initial layer ownership/capacity");
       for (const replica of r.replicas) { if (!key(replica.id) || !key(replica.reference) || resources.get(replica.target)?.kind !== "compute" || !i.endpoints[replica.target]!.alive) throw Error("Startup compute target"); n(replica.at, "us", 0, horizon); }
     }
     if (r.kind === "monitor") {

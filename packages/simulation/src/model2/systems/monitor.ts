@@ -12,6 +12,7 @@ const sampleIdentity = (s: Telemetry) => JSON.stringify([s.id, s.target, s.measu
 
 export function telemetryBackend(config: TelemetryConfig, kernel: EventKernel) {
   const records = new Map<string, Telemetry & { arrivedAt: number }>(), latest = new Map<string, { measurementAt: number; arrivedAt: number }>(); let received = 0, duplicates = 0, refused = 0;
+  const recent = new Map<string, Array<Telemetry & { arrivedAt: number }>>();
   const service = systemService(config.id, config, kernel, (work, done) => {
     const batch = (work.message?.request as { samples?: Telemetry[] })?.samples;
     if (!Array.isArray(batch) || !batch.length || batch.length > SYSTEM_LIMITS.entries || batch.some((s) => !s || typeof s.id !== "string" || typeof s.target !== "string" || !Number.isSafeInteger(s.bytes) || s.bytes < 0 || !Number.isSafeInteger(s.measurementAt) || s.measurementAt < 0 || !Number.isSafeInteger(s.collectedAt) || s.measurementAt > s.collectedAt || s.collectedAt > kernel.now)) { refused++; done({ ok: false, reason: "invalid-telemetry" }); return; }
@@ -20,9 +21,10 @@ export function telemetryBackend(config: TelemetryConfig, kernel: EventKernel) {
     for (const sample of batch) { const identity = sampleIdentity(sample), old = records.get(sample.id); if ((old && sampleIdentity(old) !== identity) || (identities.has(sample.id) && identities.get(sample.id) !== identity)) { refused++; done({ ok: false, reason: "telemetry-identity-conflict" }); return; } identities.set(sample.id, identity); }
     if (records.size + fresh.size > requireKnown(config.samples, "count")) { refused++; done({ ok: false, reason: "telemetry-backend-capacity" }); return; }
     for (const s of batch) { received++; if (records.has(s.id)) duplicates++; else { records.set(s.id, { ...copy(s), arrivedAt: kernel.now }); if (s.measurementAt >= (latest.get(s.target)?.measurementAt ?? -1)) latest.set(s.target, { measurementAt: s.measurementAt, arrivedAt: kernel.now }); } }
+    for (const sample of batch) { const row = records.get(sample.id)!, previous = recent.get(sample.target) ?? []; recent.set(sample.target, [...previous.filter((r) => r.id !== row.id), row].sort((a, b) => b.measurementAt - a.measurementAt || (a.id < b.id ? -1 : 1)).slice(0, 2)); }
     done({ ok: true });
   });
-  return { ...service, evidence: () => ({ id: config.id, received, duplicates, refused, samples: [...records.values()].map((s) => copy(s)), latest: [...latest.entries()].map(([target, sample]) => ({ target, ...sample, ageUs: kernel.now - sample.measurementAt })), freshnessPolicy: "Age only; no backend health threshold authored", service: service.serviceEvidence() }) };
+  return { ...service, recent: (target: string) => (recent.get(target) ?? []).map(copy), evidence: () => ({ id: config.id, received, duplicates, refused, samples: [...records.values()].map((s) => copy(s)), latest: [...latest.entries()].map(([target, sample]) => ({ target, ...sample, ageUs: kernel.now - sample.measurementAt })), freshnessPolicy: "Age only; no backend health threshold authored", service: service.serviceEvidence() }) };
 }
 export function monitoringAgent(config: MonitorConfig, kernel: EventKernel, send: Deliver) {
   const buffered = new Map<string, { sample: Telemetry; attempts: number }>(), inFlight = new Map<string, Array<{ sample: Telemetry; attempts: number }>>(), last = new Map<string, number>();

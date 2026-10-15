@@ -10,6 +10,7 @@ interface Request { work: Invocation; done(outcome: RemoteOutcome): void; receip
 export function loadBalancer(config: LoadBalancer, kernel: EventKernel, paths: Map<string, ReturnType<typeof pathTransport>>, operations: Map<string, OperationClass>, seed: string, horizon: number, trace: Trace) {
   const members = [...config.backends].sort().map((id) => ({ id, health: config.health.initial === "eligible", draining: false, successes: 0, failures: 0, outstanding: 0, selected: 0, probes: 0, cancelCheck: undefined as (() => boolean) | undefined }));
   const active = new Map<string, Request>(), pending = new Map<string, Request>();
+  const membersById = new Map(members.map((m) => [m.id, m]));
   let received = 0, completed = 0, rejected = 0, cancelled = 0, attempts = 0, retries = 0, retryLimited = 0, activeRetries = 0, cursor = 0, pumping = false;
   const path = (backend: string) => paths.get(JSON.stringify([config.id, backend]))!;
   const finish = (r: Request, outcome: RemoteOutcome) => {
@@ -74,6 +75,7 @@ export function loadBalancer(config: LoadBalancer, kernel: EventKernel, paths: M
     member.cancelCheck = kernel.schedule(0, 3, JSON.stringify(["health-check", config.id, member.id]), check);
   }
   return {
+    backend(id: string) { const member = membersById.get(id); if (!member) throw Error("Unknown backend"); return { health: member.health, draining: member.draining, outstanding: member.outstanding }; },
     accept(work: Invocation, done: Request["done"]): Receipt {
       received++;
       if (active.size >= requireKnown(config.maxOutstanding, "count") && pending.size >= requireKnown(config.maxPending, "count")) { rejected++; trace("lb-failure", work.callId, "pending-overflow", work.rootId, work.attempt); done("rejected"); return { admitted: false, state: () => "finished", cancel: () => "already-finished" }; }

@@ -42,5 +42,5 @@ export function dnsResolver(config: ResolverConfig, kernel: EventKernel, send: D
       done(reply);
     }); return () => { receipt.cancel(); };
   });
-  return { ...service, peek(name: string) { const entry = cache.get(dnsName(name)); return entry && entry.expires > kernel.now ? copy(entry.reply) : undefined; }, evidence: () => ({ id: config.id, queries, hits, misses, authoritativeLookups: upstream, failures, fills, expirations, evictions, replaced, cache: [...cache.entries()].map(([name, e]) => ({ name, expiresAt: e.expires, answer: copy(e.reply) })), service: service.serviceEvidence() }) };
+  return { ...service, clear() { for (const name of [...cache.keys()]) { remove(name); evictions++; } }, peek(name: string) { const entry = cache.get(dnsName(name)); return entry && entry.expires > kernel.now ? copy(entry.reply) : undefined; }, evidence: () => ({ id: config.id, queries, hits, misses, authoritativeLookups: upstream, failures, fills, expirations, evictions, replaced, cache: [...cache.entries()].map(([name, e]) => ({ name, expiresAt: e.expires, answer: copy(e.reply) })), service: service.serviceEvidence() }) };
 }

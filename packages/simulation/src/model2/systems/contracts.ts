@@ -11,6 +11,7 @@ export interface RegistryConfig extends CommandConfig { id: string; kind: "regis
 export interface StartupConfig extends CommandConfig {
   id: string; kind: "artifact-client"; registry: string; cacheBytes: Quantity<"bytes">;
   attempts: Quantity<"count">; backoff: Quantity<"us">;
+  initialLayers?: Array<{ digest: string; bytes: Quantity<"bytes"> }>;
   replicas: Array<{ id: string; target: string; reference: string; at: Quantity<"us"> }>;
 }
 export interface MonitorConfig extends CommandConfig {

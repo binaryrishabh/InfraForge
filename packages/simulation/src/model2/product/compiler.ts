@@ -1,0 +1,141 @@
+import { requireKnown } from "../../reality/quantity";
+import { validateSystems } from "../systems/validate";
+import type { SystemsInput } from "../systems/contracts";
+import { canonical, derivedLedger } from "./provenance";
+import { TRANSLATION_OWNERS, ownerAccepts, rewriteReferences } from "./owners";
+import { compileArrivals } from "./workload";
+import { compileFaults } from "./faults";
+import { validateController } from "./controller-policy";
+import type { SavedProductDesign, ProductContract, CompileResult, Diagnostic, SemanticSpec, CompiledPool, EdgeContract } from "./contracts";
+import { COMPILER_VERSION } from "./contracts";
+import { boundedProduct } from "./bounds";
+import { validateMaterializedSemantics } from "./semantics";
+import { capabilityFacts } from "./capabilities";
+import { numericOrigins } from "./origins";
+export function compileProduct(design: SavedProductDesign, contract: ProductContract): CompileResult {
+  const diagnostics: Diagnostic[] = [];
+  const error = (code: string, path: string, message: string) => diagnostics.push({ code, path, message, severity: "error" });
+  let semantic: SemanticSpec | undefined, phase = "design";
+  try {
+    boundedProduct(design); boundedProduct(contract);
+    if (design.schema !== "infraforge-saved-design/1" || contract.schema !== "infraforge-product-model2/1" || !contract.version || !contract.designVersion || !contract.catalogVersion || contract.workloadVersion !== "product-arrivals/1") error("VERSION_REQUIRED", "versions", "Explicit design/compiler/application/catalog/workload versions required");
+    if (!contract.application) error("MISSING_APPLICATION_PROFILE", "application", "Missing application execution profile; provider hardware cannot supply operation demand");
+    if (design.resources.length > 256 || design.connections.length > 2048 || !design.resources.length) error("DESIGN_BUDGET", "design", "Bounded nonempty design required");
+    const nodes = new Map(design.resources.map((r) => [r.id, r]));
+    if (nodes.size !== design.resources.length || design.resources.some((r) => !/^[a-zA-Z0-9_-]{1,64}$/.test(r.id))) error("RESOURCE_ID", "resources", "Unique bounded semantic IDs required; labels/coordinates do not define identity");
+    const edgeIds = new Set(design.connections.map((e) => e.id));
+    if (edgeIds.size !== design.connections.length) error("EDGE_ID", "connections", "Unique connection identities required");
+    for (const r of design.resources) {
+      const allowed = new Set(["id", "type", "x", "y", "skuId", "autoscaling", "public", "encryption", "openPorts", "size", "region", "name"]);
+      for (const key of Object.keys(r)) if (!allowed.has(key)) error("UNSUPPORTED_RESOURCE_SETTING", `resources.${r.id}.${key}`, "Unrecognized saved setting needs an explicit compiler-version owner");
+      const spec = contract.nodes[r.id];
+      if (!(r.type in TRANSLATION_OWNERS)) { error("UNSUPPORTED_RESOURCE", `resources.${r.id}`, `No translation owner for ${r.type}`); continue; }
+      if (!spec) { error("MISSING_RESOURCE_PROFILE", `nodes.${r.id}`, TRANSLATION_OWNERS[r.type].requires); continue; }
+      if (spec.type !== r.type || !spec.profileVersion || !spec.provenance.length) error("RESOURCE_PROFILE", `nodes.${r.id}`, "Matching versioned resource profile/provenance required");
+      if (spec.securityReplacement !== "explicit-reviewed/1") error("LEGACY_SECURITY_INCOMPLETE", `nodes.${r.id}`, "Legacy public/encryption/openPorts are historical only; reviewed listeners, external entry and policy/TLS replacement required");
+      if (r.autoscaling?.enabled && !spec.controller) error("MISSING_CONTROLLER_PROFILE", `nodes.${r.id}.controller`, "Legacy autoscaling has no provisioning/readiness/drain or metric-freshness policy");
+      if (spec.controller && (r.type !== "Virtual Machine" || !r.autoscaling?.enabled)) error("CONTROLLER_BINDING", `nodes.${r.id}.controller`, "A controller requires an enabled VM pool intent");
+      if (spec.controller && (r.autoscaling?.minReplicas !== requireKnown(spec.controller.min, "count") || r.autoscaling?.maxReplicas !== requireKnown(spec.controller.max, "count") || r.autoscaling?.targetCpu === undefined || r.autoscaling.targetCpu / 100 !== requireKnown(spec.controller.target, "ratio"))) error("AUTOSCALING_MISMATCH", `resources.${r.id}.autoscaling`, "Reviewed controller min/max/target must match explicit product intent; no auto defaults");
+      if (r.type === "Firewall" ? !spec.firewall || spec.resources.length !== 0 : !spec.resources.some((c) => c.role === spec.primary && ownerAccepts(r.type, c.config))) error("RESOURCE_OWNER", `nodes.${r.id}`, "Primary mechanism must match the resource translation owner");
+      if (r.skuId && !contract.capabilities.some((c) => c.resource === r.id && c.sku === r.skuId && c.catalogVersion === contract.catalogVersion)) error("PROVIDER_CAPABILITY_UNKNOWN", `resources.${r.id}.skuId`, "Approximate legacy catalog cannot establish sourced capabilities or application throughput");
+    }
+    for (const key of Object.keys(contract.nodes)) if (!nodes.has(key)) error("ORPHAN_PROFILE", `nodes.${key}`, "Profile has no saved product resource");
+    for (const e of design.connections) {
+      if (!nodes.has(e.sourceId) || !nodes.has(e.targetId)) error("UNKNOWN_EDGE_ENDPOINT", `connections.${e.id}`, "Saved edge has no matching resource");
+      if (!contract.edges[e.id]) error("AMBIGUOUS_CONNECTION", `connections.${e.id}`, "Drawn edge needs explicit dependency/routing/origin/monitor/consumer/artifact/policy intent");
+    }
+    for (const key of Object.keys(contract.edges)) if (!edgeIds.has(key)) error("ORPHAN_EDGE_INTENT", `edges.${key}`, "Semantic edge must refer to an actual saved connection");
+    if (diagnostics.length) return { ok: false, diagnostics };
+    const app = contract.application!;
+    if (app.schema !== "infraforge-application/1" || !app.version || !app.id || !app.validityDomain || !app.provenance.length || !app.operations.some((o) => o.id === app.controlOperation)) throw Error("Versioned application provenance/validity, operations and explicit control operation required");
+    phase = "provenance"; const provenance = derivedLedger(contract.ledger);
+    const runtime: SystemsInput = { modelVersion: "2", workloadVersion: "m2g/1", seed: contract.seed, ledger: provenance.ledger, profiles: [...app.demands].sort((a, b) => a.id < b.id ? -1 : 1), resources: [], operations: [], arrivals: [], faults: [], horizon: contract.horizon, sampleInterval: contract.sampleInterval, limits: contract.limits, interventions: [], links: [], paths: [], networkInterventions: [], endpoints: {}, dataInterventions: [], asyncInterventions: [], systems: { operation: app.controlOperation, identities: [{ id: "$caller", zone: "external", address: contract.caller.address }], listeners: [], firewalls: [], connections: [], instrumentation: [], interventions: [], commands: [] } };
+    const pools: CompiledPool[] = [], expansion = new Map<string, string[]>(), roleIds = new Map<string, string>();
+    const resources = [...design.resources].sort((a, b) => a.id < b.id ? -1 : 1);
+    for (const r of resources) {
+      const spec = contract.nodes[r.id]!, count = spec.controller ? requireKnown(spec.controller.slots, "count") : 1;
+      if (!Number.isSafeInteger(count) || count < 1 || count > 128 || new Set(spec.resources.map((v) => v.role)).size !== spec.resources.length) throw Error("Invalid replica/role budget");
+      const ids = Array.from({ length: count }, (_, n) => spec.controller ? `${r.id}#${n}` : r.id); expansion.set(r.id, ids);
+      for (const instance of ids) for (const resource of spec.resources) roleIds.set(`${instance}/${resource.role}`, resource.role === spec.primary ? instance : `${instance}/${resource.role}`);
+    }
+    const ref = (value: string, instance?: string) => {
+      const [node, role] = value.slice(1).split("/"); const owner = node === "self" ? instance! : node!;
+      const original = owner.split("#")[0]!, spec = contract.nodes[original]; if (!spec) throw Error(`Unknown semantic reference ${value}`);
+      const resolved = roleIds.get(`${owner}/${role ?? spec.primary}`); if (!resolved) throw Error(`Ambiguous pool or unknown role ${value}; use a routing edge or explicit instance`); return resolved;
+    };
+    phase = "nodes";
+    for (const r of resources) {
+      const spec = contract.nodes[r.id]!;
+      if (spec.firewall) runtime.systems.firewalls.push({ ...spec.firewall, id: r.id });
+      for (const instance of expansion.get(r.id)!) for (const resource of [...spec.resources].sort((a, b) => a.role < b.role ? -1 : 1)) {
+        const id = roleIds.get(`${instance}/${resource.role}`)!;
+        const material = { ...rewriteReferences(resource.config, (value) => ref(value, instance)), id } as SystemsInput["resources"][number];
+        if ("execution" in material) material.execution.id = id;
+        runtime.resources.push(material); runtime.endpoints[id] = { alive: true, ready: true };
+        const identity = spec.identities.find((p) => p.role === resource.role); if (!identity) throw Error(`Missing explicit network identity ${r.id}/${resource.role}`);
+        // Replica addresses are explicit per-slot, never synthesized from a coordinate or ordinal.
+        const address = identity.address.split(",")[expansion.get(r.id)!.indexOf(instance)]; if (!address) throw Error(`Missing replica address ${instance}/${resource.role}`);
+        runtime.systems.identities.push({ id, zone: identity.zone, address });
+        for (const listener of spec.listeners.filter((l) => l.role === resource.role)) { const { role: _role, ...l } = listener; runtime.systems.listeners.push({ ...l, resource: id }); }
+      }
+    }
+    for (const r of resources) {
+      const spec = contract.nodes[r.id]!;
+      if (spec.controller) {
+        validateController(spec.controller, runtime.ledger);
+        const replicas = expansion.get(r.id)!, artifacts = replicas.map((instance) => ({ id: ref(spec.controller!.artifact.node === r.id ? `$self/${spec.controller!.artifact.role}` : `$${spec.controller!.artifact.node}/${spec.controller!.artifact.role}`, instance), replica: instance }));
+        const profile = { ...spec.controller, loadBalancer: ref(spec.controller.loadBalancer), signal: spec.controller.signal.kind === "observed-core-time" ? { ...spec.controller.signal, backend: ref(spec.controller.signal.backend) } : spec.controller.signal };
+        for (const a of artifacts) { const client = runtime.resources.find((s) => s.id === a.id); if (client?.kind !== "artifact-client") throw Error("Scale-out requires owned artifact client"); client.replicas.push({ id: a.replica, target: a.replica, reference: profile.artifact.reference, at: provenance.q(`m2h.${a.replica}.artifactAt`, 0, "us", ["generic-reconcile/1: deferred artifact acquisition begins only after provision"], "implementation-policy") }); }
+        pools.push({ id: r.id, replicas, profile, artifactClients: artifacts });
+      }
+    }
+    const links = new Map<string, SystemsInput["links"][number]>();
+    const path = (id: string, source: string, target: string, edge: EdgeContract) => {
+      if (!edge.transport || !edge.security || !edge.request?.length || !edge.response?.length) throw Error(`Missing transport/listener/security for ${id}; physical bandwidth/propagation remain Unknown`);
+      const t = contract.transports[edge.transport]; if (!t?.version || !t.provenance.length || !["per-path", "shared"].includes(t.ownership)) throw Error(`Missing versioned transport/link ownership ${edge.transport}`);
+      const prefix = t.ownership === "shared" ? `transport:${edge.transport}` : id;
+      for (const l of [...t.links].sort((a, b) => a.id < b.id ? -1 : 1)) {
+        const endpoint = (v: string) => v === "$source" ? source : v === "$target" ? target : v.startsWith("$") && v !== "$caller" ? ref(v) : v;
+        const mapped = { ...l, id: `${prefix}/${l.id}`, from: endpoint(l.from), to: endpoint(l.to) };
+        const old = links.get(mapped.id); if (old && JSON.stringify(canonical(old)) !== JSON.stringify(canonical(mapped))) throw Error(`Conflicting shared physical link ${mapped.id}`); links.set(mapped.id, mapped);
+      }
+      runtime.paths.push({ id, source, target, request: edge.request.map((l) => `${prefix}/${l}`), response: edge.response.map((l) => `${prefix}/${l}`), pool: t.pool, bytes: t.bytes });
+      runtime.systems.connections.push({ ...rewriteReferences(edge.security, (v) => ref(v)), path: id });
+    };
+    phase = "topology";
+    const materialized = new Map(runtime.resources.map((r) => [r.id, r]));
+    const semanticEdges: SemanticSpec["edges"] = [];
+    for (const r of resources) for (const instance of expansion.get(r.id)!) for (const e of [...contract.nodes[r.id]!.internalEdges].sort((a, b) => a.id < b.id ? -1 : 1)) path(`${instance}/internal/${e.id}`, ref(`$self/${e.sourceRole}`, instance), ref(`$self/${e.targetRole}`, instance), e);
+    for (const e of [...design.connections].sort((a, b) => a.id < b.id ? -1 : 1)) {
+      const intent = contract.edges[e.id]!; semanticEdges.push({ id: e.id, source: e.sourceId, target: e.targetId, purpose: intent.purpose });
+      if (intent.purpose === "policy-attachment") { if (nodes.get(e.sourceId)!.type !== "Firewall") throw Error("Policy attachment source must be Firewall"); continue; }
+      if (!intent.security || requireKnown(intent.security.port, "count") !== e.port) throw Error(`Connection ${e.id} port disagrees with reviewed listener contract`);
+      for (const s of expansion.get(e.sourceId)!) for (const t of expansion.get(e.targetId)!) {
+        const source = ref(`$self/${intent.sourceRole}`, s), target = ref(`$self/${intent.targetRole}`, t);
+        path(`${e.id}:${s}:${t}`, source, target, intent);
+        if (intent.purpose === "routing") { const lb = materialized.get(source); if (lb?.kind !== "load-balancer") throw Error("Routing owner must be LB"); lb.backends.push(target); }
+        if (intent.purpose === "monitor-target") { const agent = materialized.get(source); if (agent?.kind !== "monitor") throw Error("Monitor-target owner must be Monitoring Agent"); agent.targets.push(target); }
+      }
+    }
+    const entry = ref(contract.caller.entry); path("external-entry", "$caller", entry, { purpose: "dependency", sourceRole: "external", targetRole: "entry", ...contract.caller });
+    for (const e of contract.caller.dependencies) path(`external/${e.id}`, "$caller", ref(e.target), { ...e, sourceRole: "external", targetRole: "target" });
+    for (const o of [...app.operations].sort((a, b) => a.id < b.id ? -1 : 1)) runtime.operations.push({ ...o, entry });
+    runtime.links = [...links.values()];
+    runtime.systems.instrumentation = contract.instrumentation.flatMap((p) => expansion.has(p.target.slice(1)) ? expansion.get(p.target.slice(1))!.map((target) => ({ ...p, target })) : [{ ...p, target: ref(p.target) }]);
+    runtime.systems.commands = rewriteReferences(contract.commands, (v) => ref(v));
+    phase = "workload"; runtime.arrivals = compileArrivals(design, contract, provenance);
+    phase = "faults"; const crashes = compileFaults(contract.faults, runtime, (id) => expansion.get(id) ?? [id], provenance);
+    phase = "capabilities";
+    const capabilities = capabilityFacts(contract, resources);
+    semantic = { schema: "infraforge-semantic-infrastructure/1", versions: { design: contract.designVersion, compiler: COMPILER_VERSION, model: "2", application: `${app.id}@${app.version}`, catalog: contract.catalogVersion, workload: contract.workloadVersion, contract: contract.version }, nodes: resources.map((r) => ({ id: r.id, type: r.type, owner: TRANSLATION_OWNERS[r.type].owner, profile: contract.nodes[r.id]!.profileVersion })), edges: semanticEdges, capabilities, legacyMetadata: resources.map(({ id, region, public: exposed, encryption, openPorts }) => ({ id, region, public: exposed, encryption, openPorts })), unknown: ["Provider effective CPU/credits, memory/device failure, price/region physics", "TLS crypto CPU/timing, physical link demand unless explicitly supplied", "Application profiles prove only their authored validity domain"], numericOrigins: [] };
+    phase = "numeric-provenance"; provenance.audit(runtime); for (const p of pools) provenance.audit(p); provenance.audit(crashes);
+    semantic.numericOrigins = numericOrigins(runtime, pools, contract, crashes);
+    runtime.ledger.sort((a, b) => a.id < b.id ? -1 : 1);
+    phase = "runtime-contract"; validateMaterializedSemantics(runtime, semantic.edges); validateSystems(runtime);
+    return { ok: true, value: canonical({ schema: "infraforge-compiled-product/1", semantic, input: runtime, pools, crashes }), diagnostics };
+  } catch (cause) {
+    const message = cause instanceof Error ? cause.message : String(cause);
+    const code = message.startsWith("Missing listener") ? "MISSING_LISTENER" : message.startsWith("Unsupported resource setting") ? "UNSUPPORTED_RESOURCE_SETTING" : /provenance|Anonymous compiler number/.test(message) ? "MISSING_PROVENANCE" : /Missing.*operation|read\/write operation/.test(message) ? "MISSING_OPERATION_MAPPING" : phase.toUpperCase().replaceAll("-", "_") + "_INCOMPLETE";
+    error(code, phase, message); return { ok: false, diagnostics, semantic };
+  }
+}

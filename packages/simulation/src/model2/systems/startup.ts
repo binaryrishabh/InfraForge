@@ -10,6 +10,8 @@ import { eventRows, SYSTEM_LIMITS } from "./policy";
 export function artifactClient(config: StartupConfig, kernel: EventKernel, send: Deliver, operation: string) {
   const cache = new Map<string, number>(), replicas = new Map(config.replicas.map((r) => [r.id, { ...r, state: "pending" as "pending" | "pulling" | "failed" | "running", attempts: 0, readyAt: null as number | null, resolvedDigest: null as string | null, requiredLayers: [] as BlobDescriptor[] }]));
   const events = eventRows(); let bytes = 0, pulled = 0, reused = 0, failures = 0;
+  for (const layer of config.initialLayers ?? []) { const size = requireKnown(layer.bytes, "bytes"); cache.set(layer.digest, size); bytes += size; }
+  const launches = new Map<string, (done: (ok: boolean) => void) => void>();
   const service = systemService(config.id, config, kernel, (work, done) => {
     const request = work.message?.request as { kind: string; replica: string }, replica = replicas.get(request.replica)!;
     if (!replica || replica.state === "running") { done({ ok: !!replica, reason: replica ? undefined : "missing-replica" }); return; }
@@ -32,19 +34,20 @@ export function artifactClient(config: StartupConfig, kernel: EventKernel, send:
       }; next();
     }); return () => { receipt?.cancel(); };
   });
-  return { ...service, start(context: NetworkContext, horizon: number) {
+  return { ...service, launch(id: string, done: (ok: boolean) => void) { const start = launches.get(id); if (!start) throw Error("Unknown deferred artifact replica"); start(done); }, start(context: NetworkContext, horizon: number, deferred = false) {
     for (const r of replicas.values()) {
       context.setReady(r.target, false);
-      const attempt = () => {
-        if (kernel.now >= horizon || r.state === "running") return;
+      const attempt = (completed?: (ok: boolean) => void) => {
+        if (kernel.now >= horizon || r.state === "running") { completed?.(r.state === "running"); return; }
         r.attempts++;
         const work: Invocation = { rootId: JSON.stringify(["startup", config.id, r.id]), callId: JSON.stringify(["startup", config.id, r.id, r.attempts]), attempt: r.attempts, operation, offeredAt: kernel.now, message: { request: { kind: "start", replica: r.id } } };
         service.accept(work, (outcome) => {
-          if (outcome === "completed") context.setReady(r.target, true);
-          else { r.state = "failed"; if (r.attempts < requireKnown(config.attempts, "count")) { const at = kernel.now + requireKnown(config.backoff, "us"); if (at < horizon) kernel.schedule(at, 2, JSON.stringify(["startup-retry", config.id, r.id, r.attempts]), attempt); } }
+          if (outcome === "completed") { if (!deferred) context.setReady(r.target, true); completed?.(true); }
+          else { r.state = "failed"; if (!deferred && r.attempts < requireKnown(config.attempts, "count")) { const at = kernel.now + requireKnown(config.backoff, "us"); if (at < horizon) kernel.schedule(at, 2, JSON.stringify(["startup-retry", config.id, r.id, r.attempts]), () => attempt()); } else completed?.(false); }
         });
       };
-      kernel.schedule(requireKnown(r.at, "us"), 2, JSON.stringify(["startup", config.id, r.id]), attempt);
+      launches.set(r.id, attempt);
+      if (!deferred) kernel.schedule(requireKnown(r.at, "us"), 2, JSON.stringify(["startup", config.id, r.id]), () => attempt());
     }
   }, evidence: () => ({ id: config.id, cache: [...cache.entries()].map(([digest, bytes]) => ({ digest, bytes })), cachedBytes: bytes, pulledBytes: pulled, reusedLayers: reused, failures, replicas: [...replicas.values()].map((r) => ({ ...r })), service: service.serviceEvidence(), events: events.snapshot() }) };
 }

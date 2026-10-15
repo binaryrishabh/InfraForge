@@ -14,10 +14,15 @@ import type { Trace } from "./contracts";
 import type { Invocation, Receipt, RemoteOutcome } from "../workload/contracts";
 
 export interface NetworkContext {
-  setReady(id: string, ready: boolean): void;
+  setReady(id: string, ready: boolean, owner?: string): void;
   endpoint(id: string): { alive: boolean; ready: boolean };
   reachable(path: string): boolean;
   observe(id: string): unknown;
+  setAvailable(id: string, alive: boolean): void;
+  abortOwned(id: string): void;
+  retireOwner?(id: string): void;
+  drain(lb: string, backend: string, grace: number): void;
+  backend(lb: string, backend: string): { health: boolean; draining: boolean; outstanding: number };
 }
 export interface NetworkExtension {
   resource: ResourceFactory;
@@ -47,12 +52,15 @@ export function createNetworkRuntime(authored: NetworkInput, extension?: Network
   for (const r of input.resources) if (r.kind === "load-balancer") r.backends.sort(lexical);
   let measure: () => NetworkSnapshot;
   const runtime = createComputeRuntime(computeAdapter(input), (kernel, deliver, controls) => {
-    const trace = networkTrace(kernel, input.limits.maxRawResults), states = new Map(Object.entries(input.endpoints).map(([id, state]) => [id, { ...state }])), readiness = new Map<string, boolean>(), activeStates = new Map<string, { alive: boolean; ready: boolean }>();
-    const context: NetworkContext = { setReady(id, ready) { const state = states.get(id); if (!state) throw Error("Unknown readiness target"); readiness.set(id, ready); state.ready = (activeStates.get(id) ?? input.endpoints[id]!).ready && ready; }, endpoint: (id) => ({ ...states.get(id)! }), observe: controls.observe, reachable: (id) => { const p = input.paths.find((p) => p.id === id); return !!p && [...p.request, ...p.response].every((l) => links.get(l)!.reachable()); } };
-    extension?.install?.(kernel, trace.emit, context);
+    const trace = networkTrace(kernel, input.limits.maxRawResults), states = new Map(Object.entries(input.endpoints).map(([id, state]) => [id, { ...state }])), readiness = new Map<string, Map<string, boolean>>(), activeStates = new Map<string, { alive: boolean; ready: boolean }>();
+    const availability = new Map<string, boolean>();
+    const applyState = (id: string) => { const desired = activeStates.get(id) ?? input.endpoints[id]!; const next = { alive: desired.alive && (availability.get(id) ?? true), ready: desired.ready && [...(readiness.get(id)?.values() ?? [])].every(Boolean) }; const previous = states.get(id)!; states.set(id, next); if (previous.alive !== next.alive && input.resources.find((r) => r.id === id)!.kind !== "load-balancer") controls.pause(id, !next.alive); };
+    const context: NetworkContext = { abortOwned: controls.abortOwned, setReady(id, ready, owner = "default") { if (!states.has(id)) throw Error("Unknown readiness target"); const gates = readiness.get(id) ?? new Map<string, boolean>(); gates.set(owner, ready); readiness.set(id, gates); applyState(id); }, setAvailable(id, alive) { if (!states.has(id)) throw Error("Unknown availability target"); availability.set(id, alive); applyState(id); }, drain(lb, backend, grace) { lbs.get(lb)!.drain(backend, grace); }, backend(lb, backend) { return lbs.get(lb)!.backend(backend); }, endpoint: (id) => ({ ...states.get(id)! }), observe: controls.observe, reachable: (id) => { const p = input.paths.find((p) => p.id === id); return !!p && [...p.request, ...p.response].every((l) => links.get(l)!.reachable()); } };
     for (const r of input.resources) if (r.kind !== "load-balancer" && !states.get(r.id)!.alive) controls.pause(r.id, true);
+    extension?.install?.(kernel, trace.emit, context);
     const links = new Map(input.links.map((l) => [l.id, networkLink(l, kernel, trace.emit)]));
     const paths = new Map<string, ReturnType<typeof pathTransport>>();
+    context.retireOwner = (id) => { for (const r of input.resources) if (r.id === id || r.id.startsWith(id + "/")) context.setReady(r.id, false, "terminated"); for (const p of input.paths) if (p.source === id || p.source.startsWith(id + "/")) paths.get(JSON.stringify([p.source, p.target]))!.reset(); };
     const send = (source: string, target: string, work: Invocation, done: (outcome: RemoteOutcome) => void) => { const path = paths.get(JSON.stringify([source, target])); if (!path) throw Error("Missing explicit transport path"); return path.exchange(work, (result) => done(result.ok ? "completed" : "rejected")); };
     for (const p of input.paths) paths.set(JSON.stringify([p.source, p.target]), pathTransport(p, kernel, links, deliver, (id) => states.get(id)!.alive, trace.emit, (session, target) => extension?.disconnected?.(target, session), extension?.connection?.(p, kernel, send, context)));
     const lbs = new Map(input.resources.filter((r) => r.kind === "load-balancer").map((r) => [r.id, loadBalancer(r, kernel, paths, new Map(input.operations.map((o) => [o.id, o])), input.seed, requireKnown(input.horizon, "us"), trace.emit)]));
@@ -62,10 +70,8 @@ export function createNetworkRuntime(authored: NetworkInput, extension?: Network
         if (i.kind === "bandwidth") links.get(i.target)!.bandwidth(requireKnown(active ? i.bandwidth : input.links.find((l) => l.id === i.target)!.bandwidth, "bytes/s"));
         if (i.kind === "delay") links.get(i.target)!.delay(active ? requireKnown(i.delay, "us") : 0);
         if (i.kind === "service-state") {
-          const previous = states.get(i.target)!; if (active) activeStates.set(i.target, { alive: i.alive, ready: i.ready }); else activeStates.delete(i.target);
-          const desired = activeStates.get(i.target) ?? input.endpoints[i.target]!, next = { alive: desired.alive, ready: desired.ready && (readiness.get(i.target) ?? true) };
-          states.set(i.target, next);
-          if (previous.alive !== next.alive && input.resources.find((r) => r.id === i.target)!.kind !== "load-balancer") controls.pause(i.target, !next.alive);
+          if (active) activeStates.set(i.target, { alive: i.alive, ready: i.ready }); else activeStates.delete(i.target);
+          applyState(i.target);
         }
         if (i.kind === "reset") [...paths.values()].find((p) => p.measure().id === i.target)!.reset();
         if (i.kind === "drain") lbs.get(i.target)!.drain(i.backend, requireKnown(i.grace, "us"));

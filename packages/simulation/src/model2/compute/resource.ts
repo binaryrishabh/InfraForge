@@ -73,6 +73,7 @@ export function computeResource(config: ComputeResource, profiles: Map<string, C
       if (!paused) { for (const call of active.values()) if (call.phase === "wait") scheduleWait(call); pump(); }
     },
     setCapacity(cores: number) { scheduler.capacity(cores); },
+    abortOwned() { for (const call of [...active.values(), ...queue.values()]) { const child = call.child; finish(call, "rejected"); child?.cancel(); } },
     competitor(id: string, demand: number, parallelism: number) { scheduler.add({ id, demand, cap: parallelism, competitor: true, done: () => {} }); },
     removeCompetitor(id: string) { scheduler.remove(id); },
     measure(): ComputeState {
