@@ -29055,18 +29055,18 @@
       "id": "m1.apps.backend.stages.costEstimation.stages.2",
       "concept": "monthlyUsd · literal 10",
       "modelVersion": "1",
-      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "scope": "Historical fallback price in deployment-time cost estimation",
       "quantity": {
         "kind": "known",
         "value": 10,
-        "unit": "code-number",
+        "unit": "USD/month",
         "provenance": [
           "m1.apps.backend.stages.costEstimation.stages.2"
         ]
       },
       "formula": "const monthlyUsd = sku ? sku.monthlyPriceUsd : (GENERIC_MONTHLY_USD[resource.type] ?? 10);",
-      "classification": "implementation-policy",
-      "confidence": "high",
+      "classification": "approximation",
+      "confidence": "low",
       "provenance": [
         {
           "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/stages/costEstimation.stages.ts#L14",
@@ -29075,12 +29075,11 @@
         }
       ],
       "assumptions": [
-        "This literal is not evidence of real infrastructure capacity or performance.",
-        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+        "Fallback estimate, not a documented provider tariff; runtime cost.ts contains the matching historical fallback."
       ],
       "researchedOn": "2026-10-15",
-      "freeMode": "conditional",
-      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "freeMode": "forbidden",
+      "replacement": "M2G: missing tariff remains Unknown; derive priced components from dated provider/service/region billing rules.",
       "location": {
         "file": "apps/backend/stages/costEstimation.stages.ts",
         "line": 14,

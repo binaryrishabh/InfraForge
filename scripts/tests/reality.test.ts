@@ -16,6 +16,8 @@ test("every production numeric literal and source file is inventoried; implement
   for (const file of ["apps/backend/lib/prisma.ts", "apps/web/src/lib/format.ts", "apps/web/src/lib/useMediaQuery.ts"])
     expect(actual.files.some((entry) => entry.file === file)).toBe(true);
   expect(validateLedger(actual.ledger)).toEqual([]);
+  expect(actual.ledger.find((e) => e.location.file === "apps/backend/stages/costEstimation.stages.ts" && e.formula.includes("GENERIC_MONTHLY_USD")))
+    .toMatchObject({ classification: "approximation", freeMode: "forbidden", quantity: { unit: "USD/month", value: 10 } });
   expect(actual.ledger.filter((e) => e.classification === "obsolete").length).toBe(2);
   expect(actual.ledger.filter((e) => e.classification !== "implementation-policy").every((e) => e.freeMode === "forbidden")).toBe(true);
 });

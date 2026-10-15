@@ -63,6 +63,11 @@ export function classify(site: NumericSite): RealityEntry {
     if (/RESOURCE_PORTS|openPorts/.test(file + context)) unit = "port";
   }
   const evidence: RealityEntry["provenance"] = [{ source: `repo:${AUDIT_SHA}/${file}#L${site.line}`, supports: "implementation", detail: "Exact historical literal and source expression; not external validation." }];
+  if (file === "apps/backend/stages/costEstimation.stages.ts" && context.includes("GENERIC_MONTHLY_USD") && site.value === 10) {
+    classification = "approximation"; unit = "USD/month"; scope = "Historical fallback price in deployment-time cost estimation";
+    assumptions = ["Fallback estimate, not a documented provider tariff; runtime cost.ts contains the matching historical fallback."];
+    replacement = "M2G: missing tariff remains Unknown; derive priced components from dated provider/service/region billing rules.";
+  }
   if (classification === "obsolete") evidence.push({ source: "https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/burstable-credits-baseline-concepts.html", supports: "qualitative",
     detail: "Contradicts this stored coefficient: EC2 t3.medium/large baselines are 20%/30% per vCPU. Exact replacement facts are separately recorded in provider-facts.json; this source does not validate the stored value." });
   if (file.includes("apps/web/src/features/monitoring/store/") && /metrics|cpu|health|loadFraction|simulatedSeconds|burnRate|accumulatedCost/.test(symbol + context)) {
