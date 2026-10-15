@@ -710,8 +710,9 @@ Improvement drafts are browser-history context, not durable unfinished tasks; a
 new attempt durably retains its hypothesis. Deleting its source removes the ability
 to compare with that source but preserves the child's own evidence/hypothesis.
 
-Next engine milestone: **M2E — database/cache mechanisms** using internal workload,
-compute, pool and transport ownership, with measured demand and explicit Unknowns.
+Next engine work: **storage/durability and recovery** using the M2F queue/object
+ownership seams, measured demand and explicit Unknowns. Registry and partitioned-log
+semantics remain separate future resources.
 Deepen existing resources before expansion or Free Mode/challenge migration. Real
 availability, latency, request success, cache warm-up, data recovery and statistical
 conclusions remain outside Model 1. Hosted production remains parked.
