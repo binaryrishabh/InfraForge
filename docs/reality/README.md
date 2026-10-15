@@ -64,3 +64,13 @@ and [proofs/sweep/performance](m2f-validation.md). Select internal `m2f/1` expli
 and cleans isolated local broker/reference fixtures; `perf:async` measures the
 executor. Queue and object timing are not accepted physical predictors. Model 1
 remains active, Model 2 internal and production parked.
+
+M2G's [system mechanisms](m2g-architecture.md) add DNS/CDN, policy/TLS, registry startup
+and bounded monitoring. M2H adds the [saved-product compiler and real controllers](m2h-product-bridge.md).
+`debug:product` retains six authored-design compile/run proofs; `check:product`
+replays them with exact-source provenance. `sweep:product` runs 2,048 compiler and
+2,048 controller cases; `perf:product` measures the executor. The shipping inventory
+separates `PRODUCT_UI_VALIDITY` (`check:product-ui`) from
+`MODEL2_REALITY_SHIPPING_READY` (`check:model2-reality-shipping`). Ordinary coverage
+validation passes while these explicit readiness checks can correctly refuse.
+Internal mechanisms and reviewed software actions do not activate Model 2 publicly.

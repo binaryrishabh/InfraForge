@@ -1,7 +1,10 @@
 # InfraForge project state
 
-Verified locally 2026-10-15 on `develop`. **Reality Engine M2F** adds internal messaging,
-object storage and asynchronous pipelines; the accepted learning product stays on Model 1.
+Accepted **Reality Engine M2G** checkpoint on `develop`:
+`019d230943d743b609b24232172603dca5d8bc63`, Actions **38784325197**, **10/10 successful**.
+405 workspace, 54 tooling and 18 isolated integration tests passed; 3,000 deterministic
+cases, 30 unchanged goldens and ten unchanged challenge hashes. **Vercel FAILED separately**.
+Physical M2G timing remains **Unknown**. Model 1 ACTIVE; Model 2 INTERNAL; production PARKED.
 Hosted production cutover remains **PARKED**. These milestones did not access Neon,
 EC2/AWS, hosted PostgreSQL/Nginx, Vercel, DNS, OAuth settings, production secrets or
 `main`.
@@ -12,6 +15,13 @@ See [local setup](../Readme.md), [authentication](AUTHENTICATION.md),
 outside Git and do not create executor memories or planning archives.
 
 ## Product direction and policy
+
+Shipping surfaces have two independent gates: **PRODUCT_UI_VALIDITY** proves the
+promised software action; **MODEL2_REALITY_SHIPPING_READY** proves infrastructure
+semantics. Dialog close, canvas pan, navigation, search and prediction selection
+do not require physics owners. Technical metrics, security, workload, cost, faults
+and resource controls do. Presentation metadata is not infrastructure truth.
+An unreviewed new surface fails closed; categorization never proves correctness.
 
 Complete **Challenge → Build → Predict → Run → Break → Understand → Improve →
 Run again** before expanding scope. Preserve the visual identity and use progressive
@@ -689,7 +699,7 @@ that changes real simulation state or evidence.
 
 If it has no real mechanism/effect, it must not ship in the final product.
 Decorative technical controls are forbidden.
-Unknown is acceptable. Fake behavior is not.
+Unknown is acceptable. Fake behavior is forbidden.
 
 This specifically includes, but is not limited to: Publicly reachable, Encryption,
 Open ports, firewall rules, DNS, CDN, IAM/security controls later, autoscaling,
@@ -701,6 +711,9 @@ REAL MECHANISM → REAL STATE CHANGE → REAL DOWNSTREAM EFFECT → REAL EVIDENC
 
 OR REMOVE IT.
 
+Apply the physics gate to infrastructure-semantic claims. Ordinary software actions
+follow PRODUCT_UI_VALIDITY; presentation state retains its software meaning.
+
 M2G adds explicit internal DNS/TTL, CDN origin/cache, ordered stateful firewall and
 TLS identity gates, object-backed registry/layer startup and bounded metric export.
 The machine-readable shipping inventory identifies incomplete visible controls;
@@ -710,8 +723,41 @@ claimed. Physical security/transport/storage timing remains scoped or Unknown.
 Model 1 ACTIVE; Model 2 INTERNAL; production PARKED. Local final validation passed:
 142 simulation tests (19 M2G), 54 tooling tests, 73 challenge checks, all 30 goldens
 and ten immutable hashes, frozen install, typecheck/lint/boundaries, web build and
-audit. The shipping inventory covers 441 surfaces; 379 remain ineligible. Exact-SHA
+audit. The original M2G inventory covered 441 surfaces and reported 379 ineligible; M2H corrects its over-broad UI/physics taxonomy below. Exact-SHA
 Actions and separate external-status evidence belong in the M2G completion report.
+
+## Reality Engine M2H
+
+The internal `infraforge-product-compiler/1` translates actual saved domain resource,
+connection and workload objects through versioned application/infrastructure contracts
+into M2C–M2G mechanisms. Missing demand, ambiguous edges, unresolved network quantities,
+legacy-only security, unknown SKU facts and unsupported controls are refused. Coordinates,
+labels, size and declaration order do not supply physics. Explicit link ownership can be
+per-path or shared. Legacy region/security fields remain historical metadata.
+
+`generic-reconcile/1` separates desired, provisioning, image acquisition, startup,
+readiness, LB service, drain, failed and terminated populations. Direct core-time and
+backend-observed core-time are distinct profiles; stale/missing intervals hold desired.
+Registry failure blocks actual artifact acquisition while existing replicas continue.
+Crash abort/loss/retention is resource-specific, with a separate authored restart gate.
+Vertical resize, MemoryLeak and DiskFailure remain unavailable in Model 2. Presentation
+supports Observed/Interpreted/Unknown without cost/memory/CPU fallbacks.
+
+Corrected inventory: 441 scanned AST surfaces = 178 technical + 159 software actions +
+104 presentation surfaces. **177 technical blockers remain** (68 inputs, 98 outputs,
+11 resource types). Provider/cost contributes 19 of those surfaces. UI validity is
+independent: 11 reviewed behavior proofs, 252 requiring review; this is not 252 known
+software defects. New/changed surfaces fail closed. Internal compile/run proofs do not
+promote unbound normal UI controls. See [M2H architecture/research](reality/m2h-product-bridge.md),
+[proofs](reality/m2h-proofs.json), [sweeps](reality/m2h-sweeps.json),
+[executor measurements](reality/m2h-performance.json) and the shipping/depth JSON files.
+Final local validation passed 426 workspace tests (163 simulation, including 21 M2H tests),
+59 tooling tests and 73 overlapping challenge checks, all 30 goldens and ten hashes,
+frozen install, typechecks/lint/boundaries, web build and audit. The 4,096 new generated
+cases passed with deterministic replay. Expected readiness refusals retain 177 technical
+blockers and 252 UI proof reviews. Model 1 ACTIVE; Model 2 INTERNAL; production PARKED.
+Exact-final-SHA CI/status
+and full final validation belong in the M2H completion report outside Git.
 
 ## Parked hosted work and remaining limits
 
@@ -748,9 +794,9 @@ Improvement drafts are browser-history context, not durable unfinished tasks; a
 new attempt durably retains its hypothesis. Deleting its source removes the ability
 to compare with that source but preserves the child's own evidence/hypothesis.
 
-Next engine work: **M2H — application/workload contracts and controller reality**,
-with a proven diagram-to-model bridge, actual provisioning/drain/readiness and
-collected evidence. Deepen resource-specific memory/storage/durability and recovery
+Next engine work: **M2I — provider/location/capability and billing contracts**,
+building on the proven internal compiler/controller bridge. Version provider facts,
+regions/failure domains, meter dimensions and prices. Deepen memory/storage/durability and recovery
 where required; keep physical demand Unknown until identified. Partitioned-log
 semantics remain a separate future resource.
 Deepen existing resources before expansion or Free Mode/challenge migration. Real

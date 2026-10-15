@@ -1,0 +1,327 @@
+{
+  "schema": "infraforge-product-performance/1",
+  "sourceHash": "d1fe122d5a502dc916190a6d487cc72c4965bc0d563a92222166f0c130b74dfe",
+  "host": {
+    "runtime": "Bun 1.3.14",
+    "nodeCompatibility": "v24.3.0",
+    "platform": "win32",
+    "release": "10.0.26300",
+    "cpu": "AMD Ryzen 7 5700U with Radeon Graphics         "
+  },
+  "complete": true,
+  "scope": "Executor wall costs of synthetic authored compiler/controller workloads. Heap includes prior cases/GC; no infrastructure/provider timing or cost claim; compilation includes existing validators",
+  "cases": [
+    {
+      "name": "diagram-32",
+      "authoredHash": "b9fa26539c0863a5529c86dfff1739dfb0a1e3d46276e604b728e5a0bfe9fdd9",
+      "compiledHash": "3f3aed1e402f9a3f20aba1704aadf5982aec3838ecc1331d90a013ebd8d86d37",
+      "productNodes": 32,
+      "resources": 41,
+      "paths": 48,
+      "compileMs": 86.29379999999999,
+      "setupMs": 78.1676,
+      "executionMs": 152.15269999999998,
+      "evidenceMs": 68.16809999999998,
+      "serializeMs": 9.058900000000051,
+      "retainedBytes": 3192252,
+      "processHeapUsed": 20064710,
+      "events": {
+        "processed": 4008,
+        "cancelled": 2629,
+        "pending": 14,
+        "peakPending": 105
+      },
+      "counts": {
+        "offered": 24,
+        "admitted": 24,
+        "completed": 9,
+        "rejected": 13,
+        "deadlineExceeded": 0,
+        "abandoned": 0,
+        "remoteOutcomesAfterCallerStop": 0,
+        "cancellationRequested": 0,
+        "cancellationConfirmedAtEntry": 0,
+        "inFlight": 2
+      },
+      "controllers": [
+        {
+          "id": "vm",
+          "evaluations": 4,
+          "populations": {
+            "reserved": 2,
+            "provisioning": 0,
+            "pulling": 0,
+            "starting": 0,
+            "ready": 1,
+            "draining": 0,
+            "failed": 0,
+            "terminated": 0
+          },
+          "created": 1,
+          "identityBudgetExhausted": 0
+        }
+      ],
+      "numericOrigins": 1374
+    },
+    {
+      "name": "diagram-128",
+      "authoredHash": "d652e53498402af2af903b4fcfa9c796db7844b9dfb4b15f406aca467dfa067e",
+      "compiledHash": "b67dafd93f90c2981228576a1bea16af1a8c17218a0da7e6639e3a6a8503eef2",
+      "productNodes": 128,
+      "resources": 137,
+      "paths": 144,
+      "compileMs": 104.46169999999995,
+      "setupMs": 145.97900000000004,
+      "executionMs": 459.93409999999994,
+      "evidenceMs": 99.36860000000001,
+      "serializeMs": 14.942999999999984,
+      "retainedBytes": 5260412,
+      "processHeapUsed": 51172532,
+      "events": {
+        "processed": 14842,
+        "cancelled": 9510,
+        "pending": 14,
+        "peakPending": 292
+      },
+      "counts": {
+        "offered": 24,
+        "admitted": 24,
+        "completed": 9,
+        "rejected": 13,
+        "deadlineExceeded": 0,
+        "abandoned": 0,
+        "remoteOutcomesAfterCallerStop": 0,
+        "cancellationRequested": 0,
+        "cancellationConfirmedAtEntry": 0,
+        "inFlight": 2
+      },
+      "controllers": [
+        {
+          "id": "vm",
+          "evaluations": 4,
+          "populations": {
+            "reserved": 2,
+            "provisioning": 0,
+            "pulling": 0,
+            "starting": 0,
+            "ready": 1,
+            "draining": 0,
+            "failed": 0,
+            "terminated": 0
+          },
+          "created": 1,
+          "identityBudgetExhausted": 0
+        }
+      ],
+      "numericOrigins": 3774
+    },
+    {
+      "name": "pool-8",
+      "authoredHash": "02935abce9b219f81ab2411986c692dbc6452e8ca80dec3794d05fd01e5e3830",
+      "compiledHash": "189edf496d8160beb551dd74668d87f1d8aa55080f87606df50b48c88e1ef6af",
+      "productNodes": 11,
+      "resources": 59,
+      "paths": 105,
+      "compileMs": 62.54639999999995,
+      "setupMs": 92.68889999999988,
+      "executionMs": 391.74019999999996,
+      "evidenceMs": 64.4668999999999,
+      "serializeMs": 13.129599999999982,
+      "retainedBytes": 4188219,
+      "processHeapUsed": 25890322,
+      "events": {
+        "processed": 25338,
+        "cancelled": 15454,
+        "pending": 24,
+        "peakPending": 138
+      },
+      "counts": {
+        "offered": 130,
+        "admitted": 130,
+        "completed": 130,
+        "rejected": 0,
+        "deadlineExceeded": 0,
+        "abandoned": 0,
+        "remoteOutcomesAfterCallerStop": 0,
+        "cancellationRequested": 0,
+        "cancellationConfirmedAtEntry": 0,
+        "inFlight": 0
+      },
+      "controllers": [
+        {
+          "id": "vm",
+          "evaluations": 12,
+          "populations": {
+            "reserved": 8,
+            "provisioning": 0,
+            "pulling": 0,
+            "starting": 0,
+            "ready": 8,
+            "draining": 0,
+            "failed": 0,
+            "terminated": 0
+          },
+          "created": 8,
+          "identityBudgetExhausted": 0
+        }
+      ],
+      "numericOrigins": 2801
+    },
+    {
+      "name": "pool-32",
+      "authoredHash": "f34636a4f78051758a96d27c23106064b795da898f8bb6993b68e16e395be8b2",
+      "compiledHash": "0116e90b174330c33d887e2608c3128cc36c217f4677c95f6810cb9d5525721a",
+      "productNodes": 11,
+      "resources": 107,
+      "paths": 201,
+      "compileMs": 98.84079999999994,
+      "setupMs": 132.8406,
+      "executionMs": 1238.9930999999997,
+      "evidenceMs": 141.1197000000002,
+      "serializeMs": 27.159699999999702,
+      "retainedBytes": 6243049,
+      "processHeapUsed": 43004259,
+      "events": {
+        "processed": 77922,
+        "cancelled": 37369,
+        "pending": 96,
+        "peakPending": 310
+      },
+      "counts": {
+        "offered": 130,
+        "admitted": 130,
+        "completed": 130,
+        "rejected": 0,
+        "deadlineExceeded": 0,
+        "abandoned": 0,
+        "remoteOutcomesAfterCallerStop": 0,
+        "cancellationRequested": 0,
+        "cancellationConfirmedAtEntry": 0,
+        "inFlight": 0
+      },
+      "controllers": [
+        {
+          "id": "vm",
+          "evaluations": 12,
+          "populations": {
+            "reserved": 0,
+            "provisioning": 0,
+            "pulling": 0,
+            "starting": 0,
+            "ready": 32,
+            "draining": 0,
+            "failed": 0,
+            "terminated": 0
+          },
+          "created": 32,
+          "identityBudgetExhausted": 0
+        }
+      ],
+      "numericOrigins": 5073
+    },
+    {
+      "name": "controller-churn",
+      "authoredHash": "0312961186323631c6e2c9744aa764a9d3a42974e6f2e604d6ffd537c6607dfc",
+      "compiledHash": "e698b7a65302e7ef71d325cb13c49f11e5ef627271f1a5bae535308480e9e7c7",
+      "productNodes": 11,
+      "resources": 59,
+      "paths": 105,
+      "compileMs": 83.88490000000002,
+      "setupMs": 101.2552999999998,
+      "executionMs": 203.31089999999995,
+      "evidenceMs": 60.861199999999826,
+      "serializeMs": 15.176800000000185,
+      "retainedBytes": 3943261,
+      "processHeapUsed": 29780768,
+      "events": {
+        "processed": 11267,
+        "cancelled": 6690,
+        "pending": 3,
+        "peakPending": 135
+      },
+      "counts": {
+        "offered": 130,
+        "admitted": 130,
+        "completed": 59,
+        "rejected": 71,
+        "deadlineExceeded": 0,
+        "abandoned": 0,
+        "remoteOutcomesAfterCallerStop": 0,
+        "cancellationRequested": 0,
+        "cancellationConfirmedAtEntry": 0,
+        "inFlight": 0
+      },
+      "controllers": [
+        {
+          "id": "vm",
+          "evaluations": 12,
+          "populations": {
+            "reserved": 0,
+            "provisioning": 0,
+            "pulling": 0,
+            "starting": 0,
+            "ready": 1,
+            "draining": 0,
+            "failed": 0,
+            "terminated": 15
+          },
+          "created": 16,
+          "identityBudgetExhausted": 9
+        }
+      ],
+      "numericOrigins": 2821
+    },
+    {
+      "name": "controller-evaluations",
+      "authoredHash": "d27598e1a1798d592d8fc57768ab4305a0f37248e28d4290df5373b650db15bc",
+      "compiledHash": "97d5471ea7e31254b6dd3079a178e1440fea121c235a8f17803d95978d169e5c",
+      "productNodes": 11,
+      "resources": 59,
+      "paths": 105,
+      "compileMs": 71.44899999999961,
+      "setupMs": 96.05829999999969,
+      "executionMs": 679.7828000000009,
+      "evidenceMs": 69.13850000000002,
+      "serializeMs": 19.21640000000025,
+      "retainedBytes": 4423239,
+      "processHeapUsed": 49980856,
+      "events": {
+        "processed": 26526,
+        "cancelled": 15454,
+        "pending": 24,
+        "peakPending": 138
+      },
+      "counts": {
+        "offered": 130,
+        "admitted": 130,
+        "completed": 130,
+        "rejected": 0,
+        "deadlineExceeded": 0,
+        "abandoned": 0,
+        "remoteOutcomesAfterCallerStop": 0,
+        "cancellationRequested": 0,
+        "cancellationConfirmedAtEntry": 0,
+        "inFlight": 0
+      },
+      "controllers": [
+        {
+          "id": "vm",
+          "evaluations": 1200,
+          "populations": {
+            "reserved": 8,
+            "provisioning": 0,
+            "pulling": 0,
+            "starting": 0,
+            "ready": 8,
+            "draining": 0,
+            "failed": 0,
+            "terminated": 0
+          },
+          "created": 8,
+          "identityBudgetExhausted": 0
+        }
+      ],
+      "numericOrigins": 2801
+    }
+  ]
+}

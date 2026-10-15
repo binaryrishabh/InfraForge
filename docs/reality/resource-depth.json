@@ -80,6 +80,18 @@
           "scripts/reality/systems-proofs.ts"
         ],
         "shippingGate": "CLOSED: see shipping-reality.json"
+      },
+      "productBridge": {
+        "revision": "m2h/1",
+        "level": "product-semantic-bridge-proven",
+        "owner": "packages/simulation/src/model2/product/owners.ts",
+        "compiler": "packages/simulation/src/model2/product/compiler.ts",
+        "proof": "packages/simulation/tests/product.test.ts",
+        "evidence": "docs/reality/m2h-proofs.json",
+        "scope": "All eleven saved-domain resource types compile/run in the normal proof with explicit authored application/infrastructure contracts; no legacy UI auto-migration",
+        "required": "Versioned resource-specific profile, application demand where needed, explicit dependencies/transport/listener/security and exact ledger provenance",
+        "unknown": "Physical provider performance, region/failure domains, cost, complete memory/device/durability semantics; unsupported settings refuse",
+        "shippingEligible": false
       }
     },
     {
@@ -158,6 +170,18 @@
           "scripts/reality/systems-proofs.ts"
         ],
         "shippingGate": "CLOSED: see shipping-reality.json"
+      },
+      "productBridge": {
+        "revision": "m2h/1",
+        "level": "product-semantic-bridge-proven",
+        "owner": "packages/simulation/src/model2/product/owners.ts",
+        "compiler": "packages/simulation/src/model2/product/compiler.ts",
+        "proof": "packages/simulation/tests/product.test.ts",
+        "evidence": "docs/reality/m2h-proofs.json",
+        "scope": "All eleven saved-domain resource types compile/run in the normal proof with explicit authored application/infrastructure contracts; no legacy UI auto-migration",
+        "required": "Versioned resource-specific profile, application demand where needed, explicit dependencies/transport/listener/security and exact ledger provenance",
+        "unknown": "Physical provider performance, region/failure domains, cost, complete memory/device/durability semantics; unsupported settings refuse",
+        "shippingEligible": false
       }
     },
     {
@@ -237,6 +261,18 @@
           "scripts/reality/systems-proofs.ts"
         ],
         "shippingGate": "CLOSED: see shipping-reality.json"
+      },
+      "productBridge": {
+        "revision": "m2h/1",
+        "level": "product-semantic-bridge-proven",
+        "owner": "packages/simulation/src/model2/product/owners.ts",
+        "compiler": "packages/simulation/src/model2/product/compiler.ts",
+        "proof": "packages/simulation/tests/product.test.ts",
+        "evidence": "docs/reality/m2h-proofs.json",
+        "scope": "All eleven saved-domain resource types compile/run in the normal proof with explicit authored application/infrastructure contracts; no legacy UI auto-migration",
+        "required": "Versioned resource-specific profile, application demand where needed, explicit dependencies/transport/listener/security and exact ledger provenance",
+        "unknown": "Physical provider performance, region/failure domains, cost, complete memory/device/durability semantics; unsupported settings refuse",
+        "shippingEligible": false
       }
     },
     {
@@ -315,6 +351,18 @@
           "packages/simulation/tests/network.test.ts"
         ],
         "shippingGate": "CLOSED: see shipping-reality.json"
+      },
+      "productBridge": {
+        "revision": "m2h/1",
+        "level": "product-semantic-bridge-proven",
+        "owner": "packages/simulation/src/model2/product/owners.ts",
+        "compiler": "packages/simulation/src/model2/product/compiler.ts",
+        "proof": "packages/simulation/tests/product.test.ts",
+        "evidence": "docs/reality/m2h-proofs.json",
+        "scope": "All eleven saved-domain resource types compile/run in the normal proof with explicit authored application/infrastructure contracts; no legacy UI auto-migration",
+        "required": "Versioned resource-specific profile, application demand where needed, explicit dependencies/transport/listener/security and exact ledger provenance",
+        "unknown": "Physical provider performance, region/failure domains, cost, complete memory/device/durability semantics; unsupported settings refuse",
+        "shippingEligible": false
       }
     },
     {
@@ -395,6 +443,18 @@
           "packages/simulation/tests/compute.test.ts"
         ],
         "shippingGate": "CLOSED: see shipping-reality.json"
+      },
+      "productBridge": {
+        "revision": "m2h/1",
+        "level": "product-semantic-bridge-proven",
+        "owner": "packages/simulation/src/model2/product/owners.ts",
+        "compiler": "packages/simulation/src/model2/product/compiler.ts",
+        "proof": "packages/simulation/tests/product.test.ts",
+        "evidence": "docs/reality/m2h-proofs.json",
+        "scope": "All eleven saved-domain resource types compile/run in the normal proof with explicit authored application/infrastructure contracts; no legacy UI auto-migration",
+        "required": "Versioned resource-specific profile, application demand where needed, explicit dependencies/transport/listener/security and exact ledger provenance",
+        "unknown": "Physical provider performance, region/failure domains, cost, complete memory/device/durability semantics; unsupported settings refuse",
+        "shippingEligible": false
       }
     },
     {
@@ -474,6 +534,18 @@
           "scripts/reality/systems-proofs.ts"
         ],
         "shippingGate": "CLOSED: see shipping-reality.json"
+      },
+      "productBridge": {
+        "revision": "m2h/1",
+        "level": "product-semantic-bridge-proven",
+        "owner": "packages/simulation/src/model2/product/owners.ts",
+        "compiler": "packages/simulation/src/model2/product/compiler.ts",
+        "proof": "packages/simulation/tests/product.test.ts",
+        "evidence": "docs/reality/m2h-proofs.json",
+        "scope": "All eleven saved-domain resource types compile/run in the normal proof with explicit authored application/infrastructure contracts; no legacy UI auto-migration",
+        "required": "Versioned resource-specific profile, application demand where needed, explicit dependencies/transport/listener/security and exact ledger provenance",
+        "unknown": "Physical provider performance, region/failure domains, cost, complete memory/device/durability semantics; unsupported settings refuse",
+        "shippingEligible": false
       }
     },
     {
@@ -552,6 +624,18 @@
           "packages/simulation/tests/data.test.ts"
         ],
         "shippingGate": "CLOSED: see shipping-reality.json"
+      },
+      "productBridge": {
+        "revision": "m2h/1",
+        "level": "product-semantic-bridge-proven",
+        "owner": "packages/simulation/src/model2/product/owners.ts",
+        "compiler": "packages/simulation/src/model2/product/compiler.ts",
+        "proof": "packages/simulation/tests/product.test.ts",
+        "evidence": "docs/reality/m2h-proofs.json",
+        "scope": "All eleven saved-domain resource types compile/run in the normal proof with explicit authored application/infrastructure contracts; no legacy UI auto-migration",
+        "required": "Versioned resource-specific profile, application demand where needed, explicit dependencies/transport/listener/security and exact ledger provenance",
+        "unknown": "Physical provider performance, region/failure domains, cost, complete memory/device/durability semantics; unsupported settings refuse",
+        "shippingEligible": false
       }
     },
     {
@@ -631,6 +715,18 @@
           "packages/simulation/tests/data.test.ts"
         ],
         "shippingGate": "CLOSED: see shipping-reality.json"
+      },
+      "productBridge": {
+        "revision": "m2h/1",
+        "level": "product-semantic-bridge-proven",
+        "owner": "packages/simulation/src/model2/product/owners.ts",
+        "compiler": "packages/simulation/src/model2/product/compiler.ts",
+        "proof": "packages/simulation/tests/product.test.ts",
+        "evidence": "docs/reality/m2h-proofs.json",
+        "scope": "All eleven saved-domain resource types compile/run in the normal proof with explicit authored application/infrastructure contracts; no legacy UI auto-migration",
+        "required": "Versioned resource-specific profile, application demand where needed, explicit dependencies/transport/listener/security and exact ledger provenance",
+        "unknown": "Physical provider performance, region/failure domains, cost, complete memory/device/durability semantics; unsupported settings refuse",
+        "shippingEligible": false
       }
     },
     {
@@ -708,6 +804,18 @@
           "packages/simulation/tests/async.test.ts"
         ],
         "shippingGate": "CLOSED: see shipping-reality.json"
+      },
+      "productBridge": {
+        "revision": "m2h/1",
+        "level": "product-semantic-bridge-proven",
+        "owner": "packages/simulation/src/model2/product/owners.ts",
+        "compiler": "packages/simulation/src/model2/product/compiler.ts",
+        "proof": "packages/simulation/tests/product.test.ts",
+        "evidence": "docs/reality/m2h-proofs.json",
+        "scope": "All eleven saved-domain resource types compile/run in the normal proof with explicit authored application/infrastructure contracts; no legacy UI auto-migration",
+        "required": "Versioned resource-specific profile, application demand where needed, explicit dependencies/transport/listener/security and exact ledger provenance",
+        "unknown": "Physical provider performance, region/failure domains, cost, complete memory/device/durability semantics; unsupported settings refuse",
+        "shippingEligible": false
       }
     },
     {
@@ -788,6 +896,18 @@
           "packages/simulation/tests/async.test.ts"
         ],
         "shippingGate": "CLOSED: see shipping-reality.json"
+      },
+      "productBridge": {
+        "revision": "m2h/1",
+        "level": "product-semantic-bridge-proven",
+        "owner": "packages/simulation/src/model2/product/owners.ts",
+        "compiler": "packages/simulation/src/model2/product/compiler.ts",
+        "proof": "packages/simulation/tests/product.test.ts",
+        "evidence": "docs/reality/m2h-proofs.json",
+        "scope": "All eleven saved-domain resource types compile/run in the normal proof with explicit authored application/infrastructure contracts; no legacy UI auto-migration",
+        "required": "Versioned resource-specific profile, application demand where needed, explicit dependencies/transport/listener/security and exact ledger provenance",
+        "unknown": "Physical provider performance, region/failure domains, cost, complete memory/device/durability semantics; unsupported settings refuse",
+        "shippingEligible": false
       }
     },
     {
@@ -867,6 +987,18 @@
           "scripts/reality/systems-proofs.ts"
         ],
         "shippingGate": "CLOSED: see shipping-reality.json"
+      },
+      "productBridge": {
+        "revision": "m2h/1",
+        "level": "product-semantic-bridge-proven",
+        "owner": "packages/simulation/src/model2/product/owners.ts",
+        "compiler": "packages/simulation/src/model2/product/compiler.ts",
+        "proof": "packages/simulation/tests/product.test.ts",
+        "evidence": "docs/reality/m2h-proofs.json",
+        "scope": "All eleven saved-domain resource types compile/run in the normal proof with explicit authored application/infrastructure contracts; no legacy UI auto-migration",
+        "required": "Versioned resource-specific profile, application demand where needed, explicit dependencies/transport/listener/security and exact ledger provenance",
+        "unknown": "Physical provider performance, region/failure domains, cost, complete memory/device/durability semantics; unsupported settings refuse",
+        "shippingEligible": false
       }
     }
   ]

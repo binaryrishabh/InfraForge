@@ -39,3 +39,12 @@ registry startup and real metric collection/export. Every current resource now h
 a meaningful internal foundation, while physical demand/durability, protocol breadth
 and visible-control migration remain partial/Unknown. No row claims final-product
 eligibility. [Shipping inventory](shipping-reality.json) keeps the gate closed.
+
+M2H adds a separate `productBridge` record for every row: owner, compiler,
+required inputs, actual compile/run proof, scoped Unknown and final eligibility.
+All eleven types have the `product-semantic-bridge-proven` level only because the
+saved-domain proof executes their mechanisms. These authored profiles are internal;
+no row becomes generally shippable. VM/LB scaling remains partial at provider level,
+while the generic desired/provision/image/readiness/drain controller is now proven.
+Legacy fields, provider pricing/location, physical memory/storage and unsupported
+faults remain explicit gaps. See [M2H](m2h-product-bridge.md).
