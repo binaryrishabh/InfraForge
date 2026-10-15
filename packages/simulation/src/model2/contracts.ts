@@ -34,7 +34,7 @@ export interface Model2Input {
 }
 export interface Work { id: string; classId: string; arrived: number; deadline: number }
 export type WorkOutcome = "completed" | "rejected" | "timed-out";
-export interface ResourceMeasurement {
+export interface StationMeasurement {
   id: string;
   status: "healthy" | "backpressured" | "unavailable";
   queued: number;
@@ -47,9 +47,9 @@ export interface ResourceMeasurement {
   memoryBytes: Quantity<"bytes">;
 }
 // Modules accept work and compose shared mechanisms. They never mutate neighbours' metrics.
-export interface ResourceBehavior {
+export interface ResourceBehavior<Measurements = StationMeasurement, Fault = boolean> {
   accept(work: Work, done: (outcome: WorkOutcome) => void): void;
   cancel(id: string): void;
-  fault(active: boolean): void;
-  measure(): ResourceMeasurement;
+  fault(effect: Fault): void;
+  measure(): Measurements;
 }

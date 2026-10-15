@@ -44,7 +44,9 @@ Separate contracts:
   background jobs, cacheability/key reuse, retries and geography are future extensions
   with explicit semantics, not unused fields added now.
 - **Resource behavior:** accept/cancel work, apply supported mechanism fault, produce
-  measurements. Modules compose service/admission/queue/network/cache mechanisms.
+  measurements. The interface is generic over metric and fault shapes: its station
+  defaults do not force CPU/memory fields or a service-pause fault onto an opaque
+  managed service. Modules compose service/admission/queue/network/cache mechanisms.
   A compute module does not know database-specific cascade rules. M2A's compute and
   DB stations share finite service/admission; DB additionally reports active slots
   as connections. Router is an explicit sorted round-robin policy with no fabricated
