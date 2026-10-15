@@ -1,5 +1,6 @@
 import type { ChaosType, ConnectionLine, Resource, ResourceType } from "@infraforge/domain/resource";
 import type { ResolvedWorkloadProfile } from "@infraforge/domain/workload";
+export * from "./learning";
 
 export type ChallengeDifficulty = "starter" | "core" | "advanced";
 // Design challenges judge a design under fixed traffic; resilience challenges add one scheduled fault.
@@ -145,6 +146,7 @@ export interface ChallengeBrief extends Omit<ChallengeDefinition, "debrief"> {
 }
 
 export interface LearningAttempt extends ChallengeAttemptSummary {
+  learning?: import("./learning").AttemptLearning | null;
   challengeId: string;
   title: string;
   category: ChallengeCategory;

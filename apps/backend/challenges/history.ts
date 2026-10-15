@@ -9,6 +9,7 @@ export function learningAttempt(row: StoredRun): LearningAttempt {
   const plan = readRecordedExperiment(row.challengeExperiment);
   const current = row.challengeId ? latestChallenge(row.challengeId) : null;
   return { runId: row.id, challengeId: row.challengeId!, version: row.challengeVersion ?? 0,
+    learning: report.run.learning,
     title: evaluation?.title ?? row.challengeId!, createdAt: row.createdAt.toISOString(),
     category: row.challengeExperiment == null ? "design" : "resilience", fault: plan?.fault ?? null,
     status: evaluation?.status ?? "unavailable", metCount: evaluation?.metCount ?? 0, total: evaluation?.total ?? 0,

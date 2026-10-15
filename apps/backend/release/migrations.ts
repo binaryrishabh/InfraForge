@@ -10,7 +10,7 @@ const hash = (value: string) => createHash("sha256").update(value).digest("hex")
 const ADDITIVE_MIGRATIONS = new Set(["20261009000000_capture_run_inputs", "20261009010000_add_authentication",
   "20261013000000_reliable_run_evidence", "20261013010000_honest_reruns", "20261014000000_challenge_attempts",
   "20261015000000_challenge_versions_experiments", "20261016000000_experiment_evidence",
-  "20261017000000_credential_usernames"]);
+  "20261017000000_credential_usernames", "20261018000000_challenge_learning"]);
 
 export async function migrationManifest(): Promise<Migration[]> {
   const directory = new URL("../prisma/migrations/", import.meta.url);
@@ -60,16 +60,18 @@ export async function checkSchemaGuards(db: Database) {
     WHERE NOT tgisinternal AND tgenabled = 'O' AND n.nspname = 'public' AND NOT p.prosecdef
     AND p.prorettype = 'trigger'::regtype AND p.proconfig IS NULL
     AND p.prolang = (SELECT oid FROM pg_language WHERE lanname='plpgsql') AND tgqual IS NULL
-    AND ((tgrelid = '"Deployment"'::regclass AND tgname IN ('deployment_inputs_immutable', 'deployment_active_delete_guard', 'deployment_identity_capture', 'deployment_evidence_guard', 'deployment_lineage_guard', 'deployment_challenge_attempt', 'deployment_challenge_guard'))
+    AND ((tgrelid = '"Deployment"'::regclass AND tgname IN ('deployment_inputs_immutable', 'deployment_active_delete_guard', 'deployment_identity_capture', 'deployment_evidence_guard', 'deployment_lineage_guard', 'deployment_challenge_attempt', 'deployment_challenge_guard', 'deployment_learning_insert', 'deployment_learning_guard'))
       OR (tgrelid = '"Infrastructure"'::regclass AND tgname IN ('design_owner_guard', 'design_active_delete_guard', 'infrastructure_challenge_guard'))
       OR (tgrelid = '"RunAction"'::regclass AND tgname IN ('run_action_evidence_guard', 'run_action_challenge_guard'))
       OR (tgrelid = '"RunEvidenceSample"'::regclass AND tgname = 'run_experiment_evidence_guard'))`);
-  if (result.rows.length !== 13) throw new Error("Required ownership/run-input database guards are missing or disabled");
+  if (result.rows.length !== 15) throw new Error("Required ownership/run-input database guards are missing or disabled");
   const sources = (await Promise.all([...ADDITIVE_MIGRATIONS].map((name) =>
     readFile(new URL(`../prisma/migrations/${name}/migration.sql`, import.meta.url), "utf8")))).join("\n");
   const bodies = new Map([...sources.matchAll(/CREATE (?:OR REPLACE )?FUNCTION (\w+)\(\) RETURNS trigger LANGUAGE plpgsql AS \$\$([\s\S]*?)\$\$/g)]
     .map((match) => [match[1], match[2]!.replace(/\r\n/g, "\n").trim()]));
   const expected: Record<string, [string, number, string]> = {
+    deployment_learning_insert: ["verify_challenge_learning", 7, 'BEFORE INSERT ON public."Deployment"'],
+    deployment_learning_guard: ["protect_challenge_learning", 19, 'BEFORE UPDATE OF "improvementSourceId", "learningHypothesis", "learningIntent" ON public."Deployment"'],
     run_experiment_evidence_guard: ["protect_experiment_evidence", 23, 'BEFORE INSERT OR UPDATE ON public."RunEvidenceSample"'],
     deployment_inputs_immutable: ["protect_deployment_inputs", 19, 'BEFORE UPDATE OF "runInputs", seed, "workloadProfile" ON public."Deployment"'],
     deployment_active_delete_guard: ["protect_active_deployment", 11, 'BEFORE DELETE ON public."Deployment"'],
@@ -95,6 +97,7 @@ export async function checkSchemaGuards(db: Database) {
     CROSS JOIN "Session" s CROSS JOIN "Account" a CROSS JOIN "Verification" v CROSS JOIN "RunAction" r LIMIT 0`);
   await db.query('SELECT "deploymentId", "simulatedSeconds", "sampledAt", payload, hash FROM "RunEvidenceSample" LIMIT 0');
   await db.query('SELECT username FROM "User" LIMIT 0');
+  await db.query('SELECT "improvementSourceId", "learningHypothesis", "learningIntent" FROM "Deployment" LIMIT 0');
   await checkCredentialSchema(db);
 }
 

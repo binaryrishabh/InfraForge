@@ -4,11 +4,13 @@ import { readRunInputs } from "../deployments/runInputs";
 import { compareInputs } from "./inputs";
 import { affectingActions, compareConduct } from "./conduct";
 import { metric, normalizedFinalState } from "./outcomes";
+import { reviewDesignChanges } from "../challenges/designChanges";
+import { canonical } from "./design";
 
 const input = (v: unknown) => { try { return readRunInputs(v); } catch { return null; } };
 type Attempt = StoredRun & { sourceRunId?: string | null };
 // Identity of the conditions a challenge attempt ran under, all recorded on the attempt itself.
-const conditions = (r: Attempt) => JSON.stringify([r.challengeId, r.challengeVersion, r.challengeSpecHash, r.seed, r.evaluationStopAtSimulatedSeconds, r.challengeExperiment ?? null]);
+const conditions = (r: Attempt) => canonical([r.challengeId, r.challengeVersion, r.challengeSpecHash, input(r.runInputs)?.workloadProfile ?? null, input(r.runInputs)?.seed ?? r.seed, r.evaluationStopAtSimulatedSeconds, r.challengeExperiment ?? null]);
 export function classifyComparison(first: StoredRun & { sourceRunId?: string | null; runtimeActive?: boolean }, second: typeof first): RunComparison {
   const rows: [typeof first, typeof first] = first.createdAt.getTime() < second.createdAt.getTime() ||
     (first.createdAt.getTime() === second.createdAt.getTime() && first.id < second.id) ? [first, second] : [second, first];
@@ -67,11 +69,13 @@ export function classifyComparison(first: StoredRun & { sourceRunId?: string | n
     metric("Design monthly estimate (CostEstimate gate)", "USD/month", monthly[0], monthly[1], starting.facets.catalog === "same",
       "Monthly-estimate delta requires compatible captured catalog provenance.")];
   return { version: 1, runs: [reports[0].run, reports[1].run], available,
+    designChangeReview: challengeConditions === "same" && input(rows[0].runInputs) && input(rows[1].runInputs) ? reviewDesignChanges(input(rows[0].runInputs)!, input(rows[1].runInputs)!) : null,
     experimentEvidence: { comparable: traceComparable, traces: traceFacts, reason: traceComparable ?
       "Both complete retained windows share recorded experiment conditions. These are facts from one model-1 pair, not a controlled or statistical claim." :
       "Different, missing or incomplete experiment evidence permits descriptive retained-window facts only. A partial-window peak is not a full-window maximum." },
     unavailableReason: available ? null : "Both runs must be inactive before comparing final evidence. Stop the live run or wait for deployment gates.",
-    lineage: rows[1].sourceRunId === rows[0].id || rows[0].sourceRunId === rows[1].id ? "source-and-rerun" : rows[0].sourceRunId && rows[0].sourceRunId === rows[1].sourceRunId ? "siblings" : "unrelated",
+    lineage: rows[1].improvementSourceId === rows[0].id || rows[0].improvementSourceId === rows[1].id ? "source-and-improvement" :
+      rows[1].sourceRunId === rows[0].id || rows[0].sourceRunId === rows[1].id ? "source-and-rerun" : rows[0].sourceRunId && rows[0].sourceRunId === rows[1].sourceRunId ? "siblings" : "unrelated",
     headline: !available || starting.grade === "side-by-side-only" ? "descriptive-only" : deterministicState === "differs" ? "determinism-mismatch" :
       deterministicState === "matches" ? "determinism-match" : strongest ? "matched-pair" : "starting-inputs-only",
     starting, conduct, evidence: { code: !a || !b ? "missing" : exact ? "both-exact" : reports.some((r) => r.terminal) ? "exact-and-checkpoint" : "checkpoints-only",

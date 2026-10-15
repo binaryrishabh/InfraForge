@@ -13,6 +13,7 @@ export interface RunChallengeSummary {
 }
 
 export interface RunSummary {
+  learning?: import("../challenges/learning").AttemptLearning | null;
   id: string;
   infrastructureId: string | null;
   infrastructureName: string;
@@ -96,6 +97,7 @@ export interface ReportCheckpoint {
 }
 
 export interface RunReport {
+  guidedReview?: import("../challenges/learning").GuidedReview | null;
   experimentTrace?: import("./experimentTrace").ExperimentTrace;
   version: 1;
   run: RunSummary;

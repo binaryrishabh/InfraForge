@@ -20,6 +20,7 @@ import { checkChallengeAttempts, checkResilienceAttempt } from "./challengeCheck
 import { checkExperimentTraces } from "./experimentTraceChecks";
 import { checkLearningHistory } from "./learningHistoryChecks";
 import { checkCredentials } from "./credentialChecks";
+import { checkLearningExperiments } from "./learningChecks";
 
 type Event = Record<string, any>;
 type Snapshot = SimulationSnapshot & { publishType: string };
@@ -109,6 +110,11 @@ integration("local deployment lifecycle", () => {
       sessions = new SessionFixtures(harness);
       phase("public credential authentication");
       evidence.credentials = await checkCredentials(harness, sessions);
+      if (process.env.INTEGRATION_LEARNING_ONLY === "1") {
+        await harness.startWorker(); workerStarted = true;
+        evidence.learning = await checkLearningExperiments(harness, sessions, infrastructureIds, deploymentIds);
+        evidence.result = "passed"; return;
+      }
       if (process.env.INTEGRATION_AUTH_ONLY === "1") {
         const design = await harness.request("/infrastructure", { name: "Credential isolation", layout }, "POST", 201);
         infrastructureIds.push(design.createdInfrastructure.id);
@@ -644,6 +650,8 @@ integration("local deployment lifecycle", () => {
       evidence.experimentTraces = await checkExperimentTraces(harness, sessions, infrastructureIds, deploymentIds);
       phase("cross-challenge learning history");
       evidence.learningHistory = await checkLearningHistory(harness, sessions, infrastructureIds, deploymentIds);
+      phase("deliberate challenge improvements");
+      evidence.learning = await checkLearningExperiments(harness, sessions, infrastructureIds, deploymentIds);
       evidence.result = "passed";
     } catch (error) {
       evidence.result = "failed";

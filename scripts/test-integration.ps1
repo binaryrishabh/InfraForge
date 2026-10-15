@@ -1,6 +1,7 @@
 param(
     [switch]$SafetyGuardsOnly,
     [switch]$AuthOnly,
+    [switch]$LearningOnly,
     [ValidatePattern('^[a-f0-9]{32}$')][string]$CleanupRun,
     [ValidatePattern('^[a-z0-9][a-z0-9._/-]*:[a-z0-9._-]+$')][string]$RuntimeImage
 )
@@ -165,6 +166,7 @@ try {
         }
         $start.Environment['INTEGRATION_RUN'] = '1'
         if ($AuthOnly) { $start.Environment['INTEGRATION_AUTH_ONLY'] = '1' }
+        if ($LearningOnly) { $start.Environment['INTEGRATION_LEARNING_ONLY'] = '1' }
         $start.Environment['INTEGRATION_DISPOSABLE'] = 'local-only'
         $start.Environment['INTEGRATION_DATABASE_URL'] = "postgresql://postgres@127.0.0.1:$pgPort/infraforge_it_$run"
         $start.Environment['INTEGRATION_REDIS_PORT'] = $redisPort
@@ -173,7 +175,7 @@ try {
         $start.Environment['DOTENV_CONFIG_PATH'] = Join-Path $evidenceDir 'absent.env'
         $start.Environment['DOTENV_CONFIG_OVERRIDE'] = 'false'
         $start.Environment['DO_NOT_TRACK'] = '1'
-        $arguments = if ($SafetyGuardsOnly) { @('test', 'tests/integration/localHarness.test.ts') } elseif ($AuthOnly) { @('test', 'tests/integration/deployment.integration.test.ts') } else { @('run', 'test:integration') }
+        $arguments = if ($SafetyGuardsOnly) { @('test', 'tests/integration/localHarness.test.ts') } elseif ($AuthOnly -or $LearningOnly) { @('test', 'tests/integration/deployment.integration.test.ts') } else { @('run', 'test:integration') }
         if ($RuntimeImage) {
             Invoke-Docker (@('run', '-d', '--pull=never') + $labelArgs + @('--network', "container:$($names.postgres)",
                 '--name', $names.runtime, $image.Id, 'sleep', 'infinity')) | Out-Null
@@ -185,8 +187,9 @@ try {
                 'INTEGRATION_API_PORT=3100', 'DOTENV_CONFIG_PATH=/tmp/infraforge-absent.env', 'DOTENV_CONFIG_OVERRIDE=false', 'DO_NOT_TRACK=1')
             $arguments = @('--host', $endpoint, 'exec', '--workdir', '/app/apps/backend')
             if ($AuthOnly) { $environment += 'INTEGRATION_AUTH_ONLY=1' }
+            if ($LearningOnly) { $environment += 'INTEGRATION_LEARNING_ONLY=1' }
             foreach ($setting in $environment) { $arguments += @('--env', $setting) }
-            $arguments += @($names.runtime, 'bun', '--no-env-file', '--no-install', 'test', $(if ($SafetyGuardsOnly) { 'tests/integration/localHarness.test.ts' } elseif ($AuthOnly) { 'tests/integration/deployment.integration.test.ts' } else { 'tests/integration' }))
+            $arguments += @($names.runtime, 'bun', '--no-env-file', '--no-install', 'test', $(if ($SafetyGuardsOnly) { 'tests/integration/localHarness.test.ts' } elseif ($AuthOnly -or $LearningOnly) { 'tests/integration/deployment.integration.test.ts' } else { 'tests/integration' }))
         } else { $arguments = @('--no-env-file', '--no-install') + $arguments }
         foreach ($argument in $arguments) { $start.ArgumentList.Add($argument) }
         $record.result = 'testing'

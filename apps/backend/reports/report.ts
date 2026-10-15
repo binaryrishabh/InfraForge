@@ -6,6 +6,8 @@ import type { RunAction as StoredAction } from "../lib/generated/prisma/client";
 import { evaluateAttempt } from "../challenges/evaluate";
 import type { ChallengeRegistry } from "../challenges/registry";
 import { buildExperimentTrace, type StoredEvidenceSample } from "../evidence/report";
+import { guidedReview } from "../challenges/guidedReview";
+import { improvementSource } from "../challenges/improvements";
 
 export interface StoredRun {
   evidenceSamples?: StoredEvidenceSample[];
@@ -18,6 +20,7 @@ export interface StoredRun {
   runtimeActive?: boolean; challengeId?: string | null; challengeVersion?: number | null; challengeSpecHash?: string | null;
   challengePrediction?: unknown; predictionSubmittedAt?: Date | null; evaluationStopAtSimulatedSeconds?: number | null;
   challengeExperiment?: unknown;
+  improvementSourceId?: string | null; learningHypothesis?: string | null; learningIntent?: string | null;
 }
 
 type Records = ReturnType<typeof readRecords>;
@@ -43,6 +46,8 @@ function summary(row: StoredRun, records: Records, challenge = challengeOf(row, 
     chaosEventCount: Array.isArray(row.chaosEvents) && row.chaosEvents.length === records.chaos.length ? records.chaos.length + (row.durableChaosCount ?? row.actions?.filter((a) => a.kind === "chaos").length ?? 0) : null,
     topologyRevision: Number.isSafeInteger(row.topologyRevision) && row.topologyRevision >= 0 ? row.topologyRevision : null,
     actionCount: row.actionCount ?? row.actions?.length ?? 0,
+    learning: row.learningHypothesis && (row.learningIntent === "improvement" || row.learningIntent === "repeat") ?
+      { sourceRunId: row.improvementSourceId ?? null, hypothesis: row.learningHypothesis, intent: row.learningIntent } : null,
     sourceRunId: row.sourceRunId ?? null, sourceRunName: row.sourceRun?.runName ?? null,
     rerunMode: row.rerunMode === "exact" || row.rerunMode === "current-design" ? row.rerunMode : null,
     autoStopAtSimulatedSeconds: row.autoStopAtSimulatedSeconds ?? null,
@@ -113,5 +118,9 @@ export function buildRunReport(row: StoredRun, registry?: ChallengeRegistry): Ru
   report.unknown.push("Monthly estimates and checkpoint cost are educational model values, not cloud bills. A cost change caused by chaos cannot be established from these records.");
   report.inspectNext.push("Compare the recorded workload and original architecture, make one deliberate change, then rerun with the same workload to compare outcomes.");
   report.unknown = [...new Set(report.unknown)];
+  let unavailableReason: string | null = null;
+  if (row.challengeId) try { improvementSource(row, row.challengeId); }
+  catch (error) { unavailableReason = error instanceof Error ? error.message : "The source cannot be reused safely."; }
+  report.guidedReview = guidedReview(report, !!row.challengeId && !unavailableReason, unavailableReason);
   return report;
 }

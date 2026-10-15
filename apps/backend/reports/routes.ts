@@ -13,6 +13,7 @@ export const reportSelection = { id: true, infrastructureId: true, runName: true
   sourceRunId: true, rerunMode: true, autoStopAtSimulatedSeconds: true, sourceRun: { select: { runName: true } },
   challengeId: true, challengeVersion: true, challengeSpecHash: true, challengePrediction: true, predictionSubmittedAt: true,
   evaluationStopAtSimulatedSeconds: true, challengeExperiment: true,
+  improvementSourceId: true, learningHypothesis: true, learningIntent: true,
   // Summaries need only a resilience attempt's scheduled fault; full reports select every action.
   actions: { where: { kind: "chaos", parameters: { path: ["trigger"], equals: "challenge-experiment" } }, orderBy: { sequence: "asc" }, take: 1 },
   status: true, createdAt: true, updatedAt: true, resourceCount: true, workloadProfile: true,
@@ -43,8 +44,9 @@ reportRouter.get("/:deploymentId/compare-options", async (req, res) => {
   const source = await prisma.deployment.findFirst({ where: { id: id.data, ownerId }, select: { infrastructureId: true } });
   if (!source) throw new NotFoundError("Run not found");
   const eligible = { ownerId, id: { not: id.data }, runtimeActive: false, status: { in: ["completed", "failed", "torn-down"] } };
-  const original = await prisma.deployment.findFirstOrThrow({ where: { id: id.data, ownerId }, select: { sourceRunId: true } });
-  const relatedWhere = { OR: [{ id: original.sourceRunId ?? id.data }, { sourceRunId: id.data }, ...(original.sourceRunId ? [{ sourceRunId: original.sourceRunId }] : [])] };
+  const original = await prisma.deployment.findFirstOrThrow({ where: { id: id.data, ownerId }, select: { sourceRunId: true, improvementSourceId: true } });
+  const parent = original.improvementSourceId ?? original.sourceRunId;
+  const relatedWhere = { OR: [{ id: parent ?? id.data }, { sourceRunId: id.data }, { improvementSourceId: id.data }, ...(parent ? [{ sourceRunId: parent }, { improvementSourceId: parent }] : [])] };
   const related = await prisma.deployment.findMany({ where: { ...eligible, ...relatedWhere }, select: selection, orderBy: [{ createdAt: "desc" }, { id: "desc" }], take: 100 });
   const sameDesign = source.infrastructureId ? await prisma.deployment.findMany({ where: { ...eligible, infrastructureId: source.infrastructureId, id: { notIn: [id.data, ...related.map((r) => r.id)] } }, select: selection, orderBy: [{ createdAt: "desc" }, { id: "desc" }], take: 100 - related.length }) : [];
   const rest = await prisma.deployment.findMany({ where: { ...eligible, id: { notIn: [id.data, ...related.map((r) => r.id), ...sameDesign.map((r) => r.id)] } }, select: selection, orderBy: [{ createdAt: "desc" }, { id: "desc" }], take: 100 - related.length - sameDesign.length });
@@ -59,8 +61,9 @@ reportRouter.get("/:deploymentId/family", async (req, res) => {
   const family = await prisma.$transaction(async (tx) => {
     const run = await tx.deployment.findFirst({ where: { id: id.data, ownerId }, select: selection });
     if (!run) throw new NotFoundError("Run not found");
-    const source = run.sourceRunId ? await tx.deployment.findFirst({ where: { id: run.sourceRunId, ownerId }, select: selection }) : null;
-    const rows = await tx.deployment.findMany({ where: { sourceRunId: run.id, ownerId }, select: selection, orderBy: [{ createdAt: "asc" }, { id: "asc" }], take: 51 });
+    const parent = run.improvementSourceId ?? run.sourceRunId;
+    const source = parent ? await tx.deployment.findFirst({ where: { id: parent, ownerId }, select: selection }) : null;
+    const rows = await tx.deployment.findMany({ where: { OR: [{ sourceRunId: run.id }, { improvementSourceId: run.id }], ownerId }, select: selection, orderBy: [{ createdAt: "asc" }, { id: "asc" }], take: 51 });
     const read = (v: unknown) => { try { return readRunInputs(v); } catch { return null; } };
     return { source: source ? summarizeRun(source) : null, reruns: rows.slice(0, 50).map((r) => ({ run: summarizeRun(r), starting: compareInputs(read(run.runInputs), read(r.runInputs)) })), limit: 50, truncated: rows.length > 50 };
   }, { isolationLevel: "RepeatableRead" });

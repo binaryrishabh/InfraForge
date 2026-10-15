@@ -17,7 +17,7 @@ integration("migration 16 preserves OAuth users, rejects ambiguous legacy email 
   try {
     await admin.query(`CREATE DATABASE "${name}" TEMPLATE template0`); created = true;
     const directory = new URL("../../prisma/migrations/", import.meta.url);
-    const folders = (await readdir(directory, { withFileTypes: true })).filter((e) => e.isDirectory()).map((e) => e.name).sort();
+    const folders = (await readdir(directory, { withFileTypes: true })).filter((e) => e.isDirectory() && e.name <= "20261017000000_credential_usernames").map((e) => e.name).sort();
     expect(folders).toHaveLength(16);
     for (const folder of folders.slice(0, 15)) await db.query(await Bun.file(new URL(`${folder}/migration.sql`, directory)).text());
     const user = randomUUID(), account = randomUUID(), other = randomUUID();

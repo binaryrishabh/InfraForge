@@ -48,6 +48,11 @@ model Deployment {
   predictionSubmittedAt DateTime?
   evaluationStopAtSimulatedSeconds Int?
   challengeExperiment              Json?
+  improvementSourceId   String?
+  improvementSource     Deployment?  @relation("ChallengeLearning", fields: [improvementSourceId], references: [id], onDelete: SetNull)
+  improvements          Deployment[] @relation("ChallengeLearning")
+  learningHypothesis    String?       @db.VarChar(400)
+  learningIntent        String?
   status                String                      @default("pending") // pending, running, live, completed, failed, torn-down
   resourceCount         Int                         @default(0) // How many resources in this deployment
   stages                Json                        @default("[]") // Array of { timestamp, event, message }
@@ -65,6 +70,7 @@ model Deployment {
   @@index([ownerId, createdAt, id])
   @@index([infrastructureId])
   @@index([sourceRunId, createdAt, id])
+  @@index([improvementSourceId, createdAt, id])
   @@index([ownerId, challengeId, createdAt])
   @@index([ownerId, challengeId, createdAt, id])
 }

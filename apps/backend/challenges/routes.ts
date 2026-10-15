@@ -15,8 +15,13 @@ import { readPrediction } from "./prediction";
 import { preflight } from "./preflight";
 import { experimentReadiness, recordedExperiment } from "./experiment";
 import { learningAttempt } from "./history";
+import { HYPOTHESIS_MAX } from "@infraforge/contracts/challenges";
+import { improvementRouter } from "./improvementRoutes";
+import { improvementSource } from "./improvements";
+import { reviewDesignChanges } from "./designChanges";
 
 export const challengeRouter = Router();
+challengeRouter.use(improvementRouter);
 const STARTER_LAYOUT_VERSION = 3;
 const ATTEMPT_WINDOW = 20;
 const challengeId = z.string().regex(/^[a-z0-9-]{1,64}$/);
@@ -139,11 +144,14 @@ challengeRouter.post("/:id/preflight", async (req, res) => {
 });
 
 // Strict: the workload, seed, evaluation time, experiment and rules come only from the source-controlled definition.
-const attemptBody = z.object({ infrastructureId: z.uuid(), prediction: z.unknown() }).strict();
+const attemptBody = z.object({ infrastructureId: z.uuid(), prediction: z.unknown(), improvement: z.object({
+  sourceRunId: z.uuid(), hypothesis: z.string().trim().min(1).max(HYPOTHESIS_MAX), intent: z.enum(["improvement", "repeat"]),
+  inputHash: z.string().regex(/^[a-f0-9]{64}$/), acknowledgeMultiple: z.boolean(),
+}).strict().optional() }).strict();
 challengeRouter.post("/:id/attempts", async (req, res) => {
-  const { definition, hash } = entryFor(req.params.id);
   const body = attemptBody.safeParse(req.body);
   if (!body.success) throw new ValidationError("A challenge design and a complete prediction are required. Workload, rules and the experiment cannot be supplied.");
+  const { definition, hash } = entryFor(req.params.id, body.data.improvement ? req.query.version : undefined);
   const ownerId: string = res.locals.userId;
   const run = await prisma.$transaction(async (tx) => {
     await tx.$queryRaw`SELECT id FROM "Infrastructure" WHERE id = ${body.data.infrastructureId} FOR UPDATE`;
@@ -156,6 +164,18 @@ challengeRouter.post("/:id/attempts", async (req, res) => {
     const active = await tx.deployment.count({ where: { ownerId, challengeId: definition.id, OR: [{ status: { in: ["pending", "running", "live"] } }, { runtimeActive: true }] } });
     if (active) throw new ConflictError("An attempt at this challenge is still running. Stop it or let it reach the evaluation second first.");
     const runInputs = captureRunInputs(design.layout, definition.workload, challengeSeed(definition));
+    const improvement = body.data.improvement;
+    if (improvement) {
+      await tx.$queryRaw`SELECT id FROM "Deployment" WHERE id = ${improvement.sourceRunId} AND "ownerId" = ${ownerId} FOR SHARE`;
+      const source = await tx.deployment.findFirst({ where: { id: improvement.sourceRunId, ownerId } });
+      if (!source) throw new NotFoundError("Source attempt not found");
+      const original = improvementSource(source, definition.id);
+      if (original.definition.version !== definition.version) throw new ConflictError("Use the source's exact challenge version.");
+      const review = reviewDesignChanges(original.input, runInputs);
+      if (review.classification === "unavailable" || review.inputHash !== improvement.inputHash) throw new ConflictError("The design or conditions changed after review. Review the current design again.");
+      if ((review.count === 0) !== (improvement.intent === "repeat")) throw new ConflictError("No simulation-relevant change requires an explicit repeat; a changed design is an improvement experiment.");
+      if (review.classification === "several-changes" && !improvement.acknowledgeMultiple) throw new ConflictError("Acknowledge several changes before continuing.");
+    }
     const readiness = validateDeploymentReadiness(runInputs.resources, runInputs.connectionLines);
     if (!readiness.valid) throw new ValidationError(`Fix the design before starting: ${readiness.errors.join("; ")}`);
     if (definition.experiment) {
@@ -168,6 +188,7 @@ challengeRouter.post("/:id/attempts", async (req, res) => {
       resourceCount: runInputs.resources.length, workloadProfile: runInputs.workloadProfile, seed: runInputs.seed, runInputs,
       liveTopology: { resources: runInputs.resources, connectionLines: runInputs.connectionLines },
       challengeId: definition.id, challengeVersion: definition.version, challengeSpecHash: hash,
+      ...(improvement ? { improvementSourceId: improvement.sourceRunId, learningHypothesis: improvement.hypothesis, learningIntent: improvement.intent } : {}),
       challengePrediction: storedJson(prediction), predictionSubmittedAt: new Date(),
       evaluationStopAtSimulatedSeconds: definition.evaluationSeconds, ...(experiment ? { challengeExperiment: storedJson(experiment) } : {}) } });
     await tx.outbox.create({ data: { eventType: "deployment-created", payload: { deploymentId: created.id } } });

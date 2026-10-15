@@ -17,15 +17,23 @@ export interface StartingComparison {
   design: DesignDifference | null; workload: FieldDifference[];
   alignment: { code: "aligned" | "shifted" | "unknown"; aligned: string[]; shifted: Array<{ id: string; earlierPosition: number; laterPosition: number }>; scope: string };
 }
+export interface DesignChangeReview {
+  classification: "no-change" | "one-change" | "several-changes" | "unavailable";
+  count: number | null;
+  differences: DesignDifference | null;
+  starting: StartingComparison;
+  inputHash: string;
+}
 export interface CompareMetric { field: string; unit: string; earlier: number | null; later: number | null; delta: number | null; withheldReason?: string }
 export interface RunComparison {
+  designChangeReview?: DesignChangeReview | null;
   experimentEvidence?: { comparable: boolean; reason: string; traces: [
     { status: import("./experimentTrace").ExperimentTrace["status"]; start: number | null; end: number | null; count: number; target: string | null; highestCpu: { second: number; value: number } | null },
     { status: import("./experimentTrace").ExperimentTrace["status"]; start: number | null; end: number | null; count: number; target: string | null; highestCpu: { second: number; value: number } | null }
   ] };
   version: 1; runs: [RunSummary, RunSummary];
   available: boolean; unavailableReason: string | null;
-  lineage: "source-and-rerun" | "siblings" | "unrelated";
+  lineage: "source-and-rerun" | "source-and-improvement" | "siblings" | "unrelated";
   headline: "descriptive-only" | "starting-inputs-only" | "matched-pair" | "determinism-match" | "determinism-mismatch";
   starting: StartingComparison;
   conduct: { code: "same" | "different" | "unknown"; actions: [RunAction[], RunAction[]]; speedNote: string; reasons: string[] };
