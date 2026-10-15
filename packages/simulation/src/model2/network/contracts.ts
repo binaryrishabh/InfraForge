@@ -46,3 +46,9 @@ export type FailureReason = typeof RETRYABLE_FAILURES[number];
 export interface TraceEvent { at: number; kind: string; id: string; root?: string; attempt?: number; detail: string }
 export type Trace = (kind: string, id: string, detail: string, root?: string, attempt?: number) => void;
 export interface TransportResult { ok: boolean; reason?: FailureReason; ambiguous: boolean }
+export interface ConnectionRoute { target: string; request: string[]; response: string[] }
+export interface ConnectionHook {
+  open(id: string, done: (route?: ConnectionRoute, failure?: FailureReason) => void): () => boolean;
+  close(id: string): void;
+  returnTraffic?(id: string): boolean;
+}

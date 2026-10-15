@@ -7,19 +7,26 @@ import { objectStore } from "./objects";
 import { asyncPublisher } from "./publisher";
 import { asyncWorker } from "./worker";
 import { ASYNC_POLICY_LEDGER } from "./policy";
+import type { NetworkExtension } from "../network/run";
 const copy = <T>(v: T): T => JSON.parse(JSON.stringify(v));
 export function createAsyncModel2(authored: AsyncInput) {
+  return createAsyncRuntime(authored);
+}
+export function createAsyncRuntime(authored: AsyncInput, extension?: NetworkExtension) {
   validateAsync(authored); const i = copy(authored); i.resources.sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
   const brokers = new Map<string, ReturnType<typeof deliveryQueue>>(), stores = new Map<string, ReturnType<typeof objectStore>>(), publishers = new Map<string, ReturnType<typeof asyncPublisher>>(), workers = new Map<string, ReturnType<typeof asyncWorker>>();
   const runtime = createDataRuntime(dataAdapter(i), {
+    ...extension,
     resource(id, kernel, send) {
+      const external = extension?.resource(id, kernel, send); if (external) return external;
       const r = i.resources.find((r) => r.id === id)!; if (!isAsync(r)) return;
       if (r.kind === "delivery-queue") { const service = deliveryQueue(r, kernel); brokers.set(id, service); return service; }
       if (r.kind === "object-store") { const service = objectStore(r, kernel); stores.set(id, service); return service; }
       if (r.kind === "async-publisher") { const service = asyncPublisher(r, kernel, send); publishers.set(id, service); return service; }
       const service = asyncWorker(r, kernel, send, requireKnown(i.horizon, "us")); workers.set(id, service); return service;
     },
-    install(kernel, trace) {
+    install(kernel, trace, context) {
+      extension?.install?.(kernel, trace, context);
       for (const worker of workers.values()) worker.start();
       for (const f of i.asyncInterventions) {
         const apply = (enabled: boolean) => {

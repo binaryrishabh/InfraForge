@@ -1,0 +1,7 @@
+import type { RealityEntry } from "../../reality/ledger";
+export const SYSTEM_LIMITS = { entries: 100000, rules: 10000, flows: 100000, targets: 512, resources: 512, manifestLayers: 1024, events: 1000, attempts: 1000, nameCharacters: 253, inputFields: 1000000, inputDepth: 16, textCharacters: 1024 } as const;
+export const SYSTEM_POLICY_LEDGER: RealityEntry[] = Object.entries(SYSTEM_LIMITS).map(([name, value]) => ({ id: `m2g.policy.${name}`, concept: name, modelVersion: "2", scope: "Bounded internal m2g/1 executor", validityDomain: "Implementation budget; not provider capacity", quantity: { kind: "known", value, unit: "count", provenance: [`m2g.policy.${name}`] }, formula: "Explicit executor budget", classification: "implementation-policy", confidence: "high", provenance: [{ source: "packages/simulation/src/model2/systems/policy.ts", supports: "implementation", detail: "Explicit finite executor/state/evidence budgets" }], assumptions: ["No physical/provider performance claim"], researchedOn: "2026-10-15", freeMode: "forbidden", replacement: "Review using executor measurements" }));
+export function eventRows() {
+  const rows: Array<{ at: number; kind: string; id: string; detail: string }> = []; let omitted = 0;
+  return { add(at: number, kind: string, id: string, detail: string) { if (rows.length < SYSTEM_LIMITS.events) rows.push({ at, kind, id, detail }); else omitted++; }, snapshot: () => ({ rows: rows.map((r) => ({ ...r })), omitted }) };
+}

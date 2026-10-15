@@ -30,7 +30,7 @@ export function validateComputeInput(authored: ComputeInput) {
   validateWorkload(adapt(authored));
   validateCompute(authored);
 }
-export function createComputeRuntime(authored: ComputeInput, compose?: (kernel: EventKernel, deliver: Deliver, controls: { pause(id: string, value: boolean): void }) => ComputeComposition, resourceFactory?: ResourceFactory) {
+export function createComputeRuntime(authored: ComputeInput, compose?: (kernel: EventKernel, deliver: Deliver, controls: { pause(id: string, value: boolean): void; observe(id: string): unknown }) => ComputeComposition, resourceFactory?: ResourceFactory) {
   validateComputeInput(authored);
   const input: ComputeInput = JSON.parse(JSON.stringify(authored));
   for (const list of [input.resources, input.profiles, input.operations, input.arrivals, input.faults, input.ledger, input.interventions]) list.sort((a, b) => lexical(a.id, b.id));
@@ -51,7 +51,7 @@ export function createComputeRuntime(authored: ComputeInput, compose?: (kernel: 
     route: (target, work, done, direct) => composition ? composition.receive(target, work, done, direct) : direct(),
     enter: (target, work, done) => composition ? composition.send("$caller", target, work, done) : deliverEntry(target, work, done),
     install(kernel, _stations, send) {
-      deliverEntry = send; composition = compose?.(kernel, send, { pause: (id, value) => _stations.get(id)!.pause(value) });
+      deliverEntry = send; composition = compose?.(kernel, send, { pause: (id, value) => _stations.get(id)!.pause(value), observe: (id) => _stations.get(id)?.measure() });
       for (const i of [...input.interventions].sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0)) {
         const at = requireKnown(i.at, "us"), resource = computes.get(i.target)!;
         kernel.schedule(at, 0, JSON.stringify(["compute-intervention", i.id]), () => {

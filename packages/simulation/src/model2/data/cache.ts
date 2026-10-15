@@ -4,6 +4,7 @@ import type { EventKernel } from "../time";
 import type { Invocation, Receipt, RemoteOutcome } from "../workload/contracts";
 import type { CacheConfig, DataReply, DataRequest } from "./contracts";
 import { DATA_LIMITS } from "./policy";
+import { expireOwned, evictOwned } from "./cache-state";
 interface Entry { version: number; bytes: number; expires: number; sequence: number }
 interface Command { work: Invocation; done(outcome: RemoteOutcome): void; terminal: boolean }
 export function keyedCache(config: CacheConfig, kernel: EventKernel) {
@@ -14,7 +15,7 @@ export function keyedCache(config: CacheConfig, kernel: EventKernel) {
   let expirationCursor = entries.keys();
   let busyUs = 0, busyStart = kernel.now;
   const remove = (key: string) => { const e = entries.get(key); if (e) { used -= e.bytes + overhead; entries.delete(key); } };
-  const expire = (key: string) => { const e = entries.get(key); if (e && e.expires <= kernel.now) { remove(key); expirations++; } };
+  const expire = (key: string) => { if (expireOwned(entries, key, kernel.now, remove)) expirations++; };
   const finish = (c: Command, reply: DataReply, cancel = false) => {
     if (c.terminal) return; c.terminal = true;
     if (active.has(c.work.callId)) { busyUs += kernel.now - busyStart; cpu.remove(c.work.callId); } active.delete(c.work.callId); queue.delete(c.work.callId);
@@ -36,9 +37,7 @@ export function keyedCache(config: CacheConfig, kernel: EventKernel) {
     const bytes = request.row.bytes + overhead, existing = entries.get(request.key), required = used - (existing ? existing.bytes + overhead : 0) + bytes;
     if (bytes > capacity || (!existing && entries.size >= DATA_LIMITS.keys) || (required > capacity && config.policy === "no-eviction")) { allocationRefused++; return { ok: false, reason: "cache-capacity" }; }
     remove(request.key);
-    while (used + bytes > capacity) {
-      const key = entries.keys().next().value!; const expired = entries.get(key)!.expires <= kernel.now; remove(key); if (expired) expirations++; else evictions++;
-    }
+    evictOwned(entries, () => used + bytes <= capacity, (key, entry) => { const expired = entry.expires <= kernel.now; remove(key); if (expired) expirations++; else evictions++; });
     entries.set(request.key, { ...request.row, expires: kernel.now + requireKnown(config.ttl, "us"), sequence: sequence++ }); used += bytes; fills++; return { ok: true };
   };
   const pump = () => {

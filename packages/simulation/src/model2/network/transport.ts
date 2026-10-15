@@ -2,12 +2,13 @@ import { requireKnown } from "../../reality/quantity";
 import type { Deliver } from "../compute/run";
 import type { Invocation, Receipt } from "../workload/contracts";
 import type { EventKernel } from "../time";
-import type { FailureReason, PathConfig, Trace, TransportResult } from "./contracts";
+import type { ConnectionHook, FailureReason, PathConfig, Trace, TransportResult } from "./contracts";
 import type { networkLink } from "./link";
 import { connectionPool, type Lease } from "./pool";
 
-export function pathTransport(config: PathConfig, kernel: EventKernel, links: Map<string, ReturnType<typeof networkLink>>, deliver: Deliver, alive: (id: string) => boolean, trace: Trace, disconnected?: (session: string) => void) {
-  const pool = connectionPool(config.id, config.pool, kernel, () => alive(config.target) && [...config.request, ...config.response].every((id) => links.get(id)!.reachable()), (kind, id, detail, root, attempt) => { trace(kind, id, detail, root, attempt); if (kind === "connection-closed") disconnected?.(id); });
+export function pathTransport(config: PathConfig, kernel: EventKernel, links: Map<string, ReturnType<typeof networkLink>>, deliver: Deliver, alive: (id: string) => boolean, trace: Trace, disconnected?: (session: string, target: string) => void, hook?: ConnectionHook) {
+  const targets = new Map<string, string>();
+  const pool = connectionPool(config.id, config.pool, kernel, (route = config) => alive(route.target) && [...route.request, ...route.response].every((id) => links.get(id)!.reachable()), (kind, id, detail, root, attempt) => { trace(kind, id, detail, root, attempt); if (kind === "connection-closed") { disconnected?.(id, targets.get(id) ?? config.target); targets.delete(id); } }, hook);
   let offered = 0, completed = 0, failed = 0, cancelled = 0, remoteAfterStop = 0, live = 0;
   const reasons: Record<string, number> = {}, latency = { connectionWaitUs: 0, requestTransportUs: 0, remoteServiceUs: 0, responseTransportUs: 0 };
   return {
@@ -42,20 +43,21 @@ export function pathTransport(config: PathConfig, kernel: EventKernel, links: Ma
       const totalBytes = (envelope: number, body = 0) => { const total = envelope + body; if (!Number.isSafeInteger(body) || body < 0 || !Number.isSafeInteger(total)) throw new Error("Invalid logical message body size"); return total; };
       cancelAcquire = pool.acquire(key, (acquired) => {
         if (terminal) { acquired.release(); return; }
-        lease = acquired; state = "serving"; const readyAt = kernel.now; latency.connectionWaitUs += readyAt - start;
+        lease = acquired; const route = acquired.route ?? config; targets.set(acquired.connection, route.target); state = "serving"; const readyAt = kernel.now; latency.connectionWaitUs += readyAt - start;
         trace("connection-acquired", key, acquired.connection, work.rootId, work.attempt);
         cancelTimeout = kernel.schedule(kernel.now + requireKnown(config.pool.responseTimeout, "us"), 1, JSON.stringify(["upstream-timeout", config.id, key]), () => finish({ ok: false, reason: "response-timeout", ambiguous: delivered }));
         const bytes = config.bytes[work.operation]!;
-        sendBytes(config.request, totalBytes(requireKnown(bytes.request, "bytes"), work.message?.bodyBytes?.request), "request", () => {
+        sendBytes(route.request, totalBytes(requireKnown(bytes.request, "bytes"), work.message?.bodyBytes?.request), "request", () => {
           delivered = true; state = "waiting"; const deliveredAt = kernel.now; latency.requestTransportUs += deliveredAt - readyAt;
-          trace("request-delivered", key, config.target, work.rootId, work.attempt);
-          if (!alive(config.target)) return;
+          trace("request-delivered", key, route.target, work.rootId, work.attempt);
+          if (!alive(route.target)) return;
           const request: Invocation = { ...work, sessionId: acquired.connection, ...(work.message ? { message: { request: JSON.parse(JSON.stringify(work.message.request)) } } : {}) };
-          remote = deliver(config.target, request, (outcome) => {
+          remote = deliver(route.target, request, (outcome) => {
             if (terminal) { remoteAfterStop++; trace("remote-after-transport-stop", key, outcome, work.rootId, work.attempt); return; }
-            if (!alive(config.target)) return;
+            if (!alive(route.target)) return;
+            if (hook?.returnTraffic && !hook.returnTraffic(acquired.connection)) { finish({ ok: false, reason: "reset", ambiguous: true }); return; }
             const serviceEnd = kernel.now; latency.remoteServiceUs += serviceEnd - deliveredAt;
-            sendBytes(config.response, totalBytes(requireKnown(bytes.response, "bytes"), request.message?.bodyBytes?.response), "response", () => {
+            sendBytes(route.response, totalBytes(requireKnown(bytes.response, "bytes"), request.message?.bodyBytes?.response), "response", () => {
               if (work.message && request.message?.response !== undefined) work.message.response = JSON.parse(JSON.stringify(request.message.response));
               latency.responseTransportUs += kernel.now - serviceEnd;
               finish(outcome === "completed" ? { ok: true, ambiguous: false } : { ok: false, reason: "backend-rejected", ambiguous: true });
