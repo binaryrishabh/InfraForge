@@ -675,6 +675,44 @@ outage and large-state executor proofs. Model 1/goldens/challenges remain unchan
 Next: deeper storage/durability and recovery, with separate registry/log resources
 using these seams. Vercel remains queued before hosted/public-preview work resumes.
 
+## Reality Engine M2G and permanent shipping gate
+
+Accepted M2F SHA: `b1170b7301407e45e904b1b0d75569e673b0bc43`, Actions
+`38770371290`: **10/10 successful**. **Vercel FAILED separately**. The M2F broker
+timing predictor remains **REJECTED**; object timing remains **Unknown**.
+
+**FINAL-PRODUCT REALITY GATE** — permanent owner rule:
+
+Every user-visible resource, toggle, field, number, metric, security option,
+fault, control, connection and warning must map to an actual modeled mechanism
+that changes real simulation state or evidence.
+
+If it has no real mechanism/effect, it must not ship in the final product.
+Decorative technical controls are forbidden.
+Unknown is acceptable. Fake behavior is not.
+
+This specifically includes, but is not limited to: Publicly reachable, Encryption,
+Open ports, firewall rules, DNS, CDN, IAM/security controls later, autoscaling,
+chaos, cost, monitoring and registry settings.
+
+The final product rule is:
+
+REAL MECHANISM → REAL STATE CHANGE → REAL DOWNSTREAM EFFECT → REAL EVIDENCE
+
+OR REMOVE IT.
+
+M2G adds explicit internal DNS/TTL, CDN origin/cache, ordered stateful firewall and
+TLS identity gates, object-backed registry/layer startup and bounded metric export.
+The machine-readable shipping inventory identifies incomplete visible controls;
+coverage validation is separate from the deliberately closed Model-2 shipping gate.
+No automatic bridge from old public/encryption/openPorts or SKU/chaos knobs is
+claimed. Physical security/transport/storage timing remains scoped or Unknown.
+Model 1 ACTIVE; Model 2 INTERNAL; production PARKED. Local final validation passed:
+142 simulation tests (19 M2G), 54 tooling tests, 73 challenge checks, all 30 goldens
+and ten immutable hashes, frozen install, typecheck/lint/boundaries, web build and
+audit. The shipping inventory covers 441 surfaces; 379 remain ineligible. Exact-SHA
+Actions and separate external-status evidence belong in the M2G completion report.
+
 ## Parked hosted work and remaining limits
 
 B0.6E stopped before database access with identity/reset-credential gates unfinished.
@@ -710,9 +748,11 @@ Improvement drafts are browser-history context, not durable unfinished tasks; a
 new attempt durably retains its hypothesis. Deleting its source removes the ability
 to compare with that source but preserves the child's own evidence/hypothesis.
 
-Next engine work: **storage/durability and recovery** using the M2F queue/object
-ownership seams, measured demand and explicit Unknowns. Registry and partitioned-log
-semantics remain separate future resources.
+Next engine work: **M2H — application/workload contracts and controller reality**,
+with a proven diagram-to-model bridge, actual provisioning/drain/readiness and
+collected evidence. Deepen resource-specific memory/storage/durability and recovery
+where required; keep physical demand Unknown until identified. Partitioned-log
+semantics remain a separate future resource.
 Deepen existing resources before expansion or Free Mode/challenge migration. Real
 availability, latency, request success, cache warm-up, data recovery and statistical
 conclusions remain outside Model 1. Hosted production remains parked.

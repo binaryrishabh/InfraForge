@@ -31,5 +31,11 @@ variant requires a distinct configuration/composition before exposing those metr
 Comparable depth means appropriate behavior, not identical fields. Managed-service
 internal CPU may be Unknown while a self-hosted process has measured CPU demand.
 No family gains more icons before these existing resources have honest depth.
-M2A implements only a router and compute/database **service-station proof**; none of
-the remaining target mechanisms is presented as already implemented.
+The original dimensions above remain the historical Model-1 audit. Each JSON row
+now has a separate `model2` record with all twenty dimensions, implemented/partial/
+Unknown lists, mechanism/proof sources and remaining gaps. M2B–M2F deepen compute,
+transport/LB, DB/cache and queue/objects; M2G adds DNS, CDN, stateful policy/TLS,
+registry startup and real metric collection/export. Every current resource now has
+a meaningful internal foundation, while physical demand/durability, protocol breadth
+and visible-control migration remain partial/Unknown. No row claims final-product
+eligibility. [Shipping inventory](shipping-reality.json) keeps the gate closed.
