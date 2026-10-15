@@ -10,6 +10,7 @@ import { validateWorkload } from "../workload/validate";
 import { lexical } from "../time";
 import type { EventKernel } from "../time";
 import type { Invocation, Receipt, RemoteOutcome } from "../workload/contracts";
+import type { WorkEndpoint } from "../workload/run";
 
 const copy = <T>(value: T): T => JSON.parse(JSON.stringify(value));
 export type Deliver = (target: string, work: Invocation, done: (outcome: RemoteOutcome) => void) => Receipt;
@@ -17,6 +18,7 @@ export interface ComputeComposition {
   send(source: string, target: string, work: Invocation, done: (outcome: RemoteOutcome) => void): Receipt;
   receive(target: string, work: Invocation, done: (outcome: RemoteOutcome) => void, direct: () => Receipt): Receipt;
 }
+export type ResourceFactory = (id: string, kernel: EventKernel, send: Deliver) => WorkEndpoint<ComputeState> | undefined;
 export function createComputeModel2(authored: ComputeInput) {
   return createComputeRuntime(authored);
 }
@@ -28,7 +30,7 @@ export function validateComputeInput(authored: ComputeInput) {
   validateWorkload(adapt(authored));
   validateCompute(authored);
 }
-export function createComputeRuntime(authored: ComputeInput, compose?: (kernel: EventKernel, deliver: Deliver, controls: { pause(id: string, value: boolean): void }) => ComputeComposition) {
+export function createComputeRuntime(authored: ComputeInput, compose?: (kernel: EventKernel, deliver: Deliver, controls: { pause(id: string, value: boolean): void }) => ComputeComposition, resourceFactory?: ResourceFactory) {
   validateComputeInput(authored);
   const input: ComputeInput = JSON.parse(JSON.stringify(authored));
   for (const list of [input.resources, input.profiles, input.operations, input.arrivals, input.faults, input.ledger, input.interventions]) list.sort((a, b) => lexical(a.id, b.id));
@@ -40,6 +42,8 @@ export function createComputeRuntime(authored: ComputeInput, compose?: (kernel: 
   const runtime = createWorkloadRuntime<ComputeState>(adapter, {
     station(config, demands, kernel, send) {
       const original = input.resources.find((r) => r.id === config.id)!;
+      const external = resourceFactory?.(original.id, kernel, (target, work, done) => composition ? composition.send(original.id, target, work, done) : send(target, work, done));
+      if (external) return external;
       if (!isCompute(original)) return workloadStation(config, demands, kernel, (target, work, done) => composition ? composition.send(original.id, target, work, done) : send(target, work, done));
       const profiles = new Map(input.operations.map((o) => [o.id, input.profiles.find((p) => p.id === original.profiles[o.id])!]).filter((pair): pair is [string, Extract<ComputeInput["profiles"][number], { schema: "infraforge-compute-demand/1" }>] => typeof pair[0] === "string" && typeof pair[1] === "object" && isComputeProfile(pair[1])));
       const resource = computeResource(original, profiles, kernel, (target, work, done) => composition ? composition.send(original.id, target, work, done) : send(target, work, done)); computes.set(original.id, resource); return resource;

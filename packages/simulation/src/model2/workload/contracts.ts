@@ -32,7 +32,12 @@ export interface WorkIdentity {
   parentCallId?: string;
   operation: string;
 }
-export interface Invocation extends WorkIdentity { offeredAt: number; payloadBytes?: number }
+export interface Invocation extends WorkIdentity {
+  offeredAt: number; payloadBytes?: number;
+  // Internal application messages are copied by transport; replies become visible on return.
+  message?: { request: unknown; response?: unknown };
+  sessionId?: string;
+}
 export type RemoteOutcome = "completed" | "rejected" | "cancelled";
 export type CallerOutcome = "completed" | "rejected" | "deadline-exceeded" | "abandoned";
 export interface Receipt {

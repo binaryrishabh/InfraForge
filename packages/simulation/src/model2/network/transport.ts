@@ -6,8 +6,8 @@ import type { FailureReason, PathConfig, Trace, TransportResult } from "./contra
 import type { networkLink } from "./link";
 import { connectionPool, type Lease } from "./pool";
 
-export function pathTransport(config: PathConfig, kernel: EventKernel, links: Map<string, ReturnType<typeof networkLink>>, deliver: Deliver, alive: (id: string) => boolean, trace: Trace) {
-  const pool = connectionPool(config.id, config.pool, kernel, () => alive(config.target) && [...config.request, ...config.response].every((id) => links.get(id)!.reachable()), trace);
+export function pathTransport(config: PathConfig, kernel: EventKernel, links: Map<string, ReturnType<typeof networkLink>>, deliver: Deliver, alive: (id: string) => boolean, trace: Trace, disconnected?: (session: string) => void) {
+  const pool = connectionPool(config.id, config.pool, kernel, () => alive(config.target) && [...config.request, ...config.response].every((id) => links.get(id)!.reachable()), (kind, id, detail, root, attempt) => { trace(kind, id, detail, root, attempt); if (kind === "connection-closed") disconnected?.(id); });
   let offered = 0, completed = 0, failed = 0, cancelled = 0, remoteAfterStop = 0, live = 0;
   const reasons: Record<string, number> = {}, latency = { connectionWaitUs: 0, requestTransportUs: 0, remoteServiceUs: 0, responseTransportUs: 0 };
   return {
@@ -49,11 +49,13 @@ export function pathTransport(config: PathConfig, kernel: EventKernel, links: Ma
           delivered = true; state = "waiting"; const deliveredAt = kernel.now; latency.requestTransportUs += deliveredAt - readyAt;
           trace("request-delivered", key, config.target, work.rootId, work.attempt);
           if (!alive(config.target)) return;
-          remote = deliver(config.target, work, (outcome) => {
+          const request: Invocation = { ...work, sessionId: acquired.connection, ...(work.message ? { message: { request: JSON.parse(JSON.stringify(work.message.request)) } } : {}) };
+          remote = deliver(config.target, request, (outcome) => {
             if (terminal) { remoteAfterStop++; trace("remote-after-transport-stop", key, outcome, work.rootId, work.attempt); return; }
             if (!alive(config.target)) return;
             const serviceEnd = kernel.now; latency.remoteServiceUs += serviceEnd - deliveredAt;
             sendBytes(config.response, requireKnown(bytes.response, "bytes"), "response", () => {
+              if (work.message && request.message?.response !== undefined) work.message.response = JSON.parse(JSON.stringify(request.message.response));
               latency.responseTransportUs += kernel.now - serviceEnd;
               finish(outcome === "completed" ? { ok: true, ambiguous: false } : { ok: false, reason: "backend-rejected", ambiguous: true });
             });
