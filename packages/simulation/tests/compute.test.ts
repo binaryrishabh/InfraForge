@@ -29,8 +29,8 @@ test("unused CPU is reusable but invocation parallelism caps it; workers are not
   expect(e.results[0]!.responseUs).toBe(100); expect(e.resources[0]!.compute!.cpu.appCoreUs).toBe(100); computeConservation(e);
   const parallel = computeRun(computeFixture({ count: 1, cores: 4, slots: 8, parallelism: 2, cpu: 100 })); expect(parallel.results[0]!.responseUs).toBe(50);
 });
-test("default internal Model-2 dispatch selects compute while M2B replay stays explicit", () => {
-  const entry = resolveModel("2", { internal: true });
+test("explicit internal Model-2 compute dispatch preserves M2C replay", () => {
+  const entry = resolveModel("2", { internal: true, workloadVersion: "m2c/1" });
   if (entry.version !== "2" || entry.workloadVersion !== "m2c/1") throw new Error("Wrong dispatch");
   expect(entry.create(computeFixture({ count: 1 })).evidence().workloadVersion).toBe("m2c/1");
   expect(() => resolveModel("2")).toThrow("internal");

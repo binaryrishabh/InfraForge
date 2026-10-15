@@ -14,7 +14,9 @@ export interface WorkEndpoint<M extends StationState> {
 }
 export interface RuntimeModules<M extends StationState> {
   station(config: WorkStation, demands: Map<string, { cpuUs: number; ioUs: number }>, kernel: EventKernel, send: (target: string, work: Invocation, done: (outcome: RemoteOutcome) => void) => Receipt): WorkEndpoint<M>;
-  install?(kernel: EventKernel, stations: Map<string, WorkEndpoint<M>>): void;
+  install?(kernel: EventKernel, stations: Map<string, WorkEndpoint<M>>, send: (target: string, work: Invocation, done: (outcome: RemoteOutcome) => void) => Receipt): void;
+  route?(target: string, work: Invocation, done: (outcome: RemoteOutcome) => void, direct: () => Receipt): Receipt;
+  enter?(target: string, work: Invocation, done: (outcome: RemoteOutcome) => void): Receipt;
 }
 
 // Separate internal workload revision; no public export, HTTP route or Model-1 dispatch.
@@ -34,12 +36,15 @@ export function createWorkloadRuntime<M extends StationState>(authored: Workload
   const stations = new Map<string, WorkEndpoint<M>>();
   const routers = new Map(input.resources.filter((r) => r.kind === "router").map((r) => [r.id, { backends: r.backends, next: 0 }]));
   const send = (target: string, work: Invocation, done: (outcome: RemoteOutcome) => void): Receipt => {
-    const router = routers.get(target);
-    if (router) return send(router.backends[router.next++ % router.backends.length]!, work, done);
-    return stations.get(target)!.accept(work, done);
+    const direct = () => {
+      const router = routers.get(target);
+      if (router) return send(router.backends[router.next++ % router.backends.length]!, work, done);
+      return stations.get(target)!.accept(work, done);
+    };
+    return modules.route ? modules.route(target, work, done, direct) : direct();
   };
   for (const r of input.resources) if (r.kind !== "router") stations.set(r.id, modules.station(r, demands.get(r.id)!, kernel, send));
-  modules.install?.(kernel, stations);
+  modules.install?.(kernel, stations, send);
   const operations = new Map(input.operations.map((o) => [o.id, o]));
   const live = new Map<string, { work: Invocation; receipt?: Receipt }>();
   const book = new ResultBook(input.limits.maxRawResults);
@@ -70,7 +75,7 @@ export function createWorkloadRuntime<M extends StationState>(authored: Workload
     };
     cancelDeadline = kernel.schedule(kernel.now + requireKnown(operation.callerTimeout, "us"), 1, identity("caller-stop", rootId, 0), () => stop("deadline-exceeded"));
     if (operation.abandonAfter) cancelAbandon = kernel.schedule(kernel.now + requireKnown(operation.abandonAfter, "us"), 1, identity("caller-stop", rootId, 1), () => stop("abandoned"));
-    pending.receipt = send(operation.entry, work, (outcome) => {
+    pending.receipt = (modules.enter ?? send)(operation.entry, work, (outcome) => {
       if (terminal) { counts.remoteOutcomesAfterCallerStop++; return; }
       finish(outcome === "completed" ? "completed" : "rejected");
     });
