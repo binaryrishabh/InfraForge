@@ -1,5 +1,9 @@
 # Model-2 contract and foundation
 
+This document preserves the M2A foundation/replay contract. M2B now supplies the
+explicit internal registry entry point; see [workload architecture](m2b-workload.md).
+The original M2A `createModel2` remains a direct historical proof import/CLI.
+
 Status: internal M2A, explicit version **"2"**, revision `2-m2a-v1`. Published active
 model remains **"1"** for Free Mode and all ten challenges. Existing run capture,
 worker, evidence, reports and simulation exports are unchanged. The internal

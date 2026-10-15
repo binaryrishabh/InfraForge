@@ -7,6 +7,7 @@ import { keyedUniform } from "../src/model2/random";
 import { ResultBook } from "../src/model2/workload/evidence";
 import { workloadFixture, quantities } from "./workloadFixture";
 import type { WorkloadInput } from "../src/model2/workload/contracts";
+import { resolveModel } from "../src/model2/registry";
 
 export function execute(input: WorkloadInput, batch?: number) {
   const m = createWorkloadModel2(input);
@@ -24,6 +25,13 @@ export function conserved(e: ReturnType<typeof execute>) {
     if (s.received !== s.admitted + s.rejected || s.admitted !== s.completed + s.failed + s.cancelled + s.queued + s.serving + s.waiting) throw new Error("Station conservation");
   }
 }
+test("explicit internal Model-2 dispatch uses the versioned M2B workload core", () => {
+  const entry = resolveModel("2", { internal: true });
+  if (entry.version !== "2") throw new Error("Wrong dispatch");
+  expect(entry.workloadVersion).toBe("m2b/1"); expect(entry.published).toBe(false);
+  const model = entry.create(workloadFixture()); model.advanceTo(model.horizon);
+  expect(model.evidence().counts.completed).toBe(10);
+});
 test("analytical service, queue overflow, two classes, and exact deadline ties", () => {
   const normal = execute(workloadFixture()); expect(normal.counts.completed).toBe(10); expect(normal.results.every((r) => r.responseUs === 100)).toBe(true);
   expect(normal.resources[0]!.consumedCoreUs).toBe(1000); conserved(normal);

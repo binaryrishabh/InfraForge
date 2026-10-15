@@ -1,6 +1,7 @@
 # Internal workload architecture: m2b/1
 
-`createWorkloadModel2` is a direct internal import under `model2/workload/run.ts`.
+The explicit internal Model-2 registry dispatches to `createWorkloadModel2` under
+`model2/workload/run.ts`, requiring workload revision `m2b/1`.
 Model 1 is active. The M2A proof entry point remains available with its original
 input/lifecycle semantics; historical proof inputs are not silently reinterpreted.
 M2B shares integer virtual time and keyed Philox with M2A. No public package export,
