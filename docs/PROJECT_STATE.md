@@ -1,7 +1,7 @@
 # InfraForge project state
 
-Verified locally 2026-10-15 on `develop`. **Reality Engine M2D** adds internal network,
-connection and load-balancer mechanisms; the accepted learning product stays on Model 1.
+Verified locally 2026-10-15 on `develop`. **Reality Engine M2E** adds internal relational
+transactions and keyed caching; the accepted learning product stays on Model 1.
 Hosted production cutover remains **PARKED**. These milestones did not access Neon,
 EC2/AWS, hosted PostgreSQL/Nginx, Vercel, DNS, OAuth settings, production secrets or
 `main`.
@@ -579,6 +579,11 @@ unchanged. Production PARKED.
 
 ## Reality Engine M2D
 
+Accepted M2D SHA: `4847c7b1d4d6ecb15caa214148811d76467db58d`, GitHub Actions
+`38749835365`: **10/10 successful**. The separate **Vercel commit status FAILED**.
+This checkpoint is not universally green; GitHub metadata was inspected without
+accessing the Vercel account/configuration.
+
 The internal default is `m2d/1`; explicit M2C/M2B and direct M2A replay remain. Directed
 authored links serialize known request/response bytes through FIFO buffers and separate
 propagation; logical paths can share bottlenecks. Resource-neutral pools own connection
@@ -603,8 +608,38 @@ propagation remain Unknown. No WAN/cloud/ALB/NLB validity or Free Mode promotion
 [M2D research/design/calibration/validation](reality/README.md) retain vertical failure,
 health lag, reuse/pool/multiplexing/drain/retry/partition proofs, 3,000 generated cases
 and bounded 5,000-caller performance runs. Model 1/goldens/challenge hashes, schema, UI
-and runtime activation remain unchanged. Next: M2E DB/cache depth using these primitives;
+and runtime activation remain unchanged. M2E adds DB/cache depth using these primitives;
 transport/runtime accuracy remains unresolved. Production stays **PARKED**.
+
+## Reality Engine M2E
+
+Explicit internal `m2e/1` composes M2B identity, M2C CPU and M2D transport/pools with
+separate relational sessions, bounded transaction admission/programs, statement
+snapshots, actual shared/exclusive lock queues, deterministic cycle victims,
+commit/rollback/timeouts and authored log acknowledgement. Physical buffer/storage/
+fsync/replication/recovery remain Unknown. The old generic DB station is not extended.
+Keyed cache entries own sizes, versions, virtual TTL, exact LRU/no-eviction and
+warm state. Cache-aside makes real lookup/fetch/fill/invalidation calls; opt-in
+coalescing removes duplicate fetches. Faults change service/session/CPU/cache state.
+
+Local labelled disposable PG/Redis fixtures produced 60 DB + 54 cache batches and
+were cleaned. The complete timing predictor is **REJECTED** (fit throughput MARE
+119.72%, held-out 69.41%); aggregate CPU and runtime/transport/storage residuals do
+not identify query timing. All 54 cache hit/miss sequences replay exactly, with
+cache timing Unknown. No network backfitting or Free Mode/provider promotion.
+The M2D predictor remains rejected at **1,488.57% held-out MARE**.
+
+[M2E research/design/calibration/validation](reality/README.md) retain cascade,
+warm-up, TTL, capacity, stampede/coalescing, DB outage, session exhaustion, contention
+and detached-work proofs, 3,000 generated cases and 100,000-key executor measurements.
+Model 1, its 30 goldens and ten challenge hashes remain unchanged. No UI/schema/
+production activation change. Next: messaging/storage mechanisms and deeper
+resource-specific recovery, with measurement-layer separation still unresolved.
+
+**Queued defect before hosted/public-preview work resumes:** repeated Vercel commit/
+deployment status failures must be diagnosed separately from successful GitHub
+Actions. Do not repair Vercel during M2E or call a failing external-status checkpoint
+fully green. Production remains **PARKED**.
 
 ## Parked hosted work and remaining limits
 

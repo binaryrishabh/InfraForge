@@ -39,3 +39,12 @@ The internal default is now `m2d/1`; explicit M2C/M2B replay remains. Use
 `bun run debug:network` for the synthetic vertical/fault proofs. `measure:network`
 opens bounded temporary loopback sockets; `perf:network` measures the local executor.
 The complete host networking predictor is rejected; no cloud/WAN numbers are promoted.
+
+M2E adds separate [relational/cache mechanisms](m2e-data.md), [research and design
+decisions](m2e-research.md), [local measurement/calibration limits](m2e-calibration.md)
+and [proof/sweep/performance validation](m2e-validation.md). Select `m2e/1` explicitly
+through the internal registry. Use `check:data` and `debug:data` for committed replay;
+`measure:data` explicitly creates and cleans disposable local fixtures, and
+`perf:data` measures the executor. The complete data timing predictor is rejected;
+all 54 cache logical sequences match, without claiming calibrated cache latency.
+Model 1 remains active, Model 2 internal and production parked.

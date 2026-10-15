@@ -34,6 +34,10 @@
     "check:network": "bun --no-env-file scripts/reality/network-calibration.ts",
     "measure:network": "node scripts/reality/network-benchmark.mjs",
     "perf:network": "bun --no-env-file scripts/reality/network-performance.ts",
+    "debug:data": "bun --no-env-file scripts/reality/data-proofs.ts",
+    "check:data": "bun --no-env-file scripts/reality/data-calibration.ts",
+    "measure:data": "node scripts/reality/data-benchmark.mjs",
+    "perf:data": "bun --no-env-file scripts/reality/data-performance.ts",
     "audit": "bun audit --json"
   },
   "devDependencies": {
