@@ -5,9 +5,11 @@ import ts from "typescript";
 import { fileURLToPath } from "node:url";
 import { RESOURCE_TYPES } from "../../packages/domain/src/resource/RESOURCE_TYPES.constants";
 export const shippingRoot = resolve(fileURLToPath(new URL("../..", import.meta.url)));
-export type ShippingStatus = "REAL" | "PARTIAL" | "MODEL1_ONLY" | "UNKNOWN" | "REMOVE_BEFORE_MODEL2_SHIP";
+export type ShippingStatus = "REAL" | "PARTIAL" | "MODEL1_ONLY" | "UNKNOWN" | "REMOVE_BEFORE_MODEL2_SHIP" | "NOT_APPLICABLE";
+export const SURFACE_CATEGORIES = ["INFRA_INPUT", "INFRA_OUTPUT", "RESOURCE_TYPE", "WORKLOAD_INPUT", "FAULT_CONTROL", "SECURITY_CONTROL", "COST_INPUT_OR_OUTPUT", "PRODUCT_UI_ACTION", "PRESENTATION_ONLY", "UNREVIEWED"] as const;
+export type SurfaceCategory = typeof SURFACE_CATEGORIES[number];
 export interface Surface { id: string; source: string; identity: string; description: string; kind: "field" | "resource" | "chaos" | "control" | "display" }
-export interface ShippingEntry extends Surface { resources: string[]; model1Meaning: string; model2Owner: string; changesState: boolean; effects: { physics: boolean; reachability: boolean; security: boolean; cost: boolean; evidence: boolean }; provenanceRequirements: string[]; status: ShippingStatus; finalProductEligible: boolean; plan: string }
+export interface ShippingEntry extends Surface { category: SurfaceCategory; categoryReason: string; ui: { status: "VALID" | "REVIEW_REQUIRED" | "NOT_APPLICABLE"; behavior: string; proofs: string[] }; resources: string[]; model1Meaning: string; model2Owner: string; changesState: boolean; effects: { physics: boolean; reachability: boolean; security: boolean; cost: boolean; evidence: boolean }; provenanceRequirements: string[]; status: ShippingStatus; finalProductEligible: boolean; plan: string }
 export function scanSurface(source: string, text: string): Surface[] {
   const file = ts.createSourceFile(source, text, ts.ScriptTarget.Latest, true, source.endsWith("tsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS), rows: Surface[] = [], occurrences = new Map<string, number>();
   const add = (kind: Surface["kind"], identity: string, description = identity) => { const count = occurrences.get(identity) ?? 0; occurrences.set(identity, count + 1); rows.push({ id: `${kind}:${source}:${identity}:${count}`, source, identity, description, kind }); };
@@ -39,21 +41,31 @@ export function validateShipping(entries: ShippingEntry[], surfaces = visibleSur
   const actual = new Set(surfaces.map((s) => s.id));
   for (const entry of entries) {
     if (!actual.has(entry.id)) errors.push(`Stale inventory identity: ${entry.id}`);
-    if (!["REAL", "PARTIAL", "MODEL1_ONLY", "UNKNOWN", "REMOVE_BEFORE_MODEL2_SHIP"].includes(entry.status) || !entry.resources.length || !entry.model1Meaning.trim() || !entry.model2Owner.trim() || !entry.provenanceRequirements.length || !entry.plan.trim() || !entry.effects || Object.values(entry.effects).some((x) => typeof x !== "boolean")) errors.push(`Incomplete inventory entry: ${entry.id}`);
-    if (entry.finalProductEligible && (entry.status !== "REAL" || !entry.changesState || !existsSync(resolve(root, entry.model2Owner)))) errors.push(`Unsupported shipping eligibility: ${entry.id}`);
+    if (!["REAL", "PARTIAL", "MODEL1_ONLY", "UNKNOWN", "REMOVE_BEFORE_MODEL2_SHIP", "NOT_APPLICABLE"].includes(entry.status) || !entry.resources.length || !entry.model1Meaning.trim() || !entry.model2Owner.trim() || !entry.provenanceRequirements.length || !entry.plan.trim() || !entry.effects || Object.values(entry.effects).some((x) => typeof x !== "boolean")) errors.push(`Incomplete inventory entry: ${entry.id}`);
+    const uiOnly = ["PRODUCT_UI_ACTION", "PRESENTATION_ONLY"].includes(entry.category);
+    if (!SURFACE_CATEGORIES.includes(entry.category) || !entry.categoryReason?.trim() || !entry.ui || !["VALID", "REVIEW_REQUIRED", "NOT_APPLICABLE"].includes(entry.ui.status)) errors.push(`Unreviewed surface taxonomy: ${entry.id}`);
+    if ((entry.kind === "resource" && entry.category !== "RESOURCE_TYPE") || (entry.kind === "chaos" && entry.category !== "FAULT_CONTROL") || (entry.kind === "field" && /^(Resource\.(public|encryption|openPorts|skuId|autoscaling)|AutoscalingPolicy\.|WorkloadProfile\.|ConnectionLine\.(sourceId|targetId|port))/.test(entry.identity) && uiOnly)) errors.push(`Technical surface misclassified as UI: ${entry.id}`);
+    if (uiOnly && entry.kind === "control" && /resource\.(public|encryption|openPorts|skuId|autoscaling)|policy\.(minReplicas|maxReplicas|targetCpu)|metric\.(cpu|memory|health)|profile\.(targetThroughput|readWriteRatio|payloadSize|trafficShape|peakMultiplier|throughputUnit)/.test(entry.description)) errors.push(`Technical binding misclassified as UI: ${entry.id}`);
+    if ((uiOnly && entry.status !== "NOT_APPLICABLE") || (!uiOnly && entry.status === "NOT_APPLICABLE") || (uiOnly && entry.finalProductEligible && entry.ui.status !== "VALID")) errors.push(`Incorrect separate readiness eligibility: ${entry.id}`);
+    if (entry.ui?.status === "VALID" && (!uiOnly || !entry.ui.behavior.trim() || !entry.ui.proofs.length || entry.ui.proofs.some((p) => !existsSync(resolve(root, p))))) errors.push(`Unsupported UI validity: ${entry.id}`);
+    if (!uiOnly && entry.finalProductEligible && (entry.status !== "REAL" || (!entry.changesState && !entry.effects.evidence) || !entry.model2Owner.startsWith("packages/simulation/src/model2/") || !existsSync(resolve(root, entry.model2Owner)))) errors.push(`Unsupported shipping eligibility: ${entry.id}`);
   }
   return errors;
 }
-export const unshippable = (entries: ShippingEntry[]) => entries.filter((e) => !e.finalProductEligible || e.status !== "REAL");
+export const infrastructureSurface = (e: ShippingEntry) => !["PRODUCT_UI_ACTION", "PRESENTATION_ONLY"].includes(e.category);
+export const unshippable = (entries: ShippingEntry[]) => entries.filter((e) => infrastructureSurface(e) && (!e.finalProductEligible || e.status !== "REAL" || e.category === "UNREVIEWED"));
+export const invalidUi = (entries: ShippingEntry[]) => entries.filter((e) => !infrastructureSurface(e) && e.ui.status !== "VALID");
+export function shippingSummary(entries: ShippingEntry[]) { return { surfaces: entries.length, byCategory: Object.fromEntries(SURFACE_CATEGORIES.map((c) => [c, entries.filter((e) => e.category === c).length])), technicalBlocked: unshippable(entries).length, technicalOutputsBlocked: unshippable(entries).filter((e) => e.category === "INFRA_OUTPUT" || (e.category === "COST_INPUT_OR_OUTPUT" && e.kind === "display")).length, productUiValidity: { valid: entries.filter((e) => !infrastructureSurface(e) && e.ui.status === "VALID").length, reviewRequired: invalidUi(entries).length }, model2RealityShippingReady: unshippable(entries).length === 0 }; }
 export function newInventoryEntry(surface: Surface): ShippingEntry {
-  return { ...surface, resources: ["ALL"], model1Meaning: "New visible surface requires explicit semantic review", model2Owner: "UNASSIGNED", changesState: false, effects: { physics: false, reachability: false, security: false, cost: false, evidence: false }, provenanceRequirements: ["Trace input to state owner and downstream proof; record units/domain for numeric values"], status: "UNKNOWN", finalProductEligible: false, plan: "Implement and prove the real mechanism or remove before Model-2 shipping" };
+  return { ...surface, category: "UNREVIEWED", categoryReason: "Classification requires semantic review; new surfaces fail closed", ui: { status: "NOT_APPLICABLE", behavior: "Unreviewed", proofs: [] }, resources: ["ALL"], model1Meaning: "New visible surface requires explicit semantic review", model2Owner: "UNASSIGNED", changesState: false, effects: { physics: false, reachability: false, security: false, cost: false, evidence: false }, provenanceRequirements: ["Trace input to state owner and downstream proof; record units/domain for numeric values"], status: "UNKNOWN", finalProductEligible: false, plan: "Implement and prove the real mechanism or remove before Model-2 shipping" };
 }
 export function shippingInventory(root = shippingRoot) { return JSON.parse(readFileSync(resolve(root, "docs/reality/shipping-reality.json"), "utf8")) as { schema: string; entries: ShippingEntry[] }; }
 if (import.meta.main) {
   const file = resolve(shippingRoot, "docs/reality/shipping-reality.json"), surfaces = visibleSurfaces(), previous = existsSync(file) ? shippingInventory().entries : [], byId = new Map(previous.map((e) => [e.id, e]));
-  if (process.argv.includes("--write")) writeFileSync(file, JSON.stringify({ schema: "infraforge-shipping-reality/1", scope: "Every declared infrastructure field/resource/chaos option and scanned web interactive/technical display surface; normal Model-1 validation does not require Model-2 shipping readiness", entries: surfaces.map((s) => byId.has(s.id) ? { ...byId.get(s.id)!, ...s } : newInventoryEntry(s)) }, null, 2) + "\n");
+  if (process.argv.includes("--write")) writeFileSync(file, JSON.stringify({ schema: "infraforge-shipping-reality/2", scope: "Separate PRODUCT_UI_VALIDITY from MODEL2_REALITY_SHIPPING_READY. New or changed fingerprints require review; ordinary current Model-1 validation checks inventory coverage only.", entries: surfaces.map((s) => byId.has(s.id) ? { ...byId.get(s.id)!, ...s } : newInventoryEntry(s)) }, null, 2) + "\n");
   const entries = shippingInventory().entries, errors = validateShipping(entries), blocked = unshippable(entries);
   if (errors.length) throw Error(errors.join("\n"));
-  console.log(JSON.stringify({ surfaces: entries.length, byStatus: Object.fromEntries(["REAL", "PARTIAL", "MODEL1_ONLY", "UNKNOWN", "REMOVE_BEFORE_MODEL2_SHIP"].map((status) => [status, entries.filter((e) => e.status === status).length])), model2ShippingReady: blocked.length === 0, blockedCount: blocked.length, ...(process.argv.includes("--blocked") ? { blocked } : {}) }));
-  if (process.argv.includes("--ready") && blocked.length) { console.error("MODEL2_SHIPPING_READY refused: visible mechanisms remain incomplete"); process.exitCode = 1; }
+  console.log(JSON.stringify({ ...shippingSummary(entries), ...(process.argv.includes("--blocked") ? { blocked } : {}) }));
+  if (process.argv.includes("--ui-ready") && invalidUi(entries).length) { console.error("PRODUCT_UI_VALIDITY requires behavior proof review"); process.exitCode = 1; }
+  if (process.argv.includes("--ready") && blocked.length) { console.error("MODEL2_REALITY_SHIPPING_READY refused: technical infrastructure surfaces remain incomplete"); process.exitCode = 1; }
 }
