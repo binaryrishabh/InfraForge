@@ -332,9 +332,12 @@ retained. No agent folders or executor memories were created.
 | PostgreSQL 18/Redis | Exact backend image: 17 passed, 1,384 assertions across eleven files; lifecycle/retries/teardown/reruns/traces/history/security/migrations and cleanup passed |
 | Migration 16 | Schema-15 upgrade preserves OAuth users/accounts; case collision rolls back all DDL; nullable usernames, format/unique guards and release index drift rejection passed |
 | Docker | Normal-context commit-tagged image, fictional-settings Compose check and all five packaged entrypoints passed |
-| Release rehearsal | Windows Bun failed at its first Docker subprocess with `EUNKNOWN/uv_spawn`, before fixtures were created; exact-SHA Linux CI packaging runs the full rehearsal and must pass before completion |
+| Release rehearsal | All 27 Linux CI rehearsal stages passed, including migration failure, restore, ownership, TLS/session security, dependency failure, rollback and cleanup. Windows Bun failed at its first Docker subprocess with `EUNKNOWN/uv_spawn`, before fixtures were created |
 | Frontend build | Passed; main chunk about 253 kB, no chunk warning |
 | Dependency audit | `{}`; no dependency upgrade |
+
+All ten [CI jobs](https://github.com/binaryrishabh/InfraForge/actions/runs/38633719645)
+passed at `80a34c68fae39e1aaf56a4f5103092a24627b410`, covering the complete implementation.
 
 Real browser QA registered two disposable accounts through the public form with
 zero OAuth providers. User A saved designs, ran CPU-pressure attempts, received
@@ -364,8 +367,10 @@ refused and the connection closes 1008. Already-authorized TCP frames cannot be
 recalled. Earlier ordinary telemetry was not evidence of a newly authorized
 post-revocation message. Disposable QA proxy errors were isolated to test tooling;
 API/WS direct-port behavior and native authentication stayed enabled throughout.
-Owned test resources are removed after evidence capture; referenced/unknown work
-and developer storage are preserved. Local/CI verification is not production proof.
+Owned QA containers and temporary image tags were removed after evidence capture;
+their disposable data is gone. Eight unused source/helper files were removed,
+recovering 2,325,687 bytes. Unique evidence, referenced/unknown work and developer
+storage are preserved. Local/CI verification is not production proof.
 
 ## Parked hosted work and remaining limits
 
