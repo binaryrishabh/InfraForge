@@ -118,4 +118,13 @@ describe("source import boundaries", () => {
       expect(errors).toContain("undeclared dependency");
     });
   });
+  test("internal Model-2 code cannot enter a browser through a future export", () => {
+    withWorkspaceFixture((root, put) => {
+      put("packages/simulation/package.json", JSON.stringify({ name: "@infraforge/simulation", exports: { "./internal": "./src/model2/run.ts" } }));
+      put("packages/simulation/src/model2/run.ts", "export type Internal = string;");
+      put("apps/web/package.json", JSON.stringify({ name: "@infraforge/web", dependencies: { "@infraforge/simulation": "workspace:*" } }));
+      put("apps/web/src/app.ts", "import type { Internal } from '@infraforge/simulation/internal';");
+      expect(checkBoundaries(root).errors.join("\n")).toContain("model2/run.ts: browser closure reaches forbidden simulation runtime");
+    });
+  });
 });

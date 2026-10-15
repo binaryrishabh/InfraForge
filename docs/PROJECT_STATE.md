@@ -1,7 +1,7 @@
 # InfraForge project state
 
-Verified locally 2026-10-15 on `develop`. **Post-fault observation** extends guided
-evidence reading and deliberate one-change improvements.
+Verified locally 2026-10-15 on `develop`. **Reality Engine M2A** begins a separate
+internal simulation foundation; the accepted post-fault learning product stays on Model 1.
 Hosted production cutover remains **PARKED**. These milestones did not access Neon,
 EC2/AWS, hosted PostgreSQL/Nginx, Vercel, DNS, OAuth settings, production secrets or
 `main`.
@@ -488,6 +488,37 @@ its two checks passed separately. Exact published-SHA CI remains the final autho
 The local development database had an older malformed evidence-trigger expression;
 its function was restored from committed migration 15 without editing migration files.
 
+## Reality Engine M2A
+
+Accepted post-fault checkpoint: `361a3b1afe33740d8f45d9c79601c6476657d602`,
+[CI 38710194176](https://github.com/binaryrishabh/InfraForge/actions/runs/38710194176),
+10/10 green. Model 1 remains the sole published active physics for Free Mode and all
+ten immutable challenges. No historical inputs/evidence are upgraded or reinterpreted.
+
+**Permanent reality doctrine:** Free Mode numbers must trace to documented provider/
+service facts, selected configuration, workload, topology/dependencies, derived models,
+researched/calibrated assumptions or explicitly bounded estimates; otherwise **Unknown**.
+No arbitrary/decorative numbers or invented precision. Provider capability does not
+establish application throughput. Every existing resource needs comparable appropriate
+depth; depth precedes new icon families. Shared mechanisms generate consequences;
+faults alter resource-specific mechanisms. Free and Challenge modes use the same
+physics per version. Independent deep research and progressive validation are permanent.
+
+[Reality research/audit/design](reality/README.md) holds the detailed architecture,
+machine-readable numeric ledger and eleven-resource depth matrix. The audit preserves
+Model-1 approximations, including catalog gaps, without treating them as future physics.
+Model 2 (`"2"`) is internal only: explicit dispatch, unit/provenance/unknown primitives,
+stable keyed RNG, integer-time event kernel, modular finite service stations and an
+identified-work routing/compute/database proof. Fault pause changes service progress;
+held dependency slots and bounded queues propagate pressure. Removal permits state
+to drain. Synthetic sensitivity/analytical tests verify mechanics, not real-service
+calibration. Memory/cost remain Unknown where unmodeled. No schema/runtime activation,
+frontend redesign, provider service or infrastructure addition occurs in M2A.
+
+UI beautification is deferred; Claude later owns the major UI/UX redesign. Credential
+auth and the 1100px Designer rule remain accepted. Future auth remains email OTP/magic
+link, then phone. Production remains **PARKED**.
+
 ## Parked hosted work and remaining limits
 
 B0.6E stopped before database access with identity/reset-credential gates unfinished.
@@ -503,8 +534,8 @@ and verified OAuth/TLS configuration.
 A single pair establishes no statistical significance, production reliability, real
 cloud behavior or general superiority across seeds. Continuous telemetry, all
 automatic scaling events, replay/checkpoint recovery and multi-seed experiments
-remain absent. Model-2 resource-keyed RNG is deferred to an explicit simulation
-milestone. Windows runtime stability (native Bun crashes, `tsc` out of memory on this
+remain absent in the published product. Model-2 keyed RNG now exists only in the
+internal foundation. Windows runtime stability (native Bun crashes, `tsc` out of memory on this
 host) and external OAuth sign-in in a browser remain unverified; authenticated browser
 QA now uses real public credentials in disposable local data. The sample design keeps the two readiness
 warnings its domain tests pin (vm-2 has no data path, monitor-1 is unreachable).
@@ -523,7 +554,8 @@ Improvement drafts are browser-history context, not durable unfinished tasks; a
 new attempt durably retains its hypothesis. Deleting its source removes the ability
 to compare with that source but preserves the child's own evidence/hypothesis.
 
-Next product milestone: investigate a separately calibrated workload-change learning
-exercise using the accepted predict/observe/improve loop. Real availability, latency,
-request success, cache warm-up, data recovery and statistical conclusions remain
-outside model 1. Hosted production remains parked.
+Next product milestone: **M2B — workload/request/service-demand engine** with measured
+profiles, explicit arrival/deadline ownership and reproducible calibration/validation.
+Deepen existing resources before expansion or Free Mode/challenge migration. Real
+availability, latency, request success, cache warm-up, data recovery and statistical
+conclusions remain outside Model 1. Hosted production remains parked.

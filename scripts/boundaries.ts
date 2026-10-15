@@ -170,7 +170,7 @@ export function checkBoundaries(root: string): { errors: string[]; edges: Import
     const source = pending.pop()!;
     if (reachable.has(source)) continue;
     reachable.add(source);
-    if (/^packages\/simulation\/src\/(?:engine[^/]*|cost|topology|types)(?:\.|\/)/.test(source)) {
+    if (/^packages\/simulation\/src\/(?:engine[^/]*|cost|topology|types|models|model2)(?:\.|\/)/.test(source)) {
       errors.push(`${source}: browser closure reaches forbidden simulation runtime`);
     }
     for (const edge of edges.filter((item) => item.source === source)) {

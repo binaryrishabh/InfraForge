@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "auditedModel": "1",
+  "targetModel": "2",
+  "scope": "Generic diagram resources; deployment/service identity must disambiguate self-hosted from managed behavior before implementation.",
+  "resources": [
+    {
+      "resource": "DNS",
+      "dimensions": { "configuration": "partial", "inputTraffic": "generic", "outputTraffic": "generic", "state": "absent", "capacity": "synthetic", "limits": "absent", "cpu": "synthetic", "memory": "synthetic", "network": "absent", "connections": "absent", "storageIO": "not-applicable", "queuing": "absent", "scaling": "not-applicable", "failureModes": "generic", "chaos": "generic", "recovery": "generic", "security": "static", "cost": "synthetic", "dependencies": "partial", "observableMetrics": "synthetic" },
+      "currentImplementation": "Entry point injects application RPS; fallback 5000, generic CPU/memory, fixed cost and common faults.",
+      "realityGap": "No name/query, answer, TTL, resolver cache, negative cache, timeout or authoritative/recursive role. HTTP routing is not DNS resolution.",
+      "targetBehavior": "Explicit resolver/authoritative identity, query class, TTL/cache state, name-to-endpoint dependencies and bounded query service. Managed-service CPU/memory/storage and replica scaling remain opaque/not applicable unless a self-hosted server is selected; expose queries, cache outcomes, resolution failures and priced query usage."
+    },
+    {
+      "resource": "CDN",
+      "dimensions": { "configuration": "partial", "inputTraffic": "generic", "outputTraffic": "generic", "state": "absent", "capacity": "synthetic", "limits": "absent", "cpu": "synthetic", "memory": "synthetic", "network": "synthetic", "connections": "absent", "storageIO": "absent", "queuing": "absent", "scaling": "not-applicable", "failureModes": "generic", "chaos": "generic", "recovery": "generic", "security": "static", "cost": "synthetic", "dependencies": "partial", "observableMetrics": "synthetic" },
+      "currentImplementation": "Generic pass-through, capacity 20000 RPS and bandwidth proxy, no edge cache behavior.",
+      "realityGap": "No object identity, cache policy, origin traffic, expiry, geography or invalidation.",
+      "targetBehavior": "Request/cacheability classes, byte/working-set cache state, TTL/eviction and origin miss work; link reachability and transfer metering. Provider limits/cost by service and geography. Internal provider CPU and physical replicas are opaque; no invented percentages or scaling controls."
+    },
+    {
+      "resource": "Firewall",
+      "dimensions": { "configuration": "partial", "inputTraffic": "generic", "outputTraffic": "generic", "state": "absent", "capacity": "synthetic", "limits": "absent", "cpu": "synthetic", "memory": "synthetic", "network": "absent", "connections": "absent", "storageIO": "not-applicable", "queuing": "absent", "scaling": "not-applicable", "failureModes": "generic", "chaos": "generic", "recovery": "generic", "security": "static", "cost": "synthetic", "dependencies": "partial", "observableMetrics": "synthetic" },
+      "currentImplementation": "Entry/pass-through resource with fallback capacity; public/encryption/open-port flags are static warnings.",
+      "realityGap": "No rule evaluation, denied work, state table, listener or protocol semantics. Diagram presence gives no protection.",
+      "targetBehavior": "Explicit L3/L4/L7 service identity, policy/reachability and allowed/denied flow counters, connection state where applicable. Appliance capacity from configured demand; managed internals opaque. Storage/scaling only for a selected appliance implementation, never implied by the icon."
+    },
+    {
+      "resource": "Load Balancer",
+      "dimensions": { "configuration": "partial", "inputTraffic": "partial", "outputTraffic": "partial", "state": "partial", "capacity": "synthetic", "limits": "partial", "cpu": "synthetic", "memory": "synthetic", "network": "synthetic", "connections": "absent", "storageIO": "not-applicable", "queuing": "absent", "scaling": "partial", "failureModes": "generic", "chaos": "generic", "recovery": "generic", "security": "static", "cost": "synthetic", "dependencies": "partial", "observableMetrics": "partial" },
+      "currentImplementation": "Equal VM split, pools, previous-tick shedding logs, CPU autoscaling policy and pending replicas.",
+      "realityGap": "No real connection/request limits, queues, health probes, affinity, detection lag or response routing.",
+      "targetBehavior": "Composable routing policy, endpoint eligibility, connection/pending-request limits and backpressure, probe/detection events, byte/link work. Keep pool control distinct from LB service. M2A proves only deterministic sorted round robin; other mechanisms and LB consumption are pending."
+    },
+    {
+      "resource": "Virtual Machine",
+      "dimensions": { "configuration": "partial", "inputTraffic": "partial", "outputTraffic": "generic", "state": "partial", "capacity": "synthetic", "limits": "partial", "cpu": "synthetic", "memory": "synthetic", "network": "synthetic", "connections": "synthetic", "storageIO": "absent", "queuing": "absent", "scaling": "partial", "failureModes": "generic", "chaos": "generic", "recovery": "generic", "security": "static", "cost": "approximation", "dependencies": "partial", "observableMetrics": "partial" },
+      "currentImplementation": "SKU vCPU/baseline multiplied by80, write tax, synthetic memory/connections, pool and vertical restart state.",
+      "realityGap": "Host capability is conflated with application throughput; no CPU credits, scheduler, memory allocations, worker queue, sockets or app readiness.",
+      "targetBehavior": "Host capability plus separate application service-demand profile; bounded workers/queues, CPU-time and memory allocations, connection pools and deadlines. Provision/readiness/drain events and stateful credits later. M2A uses explicitly reserved CPU shares and synchronous dependency slots, not a full CPU scheduler."
+    },
+    {
+      "resource": "Container Registry",
+      "dimensions": { "configuration": "partial", "inputTraffic": "generic", "outputTraffic": "generic", "state": "absent", "capacity": "synthetic", "limits": "absent", "cpu": "synthetic", "memory": "synthetic", "network": "absent", "connections": "absent", "storageIO": "absent", "queuing": "absent", "scaling": "not-applicable", "failureModes": "generic", "chaos": "generic", "recovery": "generic", "security": "static", "cost": "synthetic", "dependencies": "partial", "observableMetrics": "synthetic" },
+      "currentImplementation": "Generic serving resource with1000 RPS, no artifact lifecycle.",
+      "realityGap": "Registry traffic should arise from push/pull/startup work, not every application request.",
+      "targetBehavior": "Image manifests/layers, cache reuse, authentication/reachability, byte transfer, storage and operation quotas; deployment startup creates pull work and readiness delay. Managed CPU/replica scaling opaque; self-hosted implementation can compose compute/storage queues. Expose pull bytes, failures and startup blocking."
+    },
+    {
+      "resource": "Cache",
+      "dimensions": { "configuration": "partial", "inputTraffic": "synthetic", "outputTraffic": "partial", "state": "absent", "capacity": "synthetic", "limits": "absent", "cpu": "synthetic", "memory": "synthetic", "network": "absent", "connections": "absent", "storageIO": "not-applicable", "queuing": "absent", "scaling": "absent", "failureModes": "generic", "chaos": "generic", "recovery": "generic", "security": "static", "cost": "synthetic", "dependencies": "partial", "observableMetrics": "synthetic" },
+      "currentImplementation": "Global80% hit ratio, recomputed global RPS and memory formula; failed cache forwards all read demand.",
+      "realityGap": "No cache contents, TTL, invalidation, eviction, warm-up or persistent state. No measured misses/hits.",
+      "targetBehavior": "Small explicit key/object or calibrated reuse-distance model; bytes/working set, TTL, capacity, eviction and cold start. Misses generate dependency work; connection/CPU queues consume service demand. Persistence/storage I/O only when configured; crash loss and warm-up differ from fault expiry."
+    },
+    {
+      "resource": "Database",
+      "dimensions": { "configuration": "partial", "inputTraffic": "synthetic", "outputTraffic": "partial", "state": "absent", "capacity": "synthetic", "limits": "approximation", "cpu": "synthetic", "memory": "synthetic", "network": "absent", "connections": "synthetic", "storageIO": "absent", "queuing": "absent", "scaling": "partial", "failureModes": "generic", "chaos": "generic", "recovery": "generic", "security": "static", "cost": "approximation", "dependencies": "partial", "observableMetrics": "synthetic" },
+      "currentImplementation": "QPS/vCPU125, global workload factor, VMs×20 connections, limit pressure forces CPU≥95, vertical restart.",
+      "realityGap": "No pool lifecycle, actual queries, query working memory, I/O, lock waits, transactions, consistency or recovery state.",
+      "targetBehavior": "Query-class CPU/memory/I/O demand, client pool and server reserved connection limits, queue/admission and contention domains. Buffer cache, writes/WAL/checkpoints, replicas/failover require separate calibration. M2A proves only bounded active connection/service slots with serial CPU/I/O and blocked callers; it is not PostgreSQL emulation."
+    },
+    {
+      "resource": "Object Storage",
+      "dimensions": { "configuration": "partial", "inputTraffic": "generic", "outputTraffic": "generic", "state": "absent", "capacity": "synthetic", "limits": "absent", "cpu": "synthetic", "memory": "synthetic", "network": "synthetic", "connections": "absent", "storageIO": "absent", "queuing": "absent", "scaling": "not-applicable", "failureModes": "generic", "chaos": "generic", "recovery": "generic", "security": "static", "cost": "synthetic", "dependencies": "partial", "observableMetrics": "synthetic" },
+      "currentImplementation": "Generic2000 RPS and bandwidth proxy, no stored objects/bytes or operation outcomes.",
+      "realityGap": "No PUT/GET/LIST/delete classes, size/prefix distribution, quotas, durability or storage billing.",
+      "targetBehavior": "Operation/byte work, object inventory, partitioned quotas, request/transfer/storage metering, authorization/reachability and retryable errors. Managed internal CPU/memory/physical disk failure and replica scaling are opaque; never infer data loss from endpoint unavailability."
+    },
+    {
+      "resource": "Message Queue",
+      "dimensions": { "configuration": "partial", "inputTraffic": "generic", "outputTraffic": "generic", "state": "absent", "capacity": "synthetic", "limits": "absent", "cpu": "synthetic", "memory": "synthetic", "network": "absent", "connections": "absent", "storageIO": "absent", "queuing": "absent", "scaling": "absent", "failureModes": "generic", "chaos": "generic", "recovery": "generic", "security": "static", "cost": "synthetic", "dependencies": "partial", "observableMetrics": "synthetic" },
+      "currentImplementation": "Generic5000 RPS pass-through; no message backlog.",
+      "realityGap": "A queue icon has no producer/consumer/acknowledgement, retention or redelivery mechanism.",
+      "targetBehavior": "Messages with identity/bytes, publish acceptance, ready/unacked backlog, consumers and prefetch/concurrency, acknowledgement, visibility/expiry, retry budgets and DLQ. Persistence and replication are configured durability mechanisms. Backlog and work conservation drive pressure/recovery and operation/storage cost."
+    },
+    {
+      "resource": "Monitoring Agent",
+      "dimensions": { "configuration": "partial", "inputTraffic": "absent", "outputTraffic": "absent", "state": "absent", "capacity": "synthetic", "limits": "absent", "cpu": "synthetic", "memory": "synthetic", "network": "absent", "connections": "absent", "storageIO": "absent", "queuing": "absent", "scaling": "not-applicable", "failureModes": "generic", "chaos": "generic", "recovery": "generic", "security": "static", "cost": "synthetic", "dependencies": "partial", "observableMetrics": "synthetic" },
+      "currentImplementation": "Fixed CPU12/memory18 and generic cost; diagram edges do not create a telemetry pipeline.",
+      "realityGap": "No scrape/export interval, sample bytes/cardinality, local buffer, telemetry loss or target overhead.",
+      "targetBehavior": "Configured collection/export work, target sampling overhead, finite buffers, loss/backpressure and exporter reachability. Local memory/CPU/storage measured only from explicit demand/allocation. Replica autoscaling is not an agent behavior; host deployment count belongs to the orchestrator. Agent failure must not make application availability fail automatically."
+    }
+  ]
+}
