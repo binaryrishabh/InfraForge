@@ -76,7 +76,7 @@ export function ChallengeBriefView({ brief }: { brief: ChallengeBrief }) {
         </Section>
         <Section number={at(2)} title="Requirements" className="mt-8"><RequirementList criteria={brief.criteria} /></Section>
         <Section number={at(3)} title="Before each attempt you predict" className="mt-8">
-          <PredictionList predictions={brief.predictions} />
+          <PredictionList predictions={brief.predictions} postFault={!!brief.experiment?.postFaultObservationSeconds} />
           <p className="mt-2 text-sm text-ink-3">Predictions are locked when the attempt starts and are shown beside the result. They never affect whether the requirements are met.</p>
         </Section>
         <Section number={at(4)} title="Hints" className="mt-8"><HintReveal challengeId={brief.id} version={brief.version} hints={brief.hints} /></Section>

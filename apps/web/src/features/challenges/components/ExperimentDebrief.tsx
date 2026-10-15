@@ -3,6 +3,7 @@ import { StatusMark } from "@/ui/StatusMark";
 import { faultLabel } from "../experiment";
 import type { ExperimentTrace } from "@infraforge/contracts/reports";
 import { ExperimentTraceView } from "./ExperimentTraceView";
+import { PostFaultFacts } from "./PostFaultFacts";
 
 const STATE = {
   scheduled: { kind: "pending", label: "Scheduled" },
@@ -34,6 +35,7 @@ export function ExperimentDebrief({ experiment, evaluationSeconds, trace, showTr
         </dl>
         <p className="mt-3 text-sm text-ink-2">{experiment.detail}</p>
       </div>
+      {showTrace && <PostFaultFacts observation={trace?.observation} target={experiment.targetResourceId} />}
       {showTrace ? <ExperimentTraceView trace={trace} experiment={experiment} /> : <p className="mt-3 text-sm text-ink-3">The live timeline shows wall-cycle snapshots. The retained per-second experiment trace opens here after the attempt stops.</p>}
       <div className="mt-4 grid gap-6 lg:grid-cols-2">
         <div>

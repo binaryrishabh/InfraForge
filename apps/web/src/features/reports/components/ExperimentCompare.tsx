@@ -1,4 +1,5 @@
 import type { RunComparison } from "@infraforge/contracts/reports";
+import { healthySampleText } from "@/features/challenges/observationText";
 
 export function ExperimentCompare({ evidence }: { evidence: RunComparison["experimentEvidence"] }) {
   if (!evidence || evidence.traces.every((t) => t.status === "not-applicable")) return null;
@@ -9,6 +10,12 @@ export function ExperimentCompare({ evidence }: { evidence: RunComparison["exper
       <dt className="font-semibold text-ink">{i === 0 ? "Earlier" : "Later"} trace</dt><dd>{trace.status.replaceAll("-", " ")} · {trace.count} retained samples</dd>
       <dd>{trace.start == null ? "No supported retained window" : `Expected seconds ${trace.start}–${trace.end}`}</dd>
       <dd className="break-words">{trace.highestCpu ? `Highest recorded CPU for ${trace.target} in its retained experiment window: ${trace.highestCpu.value}% at second ${trace.highestCpu.second}.` : "Target CPU peak unavailable."}</dd>
+      {trace.observation && trace.observation.status !== "not-applicable" && <>
+        <dd>Fault end: {trace.observation.faultEndSecond ?? "unverified"} · evaluation: {trace.observation.evaluationSecond} s · {trace.observation.sampleCount} post-fault samples.</dd>
+        <dd>Target · {healthySampleText(trace.observation.target.firstHealthy)}</dd>
+        <dd>Overall system · {healthySampleText(trace.observation.system.firstHealthy)}</dd>
+        <dd>At evaluation · target: {trace.observation.target.healthAtEvaluation ?? "unknown"}; overall: {trace.observation.system.healthAtEvaluation ?? "unknown"}.</dd>
+      </>}
     </dl>)}</div>
     <p className="mt-2 text-xs text-ink-3">Gaps and complete per-second values appear in each run's debrief. No overlaid or interpolated curves are produced.</p>
   </section>;

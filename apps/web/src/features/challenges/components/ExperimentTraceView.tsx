@@ -17,7 +17,11 @@ export function ExperimentTraceView({ trace, experiment }: { trace?: ExperimentT
     { label: "First retained tick after the boundary", second: trace.moments?.firstAfterFault ?? null },
     { label: "First measured overall-health change between adjacent ticks", second: trace.moments?.firstOverallHealthChange ?? null },
     { label: "Highest recorded CPU in the retained experiment window", second: facts?.highestCpu.second ?? null },
-    { label: "At evaluation", second: trace.expectedEnd }];
+    { label: "Last active-fault tick (fault ends after measurement)", second: trace.moments?.lastActiveFault ?? null },
+    { label: "First retained sample after fault end", second: trace.moments?.firstPostFault ?? null },
+    { label: "First retained Healthy target sample after fault end", second: trace.moments?.firstTargetHealthy ?? null },
+    { label: "First retained Healthy overall-system sample after fault end", second: trace.moments?.firstOverallHealthy ?? null },
+    { label: "At evaluation", second: trace.moments?.evaluation ?? null }].filter((r) => r.second !== null && trace.points.some((p) => p.simulatedSeconds === r.second));
   const selected = trace.points.find((p) => p.simulatedSeconds === second) ?? trace.points.at(-1)!;
   const selectedResource = selected.resources.find((r) => r.id === resourceId);
   return <section id="recorded-experiment-window" tabIndex={-1} aria-labelledby={`${id}-title`} className="mt-5 min-w-0">
@@ -50,6 +54,6 @@ export function ExperimentTraceView({ trace, experiment }: { trace?: ExperimentT
       <p>{resourceId}: {selectedResource ? `${selectedResource.health}, CPU ${selectedResource.cpu}%, memory ${selectedResource.memory}%, RPS ${selectedResource.rps ?? "not recorded"}, connections ${selectedResource.connections ?? "not recorded"}` : "No measurement retained at this second."}</p>
       {selected.pools.map((p) => <p key={p.id}>{p.id}: {p.currentReplicas} current replicas ({p.baseReplicas} placed plus active spawned replicas); {p.pending ? `${p.pending.action === "up" ? "provisioning" : "draining"}, ${p.pending.secondsRemaining} seconds remaining` : "no pending replica change"}. Replica count does not establish healthy serving capacity.</p>)}
     </div>
-    <p className="mt-3 text-sm text-ink-3">{facts?.firstHealthyAfterFault == null ? "Recovery remains unknown: no retained healthy sample after the fault window establishes it." : `First retained healthy sample after the fault: second ${facts.firstHealthyAfterFault}. This is a recorded sample, not a recovery guarantee.`} Highest values describe this retained window only, never the entire run.</p>
+    <p className="mt-3 text-sm text-ink-3">{facts?.firstHealthyAfterFault == null ? "No Healthy sample for this resource was retained after the scheduled fault window." : `First retained Healthy sample for ${resourceId} ${facts.firstHealthyAfterFaultComplete ? "after the fault" : "after missing evidence"}: second ${facts.firstHealthyAfterFault}.`} Highest values describe this retained window only. Samples do not establish continuous health or production recovery.</p>
   </section>;
 }

@@ -108,7 +108,7 @@ export function AttemptDialog({ brief, preflight, open, onOpenChange }: { brief:
         )}
         {phases ? <>
           <div className="flex flex-col gap-3"><h3 className="if-eyebrow">Before the fault</h3>{phases.before.map(field)}</div>
-          <div className="flex flex-col gap-3"><h3 className="if-eyebrow">While it is active</h3>{phases.during.map(field)}</div>
+          <div className="flex flex-col gap-3"><h3 className="if-eyebrow">{brief.experiment?.postFaultObservationSeconds ? "At post-fault evaluation" : "While it is active"}</h3>{phases.during.map(field)}</div>
         </> : brief.predictions.map(field)}
         <Field label="Why do you expect this?" optional hint={`${reasoning.length}/${PREDICTION_REASONING_MAX} characters. Shown next to the result.`}>
           {({ id, describedBy }) => <Textarea id={id} aria-describedby={describedBy} value={reasoning} maxLength={PREDICTION_REASONING_MAX} onChange={(e) => setReasoning(e.target.value)} rows={3} />}

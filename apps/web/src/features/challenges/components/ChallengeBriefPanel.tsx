@@ -68,7 +68,7 @@ export function ChallengeBriefPanel({ brief, preflight, preflightError, workspac
       </Block>
       <Block title="Before you run">
         <p className="text-sm text-ink-2">You will commit to {brief.predictions.length === 1 ? "one prediction" : `${brief.predictions.length} predictions`} first:</p>
-        <div className="mt-2"><PredictionList predictions={brief.predictions} /></div>
+        <div className="mt-2"><PredictionList predictions={brief.predictions} postFault={!!brief.experiment?.postFaultObservationSeconds} /></div>
       </Block>
       <Block title="Hints"><HintReveal challengeId={brief.id} version={brief.version} hints={brief.hints} /></Block>
       <div className="border-t border-line px-4 py-4 text-sm">

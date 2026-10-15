@@ -25,7 +25,8 @@ function label(brief: ChallengeBrief | null, p: PredictionResult, value: string 
 // For a resilience challenge, which side of the fault a question was about.
 function phase(brief: ChallengeBrief | null, p: PredictionResult) {
   if (!brief?.experiment) return null;
-  return brief.predictions.find((q) => q.id === p.id)?.kind === "baseline-health" ? "Before the fault" : "While it was active";
+  return brief.predictions.find((q) => q.id === p.id)?.kind === "baseline-health" ? "Before the fault" :
+    brief.experiment.postFaultObservationSeconds ? "At post-fault evaluation" : "While it was active";
 }
 
 function Sources({ sources }: { sources: string[] }) {

@@ -27,7 +27,7 @@ test("real trace visuals have fault/evaluation markers, target selection and equ
   expect(html).toContain("<caption"); expect(html).toContain('scope="row"');
   expect(html).toContain("experiment target"); expect(html).toContain("Inspect retained sample at second 61");
   expect(html).toContain("Highest recorded CPU in the retained experiment window");
-  expect(html).toContain("Recovery remains unknown");
+  expect(html).toContain("No Healthy sample for this resource was retained");
   expect(html).not.toContain("<animate"); expect(html).not.toContain("maximum CPU for the entire run");
 });
 

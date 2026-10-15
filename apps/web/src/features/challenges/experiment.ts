@@ -12,17 +12,21 @@ export const planOf = (e: ChallengeExperiment): ExperimentPlan =>
 export const recordedPlan = (e: RecordedExperiment): ExperimentPlan =>
   ({ fault: e.fault, at: e.atSimulatedSecond, duration: e.durationSimulatedSeconds, target: e.targetResourceId, targetType: e.targetType });
 
-export type ExperimentPhaseKind = "baseline" | "active" | "waiting" | "ended";
+export type ExperimentPhaseKind = "baseline" | "active" | "waiting" | "ended" | "observing" | "evaluation";
 export interface ExperimentPhase { kind: ExperimentPhaseKind; remaining: number | null; message: string }
 
 /* Where a live resilience attempt stands, from the simulated clock and the fault the
 simulator reports as active. Text first; any animation only repeats it. A fault
 window closing is "fault ended", never "recovered". */
-export function experimentPhase(plan: ExperimentPlan, seconds: number, active: ChaosEffect | undefined): ExperimentPhase {
+export function experimentPhase(plan: ExperimentPlan, seconds: number, active: ChaosEffect | undefined, evaluationSeconds = plan.at + plan.duration): ExperimentPhase {
   const what = `${faultLabel(plan.fault)} on ${plan.target}`;
   const end = plan.at + plan.duration;
   if (active) return { kind: "active", remaining: active.remainingTicks,
     message: `${what} active · ${active.remainingTicks} simulated ${active.remainingTicks === 1 ? "second" : "seconds"} remaining` };
+  if (evaluationSeconds > end && seconds >= evaluationSeconds) return { kind: "evaluation", remaining: 0,
+    message: `Evaluation second ${evaluationSeconds} reached · fault ended at second ${end}` };
+  if (evaluationSeconds > end && seconds >= end) return { kind: "observing", remaining: evaluationSeconds - seconds,
+    message: `Fault ended at second ${end} · post-fault observation · evaluate at ${evaluationSeconds} s (${evaluationSeconds - seconds} simulated seconds remaining)` };
   if (seconds >= end) return { kind: "ended", remaining: 0, message: `Fault ended at second ${end} (${what})` };
   if (seconds >= plan.at) return { kind: "waiting", remaining: null, message: `${what} is due; waiting for the simulator to record it` };
   return { kind: "baseline", remaining: plan.at - seconds, message: `Baseline · ${what} scheduled at second ${plan.at}, in ${plan.at - seconds} simulated seconds` };

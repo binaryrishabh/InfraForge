@@ -9,7 +9,7 @@ export function ExperimentStrip({ plan, evaluationSeconds }: { plan: ExperimentP
   const active = useSimulationStore((s) => s.activeChaos.find((c) => c.resourceId === plan.target && c.chaosType === plan.fault));
   return (
     <section aria-label="Experiment" className="shrink-0 border-b border-line bg-surface px-3 pt-1 pb-2.5 sm:px-4">
-      <ExperimentTimeline plan={plan} evaluationSeconds={evaluationSeconds} seconds={seconds} phase={experimentPhase(plan, seconds, active)} className="mx-auto max-w-[760px]" />
+      <ExperimentTimeline plan={plan} evaluationSeconds={evaluationSeconds} seconds={seconds} phase={experimentPhase(plan, seconds, active, evaluationSeconds)} className="mx-auto max-w-[900px]" />
     </section>
   );
 }

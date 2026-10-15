@@ -18,8 +18,15 @@ export function TraceCharts({ trace, experiment, resourceId }: { trace: Experime
   const x = (second: number) => 62 + ((second - start) / Math.max(1, end - start)) * (width - 78);
   const y = (value: number) => 134 - value;
   const marker = experiment.appliedSimulatedSeconds ?? experiment.atSimulatedSecond;
+  const faultEnd = marker + experiment.durationSimulatedSeconds;
+  const observing = end > faultEnd;
   const context = () => <>
     <rect x={x(marker)} y="24" width={Math.max(0, x(Math.min(end, marker + experiment.durationSimulatedSeconds)) - x(marker))} height="116" fill="currentColor" className="text-warn" opacity="0.08" />
+    {observing && <>
+      <rect x={x(faultEnd)} y="24" width={Math.max(0, x(end) - x(faultEnd))} height="116" fill="currentColor" className="text-accent" opacity="0.07" />
+      <line x1={x(faultEnd)} x2={x(faultEnd)} y1="22" y2="140" stroke="currentColor" strokeDasharray="2 2" className="text-ink-2" />
+      <text x={x(faultEnd)} y="14" textAnchor="middle" fontSize="11" fill="currentColor">{experiment.endedSimulatedSeconds === faultEnd ? "Ended" : "Planned end"} {faultEnd}s</text>
+    </>}
     {trace.missingRanges.map((gap) => <rect key={gap.start} x={x(gap.start) - 2} y="24" width={Math.max(4, x(gap.end) - x(gap.start) + 4)} height="116" fill={`url(#${label}-gap)`} />)}
     <line x1={x(marker)} x2={x(marker)} y1="22" y2="140" stroke="currentColor" strokeDasharray="3 3" className="text-ink-2" />
     <text x={x(marker)} y="14" textAnchor="middle" fontSize="11" fill="currentColor">{experiment.appliedSimulatedSeconds == null ? "Scheduled" : "Applied"} {marker}s</text>
@@ -50,6 +57,6 @@ export function TraceCharts({ trace, experiment, resourceId }: { trace: Experime
         </g>)}
       </svg>
     </figure>
-    <p className="text-xs text-ink-3">Each point is a completed simulated tick. Shading marks the {experiment.appliedSimulatedSeconds == null ? "scheduled" : "applied"} fault window; hatching marks missing evidence. No smoothing, estimated intermediate values or live WebSocket samples are used.</p>
+    <p className="text-xs text-ink-3">Each point is a completed simulated tick. Baseline precedes the {experiment.appliedSimulatedSeconds == null ? "scheduled" : "applied"} fault window (amber). {observing && `Post-fault observation (blue) follows second ${faultEnd}; the expiry tick still measures the fault. `}Hatching marks missing evidence. No smoothing, estimated intermediate values or live WebSocket samples are used.</p>
   </div>;
 }

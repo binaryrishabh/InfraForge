@@ -6,6 +6,8 @@ const ANNOUNCE: Record<ExperimentPhase["kind"], (plan: ExperimentPlan) => string
   waiting: (p) => `${faultLabel(p.fault)} on ${p.target} is due.`,
   active: (p) => `${faultLabel(p.fault)} on ${p.target} is now active.`,
   ended: (p) => `Fault ended at second ${p.at + p.duration}.`,
+  observing: (p) => `Fault ended at second ${p.at + p.duration}. Post-fault observation is running.`,
+  evaluation: () => "Evaluation second reached.",
 };
 
 /* Baseline, the scheduled fault and the judging second on one short track. The
@@ -18,18 +20,21 @@ export function ExperimentTimeline({ plan, evaluationSeconds, seconds, phase, cl
   const pct = (s: number) => `${(Math.min(Math.max(s, 0), end) / end) * 100}%`;
   const now = seconds === undefined ? null : Math.min(seconds, end);
   const label = `${faultLabel(plan.fault)} on ${plan.target}`;
-  const step = phase ? (phase.kind === "baseline" ? 0 : phase.kind === "ended" ? 2 : 1) : null;
-  const marks = [{ s: 0, align: "left" }, { s: plan.at, align: "center" }, { s: evaluationSeconds, align: "right" }] as const;
+  const observing = evaluationSeconds > plan.at + plan.duration;
+  const step = phase ? (phase.kind === "baseline" ? 0 : phase.kind === "observing" ? 2 : ["ended", "evaluation"].includes(phase.kind) ? 3 : 1) : null;
+  const marks = [{ s: 0, align: "left" }, { s: plan.at, align: "center" },
+    ...(observing ? [{ s: plan.at + plan.duration, align: "center" }] : []), { s: evaluationSeconds, align: "right" }];
   return (
     <figure className={cx("w-full", className)}>
       <figcaption className="sr-only">Experiment timeline in simulated seconds</figcaption>
       <div aria-hidden="true" className="relative mx-1 mt-5 h-3">
         <div className="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-line-strong" />
+        {observing && <div className="absolute top-0 h-3 rounded-sm border border-accent/50 bg-accent/10" style={{ left: pct(plan.at + plan.duration), width: pct(evaluationSeconds - plan.at - plan.duration) }} />}
         <div className="absolute top-0 h-3 rounded-sm border border-fail/60 bg-fail-soft [background-image:repeating-linear-gradient(135deg,transparent_0_4px,color-mix(in_srgb,var(--if-fail)_18%,transparent)_4px_6px)]"
           style={{ left: pct(plan.at), width: pct(plan.duration) }} />
         {now !== null && <div className="absolute top-1/2 h-[3px] -translate-y-1/2 rounded-full bg-accent" style={{ width: pct(now) }} />}
         {marks.map((m) => (
-          <span key={m.align} className="absolute top-1/2 h-3 w-px -translate-y-1/2 bg-ink-2" style={{ left: pct(m.s) }}>
+          <span key={m.s} className="absolute top-1/2 h-3 w-px -translate-y-1/2 bg-ink-2" style={{ left: pct(m.s) }}>
             <span className={cx("if-num absolute bottom-full mb-1 text-[11px] whitespace-nowrap text-ink-2",
               m.align === "left" ? "left-0" : m.align === "right" ? "right-0" : "left-1/2 -translate-x-1/2")}>{m.s} s</span>
           </span>
@@ -39,14 +44,17 @@ export function ExperimentTimeline({ plan, evaluationSeconds, seconds, phase, cl
       {/* From the small breakpoint the legend's columns follow the track's segments. */}
       {/* While live on a phone the track and the phase sentence carry it; the list stays for screen readers. */}
       <ol className={cx("mt-3 grid gap-x-3 gap-y-1 text-xs sm:[grid-template-columns:var(--if-legend)]", phase && "max-sm:sr-only")}
-        style={{ ["--if-legend" as string]: `minmax(0,${plan.at}fr) minmax(0,${Math.max(end - plan.at, 1)}fr)` }}>
+        style={{ ["--if-legend" as string]: observing ? "repeat(2,minmax(0,1fr))" : `minmax(0,${plan.at}fr) minmax(0,${Math.max(end - plan.at, 1)}fr)` }}>
         <li aria-current={step === 0 ? "step" : undefined} className={cx(step === 0 && "font-semibold")}>
           <span className="text-ink">Baseline</span> <span className="if-num whitespace-nowrap text-ink-3">0–{plan.at} s</span>
         </li>
         <li aria-current={step === 1 ? "step" : undefined} className={cx(step === 1 && "font-semibold")}>
-          <span className="text-fail">{label}</span> <span className="if-num whitespace-nowrap text-ink-3">{plan.at}–{plan.at + plan.duration} s</span>
+          <span className="text-fail">Fault active · {label}</span> <span className="if-num whitespace-nowrap text-ink-3">{plan.at}–{plan.at + plan.duration} s</span>
         </li>
-        <li aria-current={step === 2 ? "step" : undefined} className={cx("sm:col-span-2 sm:text-right", step === 2 && "font-semibold")}>
+        {observing && <li aria-current={step === 2 ? "step" : undefined} className={cx(step === 2 && "font-semibold")}>
+          <span className="text-accent">Observe after fault end</span> <span className="if-num text-ink-3">{plan.at + plan.duration}–{evaluationSeconds} s</span>
+        </li>}
+        <li aria-current={step === 3 ? "step" : undefined} className={cx(!observing && "sm:col-span-2", "sm:text-right", step === 3 && "font-semibold")}>
           <span className="text-ink">Judged at <span className="if-num">{evaluationSeconds} s</span></span>
           {evaluationSeconds === plan.at + plan.duration && <span className="text-ink-3">, the fault's last second</span>}
         </li>
