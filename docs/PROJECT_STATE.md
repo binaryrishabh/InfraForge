@@ -1,7 +1,7 @@
 # InfraForge project state
 
-Verified locally 2026-10-15 on `develop`. **Guided evidence reading and deliberate
-one-change improvements** extends the accepted credentials and experiment evidence.
+Verified locally 2026-10-15 on `develop`. **Post-fault observation** extends guided
+evidence reading and deliberate one-change improvements.
 Hosted production cutover remains **PARKED**. These milestones did not access Neon,
 EC2/AWS, hosted PostgreSQL/Nginx, Vercel, DNS, OAuth settings, production secrets or
 `main`.
@@ -177,8 +177,8 @@ portal text, reduced motion and narrow metric blocks preserve the existing desig
 
 ## Challenge + Predict
 
-Nine challenges live in `apps/backend/challenges`: six Design challenges (two
-starter, two core, two advanced) and three Resilience challenges, calibrated against
+Ten challenges live in `apps/backend/challenges`: six Design challenges (two
+starter, two core, two advanced) and four Resilience challenges, calibrated against
 model 1/catalog 2026-08. A learner opens a per-challenge workspace (a saved design
 marked with its challenge and version), designs, answers fixed prediction questions and
 starts an attempt. The prediction is written in the same insert as the run and is
@@ -432,6 +432,62 @@ upgrade/rollback/dependency-loss sequence. Final documentation publication also
 requires the normal exact-SHA workflow; these results identify the implementation
 checkpoint rather than predicting a later commit's outcome.
 
+## Post-fault observation
+
+New immutable `after-the-cache-returns@1` adds a 45-second observation phase:
+baseline → fault active → post-fault observation → evaluation. Crash applies at 60;
+tick 90 still measures the fault, then the engine removes it and completes its
+durable action. Tick 91 is the first possible post-fault sample. Target Healthy at
+91, overall Healthy at 92 and Saturated at evaluation 135 coexist in the starter:
+delayed provisioning joins at 126; database connection pressure appears at 127.
+The hidden one-change reference passes. No solution is sent in briefs or bundles.
+
+Authoring optionally adds `experiment.postFaultObservationSeconds` (integer 1–60).
+Evaluation equals fault start + model duration + observation; the inclusive trace
+must fit the unchanged 121-point bound. Omission preserves legacy fault-end judging.
+All nine earlier V1 files/hashes, engine/model 1, goldens and migrations 1–17 remain
+unchanged. Existing immutable run plan, evaluation stop and samples suffice: **no
+migration**. Calibration explored 3,240 deterministic candidates with five faults;
+see [authoring/research](../apps/backend/challenges/README.md).
+
+Server-derived observation distinguishes an unverified fault end, no retained
+samples, a Healthy sample observed, a complete post-fault window with none Healthy,
+and unknown evidence. Target and system stay separate. Facts include actual end,
+first retained target state, first Healthy target/system samples, continuity from
+expiry through each sample, sample count, evaluation health and pending pool actions.
+Missing ticks or subject measurements qualify first Healthy wording as **after
+missing evidence**. No duration, interpolation, sustained-health or production-recovery
+claim follows. Worker interruption preserves durable samples and fails honestly;
+early stop during observation is not evaluated.
+
+Live timeline continues through Observe to later evaluation; active-fault styling
+follows actual snapshots. Reports show separate target/system facts, fault-end and
+evaluation markers, unsmoothed values, gaps, selected-resource inspection and present
+key moments. Guided review follows expectation → fault → after the fault → evaluation
+→ unknown → next experiment. Existing hypothesis/fresh prediction/one-change workflow,
+source lineage and history are reused. Honest Compare keeps its classifier and fixed
+conditions (including horizon), showing first retained Healthy samples and evaluation
+states side by side, without a winner or faster-recovery claim. Log presentation
+translates engine recovery shorthand into fault-ended or measured-health facts;
+engine output and RNG remain unchanged.
+
+Credentials remain accepted. Designer still requires 1100 CSS px; ordinary reports
+remain responsive with native keyboard selectors, text/table equivalents, phase
+announcements and existing reduced-motion rules. Future auth remains email OTP/magic
+link, then phone. Hosted production remains **PARKED**.
+
+Local verification: 156 backend and 83 frontend tests passed; challenge calibration,
+all 30 engine goldens, workspace/script type checks, lint/boundaries, frontend build,
+tooling and audit passed. The real credential browser loop covered starter at 1×/60×
+(all 106 payload hashes identical), guided review, one-change improvement, fresh
+prediction, passing rerun, direct Compare, early stop at 120, history, keyboard sample
+inspection, 375px report and 1099/1100px Designer boundary. Disposable integration's
+full lifecycle including observation/interruption passed; an unrelated transient
+NOWAIT conflict in the cutover fixture was isolated, bounded in the test helper and
+its two checks passed separately. Exact published-SHA CI remains the final authority.
+The local development database had an older malformed evidence-trigger expression;
+its function was restored from committed migration 15 without editing migration files.
+
 ## Parked hosted work and remaining limits
 
 B0.6E stopped before database access with identity/reset-credential gates unfinished.
@@ -456,8 +512,9 @@ Every challenge is still at version 1, so the upgrade path (older-workspace noti
 fresh or copied workspace) is proven by registry fixtures, server-rendered tests and
 SQL guards, not by a real second version in the browser. Experiments retain one fault
 and a bounded tick window, not continuous monitoring. Evidence before the window,
-missing points and actual recovery remain unknown. Published evaluation stops occur
-on the last active fault tick, so these traces cannot establish post-fault recovery.
+missing points and production recovery remain unknown. The three earlier resilience
+versions still stop on the last active fault tick; their reports gain no invented
+post-fault samples. The new challenge observes through its own bounded later evaluation.
 Restart fails interrupted work; it never resumes a checkpoint. Recent Met indicators
 cover the latest 20 attempts rather than an invented lifetime achievement. Local/CI
 proof is not production readiness.
@@ -466,6 +523,7 @@ Improvement drafts are browser-history context, not durable unfinished tasks; a
 new attempt durably retains its hypothesis. Deleting its source removes the ability
 to compare with that source but preserves the child's own evidence/hypothesis.
 
-Next product milestone: an explicitly authored and calibrated post-fault recovery
-exercise with its own observation window. Recovery must not be inferred from fault
-completion. Hosted production remains parked.
+Next product milestone: investigate a separately calibrated workload-change learning
+exercise using the accepted predict/observe/improve loop. Real availability, latency,
+request success, cache warm-up, data recovery and statistical conclusions remain
+outside model 1. Hosted production remains parked.

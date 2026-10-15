@@ -87,7 +87,15 @@ integration("PostgreSQL 18 cutover proof", () => {
       const rejected = async (selected = ids, message?: string) => {
         // Await database I/O before invoking matchers: Bun's native rejects
         // matcher can stall PostgreSQL BEGIN replies on Windows.
-        const error = await retireLegacyRuns(db, request(selected)).then(() => null, (failure: unknown) => failure);
+        let error: unknown;
+        // A transient table lock can preempt the semantic rejection being tested.
+        // Retry only that rolled-back NOWAIT result. The explicit lock-conflict
+        // assertion below calls retirement directly and still requires 55P03.
+        for (let retry = 0; retry <= 20; retry++) {
+          error = await retireLegacyRuns(db, request(selected)).then(() => null, (failure: unknown) => failure);
+          if ((error as { code?: string } | null)?.code !== "55P03" || retry === 20) break;
+          await Bun.sleep(100);
+        }
         expect(error).toBeInstanceOf(Error);
         if (message) expect((error as Error).message).toContain(message);
       };
