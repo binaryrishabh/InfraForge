@@ -1,7 +1,8 @@
 # Model-2 contract and foundation
 
-This document preserves the M2A foundation/replay contract. M2C now supplies the
-internal registry default; see [compute architecture](m2c-compute.md). Explicit
+This document preserves the M2A foundation/replay contract. M2D now supplies the
+internal registry default; see [network architecture](m2d-network.md). Explicit M2C
+preserves the [compute architecture](m2c-compute.md). Explicit
 M2B replay preserves the [workload contract](m2b-workload.md).
 The original M2A `createModel2` remains a direct historical proof import/CLI.
 

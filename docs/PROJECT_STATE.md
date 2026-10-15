@@ -1,7 +1,7 @@
 # InfraForge project state
 
-Verified locally 2026-10-15 on `develop`. **Reality Engine M2C** adds internal compute
-scheduling and resident ownership; the accepted post-fault learning product stays on Model 1.
+Verified locally 2026-10-15 on `develop`. **Reality Engine M2D** adds internal network,
+connection and load-balancer mechanisms; the accepted learning product stays on Model 1.
 Hosted production cutover remains **PARKED**. These milestones did not access Neon,
 EC2/AWS, hosted PostgreSQL/Nginx, Vercel, DNS, OAuth settings, production secrets or
 `main`.
@@ -547,6 +547,10 @@ Production remains **PARKED**.
 
 ## Reality Engine M2C
 
+Accepted final M2C checkpoint: `fe642eaf1d3d0b8ea500106394213d7c7bdcf372`,
+[CI 38741704584](https://github.com/binaryrishabh/InfraForge/actions/runs/38741704584),
+10/10 green.
+
 The internal default is `m2c/1`; explicit M2B and direct M2A replay remain. A dedicated
 compute module composes M2B arrivals/caller ownership. Workers bound application
 concurrency; capped equal fluid sharing distributes authored CPU capacity among
@@ -571,7 +575,36 @@ resident mapping stays Unknown. Profiles remain forbidden from Free Mode.
 [M2C research, architecture, calibration and validation](reality/README.md) record
 synthetic A–F/pause proofs, 3,000 generated conservation cases and bounded 10,000-call
 performance runs. Model 1/goldens/challenges, schema, UI and runtime activation remain
-unchanged. Next: M2D network/load balancing/connections, internal only. Production PARKED.
+unchanged. Production PARKED.
+
+## Reality Engine M2D
+
+The internal default is `m2d/1`; explicit M2C/M2B and direct M2A replay remain. Directed
+authored links serialize known request/response bytes through FIFO buffers and separate
+propagation; logical paths can share bottlenecks. Resource-neutral pools own connection
+establishment, stream leases, reuse, idle expiry, acquisition queues/timeouts and drain.
+Serial and configured multiplexed modes do not claim exact TCP/HTTP behavior.
+
+A dedicated LB composes deterministic round robin/least-outstanding, backend pools,
+outstanding/pending bounds, readiness, actual operation probes and delayed health
+thresholds. Drain stops new selection and closes remaining leases after authored grace.
+Caller/acquisition/connect/response/LB-pending/health timeouts remain distinct. Optional
+safe retries have new attempts, keyed backoff/jitter and concurrent bounds; they consume
+real connections, bytes and compute. Endpoint suspension, link blackholes, added delay,
+bandwidth changes and resets act on mechanisms without RPS/CPU multipliers.
+
+The controlled loopback campaign has 90 batches / 2,880 operations: 32 fitting and 58
+held-out batches, including 42 wholly held-out configurations. Sixteen conditional
+socket-duration points remain internal. The complete networking predictor is rejected:
+held-out throughput MARE is 1,488.57%, with timer/runtime costs particularly visible
+for tiny messages. No residual latency constant is fitted; physical bandwidth/RTT/
+propagation remain Unknown. No WAN/cloud/ALB/NLB validity or Free Mode promotion.
+
+[M2D research/design/calibration/validation](reality/README.md) retain vertical failure,
+health lag, reuse/pool/multiplexing/drain/retry/partition proofs, 3,000 generated cases
+and bounded 5,000-caller performance runs. Model 1/goldens/challenge hashes, schema, UI
+and runtime activation remain unchanged. Next: M2E DB/cache depth using these primitives;
+transport/runtime accuracy remains unresolved. Production stays **PARKED**.
 
 ## Parked hosted work and remaining limits
 
@@ -608,8 +641,8 @@ Improvement drafts are browser-history context, not durable unfinished tasks; a
 new attempt durably retains its hypothesis. Deleting its source removes the ability
 to compare with that source but preserves the child's own evidence/hypothesis.
 
-Next engine milestone: **M2D — network/load-balancing/connection mechanisms** on the
-internal workload/compute foundation, with measured demand and explicit Unknowns.
+Next engine milestone: **M2E — database/cache mechanisms** using internal workload,
+compute, pool and transport ownership, with measured demand and explicit Unknowns.
 Deepen existing resources before expansion or Free Mode/challenge migration. Real
 availability, latency, request success, cache warm-up, data recovery and statistical
 conclusions remain outside Model 1. Hosted production remains parked.

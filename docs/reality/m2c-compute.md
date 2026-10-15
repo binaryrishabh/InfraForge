@@ -1,6 +1,7 @@
 # Internal compute mechanism: m2c/1
 
-The explicit internal Model-2 registry selects M2C. M2B replay remains available
+This preserves the M2C compute contract. M2D now supplies the internal registry default;
+M2C replay selects `workloadVersion: "m2c/1"`. M2B replay remains available
 with `workloadVersion: "m2b/1"` or its direct entry point; M2A replay remains direct.
 Model 1, published exports, browser imports, challenges and runtime packaging stay
 unchanged. Compute lives in its own `model2/compute` module and composes the shared

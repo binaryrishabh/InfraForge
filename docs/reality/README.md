@@ -30,3 +30,12 @@ registry now defaults to `m2c/1`; explicit `m2b/1` and direct M2A replay are pre
 replaces local observations and `perf:compute` records separate executor timings.
 The measured CPU candidates and abstract resident components are not published
 provider physics. Model 2 remains internal; Model 1 remains active.
+
+M2D adds [network/pool/LB mechanisms](m2d-network.md), [primary research and rejected
+models](m2d-research.md), [controlled loopback measurements and visible calibration
+failure](m2d-calibration.md), and [proofs/conservation/performance](m2d-validation.md).
+The internal default is now `m2d/1`; explicit M2C/M2B replay remains. Use
+`bun run check:network` for committed measurement/artifact replay and
+`bun run debug:network` for the synthetic vertical/fault proofs. `measure:network`
+opens bounded temporary loopback sockets; `perf:network` measures the local executor.
+The complete host networking predictor is rejected; no cloud/WAN numbers are promoted.
