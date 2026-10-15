@@ -1,2 +1,3 @@
 # The calibration source hash covers exact benchmark bytes on every checkout.
 scripts/reality/compute-benchmark.mjs text eol=lf
+scripts/reality/network-benchmark.mjs text eol=lf

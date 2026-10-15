@@ -30,6 +30,10 @@
     "check:compute": "bun --no-env-file scripts/reality/compute-calibration.ts",
     "measure:compute": "bun --no-env-file scripts/reality/measure-compute.ts",
     "perf:compute": "bun --no-env-file scripts/reality/compute-performance.ts",
+    "debug:network": "bun --no-env-file scripts/reality/network-proofs.ts",
+    "check:network": "bun --no-env-file scripts/reality/network-calibration.ts",
+    "measure:network": "node scripts/reality/network-benchmark.mjs",
+    "perf:network": "bun --no-env-file scripts/reality/network-performance.ts",
     "audit": "bun audit --json"
   },
   "devDependencies": {
