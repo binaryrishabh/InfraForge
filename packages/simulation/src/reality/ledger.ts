@@ -6,6 +6,8 @@ export interface RealityEntry {
   concept: string;
   modelVersion: "1" | "2";
   scope: string;
+  // Required by the M2B input contract; historical M1/M2A entries retain their schema.
+  validityDomain?: string;
   quantity: Quantity;
   formula: string;
   classification: typeof CLASSIFICATIONS[number];
@@ -24,6 +26,7 @@ export function validateLedger(entries: RealityEntry[]): string[] {
     if (!e.id || ids.has(e.id)) fail("Missing or duplicate stable id");
     ids.add(e.id);
     for (const field of [e.concept, e.scope, e.formula, e.replacement]) if (!field?.trim()) fail("Missing description/formula/replacement");
+    if (e.validityDomain !== undefined && !e.validityDomain.trim()) fail("Empty validity domain");
     if (!CLASSIFICATIONS.includes(e.classification)) fail("Unsupported classification");
     if (!["1", "2"].includes(e.modelVersion)) fail("Unsupported model");
     if (!["high", "conditional", "low", "unknown"].includes(e.confidence)) fail("Missing confidence");
