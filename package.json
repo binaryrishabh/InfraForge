@@ -26,6 +26,10 @@
     "check:calibration": "bun --no-env-file scripts/reality/workload-calibration.ts",
     "measure:workload": "bun --no-env-file scripts/reality/workload-calibration.ts --measure",
     "perf:workload": "bun --no-env-file scripts/reality/workload-performance.ts",
+    "debug:compute": "bun --no-env-file scripts/reality/compute-proofs.ts",
+    "check:compute": "bun --no-env-file scripts/reality/compute-calibration.ts",
+    "measure:compute": "bun --no-env-file scripts/reality/measure-compute.ts",
+    "perf:compute": "bun --no-env-file scripts/reality/compute-performance.ts",
     "audit": "bun audit --json"
   },
   "devDependencies": {

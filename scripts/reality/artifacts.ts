@@ -20,5 +20,6 @@ export function validateArtifacts(root: string): string[] {
   const facts = JSON.parse(readFileSync(resolve(root, "docs/reality/provider-facts.json"), "utf8")) as RealityEntry[];
   const matrix = JSON.parse(readFileSync(resolve(root, "docs/reality/resource-depth.json"), "utf8")) as { resources: DepthRow[] };
   const m2b = JSON.parse(readFileSync(resolve(root, "docs/reality/m2b-calibration.json"), "utf8")) as { ledger: RealityEntry[]; policyLedger: RealityEntry[] };
-  return [...validateLedger(facts), ...validateDepth(matrix.resources), ...validateLedger([...m2b.ledger, ...m2b.policyLedger])];
+  const m2c = JSON.parse(readFileSync(resolve(root, "docs/reality/m2c-calibration.json"), "utf8")) as { ledger: RealityEntry[]; policyLedger: RealityEntry[] };
+  return [...validateLedger(facts), ...validateDepth(matrix.resources), ...validateLedger([...m2b.ledger, ...m2b.policyLedger]), ...validateLedger([...m2c.ledger, ...m2c.policyLedger])];
 }
