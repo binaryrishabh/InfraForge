@@ -35,7 +35,7 @@ export interface WorkIdentity {
 export interface Invocation extends WorkIdentity {
   offeredAt: number; payloadBytes?: number;
   // Internal application messages are copied by transport; replies become visible on return.
-  message?: { request: unknown; response?: unknown };
+  message?: { request: unknown; response?: unknown; bodyBytes?: { request?: number; response?: number } };
   sessionId?: string;
 }
 export type RemoteOutcome = "completed" | "rejected" | "cancelled";

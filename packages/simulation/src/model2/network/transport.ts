@@ -39,13 +39,14 @@ export function pathTransport(config: PathConfig, kernel: EventKernel, links: Ma
           });
         }; next();
       };
+      const totalBytes = (envelope: number, body = 0) => { const total = envelope + body; if (!Number.isSafeInteger(body) || body < 0 || !Number.isSafeInteger(total)) throw new Error("Invalid logical message body size"); return total; };
       cancelAcquire = pool.acquire(key, (acquired) => {
         if (terminal) { acquired.release(); return; }
         lease = acquired; state = "serving"; const readyAt = kernel.now; latency.connectionWaitUs += readyAt - start;
         trace("connection-acquired", key, acquired.connection, work.rootId, work.attempt);
         cancelTimeout = kernel.schedule(kernel.now + requireKnown(config.pool.responseTimeout, "us"), 1, JSON.stringify(["upstream-timeout", config.id, key]), () => finish({ ok: false, reason: "response-timeout", ambiguous: delivered }));
         const bytes = config.bytes[work.operation]!;
-        sendBytes(config.request, requireKnown(bytes.request, "bytes"), "request", () => {
+        sendBytes(config.request, totalBytes(requireKnown(bytes.request, "bytes"), work.message?.bodyBytes?.request), "request", () => {
           delivered = true; state = "waiting"; const deliveredAt = kernel.now; latency.requestTransportUs += deliveredAt - readyAt;
           trace("request-delivered", key, config.target, work.rootId, work.attempt);
           if (!alive(config.target)) return;
@@ -54,7 +55,7 @@ export function pathTransport(config: PathConfig, kernel: EventKernel, links: Ma
             if (terminal) { remoteAfterStop++; trace("remote-after-transport-stop", key, outcome, work.rootId, work.attempt); return; }
             if (!alive(config.target)) return;
             const serviceEnd = kernel.now; latency.remoteServiceUs += serviceEnd - deliveredAt;
-            sendBytes(config.response, requireKnown(bytes.response, "bytes"), "response", () => {
+            sendBytes(config.response, totalBytes(requireKnown(bytes.response, "bytes"), request.message?.bodyBytes?.response), "response", () => {
               if (work.message && request.message?.response !== undefined) work.message.response = JSON.parse(JSON.stringify(request.message.response));
               latency.responseTransportUs += kernel.now - serviceEnd;
               finish(outcome === "completed" ? { ok: true, ambiguous: false } : { ok: false, reason: "backend-rejected", ambiguous: true });

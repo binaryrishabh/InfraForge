@@ -6,14 +6,21 @@ import { relationalDatabase } from "./database";
 import { keyedCache } from "./cache";
 import { cacheAside } from "./aside";
 import { DATA_POLICY_LEDGER } from "./policy";
+import type { ResourceFactory } from "../compute/run";
+import type { EventKernel } from "../time";
+import type { Trace } from "../network/contracts";
 const copy = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
 export function createDataModel2(authored: DataInput) {
+  return createDataRuntime(authored);
+}
+export function createDataRuntime(authored: DataInput, extension?: { resource: ResourceFactory; install?(kernel: EventKernel, trace: Trace): void }) {
   validateData(authored);
   const input = copy(authored);
   input.resources.sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
   const databases = new Map<string, ReturnType<typeof relationalDatabase>>(), caches = new Map<string, ReturnType<typeof keyedCache>>(), applications = new Map<string, ReturnType<typeof cacheAside>>();
   const runtime = createNetworkRuntime(networkAdapter(input), {
     resource(id, kernel, send) {
+      const external = extension?.resource(id, kernel, send); if (external) return external;
       const config = input.resources.find((r) => r.id === id)!; if (!isData(config)) return;
       if (config.kind === "relational") { const r = relationalDatabase(config, kernel); databases.set(id, r); return r; }
       if (config.kind === "cache") { const r = keyedCache(config, kernel); caches.set(id, r); return r; }
@@ -21,6 +28,7 @@ export function createDataModel2(authored: DataInput) {
     },
     disconnected(target, session) { databases.get(target)?.closeSession(session); },
     install(kernel, trace) {
+      extension?.install?.(kernel, trace);
       for (const i of input.dataInterventions) {
         const apply = (active: boolean) => {
           const config = input.resources.find((r) => r.id === i.target)!;
