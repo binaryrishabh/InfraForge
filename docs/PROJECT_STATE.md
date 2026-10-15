@@ -383,7 +383,7 @@ executor memories were created.
 | Focused learning | 148 real-session integration assertions: source inputs after design deletion, owner isolation/no mutation, fixed conditions, fresh prediction, stale hash, multi-change acknowledgement, repeat intent, lineage and immutable SQL guards |
 | PostgreSQL 18/Redis | Exact backend image: 18 passed, 1,419 assertions across twelve files; lifecycle/retries/teardown/reruns/traces/history/security/migrations and cleanup passed |
 | Migration 17 | Populated schema-16 upgrade: 11 assertions; legacy fields stay NULL, source/conditions/completeness and immutability guards, source deletion and release guard drift checks passed |
-| Docker/release | Normal-context commit-tagged backend image built. Because migration 17 is new, publication closure requires final exact-SHA CI packaging and the full Linux release rehearsal; the accepted credential checkpoint's rehearsal is not evidence for this migration |
+| Docker/release | Exact implementation-SHA image, Compose and five packaged entrypoints passed CI. All 27 full Linux rehearsal stages passed with migration 17: failure/restore/postchecks, worker exclusivity, compatible rollback, unhealthy release, dependency loss, real pooling modes, TLS/session/Origin security and cleanup |
 | Frontend build | Passed; production main chunk 254.02 kB, no chunk warning |
 | Dependency audit | `{}`; no dependency upgrade |
 
@@ -421,8 +421,16 @@ Compose stop/replacement proof did not reproduce it; its services/helpers/networ
 were removed. Shutdown now inspects all owned application container states, rejects
 paused/restarting/unknown states and waits at most five seconds for an engine-state
 transition. Failure still prevents migration and reports the blocking state. The
-original transition cause was not established; final exact-SHA CI must repeat the
-entire rehearsal before closing this milestone.
+original transition cause was not established; the repeated full rehearsal below
+verifies the corrected guard without claiming a reproduced root cause.
+
+Verified implementation checkpoint: `992bc8fb0c51bba848f067db45d9530d0f75d4de`,
+[exact-SHA CI 38701069901](https://github.com/binaryrishabh/InfraForge/actions/runs/38701069901),
+10/10 jobs green. This includes the complete repeated 27-stage release rehearsal
+and all 18 integration tests (1,419 assertions). The shutdown guard passed the full
+upgrade/rollback/dependency-loss sequence. Final documentation publication also
+requires the normal exact-SHA workflow; these results identify the implementation
+checkpoint rather than predicting a later commit's outcome.
 
 ## Parked hosted work and remaining limits
 
