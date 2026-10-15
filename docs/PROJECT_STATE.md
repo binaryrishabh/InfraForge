@@ -1,7 +1,7 @@
 # InfraForge project state
 
-Verified locally 2026-10-15 on `develop`. **Reality Engine M2A** begins a separate
-internal simulation foundation; the accepted post-fault learning product stays on Model 1.
+Verified locally 2026-10-15 on `develop`. **Reality Engine M2B** extends the separate
+internal workload foundation; the accepted post-fault learning product stays on Model 1.
 Hosted production cutover remains **PARKED**. These milestones did not access Neon,
 EC2/AWS, hosted PostgreSQL/Nginx, Vercel, DNS, OAuth settings, production secrets or
 `main`.
@@ -490,6 +490,10 @@ its function was restored from committed migration 15 without editing migration 
 
 ## Reality Engine M2A
 
+Accepted final M2A checkpoint: `f9e8f1e648f81c20d468637e085deb4c900ce425`,
+[CI 38719543934](https://github.com/binaryrishabh/InfraForge/actions/runs/38719543934),
+10/10 green.
+
 Accepted post-fault checkpoint: `361a3b1afe33740d8f45d9c79601c6476657d602`,
 [CI 38710194176](https://github.com/binaryrishabh/InfraForge/actions/runs/38710194176),
 10/10 green. Model 1 remains the sole published active physics for Free Mode and all
@@ -518,6 +522,25 @@ frontend redesign, provider service or infrastructure addition occurs in M2A.
 UI beautification is deferred; Claude later owns the major UI/UX redesign. Credential
 auth and the 1100px Designer rule remain accepted. Future auth remains email OTP/magic
 link, then phone. Production remains **PARKED**.
+
+## Reality Engine M2B
+
+Model 1 remains active, with all historical physics/goldens and ten published
+challenge definitions preserved. Model 2 remains internal. `m2b/1` separates
+operation classes, open/closed/trace arrivals and versioned service-demand profiles.
+Caller deadlines/abandonment do not imply remote cancellation; each service owns an
+explicit cancellation capability. Root/attempt/child identity and caller/station
+conservation preserve continuing work. Evidence and trace ingestion are bounded.
+
+Profiles require unit/provenance/validity checks; unsupported scenarios stay Unknown.
+The measured local PBKDF2 exercise has disjoint fitting/holdout batches and twelve
+held-out traces. It proves the calibration pipeline and mix-dependent work pressure,
+with visible latency discrepancy; it establishes no cloud SKU or universal RPS.
+All profiles remain forbidden from Free Mode. [M2B architecture/research/calibration/
+validation](reality/README.md) contains the details and reproducible benchmark data.
+Next: compute scheduling/worker contention and workload-specific measurement depth.
+No schema, runtime activation, challenge migration, UI redesign or production work.
+Production remains **PARKED**.
 
 ## Parked hosted work and remaining limits
 

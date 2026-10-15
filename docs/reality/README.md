@@ -1,6 +1,6 @@
-# Reality Engine M2A
+# Reality Engine
 
-Model 1 remains the only active published physics. Model 2 is an internal foundation.
+Model 1 remains the only active published physics. Model 2 is internal.
 See [audit](audit.md), [resource depth](resource-depth.md), [architecture](model2.md)
 and [research](research.md). The machine-readable [ledger](model1-ledger.json) is
 checked by `bun run check:reality`; it is not shipped in the API or browser.
@@ -11,3 +11,12 @@ No schema migration, historical reinterpretation or Free Mode switch is part of 
 units, queue/connection/CPU state and metric definitions. Add `--json` for the complete
 captured input, provenance and evidence. This is a local diagnostic CLI; it creates
 no account, database rows, service or frontend route.
+
+M2B adds [workload/lifecycle architecture](m2b-workload.md),
+[deep research and rejected approaches](m2b-research.md),
+[profiles and measured calibration](m2b-calibration.md), and
+[verification, ledger and performance](m2b-validation.md). Raw measured batches and
+bounded held-out traces are source-controlled research artifacts, not runtime data.
+`bun run check:calibration` replays them; `bun run debug:workload` inspects overload,
+continued remote work, service pause and explicit cancellation. All local profiles
+are narrow host-specific candidates forbidden from Free Mode.
