@@ -55,6 +55,7 @@ test("runtime image admits the internal execution closure while excluding audit,
   for (const file of ["docs/reality/model1-ledger.json", "docs/reality/m2k-product-proof.json", "apps/backend/tests/model2Fixture.ts", "packages/simulation/tests/productFixture.ts", "apps/backend/internalModel2/private.env.ts", "packages/simulation/src/model2/.private/key.ts", "packages/simulation/src/model2/product/future.json"])
     expect(context.ignores(file)).toBe(true);
   expect(context.ignores("packages/simulation/src/engine.ts")).toBe(false);
+  expect(context.ignores("apps/backend/internalModel2/legacyRuntime.json")).toBe(false);
   const walk = (path: string): string[] => readdirSync(resolve(root, path), { withFileTypes: true }).flatMap((entry) => entry.isDirectory() ? walk(`${path}/${entry.name}`) : entry.name.endsWith(".ts") ? [`${path}/${entry.name}`] : []);
   for (const folder of ["apps/backend/internalModel2", "packages/simulation/src/model2", "packages/simulation/src/reality", "packages/domain/src", "packages/catalog/src"])
     for (const file of walk(folder)) expect(context.ignores(file)).toBe(false);

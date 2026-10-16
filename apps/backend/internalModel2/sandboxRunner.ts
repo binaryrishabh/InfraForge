@@ -2,7 +2,7 @@ import { LESSON_SANDBOX as limits } from "./lessonLimits";
 import { executionSource } from "./identity";
 import { containerName, createArguments, verifyContainer, inspectContainer, removeContainer } from "./sandboxDocker";
 import type { DockerConnection } from "./dockerConnection";
-export interface SandboxReceipt { schema: "model2-sandbox-receipt/1"; connection?: DockerConnection["receipt"]; inspection: ReturnType<typeof verifyContainer>; enforcement?: unknown; exit?: { code: number; oom: boolean; error: string }; elapsedMs?: number }
+export interface SandboxReceipt { schema: "model2-sandbox-receipt/1"; connection?: DockerConnection["receipt"]; inspection: ReturnType<typeof verifyContainer>; enforcement?: unknown; exit?: { code: number; oom: boolean; error: string }; elapsedMs?: number; errorOutput?: string }
 export async function runSandbox(control: DockerConnection, id: string, image: string, input: unknown, onFrame: (value: any) => Promise<unknown>, onReceipt: (receipt: SandboxReceipt) => Promise<void>, signal?: AbortSignal, origin = id) {
   const name = containerName(id), started = Date.now(), serialized = JSON.stringify(input) + "\n";
   if (Buffer.byteLength(serialized) > limits.inputBytes) throw Error("Sandbox input budget exceeded");
@@ -26,8 +26,8 @@ export async function runSandbox(control: DockerConnection, id: string, image: s
     // Observe rejection immediately, even while awaiting stream data or a commit.
     void exited.catch(() => {});
     deadline = setTimeout(() => kill("Sandbox wall deadline exceeded"), Math.max(1, limits.deadlineMs - (Date.now() - started)));
-    let stderr = 0;
-    running.stderr.on("data", (chunk: Buffer) => { stderr += chunk.length; if (stderr > 16384) kill("Sandbox error output budget exceeded"); });
+    let stderr = 0, errorOutput = "";
+    running.stderr.on("data", (chunk: Buffer) => { stderr += chunk.length; errorOutput = (errorOutput + chunk.toString("utf8")).slice(0, 2048); if (stderr > 16384) kill("Sandbox error output budget exceeded"); });
     running.stdin.on("error", () => { /* Exit/pipe closure is assessed below. */ });
     running.stdin.write(serialized);
     let pending = Buffer.alloc(0), bytes = 0, frames = 0, ready = false, done = false, stopped = false;
@@ -58,6 +58,7 @@ export async function runSandbox(control: DockerConnection, id: string, image: s
     if (failure) throw failure;
     const state = (await inspectContainer(control, container)).State;
     receipt.exit = { code: state.ExitCode, oom: state.OOMKilled, error: String(state.Error).slice(0, 500) }; receipt.elapsedMs = Date.now() - started;
+    if (errorOutput) receipt.errorOutput = errorOutput;
     await onReceipt(receipt);
     if (code !== 0 || state.ExitCode !== 0 || state.OOMKilled || pending.length || !ready || !done && !stopped) throw Error(`Sandbox ended without a complete protocol (exit ${state.ExitCode}, OOM ${Boolean(state.OOMKilled)})`);
     return receipt;

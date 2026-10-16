@@ -233,7 +233,7 @@
     },
     {
       "file": "apps/backend/internalModel2/captureV1.ts",
-      "hash": "7f397d2ba145df18848dec9c14c5fd82ba74d289fd920bbce2ea5d06bd73cd3f"
+      "hash": "12c3e642b433ca3b572c1f4426b39ea75249dad13c03e859f089bb2dbe0b4f00"
     },
     {
       "file": "apps/backend/internalModel2/captureV2.ts",
@@ -285,7 +285,7 @@
     },
     {
       "file": "apps/backend/internalModel2/identity.ts",
-      "hash": "bfe3745f3c0b56c55c67a9868f9b84ba73a461537d9c45eab5bc0eb0cf6394e4"
+      "hash": "5b31b1a88ab61990d2944e9178d615413328fd49e5bdf8fa877dd56d5648a95d"
     },
     {
       "file": "apps/backend/internalModel2/legacyCompatibility.ts",
@@ -293,7 +293,7 @@
     },
     {
       "file": "apps/backend/internalModel2/legacyRuntime.json",
-      "hash": "096690227808c1a1b7f36d5f2834a9ab761042227d3e22650b4a9fa50a5e9ddd"
+      "hash": "ae9fd3c1b1186dad06c1c1fa8d9e83436871102e2849d4b86cd8d0fc79cc1c85"
     },
     {
       "file": "apps/backend/internalModel2/lessonAuthoring.ts",
@@ -349,7 +349,7 @@
     },
     {
       "file": "apps/backend/internalModel2/sandboxRunner.ts",
-      "hash": "c24ac994911a223a412b3583109583e1ad9e2d47a66bbe86f43a2009680ae3ae"
+      "hash": "344983714b20d70e0d9a0f89cef1b23e13235834f5eef5201bf475a648531217"
     },
     {
       "file": "apps/backend/internalModel2/store.ts",

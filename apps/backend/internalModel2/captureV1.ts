@@ -22,8 +22,8 @@ export type StoredCapture = ReturnType<typeof capture>;
 export function readCapture(value: unknown, input: string): StoredCapture {
   boundedProduct(value); jsonBytes(value, limits.evidenceBytes);
   const e = value as StoredCapture, { fingerprint, ...body } = e;
-  if (!Array.isArray(e.model?.objects) || !Array.isArray(e.model?.commands?.results) || "causal" in e.model || "callers" in e.model) throw Error("Stored v1 evidence has an incompatible projection");
   if (e.schema !== "infraforge-internal-evidence/1" || contentHash(body) !== fingerprint || e.input !== input) throw Error("Stored evidence is missing, corrupt or incompatible");
+  if (!Array.isArray(e.model?.objects) || !Array.isArray(e.model?.commands?.results) || "causal" in e.model || "callers" in e.model) throw Error("Stored v1 evidence has an incompatible projection");
   if (!Number.isSafeInteger(e.sequence) || e.sequence < 1 || e.sequence > limits.captures || !Array.isArray(e.checkpoints) || e.checkpoints.length !== e.sequence || e.checkpoints.at(-1)?.atUs !== e.throughUs || e.usage.snapshot.atUs !== e.throughUs) throw Error("Stored evidence checkpoint sequence or time gap");
   return e;
 }

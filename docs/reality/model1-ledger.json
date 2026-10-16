@@ -352,7 +352,7 @@
     },
     {
       "file": "apps/backend/internalModel2/captureV1.ts",
-      "sha256": "79d219e750a652d60512679657c417688decda158e3f0a7f8b4079e65072484c",
+      "sha256": "ce894a18bc1cd2238efb4a20860f3bda49cbe8cbae8df8f802da6792d8c74afc",
       "numericSites": 3
     },
     {
@@ -417,7 +417,7 @@
     },
     {
       "file": "apps/backend/internalModel2/identity.ts",
-      "sha256": "6fbc37f11514d1fd8cdcd4469ac6c41f1e8d7bfb08ea6c48779be967f09b4397",
+      "sha256": "e3b8bdbf280d412d994a5c148b0abc28dcf29ebf2ceea6afb33310bfdffcf4c3",
       "numericSites": 0
     },
     {
@@ -492,8 +492,8 @@
     },
     {
       "file": "apps/backend/internalModel2/sandboxRunner.ts",
-      "sha256": "97a6ea01262ac650e939747883a3b6987eea7b42e1598a3f6ac7fcb1de52a7b2",
-      "numericSites": 19
+      "sha256": "965831cf1e30e1cfd7dfb63c1b4590a88b610404594c66fd6f61c2a6cd1e8d92",
+      "numericSites": 21
     },
     {
       "file": "apps/backend/internalModel2/store.ts",
@@ -32944,7 +32944,7 @@
           "m1.apps.backend.internalModel2.sandboxRunner.2"
         ]
       },
-      "formula": "let stderr = 0;",
+      "formula": "let stderr = 0, errorOutput = \"\";",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
@@ -32969,6 +32969,78 @@
     },
     {
       "id": "m1.apps.backend.internalModel2.sandboxRunner.3",
+      "concept": "runSandbox · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.internalModel2.sandboxRunner.3"
+        ]
+      },
+      "formula": "errorOutput = (errorOutput + chunk.toString(\"utf8\")).slice(0, 2048);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/internalModel2/sandboxRunner.ts#L30",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/internalModel2/sandboxRunner.ts",
+        "line": 30,
+        "column": 135
+      }
+    },
+    {
+      "id": "m1.apps.backend.internalModel2.sandboxRunner.4",
+      "concept": "runSandbox · literal 2048",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 2048,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.internalModel2.sandboxRunner.4"
+        ]
+      },
+      "formula": "errorOutput = (errorOutput + chunk.toString(\"utf8\")).slice(0, 2048);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/internalModel2/sandboxRunner.ts#L30",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/internalModel2/sandboxRunner.ts",
+        "line": 30,
+        "column": 138
+      }
+    },
+    {
+      "id": "m1.apps.backend.internalModel2.sandboxRunner.5",
       "concept": "runSandbox · literal 16384",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
@@ -32977,7 +33049,7 @@
         "value": 16384,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.internalModel2.sandboxRunner.3"
+          "m1.apps.backend.internalModel2.sandboxRunner.5"
         ]
       },
       "formula": "if (stderr > 16384) kill(\"Sandbox error output budget exceeded\");",
@@ -33000,84 +33072,12 @@
       "location": {
         "file": "apps/backend/internalModel2/sandboxRunner.ts",
         "line": 30,
-        "column": 89
-      }
-    },
-    {
-      "id": "m1.apps.backend.internalModel2.sandboxRunner.4",
-      "concept": "pending · literal 0",
-      "modelVersion": "1",
-      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
-      "quantity": {
-        "kind": "known",
-        "value": 0,
-        "unit": "code-number",
-        "provenance": [
-          "m1.apps.backend.internalModel2.sandboxRunner.4"
-        ]
-      },
-      "formula": "let pending = Buffer.alloc(0), bytes = 0, frames = 0, ready = false, done = false, stopped = false;",
-      "classification": "implementation-policy",
-      "confidence": "high",
-      "provenance": [
-        {
-          "source": "workspace:apps/backend/internalModel2/sandboxRunner.ts#L33",
-          "supports": "implementation",
-          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
-        }
-      ],
-      "assumptions": [
-        "This literal is not evidence of real infrastructure capacity or performance.",
-        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
-      ],
-      "researchedOn": "2026-10-15",
-      "freeMode": "conditional",
-      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
-      "location": {
-        "file": "apps/backend/internalModel2/sandboxRunner.ts",
-        "line": 33,
-        "column": 32
-      }
-    },
-    {
-      "id": "m1.apps.backend.internalModel2.sandboxRunner.5",
-      "concept": "bytes · literal 0",
-      "modelVersion": "1",
-      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
-      "quantity": {
-        "kind": "known",
-        "value": 0,
-        "unit": "code-number",
-        "provenance": [
-          "m1.apps.backend.internalModel2.sandboxRunner.5"
-        ]
-      },
-      "formula": "let pending = Buffer.alloc(0), bytes = 0, frames = 0, ready = false, done = false, stopped = false;",
-      "classification": "implementation-policy",
-      "confidence": "high",
-      "provenance": [
-        {
-          "source": "workspace:apps/backend/internalModel2/sandboxRunner.ts#L33",
-          "supports": "implementation",
-          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
-        }
-      ],
-      "assumptions": [
-        "This literal is not evidence of real infrastructure capacity or performance.",
-        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
-      ],
-      "researchedOn": "2026-10-15",
-      "freeMode": "conditional",
-      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
-      "location": {
-        "file": "apps/backend/internalModel2/sandboxRunner.ts",
-        "line": 33,
-        "column": 44
+        "column": 158
       }
     },
     {
       "id": "m1.apps.backend.internalModel2.sandboxRunner.6",
-      "concept": "frames · literal 0",
+      "concept": "pending · literal 0",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
       "quantity": {
@@ -33108,11 +33108,83 @@
       "location": {
         "file": "apps/backend/internalModel2/sandboxRunner.ts",
         "line": 33,
-        "column": 56
+        "column": 32
       }
     },
     {
       "id": "m1.apps.backend.internalModel2.sandboxRunner.7",
+      "concept": "bytes · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.internalModel2.sandboxRunner.7"
+        ]
+      },
+      "formula": "let pending = Buffer.alloc(0), bytes = 0, frames = 0, ready = false, done = false, stopped = false;",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/internalModel2/sandboxRunner.ts#L33",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/internalModel2/sandboxRunner.ts",
+        "line": 33,
+        "column": 44
+      }
+    },
+    {
+      "id": "m1.apps.backend.internalModel2.sandboxRunner.8",
+      "concept": "frames · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.internalModel2.sandboxRunner.8"
+        ]
+      },
+      "formula": "let pending = Buffer.alloc(0), bytes = 0, frames = 0, ready = false, done = false, stopped = false;",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/internalModel2/sandboxRunner.ts#L33",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/internalModel2/sandboxRunner.ts",
+        "line": 33,
+        "column": 56
+      }
+    },
+    {
+      "id": "m1.apps.backend.internalModel2.sandboxRunner.9",
       "concept": "runSandbox · literal 10",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
@@ -33121,7 +33193,7 @@
         "value": 10,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.internalModel2.sandboxRunner.7"
+          "m1.apps.backend.internalModel2.sandboxRunner.9"
         ]
       },
       "formula": "while ((end = pending.indexOf(10)) !== -1) { if (end > limits.lineBytes || ++frames > 35) throw Error(\"Sandbox frame budget exceeded\"); const frame = JSON.parse(pending.subarray(0, end).toString(\"utf8\")); pending = pending.subarray(end + 1); if (done || stopped) throw Error(\"Unexpected output after terminal frame\"); if (!ready) { const e = frame.enforcement, cpu = String(e?.cpu).split(/\\s+/).map(Number); if (frame.kind !== \"ready\" || frame.source !== executionSource || e.memory !== String(limits",
@@ -33148,7 +33220,7 @@
       }
     },
     {
-      "id": "m1.apps.backend.internalModel2.sandboxRunner.8",
+      "id": "m1.apps.backend.internalModel2.sandboxRunner.10",
       "concept": "runSandbox · literal -1",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
@@ -33157,7 +33229,7 @@
         "value": -1,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.internalModel2.sandboxRunner.8"
+          "m1.apps.backend.internalModel2.sandboxRunner.10"
         ]
       },
       "formula": "while ((end = pending.indexOf(10)) !== -1) { if (end > limits.lineBytes || ++frames > 35) throw Error(\"Sandbox frame budget exceeded\"); const frame = JSON.parse(pending.subarray(0, end).toString(\"utf8\")); pending = pending.subarray(end + 1); if (done || stopped) throw Error(\"Unexpected output after terminal frame\"); if (!ready) { const e = frame.enforcement, cpu = String(e?.cpu).split(/\\s+/).map(Number); if (frame.kind !== \"ready\" || frame.source !== executionSource || e.memory !== String(limits",
@@ -33184,7 +33256,7 @@
       }
     },
     {
-      "id": "m1.apps.backend.internalModel2.sandboxRunner.9",
+      "id": "m1.apps.backend.internalModel2.sandboxRunner.11",
       "concept": "runSandbox · literal 35",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
@@ -33193,7 +33265,7 @@
         "value": 35,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.internalModel2.sandboxRunner.9"
+          "m1.apps.backend.internalModel2.sandboxRunner.11"
         ]
       },
       "formula": "if (end > limits.lineBytes || ++frames > 35) throw Error(\"Sandbox frame budget exceeded\");",
@@ -33220,7 +33292,7 @@
       }
     },
     {
-      "id": "m1.apps.backend.internalModel2.sandboxRunner.10",
+      "id": "m1.apps.backend.internalModel2.sandboxRunner.12",
       "concept": "frame · literal 0",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
@@ -33229,7 +33301,7 @@
         "value": 0,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.internalModel2.sandboxRunner.10"
+          "m1.apps.backend.internalModel2.sandboxRunner.12"
         ]
       },
       "formula": "const frame = JSON.parse(pending.subarray(0, end).toString(\"utf8\"));",
@@ -33256,7 +33328,7 @@
       }
     },
     {
-      "id": "m1.apps.backend.internalModel2.sandboxRunner.11",
+      "id": "m1.apps.backend.internalModel2.sandboxRunner.13",
       "concept": "runSandbox · literal 1",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
@@ -33265,7 +33337,7 @@
         "value": 1,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.internalModel2.sandboxRunner.11"
+          "m1.apps.backend.internalModel2.sandboxRunner.13"
         ]
       },
       "formula": "pending = pending.subarray(end + 1);",
@@ -33292,7 +33364,7 @@
       }
     },
     {
-      "id": "m1.apps.backend.internalModel2.sandboxRunner.12",
+      "id": "m1.apps.backend.internalModel2.sandboxRunner.14",
       "concept": "runSandbox · literal 1000",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
@@ -33301,7 +33373,7 @@
         "value": 1000,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.internalModel2.sandboxRunner.12"
+          "m1.apps.backend.internalModel2.sandboxRunner.14"
         ]
       },
       "formula": "if (frame.kind !== \"ready\" || frame.source !== executionSource || e.memory !== String(limits.memoryBytes) || e.swap !== \"0\" || e.pids !== String(limits.pids) || e.uid !== 1000 || cpu.length !== 2 || cpu[0] !== cpu[1] || !/Max cpu time\\s+5\\s+5\\s+seconds/.test(e.limits) || !/Max open files\\s+128\\s+128/.test(e.limits) || e.env.some((key: string) => /DATABASE|REDIS|SECRET|TOKEN|AUTH/.test(key))) throw Error(\"Kernel containment verification failed\");",
@@ -33328,7 +33400,7 @@
       }
     },
     {
-      "id": "m1.apps.backend.internalModel2.sandboxRunner.13",
+      "id": "m1.apps.backend.internalModel2.sandboxRunner.15",
       "concept": "runSandbox · literal 2",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
@@ -33337,7 +33409,7 @@
         "value": 2,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.internalModel2.sandboxRunner.13"
+          "m1.apps.backend.internalModel2.sandboxRunner.15"
         ]
       },
       "formula": "if (frame.kind !== \"ready\" || frame.source !== executionSource || e.memory !== String(limits.memoryBytes) || e.swap !== \"0\" || e.pids !== String(limits.pids) || e.uid !== 1000 || cpu.length !== 2 || cpu[0] !== cpu[1] || !/Max cpu time\\s+5\\s+5\\s+seconds/.test(e.limits) || !/Max open files\\s+128\\s+128/.test(e.limits) || e.env.some((key: string) => /DATABASE|REDIS|SECRET|TOKEN|AUTH/.test(key))) throw Error(\"Kernel containment verification failed\");",
@@ -33364,7 +33436,7 @@
       }
     },
     {
-      "id": "m1.apps.backend.internalModel2.sandboxRunner.14",
+      "id": "m1.apps.backend.internalModel2.sandboxRunner.16",
       "concept": "runSandbox · literal 0",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
@@ -33373,7 +33445,7 @@
         "value": 0,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.internalModel2.sandboxRunner.14"
+          "m1.apps.backend.internalModel2.sandboxRunner.16"
         ]
       },
       "formula": "if (frame.kind !== \"ready\" || frame.source !== executionSource || e.memory !== String(limits.memoryBytes) || e.swap !== \"0\" || e.pids !== String(limits.pids) || e.uid !== 1000 || cpu.length !== 2 || cpu[0] !== cpu[1] || !/Max cpu time\\s+5\\s+5\\s+seconds/.test(e.limits) || !/Max open files\\s+128\\s+128/.test(e.limits) || e.env.some((key: string) => /DATABASE|REDIS|SECRET|TOKEN|AUTH/.test(key))) throw Error(\"Kernel containment verification failed\");",
@@ -33400,7 +33472,7 @@
       }
     },
     {
-      "id": "m1.apps.backend.internalModel2.sandboxRunner.15",
+      "id": "m1.apps.backend.internalModel2.sandboxRunner.17",
       "concept": "runSandbox · literal 1",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
@@ -33409,7 +33481,7 @@
         "value": 1,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.internalModel2.sandboxRunner.15"
+          "m1.apps.backend.internalModel2.sandboxRunner.17"
         ]
       },
       "formula": "if (frame.kind !== \"ready\" || frame.source !== executionSource || e.memory !== String(limits.memoryBytes) || e.swap !== \"0\" || e.pids !== String(limits.pids) || e.uid !== 1000 || cpu.length !== 2 || cpu[0] !== cpu[1] || !/Max cpu time\\s+5\\s+5\\s+seconds/.test(e.limits) || !/Max open files\\s+128\\s+128/.test(e.limits) || e.env.some((key: string) => /DATABASE|REDIS|SECRET|TOKEN|AUTH/.test(key))) throw Error(\"Kernel containment verification failed\");",
@@ -33436,7 +33508,7 @@
       }
     },
     {
-      "id": "m1.apps.backend.internalModel2.sandboxRunner.16",
+      "id": "m1.apps.backend.internalModel2.sandboxRunner.18",
       "concept": "runSandbox.error · literal 0",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
@@ -33445,7 +33517,7 @@
         "value": 0,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.internalModel2.sandboxRunner.16"
+          "m1.apps.backend.internalModel2.sandboxRunner.18"
         ]
       },
       "formula": "error: String(state.Error).slice(0, 500)",
@@ -33472,7 +33544,7 @@
       }
     },
     {
-      "id": "m1.apps.backend.internalModel2.sandboxRunner.17",
+      "id": "m1.apps.backend.internalModel2.sandboxRunner.19",
       "concept": "runSandbox.error · literal 500",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
@@ -33481,7 +33553,7 @@
         "value": 500,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.internalModel2.sandboxRunner.17"
+          "m1.apps.backend.internalModel2.sandboxRunner.19"
         ]
       },
       "formula": "error: String(state.Error).slice(0, 500)",
@@ -33508,7 +33580,7 @@
       }
     },
     {
-      "id": "m1.apps.backend.internalModel2.sandboxRunner.18",
+      "id": "m1.apps.backend.internalModel2.sandboxRunner.20",
       "concept": "runSandbox · literal 0",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
@@ -33517,7 +33589,7 @@
         "value": 0,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.internalModel2.sandboxRunner.18"
+          "m1.apps.backend.internalModel2.sandboxRunner.20"
         ]
       },
       "formula": "if (code !== 0 || state.ExitCode !== 0 || state.OOMKilled || pending.length || !ready || !done && !stopped) throw Error(`Sandbox ended without a complete protocol (exit ${state.ExitCode}, OOM ${Boolean(state.OOMKilled)})`);",
@@ -33525,7 +33597,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/sandboxRunner.ts#L62",
+          "source": "workspace:apps/backend/internalModel2/sandboxRunner.ts#L63",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -33539,12 +33611,12 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/sandboxRunner.ts",
-        "line": 62,
+        "line": 63,
         "column": 18
       }
     },
     {
-      "id": "m1.apps.backend.internalModel2.sandboxRunner.19",
+      "id": "m1.apps.backend.internalModel2.sandboxRunner.21",
       "concept": "runSandbox · literal 0",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
@@ -33553,7 +33625,7 @@
         "value": 0,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.internalModel2.sandboxRunner.19"
+          "m1.apps.backend.internalModel2.sandboxRunner.21"
         ]
       },
       "formula": "if (code !== 0 || state.ExitCode !== 0 || state.OOMKilled || pending.length || !ready || !done && !stopped) throw Error(`Sandbox ended without a complete protocol (exit ${state.ExitCode}, OOM ${Boolean(state.OOMKilled)})`);",
@@ -33561,7 +33633,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/sandboxRunner.ts#L62",
+          "source": "workspace:apps/backend/internalModel2/sandboxRunner.ts#L63",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -33575,7 +33647,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/sandboxRunner.ts",
-        "line": 62,
+        "line": 63,
         "column": 42
       }
     },
