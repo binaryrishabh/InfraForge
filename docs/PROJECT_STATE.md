@@ -1,23 +1,54 @@
 # InfraForge project state
 
-Latest implemented product checkpoint: **M2K — INTERNAL product-to-Model-2
-execution**. The gated path captures an owned saved design and complete authored
-contracts, commits a versioned immutable input and queue intent, executes within
-the existing worker's ownership boundary, and retains a bounded read-only
-Observed/Interpreted/Unknown report. Its initial scope is one VM CPU station plus
-one current-object store; Free Mode and challenge dispatch stay on Model 1. See
-[M2K supported/refused features, research and limits](reality/m2k-product-integration.md).
-Real PostgreSQL/Redis/API/worker proof at `39060f4b06edb031fc895e022adf6e422fa00b6d`
-passed [10/10 CI jobs](https://github.com/binaryrishabh/InfraForge/actions/runs/38909261891),
-including 19 integration tests and 27 release rehearsal events. The
-[retained actual product artifact](reality/m2k-product-proof.json) and
-[provenance](reality/m2k-product-proof-provenance.json) reconstruct the complete run
-and five interrupted/cancelled prefixes independently on Windows. This is proven
-internal implementation; independent acceptance remains a separate review.
-Local M2K validation passed 482 workspace, 64 tooling and 73 challenge tests,
-typecheck, lint/boundaries, build and audit. CI also verifies each fresh product
-artifact. The task's completion report records final publication SHA, exact-SHA
-CI, local/remote agreement and separate Vercel status.
+Latest independently accepted INTERNAL product milestone: **M2K — saved-design
+to Model-2 worker, durable evidence and read-only report** at
+`72eed4dbe1783798d3d3db760d10e4fd985bb8a5` on `develop`.
+The [exact-SHA CI run 38910870530](https://github.com/binaryrishabh/InfraForge/actions/runs/38910870530)
+completed **10/10 jobs**: 482 workspace, 64 tooling, 73 challenge and 19
+integration tests, plus packaging/full release rehearsal. All 30 Model-1 goldens
+and the ten immutable challenge hashes remain protected. Vercel **FAILED**
+separately. GitHub develop matches the accepted SHA; the executor reports
+a clean local worktree and matching remote, which the Lead cannot inspect locally.
+
+Independent acceptance covers one explicitly operator-granted INTERNAL path:
+an authenticated owner's saved design, reviewed full authored contracts and
+recorded workload are compiled into an immutable versioned input with a
+transactional Outbox intent; the existing worker executes one VM CPU station
+and one atomic-current-object store with optional one modeled process Crash;
+bounded committed evidence survives safely interrupted execution; a read-only
+Observed/Interpreted/Unknown report and deterministic retained-prefix replay
+can be verified after the worker stops. Unsupported models and missing input
+are rejected without copying Model-1 defaults.
+
+CI used actual disposable PostgreSQL/Redis, the HTTP API, Better Auth sessions,
+BullMQ and a real worker. Fresh exact-SHA
+`internal-model2-product-proof` artifact (ID `12050711972`) passed its independent
+reconstruction check. The normal run and all five process-death, ownership-loss,
+transaction-failure, cancellation and grant-revocation prefixes were replayed;
+264,472 modeled object byte-us were independently calculated. Retained proof
+is under `docs/reality/m2k-product-proof.json` with producer/source provenance
+recorded separately. The latest CI produced a separate fresh proof under its
+own exact commit; do not mislabel the older retained producer SHA as the latest
+CI artifact's producer.
+
+**Boundaries:** no general Model-2 Free Mode or challenge activation, no automatic
+restart/resume of interrupted runs, no ordinary editor contract authoring yet,
+no physical/cloud throughput/durability/billing guarantees, no production release.
+Model 2 shares the existing worker process and bounded logical event limits are
+not hard process isolation or guaranteed CPU deadlines. **Model 1 ACTIVE;
+Model 2 INTERNAL; production PARKED.** Readiness baseline remains 441 surfaces,
+177 technical blockers and 252 UI reviews; passing this internal slice changes
+none of those counts. Claude Opus 5.5 owns future major UI/UX work. The separate
+product experience backlog is tracked in
+[GitHub issue #2](https://github.com/binaryrishabh/InfraForge/issues/2).
+
+**Next accepted direction:** a narrow INTERNAL author/review/submit workflow for
+exact supported application, workload and infrastructure contracts, connected
+to the M2K execution and reports. Prove honest field provenance, refusal of
+unsupported settings, user comprehension, and per-surface eligibility before
+proposing any Model-2 Free Mode switch. Coordinate major UX/UI work with Claude,
+and do not widen scope merely to decrease shipping counts. See
+[M2K implementation/research/limits](reality/m2k-product-integration.md).
 
 Latest independently accepted internal engine milestone: **Reality Engine M2J —
 real usage evidence and metering** at `094841dc031e2f68f18798f58e8b7eaa9f909d89`
