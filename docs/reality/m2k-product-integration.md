@@ -125,6 +125,9 @@ capture. If the database remains unavailable, a replacement retires the running
 record after ownership can safely be re-established. Cancellation and grant
 revocation stop at a capture boundary, retaining the actual prefix; cancellation
 does not promise an instantaneous physical interrupt.
+An active record's status is its last committed lifecycle state, not a worker
+liveness signal. Without a replacement worker, a crashed running record can remain
+marked running while its report still identifies the retained incomplete prefix.
 
 Read-only replay requires the exact retained schema, content identity and execution
 source. It reconstructs the captured cuts and compares the whole evidence identity.

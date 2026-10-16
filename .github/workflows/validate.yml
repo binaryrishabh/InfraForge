@@ -71,6 +71,7 @@ jobs:
           bun-version: 1.3.14
       - run: bun install --frozen-lockfile
       - run: bun run test:integration
+      - run: bun --no-env-file scripts/verify-internal-model2-proof.ts /tmp/infraforge-model2-*.json
       - uses: actions/upload-artifact@v4
         if: always()
         with:

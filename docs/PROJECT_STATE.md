@@ -7,11 +7,17 @@ the existing worker's ownership boundary, and retains a bounded read-only
 Observed/Interpreted/Unknown report. Its initial scope is one VM CPU station plus
 one current-object store; Free Mode and challenge dispatch stay on Model 1. See
 [M2K supported/refused features, research and limits](reality/m2k-product-integration.md).
-Independent acceptance, exact-SHA database/worker proof and final release results
-are separate from implementation; the completion report retains that evidence.
+Real PostgreSQL/Redis/API/worker proof at `39060f4b06edb031fc895e022adf6e422fa00b6d`
+passed [10/10 CI jobs](https://github.com/binaryrishabh/InfraForge/actions/runs/38909261891),
+including 19 integration tests and 27 release rehearsal events. The
+[retained actual product artifact](reality/m2k-product-proof.json) and
+[provenance](reality/m2k-product-proof-provenance.json) reconstruct the complete run
+and five interrupted/cancelled prefixes independently on Windows. This is proven
+internal implementation; independent acceptance remains a separate review.
 Local M2K validation passed 482 workspace, 64 tooling and 73 challenge tests,
-typecheck, lint/boundaries, build and audit. Disposable CI's exact-SHA product
-proof and packaging/release rehearsal are required before completion is claimed.
+typecheck, lint/boundaries, build and audit. CI also verifies each fresh product
+artifact. The task's completion report records final publication SHA, exact-SHA
+CI, local/remote agreement and separate Vercel status.
 
 Latest independently accepted internal engine milestone: **Reality Engine M2J —
 real usage evidence and metering** at `094841dc031e2f68f18798f58e8b7eaa9f909d89`

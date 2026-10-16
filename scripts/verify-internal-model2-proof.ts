@@ -9,7 +9,7 @@ import type { InternalRunRow } from "../apps/backend/internalModel2/store";
 // Reconstruct independently of the database and integration runner. CI logs and
 // the producer commit establish the real product lifecycle; this checks content.
 const path = process.argv[2];
-if (!path) throw Error("Supply the downloaded internal-model2-product-proof JSON path");
+if (!path || process.argv.length !== 3) throw Error("Supply one downloaded internal-model2-product-proof JSON path");
 const bytes = await readFile(path);
 assert(bytes.length <= 1048576, "Product proof exceeds one MiB");
 const proof = JSON.parse(bytes.toString("utf8"));
@@ -41,6 +41,10 @@ for (const kind of ["process-death", "ownership-loss", "transactionFailure"]) {
   const failure = proof.failures[kind];
   assert.equal(failure.status, "interrupted"); assert.equal(failure.sequence, 3);
   if (failure.before) assert.equal(failure.before, failure.retained);
+  if (failure.reportWithoutWorker) {
+    assert.equal(failure.reportWithoutWorker.sequence, 3);
+    assert.equal(failure.reportWithoutWorker.throughUs, 2500);
+  }
 }
 for (const failure of Object.values(proof.failures) as Array<Record<string, any>>) {
   const recorded = readEnvelope(failure.input, failure.input.fingerprint);

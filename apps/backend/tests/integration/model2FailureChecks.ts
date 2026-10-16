@@ -12,6 +12,9 @@ export async function checkModel2Failures(h: LocalHarness, create: (key: string)
       const before = await read(id);
       expect(before.status).toBe("running"); expect(before.sequence).toBe(3); expect(before.throughUs).toBe(2500);
       if (loss === "ownership-loss") await verifyOwnershipLoss(h, pid); else await h.stop("worker");
+      const absent = (await h.request(`/internal/model2/runs/${id}/report`)).report;
+      expect(absent.sequence).toBe(3); expect(absent.throughUs).toBe(2500); expect(absent.problems).toEqual([]);
+      expect(absent.unknown.join(" ")).toContain("retained prefix");
       await barrier.release();
       // The failed transaction cannot commit its advanced state after ownership ends.
       expect((await read(id)).sequence).toBe(3);
@@ -21,7 +24,8 @@ export async function checkModel2Failures(h: LocalHarness, create: (key: string)
       expect(after.sequence).toBe(3); expect(after.evidence.fingerprint).toBe(before.evidence.fingerprint);
       const replay = await h.request(`/internal/model2/runs/${id}/replay`);
       expect(replay.replay.kind).toBe("MatchesRecordedPrefix"); expect(replay.replay.complete).toBe(false);
-      proof[loss] = { ...retained(after), before: before.evidence.fingerprint, replay: replay.replay.kind };
+      proof[loss] = { ...retained(after), before: before.evidence.fingerprint, replay: replay.replay.kind,
+        reportWithoutWorker: { status: absent.status, sequence: absent.sequence, throughUs: absent.throughUs } };
     } finally { await barrier.close().catch(() => {}); }
   }
   await h.sql.query(`CREATE FUNCTION model2_fixture_write_failure() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN
