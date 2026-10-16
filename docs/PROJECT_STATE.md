@@ -40,6 +40,34 @@ coding, affected/security suites after a slice, then full validation at the fina
 checkpoint. Schema/runtime changes also require the release rehearsal. Never
 create executor memories or permanent scratch archives.
 
+## Future visualization and Model 1 retirement
+
+Owner direction, not an implemented or authorized shipping change:
+
+When Claude Opus 5.5 is available for the major UI/UX redesign, it leads design
+research, visual direction and the redesign implementation. Codex does not own
+independent major visual redesign. Explore Three.js and a stable React Three Fiber
+release for selective cinematic scenes, optional 3D infrastructure views, animations
+and properly licensed real photographs/assets where they improve understanding.
+Claude chooses the final style and stack after research and measured prototypes.
+Do not cover every interface with effects: editing, data, reading and accessibility
+must remain clear and usable. Require keyboard/text alternatives, reduced-motion and
+low-GPU fallbacks, bounded performance, browser testing and resource cleanup.
+
+Presentation never creates simulation truth. Any visual indication of network
+traffic, load, failure, recovery, cost, security or another technical fact must
+derive from versioned Model-2 state/evidence. Decorative scenes must remain plainly
+illustrative, not fabricated telemetry or infrastructure behavior.
+
+When Model 2 genuinely passes its end-to-end shipping gates, move new Free Mode and
+challenge executions to it and retire Model 1 from active new-run execution. Do not
+maintain two active new-run engines indefinitely. Preserve old runs, reports, input
+provenance, comparisons, the 30 Model-1 goldens and immutable challenge versions;
+never silently rejudge old attempts. Remove unused Model-1 runtime/code only after
+historical reading, migrations and any required exact replay are protected by
+verified compatibility or a narrow retained legacy reader. Model 2 activation and
+Model-1 removal need separate proven release decisions, not a premature toggle.
+
 ## Accepted architecture and foundation
 
 | Workspace | Responsibility |
