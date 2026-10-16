@@ -21,6 +21,7 @@ import { Loading } from "../ui/Page";
 const CanvasDesignerPage = lazy(() => import("../features/canvas/components/CanvasDesignerPage").then((m) => ({ default: m.CanvasDesignerPage })));
 const RunReportPage = lazy(() => import("../features/reports/pages/RunReportPage").then((m) => ({ default: m.RunReportPage })));
 const ComparePage = lazy(() => import("../features/reports/pages/ComparePage").then((m) => ({ default: m.ComparePage })));
+const InternalWorkspace = lazy(() => import("../features/internalModel2/InternalWorkspace").then((m) => ({ default: m.InternalWorkspace })));
 
 // Older links keep working: /dashboard and /reports moved to /home and /runs.
 function LegacyReport() {
@@ -75,6 +76,7 @@ function App() {
             <Route path="/runs/compare" element={<ComparePage />} />
             <Route path="/runs/:deploymentId" element={<RunReportPage />} />
             <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/internal/model2" element={<InternalWorkspace />} />
           </Route>
           {/* The designer and live runs are full-screen workspaces with their own bar. */}
           <Route path="/design" element={<Suspense fallback={<div className="grid h-dvh place-items-center bg-canvas"><Loading label="Opening the designer…" /></div>}><CanvasDesignerPage /></Suspense>} />

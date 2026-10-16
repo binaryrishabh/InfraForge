@@ -1,5 +1,15 @@
 # InfraForge project state
 
+M2L implementation checkpoint: the current-style `/internal/model2` workspace now
+connects guided authored fields, read-only server validation, revision/value review,
+exact M2K submission retry, bounded run observation and durable report/replay/cancel.
+The operator grant and owner checks remain authoritative. The compiler, worker,
+database schema and Model-1 execution are unchanged. Focused tests pass; actual
+Chromium/API/database/worker CI and final validation are required before claiming
+completion. See [M2L contracts and redesign handoff](reality/m2l-workspace-handoff.md).
+Issue #3 stays open for independent Lead review. The 441-surface accepted baseline
+is preserved; new surfaces are initially inventoried as unreviewed, not promoted.
+
 **Active execution direction (owner, 2026-10-16): do not pause frontend work
 for Claude.** Codex (MODEL GPT-6.1 Sol, REASONING Extra High) may implement
 the complete M2L INTERNAL Model-2 author/review/submit/report/replay workflow

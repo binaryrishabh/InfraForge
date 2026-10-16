@@ -3,6 +3,8 @@
   "private": true,
   "type": "module",
   "exports": {
+    "./internal-model2": "./src/internal-model2/index.ts",
+    "./internal-model2/example": "./src/internal-model2/example.ts",
     "./auth": "./src/auth/index.ts",
     "./actions": {
       "types": "./src/actions/index.ts",

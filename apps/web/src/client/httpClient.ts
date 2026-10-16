@@ -8,7 +8,7 @@ export function cancelUserRequests() {
   requests = new AbortController();
 }
 http.interceptors.request.use((request) => {
-  request.signal = requests.signal;
+  request.signal = request.signal ? AbortSignal.any([requests.signal, request.signal as AbortSignal]) : requests.signal;
   return request;
 });
 http.interceptors.response.use((response) => response, (error) => {

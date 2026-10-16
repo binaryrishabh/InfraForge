@@ -23,6 +23,7 @@ import { checkCredentials } from "./credentialChecks";
 import { checkLearningExperiments } from "./learningChecks";
 import { checkPostFaultObservation } from "./postFaultChecks";
 import { checkInternalModel2 } from "./model2Checks";
+import { checkModel2Browser } from "./model2BrowserChecks";
 
 type Event = Record<string, any>;
 type Snapshot = SimulationSnapshot & { publishType: string };
@@ -135,6 +136,8 @@ integration("local deployment lifecycle", () => {
       }
       phase("internal Model-2 saved design, durable worker and read-only historical report");
       evidence.model2 = await checkInternalModel2(harness, sessions, infrastructureIds);
+      phase("internal Model-2 browser authoring, review and durable reporting");
+      evidence.model2Browser = await checkModel2Browser(harness, sessions, infrastructureIds);
       const invalidJson = await fetch(harness.api + "/infrastructure", {
         method: "POST", headers: harness.headers, body: "{",
       });

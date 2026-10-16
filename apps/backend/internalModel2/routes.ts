@@ -4,12 +4,14 @@ import { NotFoundError, ValidationError } from "../utils/errors";
 import { admissionSchema, CompilationRefusal } from "./envelope";
 import { admit, hasInternalGrant, ownedRun, requestCancellation, internalDatabase } from "./store";
 import { internalReport, reportHtml, replayStored } from "./report";
+import { workspaceRouter } from "./workspace";
 export const internalModel2Router = Router();
 internalModel2Router.use(async (_req, res, next) => {
   if (!await hasInternalGrant(res.locals.userId)) throw new NotFoundError();
   res.set("Cache-Control", "no-store"); res.set("X-Content-Type-Options", "nosniff"); next();
 });
 internalModel2Router.use(json({ limit: "256kb" }));
+internalModel2Router.use(workspaceRouter);
 internalModel2Router.post("/runs", async (req, res) => {
   const parsed = admissionSchema.safeParse(req.body);
   if (!parsed.success) throw new ValidationError(parsed.error.issues.map((e) => `${e.path.join(".")}: ${e.message}`).join("; "));
