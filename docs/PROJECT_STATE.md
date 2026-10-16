@@ -1,5 +1,34 @@
 # InfraForge project state
 
+Latest independently accepted internal engine milestone: **Reality Engine M2I** at
+`5b4771ac107e447aa08aac146b8ff15f019beac9` on `develop`.
+The exact-SHA [GitHub Actions run 38880286728](https://github.com/binaryrishabh/InfraForge/actions/runs/38880286728)
+completed **10/10 jobs**, including 454 workspace, 61 tooling and 18
+integration test passes. All 30 Model-1 goldens and ten pinned challenge
+versions/hashes remain protected. Exact-SHA packaging/release rehearsal passed.
+**Vercel FAILED separately**; it is not a green deployment.
+
+Independent acceptance scope: bounded INTERNAL provider/placement/capability,
+selected-process incident, and one AWS EC2 Linux shared On-Demand m5.large
+us-east-1 allocation-time price adapter only. The exact retained public CSV row
+is USD 0.096 per instance-hour (price effective 2026-10-01); arithmetic and
+billing rules were checked against first-party AWS documentation, but the entire
+regional CSV was not independently re-downloaded. EC2 running-state billing
+is inferred from an explicitly AUTHORED lifecycle mapping, not observed AWS
+instance states. The selected compute subtotal is an interpreted estimate;
+full cost, physical timing, actual cloud reliability and broader provider/service
+billing are Unknown. 1,024 billing vectors, ten independent analytic boundary
+vectors, 128 compiler cases and eight scenario campaigns/32 captures were
+tested. Two first-pass LOCAL timeout cases were reported by Codex as passing
+isolated reruns unchanged; the independently checked full exact-SHA CI was green.
+The local worktree cleanliness is executor-reported, while GitHub independently
+confirms the exact published `develop` SHA. Neither normal UI nor readiness gate
+was promoted: 441 surfaces, 177 technical blockers and 252 UI behavior reviews.
+Model 1 ACTIVE; Model 2 INTERNAL; production PARKED. Next engine research should
+deepen actual usage evidence and narrowly sourced provider-meter adapters before
+broader cost claims. Preserve the planned Claude-led visual redesign and eventual
+safe Model-1 retirement without prematurely activating either.
+
 Latest accepted internal engine milestone: **Reality Engine M2H** at
 `5202ab3d54a28e9a47750b3f6bc21482a8a7c2c6` on `develop`.
 Two exact-SHA GitHub Actions runs, [38800316287](https://github.com/binaryrishabh/InfraForge/actions/runs/38800316287)
