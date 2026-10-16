@@ -15,6 +15,17 @@ export async function checkLessonBrowser(h: LocalHarness, cookie: string, output
     await until(async () => { if (server.exitCode !== null) throw Error(log); try { return (await fetch("http://127.0.0.1:5173", { signal: AbortSignal.timeout(1500) })).ok || undefined; } catch { return undefined; } }, "lesson Vite");
     await h.stop("worker"); await page.goto(h.origin + "/internal/model2/learn");
     await page.getByRole("button", { name: "Create lesson design", exact: true }).click();
+    const refreshed = page.waitForResponse((r: any) => r.url().endsWith("/internal/model2/runs") && r.request().method() === "GET");
+    await page.getByRole("button", { name: "Refresh designs and history" }).click(); await refreshed;
+    await page.getByLabel("When should the read happen?").selectOption("after");
+    await page.getByRole("button", { name: "Review lesson", exact: true }).click();
+    await page.getByRole("heading", { name: "Review your restart experiment" }).waitFor();
+    expect(await page.getByRole("button", { name: "Run reviewed lesson", exact: true }).isDisabled()).toBe(true);
+    await page.getByRole("button", { name: "Change read phase", exact: true }).click();
+    await page.getByLabel("When should the read happen?").selectOption("during");
+    await page.getByRole("button", { name: "Review lesson", exact: true }).click();
+    await page.getByText("While the process is unavailable at 12000 modeled us.", { exact: false }).waitFor();
+    await page.getByRole("button", { name: "Change read phase", exact: true }).click();
     await page.getByLabel("When should the read happen?").selectOption("after");
     await page.getByRole("button", { name: "Review lesson", exact: true }).click();
     await page.getByRole("heading", { name: "Review your restart experiment" }).waitFor();
@@ -27,6 +38,7 @@ export async function checkLessonBrowser(h: LocalHarness, cookie: string, output
     await page.getByLabel("I accept the teaching assumptions", { exact: false }).focus(); await page.keyboard.press("Space");
     await page.getByRole("button", { name: "Run reviewed lesson", exact: true }).press("Enter");
     await page.getByRole("button", { name: "Retry exact lesson submission" }).waitFor(); await page.reload();
+    expect(await page.getByRole("button", { name: "Change read phase", exact: true }).isDisabled()).toBe(true);
     await page.getByRole("button", { name: "Retry exact lesson submission" }).click({ clickCount: 2 }); await page.waitForURL(/\?run=/);
     const id = new URL(page.url()).searchParams.get("run")!;
     expect(id).toBe(lostId); expect((await h.sql.query('SELECT 1 FROM "InternalModel2Run" WHERE "idempotencyKey"=$1', [retryKey])).rowCount).toBe(1);
@@ -40,7 +52,7 @@ export async function checkLessonBrowser(h: LocalHarness, cookie: string, output
     await page.setViewportSize({ width: 390, height: 844 }); expect(await page.evaluate("document.documentElement.scrollWidth<=window.innerWidth")).toBe(true);
     await page.getByRole("region", { name: "Lesson result" }).scrollIntoViewIfNeeded(); await page.screenshot({ path: join(output, "lesson-result-mobile.png") });
     await page.goto(h.origin + "/internal/model2"); await page.getByText("Internal workspace unavailable for this session", { exact: false }).waitFor();
-    return { executed: true, browser: browser.version(), id, cases: ["guided create choose review consent execute result", "keyboard consent", "lost response refresh exact retry duplicate click", "actual isolated worker and replay", "mobile no overflow", "advanced authoring refused"] };
+    return { executed: true, browser: browser.version(), id, cases: ["guided create choose review consent execute result", "phase editing and explicit saved/history refresh", "keyboard consent", "lost response refresh exact retry duplicate click", "actual isolated worker and replay", "mobile no overflow", "advanced authoring refused"] };
   } catch (error) { await page.screenshot({ path: join(output, "lesson-browser-failure.png"), fullPage: true }).catch(() => {}); throw error; }
   finally { await browser.close(); server.kill("SIGKILL"); await server.exited; }
 }

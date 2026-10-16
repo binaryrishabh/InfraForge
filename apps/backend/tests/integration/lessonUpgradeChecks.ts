@@ -16,7 +16,7 @@ export async function checkLessonUpgrade(h: LocalHarness) {
     await db.query('INSERT INTO "User" (id,name,email,"updatedAt") VALUES ($1,\'Legacy M2M fixture\',$2,now())', [owner, `${owner}@infraforge.test`]);
     await db.query('INSERT INTO "Infrastructure" (id,"userId","ownerId",name,layout,"updatedAt") VALUES ($1,$2,$2,\'Legacy saved fields\',\'{"resources":[],"connectionLines":[],"unsupported":"retained"}\',now())', [design, owner]);
     await db.query('INSERT INTO "InternalModel2Grant" ("userId",reason) VALUES ($1,\'Existing trusted operator\')', [owner]);
-    const insert = (id: string) => db.query('INSERT INTO "InternalModel2Run" (id,"ownerId","infrastructureId","idempotencyKey","requestHash",input,"inputHash") VALUES ($1,$2,$3,$1,$4,\'{}\',$4)', [id, owner, design, hash]);
+    const insert = (id: string) => db.query('INSERT INTO "InternalModel2Run" (id,"ownerId","infrastructureId","idempotencyKey","requestHash",input,"inputHash") VALUES ($1,$2,$3,$5,$4,\'{}\',$4)', [id, owner, design, hash, id]);
     await insert(run); await db.query('UPDATE "InternalModel2Run" SET status=\'cancelled\' WHERE id=$1', [run]);
     const before = (await db.query('SELECT * FROM "InternalModel2Run"')).rows, saved = (await db.query('SELECT * FROM "Infrastructure"')).rows;
     await db.query(await Bun.file(new URL(`${folders[18]}/migration.sql`, directory)).text());
@@ -28,6 +28,7 @@ export async function checkLessonUpgrade(h: LocalHarness) {
     await db.query('UPDATE "InternalModel2Grant" SET scope=\'lesson\'');
     await expect(insert(crypto.randomUUID())).rejects.toThrow("immutable lesson metadata");
     expect((await db.query('SELECT count(*)::int AS n FROM "InternalModel2Run"')).rows[0].n).toBe(1);
-    return { before: contentHash(before), after: contentHash(after), saved: contentHash(saved), existingGrantScope: "operator", invalidScopeRejected: true, unscopedAdmissionRejected: true };
+    const jsonHash = (value: unknown) => contentHash(JSON.parse(JSON.stringify(value)));
+    return { before: jsonHash(before), after: jsonHash(after), saved: jsonHash(saved), existingGrantScope: "operator", invalidScopeRejected: true, unscopedAdmissionRejected: true };
   } finally { await db.end(); if (created) await h.sql.query(`DROP DATABASE "${name}"`); }
 }

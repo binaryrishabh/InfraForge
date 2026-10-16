@@ -7,11 +7,18 @@ if (baseline.length !== 474) throw Error("Unexpected accepted M2L baseline");
 const accepted = new Map(baseline.map((entry) => [entry.id, entry]));
 const path = "docs/reality/m2m-preview-proof.json", proof = existsSync(resolve(shippingRoot, path)) ? JSON.parse(readFileSync(resolve(shippingRoot, path), "utf8")) : null;
 const proved = proof?.success === true && proof?.browser?.executed === true;
+if (proved) {
+  const checked = Bun.spawnSync([process.execPath, "--no-env-file", "scripts/verify-model2-lesson-proof.ts", path], { cwd: shippingRoot, stdout: "pipe", stderr: "pipe" });
+  if (checked.exitCode !== 0) throw Error(checked.stderr.toString() || "Current lesson proof reconstruction refused");
+}
+const actions = new Set(["Button-03ad7717d37eb07c8c88", "Button-81c8adf0b5d574b3ca55", "Button-c2c48a9935150c9efaca", "form-b8de9e678e5fef5af1ea", "Button-3fc2b6a24341d2179f03", "Button-9a579eb19db2c73ca5e5", "input-09f0a5f8a559a03edd6c"]);
+const inputs = new Set(["LessonReview-45eb64b9fdd926867cd0", "Select-5cf3d8a1686e5ad50a28", "Select-94449c6749f709ea4380", "option-507ce379458462c0af55", "option-9629eeef61c351c5240c", "option-97530eb60804ae492d80"]);
+const outputs = new Set(["LessonHistory-73c268cacfded7e9e37d", "LessonResult-0fb66cc5a4f022a13e40"]);
 const entries = visibleSurfaces().map((surface): ShippingEntry => {
   if (accepted.has(surface.id)) return accepted.get(surface.id)!;
   if (!/apps\/web\/src\/features\/(internalLessons|internalModel2)\//.test(surface.source)) throw Error(`Unreviewed unrelated surface: ${surface.id}`);
-  const entry = newInventoryEntry(surface), technical = /Select-|LessonResult-|LessonReview-|LessonHistory-/.test(surface.identity);
-  const output = /^(LessonResult|LessonHistory)-/.test(surface.identity);
+  if (!actions.has(surface.identity) && !inputs.has(surface.identity) && !outputs.has(surface.identity)) throw Error(`Unreviewed lesson control fingerprint: ${surface.id}`);
+  const entry = newInventoryEntry(surface), technical = !actions.has(surface.identity), output = outputs.has(surface.identity);
   entry.category = technical ? output ? "INFRA_OUTPUT" : "INFRA_INPUT" : "PRODUCT_UI_ACTION";
   entry.categoryReason = technical ? output ? "Renders actual retained command results, incomplete prefixes and explicit Unknown" : "Chooses owned design/revision or authored read phase; reviewed numeric contract remains a technical input" : "Guided internal review, consent, history, explicit separate design creation and exact-retry interaction";
   entry.model1Meaning = "Internal lesson only; normal Model-1 behavior unchanged"; entry.model2Owner = "apps/backend/internalModel2/lessonExecution.ts";

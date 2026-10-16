@@ -5078,11 +5078,11 @@
       "identity": "option-507ce379458462c0af55",
       "description": "option: value=\"\"",
       "kind": "control",
-      "category": "PRODUCT_UI_ACTION",
-      "categoryReason": "Guided internal review, consent, history, explicit separate design creation and exact-retry interaction",
+      "category": "INFRA_INPUT",
+      "categoryReason": "Chooses owned design/revision or authored read phase; reviewed numeric contract remains a technical input",
       "ui": {
-        "status": "REVIEW_REQUIRED",
-        "behavior": "Await the complete real browser producer and semantic review",
+        "status": "NOT_APPLICABLE",
+        "behavior": "Technical software proof is limited to the internal lesson; general Model-2 shipping remains closed",
         "proofs": []
       },
       "resources": [
@@ -5093,8 +5093,8 @@
       "model2Owner": "apps/backend/internalModel2/lessonExecution.ts",
       "changesState": true,
       "effects": {
-        "physics": false,
-        "reachability": false,
+        "physics": true,
+        "reachability": true,
         "security": false,
         "cost": false,
         "evidence": true
@@ -5103,7 +5103,7 @@
         "Versioned educational profile, exact owned design revision, immutable reviewed image/policy and actual retained capture",
         "No physical/provider throughput, durability, latency, security or pricing claim; missing evidence Unknown"
       ],
-      "status": "NOT_APPLICABLE",
+      "status": "PARTIAL",
       "finalProductEligible": false,
       "plan": "Keep INTERNAL. Claude may replace presentation while preserving authenticated scoped APIs, review/retry identity, prefixes, Unknown and worker limits. General technical shipping requires separate approval and evidence."
     },
@@ -5113,11 +5113,11 @@
       "identity": "option-9629eeef61c351c5240c",
       "description": "option: value={d.id}",
       "kind": "control",
-      "category": "PRODUCT_UI_ACTION",
-      "categoryReason": "Guided internal review, consent, history, explicit separate design creation and exact-retry interaction",
+      "category": "INFRA_INPUT",
+      "categoryReason": "Chooses owned design/revision or authored read phase; reviewed numeric contract remains a technical input",
       "ui": {
-        "status": "REVIEW_REQUIRED",
-        "behavior": "Await the complete real browser producer and semantic review",
+        "status": "NOT_APPLICABLE",
+        "behavior": "Technical software proof is limited to the internal lesson; general Model-2 shipping remains closed",
         "proofs": []
       },
       "resources": [
@@ -5128,8 +5128,8 @@
       "model2Owner": "apps/backend/internalModel2/lessonExecution.ts",
       "changesState": true,
       "effects": {
-        "physics": false,
-        "reachability": false,
+        "physics": true,
+        "reachability": true,
         "security": false,
         "cost": false,
         "evidence": true
@@ -5138,7 +5138,7 @@
         "Versioned educational profile, exact owned design revision, immutable reviewed image/policy and actual retained capture",
         "No physical/provider throughput, durability, latency, security or pricing claim; missing evidence Unknown"
       ],
-      "status": "NOT_APPLICABLE",
+      "status": "PARTIAL",
       "finalProductEligible": false,
       "plan": "Keep INTERNAL. Claude may replace presentation while preserving authenticated scoped APIs, review/retry identity, prefixes, Unknown and worker limits. General technical shipping requires separate approval and evidence."
     },
@@ -5148,11 +5148,11 @@
       "identity": "option-97530eb60804ae492d80",
       "description": "option: value={key}",
       "kind": "control",
-      "category": "PRODUCT_UI_ACTION",
-      "categoryReason": "Guided internal review, consent, history, explicit separate design creation and exact-retry interaction",
+      "category": "INFRA_INPUT",
+      "categoryReason": "Chooses owned design/revision or authored read phase; reviewed numeric contract remains a technical input",
       "ui": {
-        "status": "REVIEW_REQUIRED",
-        "behavior": "Await the complete real browser producer and semantic review",
+        "status": "NOT_APPLICABLE",
+        "behavior": "Technical software proof is limited to the internal lesson; general Model-2 shipping remains closed",
         "proofs": []
       },
       "resources": [
@@ -5163,8 +5163,8 @@
       "model2Owner": "apps/backend/internalModel2/lessonExecution.ts",
       "changesState": true,
       "effects": {
-        "physics": false,
-        "reachability": false,
+        "physics": true,
+        "reachability": true,
         "security": false,
         "cost": false,
         "evidence": true
@@ -5173,7 +5173,7 @@
         "Versioned educational profile, exact owned design revision, immutable reviewed image/policy and actual retained capture",
         "No physical/provider throughput, durability, latency, security or pricing claim; missing evidence Unknown"
       ],
-      "status": "NOT_APPLICABLE",
+      "status": "PARTIAL",
       "finalProductEligible": false,
       "plan": "Keep INTERNAL. Claude may replace presentation while preserving authenticated scoped APIs, review/retry identity, prefixes, Unknown and worker limits. General technical shipping requires separate approval and evidence."
     },
