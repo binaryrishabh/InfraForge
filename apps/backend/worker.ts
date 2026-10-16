@@ -49,7 +49,11 @@ const ownership = await WorkerOwnership.acquire(databaseUrl, () => {
 });
 await retireInterruptedRuns();
 await retireInternalRuns(ownership);
-await reapLessonContainers();
+await reapLessonContainers().catch(() => {
+  // Lesson admission/execution still refuses an unavailable runner. A parked
+  // preview runner must not prevent the existing Model-1 worker from starting.
+  console.error("Lesson container cleanup unavailable; isolated lesson execution remains fail closed.");
+});
 await startRuntime(ownership);
 const model2Worker = internalWorker(ownership);
 await model2Worker.waitUntilReady();

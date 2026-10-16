@@ -75,6 +75,7 @@ export async function replayLesson(row: InternalRunRow) {
   return result;
 }
 export async function reapLessonContainers() {
+  if (!lessonImage()) return;
   const records = await internalDatabase.query('SELECT l."runId",l.policy,r.status FROM "InternalModel2LessonRun" l JOIN "InternalModel2Run" r ON r.id=l."runId"');
   if (!records.rowCount) return;
   const names = (await docker(["ps", "--all", "--filter", "label=infraforge.model2", "--format", "{{.Names}}"])).split("\n").filter(Boolean);

@@ -7,7 +7,8 @@ import { capture, instantiate } from "../internalModel2/capture";
 import type { StoredCapture } from "../internalModel2/capture";
 import { makeLessonPolicy, readLessonPolicy, lessonSubmission } from "../internalModel2/lessonPolicy";
 import { lessonSummary } from "../internalModel2/lessonSummary";
-import { replayStored } from "../internalModel2/report";
+import { internalReport, replayStored } from "../internalModel2/report";
+import { contentHash } from "../internalModel2/identity";
 import { lessonImage } from "../internalModel2/lessonLimits";
 import { createArguments, verifyContainer } from "../internalModel2/sandboxDocker";
 import type { InternalRunRow } from "../internalModel2/store";
@@ -27,6 +28,15 @@ for (const phase of ["before", "during", "after"] as const) test(`lesson ${phase
   expect(lessonSummary({ ...row, sequence: row.sequence - 1 }, policy, {}).kind).toBe("Unknown");
   expect(readLessonPolicy(policy, input.fingerprint)).toEqual(policy);
   expect(() => readLessonPolicy({ ...policy, phase: "after" === phase ? "before" : "after" }, input.fingerprint)).toThrow();
+  expect(lessonSummary(row, { ...policy, schema: "future-lesson/2" }, {}).kind).toBe("Unknown");
+  const historical = structuredClone(input); historical.source = "f".repeat(64);
+  const { fingerprint: _input, ...body } = historical; void _input; historical.fingerprint = contentHash(body);
+  const past = structuredClone(evidence!); past.source = historical.source; past.input = historical.fingerprint;
+  const { fingerprint: _evidence, ...facts } = past; void _evidence; past.fingerprint = contentHash(facts);
+  const historicalRow = { ...row, input: historical, inputHash: historical.fingerprint, evidence: past };
+  expect(internalReport(historicalRow).state).toEqual(past.model);
+  expect(internalReport(historicalRow).replay.compatible).toBe(false);
+  expect(() => replayStored(historicalRow)).toThrow("incompatible");
 });
 test("lesson submission and installed image are strict, with no user-supplied resource controls", () => {
   expect(lessonSubmission.safeParse({ schema: "object-restart/1", phase: "after", image: "arbitrary" }).success).toBe(false);

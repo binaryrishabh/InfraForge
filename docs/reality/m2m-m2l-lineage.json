@@ -144,7 +144,7 @@
     },
     {
       "file": "apps/backend/internalModel2/lessonExecution.ts",
-      "hash": "b97461a715591d8e5886034e45a5f9bceaa39c63133884b189a2147f9889de72"
+      "hash": "b2ce5f263c52ecfd9668b652da4ba8fda4b0875777b78a06cac9b16c305b03ec"
     },
     {
       "file": "apps/backend/internalModel2/lessonLimits.ts",
@@ -224,7 +224,7 @@
     },
     {
       "file": "apps/backend/worker.ts",
-      "hash": "e0fe77c948cee6f2c75ddd70154d064b451b36dc8d177f44bcd48c175cc98df3"
+      "hash": "104be42d5155f4343684768305dce89c56a6c3740c292b9f485c4791f0514350"
     },
     {
       "file": "apps/web/src/api/internalLesson.api.ts",

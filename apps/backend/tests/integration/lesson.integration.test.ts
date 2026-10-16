@@ -39,6 +39,13 @@ suite("controlled internal object restart lesson", () => {
       expect((await h.request(base + "/lesson/design", {}, "POST", 201)).id).toBe(id);
       const design = (await h.request(base + "/lesson")).workspace.designs.find((d: any) => d.id === id);
       const choice = (phase = "after") => ({ schema: "object-restart/1", infrastructureId: id, expectedDesignUpdatedAt: design.updatedAt, idempotencyKey: crypto.randomUUID(), phase });
+      const pinnedImage = process.env.MODEL2_LESSON_IMAGE!;
+      delete process.env.MODEL2_LESSON_IMAGE;
+      try {
+        await h.restartApi();
+        expect((await h.request(base + "/lesson")).workspace.configured).toBe(false);
+        await h.request(base + "/lesson/review", choice(), "POST", 409);
+      } finally { process.env.MODEL2_LESSON_IMAGE = pinnedImage; await h.restartApi(); }
       const create = async (phase = "after") => { const review = (await h.request(base + "/lesson/review", choice(phase), "POST")).lesson; return (await h.request(base + "/lesson/runs", { ...review.choice, reviewHash: review.reviewHash }, "POST", 202)).id as string; };
       const review = (await h.request(base + "/lesson/review", choice(), "POST")).lesson, submission = { ...review.choice, reviewHash: review.reviewHash };
       expect((await h.sql.query('SELECT count(*)::int AS n FROM "InternalModel2Run"')).rows[0].n).toBe(0);
@@ -54,6 +61,12 @@ suite("controlled internal object restart lesson", () => {
       expect((await h.request(base + "/lesson/runs", submission, "POST", 200)).id).toBe(admitted.id);
       await h.request(base + "/lesson/runs", { ...submission, phase: "during" }, "POST", 409);
       await h.request(`${base}/runs/${admitted.id}/cancel`, {}, "POST", 202);
+      await h.sql.query('UPDATE "InternalModel2Grant" SET scope=\'operator\' WHERE "userId"=$1', [alice.user.id]);
+      const advanced = await h.request(base + "/runs", { ...review.review.request, idempotencyKey: "advanced-owner-only", contract: { ...review.review.request.contract, version: "internal-authoring/1" } }, "POST", 202);
+      await h.request(`${base}/runs/${advanced.id}/cancel`, {}, "POST", 202);
+      await h.sql.query('UPDATE "InternalModel2Grant" SET scope=\'lesson\' WHERE "userId"=$1', [alice.user.id]);
+      for (const action of ["report", "input", "replay"]) await h.request(`${base}/runs/${advanced.id}/${action}`, undefined, "GET", 404);
+      expect((await h.request(base + "/runs")).runs.some((r: any) => r.id === advanced.id)).toBe(false);
       h.cookie = bob.cookie;
       await h.request(base + "/lesson/review", choice(), "POST", 404);
       for (const action of ["report", "input", "replay"]) await h.request(`${base}/runs/${admitted.id}/${action}`, undefined, "GET", 404);
@@ -102,6 +115,16 @@ suite("controlled internal object restart lesson", () => {
       }
       proof.cases.push("parent death retains committed prefix", "ownership loss prevents later commits", "running cancellation", "grant revocation stops execution", "capture persistence failure retains prefix");
       const complete = proof.runs[2].row;
+      await h.stop("worker"); delete process.env.MODEL2_LESSON_IMAGE;
+      try {
+        await h.restartApi();
+        expect((await h.request(base + "/lesson/runs", submission, "POST")).id).toBe(admitted.id);
+        expect((await h.request(`${base}/runs/${complete.id}/replay`)).replay).toMatchObject({ kind: "Unavailable" });
+        expect((await h.request(`${base}/runs/${complete.id}/report`)).report.lesson.kind).toBe("Observed");
+        await h.startWorker();
+        await until(async () => (await fetch("http://127.0.0.1:3002/health/ready", { signal: AbortSignal.timeout(1500) }).then((r) => r.ok).catch(() => false)) || undefined, "Model-1 worker starts with lesson runner parked");
+      } finally { await h.stop("worker"); process.env.MODEL2_LESSON_IMAGE = pinnedImage; await h.restartApi(); await h.startWorker(); }
+      proof.cases.push("missing runner refuses review and replay without inline fallback", "retry recovers original admission after runner configuration changes", "parked lesson runner preserves Model-1 worker startup", "scope downgrade hides advanced owned reports");
       await alterRecordedField(h, complete.id, "evidence", {}, async () => { const report = (await h.request(`${base}/runs/${complete.id}/report`)).report; expect(report.lesson.kind).toBe("Unknown"); expect(report.replay.compatible).toBe(false); });
       await alterRecordedField(h, complete.id, "evidence", complete.evidence, async () => {});
       proof.cases.push("corrupt evidence remains Unknown");

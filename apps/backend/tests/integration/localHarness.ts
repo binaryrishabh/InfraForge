@@ -179,6 +179,14 @@ export class LocalHarness {
     this.spawn(name, ["run", "worker.ts"]);
   }
 
+  async restartApi() {
+    await this.stop("api"); this.spawn("api", ["run", "index.ts"]);
+    await until(async () => {
+      try { return (await fetch(`http://localhost:${this.settings.apiPort}/health`, { signal: AbortSignal.timeout(1500) })).ok || undefined; }
+      catch { return undefined; }
+    }, "reconfigured disposable API health");
+  }
+
   async waitForExit(name: string) {
     const child = this.children.get(name);
     if (!child) throw new Error(`Unknown process ${name}`);
