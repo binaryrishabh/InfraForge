@@ -274,10 +274,15 @@ without weakening any gate. Vercel is a separate failing status and was not repa
 Final-publication validation exposed a separate test-parent exit-observation
 failure. Repeated CI diagnostics showed the owned worker in Linux state `Z`
 (already terminated, awaiting reaping), while the Bun subprocess promise and exit
-fields remained pending. The test harness now uses a spawn-time
-[child-process exit event](https://nodejs.org/api/child_process.html#event-exit),
-with explicit signal outcomes and the same five-second stop bound. Three real
-subprocess tests cover normal/nonzero exits and repeated SIGKILL/reaping. This
+fields remained pending. A spawn-time Node-compatible event adapter reproduced
+the same issue under pinned Bun. The test harness now observes the runtime callback
+and independently [collects a kernel wait status](https://man7.org/linux/man-pages/man2/waitpid.2.html)
+only for a confirmed Linux zombie whose parent is this test process. Nonblocking
+`waitpid` must return that exact PID; unknown/live/unrelated processes cannot count
+as exited. The same five-second stop bound remains. Four real subprocess tests
+cover normal/nonzero exits, repeated SIGKILL/reaping and a deliberately blocked
+parent callback with actual kernel collection. Process receipts state which exit
+observer supplied the result. This
 changes test process management only; retained simulator execution source, historical
 producer receipts, production worker and Model-1 behavior are unchanged. The
 failed attempts and bounded OS diagnostics are retained separately. Final CI also

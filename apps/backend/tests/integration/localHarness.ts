@@ -95,7 +95,7 @@ export class LocalHarness {
   private diagnostics = new Map<string, string>();
   private processRecords: Array<{ name: string; pid: number; startedAt: string; endedAt?: string; killedByHarness?: boolean;
     exitCodeBeforeStop?: number | null; signalCodeBeforeStop?: string | null;
-    exitCode?: number | null; signalCode?: string | null }> = [];
+    exitCode?: number | null; signalCode?: string | null; exitObservation?: string }> = [];
   private serviceChecks: Array<{ phase: string; timestamp: string; redisResponse: string }> = [];
   private readonly cwd = fileURLToPath(new URL("../../", import.meta.url));
 
@@ -125,7 +125,7 @@ export class LocalHarness {
     this.processRecords.push(record);
     void child.exited.then(() => {
       const completed = this.processRecords.findLast((item) => item.pid === child.pid);
-      if (completed) { completed.endedAt = new Date().toISOString(); completed.exitCode = child.exitCode; completed.signalCode = child.signalCode; }
+      if (completed) { completed.endedAt = new Date().toISOString(); completed.exitCode = child.exitCode; completed.signalCode = child.signalCode; completed.exitObservation = child.observation; }
     });
     for (const stream of [child.stdout, child.stderr]) {
       void (async () => {
@@ -214,7 +214,7 @@ export class LocalHarness {
         }, 5000);
       })]);
     } finally { clearTimeout(timer); }
-    if (record) { record.exitCode = child.exitCode; record.signalCode = child.signalCode; }
+    if (record) { record.exitCode = child.exitCode; record.signalCode = child.signalCode; record.exitObservation = child.observation; }
     this.children.delete(name);
   }
 
