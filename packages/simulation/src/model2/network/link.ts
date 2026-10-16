@@ -1,9 +1,13 @@
 import { requireKnown } from "../../reality/quantity";
 import type { EventKernel } from "../time";
 import type { LinkConfig, Trace } from "./contracts";
+import type { RuntimeUsageObserver, TransferContext } from "../../reality/metering/contracts";
+import { usageSource } from "../../reality/metering/port";
 
-interface Transfer { id: string; bytes: number; sent: number; queuedAt: number; state: "queued" | "serializing" | "propagating"; cancel?: () => boolean; done(result: "delivered" | "unreachable" | "overflow" | "aborted"): void }
-export function networkLink(config: LinkConfig, kernel: EventKernel, trace?: Trace) {
+interface Transfer { id: string; usageId: number; bytes: number; sent: number; queuedAt: number; state: "queued" | "serializing" | "propagating"; cancel?: () => boolean; done(result: "delivered" | "unreachable" | "overflow" | "aborted"): void }
+export function networkLink(config: LinkConfig, kernel: EventKernel, trace?: Trace, observer?: RuntimeUsageObserver) {
+  const usage = usageSource({ family: "link", resource: config.id, profile: "directed-payload/1", from: config.from, to: config.to }, kernel, observer);
+  let usageId = 0;
   const live = new Map<string, Transfer>(), queue = new Map<string, Transfer>();
   let current: Transfer | undefined, anchor = kernel.now, rate = requireKnown(config.bandwidth, "bytes/s") / 1000000;
   let partition = false, extraDelay = 0, boundary: (() => boolean) | undefined;
@@ -16,6 +20,7 @@ export function networkLink(config: LinkConfig, kernel: EventKernel, trace?: Tra
     if (current === t) { boundary?.(); current = undefined; }
     if (result === "delivered") delivered += t.bytes; else { failed += t.bytes; discarded += t.sent; }
     trace?.("link-terminal", t.id, `${config.id}:${result}:${t.bytes}bytes:offeredAt=${t.queuedAt}`);
+    usage?.({ kind: "transfer-end", transfer: t.usageId, outcome: result });
     t.done(result);
   };
   const schedule = () => {
@@ -39,13 +44,15 @@ export function networkLink(config: LinkConfig, kernel: EventKernel, trace?: Tra
     queueWait += kernel.now - current.queuedAt; anchor = kernel.now; schedule();
   };
   return {
-    transmit(id: string, bytes: number, done: Transfer["done"]) {
+    transmit(id: string, bytes: number, done: Transfer["done"], context?: TransferContext) {
       if (live.has(id) || !Number.isSafeInteger(bytes) || bytes < 0) throw new Error("Invalid/duplicate byte transfer");
       offered += bytes;
-      if (partition) { rejected += bytes; done("unreachable"); return () => false; }
+      const transfer = ++usageId;
+      if (partition) { rejected += bytes; usage?.({ kind: "transfer-start", transfer, id, bytes, accepted: false, context: context ? { ...context } : null }); usage?.({ kind: "transfer-end", transfer, outcome: "unreachable" }); done("unreachable"); return () => false; }
       const queuedBytes = [...queue.values()].reduce((sum, t) => sum + t.bytes, 0);
-      if (current && queuedBytes + bytes > requireKnown(config.bufferBytes, "bytes")) { rejected += bytes; done("overflow"); return () => false; }
-      accepted += bytes; const t: Transfer = { id, bytes, sent: 0, queuedAt: kernel.now, state: "queued", done }; live.set(id, t); queue.set(id, t);
+      if (current && queuedBytes + bytes > requireKnown(config.bufferBytes, "bytes")) { rejected += bytes; usage?.({ kind: "transfer-start", transfer, id, bytes, accepted: false, context: context ? { ...context } : null }); usage?.({ kind: "transfer-end", transfer, outcome: "overflow" }); done("overflow"); return () => false; }
+      accepted += bytes; const t: Transfer = { id, usageId: transfer, bytes, sent: 0, queuedAt: kernel.now, state: "queued", done }; live.set(id, t); queue.set(id, t);
+      usage?.({ kind: "transfer-start", transfer, id, bytes, accepted: true, context: context ? { ...context } : null });
       trace?.("link-admitted", id, `${config.id}:${config.from}->${config.to}:${bytes}bytes`);
       pump();
       return () => { if (!live.has(id)) return false; settle(); finish(t, "aborted"); pump(); return true; };

@@ -57,7 +57,10 @@
     "check:model2-reality-shipping": "bun --no-env-file scripts/reality/shipping-inventory.ts --ready",
     "check:provider": "bun --no-env-file scripts/reality/provider-proofs.ts",
     "debug:provider": "bun --no-env-file scripts/reality/provider-proofs.ts --write",
-    "perf:provider": "bun --no-env-file scripts/reality/provider-performance.ts"
+    "perf:provider": "bun --no-env-file scripts/reality/provider-performance.ts",
+    "check:metering": "bun --no-env-file scripts/reality/metering-proofs.ts",
+    "debug:metering": "bun --no-env-file scripts/reality/metering-proofs.ts --write",
+    "perf:metering": "bun --no-env-file scripts/reality/metering-performance.ts"
   },
   "devDependencies": {
     "turbo": "2.11.6",

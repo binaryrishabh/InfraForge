@@ -2,7 +2,8 @@ import { expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { validateProviderProofs } from "../reality/provider-proofs";
-import { providerArtifactBytes, providerRoot, providerSourceHash } from "../reality/provider-source";
+import { providerArtifactBytes, providerRoot } from "../reality/provider-source";
+import { historicalProviderHash } from "../reality/source-lineage";
 test("M2I saved-product evidence and positive/negative campaigns replay without artifact growth", () => {
   const v = validateProviderProofs();
 
@@ -21,7 +22,7 @@ test("M2I host measurements retain source identity and explicit physical Unknown
 
   expect(p.complete).toBe(true);
 
-  expect(p.sourceHash).toBe(providerSourceHash());
+  expect(p.sourceHash).toBe(historicalProviderHash());
 
   expect(p.billingRows).toBe(10000);
 

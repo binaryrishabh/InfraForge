@@ -12,6 +12,7 @@ import type { ResourceFactory } from "../compute/run";
 import type { EventKernel } from "../time";
 import type { Trace } from "./contracts";
 import type { Invocation, Receipt, RemoteOutcome } from "../workload/contracts";
+import type { RuntimeUsageObserver } from "../../reality/metering/contracts";
 
 export interface NetworkContext {
   setReady(id: string, ready: boolean, owner?: string): void;
@@ -25,6 +26,7 @@ export interface NetworkContext {
   backend(lb: string, backend: string): { health: boolean; draining: boolean; outstanding: number };
 }
 export interface NetworkExtension {
+  usage?: RuntimeUsageObserver;
   resource: ResourceFactory;
   install?(kernel: EventKernel, trace: Trace, context: NetworkContext): void;
   disconnected?(target: string, session: string): void;
@@ -58,7 +60,7 @@ export function createNetworkRuntime(authored: NetworkInput, extension?: Network
     const context: NetworkContext = { abortOwned: controls.abortOwned, setReady(id, ready, owner = "default") { if (!states.has(id)) throw Error("Unknown readiness target"); const gates = readiness.get(id) ?? new Map<string, boolean>(); gates.set(owner, ready); readiness.set(id, gates); applyState(id); }, setAvailable(id, alive) { if (!states.has(id)) throw Error("Unknown availability target"); availability.set(id, alive); applyState(id); }, drain(lb, backend, grace) { lbs.get(lb)!.drain(backend, grace); }, backend(lb, backend) { return lbs.get(lb)!.backend(backend); }, endpoint: (id) => ({ ...states.get(id)! }), observe: controls.observe, reachable: (id) => { const p = input.paths.find((p) => p.id === id); return !!p && [...p.request, ...p.response].every((l) => links.get(l)!.reachable()); } };
     for (const r of input.resources) if (r.kind !== "load-balancer" && !states.get(r.id)!.alive) controls.pause(r.id, true);
     extension?.install?.(kernel, trace.emit, context);
-    const links = new Map(input.links.map((l) => [l.id, networkLink(l, kernel, trace.emit)]));
+    const links = new Map(input.links.map((l) => [l.id, networkLink(l, kernel, trace.emit, extension?.usage)]));
     const paths = new Map<string, ReturnType<typeof pathTransport>>();
     context.retireOwner = (id) => { for (const r of input.resources) if (r.id === id || r.id.startsWith(id + "/")) context.setReady(r.id, false, "terminated"); for (const p of input.paths) if (p.source === id || p.source.startsWith(id + "/")) paths.get(JSON.stringify([p.source, p.target]))!.reset(); };
     const send = (source: string, target: string, work: Invocation, done: (outcome: RemoteOutcome) => void) => { const path = paths.get(JSON.stringify([source, target])); if (!path) throw Error("Missing explicit transport path"); return path.exchange(work, (result) => done(result.ok ? "completed" : "rejected")); };

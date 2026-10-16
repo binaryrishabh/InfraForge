@@ -3,10 +3,12 @@ import { resolve } from "node:path";
 import { compileProduct } from "../../packages/simulation/src/model2/product/compiler";
 import { validateLedger } from "../../packages/simulation/src/reality/ledger";
 import type { productProofs } from "./product-proofs";
-import { productHash, productRoot, productSourceHash } from "./product-source";
+import { productHash, productRoot } from "./product-source";
+import { historicalFoundationHash, verifyHistoricalArtifacts } from "./source-lineage";
 export function retainedProductProofs(root = productRoot) { return JSON.parse(readFileSync(resolve(root, "docs/reality/m2h-proofs.json"), "utf8")) as ReturnType<typeof productProofs>; }
 export function validateProductArtifacts(root = productRoot) {
-  const errors: string[] = [], proofs = retainedProductProofs(root), sourceHash = productSourceHash();
+  verifyHistoricalArtifacts(root);
+  const errors: string[] = [], proofs = retainedProductProofs(root), sourceHash = historicalFoundationHash(root);
   if (proofs.schema !== "infraforge-product-proofs/1" || !proofs.complete || proofs.sourceHash !== sourceHash || proofs.cases.length !== 6) errors.push("M2H proof schema/source/completeness drift");
   for (const c of proofs.cases) {
     errors.push(...validateLedger(c.compiled.input.ledger));

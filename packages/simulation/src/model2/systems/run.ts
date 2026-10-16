@@ -12,8 +12,10 @@ import { securityPlane } from "./security";
 import { eventRows, SYSTEM_LIMITS, SYSTEM_POLICY_LEDGER } from "./policy";
 import type { NetworkContext } from "../network/run";
 import type { EventKernel } from "../time";
+import type { RuntimeUsageObserver } from "../../reality/metering/contracts";
 const copy = <T>(v: T): T => JSON.parse(JSON.stringify(v));
 export interface SystemsExtension {
+  usage?: RuntimeUsageObserver;
   deferredClients: string[];
   crashes?: Array<{ target: string; at: number; restartAt: number }>;
   install(kernel: EventKernel, context: NetworkContext, controls: { artifacts(client: string, replica: string, done: (ok: boolean) => void): void; samples(backend: string, target: string): Array<{ measurementAt: number; arrivedAt: number; values: unknown }> }): void;
@@ -26,6 +28,7 @@ export function createSystemsModel2(authored: SystemsInput, extension?: SystemsE
   const commandResults: Array<{ id: string; at: number; outcome: string; reply: unknown }> = []; let commandOffered = 0, commandLive = 0, commandCompleted = 0, commandFailed = 0, commandOmitted = 0, retainedFields = 0;
   const resultFits = (value: unknown) => { const pending: unknown[] = [value]; let fields = 0; while (pending.length) { if (++fields + retainedFields > SYSTEM_LIMITS.inputFields) return false; const v = pending.pop(); if (v && typeof v === "object") for (const child of Object.values(v)) pending.push(child); } retainedFields += fields; return true; };
   const runtime = createAsyncRuntime(asyncAdapter(i), {
+    usage: extension?.usage,
     resource(id, kernel, send) {
       const r = i.resources.find((r) => r.id === id)!; if (!isSystem(r)) return;
       if (r.kind === "dns-authority") { const service = dnsAuthority(r, kernel); authorities.set(id, service); return service; }

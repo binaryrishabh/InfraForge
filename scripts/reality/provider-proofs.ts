@@ -5,6 +5,7 @@ import { billingCampaign, providerCampaign } from "../../packages/simulation/tes
 import { compileProviderProduct } from "../../packages/simulation/src/reality/provider/compile";
 import { createProviderModel2 } from "../../packages/simulation/src/reality/provider/run";
 import { productSourceHash } from "./product-source";
+import { historicalFoundationHash, historicalProviderHash, verifyHistoricalArtifacts } from "./source-lineage";
 import { providerArtifactBytes, providerRoot, providerSourceHash, providerDigest as digest } from "./provider-source";
 export function providerProofs() {
   const base = providerFixture();
@@ -138,7 +139,12 @@ export function validateProviderProofs() {
 
   const current = providerProofs();
 
-  if (digest(retained) !== digest(current)) throw Error("M2I retained facts/source/campaign/evidence drift; regenerate only after review");
+  verifyHistoricalArtifacts();
+  if (retained.sourceHash !== historicalProviderHash() || retained.foundationHash !== historicalFoundationHash()) throw Error("M2I accepted source lineage drift");
+  // Compare current runtime outcomes against the immutable accepted evidence. The two
+  // vintage source fields are checked separately; current source hashes stay current.
+  const semantic = (proof: typeof current) => { const { sourceHash, foundationHash, ...body } = proof; void sourceHash; void foundationHash; return body; };
+  if (digest(semantic(retained)) !== digest(semantic(current))) throw Error("M2I retained facts/campaign/evidence drift; historical results must not be reinterpreted");
 
   if (providerArtifactBytes() > 1048576) throw Error("M2I evidence exceeds one MiB review budget; remove duplication without deleting proof");
 

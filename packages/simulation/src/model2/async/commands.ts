@@ -3,8 +3,9 @@ import { cpuScheduler } from "../compute/scheduler";
 import type { EventKernel } from "../time";
 import type { Invocation, Receipt, RemoteOutcome } from "../workload/contracts";
 import type { CommandConfig } from "./contracts";
-interface Command { work: Invocation; done(outcome: RemoteOutcome): void; terminal: boolean; cpu: boolean; cancelTimeout?: () => boolean; cancelWait?: () => boolean }
-export function commandService(id: string, config: CommandConfig, kernel: EventKernel, apply: (work: Invocation) => { ok: boolean; reason?: string }) {
+import type { UsageEmitter } from "../../reality/metering/contracts";
+interface Command { work: Invocation; request: number; done(outcome: RemoteOutcome): void; terminal: boolean; cpu: boolean; cancelTimeout?: () => boolean; cancelWait?: () => boolean }
+export function commandService(id: string, config: CommandConfig, kernel: EventKernel, apply: (work: Invocation, request: number) => { ok: boolean; reason?: string }, usage?: UsageEmitter) {
   const cpu = cpuScheduler(id, requireKnown(config.execution.cores, "cores"), kernel), queue = new Map<string, Command>(), active = new Map<string, Command>();
   let paused = false, pumping = false, received = 0, admitted = 0, rejected = 0, completed = 0, failed = 0, cancelled = 0, area = 0, anchor = kernel.now;
   const reasons: Record<string, number> = {};
@@ -12,6 +13,7 @@ export function commandService(id: string, config: CommandConfig, kernel: EventK
   const finish = (c: Command, reply: { ok: boolean; reason?: string }, cancel = false) => {
     if (c.terminal) return; c.terminal = true; c.cancelTimeout?.(); c.cancelWait?.(); if (c.cpu) cpu.remove(c.work.callId); settle(); active.delete(c.work.callId); queue.delete(c.work.callId);
     if (cancel) cancelled++; else if (reply.ok) completed++; else failed++; if (reply.reason) reasons[reply.reason] = (reasons[reply.reason] ?? 0) + 1;
+    usage?.({ kind: "operation-end", request: c.request, outcome: cancel ? "cancelled" : reply.ok ? "completed" : "failed", reason: reply.reason ?? null });
     if (c.work.message) c.work.message.response = reply; c.done(cancel ? "cancelled" : reply.ok ? "completed" : "rejected"); pump();
   };
   const pump = () => {
@@ -19,14 +21,17 @@ export function commandService(id: string, config: CommandConfig, kernel: EventK
     while (queue.size && active.size < requireKnown(config.concurrency, "count")) {
       const c = queue.values().next().value!; queue.delete(c.work.callId); settle(); active.set(c.work.callId, c); const kind = (c.work.message?.request as { kind?: string } | undefined)?.kind, demand = kind && config.demands[kind];
       if (!demand) { finish(c, { ok: false, reason: "unsupported-command" }); continue; }
-      c.cpu = true; cpu.add({ id: c.work.callId, demand: requireKnown(demand.cpu, "cpu-us"), cap: 1, done() { c.cpu = false; c.cancelWait = kernel.schedule(kernel.now + requireKnown(demand.wait, "us"), 2, JSON.stringify(["async-command", id, c.work.callId]), () => finish(c, apply(c.work))); } });
+      c.cpu = true; cpu.add({ id: c.work.callId, demand: requireKnown(demand.cpu, "cpu-us"), cap: 1, done() { c.cpu = false; c.cancelWait = kernel.schedule(kernel.now + requireKnown(demand.wait, "us"), 2, JSON.stringify(["async-command", id, c.work.callId]), () => finish(c, apply(c.work, c.request))); } });
     }
     pumping = false;
   };
   return {
     accept(work: Invocation, done: Command["done"]): Receipt {
-      received++; if (paused || (active.size >= requireKnown(config.concurrency, "count") && queue.size >= requireKnown(config.pending, "count"))) { rejected++; if (work.message) work.message.response = { ok: false, reason: paused ? "service-unavailable" : "command-queue-full" }; done("rejected"); return { admitted: false, state: () => "finished", cancel: () => "already-finished" }; }
-      admitted++; const c: Command = { work, done, terminal: false, cpu: false }; queue.set(work.callId, c); c.cancelTimeout = kernel.schedule(kernel.now + requireKnown(config.timeout, "us"), 1, JSON.stringify(["async-command-timeout", id, work.callId]), () => finish(c, { ok: false, reason: "command-timeout" })); pump();
+      const request = ++received;
+      const kind = (work.message?.request as { kind?: unknown } | undefined)?.kind;
+      if (paused || (active.size >= requireKnown(config.concurrency, "count") && queue.size >= requireKnown(config.pending, "count"))) { rejected++; const reason = paused ? "service-unavailable" : "command-queue-full"; usage?.({ kind: "operation-start", request, admitted: false, command: typeof kind === "string" ? kind : null, callId: work.callId, rootId: work.rootId, attempt: work.attempt }); usage?.({ kind: "operation-end", request, outcome: "rejected", reason }); if (work.message) work.message.response = { ok: false, reason }; done("rejected"); return { admitted: false, state: () => "finished", cancel: () => "already-finished" }; }
+      admitted++; usage?.({ kind: "operation-start", request, admitted: true, command: typeof kind === "string" ? kind : null, callId: work.callId, rootId: work.rootId, attempt: work.attempt });
+      const c: Command = { work, request, done, terminal: false, cpu: false }; queue.set(work.callId, c); c.cancelTimeout = kernel.schedule(kernel.now + requireKnown(config.timeout, "us"), 1, JSON.stringify(["async-command-timeout", id, work.callId]), () => finish(c, { ok: false, reason: "command-timeout" })); pump();
       return { admitted: true, state: () => c.terminal ? "finished" : queue.has(work.callId) ? "queued" : "serving", cancel() { if (c.terminal) return "already-finished"; finish(c, { ok: false, reason: "cancelled" }, true); return "cancelled"; } };
     },
     pause(value: boolean) { paused = value; cpu.pause(value); if (value) for (const c of [...active.values(), ...queue.values()]) finish(c, { ok: false, reason: "service-unavailable" }); else pump(); },

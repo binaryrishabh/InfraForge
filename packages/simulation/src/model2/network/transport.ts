@@ -25,7 +25,8 @@ export function pathTransport(config: PathConfig, kernel: EventKernel, links: Ma
         if (!result.ok && delivered && config.pool.remoteCancellation === "request-cancellation") remote?.cancel();
         done(result);
       };
-      const sendBytes = (ids: string[], bytes: number, direction: string, end: () => void) => {
+      let endpoints = { origin: config.source, destination: config.target };
+      const sendBytes = (ids: string[], bytes: number, direction: "request" | "response", end: () => void) => {
         let hop = 0;
         const next = () => {
           if (terminal) return;
@@ -37,13 +38,13 @@ export function pathTransport(config: PathConfig, kernel: EventKernel, links: Ma
             if (outcome === "delivered") next();
             else if (outcome === "overflow") finish({ ok: false, reason: "link-overflow", ambiguous: delivered });
             // Partition silently discards modeled messages. Only the owning timeout detects it.
-          });
+          }, { path: config.id, direction, hop: index, origin: direction === "request" ? endpoints.origin : endpoints.destination, destination: direction === "request" ? endpoints.destination : endpoints.origin, callId: work.callId, rootId: work.rootId, attempt: work.attempt });
         }; next();
       };
       const totalBytes = (envelope: number, body = 0) => { const total = envelope + body; if (!Number.isSafeInteger(body) || body < 0 || !Number.isSafeInteger(total)) throw new Error("Invalid logical message body size"); return total; };
       cancelAcquire = pool.acquire(key, (acquired) => {
         if (terminal) { acquired.release(); return; }
-        lease = acquired; const route = acquired.route ?? config; targets.set(acquired.connection, route.target); state = "serving"; const readyAt = kernel.now; latency.connectionWaitUs += readyAt - start;
+        lease = acquired; const route = acquired.route ?? config; endpoints = { origin: config.source, destination: route.target }; targets.set(acquired.connection, route.target); state = "serving"; const readyAt = kernel.now; latency.connectionWaitUs += readyAt - start;
         trace("connection-acquired", key, acquired.connection, work.rootId, work.attempt);
         cancelTimeout = kernel.schedule(kernel.now + requireKnown(config.pool.responseTimeout, "us"), 1, JSON.stringify(["upstream-timeout", config.id, key]), () => finish({ ok: false, reason: "response-timeout", ambiguous: delivered }));
         const bytes = config.bytes[work.operation]!;

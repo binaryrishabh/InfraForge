@@ -236,3 +236,10 @@ Existing rejected M2D/M2E/M2F timing predictors and M2G timing Unknown are prese
 Other providers/services, complete storage/operation/transfer meters, price-change
 allocation, account discounts and invoice rounding need separate mechanisms/proofs.
 UI/UX redesign and Model-1 retirement remain separate future owner decisions.
+
+M2J now supplies actual current-object mutation/byte-time, object-service attempt
+and selected directed-payload evidence through the compiled product runtime. See
+[M2J scope and product-integration assessment](m2j-usage-evidence.md). These raw
+measurements do not complete provider storage/request/transfer billing semantics.
+M2I proof/performance artifacts retain their accepted source identities; M2J's
+strict source lineage plus current-runtime semantic replay preserves that history.

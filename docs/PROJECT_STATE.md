@@ -1,5 +1,11 @@
 # InfraForge project state
 
+Latest implemented internal checkpoint: **Reality Engine M2J — real usage evidence
+and metering**, over the independently accepted M2I/develop starting point
+`de787991e5ef4b5756d5dd5cd8598ce323538e68`. This is an implementation milestone,
+not independent acceptance or product activation. See [M2J mechanisms, evidence,
+limits and next integration milestone](reality/m2j-usage-evidence.md).
+
 Latest independently accepted internal engine milestone: **Reality Engine M2I** at
 `5b4771ac107e447aa08aac146b8ff15f019beac9` on `develop`.
 The exact-SHA [GitHub Actions run 38880286728](https://github.com/binaryrishabh/InfraForge/actions/runs/38880286728)
@@ -925,12 +931,62 @@ Improvement drafts are browser-history context, not durable unfinished tasks; a
 new attempt durably retains its hypothesis. Deleting its source removes the ability
 to compare with that source but preserves the child's own evidence/hypothesis.
 
-Next engine work: deepen M2I's explicit usage evidence and provider adapters before
-claiming broader price coverage or full costs. Storage mutation boundaries,
-request/transfer charge semantics, account/time aggregation, capability/availability
-evidence and price-change handling need separate bounded proofs. Deepen
-memory/storage/durability and recovery where required; keep physical demand Unknown
-until identified. Partitioned-log semantics remain a separate future resource.
-Deepen existing resources before expansion or Free Mode/challenge migration. Real
-availability, latency, request success, cache warm-up, data recovery and statistical
-conclusions remain outside Model 1. Hosted production remains parked.
+Next engine/product work: M2K should connect one bounded internal saved-design run
+to Model 2 through versioned captured inputs, worker ownership/interruption,
+retained evidence and an Observed/Interpreted/Unknown report. M2J closes selected
+usage mechanisms; the active worker still calls Model 1. Further isolated pricing
+or resource breadth is lower value than proving this complete product path.
+Provider request/transfer charge semantics, account aggregation, price-period
+splitting, physical demand/durability and other unsupported claims stay Unknown.
+Integration does not authorize broad activation, reinterpret published attempts,
+weaken either gate or begin the separate Claude-led visual redesign. Model 1
+remains ACTIVE, Model 2 INTERNAL and production PARKED until a verified migration.
+
+## Reality Engine M2J
+
+M2J attaches optional event ports to actual current-object commits, object-service
+attempts and selected directed-link transfers inside the compiled product runtime.
+Create/overwrite/delete evidence records actual generations and before/after bytes.
+Exact BigInt occupancy integrates each transition; failed/cancelled operations do
+not invent storage. Service receipt/admission/terminal populations remain distinct
+from client response success. Transfer evidence retains path/direction/endpoints,
+hop and attempt identity, admitted/rejected/delivered/failed/live payload.
+
+Run/input/epoch and producer sequence cuts support exact cumulative-to-interval
+usage and adjacent recombination. Identical evidence delivery deduplicates without
+deduplicating real attempts. Missing final records, gaps, conflicting identities,
+resets, interrupted execution, overlap and exhausted record/field/text budgets
+remain Unknown. Actual object state and operation/link counters reconcile at
+capture. Two stores and a shared link retain independent ownership. No new provider
+tariff was added: modeled current bytes and payload are insufficient to claim S3
+versioning/storage-class/request or Internet-egress billing. Existing M2I exact
+money, location/dimension/currency/source/validity protections remain intact;
+the selected compute subtotal is separate and the full bill stays Unknown.
+
+Five retained product scenarios / 165 cuts / 254 source events cover normal work,
+capacity rejection, lost response after commit, process retention/recovery and
+collector overflow. Each execution matches the unmetered model/provider results.
+The 22 focused tests include 512 actual eight-command schedules against an
+independent storage/byte-time oracle, exact large-integer arithmetic, same-time
+commits, cancellation, interrupted real execution and replay/negative conservation
+checks. [Proofs](reality/m2j-proofs.json), [source lineage](reality/m2j-source-lineage.json)
+and [current host measurements](reality/m2j-performance.json) share a one-MiB budget.
+The normal frame has 66 records / 27,930 serialized bytes; overflow stays bounded
+and incomplete. Host measurements are execution overhead, not physical calibration.
+
+Runtime source changed, so M2H/M2I historical artifacts retain their original source
+identities and bytes. Strict bounded source projection reconstructs both accepted
+fingerprints and refuses unreviewed edits; current M2J proof separately fingerprints
+the actual new implementation, lineage verifier, manifest, fixtures and tools.
+Historical compilation and semantic outcomes still replay exactly. Old performance
+results are never relabeled as measurements of new source. This provenance data is
+not another executable engine. Model-1 goldens, ten challenge hashes and history,
+normal dispatch, schemas, UI and deployment configuration are unchanged.
+
+Use `bun run check:metering` for reconstruction and the tooling suite for retained
+source/performance/budget checks. Full validation, exact-SHA publication/CI,
+integration/packaging and independent Vercel status are recorded in the completion
+report outside Git. Readiness remains 441 surfaces, 177 technical blockers and 252
+UI behavior reviews. The proposed next milestone is the internal product vertical
+slice above; eventual safe Model-1 retirement and the Claude Opus 5.5 visual redesign
+remain separate owner directions.
