@@ -25,15 +25,16 @@ export function InternalReport({ id, blocked }: { id: string; blocked: () => voi
   }, [id, version, blocked]);
   const act = async (kind: "cancel" | "replay") => {
     if (action.current) return; action.current = true; setBusy(true);
-    try { if (kind === "cancel") { await api.cancelInternal(id, control.current.signal); setVersion((v) => v + 1); } else { const value = await api.replayInternal(id, control.current.signal); if (!control.current.signal.aborted) setReplay(value); } }
-    catch (e) { if (!control.current.signal.aborted) { const detail = api.internalError(e); setError(detail.message); if (detail.denied) { setReport(null); blocked(); } } }
-    finally { action.current = false; if (!control.current.signal.aborted) setBusy(false); }
+    const signal = control.current.signal;
+    try { if (kind === "cancel") { await api.cancelInternal(id, signal); if (!signal.aborted) setVersion((v) => v + 1); } else { const value = await api.replayInternal(id, signal); if (!signal.aborted) setReplay(value); } }
+    catch (e) { if (!signal.aborted) { const detail = api.internalError(e); setError(detail.message); if (detail.denied) { setReport(null); blocked(); } } }
+    finally { action.current = false; if (!signal.aborted) setBusy(false); }
   };
   return <section ref={region} tabIndex={-1} aria-label="Durable Model-2 report" className="mt-10 space-y-5 border-t border-line pt-6 outline-none">
     <h2 className="text-2xl font-semibold">Last durable result</h2><p className="break-all text-sm text-ink-3">Run {id}</p>
     {error && <Notice tone="fail" role="alert">{error}</Notice>}
     {!report && !error && <Loading label="Reading retained evidence…" />}
-    <Button size="sm" onClick={() => { setStopped(false); setVersion((v) => v + 1); }}>Refresh durable report</Button>
+    <Button size="sm" disabled={busy} onClick={() => { setStopped(false); setVersion((v) => v + 1); }}>Refresh durable report</Button>
     {stopped && <p role="status">Automatic refresh stopped after 60 reads. Refresh manually to read the latest committed state.</p>}
     {report && <>
       <p role="status" className="font-semibold">Status: {report.status} · capture {report.sequence} · through {report.throughUs} us</p>

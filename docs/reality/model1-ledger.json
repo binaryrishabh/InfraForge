@@ -1272,7 +1272,7 @@
     },
     {
       "file": "apps/web/src/features/internalModel2/InternalReport.tsx",
-      "sha256": "b9d2e9ef3a33019c1498e409bc5e605e05c965a158047cf052ff73b4e3570e8f",
+      "sha256": "a6395d5050973187295bd27fe4910338d4da9fecb80069194fc195b01f37597c",
       "numericSites": 8
     },
     {
@@ -58748,7 +58748,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/web/src/features/internalModel2/InternalReport.tsx#L28",
+          "source": "workspace:apps/web/src/features/internalModel2/InternalReport.tsx#L29",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -58762,8 +58762,8 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/features/internalModel2/InternalReport.tsx",
-        "line": 28,
-        "column": 112
+        "line": 29,
+        "column": 117
       }
     },
     {
@@ -58779,12 +58779,12 @@
           "m1.apps.web.src.features.internalModel2.InternalReport.6"
         ]
       },
-      "formula": "return <section ref={region} tabIndex={-1} aria-label=\"Durable Model-2 report\" className=\"mt-10 space-y-5 border-t border-line pt-6 outline-none\"> <h2 className=\"text-2xl font-semibold\">Last durable result</h2><p className=\"break-all text-sm text-ink-3\">Run {id}</p> {error && <Notice tone=\"fail\" role=\"alert\">{error}</Notice>} {!report && !error && <Loading label=\"Reading retained evidence…\" />} <Button size=\"sm\" onClick={() => { setStopped(false); setVersion((v) => v + 1); }}>Refresh durable rep",
+      "formula": "return <section ref={region} tabIndex={-1} aria-label=\"Durable Model-2 report\" className=\"mt-10 space-y-5 border-t border-line pt-6 outline-none\"> <h2 className=\"text-2xl font-semibold\">Last durable result</h2><p className=\"break-all text-sm text-ink-3\">Run {id}</p> {error && <Notice tone=\"fail\" role=\"alert\">{error}</Notice>} {!report && !error && <Loading label=\"Reading retained evidence…\" />} <Button size=\"sm\" disabled={busy} onClick={() => { setStopped(false); setVersion((v) => v + 1); }}>Ref",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/web/src/features/internalModel2/InternalReport.tsx#L32",
+          "source": "workspace:apps/web/src/features/internalModel2/InternalReport.tsx#L33",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -58798,7 +58798,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/features/internalModel2/InternalReport.tsx",
-        "line": 32,
+        "line": 33,
         "column": 43
       }
     },
@@ -58820,7 +58820,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/web/src/features/internalModel2/InternalReport.tsx#L36",
+          "source": "workspace:apps/web/src/features/internalModel2/InternalReport.tsx#L37",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -58834,8 +58834,8 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/features/internalModel2/InternalReport.tsx",
-        "line": 36,
-        "column": 81
+        "line": 37,
+        "column": 97
       }
     },
     {
@@ -58851,12 +58851,12 @@
           "m1.apps.web.src.features.internalModel2.InternalReport.8"
         ]
       },
-      "formula": "return <section ref={region} tabIndex={-1} aria-label=\"Durable Model-2 report\" className=\"mt-10 space-y-5 border-t border-line pt-6 outline-none\"> <h2 className=\"text-2xl font-semibold\">Last durable result</h2><p className=\"break-all text-sm text-ink-3\">Run {id}</p> {error && <Notice tone=\"fail\" role=\"alert\">{error}</Notice>} {!report && !error && <Loading label=\"Reading retained evidence…\" />} <Button size=\"sm\" onClick={() => { setStopped(false); setVersion((v) => v + 1); }}>Refresh durable rep",
+      "formula": "return <section ref={region} tabIndex={-1} aria-label=\"Durable Model-2 report\" className=\"mt-10 space-y-5 border-t border-line pt-6 outline-none\"> <h2 className=\"text-2xl font-semibold\">Last durable result</h2><p className=\"break-all text-sm text-ink-3\">Run {id}</p> {error && <Notice tone=\"fail\" role=\"alert\">{error}</Notice>} {!report && !error && <Loading label=\"Reading retained evidence…\" />} <Button size=\"sm\" disabled={busy} onClick={() => { setStopped(false); setVersion((v) => v + 1); }}>Ref",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/web/src/features/internalModel2/InternalReport.tsx#L41",
+          "source": "workspace:apps/web/src/features/internalModel2/InternalReport.tsx#L42",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -58870,7 +58870,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/features/internalModel2/InternalReport.tsx",
-        "line": 41,
+        "line": 42,
         "column": 33
       }
     },
