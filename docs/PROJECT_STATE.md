@@ -1,22 +1,66 @@
 # InfraForge project state
 
-M2L implemented and technically verified; pending independent Lead acceptance.
-The current-style `/internal/model2` workspace connects guided authored fields,
-read-only server compilation, saved revision/value review, exact M2K retry,
-bounded observation and durable report/replay/cancel. Implementation/proof producer
-`466f5d77ba554415f6936e47e7d45cd2d40dd4fe` passed all ten
-[CI jobs, including full integration and packaging/release rehearsal](https://github.com/binaryrishabh/InfraForge/actions/runs/38932531599).
-Actual Chromium 156 completed 22 cases against disposable PostgreSQL/Redis and the
-real API/worker; retained inputs, reports and complete/interrupted/cancelled replays
-independently reconstruct. See [proof provenance](reality/m2l-browser-proof.md) and
-[functional contracts / Claude redesign handoff](reality/m2l-workspace-handoff.md).
-The operator grant, owner checks, M2K compiler/worker/schema and all Model-1 behavior
-remain unchanged. All 441 accepted inventory entries are unchanged. The 33 additions
-are 10 browser-proven UI actions and 23 PARTIAL technical surfaces: 474 total,
-200 technical blockers, 21 valid UI surfaces and 252 original UI reviews outstanding.
-Both general shipping gates stay closed. Model 1 ACTIVE; Model 2 INTERNAL;
-production PARKED. Vercel failed separately and was not repaired. Issue #3 remains
-open for independent Lead review; this implementation does not claim acceptance.
+Latest independently ACCEPTED internal product milestone: **M2L — functional
+Model-2 authoring, validation, reviewed admission and durable report/replay UI**,
+implemented and published at `9cad270c9df33b0324451f735614a468cc532232`
+on `develop`. Independent Lead review checked the exact-SHA
+[CI run 38934325286](https://github.com/binaryrishabh/InfraForge/actions/runs/38934325286):
+**10/10 successful jobs**, 488 workspace, 64 tooling, 73 challenge and 19
+integration tests, 22 actual Chromium browser cases, packaging and full
+release rehearsal. The integration log independently re-verifies fresh M2L
+browser evidence and M2K worker evidence for that exact SHA; retained earlier
+M2L proof remains pinned to its original producer `466f5d77...` and is never
+relabeled as final-commit source. CI artifacts include
+`internal-model2-browser-proof` (ID `12060786352`) and
+`internal-model2-product-proof` (ID `12060806253`). All 30 Model-1
+goldens and ten immutable challenge hashes remain protected.
+
+The operator-granted, authenticated INTERNAL `/internal/model2` React journey
+now supports owned saved-design choice and honest scope refusals; authoring
+explicit values, provenance and units; read-only authoritative server
+validation; exact saved revision and complete-contract review with consent;
+idempotent M2K admission including uncertain-response same-key retry after
+refresh; bounded report reads, safe cancellation, durable Observed/Interpreted/
+Unknown report and deterministic prefix replay. It reuses the existing
+React/Tailwind design and separates visual components from server semantics
+for Claude's comprehensive future UI/UX redesign. The user-visible internal
+educational example requires an explicit action and approval; it does not
+replace missing physical/provider evidence.
+
+Independent shipping inventory comparison verified the original **441/441
+entries unchanged**. M2L added 33 surfaces: 10 proven UI actions and 23 PARTIAL
+technical surfaces. Baseline is now **474 total, 200 technical blockers,
+252 outstanding existing UI behavior reviews, 21 valid UI surfaces**.
+Both general shipping gates remain CLOSED. Model 1 **ACTIVE**, Model 2
+**INTERNAL**, production **PARKED**. No main/production change; Vercel
+**FAILED separately** and remains unrepaired. Local cleanliness and
+local/remote agreement are executor-reported; GitHub confirms exact remote
+develop HEAD at the implementation commit. The local Windows completion report
+was not directly available in this review; acceptance relied on repository
+code, checks, exact-SHA CI logs and retained/browser proof verification.
+
+Important limits: the guided product still only supports one standalone VM,
+one atomic-current-object store, one explicitly directed dependency and
+bounded authored commands/process fault; all saved legacy provider/region,
+autoscaling and security controls are refused. Physical/cloud throughput,
+durability, actual cloud price and broad user readiness are Unknown.
+Interrupted runs preserve the last committed prefix rather than auto-resume.
+The current authored field form is functionally verified, not the intended
+final visual design. Claude Opus 5.5 owns independent comprehensive UI/UX
+research and redesign when available; functionality, truth/security,
+accessibility, exact retry identities and historical evidence are mandatory
+handoff contracts. See [M2L redesign handoff](reality/m2l-workspace-handoff.md)
+and [M2L retained browser proof](reality/m2l-browser-proof.md).
+GitHub [issue #3](https://github.com/binaryrishabh/InfraForge/issues/3)
+tracks accepted M2L implementation. The learning/onboarding backlog remains
+queued in [issue #2](https://github.com/binaryrishabh/InfraForge/issues/2).
+
+**Next Lead direction:** progress to the next bounded, evidence-led
+Model-2 product activation/readiness decision, not another detached engine
+experiment and not general activation by default. Codex may continue
+functional integration/readiness and safety work with the current UI; Claude
+may redesign all visible UI/UX at a clean seam when available, without
+fabricating technical outputs or weakening current shipping gates.
 
 **Active execution direction (owner, 2026-10-16): do not pause frontend work
 for Claude.** Codex (MODEL GPT-6.1 Sol, REASONING Extra High) may implement
