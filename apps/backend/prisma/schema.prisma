@@ -18,6 +18,7 @@ model Infrastructure {
   challengeId           String?
   challengeVersion      Int?
   deployments           Deployment[] // One infrastructure has many deployments
+  internalModel2Runs    InternalModel2Run[]
   createdAt             DateTime                    @default(now())
   updatedAt             DateTime                    @updatedAt
   @@index([ownerId])
@@ -131,6 +132,8 @@ model User {
   accounts      Account[]
   designs       Infrastructure[]
   deployments   Deployment[]
+  internalModel2Grant InternalModel2Grant?
+  internalModel2Runs InternalModel2Run[]
 }
 
 model Session {
@@ -173,4 +176,34 @@ model Verification {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
   @@index([identifier])
+}
+
+model InternalModel2Grant {
+  userId String @id
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reason String @db.VarChar(400)
+  grantedAt DateTime @default(now()) @db.Timestamptz(3)
+}
+
+model InternalModel2Run {
+  id String @id
+  ownerId String
+  owner User @relation(fields: [ownerId], references: [id], onDelete: Restrict)
+  infrastructureId String?
+  infrastructure Infrastructure? @relation(fields: [infrastructureId], references: [id], onDelete: SetNull)
+  idempotencyKey String @db.VarChar(80)
+  requestHash String @db.VarChar(64)
+  input Json
+  inputHash String @db.VarChar(64)
+  status String @default("queued")
+  token String?
+  sequence Int @default(0)
+  throughUs Int @default(0)
+  evidence Json?
+  cancelRequested Boolean @default(false)
+  reason String? @db.VarChar(500)
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @default(now()) @db.Timestamptz(3)
+  @@unique([ownerId, idempotencyKey])
+  @@index([status, createdAt])
 }

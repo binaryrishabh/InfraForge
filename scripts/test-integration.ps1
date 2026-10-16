@@ -2,6 +2,7 @@ param(
     [switch]$SafetyGuardsOnly,
     [switch]$AuthOnly,
     [switch]$LearningOnly,
+    [switch]$Model2Only,
     [ValidatePattern('^[a-f0-9]{32}$')][string]$CleanupRun,
     [ValidatePattern('^[a-z0-9][a-z0-9._/-]*:[a-z0-9._-]+$')][string]$RuntimeImage
 )
@@ -153,7 +154,7 @@ try {
         $pgPort = Invoke-Docker @('inspect', $names.postgres, '--format', '{{(index (index .NetworkSettings.Ports "5432/tcp") 0).HostPort}}')
         $redisPort = if ($RuntimeImage) { '56379' } else { Invoke-Docker @('inspect', $names.redis, '--format', '{{(index (index .NetworkSettings.Ports "6379/tcp") 0).HostPort}}') }
         $start = [Diagnostics.ProcessStartInfo]::new($(if ($RuntimeImage) { $dockerExe } else { (Get-Command bun -ErrorAction Stop).Source }))
-        $start.WorkingDirectory = if ($SafetyGuardsOnly -or $AuthOnly) { Join-Path $repoRoot 'apps/backend' } else { $repoRoot }
+        $start.WorkingDirectory = if ($SafetyGuardsOnly -or $AuthOnly -or $LearningOnly -or $Model2Only) { Join-Path $repoRoot 'apps/backend' } else { $repoRoot }
         $start.UseShellExecute = $false
         $start.CreateNoWindow = $true
         $start.WindowStyle = 'Hidden'
@@ -167,6 +168,7 @@ try {
         $start.Environment['INTEGRATION_RUN'] = '1'
         if ($AuthOnly) { $start.Environment['INTEGRATION_AUTH_ONLY'] = '1' }
         if ($LearningOnly) { $start.Environment['INTEGRATION_LEARNING_ONLY'] = '1' }
+        if ($Model2Only) { $start.Environment['INTEGRATION_MODEL2_ONLY'] = '1' }
         $start.Environment['INTEGRATION_DISPOSABLE'] = 'local-only'
         $start.Environment['INTEGRATION_DATABASE_URL'] = "postgresql://postgres@127.0.0.1:$pgPort/infraforge_it_$run"
         $start.Environment['INTEGRATION_REDIS_PORT'] = $redisPort
@@ -175,7 +177,7 @@ try {
         $start.Environment['DOTENV_CONFIG_PATH'] = Join-Path $evidenceDir 'absent.env'
         $start.Environment['DOTENV_CONFIG_OVERRIDE'] = 'false'
         $start.Environment['DO_NOT_TRACK'] = '1'
-        $arguments = if ($SafetyGuardsOnly) { @('test', 'tests/integration/localHarness.test.ts') } elseif ($AuthOnly -or $LearningOnly) { @('test', 'tests/integration/deployment.integration.test.ts') } else { @('run', 'test:integration') }
+        $arguments = if ($SafetyGuardsOnly) { @('test', 'tests/integration/localHarness.test.ts') } elseif ($AuthOnly -or $LearningOnly -or $Model2Only) { @('test', 'tests/integration/deployment.integration.test.ts') } else { @('run', 'test:integration') }
         if ($RuntimeImage) {
             Invoke-Docker (@('run', '-d', '--pull=never') + $labelArgs + @('--network', "container:$($names.postgres)",
                 '--name', $names.runtime, $image.Id, 'sleep', 'infinity')) | Out-Null
@@ -188,8 +190,9 @@ try {
             $arguments = @('--host', $endpoint, 'exec', '--workdir', '/app/apps/backend')
             if ($AuthOnly) { $environment += 'INTEGRATION_AUTH_ONLY=1' }
             if ($LearningOnly) { $environment += 'INTEGRATION_LEARNING_ONLY=1' }
+            if ($Model2Only) { $environment += 'INTEGRATION_MODEL2_ONLY=1' }
             foreach ($setting in $environment) { $arguments += @('--env', $setting) }
-            $arguments += @($names.runtime, 'bun', '--no-env-file', '--no-install', 'test', $(if ($SafetyGuardsOnly) { 'tests/integration/localHarness.test.ts' } elseif ($AuthOnly -or $LearningOnly) { 'tests/integration/deployment.integration.test.ts' } else { 'tests/integration' }))
+            $arguments += @($names.runtime, 'bun', '--no-env-file', '--no-install', 'test', $(if ($SafetyGuardsOnly) { 'tests/integration/localHarness.test.ts' } elseif ($AuthOnly -or $LearningOnly -or $Model2Only) { 'tests/integration/deployment.integration.test.ts' } else { 'tests/integration' }))
         } else { $arguments = @('--no-env-file', '--no-install') + $arguments }
         foreach ($argument in $arguments) { $start.ArgumentList.Add($argument) }
         $record.result = 'testing'

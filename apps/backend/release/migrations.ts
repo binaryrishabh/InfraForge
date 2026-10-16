@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { readdir, readFile } from "node:fs/promises";
 import type { Client, Pool } from "pg";
 import { checkCredentialSchema } from "./credentialSchema";
+import { checkInternalModel2Schema } from "./model2Schema";
 
 type Database = Pick<Client | Pool, "query">;
 export type Migration = { name: string; checksum: string; checksums: string[] };
@@ -10,7 +11,7 @@ const hash = (value: string) => createHash("sha256").update(value).digest("hex")
 const ADDITIVE_MIGRATIONS = new Set(["20261009000000_capture_run_inputs", "20261009010000_add_authentication",
   "20261013000000_reliable_run_evidence", "20261013010000_honest_reruns", "20261014000000_challenge_attempts",
   "20261015000000_challenge_versions_experiments", "20261016000000_experiment_evidence",
-  "20261017000000_credential_usernames", "20261018000000_challenge_learning"]);
+  "20261017000000_credential_usernames", "20261018000000_challenge_learning", "20261019000000_internal_model2"]);
 
 export async function migrationManifest(): Promise<Migration[]> {
   const directory = new URL("../prisma/migrations/", import.meta.url);
@@ -53,7 +54,7 @@ export async function checkHistory(db: Database, complete = true) {
   return { manifest, count, fingerprint: migrationFingerprint(manifest) };
 }
 
-export async function checkSchemaGuards(db: Database) {
+export async function checkModel1SchemaGuards(db: Database) {
   // Prisma's schema diff cannot check SQL triggers. Check them separately.
   const result = await db.query(`SELECT tgname, tgtype, pg_get_triggerdef(t.oid) AS definition, p.proname, p.prosrc
     FROM pg_trigger t JOIN pg_proc p ON p.oid = t.tgfoid JOIN pg_namespace n ON n.oid = p.pronamespace
@@ -101,7 +102,14 @@ export async function checkSchemaGuards(db: Database) {
   await checkCredentialSchema(db);
 }
 
+export async function checkSchemaGuards(db: Database) {
+  await checkModel1SchemaGuards(db);
+  await checkInternalModel2Schema(db);
+}
+
 export async function assertReleaseIdle(db: Database) {
+  const internal = await db.query("SELECT to_regclass('public.\"InternalModel2Run\"') IS NOT NULL AS present");
+  if (internal.rows[0].present && (await db.query('SELECT 1 FROM "InternalModel2Run" WHERE status IN (\'queued\',\'running\') LIMIT 1')).rowCount) throw Error("Active internal Model-2 runs must finish or be cancelled before release");
   const tables = await db.query("SELECT to_regclass('public.\"Deployment\"') IS NOT NULL AS present");
   if (tables.rows[0].present) {
     // The JSON lookup also works before the additive runtimeActive column exists.

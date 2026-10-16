@@ -1,5 +1,18 @@
 # InfraForge project state
 
+Latest implemented product checkpoint: **M2K — INTERNAL product-to-Model-2
+execution**. The gated path captures an owned saved design and complete authored
+contracts, commits a versioned immutable input and queue intent, executes within
+the existing worker's ownership boundary, and retains a bounded read-only
+Observed/Interpreted/Unknown report. Its initial scope is one VM CPU station plus
+one current-object store; Free Mode and challenge dispatch stay on Model 1. See
+[M2K supported/refused features, research and limits](reality/m2k-product-integration.md).
+Independent acceptance, exact-SHA database/worker proof and final release results
+are separate from implementation; the completion report retains that evidence.
+Local M2K validation passed 482 workspace, 64 tooling and 73 challenge tests,
+typecheck, lint/boundaries, build and audit. Disposable CI's exact-SHA product
+proof and packaging/release rehearsal are required before completion is claimed.
+
 Latest independently accepted internal engine milestone: **Reality Engine M2J —
 real usage evidence and metering** at `094841dc031e2f68f18798f58e8b7eaa9f909d89`
 on `develop`. Exact-SHA GitHub Actions [38895281509](https://github.com/binaryrishabh/InfraForge/actions/runs/38895281509)
@@ -20,16 +33,16 @@ simulation/provider outcomes were compared for equality. Source hashes and
 historical M2H/M2I artifacts retain their original identities; this is
 provenance compatibility, not a revived historical engine.
 
-Not supported: durable backend/worker usage persistence and crash recovery,
+At the accepted M2J boundary, unsupported: durable backend/worker usage persistence and crash recovery,
 live normal product Model-2 dispatch, S3/versioning/error-class storage or
 request billing, provider network-egress charge classification, complete cloud
 bill, physical calibration, universal UI readiness. No provider tariff was
 added. **Model 1 ACTIVE; Model 2 INTERNAL; production PARKED.** The 441
 surfaces still have 177 technical blockers and 252 UI behavior reviews. Next
-M2K is a strictly INTERNAL saved-design -> immutable versioned run-input ->
+M2K implements the narrow INTERNAL saved-design -> immutable versioned run-input ->
 worker -> retained evidence -> read-only Observed/Interpreted/Unknown report
-vertical slice with explicit owner authorization and replay/interruption
-proofs. Do not activate general Free Mode/challenge Model-2 or retire Model 1;
+path described above. It supports safe interruption and read-only prefix replay;
+it does not resume crashed executions. Do not activate general Free Mode/challenge Model-2 or retire Model 1;
 Claude owns the later visual redesign. See
 [M2J research/evidence/limits](reality/m2j-usage-evidence.md).
 

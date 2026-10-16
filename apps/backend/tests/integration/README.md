@@ -1,5 +1,14 @@
 # Local integration baseline
 
+`pwsh ./scripts/test-integration.ps1 -Model2Only` selects the real INTERNAL
+saved-design → admission → worker → durable evidence → read-only report path,
+including process/ownership loss, transaction rollback, cancellation, revocation
+and two granted users' isolation. It uses the same owned disposable services and
+cleanup. The full suite also proves additive migration 18 over schema 17 and runs
+all existing Model-1/challenge tests. No test-only application endpoint is enabled.
+CI retains `internal-model2-product-proof` as a bounded, independently reviewable
+artifact. `-Model2Only` may be combined with `-RuntimeImage` as below.
+
 ## Managed local fixtures
 
 From the repository root, run `bun run test:integration:local` with PowerShell 7,

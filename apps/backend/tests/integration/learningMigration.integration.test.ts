@@ -6,7 +6,7 @@ import { readLocalSettings } from "./localHarness";
 import { captureRunInputs } from "../../deployments/runInputs";
 import { definition, tier } from "../challengeHarness";
 import { challengeSeed, specHash } from "../../challenges/registry";
-import { checkSchemaGuards } from "../../release/migrations";
+import { checkModel1SchemaGuards as checkSchemaGuards } from "../../release/migrations";
 
 const integration = process.env.INTEGRATION_RUN === "1" ? test : test.skip;
 integration("migration 17 preserves populated schema 16 and enforces immutable same-condition learning lineage", async () => {
@@ -17,7 +17,7 @@ integration("migration 17 preserves populated schema 16 and enforces immutable s
   try {
     await admin.query(`CREATE DATABASE "${name}" TEMPLATE template0`); created = true;
     const directory = new URL("../../prisma/migrations/", import.meta.url);
-    const folders = (await readdir(directory, { withFileTypes: true })).filter((e) => e.isDirectory()).map((e) => e.name).sort();
+    const folders = (await readdir(directory, { withFileTypes: true })).filter((e) => e.isDirectory() && e.name <= "20261018000000_challenge_learning").map((e) => e.name).sort();
     expect(folders).toHaveLength(17);
     for (const folder of folders.slice(0, 16)) await db.query(await Bun.file(new URL(`${folder}/migration.sql`, directory)).text());
     const owner = randomUUID(), design = randomUUID(), source = randomUUID(), d = definition("first-production-api");

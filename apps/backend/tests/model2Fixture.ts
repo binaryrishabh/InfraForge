@@ -1,0 +1,42 @@
+import type { ProductContract, Quantity, Unit } from "@infraforge/simulation/internal-product";
+// Every demand, capacity, timing and byte value is explicitly authored for software
+// verification. The product admission path imports no fixture or default profile.
+export function internalProductFixture() {
+  const ledger: ProductContract["ledger"] = [];
+  const q = <U extends Unit>(id: string, value: number, unit: U): Quantity<U> => {
+    const quantity: Quantity<U> = { kind: "known", value, unit, provenance: [id] };
+    ledger.push({ id, concept: id, modelVersion: "2", scope: "Authored internal product software verification", validityDomain: "Authored internal product software verification only", quantity, formula: String(value), classification: "educational-assumption", confidence: "conditional",
+      provenance: [{ source: "apps/backend/tests/model2Fixture.ts", supports: "implementation", detail: "Authored, not measured cloud performance" }], assumptions: ["No physical/provider calibration"], researchedOn: "2026-10-16", freeMode: "forbidden", replacement: "Workload-specific sourced contracts required for broader claims" }); return quantity;
+  };
+  const cores = q("cpu.cores", 1, "cores"), workers = q("cpu.workers", 2, "count"), pending = q("cpu.queue", 32, "count"), cpu = q("app.cpu", 20, "cpu-us"), zero = q("time.zero", 0, "us"), cap = q("cpu.parallel", 1, "cores");
+  const execution = { id: "authored-execution", kind: "compute" as const, cores, workers, scheduler: "capped-equal-fluid/1" as const, queueCapacity: pending, profiles: { read: "internal.read", write: "internal.write" }, context: { labels: { environment: "authored-internal-product" }, quantities: {} }, cancellation: "cooperative" as const, memory: { coverage: "partial" as const, policy: "observe" as const } };
+  const port = q("listener.port", 8080, "count"), security = { port, protocol: "tcp" as const, firewalls: [], tls: { mode: "plaintext" as const, trustedIssuers: [] } };
+  const commandCpu = q("object.command.cpu", 2, "cpu-us"), timeout = q("object.command.timeout", 1000, "us"), concurrency = q("object.command.concurrency", 4, "count"), body = q("protocol.bytes", 64, "bytes"), commandBody = q("command.noBody", 0, "bytes");
+  const contract: ProductContract = { schema: "infraforge-product-model2/1", version: "authored-internal-product/1", designVersion: "saved-domain/1", catalogVersion: "unselected-authored/1", workloadVersion: "product-arrivals/1",
+    application: { schema: "infraforge-application/1", id: "internal-product", version: "1", provenance: ["apps/backend/tests/model2Fixture.ts"], validityDomain: "Authored software verification only",
+      operations: ["read", "write"].map((id) => ({ id, callerTimeout: timeout, onCallerStop: "request-cancellation", idempotency: id === "read" ? "read-only" : "non-idempotent" })),
+      demands: ["read", "write"].map((operation) => ({ schema: "infraforge-compute-demand/1", id: `internal.${operation}`, version: "1", application: "internal-product", operation, stage: "compute", method: "synthetic", cpu, blockingWait: zero, maxCpuParallelism: cap, residentCoverage: "partial", obtainedBy: "Authored verification contract", evidence: ["apps/backend/tests/model2Fixture.ts"], date: "2026-10-16", validity: { exact: { environment: "authored-internal-product" }, ranges: {} }, uncertainty: ["Physical demand and complete resident memory Unknown"], freeMode: "forbidden" })),
+      controlOperation: "read", readOperation: "read", writeOperation: "write", payloads: { light: body, medium: body, heavy: body } }, ledger,
+    nodes: { vm: { type: "Virtual Machine", primary: "main", profileVersion: "authored/1", provenance: ["Explicit standalone CPU station; scheduled object commands are separate from application work"], securityReplacement: "explicit-reviewed/1", resources: [{ role: "main", config: execution }], internalEdges: [], identities: [{ role: "main", zone: "internal", address: "192.0.2.1" }], listeners: [{ role: "main", protocol: "tcp", port, tls: "plaintext" }] },
+      objects: { type: "Object Storage", primary: "main", profileVersion: "authored/1", provenance: ["Explicit current-object profile; no physical durability or S3 billing"], securityReplacement: "explicit-reviewed/1", resources: [{ role: "main", config: { kind: "object-store", profile: "atomic-current-object/1", execution, concurrency, pending, timeout, demands: Object.fromEntries(["put", "get", "head", "delete"].map((kind) => [kind, { cpu: commandCpu, wait: zero }])), initial: [], capacity: q("object.capacity", 4096, "bytes") } }], internalEdges: [], identities: [{ role: "main", zone: "internal", address: "192.0.2.2" }], listeners: [{ role: "main", protocol: "tcp", port, tls: "plaintext" }] } },
+    edges: { access: { purpose: "dependency", sourceRole: "main", targetRole: "main", transport: "authored", request: ["request"], response: ["response"], security } },
+    transports: { authored: { version: "authored/1", ownership: "per-path", provenance: ["Authored bandwidth, propagation, pools and envelope bytes; not a cloud prediction"], links: [
+      { id: "request", from: "$source", to: "$target", policy: "fifo-message/1", bandwidth: q("request.bandwidth", 1000000000, "bytes/s"), propagation: q("request.propagation", 1, "us"), bufferBytes: q("request.buffer", 4096, "bytes") },
+      { id: "response", from: "$target", to: "$source", policy: "fifo-message/1", bandwidth: q("response.bandwidth", 1000000000, "bytes/s"), propagation: q("response.propagation", 1, "us"), bufferBytes: q("response.buffer", 4096, "bytes") }],
+      pool: { mode: "serial", reuse: true, maxConnections: concurrency, streams: q("pool.streams", 1, "count"), pending, establish: zero, acquireTimeout: q("pool.acquire", 500, "us"), connectTimeout: q("pool.connect", 500, "us"), responseTimeout: q("pool.response", 500, "us"), remoteCancellation: "request-cancellation" }, bytes: { read: { request: body, response: body }, write: { request: body, response: body } } } },
+    caller: { address: "198.51.100.1", entry: "$vm", transport: "authored", request: ["request"], response: ["response"], security, dependencies: [] },
+    seed: "authored-internal-product/1", horizon: q("run.horizon", 20000, "us"), sampleInterval: q("run.sample", 1000, "us"), arrival: { start: q("run.arrival.start", 1000, "us") },
+    limits: { maxEvents: 10000, maxRequests: 256, maxTraceRows: 256, maxRawResults: 256, maxSamples: 64 }, instrumentation: [], capabilities: [], commands: [],
+    faults: [{ id: "object-process", kind: "Crash", target: "objects", at: q("fault.at", 5000, "us"), duration: q("fault.duration", 3000, "us"), restart: q("fault.restart", 1000, "us"), profile: "retain-logical-state/1" }] };
+  for (const [id, at, request, bytes] of [
+    ["create", 1000, { kind: "put", namespace: "n", key: "k", bytes: 10, content: "first" }, 10],
+    ["overwrite", 3000, { kind: "put", namespace: "n", key: "k", bytes: 20, content: "second" }, 20],
+    ["during-fault", 6000, { kind: "get", namespace: "n", key: "k" }, 0],
+    ["after-recovery", 10000, { kind: "get", namespace: "n", key: "k" }, 0],
+    ["delete", 14000, { kind: "delete", namespace: "n", key: "k" }, 0],
+    ["retain", 16500, { kind: "put", namespace: "n", key: "retained", bytes: 7, content: "retained" }, 7],
+    ["head", 18000, { kind: "head", namespace: "n", key: "retained" }, 0]
+  ] as const) contract.commands.push({ id, at: q(`command.${id}.at`, at, "us"), source: "$vm", target: "$objects", operation: "read", request, bodyBytes: bytes ? q(`command.${id}.bytes`, bytes, "bytes") : commandBody, provenance: "Authored recorded command schedule, executed by actual product transport/object services" });
+  return { layout: { resources: [{ id: "vm", type: "Virtual Machine" as const, x: 0, y: 0, name: "Authored CPU" }, { id: "objects", type: "Object Storage" as const, x: 200, y: 0, name: "Authored objects" }], connectionLines: [{ id: "access", sourceId: "vm", targetId: "objects", sourceType: "Virtual Machine" as const, targetType: "Object Storage" as const, port: 8080 }] },
+    request: { infrastructureId: "00000000-0000-4000-8000-000000000001", idempotencyKey: "recorded-product-run", expectedDesignUpdatedAt: "2026-10-16T00:00:00.000Z", workload: { targetThroughput: 60000, throughputUnit: "per-minute" as const, trafficShape: "steady" as const, readWriteRatio: 1, payloadSize: "light" as const }, contract } };
+}

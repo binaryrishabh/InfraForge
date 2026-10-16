@@ -22,6 +22,7 @@ import { checkLearningHistory } from "./learningHistoryChecks";
 import { checkCredentials } from "./credentialChecks";
 import { checkLearningExperiments } from "./learningChecks";
 import { checkPostFaultObservation } from "./postFaultChecks";
+import { checkInternalModel2 } from "./model2Checks";
 
 type Event = Record<string, any>;
 type Snapshot = SimulationSnapshot & { publishType: string };
@@ -111,6 +112,11 @@ integration("local deployment lifecycle", () => {
       sessions = new SessionFixtures(harness);
       phase("public credential authentication");
       evidence.credentials = await checkCredentials(harness, sessions);
+      if (process.env.INTEGRATION_MODEL2_ONLY === "1") {
+        await harness.startWorker(); workerStarted = true;
+        evidence.model2 = await checkInternalModel2(harness, sessions, infrastructureIds);
+        evidence.result = "passed"; return;
+      }
       if (process.env.INTEGRATION_LEARNING_ONLY === "1") {
         await harness.startWorker(); workerStarted = true;
         evidence.learning = await checkLearningExperiments(harness, sessions, infrastructureIds, deploymentIds);
@@ -655,6 +661,8 @@ integration("local deployment lifecycle", () => {
       evidence.learningHistory = await checkLearningHistory(harness, sessions, infrastructureIds, deploymentIds);
       phase("deliberate challenge improvements");
       evidence.learning = await checkLearningExperiments(harness, sessions, infrastructureIds, deploymentIds);
+      phase("internal Model-2 saved design, durable worker and read-only historical report");
+      evidence.model2 = await checkInternalModel2(harness, sessions, infrastructureIds);
       evidence.result = "passed";
     } catch (error) {
       evidence.result = "failed";

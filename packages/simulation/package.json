@@ -3,6 +3,7 @@
   "private": true,
   "type": "module",
   "exports": {
+    "./internal-product": { "types": "./src/internalProduct.ts", "default": "./src/internalProduct.ts" },
     "./capacity": {
       "types": "./src/capacity.ts",
       "default": "./src/capacity.ts"

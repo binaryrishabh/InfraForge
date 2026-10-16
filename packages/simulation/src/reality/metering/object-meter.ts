@@ -34,7 +34,7 @@ export class ObjectMeter {
     if (!this.origin) throw Error("Object origin missing");
     if (detail.kind === "operation-start") {
       if (count(detail.request) !== this.totals.received + 1n || this.requests.has(detail.request) || typeof detail.admitted !== "boolean") throw Error("Request receipt sequence gap/duplicate");
-      text(detail.callId); text(detail.rootId); if (count(detail.attempt) < 1n) throw Error("Request attempt identity missing");
+      text(detail.callId); text(detail.rootId); count(detail.attempt);
       if (detail.command !== null) text(detail.command);
       const key = JSON.stringify(detail.command), command = this.commands.get(key) ?? { command: detail.command, totals: counters() };
       this.commands.set(key, command); this.requests.set(detail.request, { command: detail.command, admitted: detail.admitted, changed: false }); this.totals.received++; command.totals.received++;

@@ -12,6 +12,7 @@ import { deploymentRouter } from "./routes/deployment.routes";
 import { challengeRouter } from "./challenges/routes";
 import { assertRuntimeSchema } from "./release/runtime";
 import { createReadiness } from "./health/readiness";
+import { internalModel2Router } from "./internalModel2/routes";
 
 await assertRuntimeSchema();
 const readiness = createReadiness();
@@ -43,6 +44,7 @@ app.all("/api/auth/*splat", authHandler);
 app.use("/api/infrastructure", requireSession);
 app.use("/api/deployments", requireSession);
 app.use("/api/challenges", requireSession);
+app.use("/api/internal/model2", requireSession, internalModel2Router);
 app.use(express.json());
 
 // Domain routers

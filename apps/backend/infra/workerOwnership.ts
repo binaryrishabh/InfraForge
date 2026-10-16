@@ -6,6 +6,7 @@ const LOCK = [186542854, 1];
 export class WorkerOwnership {
   private held = false;
   private closing = false;
+  private transactions: Promise<unknown> = Promise.resolve();
 
   private constructor(private readonly client: Client, private readonly onLost: () => void) {
     client.on("error", () => this.lose());
@@ -54,5 +55,22 @@ export class WorkerOwnership {
     if (this.held) await this.client.query("SELECT pg_advisory_unlock($1, $2)", LOCK);
     this.held = false;
     await this.client.end();
+  }
+
+  // Internal execution writes use the lock-holding session itself. Losing that
+  // session rolls its transaction back before a replacement can own the worker.
+  transaction<T>(operation: (client: Client) => Promise<T>): Promise<T> {
+    const result = this.transactions.then(async () => {
+      await this.assertHeld();
+      await this.client.query("BEGIN");
+      try {
+        const value = await operation(this.client);
+        await this.assertHeld();
+        await this.client.query("COMMIT");
+        return value;
+      } catch (error) { await this.client.query("ROLLBACK").catch(() => {}); throw error; }
+    });
+    this.transactions = result.catch(() => {});
+    return result;
   }
 }

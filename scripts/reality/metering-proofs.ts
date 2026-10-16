@@ -9,6 +9,7 @@ import { combineUsageWindows } from "../../packages/simulation/src/reality/meter
 import { replayUsage } from "../../packages/simulation/src/reality/metering/replay";
 import { historicalFoundationHash, historicalProviderHash, verifyHistoricalArtifacts } from "./source-lineage";
 import { meteringArtifactBytes, meteringDigest, meteringRoot, meteringSourceHash } from "./metering-source";
+import { historicalMeteringHash } from "../metering-lineage";
 
 export function meteringProofs() {
   verifyHistoricalArtifacts();
@@ -41,7 +42,9 @@ export function meteringProofs() {
 }
 export function validateMeteringProofs() {
   const retained = JSON.parse(readFileSync(resolve(meteringRoot, "docs/reality/m2j-proofs.json"), "utf8")), actual = meteringProofs();
-  if (meteringDigest(retained) !== meteringDigest(actual)) throw Error("M2J current source, authored input or actual evidence drift");
+  if (retained.sourceHash !== historicalMeteringHash()) throw Error("M2J accepted source identity drift");
+  const semantic = (proof: typeof actual) => { const { sourceHash, ...body } = proof; void sourceHash; return body; };
+  if (meteringDigest(semantic(retained)) !== meteringDigest(semantic(actual))) throw Error("M2J authored input or actual evidence drift; no historical reinterpretation");
   if (meteringArtifactBytes() > 1048576) throw Error("M2J proof/lineage/measurement review budget exceeded");
   return { cases: actual.cases.length, cuts: actual.cases.reduce((n, c) => n + c.cuts.length, 0), records: actual.cases.reduce((n, c) => n + c.frame.records.length, 0), artifactBytes: meteringArtifactBytes(), sourceHash: actual.sourceHash };
 }

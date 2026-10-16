@@ -33,6 +33,9 @@ import type { OutboxPayload } from "./types/OutboxPayload.interface";
 import type { DeploymentJob } from "./types/DeploymentJob.interface";
 import type { DeploymentStages } from "@infraforge/contracts/deployment";
 import type { DeploymentTimeline } from "@infraforge/contracts/deployment";
+import { internalWorker } from "./internalModel2/worker";
+import { retireInternalRuns, failInternalDelivery } from "./internalModel2/execution";
+import { internalModel2Queue } from "./internalModel2/queue";
 import { deploymentFailureStatus, isRetiredDeployment } from "./utils/deploymentJobPolicy";
 
 await assertRuntimeSchema();
@@ -44,7 +47,10 @@ const ownership = await WorkerOwnership.acquire(databaseUrl, () => {
   process.exit(1);
 });
 await retireInterruptedRuns();
+await retireInternalRuns(ownership);
 await startRuntime(ownership);
+const model2Worker = internalWorker(ownership);
+await model2Worker.waitUntilReady();
 let stopping = false;
 let outboxTimer: ReturnType<typeof setTimeout> | undefined;
 let outboxPoll: Promise<void> | undefined;
@@ -91,6 +97,10 @@ async function pollOutbox() {
           await publishChaosInjected(
             entry as unknown as { payload: OutboxPayload },
           );
+        } else if (entry.eventType === "model2-internal-created") {
+          const id = (entry.payload as { internalModel2RunId?: string }).internalModel2RunId;
+          if (!id) throw new Error("Missing internal Model-2 run identity");
+          await internalModel2Queue.add(entry.eventType, { internalModel2RunId: id }, { jobId: id });
         } else {
           // Add Deployment to BullMQ queue for worker to process it.
           // jobId = deploymentId ensures idempotency, duplicates are ignored by BullMQ automatically, ensures processing only once at max.
@@ -126,6 +136,10 @@ async function pollOutbox() {
 
         // If permanently failed, mark deployment as failed and notify
         if (isFailed) {
+          if (entry.eventType === "model2-internal-created") {
+            const id = (entry.payload as { internalModel2RunId?: string }).internalModel2RunId;
+            if (id) await failInternalDelivery(ownership, id);
+          }
           try {
             if (entry.eventType === "deployment-created") {
               const failure = await prisma.deployment.updateMany({
@@ -415,6 +429,9 @@ const readiness = createReadiness(async () => {
     throw new Error("Worker is not processing jobs/outbox");
   }
   await ownership.assertHeld();
+  const internalBackend = model2Worker.getBackend();
+  const [internalConnection, internalBlocking] = await Promise.all([internalBackend.client, internalBackend.blockingClient]);
+  if (!model2Worker.isRunning() || internalConnection.status !== "ready" || internalBlocking?.status !== "ready") throw new Error("Internal Model-2 worker is unavailable");
 });
 const server = http.createServer(async (req, res) => {
   if (req.url !== "/health/ready") { res.writeHead(404); res.end(); return; }
@@ -433,6 +450,8 @@ async function shutdown() {
   const deadline = setTimeout(() => process.exit(1), 25000);
   try {
     await worker.close();
+    await model2Worker.close();
+    await internalModel2Queue.close();
     await Promise.all([runtimeStopped, outboxPoll]);
     await readiness.close();
     await prisma.$disconnect();

@@ -62,7 +62,8 @@ export function classify(site: NumericSite): RealityEntry {
     replacement = "M2: explicit listener/protocol/reachability and security policy; retain static warnings separately.";
     if (/RESOURCE_PORTS|openPorts/.test(file + context)) unit = "port";
   }
-  const evidence: RealityEntry["provenance"] = [{ source: `repo:${AUDIT_SHA}/${file}#L${site.line}`, supports: "implementation", detail: "Exact historical literal and source expression; not external validation." }];
+  const internalProductSource = /apps\/backend\/internalModel2\/|apps\/backend\/release\/model2Schema|packages\/simulation\/src\/internalProduct/.test(file);
+  const evidence: RealityEntry["provenance"] = [{ source: internalProductSource ? `workspace:${file}#L${site.line}` : `repo:${AUDIT_SHA}/${file}#L${site.line}`, supports: "implementation", detail: internalProductSource ? "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption." : "Exact historical literal and source expression; not external validation." }];
   if (file === "apps/backend/stages/costEstimation.stages.ts" && context.includes("GENERIC_MONTHLY_USD") && site.value === 10) {
     classification = "approximation"; unit = "USD/month"; scope = "Historical fallback price in deployment-time cost estimation";
     assumptions = ["Fallback estimate, not a documented provider tariff; runtime cost.ts contains the matching historical fallback."];

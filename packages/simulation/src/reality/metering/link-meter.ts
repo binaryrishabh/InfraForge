@@ -19,7 +19,7 @@ export class LinkMeter {
       if (context !== null) {
         if (!["request", "response"].includes(context.direction)) throw Error("Unknown transfer direction");
         text(context.path, 160); text(context.origin, 160); text(context.destination, 160); text(context.callId); text(context.rootId); count(context.hop);
-        if (count(context.attempt) < 1n) throw Error("Missing transfer attempt identity");
+        count(context.attempt); // Workload roots use zero; retry owners may start at one.
         direction = context.direction;
       }
       this.live.set(detail.transfer, { bytes, accepted: detail.accepted, direction });
