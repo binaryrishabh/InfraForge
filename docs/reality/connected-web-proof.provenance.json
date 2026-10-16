@@ -1,0 +1,149 @@
+{
+  "schema": "infraforge-connected-proof-provenance/1",
+  "startingCommit": "7e24ac77a868c9cec9e76141d29a156115238e91",
+  "producerCommit": "0fb800a58ecc000fecc1f7b6a30015bb7142e26b",
+  "executionSource": "c978627d82007fc5e55f4bc653ea9132b3f185e381ac0d048afda1645d319ca6",
+  "proof": {
+    "file": "connected-web-proof.json",
+    "bytes": 1485554,
+    "sha256": "474405f0a45a51edc11c539988298f6e6f7893e9c68365db8d26fef992144217"
+  },
+  "workflow": {
+    "id": 38974703974,
+    "url": "https://github.com/binaryrishabh/InfraForge/actions/runs/38974703974",
+    "head": "0fb800a58ecc000fecc1f7b6a30015bb7142e26b",
+    "conclusion": "success",
+    "jobs": [
+      {
+        "id": 117221216322,
+        "name": "packaging",
+        "conclusion": "success"
+      },
+      {
+        "id": 117221216510,
+        "name": "m2m-preview",
+        "conclusion": "success"
+      },
+      {
+        "id": 117221216529,
+        "name": "checks (build --filter=@infraforge/web)",
+        "conclusion": "success"
+      },
+      {
+        "id": 117221216613,
+        "name": "checks (audit)",
+        "conclusion": "success"
+      },
+      {
+        "id": 117221216623,
+        "name": "checks (test:tooling)",
+        "conclusion": "success"
+      },
+      {
+        "id": 117221216648,
+        "name": "checks (test)",
+        "conclusion": "success"
+      },
+      {
+        "id": 117221216662,
+        "name": "integration",
+        "conclusion": "success"
+      },
+      {
+        "id": 117221216668,
+        "name": "checks (lint)",
+        "conclusion": "success"
+      },
+      {
+        "id": 117221216686,
+        "name": "checks (check:challenges)",
+        "conclusion": "success"
+      },
+      {
+        "id": 117221216778,
+        "name": "checks (check:boundaries)",
+        "conclusion": "success"
+      },
+      {
+        "id": 117221216779,
+        "name": "checks (typecheck)",
+        "conclusion": "success"
+      }
+    ]
+  },
+  "artifact": {
+    "id": 12078233953,
+    "bytes": 116068,
+    "digest": "sha256:0f828a181447404694746ccce0f44160315ed3df0f1aa0ce669fd63de8c298a6",
+    "url": "https://github.com/binaryrishabh/InfraForge/actions/runs/38974703974/artifacts/12078233953"
+  },
+  "verification": {
+    "cases": 16,
+    "runs": 6,
+    "negativeMutationsRefused": 9,
+    "connectedTests": 31,
+    "workspaceTests": 530,
+    "toolingTests": 64,
+    "challengeTests": 73,
+    "integrationTests": 19,
+    "releaseRehearsalEvents": 27,
+    "historicalProducersUnchanged": true
+  },
+  "limits": {
+    "requestBytes": 262144,
+    "inputBytes": 524288,
+    "evidenceBytes": 262144
+  },
+  "persisted": [
+    {
+      "name": "healthy",
+      "inputBytes": 130964,
+      "evidenceBytes": 164939,
+      "sequence": 17,
+      "throughUs": 60000
+    },
+    {
+      "name": "failure",
+      "inputBytes": 137367,
+      "evidenceBytes": 158935,
+      "sequence": 20,
+      "throughUs": 60000
+    },
+    {
+      "name": "late-cancel",
+      "inputBytes": 126376,
+      "evidenceBytes": 72022,
+      "sequence": 17,
+      "throughUs": 12000
+    },
+    {
+      "name": "early-cancel",
+      "inputBytes": 126374,
+      "evidenceBytes": 70328,
+      "sequence": 17,
+      "throughUs": 12000
+    },
+    {
+      "name": "overflow",
+      "inputBytes": 130962,
+      "evidenceBytes": 142320,
+      "sequence": 17,
+      "throughUs": 60000
+    },
+    {
+      "name": "worker-prefix",
+      "inputBytes": 137367,
+      "evidenceBytes": 79508,
+      "sequence": 8,
+      "throughUs": 22500
+    }
+  ],
+  "boundaries": {
+    "model1": "ACTIVE",
+    "model2": "INTERNAL",
+    "production": "PARKED",
+    "generalFreeMode": false,
+    "actualDedicatedRootlessHost": "UNKNOWN; parked pending a host",
+    "activation": "Requires separate verified approval"
+  }
+}

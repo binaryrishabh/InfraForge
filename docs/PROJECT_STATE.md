@@ -7,6 +7,12 @@ caller → LB → app → DB identities, logical effects, failure/health/readine
 transitions and bounded completeness. Historical v1 formats and retained producers
 remain separate, with explicit reviewed source compatibility. See the
 [implementation boundary and validation receipt](reality/connected-web-handoff.md).
+Implementation producer `0fb800a58ecc000fecc1f7b6a30015bb7142e26b` passed
+[11/11 CI jobs](https://github.com/binaryrishabh/InfraForge/actions/runs/38974703974),
+including 530 workspace tests, 19 integration tests, packaging and full release
+rehearsal. Its retained connected proof independently reconstructs six durable
+runs and 16 cases; nine proof mutations refuse. Independent acceptance/activation
+is still separate from this engineering validation.
 Claude's UI/UX research is separate; no visible redesign or general activation is
 part of this work. Host verification is **parked pending an actual dedicated host**;
 actual rootless host readiness remains UNKNOWN. Model 1 ACTIVE; Model 2 INTERNAL;

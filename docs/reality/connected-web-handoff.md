@@ -93,6 +93,9 @@ also checks caller/resource/transaction/pool/link conservation. Replay independe
 re-executes immutable input and compares the version-specific capture fingerprint.
 It writes no product state. Prefix replay reproduces only the committed prefix;
 it never resumes an interrupted run.
+Replay `complete` describes reaching the authored horizon with complete usage,
+not draining every request or retaining every causal event. Those have separate
+in-flight and evidence-completeness fields.
 
 ## Failure, recovery and cancellation
 
@@ -165,6 +168,11 @@ Reviewed first-party technical sources on 2026-10-17:
 
 This is an INTERNAL operator capability, not approval for less-trusted users or
 general saved graphs. The isolated object lesson's host requirements are unchanged.
+Connected operator runs execute in the existing worker; v2 does not gain the
+object lesson's separate OS containment merely by using versioned evidence.
+The lesson regression proof exercises real process/memory/CPU/time enforcement;
+it is not a v2 isolation or dedicated-host readiness claim. Extending access beyond
+trusted operators still requires an independently approved execution boundary.
 Actual dedicated rootless host readiness is UNKNOWN and parked until a host exists.
 No Vercel repair/deployment, Model-1 retirement, challenge migration or grant
 activation belongs to this checkpoint.
@@ -180,4 +188,85 @@ behavior with explicit idempotency and remote-effect evidence; it is excluded he
 
 ## Validation receipt
 
-Pending the final exact-SHA CI and independently retained product proof.
+Producer: `0fb800a58ecc000fecc1f7b6a30015bb7142e26b`, execution source
+`c978627d82007fc5e55f4bc653ea9132b3f185e381ac0d048afda1645d319ca6`.
+[Actions 38974703974](https://github.com/binaryrishabh/InfraForge/actions/runs/38974703974)
+passed all eleven jobs. The retained [raw producer](connected-web-proof.json) and
+[provenance receipt](connected-web-proof.provenance.json) preserve exact identities;
+the raw JSON is 1,485,554 bytes, SHA-256
+`474405f0a45a51edc11c539988298f6e6f7893e9c68365db8d26fef992144217`.
+It came from artifact `12078233953`, ZIP digest
+`0f828a181447404694746ccce0f44160315ed3df0f1aa0ce669fd63de8c298a6`.
+This is the original producer receipt, not a claim that a later evidence-only
+publication commit produced those rows. Final publication CI is reported separately.
+
+| Producer job | Result |
+| --- | --- |
+| build --filter=@infraforge/web | PASS |
+| typecheck | PASS |
+| lint | PASS |
+| test | PASS: 530 workspace tests; 14 integration-only skips |
+| check:boundaries | PASS |
+| test:tooling | PASS: 64 tests |
+| check:challenges | PASS: 73 tests |
+| audit | PASS |
+| integration | PASS: 19 tests; fresh connected, M2K and M2L proof reconstruction |
+| m2m-preview | PASS: fresh and retained proof reconstruction, negative mutations and real containment checks |
+| packaging | PASS: image/entrypoint validation and full 27-event release rehearsal |
+
+There are 31 new focused connected tests and 16 product proof cases across six
+durable runs. The independent verifier replays all six and correlates engine
+identities, counts and effects. Nine altered producer copies are refused: failed
+producer, missing case, source drift, cross-version evidence, missing identities,
+invented commit, overflow claiming certainty, a completed relabel of an interrupted
+prefix, and a changed caller outcome. The existing nine M2M mutations also refuse.
+Additional reader tests use valid recomputed hashes with impossible projection,
+time or retention metadata; event/identity/text caps are tested separately, including
+zero caller-row retention. No generated tests were added to inflate these counts.
+
+| Run | Input bytes | Latest evidence bytes | Retained cut |
+| --- | ---: | ---: | --- |
+| healthy | 130,964 | 164,939 | 17 captures; 60,000 us |
+| failure | 137,367 | 158,935 | 20 captures; 60,000 us |
+| late-cancel | 126,376 | 72,022 | 17 captures; 12,000 us |
+| early-cancel | 126,374 | 70,328 | 17 captures; 12,000 us |
+| overflow | 130,962 | 142,320 | 17 captures; 60,000 us |
+| worker-prefix | 137,367 | 79,508 | 8 captures; 22,500 us |
+
+Healthy execution completes 11 of 12 offered callers, with one right-censored;
+LB selections split 6/6. Failure execution completes nine, times out two and retains
+one in flight; selections split 5/7. App-b's consumed modeled CPU changes from
+33,000 to 42,004 core-us. DB commits change from 19 to 16, logical writes from six
+to four; DB counts include actual health-probe work. These are observed differences,
+not a manufactured overload. Healthy/failure retain 311/290 causal events with no
+omissions. The overflow experiment retains two and omits 309, with unchanged
+aggregate physics and an Unknown exact-causality claim. Late cancellation retains
+row version two; early cancellation retains version one and a cancelled transaction.
+The actual SIGKILL prefix retains eight committed captures and replays unchanged
+after restart retirement; it never becomes a completed execution.
+
+Negative admission coverage includes topology, backend binding, health operation,
+app demand, DB dependency/plan, saved direction, listener, transport, security,
+legacy provider/autoscaling fields, fault owner, provenance, expansion, retention
+budget, profile version and contradictory read/write plans. Product tests add
+unauthenticated, missing/operator-vs-lesson grant, cross-owner, stale revision,
+exact retry and atomic Outbox checks. Common v1 lifecycle proofs still cover running
+cancellation, revocation, ownership loss and failed capture transactions.
+
+Retained M2K, M2L and M2M raw artifacts independently reconstruct unchanged;
+fresh M2K/M2L/M2M producers also reconstruct. Fresh M2M retains 25 backend cases,
+seven browser cases and eight runs; retained historical counts stay historical.
+All 30 Model-1 goldens and ten frozen challenge hashes pass unchanged. Shipping
+inventory remains 489 surfaces, 208 technical blockers, 28 valid UI surfaces and
+252 requiring UI review; general readiness is false. Numeric inventory changes
+from 431 files/2,454 sites to 440 files/2,570 sites, reflecting implementation and
+retention policy rather than new cloud facts.
+
+Windows local checks passed focused tests, historical verifiers, tooling, backend
+types and import boundaries. The global Windows TypeScript launcher and later
+large Bun processes failed in the local environment; their partial runs are not
+reported as passing. The full required workspace commands, browser integration,
+OS checks, packaging and release rehearsal passed on pinned Linux CI.
+The first implementation CI run exposed packaged-metadata and v1 corruption-message
+regressions; its failed logs/receipts are retained separately. Both were corrected
+without weakening any gate. Vercel is a separate failing status and was not repaired.
