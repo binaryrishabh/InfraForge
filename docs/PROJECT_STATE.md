@@ -1,5 +1,25 @@
 # InfraForge project state
 
+Latest accepted internal engine milestone: **Reality Engine M2H** at
+`5202ab3d54a28e9a47750b3f6bc21482a8a7c2c6` on `develop`.
+Two exact-SHA GitHub Actions runs, [38800316287](https://github.com/binaryrishabh/InfraForge/actions/runs/38800316287)
+and [38800316378](https://github.com/binaryrishabh/InfraForge/actions/runs/38800316378),
+completed successfully: **10/10 jobs each**, including integration and packaging.
+Verified CI logs: **426 workspace passes**, **59 tooling passes**, **18 integration
+passes**, **4,096 generated compiler/controller cases** (2,048 each), all **30
+Model-1 goldens**, and immutable challenge-version/hash protection checks.
+**Vercel FAILED separately** on the M2H SHA; the Vercel Preview Comments check
+passing does not repair the deployment. No change to production/main is authorized.
+
+M2H acceptance is **internal software/semantics only**, not physical cloud
+calibration or Model-2 release approval. The inventory remains **441 surfaces**:
+178 technical (177 blocked), 263 ordinary UI/presentation (11 validated,
+252 still requiring behavior review). The separate product-UI and Model-2 reality
+shipping gates remain enforced; internal compiler/controller proofs do not
+make the visible controls eligible. Model 1 ACTIVE; Model 2 INTERNAL; production
+PARKED. Next intended engine research is M2I provider/location/capability and
+billing contracts, with physical performance Unknown unless separately proved.
+
 Accepted **Reality Engine M2G** checkpoint on `develop`:
 `019d230943d743b609b24232172603dca5d8bc63`, Actions **38784325197**, **10/10 successful**.
 405 workspace, 54 tooling and 18 isolated integration tests passed; 3,000 deterministic
