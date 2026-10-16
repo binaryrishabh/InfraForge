@@ -54,7 +54,10 @@
     "sweep:product": "bun --no-env-file scripts/reality/product-proofs.ts --sweeps",
     "perf:product": "bun --no-env-file scripts/reality/product-performance.ts",
     "check:product-ui": "bun --no-env-file scripts/reality/shipping-inventory.ts --ui-ready",
-    "check:model2-reality-shipping": "bun --no-env-file scripts/reality/shipping-inventory.ts --ready"
+    "check:model2-reality-shipping": "bun --no-env-file scripts/reality/shipping-inventory.ts --ready",
+    "check:provider": "bun --no-env-file scripts/reality/provider-proofs.ts",
+    "debug:provider": "bun --no-env-file scripts/reality/provider-proofs.ts --write",
+    "perf:provider": "bun --no-env-file scripts/reality/provider-performance.ts"
   },
   "devDependencies": {
     "turbo": "2.11.6",

@@ -17,8 +17,8 @@ calibration or Model-2 release approval. The inventory remains **441 surfaces**:
 252 still requiring behavior review). The separate product-UI and Model-2 reality
 shipping gates remain enforced; internal compiler/controller proofs do not
 make the visible controls eligible. Model 1 ACTIVE; Model 2 INTERNAL; production
-PARKED. Next intended engine research is M2I provider/location/capability and
-billing contracts, with physical performance Unknown unless separately proved.
+PARKED. M2I now implements a bounded internal provider/location/capability and
+billing foundation below; physical performance remains Unknown unless separately proved.
 
 Accepted **Reality Engine M2G** checkpoint on `develop`:
 `019d230943d743b609b24232172603dca5d8bc63`, Actions **38784325197**, **10/10 successful**.
@@ -807,6 +807,60 @@ blockers and 252 UI proof reviews. Model 1 ACTIVE; Model 2 INTERNAL; production 
 Exact-final-SHA CI/status
 and full final validation belong in the M2H completion report outside Git.
 
+## Reality Engine M2I
+
+M2I is an internal implementation checkpoint over the accepted M2H source, not a
+release or independent acceptance decision. The versioned provider sidecar and
+SHA-256-pinned facts compile through the unchanged saved-product bridge. Public
+EC2 offer version `20261015191316` supplies one exact Linux/shared/On-Demand
+`m5.large` scope in `us-east-1`: 2 vCPUs, 8 GiB, USD 0.096 per instance-hour.
+Publication/retrieval dates, source hashes, validity, terms and Unknown remain
+explicit. Raw network/clock/catalog monthly figures are not promoted.
+
+Authored CPU/memory partitions must fit sourced capabilities. Complete authored
+modeled compute memory uses actual M2C allocation rejection; auxiliary reservations
+do not claim complete physical memory. Qualified stable region/zone placements and
+explicit same/different-zone constraints replace name guesses. Authored selected
+process incidents fan out by membership into real M2H crashes; managed-service fate,
+full AZ failure, live capacity, distances, latency and failure probabilities remain
+Unknown. Provider CPU/RAM never automatically supplies application throughput.
+
+Actual controller provision/image/startup/drain/termination evidence supplies exact
+allocation intervals under an explicit authored mapping to billable state. The
+selected EC2 rule applies per-second increments and per-start one-minute minimums.
+Exact rational money avoids float accumulation. Generic authored tier, byte-time,
+operation/counter primitives have conservation/reset tests; no unproved S3 or
+Internet-egress price adapter is claimed. Full cost remains Unknown. Price changes,
+account aggregation/discounts, tax, storage/network/managed services and invoice
+rounding remain unsupported. There is no price or physical-timing fallback.
+
+Eight retained cases / 32 captures cover normal operation, memory admission,
+zone/region incidents, registry retries, manual drain, failed provisioning and
+unpriced allocations. 1,024 deterministic arithmetic vectors, ten separate analytic
+holdouts and 128 compiler cases (64 valid / 64 refused) supplement focused provenance,
+invalid-pricing, version/content drift and lifecycle tests. These are software and
+arithmetic proofs, not a fitted physical cloud predictor. All M2A–M2H source and
+evidence, rejected timing fits, Model-1 goldens and challenge hashes are preserved.
+
+New M2I JSON evidence has a combined one-MiB review budget; compact serialization
+retains semantic proof without repeating whole compiled inputs. Existing large
+historical artifacts are preserved. See [M2I research/design/limits](reality/m2i-provider-foundation.md),
+[retained proofs](reality/m2i-proofs.json), [public price row](reality/m2i-ec2-source.json)
+and [host-only measurements](reality/m2i-performance.json).
+
+Local focused verification passed 28 provider tests / 2,189 assertions and 61
+tooling tests. Model-1 inventory remains 384 files / 2,121 numeric sites. The first
+full workspace command reported 189 simulation passes and two timeouts in unchanged
+systems/FCFS campaigns; both passed isolated reruns under their original limits.
+The other workspaces passed 263 tests with 12 intentional integration skips.
+This is complete local case coverage across runs, not a single green full command.
+No old assertion or timeout was relaxed. Frozen installation, lint/boundaries,
+workspace/release/tooling types, web build, audit and challenge/Reality/shipping
+coverage also passed. Both readiness gates correctly refused. Detailed validation,
+exact commits/CI and separate Vercel status belong in the completion report outside
+Git. Normal product dispatch and both shipping gates remain unchanged: 441 surfaces,
+177 technical blockers, 252 UI reviews. Model 1 ACTIVE; Model 2 INTERNAL; production PARKED.
+
 ## Parked hosted work and remaining limits
 
 B0.6E stopped before database access with identity/reset-credential gates unfinished.
@@ -842,11 +896,12 @@ Improvement drafts are browser-history context, not durable unfinished tasks; a
 new attempt durably retains its hypothesis. Deleting its source removes the ability
 to compare with that source but preserves the child's own evidence/hypothesis.
 
-Next engine work: **M2I — provider/location/capability and billing contracts**,
-building on the proven internal compiler/controller bridge. Version provider facts,
-regions/failure domains, meter dimensions and prices. Deepen memory/storage/durability and recovery
-where required; keep physical demand Unknown until identified. Partitioned-log
-semantics remain a separate future resource.
+Next engine work: deepen M2I's explicit usage evidence and provider adapters before
+claiming broader price coverage or full costs. Storage mutation boundaries,
+request/transfer charge semantics, account/time aggregation, capability/availability
+evidence and price-change handling need separate bounded proofs. Deepen
+memory/storage/durability and recovery where required; keep physical demand Unknown
+until identified. Partitioned-log semantics remain a separate future resource.
 Deepen existing resources before expansion or Free Mode/challenge migration. Real
 availability, latency, request success, cache warm-up, data recovery and statistical
 conclusions remain outside Model 1. Hosted production remains parked.

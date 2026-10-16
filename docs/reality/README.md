@@ -74,3 +74,13 @@ separates `PRODUCT_UI_VALIDITY` (`check:product-ui`) from
 `MODEL2_REALITY_SHIPPING_READY` (`check:model2-reality-shipping`). Ordinary coverage
 validation passes while these explicit readiness checks can correctly refuse.
 Internal mechanisms and reviewed software actions do not activate Model 2 publicly.
+
+M2I adds the [provider/location/capability and billing foundation](m2i-provider-foundation.md)
+over the unchanged M2H compiler. One reviewed public EC2 quote and capability scope
+constrain authored host partitions; explicit placement incidents use actual process
+faults. Exact lifecycle usage produces conditional selected-compute estimates while
+the full bill stays Unknown. `check:provider` replays eight compact saved-product
+proofs, 1,024 billing and 128 compiler cases; `perf:provider` measures the executor.
+All M2I JSON artifacts share a one-MiB review budget. Snapshot/price validity,
+authored assumptions and unsupported provider cases remain explicit. Neither the
+177-technical nor the 252-UI-review readiness gate is opened.

@@ -1,0 +1,50 @@
+[
+  {
+    "url": "https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-lifecycle.html",
+    "retrievedAt": "2026-10-16T06:09:31.6130999Z",
+    "publicationDate": null,
+    "normalizedUtf8Sha256": "dd5415c0ca8f9288c1e75eada606117d8c93e9d941b0fbd2e3ac30ae3af7b920",
+    "normalizedBytes": 28697,
+    "scope": "Primary-source review metadata; date of publication Unknown unless separately established; page content not retained"
+  },
+  {
+    "url": "https://docs.aws.amazon.com/global-infrastructure/latest/regions/aws-availability-zones.html",
+    "retrievedAt": "2026-10-16T06:09:32.0255155Z",
+    "publicationDate": null,
+    "normalizedUtf8Sha256": "2779e312105562260d163ff987028ef6012ca58cb422c16bbf12f4e346350427",
+    "normalizedBytes": 44586,
+    "scope": "Primary-source review metadata; date of publication Unknown unless separately established; page content not retained"
+  },
+  {
+    "url": "https://docs.aws.amazon.com/ec2/latest/instancetypes/gp.html",
+    "retrievedAt": "2026-10-16T06:09:32.5022519Z",
+    "publicationDate": null,
+    "normalizedUtf8Sha256": "3e788c2f74db2bf0fdd238dd6a1bf6326d0050f3c976d3168fdc16163f8e23b1",
+    "normalizedBytes": 611028,
+    "scope": "Primary-source review metadata; date of publication Unknown unless separately established; page content not retained"
+  },
+  {
+    "url": "https://learn.microsoft.com/en-us/azure/virtual-machines/states-billing",
+    "retrievedAt": "2026-10-16T06:09:33.2839322Z",
+    "publicationDate": null,
+    "normalizedUtf8Sha256": "f1921719dc1c930116d6d1f3ddd8f7d05f3a4cadde494ea95adc5438694ec2d2",
+    "normalizedBytes": 55371,
+    "scope": "Primary-source review metadata; date of publication Unknown unless separately established; page content not retained"
+  },
+  {
+    "url": "https://cloud.google.com/products/compute/pricing",
+    "retrievedAt": "2026-10-16T06:09:34.5401434Z",
+    "publicationDate": null,
+    "normalizedUtf8Sha256": "9afd5e89a30b1b2c9d509b564c9607dbec6b909ea0a1b15bb8d298e4a3863ad2",
+    "normalizedBytes": 2317895,
+    "scope": "Primary-source review metadata; date of publication Unknown unless separately established; page content not retained"
+  },
+  {
+    "url": "https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/reading-service-price-list-file-for-services.html",
+    "retrievedAt": "2026-10-16T06:09:34.9503253Z",
+    "publicationDate": null,
+    "normalizedUtf8Sha256": "03e36aae1859806bdd0ecf2fd176ff08f59af1aa5ef26539f92f992774784040",
+    "normalizedBytes": 41640,
+    "scope": "Primary-source review metadata; date of publication Unknown unless separately established; page content not retained"
+  }
+]
