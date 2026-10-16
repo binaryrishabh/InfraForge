@@ -10,8 +10,8 @@ const proved = proof?.success === true && proof?.browser?.executed === true;
 const entries = visibleSurfaces().map((surface): ShippingEntry => {
   if (accepted.has(surface.id)) return accepted.get(surface.id)!;
   if (!/apps\/web\/src\/features\/(internalLessons|internalModel2)\//.test(surface.source)) throw Error(`Unreviewed unrelated surface: ${surface.id}`);
-  const entry = newInventoryEntry(surface), technical = /Select-|LessonResult-|LessonReview-/.test(surface.identity);
-  const output = surface.identity.startsWith("LessonResult-");
+  const entry = newInventoryEntry(surface), technical = /Select-|LessonResult-|LessonReview-|LessonHistory-/.test(surface.identity);
+  const output = /^(LessonResult|LessonHistory)-/.test(surface.identity);
   entry.category = technical ? output ? "INFRA_OUTPUT" : "INFRA_INPUT" : "PRODUCT_UI_ACTION";
   entry.categoryReason = technical ? output ? "Renders actual retained command results, incomplete prefixes and explicit Unknown" : "Chooses owned design/revision or authored read phase; reviewed numeric contract remains a technical input" : "Guided internal review, consent, history, explicit separate design creation and exact-retry interaction";
   entry.model1Meaning = "Internal lesson only; normal Model-1 behavior unchanged"; entry.model2Owner = "apps/backend/internalModel2/lessonExecution.ts";

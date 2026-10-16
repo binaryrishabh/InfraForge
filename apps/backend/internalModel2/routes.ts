@@ -9,6 +9,7 @@ import { lessonRouter } from "./lessonRoutes";
 import { grantScope, lessonRecord } from "./lessonStore";
 import { replayLesson } from "./lessonExecution";
 import { lessonSummary } from "./lessonSummary";
+import { readLessonPolicy } from "./lessonPolicy";
 export const internalModel2Router = Router();
 internalModel2Router.use(async (_req, res, next) => {
   const scope = await grantScope(res.locals.userId);
@@ -19,7 +20,6 @@ internalModel2Router.use(async (_req, res, next) => {
 internalModel2Router.use(json({ limit: "256kb" }));
 internalModel2Router.get("/capability", (_req, res) => { res.json({ scope: res.locals.model2Scope }); });
 internalModel2Router.use(lessonRouter);
-internalModel2Router.use((req, res, next) => { if (["/workspace", "/validate"].includes(req.path.replace(/\/$/, "")) && res.locals.model2Scope !== "operator") throw new NotFoundError(); next(); });
 internalModel2Router.use(workspaceRouter);
 internalModel2Router.post("/runs", async (req, res) => {
   if (res.locals.model2Scope !== "operator") throw new NotFoundError();
@@ -34,8 +34,13 @@ internalModel2Router.post("/runs", async (req, res) => {
   }
 });
 internalModel2Router.get("/runs", async (_req, res) => {
-  const rows = await internalDatabase.query('SELECT id,status,"inputHash",sequence,"throughUs",reason,"createdAt" FROM "InternalModel2Run" r WHERE "ownerId"=$1 AND ($2=\'operator\' OR EXISTS (SELECT 1 FROM "InternalModel2LessonRun" l WHERE l."runId"=r.id)) ORDER BY "createdAt" DESC,id DESC LIMIT 20', [res.locals.userId, res.locals.model2Scope]);
-  res.json({ success: true, runs: rows.rows, limit: 20 });
+  const rows = await internalDatabase.query('SELECT r.id,r.status,r."inputHash",r.sequence,r."throughUs",r.reason,r."createdAt",l."runId" AS "lessonId",l.policy AS "lessonPolicy" FROM "InternalModel2Run" r LEFT JOIN "InternalModel2LessonRun" l ON l."runId"=r.id WHERE r."ownerId"=$1 AND ($2=\'operator\' OR l."runId" IS NOT NULL) ORDER BY r."createdAt" DESC,r.id DESC LIMIT 20', [res.locals.userId, res.locals.model2Scope]);
+  const runs = rows.rows.map(({ lessonPolicy, lessonId, ...row }) => {
+    if (lessonId === null) return row;
+    try { const p = readLessonPolicy(lessonPolicy, row.inputHash); return { ...row, lesson: { phase: p.phase, profile: p.schema } }; }
+    catch { return { ...row, lesson: { phase: "Unknown", profile: "Unknown" } }; }
+  });
+  res.json({ success: true, runs, limit: 20 });
 });
 internalModel2Router.param("id", (req, _res, next, value) => { if (!z.uuid().safeParse(value).success) throw new ValidationError("A valid internal run ID is required"); next(); });
 internalModel2Router.use("/runs/:id", async (req, res, next) => {

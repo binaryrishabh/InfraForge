@@ -412,7 +412,7 @@
     },
     {
       "file": "apps/backend/internalModel2/routes.ts",
-      "sha256": "af82cda625bab7a3293cb04d8393273a278bc3da92d49770bfc46eb0a2189657",
+      "sha256": "8247de5ac2924d5634548819c517415b9cd1db428ebafbafa894273172572466",
       "numericSites": 5
     },
     {
@@ -447,7 +447,7 @@
     },
     {
       "file": "apps/backend/internalModel2/workspace.ts",
-      "sha256": "726b9b9949fdb81d3ca5712ea66fa8fcc45d4ad441f2caeed4ee1418b34744a2",
+      "sha256": "3b65a3c8d23629753130084be010d917cc82941319b2ad70180d8bfe7462cf4f",
       "numericSites": 7
     },
     {
@@ -1332,8 +1332,13 @@
     },
     {
       "file": "apps/web/src/features/internalLessons/InternalLesson.tsx",
-      "sha256": "f074c76a4c9b67b77f2ae6e7ad73498b8f5cd7f8af56afc8cf093472b6a58490",
+      "sha256": "9884e6670c441d0252df87119e52bbfc42ffd62d560c82134017ea94566ceddd",
       "numericSites": 1
+    },
+    {
+      "file": "apps/web/src/features/internalLessons/LessonHistory.tsx",
+      "sha256": "72a4cae5cb95294ca1351e6c1b8056342467b52264975bd155465597ae0c51e6",
+      "numericSites": 0
     },
     {
       "file": "apps/web/src/features/internalLessons/LessonResult.tsx",
@@ -1872,7 +1877,7 @@
     },
     {
       "file": "packages/contracts/src/internal-model2/index.ts",
-      "sha256": "d634f0e81fcce531cf8a43942c92174348a9f409026c6b6cb6a746237c5b3080",
+      "sha256": "89fc4c174a03a78456eedc1f7fddeb525af69fe9be7526b61638e6d6021ef654",
       "numericSites": 76
     },
     {
@@ -27844,7 +27849,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/routes.ts#L38",
+          "source": "workspace:apps/backend/internalModel2/routes.ts#L43",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -27858,8 +27863,8 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/routes.ts",
-        "line": 38,
-        "column": 53
+        "line": 43,
+        "column": 42
       }
     },
     {
@@ -27880,7 +27885,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/routes.ts#L62",
+          "source": "workspace:apps/backend/internalModel2/routes.ts#L67",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -27894,7 +27899,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/routes.ts",
-        "line": 62,
+        "line": 67,
         "column": 95
       }
     },
@@ -29428,7 +29433,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/workspace.ts#L12",
+          "source": "workspace:apps/backend/internalModel2/workspace.ts#L13",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -29442,7 +29447,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/workspace.ts",
-        "line": 12,
+        "line": 13,
         "column": 74
       }
     },
@@ -29464,7 +29469,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/workspace.ts#L16",
+          "source": "workspace:apps/backend/internalModel2/workspace.ts#L18",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -29478,7 +29483,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/workspace.ts",
-        "line": 16,
+        "line": 18,
         "column": 37
       }
     },
@@ -29500,7 +29505,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/workspace.ts#L18",
+          "source": "workspace:apps/backend/internalModel2/workspace.ts#L20",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -29514,7 +29519,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/workspace.ts",
-        "line": 18,
+        "line": 20,
         "column": 234
       }
     },
@@ -29536,7 +29541,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/workspace.ts#L22",
+          "source": "workspace:apps/backend/internalModel2/workspace.ts#L24",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -29550,7 +29555,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/workspace.ts",
-        "line": 22,
+        "line": 24,
         "column": 39
       }
     },
@@ -29572,7 +29577,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/workspace.ts#L29",
+          "source": "workspace:apps/backend/internalModel2/workspace.ts#L31",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -29586,7 +29591,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/workspace.ts",
-        "line": 29,
+        "line": 31,
         "column": 115
       }
     },
@@ -29608,7 +29613,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/workspace.ts#L29",
+          "source": "workspace:apps/backend/internalModel2/workspace.ts#L31",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -29622,7 +29627,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/workspace.ts",
-        "line": 29,
+        "line": 31,
         "column": 119
       }
     },
@@ -29644,7 +29649,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/workspace.ts#L30",
+          "source": "workspace:apps/backend/internalModel2/workspace.ts#L32",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -29658,7 +29663,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/workspace.ts",
-        "line": 30,
+        "line": 32,
         "column": 75
       }
     },
@@ -61656,7 +61661,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/web/src/features/internalLessons/InternalLesson.tsx#L22",
+          "source": "workspace:apps/web/src/features/internalLessons/InternalLesson.tsx#L23",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -61670,7 +61675,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/features/internalLessons/InternalLesson.tsx",
-        "line": 22,
+        "line": 23,
         "column": 33
       }
     },

@@ -4898,6 +4898,41 @@
       "plan": "Keep INTERNAL. Claude may replace presentation while preserving authenticated scoped APIs, review/retry identity, prefixes, Unknown and worker limits. General technical shipping requires separate approval and evidence."
     },
     {
+      "id": "control:apps/web/src/features/internalLessons/InternalLesson.tsx:LessonHistory-73c268cacfded7e9e37d:0",
+      "source": "apps/web/src/features/internalLessons/InternalLesson.tsx",
+      "identity": "LessonHistory-73c268cacfded7e9e37d",
+      "description": "LessonHistory: value={state.runs}",
+      "kind": "control",
+      "category": "INFRA_OUTPUT",
+      "categoryReason": "Renders actual retained command results, incomplete prefixes and explicit Unknown",
+      "ui": {
+        "status": "NOT_APPLICABLE",
+        "behavior": "Technical software proof is limited to the internal lesson; general Model-2 shipping remains closed",
+        "proofs": []
+      },
+      "resources": [
+        "Virtual Machine",
+        "Object Storage"
+      ],
+      "model1Meaning": "Internal lesson only; normal Model-1 behavior unchanged",
+      "model2Owner": "apps/backend/internalModel2/lessonExecution.ts",
+      "changesState": false,
+      "effects": {
+        "physics": false,
+        "reachability": false,
+        "security": false,
+        "cost": false,
+        "evidence": true
+      },
+      "provenanceRequirements": [
+        "Versioned educational profile, exact owned design revision, immutable reviewed image/policy and actual retained capture",
+        "No physical/provider throughput, durability, latency, security or pricing claim; missing evidence Unknown"
+      ],
+      "status": "PARTIAL",
+      "finalProductEligible": false,
+      "plan": "Keep INTERNAL. Claude may replace presentation while preserving authenticated scoped APIs, review/retry identity, prefixes, Unknown and worker limits. General technical shipping requires separate approval and evidence."
+    },
+    {
       "id": "control:apps/web/src/features/internalLessons/InternalLesson.tsx:LessonReview-45eb64b9fdd926867cd0:0",
       "source": "apps/web/src/features/internalLessons/InternalLesson.tsx",
       "identity": "LessonReview-45eb64b9fdd926867cd0",

@@ -62,7 +62,8 @@ export interface AdmissionRequest { infrastructureId: string; expectedDesignUpda
 export interface Diagnostic { code: string; path: string; message: string; severity?: string }
 export interface InternalDesign { id: string; name: string; updatedAt: string; supported: boolean; reasons: string[]; vm?: string; objects?: string; connection?: string; port?: number }
 export interface Review { request: AdmissionRequest; requestHash: string; revision: string; designName: string; fields: { field: string; value: number; unit: string; origin: string }[]; assumptions: string[]; arrivals: number }
-export interface RunSummary { id: string; status: string; inputHash: string; sequence: number; throughUs: number; reason: string | null; createdAt: string }
+export interface RunSummary { id: string; status: string; inputHash: string; sequence: number; throughUs: number; reason: string | null; createdAt: string;
+  lesson?: { phase: "before" | "during" | "after" | "Unknown"; profile: string } }
 export interface InternalReport { id: string; status: string; reason: string | null; inputHash: string; source: string | null; sequence: number; throughUs: number; inputValid: boolean; problems: string[];
   replay: { compatible: boolean; reason: string }; observed: [string, Json][]; interpreted: [string, Json][]; unknown: string[]; state: Json; checkpoints: Json[]; usage: Json;
   lesson?: { profile: string; phase: string; kind: "Observed" | "Unknown"; readOutcome: string; returnedBytes: number | null; explanation: string; limits: string[] } }

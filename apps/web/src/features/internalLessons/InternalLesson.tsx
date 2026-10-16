@@ -9,6 +9,7 @@ import { Field, Select } from "@/ui/Field";
 import { InternalReport } from "@/features/internalModel2/InternalReport";
 import { useLesson } from "./useLesson";
 import { LessonReview } from "./LessonReview";
+import { LessonHistory } from "./LessonHistory";
 function Lesson({ owner }: { owner: string }) {
   const [query, setQuery] = useSearchParams(), [blocked, setBlocked] = useState(false), focus = useRef<HTMLDivElement>(null);
   const onRun = useCallback((id: string) => setQuery({ run: id }), [setQuery]), denied = useCallback(() => setBlocked(true), []);
@@ -31,7 +32,7 @@ function Lesson({ owner }: { owner: string }) {
       </fieldset>
       <Button type="submit" variant="primary" loading={state.busy} disabled={!selected?.supported || !state.workspace?.configured}>Review lesson</Button>
     </form>}
-    <section aria-label="Lesson history" className="mt-8 space-y-3"><h2 className="text-xl font-semibold">Your retained runs</h2><ul className="space-y-2">{state.runs.map((item) => <li key={item.id}><Link className="break-all underline" to={`?run=${encodeURIComponent(item.id)}`}>{item.id}</Link> · {item.status}</li>)}</ul></section>
+    <section aria-label="Lesson history" className="mt-8 space-y-3"><h2 className="text-xl font-semibold">Your retained runs</h2><LessonHistory value={state.runs} /></section>
     {state.workspace?.operator && <Link className="mt-5 block underline" to="/internal/model2">Open advanced internal authoring</Link>}
     {run && <InternalReport key={run} id={run} blocked={denied} />}
   </Page>;

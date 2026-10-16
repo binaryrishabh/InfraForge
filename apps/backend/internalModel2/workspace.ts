@@ -8,10 +8,12 @@ import { contentHash } from "./identity";
 import { ConflictError, NotFoundError } from "../utils/errors";
 export const workspaceRouter = Router();
 workspaceRouter.get("/workspace", async (_req, res) => {
+  if (res.locals.model2Scope !== "operator") throw new NotFoundError();
   const rows = await internalDatabase.query('SELECT id,name,layout,"updatedAt" AT TIME ZONE \'UTC\' AS "updatedAt","challengeId" FROM "Infrastructure" WHERE "ownerId"=$1 ORDER BY "updatedAt" DESC LIMIT 100', [res.locals.userId]);
   res.json({ success: true, designs: rows.rows.map(assessDesign), limit: 100 });
 });
 workspaceRouter.post("/validate", async (req, res) => {
+  if (res.locals.model2Scope !== "operator") throw new NotFoundError();
   const parsed = authoringRequest.safeParse(req.body);
   if (!parsed.success) { res.status(422).json({ diagnostics: parsed.error.issues.map((e) => ({ code: "AUTHORING_FIELD", path: e.path.join("."), message: `${e.message}. Complete this field before review.` })) }); return; }
   const input = parsed.data;

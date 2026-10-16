@@ -33,6 +33,7 @@ export async function checkLessonBrowser(h: LocalHarness, cookie: string, output
     await h.startWorker(); await until(async () => (await h.sql.query('SELECT status FROM "InternalModel2Run" WHERE id=$1', [id])).rows[0]?.status === "completed" || undefined, "guided browser worker completion", 40000);
     await page.getByRole("button", { name: "Refresh durable report" }).click();
     await page.getByRole("heading", { name: "Your recorded read" }).waitFor(); await page.getByText("24 returned object bytes", { exact: false }).waitFor();
+    expect(await page.getByRole("region", { name: "Lesson history" }).getByRole("link", { name: "After restart readiness returns · completed", exact: true }).count()).toBeGreaterThan(0);
     await page.getByRole("button", { name: "Verify deterministic replay" }).click(); await page.getByText("Replay: MatchesRecordedPrefix", { exact: false }).waitFor();
     await page.getByRole("region", { name: "Lesson result" }).scrollIntoViewIfNeeded();
     await page.screenshot({ path: join(output, "lesson-result-desktop.png") });

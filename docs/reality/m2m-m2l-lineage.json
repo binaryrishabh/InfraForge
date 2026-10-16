@@ -52,7 +52,8 @@
     },
     {
       "file": "apps/backend/internalModel2/workspace.ts",
-      "hash": "44f6c551040e3e5eda20f47bcecbb77ce2fc70fab61c6c4140ead0199a1fae61"
+      "hash": "44f6c551040e3e5eda20f47bcecbb77ce2fc70fab61c6c4140ead0199a1fae61",
+      "text": "import { randomUUID } from \"node:crypto\";\nimport { Router } from \"express\";\nimport { authoringGroups } from \"@infraforge/contracts/internal-model2\";\nimport { internalDatabase } from \"./store\";\nimport { assessDesign, authoringRequest, authoredContract, authoredAssumptions } from \"./authoring\";\nimport { compileEnvelope, CompilationRefusal } from \"./envelope\";\nimport { contentHash } from \"./identity\";\nimport { ConflictError, NotFoundError } from \"../utils/errors\";\nexport const workspaceRouter = Router();\nworkspaceRouter.get(\"/workspace\", async (_req, res) => {\n  const rows = await internalDatabase.query('SELECT id,name,layout,\"updatedAt\" AT TIME ZONE \\'UTC\\' AS \"updatedAt\",\"challengeId\" FROM \"Infrastructure\" WHERE \"ownerId\"=$1 ORDER BY \"updatedAt\" DESC LIMIT 100', [res.locals.userId]);\n  res.json({ success: true, designs: rows.rows.map(assessDesign), limit: 100 });\n});\nworkspaceRouter.post(\"/validate\", async (req, res) => {\n  const parsed = authoringRequest.safeParse(req.body);\n  if (!parsed.success) { res.status(422).json({ diagnostics: parsed.error.issues.map((e) => ({ code: \"AUTHORING_FIELD\", path: e.path.join(\".\"), message: `${e.message}. Complete this field before review.` })) }); return; }\n  const input = parsed.data;\n  const row = (await internalDatabase.query('SELECT id,name,layout,\"updatedAt\" AT TIME ZONE \\'UTC\\' AS \"updatedAt\",\"challengeId\" FROM \"Infrastructure\" WHERE id=$1 AND \"ownerId\"=$2', [input.infrastructureId, res.locals.userId])).rows[0];\n  if (!row) throw new NotFoundError(\"Saved design not available\");\n  if (row.updatedAt.toISOString() !== input.expectedDesignUpdatedAt) throw new ConflictError(\"Saved design changed. Refresh designs, select its revision and validate again.\");\n  const design = assessDesign(row);\n  if (!design.supported) { res.status(422).json({ diagnostics: design.reasons.map((message) => ({ code: \"AUTHORING_SCOPE\", path: \"infrastructureId\", message })) }); return; }\n  try {\n    const authored = authoredContract(input.authoring, design);\n    const request = { infrastructureId: input.infrastructureId, expectedDesignUpdatedAt: input.expectedDesignUpdatedAt, idempotencyKey: input.idempotencyKey, workload: authored.workload, contract: authored.contract };\n    const envelope = compileEnvelope(randomUUID(), res.locals.userId, row.layout, row.updatedAt, request);\n    res.json({ success: true, review: { request, requestHash: contentHash(request), revision: design.updatedAt, designName: design.name,\n      fields: authoringGroups.flatMap((g) => g.fields).map((f) => ({ field: f.label, value: authored.values[f.key], unit: f.unit, origin: input.authoring.origin })), assumptions: authoredAssumptions,\n      arrivals: envelope.compiled.input.arrivals.reduce((n, a) => n + (a.kind === \"trace\" ? a.trace.rows.length : 0), 0) } });\n  } catch (error) { if (error instanceof CompilationRefusal) { res.status(422).json({ diagnostics: error.diagnostics }); return; } throw error; }\n});\n"
     },
     {
       "file": "apps/web/src/api/internalModel2.api.ts",
@@ -175,7 +176,7 @@
     },
     {
       "file": "apps/backend/internalModel2/routes.ts",
-      "hash": "4db6852da87f35d500a5a8bf834ea74cc0a958fa35464d6b01562e602faca0bf"
+      "hash": "f1a58716f3ca41523786d85c9e9458e02695dd5fadff3e4da6b0c424b307ea88"
     },
     {
       "file": "apps/backend/internalModel2/sandboxChild.ts",
@@ -203,7 +204,7 @@
     },
     {
       "file": "apps/backend/internalModel2/workspace.ts",
-      "hash": "44f6c551040e3e5eda20f47bcecbb77ce2fc70fab61c6c4140ead0199a1fae61"
+      "hash": "095d30d6f92651669f39ed01af924844f000277ee1cde3635e23170129df0cba"
     },
     {
       "file": "apps/backend/prisma/migrations/20261020000000_model2_lesson/migration.sql",
@@ -247,7 +248,11 @@
     },
     {
       "file": "apps/web/src/features/internalLessons/InternalLesson.tsx",
-      "hash": "8ba69cd994314a6ab926599b7a4a2638b2c89594b9c651683440d9af6f2a9123"
+      "hash": "746f5d0476172bc13aa25c068ef1701b54516d0899f70e079fb5f6c5634c4ed1"
+    },
+    {
+      "file": "apps/web/src/features/internalLessons/LessonHistory.tsx",
+      "hash": "9066deea59069f2df86e9b3c863e9eed2c5a43860fc6307d5d9628755f594224"
     },
     {
       "file": "apps/web/src/features/internalLessons/LessonResult.tsx",
@@ -303,7 +308,7 @@
     },
     {
       "file": "packages/contracts/src/internal-model2/index.ts",
-      "hash": "6a48570c02750a2d7bac8764d9f9d55e5330bdf835d0da1375eaf1273a8b2b03"
+      "hash": "36a41bc1a991c97db6104866f4425b97f3a65520329cc189048cc9b161c2581c"
     }
   ],
   "artifact": "417f931f81556eb24976aaafb07ed32bbb4f37dd708b1b8507f69727406dec14"

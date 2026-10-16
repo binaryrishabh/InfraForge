@@ -9,6 +9,7 @@ import { checkLessonBrowser } from "./lessonBrowserChecks";
 import { checkLessonSandbox } from "./lessonSandboxChecks";
 import { lessonSource } from "./lessonSource";
 import { compileEnvelope, admissionSchema } from "../../internalModel2/envelope";
+import { checkLessonSchema } from "../../release/lessonSchema";
 const suite = process.env.M2M_RUN === "1" ? describe : describe.skip;
 suite("controlled internal object restart lesson", () => {
   test("proves scoped product execution, durable failure boundaries and real OS containment", async () => {
@@ -22,12 +23,16 @@ suite("controlled internal object restart lesson", () => {
     }, "isolated runner cleanup releases replay lease", 30000, 200);
     try {
       await h.prepare(); sessions = new SessionFixtures(h); const alice = await sessions.create(), bob = await sessions.create(); owners = [alice.user.id, bob.user.id]; h.cookie = alice.cookie;
+      await checkLessonSchema(h.sql);
+      await h.sql.query('ALTER TABLE "InternalModel2LessonRun" DISABLE TRIGGER model2_lesson_guard');
+      try { await expect(checkLessonSchema(h.sql)).rejects.toThrow(); }
+      finally { await h.sql.query('ALTER TABLE "InternalModel2LessonRun" ENABLE TRIGGER model2_lesson_guard'); }
       proof.services = { postgres: (await h.sql.query("SHOW server_version")).rows[0].server_version, redis: /^redis_version:(.+)$/m.exec(await h.redis.info("server"))?.[1]?.trim() };
       expect((await fetch(h.api + base + "/lesson", { headers: { Origin: h.origin } })).status).toBe(401);
       await h.request(base + "/lesson", undefined, "GET", 404);
       await h.sql.query('INSERT INTO "InternalModel2Grant" ("userId",reason,scope) VALUES ($1,\'Disposable M2M proof\',\'lesson\'),($2,\'Disposable second owner\',\'lesson\')', owners);
       expect((await h.request(base + "/capability")).scope).toBe("lesson");
-      for (const path of ["/workspace", "/workspace/", "/validate", "/validate/", "/runs"]) await h.request(base + path, path.startsWith("/workspace") ? undefined : {}, path.startsWith("/workspace") ? "GET" : "POST", 404);
+      for (const path of ["/workspace", "/workspace/", "/WORKSPACE", "/validate", "/validate/", "/VALIDATE", "/runs", "/RUNS"]) await h.request(base + path, path.toLowerCase().startsWith("/workspace") ? undefined : {}, path.toLowerCase().startsWith("/workspace") ? "GET" : "POST", 404);
       const id = (await h.request(base + "/lesson/design", {}, "POST", 201)).id;
       expect((await h.request(base + "/lesson/design", {}, "POST", 201)).id).toBe(id);
       const design = (await h.request(base + "/lesson")).workspace.designs.find((d: any) => d.id === id);
@@ -71,6 +76,8 @@ suite("controlled internal object restart lesson", () => {
         proof.runs.push({ phase, row, ...record, report, replay });
       }
       proof.cases.push("three supported phases execute in isolated worker", "isolated replay writes nothing", "kernel enforcement receipts", "immutable policy and terminal persistence");
+      const history = (await h.request(base + "/runs")).runs;
+      for (const saved of proof.runs) expect(history.find((r: any) => r.id === saved.row.id).lesson.phase).toBe(saved.phase);
       for (const loss of ["process-death", "ownership-loss", "cancel", "revoke", "persistence"] as const) {
         const barrier = await captureBarrier(h);
         try {

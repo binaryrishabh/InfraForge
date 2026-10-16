@@ -29,4 +29,5 @@ assert.equal(proof.os.results.controls.value.readonly, true); assert.equal(proof
 assert.equal(proof.os.results.pids.value.denied, true); assert(proof.os.results.pids.value.count > 0 && proof.os.results.pids.value.count < 64);
 assert.equal(proof.os.results.memory.receipt.exit.oom, true); assert.equal(proof.os.results.cpu.receipt.exit.oom, false);
 assert(proof.os.results.cpu.elapsedMs < 15000); assert(proof.os.results.wall.elapsedMs >= 14000 && proof.os.results.wall.elapsedMs < 25000);
+assert.equal(proof.os.orphan.parentKilled, true); assert.equal(proof.os.orphan.state.Running, false); assert.match(proof.os.orphan.overlapRefused, /still active/);
 console.info(JSON.stringify({ verified: true, commit: proof.commit, source: proof.source, image: proof.image, runs: proof.runs.length, cases: proof.cases.length, browser: proof.browser.browser, bytes: bytes.length }));

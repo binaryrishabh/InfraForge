@@ -4,6 +4,7 @@ import { mkdir } from "node:fs/promises";
 import { runSandbox } from "../../internalModel2/sandboxRunner";
 import type { SandboxReceipt } from "../../internalModel2/sandboxRunner";
 import { docker } from "../../internalModel2/sandboxDocker";
+import { checkOrphanDeadline } from "./lessonOrphanChecks";
 // This probe replaces the entrypoint in a disposable test image only.
 const fixture = `import { sandboxReady } from './sandboxHandshake';
 import { createInterface } from 'node:readline';
@@ -57,6 +58,7 @@ export async function checkLessonSandbox(baseImage: string, output: string) {
       if (kind === "oversized") expect(failure).toContain("line budget");
       if (kind === "malformed") expect(failure).toMatch(/JSON|parse|Expected/i);
     }
-    return { image, baseImage, results };
+    const orphan = await checkOrphanDeadline(image, output);
+    return { image, baseImage, results, orphan };
   } finally { await docker(["image", "rm", tag, baseTag]); }
 }
