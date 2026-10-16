@@ -4801,9 +4801,13 @@
       "category": "PRODUCT_UI_ACTION",
       "categoryReason": "Guided internal review, consent, history, explicit separate design creation and exact-retry interaction",
       "ui": {
-        "status": "REVIEW_REQUIRED",
-        "behavior": "Await the complete real browser producer and semantic review",
-        "proofs": []
+        "status": "VALID",
+        "behavior": "Real Chromium proves create/select/review/consent/exact retry after lost response and refresh, worker result, replay and mobile width",
+        "proofs": [
+          "docs/reality/m2m-preview-proof.json",
+          "apps/backend/tests/integration/lessonBrowserChecks.ts",
+          "docs/reality/m2m-handoff.md"
+        ]
       },
       "resources": [
         "Virtual Machine",
@@ -4824,7 +4828,7 @@
         "No physical/provider throughput, durability, latency, security or pricing claim; missing evidence Unknown"
       ],
       "status": "NOT_APPLICABLE",
-      "finalProductEligible": false,
+      "finalProductEligible": true,
       "plan": "Keep INTERNAL. Claude may replace presentation while preserving authenticated scoped APIs, review/retry identity, prefixes, Unknown and worker limits. General technical shipping requires separate approval and evidence."
     },
     {
@@ -4836,9 +4840,13 @@
       "category": "PRODUCT_UI_ACTION",
       "categoryReason": "Guided internal review, consent, history, explicit separate design creation and exact-retry interaction",
       "ui": {
-        "status": "REVIEW_REQUIRED",
-        "behavior": "Await the complete real browser producer and semantic review",
-        "proofs": []
+        "status": "VALID",
+        "behavior": "Real Chromium proves create/select/review/consent/exact retry after lost response and refresh, worker result, replay and mobile width",
+        "proofs": [
+          "docs/reality/m2m-preview-proof.json",
+          "apps/backend/tests/integration/lessonBrowserChecks.ts",
+          "docs/reality/m2m-handoff.md"
+        ]
       },
       "resources": [
         "Virtual Machine",
@@ -4859,7 +4867,7 @@
         "No physical/provider throughput, durability, latency, security or pricing claim; missing evidence Unknown"
       ],
       "status": "NOT_APPLICABLE",
-      "finalProductEligible": false,
+      "finalProductEligible": true,
       "plan": "Keep INTERNAL. Claude may replace presentation while preserving authenticated scoped APIs, review/retry identity, prefixes, Unknown and worker limits. General technical shipping requires separate approval and evidence."
     },
     {
@@ -4871,9 +4879,13 @@
       "category": "PRODUCT_UI_ACTION",
       "categoryReason": "Guided internal review, consent, history, explicit separate design creation and exact-retry interaction",
       "ui": {
-        "status": "REVIEW_REQUIRED",
-        "behavior": "Await the complete real browser producer and semantic review",
-        "proofs": []
+        "status": "VALID",
+        "behavior": "Real Chromium proves create/select/review/consent/exact retry after lost response and refresh, worker result, replay and mobile width",
+        "proofs": [
+          "docs/reality/m2m-preview-proof.json",
+          "apps/backend/tests/integration/lessonBrowserChecks.ts",
+          "docs/reality/m2m-handoff.md"
+        ]
       },
       "resources": [
         "Virtual Machine",
@@ -4894,7 +4906,7 @@
         "No physical/provider throughput, durability, latency, security or pricing claim; missing evidence Unknown"
       ],
       "status": "NOT_APPLICABLE",
-      "finalProductEligible": false,
+      "finalProductEligible": true,
       "plan": "Keep INTERNAL. Claude may replace presentation while preserving authenticated scoped APIs, review/retry identity, prefixes, Unknown and worker limits. General technical shipping requires separate approval and evidence."
     },
     {
@@ -5046,9 +5058,13 @@
       "category": "PRODUCT_UI_ACTION",
       "categoryReason": "Guided internal review, consent, history, explicit separate design creation and exact-retry interaction",
       "ui": {
-        "status": "REVIEW_REQUIRED",
-        "behavior": "Await the complete real browser producer and semantic review",
-        "proofs": []
+        "status": "VALID",
+        "behavior": "Real Chromium proves create/select/review/consent/exact retry after lost response and refresh, worker result, replay and mobile width",
+        "proofs": [
+          "docs/reality/m2m-preview-proof.json",
+          "apps/backend/tests/integration/lessonBrowserChecks.ts",
+          "docs/reality/m2m-handoff.md"
+        ]
       },
       "resources": [
         "Virtual Machine",
@@ -5069,7 +5085,7 @@
         "No physical/provider throughput, durability, latency, security or pricing claim; missing evidence Unknown"
       ],
       "status": "NOT_APPLICABLE",
-      "finalProductEligible": false,
+      "finalProductEligible": true,
       "plan": "Keep INTERNAL. Claude may replace presentation while preserving authenticated scoped APIs, review/retry identity, prefixes, Unknown and worker limits. General technical shipping requires separate approval and evidence."
     },
     {
@@ -5186,9 +5202,13 @@
       "category": "PRODUCT_UI_ACTION",
       "categoryReason": "Guided internal review, consent, history, explicit separate design creation and exact-retry interaction",
       "ui": {
-        "status": "REVIEW_REQUIRED",
-        "behavior": "Await the complete real browser producer and semantic review",
-        "proofs": []
+        "status": "VALID",
+        "behavior": "Real Chromium proves create/select/review/consent/exact retry after lost response and refresh, worker result, replay and mobile width",
+        "proofs": [
+          "docs/reality/m2m-preview-proof.json",
+          "apps/backend/tests/integration/lessonBrowserChecks.ts",
+          "docs/reality/m2m-handoff.md"
+        ]
       },
       "resources": [
         "Virtual Machine",
@@ -5209,7 +5229,7 @@
         "No physical/provider throughput, durability, latency, security or pricing claim; missing evidence Unknown"
       ],
       "status": "NOT_APPLICABLE",
-      "finalProductEligible": false,
+      "finalProductEligible": true,
       "plan": "Keep INTERNAL. Claude may replace presentation while preserving authenticated scoped APIs, review/retry identity, prefixes, Unknown and worker limits. General technical shipping requires separate approval and evidence."
     },
     {
@@ -5221,9 +5241,13 @@
       "category": "PRODUCT_UI_ACTION",
       "categoryReason": "Guided internal review, consent, history, explicit separate design creation and exact-retry interaction",
       "ui": {
-        "status": "REVIEW_REQUIRED",
-        "behavior": "Await the complete real browser producer and semantic review",
-        "proofs": []
+        "status": "VALID",
+        "behavior": "Real Chromium proves create/select/review/consent/exact retry after lost response and refresh, worker result, replay and mobile width",
+        "proofs": [
+          "docs/reality/m2m-preview-proof.json",
+          "apps/backend/tests/integration/lessonBrowserChecks.ts",
+          "docs/reality/m2m-handoff.md"
+        ]
       },
       "resources": [
         "Virtual Machine",
@@ -5244,7 +5268,7 @@
         "No physical/provider throughput, durability, latency, security or pricing claim; missing evidence Unknown"
       ],
       "status": "NOT_APPLICABLE",
-      "finalProductEligible": false,
+      "finalProductEligible": true,
       "plan": "Keep INTERNAL. Claude may replace presentation while preserving authenticated scoped APIs, review/retry identity, prefixes, Unknown and worker limits. General technical shipping requires separate approval and evidence."
     },
     {
@@ -5256,9 +5280,13 @@
       "category": "PRODUCT_UI_ACTION",
       "categoryReason": "Guided internal review, consent, history, explicit separate design creation and exact-retry interaction",
       "ui": {
-        "status": "REVIEW_REQUIRED",
-        "behavior": "Await the complete real browser producer and semantic review",
-        "proofs": []
+        "status": "VALID",
+        "behavior": "Real Chromium proves create/select/review/consent/exact retry after lost response and refresh, worker result, replay and mobile width",
+        "proofs": [
+          "docs/reality/m2m-preview-proof.json",
+          "apps/backend/tests/integration/lessonBrowserChecks.ts",
+          "docs/reality/m2m-handoff.md"
+        ]
       },
       "resources": [
         "Virtual Machine",
@@ -5279,7 +5307,7 @@
         "No physical/provider throughput, durability, latency, security or pricing claim; missing evidence Unknown"
       ],
       "status": "NOT_APPLICABLE",
-      "finalProductEligible": false,
+      "finalProductEligible": true,
       "plan": "Keep INTERNAL. Claude may replace presentation while preserving authenticated scoped APIs, review/retry identity, prefixes, Unknown and worker limits. General technical shipping requires separate approval and evidence."
     },
     {

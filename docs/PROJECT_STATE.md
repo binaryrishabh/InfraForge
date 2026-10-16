@@ -1,16 +1,40 @@
 # InfraForge project state
 
-M2M implementation is in verification: a lesson-scoped, authenticated object
-restart learning experience at `/internal/model2/learn`, using the existing
-Model-2 engine and a pinned disposable Linux executor. Before/during/after read
-choices, strict review/retry identity, explicit new owned lesson design, retained
-prefixes and actual read-result semantics are implemented. Model 1 **ACTIVE**,
-Model 2 **INTERNAL**, production **PARKED**. No general activation or new grants.
+M2M engineering is implemented and proved for **Read a current object before,
+during or after a modeled process restart**, at `/internal/model2/learn`.
+The lesson-scoped authenticated journey creates a separate owned compatible design,
+reviews an explicit educational profile, executes through the existing Model-2
+Outbox/worker/engine in a pinned disposable Linux container, and presents actual
+recorded read results. Before and after reads complete with 24 bytes; the during
+read is rejected and its returned bytes remain Unknown. Complete and interrupted
+evidence remains independently replayable. No cloud timing/durability claim.
+
+Producer `23318372c2932890e3a03c9c2dc33721bcdea3b6` passed **11/11 jobs** in
+[exact-SHA CI 38948550961](https://github.com/binaryrishabh/InfraForge/actions/runs/38948550961),
+including full regression integration, workspace tests and packaging/release
+rehearsal. The dedicated M2M job proves 22 backend cases, seven actual Chromium
+cases, three complete runs and five retained failure/cancellation prefixes,
+real CPU/memory/PID/wall/output enforcement, parent-death termination, migration
+18→19 preservation, authorization, exact retries and parked-runner Model-1 startup.
+[Retained proof](reality/m2m-preview-proof.json) keeps its original producer;
+[provenance](reality/m2m-provenance.json) pins its bytes, source, image and CI artifact.
+Later CI must produce fresh evidence and reverify this retained proof, accepted
+M2L proof and their distinct source identities. Nine corrupted-artifact checks
+exercise refusal rather than trusting a producer's success flag.
+
+All **474 accepted shipping entries remain unchanged**. M2M adds eight PARTIAL
+technical surfaces and seven proven UI actions: **489 total, 208 technical blockers,
+28 valid UI surfaces and 252 outstanding existing UI reviews**. Both general
+shipping gates stay CLOSED. All 30 Model-1 goldens and ten challenge hashes remain
+protected. Model 1 **ACTIVE**, Model 2 **INTERNAL**, production **PARKED**.
+No account grants, general activation, challenge migration, main or production
+changes. Independent M2M Lead acceptance and an explicitly approved preview
+audience/operational envelope remain required. A dedicated rootless Linux runner,
+verified cgroup delegation, image distribution, monitoring and retention checks
+on that actual host remain activation prerequisites; disposable rootful CI does
+not establish them. Vercel is separate from Actions and remains failed/unrepaired.
 See [M2M research](reality/m2m-design.md) and
-[implementation handoff](reality/m2m-handoff.md). The dedicated Linux/Chromium
-proof and full exact-SHA CI/packaging are pending; this is not an acceptance claim.
-All 474 accepted shipping entries remain unchanged; new technical controls remain
-PARTIAL and new UI interactions await their retained browser producer.
+[functional and Claude presentation handoff](reality/m2m-handoff.md).
 
 Latest independently ACCEPTED internal product milestone: **M2L — functional
 Model-2 authoring, validation, reviewed admission and durable report/replay UI**,

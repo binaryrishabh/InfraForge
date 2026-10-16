@@ -134,6 +134,8 @@ jobs:
       - run: bun --no-env-file --no-install test tests/integration/lesson.integration.test.ts
         working-directory: apps/backend
       - run: bun --no-env-file scripts/verify-model2-lesson-proof.ts /tmp/infraforge-m2m/preview-proof.json
+      - run: bun --no-env-file scripts/m2m-proof-negative.ts /tmp/infraforge-m2m/preview-proof.json
+      - run: bun --no-env-file scripts/verify-model2-lesson-proof.ts docs/reality/m2m-preview-proof.json
       - uses: actions/upload-artifact@v4
         if: always()
         with:

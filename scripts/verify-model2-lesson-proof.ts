@@ -1,4 +1,6 @@
 import { readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { resolve } from "node:path";
 import { strict as assert } from "node:assert";
 import { contentHash } from "../apps/backend/internalModel2/identity";
 import { readEnvelope } from "../apps/backend/internalModel2/envelope";
@@ -10,6 +12,14 @@ import { lessonSource } from "./m2m-lineage";
 const path = process.argv[2]; if (!path || process.argv.length !== 3) throw Error("Supply one retained M2M preview proof");
 const bytes = readFileSync(path); assert(bytes.length <= 4194304);
 const proof = JSON.parse(bytes.toString());
+if (resolve(path) === resolve("docs/reality/m2m-preview-proof.json")) {
+  const provenance = JSON.parse(readFileSync("docs/reality/m2m-provenance.json", "utf8"));
+  assert.equal(provenance.schema, "infraforge-m2m-provenance/1");
+  assert.equal(provenance.proof.bytes, bytes.length);
+  assert.equal(provenance.proof.sha256, createHash("sha256").update(bytes).digest("hex"));
+  assert.equal(provenance.producer.commit, proof.commit);
+  assert.equal(provenance.source, proof.source); assert.equal(provenance.image, proof.image);
+}
 assert.equal(proof.schema, "infraforge-m2m-preview/1"); assert.equal(proof.success, true); assert.equal(proof.rowsRemoved, true);
 assert.equal(proof.upgrade.before, proof.upgrade.after); assert.equal(proof.upgrade.existingGrantScope, "operator"); assert.equal(proof.upgrade.unscopedAdmissionRejected, true);
 assert.match(proof.commit, /^[a-f0-9]{40}$/); assert.equal(proof.source, lessonSource());

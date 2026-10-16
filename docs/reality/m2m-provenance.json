@@ -1,0 +1,31 @@
+{
+  "schema": "infraforge-m2m-provenance/1",
+  "producer": {
+    "commit": "23318372c2932890e3a03c9c2dc33721bcdea3b6",
+    "run": 38948550961,
+    "job": 117133791684,
+    "url": "https://github.com/binaryrishabh/InfraForge/actions/runs/38948550961/job/117133791684",
+    "conclusion": "success"
+  },
+  "artifact": {
+    "id": 12067688794,
+    "name": "internal-model2-lesson-proof",
+    "archiveBytes": 351635,
+    "archiveDigest": "sha256:265f40c688f096ebe0193fb8750c0f6cfd528b5ca89a9bca21ec7585db35544b",
+    "createdAt": "2026-10-16T18:39:18Z",
+    "expiresAt": "2026-10-30T18:39:17Z"
+  },
+  "proof": {
+    "path": "docs/reality/m2m-preview-proof.json",
+    "bytes": 1287095,
+    "sha256": "b92d05b43aa8cf65edf68a1abb14f4485ab34459281d9070a32d7423b2850cbe",
+    "backendCases": 22,
+    "browserCases": 7,
+    "retainedRuns": 8,
+    "browser": "156.0.8078.4"
+  },
+  "source": "3d4f63b50843968340724844b5c54ab0a02b0c078fa3098d9e1ffee4f9d1a8a1",
+  "coreSource": "bac35c995b5e5d59a9ce901745c014644fdb843183adbcbb761fb99184c11306",
+  "image": "sha256:c239fdc64c120db2b641aae0f05e754dac9ff8822b0aef5391cecc50ca6741aa",
+  "boundary": "Original producer bytes retained without relabeling. Subsequent CI produces separate fresh evidence and verifies this artifact against the current product source. Disposable rootful Linux proof does not approve rootless deployment or activation."
+}
