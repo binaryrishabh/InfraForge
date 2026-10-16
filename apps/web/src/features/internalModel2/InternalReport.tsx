@@ -11,11 +11,12 @@ function Value({ value }: { value: Json }) {
 }
 export function InternalReport({ id, blocked }: { id: string; blocked: () => void }) {
   const [report, setReport] = useState<Report | null>(null), [error, setError] = useState(""), [busy, setBusy] = useState(false), [replay, setReplay] = useState<ReplayResult | null>(null), [version, setVersion] = useState(0), [stopped, setStopped] = useState(false);
-  const action = useRef(false), control = useRef(new AbortController());
+  const action = useRef(false), control = useRef(new AbortController()), region = useRef<HTMLElement>(null);
+  useEffect(() => { region.current?.focus(); }, [id]);
   useEffect(() => {
     const controller = new AbortController(); control.current = controller; let timer: ReturnType<typeof setTimeout> | undefined, count = 0;
     const read = async () => {
-      try { const value = await api.internalReport(id, controller.signal); if (controller.signal.aborted) return; setReport(value); setError("");
+      try { const value = await api.internalReport(id, controller.signal); if (controller.signal.aborted) return; setReport(value); setError(""); if (!value.replay.compatible) setReplay(null);
         if (["queued", "running"].includes(value.status) && ++count < 60) timer = setTimeout(() => { void read(); }, 2000);
         else setStopped(["queued", "running"].includes(value.status));
       } catch (e) { if (!controller.signal.aborted) { const detail = api.internalError(e); setError(detail.message); if (detail.denied) { setReport(null); blocked(); } } }
@@ -28,7 +29,7 @@ export function InternalReport({ id, blocked }: { id: string; blocked: () => voi
     catch (e) { if (!control.current.signal.aborted) { const detail = api.internalError(e); setError(detail.message); if (detail.denied) { setReport(null); blocked(); } } }
     finally { action.current = false; if (!control.current.signal.aborted) setBusy(false); }
   };
-  return <section aria-label="Durable Model-2 report" className="mt-10 space-y-5 border-t border-line pt-6">
+  return <section ref={region} tabIndex={-1} aria-label="Durable Model-2 report" className="mt-10 space-y-5 border-t border-line pt-6 outline-none">
     <h2 className="text-2xl font-semibold">Last durable result</h2><p className="break-all text-sm text-ink-3">Run {id}</p>
     {error && <Notice tone="fail" role="alert">{error}</Notice>}
     {!report && !error && <Loading label="Reading retained evidence…" />}

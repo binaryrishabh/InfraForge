@@ -5024,9 +5024,9 @@
       "plan": "Implement and prove the real mechanism or remove before Model-2 shipping"
     },
     {
-      "id": "control:apps/web/src/features/internalModel2/AuthoringFields.tsx:Select-47427e9ee538449baebe:0",
+      "id": "control:apps/web/src/features/internalModel2/AuthoringFields.tsx:Select-5e2fdff3cab018016aab:0",
       "source": "apps/web/src/features/internalModel2/AuthoringFields.tsx",
-      "identity": "Select-47427e9ee538449baebe",
+      "identity": "Select-5e2fdff3cab018016aab",
       "description": "Select: value={draft.zone} onChange={(e) => change({ ...draft, zone: e.target.value })}",
       "kind": "control",
       "category": "UNREVIEWED",

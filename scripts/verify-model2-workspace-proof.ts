@@ -5,6 +5,7 @@ import { readCapture } from "../apps/backend/internalModel2/capture";
 import { contentHash } from "../apps/backend/internalModel2/identity";
 import { internalReport, replayStored } from "../apps/backend/internalModel2/report";
 import type { InternalRunRow } from "../apps/backend/internalModel2/store";
+import { workspaceSource } from "../apps/backend/tests/integration/model2WorkspaceSource";
 
 // Content reconstruction complements the actual browser/DB/worker producer logs.
 const path = process.argv[2];
@@ -15,8 +16,10 @@ const proof = JSON.parse(bytes.toString("utf8"));
 assert.equal(proof.schema, "infraforge-m2l-browser/1");
 assert.equal(proof.success, true);
 assert.match(proof.commit, /^[a-f0-9]{40}$/);
+assert.equal(proof.source, workspaceSource(), "Workspace source changed since the browser proof");
 assert.match(proof.browser, /^\d+\./);
 assert.equal(proof.rowsRemoved, true);
+for (const name of ["review editing and saved/history refresh", "mobile authoring"]) assert(proof.cases.includes(name), `Missing case: ${name}`);
 for (const name of ["read-only server validation", "stale saved revision", "authoritative compiler refusal", "validation authorization and owner isolation", "grant refusal", "unsupported saved design", "server field errors", "keyboard review", "lost response + refresh + duplicate click", "queued GUI cancellation", "running GUI cancellation retains committed prefix", "real saved design → author → review → worker → report", "deterministic GUI replay", "worker-absent interrupted report", "corrupt evidence", "historical source mismatch", "mobile no page overflow", "two browser owner isolation", "grant revocation", "lost session"]) assert(proof.cases.includes(name), `Missing case: ${name}`);
 for (const [name, expectedStatus] of [["complete", "completed"], ["interrupted", "interrupted"], ["cancelled", "cancelled"], ["queued", "cancelled"]]) {
   const saved = proof[name];

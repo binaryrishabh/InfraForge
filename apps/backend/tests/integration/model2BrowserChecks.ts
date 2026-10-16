@@ -8,13 +8,14 @@ import { SessionFixtures } from "./sessionFixtures";
 import { captureBarrier, alterRecordedField } from "./model2Barriers";
 import { contentHash } from "../../internalModel2/identity";
 import { educationalExample } from "@infraforge/contracts/internal-model2/example";
+import { workspaceSource } from "./model2WorkspaceSource";
 
 export async function checkModel2Browser(h: LocalHarness, sessions: SessionFixtures, designs: string[]) {
   if (!process.env.MODEL2_BROWSER_MODULE) return { executed: false, reason: "Pinned Playwright runtime is supplied by CI" };
   const { chromium } = await import(process.env.MODEL2_BROWSER_MODULE);
   const browser = await chromium.launch({ headless: true });
   const output = join(tmpdir(), "infraforge-m2l"); await mkdir(output, { recursive: true });
-  const proof: Record<string, any> = { schema: "infraforge-m2l-browser/1", commit: process.env.GITHUB_SHA, browser: browser.version(), startedAt: new Date().toISOString(), success: false, cases: [] };
+  const proof: Record<string, any> = { schema: "infraforge-m2l-browser/1", commit: process.env.GITHUB_SHA, source: workspaceSource(), browser: browser.version(), startedAt: new Date().toISOString(), success: false, cases: [] };
   const cookie = h.cookie, alice = await sessions.create(), bob = await sessions.create(), rows: string[] = [];
   const server = Bun.spawn([process.execPath, "--no-env-file", "--no-install", "../../node_modules/vite/bin/vite.js", "--host", "127.0.0.1", "--port", "5173", "--strictPort"], {
     cwd: fileURLToPath(new URL("../../../web/", import.meta.url)),
@@ -66,6 +67,19 @@ export async function checkModel2Browser(h: LocalHarness, sessions: SessionFixtu
     await page.getByText("Server validation refused this input", { exact: false }).waitFor();
     expect(await page.getByLabel("Read CPU demand (cpu-us)", { exact: true }).getAttribute("aria-invalid")).toBe("true");
     await page.getByLabel("Read CPU demand (cpu-us)", { exact: true }).fill("30");
+    await page.getByRole("button", { name: "Validate and review on server" }).click();
+    await page.getByRole("heading", { name: "Review the exact execution" }).waitFor();
+    await page.getByRole("button", { name: "Back to edit" }).click();
+    expect(await page.getByLabel("Read CPU demand (cpu-us)", { exact: true }).inputValue()).toBe("30");
+    for (const name of ["Refresh saved revisions", "Refresh internal history"]) {
+      const response = page.waitForResponse((r: any) => r.url().endsWith("/internal/model2/runs") && r.request().method() === "GET");
+      await page.getByRole("button", { name, exact: true }).click(); await response;
+    }
+    await page.setViewportSize({ width: 390, height: 844 });
+    expect(await page.evaluate("document.documentElement.scrollWidth <= window.innerWidth")).toBe(true);
+    await page.screenshot({ path: join(output, "authoring-mobile.png"), fullPage: true });
+    await page.setViewportSize({ width: 1280, height: 900 });
+    proof.cases.push("review editing and saved/history refresh", "mobile authoring");
     // Commit through the real API, then lose only the response. Retry must retain identity.
     let lost = false;
     await page.route("**/api/internal/model2/runs", async (route: any) => {
@@ -96,7 +110,8 @@ export async function checkModel2Browser(h: LocalHarness, sessions: SessionFixtu
     await page.getByText("Replay: MatchesRecordedPrefix", { exact: false }).waitFor();
     await page.getByText("Usage evidence", { exact: true }).click();
     await page.getByText("Service activity, commands, object state and faults", { exact: true }).click();
-    await page.screenshot({ path: join(output, "report-desktop.png"), fullPage: true });
+    await page.getByRole("heading", { name: "Last durable result" }).scrollIntoViewIfNeeded();
+    await page.screenshot({ path: join(output, "report-desktop.png") });
     const complete = await read(completeId);
     expect(complete.evidence.model.commands.results).toHaveLength(3);
     proof.complete = await retain(completeId);
@@ -135,7 +150,8 @@ export async function checkModel2Browser(h: LocalHarness, sessions: SessionFixtu
     await page.getByRole("button", { name: "Refresh durable report" }).click();
     await page.setViewportSize({ width: 390, height: 844 });
     expect(await page.evaluate("document.documentElement.scrollWidth <= window.innerWidth")).toBe(true);
-    await page.screenshot({ path: join(output, "report-mobile.png"), fullPage: true });
+    await page.getByRole("heading", { name: "Last durable result" }).scrollIntoViewIfNeeded();
+    await page.screenshot({ path: join(output, "report-mobile.png") });
     const other = await browser.newContext(); await addSession(other, bob.cookie); const second = await other.newPage();
     await second.goto(h.origin + `/internal/model2?run=${completeId}`); await second.getByText("Internal workspace unavailable for this session", { exact: false }).waitFor();
     expect(await second.getByText("Observed modeled facts", { exact: true }).count()).toBe(0); await other.close();

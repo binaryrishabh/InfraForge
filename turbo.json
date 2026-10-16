@@ -87,6 +87,7 @@
         "INTEGRATION_REDIS_PORT",
         "INTEGRATION_API_PORT",
         "INTEGRATION_ALLOW_API_3000",
+        "MODEL2_BROWSER_MODULE",
         "PG*"
       ],
       "outputs": []
