@@ -270,3 +270,15 @@ OS checks, packaging and release rehearsal passed on pinned Linux CI.
 The first implementation CI run exposed packaged-metadata and v1 corruption-message
 regressions; its failed logs/receipts are retained separately. Both were corrected
 without weakening any gate. Vercel is a separate failing status and was not repaired.
+
+Final-publication validation exposed a separate test-parent exit-observation
+failure. Repeated CI diagnostics showed the owned worker in Linux state `Z`
+(already terminated, awaiting reaping), while the Bun subprocess promise and exit
+fields remained pending. The test harness now uses a spawn-time
+[child-process exit event](https://nodejs.org/api/child_process.html#event-exit),
+with explicit signal outcomes and the same five-second stop bound. Three real
+subprocess tests cover normal/nonzero exits and repeated SIGKILL/reaping. This
+changes test process management only; retained simulator execution source, historical
+producer receipts, production worker and Model-1 behavior are unchanged. The
+failed attempts and bounded OS diagnostics are retained separately. Final CI also
+retains the full integration lifecycle receipt for independent process review.

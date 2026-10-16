@@ -6,6 +6,7 @@ import { randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { Pool } from "pg";
 import Redis from "ioredis";
+import { spawnOwned } from "./ownedProcess";
 
 export interface LocalSettings {
   databaseUrl: string;
@@ -90,7 +91,7 @@ export class LocalHarness {
   readonly sql: Pool;
   readonly redis: Redis;
   readonly api: string;
-  private children = new Map<string, ReturnType<typeof Bun.spawn>>();
+  private children = new Map<string, ReturnType<typeof spawnOwned>>();
   private diagnostics = new Map<string, string>();
   private processRecords: Array<{ name: string; pid: number; startedAt: string; endedAt?: string; killedByHarness?: boolean;
     exitCodeBeforeStop?: number | null; signalCodeBeforeStop?: string | null;
@@ -115,10 +116,9 @@ export class LocalHarness {
 
   private spawn(name: string, args: string[]) {
     if (this.children.has(name)) throw new Error(`Process ${name} is already registered`);
-    const child = Bun.spawn([process.execPath, "--no-env-file", "--no-install", ...args], {
+    const child = spawnOwned([process.execPath, "--no-env-file", "--no-install", ...args], {
       cwd: this.cwd,
       env: { ...childEnvironment(this.settings, process.env), BETTER_AUTH_SECRET: this.authSecret },
-      stdout: "pipe", stderr: "pipe",
     });
     this.children.set(name, child);
     const record = { name, pid: child.pid, startedAt: new Date().toISOString() };
@@ -129,7 +129,7 @@ export class LocalHarness {
     });
     for (const stream of [child.stdout, child.stderr]) {
       void (async () => {
-        for await (const chunk of stream as ReadableStream<Uint8Array>) {
+        for await (const chunk of stream) {
           const previous = this.diagnostics.get(name) ?? "";
           this.diagnostics.set(name, (previous + this.redact(new TextDecoder().decode(chunk))).slice(-12000));
         }
