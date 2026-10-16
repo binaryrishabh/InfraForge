@@ -1,10 +1,39 @@
 # InfraForge project state
 
-Latest implemented internal checkpoint: **Reality Engine M2J — real usage evidence
-and metering**, over the independently accepted M2I/develop starting point
-`de787991e5ef4b5756d5dd5cd8598ce323538e68`. This is an implementation milestone,
-not independent acceptance or product activation. See [M2J mechanisms, evidence,
-limits and next integration milestone](reality/m2j-usage-evidence.md).
+Latest independently accepted internal engine milestone: **Reality Engine M2J —
+real usage evidence and metering** at `094841dc031e2f68f18798f58e8b7eaa9f909d89`
+on `develop`. Exact-SHA GitHub Actions [38895281509](https://github.com/binaryrishabh/InfraForge/actions/runs/38895281509)
+passed **10/10 jobs**, including 476 workspace, 64 tooling and 18 integration
+tests, packaging and full release rehearsal. Model-1's 30 goldens and all ten
+immutable challenge hashes remain protected. Vercel FAILED separately; the
+production release remains PARKED.
+
+Independent acceptance covers INTERNAL optional metering of actual compiled
+Model-2 current-object commits, service-attempt outcomes and selected directed
+link payload transfers. Exact byte-time uses object mutation boundaries;
+run/epoch/producer sequence records support complete cumulative-to-interval
+windows and replay. Missing/reordered/conflicting evidence, interruption and
+retention exhaustion fail closed to Unknown. Five retained cases, 165 captures,
+254 source events and 512 independently expected eight-command schedules are
+recorded and replayed under source and size checks. Metered and unmetered
+simulation/provider outcomes were compared for equality. Source hashes and
+historical M2H/M2I artifacts retain their original identities; this is
+provenance compatibility, not a revived historical engine.
+
+Not supported: durable backend/worker usage persistence and crash recovery,
+live normal product Model-2 dispatch, S3/versioning/error-class storage or
+request billing, provider network-egress charge classification, complete cloud
+bill, physical calibration, universal UI readiness. No provider tariff was
+added. **Model 1 ACTIVE; Model 2 INTERNAL; production PARKED.** The 441
+surfaces still have 177 technical blockers and 252 UI behavior reviews. Next
+M2K is a strictly INTERNAL saved-design -> immutable versioned run-input ->
+worker -> retained evidence -> read-only Observed/Interpreted/Unknown report
+vertical slice with explicit owner authorization and replay/interruption
+proofs. Do not activate general Free Mode/challenge Model-2 or retire Model 1;
+Claude owns the later visual redesign. See
+[M2J research/evidence/limits](reality/m2j-usage-evidence.md).
+
+
 
 Latest independently accepted internal engine milestone: **Reality Engine M2I** at
 `5b4771ac107e447aa08aac146b8ff15f019beac9` on `develop`.
