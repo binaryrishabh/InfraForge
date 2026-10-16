@@ -182,6 +182,7 @@ model InternalModel2Grant {
   userId String @id
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   reason String @db.VarChar(400)
+  scope String @default("operator") @db.VarChar(16)
   grantedAt DateTime @default(now()) @db.Timestamptz(3)
 }
 
@@ -204,6 +205,14 @@ model InternalModel2Run {
   reason String? @db.VarChar(500)
   createdAt DateTime @default(now()) @db.Timestamptz(3)
   updatedAt DateTime @default(now()) @db.Timestamptz(3)
+  lesson InternalModel2LessonRun?
   @@unique([ownerId, idempotencyKey])
   @@index([status, createdAt])
+}
+
+model InternalModel2LessonRun {
+  runId String @id
+  run InternalModel2Run @relation(fields: [runId], references: [id], onDelete: Cascade)
+  policy Json
+  receipt Json?
 }

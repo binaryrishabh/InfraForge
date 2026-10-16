@@ -4,7 +4,7 @@ import { Wordmark } from "@/ui/Brand";
 import { cx } from "@/ui/cx";
 import { Loading, Page } from "@/ui/Page";
 import { AccountMenu } from "./AccountMenu";
-import { workspace } from "@/api/internalModel2.api";
+import { capability } from "@/api/internalLesson.api";
 import { useAuthStore } from "@/features/auth/store/auth.store";
 
 const NAV = [
@@ -18,7 +18,7 @@ export function SkipLink() {
   return <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:rounded-md focus:bg-ink focus:px-3 focus:py-2 focus:text-inverse">Skip to content</a>;
 }
 
-function NavItems({ className, internal }: { className?: string; internal: boolean }) {
+function NavItems({ className, internal, lesson }: { className?: string; internal: boolean; lesson: boolean }) {
   return (
     <ul className={cx("flex items-center gap-1", className)}>
       {NAV.map((item) => (
@@ -29,7 +29,7 @@ function NavItems({ className, internal }: { className?: string; internal: boole
           </NavLink>
         </li>
       ))}
-      {internal && <li className="shrink-0"><NavLink to="/internal/model2" className="inline-flex h-9 items-center whitespace-nowrap rounded-md px-3 text-sm text-ink-2 hover:bg-sunken">Model 2 · internal</NavLink></li>}
+      {internal && <li className="shrink-0"><NavLink to={lesson ? "/internal/model2/learn" : "/internal/model2"} className="inline-flex h-9 items-center whitespace-nowrap rounded-md px-3 text-sm text-ink-2 hover:bg-sunken">Model 2 · internal</NavLink></li>}
     </ul>
   );
 }
@@ -38,9 +38,10 @@ function NavItems({ className, internal }: { className?: string; internal: boole
 Narrow screens keep the same four links in a scrollable second row. */
 export function AppShell() {
   const owner = useAuthStore((s) => s.user?.id), [grantedOwner, setGrantedOwner] = useState<string | null>(null);
+  const [lesson, setLesson] = useState(false);
   useEffect(() => {
     const controller = new AbortController();
-    if (owner) void workspace(controller.signal).then(() => { if (!controller.signal.aborted) setGrantedOwner(owner); }).catch(() => { if (!controller.signal.aborted) setGrantedOwner(null); });
+    if (owner) void capability(controller.signal).then((value) => { if (!controller.signal.aborted) { setGrantedOwner(owner); setLesson(value.scope === "lesson"); } }).catch(() => { if (!controller.signal.aborted) setGrantedOwner(null); });
     return () => controller.abort();
   }, [owner]);
   return (
@@ -49,10 +50,10 @@ export function AppShell() {
       <header className="sticky top-0 z-30 border-b border-line bg-bg/95 backdrop-blur-sm">
         <div className="mx-auto flex h-14 max-w-[1360px] items-center gap-6 px-4 sm:px-6 lg:px-8">
           <Link to="/home" aria-label="InfraForge home" className="rounded-md"><Wordmark /></Link>
-          <nav aria-label="Primary" className="hidden flex-1 md:block"><NavItems internal={!!owner && grantedOwner === owner} /></nav>
+          <nav aria-label="Primary" className="hidden flex-1 md:block"><NavItems internal={!!owner && grantedOwner === owner} lesson={lesson} /></nav>
           <div className="ml-auto md:ml-0"><AccountMenu /></div>
         </div>
-        <nav aria-label="Primary" className="if-scroll overflow-x-auto overflow-y-hidden border-t border-line px-2 md:hidden"><NavItems internal={!!owner && grantedOwner === owner} className="h-11" /></nav>
+        <nav aria-label="Primary" className="if-scroll overflow-x-auto overflow-y-hidden border-t border-line px-2 md:hidden"><NavItems internal={!!owner && grantedOwner === owner} lesson={lesson} className="h-11" /></nav>
       </header>
       <main id="main" tabIndex={-1} className="outline-none"><Suspense fallback={<Page><Loading label="Loading…" /></Page>}><Outlet /></Suspense></main>
     </div>

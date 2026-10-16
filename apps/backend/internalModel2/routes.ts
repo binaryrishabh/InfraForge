@@ -2,17 +2,27 @@ import { Router, json } from "express";
 import { z } from "zod";
 import { NotFoundError, ValidationError } from "../utils/errors";
 import { admissionSchema, CompilationRefusal } from "./envelope";
-import { admit, hasInternalGrant, ownedRun, requestCancellation, internalDatabase } from "./store";
+import { admit, ownedRun, requestCancellation, internalDatabase } from "./store";
 import { internalReport, reportHtml, replayStored } from "./report";
 import { workspaceRouter } from "./workspace";
+import { lessonRouter } from "./lessonRoutes";
+import { grantScope, lessonRecord } from "./lessonStore";
+import { replayLesson } from "./lessonExecution";
+import { lessonSummary } from "./lessonSummary";
 export const internalModel2Router = Router();
 internalModel2Router.use(async (_req, res, next) => {
-  if (!await hasInternalGrant(res.locals.userId)) throw new NotFoundError();
+  const scope = await grantScope(res.locals.userId);
+  if (!scope) throw new NotFoundError();
+  res.locals.model2Scope = scope;
   res.set("Cache-Control", "no-store"); res.set("X-Content-Type-Options", "nosniff"); next();
 });
 internalModel2Router.use(json({ limit: "256kb" }));
+internalModel2Router.get("/capability", (_req, res) => { res.json({ scope: res.locals.model2Scope }); });
+internalModel2Router.use(lessonRouter);
+internalModel2Router.use((req, res, next) => { if (["/workspace", "/validate"].includes(req.path.replace(/\/$/, "")) && res.locals.model2Scope !== "operator") throw new NotFoundError(); next(); });
 internalModel2Router.use(workspaceRouter);
 internalModel2Router.post("/runs", async (req, res) => {
+  if (res.locals.model2Scope !== "operator") throw new NotFoundError();
   const parsed = admissionSchema.safeParse(req.body);
   if (!parsed.success) throw new ValidationError(parsed.error.issues.map((e) => `${e.path.join(".")}: ${e.message}`).join("; "));
   try {
@@ -24,21 +34,27 @@ internalModel2Router.post("/runs", async (req, res) => {
   }
 });
 internalModel2Router.get("/runs", async (_req, res) => {
-  const rows = await internalDatabase.query('SELECT id,status,"inputHash",sequence,"throughUs",reason,"createdAt" FROM "InternalModel2Run" WHERE "ownerId"=$1 ORDER BY "createdAt" DESC,id DESC LIMIT 20', [res.locals.userId]);
+  const rows = await internalDatabase.query('SELECT id,status,"inputHash",sequence,"throughUs",reason,"createdAt" FROM "InternalModel2Run" r WHERE "ownerId"=$1 AND ($2=\'operator\' OR EXISTS (SELECT 1 FROM "InternalModel2LessonRun" l WHERE l."runId"=r.id)) ORDER BY "createdAt" DESC,id DESC LIMIT 20', [res.locals.userId, res.locals.model2Scope]);
   res.json({ success: true, runs: rows.rows, limit: 20 });
 });
 internalModel2Router.param("id", (req, _res, next, value) => { if (!z.uuid().safeParse(value).success) throw new ValidationError("A valid internal run ID is required"); next(); });
+internalModel2Router.use("/runs/:id", async (req, res, next) => {
+  await ownedRun(String(req.params.id), res.locals.userId);
+  if (res.locals.model2Scope !== "operator" && !await lessonRecord(String(req.params.id))) throw new NotFoundError();
+  next();
+});
 internalModel2Router.get("/runs/:id/report", async (req, res) => {
-  const report = internalReport(await ownedRun(String(req.params.id), res.locals.userId));
+  const row = await ownedRun(String(req.params.id), res.locals.userId), report = internalReport(row);
+  const record = await lessonRecord(row.id);
   if (req.query.format === "html") {
     res.set("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; frame-ancestors 'none'");
     res.type("html").send(reportHtml(report));
-  } else res.json({ success: true, report });
+  } else res.json({ success: true, report: record ? { ...report, lesson: lessonSummary(row, record.policy, record.receipt) } : report });
 });
 internalModel2Router.get("/runs/:id/input", async (req, res) => { const row = await ownedRun(String(req.params.id), res.locals.userId); res.json({ success: true, input: row.input, inputHash: row.inputHash }); });
 internalModel2Router.get("/runs/:id/replay", async (req, res) => {
   const row = await ownedRun(String(req.params.id), res.locals.userId);
-  try { res.json({ success: true, replay: replayStored(row) }); }
+  try { res.json({ success: true, replay: await lessonRecord(row.id) ? await replayLesson(row) : replayStored(row) }); }
   catch (error) { res.json({ success: true, replay: { kind: "Unavailable", reason: error instanceof Error ? error.message : "Historical replay unavailable" } }); }
 });
 internalModel2Router.post("/runs/:id/cancel", async (req, res) => {

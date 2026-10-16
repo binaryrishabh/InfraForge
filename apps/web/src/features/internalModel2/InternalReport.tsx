@@ -3,6 +3,7 @@ import type { InternalReport as Report, Json, ReplayResult } from "@infraforge/c
 import * as api from "@/api/internalModel2.api";
 import { Button } from "@/ui/Button";
 import { Notice, Loading } from "@/ui/Page";
+import { LessonResult } from "@/features/internalLessons/LessonResult";
 function Value({ value }: { value: Json }) {
   if (value === null) return <span>Unavailable</span>;
   if (Array.isArray(value)) return <ul className="space-y-2">{value.map((v, i) => <li key={i} className="border-l border-line pl-3"><Value value={v} /></li>)}</ul>;
@@ -37,6 +38,7 @@ export function InternalReport({ id, blocked }: { id: string; blocked: () => voi
     <Button size="sm" disabled={busy} onClick={() => { setStopped(false); setVersion((v) => v + 1); }}>Refresh durable report</Button>
     {stopped && <p role="status">Automatic refresh stopped after 60 reads. Refresh manually to read the latest committed state.</p>}
     {report && <>
+      {report.lesson && <LessonResult value={report.lesson} />}
       <p role="status" className="font-semibold">Status: {report.status} · capture {report.sequence} · through {report.throughUs} us</p>
       <p className="text-sm">{report.reason || "Lifecycle status is the last committed state, not a worker liveness signal."} {report.status !== "completed" && "Retained prefix only; missing work is not zero. Crashed executions are not resumed."}</p>
       {report.problems.length > 0 && <Notice tone="fail">{report.problems.join(" ")}</Notice>}

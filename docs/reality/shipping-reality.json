@@ -1,6 +1,6 @@
 {
   "schema": "infraforge-shipping-reality/2",
-  "scope": "Separate PRODUCT_UI_VALIDITY from MODEL2_REALITY_SHIPPING_READY. M2L additions have narrow internal browser/API/worker proof; accepted 441-entry baseline preserved.",
+  "scope": "Accepted 474 M2L entries preserved. Guided lesson additions separately reviewed; Model-2 technical shipping remains closed.",
   "entries": [
     {
       "id": "chaos:packages/domain/src/resource/DeploymentChaosNames.enum.ts:CpuSpike:0",
@@ -4793,6 +4793,461 @@
       "legacyM2gStatus": "MODEL1_ONLY"
     },
     {
+      "id": "control:apps/web/src/features/internalLessons/InternalLesson.tsx:Button-03ad7717d37eb07c8c88:0",
+      "source": "apps/web/src/features/internalLessons/InternalLesson.tsx",
+      "identity": "Button-03ad7717d37eb07c8c88",
+      "description": "Button: onClick={() => { void state.create(); }}",
+      "kind": "control",
+      "category": "PRODUCT_UI_ACTION",
+      "categoryReason": "Guided internal review, consent, history, explicit separate design creation and exact-retry interaction",
+      "ui": {
+        "status": "REVIEW_REQUIRED",
+        "behavior": "Await the complete real browser producer and semantic review",
+        "proofs": []
+      },
+      "resources": [
+        "Virtual Machine",
+        "Object Storage"
+      ],
+      "model1Meaning": "Internal lesson only; normal Model-1 behavior unchanged",
+      "model2Owner": "apps/backend/internalModel2/lessonExecution.ts",
+      "changesState": true,
+      "effects": {
+        "physics": false,
+        "reachability": false,
+        "security": false,
+        "cost": false,
+        "evidence": true
+      },
+      "provenanceRequirements": [
+        "Versioned educational profile, exact owned design revision, immutable reviewed image/policy and actual retained capture",
+        "No physical/provider throughput, durability, latency, security or pricing claim; missing evidence Unknown"
+      ],
+      "status": "NOT_APPLICABLE",
+      "finalProductEligible": false,
+      "plan": "Keep INTERNAL. Claude may replace presentation while preserving authenticated scoped APIs, review/retry identity, prefixes, Unknown and worker limits. General technical shipping requires separate approval and evidence."
+    },
+    {
+      "id": "control:apps/web/src/features/internalLessons/InternalLesson.tsx:Button-81c8adf0b5d574b3ca55:0",
+      "source": "apps/web/src/features/internalLessons/InternalLesson.tsx",
+      "identity": "Button-81c8adf0b5d574b3ca55",
+      "description": "Button: onClick={() => { void state.refresh(); }}",
+      "kind": "control",
+      "category": "PRODUCT_UI_ACTION",
+      "categoryReason": "Guided internal review, consent, history, explicit separate design creation and exact-retry interaction",
+      "ui": {
+        "status": "REVIEW_REQUIRED",
+        "behavior": "Await the complete real browser producer and semantic review",
+        "proofs": []
+      },
+      "resources": [
+        "Virtual Machine",
+        "Object Storage"
+      ],
+      "model1Meaning": "Internal lesson only; normal Model-1 behavior unchanged",
+      "model2Owner": "apps/backend/internalModel2/lessonExecution.ts",
+      "changesState": true,
+      "effects": {
+        "physics": false,
+        "reachability": false,
+        "security": false,
+        "cost": false,
+        "evidence": true
+      },
+      "provenanceRequirements": [
+        "Versioned educational profile, exact owned design revision, immutable reviewed image/policy and actual retained capture",
+        "No physical/provider throughput, durability, latency, security or pricing claim; missing evidence Unknown"
+      ],
+      "status": "NOT_APPLICABLE",
+      "finalProductEligible": false,
+      "plan": "Keep INTERNAL. Claude may replace presentation while preserving authenticated scoped APIs, review/retry identity, prefixes, Unknown and worker limits. General technical shipping requires separate approval and evidence."
+    },
+    {
+      "id": "control:apps/web/src/features/internalLessons/InternalLesson.tsx:Button-c2c48a9935150c9efaca:0",
+      "source": "apps/web/src/features/internalLessons/InternalLesson.tsx",
+      "identity": "Button-c2c48a9935150c9efaca",
+      "description": "Button: <Button type=\"submit\" variant=\"primary\" loading={state.busy} disabled={!selected?.supported || !state.workspace?.configured}>Review lesson</Button>",
+      "kind": "control",
+      "category": "PRODUCT_UI_ACTION",
+      "categoryReason": "Guided internal review, consent, history, explicit separate design creation and exact-retry interaction",
+      "ui": {
+        "status": "REVIEW_REQUIRED",
+        "behavior": "Await the complete real browser producer and semantic review",
+        "proofs": []
+      },
+      "resources": [
+        "Virtual Machine",
+        "Object Storage"
+      ],
+      "model1Meaning": "Internal lesson only; normal Model-1 behavior unchanged",
+      "model2Owner": "apps/backend/internalModel2/lessonExecution.ts",
+      "changesState": true,
+      "effects": {
+        "physics": false,
+        "reachability": false,
+        "security": false,
+        "cost": false,
+        "evidence": true
+      },
+      "provenanceRequirements": [
+        "Versioned educational profile, exact owned design revision, immutable reviewed image/policy and actual retained capture",
+        "No physical/provider throughput, durability, latency, security or pricing claim; missing evidence Unknown"
+      ],
+      "status": "NOT_APPLICABLE",
+      "finalProductEligible": false,
+      "plan": "Keep INTERNAL. Claude may replace presentation while preserving authenticated scoped APIs, review/retry identity, prefixes, Unknown and worker limits. General technical shipping requires separate approval and evidence."
+    },
+    {
+      "id": "control:apps/web/src/features/internalLessons/InternalLesson.tsx:LessonReview-45eb64b9fdd926867cd0:0",
+      "source": "apps/web/src/features/internalLessons/InternalLesson.tsx",
+      "identity": "LessonReview-45eb64b9fdd926867cd0",
+      "description": "LessonReview: value={state.saved.review}",
+      "kind": "control",
+      "category": "INFRA_INPUT",
+      "categoryReason": "Chooses owned design/revision or authored read phase; reviewed numeric contract remains a technical input",
+      "ui": {
+        "status": "NOT_APPLICABLE",
+        "behavior": "Technical software proof is limited to the internal lesson; general Model-2 shipping remains closed",
+        "proofs": []
+      },
+      "resources": [
+        "Virtual Machine",
+        "Object Storage"
+      ],
+      "model1Meaning": "Internal lesson only; normal Model-1 behavior unchanged",
+      "model2Owner": "apps/backend/internalModel2/lessonExecution.ts",
+      "changesState": true,
+      "effects": {
+        "physics": true,
+        "reachability": true,
+        "security": false,
+        "cost": false,
+        "evidence": true
+      },
+      "provenanceRequirements": [
+        "Versioned educational profile, exact owned design revision, immutable reviewed image/policy and actual retained capture",
+        "No physical/provider throughput, durability, latency, security or pricing claim; missing evidence Unknown"
+      ],
+      "status": "PARTIAL",
+      "finalProductEligible": false,
+      "plan": "Keep INTERNAL. Claude may replace presentation while preserving authenticated scoped APIs, review/retry identity, prefixes, Unknown and worker limits. General technical shipping requires separate approval and evidence."
+    },
+    {
+      "id": "control:apps/web/src/features/internalLessons/InternalLesson.tsx:Select-5cf3d8a1686e5ad50a28:0",
+      "source": "apps/web/src/features/internalLessons/InternalLesson.tsx",
+      "identity": "Select-5cf3d8a1686e5ad50a28",
+      "description": "Select: value={state.saved.phase} onChange={(e) => state.update({ phase: e.target.value as ReadPhase })}",
+      "kind": "control",
+      "category": "INFRA_INPUT",
+      "categoryReason": "Chooses owned design/revision or authored read phase; reviewed numeric contract remains a technical input",
+      "ui": {
+        "status": "NOT_APPLICABLE",
+        "behavior": "Technical software proof is limited to the internal lesson; general Model-2 shipping remains closed",
+        "proofs": []
+      },
+      "resources": [
+        "Virtual Machine",
+        "Object Storage"
+      ],
+      "model1Meaning": "Internal lesson only; normal Model-1 behavior unchanged",
+      "model2Owner": "apps/backend/internalModel2/lessonExecution.ts",
+      "changesState": true,
+      "effects": {
+        "physics": true,
+        "reachability": true,
+        "security": false,
+        "cost": false,
+        "evidence": true
+      },
+      "provenanceRequirements": [
+        "Versioned educational profile, exact owned design revision, immutable reviewed image/policy and actual retained capture",
+        "No physical/provider throughput, durability, latency, security or pricing claim; missing evidence Unknown"
+      ],
+      "status": "PARTIAL",
+      "finalProductEligible": false,
+      "plan": "Keep INTERNAL. Claude may replace presentation while preserving authenticated scoped APIs, review/retry identity, prefixes, Unknown and worker limits. General technical shipping requires separate approval and evidence."
+    },
+    {
+      "id": "control:apps/web/src/features/internalLessons/InternalLesson.tsx:Select-94449c6749f709ea4380:0",
+      "source": "apps/web/src/features/internalLessons/InternalLesson.tsx",
+      "identity": "Select-94449c6749f709ea4380",
+      "description": "Select: value={state.saved.design} onChange={(e) => state.update({ design: e.target.value })}",
+      "kind": "control",
+      "category": "INFRA_INPUT",
+      "categoryReason": "Chooses owned design/revision or authored read phase; reviewed numeric contract remains a technical input",
+      "ui": {
+        "status": "NOT_APPLICABLE",
+        "behavior": "Technical software proof is limited to the internal lesson; general Model-2 shipping remains closed",
+        "proofs": []
+      },
+      "resources": [
+        "Virtual Machine",
+        "Object Storage"
+      ],
+      "model1Meaning": "Internal lesson only; normal Model-1 behavior unchanged",
+      "model2Owner": "apps/backend/internalModel2/lessonExecution.ts",
+      "changesState": true,
+      "effects": {
+        "physics": true,
+        "reachability": true,
+        "security": false,
+        "cost": false,
+        "evidence": true
+      },
+      "provenanceRequirements": [
+        "Versioned educational profile, exact owned design revision, immutable reviewed image/policy and actual retained capture",
+        "No physical/provider throughput, durability, latency, security or pricing claim; missing evidence Unknown"
+      ],
+      "status": "PARTIAL",
+      "finalProductEligible": false,
+      "plan": "Keep INTERNAL. Claude may replace presentation while preserving authenticated scoped APIs, review/retry identity, prefixes, Unknown and worker limits. General technical shipping requires separate approval and evidence."
+    },
+    {
+      "id": "control:apps/web/src/features/internalLessons/InternalLesson.tsx:form-b8de9e678e5fef5af1ea:0",
+      "source": "apps/web/src/features/internalLessons/InternalLesson.tsx",
+      "identity": "form-b8de9e678e5fef5af1ea",
+      "description": "form: onSubmit={(e) => { e.preventDefault(); void state.review(); }}",
+      "kind": "control",
+      "category": "PRODUCT_UI_ACTION",
+      "categoryReason": "Guided internal review, consent, history, explicit separate design creation and exact-retry interaction",
+      "ui": {
+        "status": "REVIEW_REQUIRED",
+        "behavior": "Await the complete real browser producer and semantic review",
+        "proofs": []
+      },
+      "resources": [
+        "Virtual Machine",
+        "Object Storage"
+      ],
+      "model1Meaning": "Internal lesson only; normal Model-1 behavior unchanged",
+      "model2Owner": "apps/backend/internalModel2/lessonExecution.ts",
+      "changesState": true,
+      "effects": {
+        "physics": false,
+        "reachability": false,
+        "security": false,
+        "cost": false,
+        "evidence": true
+      },
+      "provenanceRequirements": [
+        "Versioned educational profile, exact owned design revision, immutable reviewed image/policy and actual retained capture",
+        "No physical/provider throughput, durability, latency, security or pricing claim; missing evidence Unknown"
+      ],
+      "status": "NOT_APPLICABLE",
+      "finalProductEligible": false,
+      "plan": "Keep INTERNAL. Claude may replace presentation while preserving authenticated scoped APIs, review/retry identity, prefixes, Unknown and worker limits. General technical shipping requires separate approval and evidence."
+    },
+    {
+      "id": "control:apps/web/src/features/internalLessons/InternalLesson.tsx:option-507ce379458462c0af55:0",
+      "source": "apps/web/src/features/internalLessons/InternalLesson.tsx",
+      "identity": "option-507ce379458462c0af55",
+      "description": "option: value=\"\"",
+      "kind": "control",
+      "category": "PRODUCT_UI_ACTION",
+      "categoryReason": "Guided internal review, consent, history, explicit separate design creation and exact-retry interaction",
+      "ui": {
+        "status": "REVIEW_REQUIRED",
+        "behavior": "Await the complete real browser producer and semantic review",
+        "proofs": []
+      },
+      "resources": [
+        "Virtual Machine",
+        "Object Storage"
+      ],
+      "model1Meaning": "Internal lesson only; normal Model-1 behavior unchanged",
+      "model2Owner": "apps/backend/internalModel2/lessonExecution.ts",
+      "changesState": true,
+      "effects": {
+        "physics": false,
+        "reachability": false,
+        "security": false,
+        "cost": false,
+        "evidence": true
+      },
+      "provenanceRequirements": [
+        "Versioned educational profile, exact owned design revision, immutable reviewed image/policy and actual retained capture",
+        "No physical/provider throughput, durability, latency, security or pricing claim; missing evidence Unknown"
+      ],
+      "status": "NOT_APPLICABLE",
+      "finalProductEligible": false,
+      "plan": "Keep INTERNAL. Claude may replace presentation while preserving authenticated scoped APIs, review/retry identity, prefixes, Unknown and worker limits. General technical shipping requires separate approval and evidence."
+    },
+    {
+      "id": "control:apps/web/src/features/internalLessons/InternalLesson.tsx:option-9629eeef61c351c5240c:0",
+      "source": "apps/web/src/features/internalLessons/InternalLesson.tsx",
+      "identity": "option-9629eeef61c351c5240c",
+      "description": "option: value={d.id}",
+      "kind": "control",
+      "category": "PRODUCT_UI_ACTION",
+      "categoryReason": "Guided internal review, consent, history, explicit separate design creation and exact-retry interaction",
+      "ui": {
+        "status": "REVIEW_REQUIRED",
+        "behavior": "Await the complete real browser producer and semantic review",
+        "proofs": []
+      },
+      "resources": [
+        "Virtual Machine",
+        "Object Storage"
+      ],
+      "model1Meaning": "Internal lesson only; normal Model-1 behavior unchanged",
+      "model2Owner": "apps/backend/internalModel2/lessonExecution.ts",
+      "changesState": true,
+      "effects": {
+        "physics": false,
+        "reachability": false,
+        "security": false,
+        "cost": false,
+        "evidence": true
+      },
+      "provenanceRequirements": [
+        "Versioned educational profile, exact owned design revision, immutable reviewed image/policy and actual retained capture",
+        "No physical/provider throughput, durability, latency, security or pricing claim; missing evidence Unknown"
+      ],
+      "status": "NOT_APPLICABLE",
+      "finalProductEligible": false,
+      "plan": "Keep INTERNAL. Claude may replace presentation while preserving authenticated scoped APIs, review/retry identity, prefixes, Unknown and worker limits. General technical shipping requires separate approval and evidence."
+    },
+    {
+      "id": "control:apps/web/src/features/internalLessons/InternalLesson.tsx:option-97530eb60804ae492d80:0",
+      "source": "apps/web/src/features/internalLessons/InternalLesson.tsx",
+      "identity": "option-97530eb60804ae492d80",
+      "description": "option: value={key}",
+      "kind": "control",
+      "category": "PRODUCT_UI_ACTION",
+      "categoryReason": "Guided internal review, consent, history, explicit separate design creation and exact-retry interaction",
+      "ui": {
+        "status": "REVIEW_REQUIRED",
+        "behavior": "Await the complete real browser producer and semantic review",
+        "proofs": []
+      },
+      "resources": [
+        "Virtual Machine",
+        "Object Storage"
+      ],
+      "model1Meaning": "Internal lesson only; normal Model-1 behavior unchanged",
+      "model2Owner": "apps/backend/internalModel2/lessonExecution.ts",
+      "changesState": true,
+      "effects": {
+        "physics": false,
+        "reachability": false,
+        "security": false,
+        "cost": false,
+        "evidence": true
+      },
+      "provenanceRequirements": [
+        "Versioned educational profile, exact owned design revision, immutable reviewed image/policy and actual retained capture",
+        "No physical/provider throughput, durability, latency, security or pricing claim; missing evidence Unknown"
+      ],
+      "status": "NOT_APPLICABLE",
+      "finalProductEligible": false,
+      "plan": "Keep INTERNAL. Claude may replace presentation while preserving authenticated scoped APIs, review/retry identity, prefixes, Unknown and worker limits. General technical shipping requires separate approval and evidence."
+    },
+    {
+      "id": "control:apps/web/src/features/internalLessons/LessonReview.tsx:Button-3fc2b6a24341d2179f03:0",
+      "source": "apps/web/src/features/internalLessons/LessonReview.tsx",
+      "identity": "Button-3fc2b6a24341d2179f03",
+      "description": "Button: onClick={edit}",
+      "kind": "control",
+      "category": "PRODUCT_UI_ACTION",
+      "categoryReason": "Guided internal review, consent, history, explicit separate design creation and exact-retry interaction",
+      "ui": {
+        "status": "REVIEW_REQUIRED",
+        "behavior": "Await the complete real browser producer and semantic review",
+        "proofs": []
+      },
+      "resources": [
+        "Virtual Machine",
+        "Object Storage"
+      ],
+      "model1Meaning": "Internal lesson only; normal Model-1 behavior unchanged",
+      "model2Owner": "apps/backend/internalModel2/lessonExecution.ts",
+      "changesState": true,
+      "effects": {
+        "physics": false,
+        "reachability": false,
+        "security": false,
+        "cost": false,
+        "evidence": true
+      },
+      "provenanceRequirements": [
+        "Versioned educational profile, exact owned design revision, immutable reviewed image/policy and actual retained capture",
+        "No physical/provider throughput, durability, latency, security or pricing claim; missing evidence Unknown"
+      ],
+      "status": "NOT_APPLICABLE",
+      "finalProductEligible": false,
+      "plan": "Keep INTERNAL. Claude may replace presentation while preserving authenticated scoped APIs, review/retry identity, prefixes, Unknown and worker limits. General technical shipping requires separate approval and evidence."
+    },
+    {
+      "id": "control:apps/web/src/features/internalLessons/LessonReview.tsx:Button-9a579eb19db2c73ca5e5:0",
+      "source": "apps/web/src/features/internalLessons/LessonReview.tsx",
+      "identity": "Button-9a579eb19db2c73ca5e5",
+      "description": "Button: onClick={submit}",
+      "kind": "control",
+      "category": "PRODUCT_UI_ACTION",
+      "categoryReason": "Guided internal review, consent, history, explicit separate design creation and exact-retry interaction",
+      "ui": {
+        "status": "REVIEW_REQUIRED",
+        "behavior": "Await the complete real browser producer and semantic review",
+        "proofs": []
+      },
+      "resources": [
+        "Virtual Machine",
+        "Object Storage"
+      ],
+      "model1Meaning": "Internal lesson only; normal Model-1 behavior unchanged",
+      "model2Owner": "apps/backend/internalModel2/lessonExecution.ts",
+      "changesState": true,
+      "effects": {
+        "physics": false,
+        "reachability": false,
+        "security": false,
+        "cost": false,
+        "evidence": true
+      },
+      "provenanceRequirements": [
+        "Versioned educational profile, exact owned design revision, immutable reviewed image/policy and actual retained capture",
+        "No physical/provider throughput, durability, latency, security or pricing claim; missing evidence Unknown"
+      ],
+      "status": "NOT_APPLICABLE",
+      "finalProductEligible": false,
+      "plan": "Keep INTERNAL. Claude may replace presentation while preserving authenticated scoped APIs, review/retry identity, prefixes, Unknown and worker limits. General technical shipping requires separate approval and evidence."
+    },
+    {
+      "id": "control:apps/web/src/features/internalLessons/LessonReview.tsx:input-09f0a5f8a559a03edd6c:0",
+      "source": "apps/web/src/features/internalLessons/LessonReview.tsx",
+      "identity": "input-09f0a5f8a559a03edd6c",
+      "description": "input: checked={confirmed} onChange={(e) => setConfirmed(e.target.checked)}",
+      "kind": "control",
+      "category": "PRODUCT_UI_ACTION",
+      "categoryReason": "Guided internal review, consent, history, explicit separate design creation and exact-retry interaction",
+      "ui": {
+        "status": "REVIEW_REQUIRED",
+        "behavior": "Await the complete real browser producer and semantic review",
+        "proofs": []
+      },
+      "resources": [
+        "Virtual Machine",
+        "Object Storage"
+      ],
+      "model1Meaning": "Internal lesson only; normal Model-1 behavior unchanged",
+      "model2Owner": "apps/backend/internalModel2/lessonExecution.ts",
+      "changesState": true,
+      "effects": {
+        "physics": false,
+        "reachability": false,
+        "security": false,
+        "cost": false,
+        "evidence": true
+      },
+      "provenanceRequirements": [
+        "Versioned educational profile, exact owned design revision, immutable reviewed image/policy and actual retained capture",
+        "No physical/provider throughput, durability, latency, security or pricing claim; missing evidence Unknown"
+      ],
+      "status": "NOT_APPLICABLE",
+      "finalProductEligible": false,
+      "plan": "Keep INTERNAL. Claude may replace presentation while preserving authenticated scoped APIs, review/retry identity, prefixes, Unknown and worker limits. General technical shipping requires separate approval and evidence."
+    },
+    {
       "id": "control:apps/web/src/features/internalModel2/AuthoringFields.tsx:Button-65ec3808a34e0f2bce77:0",
       "source": "apps/web/src/features/internalModel2/AuthoringFields.tsx",
       "identity": "Button-65ec3808a34e0f2bce77",
@@ -5529,6 +5984,41 @@
       "status": "NOT_APPLICABLE",
       "finalProductEligible": true,
       "plan": "Preserve API/auth/retry/accessibility semantics during Claude redesign; reprove replacement control fingerprints"
+    },
+    {
+      "id": "control:apps/web/src/features/internalModel2/InternalReport.tsx:LessonResult-0fb66cc5a4f022a13e40:0",
+      "source": "apps/web/src/features/internalModel2/InternalReport.tsx",
+      "identity": "LessonResult-0fb66cc5a4f022a13e40",
+      "description": "LessonResult: value={report.lesson}",
+      "kind": "control",
+      "category": "INFRA_OUTPUT",
+      "categoryReason": "Renders actual retained command results, incomplete prefixes and explicit Unknown",
+      "ui": {
+        "status": "NOT_APPLICABLE",
+        "behavior": "Technical software proof is limited to the internal lesson; general Model-2 shipping remains closed",
+        "proofs": []
+      },
+      "resources": [
+        "Virtual Machine",
+        "Object Storage"
+      ],
+      "model1Meaning": "Internal lesson only; normal Model-1 behavior unchanged",
+      "model2Owner": "apps/backend/internalModel2/lessonExecution.ts",
+      "changesState": false,
+      "effects": {
+        "physics": false,
+        "reachability": false,
+        "security": false,
+        "cost": false,
+        "evidence": true
+      },
+      "provenanceRequirements": [
+        "Versioned educational profile, exact owned design revision, immutable reviewed image/policy and actual retained capture",
+        "No physical/provider throughput, durability, latency, security or pricing claim; missing evidence Unknown"
+      ],
+      "status": "PARTIAL",
+      "finalProductEligible": false,
+      "plan": "Keep INTERNAL. Claude may replace presentation while preserving authenticated scoped APIs, review/retry identity, prefixes, Unknown and worker limits. General technical shipping requires separate approval and evidence."
     },
     {
       "id": "control:apps/web/src/features/internalModel2/InternalReport.tsx:Value-59cd38e5981dbfec6ff4:0",

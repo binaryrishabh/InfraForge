@@ -7,7 +7,7 @@ export async function validateAuthoring(body: AuthoringRequest, signal?: AbortSi
 export async function admitInternal(body: AdmissionRequest, signal?: AbortSignal) { return (await http.post<{ id: string; created: boolean }>(`${base}/runs`, body, { signal, timeout: 20000 })).data; }
 export async function internalRuns(signal?: AbortSignal) { return (await http.get<{ runs: RunSummary[] }>(`${base}/runs`, { signal, timeout: 15000 })).data.runs; }
 export async function internalReport(id: string, signal?: AbortSignal) { return (await http.get<{ report: InternalReport }>(`${base}/runs/${encodeURIComponent(id)}/report`, { signal, timeout: 15000 })).data.report; }
-export async function replayInternal(id: string, signal?: AbortSignal) { return (await http.get<{ replay: ReplayResult }>(`${base}/runs/${encodeURIComponent(id)}/replay`, { signal, timeout: 20000 })).data.replay; }
+export async function replayInternal(id: string, signal?: AbortSignal) { return (await http.get<{ replay: ReplayResult }>(`${base}/runs/${encodeURIComponent(id)}/replay`, { signal, timeout: 40000 })).data.replay; }
 export async function cancelInternal(id: string, signal?: AbortSignal) { await http.post(`${base}/runs/${encodeURIComponent(id)}/cancel`, {}, { signal, timeout: 15000 }); }
 export function internalError(error: unknown): { message: string; denied: boolean; definitive: boolean; diagnostics: Diagnostic[] } {
   if (!isAxiosError(error)) return { message: "The request could not be completed. Your edits are preserved.", denied: false, definitive: false, diagnostics: [] };

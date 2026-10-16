@@ -1,4 +1,5 @@
 FROM oven/bun:1.3.14
+RUN command -v timeout
 ARG RELEASE_SHA
 LABEL org.opencontainers.image.source="https://github.com/binaryrishabh/InfraForge" \
       org.opencontainers.image.revision=$RELEASE_SHA

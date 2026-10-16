@@ -8,10 +8,12 @@ import { contentHash } from "./identity";
 import { INTERNAL_LIMITS as limits } from "./budgets";
 import { boundedProduct } from "@infraforge/simulation/internal-product";
 import { jsonBytes } from "./budgets";
+import type { ExecutionEnvelope } from "./envelope";
+import type { LessonPolicy } from "./lessonPolicy";
 export const internalDatabase = new Pool({ connectionString: config.DATABASE_URL, connectionTimeoutMillis: 5000, query_timeout: 10000 });
 export interface InternalRunRow { id: string; ownerId: string; infrastructureId: string | null; idempotencyKey: string; requestHash: string; input: unknown; inputHash: string; status: string; token: string | null; sequence: number; throughUs: number; evidence: unknown; cancelRequested: boolean; reason: string | null; createdAt: Date; updatedAt: Date }
 export async function hasInternalGrant(owner: string) { return (await internalDatabase.query('SELECT 1 FROM "InternalModel2Grant" WHERE "userId"=$1', [owner])).rowCount === 1; }
-export async function admit(owner: string, request: z.infer<typeof admissionSchema>) {
+export async function admit(owner: string, request: z.infer<typeof admissionSchema>, lesson?: (input: ExecutionEnvelope) => LessonPolicy) {
   // Bound untrusted structure before hashing or borrowing a transaction connection.
   try { boundedProduct(request); jsonBytes(request, limits.requestBytes); }
   catch { throw new ValidationError("Internal request exceeds structural, text or byte budgets"); }
@@ -20,7 +22,8 @@ export async function admit(owner: string, request: z.infer<typeof admissionSche
     await client.query("BEGIN");
     // One bounded admission critical section makes per-owner/global quotas race safe.
     await client.query("SELECT pg_advisory_xact_lock(186542854,2)");
-    if (!(await client.query('SELECT 1 FROM "InternalModel2Grant" WHERE "userId"=$1 FOR SHARE', [owner])).rowCount) throw new NotFoundError();
+    const grant = (await client.query('SELECT scope FROM "InternalModel2Grant" WHERE "userId"=$1 FOR SHARE', [owner])).rows[0];
+    if (!grant || !["operator", "lesson"].includes(grant.scope) || !lesson && (grant.scope !== "operator" || (request.contract as { version?: string })?.version === "object-restart/1")) throw new NotFoundError();
     const existing = (await client.query<InternalRunRow>('SELECT * FROM "InternalModel2Run" WHERE "ownerId"=$1 AND "idempotencyKey"=$2', [owner, request.idempotencyKey])).rows[0];
     if (existing) {
       if (existing.requestHash !== requestHash) throw new ConflictError("Idempotency key already names a different recorded request");
@@ -36,6 +39,7 @@ export async function admit(owner: string, request: z.infer<typeof admissionSche
     const id = randomUUID(), envelope = compileEnvelope(id, owner, design.layout, design.updatedAt, request);
     const row = (await client.query<InternalRunRow>(`INSERT INTO "InternalModel2Run" (id,"ownerId","infrastructureId","idempotencyKey","requestHash",input,"inputHash")
       VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *`, [id, owner, request.infrastructureId, request.idempotencyKey, requestHash, envelope, envelope.fingerprint])).rows[0]!;
+    if (lesson) await client.query('INSERT INTO "InternalModel2LessonRun" ("runId",policy) VALUES ($1,$2)', [id, lesson(envelope)]);
     await client.query('INSERT INTO "Outbox" (id,"eventType",payload) VALUES ($1,\'model2-internal-created\',$2)', [randomUUID(), { internalModel2RunId: id }]);
     await client.query("COMMIT"); return { run: row, created: true };
   } catch (error) { await client.query("ROLLBACK"); throw error; } finally { client.release(); }

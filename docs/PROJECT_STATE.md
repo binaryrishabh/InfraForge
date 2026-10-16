@@ -1,5 +1,17 @@
 # InfraForge project state
 
+M2M implementation is in verification: a lesson-scoped, authenticated object
+restart learning experience at `/internal/model2/learn`, using the existing
+Model-2 engine and a pinned disposable Linux executor. Before/during/after read
+choices, strict review/retry identity, explicit new owned lesson design, retained
+prefixes and actual read-result semantics are implemented. Model 1 **ACTIVE**,
+Model 2 **INTERNAL**, production **PARKED**. No general activation or new grants.
+See [M2M research](reality/m2m-design.md) and
+[implementation handoff](reality/m2m-handoff.md). The dedicated Linux/Chromium
+proof and full exact-SHA CI/packaging are pending; this is not an acceptance claim.
+All 474 accepted shipping entries remain unchanged; new technical controls remain
+PARTIAL and new UI interactions await their retained browser producer.
+
 Latest independently ACCEPTED internal product milestone: **M2L — functional
 Model-2 authoring, validation, reviewed admission and durable report/replay UI**,
 implemented and published at `9cad270c9df33b0324451f735614a468cc532232`

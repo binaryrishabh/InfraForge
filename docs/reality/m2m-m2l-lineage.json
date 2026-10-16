@@ -1,0 +1,310 @@
+{
+  "schema": "infraforge-m2m-m2l-lineage/1",
+  "accepted": "5fd8ee25ac54fbc4d60d74ae3c35aa45c4e476a6",
+  "originalHash": "19bea478db5f2c158a67765d602d4c129766dc78b32c101ad06c83e54318fce7",
+  "original": [
+    {
+      "file": "apps/backend/internalModel2/authoring.ts",
+      "hash": "06a33301e5be68dbfdbdfad17c083d49e26859db2fa20a341c703faffa952b17"
+    },
+    {
+      "file": "apps/backend/internalModel2/budgets.ts",
+      "hash": "ec9246ab659fc0f1539829b95ac4ff190865a6c712ac3e537de381e695aeebfa"
+    },
+    {
+      "file": "apps/backend/internalModel2/capture.ts",
+      "hash": "3a2ad8b53bf3b110e82ae0652b1b696546387868284cab8b6bb1753d5ec00e95"
+    },
+    {
+      "file": "apps/backend/internalModel2/envelope.ts",
+      "hash": "ec0118b6fb4e0301689ea4a8c60fa2a8b33e460384d4f9a7814540e785d57089"
+    },
+    {
+      "file": "apps/backend/internalModel2/execution.ts",
+      "hash": "c68d4469b94fca10e381c00a9609218b494d9512d206f6a4564d656420e9cf14",
+      "text": "import { randomUUID } from \"node:crypto\";\nimport type { WorkerOwnership } from \"../infra/workerOwnership\";\nimport type { InternalRunRow } from \"./store\";\nimport { readEnvelope, captureCuts } from \"./envelope\";\nimport { capture, instantiate } from \"./capture\";\nimport type { StoredCapture, CaptureCheckpoint } from \"./capture\";\nexport async function retireInternalRuns(ownership: WorkerOwnership) {\n  await ownership.transaction(async (db) => {\n    await db.query(`UPDATE \"InternalModel2Run\" SET status='interrupted',reason='Worker restarted; last durable prefix retained. Exact continuation is unsupported.',\"updatedAt\"=now() WHERE status='running'`);\n    await db.query(`UPDATE \"InternalModel2Run\" r SET status='failed',reason='Durable queue delivery exhausted before execution',\"updatedAt\"=now()\n      WHERE status='queued' AND EXISTS (SELECT 1 FROM \"Outbox\" o WHERE o.\"eventType\"='model2-internal-created' AND o.status='failed' AND o.payload->>'internalModel2RunId'=r.id)`);\n  });\n}\nexport async function failInternalDelivery(ownership: WorkerOwnership, id: string) {\n  await ownership.transaction(async (db) => { await db.query(`UPDATE \"InternalModel2Run\" SET status='failed',reason='Durable queue delivery exhausted before execution',\"updatedAt\"=now() WHERE id=$1 AND status='queued'`, [id]); });\n}\nexport async function executeInternalRun(id: string, ownership: WorkerOwnership) {\n  const claimed = await ownership.transaction(async (db) => {\n    const row = (await db.query<InternalRunRow>('SELECT * FROM \"InternalModel2Run\" WHERE id=$1 FOR UPDATE', [id])).rows[0];\n    if (!row || ![\"queued\", \"running\"].includes(row.status)) return null;\n    if (row.status === \"running\") { await db.query(`UPDATE \"InternalModel2Run\" SET status='interrupted',reason='Prior delivery stopped without a terminal commit; no resume',\"updatedAt\"=now() WHERE id=$1`, [id]); return null; }\n    try {\n      if (!(await db.query('SELECT 1 FROM \"InternalModel2Grant\" WHERE \"userId\"=$1', [row.ownerId])).rowCount) throw Error(\"Internal authorization revoked before execution\");\n      const input = readEnvelope(row.input, row.inputHash);\n      if (input.runId !== row.id || input.ownerId !== row.ownerId) throw Error(\"Recorded execution owner/identity mismatch\");\n      const token = randomUUID();\n      await db.query('UPDATE \"InternalModel2Run\" SET status=\\'running\\',token=$2,\"updatedAt\"=now() WHERE id=$1', [id, token]);\n      return { input, token };\n    } catch (error) {\n      await db.query('UPDATE \"InternalModel2Run\" SET status=\\'failed\\',reason=$2,\"updatedAt\"=now() WHERE id=$1', [id, message(error)]); return null;\n    }\n  });\n  if (!claimed) return;\n  let sequence = 0;\n  let history: CaptureCheckpoint[] = [];\n  const stop = async (reason: string) => ownership.transaction(async (db) => {\n    await db.query('UPDATE \"InternalModel2Run\" SET status=\\'interrupted\\',reason=$3,\"updatedAt\"=now() WHERE id=$1 AND token=$2 AND status=\\'running\\'', [id, claimed.token, reason.slice(0, 500)]);\n  });\n  async function persist(value: StoredCapture, final: boolean, failure: string | null) {\n    return ownership.transaction(async (db) => {\n      const row = (await db.query<InternalRunRow>('SELECT * FROM \"InternalModel2Run\" WHERE id=$1 AND token=$2 AND status=\\'running\\' FOR UPDATE', [id, claimed!.token])).rows[0];\n      if (!row) return false;\n      if (row.sequence !== sequence) throw Error(\"Durable capture sequence changed\");\n      const granted = (await db.query('SELECT 1 FROM \"InternalModel2Grant\" WHERE \"userId\"=$1', [row.ownerId])).rowCount;\n      const cancelled = row.cancelRequested || !granted, status = cancelled ? \"cancelled\" : failure ? \"failed\" : final ? \"completed\" : \"running\";\n      const reason = !granted ? \"Internal authorization revoked; stopped at the next capture boundary\" : row.cancelRequested ? \"Cancellation requested; stopped at the next capture boundary\" : failure;\n      await db.query('UPDATE \"InternalModel2Run\" SET status=$3,evidence=$4,sequence=$5,\"throughUs\"=$6,reason=$7,\"updatedAt\"=now() WHERE id=$1 AND token=$2 AND status=\\'running\\'', [id, claimed!.token, status, value, value.sequence, value.throughUs, reason]);\n      sequence = value.sequence; return status === \"running\";\n    });\n  }\n  try {\n    const runtime = instantiate(claimed.input), cuts = captureCuts(claimed.input);\n    for (const at of cuts) {\n      await ownership.assertHeld();\n      let failure: string | null = null;\n      try { runtime.advanceTo(at); } catch (error) { failure = message(error); }\n      const value = capture(runtime, claimed.input, sequence + 1, history);\n      if (!await persist(value, at === runtime.horizon, failure)) return;\n      history = value.checkpoints;\n    }\n  } catch (error) {\n    // Advanced work whose capture did not commit is never replayed as continuation.\n    // If this write also fails, startup/re-delivery will retire the running row.\n    await stop(`Execution/persistence interrupted: ${message(error)}; last durable prefix retained`);\n  }\n}\nconst message = (error: unknown) => (error instanceof Error ? error.message : \"Internal execution failed\").slice(0, 400);\n"
+    },
+    {
+      "file": "apps/backend/internalModel2/identity.ts",
+      "hash": "78df51ca7d7e795553d49e410cdbdf4da54c311594078c7883ee9309eba56184"
+    },
+    {
+      "file": "apps/backend/internalModel2/queue.ts",
+      "hash": "dabb9891e7fe30a01c1df36fa29ec3caf198014dbf8160f2e0b44f118287246a"
+    },
+    {
+      "file": "apps/backend/internalModel2/report.ts",
+      "hash": "00589fcaf78979f53dcc18bd7ab8942ee106d6e7563ea107f83b888088ef67f8"
+    },
+    {
+      "file": "apps/backend/internalModel2/routes.ts",
+      "hash": "a7558f5b08c21bcd936751bd8f5683827db34d7ef5f4b2a4510d933e581bd35a",
+      "text": "import { Router, json } from \"express\";\nimport { z } from \"zod\";\nimport { NotFoundError, ValidationError } from \"../utils/errors\";\nimport { admissionSchema, CompilationRefusal } from \"./envelope\";\nimport { admit, hasInternalGrant, ownedRun, requestCancellation, internalDatabase } from \"./store\";\nimport { internalReport, reportHtml, replayStored } from \"./report\";\nimport { workspaceRouter } from \"./workspace\";\nexport const internalModel2Router = Router();\ninternalModel2Router.use(async (_req, res, next) => {\n  if (!await hasInternalGrant(res.locals.userId)) throw new NotFoundError();\n  res.set(\"Cache-Control\", \"no-store\"); res.set(\"X-Content-Type-Options\", \"nosniff\"); next();\n});\ninternalModel2Router.use(json({ limit: \"256kb\" }));\ninternalModel2Router.use(workspaceRouter);\ninternalModel2Router.post(\"/runs\", async (req, res) => {\n  const parsed = admissionSchema.safeParse(req.body);\n  if (!parsed.success) throw new ValidationError(parsed.error.issues.map((e) => `${e.path.join(\".\")}: ${e.message}`).join(\"; \"));\n  try {\n    const result = await admit(res.locals.userId, parsed.data);\n    res.status(result.created ? 202 : 200).json({ success: true, id: result.run.id, status: result.run.status, inputHash: result.run.inputHash, created: result.created });\n  } catch (error) {\n    if (error instanceof CompilationRefusal) { res.status(422).json({ success: false, message: error.message, diagnostics: error.diagnostics }); return; }\n    throw error;\n  }\n});\ninternalModel2Router.get(\"/runs\", async (_req, res) => {\n  const rows = await internalDatabase.query('SELECT id,status,\"inputHash\",sequence,\"throughUs\",reason,\"createdAt\" FROM \"InternalModel2Run\" WHERE \"ownerId\"=$1 ORDER BY \"createdAt\" DESC,id DESC LIMIT 20', [res.locals.userId]);\n  res.json({ success: true, runs: rows.rows, limit: 20 });\n});\ninternalModel2Router.param(\"id\", (req, _res, next, value) => { if (!z.uuid().safeParse(value).success) throw new ValidationError(\"A valid internal run ID is required\"); next(); });\ninternalModel2Router.get(\"/runs/:id/report\", async (req, res) => {\n  const report = internalReport(await ownedRun(String(req.params.id), res.locals.userId));\n  if (req.query.format === \"html\") {\n    res.set(\"Content-Security-Policy\", \"default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; frame-ancestors 'none'\");\n    res.type(\"html\").send(reportHtml(report));\n  } else res.json({ success: true, report });\n});\ninternalModel2Router.get(\"/runs/:id/input\", async (req, res) => { const row = await ownedRun(String(req.params.id), res.locals.userId); res.json({ success: true, input: row.input, inputHash: row.inputHash }); });\ninternalModel2Router.get(\"/runs/:id/replay\", async (req, res) => {\n  const row = await ownedRun(String(req.params.id), res.locals.userId);\n  try { res.json({ success: true, replay: replayStored(row) }); }\n  catch (error) { res.json({ success: true, replay: { kind: \"Unavailable\", reason: error instanceof Error ? error.message : \"Historical replay unavailable\" } }); }\n});\ninternalModel2Router.post(\"/runs/:id/cancel\", async (req, res) => {\n  if (!z.object({}).strict().safeParse(req.body).success) throw new ValidationError(\"Cancellation requires an empty JSON object\");\n  const row = await requestCancellation(String(req.params.id), res.locals.userId); res.status(202).json({ success: true, id: row.id, status: row.status });\n});\n"
+    },
+    {
+      "file": "apps/backend/internalModel2/store.ts",
+      "hash": "e390bd0131a38b016eaa897574a3a1c3cea215bff5af328975aa939dbe043a1f",
+      "text": "import { Pool } from \"pg\";\nimport { randomUUID } from \"node:crypto\";\nimport type { z } from \"zod\";\nimport { config } from \"../utils/config\";\nimport { ConflictError, NotFoundError, ValidationError } from \"../utils/errors\";\nimport { admissionSchema, compileEnvelope } from \"./envelope\";\nimport { contentHash } from \"./identity\";\nimport { INTERNAL_LIMITS as limits } from \"./budgets\";\nimport { boundedProduct } from \"@infraforge/simulation/internal-product\";\nimport { jsonBytes } from \"./budgets\";\nexport const internalDatabase = new Pool({ connectionString: config.DATABASE_URL, connectionTimeoutMillis: 5000, query_timeout: 10000 });\nexport interface InternalRunRow { id: string; ownerId: string; infrastructureId: string | null; idempotencyKey: string; requestHash: string; input: unknown; inputHash: string; status: string; token: string | null; sequence: number; throughUs: number; evidence: unknown; cancelRequested: boolean; reason: string | null; createdAt: Date; updatedAt: Date }\nexport async function hasInternalGrant(owner: string) { return (await internalDatabase.query('SELECT 1 FROM \"InternalModel2Grant\" WHERE \"userId\"=$1', [owner])).rowCount === 1; }\nexport async function admit(owner: string, request: z.infer<typeof admissionSchema>) {\n  // Bound untrusted structure before hashing or borrowing a transaction connection.\n  try { boundedProduct(request); jsonBytes(request, limits.requestBytes); }\n  catch { throw new ValidationError(\"Internal request exceeds structural, text or byte budgets\"); }\n  const requestHash = contentHash(request), client = await internalDatabase.connect();\n  try {\n    await client.query(\"BEGIN\");\n    // One bounded admission critical section makes per-owner/global quotas race safe.\n    await client.query(\"SELECT pg_advisory_xact_lock(186542854,2)\");\n    if (!(await client.query('SELECT 1 FROM \"InternalModel2Grant\" WHERE \"userId\"=$1 FOR SHARE', [owner])).rowCount) throw new NotFoundError();\n    const existing = (await client.query<InternalRunRow>('SELECT * FROM \"InternalModel2Run\" WHERE \"ownerId\"=$1 AND \"idempotencyKey\"=$2', [owner, request.idempotencyKey])).rows[0];\n    if (existing) {\n      if (existing.requestHash !== requestHash) throw new ConflictError(\"Idempotency key already names a different recorded request\");\n      await client.query(\"COMMIT\"); return { run: existing, created: false };\n    }\n    const counts = (await client.query(`SELECT count(*)::int AS total, count(*) FILTER (WHERE \"ownerId\"=$1)::int AS owned,\n      count(*) FILTER (WHERE \"ownerId\"=$1 AND status IN ('queued','running'))::int AS active FROM \"InternalModel2Run\"`, [owner])).rows[0];\n    if (counts.total >= limits.globalRuns || counts.owned >= limits.ownerRuns || counts.active >= limits.activeRuns) throw new ConflictError(\"Internal run retention/admission quota reached\");\n    const design = (await client.query('SELECT layout,\"updatedAt\" AT TIME ZONE \\'UTC\\' AS \"updatedAt\",\"challengeId\" FROM \"Infrastructure\" WHERE id=$1 AND \"ownerId\"=$2 FOR SHARE', [request.infrastructureId, owner])).rows[0];\n    if (!design) throw new NotFoundError(\"Saved design not found\");\n    if (design.challengeId) throw new ValidationError(\"Published challenge workspaces are excluded from internal Model-2 admission\");\n    if (design.updatedAt.toISOString() !== request.expectedDesignUpdatedAt) throw new ConflictError(\"Saved design changed; review it before creating a new internal run\");\n    const id = randomUUID(), envelope = compileEnvelope(id, owner, design.layout, design.updatedAt, request);\n    const row = (await client.query<InternalRunRow>(`INSERT INTO \"InternalModel2Run\" (id,\"ownerId\",\"infrastructureId\",\"idempotencyKey\",\"requestHash\",input,\"inputHash\")\n      VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *`, [id, owner, request.infrastructureId, request.idempotencyKey, requestHash, envelope, envelope.fingerprint])).rows[0]!;\n    await client.query('INSERT INTO \"Outbox\" (id,\"eventType\",payload) VALUES ($1,\\'model2-internal-created\\',$2)', [randomUUID(), { internalModel2RunId: id }]);\n    await client.query(\"COMMIT\"); return { run: row, created: true };\n  } catch (error) { await client.query(\"ROLLBACK\"); throw error; } finally { client.release(); }\n}\nexport async function ownedRun(id: string, owner: string) {\n  const row = (await internalDatabase.query<InternalRunRow>('SELECT * FROM \"InternalModel2Run\" WHERE id=$1 AND \"ownerId\"=$2', [id, owner])).rows[0];\n  if (!row) throw new NotFoundError(\"Internal run not found\"); return row;\n}\nexport async function requestCancellation(id: string, owner: string) {\n  const row = (await internalDatabase.query<InternalRunRow>(`UPDATE \"InternalModel2Run\" SET \"cancelRequested\"=true,\n    status=CASE WHEN status='queued' THEN 'cancelled' ELSE status END,\n    reason=CASE WHEN status='queued' THEN 'Cancelled before execution' ELSE reason END,\"updatedAt\"=now()\n    WHERE id=$1 AND \"ownerId\"=$2 AND status IN ('queued','running')\n      AND EXISTS (SELECT 1 FROM \"InternalModel2Grant\" WHERE \"userId\"=$2) RETURNING *`, [id, owner])).rows[0];\n  if (!row) { await ownedRun(id, owner); throw new ConflictError(\"Internal run is already terminal\"); } return row;\n}\n"
+    },
+    {
+      "file": "apps/backend/internalModel2/worker.ts",
+      "hash": "4f2bb42e0fd5573b40ffc7965851f5d540f282ded472cbe812d9a51543aa6ed1"
+    },
+    {
+      "file": "apps/backend/internalModel2/workspace.ts",
+      "hash": "44f6c551040e3e5eda20f47bcecbb77ce2fc70fab61c6c4140ead0199a1fae61"
+    },
+    {
+      "file": "apps/web/src/api/internalModel2.api.ts",
+      "hash": "e7f61feb61acdd8e453b100f4ebe15a9c90bf058a4887950cb1964746c8735a7",
+      "text": "import { http, API_URL } from \"@/client/httpClient\";\nimport type { AuthoringRequest, AdmissionRequest, InternalDesign, Review, RunSummary, InternalReport, ReplayResult, Diagnostic } from \"@infraforge/contracts/internal-model2\";\nimport { isAxiosError } from \"axios\";\nconst base = `${API_URL}/internal/model2`;\nexport async function workspace(signal?: AbortSignal) { return (await http.get<{ designs: InternalDesign[] }>(`${base}/workspace`, { signal, timeout: 15000 })).data; }\nexport async function validateAuthoring(body: AuthoringRequest, signal?: AbortSignal) { return (await http.post<{ review: Review }>(`${base}/validate`, body, { signal, timeout: 20000 })).data.review; }\nexport async function admitInternal(body: AdmissionRequest, signal?: AbortSignal) { return (await http.post<{ id: string; created: boolean }>(`${base}/runs`, body, { signal, timeout: 20000 })).data; }\nexport async function internalRuns(signal?: AbortSignal) { return (await http.get<{ runs: RunSummary[] }>(`${base}/runs`, { signal, timeout: 15000 })).data.runs; }\nexport async function internalReport(id: string, signal?: AbortSignal) { return (await http.get<{ report: InternalReport }>(`${base}/runs/${encodeURIComponent(id)}/report`, { signal, timeout: 15000 })).data.report; }\nexport async function replayInternal(id: string, signal?: AbortSignal) { return (await http.get<{ replay: ReplayResult }>(`${base}/runs/${encodeURIComponent(id)}/replay`, { signal, timeout: 20000 })).data.replay; }\nexport async function cancelInternal(id: string, signal?: AbortSignal) { await http.post(`${base}/runs/${encodeURIComponent(id)}/cancel`, {}, { signal, timeout: 15000 }); }\nexport function internalError(error: unknown): { message: string; denied: boolean; definitive: boolean; diagnostics: Diagnostic[] } {\n  if (!isAxiosError(error)) return { message: \"The request could not be completed. Your edits are preserved.\", denied: false, definitive: false, diagnostics: [] };\n  const status = error.response?.status;\n  return { message: status === 401 ? \"Your session ended. Sign in again; no new run will be submitted automatically.\" : status === 404 ? \"Internal workspace unavailable. It may not be granted to your account or the record is unavailable.\" : error.response?.data?.message || \"Request outcome unavailable. Retry the same reviewed submission to avoid duplication.\",\n    denied: status === 401 || status === 404, definitive: status === 400 || status === 409 || status === 422, diagnostics: error.response?.data?.diagnostics ?? [] };\n}\n"
+    },
+    {
+      "file": "apps/web/src/app/App.tsx",
+      "hash": "1509c18219449524d534fff3900333b46cd84da208460df3dd11e886b7b7801a",
+      "text": "import { lazy, Suspense, useEffect } from \"react\";\nimport { BrowserRouter, Navigate, Route, Routes, useLocation, useParams } from \"react-router-dom\";\nimport { Toaster } from \"sonner\";\nimport { LandingPage } from \"../features/landing/pages/LandingPage\";\nimport { SignInPage } from \"../features/auth/pages/SignInPage\";\nimport { HomePage } from \"../features/dashboard/pages/HomePage\";\nimport { NotFoundPage } from \"../features/dashboard/pages/NotFoundPage\";\nimport { ChallengesPage } from \"../features/challenges/pages/ChallengesPage\";\nimport { ChallengeDetailPage } from \"../features/challenges/pages/ChallengeDetailPage\";\nimport { DesignsPage } from \"../features/designs/DesignsPage\";\nimport { RunHistoryPage } from \"../features/reports/pages/RunHistoryPage\";\nimport { SettingsPage } from \"../features/settings/SettingsPage\";\nimport { AppShell } from \"../components/shell/AppShell\";\nimport { ProtectedRoute } from \"../components/shell/ProtectedRoute\";\nimport { PublicOnlyRoute } from \"../components/shell/PublicOnlyRoute\";\nimport { useAuthStore } from \"../features/auth/store/auth.store\";\nimport { resolvedTheme, usePreferences } from \"./preferences\";\nimport { Loading } from \"../ui/Page\";\n\n// The designer and the evidence views carry most of the code; they load on first visit.\nconst CanvasDesignerPage = lazy(() => import(\"../features/canvas/components/CanvasDesignerPage\").then((m) => ({ default: m.CanvasDesignerPage })));\nconst RunReportPage = lazy(() => import(\"../features/reports/pages/RunReportPage\").then((m) => ({ default: m.RunReportPage })));\nconst ComparePage = lazy(() => import(\"../features/reports/pages/ComparePage\").then((m) => ({ default: m.ComparePage })));\nconst InternalWorkspace = lazy(() => import(\"../features/internalModel2/InternalWorkspace\").then((m) => ({ default: m.InternalWorkspace })));\n\n// Older links keep working: /dashboard and /reports moved to /home and /runs.\nfunction LegacyReport() {\n  const { deploymentId = \"\" } = useParams();\n  return <Navigate to={`/runs/${encodeURIComponent(deploymentId)}`} replace />;\n}\nfunction LegacyCompare() {\n  const { search } = useLocation();\n  return <Navigate to={`/runs/compare${search}`} replace />;\n}\n\nfunction ThemedToaster() {\n  const theme = usePreferences((s) => s.theme);\n  return <Toaster position=\"bottom-right\" theme={resolvedTheme(theme) === \"ink\" ? \"dark\" : \"light\"} closeButton\n    toastOptions={{ style: { background: \"var(--if-raised)\", border: \"1px solid var(--if-line-strong)\", color: \"var(--if-ink)\", borderRadius: \"6px\", fontFamily: \"var(--font-sans)\" } }} />;\n}\n\nfunction App() {\n  const hydrate = useAuthStore((s) => s.hydrate);\n  useEffect(() => {\n    void hydrate();\n    const refresh = () => { void hydrate(); };\n    const expire = () => useAuthStore.getState().expire();\n    window.addEventListener(\"focus\", refresh);\n    window.addEventListener(\"infraforge:session-ended\", expire);\n    const interval = setInterval(refresh, 60000);\n    const channel = new BroadcastChannel(\"infraforge-session\");\n    channel.onmessage = refresh;\n    return () => {\n      clearInterval(interval); channel.close();\n      window.removeEventListener(\"focus\", refresh);\n      window.removeEventListener(\"infraforge:session-ended\", expire);\n    };\n  }, [hydrate]);\n\n  return (\n    <BrowserRouter>\n      <ThemedToaster />\n      <Routes>\n        <Route path=\"/\" element={<LandingPage />} />\n        <Route element={<PublicOnlyRoute />}>\n          <Route path=\"/signin\" element={<SignInPage key=\"signin\" />} />\n          <Route path=\"/signup\" element={<SignInPage key=\"signup\" mode=\"signup\" />} />\n        </Route>\n        <Route element={<ProtectedRoute />}>\n          <Route element={<AppShell />}>\n            <Route path=\"/home\" element={<HomePage />} />\n            <Route path=\"/challenges\" element={<ChallengesPage />} />\n            <Route path=\"/challenges/:challengeId\" element={<ChallengeDetailPage />} />\n            <Route path=\"/designs\" element={<DesignsPage />} />\n            <Route path=\"/runs\" element={<RunHistoryPage />} />\n            <Route path=\"/runs/compare\" element={<ComparePage />} />\n            <Route path=\"/runs/:deploymentId\" element={<RunReportPage />} />\n            <Route path=\"/settings\" element={<SettingsPage />} />\n            <Route path=\"/internal/model2\" element={<InternalWorkspace />} />\n          </Route>\n          {/* The designer and live runs are full-screen workspaces with their own bar. */}\n          <Route path=\"/design\" element={<Suspense fallback={<div className=\"grid h-dvh place-items-center bg-canvas\"><Loading label=\"Opening the designer…\" /></div>}><CanvasDesignerPage /></Suspense>} />\n          <Route path=\"/dashboard\" element={<Navigate to=\"/home\" replace />} />\n          <Route path=\"/reports\" element={<Navigate to=\"/runs\" replace />} />\n          <Route path=\"/reports/compare\" element={<LegacyCompare />} />\n          <Route path=\"/reports/:deploymentId\" element={<LegacyReport />} />\n        </Route>\n        <Route path=\"*\" element={<NotFoundPage />} />\n      </Routes>\n    </BrowserRouter>\n  );\n}\n\nexport default App;\n"
+    },
+    {
+      "file": "apps/web/src/client/httpClient.ts",
+      "hash": "c8d3ee4fcfc2b725b6255f55838939a62aad723f7713f6c27398c3b20be4130d"
+    },
+    {
+      "file": "apps/web/src/components/shell/AppShell.tsx",
+      "hash": "f737c3dfb5d3ec14ce293bfba7117bb1fdf78b5c770aafeadf5220fdc28ad5e5",
+      "text": "import { Suspense, useEffect, useState } from \"react\";\nimport { Link, NavLink, Outlet } from \"react-router-dom\";\nimport { Wordmark } from \"@/ui/Brand\";\nimport { cx } from \"@/ui/cx\";\nimport { Loading, Page } from \"@/ui/Page\";\nimport { AccountMenu } from \"./AccountMenu\";\nimport { workspace } from \"@/api/internalModel2.api\";\nimport { useAuthStore } from \"@/features/auth/store/auth.store\";\n\nconst NAV = [\n  { to: \"/home\", label: \"Home\" },\n  { to: \"/challenges\", label: \"Challenges\" },\n  { to: \"/designs\", label: \"Designs\" },\n  { to: \"/runs\", label: \"Runs\" },\n] as const;\n\nexport function SkipLink() {\n  return <a href=\"#main\" className=\"sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:rounded-md focus:bg-ink focus:px-3 focus:py-2 focus:text-inverse\">Skip to content</a>;\n}\n\nfunction NavItems({ className, internal }: { className?: string; internal: boolean }) {\n  return (\n    <ul className={cx(\"flex items-center gap-1\", className)}>\n      {NAV.map((item) => (\n        <li key={item.to}>\n          <NavLink to={item.to} className={({ isActive }) => cx(\"relative inline-flex h-9 items-center rounded-md px-3 text-sm font-medium transition-colors\",\n            isActive ? \"text-ink after:absolute after:inset-x-3 after:-bottom-[11px] after:h-[2px] after:bg-ink\" : \"text-ink-3 hover:bg-sunken hover:text-ink\")}>\n            {item.label}\n          </NavLink>\n        </li>\n      ))}\n      {internal && <li className=\"shrink-0\"><NavLink to=\"/internal/model2\" className=\"inline-flex h-9 items-center whitespace-nowrap rounded-md px-3 text-sm text-ink-2 hover:bg-sunken\">Model 2 · internal</NavLink></li>}\n    </ul>\n  );\n}\n\n/* Paper shell: one top bar, four destinations, account on the right.\nNarrow screens keep the same four links in a scrollable second row. */\nexport function AppShell() {\n  const owner = useAuthStore((s) => s.user?.id), [grantedOwner, setGrantedOwner] = useState<string | null>(null);\n  useEffect(() => {\n    const controller = new AbortController();\n    if (owner) void workspace(controller.signal).then(() => { if (!controller.signal.aborted) setGrantedOwner(owner); }).catch(() => { if (!controller.signal.aborted) setGrantedOwner(null); });\n    return () => controller.abort();\n  }, [owner]);\n  return (\n    <div className=\"min-h-dvh bg-bg text-ink\">\n      <SkipLink />\n      <header className=\"sticky top-0 z-30 border-b border-line bg-bg/95 backdrop-blur-sm\">\n        <div className=\"mx-auto flex h-14 max-w-[1360px] items-center gap-6 px-4 sm:px-6 lg:px-8\">\n          <Link to=\"/home\" aria-label=\"InfraForge home\" className=\"rounded-md\"><Wordmark /></Link>\n          <nav aria-label=\"Primary\" className=\"hidden flex-1 md:block\"><NavItems internal={!!owner && grantedOwner === owner} /></nav>\n          <div className=\"ml-auto md:ml-0\"><AccountMenu /></div>\n        </div>\n        <nav aria-label=\"Primary\" className=\"if-scroll overflow-x-auto overflow-y-hidden border-t border-line px-2 md:hidden\"><NavItems internal={!!owner && grantedOwner === owner} className=\"h-11\" /></nav>\n      </header>\n      <main id=\"main\" tabIndex={-1} className=\"outline-none\"><Suspense fallback={<Page><Loading label=\"Loading…\" /></Page>}><Outlet /></Suspense></main>\n    </div>\n  );\n}\n"
+    },
+    {
+      "file": "apps/web/src/features/internalModel2/AuthoringFields.tsx",
+      "hash": "570160bb865ce8badc87b4c49cb5b44aac647b4011b81ca8b6abcca5dc67f85e"
+    },
+    {
+      "file": "apps/web/src/features/internalModel2/InternalReport.tsx",
+      "hash": "f4192d8408c6c18f8b9a08dd6be52c61d3c9e814b378beb87e635e4f44037c2d",
+      "text": "import { useEffect, useRef, useState } from \"react\";\nimport type { InternalReport as Report, Json, ReplayResult } from \"@infraforge/contracts/internal-model2\";\nimport * as api from \"@/api/internalModel2.api\";\nimport { Button } from \"@/ui/Button\";\nimport { Notice, Loading } from \"@/ui/Page\";\nfunction Value({ value }: { value: Json }) {\n  if (value === null) return <span>Unavailable</span>;\n  if (Array.isArray(value)) return <ul className=\"space-y-2\">{value.map((v, i) => <li key={i} className=\"border-l border-line pl-3\"><Value value={v} /></li>)}</ul>;\n  if (typeof value === \"object\") return <dl className=\"space-y-1\">{Object.entries(value).map(([key, child]) => <div key={key} className=\"flex flex-wrap gap-x-3\"><dt className=\"font-medium\">{key}</dt><dd className=\"min-w-0 break-words\"><Value value={child} /></dd></div>)}</dl>;\n  return <span>{String(value)}</span>;\n}\nexport function InternalReport({ id, blocked }: { id: string; blocked: () => void }) {\n  const [report, setReport] = useState<Report | null>(null), [error, setError] = useState(\"\"), [busy, setBusy] = useState(false), [replay, setReplay] = useState<ReplayResult | null>(null), [version, setVersion] = useState(0), [stopped, setStopped] = useState(false);\n  const action = useRef(false), control = useRef(new AbortController()), region = useRef<HTMLElement>(null);\n  useEffect(() => { region.current?.focus(); }, [id]);\n  useEffect(() => {\n    const controller = new AbortController(); control.current = controller; let timer: ReturnType<typeof setTimeout> | undefined, count = 0;\n    const read = async () => {\n      try { const value = await api.internalReport(id, controller.signal); if (controller.signal.aborted) return; setReport(value); setError(\"\"); if (!value.replay.compatible) setReplay(null);\n        if ([\"queued\", \"running\"].includes(value.status) && ++count < 60) timer = setTimeout(() => { void read(); }, 2000);\n        else setStopped([\"queued\", \"running\"].includes(value.status));\n      } catch (e) { if (!controller.signal.aborted) { const detail = api.internalError(e); setError(detail.message); if (detail.denied) { setReport(null); blocked(); } } }\n    };\n    void read(); return () => { controller.abort(); clearTimeout(timer); };\n  }, [id, version, blocked]);\n  const act = async (kind: \"cancel\" | \"replay\") => {\n    if (action.current) return; action.current = true; setBusy(true);\n    const signal = control.current.signal;\n    try { if (kind === \"cancel\") { await api.cancelInternal(id, signal); if (!signal.aborted) setVersion((v) => v + 1); } else { const value = await api.replayInternal(id, signal); if (!signal.aborted) setReplay(value); } }\n    catch (e) { if (!signal.aborted) { const detail = api.internalError(e); setError(detail.message); if (detail.denied) { setReport(null); blocked(); } } }\n    finally { action.current = false; if (!signal.aborted) setBusy(false); }\n  };\n  return <section ref={region} tabIndex={-1} aria-label=\"Durable Model-2 report\" className=\"mt-10 space-y-5 border-t border-line pt-6 outline-none\">\n    <h2 className=\"text-2xl font-semibold\">Last durable result</h2><p className=\"break-all text-sm text-ink-3\">Run {id}</p>\n    {error && <Notice tone=\"fail\" role=\"alert\">{error}</Notice>}\n    {!report && !error && <Loading label=\"Reading retained evidence…\" />}\n    <Button size=\"sm\" disabled={busy} onClick={() => { setStopped(false); setVersion((v) => v + 1); }}>Refresh durable report</Button>\n    {stopped && <p role=\"status\">Automatic refresh stopped after 60 reads. Refresh manually to read the latest committed state.</p>}\n    {report && <>\n      <p role=\"status\" className=\"font-semibold\">Status: {report.status} · capture {report.sequence} · through {report.throughUs} us</p>\n      <p className=\"text-sm\">{report.reason || \"Lifecycle status is the last committed state, not a worker liveness signal.\"} {report.status !== \"completed\" && \"Retained prefix only; missing work is not zero. Crashed executions are not resumed.\"}</p>\n      {report.problems.length > 0 && <Notice tone=\"fail\">{report.problems.join(\" \")}</Notice>}\n      <div className=\"flex flex-wrap gap-3\"><Button loading={busy} disabled={!report.replay.compatible} onClick={() => { void act(\"replay\"); }}>Verify deterministic replay</Button>{[\"queued\", \"running\"].includes(report.status) && <Button disabled={busy} onClick={() => { void act(\"cancel\"); }}>Cancel this run</Button>}</div>\n      <p className=\"text-sm\">{report.replay.reason} Cancellation stops at a capture boundary and retains its committed prefix.</p>\n      {replay && <Notice><span role=\"status\">Replay: {replay.kind}. {replay.reason} {replay.complete === false ? \"Matches a prefix only, not a complete execution.\" : replay.complete ? \"Complete recorded capture matches.\" : \"\"} {replay.mutation}</span></Notice>}\n      <div className=\"grid gap-6 lg:grid-cols-2\">{[[\"Observed modeled facts\", report.observed], [\"Interpreted\", report.interpreted]] .map(([title, rows]) => <section key={String(title)} className=\"rounded-md border border-line p-4\"><h3 className=\"mb-3 font-semibold\">{String(title)}</h3><Value value={rows as Json} /></section>)}</div>\n      <section className=\"rounded-md border border-line p-4\"><h3 className=\"mb-3 font-semibold\">Unknown and uncertainties</h3><ul className=\"list-disc space-y-2 pl-5 text-sm\">{report.unknown.map((s) => <li key={s}>{s}</li>)}</ul></section>\n      {[[\"Service activity, commands, object state and faults\", report.state], [\"Usage evidence\", report.usage], [\"Retained checkpoint history\", report.checkpoints]].map(([title, value]) => <details key={String(title)} className=\"rounded-md border border-line p-4\"><summary className=\"cursor-pointer font-semibold\">{String(title)}</summary><div className=\"mt-4 text-sm\"><Value value={value as Json} /></div></details>)}\n      <details><summary className=\"cursor-pointer text-sm underline\">Input and execution identity</summary><p className=\"break-all text-xs\">Input {report.inputHash}<br />Source {report.source ?? \"Unknown\"}</p></details>\n    </>}\n  </section>;\n}\n"
+    },
+    {
+      "file": "apps/web/src/features/internalModel2/InternalWorkspace.tsx",
+      "hash": "ed34d88882f2dfbf9bb0491b630936fae2a744707efe00d8d1b5b10afbd325b9"
+    },
+    {
+      "file": "apps/web/src/features/internalModel2/ReviewPanel.tsx",
+      "hash": "b1ee3615d8b1143674d3e6f590db72ce35807dc1aab41397ef69e69092fe5f75"
+    },
+    {
+      "file": "apps/web/src/features/internalModel2/draft.ts",
+      "hash": "d160fd2628e13a55c8b762cf08d56217fcf89cb82ef21d0c199830a27883fc73"
+    },
+    {
+      "file": "apps/web/src/features/internalModel2/useAuthoring.ts",
+      "hash": "81a59997a9da5b97a51efd9762200d4016ff64e89aa152faae891bd373aa7a33"
+    },
+    {
+      "file": "packages/contracts/src/internal-model2/example.ts",
+      "hash": "06f4416e1924431a9a6dd26e518744e5963521554384328065ccd48dc1749260"
+    },
+    {
+      "file": "packages/contracts/src/internal-model2/index.ts",
+      "hash": "e35c3bbc9c69ec2bcda1eb00da910de992da4887a0f89e41f457c447b1f7d0ab",
+      "text": "export type Json = null | boolean | number | string | Json[] | { [key: string]: Json };\nexport interface NumericField { key: string; label: string; unit: string; min: number; max: number; integer?: boolean }\nexport const authoringGroups: { title: string; fields: NumericField[] }[] = [\n  { title: \"Recorded workload and timeline\", fields: [\n    { key: \"horizon\", label: \"Horizon\", unit: \"us\", min: 1, max: 1000000, integer: true },\n    { key: \"sample\", label: \"Sample interval\", unit: \"us\", min: 1, max: 1000000, integer: true },\n    { key: \"start\", label: \"Arrival start\", unit: \"us\", min: 0, max: 1000000, integer: true },\n    { key: \"rate\", label: \"Steady arrival rate\", unit: \"requests/minute\", min: 0.001, max: 100000000 },\n    { key: \"readRatio\", label: \"Read fraction\", unit: \"ratio\", min: 0, max: 1 },\n    { key: \"payload\", label: \"Application payload\", unit: \"bytes\", min: 0, max: 1000000, integer: true },\n  ] },\n  { title: \"Application and VM\", fields: [\n    { key: \"readCpu\", label: \"Read CPU demand\", unit: \"cpu-us\", min: 1, max: 1000000 },\n    { key: \"writeCpu\", label: \"Write CPU demand\", unit: \"cpu-us\", min: 1, max: 1000000 },\n    { key: \"appWait\", label: \"Application blocking wait\", unit: \"us\", min: 0, max: 1000000 },\n    { key: \"cores\", label: \"VM cores\", unit: \"cores\", min: 1, max: 64, integer: true },\n    { key: \"workers\", label: \"VM workers\", unit: \"count\", min: 1, max: 256, integer: true },\n    { key: \"queue\", label: \"VM pending capacity\", unit: \"count\", min: 0, max: 256, integer: true },\n    { key: \"parallel\", label: \"CPU parallelism per operation\", unit: \"cores\", min: 1, max: 64, integer: true },\n    { key: \"callerTimeout\", label: \"Caller timeout\", unit: \"us\", min: 1, max: 1000000 },\n  ] },\n  { title: \"Atomic current-object store\", fields: [\n    { key: \"capacity\", label: \"Current-object capacity\", unit: \"bytes\", min: 1, max: 1000000000, integer: true },\n    { key: \"objectCpu\", label: \"CPU per object command\", unit: \"cpu-us\", min: 1, max: 1000000 },\n    { key: \"objectWait\", label: \"Object command blocking wait\", unit: \"us\", min: 0, max: 1000000 },\n    { key: \"objectConcurrency\", label: \"Object concurrency\", unit: \"count\", min: 1, max: 256, integer: true },\n    { key: \"objectQueue\", label: \"Object pending capacity\", unit: \"count\", min: 0, max: 256, integer: true },\n    { key: \"objectTimeout\", label: \"Object command timeout\", unit: \"us\", min: 1, max: 1000000 },\n  ] },\n  { title: \"Directed transport and connection pool\", fields: [\n    { key: \"port\", label: \"TCP listener port\", unit: \"port\", min: 1, max: 65535, integer: true },\n    { key: \"bandwidth\", label: \"Bandwidth per directed link\", unit: \"bytes/s\", min: 1, max: 1000000000 },\n    { key: \"propagation\", label: \"Propagation per directed link\", unit: \"us\", min: 0, max: 1000000 },\n    { key: \"buffer\", label: \"Link buffer\", unit: \"bytes\", min: 0, max: 1000000, integer: true },\n    { key: \"connections\", label: \"Pool connections\", unit: \"count\", min: 1, max: 256, integer: true },\n    { key: \"streams\", label: \"Streams per connection\", unit: \"count\", min: 1, max: 256, integer: true },\n    { key: \"poolQueue\", label: \"Pool pending capacity\", unit: \"count\", min: 0, max: 256, integer: true },\n    { key: \"establish\", label: \"Connection establishment\", unit: \"us\", min: 0, max: 1000000 },\n    { key: \"acquire\", label: \"Pool acquisition timeout\", unit: \"us\", min: 1, max: 1000000 },\n    { key: \"connect\", label: \"Connect timeout\", unit: \"us\", min: 1, max: 1000000 },\n    { key: \"response\", label: \"Response timeout\", unit: \"us\", min: 1, max: 1000000 },\n    { key: \"requestBytes\", label: \"Protocol request envelope\", unit: \"bytes\", min: 0, max: 1000000, integer: true },\n    { key: \"responseBytes\", label: \"Protocol response envelope\", unit: \"bytes\", min: 0, max: 1000000, integer: true },\n  ] },\n  { title: \"Software evidence budgets\", fields: [\n    { key: \"maxEvents\", label: \"Maximum events\", unit: \"count\", min: 1, max: 10000, integer: true },\n    { key: \"maxRequests\", label: \"Maximum requests\", unit: \"count\", min: 1, max: 256, integer: true },\n    { key: \"maxSamples\", label: \"Maximum samples\", unit: \"count\", min: 1, max: 64, integer: true },\n    { key: \"maxTraceRows\", label: \"Maximum trace rows\", unit: \"count\", min: 1, max: 256, integer: true },\n    { key: \"maxRawResults\", label: \"Maximum raw results\", unit: \"count\", min: 1, max: 256, integer: true },\n  ] },\n];\nexport interface AuthoredCommand { at: string; kind: \"put\" | \"get\" | \"head\" | \"delete\"; namespace: string; key: string; bytes: string; content: string }\nexport interface AuthoringDraft {\n  schema: \"infraforge-authoring/1\"; origin: string; values: Record<string, string>;\n  vmAddress: string; objectAddress: string; callerAddress: string; zone: string;\n  security: \"\" | \"plaintext-reviewed\"; commands: AuthoredCommand[];\n  crash: boolean; crashAt: string; crashDuration: string; restart: string;\n}\nexport interface AuthoringRequest { infrastructureId: string; expectedDesignUpdatedAt: string; idempotencyKey: string; authoring: AuthoringDraft }\nexport interface AdmissionRequest { infrastructureId: string; expectedDesignUpdatedAt: string; idempotencyKey: string; workload: Json; contract: Json }\nexport interface Diagnostic { code: string; path: string; message: string; severity?: string }\nexport interface InternalDesign { id: string; name: string; updatedAt: string; supported: boolean; reasons: string[]; vm?: string; objects?: string; connection?: string; port?: number }\nexport interface Review { request: AdmissionRequest; requestHash: string; revision: string; designName: string; fields: { field: string; value: number; unit: string; origin: string }[]; assumptions: string[]; arrivals: number }\nexport interface RunSummary { id: string; status: string; inputHash: string; sequence: number; throughUs: number; reason: string | null; createdAt: string }\nexport interface InternalReport { id: string; status: string; reason: string | null; inputHash: string; source: string | null; sequence: number; throughUs: number; inputValid: boolean; problems: string[];\n  replay: { compatible: boolean; reason: string }; observed: [string, Json][]; interpreted: [string, Json][]; unknown: string[]; state: Json; checkpoints: Json[]; usage: Json }\nexport interface ReplayResult { kind: string; complete?: boolean; expected?: string; actual?: string; reason?: string; mutation?: string }\n"
+    }
+  ],
+  "current": [
+    {
+      "file": "apps/backend/Dockerfile",
+      "hash": "c7135eaf89dd175fb6dde9e6c8149610b45c4a4eb526aaaa89c223968f8ad39a"
+    },
+    {
+      "file": "apps/backend/internalModel2/authoring.ts",
+      "hash": "06a33301e5be68dbfdbdfad17c083d49e26859db2fa20a341c703faffa952b17"
+    },
+    {
+      "file": "apps/backend/internalModel2/budgets.ts",
+      "hash": "ec9246ab659fc0f1539829b95ac4ff190865a6c712ac3e537de381e695aeebfa"
+    },
+    {
+      "file": "apps/backend/internalModel2/capture.ts",
+      "hash": "3a2ad8b53bf3b110e82ae0652b1b696546387868284cab8b6bb1753d5ec00e95"
+    },
+    {
+      "file": "apps/backend/internalModel2/envelope.ts",
+      "hash": "ec0118b6fb4e0301689ea4a8c60fa2a8b33e460384d4f9a7814540e785d57089"
+    },
+    {
+      "file": "apps/backend/internalModel2/execution.ts",
+      "hash": "bc494bedf566bae80ce9c04ccf8cad3f8c6050516150e9e5f5def2379119297b"
+    },
+    {
+      "file": "apps/backend/internalModel2/identity.ts",
+      "hash": "78df51ca7d7e795553d49e410cdbdf4da54c311594078c7883ee9309eba56184"
+    },
+    {
+      "file": "apps/backend/internalModel2/lessonAuthoring.ts",
+      "hash": "fdd186918a9b54ca2b5cf38ffc4e9fb9092cc08d1ad9449f799648f383dc5653"
+    },
+    {
+      "file": "apps/backend/internalModel2/lessonExecution.ts",
+      "hash": "f81ed80a7a0d36df27c6a7e4fff6b06e94e5f9838434bcf3091be7a91dfbd2fa"
+    },
+    {
+      "file": "apps/backend/internalModel2/lessonLimits.ts",
+      "hash": "061f7e3307874128d876aa1c493fb4739ccb8e0aed0e4342287745c8d4ec1a81"
+    },
+    {
+      "file": "apps/backend/internalModel2/lessonPolicy.ts",
+      "hash": "03736442f2f31e0a25903e3fe7c14ae76a82fc4f67d43bac4654deb441cf65a6"
+    },
+    {
+      "file": "apps/backend/internalModel2/lessonRoutes.ts",
+      "hash": "9db30ed73d1c66cac76260cddb049373f44fb02cfaeeff40c0c9d4dd6b9bbbe2"
+    },
+    {
+      "file": "apps/backend/internalModel2/lessonStore.ts",
+      "hash": "c594a0e1269e049ab51e0480a93185a0201a265f80067385ea1cea2a6150bd87"
+    },
+    {
+      "file": "apps/backend/internalModel2/lessonSummary.ts",
+      "hash": "197cfe944991a549e9b48c1fdb3a8e16ce53c9777f887410e4b6392fd7b5ca46"
+    },
+    {
+      "file": "apps/backend/internalModel2/queue.ts",
+      "hash": "dabb9891e7fe30a01c1df36fa29ec3caf198014dbf8160f2e0b44f118287246a"
+    },
+    {
+      "file": "apps/backend/internalModel2/report.ts",
+      "hash": "00589fcaf78979f53dcc18bd7ab8942ee106d6e7563ea107f83b888088ef67f8"
+    },
+    {
+      "file": "apps/backend/internalModel2/routes.ts",
+      "hash": "4db6852da87f35d500a5a8bf834ea74cc0a958fa35464d6b01562e602faca0bf"
+    },
+    {
+      "file": "apps/backend/internalModel2/sandboxChild.ts",
+      "hash": "127661af4ec24a45d4e9622956c4700d3692719b32c41fb6e58f702a6bb2b48d"
+    },
+    {
+      "file": "apps/backend/internalModel2/sandboxDocker.ts",
+      "hash": "351fa1b4b62655d7363a5fb4bdb6076ab8da69dfc333f818f680480bfcfaa6a1"
+    },
+    {
+      "file": "apps/backend/internalModel2/sandboxHandshake.ts",
+      "hash": "c8b4db105d8de9dedaf5470f37e125f32881f2547f2baae354e4b656194d67e5"
+    },
+    {
+      "file": "apps/backend/internalModel2/sandboxRunner.ts",
+      "hash": "085be8693957f3f4f3defb9dcc3945f58e96bfab5bbc032d3cd8a3b82a559435"
+    },
+    {
+      "file": "apps/backend/internalModel2/store.ts",
+      "hash": "03d13363d80ad74e19128fb5e507dd37cb90c0fe8abd221ecb0b645934c9ce2f"
+    },
+    {
+      "file": "apps/backend/internalModel2/worker.ts",
+      "hash": "4f2bb42e0fd5573b40ffc7965851f5d540f282ded472cbe812d9a51543aa6ed1"
+    },
+    {
+      "file": "apps/backend/internalModel2/workspace.ts",
+      "hash": "44f6c551040e3e5eda20f47bcecbb77ce2fc70fab61c6c4140ead0199a1fae61"
+    },
+    {
+      "file": "apps/backend/prisma/migrations/20261020000000_model2_lesson/migration.sql",
+      "hash": "24346ffdab9d0301703a9ca0814cf4b9f86158ad6332ace37625d04835313ce1"
+    },
+    {
+      "file": "apps/backend/prisma/schema.prisma",
+      "hash": "1f4a92312df9673263f477561641dd8f0c2fcaf4dbc8f56c0de939bbc9fc492e"
+    },
+    {
+      "file": "apps/backend/release/lessonSchema.ts",
+      "hash": "ae8eb75e4187b679cbdd317fa2234b23bba2039642f7a2e689dffb31c9a02f7f"
+    },
+    {
+      "file": "apps/backend/release/migrations.ts",
+      "hash": "c3b531b0f860fc042cdb5efcfadc38a4789f3d5783d2e9a37b1e4f106c87433d"
+    },
+    {
+      "file": "apps/backend/worker.ts",
+      "hash": "e0fe77c948cee6f2c75ddd70154d064b451b36dc8d177f44bcd48c175cc98df3"
+    },
+    {
+      "file": "apps/web/src/api/internalLesson.api.ts",
+      "hash": "1b3640dac41000a0792c5d8030f0ed236286eebc4eb15cbf398ee3c1e2f4e83f"
+    },
+    {
+      "file": "apps/web/src/api/internalModel2.api.ts",
+      "hash": "41dce2bbe30d646e2f49eea944df3ecfa454298865f0732842f58b3775b9b672"
+    },
+    {
+      "file": "apps/web/src/app/App.tsx",
+      "hash": "97f1bbfb90b13e4ee642a0d5ec4b7772f265e646749d023d66fa528ffbe089d7"
+    },
+    {
+      "file": "apps/web/src/client/httpClient.ts",
+      "hash": "c8d3ee4fcfc2b725b6255f55838939a62aad723f7713f6c27398c3b20be4130d"
+    },
+    {
+      "file": "apps/web/src/components/shell/AppShell.tsx",
+      "hash": "d5fdf2af356f053cd05fc28013eb7612a5cef35fa834dbc491870c26684c37ce"
+    },
+    {
+      "file": "apps/web/src/features/internalLessons/InternalLesson.tsx",
+      "hash": "8ba69cd994314a6ab926599b7a4a2638b2c89594b9c651683440d9af6f2a9123"
+    },
+    {
+      "file": "apps/web/src/features/internalLessons/LessonResult.tsx",
+      "hash": "c5f903895ccc9ada699c7b735a6a59d32393affe54adbefa0cf665d0b18960ce"
+    },
+    {
+      "file": "apps/web/src/features/internalLessons/LessonReview.tsx",
+      "hash": "a24bc797b1019349ceab9defb208dacccb3eb0aade54348c87fd6ecaa7918af9"
+    },
+    {
+      "file": "apps/web/src/features/internalLessons/lessonDraft.ts",
+      "hash": "bb4e464c3ad2aab06182490406129f48ed5bb9714e3d17ce124759d429954818"
+    },
+    {
+      "file": "apps/web/src/features/internalLessons/useLesson.ts",
+      "hash": "37d9a47f211d835aa84060465c7c6d0db990c3b92f42c125a6865d824a75ad4a"
+    },
+    {
+      "file": "apps/web/src/features/internalModel2/AuthoringFields.tsx",
+      "hash": "570160bb865ce8badc87b4c49cb5b44aac647b4011b81ca8b6abcca5dc67f85e"
+    },
+    {
+      "file": "apps/web/src/features/internalModel2/InternalReport.tsx",
+      "hash": "d846e490081ad530c46e52e2fde4c9a22bcd62ecbbe2a0122ce97bc2e751e8d6"
+    },
+    {
+      "file": "apps/web/src/features/internalModel2/InternalWorkspace.tsx",
+      "hash": "ed34d88882f2dfbf9bb0491b630936fae2a744707efe00d8d1b5b10afbd325b9"
+    },
+    {
+      "file": "apps/web/src/features/internalModel2/ReviewPanel.tsx",
+      "hash": "b1ee3615d8b1143674d3e6f590db72ce35807dc1aab41397ef69e69092fe5f75"
+    },
+    {
+      "file": "apps/web/src/features/internalModel2/draft.ts",
+      "hash": "d160fd2628e13a55c8b762cf08d56217fcf89cb82ef21d0c199830a27883fc73"
+    },
+    {
+      "file": "apps/web/src/features/internalModel2/useAuthoring.ts",
+      "hash": "81a59997a9da5b97a51efd9762200d4016ff64e89aa152faae891bd373aa7a33"
+    },
+    {
+      "file": "packages/contracts/src/internal-lessons/index.ts",
+      "hash": "a42ec0230f8d78bbc795f567d4c38c011351435fd80074c34c8f2faac4ef584d"
+    },
+    {
+      "file": "packages/contracts/src/internal-lessons/profile.ts",
+      "hash": "3ec40017e339db52598a9430518997a37b35ab2fae1e755b8ed7fe764510416b"
+    },
+    {
+      "file": "packages/contracts/src/internal-model2/example.ts",
+      "hash": "06f4416e1924431a9a6dd26e518744e5963521554384328065ccd48dc1749260"
+    },
+    {
+      "file": "packages/contracts/src/internal-model2/index.ts",
+      "hash": "6a48570c02750a2d7bac8764d9f9d55e5330bdf835d0da1375eaf1273a8b2b03"
+    }
+  ],
+  "artifact": "417f931f81556eb24976aaafb07ed32bbb4f37dd708b1b8507f69727406dec14"
+}

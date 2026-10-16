@@ -49,10 +49,10 @@ export function readLocalSettings(env: Record<string, string | undefined>): Loca
 
 export function childEnvironment(settings: LocalSettings, inherited: Record<string, string | undefined>): Record<string, string> {
   const env: Record<string, string> = {};
-  for (const name of ["PATH", "Path", "SystemRoot", "WINDIR", "ComSpec", "PATHEXT", "TEMP", "TMP", "TMPDIR"]) {
+  for (const name of ["PATH", "Path", "SystemRoot", "WINDIR", "ComSpec", "PATHEXT", "TEMP", "TMP", "TMPDIR", "USERPROFILE", "HOME"]) {
     if (inherited[name] !== undefined) env[name] = inherited[name];
   }
-  return { ...env, NODE_ENV: "test", DATABASE_URL: settings.databaseUrl, DO_NOT_TRACK: "1",
+  return { ...env, ...(inherited.M2M_RUN === "1" && inherited.MODEL2_LESSON_IMAGE ? { MODEL2_LESSON_IMAGE: inherited.MODEL2_LESSON_IMAGE } : {}), NODE_ENV: "test", DATABASE_URL: settings.databaseUrl, DO_NOT_TRACK: "1",
     BETTER_AUTH_URL: `http://localhost:${settings.apiPort}`, APP_ORIGINS: "http://localhost:5173",
     BETTER_AUTH_SECRET: randomUUID() + randomUUID(),
     PORT: String(settings.apiPort), LISTEN_HOST: "127.0.0.1", REDIS_HOST: "127.0.0.1", REDIS_PORT: String(settings.redisPort),

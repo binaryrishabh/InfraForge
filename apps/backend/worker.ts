@@ -36,6 +36,7 @@ import type { DeploymentTimeline } from "@infraforge/contracts/deployment";
 import { internalWorker } from "./internalModel2/worker";
 import { retireInternalRuns, failInternalDelivery } from "./internalModel2/execution";
 import { internalModel2Queue } from "./internalModel2/queue";
+import { reapLessonContainers } from "./internalModel2/lessonExecution";
 import { deploymentFailureStatus, isRetiredDeployment } from "./utils/deploymentJobPolicy";
 
 await assertRuntimeSchema();
@@ -48,6 +49,7 @@ const ownership = await WorkerOwnership.acquire(databaseUrl, () => {
 });
 await retireInterruptedRuns();
 await retireInternalRuns(ownership);
+await reapLessonContainers();
 await startRuntime(ownership);
 const model2Worker = internalWorker(ownership);
 await model2Worker.waitUntilReady();
