@@ -83,6 +83,10 @@ export async function checkModel2Browser(h: LocalHarness, sessions: SessionFixtu
     }
     await page.setViewportSize({ width: 390, height: 844 });
     expect(await page.evaluate("document.documentElement.scrollWidth <= window.innerWidth")).toBe(true);
+    const internalNav = page.getByRole("link", { name: "Model 2 · internal", exact: true });
+    await internalNav.scrollIntoViewIfNeeded();
+    expect(await internalNav.evaluate((node: any) => node.scrollHeight <= node.clientHeight)).toBe(true);
+    await page.evaluate("window.scrollTo(0, 0)");
     await page.screenshot({ path: join(output, "authoring-mobile.png"), fullPage: true });
     await page.setViewportSize({ width: 1280, height: 900 });
     proof.cases.push("review editing and saved/history refresh", "mobile authoring");
@@ -94,6 +98,7 @@ export async function checkModel2Browser(h: LocalHarness, sessions: SessionFixtu
     await page.getByRole("button", { name: "Validate and review on server" }).click();
     await page.getByRole("heading", { name: "Review the exact execution" }).waitFor();
     const reviewedIdentity = (await page.getByText("Reviewed request identity:", { exact: false }).textContent())?.split(": ")[1];
+    await page.evaluate("window.scrollTo(0, 0)");
     await page.screenshot({ path: join(output, "review-desktop.png"), fullPage: true });
     await page.getByLabel("I reviewed this saved revision", { exact: false }).check();
     await page.getByRole("button", { name: "Execute reviewed Model-2 run" }).click();
@@ -116,8 +121,10 @@ export async function checkModel2Browser(h: LocalHarness, sessions: SessionFixtu
     await page.getByText("Replay: MatchesRecordedPrefix", { exact: false }).waitFor();
     await page.getByText("Usage evidence", { exact: true }).click();
     await page.getByText("Service activity, commands, object state and faults", { exact: true }).click();
-    await page.getByRole("heading", { name: "Last durable result" }).scrollIntoViewIfNeeded();
+    await page.evaluate(`window.scrollBy(0, document.querySelector('[aria-label="Durable Model-2 report"]').getBoundingClientRect().top - 120)`);
     await page.screenshot({ path: join(output, "report-desktop.png") });
+    await page.getByRole("heading", { name: "Observed modeled facts", exact: true }).scrollIntoViewIfNeeded();
+    await page.screenshot({ path: join(output, "report-facts-desktop.png") });
     const complete = await read(completeId);
     expect(complete.evidence.model.commands.results).toHaveLength(3);
     proof.complete = await retain(completeId);
@@ -154,10 +161,13 @@ export async function checkModel2Browser(h: LocalHarness, sessions: SessionFixtu
     try { await rewrite(changed, changed.fingerprint, history); await page.getByRole("button", { name: "Refresh durable report" }).click(); await page.getByText("Execution source differs", { exact: false }).waitFor(); expect(await page.getByRole("button", { name: "Verify deterministic replay" }).isDisabled()).toBe(true); }
     finally { await rewrite(complete.input, complete.inputHash, complete.evidence); db.release(); }
     await page.getByRole("button", { name: "Refresh durable report" }).click();
+    await page.getByText("Read-only deterministic prefix replay is available", { exact: false }).waitFor();
     await page.setViewportSize({ width: 390, height: 844 });
     expect(await page.evaluate("document.documentElement.scrollWidth <= window.innerWidth")).toBe(true);
-    await page.getByRole("heading", { name: "Last durable result" }).scrollIntoViewIfNeeded();
+    await page.evaluate(`window.scrollBy(0, document.querySelector('[aria-label="Durable Model-2 report"]').getBoundingClientRect().top - 120)`);
     await page.screenshot({ path: join(output, "report-mobile.png") });
+    await page.getByRole("heading", { name: "Unknown and uncertainties", exact: true }).scrollIntoViewIfNeeded();
+    await page.screenshot({ path: join(output, "report-unknowns-mobile.png") });
     const other = await browser.newContext(); await addSession(other, bob.cookie); const second = await other.newPage();
     await second.goto(h.origin + `/internal/model2?run=${completeId}`); await second.getByText("Internal workspace unavailable for this session", { exact: false }).waitFor();
     expect(await second.getByText("Observed modeled facts", { exact: true }).count()).toBe(0); await other.close();

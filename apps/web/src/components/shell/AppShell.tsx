@@ -29,7 +29,7 @@ function NavItems({ className, internal }: { className?: string; internal: boole
           </NavLink>
         </li>
       ))}
-      {internal && <li><NavLink to="/internal/model2" className="inline-flex h-9 items-center rounded-md px-3 text-sm text-ink-2 hover:bg-sunken">Model 2 · internal</NavLink></li>}
+      {internal && <li className="shrink-0"><NavLink to="/internal/model2" className="inline-flex h-9 items-center whitespace-nowrap rounded-md px-3 text-sm text-ink-2 hover:bg-sunken">Model 2 · internal</NavLink></li>}
     </ul>
   );
 }
