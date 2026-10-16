@@ -1,5 +1,16 @@
 # InfraForge project state
 
+**Lesson-runner host checkpoint (2026-10-17): actual host UNVERIFIED.** The owner
+confirmed that no dedicated Linux host is available yet. Repository-side read-only
+preflight and explicitly invoked bounded enforcement probes are prepared under
+`scripts/lesson-host`; see the [host procedure and gate ledger](reality/lesson-host-readiness.md).
+They distinguish configured/observed/enforced evidence, refuse unsuitable or
+unknown preconditions, and never declare rootless readiness from a preflight or
+rootful CI. Actual controller enforcement, deployed-service lifecycle, daemon
+authority, retention and disable/recovery on the intended host remain UNKNOWN.
+No host settings, service installation, grants, preview or production were changed.
+Model 1 ACTIVE; Model 2 INTERNAL; production PARKED. Accepted M2M below remains intact.
+
 **Owner workflow (2026-10-17): revert the temporary A/B/C/D parallel-branch plan.**
 Active engineering work returns to the established **single integration track on
 `develop`**, with `main` reserved for separately approved, validated promotion.
