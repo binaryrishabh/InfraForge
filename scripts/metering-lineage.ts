@@ -3,7 +3,7 @@ import { readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { relative, resolve } from "node:path";
 import { meteringDigest, meteringRoot } from "./reality/metering-source";
 const acceptedHash = "d9802e09b0d71796eccc181d3fe32d3d9e1b1c1b6370aba61b61d566d8ed61db";
-const paths = ["packages/simulation/src/reality/metering/link-meter.ts", "packages/simulation/src/reality/metering/object-meter.ts", "scripts/reality/metering-proofs.ts", "scripts/tests/meteringArtifacts.test.ts", "scripts/reality/classify.ts"];
+const paths = ["packages/simulation/src/reality/metering/link-meter.ts", "packages/simulation/src/reality/metering/object-meter.ts", "scripts/reality/metering-proofs.ts", "scripts/tests/meteringArtifacts.test.ts", "scripts/reality/classify.ts", "scripts/tests/reality.test.ts"];
 const artifacts = ["docs/reality/m2j-proofs.json", "docs/reality/m2j-performance.json", "docs/reality/m2j-source-lineage.json"];
 const normalize = (s: string) => s.replaceAll("\r\n", "\n");
 const hash = (s: string) => createHash("sha256").update(normalize(s)).digest("hex");

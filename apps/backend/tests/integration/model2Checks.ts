@@ -30,7 +30,7 @@ export async function checkInternalModel2(h: LocalHarness, sessions: SessionFixt
     expect((await fetch(h.api + base + "/runs", { headers: { Origin: h.origin } })).status).toBe(401);
     await h.request(base + "/runs", undefined, "GET", 404);
     await h.sql.query('INSERT INTO "InternalModel2Grant" ("userId",reason) VALUES ($1,\'Disposable internal product proof\')', [owner]); grants.push(owner);
-    const saved = (await h.request("/infrastructure", { name: "Explicit internal product fixture", layout: fixture.layout }, "POST", 201)).createdInfrastructure;
+    const saved = (await h.request("/infrastructure", { name: "Internal Model-2 fixture", layout: fixture.layout }, "POST", 201)).createdInfrastructure;
     designs.push(saved.id);
     const request = { ...fixture.request, infrastructureId: saved.id, expectedDesignUpdatedAt: saved.updatedAt };
     const create = async (key: string) => { const result = await h.request(base + "/runs", { ...request, idempotencyKey: key }, "POST", 202); rows.push(result.id); return result.id as string; };

@@ -151,11 +151,13 @@ The real product workload exposed a valid zero-based first-attempt identity, whi
 M2J's collector had rejected. M2K accepts the actual nonnegative safe integer and
 keeps distinct receipts/events; it does not renumber runtime work. Accepted M2J
 proof/performance/lineage JSON remains unchanged. The new bounded source lineage
-reconstructs the accepted M2J fingerprint from five original source files and
+reconstructs the accepted M2J fingerprint from six original source files and
 strict current pins; runtime semantic evidence must still replay exactly. Existing
 M2H/M2I provenance protections remain. New internal policy inventory entries cite
 their actual workspace source instead of claiming to exist at the old Model-1 audit
 commit. No Model-1 calibrated coefficient or golden expectation was changed.
+The runtime image now explicitly includes the internal engine, metering and adapter
+TypeScript closure; audit data, tests, private files and secrets remain excluded.
 
 ## Proof and remaining product requirement
 

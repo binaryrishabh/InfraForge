@@ -133,6 +133,8 @@ integration("local deployment lifecycle", () => {
         await checkUserIsolation(harness, sessions, infrastructureIds[0]!, deploymentIds[0]!);
         evidence.result = "passed"; return;
       }
+      phase("internal Model-2 saved design, durable worker and read-only historical report");
+      evidence.model2 = await checkInternalModel2(harness, sessions, infrastructureIds);
       const invalidJson = await fetch(harness.api + "/infrastructure", {
         method: "POST", headers: harness.headers, body: "{",
       });
@@ -661,8 +663,6 @@ integration("local deployment lifecycle", () => {
       evidence.learningHistory = await checkLearningHistory(harness, sessions, infrastructureIds, deploymentIds);
       phase("deliberate challenge improvements");
       evidence.learning = await checkLearningExperiments(harness, sessions, infrastructureIds, deploymentIds);
-      phase("internal Model-2 saved design, durable worker and read-only historical report");
-      evidence.model2 = await checkInternalModel2(harness, sessions, infrastructureIds);
       evidence.result = "passed";
     } catch (error) {
       evidence.result = "failed";

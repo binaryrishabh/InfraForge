@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { resolve } from "node:path";
 import { buildInventory, root } from "../reality/inventory";
 import { scanFile } from "../reality/scan";
@@ -50,9 +50,12 @@ test("unknown components cannot become a free zero total and epistemic bounds re
 test("provider fact snapshots and all eleven resource depth rows/dimensions validate", () => {
   expect(validateArtifacts(root)).toEqual([]); expect(validateDepth([])).not.toEqual([]);
 });
-test("audit data and internal Model-2 foundation stay outside the current runtime image", () => {
+test("runtime image admits the internal execution closure while excluding audit, tests and private files", () => {
   const context = ignore().add(readFileSync(resolve(root, ".dockerignore"), "utf8"));
-  for (const file of ["docs/reality/model1-ledger.json", "packages/simulation/src/model2/run.ts", "packages/simulation/src/reality/quantity.ts"])
+  for (const file of ["docs/reality/model1-ledger.json", "docs/reality/m2k-product-proof.json", "apps/backend/tests/model2Fixture.ts", "packages/simulation/tests/productFixture.ts", "apps/backend/internalModel2/private.env.ts", "packages/simulation/src/model2/.private/key.ts", "packages/simulation/src/model2/product/future.json"])
     expect(context.ignores(file)).toBe(true);
   expect(context.ignores("packages/simulation/src/engine.ts")).toBe(false);
+  const walk = (path: string): string[] => readdirSync(resolve(root, path), { withFileTypes: true }).flatMap((entry) => entry.isDirectory() ? walk(`${path}/${entry.name}`) : entry.name.endsWith(".ts") ? [`${path}/${entry.name}`] : []);
+  for (const folder of ["apps/backend/internalModel2", "packages/simulation/src/model2", "packages/simulation/src/reality", "packages/domain/src", "packages/catalog/src"])
+    for (const file of walk(folder)) expect(context.ignores(file)).toBe(false);
 });

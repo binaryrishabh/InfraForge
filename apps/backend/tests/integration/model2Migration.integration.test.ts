@@ -25,7 +25,7 @@ integration("migration 18 preserves schema-17 history and guards immutable bound
     expect((await db.query('SELECT * FROM "InternalModel2Grant"')).rows).toEqual([]);
     expect((await db.query('SELECT * FROM "InternalModel2Run"')).rows).toEqual([]);
     await checkSchemaGuards(db);
-    const insert = (id: string, actor = owner) => db.query(`INSERT INTO "InternalModel2Run" (id,"ownerId","infrastructureId","idempotencyKey","requestHash",input,"inputHash") VALUES ($1,$2,$3,$1,$4,'{}',$4)`, [id, actor, design, "0".repeat(64)]);
+    const insert = (id: string, actor = owner) => db.query(`INSERT INTO "InternalModel2Run" (id,"ownerId","infrastructureId","idempotencyKey","requestHash",input,"inputHash") VALUES ($1,$2,$3,$5,$4,'{}',$4)`, [id, actor, design, "0".repeat(64), id]);
     await expect(insert(randomUUID())).rejects.toThrow("granted same-owner");
     await db.query('INSERT INTO "InternalModel2Grant" ("userId",reason) VALUES ($1,\'Disposable migration proof\'),($2,\'Other grant\')', [owner, other]);
     await expect(insert(randomUUID(), other)).rejects.toThrow("granted same-owner");
