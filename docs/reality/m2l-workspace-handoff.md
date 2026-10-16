@@ -1,7 +1,11 @@
 # M2L internal workspace and redesign handoff
 
-Implementation checkpoint; final exact-SHA browser/CI evidence is required before
-claiming completion. Issue #3 remains open for independent Lead review.
+Implemented and technically verified on proof producer
+`466f5d77ba554415f6936e47e7d45cd2d40dd4fe`:
+[all ten CI jobs passed](https://github.com/binaryrishabh/InfraForge/actions/runs/38932531599),
+including actual Chromium/API/PostgreSQL/Redis/worker behavior and full packaging /
+release rehearsal. [Retained proof and provenance](m2l-browser-proof.md) describe
+the exact evidence. Issue #3 remains open for independent Lead acceptance.
 
 ## User journey and source boundaries
 
@@ -16,6 +20,18 @@ The journey is saved design → supported-shape explanation → guided authored 
 M2K admission → durable report/history → cancellation or read-only replay.
 The saved design is never silently rewritten. Legacy controls, challenge workspaces
 and unsupported shapes show concrete refusal reasons.
+
+For an explicitly granted operator, open **Model 2 · internal**, select a compatible
+owned saved design and enter the fields (or deliberately load the labelled authored
+example). Validate, correct any named field errors, review the saved revision and
+all assumptions, then confirm the checkbox and execute. Focus moves to the selected
+durable report. An uncertain outcome exposes **Retry exact submission**, including
+after reload; it never automatically submits a replacement. Session storage must
+be available before admission, otherwise submission is blocked with an explanation.
+The 20-row history is a manual observation: its previous status can differ from a
+newer selected report until **Refresh internal history** is used. Normal Model-1
+designs with refused legacy fields require a separately reviewed compatible saved
+design; this workspace does not sanitize them or create compatibility copies.
 
 `packages/contracts/src/internal-model2/` owns browser-safe field metadata, units,
 DTOs and the optional explicit educational example. It imports no simulation engine.
@@ -128,11 +144,27 @@ worker interruption, corrupt/incompatible history, mobile width and lost session
 Test-only PostgreSQL barriers and privileged historical-corruption fixtures are
 confined to disposable services; no application failure switch is installed.
 
-New/changed visible controls must be inventoried. The 441 accepted baseline entries
-are preserved; new surfaces initially fail closed as unreviewed. A browser pass does
-not qualify unrelated surfaces or general Model-2 activation. Final inventory
-counts, per-surface reviews, proof artifacts and exact commits belong in the final
-completion report. Both technical and UI gates remain closed.
+The browser proof has a separate digest of the actual workspace implementation
+(backend internal modules, browser-safe contracts, authoring/report modules, API,
+HTTP cancellation, route and shell). This does not change M2K execution identity.
+The independent verifier reconstructs complete and interrupted/cancelled reports
+and deterministic replays from the retained actual inputs/captures, and refuses
+source drift. CI verifies both the fresh artifact and retained M2L proof. When
+replacing the UI or behavior, produce and inspect a genuine new artifact, retain
+its versioned evidence, and review new shipping fingerprints. Do not rewrite a
+previous proof's producer/source identity to make new code appear verified.
+
+New/changed visible controls are inventoried with actual behavior proof. All 441
+accepted entries are unchanged. The 33 additions are ten PRODUCT_UI_ACTION entries
+with actual Chromium behavior proof and 23 PARTIAL technical entries (authored
+inputs/security/faults and retained evidence). The reviewed total is 474 surfaces,
+200 technical blockers, 21 valid UI surfaces, and the original 252 outstanding UI
+reviews. No pre-existing technical or UI entry was promoted. Both general shipping
+gates remain closed; the internal browser pass does not qualify unrelated surfaces.
+`scripts/m2l-inventory.ts` is the additive M2L review/reproduction tool; it verifies
+the proof and asserts the accepted baseline remains unchanged. Its fixed baseline
+guard is for this additive milestone, not a requirement that Claude retain today's
+control identities or styling. A redesign needs a new semantic inventory review.
 
 ## What Claude may replace
 

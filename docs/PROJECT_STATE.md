@@ -1,14 +1,22 @@
 # InfraForge project state
 
-M2L implementation checkpoint: the current-style `/internal/model2` workspace now
-connects guided authored fields, read-only server validation, revision/value review,
-exact M2K submission retry, bounded run observation and durable report/replay/cancel.
-The operator grant and owner checks remain authoritative. The compiler, worker,
-database schema and Model-1 execution are unchanged. Focused tests pass; actual
-Chromium/API/database/worker CI and final validation are required before claiming
-completion. See [M2L contracts and redesign handoff](reality/m2l-workspace-handoff.md).
-Issue #3 stays open for independent Lead review. The 441-surface accepted baseline
-is preserved; new surfaces are initially inventoried as unreviewed, not promoted.
+M2L implemented and technically verified; pending independent Lead acceptance.
+The current-style `/internal/model2` workspace connects guided authored fields,
+read-only server compilation, saved revision/value review, exact M2K retry,
+bounded observation and durable report/replay/cancel. Implementation/proof producer
+`466f5d77ba554415f6936e47e7d45cd2d40dd4fe` passed all ten
+[CI jobs, including full integration and packaging/release rehearsal](https://github.com/binaryrishabh/InfraForge/actions/runs/38932531599).
+Actual Chromium 156 completed 22 cases against disposable PostgreSQL/Redis and the
+real API/worker; retained inputs, reports and complete/interrupted/cancelled replays
+independently reconstruct. See [proof provenance](reality/m2l-browser-proof.md) and
+[functional contracts / Claude redesign handoff](reality/m2l-workspace-handoff.md).
+The operator grant, owner checks, M2K compiler/worker/schema and all Model-1 behavior
+remain unchanged. All 441 accepted inventory entries are unchanged. The 33 additions
+are 10 browser-proven UI actions and 23 PARTIAL technical surfaces: 474 total,
+200 technical blockers, 21 valid UI surfaces and 252 original UI reviews outstanding.
+Both general shipping gates stay closed. Model 1 ACTIVE; Model 2 INTERNAL;
+production PARKED. Vercel failed separately and was not repaired. Issue #3 remains
+open for independent Lead review; this implementation does not claim acceptance.
 
 **Active execution direction (owner, 2026-10-16): do not pause frontend work
 for Claude.** Codex (MODEL GPT-6.1 Sol, REASONING Extra High) may implement

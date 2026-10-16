@@ -1,6 +1,6 @@
 {
   "schema": "infraforge-shipping-reality/2",
-  "scope": "Separate PRODUCT_UI_VALIDITY from MODEL2_REALITY_SHIPPING_READY. New or changed fingerprints require review; ordinary current Model-1 validation checks inventory coverage only.",
+  "scope": "Separate PRODUCT_UI_VALIDITY from MODEL2_REALITY_SHIPPING_READY. M2L additions have narrow internal browser/API/worker proof; accepted 441-entry baseline preserved.",
   "entries": [
     {
       "id": "chaos:packages/domain/src/resource/DeploymentChaosNames.enum.ts:CpuSpike:0",
@@ -4798,32 +4798,40 @@
       "identity": "Button-65ec3808a34e0f2bce77",
       "description": "Button: onClick={() => change({ ...draft, commands: draft.commands.filter((_, at) => at !== i) })}",
       "kind": "control",
-      "category": "UNREVIEWED",
-      "categoryReason": "Classification requires semantic review; new surfaces fail closed",
+      "category": "INFRA_INPUT",
+      "categoryReason": "Authored technical input to the narrow M2K compiler; includes explicit units, limits and educational origin rather than provider defaults",
       "ui": {
         "status": "NOT_APPLICABLE",
-        "behavior": "Unreviewed",
-        "proofs": []
+        "behavior": "Technical readiness is separate from interaction behavior; guided compilation/runtime and browser proof cover only the internal authored scope",
+        "proofs": [
+          "docs/reality/m2l-browser-proof.json",
+          "apps/backend/tests/integration/model2BrowserChecks.ts",
+          "apps/backend/tests/model2Authoring.test.ts",
+          "apps/web/tests/internalModel2.test.tsx",
+          "docs/reality/m2l-workspace-handoff.md"
+        ]
       },
       "resources": [
-        "ALL"
+        "Virtual Machine",
+        "Object Storage"
       ],
-      "model1Meaning": "New visible surface requires explicit semantic review",
-      "model2Owner": "UNASSIGNED",
-      "changesState": false,
+      "model1Meaning": "Dedicated granted internal workspace; existing Model-1 runs unchanged",
+      "model2Owner": "apps/backend/internalModel2/authoring.ts",
+      "changesState": true,
       "effects": {
-        "physics": false,
-        "reachability": false,
+        "physics": true,
+        "reachability": true,
         "security": false,
         "cost": false,
-        "evidence": false
+        "evidence": true
       },
       "provenanceRequirements": [
-        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+        "Explicit owner-authored educational origin and units; exact saved revision, immutable envelope and retained capture identity",
+        "Physical throughput/cloud timing/reliability/durability and full pricing Unknown; explicit server grant and owner checks on every request"
       ],
-      "status": "UNKNOWN",
+      "status": "PARTIAL",
       "finalProductEligible": false,
-      "plan": "Implement and prove the real mechanism or remove before Model-2 shipping"
+      "plan": "Keep INTERNAL. Broader physical, provider, resource and reliability support needs independent contracts/proofs before general Model-2 shipping"
     },
     {
       "id": "control:apps/web/src/features/internalModel2/AuthoringFields.tsx:Button-b15d70957266af0885f0:0",
@@ -4831,32 +4839,40 @@
       "identity": "Button-b15d70957266af0885f0",
       "description": "Button: onClick={() => change({ ...draft, commands: [...draft.commands, { at: \"\", kind: \"put\", namespace: \"\", key: \"\", bytes: \"\", content: \"\" }] })}",
       "kind": "control",
-      "category": "UNREVIEWED",
-      "categoryReason": "Classification requires semantic review; new surfaces fail closed",
+      "category": "INFRA_INPUT",
+      "categoryReason": "Authored technical input to the narrow M2K compiler; includes explicit units, limits and educational origin rather than provider defaults",
       "ui": {
         "status": "NOT_APPLICABLE",
-        "behavior": "Unreviewed",
-        "proofs": []
+        "behavior": "Technical readiness is separate from interaction behavior; guided compilation/runtime and browser proof cover only the internal authored scope",
+        "proofs": [
+          "docs/reality/m2l-browser-proof.json",
+          "apps/backend/tests/integration/model2BrowserChecks.ts",
+          "apps/backend/tests/model2Authoring.test.ts",
+          "apps/web/tests/internalModel2.test.tsx",
+          "docs/reality/m2l-workspace-handoff.md"
+        ]
       },
       "resources": [
-        "ALL"
+        "Virtual Machine",
+        "Object Storage"
       ],
-      "model1Meaning": "New visible surface requires explicit semantic review",
-      "model2Owner": "UNASSIGNED",
-      "changesState": false,
+      "model1Meaning": "Dedicated granted internal workspace; existing Model-1 runs unchanged",
+      "model2Owner": "apps/backend/internalModel2/authoring.ts",
+      "changesState": true,
       "effects": {
-        "physics": false,
-        "reachability": false,
+        "physics": true,
+        "reachability": true,
         "security": false,
         "cost": false,
-        "evidence": false
+        "evidence": true
       },
       "provenanceRequirements": [
-        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+        "Explicit owner-authored educational origin and units; exact saved revision, immutable envelope and retained capture identity",
+        "Physical throughput/cloud timing/reliability/durability and full pricing Unknown; explicit server grant and owner checks on every request"
       ],
-      "status": "UNKNOWN",
+      "status": "PARTIAL",
       "finalProductEligible": false,
-      "plan": "Implement and prove the real mechanism or remove before Model-2 shipping"
+      "plan": "Keep INTERNAL. Broader physical, provider, resource and reliability support needs independent contracts/proofs before general Model-2 shipping"
     },
     {
       "id": "control:apps/web/src/features/internalModel2/AuthoringFields.tsx:Input-3f530448fb76f973b0aa:0",
@@ -4864,32 +4880,40 @@
       "identity": "Input-3f530448fb76f973b0aa",
       "description": "Input: value={c[key as keyof typeof c]} onChange={(e) => command(i, key, e.target.value)}",
       "kind": "control",
-      "category": "UNREVIEWED",
-      "categoryReason": "Classification requires semantic review; new surfaces fail closed",
+      "category": "INFRA_INPUT",
+      "categoryReason": "Authored technical input to the narrow M2K compiler; includes explicit units, limits and educational origin rather than provider defaults",
       "ui": {
         "status": "NOT_APPLICABLE",
-        "behavior": "Unreviewed",
-        "proofs": []
+        "behavior": "Technical readiness is separate from interaction behavior; guided compilation/runtime and browser proof cover only the internal authored scope",
+        "proofs": [
+          "docs/reality/m2l-browser-proof.json",
+          "apps/backend/tests/integration/model2BrowserChecks.ts",
+          "apps/backend/tests/model2Authoring.test.ts",
+          "apps/web/tests/internalModel2.test.tsx",
+          "docs/reality/m2l-workspace-handoff.md"
+        ]
       },
       "resources": [
-        "ALL"
+        "Virtual Machine",
+        "Object Storage"
       ],
-      "model1Meaning": "New visible surface requires explicit semantic review",
-      "model2Owner": "UNASSIGNED",
-      "changesState": false,
+      "model1Meaning": "Dedicated granted internal workspace; existing Model-1 runs unchanged",
+      "model2Owner": "apps/backend/internalModel2/authoring.ts",
+      "changesState": true,
       "effects": {
-        "physics": false,
-        "reachability": false,
+        "physics": true,
+        "reachability": true,
         "security": false,
         "cost": false,
-        "evidence": false
+        "evidence": true
       },
       "provenanceRequirements": [
-        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+        "Explicit owner-authored educational origin and units; exact saved revision, immutable envelope and retained capture identity",
+        "Physical throughput/cloud timing/reliability/durability and full pricing Unknown; explicit server grant and owner checks on every request"
       ],
-      "status": "UNKNOWN",
+      "status": "PARTIAL",
       "finalProductEligible": false,
-      "plan": "Implement and prove the real mechanism or remove before Model-2 shipping"
+      "plan": "Keep INTERNAL. Broader physical, provider, resource and reliability support needs independent contracts/proofs before general Model-2 shipping"
     },
     {
       "id": "control:apps/web/src/features/internalModel2/AuthoringFields.tsx:Input-7f39c3765b2494c48975:0",
@@ -4897,32 +4921,40 @@
       "identity": "Input-7f39c3765b2494c48975",
       "description": "Input: value={draft.values[field.key] ?? \"\"} onChange={(e) => change({ ...draft, values: { ...draft.values, [field.key]: e.target.value } })}",
       "kind": "control",
-      "category": "UNREVIEWED",
-      "categoryReason": "Classification requires semantic review; new surfaces fail closed",
+      "category": "INFRA_INPUT",
+      "categoryReason": "Authored technical input to the narrow M2K compiler; includes explicit units, limits and educational origin rather than provider defaults",
       "ui": {
         "status": "NOT_APPLICABLE",
-        "behavior": "Unreviewed",
-        "proofs": []
+        "behavior": "Technical readiness is separate from interaction behavior; guided compilation/runtime and browser proof cover only the internal authored scope",
+        "proofs": [
+          "docs/reality/m2l-browser-proof.json",
+          "apps/backend/tests/integration/model2BrowserChecks.ts",
+          "apps/backend/tests/model2Authoring.test.ts",
+          "apps/web/tests/internalModel2.test.tsx",
+          "docs/reality/m2l-workspace-handoff.md"
+        ]
       },
       "resources": [
-        "ALL"
+        "Virtual Machine",
+        "Object Storage"
       ],
-      "model1Meaning": "New visible surface requires explicit semantic review",
-      "model2Owner": "UNASSIGNED",
-      "changesState": false,
+      "model1Meaning": "Dedicated granted internal workspace; existing Model-1 runs unchanged",
+      "model2Owner": "apps/backend/internalModel2/authoring.ts",
+      "changesState": true,
       "effects": {
-        "physics": false,
-        "reachability": false,
+        "physics": true,
+        "reachability": true,
         "security": false,
         "cost": false,
-        "evidence": false
+        "evidence": true
       },
       "provenanceRequirements": [
-        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+        "Explicit owner-authored educational origin and units; exact saved revision, immutable envelope and retained capture identity",
+        "Physical throughput/cloud timing/reliability/durability and full pricing Unknown; explicit server grant and owner checks on every request"
       ],
-      "status": "UNKNOWN",
+      "status": "PARTIAL",
       "finalProductEligible": false,
-      "plan": "Implement and prove the real mechanism or remove before Model-2 shipping"
+      "plan": "Keep INTERNAL. Broader physical, provider, resource and reliability support needs independent contracts/proofs before general Model-2 shipping"
     },
     {
       "id": "control:apps/web/src/features/internalModel2/AuthoringFields.tsx:Input-be7c3b2a224f40d345ee:0",
@@ -4930,32 +4962,40 @@
       "identity": "Input-be7c3b2a224f40d345ee",
       "description": "Input: value={draft[key]} onChange={(e) => change({ ...draft, [key]: e.target.value })}",
       "kind": "control",
-      "category": "UNREVIEWED",
-      "categoryReason": "Classification requires semantic review; new surfaces fail closed",
+      "category": "INFRA_INPUT",
+      "categoryReason": "Authored technical input to the narrow M2K compiler; includes explicit units, limits and educational origin rather than provider defaults",
       "ui": {
         "status": "NOT_APPLICABLE",
-        "behavior": "Unreviewed",
-        "proofs": []
+        "behavior": "Technical readiness is separate from interaction behavior; guided compilation/runtime and browser proof cover only the internal authored scope",
+        "proofs": [
+          "docs/reality/m2l-browser-proof.json",
+          "apps/backend/tests/integration/model2BrowserChecks.ts",
+          "apps/backend/tests/model2Authoring.test.ts",
+          "apps/web/tests/internalModel2.test.tsx",
+          "docs/reality/m2l-workspace-handoff.md"
+        ]
       },
       "resources": [
-        "ALL"
+        "Virtual Machine",
+        "Object Storage"
       ],
-      "model1Meaning": "New visible surface requires explicit semantic review",
-      "model2Owner": "UNASSIGNED",
-      "changesState": false,
+      "model1Meaning": "Dedicated granted internal workspace; existing Model-1 runs unchanged",
+      "model2Owner": "apps/backend/internalModel2/authoring.ts",
+      "changesState": true,
       "effects": {
-        "physics": false,
-        "reachability": false,
+        "physics": true,
+        "reachability": true,
         "security": false,
         "cost": false,
-        "evidence": false
+        "evidence": true
       },
       "provenanceRequirements": [
-        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+        "Explicit owner-authored educational origin and units; exact saved revision, immutable envelope and retained capture identity",
+        "Physical throughput/cloud timing/reliability/durability and full pricing Unknown; explicit server grant and owner checks on every request"
       ],
-      "status": "UNKNOWN",
+      "status": "PARTIAL",
       "finalProductEligible": false,
-      "plan": "Implement and prove the real mechanism or remove before Model-2 shipping"
+      "plan": "Keep INTERNAL. Broader physical, provider, resource and reliability support needs independent contracts/proofs before general Model-2 shipping"
     },
     {
       "id": "control:apps/web/src/features/internalModel2/AuthoringFields.tsx:Input-f7dbd3dc935088e02abb:0",
@@ -4963,32 +5003,40 @@
       "identity": "Input-f7dbd3dc935088e02abb",
       "description": "Input: value={draft[key]} onChange={(e) => change({ ...draft, [key]: e.target.value })}",
       "kind": "control",
-      "category": "UNREVIEWED",
-      "categoryReason": "Classification requires semantic review; new surfaces fail closed",
+      "category": "FAULT_CONTROL",
+      "categoryReason": "Authored technical input to the narrow M2K compiler; includes explicit units, limits and educational origin rather than provider defaults",
       "ui": {
         "status": "NOT_APPLICABLE",
-        "behavior": "Unreviewed",
-        "proofs": []
+        "behavior": "Technical readiness is separate from interaction behavior; guided compilation/runtime and browser proof cover only the internal authored scope",
+        "proofs": [
+          "docs/reality/m2l-browser-proof.json",
+          "apps/backend/tests/integration/model2BrowserChecks.ts",
+          "apps/backend/tests/model2Authoring.test.ts",
+          "apps/web/tests/internalModel2.test.tsx",
+          "docs/reality/m2l-workspace-handoff.md"
+        ]
       },
       "resources": [
-        "ALL"
+        "Virtual Machine",
+        "Object Storage"
       ],
-      "model1Meaning": "New visible surface requires explicit semantic review",
-      "model2Owner": "UNASSIGNED",
-      "changesState": false,
+      "model1Meaning": "Dedicated granted internal workspace; existing Model-1 runs unchanged",
+      "model2Owner": "apps/backend/internalModel2/authoring.ts",
+      "changesState": true,
       "effects": {
-        "physics": false,
-        "reachability": false,
+        "physics": true,
+        "reachability": true,
         "security": false,
         "cost": false,
-        "evidence": false
+        "evidence": true
       },
       "provenanceRequirements": [
-        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+        "Explicit owner-authored educational origin and units; exact saved revision, immutable envelope and retained capture identity",
+        "Physical throughput/cloud timing/reliability/durability and full pricing Unknown; explicit server grant and owner checks on every request"
       ],
-      "status": "UNKNOWN",
+      "status": "PARTIAL",
       "finalProductEligible": false,
-      "plan": "Implement and prove the real mechanism or remove before Model-2 shipping"
+      "plan": "Keep INTERNAL. Broader physical, provider, resource and reliability support needs independent contracts/proofs before general Model-2 shipping"
     },
     {
       "id": "control:apps/web/src/features/internalModel2/AuthoringFields.tsx:Select-2d3887e7c17cd8befbd8:0",
@@ -4996,32 +5044,40 @@
       "identity": "Select-2d3887e7c17cd8befbd8",
       "description": "Select: value={draft.security} onChange={(e) => change({ ...draft, security: e.target.value as AuthoringDraft[\"security\"] })}",
       "kind": "control",
-      "category": "UNREVIEWED",
-      "categoryReason": "Classification requires semantic review; new surfaces fail closed",
+      "category": "SECURITY_CONTROL",
+      "categoryReason": "Authored technical input to the narrow M2K compiler; includes explicit units, limits and educational origin rather than provider defaults",
       "ui": {
         "status": "NOT_APPLICABLE",
-        "behavior": "Unreviewed",
-        "proofs": []
+        "behavior": "Technical readiness is separate from interaction behavior; guided compilation/runtime and browser proof cover only the internal authored scope",
+        "proofs": [
+          "docs/reality/m2l-browser-proof.json",
+          "apps/backend/tests/integration/model2BrowserChecks.ts",
+          "apps/backend/tests/model2Authoring.test.ts",
+          "apps/web/tests/internalModel2.test.tsx",
+          "docs/reality/m2l-workspace-handoff.md"
+        ]
       },
       "resources": [
-        "ALL"
+        "Virtual Machine",
+        "Object Storage"
       ],
-      "model1Meaning": "New visible surface requires explicit semantic review",
-      "model2Owner": "UNASSIGNED",
-      "changesState": false,
+      "model1Meaning": "Dedicated granted internal workspace; existing Model-1 runs unchanged",
+      "model2Owner": "apps/backend/internalModel2/authoring.ts",
+      "changesState": true,
       "effects": {
         "physics": false,
-        "reachability": false,
-        "security": false,
+        "reachability": true,
+        "security": true,
         "cost": false,
-        "evidence": false
+        "evidence": true
       },
       "provenanceRequirements": [
-        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+        "Explicit owner-authored educational origin and units; exact saved revision, immutable envelope and retained capture identity",
+        "Physical throughput/cloud timing/reliability/durability and full pricing Unknown; explicit server grant and owner checks on every request"
       ],
-      "status": "UNKNOWN",
+      "status": "PARTIAL",
       "finalProductEligible": false,
-      "plan": "Implement and prove the real mechanism or remove before Model-2 shipping"
+      "plan": "Keep INTERNAL. Broader physical, provider, resource and reliability support needs independent contracts/proofs before general Model-2 shipping"
     },
     {
       "id": "control:apps/web/src/features/internalModel2/AuthoringFields.tsx:Select-5e2fdff3cab018016aab:0",
@@ -5029,32 +5085,40 @@
       "identity": "Select-5e2fdff3cab018016aab",
       "description": "Select: value={draft.zone} onChange={(e) => change({ ...draft, zone: e.target.value })}",
       "kind": "control",
-      "category": "UNREVIEWED",
-      "categoryReason": "Classification requires semantic review; new surfaces fail closed",
+      "category": "INFRA_INPUT",
+      "categoryReason": "Authored technical input to the narrow M2K compiler; includes explicit units, limits and educational origin rather than provider defaults",
       "ui": {
         "status": "NOT_APPLICABLE",
-        "behavior": "Unreviewed",
-        "proofs": []
+        "behavior": "Technical readiness is separate from interaction behavior; guided compilation/runtime and browser proof cover only the internal authored scope",
+        "proofs": [
+          "docs/reality/m2l-browser-proof.json",
+          "apps/backend/tests/integration/model2BrowserChecks.ts",
+          "apps/backend/tests/model2Authoring.test.ts",
+          "apps/web/tests/internalModel2.test.tsx",
+          "docs/reality/m2l-workspace-handoff.md"
+        ]
       },
       "resources": [
-        "ALL"
+        "Virtual Machine",
+        "Object Storage"
       ],
-      "model1Meaning": "New visible surface requires explicit semantic review",
-      "model2Owner": "UNASSIGNED",
-      "changesState": false,
+      "model1Meaning": "Dedicated granted internal workspace; existing Model-1 runs unchanged",
+      "model2Owner": "apps/backend/internalModel2/authoring.ts",
+      "changesState": true,
       "effects": {
-        "physics": false,
-        "reachability": false,
+        "physics": true,
+        "reachability": true,
         "security": false,
         "cost": false,
-        "evidence": false
+        "evidence": true
       },
       "provenanceRequirements": [
-        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+        "Explicit owner-authored educational origin and units; exact saved revision, immutable envelope and retained capture identity",
+        "Physical throughput/cloud timing/reliability/durability and full pricing Unknown; explicit server grant and owner checks on every request"
       ],
-      "status": "UNKNOWN",
+      "status": "PARTIAL",
       "finalProductEligible": false,
-      "plan": "Implement and prove the real mechanism or remove before Model-2 shipping"
+      "plan": "Keep INTERNAL. Broader physical, provider, resource and reliability support needs independent contracts/proofs before general Model-2 shipping"
     },
     {
       "id": "control:apps/web/src/features/internalModel2/AuthoringFields.tsx:Select-9591a5b23c66c33b8c5a:0",
@@ -5062,32 +5126,40 @@
       "identity": "Select-9591a5b23c66c33b8c5a",
       "description": "Select: value={c.kind} onChange={(e) => command(i, \"kind\", e.target.value)}",
       "kind": "control",
-      "category": "UNREVIEWED",
-      "categoryReason": "Classification requires semantic review; new surfaces fail closed",
+      "category": "INFRA_INPUT",
+      "categoryReason": "Authored technical input to the narrow M2K compiler; includes explicit units, limits and educational origin rather than provider defaults",
       "ui": {
         "status": "NOT_APPLICABLE",
-        "behavior": "Unreviewed",
-        "proofs": []
+        "behavior": "Technical readiness is separate from interaction behavior; guided compilation/runtime and browser proof cover only the internal authored scope",
+        "proofs": [
+          "docs/reality/m2l-browser-proof.json",
+          "apps/backend/tests/integration/model2BrowserChecks.ts",
+          "apps/backend/tests/model2Authoring.test.ts",
+          "apps/web/tests/internalModel2.test.tsx",
+          "docs/reality/m2l-workspace-handoff.md"
+        ]
       },
       "resources": [
-        "ALL"
+        "Virtual Machine",
+        "Object Storage"
       ],
-      "model1Meaning": "New visible surface requires explicit semantic review",
-      "model2Owner": "UNASSIGNED",
-      "changesState": false,
+      "model1Meaning": "Dedicated granted internal workspace; existing Model-1 runs unchanged",
+      "model2Owner": "apps/backend/internalModel2/authoring.ts",
+      "changesState": true,
       "effects": {
-        "physics": false,
-        "reachability": false,
+        "physics": true,
+        "reachability": true,
         "security": false,
         "cost": false,
-        "evidence": false
+        "evidence": true
       },
       "provenanceRequirements": [
-        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+        "Explicit owner-authored educational origin and units; exact saved revision, immutable envelope and retained capture identity",
+        "Physical throughput/cloud timing/reliability/durability and full pricing Unknown; explicit server grant and owner checks on every request"
       ],
-      "status": "UNKNOWN",
+      "status": "PARTIAL",
       "finalProductEligible": false,
-      "plan": "Implement and prove the real mechanism or remove before Model-2 shipping"
+      "plan": "Keep INTERNAL. Broader physical, provider, resource and reliability support needs independent contracts/proofs before general Model-2 shipping"
     },
     {
       "id": "control:apps/web/src/features/internalModel2/AuthoringFields.tsx:input-9e4fd16d9f824904bec0:0",
@@ -5095,32 +5167,40 @@
       "identity": "input-9e4fd16d9f824904bec0",
       "description": "input: checked={draft.crash} onChange={(e) => change({ ...draft, crash: e.target.checked })}",
       "kind": "control",
-      "category": "UNREVIEWED",
-      "categoryReason": "Classification requires semantic review; new surfaces fail closed",
+      "category": "FAULT_CONTROL",
+      "categoryReason": "Authored technical input to the narrow M2K compiler; includes explicit units, limits and educational origin rather than provider defaults",
       "ui": {
         "status": "NOT_APPLICABLE",
-        "behavior": "Unreviewed",
-        "proofs": []
+        "behavior": "Technical readiness is separate from interaction behavior; guided compilation/runtime and browser proof cover only the internal authored scope",
+        "proofs": [
+          "docs/reality/m2l-browser-proof.json",
+          "apps/backend/tests/integration/model2BrowserChecks.ts",
+          "apps/backend/tests/model2Authoring.test.ts",
+          "apps/web/tests/internalModel2.test.tsx",
+          "docs/reality/m2l-workspace-handoff.md"
+        ]
       },
       "resources": [
-        "ALL"
+        "Virtual Machine",
+        "Object Storage"
       ],
-      "model1Meaning": "New visible surface requires explicit semantic review",
-      "model2Owner": "UNASSIGNED",
-      "changesState": false,
+      "model1Meaning": "Dedicated granted internal workspace; existing Model-1 runs unchanged",
+      "model2Owner": "apps/backend/internalModel2/authoring.ts",
+      "changesState": true,
       "effects": {
-        "physics": false,
-        "reachability": false,
+        "physics": true,
+        "reachability": true,
         "security": false,
         "cost": false,
-        "evidence": false
+        "evidence": true
       },
       "provenanceRequirements": [
-        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+        "Explicit owner-authored educational origin and units; exact saved revision, immutable envelope and retained capture identity",
+        "Physical throughput/cloud timing/reliability/durability and full pricing Unknown; explicit server grant and owner checks on every request"
       ],
-      "status": "UNKNOWN",
+      "status": "PARTIAL",
       "finalProductEligible": false,
-      "plan": "Implement and prove the real mechanism or remove before Model-2 shipping"
+      "plan": "Keep INTERNAL. Broader physical, provider, resource and reliability support needs independent contracts/proofs before general Model-2 shipping"
     },
     {
       "id": "control:apps/web/src/features/internalModel2/AuthoringFields.tsx:option-18e40d7b1e7ccdd33319:0",
@@ -5128,32 +5208,40 @@
       "identity": "option-18e40d7b1e7ccdd33319",
       "description": "option: value=\"external\"",
       "kind": "control",
-      "category": "UNREVIEWED",
-      "categoryReason": "Classification requires semantic review; new surfaces fail closed",
+      "category": "INFRA_INPUT",
+      "categoryReason": "Authored technical input to the narrow M2K compiler; includes explicit units, limits and educational origin rather than provider defaults",
       "ui": {
         "status": "NOT_APPLICABLE",
-        "behavior": "Unreviewed",
-        "proofs": []
+        "behavior": "Technical readiness is separate from interaction behavior; guided compilation/runtime and browser proof cover only the internal authored scope",
+        "proofs": [
+          "docs/reality/m2l-browser-proof.json",
+          "apps/backend/tests/integration/model2BrowserChecks.ts",
+          "apps/backend/tests/model2Authoring.test.ts",
+          "apps/web/tests/internalModel2.test.tsx",
+          "docs/reality/m2l-workspace-handoff.md"
+        ]
       },
       "resources": [
-        "ALL"
+        "Virtual Machine",
+        "Object Storage"
       ],
-      "model1Meaning": "New visible surface requires explicit semantic review",
-      "model2Owner": "UNASSIGNED",
-      "changesState": false,
+      "model1Meaning": "Dedicated granted internal workspace; existing Model-1 runs unchanged",
+      "model2Owner": "apps/backend/internalModel2/authoring.ts",
+      "changesState": true,
       "effects": {
-        "physics": false,
-        "reachability": false,
+        "physics": true,
+        "reachability": true,
         "security": false,
         "cost": false,
-        "evidence": false
+        "evidence": true
       },
       "provenanceRequirements": [
-        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+        "Explicit owner-authored educational origin and units; exact saved revision, immutable envelope and retained capture identity",
+        "Physical throughput/cloud timing/reliability/durability and full pricing Unknown; explicit server grant and owner checks on every request"
       ],
-      "status": "UNKNOWN",
+      "status": "PARTIAL",
       "finalProductEligible": false,
-      "plan": "Implement and prove the real mechanism or remove before Model-2 shipping"
+      "plan": "Keep INTERNAL. Broader physical, provider, resource and reliability support needs independent contracts/proofs before general Model-2 shipping"
     },
     {
       "id": "control:apps/web/src/features/internalModel2/AuthoringFields.tsx:option-2aa27df0ee8943dd70b0:0",
@@ -5161,32 +5249,40 @@
       "identity": "option-2aa27df0ee8943dd70b0",
       "description": "option: value=\"plaintext-reviewed\"",
       "kind": "control",
-      "category": "UNREVIEWED",
-      "categoryReason": "Classification requires semantic review; new surfaces fail closed",
+      "category": "SECURITY_CONTROL",
+      "categoryReason": "Authored technical input to the narrow M2K compiler; includes explicit units, limits and educational origin rather than provider defaults",
       "ui": {
         "status": "NOT_APPLICABLE",
-        "behavior": "Unreviewed",
-        "proofs": []
+        "behavior": "Technical readiness is separate from interaction behavior; guided compilation/runtime and browser proof cover only the internal authored scope",
+        "proofs": [
+          "docs/reality/m2l-browser-proof.json",
+          "apps/backend/tests/integration/model2BrowserChecks.ts",
+          "apps/backend/tests/model2Authoring.test.ts",
+          "apps/web/tests/internalModel2.test.tsx",
+          "docs/reality/m2l-workspace-handoff.md"
+        ]
       },
       "resources": [
-        "ALL"
+        "Virtual Machine",
+        "Object Storage"
       ],
-      "model1Meaning": "New visible surface requires explicit semantic review",
-      "model2Owner": "UNASSIGNED",
-      "changesState": false,
+      "model1Meaning": "Dedicated granted internal workspace; existing Model-1 runs unchanged",
+      "model2Owner": "apps/backend/internalModel2/authoring.ts",
+      "changesState": true,
       "effects": {
         "physics": false,
-        "reachability": false,
-        "security": false,
+        "reachability": true,
+        "security": true,
         "cost": false,
-        "evidence": false
+        "evidence": true
       },
       "provenanceRequirements": [
-        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+        "Explicit owner-authored educational origin and units; exact saved revision, immutable envelope and retained capture identity",
+        "Physical throughput/cloud timing/reliability/durability and full pricing Unknown; explicit server grant and owner checks on every request"
       ],
-      "status": "UNKNOWN",
+      "status": "PARTIAL",
       "finalProductEligible": false,
-      "plan": "Implement and prove the real mechanism or remove before Model-2 shipping"
+      "plan": "Keep INTERNAL. Broader physical, provider, resource and reliability support needs independent contracts/proofs before general Model-2 shipping"
     },
     {
       "id": "control:apps/web/src/features/internalModel2/AuthoringFields.tsx:option-3d372da1cc8e1dae6e75:0",
@@ -5194,32 +5290,40 @@
       "identity": "option-3d372da1cc8e1dae6e75",
       "description": "option: value=\"internal\"",
       "kind": "control",
-      "category": "UNREVIEWED",
-      "categoryReason": "Classification requires semantic review; new surfaces fail closed",
+      "category": "INFRA_INPUT",
+      "categoryReason": "Authored technical input to the narrow M2K compiler; includes explicit units, limits and educational origin rather than provider defaults",
       "ui": {
         "status": "NOT_APPLICABLE",
-        "behavior": "Unreviewed",
-        "proofs": []
+        "behavior": "Technical readiness is separate from interaction behavior; guided compilation/runtime and browser proof cover only the internal authored scope",
+        "proofs": [
+          "docs/reality/m2l-browser-proof.json",
+          "apps/backend/tests/integration/model2BrowserChecks.ts",
+          "apps/backend/tests/model2Authoring.test.ts",
+          "apps/web/tests/internalModel2.test.tsx",
+          "docs/reality/m2l-workspace-handoff.md"
+        ]
       },
       "resources": [
-        "ALL"
+        "Virtual Machine",
+        "Object Storage"
       ],
-      "model1Meaning": "New visible surface requires explicit semantic review",
-      "model2Owner": "UNASSIGNED",
-      "changesState": false,
+      "model1Meaning": "Dedicated granted internal workspace; existing Model-1 runs unchanged",
+      "model2Owner": "apps/backend/internalModel2/authoring.ts",
+      "changesState": true,
       "effects": {
-        "physics": false,
-        "reachability": false,
+        "physics": true,
+        "reachability": true,
         "security": false,
         "cost": false,
-        "evidence": false
+        "evidence": true
       },
       "provenanceRequirements": [
-        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+        "Explicit owner-authored educational origin and units; exact saved revision, immutable envelope and retained capture identity",
+        "Physical throughput/cloud timing/reliability/durability and full pricing Unknown; explicit server grant and owner checks on every request"
       ],
-      "status": "UNKNOWN",
+      "status": "PARTIAL",
       "finalProductEligible": false,
-      "plan": "Implement and prove the real mechanism or remove before Model-2 shipping"
+      "plan": "Keep INTERNAL. Broader physical, provider, resource and reliability support needs independent contracts/proofs before general Model-2 shipping"
     },
     {
       "id": "control:apps/web/src/features/internalModel2/AuthoringFields.tsx:option-af25703f3898a5f480d9:0",
@@ -5227,32 +5331,40 @@
       "identity": "option-af25703f3898a5f480d9",
       "description": "option: value=\"\"",
       "kind": "control",
-      "category": "UNREVIEWED",
-      "categoryReason": "Classification requires semantic review; new surfaces fail closed",
+      "category": "INFRA_INPUT",
+      "categoryReason": "Authored technical input to the narrow M2K compiler; includes explicit units, limits and educational origin rather than provider defaults",
       "ui": {
         "status": "NOT_APPLICABLE",
-        "behavior": "Unreviewed",
-        "proofs": []
+        "behavior": "Technical readiness is separate from interaction behavior; guided compilation/runtime and browser proof cover only the internal authored scope",
+        "proofs": [
+          "docs/reality/m2l-browser-proof.json",
+          "apps/backend/tests/integration/model2BrowserChecks.ts",
+          "apps/backend/tests/model2Authoring.test.ts",
+          "apps/web/tests/internalModel2.test.tsx",
+          "docs/reality/m2l-workspace-handoff.md"
+        ]
       },
       "resources": [
-        "ALL"
+        "Virtual Machine",
+        "Object Storage"
       ],
-      "model1Meaning": "New visible surface requires explicit semantic review",
-      "model2Owner": "UNASSIGNED",
-      "changesState": false,
+      "model1Meaning": "Dedicated granted internal workspace; existing Model-1 runs unchanged",
+      "model2Owner": "apps/backend/internalModel2/authoring.ts",
+      "changesState": true,
       "effects": {
-        "physics": false,
-        "reachability": false,
+        "physics": true,
+        "reachability": true,
         "security": false,
         "cost": false,
-        "evidence": false
+        "evidence": true
       },
       "provenanceRequirements": [
-        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+        "Explicit owner-authored educational origin and units; exact saved revision, immutable envelope and retained capture identity",
+        "Physical throughput/cloud timing/reliability/durability and full pricing Unknown; explicit server grant and owner checks on every request"
       ],
-      "status": "UNKNOWN",
+      "status": "PARTIAL",
       "finalProductEligible": false,
-      "plan": "Implement and prove the real mechanism or remove before Model-2 shipping"
+      "plan": "Keep INTERNAL. Broader physical, provider, resource and reliability support needs independent contracts/proofs before general Model-2 shipping"
     },
     {
       "id": "control:apps/web/src/features/internalModel2/AuthoringFields.tsx:option-af25703f3898a5f480d9:1",
@@ -5260,32 +5372,40 @@
       "identity": "option-af25703f3898a5f480d9",
       "description": "option: value=\"\"",
       "kind": "control",
-      "category": "UNREVIEWED",
-      "categoryReason": "Classification requires semantic review; new surfaces fail closed",
+      "category": "INFRA_INPUT",
+      "categoryReason": "Authored technical input to the narrow M2K compiler; includes explicit units, limits and educational origin rather than provider defaults",
       "ui": {
         "status": "NOT_APPLICABLE",
-        "behavior": "Unreviewed",
-        "proofs": []
+        "behavior": "Technical readiness is separate from interaction behavior; guided compilation/runtime and browser proof cover only the internal authored scope",
+        "proofs": [
+          "docs/reality/m2l-browser-proof.json",
+          "apps/backend/tests/integration/model2BrowserChecks.ts",
+          "apps/backend/tests/model2Authoring.test.ts",
+          "apps/web/tests/internalModel2.test.tsx",
+          "docs/reality/m2l-workspace-handoff.md"
+        ]
       },
       "resources": [
-        "ALL"
+        "Virtual Machine",
+        "Object Storage"
       ],
-      "model1Meaning": "New visible surface requires explicit semantic review",
-      "model2Owner": "UNASSIGNED",
-      "changesState": false,
+      "model1Meaning": "Dedicated granted internal workspace; existing Model-1 runs unchanged",
+      "model2Owner": "apps/backend/internalModel2/authoring.ts",
+      "changesState": true,
       "effects": {
-        "physics": false,
-        "reachability": false,
+        "physics": true,
+        "reachability": true,
         "security": false,
         "cost": false,
-        "evidence": false
+        "evidence": true
       },
       "provenanceRequirements": [
-        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+        "Explicit owner-authored educational origin and units; exact saved revision, immutable envelope and retained capture identity",
+        "Physical throughput/cloud timing/reliability/durability and full pricing Unknown; explicit server grant and owner checks on every request"
       ],
-      "status": "UNKNOWN",
+      "status": "PARTIAL",
       "finalProductEligible": false,
-      "plan": "Implement and prove the real mechanism or remove before Model-2 shipping"
+      "plan": "Keep INTERNAL. Broader physical, provider, resource and reliability support needs independent contracts/proofs before general Model-2 shipping"
     },
     {
       "id": "control:apps/web/src/features/internalModel2/InternalReport.tsx:Button-0483e8afa542614e2456:0",
@@ -5293,32 +5413,40 @@
       "identity": "Button-0483e8afa542614e2456",
       "description": "Button: onClick={() => { void act(\"cancel\"); }}",
       "kind": "control",
-      "category": "UNREVIEWED",
-      "categoryReason": "Classification requires semantic review; new surfaces fail closed",
+      "category": "PRODUCT_UI_ACTION",
+      "categoryReason": "Authoring/review/report navigation and run lifecycle action; technical input controls and evidence remain separately inventoried",
       "ui": {
-        "status": "NOT_APPLICABLE",
-        "behavior": "Unreviewed",
-        "proofs": []
+        "status": "VALID",
+        "behavior": "Actual Chromium exercised validation, review/back/consent, exact retry after lost response/refresh/duplicate click, saved/history/report refresh, cancellation and compatible replay; responsive and authorization refusal paths retained",
+        "proofs": [
+          "docs/reality/m2l-browser-proof.json",
+          "apps/backend/tests/integration/model2BrowserChecks.ts",
+          "apps/backend/tests/model2Authoring.test.ts",
+          "apps/web/tests/internalModel2.test.tsx",
+          "docs/reality/m2l-workspace-handoff.md"
+        ]
       },
       "resources": [
-        "ALL"
+        "Virtual Machine",
+        "Object Storage"
       ],
-      "model1Meaning": "New visible surface requires explicit semantic review",
-      "model2Owner": "UNASSIGNED",
+      "model1Meaning": "Dedicated granted internal workspace; existing Model-1 runs unchanged",
+      "model2Owner": "apps/web/src/features/internalModel2/InternalReport.tsx",
       "changesState": false,
       "effects": {
         "physics": false,
         "reachability": false,
         "security": false,
         "cost": false,
-        "evidence": false
+        "evidence": true
       },
       "provenanceRequirements": [
-        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+        "Explicit owner-authored educational origin and units; exact saved revision, immutable envelope and retained capture identity",
+        "Physical throughput/cloud timing/reliability/durability and full pricing Unknown; explicit server grant and owner checks on every request"
       ],
-      "status": "UNKNOWN",
-      "finalProductEligible": false,
-      "plan": "Implement and prove the real mechanism or remove before Model-2 shipping"
+      "status": "NOT_APPLICABLE",
+      "finalProductEligible": true,
+      "plan": "Preserve API/auth/retry/accessibility semantics during Claude redesign; reprove replacement control fingerprints"
     },
     {
       "id": "control:apps/web/src/features/internalModel2/InternalReport.tsx:Button-83cd85fb1a40e732668b:0",
@@ -5326,32 +5454,40 @@
       "identity": "Button-83cd85fb1a40e732668b",
       "description": "Button: onClick={() => { setStopped(false); setVersion((v) => v + 1); }}",
       "kind": "control",
-      "category": "UNREVIEWED",
-      "categoryReason": "Classification requires semantic review; new surfaces fail closed",
+      "category": "PRODUCT_UI_ACTION",
+      "categoryReason": "Authoring/review/report navigation and run lifecycle action; technical input controls and evidence remain separately inventoried",
       "ui": {
-        "status": "NOT_APPLICABLE",
-        "behavior": "Unreviewed",
-        "proofs": []
+        "status": "VALID",
+        "behavior": "Actual Chromium exercised validation, review/back/consent, exact retry after lost response/refresh/duplicate click, saved/history/report refresh, cancellation and compatible replay; responsive and authorization refusal paths retained",
+        "proofs": [
+          "docs/reality/m2l-browser-proof.json",
+          "apps/backend/tests/integration/model2BrowserChecks.ts",
+          "apps/backend/tests/model2Authoring.test.ts",
+          "apps/web/tests/internalModel2.test.tsx",
+          "docs/reality/m2l-workspace-handoff.md"
+        ]
       },
       "resources": [
-        "ALL"
+        "Virtual Machine",
+        "Object Storage"
       ],
-      "model1Meaning": "New visible surface requires explicit semantic review",
-      "model2Owner": "UNASSIGNED",
+      "model1Meaning": "Dedicated granted internal workspace; existing Model-1 runs unchanged",
+      "model2Owner": "apps/web/src/features/internalModel2/InternalReport.tsx",
       "changesState": false,
       "effects": {
         "physics": false,
         "reachability": false,
         "security": false,
         "cost": false,
-        "evidence": false
+        "evidence": true
       },
       "provenanceRequirements": [
-        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+        "Explicit owner-authored educational origin and units; exact saved revision, immutable envelope and retained capture identity",
+        "Physical throughput/cloud timing/reliability/durability and full pricing Unknown; explicit server grant and owner checks on every request"
       ],
-      "status": "UNKNOWN",
-      "finalProductEligible": false,
-      "plan": "Implement and prove the real mechanism or remove before Model-2 shipping"
+      "status": "NOT_APPLICABLE",
+      "finalProductEligible": true,
+      "plan": "Preserve API/auth/retry/accessibility semantics during Claude redesign; reprove replacement control fingerprints"
     },
     {
       "id": "control:apps/web/src/features/internalModel2/InternalReport.tsx:Button-9bf1d0ef820eb57efc92:0",
@@ -5359,32 +5495,40 @@
       "identity": "Button-9bf1d0ef820eb57efc92",
       "description": "Button: onClick={() => { void act(\"replay\"); }}",
       "kind": "control",
-      "category": "UNREVIEWED",
-      "categoryReason": "Classification requires semantic review; new surfaces fail closed",
+      "category": "PRODUCT_UI_ACTION",
+      "categoryReason": "Authoring/review/report navigation and run lifecycle action; technical input controls and evidence remain separately inventoried",
       "ui": {
-        "status": "NOT_APPLICABLE",
-        "behavior": "Unreviewed",
-        "proofs": []
+        "status": "VALID",
+        "behavior": "Actual Chromium exercised validation, review/back/consent, exact retry after lost response/refresh/duplicate click, saved/history/report refresh, cancellation and compatible replay; responsive and authorization refusal paths retained",
+        "proofs": [
+          "docs/reality/m2l-browser-proof.json",
+          "apps/backend/tests/integration/model2BrowserChecks.ts",
+          "apps/backend/tests/model2Authoring.test.ts",
+          "apps/web/tests/internalModel2.test.tsx",
+          "docs/reality/m2l-workspace-handoff.md"
+        ]
       },
       "resources": [
-        "ALL"
+        "Virtual Machine",
+        "Object Storage"
       ],
-      "model1Meaning": "New visible surface requires explicit semantic review",
-      "model2Owner": "UNASSIGNED",
+      "model1Meaning": "Dedicated granted internal workspace; existing Model-1 runs unchanged",
+      "model2Owner": "apps/web/src/features/internalModel2/InternalReport.tsx",
       "changesState": false,
       "effects": {
         "physics": false,
         "reachability": false,
         "security": false,
         "cost": false,
-        "evidence": false
+        "evidence": true
       },
       "provenanceRequirements": [
-        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+        "Explicit owner-authored educational origin and units; exact saved revision, immutable envelope and retained capture identity",
+        "Physical throughput/cloud timing/reliability/durability and full pricing Unknown; explicit server grant and owner checks on every request"
       ],
-      "status": "UNKNOWN",
-      "finalProductEligible": false,
-      "plan": "Implement and prove the real mechanism or remove before Model-2 shipping"
+      "status": "NOT_APPLICABLE",
+      "finalProductEligible": true,
+      "plan": "Preserve API/auth/retry/accessibility semantics during Claude redesign; reprove replacement control fingerprints"
     },
     {
       "id": "control:apps/web/src/features/internalModel2/InternalReport.tsx:Value-59cd38e5981dbfec6ff4:0",
@@ -5392,32 +5536,40 @@
       "identity": "Value-59cd38e5981dbfec6ff4",
       "description": "Value: value={rows as Json}",
       "kind": "control",
-      "category": "UNREVIEWED",
-      "categoryReason": "Classification requires semantic review; new surfaces fail closed",
+      "category": "INFRA_OUTPUT",
+      "categoryReason": "Renders actual retained Model-2 modeled facts, usage and state; no physical/cloud guarantee",
       "ui": {
         "status": "NOT_APPLICABLE",
-        "behavior": "Unreviewed",
-        "proofs": []
+        "behavior": "Technical readiness is separate from interaction behavior; guided compilation/runtime and browser proof cover only the internal authored scope",
+        "proofs": [
+          "docs/reality/m2l-browser-proof.json",
+          "apps/backend/tests/integration/model2BrowserChecks.ts",
+          "apps/backend/tests/model2Authoring.test.ts",
+          "apps/web/tests/internalModel2.test.tsx",
+          "docs/reality/m2l-workspace-handoff.md"
+        ]
       },
       "resources": [
-        "ALL"
+        "Virtual Machine",
+        "Object Storage"
       ],
-      "model1Meaning": "New visible surface requires explicit semantic review",
-      "model2Owner": "UNASSIGNED",
+      "model1Meaning": "Dedicated granted internal workspace; existing Model-1 runs unchanged",
+      "model2Owner": "apps/backend/internalModel2/report.ts",
       "changesState": false,
       "effects": {
         "physics": false,
         "reachability": false,
         "security": false,
         "cost": false,
-        "evidence": false
+        "evidence": true
       },
       "provenanceRequirements": [
-        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+        "Explicit owner-authored educational origin and units; exact saved revision, immutable envelope and retained capture identity",
+        "Physical throughput/cloud timing/reliability/durability and full pricing Unknown; explicit server grant and owner checks on every request"
       ],
-      "status": "UNKNOWN",
+      "status": "PARTIAL",
       "finalProductEligible": false,
-      "plan": "Implement and prove the real mechanism or remove before Model-2 shipping"
+      "plan": "Keep INTERNAL. Broader physical, provider, resource and reliability support needs independent contracts/proofs before general Model-2 shipping"
     },
     {
       "id": "control:apps/web/src/features/internalModel2/InternalReport.tsx:Value-8b160ad0e9f0fb2848bd:0",
@@ -5425,32 +5577,40 @@
       "identity": "Value-8b160ad0e9f0fb2848bd",
       "description": "Value: value={value as Json}",
       "kind": "control",
-      "category": "UNREVIEWED",
-      "categoryReason": "Classification requires semantic review; new surfaces fail closed",
+      "category": "INFRA_OUTPUT",
+      "categoryReason": "Renders actual retained Model-2 modeled facts, usage and state; no physical/cloud guarantee",
       "ui": {
         "status": "NOT_APPLICABLE",
-        "behavior": "Unreviewed",
-        "proofs": []
+        "behavior": "Technical readiness is separate from interaction behavior; guided compilation/runtime and browser proof cover only the internal authored scope",
+        "proofs": [
+          "docs/reality/m2l-browser-proof.json",
+          "apps/backend/tests/integration/model2BrowserChecks.ts",
+          "apps/backend/tests/model2Authoring.test.ts",
+          "apps/web/tests/internalModel2.test.tsx",
+          "docs/reality/m2l-workspace-handoff.md"
+        ]
       },
       "resources": [
-        "ALL"
+        "Virtual Machine",
+        "Object Storage"
       ],
-      "model1Meaning": "New visible surface requires explicit semantic review",
-      "model2Owner": "UNASSIGNED",
+      "model1Meaning": "Dedicated granted internal workspace; existing Model-1 runs unchanged",
+      "model2Owner": "apps/backend/internalModel2/report.ts",
       "changesState": false,
       "effects": {
         "physics": false,
         "reachability": false,
         "security": false,
         "cost": false,
-        "evidence": false
+        "evidence": true
       },
       "provenanceRequirements": [
-        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+        "Explicit owner-authored educational origin and units; exact saved revision, immutable envelope and retained capture identity",
+        "Physical throughput/cloud timing/reliability/durability and full pricing Unknown; explicit server grant and owner checks on every request"
       ],
-      "status": "UNKNOWN",
+      "status": "PARTIAL",
       "finalProductEligible": false,
-      "plan": "Implement and prove the real mechanism or remove before Model-2 shipping"
+      "plan": "Keep INTERNAL. Broader physical, provider, resource and reliability support needs independent contracts/proofs before general Model-2 shipping"
     },
     {
       "id": "control:apps/web/src/features/internalModel2/InternalReport.tsx:Value-a74b7ad2aec3fe1d4d49:0",
@@ -5458,32 +5618,40 @@
       "identity": "Value-a74b7ad2aec3fe1d4d49",
       "description": "Value: value={child}",
       "kind": "control",
-      "category": "UNREVIEWED",
-      "categoryReason": "Classification requires semantic review; new surfaces fail closed",
+      "category": "INFRA_OUTPUT",
+      "categoryReason": "Renders actual retained Model-2 modeled facts, usage and state; no physical/cloud guarantee",
       "ui": {
         "status": "NOT_APPLICABLE",
-        "behavior": "Unreviewed",
-        "proofs": []
+        "behavior": "Technical readiness is separate from interaction behavior; guided compilation/runtime and browser proof cover only the internal authored scope",
+        "proofs": [
+          "docs/reality/m2l-browser-proof.json",
+          "apps/backend/tests/integration/model2BrowserChecks.ts",
+          "apps/backend/tests/model2Authoring.test.ts",
+          "apps/web/tests/internalModel2.test.tsx",
+          "docs/reality/m2l-workspace-handoff.md"
+        ]
       },
       "resources": [
-        "ALL"
+        "Virtual Machine",
+        "Object Storage"
       ],
-      "model1Meaning": "New visible surface requires explicit semantic review",
-      "model2Owner": "UNASSIGNED",
+      "model1Meaning": "Dedicated granted internal workspace; existing Model-1 runs unchanged",
+      "model2Owner": "apps/backend/internalModel2/report.ts",
       "changesState": false,
       "effects": {
         "physics": false,
         "reachability": false,
         "security": false,
         "cost": false,
-        "evidence": false
+        "evidence": true
       },
       "provenanceRequirements": [
-        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+        "Explicit owner-authored educational origin and units; exact saved revision, immutable envelope and retained capture identity",
+        "Physical throughput/cloud timing/reliability/durability and full pricing Unknown; explicit server grant and owner checks on every request"
       ],
-      "status": "UNKNOWN",
+      "status": "PARTIAL",
       "finalProductEligible": false,
-      "plan": "Implement and prove the real mechanism or remove before Model-2 shipping"
+      "plan": "Keep INTERNAL. Broader physical, provider, resource and reliability support needs independent contracts/proofs before general Model-2 shipping"
     },
     {
       "id": "control:apps/web/src/features/internalModel2/InternalReport.tsx:Value-c3cc7ae9a70e7a213a11:0",
@@ -5491,32 +5659,40 @@
       "identity": "Value-c3cc7ae9a70e7a213a11",
       "description": "Value: value={v}",
       "kind": "control",
-      "category": "UNREVIEWED",
-      "categoryReason": "Classification requires semantic review; new surfaces fail closed",
+      "category": "INFRA_OUTPUT",
+      "categoryReason": "Renders actual retained Model-2 modeled facts, usage and state; no physical/cloud guarantee",
       "ui": {
         "status": "NOT_APPLICABLE",
-        "behavior": "Unreviewed",
-        "proofs": []
+        "behavior": "Technical readiness is separate from interaction behavior; guided compilation/runtime and browser proof cover only the internal authored scope",
+        "proofs": [
+          "docs/reality/m2l-browser-proof.json",
+          "apps/backend/tests/integration/model2BrowserChecks.ts",
+          "apps/backend/tests/model2Authoring.test.ts",
+          "apps/web/tests/internalModel2.test.tsx",
+          "docs/reality/m2l-workspace-handoff.md"
+        ]
       },
       "resources": [
-        "ALL"
+        "Virtual Machine",
+        "Object Storage"
       ],
-      "model1Meaning": "New visible surface requires explicit semantic review",
-      "model2Owner": "UNASSIGNED",
+      "model1Meaning": "Dedicated granted internal workspace; existing Model-1 runs unchanged",
+      "model2Owner": "apps/backend/internalModel2/report.ts",
       "changesState": false,
       "effects": {
         "physics": false,
         "reachability": false,
         "security": false,
         "cost": false,
-        "evidence": false
+        "evidence": true
       },
       "provenanceRequirements": [
-        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+        "Explicit owner-authored educational origin and units; exact saved revision, immutable envelope and retained capture identity",
+        "Physical throughput/cloud timing/reliability/durability and full pricing Unknown; explicit server grant and owner checks on every request"
       ],
-      "status": "UNKNOWN",
+      "status": "PARTIAL",
       "finalProductEligible": false,
-      "plan": "Implement and prove the real mechanism or remove before Model-2 shipping"
+      "plan": "Keep INTERNAL. Broader physical, provider, resource and reliability support needs independent contracts/proofs before general Model-2 shipping"
     },
     {
       "id": "control:apps/web/src/features/internalModel2/InternalWorkspace.tsx:Button-822aaef14cea6e5b17b9:0",
@@ -5524,32 +5700,40 @@
       "identity": "Button-822aaef14cea6e5b17b9",
       "description": "Button: <Button type=\"submit\" variant=\"primary\" loading={state.busy} disabled={!selected?.supported}>Validate and review on server</Button>",
       "kind": "control",
-      "category": "UNREVIEWED",
-      "categoryReason": "Classification requires semantic review; new surfaces fail closed",
+      "category": "PRODUCT_UI_ACTION",
+      "categoryReason": "Authoring/review/report navigation and run lifecycle action; technical input controls and evidence remain separately inventoried",
       "ui": {
-        "status": "NOT_APPLICABLE",
-        "behavior": "Unreviewed",
-        "proofs": []
+        "status": "VALID",
+        "behavior": "Actual Chromium exercised validation, review/back/consent, exact retry after lost response/refresh/duplicate click, saved/history/report refresh, cancellation and compatible replay; responsive and authorization refusal paths retained",
+        "proofs": [
+          "docs/reality/m2l-browser-proof.json",
+          "apps/backend/tests/integration/model2BrowserChecks.ts",
+          "apps/backend/tests/model2Authoring.test.ts",
+          "apps/web/tests/internalModel2.test.tsx",
+          "docs/reality/m2l-workspace-handoff.md"
+        ]
       },
       "resources": [
-        "ALL"
+        "Virtual Machine",
+        "Object Storage"
       ],
-      "model1Meaning": "New visible surface requires explicit semantic review",
-      "model2Owner": "UNASSIGNED",
+      "model1Meaning": "Dedicated granted internal workspace; existing Model-1 runs unchanged",
+      "model2Owner": "apps/web/src/features/internalModel2/InternalWorkspace.tsx",
       "changesState": false,
       "effects": {
         "physics": false,
         "reachability": false,
         "security": false,
         "cost": false,
-        "evidence": false
+        "evidence": true
       },
       "provenanceRequirements": [
-        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+        "Explicit owner-authored educational origin and units; exact saved revision, immutable envelope and retained capture identity",
+        "Physical throughput/cloud timing/reliability/durability and full pricing Unknown; explicit server grant and owner checks on every request"
       ],
-      "status": "UNKNOWN",
-      "finalProductEligible": false,
-      "plan": "Implement and prove the real mechanism or remove before Model-2 shipping"
+      "status": "NOT_APPLICABLE",
+      "finalProductEligible": true,
+      "plan": "Preserve API/auth/retry/accessibility semantics during Claude redesign; reprove replacement control fingerprints"
     },
     {
       "id": "control:apps/web/src/features/internalModel2/InternalWorkspace.tsx:Button-99e819acc2d4d7cf32b6:0",
@@ -5557,32 +5741,40 @@
       "identity": "Button-99e819acc2d4d7cf32b6",
       "description": "Button: onClick={() => { void state.refresh(); }}",
       "kind": "control",
-      "category": "UNREVIEWED",
-      "categoryReason": "Classification requires semantic review; new surfaces fail closed",
+      "category": "PRODUCT_UI_ACTION",
+      "categoryReason": "Authoring/review/report navigation and run lifecycle action; technical input controls and evidence remain separately inventoried",
       "ui": {
-        "status": "NOT_APPLICABLE",
-        "behavior": "Unreviewed",
-        "proofs": []
+        "status": "VALID",
+        "behavior": "Actual Chromium exercised validation, review/back/consent, exact retry after lost response/refresh/duplicate click, saved/history/report refresh, cancellation and compatible replay; responsive and authorization refusal paths retained",
+        "proofs": [
+          "docs/reality/m2l-browser-proof.json",
+          "apps/backend/tests/integration/model2BrowserChecks.ts",
+          "apps/backend/tests/model2Authoring.test.ts",
+          "apps/web/tests/internalModel2.test.tsx",
+          "docs/reality/m2l-workspace-handoff.md"
+        ]
       },
       "resources": [
-        "ALL"
+        "Virtual Machine",
+        "Object Storage"
       ],
-      "model1Meaning": "New visible surface requires explicit semantic review",
-      "model2Owner": "UNASSIGNED",
+      "model1Meaning": "Dedicated granted internal workspace; existing Model-1 runs unchanged",
+      "model2Owner": "apps/web/src/features/internalModel2/InternalWorkspace.tsx",
       "changesState": false,
       "effects": {
         "physics": false,
         "reachability": false,
         "security": false,
         "cost": false,
-        "evidence": false
+        "evidence": true
       },
       "provenanceRequirements": [
-        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+        "Explicit owner-authored educational origin and units; exact saved revision, immutable envelope and retained capture identity",
+        "Physical throughput/cloud timing/reliability/durability and full pricing Unknown; explicit server grant and owner checks on every request"
       ],
-      "status": "UNKNOWN",
-      "finalProductEligible": false,
-      "plan": "Implement and prove the real mechanism or remove before Model-2 shipping"
+      "status": "NOT_APPLICABLE",
+      "finalProductEligible": true,
+      "plan": "Preserve API/auth/retry/accessibility semantics during Claude redesign; reprove replacement control fingerprints"
     },
     {
       "id": "control:apps/web/src/features/internalModel2/InternalWorkspace.tsx:Button-acc2baf8a8c7b3f55197:0",
@@ -5590,32 +5782,40 @@
       "identity": "Button-acc2baf8a8c7b3f55197",
       "description": "Button: onClick={() => state.update(educationalExample())}",
       "kind": "control",
-      "category": "UNREVIEWED",
-      "categoryReason": "Classification requires semantic review; new surfaces fail closed",
+      "category": "INFRA_INPUT",
+      "categoryReason": "Authored technical input to the narrow M2K compiler; includes explicit units, limits and educational origin rather than provider defaults",
       "ui": {
         "status": "NOT_APPLICABLE",
-        "behavior": "Unreviewed",
-        "proofs": []
+        "behavior": "Technical readiness is separate from interaction behavior; guided compilation/runtime and browser proof cover only the internal authored scope",
+        "proofs": [
+          "docs/reality/m2l-browser-proof.json",
+          "apps/backend/tests/integration/model2BrowserChecks.ts",
+          "apps/backend/tests/model2Authoring.test.ts",
+          "apps/web/tests/internalModel2.test.tsx",
+          "docs/reality/m2l-workspace-handoff.md"
+        ]
       },
       "resources": [
-        "ALL"
+        "Virtual Machine",
+        "Object Storage"
       ],
-      "model1Meaning": "New visible surface requires explicit semantic review",
-      "model2Owner": "UNASSIGNED",
-      "changesState": false,
+      "model1Meaning": "Dedicated granted internal workspace; existing Model-1 runs unchanged",
+      "model2Owner": "apps/backend/internalModel2/authoring.ts",
+      "changesState": true,
       "effects": {
-        "physics": false,
-        "reachability": false,
+        "physics": true,
+        "reachability": true,
         "security": false,
         "cost": false,
-        "evidence": false
+        "evidence": true
       },
       "provenanceRequirements": [
-        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+        "Explicit owner-authored educational origin and units; exact saved revision, immutable envelope and retained capture identity",
+        "Physical throughput/cloud timing/reliability/durability and full pricing Unknown; explicit server grant and owner checks on every request"
       ],
-      "status": "UNKNOWN",
+      "status": "PARTIAL",
       "finalProductEligible": false,
-      "plan": "Implement and prove the real mechanism or remove before Model-2 shipping"
+      "plan": "Keep INTERNAL. Broader physical, provider, resource and reliability support needs independent contracts/proofs before general Model-2 shipping"
     },
     {
       "id": "control:apps/web/src/features/internalModel2/InternalWorkspace.tsx:Button-d405dda6a87356586f44:0",
@@ -5623,32 +5823,40 @@
       "identity": "Button-d405dda6a87356586f44",
       "description": "Button: onClick={() => { void state.refresh(); }}",
       "kind": "control",
-      "category": "UNREVIEWED",
-      "categoryReason": "Classification requires semantic review; new surfaces fail closed",
+      "category": "PRODUCT_UI_ACTION",
+      "categoryReason": "Authoring/review/report navigation and run lifecycle action; technical input controls and evidence remain separately inventoried",
       "ui": {
-        "status": "NOT_APPLICABLE",
-        "behavior": "Unreviewed",
-        "proofs": []
+        "status": "VALID",
+        "behavior": "Actual Chromium exercised validation, review/back/consent, exact retry after lost response/refresh/duplicate click, saved/history/report refresh, cancellation and compatible replay; responsive and authorization refusal paths retained",
+        "proofs": [
+          "docs/reality/m2l-browser-proof.json",
+          "apps/backend/tests/integration/model2BrowserChecks.ts",
+          "apps/backend/tests/model2Authoring.test.ts",
+          "apps/web/tests/internalModel2.test.tsx",
+          "docs/reality/m2l-workspace-handoff.md"
+        ]
       },
       "resources": [
-        "ALL"
+        "Virtual Machine",
+        "Object Storage"
       ],
-      "model1Meaning": "New visible surface requires explicit semantic review",
-      "model2Owner": "UNASSIGNED",
+      "model1Meaning": "Dedicated granted internal workspace; existing Model-1 runs unchanged",
+      "model2Owner": "apps/web/src/features/internalModel2/InternalWorkspace.tsx",
       "changesState": false,
       "effects": {
         "physics": false,
         "reachability": false,
         "security": false,
         "cost": false,
-        "evidence": false
+        "evidence": true
       },
       "provenanceRequirements": [
-        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+        "Explicit owner-authored educational origin and units; exact saved revision, immutable envelope and retained capture identity",
+        "Physical throughput/cloud timing/reliability/durability and full pricing Unknown; explicit server grant and owner checks on every request"
       ],
-      "status": "UNKNOWN",
-      "finalProductEligible": false,
-      "plan": "Implement and prove the real mechanism or remove before Model-2 shipping"
+      "status": "NOT_APPLICABLE",
+      "finalProductEligible": true,
+      "plan": "Preserve API/auth/retry/accessibility semantics during Claude redesign; reprove replacement control fingerprints"
     },
     {
       "id": "control:apps/web/src/features/internalModel2/InternalWorkspace.tsx:Select-3acfcdc99c0898429dad:0",
@@ -5656,32 +5864,40 @@
       "identity": "Select-3acfcdc99c0898429dad",
       "description": "Select: value={state.saved.design} onChange={(e) => state.update(state.saved.draft, e.target.value)}",
       "kind": "control",
-      "category": "UNREVIEWED",
-      "categoryReason": "Classification requires semantic review; new surfaces fail closed",
+      "category": "INFRA_INPUT",
+      "categoryReason": "Authored technical input to the narrow M2K compiler; includes explicit units, limits and educational origin rather than provider defaults",
       "ui": {
         "status": "NOT_APPLICABLE",
-        "behavior": "Unreviewed",
-        "proofs": []
+        "behavior": "Technical readiness is separate from interaction behavior; guided compilation/runtime and browser proof cover only the internal authored scope",
+        "proofs": [
+          "docs/reality/m2l-browser-proof.json",
+          "apps/backend/tests/integration/model2BrowserChecks.ts",
+          "apps/backend/tests/model2Authoring.test.ts",
+          "apps/web/tests/internalModel2.test.tsx",
+          "docs/reality/m2l-workspace-handoff.md"
+        ]
       },
       "resources": [
-        "ALL"
+        "Virtual Machine",
+        "Object Storage"
       ],
-      "model1Meaning": "New visible surface requires explicit semantic review",
-      "model2Owner": "UNASSIGNED",
-      "changesState": false,
+      "model1Meaning": "Dedicated granted internal workspace; existing Model-1 runs unchanged",
+      "model2Owner": "apps/backend/internalModel2/authoring.ts",
+      "changesState": true,
       "effects": {
-        "physics": false,
-        "reachability": false,
+        "physics": true,
+        "reachability": true,
         "security": false,
         "cost": false,
-        "evidence": false
+        "evidence": true
       },
       "provenanceRequirements": [
-        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+        "Explicit owner-authored educational origin and units; exact saved revision, immutable envelope and retained capture identity",
+        "Physical throughput/cloud timing/reliability/durability and full pricing Unknown; explicit server grant and owner checks on every request"
       ],
-      "status": "UNKNOWN",
+      "status": "PARTIAL",
       "finalProductEligible": false,
-      "plan": "Implement and prove the real mechanism or remove before Model-2 shipping"
+      "plan": "Keep INTERNAL. Broader physical, provider, resource and reliability support needs independent contracts/proofs before general Model-2 shipping"
     },
     {
       "id": "control:apps/web/src/features/internalModel2/InternalWorkspace.tsx:form-6ebe16f1dd0930d47929:0",
@@ -5689,32 +5905,40 @@
       "identity": "form-6ebe16f1dd0930d47929",
       "description": "form: onSubmit={(e) => { e.preventDefault(); void state.validate(); }}",
       "kind": "control",
-      "category": "UNREVIEWED",
-      "categoryReason": "Classification requires semantic review; new surfaces fail closed",
+      "category": "PRODUCT_UI_ACTION",
+      "categoryReason": "Authoring/review/report navigation and run lifecycle action; technical input controls and evidence remain separately inventoried",
       "ui": {
-        "status": "NOT_APPLICABLE",
-        "behavior": "Unreviewed",
-        "proofs": []
+        "status": "VALID",
+        "behavior": "Actual Chromium exercised validation, review/back/consent, exact retry after lost response/refresh/duplicate click, saved/history/report refresh, cancellation and compatible replay; responsive and authorization refusal paths retained",
+        "proofs": [
+          "docs/reality/m2l-browser-proof.json",
+          "apps/backend/tests/integration/model2BrowserChecks.ts",
+          "apps/backend/tests/model2Authoring.test.ts",
+          "apps/web/tests/internalModel2.test.tsx",
+          "docs/reality/m2l-workspace-handoff.md"
+        ]
       },
       "resources": [
-        "ALL"
+        "Virtual Machine",
+        "Object Storage"
       ],
-      "model1Meaning": "New visible surface requires explicit semantic review",
-      "model2Owner": "UNASSIGNED",
+      "model1Meaning": "Dedicated granted internal workspace; existing Model-1 runs unchanged",
+      "model2Owner": "apps/web/src/features/internalModel2/InternalWorkspace.tsx",
       "changesState": false,
       "effects": {
         "physics": false,
         "reachability": false,
         "security": false,
         "cost": false,
-        "evidence": false
+        "evidence": true
       },
       "provenanceRequirements": [
-        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+        "Explicit owner-authored educational origin and units; exact saved revision, immutable envelope and retained capture identity",
+        "Physical throughput/cloud timing/reliability/durability and full pricing Unknown; explicit server grant and owner checks on every request"
       ],
-      "status": "UNKNOWN",
-      "finalProductEligible": false,
-      "plan": "Implement and prove the real mechanism or remove before Model-2 shipping"
+      "status": "NOT_APPLICABLE",
+      "finalProductEligible": true,
+      "plan": "Preserve API/auth/retry/accessibility semantics during Claude redesign; reprove replacement control fingerprints"
     },
     {
       "id": "control:apps/web/src/features/internalModel2/InternalWorkspace.tsx:option-5e1b2bad58b23a49a211:0",
@@ -5722,32 +5946,40 @@
       "identity": "option-5e1b2bad58b23a49a211",
       "description": "option: value=\"\"",
       "kind": "control",
-      "category": "UNREVIEWED",
-      "categoryReason": "Classification requires semantic review; new surfaces fail closed",
+      "category": "INFRA_INPUT",
+      "categoryReason": "Authored technical input to the narrow M2K compiler; includes explicit units, limits and educational origin rather than provider defaults",
       "ui": {
         "status": "NOT_APPLICABLE",
-        "behavior": "Unreviewed",
-        "proofs": []
+        "behavior": "Technical readiness is separate from interaction behavior; guided compilation/runtime and browser proof cover only the internal authored scope",
+        "proofs": [
+          "docs/reality/m2l-browser-proof.json",
+          "apps/backend/tests/integration/model2BrowserChecks.ts",
+          "apps/backend/tests/model2Authoring.test.ts",
+          "apps/web/tests/internalModel2.test.tsx",
+          "docs/reality/m2l-workspace-handoff.md"
+        ]
       },
       "resources": [
-        "ALL"
+        "Virtual Machine",
+        "Object Storage"
       ],
-      "model1Meaning": "New visible surface requires explicit semantic review",
-      "model2Owner": "UNASSIGNED",
-      "changesState": false,
+      "model1Meaning": "Dedicated granted internal workspace; existing Model-1 runs unchanged",
+      "model2Owner": "apps/backend/internalModel2/authoring.ts",
+      "changesState": true,
       "effects": {
-        "physics": false,
-        "reachability": false,
+        "physics": true,
+        "reachability": true,
         "security": false,
         "cost": false,
-        "evidence": false
+        "evidence": true
       },
       "provenanceRequirements": [
-        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+        "Explicit owner-authored educational origin and units; exact saved revision, immutable envelope and retained capture identity",
+        "Physical throughput/cloud timing/reliability/durability and full pricing Unknown; explicit server grant and owner checks on every request"
       ],
-      "status": "UNKNOWN",
+      "status": "PARTIAL",
       "finalProductEligible": false,
-      "plan": "Implement and prove the real mechanism or remove before Model-2 shipping"
+      "plan": "Keep INTERNAL. Broader physical, provider, resource and reliability support needs independent contracts/proofs before general Model-2 shipping"
     },
     {
       "id": "control:apps/web/src/features/internalModel2/InternalWorkspace.tsx:option-d5f018d2dd44a0592410:0",
@@ -5755,32 +5987,40 @@
       "identity": "option-d5f018d2dd44a0592410",
       "description": "option: value={d.id}",
       "kind": "control",
-      "category": "UNREVIEWED",
-      "categoryReason": "Classification requires semantic review; new surfaces fail closed",
+      "category": "INFRA_INPUT",
+      "categoryReason": "Authored technical input to the narrow M2K compiler; includes explicit units, limits and educational origin rather than provider defaults",
       "ui": {
         "status": "NOT_APPLICABLE",
-        "behavior": "Unreviewed",
-        "proofs": []
+        "behavior": "Technical readiness is separate from interaction behavior; guided compilation/runtime and browser proof cover only the internal authored scope",
+        "proofs": [
+          "docs/reality/m2l-browser-proof.json",
+          "apps/backend/tests/integration/model2BrowserChecks.ts",
+          "apps/backend/tests/model2Authoring.test.ts",
+          "apps/web/tests/internalModel2.test.tsx",
+          "docs/reality/m2l-workspace-handoff.md"
+        ]
       },
       "resources": [
-        "ALL"
+        "Virtual Machine",
+        "Object Storage"
       ],
-      "model1Meaning": "New visible surface requires explicit semantic review",
-      "model2Owner": "UNASSIGNED",
-      "changesState": false,
+      "model1Meaning": "Dedicated granted internal workspace; existing Model-1 runs unchanged",
+      "model2Owner": "apps/backend/internalModel2/authoring.ts",
+      "changesState": true,
       "effects": {
-        "physics": false,
-        "reachability": false,
+        "physics": true,
+        "reachability": true,
         "security": false,
         "cost": false,
-        "evidence": false
+        "evidence": true
       },
       "provenanceRequirements": [
-        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+        "Explicit owner-authored educational origin and units; exact saved revision, immutable envelope and retained capture identity",
+        "Physical throughput/cloud timing/reliability/durability and full pricing Unknown; explicit server grant and owner checks on every request"
       ],
-      "status": "UNKNOWN",
+      "status": "PARTIAL",
       "finalProductEligible": false,
-      "plan": "Implement and prove the real mechanism or remove before Model-2 shipping"
+      "plan": "Keep INTERNAL. Broader physical, provider, resource and reliability support needs independent contracts/proofs before general Model-2 shipping"
     },
     {
       "id": "control:apps/web/src/features/internalModel2/ReviewPanel.tsx:Button-41fcabf9a6a505660607:0",
@@ -5788,32 +6028,40 @@
       "identity": "Button-41fcabf9a6a505660607",
       "description": "Button: onClick={edit}",
       "kind": "control",
-      "category": "UNREVIEWED",
-      "categoryReason": "Classification requires semantic review; new surfaces fail closed",
+      "category": "PRODUCT_UI_ACTION",
+      "categoryReason": "Authoring/review/report navigation and run lifecycle action; technical input controls and evidence remain separately inventoried",
       "ui": {
-        "status": "NOT_APPLICABLE",
-        "behavior": "Unreviewed",
-        "proofs": []
+        "status": "VALID",
+        "behavior": "Actual Chromium exercised validation, review/back/consent, exact retry after lost response/refresh/duplicate click, saved/history/report refresh, cancellation and compatible replay; responsive and authorization refusal paths retained",
+        "proofs": [
+          "docs/reality/m2l-browser-proof.json",
+          "apps/backend/tests/integration/model2BrowserChecks.ts",
+          "apps/backend/tests/model2Authoring.test.ts",
+          "apps/web/tests/internalModel2.test.tsx",
+          "docs/reality/m2l-workspace-handoff.md"
+        ]
       },
       "resources": [
-        "ALL"
+        "Virtual Machine",
+        "Object Storage"
       ],
-      "model1Meaning": "New visible surface requires explicit semantic review",
-      "model2Owner": "UNASSIGNED",
+      "model1Meaning": "Dedicated granted internal workspace; existing Model-1 runs unchanged",
+      "model2Owner": "apps/web/src/features/internalModel2/ReviewPanel.tsx",
       "changesState": false,
       "effects": {
         "physics": false,
         "reachability": false,
         "security": false,
         "cost": false,
-        "evidence": false
+        "evidence": true
       },
       "provenanceRequirements": [
-        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+        "Explicit owner-authored educational origin and units; exact saved revision, immutable envelope and retained capture identity",
+        "Physical throughput/cloud timing/reliability/durability and full pricing Unknown; explicit server grant and owner checks on every request"
       ],
-      "status": "UNKNOWN",
-      "finalProductEligible": false,
-      "plan": "Implement and prove the real mechanism or remove before Model-2 shipping"
+      "status": "NOT_APPLICABLE",
+      "finalProductEligible": true,
+      "plan": "Preserve API/auth/retry/accessibility semantics during Claude redesign; reprove replacement control fingerprints"
     },
     {
       "id": "control:apps/web/src/features/internalModel2/ReviewPanel.tsx:Button-ba304f3baca040c5f6e0:0",
@@ -5821,32 +6069,40 @@
       "identity": "Button-ba304f3baca040c5f6e0",
       "description": "Button: onClick={submit}",
       "kind": "control",
-      "category": "UNREVIEWED",
-      "categoryReason": "Classification requires semantic review; new surfaces fail closed",
+      "category": "PRODUCT_UI_ACTION",
+      "categoryReason": "Authoring/review/report navigation and run lifecycle action; technical input controls and evidence remain separately inventoried",
       "ui": {
-        "status": "NOT_APPLICABLE",
-        "behavior": "Unreviewed",
-        "proofs": []
+        "status": "VALID",
+        "behavior": "Actual Chromium exercised validation, review/back/consent, exact retry after lost response/refresh/duplicate click, saved/history/report refresh, cancellation and compatible replay; responsive and authorization refusal paths retained",
+        "proofs": [
+          "docs/reality/m2l-browser-proof.json",
+          "apps/backend/tests/integration/model2BrowserChecks.ts",
+          "apps/backend/tests/model2Authoring.test.ts",
+          "apps/web/tests/internalModel2.test.tsx",
+          "docs/reality/m2l-workspace-handoff.md"
+        ]
       },
       "resources": [
-        "ALL"
+        "Virtual Machine",
+        "Object Storage"
       ],
-      "model1Meaning": "New visible surface requires explicit semantic review",
-      "model2Owner": "UNASSIGNED",
+      "model1Meaning": "Dedicated granted internal workspace; existing Model-1 runs unchanged",
+      "model2Owner": "apps/web/src/features/internalModel2/ReviewPanel.tsx",
       "changesState": false,
       "effects": {
         "physics": false,
         "reachability": false,
         "security": false,
         "cost": false,
-        "evidence": false
+        "evidence": true
       },
       "provenanceRequirements": [
-        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+        "Explicit owner-authored educational origin and units; exact saved revision, immutable envelope and retained capture identity",
+        "Physical throughput/cloud timing/reliability/durability and full pricing Unknown; explicit server grant and owner checks on every request"
       ],
-      "status": "UNKNOWN",
-      "finalProductEligible": false,
-      "plan": "Implement and prove the real mechanism or remove before Model-2 shipping"
+      "status": "NOT_APPLICABLE",
+      "finalProductEligible": true,
+      "plan": "Preserve API/auth/retry/accessibility semantics during Claude redesign; reprove replacement control fingerprints"
     },
     {
       "id": "control:apps/web/src/features/internalModel2/ReviewPanel.tsx:input-09f0a5f8a559a03edd6c:0",
@@ -5854,32 +6110,40 @@
       "identity": "input-09f0a5f8a559a03edd6c",
       "description": "input: checked={confirmed} onChange={(e) => setConfirmed(e.target.checked)}",
       "kind": "control",
-      "category": "UNREVIEWED",
-      "categoryReason": "Classification requires semantic review; new surfaces fail closed",
+      "category": "PRODUCT_UI_ACTION",
+      "categoryReason": "Authoring/review/report navigation and run lifecycle action; technical input controls and evidence remain separately inventoried",
       "ui": {
-        "status": "NOT_APPLICABLE",
-        "behavior": "Unreviewed",
-        "proofs": []
+        "status": "VALID",
+        "behavior": "Actual Chromium exercised validation, review/back/consent, exact retry after lost response/refresh/duplicate click, saved/history/report refresh, cancellation and compatible replay; responsive and authorization refusal paths retained",
+        "proofs": [
+          "docs/reality/m2l-browser-proof.json",
+          "apps/backend/tests/integration/model2BrowserChecks.ts",
+          "apps/backend/tests/model2Authoring.test.ts",
+          "apps/web/tests/internalModel2.test.tsx",
+          "docs/reality/m2l-workspace-handoff.md"
+        ]
       },
       "resources": [
-        "ALL"
+        "Virtual Machine",
+        "Object Storage"
       ],
-      "model1Meaning": "New visible surface requires explicit semantic review",
-      "model2Owner": "UNASSIGNED",
+      "model1Meaning": "Dedicated granted internal workspace; existing Model-1 runs unchanged",
+      "model2Owner": "apps/web/src/features/internalModel2/ReviewPanel.tsx",
       "changesState": false,
       "effects": {
         "physics": false,
         "reachability": false,
         "security": false,
         "cost": false,
-        "evidence": false
+        "evidence": true
       },
       "provenanceRequirements": [
-        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+        "Explicit owner-authored educational origin and units; exact saved revision, immutable envelope and retained capture identity",
+        "Physical throughput/cloud timing/reliability/durability and full pricing Unknown; explicit server grant and owner checks on every request"
       ],
-      "status": "UNKNOWN",
-      "finalProductEligible": false,
-      "plan": "Implement and prove the real mechanism or remove before Model-2 shipping"
+      "status": "NOT_APPLICABLE",
+      "finalProductEligible": true,
+      "plan": "Preserve API/auth/retry/accessibility semantics during Claude redesign; reprove replacement control fingerprints"
     },
     {
       "id": "control:apps/web/src/features/landing/components/HeroDiagram.tsx:HealthMark-b082ba8ef0932486fa63:0",
