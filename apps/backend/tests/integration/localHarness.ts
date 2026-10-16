@@ -3,6 +3,7 @@ import { fileURLToPath } from "node:url";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { randomUUID } from "node:crypto";
+import { readFileSync } from "node:fs";
 import { Pool } from "pg";
 import Redis from "ioredis";
 
@@ -206,7 +207,11 @@ export class LocalHarness {
     let timer: ReturnType<typeof setTimeout> | undefined;
     try {
       await Promise.race([child.exited, new Promise<never>((_resolve, reject) => {
-        timer = setTimeout(() => reject(new Error(`Timed out stopping ${name}`)), 5000);
+        timer = setTimeout(() => {
+          let osState = "unavailable";
+          try { osState = readFileSync(`/proc/${child.pid}/status`, "utf8").split("\n").filter(line => /^(Name|State|PPid|Threads):/.test(line)).join("; "); } catch { /* Non-Linux or already gone. */ }
+          reject(new Error(`Timed out stopping ${name}: ${JSON.stringify({ pid: child.pid, killed: child.killed, exitCode: child.exitCode, signalCode: child.signalCode, record, osState })}`));
+        }, 5000);
       })]);
     } finally { clearTimeout(timer); }
     if (record) { record.exitCode = child.exitCode; record.signalCode = child.signalCode; }
