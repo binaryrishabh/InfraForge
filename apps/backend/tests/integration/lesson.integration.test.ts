@@ -10,6 +10,7 @@ import { checkLessonSandbox } from "./lessonSandboxChecks";
 import { lessonSource } from "./lessonSource";
 import { compileEnvelope, admissionSchema } from "../../internalModel2/envelope";
 import { checkLessonSchema } from "../../release/lessonSchema";
+import { checkLessonUpgrade } from "./lessonUpgradeChecks";
 const suite = process.env.M2M_RUN === "1" ? describe : describe.skip;
 suite("controlled internal object restart lesson", () => {
   test("proves scoped product execution, durable failure boundaries and real OS containment", async () => {
@@ -23,6 +24,7 @@ suite("controlled internal object restart lesson", () => {
     }, "isolated runner cleanup releases replay lease", 30000, 200);
     try {
       await h.prepare(); sessions = new SessionFixtures(h); const alice = await sessions.create(), bob = await sessions.create(); owners = [alice.user.id, bob.user.id]; h.cookie = alice.cookie;
+      proof.upgrade = await checkLessonUpgrade(h);
       await checkLessonSchema(h.sql);
       await h.sql.query('ALTER TABLE "InternalModel2LessonRun" DISABLE TRIGGER model2_lesson_guard');
       try { await expect(checkLessonSchema(h.sql)).rejects.toThrow(); }

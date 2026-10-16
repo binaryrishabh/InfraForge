@@ -11,6 +11,7 @@ const path = process.argv[2]; if (!path || process.argv.length !== 3) throw Erro
 const bytes = readFileSync(path); assert(bytes.length <= 4194304);
 const proof = JSON.parse(bytes.toString());
 assert.equal(proof.schema, "infraforge-m2m-preview/1"); assert.equal(proof.success, true); assert.equal(proof.rowsRemoved, true);
+assert.equal(proof.upgrade.before, proof.upgrade.after); assert.equal(proof.upgrade.existingGrantScope, "operator"); assert.equal(proof.upgrade.unscopedAdmissionRejected, true);
 assert.match(proof.commit, /^[a-f0-9]{40}$/); assert.equal(proof.source, lessonSource());
 assert.equal(proof.browser.executed, true); assert.equal(proof.browser.cases.length, 6); assert(proof.cases.length >= 17);
 for (const saved of proof.runs) {

@@ -3,7 +3,11 @@ import { randomUUID } from "node:crypto";
 import { readdir } from "node:fs/promises";
 import { Pool } from "pg";
 import { readLocalSettings } from "./localHarness";
-import { checkSchemaGuards, assertReleaseIdle } from "../../release/migrations";
+import { checkModel1SchemaGuards, assertReleaseIdle } from "../../release/migrations";
+import { checkInternalModel2Schema } from "../../release/model2Schema";
+// This fixture deliberately stops at migration 18. Current release checks also
+// require migration 19; do not reinterpret historical schema-18 readiness.
+const checkSchemaGuards = async (db: Pool) => { await checkModel1SchemaGuards(db); await checkInternalModel2Schema(db); };
 const integration = process.env.INTEGRATION_RUN === "1" ? test : test.skip;
 integration("migration 18 preserves schema-17 history and guards immutable bounded internal execution", async () => {
   const settings = readLocalSettings(process.env), admin = new Pool({ connectionString: settings.databaseUrl, ssl: false, options: "" });
