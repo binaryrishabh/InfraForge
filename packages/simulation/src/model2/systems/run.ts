@@ -13,9 +13,11 @@ import { eventRows, SYSTEM_LIMITS, SYSTEM_POLICY_LEDGER } from "./policy";
 import type { NetworkContext } from "../network/run";
 import type { EventKernel } from "../time";
 import type { RuntimeUsageObserver } from "../../reality/metering/contracts";
+import type { CausalObserver } from "../workload/causal";
 const copy = <T>(v: T): T => JSON.parse(JSON.stringify(v));
 export interface SystemsExtension {
   usage?: RuntimeUsageObserver;
+  causal?: CausalObserver;
   deferredClients: string[];
   crashes?: Array<{ target: string; at: number; restartAt: number }>;
   install(kernel: EventKernel, context: NetworkContext, controls: { artifacts(client: string, replica: string, done: (ok: boolean) => void): void; samples(backend: string, target: string): Array<{ measurementAt: number; arrivedAt: number; values: unknown }> }): void;
@@ -29,6 +31,7 @@ export function createSystemsModel2(authored: SystemsInput, extension?: SystemsE
   const resultFits = (value: unknown) => { const pending: unknown[] = [value]; let fields = 0; while (pending.length) { if (++fields + retainedFields > SYSTEM_LIMITS.inputFields) return false; const v = pending.pop(); if (v && typeof v === "object") for (const child of Object.values(v)) pending.push(child); } retainedFields += fields; return true; };
   const runtime = createAsyncRuntime(asyncAdapter(i), {
     usage: extension?.usage,
+    causal: extension?.causal,
     resource(id, kernel, send) {
       const r = i.resources.find((r) => r.id === id)!; if (!isSystem(r)) return;
       if (r.kind === "dns-authority") { const service = dnsAuthority(r, kernel); authorities.set(id, service); return service; }
@@ -45,8 +48,8 @@ export function createSystemsModel2(authored: SystemsInput, extension?: SystemsE
       for (const [id, client] of clients) client.start(network, horizon, extension?.deferredClients.includes(id));
       for (const [index, crash] of (extension?.crashes ?? []).entries()) {
         const owner = `restart-${index}`;
-        kernel.schedule(crash.at, 0, JSON.stringify(["product-crash", crash.target, index]), () => { network.setReady(crash.target, false, owner); network.abortOwned(crash.target); resolvers.get(crash.target)?.clear(); });
-        kernel.schedule(crash.restartAt, 0, JSON.stringify(["product-restart", crash.target, index]), () => network.setReady(crash.target, true, owner));
+        kernel.schedule(crash.at, 0, JSON.stringify(["product-crash", crash.target, index]), () => { network.setReady(crash.target, false, owner); network.abortOwned(crash.target); resolvers.get(crash.target)?.clear(); extension?.causal?.({ atUs: kernel.now, kind: "process-crash", resource: crash.target, detail: {} }); });
+        kernel.schedule(crash.restartAt, 0, JSON.stringify(["product-restart", crash.target, index]), () => { network.setReady(crash.target, true, owner); extension?.causal?.({ atUs: kernel.now, kind: "process-ready", resource: crash.target, detail: {} }); });
       }
       extension?.install(kernel, network, { artifacts(client, replica, done) { clients.get(client)!.launch(replica, done); }, samples(backend, target) { return backends.get(backend)?.recent(target) ?? []; } });
       for (const monitor of monitors.values()) monitor.start(horizon);

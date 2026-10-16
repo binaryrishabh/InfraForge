@@ -14,3 +14,4 @@ export type { ProductEvidence } from "./model2/product/presentation";
 export type { MeteringConfig } from "./reality/metering/contracts";
 export type { UsageFrame } from "./reality/metering/measurements";
 export type { Quantity, Unit } from "./reality/quantity";
+export type { CausalEvent, CausalObserver } from "./model2/workload/causal";

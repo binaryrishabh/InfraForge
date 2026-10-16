@@ -6,6 +6,7 @@ import { validateWorkload } from "./validate";
 import { workloadStation } from "./station";
 import { WORKLOAD_POLICY_LEDGER } from "./policy";
 import type { CallerOutcome, Invocation, Receipt, RemoteOutcome, TraceRow, WorkloadInput, WorkStation, StationState } from "./contracts";
+import type { CausalObserver } from "./causal";
 
 export interface WorkEndpoint<M extends StationState> {
   accept(work: Invocation, done: (outcome: RemoteOutcome) => void): Receipt;
@@ -13,6 +14,7 @@ export interface WorkEndpoint<M extends StationState> {
   measure(): M;
 }
 export interface RuntimeModules<M extends StationState> {
+  causal?: CausalObserver;
   station(config: WorkStation, demands: Map<string, { cpuUs: number; ioUs: number }>, kernel: EventKernel, send: (target: string, work: Invocation, done: (outcome: RemoteOutcome) => void) => Receipt): WorkEndpoint<M>;
   install?(kernel: EventKernel, stations: Map<string, WorkEndpoint<M>>, send: (target: string, work: Invocation, done: (outcome: RemoteOutcome) => void) => Receipt): void;
   route?(target: string, work: Invocation, done: (outcome: RemoteOutcome) => void, direct: () => Receipt): Receipt;
@@ -57,6 +59,7 @@ export function createWorkloadRuntime<M extends StationState>(authored: Workload
     const operation = operations.get(row.operation)!, perOperation = byOperation.get(row.operation)!; perOperation.offered++;
     const rootId = identity("root", source, row.id), callId = identity(rootId, "attempt", 0, "entry");
     const work: Invocation = { rootId, attempt: 0, callId, operation: operation.id, offeredAt: kernel.now, ...(row.payloadBytes === undefined ? {} : { payloadBytes: row.payloadBytes }) };
+    modules.causal?.({ atUs: kernel.now, kind: "caller-offered", resource: "$caller", work, detail: {} });
     const pending: { work: Invocation; receipt?: Receipt } = { work }; live.set(rootId, pending);
     let terminal = false, cancelDeadline: (() => boolean) | undefined, cancelAbandon: (() => boolean) | undefined;
     const finish = (outcome: CallerOutcome) => {
@@ -64,6 +67,7 @@ export function createWorkloadRuntime<M extends StationState>(authored: Workload
       terminal = true; live.delete(rootId); cancelDeadline?.(); cancelAbandon?.();
       const key = outcome === "deadline-exceeded" ? "deadlineExceeded" : outcome;
       counts[key]++; perOperation[key]++;
+      modules.causal?.({ atUs: kernel.now, kind: "caller-terminal", resource: "$caller", work, detail: { outcome, responseUs: kernel.now - work.offeredAt } });
       book.record({ ...work, at: kernel.now, outcome, responseUs: kernel.now - work.offeredAt }); next?.();
     };
     const stop = (outcome: "deadline-exceeded" | "abandoned") => {

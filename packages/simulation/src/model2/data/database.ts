@@ -4,9 +4,10 @@ import type { EventKernel } from "../time";
 import type { Invocation, Receipt, RemoteOutcome } from "../workload/contracts";
 import type { RelationalConfig, DataRequest, DataReply, TransactionPlan } from "./contracts";
 import { lockManager } from "./locks";
+import type { CausalObserver } from "../workload/causal";
 
 interface Tx { work: Invocation; plan: TransactionPlan; step: number; phase: "queued" | "lock" | "cpu" | "wait" | "commit"; terminal: boolean; writes: Map<string, { version: number; bytes: number }>; rows: DataReply["rows"]; cancelTx?: () => boolean; cancelStatement?: () => boolean; cancelLock?: () => boolean; cancelWait?: () => boolean; done(outcome: RemoteOutcome): void; session: string }
-export function relationalDatabase(config: RelationalConfig, kernel: EventKernel) {
+export function relationalDatabase(config: RelationalConfig, kernel: EventKernel, causal?: CausalObserver) {
   const cpu = cpuScheduler(config.id, requireKnown(config.execution.cores, "cores"), kernel), locks = lockManager();
   const rows = new Map(config.initial.map((r) => [r.key, { version: r.version, bytes: requireKnown(r.bytes, "bytes") }]));
   const keyspace = new Set(config.keys);
@@ -23,6 +24,7 @@ export function relationalDatabase(config: RelationalConfig, kernel: EventKernel
     byClass.get(t.work.operation)![ok ? "committed" : cancel ? "cancelled" : "aborted"]++;
     if (ok) { for (const [key, row] of t.writes) rows.set(key, row); committed++; logicalWrites += t.writes.size; if (t.plan.durability === "authored-log-ack") durableCommits++; }
     else { if (cancel) cancelled++; else aborted++; reasons[reason] = (reasons[reason] ?? 0) + 1; }
+    causal?.({ atUs: kernel.now, kind: "db-terminal", resource: config.id, work: t.work, detail: { session: t.session, outcome: ok ? "committed" : cancel ? "cancelled" : "aborted", reason, writes: ok ? t.writes.size : 0 } });
     if (t.work.message) t.work.message.response = { ok, rows: t.rows, durable: ok && t.plan.durability === "authored-log-ack", ...(reason ? { reason } : {}) } satisfies DataReply;
     locks.release(t.work.callId); t.done(ok ? "completed" : cancel ? "cancelled" : "rejected"); pump();
   };
@@ -47,6 +49,7 @@ export function relationalDatabase(config: RelationalConfig, kernel: EventKernel
           if (s.kind === "insert" && observed.some((r) => r.version > 0)) { finish(t, false, "unique-conflict"); return; }
           if (s.kind === "write" || s.kind === "insert") { for (const row of observed) t.writes.set(row.key, { version: row.version + 1, bytes: row.bytes }); logBytes += requireKnown(s.logBytes, "bytes"); }
           else { logicalReads += observed.length; t.rows = observed; }
+          causal?.({ atUs: kernel.now, kind: "db-statement", resource: config.id, work: t.work, detail: { session: t.session, step: t.step, statement: s.kind, pendingWrites: t.writes.size } });
           statements++; t.step++; execute(t);
         });
       } });
@@ -65,9 +68,10 @@ export function relationalDatabase(config: RelationalConfig, kernel: EventKernel
     accept(work: Invocation, done: (outcome: RemoteOutcome) => void): Receipt {
       received++; const session = work.sessionId ?? work.callId;
       if (paused || (!sessions.has(session) && sessions.size >= sessionLimit) || sessions.get(session) || (active.size >= requireKnown(config.activeTransactions, "count") && queue.size >= requireKnown(config.pendingQueries, "count"))) {
-        rejected++; const reason = paused ? "database-unavailable" : sessions.get(session) ? "session-busy" : !sessions.has(session) && sessions.size >= sessionLimit ? "session-limit" : "query-queue-full"; reasons[reason] = (reasons[reason] ?? 0) + 1; done("rejected"); return { admitted: false, state: () => "finished", cancel: () => "already-finished" };
+        rejected++; const reason = paused ? "database-unavailable" : sessions.get(session) ? "session-busy" : !sessions.has(session) && sessions.size >= sessionLimit ? "session-limit" : "query-queue-full"; reasons[reason] = (reasons[reason] ?? 0) + 1; causal?.({ atUs: kernel.now, kind: "db-rejected", resource: config.id, work, detail: { session, reason } }); done("rejected"); return { admitted: false, state: () => "finished", cancel: () => "already-finished" };
       }
       sessions.set(session, undefined); admitted++;
+      causal?.({ atUs: kernel.now, kind: "db-admitted", resource: config.id, work, detail: { session } });
       const counts = byClass.get(work.operation) ?? { admitted: 0, committed: 0, aborted: 0, cancelled: 0 }; counts.admitted++; byClass.set(work.operation, counts);
       const t: Tx = { work, done, plan: config.plans[work.operation]!, step: 0, phase: "queued", terminal: false, writes: new Map(), rows: [], session };
       sessions.set(session, t); queue.set(work.callId, t);

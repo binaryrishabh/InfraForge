@@ -59,6 +59,8 @@ export interface AuthoringDraft {
 }
 export interface AuthoringRequest { infrastructureId: string; expectedDesignUpdatedAt: string; idempotencyKey: string; authoring: AuthoringDraft }
 export interface AdmissionRequest { infrastructureId: string; expectedDesignUpdatedAt: string; idempotencyKey: string; workload: Json; contract: Json }
+// Machine-authored operator contract. The guided object workspace remains v1.
+export interface ConnectedAdmissionRequest extends AdmissionRequest { execution: "infraforge-internal-execution/2"; causal: { events: number; identities: number; textCharacters: number } }
 export interface Diagnostic { code: string; path: string; message: string; severity?: string }
 export interface InternalDesign { id: string; name: string; updatedAt: string; supported: boolean; reasons: string[]; vm?: string; objects?: string; connection?: string; port?: number }
 export interface Review { request: AdmissionRequest; requestHash: string; revision: string; designName: string; fields: { field: string; value: number; unit: string; origin: string }[]; assumptions: string[]; arrivals: number }

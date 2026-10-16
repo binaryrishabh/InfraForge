@@ -13,6 +13,7 @@ import type { EventKernel } from "../time";
 import type { Trace } from "./contracts";
 import type { Invocation, Receipt, RemoteOutcome } from "../workload/contracts";
 import type { RuntimeUsageObserver } from "../../reality/metering/contracts";
+import type { CausalObserver } from "../workload/causal";
 
 export interface NetworkContext {
   setReady(id: string, ready: boolean, owner?: string): void;
@@ -27,6 +28,7 @@ export interface NetworkContext {
 }
 export interface NetworkExtension {
   usage?: RuntimeUsageObserver;
+  causal?: CausalObserver;
   resource: ResourceFactory;
   install?(kernel: EventKernel, trace: Trace, context: NetworkContext): void;
   disconnected?(target: string, session: string): void;
@@ -54,7 +56,7 @@ export function createNetworkRuntime(authored: NetworkInput, extension?: Network
   for (const r of input.resources) if (r.kind === "load-balancer") r.backends.sort(lexical);
   let measure: () => NetworkSnapshot;
   const runtime = createComputeRuntime(computeAdapter(input), (kernel, deliver, controls) => {
-    const trace = networkTrace(kernel, input.limits.maxRawResults), states = new Map(Object.entries(input.endpoints).map(([id, state]) => [id, { ...state }])), readiness = new Map<string, Map<string, boolean>>(), activeStates = new Map<string, { alive: boolean; ready: boolean }>();
+    const trace = networkTrace(kernel, input.limits.maxRawResults, extension?.causal), states = new Map(Object.entries(input.endpoints).map(([id, state]) => [id, { ...state }])), readiness = new Map<string, Map<string, boolean>>(), activeStates = new Map<string, { alive: boolean; ready: boolean }>();
     const availability = new Map<string, boolean>();
     const applyState = (id: string) => { const desired = activeStates.get(id) ?? input.endpoints[id]!; const next = { alive: desired.alive && (availability.get(id) ?? true), ready: desired.ready && [...(readiness.get(id)?.values() ?? [])].every(Boolean) }; const previous = states.get(id)!; states.set(id, next); if (previous.alive !== next.alive && input.resources.find((r) => r.id === id)!.kind !== "load-balancer") controls.pause(id, !next.alive); };
     const context: NetworkContext = { abortOwned: controls.abortOwned, setReady(id, ready, owner = "default") { if (!states.has(id)) throw Error("Unknown readiness target"); const gates = readiness.get(id) ?? new Map<string, boolean>(); gates.set(owner, ready); readiness.set(id, gates); applyState(id); }, setAvailable(id, alive) { if (!states.has(id)) throw Error("Unknown availability target"); availability.set(id, alive); applyState(id); }, drain(lb, backend, grace) { lbs.get(lb)!.drain(backend, grace); }, backend(lb, backend) { return lbs.get(lb)!.backend(backend); }, endpoint: (id) => ({ ...states.get(id)! }), observe: controls.observe, reachable: (id) => { const p = input.paths.find((p) => p.id === id); return !!p && [...p.request, ...p.response].every((l) => links.get(l)!.reachable()); } };
@@ -65,7 +67,7 @@ export function createNetworkRuntime(authored: NetworkInput, extension?: Network
     context.retireOwner = (id) => { for (const r of input.resources) if (r.id === id || r.id.startsWith(id + "/")) context.setReady(r.id, false, "terminated"); for (const p of input.paths) if (p.source === id || p.source.startsWith(id + "/")) paths.get(JSON.stringify([p.source, p.target]))!.reset(); };
     const send = (source: string, target: string, work: Invocation, done: (outcome: RemoteOutcome) => void) => { const path = paths.get(JSON.stringify([source, target])); if (!path) throw Error("Missing explicit transport path"); return path.exchange(work, (result) => done(result.ok ? "completed" : "rejected")); };
     for (const p of input.paths) paths.set(JSON.stringify([p.source, p.target]), pathTransport(p, kernel, links, deliver, (id) => states.get(id)!.alive, trace.emit, (session, target) => extension?.disconnected?.(target, session), extension?.connection?.(p, kernel, send, context)));
-    const lbs = new Map(input.resources.filter((r) => r.kind === "load-balancer").map((r) => [r.id, loadBalancer(r, kernel, paths, new Map(input.operations.map((o) => [o.id, o])), input.seed, requireKnown(input.horizon, "us"), trace.emit)]));
+    const lbs = new Map(input.resources.filter((r) => r.kind === "load-balancer").map((r) => [r.id, loadBalancer(r, kernel, paths, new Map(input.operations.map((o) => [o.id, o])), input.seed, requireKnown(input.horizon, "us"), trace.emit, extension?.causal)]));
     for (const i of input.networkInterventions) {
       const apply = (active: boolean) => {
         if (i.kind === "partition") links.get(i.target)!.partition(active);
@@ -91,7 +93,7 @@ export function createNetworkRuntime(authored: NetworkInput, extension?: Network
         return extension?.receive?.(target, work, done) ?? lbs.get(target)?.accept(work, done) ?? direct();
       },
     };
-  }, extension?.resource);
+  }, extension?.resource, extension?.causal);
   return { horizon: runtime.horizon, advanceTo: runtime.advanceTo,
     evidence() { const e = runtime.evidence(); return { ...e, workloadVersion: "m2d/1" as const, network: copy(measure()), networkConfiguration: copy({ links: input.links, paths: input.paths, resources: input.resources.filter((r) => r.kind === "load-balancer"), endpoints: input.endpoints, interventions: input.networkInterventions }),
       unmodeled: ["packets/TCP congestion/retransmission", "TLS framing/cryptography", "DNS/NAT/ephemeral ports", "physical topology/provider transport", "GC/reclaim/swap/OOM", "database query/lock/cache mechanisms", "cost"] }; } };

@@ -5,11 +5,12 @@ import type { ComputeResource, ComputeProfile, ComputeState } from "./contracts"
 import { identity } from "../workload/arrivals";
 import { cpuScheduler } from "./scheduler";
 import { residentMemory } from "./memory";
+import type { CausalObserver } from "../workload/causal";
 
 interface Call { work: Invocation; phase: "queued" | "cpu" | "wait" | "dependency" | "finished";
   done(outcome: RemoteOutcome): void; child?: Receipt; cancelWait?: () => boolean; waitRemaining: number; waitSince: number }
 export function computeResource(config: ComputeResource, profiles: Map<string, ComputeProfile>, kernel: EventKernel,
-  send: (target: string, work: Invocation, done: Call["done"]) => Receipt) {
+  send: (target: string, work: Invocation, done: Call["done"]) => Receipt, causal?: CausalObserver) {
   const workers = requireKnown(config.workers, "count"), capacity = requireKnown(config.queueCapacity, "count");
   const scheduler = cpuScheduler(config.id, requireKnown(config.cores, "cores"), kernel, config.quota ? { budget: requireKnown(config.quota.budget, "cpu-us"), period: requireKnown(config.quota.period, "us") } : undefined);
   const memory = residentMemory(config, profiles), active = new Map<string, Call>(), queue = new Map<string, Call>();
@@ -21,6 +22,7 @@ export function computeResource(config: ComputeResource, profiles: Map<string, C
     if (call.phase === "cpu") scheduler.remove(call.work.callId);
     accountOccupancy(); call.cancelWait?.(); active.delete(call.work.callId); queue.delete(call.work.callId); memory.release(call.work.callId); call.phase = "finished";
     if (outcome === "completed") completed++; else if (outcome === "cancelled") cancelled++; else failed++;
+    causal?.({ atUs: kernel.now, kind: "app-terminal", resource: config.id, work: call.work, detail: { outcome } });
     call.done(outcome); pump();
   };
   const scheduleWait = (call: Call) => {
@@ -31,6 +33,7 @@ export function computeResource(config: ComputeResource, profiles: Map<string, C
       if (config.downstream) {
         call.phase = "dependency";
         const child = { ...call.work, parentCallId: call.work.callId, callId: identity(...JSON.parse(call.work.callId), "dependency", config.downstream) };
+        causal?.({ atUs: kernel.now, kind: "app-dependency", resource: config.id, work: child, detail: { target: config.downstream } });
         call.child = send(config.downstream, child, (outcome) => finish(call, outcome));
       } else finish(call, "completed");
     });
@@ -42,6 +45,7 @@ export function computeResource(config: ComputeResource, profiles: Map<string, C
       const call = queue.values().next().value!; queue.delete(call.work.callId);
       if (!memory.activate(call.work.callId)) { allocationRejected++; finish(call, "rejected"); continue; }
       accountOccupancy(); active.set(call.work.callId, call); call.phase = "cpu";
+      causal?.({ atUs: kernel.now, kind: "app-start", resource: config.id, work: call.work, detail: {} });
       const p = profiles.get(call.work.operation)!;
       scheduler.add({ id: call.work.callId, demand: requireKnown(p.cpu, "cpu-us"), cap: requireKnown(p.maxCpuParallelism, "cores"), done: () => {
         if (call.phase === "finished") return;
@@ -57,9 +61,10 @@ export function computeResource(config: ComputeResource, profiles: Map<string, C
       const memoryAccepted = !full && memory.acquire(work.callId, work.operation, false);
       if (full || !memoryAccepted) {
         if (!full) allocationRejected++;
-        rejected++; done("rejected"); return { admitted: false, cancel: () => "already-finished", state: () => "finished" };
+        rejected++; causal?.({ atUs: kernel.now, kind: "app-rejected", resource: config.id, work, detail: {} }); done("rejected"); return { admitted: false, cancel: () => "already-finished", state: () => "finished" };
       }
       admitted++;
+      causal?.({ atUs: kernel.now, kind: "app-admitted", resource: config.id, work, detail: {} });
       const call: Call = { work, done, phase: "queued", waitRemaining: 0, waitSince: kernel.now };
       queue.set(work.callId, call); pump();
       return { admitted: true, state: () => call.phase === "cpu" || call.phase === "wait" ? "serving" : call.phase === "dependency" ? "waiting" : call.phase,

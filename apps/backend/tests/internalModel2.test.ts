@@ -11,6 +11,7 @@ test("internal product compiles explicit saved design and recorded workload and 
   const input = compile(), runtime = instantiate(input); let evidence: StoredCapture | undefined;
   for (const at of captureCuts(input)) { runtime.advanceTo(at); evidence = capture(runtime, input, (evidence?.sequence ?? 0) + 1, evidence?.checkpoints); }
   expect(evidence!.model.capture.reachedHorizon).toBe(true);
+  if (evidence!.schema !== "infraforge-internal-evidence/1") throw Error("Expected v1 object evidence");
   expect(evidence!.usage.snapshot.complete).toBe(true);
   expect(evidence!.model.objects[0]!.objects).toEqual([{ namespace: "n", key: "retained", generation: 3, bytes: 7, content: "retained" }]);
   expect(evidence!.model.commands.results.find((r) => r.id === "after-recovery")!.reply).toMatchObject({ ok: true, object: { bytes: 20, content: "second" } });

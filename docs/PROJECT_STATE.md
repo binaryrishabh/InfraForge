@@ -1,5 +1,17 @@
 # InfraForge project state
 
+**Connected simulator/product depth (2026-10-17): active engineering track.** The
+new bounded INTERNAL connected web path uses separate execution/evidence v2
+contracts on the existing authenticated Outbox/worker pipeline. It retains actual
+caller → LB → app → DB identities, logical effects, failure/health/readiness
+transitions and bounded completeness. Historical v1 formats and retained producers
+remain separate, with explicit reviewed source compatibility. See the
+[implementation boundary and validation receipt](reality/connected-web-handoff.md).
+Claude's UI/UX research is separate; no visible redesign or general activation is
+part of this work. Host verification is **parked pending an actual dedicated host**;
+actual rootless host readiness remains UNKNOWN. Model 1 ACTIVE; Model 2 INTERNAL;
+production PARKED. The endpoint and host checkpoints below remain historical fact.
+
 **Lesson Docker endpoint correction (2026-10-17):** execution/replay/reaping now
 share one explicitly selected local Unix connection, isolated client configuration
 and socket/daemon identity checks. Default-context drift and Docker environment

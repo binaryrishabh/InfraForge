@@ -5,9 +5,10 @@ import { keyedUniform } from "../random";
 import type { Invocation, OperationClass, Receipt, RemoteOutcome } from "../workload/contracts";
 import type { LoadBalancer, Trace, TransportResult } from "./contracts";
 import type { pathTransport } from "./transport";
+import type { CausalObserver } from "../workload/causal";
 
 interface Request { work: Invocation; done(outcome: RemoteOutcome): void; receipt?: Receipt; timer?: () => boolean; retryTimer?: () => boolean; attempt: number; backend?: string; retrying: boolean; terminal: boolean }
-export function loadBalancer(config: LoadBalancer, kernel: EventKernel, paths: Map<string, ReturnType<typeof pathTransport>>, operations: Map<string, OperationClass>, seed: string, horizon: number, trace: Trace) {
+export function loadBalancer(config: LoadBalancer, kernel: EventKernel, paths: Map<string, ReturnType<typeof pathTransport>>, operations: Map<string, OperationClass>, seed: string, horizon: number, trace: Trace, causal?: CausalObserver) {
   const members = [...config.backends].sort().map((id) => ({ id, health: config.health.initial === "eligible", draining: false, successes: 0, failures: 0, outstanding: 0, selected: 0, probes: 0, cancelCheck: undefined as (() => boolean) | undefined }));
   const active = new Map<string, Request>(), pending = new Map<string, Request>();
   const membersById = new Map(members.map((m) => [m.id, m]));
@@ -78,6 +79,7 @@ export function loadBalancer(config: LoadBalancer, kernel: EventKernel, paths: M
     backend(id: string) { const member = membersById.get(id); if (!member) throw Error("Unknown backend"); return { health: member.health, draining: member.draining, outstanding: member.outstanding }; },
     accept(work: Invocation, done: Request["done"]): Receipt {
       received++;
+      causal?.({ atUs: kernel.now, kind: "lb-received", resource: config.id, work, detail: { active: active.size, pending: pending.size } });
       if (active.size >= requireKnown(config.maxOutstanding, "count") && pending.size >= requireKnown(config.maxPending, "count")) { rejected++; trace("lb-failure", work.callId, "pending-overflow", work.rootId, work.attempt); done("rejected"); return { admitted: false, state: () => "finished", cancel: () => "already-finished" }; }
       const r: Request = { work, done, attempt: 0, retrying: false, terminal: false }; pending.set(work.callId, r);
       r.timer = kernel.schedule(kernel.now + requireKnown(config.pendingTimeout, "us"), 1, JSON.stringify(["lb-pending-timeout", config.id, work.callId]), () => { trace("lb-failure", work.callId, "pending-timeout", work.rootId, work.attempt); finish(r, "rejected"); }); pump();

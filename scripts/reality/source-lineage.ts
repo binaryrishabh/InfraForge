@@ -3,6 +3,7 @@ import { readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { relative, resolve } from "node:path";
 import { productHash, productRoot } from "./product-source";
 import { providerDigest } from "./provider-source";
+import { baselinePaths, baselineText } from "../../apps/backend/internalModel2/legacyCompatibility";
 
 const accepted = "5b4771ac107e447aa08aac146b8ff15f019beac9";
 const foundation = "d1fe122d5a502dc916190a6d487cc72c4965bc0d563a92222166f0c130b74dfe";
@@ -25,10 +26,10 @@ export function sourceProjection(lineage: SourceLineage, read: (path: string) =>
   if (lineage.schema !== "infraforge-runtime-source-lineage/1" || lineage.acceptedSha !== accepted || lineage.foundationHash !== foundation || lineage.providerHash !== provider || lineage.files.length !== changed.length || new Set(lineage.files.map((f) => f.path)).size !== changed.length) throw Error("Invalid accepted source lineage identity");
   const originals = new Map<string, string>();
   for (const f of lineage.files) {
-    if (!changed.includes(f.path) || sha(f.originalText) !== f.originalSha256 || !/^[a-f0-9]{64}$/.test(f.currentSha256) || sha(read(f.path)) !== f.currentSha256) throw Error(`Unreviewed source lineage drift: ${f.path}`);
+    if (!changed.includes(f.path) || sha(f.originalText) !== f.originalSha256 || !/^[a-f0-9]{64}$/.test(f.currentSha256) || sha(baselineText(f.path, read(f.path))) !== f.currentSha256) throw Error(`Unreviewed source lineage drift: ${f.path}`);
     originals.set(f.path, normalize(f.originalText));
   }
-  return (path: string) => originals.get(path) ?? normalize(read(path));
+  return (path: string) => originals.get(path) ?? baselineText(path, read(path));
 }
 function foundationFiles(root: string) {
   const walk = (path: string): string[] => readdirSync(path, { withFileTypes: true }).flatMap((e) => e.isDirectory() ? walk(resolve(path, e.name)) : e.name.endsWith(".ts") ? [resolve(path, e.name)] : []);
@@ -36,7 +37,7 @@ function foundationFiles(root: string) {
 }
 export function historicalFoundationHash(root = productRoot, lineage = readLineage(root)) {
   const original = sourceProjection(lineage, (path) => readFileSync(resolve(root, path), "utf8"));
-  const result = productHash(foundationFiles(root).map((p) => [p, original(p)]));
+  const result = productHash(baselinePaths(foundationFiles(root)).map((p) => [p, original(p)]));
   if (result !== foundation) throw Error("Accepted M2H source fingerprint cannot be reconstructed");
   return result;
 }

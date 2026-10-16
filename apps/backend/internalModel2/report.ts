@@ -2,8 +2,12 @@ import { executionSource } from "./identity";
 import { readEnvelope, captureCuts } from "./envelope";
 import { readCapture, instantiate, capture } from "./capture";
 import type { InternalRunRow } from "./store";
+import { compatibleV1Source } from "./legacyCompatibility";
+import { decodeCausal } from "./causalJournal";
 function recordedCapture(row: InternalRunRow, source: string | null) {
   const evidence = readCapture(row.evidence, row.inputHash);
+  const input = readEnvelope(row.input, row.inputHash, false);
+  if ((input.schema === "infraforge-internal-execution/2") !== (evidence.schema === "infraforge-internal-evidence/2")) throw Error("Execution/evidence version mismatch");
   if (evidence.sequence !== row.sequence || evidence.throughUs !== row.throughUs || source !== null && evidence.source !== source) throw Error("Stored evidence metadata gap or source mismatch");
   return evidence;
 }
@@ -16,15 +20,20 @@ export function internalReport(row: InternalRunRow) {
   } catch (e) { problems.push(e instanceof Error ? e.message : "Evidence unavailable"); } }
   else problems.push("No durable execution capture is available");
   const source = evidence?.source ?? (inputValid ? readEnvelope(row.input, row.inputHash, false).source : null);
+  const compatible = source !== null && (source === executionSource || evidence?.schema !== "infraforge-internal-evidence/2" && compatibleV1Source(source, executionSource));
   if (row.status !== "completed") unknown.push("This is a retained prefix, not proof of a complete execution. Missing time/work is not zero.");
   if (evidence && !evidence.usage.snapshot.complete) unknown.push(...evidence.usage.snapshot.reasons);
+  if (evidence?.schema === "infraforge-internal-evidence/2" && !evidence.completeness.exactCausality) unknown.push("Exact request causality is Unknown: bounded causal/caller evidence was omitted. Missing events are not zero.");
+  if (evidence?.schema === "infraforge-internal-evidence/2" && evidence.model.counts.inFlight) unknown.push("The authored horizon ended with in-flight callers; their future outcomes are right-censored and Unknown.");
   const values = inputValid && evidence ? evidence.presentation.values : {};
-  return { schema: "infraforge-internal-report/1", internal: true, model: "2", id: row.id, status: row.status, reason: row.reason,
+  const connected = inputValid && readEnvelope(row.input, row.inputHash, false).schema === "infraforge-internal-execution/2";
+  return { schema: connected ? "infraforge-internal-report/2" : "infraforge-internal-report/1", internal: true, model: "2", id: row.id, status: row.status, reason: row.reason,
     inputHash: row.inputHash, source, sequence: row.sequence, throughUs: row.throughUs, inputValid, problems,
-    replay: { compatible: inputValid && evidence !== null && source === executionSource, reason: !inputValid ? "Recorded input is unavailable/corrupt/incompatible" : !evidence ? "No valid durable capture is available to replay" : source !== executionSource ? "Execution source differs; historical evidence is read without reinterpretation" : "Read-only deterministic prefix replay is available" },
+    replay: { compatible: inputValid && evidence !== null && compatible, reason: !inputValid ? "Recorded input is unavailable/corrupt/incompatible" : !evidence ? "No valid durable capture is available to replay" : !compatible ? "Execution source differs; historical evidence is read without reinterpretation" : "Read-only deterministic prefix replay is available" },
     observed: Object.entries(values).filter(([, v]) => v.kind === "Observed"), interpreted: Object.entries(values).filter(([, v]) => v.kind === "Interpreted"),
     unknown: [...unknown, ...Object.entries(values).filter(([, v]) => v.kind === "Unknown").map(([key, v]) => `${key}: ${v.kind === "Unknown" ? v.reason : "Unknown"}`)],
     state: inputValid && evidence ? evidence.model : null,
+    ...(inputValid && evidence?.schema === "infraforge-internal-evidence/2" ? { causality: { complete: evidence.completeness.exactCausality, omitted: evidence.completeness.causalOmitted, events: decodeCausal(evidence.model.causal) } } : {}),
     checkpoints: inputValid && evidence ? evidence.checkpoints : [],
     usage: inputValid && evidence ? { kind: evidence.usage.snapshot.complete ? "Observed" : "Unknown", complete: evidence.usage.snapshot.complete, measurements: evidence.usage.snapshot.complete ? evidence.usage.snapshot.measurements : [], reasons: evidence.usage.snapshot.reasons, provenance: evidence.usage.config.provenance, providerBilling: "Unknown" } : null };
 }

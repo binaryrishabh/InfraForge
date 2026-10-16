@@ -78,6 +78,15 @@ jobs:
       - run: bun --no-env-file scripts/verify-internal-model2-proof.ts /tmp/infraforge-model2-*.json
       - run: bun --no-env-file scripts/verify-model2-workspace-proof.ts /tmp/infraforge-m2l/browser-proof.json
       - run: bun --no-env-file scripts/verify-model2-workspace-proof.ts docs/reality/m2l-browser-proof.json
+      - run: bun --no-env-file scripts/verify-connected-proof.ts /tmp/infraforge-connected-proof.json
+      - run: bun --no-env-file scripts/connected-proof-negative.ts /tmp/infraforge-connected-proof.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: internal-model2-connected-proof
+          path: /tmp/infraforge-connected-proof.json
+          if-no-files-found: error
+          retention-days: 14
       - uses: actions/upload-artifact@v4
         if: always()
         with:

@@ -9,6 +9,7 @@ export function lessonSourceFiles() {
     const file = `${folder}/${entry.name}`; if (entry.isDirectory()) walk(file); else if (/\.tsx?$/.test(file)) files.push(file);
   } };
   for (const folder of ["apps/backend/internalModel2", "apps/web/src/features/internalModel2", "packages/contracts/src/internal-model2", "apps/web/src/features/internalLessons", "packages/contracts/src/internal-lessons"]) walk(folder);
+  files.push("apps/backend/internalModel2/legacyRuntime.json");
   return files.sort();
 }
 export function lessonSource() { return contentHash(lessonSourceFiles().map((file) => ({ file, text: readFileSync(resolve(root, file), "utf8").replaceAll("\r\n", "\n") }))); }

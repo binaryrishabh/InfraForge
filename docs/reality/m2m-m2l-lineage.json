@@ -13,11 +13,13 @@
     },
     {
       "file": "apps/backend/internalModel2/capture.ts",
-      "hash": "3a2ad8b53bf3b110e82ae0652b1b696546387868284cab8b6bb1753d5ec00e95"
+      "hash": "3a2ad8b53bf3b110e82ae0652b1b696546387868284cab8b6bb1753d5ec00e95",
+      "text": "import { boundedProduct, createMeteredProductModel2, presentModel2 } from \"@infraforge/simulation/internal-product\";\nimport type { ProductEvidence } from \"@infraforge/simulation/internal-product\";\nimport { hasher, contentHash } from \"./identity\";\nimport type { ExecutionEnvelope } from \"./envelope\";\nimport { INTERNAL_LIMITS as limits, jsonBytes } from \"./budgets\";\nexport const instantiate = (envelope: ExecutionEnvelope) => createMeteredProductModel2(envelope.compiled, envelope.metering, hasher);\nfunction checkpoint(model: ProductEvidence) { return { atUs: model.at, endpoints: model.network.endpoints, counts: model.counts,\n  objects: model.asynchronous.objects.map((s) => ({ id: s.id, bytes: s.storedBytes, generation: s.generation, objects: s.objects.length })) }; }\nexport type CaptureCheckpoint = ReturnType<typeof checkpoint>;\nexport function capture(runtime: ReturnType<typeof instantiate>, envelope: ExecutionEnvelope, sequence: number, history: CaptureCheckpoint[] = []) {\n  const { model } = runtime.evidence(), frame = runtime.frame();\n  if (sequence !== history.length + 1 || sequence > limits.captures) throw Error(\"Capture history sequence/budget mismatch\");\n  const body = { schema: \"infraforge-internal-evidence/1\" as const, input: envelope.fingerprint, source: envelope.source, sequence, throughUs: model.at,\n    checkpoints: [...history, checkpoint(model)],\n    model: { capture: model.capture, counts: model.counts, resources: model.resources.map((r) => ({ id: r.id, received: r.received, completed: r.completed, rejected: r.rejected, failed: r.failed, cancelled: r.cancelled, queued: r.queued, consumedCoreUs: r.consumedCoreUs })),\n      objects: model.asynchronous.objects, commands: model.systems.commands, endpoints: model.network.endpoints, faults: model.faults,\n      networkInterventions: model.network.trace.events.filter((r) => r.kind === \"network-intervention\"), networkTraceOmitted: model.network.trace.omitted },\n    presentation: presentModel2(model), usage: frame };\n  const value = { ...body, fingerprint: contentHash(body) }; jsonBytes(value, limits.evidenceBytes); return value;\n}\nexport type StoredCapture = ReturnType<typeof capture>;\nexport function readCapture(value: unknown, input: string): StoredCapture {\n  boundedProduct(value); jsonBytes(value, limits.evidenceBytes);\n  const e = value as StoredCapture, { fingerprint, ...body } = e;\n  if (e.schema !== \"infraforge-internal-evidence/1\" || contentHash(body) !== fingerprint || e.input !== input) throw Error(\"Stored evidence is missing, corrupt or incompatible\");\n  if (!Number.isSafeInteger(e.sequence) || e.sequence < 1 || e.sequence > limits.captures || !Array.isArray(e.checkpoints) || e.checkpoints.length !== e.sequence || e.checkpoints.at(-1)?.atUs !== e.throughUs || e.usage.snapshot.atUs !== e.throughUs) throw Error(\"Stored evidence checkpoint sequence or time gap\");\n  return e;\n}\n"
     },
     {
       "file": "apps/backend/internalModel2/envelope.ts",
-      "hash": "ec0118b6fb4e0301689ea4a8c60fa2a8b33e460384d4f9a7814540e785d57089"
+      "hash": "ec0118b6fb4e0301689ea4a8c60fa2a8b33e460384d4f9a7814540e785d57089",
+      "text": "import { z } from \"zod\";\nimport { boundedProduct, compileProduct, canonical, requireKnown } from \"@infraforge/simulation/internal-product\";\nimport type { ProductContract, SavedProductDesign, CompiledProduct, MeteringConfig, Diagnostic } from \"@infraforge/simulation/internal-product\";\nimport { LayoutSchema } from \"../zod_schemas/layout.schema\";\nimport { WorkloadProfileSchema } from \"../zod_schemas/deployment.schema\";\nimport { contentHash, executionSource } from \"./identity\";\nimport { INTERNAL_LIMITS as limits, jsonBytes } from \"./budgets\";\n\nexport const admissionSchema = z.object({ infrastructureId: z.uuid(), idempotencyKey: z.string().regex(/^[A-Za-z0-9_-]{1,80}$/),\n  expectedDesignUpdatedAt: z.iso.datetime(), workload: WorkloadProfileSchema.extend({ readWriteRatio: z.number().min(0).max(1) }).strict(), contract: z.unknown() }).strict();\nexport class CompilationRefusal extends Error { constructor(readonly diagnostics: Diagnostic[]) { super(\"Internal Model-2 contract refused\"); } }\nexport interface ExecutionEnvelope {\n  schema: \"infraforge-internal-execution/1\"; runId: string; ownerId: string; infrastructureId: string; designUpdatedAt: string;\n  source: string; design: SavedProductDesign; contract: ProductContract; compiled: CompiledProduct; compiledHash: string; metering: MeteringConfig; fingerprint: string;\n}\nfunction refusal(code: string, path: string, message: string): never { throw new CompilationRefusal([{ code, path, message, severity: \"error\" }]); }\nexport function compileEnvelope(runId: string, ownerId: string, layout: unknown, updatedAt: Date, request: z.infer<typeof admissionSchema>): ExecutionEnvelope {\n  try { boundedProduct(request); jsonBytes(request, limits.requestBytes); }\n  catch (error) { refusal(\"INPUT_BUDGET\", \"contract\", error instanceof Error ? error.message : \"Input budget exceeded\"); }\n  try { boundedProduct(layout); jsonBytes(layout, limits.requestBytes); }\n  catch { refusal(\"SAVED_DESIGN_BUDGET\", \"design\", \"Saved layout exceeds the internal structural/text/byte budget\"); }\n  // JSONB does not preserve object-key order. Compile the canonical authored\n  // contract so provenance traversal reconstructs identically after persistence.\n  const parsed = LayoutSchema.safeParse(layout);\n  if (!parsed.success) refusal(\"SAVED_DESIGN_INVALID\", \"design\", \"Saved infrastructure layout is invalid\");\n  const saved = parsed.data, contract = canonical(request.contract) as ProductContract;\n  if (!contract || typeof contract !== \"object\") refusal(\"CONTRACT_REQUIRED\", \"contract\", \"Supply a complete versioned application/infrastructure contract\");\n  if (contract.capabilities?.length) refusal(\"PROVIDER_SCOPE\", \"contract.capabilities\", \"Provider capability/price bindings are excluded from this authored internal slice\");\n  const objectNode = saved.resources.find((r) => r.type === \"Object Storage\"), objectConfig = objectNode && contract.nodes?.[objectNode.id]?.resources?.[0]?.config;\n  if (objectConfig?.kind === \"object-store\" && objectConfig.capacity === undefined) refusal(\"CAPACITY_REQUIRED\", \"contract.nodes\", \"Object storage requires an explicit authored byte capacity\");\n  const design: SavedProductDesign = { schema: \"infraforge-saved-design/1\", resources: saved.resources, connections: saved.connectionLines, workload: request.workload };\n  if (design.resources.length !== 2 || design.resources.filter((r) => r.type === \"Virtual Machine\").length !== 1 || design.resources.filter((r) => r.type === \"Object Storage\").length !== 1)\n    refusal(\"INTERNAL_SCOPE\", \"resources\", \"This internal slice requires exactly one Virtual Machine and one Object Storage node; other resource compositions are refused\");\n  for (const r of design.resources) if ([\"skuId\", \"size\", \"region\", \"public\", \"encryption\", \"openPorts\", \"autoscaling\"].some((key) => key in r)) refusal(\"UNSUPPORTED_CONTROL\", `resources.${r.id}`, \"SKU, region, legacy security, size and autoscaling controls are outside this internal scope; supply explicit authored resource/listener contracts\");\n  if (!contract.limits || contract.limits.maxEvents > limits.events || contract.limits.maxRequests > limits.requests || contract.limits.maxSamples > limits.samples || contract.limits.maxRawResults > limits.requests || contract.limits.maxTraceRows > limits.requests)\n    refusal(\"EXECUTION_BUDGET\", \"contract.limits\", \"Explicit bounded limits are required: events ≤10000, requests/raw/trace ≤256, samples ≤64\");\n  if (!Array.isArray(contract.commands) || contract.commands.length > limits.commands || !Array.isArray(contract.faults) || contract.faults.length > 1 || contract.faults.some((f) => f.kind !== \"Crash\" || f.profile !== \"retain-logical-state/1\" || !design.resources.some((r) => r.id === f.target && r.type === \"Object Storage\")))\n    refusal(\"SCHEDULE_SCOPE\", \"contract\", \"At most 16 recorded commands and one retained-logical-object crash are supported; other faults are refused\");\n  const compiled = compileProduct(design, contract);\n  if (!compiled.ok) throw new CompilationRefusal(compiled.diagnostics);\n  const horizon = requireKnown(contract.horizon, \"us\");\n  if (horizon > limits.horizonUs || compiled.value.input.resources.length !== 2 || compiled.value.pools.length || compiled.value.input.paths.length > 4 || compiled.value.input.links.length > 8)\n    refusal(\"MATERIALIZED_SCOPE\", \"compiled\", \"Bounded two-station internal execution required; horizon ≤1000000 us, no pool/auxiliary expansion\");\n  const vm = design.resources.find((r) => r.type === \"Virtual Machine\")!, objects = design.resources.find((r) => r.type === \"Object Storage\")!;\n  if (compiled.value.input.operations.some((o) => o.entry !== vm.id) || compiled.value.input.resources.some((r) => r.kind === \"compute\" && r.downstream) || compiled.value.input.systems.commands.some((c) => c.source !== vm.id || c.target !== objects.id))\n    refusal(\"APPLICATION_SCOPE\", \"contract\", \"This slice runs standalone VM application CPU and separate recorded VM-to-object commands; other application mappings are refused\");\n  const compiledHash = contentHash(compiled.value);\n  const metering: MeteringConfig = { schema: \"infraforge-usage-metering/1\", run: runId, epoch: \"execution-1\", inputFingerprint: compiledHash,\n    provenance: [\"Internal product run: actual modeled commands, current objects and directed payload; no physical/cloud billing claim\"],\n    objects: compiled.value.input.resources.filter((r) => r.kind === \"object-store\").map((r) => r.id), links: compiled.value.input.links.map((l) => l.id),\n    maxRecords: limits.records, maxFields: limits.fields, maxTextCharacters: limits.textCharacters };\n  const body = { schema: \"infraforge-internal-execution/1\" as const, runId, ownerId, infrastructureId: request.infrastructureId, designUpdatedAt: updatedAt.toISOString(), source: executionSource, design, contract, compiled: compiled.value, compiledHash, metering };\n  const envelope = canonical({ ...body, fingerprint: contentHash(body) }); captureCuts(envelope);\n  try { jsonBytes(envelope, limits.inputBytes); } catch { refusal(\"PERSISTENCE_BUDGET\", \"envelope\", \"Compiled execution envelope exceeds the internal persistence budget\"); }\n  return envelope;\n}\nexport function readEnvelope(value: unknown, expected: string, compatible = true): ExecutionEnvelope {\n  boundedProduct(value); jsonBytes(value, limits.inputBytes);\n  const envelope = canonical(value) as ExecutionEnvelope, { fingerprint, ...body } = envelope;\n  if (fingerprint !== expected || contentHash(body) !== fingerprint) throw Error(\"Recorded input content is missing or corrupt\");\n  if (envelope.schema !== \"infraforge-internal-execution/1\") throw Error(\"Unsupported historical input version; no reinterpretation\");\n  if (compatible && envelope.source !== executionSource) throw Error(\"Historical execution source is incompatible with this runtime\");\n  if (compatible) {\n    const current = compileProduct(envelope.design, envelope.contract);\n    if (!current.ok || contentHash(current.value) !== envelope.compiledHash || contentHash(envelope.compiled) !== envelope.compiledHash) throw Error(\"Historical compilation is incompatible or corrupt\");\n  }\n  return envelope;\n}\nexport function captureCuts(envelope: ExecutionEnvelope) {\n  const horizon = requireKnown(envelope.contract.horizon, \"us\"), cuts = new Set([0, horizon]);\n  for (let i = 1; i < 16; i++) cuts.add(Math.ceil(horizon * i / 16));\n  for (const f of envelope.contract.faults) { const at = requireKnown(f.at, \"us\"), end = at + requireKnown(f.duration, \"us\"); cuts.add(at); cuts.add(end); cuts.add(end + requireKnown(f.restart!, \"us\")); }\n  const ordered = [...cuts].filter((at) => at <= horizon).sort((a, b) => a - b);\n  if (ordered.length > limits.captures) throw Error(\"Capture budget exceeded\"); return ordered;\n}\n"
     },
     {
       "file": "apps/backend/internalModel2/execution.ts",
@@ -26,7 +28,8 @@
     },
     {
       "file": "apps/backend/internalModel2/identity.ts",
-      "hash": "78df51ca7d7e795553d49e410cdbdf4da54c311594078c7883ee9309eba56184"
+      "hash": "78df51ca7d7e795553d49e410cdbdf4da54c311594078c7883ee9309eba56184",
+      "text": "import { createHash } from \"node:crypto\";\nimport { readdirSync, readFileSync } from \"node:fs\";\nimport { relative, resolve } from \"node:path\";\nimport { canonical } from \"@infraforge/simulation/internal-product\";\nexport const hasher = { algorithm: \"sha256-utf8/1\" as const, hash: (text: string) => createHash(\"sha256\").update(text).digest(\"hex\") };\nexport const contentHash = (value: unknown) => hasher.hash(JSON.stringify(canonical(value)));\nconst root = resolve(import.meta.dir, \"../../..\");\nfunction sourceIdentity() {\n  const walk = (dir: string): string[] => readdirSync(dir, { withFileTypes: true }).flatMap((e) => e.isDirectory() ? walk(resolve(dir, e.name)) : e.name.endsWith(\".ts\") ? [resolve(dir, e.name)] : []);\n  const folders = [\"packages/simulation/src/model2\", \"packages/simulation/src/reality\", \"packages/domain/src\", \"packages/catalog/src\"];\n  const paths = [...folders.flatMap((p) => walk(resolve(root, p))), ...[\"packages/simulation/src/internalProduct.ts\", ...[\"identity\", \"envelope\", \"budgets\", \"capture\"].map((p) => `apps/backend/internalModel2/${p}.ts`)].map((p) => resolve(root, p))]\n    .map((p) => relative(root, p).replaceAll(\"\\\\\", \"/\")).sort();\n  const files = [...paths, \"bun.lock\", \"apps/backend/zod_schemas/layout.schema.ts\", \"apps/backend/zod_schemas/deployment.schema.ts\"].sort();\n  return contentHash({ runtime: `bun-${Bun.version}`, files: files.map((p) => [p, readFileSync(resolve(root, p), \"utf8\").replaceAll(\"\\r\\n\", \"\\n\")]) });\n}\n// Frozen with this process/image; changing execution source requires a new process.\nexport const executionSource = sourceIdentity();\n"
     },
     {
       "file": "apps/backend/internalModel2/queue.ts",
@@ -34,7 +37,8 @@
     },
     {
       "file": "apps/backend/internalModel2/report.ts",
-      "hash": "00589fcaf78979f53dcc18bd7ab8942ee106d6e7563ea107f83b888088ef67f8"
+      "hash": "00589fcaf78979f53dcc18bd7ab8942ee106d6e7563ea107f83b888088ef67f8",
+      "text": "import { executionSource } from \"./identity\";\nimport { readEnvelope, captureCuts } from \"./envelope\";\nimport { readCapture, instantiate, capture } from \"./capture\";\nimport type { InternalRunRow } from \"./store\";\nfunction recordedCapture(row: InternalRunRow, source: string | null) {\n  const evidence = readCapture(row.evidence, row.inputHash);\n  if (evidence.sequence !== row.sequence || evidence.throughUs !== row.throughUs || source !== null && evidence.source !== source) throw Error(\"Stored evidence metadata gap or source mismatch\");\n  return evidence;\n}\nexport function internalReport(row: InternalRunRow) {\n  let inputValid = false, evidence: ReturnType<typeof readCapture> | null = null;\n  const unknown = [\"Physical throughput/cloud timing/durability and full pricing are Unknown. This INTERNAL authored simulation is not a production-ready cloud model.\"], problems: string[] = [];\n  try { readEnvelope(row.input, row.inputHash, false); inputValid = true; } catch (e) { problems.push(e instanceof Error ? e.message : \"Input unavailable\"); }\n  if (row.evidence !== null) { try {\n    evidence = recordedCapture(row, inputValid ? readEnvelope(row.input, row.inputHash, false).source : null);\n  } catch (e) { problems.push(e instanceof Error ? e.message : \"Evidence unavailable\"); } }\n  else problems.push(\"No durable execution capture is available\");\n  const source = evidence?.source ?? (inputValid ? readEnvelope(row.input, row.inputHash, false).source : null);\n  if (row.status !== \"completed\") unknown.push(\"This is a retained prefix, not proof of a complete execution. Missing time/work is not zero.\");\n  if (evidence && !evidence.usage.snapshot.complete) unknown.push(...evidence.usage.snapshot.reasons);\n  const values = inputValid && evidence ? evidence.presentation.values : {};\n  return { schema: \"infraforge-internal-report/1\", internal: true, model: \"2\", id: row.id, status: row.status, reason: row.reason,\n    inputHash: row.inputHash, source, sequence: row.sequence, throughUs: row.throughUs, inputValid, problems,\n    replay: { compatible: inputValid && evidence !== null && source === executionSource, reason: !inputValid ? \"Recorded input is unavailable/corrupt/incompatible\" : !evidence ? \"No valid durable capture is available to replay\" : source !== executionSource ? \"Execution source differs; historical evidence is read without reinterpretation\" : \"Read-only deterministic prefix replay is available\" },\n    observed: Object.entries(values).filter(([, v]) => v.kind === \"Observed\"), interpreted: Object.entries(values).filter(([, v]) => v.kind === \"Interpreted\"),\n    unknown: [...unknown, ...Object.entries(values).filter(([, v]) => v.kind === \"Unknown\").map(([key, v]) => `${key}: ${v.kind === \"Unknown\" ? v.reason : \"Unknown\"}`)],\n    state: inputValid && evidence ? evidence.model : null,\n    checkpoints: inputValid && evidence ? evidence.checkpoints : [],\n    usage: inputValid && evidence ? { kind: evidence.usage.snapshot.complete ? \"Observed\" : \"Unknown\", complete: evidence.usage.snapshot.complete, measurements: evidence.usage.snapshot.complete ? evidence.usage.snapshot.measurements : [], reasons: evidence.usage.snapshot.reasons, provenance: evidence.usage.config.provenance, providerBilling: \"Unknown\" } : null };\n}\nexport function replayStored(row: InternalRunRow) {\n  const envelope = readEnvelope(row.input, row.inputHash), expected = recordedCapture(row, envelope.source), runtime = instantiate(envelope);\n  let actual: ReturnType<typeof capture> | undefined;\n  for (const at of captureCuts(envelope).slice(0, expected.sequence)) {\n    try { runtime.advanceTo(at); } catch { /* Capture the same deterministic failure, if this prefix contains one. */ }\n    actual = capture(runtime, envelope, (actual?.sequence ?? 0) + 1, actual?.checkpoints ?? []);\n  }\n  if (!actual) throw Error(\"No durable prefix is available\");\n  return { kind: actual.fingerprint === expected.fingerprint ? \"MatchesRecordedPrefix\" : \"Mismatch\", input: envelope.fingerprint,\n    expected: expected.fingerprint, actual: actual.fingerprint, throughUs: actual.throughUs,\n    complete: row.status === \"completed\" && actual.model.capture.reachedHorizon && actual.usage.snapshot.complete,\n    mutation: \"None; replay writes no product state\" };\n}\nconst escape = (value: unknown) => String(value).replace(/[&<>\"']/g, (c) => ({ \"&\": \"&amp;\", \"<\": \"&lt;\", \">\": \"&gt;\", '\"': \"&quot;\", \"'\": \"&#39;\" })[c]!);\nexport function reportHtml(report: ReturnType<typeof internalReport>) {\n  const section = (title: string, value: unknown) => `<section><h2>${title}</h2><pre>${escape(JSON.stringify(value, null, 2))}</pre></section>`;\n  return `<!doctype html><html lang=\"en\"><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width\"><title>Internal Model-2 report</title><style>body{max-width:76rem;margin:2rem auto;padding:0 1rem;font:16px/1.5 system-ui;background:#111827;color:#e5e7eb}h1,h2{color:#fff}pre{white-space:pre-wrap;overflow-wrap:anywhere;padding:1rem;background:#1f2937;border-radius:.5rem}section{margin:2rem 0}</style><h1>Internal Model-2 report</h1><p>Model 1 ACTIVE · Model 2 INTERNAL · production PARKED</p><p>${escape(report.id)} · ${escape(report.status)} · retained through ${escape(report.throughUs)} us</p>${section(\"Recorded identity and compatibility\", { input: report.inputHash, source: report.source, replay: report.replay, reason: report.reason, problems: report.problems })}${section(\"Observed modeled facts\", report.observed)}${section(\"Interpreted\", report.interpreted)}${section(\"Unknown and limits\", report.unknown)}${section(\"Retained service and infrastructure state\", { latest: report.state, checkpoints: report.checkpoints })}${section(\"Usage evidence\", report.usage)}</html>`;\n}\n"
     },
     {
       "file": "apps/backend/internalModel2/routes.ts",
@@ -124,7 +128,31 @@
     },
     {
       "file": "apps/backend/internalModel2/capture.ts",
-      "hash": "3a2ad8b53bf3b110e82ae0652b1b696546387868284cab8b6bb1753d5ec00e95"
+      "hash": "b8d8d536b1aa03844165cac73a8247689d2b24a1575a45c9575bef8917288e54"
+    },
+    {
+      "file": "apps/backend/internalModel2/captureV1.ts",
+      "hash": "7f397d2ba145df18848dec9c14c5fd82ba74d289fd920bbce2ea5d06bd73cd3f"
+    },
+    {
+      "file": "apps/backend/internalModel2/captureV2.ts",
+      "hash": "b0aca2bc55a01a357a12ddb268f92f2626ff20a317405a1aa3b3d61466d38792"
+    },
+    {
+      "file": "apps/backend/internalModel2/captureV2Validation.ts",
+      "hash": "9c7a52c8248fb526bfacbad6fe1fc7db6eee97c9a7a4f4561259275b13f8b79f"
+    },
+    {
+      "file": "apps/backend/internalModel2/causalJournal.ts",
+      "hash": "aa6828cf946ee77153a5d904e9595030144c290899e8a3c852b17184c5878022"
+    },
+    {
+      "file": "apps/backend/internalModel2/connectedPresentation.ts",
+      "hash": "7a871a4b5fefbcbf401846cd9235383fb9189a5057c2d9c9db0da72c048ec878"
+    },
+    {
+      "file": "apps/backend/internalModel2/connectedScope.ts",
+      "hash": "db76284318d554643b725c6e721399c8532097c5e6f273bbff967f9f3280eb48"
     },
     {
       "file": "apps/backend/internalModel2/dockerConnection.ts",
@@ -140,7 +168,15 @@
     },
     {
       "file": "apps/backend/internalModel2/envelope.ts",
-      "hash": "ec0118b6fb4e0301689ea4a8c60fa2a8b33e460384d4f9a7814540e785d57089"
+      "hash": "9f10199729987da6d6f422146db7da76b951cfe7936622eddee330ddc193ba10"
+    },
+    {
+      "file": "apps/backend/internalModel2/envelopeV1.ts",
+      "hash": "f35a95d9b034b79c7cecfcff955677ba1496075d88477e565c4ac6ca7ac568b9"
+    },
+    {
+      "file": "apps/backend/internalModel2/envelopeV2.ts",
+      "hash": "a81987186bcabdd3929dfaa3f4cf46cc11a8e402e8ad18a95c546d816034b2dc"
     },
     {
       "file": "apps/backend/internalModel2/execution.ts",
@@ -148,7 +184,15 @@
     },
     {
       "file": "apps/backend/internalModel2/identity.ts",
-      "hash": "78df51ca7d7e795553d49e410cdbdf4da54c311594078c7883ee9309eba56184"
+      "hash": "bfe3745f3c0b56c55c67a9868f9b84ba73a461537d9c45eab5bc0eb0cf6394e4"
+    },
+    {
+      "file": "apps/backend/internalModel2/legacyCompatibility.ts",
+      "hash": "4e9e9560ddea1df1ecaddc16206445587d63d7d4666ae00c128369fbdcfd3e84"
+    },
+    {
+      "file": "apps/backend/internalModel2/legacyRuntime.json",
+      "hash": "096690227808c1a1b7f36d5f2834a9ab761042227d3e22650b4a9fa50a5e9ddd"
     },
     {
       "file": "apps/backend/internalModel2/lessonAuthoring.ts",
@@ -176,7 +220,7 @@
     },
     {
       "file": "apps/backend/internalModel2/lessonSummary.ts",
-      "hash": "197cfe944991a549e9b48c1fdb3a8e16ce53c9777f887410e4b6392fd7b5ca46"
+      "hash": "11211290f78b55b1655cf4eb43cebb45eee223c4e14b1e4890a201cf0cb8cfb7"
     },
     {
       "file": "apps/backend/internalModel2/queue.ts",
@@ -184,7 +228,7 @@
     },
     {
       "file": "apps/backend/internalModel2/report.ts",
-      "hash": "00589fcaf78979f53dcc18bd7ab8942ee106d6e7563ea107f83b888088ef67f8"
+      "hash": "851158cd55573071e6158348aa057dcef9afeba9457bbe846f672fb461e7b72c"
     },
     {
       "file": "apps/backend/internalModel2/routes.ts",
@@ -320,7 +364,7 @@
     },
     {
       "file": "packages/contracts/src/internal-model2/index.ts",
-      "hash": "36a41bc1a991c97db6104866f4425b97f3a65520329cc189048cc9b161c2581c"
+      "hash": "f4e633a5c786e750ef53e0750b8946eb0ed22e5aee57a975ab49d46f8524c71a"
     }
   ],
   "artifact": "417f931f81556eb24976aaafb07ed32bbb4f37dd708b1b8507f69727406dec14"

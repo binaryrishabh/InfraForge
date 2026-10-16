@@ -7,12 +7,13 @@ import type { ContentHasher } from "../provider/fingerprint";
 import type { MeteringConfig } from "./contracts";
 import { usageJournal } from "./journal";
 import { reconcileUsage } from "./reconcile";
+import type { CausalObserver } from "../../model2/workload/causal";
 
-function meteredRuntime(compiled: CompiledProduct, config: MeteringConfig, expectedInput: string, hasher: ContentHasher) {
+function meteredRuntime(compiled: CompiledProduct, config: MeteringConfig, expectedInput: string, hasher: ContentHasher, causal?: CausalObserver) {
   if (config.inputFingerprint !== expectedInput) throw Error("Usage run must pin the exact compiled input");
   for (const id of config.objects) if (!compiled.input.resources.some((r) => r.id === id && r.kind === "object-store")) throw Error(`Unknown or unsupported object usage selection: ${id}`);
   for (const id of config.links) if (!compiled.input.links.some((l) => l.id === id)) throw Error(`Unknown directed-link usage selection: ${id}`);
-  const journal = usageJournal(config, hasher), runtime = createProductModel2(compiled, journal.observer);
+  const journal = usageJournal(config, hasher), runtime = createProductModel2(compiled, journal.observer, causal);
   function evidence() {
     const model = runtime.evidence();
     let usage = journal.capture(model.at, model.capture.failure);
@@ -22,8 +23,8 @@ function meteredRuntime(compiled: CompiledProduct, config: MeteringConfig, expec
   }
   return { horizon: runtime.horizon, advanceTo: runtime.advanceTo, evidence, frame() { return journal.frame(evidence().usage); } };
 }
-export function createMeteredProductModel2(compiled: CompiledProduct, config: MeteringConfig, hasher: ContentHasher) {
-  return meteredRuntime(compiled, config, digest(compiled, hasher), hasher);
+export function createMeteredProductModel2(compiled: CompiledProduct, config: MeteringConfig, hasher: ContentHasher, causal?: CausalObserver) {
+  return meteredRuntime(compiled, config, digest(compiled, hasher), hasher, causal);
 }
 export function createMeteredProviderModel2(compiled: ProviderProduct, config: MeteringConfig, hasher: ContentHasher) {
   const { fingerprint, ...payload } = compiled;

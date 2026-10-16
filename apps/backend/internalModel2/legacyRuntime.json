@@ -1,0 +1,2216 @@
+{
+  "schema": "infraforge-connected-v1-lineage/1",
+  "baseline": "7e24ac77a868c9cec9e76141d29a156115238e91",
+  "source": "bac35c995b5e5d59a9ce901745c014644fdb843183adbcbb761fb99184c11306",
+  "runtime": "bun-1.3.14",
+  "original": [
+    {
+      "path": "apps/backend/internalModel2/authoring.ts",
+      "hash": "fbf3e20b5c82cb9460e087aca74b39f10c1efa5e210b3ae3593beab922067e00"
+    },
+    {
+      "path": "apps/backend/internalModel2/budgets.ts",
+      "hash": "b178baa68e3e01956674aa20a6f89d1028c78a0e2bba5402e0a2521fa569ee3b"
+    },
+    {
+      "path": "apps/backend/internalModel2/capture.ts",
+      "hash": "5c73cf036d847a5ecbea3c876f3384510c72c59cdbdf7e8cec73258d43469c6e",
+      "text": "import { boundedProduct, createMeteredProductModel2, presentModel2 } from \"@infraforge/simulation/internal-product\";\nimport type { ProductEvidence } from \"@infraforge/simulation/internal-product\";\nimport { hasher, contentHash } from \"./identity\";\nimport type { ExecutionEnvelope } from \"./envelope\";\nimport { INTERNAL_LIMITS as limits, jsonBytes } from \"./budgets\";\nexport const instantiate = (envelope: ExecutionEnvelope) => createMeteredProductModel2(envelope.compiled, envelope.metering, hasher);\nfunction checkpoint(model: ProductEvidence) { return { atUs: model.at, endpoints: model.network.endpoints, counts: model.counts,\n  objects: model.asynchronous.objects.map((s) => ({ id: s.id, bytes: s.storedBytes, generation: s.generation, objects: s.objects.length })) }; }\nexport type CaptureCheckpoint = ReturnType<typeof checkpoint>;\nexport function capture(runtime: ReturnType<typeof instantiate>, envelope: ExecutionEnvelope, sequence: number, history: CaptureCheckpoint[] = []) {\n  const { model } = runtime.evidence(), frame = runtime.frame();\n  if (sequence !== history.length + 1 || sequence > limits.captures) throw Error(\"Capture history sequence/budget mismatch\");\n  const body = { schema: \"infraforge-internal-evidence/1\" as const, input: envelope.fingerprint, source: envelope.source, sequence, throughUs: model.at,\n    checkpoints: [...history, checkpoint(model)],\n    model: { capture: model.capture, counts: model.counts, resources: model.resources.map((r) => ({ id: r.id, received: r.received, completed: r.completed, rejected: r.rejected, failed: r.failed, cancelled: r.cancelled, queued: r.queued, consumedCoreUs: r.consumedCoreUs })),\n      objects: model.asynchronous.objects, commands: model.systems.commands, endpoints: model.network.endpoints, faults: model.faults,\n      networkInterventions: model.network.trace.events.filter((r) => r.kind === \"network-intervention\"), networkTraceOmitted: model.network.trace.omitted },\n    presentation: presentModel2(model), usage: frame };\n  const value = { ...body, fingerprint: contentHash(body) }; jsonBytes(value, limits.evidenceBytes); return value;\n}\nexport type StoredCapture = ReturnType<typeof capture>;\nexport function readCapture(value: unknown, input: string): StoredCapture {\n  boundedProduct(value); jsonBytes(value, limits.evidenceBytes);\n  const e = value as StoredCapture, { fingerprint, ...body } = e;\n  if (e.schema !== \"infraforge-internal-evidence/1\" || contentHash(body) !== fingerprint || e.input !== input) throw Error(\"Stored evidence is missing, corrupt or incompatible\");\n  if (!Number.isSafeInteger(e.sequence) || e.sequence < 1 || e.sequence > limits.captures || !Array.isArray(e.checkpoints) || e.checkpoints.length !== e.sequence || e.checkpoints.at(-1)?.atUs !== e.throughUs || e.usage.snapshot.atUs !== e.throughUs) throw Error(\"Stored evidence checkpoint sequence or time gap\");\n  return e;\n}\n"
+    },
+    {
+      "path": "apps/backend/internalModel2/dockerConnection.ts",
+      "hash": "a7b881e940757e84c841aa120e8334bba0a470eeb607c233ebd4d1e9d2801edd"
+    },
+    {
+      "path": "apps/backend/internalModel2/dockerEndpoint.ts",
+      "hash": "3557be29b4f444b2751846ab5eed4028e0b24e932828ad9d9b6ce750a86926fe"
+    },
+    {
+      "path": "apps/backend/internalModel2/dockerSocket.ts",
+      "hash": "95bc132a8499df43041cda44cc7995294c6d9a915586c763cb23e928c4928b5a"
+    },
+    {
+      "path": "apps/backend/internalModel2/envelope.ts",
+      "hash": "aa4de69e4d1a6f091160c2b0be94a85330d79d1c2940b220a2be900dd0fa8e05",
+      "text": "import { z } from \"zod\";\nimport { boundedProduct, compileProduct, canonical, requireKnown } from \"@infraforge/simulation/internal-product\";\nimport type { ProductContract, SavedProductDesign, CompiledProduct, MeteringConfig, Diagnostic } from \"@infraforge/simulation/internal-product\";\nimport { LayoutSchema } from \"../zod_schemas/layout.schema\";\nimport { WorkloadProfileSchema } from \"../zod_schemas/deployment.schema\";\nimport { contentHash, executionSource } from \"./identity\";\nimport { INTERNAL_LIMITS as limits, jsonBytes } from \"./budgets\";\n\nexport const admissionSchema = z.object({ infrastructureId: z.uuid(), idempotencyKey: z.string().regex(/^[A-Za-z0-9_-]{1,80}$/),\n  expectedDesignUpdatedAt: z.iso.datetime(), workload: WorkloadProfileSchema.extend({ readWriteRatio: z.number().min(0).max(1) }).strict(), contract: z.unknown() }).strict();\nexport class CompilationRefusal extends Error { constructor(readonly diagnostics: Diagnostic[]) { super(\"Internal Model-2 contract refused\"); } }\nexport interface ExecutionEnvelope {\n  schema: \"infraforge-internal-execution/1\"; runId: string; ownerId: string; infrastructureId: string; designUpdatedAt: string;\n  source: string; design: SavedProductDesign; contract: ProductContract; compiled: CompiledProduct; compiledHash: string; metering: MeteringConfig; fingerprint: string;\n}\nfunction refusal(code: string, path: string, message: string): never { throw new CompilationRefusal([{ code, path, message, severity: \"error\" }]); }\nexport function compileEnvelope(runId: string, ownerId: string, layout: unknown, updatedAt: Date, request: z.infer<typeof admissionSchema>): ExecutionEnvelope {\n  try { boundedProduct(request); jsonBytes(request, limits.requestBytes); }\n  catch (error) { refusal(\"INPUT_BUDGET\", \"contract\", error instanceof Error ? error.message : \"Input budget exceeded\"); }\n  try { boundedProduct(layout); jsonBytes(layout, limits.requestBytes); }\n  catch { refusal(\"SAVED_DESIGN_BUDGET\", \"design\", \"Saved layout exceeds the internal structural/text/byte budget\"); }\n  // JSONB does not preserve object-key order. Compile the canonical authored\n  // contract so provenance traversal reconstructs identically after persistence.\n  const parsed = LayoutSchema.safeParse(layout);\n  if (!parsed.success) refusal(\"SAVED_DESIGN_INVALID\", \"design\", \"Saved infrastructure layout is invalid\");\n  const saved = parsed.data, contract = canonical(request.contract) as ProductContract;\n  if (!contract || typeof contract !== \"object\") refusal(\"CONTRACT_REQUIRED\", \"contract\", \"Supply a complete versioned application/infrastructure contract\");\n  if (contract.capabilities?.length) refusal(\"PROVIDER_SCOPE\", \"contract.capabilities\", \"Provider capability/price bindings are excluded from this authored internal slice\");\n  const objectNode = saved.resources.find((r) => r.type === \"Object Storage\"), objectConfig = objectNode && contract.nodes?.[objectNode.id]?.resources?.[0]?.config;\n  if (objectConfig?.kind === \"object-store\" && objectConfig.capacity === undefined) refusal(\"CAPACITY_REQUIRED\", \"contract.nodes\", \"Object storage requires an explicit authored byte capacity\");\n  const design: SavedProductDesign = { schema: \"infraforge-saved-design/1\", resources: saved.resources, connections: saved.connectionLines, workload: request.workload };\n  if (design.resources.length !== 2 || design.resources.filter((r) => r.type === \"Virtual Machine\").length !== 1 || design.resources.filter((r) => r.type === \"Object Storage\").length !== 1)\n    refusal(\"INTERNAL_SCOPE\", \"resources\", \"This internal slice requires exactly one Virtual Machine and one Object Storage node; other resource compositions are refused\");\n  for (const r of design.resources) if ([\"skuId\", \"size\", \"region\", \"public\", \"encryption\", \"openPorts\", \"autoscaling\"].some((key) => key in r)) refusal(\"UNSUPPORTED_CONTROL\", `resources.${r.id}`, \"SKU, region, legacy security, size and autoscaling controls are outside this internal scope; supply explicit authored resource/listener contracts\");\n  if (!contract.limits || contract.limits.maxEvents > limits.events || contract.limits.maxRequests > limits.requests || contract.limits.maxSamples > limits.samples || contract.limits.maxRawResults > limits.requests || contract.limits.maxTraceRows > limits.requests)\n    refusal(\"EXECUTION_BUDGET\", \"contract.limits\", \"Explicit bounded limits are required: events ≤10000, requests/raw/trace ≤256, samples ≤64\");\n  if (!Array.isArray(contract.commands) || contract.commands.length > limits.commands || !Array.isArray(contract.faults) || contract.faults.length > 1 || contract.faults.some((f) => f.kind !== \"Crash\" || f.profile !== \"retain-logical-state/1\" || !design.resources.some((r) => r.id === f.target && r.type === \"Object Storage\")))\n    refusal(\"SCHEDULE_SCOPE\", \"contract\", \"At most 16 recorded commands and one retained-logical-object crash are supported; other faults are refused\");\n  const compiled = compileProduct(design, contract);\n  if (!compiled.ok) throw new CompilationRefusal(compiled.diagnostics);\n  const horizon = requireKnown(contract.horizon, \"us\");\n  if (horizon > limits.horizonUs || compiled.value.input.resources.length !== 2 || compiled.value.pools.length || compiled.value.input.paths.length > 4 || compiled.value.input.links.length > 8)\n    refusal(\"MATERIALIZED_SCOPE\", \"compiled\", \"Bounded two-station internal execution required; horizon ≤1000000 us, no pool/auxiliary expansion\");\n  const vm = design.resources.find((r) => r.type === \"Virtual Machine\")!, objects = design.resources.find((r) => r.type === \"Object Storage\")!;\n  if (compiled.value.input.operations.some((o) => o.entry !== vm.id) || compiled.value.input.resources.some((r) => r.kind === \"compute\" && r.downstream) || compiled.value.input.systems.commands.some((c) => c.source !== vm.id || c.target !== objects.id))\n    refusal(\"APPLICATION_SCOPE\", \"contract\", \"This slice runs standalone VM application CPU and separate recorded VM-to-object commands; other application mappings are refused\");\n  const compiledHash = contentHash(compiled.value);\n  const metering: MeteringConfig = { schema: \"infraforge-usage-metering/1\", run: runId, epoch: \"execution-1\", inputFingerprint: compiledHash,\n    provenance: [\"Internal product run: actual modeled commands, current objects and directed payload; no physical/cloud billing claim\"],\n    objects: compiled.value.input.resources.filter((r) => r.kind === \"object-store\").map((r) => r.id), links: compiled.value.input.links.map((l) => l.id),\n    maxRecords: limits.records, maxFields: limits.fields, maxTextCharacters: limits.textCharacters };\n  const body = { schema: \"infraforge-internal-execution/1\" as const, runId, ownerId, infrastructureId: request.infrastructureId, designUpdatedAt: updatedAt.toISOString(), source: executionSource, design, contract, compiled: compiled.value, compiledHash, metering };\n  const envelope = canonical({ ...body, fingerprint: contentHash(body) }); captureCuts(envelope);\n  try { jsonBytes(envelope, limits.inputBytes); } catch { refusal(\"PERSISTENCE_BUDGET\", \"envelope\", \"Compiled execution envelope exceeds the internal persistence budget\"); }\n  return envelope;\n}\nexport function readEnvelope(value: unknown, expected: string, compatible = true): ExecutionEnvelope {\n  boundedProduct(value); jsonBytes(value, limits.inputBytes);\n  const envelope = canonical(value) as ExecutionEnvelope, { fingerprint, ...body } = envelope;\n  if (fingerprint !== expected || contentHash(body) !== fingerprint) throw Error(\"Recorded input content is missing or corrupt\");\n  if (envelope.schema !== \"infraforge-internal-execution/1\") throw Error(\"Unsupported historical input version; no reinterpretation\");\n  if (compatible && envelope.source !== executionSource) throw Error(\"Historical execution source is incompatible with this runtime\");\n  if (compatible) {\n    const current = compileProduct(envelope.design, envelope.contract);\n    if (!current.ok || contentHash(current.value) !== envelope.compiledHash || contentHash(envelope.compiled) !== envelope.compiledHash) throw Error(\"Historical compilation is incompatible or corrupt\");\n  }\n  return envelope;\n}\nexport function captureCuts(envelope: ExecutionEnvelope) {\n  const horizon = requireKnown(envelope.contract.horizon, \"us\"), cuts = new Set([0, horizon]);\n  for (let i = 1; i < 16; i++) cuts.add(Math.ceil(horizon * i / 16));\n  for (const f of envelope.contract.faults) { const at = requireKnown(f.at, \"us\"), end = at + requireKnown(f.duration, \"us\"); cuts.add(at); cuts.add(end); cuts.add(end + requireKnown(f.restart!, \"us\")); }\n  const ordered = [...cuts].filter((at) => at <= horizon).sort((a, b) => a - b);\n  if (ordered.length > limits.captures) throw Error(\"Capture budget exceeded\"); return ordered;\n}\n"
+    },
+    {
+      "path": "apps/backend/internalModel2/execution.ts",
+      "hash": "13fbf196065987d41f56c4b65eee9ded0dcf2cddeb39fdb43dd1e1c1337576ff"
+    },
+    {
+      "path": "apps/backend/internalModel2/identity.ts",
+      "hash": "bdb1a778381cd24b275b5d2d3b744c351d7e1d5f9022679ec85096aee140e109",
+      "text": "import { createHash } from \"node:crypto\";\nimport { readdirSync, readFileSync } from \"node:fs\";\nimport { relative, resolve } from \"node:path\";\nimport { canonical } from \"@infraforge/simulation/internal-product\";\nexport const hasher = { algorithm: \"sha256-utf8/1\" as const, hash: (text: string) => createHash(\"sha256\").update(text).digest(\"hex\") };\nexport const contentHash = (value: unknown) => hasher.hash(JSON.stringify(canonical(value)));\nconst root = resolve(import.meta.dir, \"../../..\");\nfunction sourceIdentity() {\n  const walk = (dir: string): string[] => readdirSync(dir, { withFileTypes: true }).flatMap((e) => e.isDirectory() ? walk(resolve(dir, e.name)) : e.name.endsWith(\".ts\") ? [resolve(dir, e.name)] : []);\n  const folders = [\"packages/simulation/src/model2\", \"packages/simulation/src/reality\", \"packages/domain/src\", \"packages/catalog/src\"];\n  const paths = [...folders.flatMap((p) => walk(resolve(root, p))), ...[\"packages/simulation/src/internalProduct.ts\", ...[\"identity\", \"envelope\", \"budgets\", \"capture\"].map((p) => `apps/backend/internalModel2/${p}.ts`)].map((p) => resolve(root, p))]\n    .map((p) => relative(root, p).replaceAll(\"\\\\\", \"/\")).sort();\n  const files = [...paths, \"bun.lock\", \"apps/backend/zod_schemas/layout.schema.ts\", \"apps/backend/zod_schemas/deployment.schema.ts\"].sort();\n  return contentHash({ runtime: `bun-${Bun.version}`, files: files.map((p) => [p, readFileSync(resolve(root, p), \"utf8\").replaceAll(\"\\r\\n\", \"\\n\")]) });\n}\n// Frozen with this process/image; changing execution source requires a new process.\nexport const executionSource = sourceIdentity();\n"
+    },
+    {
+      "path": "apps/backend/internalModel2/lessonAuthoring.ts",
+      "hash": "a294d8b97411810edcf09c95d8b7488381503d452aca26fc89b464a98f08d59e"
+    },
+    {
+      "path": "apps/backend/internalModel2/lessonExecution.ts",
+      "hash": "1dd0042dae7965f06cb5700546799ca4bc977e7e67b66713bf02b21172420a0a"
+    },
+    {
+      "path": "apps/backend/internalModel2/lessonLimits.ts",
+      "hash": "3573c50ba67fce80c8161543518a95be642088e3733e581aaa6cf7319958bfe8"
+    },
+    {
+      "path": "apps/backend/internalModel2/lessonPolicy.ts",
+      "hash": "cd1418b2c9c23e31777b6b0cd5506251aac4bf9ce1b7ea52a34386719bf5a5f5"
+    },
+    {
+      "path": "apps/backend/internalModel2/lessonRoutes.ts",
+      "hash": "b42e03dce5f964471d70e56a2fd6f2ac2f5a67f7dca957dd180c48d6d3811503"
+    },
+    {
+      "path": "apps/backend/internalModel2/lessonStore.ts",
+      "hash": "274acae1964be3f882de6b09f6ea9b4b196deaf3c3a8a3ba2d24b442da636ea4"
+    },
+    {
+      "path": "apps/backend/internalModel2/lessonSummary.ts",
+      "hash": "8057ff65daf0073bc0814298343ac23769dffd1959b3e0c832813339b00a6d79",
+      "text": "import type { LessonSummary } from \"@infraforge/contracts/internal-lessons\";\nimport { phases } from \"@infraforge/contracts/internal-lessons\";\nimport { readLessonPolicy } from \"./lessonPolicy\";\nimport { readEnvelope } from \"./envelope\";\nimport { readCapture } from \"./capture\";\nimport type { InternalRunRow } from \"./store\";\nexport function lessonSummary(row: InternalRunRow, policy: unknown, receipt: unknown): LessonSummary {\n  const summary: LessonSummary = { profile: \"Unknown\", phase: \"Unknown\", kind: \"Unknown\", readOutcome: \"Unknown\", returnedBytes: null,\n    explanation: \"No compatible recorded read result is available. Missing work is not zero.\",\n    limits: [\"Authored software scenario; physical durability, security, reliability, latency and price remain Unknown.\", \"Retained logical object state is an explicit teaching assumption.\"] };\n  try {\n    const p = readLessonPolicy(policy, row.inputHash); summary.profile = p.schema; summary.phase = phases[p.phase].label;\n    const input = readEnvelope(row.input, row.inputHash, false), capture = readCapture(row.evidence, row.inputHash);\n    if (capture.source !== input.source || capture.sequence !== row.sequence || capture.throughUs !== row.throughUs) throw Error(\"Capture metadata mismatch\");\n    const read = capture.model.commands.results.find((result) => result.id === \"command-2\");\n    if (!read) return summary;\n    summary.kind = \"Observed\"; summary.readOutcome = read.outcome;\n    const reply = read.reply as { ok?: boolean; object?: { bytes?: number } } | null;\n    summary.returnedBytes = typeof reply?.object?.bytes === \"number\" ? reply.object.bytes : null;\n    summary.explanation = `Recorded read command: ${read.outcome} at ${read.at} modeled us. ${row.status === \"completed\" ? \"The modeled horizon completed.\" : \"This is a retained prefix; the lesson is incomplete.\"} Inspect the command reply and checkpoint history below.`;\n    if (!receipt) summary.limits.push(\"Containment receipt is unavailable; isolation enforcement is Unknown.\");\n    return summary;\n  } catch { return summary; }\n}\n"
+    },
+    {
+      "path": "apps/backend/internalModel2/queue.ts",
+      "hash": "2da5d4496790997de5c9d711f08c3748b8756934d19e6260c7e1f9bc60d45e7d"
+    },
+    {
+      "path": "apps/backend/internalModel2/report.ts",
+      "hash": "8a873e7f534fad32779f941d20527ddd24ade153624ab629ac0a983d88397e75",
+      "text": "import { executionSource } from \"./identity\";\nimport { readEnvelope, captureCuts } from \"./envelope\";\nimport { readCapture, instantiate, capture } from \"./capture\";\nimport type { InternalRunRow } from \"./store\";\nfunction recordedCapture(row: InternalRunRow, source: string | null) {\n  const evidence = readCapture(row.evidence, row.inputHash);\n  if (evidence.sequence !== row.sequence || evidence.throughUs !== row.throughUs || source !== null && evidence.source !== source) throw Error(\"Stored evidence metadata gap or source mismatch\");\n  return evidence;\n}\nexport function internalReport(row: InternalRunRow) {\n  let inputValid = false, evidence: ReturnType<typeof readCapture> | null = null;\n  const unknown = [\"Physical throughput/cloud timing/durability and full pricing are Unknown. This INTERNAL authored simulation is not a production-ready cloud model.\"], problems: string[] = [];\n  try { readEnvelope(row.input, row.inputHash, false); inputValid = true; } catch (e) { problems.push(e instanceof Error ? e.message : \"Input unavailable\"); }\n  if (row.evidence !== null) { try {\n    evidence = recordedCapture(row, inputValid ? readEnvelope(row.input, row.inputHash, false).source : null);\n  } catch (e) { problems.push(e instanceof Error ? e.message : \"Evidence unavailable\"); } }\n  else problems.push(\"No durable execution capture is available\");\n  const source = evidence?.source ?? (inputValid ? readEnvelope(row.input, row.inputHash, false).source : null);\n  if (row.status !== \"completed\") unknown.push(\"This is a retained prefix, not proof of a complete execution. Missing time/work is not zero.\");\n  if (evidence && !evidence.usage.snapshot.complete) unknown.push(...evidence.usage.snapshot.reasons);\n  const values = inputValid && evidence ? evidence.presentation.values : {};\n  return { schema: \"infraforge-internal-report/1\", internal: true, model: \"2\", id: row.id, status: row.status, reason: row.reason,\n    inputHash: row.inputHash, source, sequence: row.sequence, throughUs: row.throughUs, inputValid, problems,\n    replay: { compatible: inputValid && evidence !== null && source === executionSource, reason: !inputValid ? \"Recorded input is unavailable/corrupt/incompatible\" : !evidence ? \"No valid durable capture is available to replay\" : source !== executionSource ? \"Execution source differs; historical evidence is read without reinterpretation\" : \"Read-only deterministic prefix replay is available\" },\n    observed: Object.entries(values).filter(([, v]) => v.kind === \"Observed\"), interpreted: Object.entries(values).filter(([, v]) => v.kind === \"Interpreted\"),\n    unknown: [...unknown, ...Object.entries(values).filter(([, v]) => v.kind === \"Unknown\").map(([key, v]) => `${key}: ${v.kind === \"Unknown\" ? v.reason : \"Unknown\"}`)],\n    state: inputValid && evidence ? evidence.model : null,\n    checkpoints: inputValid && evidence ? evidence.checkpoints : [],\n    usage: inputValid && evidence ? { kind: evidence.usage.snapshot.complete ? \"Observed\" : \"Unknown\", complete: evidence.usage.snapshot.complete, measurements: evidence.usage.snapshot.complete ? evidence.usage.snapshot.measurements : [], reasons: evidence.usage.snapshot.reasons, provenance: evidence.usage.config.provenance, providerBilling: \"Unknown\" } : null };\n}\nexport function replayStored(row: InternalRunRow) {\n  const envelope = readEnvelope(row.input, row.inputHash), expected = recordedCapture(row, envelope.source), runtime = instantiate(envelope);\n  let actual: ReturnType<typeof capture> | undefined;\n  for (const at of captureCuts(envelope).slice(0, expected.sequence)) {\n    try { runtime.advanceTo(at); } catch { /* Capture the same deterministic failure, if this prefix contains one. */ }\n    actual = capture(runtime, envelope, (actual?.sequence ?? 0) + 1, actual?.checkpoints ?? []);\n  }\n  if (!actual) throw Error(\"No durable prefix is available\");\n  return { kind: actual.fingerprint === expected.fingerprint ? \"MatchesRecordedPrefix\" : \"Mismatch\", input: envelope.fingerprint,\n    expected: expected.fingerprint, actual: actual.fingerprint, throughUs: actual.throughUs,\n    complete: row.status === \"completed\" && actual.model.capture.reachedHorizon && actual.usage.snapshot.complete,\n    mutation: \"None; replay writes no product state\" };\n}\nconst escape = (value: unknown) => String(value).replace(/[&<>\"']/g, (c) => ({ \"&\": \"&amp;\", \"<\": \"&lt;\", \">\": \"&gt;\", '\"': \"&quot;\", \"'\": \"&#39;\" })[c]!);\nexport function reportHtml(report: ReturnType<typeof internalReport>) {\n  const section = (title: string, value: unknown) => `<section><h2>${title}</h2><pre>${escape(JSON.stringify(value, null, 2))}</pre></section>`;\n  return `<!doctype html><html lang=\"en\"><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width\"><title>Internal Model-2 report</title><style>body{max-width:76rem;margin:2rem auto;padding:0 1rem;font:16px/1.5 system-ui;background:#111827;color:#e5e7eb}h1,h2{color:#fff}pre{white-space:pre-wrap;overflow-wrap:anywhere;padding:1rem;background:#1f2937;border-radius:.5rem}section{margin:2rem 0}</style><h1>Internal Model-2 report</h1><p>Model 1 ACTIVE · Model 2 INTERNAL · production PARKED</p><p>${escape(report.id)} · ${escape(report.status)} · retained through ${escape(report.throughUs)} us</p>${section(\"Recorded identity and compatibility\", { input: report.inputHash, source: report.source, replay: report.replay, reason: report.reason, problems: report.problems })}${section(\"Observed modeled facts\", report.observed)}${section(\"Interpreted\", report.interpreted)}${section(\"Unknown and limits\", report.unknown)}${section(\"Retained service and infrastructure state\", { latest: report.state, checkpoints: report.checkpoints })}${section(\"Usage evidence\", report.usage)}</html>`;\n}\n"
+    },
+    {
+      "path": "apps/backend/internalModel2/routes.ts",
+      "hash": "8247de5ac2924d5634548819c517415b9cd1db428ebafbafa894273172572466"
+    },
+    {
+      "path": "apps/backend/internalModel2/sandboxChild.ts",
+      "hash": "cd574b49efd2a476a14c77ea031ba52a45a8f1f108ef29b482cf47ed48f2b352"
+    },
+    {
+      "path": "apps/backend/internalModel2/sandboxDocker.ts",
+      "hash": "c5fbbe8bc9540e434a209301161373e28ea0354ceb3484a1e579d6714cbdd847"
+    },
+    {
+      "path": "apps/backend/internalModel2/sandboxHandshake.ts",
+      "hash": "4c981641e6a3b56f5be84b4b024744d532e6a955de06990307e100b647676bc8"
+    },
+    {
+      "path": "apps/backend/internalModel2/sandboxRunner.ts",
+      "hash": "97a6ea01262ac650e939747883a3b6987eea7b42e1598a3f6ac7fcb1de52a7b2"
+    },
+    {
+      "path": "apps/backend/internalModel2/store.ts",
+      "hash": "e677a061dafd075295d24cb2c0c08ec241c3cc41ceb066c26067b4f986351a26"
+    },
+    {
+      "path": "apps/backend/internalModel2/worker.ts",
+      "hash": "d29a8f70a69b50a7fa46ef1b661a0e43a6dfa7ed65c5e7a93a9ab15a6308b5c1"
+    },
+    {
+      "path": "apps/backend/internalModel2/workspace.ts",
+      "hash": "3b65a3c8d23629753130084be010d917cc82941319b2ad70180d8bfe7462cf4f"
+    },
+    {
+      "path": "apps/backend/zod_schemas/deployment.schema.ts",
+      "hash": "0f2bca50915ed95a8192506bad69e1bca1a8cc93eb3b30b4fdb1aadc7917cb34"
+    },
+    {
+      "path": "apps/backend/zod_schemas/layout.schema.ts",
+      "hash": "7184c880769ae9aad58372dae2e9116bfb8aad39181bd6971f989b998902d2d6"
+    },
+    {
+      "path": "bun.lock",
+      "hash": "cb78121dfe4adc548b069d56500109c870feb859c273be5506a6edf3ad7fdca7"
+    },
+    {
+      "path": "docs/reality/m2i-ec2-source.json",
+      "hash": "3c312582e509b42701b9bcddec6f6fdcaab4b5cc4088a599b905a8258ab864bf"
+    },
+    {
+      "path": "docs/reality/m2i-heldout-billing.json",
+      "hash": "0a448f0c8cd8126f7aae43b6cdaac5faa12f5cee1d7d33432af396a095ba5149"
+    },
+    {
+      "path": "docs/reality/m2i-source-reviews.json",
+      "hash": "493870b3138aa0c1790acc97cc1f3344d036287eac04ea2e9ff391b9967e50ee"
+    },
+    {
+      "path": "docs/reality/m2j-source-lineage.json",
+      "hash": "42af64a52c51688d8c6cd5896cdde4b498e53f270e39c3d0238148ccb8afe62e"
+    },
+    {
+      "path": "packages/catalog/src/aws.catalog.ts",
+      "hash": "e7d1aae5aa2f5013a7dbdbe8bee1149657b67f5244d5d2744474847bf03e5aa3"
+    },
+    {
+      "path": "packages/catalog/src/catalog.types.ts",
+      "hash": "013af33453912c091c887ca9fa0e961fdf2afebdebcc5368733ae6227e1cf82e"
+    },
+    {
+      "path": "packages/catalog/src/digitalocean.catalog.ts",
+      "hash": "af2f9c0431ad7190ec10d8f92f427c187f359e9393bd2866515b3a13c4155c48"
+    },
+    {
+      "path": "packages/catalog/src/index.ts",
+      "hash": "02225be26fa7e3b849a468e5d9d2ada0afc90fa07878869fa2047cf598a2adca"
+    },
+    {
+      "path": "packages/domain/src/examples/SAMPLE_ARCHITECTURE.constants.ts",
+      "hash": "66aa9531f4fecbc5d22e253bd19ed614a6441e6bf0f1b1ee388db9dda8e32dbd"
+    },
+    {
+      "path": "packages/domain/src/examples/index.ts",
+      "hash": "083a236667c5c3ba2fc0d6953ec5bdf1a0909019867ea2f8b7993f5d69cffa84"
+    },
+    {
+      "path": "packages/domain/src/resource/AutoscalingPolicy.interface.ts",
+      "hash": "c4940418804d1762c7f953142ea5f0847933dbfed5c374e699742965e64b9913"
+    },
+    {
+      "path": "packages/domain/src/resource/ChaosType.types.ts",
+      "hash": "ac94ca1910afb96cc477e444603d6acf806f1709f370b3085664e8d2cb6fc3cb"
+    },
+    {
+      "path": "packages/domain/src/resource/ConnectionLine.interface.ts",
+      "hash": "cdb4cf65ead1aae5ef14ae33e8ba3c03df86c4489ed96e5e9a9a7d1247f46094"
+    },
+    {
+      "path": "packages/domain/src/resource/DeploymentChaosNames.enum.ts",
+      "hash": "5cf7aff085a4f5741681fbeb124e5af88ba2acdca6232a0eec347f0e983e99fe"
+    },
+    {
+      "path": "packages/domain/src/resource/RESOURCE_PORTS.constants.ts",
+      "hash": "b9f6359bd3c1689a2d24ea4668a4897815fc603ec20262c4cd7853c119eb8451"
+    },
+    {
+      "path": "packages/domain/src/resource/RESOURCE_TYPES.constants.ts",
+      "hash": "2f1f7b0f314861d8c81989a6b8f52dd65382258ae65ca34e02b2a3fe963a3889"
+    },
+    {
+      "path": "packages/domain/src/resource/Resource.interface.ts",
+      "hash": "57750b61401dd314a45ce8b5243920936ff46f3a91d6af0b483e8fa5c8dbad4b"
+    },
+    {
+      "path": "packages/domain/src/resource/ResourceHealth.enum.ts",
+      "hash": "91c817e4b9b0622bcf3f3019e236cc3e76bc8a530a883ca5cfe4e5480c684bda"
+    },
+    {
+      "path": "packages/domain/src/resource/index.ts",
+      "hash": "37cac2597b6f17fcd1ec756c6088e347b23b1c9d4968b5ac2ec24bd49bb92b00"
+    },
+    {
+      "path": "packages/domain/src/resource/legacy/ResourceState.enum.ts",
+      "hash": "59a37dd676b0741a26de708f6e8bf00245221d7abc45d4d50f2699a2b7fdfce4"
+    },
+    {
+      "path": "packages/domain/src/topology/CONNECTION_RULES.constants.ts",
+      "hash": "4e762f11d51ee3fb019a64c52cad61bdc937438811079eb513b61e2f61e6e55e"
+    },
+    {
+      "path": "packages/domain/src/topology/computeTopology.ts",
+      "hash": "3e80c2ad1271391b8fb1abe4e7c29b4a1e01583c4bbef692e2c3123759798862"
+    },
+    {
+      "path": "packages/domain/src/topology/index.ts",
+      "hash": "764649fab2349e6dc9260aec97e592d5c2305b8d49497f341bd7aa3bd1375cf0"
+    },
+    {
+      "path": "packages/domain/src/validation/index.ts",
+      "hash": "a3b57dce76dd7734feb3f7d1bffc2d5a8544bd8c2ce2ccd8949b16982eb00ab3"
+    },
+    {
+      "path": "packages/domain/src/validation/infrastructureName.ts",
+      "hash": "f2cb762ea2a6d900a64cec5cb305173b1d09c084ff0af85de4e7ce9550942203"
+    },
+    {
+      "path": "packages/domain/src/validation/validateDeploymentReadiness.validation.ts",
+      "hash": "74a059dc480be9adf81d00853405545870cc1275f3a55af13b11517b9c5f9af3"
+    },
+    {
+      "path": "packages/domain/src/workload/DEFAULT_WORKLOAD_PROFILE.constants.ts",
+      "hash": "c413722d1b0ab823cc3ebfd6ad991b61ddc623ae61702978ac1ed62f29554dbb"
+    },
+    {
+      "path": "packages/domain/src/workload/WorkloadProfile.interface.ts",
+      "hash": "3d9e4c044ab2772ef4daa30cf4da47299541454846322e276a73d44925ffd13c"
+    },
+    {
+      "path": "packages/domain/src/workload/index.ts",
+      "hash": "56e263320ea3af3d2ad69c38b118d250de1f475da93c7beec828599a1e6aefa6"
+    },
+    {
+      "path": "packages/domain/src/workload/resolveWorkload.ts",
+      "hash": "a61ea34364140fb88ceb568c882b284bdb232853cca5e0077223ee7a7dc05c9e"
+    },
+    {
+      "path": "packages/simulation/src/internalProduct.ts",
+      "hash": "8a647c2a3c9d2e723013ce1988a1189fbcf37e753a2603a93104a90bb6850efc",
+      "text": "// Explicit internal bridge; the published Model-1 engine entry point is unchanged.\nexport { compileProduct } from \"./model2/product/compiler\";\nexport { boundedProduct } from \"./model2/product/bounds\";\nexport { canonical } from \"./model2/product/provenance\";\nexport { presentModel2 } from \"./model2/product/presentation\";\nexport { createMeteredProductModel2 } from \"./reality/metering/run\";\nexport { replayUsage } from \"./reality/metering/replay\";\nexport { usageWindow } from \"./reality/metering/windows\";\nexport { digest } from \"./reality/provider/fingerprint\";\nexport { requireKnown } from \"./reality/quantity\";\nexport type { ContentHasher } from \"./reality/provider/fingerprint\";\nexport type { ProductContract, SavedProductDesign, CompiledProduct, Diagnostic } from \"./model2/product/contracts\";\nexport type { ProductEvidence } from \"./model2/product/presentation\";\nexport type { MeteringConfig } from \"./reality/metering/contracts\";\nexport type { UsageFrame } from \"./reality/metering/measurements\";\nexport type { Quantity, Unit } from \"./reality/quantity\";\n"
+    },
+    {
+      "path": "packages/simulation/src/model2/async/broker.ts",
+      "hash": "2bdfb66625a8f10c36cb79a2f96b95d79b1b35529f682842647dd306b8194f86"
+    },
+    {
+      "path": "packages/simulation/src/model2/async/client.ts",
+      "hash": "22dd4ceccefa75d2e456df0b41d401048620e554d54eb4a1301b9294b4d87944"
+    },
+    {
+      "path": "packages/simulation/src/model2/async/commands.ts",
+      "hash": "f903f1f33855898911358cedace678fa3fcf4e19b98c8a9912aa4c4797ab7a2f"
+    },
+    {
+      "path": "packages/simulation/src/model2/async/contracts.ts",
+      "hash": "62719aba911e81d1b7a22f7a3d9a6518c11c131bfc61a4c3e4a8e7854093d977"
+    },
+    {
+      "path": "packages/simulation/src/model2/async/objects.ts",
+      "hash": "27b0fb3ca22de983af3b9d14191eb5d28686308e3a7db300634510d532cc48d1"
+    },
+    {
+      "path": "packages/simulation/src/model2/async/policy.ts",
+      "hash": "1c5f8b90787d1d66c148d10fd237fa9000607c3650c46b81b96eea52611bde90"
+    },
+    {
+      "path": "packages/simulation/src/model2/async/publisher.ts",
+      "hash": "8449dcb2528911067deb9b35cf165b3a1ae043957c0e40a71bc51d2422ccf979"
+    },
+    {
+      "path": "packages/simulation/src/model2/async/run.ts",
+      "hash": "ccd71da89de47fd24ada5b6bcab3eea5a2beb903384171f08736b0c2b076c482"
+    },
+    {
+      "path": "packages/simulation/src/model2/async/validate.ts",
+      "hash": "8b84f609883804720f2843e338c3626f0a40ce41e5c193ccc3826541b208ac42"
+    },
+    {
+      "path": "packages/simulation/src/model2/async/worker.ts",
+      "hash": "dfc4f84d922a611872133b0526423f464e11ba59eaa233bb9e2415dfdec5d926"
+    },
+    {
+      "path": "packages/simulation/src/model2/compute/contracts.ts",
+      "hash": "12d2fc95201344d72724172fde1f7362d453676f082bdb8d538c423c80485ec8"
+    },
+    {
+      "path": "packages/simulation/src/model2/compute/memory.ts",
+      "hash": "2646fe1f3749735ac27a41981e996ed2db9072f568e85f43f37cb0be9d7f4ff3"
+    },
+    {
+      "path": "packages/simulation/src/model2/compute/policy.ts",
+      "hash": "93f78ca307a7f4f775bbcd610c2ae65c1c3f84035b75b646f3b7c7167862d198"
+    },
+    {
+      "path": "packages/simulation/src/model2/compute/resource.ts",
+      "hash": "28affaf28d2ffd89d4c9aa7fdd993df92cf873351c175f206765056241c294aa",
+      "text": "import { requireKnown } from \"../../reality/quantity\";\nimport type { EventKernel } from \"../time\";\nimport type { Invocation, Receipt, RemoteOutcome } from \"../workload/contracts\";\nimport type { ComputeResource, ComputeProfile, ComputeState } from \"./contracts\";\nimport { identity } from \"../workload/arrivals\";\nimport { cpuScheduler } from \"./scheduler\";\nimport { residentMemory } from \"./memory\";\n\ninterface Call { work: Invocation; phase: \"queued\" | \"cpu\" | \"wait\" | \"dependency\" | \"finished\";\n  done(outcome: RemoteOutcome): void; child?: Receipt; cancelWait?: () => boolean; waitRemaining: number; waitSince: number }\nexport function computeResource(config: ComputeResource, profiles: Map<string, ComputeProfile>, kernel: EventKernel,\n  send: (target: string, work: Invocation, done: Call[\"done\"]) => Receipt) {\n  const workers = requireKnown(config.workers, \"count\"), capacity = requireKnown(config.queueCapacity, \"count\");\n  const scheduler = cpuScheduler(config.id, requireKnown(config.cores, \"cores\"), kernel, config.quota ? { budget: requireKnown(config.quota.budget, \"cpu-us\"), period: requireKnown(config.quota.period, \"us\") } : undefined);\n  const memory = residentMemory(config, profiles), active = new Map<string, Call>(), queue = new Map<string, Call>();\n  let paused = false, received = 0, admitted = 0, rejected = 0, completed = 0, failed = 0, cancelled = 0, allocationRejected = 0, pumping = false;\n  let occupancyAt = kernel.now, occupancy = 0;\n  const accountOccupancy = () => { occupancy += active.size * (kernel.now - occupancyAt); occupancyAt = kernel.now; };\n  const finish = (call: Call, outcome: RemoteOutcome) => {\n    if (call.phase === \"finished\") return;\n    if (call.phase === \"cpu\") scheduler.remove(call.work.callId);\n    accountOccupancy(); call.cancelWait?.(); active.delete(call.work.callId); queue.delete(call.work.callId); memory.release(call.work.callId); call.phase = \"finished\";\n    if (outcome === \"completed\") completed++; else if (outcome === \"cancelled\") cancelled++; else failed++;\n    call.done(outcome); pump();\n  };\n  const scheduleWait = (call: Call) => {\n    if (paused) return;\n    call.waitSince = kernel.now;\n    call.cancelWait = kernel.schedule(kernel.now + call.waitRemaining, 2, identity(\"blocking-wait\", config.id, call.work.callId), () => {\n      call.waitRemaining = 0;\n      if (config.downstream) {\n        call.phase = \"dependency\";\n        const child = { ...call.work, parentCallId: call.work.callId, callId: identity(...JSON.parse(call.work.callId), \"dependency\", config.downstream) };\n        call.child = send(config.downstream, child, (outcome) => finish(call, outcome));\n      } else finish(call, \"completed\");\n    });\n  };\n  const pump = () => {\n    if (pumping) return;\n    pumping = true;\n    while (!paused && active.size < workers && queue.size) {\n      const call = queue.values().next().value!; queue.delete(call.work.callId);\n      if (!memory.activate(call.work.callId)) { allocationRejected++; finish(call, \"rejected\"); continue; }\n      accountOccupancy(); active.set(call.work.callId, call); call.phase = \"cpu\";\n      const p = profiles.get(call.work.operation)!;\n      scheduler.add({ id: call.work.callId, demand: requireKnown(p.cpu, \"cpu-us\"), cap: requireKnown(p.maxCpuParallelism, \"cores\"), done: () => {\n        if (call.phase === \"finished\") return;\n        call.phase = \"wait\"; call.waitRemaining = requireKnown(p.blockingWait, \"us\"); scheduleWait(call);\n      } });\n    }\n    pumping = false;\n  };\n  return {\n    accept(work: Invocation, done: Call[\"done\"]): Receipt {\n      received++;\n      const full = queue.size >= capacity && (paused || active.size >= workers);\n      const memoryAccepted = !full && memory.acquire(work.callId, work.operation, false);\n      if (full || !memoryAccepted) {\n        if (!full) allocationRejected++;\n        rejected++; done(\"rejected\"); return { admitted: false, cancel: () => \"already-finished\", state: () => \"finished\" };\n      }\n      admitted++;\n      const call: Call = { work, done, phase: \"queued\", waitRemaining: 0, waitSince: kernel.now };\n      queue.set(work.callId, call); pump();\n      return { admitted: true, state: () => call.phase === \"cpu\" || call.phase === \"wait\" ? \"serving\" : call.phase === \"dependency\" ? \"waiting\" : call.phase,\n        cancel: () => { if (call.phase === \"finished\") return \"already-finished\"; if (config.cancellation === \"unsupported\") return \"unsupported\";\n          const child = call.child; finish(call, \"cancelled\"); child?.cancel(); return \"cancelled\"; } };\n    },\n    pause(value: boolean) {\n      if (value === paused) throw new Error(\"Overlapping/unmatched compute pause\");\n      if (value) for (const call of active.values()) if (call.phase === \"wait\") { call.waitRemaining -= kernel.now - call.waitSince; call.cancelWait?.(); }\n      paused = value; scheduler.pause(value);\n      if (!paused) { for (const call of active.values()) if (call.phase === \"wait\") scheduleWait(call); pump(); }\n    },\n    setCapacity(cores: number) { scheduler.capacity(cores); },\n    abortOwned() { for (const call of [...active.values(), ...queue.values()]) { const child = call.child; finish(call, \"rejected\"); child?.cancel(); } },\n    competitor(id: string, demand: number, parallelism: number) { scheduler.add({ id, demand, cap: parallelism, competitor: true, done: () => {} }); },\n    removeCompetitor(id: string) { scheduler.remove(id); },\n    measure(): ComputeState {\n      const cpu = scheduler.measure(), resident = memory.measure();\n      const blockedWait = [...active.values()].filter((c) => c.phase === \"wait\").length, blockedDependency = [...active.values()].filter((c) => c.phase === \"dependency\").length;\n      const runnable = active.size - blockedWait - blockedDependency;\n      return { id: config.id, paused, received, admitted, rejected, completed, failed, cancelled, queued: queue.size, serving: runnable + blockedWait, waiting: blockedDependency,\n        consumedCoreUs: cpu.appCoreUs, busySlotUs: occupancy + active.size * (kernel.now - occupancyAt), compute: { workers: { configured: workers, idle: workers - active.size, runnable, blockedWait, blockedDependency }, cpu, memory: resident, allocationRejected,\n          symptoms: [ ...(paused || cpu.capacity === 0 ? [\"unavailable\"] : []), ...(queue.size ? [\"backpressured\"] : []), ...(cpu.throttled ? [\"cpu-throttled\"] : []), ...(cpu.contended && !cpu.throttled ? [\"cpu-contended\"] : []), ...(resident.comparison === \"exceeds\" ? [\"modeled-resident-limit-exceeded\"] : []) ] } };\n    },\n  };\n}\n"
+    },
+    {
+      "path": "packages/simulation/src/model2/compute/run.ts",
+      "hash": "d45c62a81e88eef62086a8110906881eba66ffee2a0735a16e84c386e8f5d494",
+      "text": "import { requireKnown } from \"../../reality/quantity\";\nimport type { ComputeInput, ComputeState } from \"./contracts\";\nimport type { WorkloadInput } from \"../workload/contracts\";\nimport { createWorkloadRuntime } from \"../workload/run\";\nimport { workloadStation } from \"../workload/station\";\nimport { computeResource } from \"./resource\";\nimport { validateCompute, isCompute, isComputeProfile } from \"./validate\";\nimport { COMPUTE_POLICY_LEDGER } from \"./policy\";\nimport { validateWorkload } from \"../workload/validate\";\nimport { lexical } from \"../time\";\nimport type { EventKernel } from \"../time\";\nimport type { Invocation, Receipt, RemoteOutcome } from \"../workload/contracts\";\nimport type { WorkEndpoint } from \"../workload/run\";\n\nconst copy = <T>(value: T): T => JSON.parse(JSON.stringify(value));\nexport type Deliver = (target: string, work: Invocation, done: (outcome: RemoteOutcome) => void) => Receipt;\nexport interface ComputeComposition {\n  send(source: string, target: string, work: Invocation, done: (outcome: RemoteOutcome) => void): Receipt;\n  receive(target: string, work: Invocation, done: (outcome: RemoteOutcome) => void, direct: () => Receipt): Receipt;\n}\nexport type ResourceFactory = (id: string, kernel: EventKernel, send: Deliver) => WorkEndpoint<ComputeState> | undefined;\nexport function createComputeModel2(authored: ComputeInput) {\n  return createComputeRuntime(authored);\n}\nconst adapt = (source: ComputeInput): WorkloadInput => ({ ...source, workloadVersion: \"m2b/1\",\n    profiles: source.profiles.map((p) => isComputeProfile(p) ? { ...p, schema: \"infraforge-demand/1\", io: p.blockingWait } : p),\n    resources: source.resources.map((r) => isCompute(r) ? { ...r, concurrency: r.workers } : r) });\nexport function validateComputeInput(authored: ComputeInput) {\n  // Preserve M2B's pre-copy trace/request budgets at the new resource seam.\n  validateWorkload(adapt(authored));\n  validateCompute(authored);\n}\nexport function createComputeRuntime(authored: ComputeInput, compose?: (kernel: EventKernel, deliver: Deliver, controls: { pause(id: string, value: boolean): void; observe(id: string): unknown; abortOwned(id: string): void }) => ComputeComposition, resourceFactory?: ResourceFactory) {\n  validateComputeInput(authored);\n  const input: ComputeInput = JSON.parse(JSON.stringify(authored));\n  for (const list of [input.resources, input.profiles, input.operations, input.arrivals, input.faults, input.ledger, input.interventions]) list.sort((a, b) => lexical(a.id, b.id));\n  const adapter = adapt(input);\n  const computes = new Map<string, ReturnType<typeof computeResource>>();\n  let composition: ComputeComposition | undefined;\n  let deliverEntry: Deliver;\n  const interventionEvidence: Array<{ id: string; at: number; state: string }> = [];\n  const runtime = createWorkloadRuntime<ComputeState>(adapter, {\n    station(config, demands, kernel, send) {\n      const original = input.resources.find((r) => r.id === config.id)!;\n      const external = resourceFactory?.(original.id, kernel, (target, work, done) => composition ? composition.send(original.id, target, work, done) : send(target, work, done));\n      if (external) return external;\n      if (!isCompute(original)) return workloadStation(config, demands, kernel, (target, work, done) => composition ? composition.send(original.id, target, work, done) : send(target, work, done));\n      const profiles = new Map(input.operations.map((o) => [o.id, input.profiles.find((p) => p.id === original.profiles[o.id])!]).filter((pair): pair is [string, Extract<ComputeInput[\"profiles\"][number], { schema: \"infraforge-compute-demand/1\" }>] => typeof pair[0] === \"string\" && typeof pair[1] === \"object\" && isComputeProfile(pair[1])));\n      const resource = computeResource(original, profiles, kernel, (target, work, done) => composition ? composition.send(original.id, target, work, done) : send(target, work, done)); computes.set(original.id, resource); return resource;\n    },\n    route: (target, work, done, direct) => composition ? composition.receive(target, work, done, direct) : direct(),\n    enter: (target, work, done) => composition ? composition.send(\"$caller\", target, work, done) : deliverEntry(target, work, done),\n    install(kernel, _stations, send) {\n      deliverEntry = send; composition = compose?.(kernel, send, { pause: (id, value) => _stations.get(id)!.pause(value), observe: (id) => _stations.get(id)?.measure(), abortOwned: (id) => computes.get(id)?.abortOwned() });\n      for (const i of [...input.interventions].sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0)) {\n        const at = requireKnown(i.at, \"us\"), resource = computes.get(i.target)!;\n        kernel.schedule(at, 0, JSON.stringify([\"compute-intervention\", i.id]), () => {\n          if (i.kind === \"capacity\") resource.setCapacity(requireKnown(i.cores, \"cores\"));\n          else resource.competitor(JSON.stringify([\"competitor\", i.id]), requireKnown(i.demand, \"cpu-us\"), requireKnown(i.parallelism, \"cores\"));\n          interventionEvidence.push({ id: i.id, at: kernel.now, state: \"applied\" });\n        });\n        if (i.kind === \"competitor\") kernel.schedule(at + requireKnown(i.duration, \"us\"), -1, JSON.stringify([\"compute-intervention-end\", i.id]), () => {\n          resource.removeCompetitor(JSON.stringify([\"competitor\", i.id])); interventionEvidence.push({ id: i.id, at: kernel.now, state: \"ended\" });\n        });\n      }\n    },\n  });\n  return { horizon: runtime.horizon, advanceTo: runtime.advanceTo,\n    evidence() { const e = runtime.evidence();\n      const intervals = e.samples.slice(1).flatMap((sample, index) => sample.resources.flatMap((resource) => {\n        const current = resource.compute?.cpu, previous = e.samples[index]!.resources.find((r) => r.id === resource.id)?.compute?.cpu;\n        if (!current || !previous) return [];\n        const appCoreUs = current.appCoreUs - previous.appCoreUs, competitorCoreUs = current.competitorCoreUs - previous.competitorCoreUs, availableCoreUs = current.availableCoreUs - previous.availableCoreUs;\n        return [{ resource: resource.id, fromUs: e.samples[index]!.at, toUs: sample.at, appCoreUs, competitorCoreUs, availableCoreUs,\n          utilization: availableCoreUs > 0 ? { kind: \"known\", unit: \"ratio\", app: appCoreUs / availableCoreUs, total: (appCoreUs + competitorCoreUs) / availableCoreUs } : { kind: \"unknown\", unit: \"ratio\", reason: \"No available core-time in interval\" } }];\n      }));\n      return { ...e, workloadVersion: \"m2c/1\" as const, intervals, computePolicyLedger: copy(COMPUTE_POLICY_LEDGER), computeProfiles: copy(input.profiles.filter(isComputeProfile)), computeConfiguration: copy(input.resources.filter(isCompute)), interventions: copy(interventionEvidence),\n      unmodeled: [\"network transport latency\", \"cost\", \"database locks\", \"packet loss\", \"GC\", \"reclaim/swap/OOM\", \"physical topology/SMT/frequency behavior outside calibrated workload points\"] }; } };\n}\n"
+    },
+    {
+      "path": "packages/simulation/src/model2/compute/scheduler.ts",
+      "hash": "fc92841b1269816cd09529b4caf75802d40892de7bc56376e001817e2c3a7102"
+    },
+    {
+      "path": "packages/simulation/src/model2/compute/sharing.ts",
+      "hash": "685b4dc2810e6c7a9eec3dcf744e66969c6069d90b9c616ec5ad12a0f54d89b6"
+    },
+    {
+      "path": "packages/simulation/src/model2/compute/validate.ts",
+      "hash": "250efb37a885df20a5c5717d8c2b693de07f3a9435a63ce23927e5a91a873112"
+    },
+    {
+      "path": "packages/simulation/src/model2/contracts.ts",
+      "hash": "3d8b2cc4dc67368d21e2ce7fb54d80594985b7fd11a5215d6c9040a93ea326f0"
+    },
+    {
+      "path": "packages/simulation/src/model2/data/aside.ts",
+      "hash": "024f336d527ce6de207876fac4b4abfd8d5d5c38d709ebb4c8379fdfaad5e98e"
+    },
+    {
+      "path": "packages/simulation/src/model2/data/cache-state.ts",
+      "hash": "c53df1e4b7b07e386ab2c423b2c2bb2d3179ac047566025363968356c40f6eaa"
+    },
+    {
+      "path": "packages/simulation/src/model2/data/cache.ts",
+      "hash": "382fb0dc59d5123a1593b7553df33408e4ae6bed00c07c614d0678860c441d6e"
+    },
+    {
+      "path": "packages/simulation/src/model2/data/contracts.ts",
+      "hash": "d7a8402fbdff6aac651019811ad92dc3661cad77f68a1937f228dd5f5f24bc81"
+    },
+    {
+      "path": "packages/simulation/src/model2/data/database.ts",
+      "hash": "2b94d388a440878b8408174cb26ad9a158a492a916eef92af3f04e15d843beb0",
+      "text": "import { requireKnown } from \"../../reality/quantity\";\nimport { cpuScheduler } from \"../compute/scheduler\";\nimport type { EventKernel } from \"../time\";\nimport type { Invocation, Receipt, RemoteOutcome } from \"../workload/contracts\";\nimport type { RelationalConfig, DataRequest, DataReply, TransactionPlan } from \"./contracts\";\nimport { lockManager } from \"./locks\";\n\ninterface Tx { work: Invocation; plan: TransactionPlan; step: number; phase: \"queued\" | \"lock\" | \"cpu\" | \"wait\" | \"commit\"; terminal: boolean; writes: Map<string, { version: number; bytes: number }>; rows: DataReply[\"rows\"]; cancelTx?: () => boolean; cancelStatement?: () => boolean; cancelLock?: () => boolean; cancelWait?: () => boolean; done(outcome: RemoteOutcome): void; session: string }\nexport function relationalDatabase(config: RelationalConfig, kernel: EventKernel) {\n  const cpu = cpuScheduler(config.id, requireKnown(config.execution.cores, \"cores\"), kernel), locks = lockManager();\n  const rows = new Map(config.initial.map((r) => [r.key, { version: r.version, bytes: requireKnown(r.bytes, \"bytes\") }]));\n  const keyspace = new Set(config.keys);\n  const sessions = new Map<string, Tx | undefined>(), active = new Map<string, Tx>(), queue = new Map<string, Tx>();\n  let activeArea = 0, activeAnchor = kernel.now;\n  const settleActive = () => { activeArea += active.size * (kernel.now - activeAnchor); activeAnchor = kernel.now; };\n  const byClass = new Map<string, { admitted: number; committed: number; aborted: number; cancelled: number }>();\n  let sessionLimit = requireKnown(config.maxSessions, \"count\"), paused = false, received = 0, rejected = 0, admitted = 0, committed = 0, aborted = 0, cancelled = 0, statements = 0, logicalReads = 0, logicalWrites = 0, logBytes = 0, durableCommits = 0, pumping = false;\n  const reasons: Record<string, number> = {};\n  const finish = (t: Tx, ok: boolean, reason = \"\", cancel = false) => {\n    if (t.terminal) return; t.terminal = true; t.cancelTx?.(); t.cancelStatement?.(); t.cancelLock?.(); t.cancelWait?.();\n    if (t.phase === \"cpu\") cpu.remove(t.work.callId);\n    settleActive(); active.delete(t.work.callId); queue.delete(t.work.callId); if (sessions.get(t.session) === t) sessions.set(t.session, undefined);\n    byClass.get(t.work.operation)![ok ? \"committed\" : cancel ? \"cancelled\" : \"aborted\"]++;\n    if (ok) { for (const [key, row] of t.writes) rows.set(key, row); committed++; logicalWrites += t.writes.size; if (t.plan.durability === \"authored-log-ack\") durableCommits++; }\n    else { if (cancel) cancelled++; else aborted++; reasons[reason] = (reasons[reason] ?? 0) + 1; }\n    if (t.work.message) t.work.message.response = { ok, rows: t.rows, durable: ok && t.plan.durability === \"authored-log-ack\", ...(reason ? { reason } : {}) } satisfies DataReply;\n    locks.release(t.work.callId); t.done(ok ? \"completed\" : cancel ? \"cancelled\" : \"rejected\"); pump();\n  };\n  const execute = (t: Tx) => {\n    if (t.terminal) return;\n    t.cancelStatement?.(); t.cancelLock?.();\n    if (t.step === t.plan.statements.length) {\n      t.phase = \"commit\"; t.cancelWait = kernel.schedule(kernel.now + requireKnown(t.plan.commitWait, \"us\"), 2, JSON.stringify([\"db-commit\", config.id, t.work.callId]), () => finish(t, true)); return;\n    }\n    const s = t.plan.statements[t.step]!, key = (t.work.message?.request as DataRequest | undefined)?.key;\n    const keys = s.keys.map((k) => k === \"$key\" ? key! : k);\n    if (keys.some((k) => !keyspace.has(k))) { finish(t, false, \"key-outside-dataset\"); return; }\n    const observe = () => keys.flatMap((k) => { const row = t.writes.get(k) ?? rows.get(k); return row ? [{ key: k, ...row }] : s.kind === \"insert\" ? [{ key: k, version: 0, bytes: requireKnown(s.insertBytes!, \"bytes\") }] : []; });\n    const snapshot = observe();\n    t.cancelStatement = kernel.schedule(kernel.now + requireKnown(t.plan.statementTimeout, \"us\"), 1, JSON.stringify([\"db-statement-timeout\", config.id, t.work.callId, t.step]), () => finish(t, false, \"statement-timeout\"));\n    const service = () => {\n      if (t.terminal) return; t.cancelLock?.(); t.phase = \"cpu\";\n      const observed = s.kind === \"snapshot-read\" ? snapshot : observe();\n      cpu.add({ id: t.work.callId, demand: requireKnown(s.cpu, \"cpu-us\"), cap: requireKnown(s.parallelism, \"cores\"), done() {\n        if (t.terminal) return; t.phase = \"wait\";\n        t.cancelWait = kernel.schedule(kernel.now + requireKnown(s.blockingWait, \"us\"), 2, JSON.stringify([\"db-blocking\", config.id, t.work.callId, t.step]), () => {\n          if (s.kind === \"insert\" && observed.some((r) => r.version > 0)) { finish(t, false, \"unique-conflict\"); return; }\n          if (s.kind === \"write\" || s.kind === \"insert\") { for (const row of observed) t.writes.set(row.key, { version: row.version + 1, bytes: row.bytes }); logBytes += requireKnown(s.logBytes, \"bytes\"); }\n          else { logicalReads += observed.length; t.rows = observed; }\n          statements++; t.step++; execute(t);\n        });\n      } });\n    };\n    if (s.kind === \"snapshot-read\") service(); else {\n      t.phase = \"lock\"; t.cancelLock = kernel.schedule(kernel.now + requireKnown(t.plan.lockTimeout, \"us\"), 1, JSON.stringify([\"db-lock-timeout\", config.id, t.work.callId, t.step]), () => finish(t, false, \"lock-timeout\"));\n      let index = 0; const acquire = () => { if (t.terminal) return; if (index === keys.length) service(); else locks.acquire(t.work.callId, keys[index++]!, s.kind === \"lock-read\" ? \"shared\" : \"exclusive\", acquire, () => finish(t, false, \"deadlock-requester-victim\")); }; acquire();\n    }\n  };\n  const pump = () => {\n    if (pumping || paused) return; pumping = true;\n    while (queue.size && active.size < requireKnown(config.activeTransactions, \"count\")) { const t = queue.values().next().value!; queue.delete(t.work.callId); settleActive(); active.set(t.work.callId, t); execute(t); }\n    pumping = false;\n  };\n  return {\n    accept(work: Invocation, done: (outcome: RemoteOutcome) => void): Receipt {\n      received++; const session = work.sessionId ?? work.callId;\n      if (paused || (!sessions.has(session) && sessions.size >= sessionLimit) || sessions.get(session) || (active.size >= requireKnown(config.activeTransactions, \"count\") && queue.size >= requireKnown(config.pendingQueries, \"count\"))) {\n        rejected++; const reason = paused ? \"database-unavailable\" : sessions.get(session) ? \"session-busy\" : !sessions.has(session) && sessions.size >= sessionLimit ? \"session-limit\" : \"query-queue-full\"; reasons[reason] = (reasons[reason] ?? 0) + 1; done(\"rejected\"); return { admitted: false, state: () => \"finished\", cancel: () => \"already-finished\" };\n      }\n      sessions.set(session, undefined); admitted++;\n      const counts = byClass.get(work.operation) ?? { admitted: 0, committed: 0, aborted: 0, cancelled: 0 }; counts.admitted++; byClass.set(work.operation, counts);\n      const t: Tx = { work, done, plan: config.plans[work.operation]!, step: 0, phase: \"queued\", terminal: false, writes: new Map(), rows: [], session };\n      sessions.set(session, t); queue.set(work.callId, t);\n      t.cancelTx = kernel.schedule(kernel.now + requireKnown(t.plan.transactionTimeout, \"us\"), 1, JSON.stringify([\"db-transaction-timeout\", config.id, work.callId]), () => finish(t, false, \"transaction-timeout\")); pump();\n      return { admitted: true, state: () => t.terminal ? \"finished\" : t.phase === \"queued\" ? \"queued\" : t.phase === \"lock\" ? \"waiting\" : \"serving\", cancel() { if (t.terminal) return \"already-finished\"; finish(t, false, \"cancelled\", true); return \"cancelled\"; } };\n    },\n    closeSession(id: string) { const tx = sessions.get(id); sessions.delete(id); if (tx) finish(tx, false, \"connection-closed\"); },\n    pause(value: boolean) { paused = value; cpu.pause(value); if (value) { for (const t of [...active.values(), ...queue.values()]) finish(t, false, \"database-unavailable\"); sessions.clear(); } else pump(); },\n    capacity(value: number) { cpu.capacity(value); }, sessionCapacity(value: number) { sessionLimit = value; },\n    measure: () => ({ id: config.id, paused, received, admitted, rejected, completed: committed, failed: aborted, cancelled, queued: queue.size, serving: [...active.values()].filter((t) => t.phase !== \"lock\").length, waiting: [...active.values()].filter((t) => t.phase === \"lock\").length, consumedCoreUs: cpu.measure().appCoreUs, busySlotUs: activeArea + active.size * (kernel.now - activeAnchor) }),\n    evidence: () => ({ id: config.id, sessions: { total: sessions.size, active: [...sessions.values()].filter(Boolean).length, idle: [...sessions.values()].filter((s) => !s).length, limit: sessionLimit }, transactions: { admitted, committed, aborted, cancelled, live: active.size + queue.size }, statements, logicalReads, logicalWrites, generatedLogBytes: logBytes, durableAcknowledgedCommits: durableCommits,\n      rows: [...rows].sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0).map(([key, value]) => ({ key, ...value })), locks: locks.measure(), waiters: locks.waiters(), cpu: cpu.measure(), reasons: { ...reasons }, queryClasses: Object.fromEntries([...byClass].sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0)), queries: { executingCpu: [...active.values()].filter((t) => t.phase === \"cpu\").length, lockWaiting: [...active.values()].filter((t) => t.phase === \"lock\").length, blockingWait: [...active.values()].filter((t) => t.phase === \"wait\").length, committing: [...active.values()].filter((t) => t.phase === \"commit\").length }, active: [...active.values()].map((t) => ({ id: t.work.callId, session: t.session, operation: t.work.operation, step: t.step, phase: t.phase, pendingWrites: t.writes.size })), queued: queue.size, physicalBufferHits: \"Unknown\", storageDeviceLatency: \"Unknown\" }),\n  };\n}\n"
+    },
+    {
+      "path": "packages/simulation/src/model2/data/locks.ts",
+      "hash": "e148cfcbb01911d0ecef9fd6deb7d374644284f1ac009136b2f4035c3579bc8d"
+    },
+    {
+      "path": "packages/simulation/src/model2/data/policy.ts",
+      "hash": "e1cf3a5adc7802454391d0667313896cd94e2a8825ceb5719524f4348b2d4fd7"
+    },
+    {
+      "path": "packages/simulation/src/model2/data/run.ts",
+      "hash": "8a4909f8916e4d6a21f7037f70099ebf6c7b04da2e687d6249a0f2d5756573f9",
+      "text": "import { requireKnown } from \"../../reality/quantity\";\nimport { createNetworkRuntime } from \"../network/run\";\nimport type { DataInput } from \"./contracts\";\nimport { isData, networkAdapter, validateData } from \"./validate\";\nimport { relationalDatabase } from \"./database\";\nimport { keyedCache } from \"./cache\";\nimport { cacheAside } from \"./aside\";\nimport { DATA_POLICY_LEDGER } from \"./policy\";\nimport type { NetworkExtension } from \"../network/run\";\nconst copy = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T;\nexport function createDataModel2(authored: DataInput) {\n  return createDataRuntime(authored);\n}\nexport function createDataRuntime(authored: DataInput, extension?: NetworkExtension) {\n  validateData(authored);\n  const input = copy(authored);\n  input.resources.sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0);\n  const databases = new Map<string, ReturnType<typeof relationalDatabase>>(), caches = new Map<string, ReturnType<typeof keyedCache>>(), applications = new Map<string, ReturnType<typeof cacheAside>>();\n  const runtime = createNetworkRuntime(networkAdapter(input), {\n    ...extension,\n    resource(id, kernel, send) {\n      const external = extension?.resource(id, kernel, send); if (external) return external;\n      const config = input.resources.find((r) => r.id === id)!; if (!isData(config)) return;\n      if (config.kind === \"relational\") { const r = relationalDatabase(config, kernel); databases.set(id, r); return r; }\n      if (config.kind === \"cache\") { const r = keyedCache(config, kernel); caches.set(id, r); return r; }\n      const r = cacheAside(config, kernel, send, input.seed); applications.set(id, r); return r;\n    },\n    disconnected(target, session) { databases.get(target)?.closeSession(session); extension?.disconnected?.(target, session); },\n    install(kernel, trace, context) {\n      extension?.install?.(kernel, trace, context);\n      for (const i of input.dataInterventions) {\n        const apply = (active: boolean) => {\n          const config = input.resources.find((r) => r.id === i.target)!;\n          if (i.kind === \"flush\") caches.get(i.target)!.flush();\n          else if (config.kind === \"relational\") {\n            if (i.kind === \"session-capacity\") databases.get(i.target)!.sessionCapacity(requireKnown(active ? i.sessions : config.maxSessions, \"count\"));\n            else databases.get(i.target)!.capacity(requireKnown(active ? i.cores : config.execution.cores, \"cores\"));\n          }\n          trace(\"data-intervention\", i.id, active ? \"applied\" : \"ended\");\n        };\n        kernel.schedule(requireKnown(i.at, \"us\"), 0, JSON.stringify([\"data-intervention\", i.id]), () => apply(true));\n        if (\"duration\" in i) kernel.schedule(requireKnown(i.at, \"us\") + requireKnown(i.duration, \"us\"), -1, JSON.stringify([\"data-intervention-end\", i.id]), () => apply(false));\n      }\n    },\n  });\n  return { horizon: runtime.horizon, advanceTo: runtime.advanceTo, evidence() {\n    const e = runtime.evidence(), dataIds = new Set(input.resources.filter(isData).map((r) => r.id)); return { ...e, computeConfiguration: e.computeConfiguration.filter((r) => !dataIds.has(r.id)), workloadVersion: \"m2e/1\" as const, data: copy({ databases: [...databases.values()].map((d) => d.evidence()), caches: [...caches.values()].map((c) => c.evidence()), applications: [...applications.values()].map((a) => a.evidence()), policyLedger: DATA_POLICY_LEDGER }),\n      dataConfiguration: copy(input.resources.filter(isData)), unmodeled: [...e.unmodeled.filter((x) => x !== \"database query/lock/cache mechanisms\"), \"physical storage/buffer-cache/WAL fsync/replication/failover\", \"full SQL/MVCC/Redis protocols\"] };\n  } };\n}\n"
+    },
+    {
+      "path": "packages/simulation/src/model2/data/validate.ts",
+      "hash": "3d13b503edeb833094444d1cb7e185c67004ae629209b890e6b6dbcc4203e5d2"
+    },
+    {
+      "path": "packages/simulation/src/model2/network/contracts.ts",
+      "hash": "8b2ea06859775f6c319ad41f97eb5ec60bd0d938b76b506cdc3f76fa23e95a83"
+    },
+    {
+      "path": "packages/simulation/src/model2/network/link.ts",
+      "hash": "1437d39f13540984fdf1375850fdaa10affbcd7e86cdc879920d0641a912d65c"
+    },
+    {
+      "path": "packages/simulation/src/model2/network/load-balancer.ts",
+      "hash": "609069bf825891c52e1df8f0eb990820f9bb24841bc3707594b2ce49f8572af6",
+      "text": "import { requireKnown } from \"../../reality/quantity\";\nimport type { EventKernel } from \"../time\";\nimport { lexical } from \"../time\";\nimport { keyedUniform } from \"../random\";\nimport type { Invocation, OperationClass, Receipt, RemoteOutcome } from \"../workload/contracts\";\nimport type { LoadBalancer, Trace, TransportResult } from \"./contracts\";\nimport type { pathTransport } from \"./transport\";\n\ninterface Request { work: Invocation; done(outcome: RemoteOutcome): void; receipt?: Receipt; timer?: () => boolean; retryTimer?: () => boolean; attempt: number; backend?: string; retrying: boolean; terminal: boolean }\nexport function loadBalancer(config: LoadBalancer, kernel: EventKernel, paths: Map<string, ReturnType<typeof pathTransport>>, operations: Map<string, OperationClass>, seed: string, horizon: number, trace: Trace) {\n  const members = [...config.backends].sort().map((id) => ({ id, health: config.health.initial === \"eligible\", draining: false, successes: 0, failures: 0, outstanding: 0, selected: 0, probes: 0, cancelCheck: undefined as (() => boolean) | undefined }));\n  const active = new Map<string, Request>(), pending = new Map<string, Request>();\n  const membersById = new Map(members.map((m) => [m.id, m]));\n  let received = 0, completed = 0, rejected = 0, cancelled = 0, attempts = 0, retries = 0, retryLimited = 0, activeRetries = 0, cursor = 0, pumping = false;\n  const path = (backend: string) => paths.get(JSON.stringify([config.id, backend]))!;\n  const finish = (r: Request, outcome: RemoteOutcome) => {\n    if (r.terminal) return; r.terminal = true; r.timer?.(); r.retryTimer?.(); active.delete(r.work.callId); pending.delete(r.work.callId);\n    if (outcome === \"completed\") completed++; else if (outcome === \"cancelled\") cancelled++; else rejected++;\n    r.done(outcome); pump();\n  };\n  const choose = () => {\n    const eligible = members.filter((m) => m.health && !m.draining);\n    if (!eligible.length) return;\n    if (config.policy === \"least-outstanding\") return eligible.sort((a, b) => a.outstanding - b.outstanding || lexical(a.id, b.id))[0];\n    for (let i = 0; i < members.length; i++) { const m = members[cursor++ % members.length]!; if (m.health && !m.draining) return m; }\n  };\n  const attempt = (r: Request) => {\n    if (r.terminal) return;\n    const member = choose(); if (!member) { trace(\"lb-failure\", r.work.callId, \"no-backend\", r.work.rootId, r.work.attempt); finish(r, \"rejected\"); return; }\n    if (r.attempt && config.retry && activeRetries >= requireKnown(config.retry.maxConcurrentRetries, \"count\")) { retryLimited++; finish(r, \"rejected\"); return; }\n    r.attempt++; attempts++; member.outstanding++; member.selected++; r.backend = member.id;\n    if (r.attempt > 1) { retries++; activeRetries++; r.retrying = true; }\n    const work: Invocation = { ...r.work, attempt: r.work.attempt + r.attempt - 1, parentCallId: r.work.callId,\n      callId: JSON.stringify([...JSON.parse(r.work.callId), \"lb\", config.id, \"try\", r.attempt, member.id]) };\n    trace(\"lb-selected\", work.callId, member.id, work.rootId, work.attempt);\n    r.receipt = path(member.id).exchange(work, (result: TransportResult) => {\n      member.outstanding--; if (r.retrying) { activeRetries--; r.retrying = false; }\n      if (r.terminal) return;\n      trace(\"attempt-terminal\", work.callId, result.ok ? \"completed\" : result.reason!, work.rootId, work.attempt);\n      if (result.ok) { finish(r, \"completed\"); return; }\n      const policy = config.retry, op = operations.get(r.work.operation)!;\n      const safe = !result.ambiguous || [\"read-only\", \"idempotent\"].includes(op.idempotency) || policy?.allowAmbiguousNonIdempotent;\n      if (!policy || r.attempt >= requireKnown(policy.maxAttempts, \"count\") || !policy.retryOn.includes(result.reason!) || !safe) { finish(r, \"rejected\"); return; }\n      const jitter = 1 + requireKnown(policy.jitter, \"ratio\") * (2 * keyedUniform(seed, config.id, work.callId, \"retry-backoff\") - 1);\n      const delay = Math.ceil(requireKnown(policy.backoff, \"us\") * 2 ** (r.attempt - 1) * jitter);\n      trace(\"retry-scheduled\", work.callId, `${result.reason}:${delay}us`, work.rootId, work.attempt);\n      r.retryTimer = kernel.schedule(kernel.now + delay, 3, JSON.stringify([\"retry\", config.id, r.work.callId, r.attempt]), () => attempt(r));\n    });\n  };\n  const pump = () => {\n    if (pumping) return; pumping = true;\n    while (pending.size && active.size < requireKnown(config.maxOutstanding, \"count\")) {\n      const r = pending.values().next().value!; pending.delete(r.work.callId); r.timer?.(); active.set(r.work.callId, r); attempt(r);\n    }\n    pumping = false;\n  };\n  for (const member of members) {\n    let probe = 0;\n    const check = () => {\n      if (member.draining) return;\n      const number = probe++, key = JSON.stringify([\"health\", config.id, member.id, number]); member.probes++;\n      let terminal = false, receipt: Receipt | undefined;\n      const observe = (ok: boolean, reason: string) => {\n        if (terminal) return; terminal = true; timeout();\n        if (ok) { member.successes++; member.failures = 0; if (member.successes >= requireKnown(config.health.healthy, \"count\")) member.health = true; }\n        else { member.failures++; member.successes = 0; if (member.failures >= requireKnown(config.health.unhealthy, \"count\")) member.health = false; }\n        trace(\"health-observation\", key, `${reason}:eligible=${member.health}`);\n      };\n      const timeout = kernel.schedule(kernel.now + requireKnown(config.health.timeout, \"us\"), 1, JSON.stringify([\"health-timeout\", key]), () => { observe(false, \"health-timeout\"); receipt?.cancel(); });\n      receipt = path(member.id).exchange({ rootId: key, callId: key, attempt: 0, operation: config.health.operation, offeredAt: kernel.now }, (result) => observe(result.ok, result.ok ? \"passed\" : result.reason!));\n      trace(\"health-probe\", key, member.id);\n      const next = kernel.now + requireKnown(config.health.interval, \"us\");\n      if (next <= horizon) member.cancelCheck = kernel.schedule(next, 3, JSON.stringify([\"health-check\", config.id, member.id]), check);\n    };\n    member.cancelCheck = kernel.schedule(0, 3, JSON.stringify([\"health-check\", config.id, member.id]), check);\n  }\n  return {\n    backend(id: string) { const member = membersById.get(id); if (!member) throw Error(\"Unknown backend\"); return { health: member.health, draining: member.draining, outstanding: member.outstanding }; },\n    accept(work: Invocation, done: Request[\"done\"]): Receipt {\n      received++;\n      if (active.size >= requireKnown(config.maxOutstanding, \"count\") && pending.size >= requireKnown(config.maxPending, \"count\")) { rejected++; trace(\"lb-failure\", work.callId, \"pending-overflow\", work.rootId, work.attempt); done(\"rejected\"); return { admitted: false, state: () => \"finished\", cancel: () => \"already-finished\" }; }\n      const r: Request = { work, done, attempt: 0, retrying: false, terminal: false }; pending.set(work.callId, r);\n      r.timer = kernel.schedule(kernel.now + requireKnown(config.pendingTimeout, \"us\"), 1, JSON.stringify([\"lb-pending-timeout\", config.id, work.callId]), () => { trace(\"lb-failure\", work.callId, \"pending-timeout\", work.rootId, work.attempt); finish(r, \"rejected\"); }); pump();\n      return { admitted: true, state: () => r.terminal ? \"finished\" : pending.has(work.callId) ? \"queued\" : \"waiting\", cancel: () => {\n        if (r.terminal) return \"already-finished\";\n        finish(r, \"cancelled\"); r.receipt?.cancel(); return \"cancelled\";\n      } };\n    },\n    drain(backend: string, grace: number) { const m = members.find((m) => m.id === backend)!; m.draining = true; m.cancelCheck?.(); path(backend).drain(grace); trace(\"backend-draining\", config.id, `${backend}:${grace}us`); },\n    measure: () => ({ id: config.id, received, completed, rejected, cancelled, active: active.size, pending: pending.size, attempts, retries, retryLimited, activeRetries,\n      backends: members.map(({ cancelCheck: _cancel, ...m }) => ({ ...m })) }),\n  };\n}\n"
+    },
+    {
+      "path": "packages/simulation/src/model2/network/policy.ts",
+      "hash": "725d44823522c4e1c224e5be8092c9c87a4740d6ac69fa33fe4091eba297c0a0"
+    },
+    {
+      "path": "packages/simulation/src/model2/network/pool.ts",
+      "hash": "91ff22b8d9d56cae0276992874b93ca0f743053955c2f729f069d8fe8bb34422"
+    },
+    {
+      "path": "packages/simulation/src/model2/network/run.ts",
+      "hash": "b7d80259f37a1ee3ab70ad78626c3d0df09cc21c6944faad6efe22cf31a036a7",
+      "text": "import { requireKnown } from \"../../reality/quantity\";\nimport { createComputeRuntime, validateComputeInput } from \"../compute/run\";\nimport { lexical } from \"../time\";\nimport type { ConnectionHook, NetworkInput, PathConfig } from \"./contracts\";\nimport { computeAdapter, validateNetwork } from \"./validate\";\nimport { networkLink } from \"./link\";\nimport { pathTransport } from \"./transport\";\nimport { loadBalancer } from \"./load-balancer\";\nimport { networkTrace } from \"./trace\";\nimport { NETWORK_POLICY_LEDGER } from \"./policy\";\nimport type { ResourceFactory } from \"../compute/run\";\nimport type { EventKernel } from \"../time\";\nimport type { Trace } from \"./contracts\";\nimport type { Invocation, Receipt, RemoteOutcome } from \"../workload/contracts\";\nimport type { RuntimeUsageObserver } from \"../../reality/metering/contracts\";\n\nexport interface NetworkContext {\n  setReady(id: string, ready: boolean, owner?: string): void;\n  endpoint(id: string): { alive: boolean; ready: boolean };\n  reachable(path: string): boolean;\n  observe(id: string): unknown;\n  setAvailable(id: string, alive: boolean): void;\n  abortOwned(id: string): void;\n  retireOwner?(id: string): void;\n  drain(lb: string, backend: string, grace: number): void;\n  backend(lb: string, backend: string): { health: boolean; draining: boolean; outstanding: number };\n}\nexport interface NetworkExtension {\n  usage?: RuntimeUsageObserver;\n  resource: ResourceFactory;\n  install?(kernel: EventKernel, trace: Trace, context: NetworkContext): void;\n  disconnected?(target: string, session: string): void;\n  connection?(path: PathConfig, kernel: EventKernel, send: (source: string, target: string, work: Invocation, done: (outcome: RemoteOutcome) => void) => Receipt, context: NetworkContext): ConnectionHook | undefined;\n  receive?(target: string, work: Invocation, done: (outcome: RemoteOutcome) => void): Receipt | undefined;\n}\n\ninterface NetworkSnapshot {\n  links: ReturnType<ReturnType<typeof networkLink>[\"measure\"]>[];\n  paths: ReturnType<ReturnType<typeof pathTransport>[\"measure\"]>[];\n  loadBalancers: ReturnType<ReturnType<typeof loadBalancer>[\"measure\"]>[];\n  endpoints: Record<string, { alive: boolean; ready: boolean }>;\n  trace: ReturnType<ReturnType<typeof networkTrace>[\"measure\"]>;\n  policyLedger: typeof NETWORK_POLICY_LEDGER;\n}\nconst copy = <T>(v: T): T => JSON.parse(JSON.stringify(v));\nexport function createNetworkModel2(authored: NetworkInput) {\n  return createNetworkRuntime(authored);\n}\nexport function createNetworkRuntime(authored: NetworkInput, extension?: NetworkExtension) {\n  validateNetwork(authored);\n  validateComputeInput(computeAdapter(authored));\n  const input: NetworkInput = JSON.parse(JSON.stringify(authored));\n  for (const xs of [input.links, input.paths, input.networkInterventions, input.resources]) xs.sort((a, b) => lexical(a.id, b.id));\n  for (const r of input.resources) if (r.kind === \"load-balancer\") r.backends.sort(lexical);\n  let measure: () => NetworkSnapshot;\n  const runtime = createComputeRuntime(computeAdapter(input), (kernel, deliver, controls) => {\n    const trace = networkTrace(kernel, input.limits.maxRawResults), states = new Map(Object.entries(input.endpoints).map(([id, state]) => [id, { ...state }])), readiness = new Map<string, Map<string, boolean>>(), activeStates = new Map<string, { alive: boolean; ready: boolean }>();\n    const availability = new Map<string, boolean>();\n    const applyState = (id: string) => { const desired = activeStates.get(id) ?? input.endpoints[id]!; const next = { alive: desired.alive && (availability.get(id) ?? true), ready: desired.ready && [...(readiness.get(id)?.values() ?? [])].every(Boolean) }; const previous = states.get(id)!; states.set(id, next); if (previous.alive !== next.alive && input.resources.find((r) => r.id === id)!.kind !== \"load-balancer\") controls.pause(id, !next.alive); };\n    const context: NetworkContext = { abortOwned: controls.abortOwned, setReady(id, ready, owner = \"default\") { if (!states.has(id)) throw Error(\"Unknown readiness target\"); const gates = readiness.get(id) ?? new Map<string, boolean>(); gates.set(owner, ready); readiness.set(id, gates); applyState(id); }, setAvailable(id, alive) { if (!states.has(id)) throw Error(\"Unknown availability target\"); availability.set(id, alive); applyState(id); }, drain(lb, backend, grace) { lbs.get(lb)!.drain(backend, grace); }, backend(lb, backend) { return lbs.get(lb)!.backend(backend); }, endpoint: (id) => ({ ...states.get(id)! }), observe: controls.observe, reachable: (id) => { const p = input.paths.find((p) => p.id === id); return !!p && [...p.request, ...p.response].every((l) => links.get(l)!.reachable()); } };\n    for (const r of input.resources) if (r.kind !== \"load-balancer\" && !states.get(r.id)!.alive) controls.pause(r.id, true);\n    extension?.install?.(kernel, trace.emit, context);\n    const links = new Map(input.links.map((l) => [l.id, networkLink(l, kernel, trace.emit, extension?.usage)]));\n    const paths = new Map<string, ReturnType<typeof pathTransport>>();\n    context.retireOwner = (id) => { for (const r of input.resources) if (r.id === id || r.id.startsWith(id + \"/\")) context.setReady(r.id, false, \"terminated\"); for (const p of input.paths) if (p.source === id || p.source.startsWith(id + \"/\")) paths.get(JSON.stringify([p.source, p.target]))!.reset(); };\n    const send = (source: string, target: string, work: Invocation, done: (outcome: RemoteOutcome) => void) => { const path = paths.get(JSON.stringify([source, target])); if (!path) throw Error(\"Missing explicit transport path\"); return path.exchange(work, (result) => done(result.ok ? \"completed\" : \"rejected\")); };\n    for (const p of input.paths) paths.set(JSON.stringify([p.source, p.target]), pathTransport(p, kernel, links, deliver, (id) => states.get(id)!.alive, trace.emit, (session, target) => extension?.disconnected?.(target, session), extension?.connection?.(p, kernel, send, context)));\n    const lbs = new Map(input.resources.filter((r) => r.kind === \"load-balancer\").map((r) => [r.id, loadBalancer(r, kernel, paths, new Map(input.operations.map((o) => [o.id, o])), input.seed, requireKnown(input.horizon, \"us\"), trace.emit)]));\n    for (const i of input.networkInterventions) {\n      const apply = (active: boolean) => {\n        if (i.kind === \"partition\") links.get(i.target)!.partition(active);\n        if (i.kind === \"bandwidth\") links.get(i.target)!.bandwidth(requireKnown(active ? i.bandwidth : input.links.find((l) => l.id === i.target)!.bandwidth, \"bytes/s\"));\n        if (i.kind === \"delay\") links.get(i.target)!.delay(active ? requireKnown(i.delay, \"us\") : 0);\n        if (i.kind === \"service-state\") {\n          if (active) activeStates.set(i.target, { alive: i.alive, ready: i.ready }); else activeStates.delete(i.target);\n          applyState(i.target);\n        }\n        if (i.kind === \"reset\") [...paths.values()].find((p) => p.measure().id === i.target)!.reset();\n        if (i.kind === \"drain\") lbs.get(i.target)!.drain(i.backend, requireKnown(i.grace, \"us\"));\n        trace.emit(\"network-intervention\", i.id, active ? \"applied\" : \"ended\");\n      };\n      kernel.schedule(requireKnown(i.at, \"us\"), 0, JSON.stringify([\"network-intervention\", i.id]), () => apply(true));\n      if (\"duration\" in i) kernel.schedule(requireKnown(i.at, \"us\") + requireKnown(i.duration, \"us\"), -1, JSON.stringify([\"network-intervention-end\", i.id]), () => apply(false));\n    }\n    measure = () => ({ links: [...links.values()].map((l) => l.measure()), paths: [...paths.values()].map((p) => p.measure()), loadBalancers: [...lbs.values()].map((lb) => lb.measure()), endpoints: Object.fromEntries(states), trace: trace.measure(), policyLedger: NETWORK_POLICY_LEDGER });\n    return {\n      send,\n      receive(target, work, done, direct) {\n        const state = states.get(target)!;\n        if (!state.alive || !state.ready) { done(\"rejected\"); return { admitted: false, state: () => \"finished\", cancel: () => \"already-finished\" }; }\n        return extension?.receive?.(target, work, done) ?? lbs.get(target)?.accept(work, done) ?? direct();\n      },\n    };\n  }, extension?.resource);\n  return { horizon: runtime.horizon, advanceTo: runtime.advanceTo,\n    evidence() { const e = runtime.evidence(); return { ...e, workloadVersion: \"m2d/1\" as const, network: copy(measure()), networkConfiguration: copy({ links: input.links, paths: input.paths, resources: input.resources.filter((r) => r.kind === \"load-balancer\"), endpoints: input.endpoints, interventions: input.networkInterventions }),\n      unmodeled: [\"packets/TCP congestion/retransmission\", \"TLS framing/cryptography\", \"DNS/NAT/ephemeral ports\", \"physical topology/provider transport\", \"GC/reclaim/swap/OOM\", \"database query/lock/cache mechanisms\", \"cost\"] }; } };\n}\n"
+    },
+    {
+      "path": "packages/simulation/src/model2/network/trace.ts",
+      "hash": "7ad592fefb0e54299ddedb17af16609618985397e52ef420fae306b4f1962431",
+      "text": "import type { EventKernel } from \"../time\";\nimport type { TraceEvent, Trace } from \"./contracts\";\n\nexport function networkTrace(kernel: EventKernel, limit: number) {\n  const events: TraceEvent[] = [], totals: Record<string, number> = {}; let omitted = 0;\n  const emit: Trace = (kind, id, detail, root, attempt) => {\n    totals[kind] = (totals[kind] ?? 0) + 1;\n    if (events.length < limit) events.push({ at: kernel.now, kind, id, detail, ...(root === undefined ? {} : { root }), ...(attempt === undefined ? {} : { attempt }) }); else omitted++;\n  };\n  return { emit, measure: () => ({ events: events.map((e) => ({ ...e })), totals: { ...totals }, retained: events.length, omitted }) };\n}\n"
+    },
+    {
+      "path": "packages/simulation/src/model2/network/transport.ts",
+      "hash": "721517a57ec80a025078c713d249acd327a126495f4eb549bda2e1daead8a888"
+    },
+    {
+      "path": "packages/simulation/src/model2/network/validate.ts",
+      "hash": "2155439db5b88fd6d18ab2d54bbddff1b2c9ec50a02422a8a0f30d07427fc3df"
+    },
+    {
+      "path": "packages/simulation/src/model2/product/bounds.ts",
+      "hash": "57884c7f32054ad0db217385ccca25d4e159d65ad2c4487179d4171046e500bc"
+    },
+    {
+      "path": "packages/simulation/src/model2/product/capabilities.ts",
+      "hash": "fb0ffef916a79ffd0fbc682ae345ea22d6d73c5ddb097b42d4154254df571ae2"
+    },
+    {
+      "path": "packages/simulation/src/model2/product/compiler.ts",
+      "hash": "38b39e5f434c61ed1a36a21db81db4edb42f332804d3f1e96eecaeaed78051cb"
+    },
+    {
+      "path": "packages/simulation/src/model2/product/contracts.ts",
+      "hash": "e395feb81322568580278a71cb968502ebe5519426e7231a32cf80d4b56669f5"
+    },
+    {
+      "path": "packages/simulation/src/model2/product/controller-policy.ts",
+      "hash": "b216a1e9eb074a755843c66f8ce172bd07a70c832bc554a9eb6d452b11c34d6f"
+    },
+    {
+      "path": "packages/simulation/src/model2/product/controller.ts",
+      "hash": "d1d2d8cfec74bad127327a40e27ca73834b9338b3c1284c5dba370a99e3c2941"
+    },
+    {
+      "path": "packages/simulation/src/model2/product/faults.ts",
+      "hash": "85fb6f5c87d8d7989ba4a452eec470ce7c7bb61799d4213d7eaaca95f362780e"
+    },
+    {
+      "path": "packages/simulation/src/model2/product/origins.ts",
+      "hash": "da220412c60b75cf8a5c433e00d18e6d70756aa99cefad1d37bb4a6a8697dfac"
+    },
+    {
+      "path": "packages/simulation/src/model2/product/owners.ts",
+      "hash": "7df3d3131b268abcf5c9b2d614f1ddad545381b9b7af4ed0983aba88e50bb70f"
+    },
+    {
+      "path": "packages/simulation/src/model2/product/presentation.ts",
+      "hash": "7c4f16bca8594cdc69d5c5a9903edfa4d7aba8b5feb8095b597c98ff51f4a61e"
+    },
+    {
+      "path": "packages/simulation/src/model2/product/provenance.ts",
+      "hash": "ee1d29b0d3a6db0ec992c4a29f807fd8e1dc1d60ef3b9efb1462ac361bf76df5"
+    },
+    {
+      "path": "packages/simulation/src/model2/product/run.ts",
+      "hash": "0331fceff1c89bcd1c597832ca6369df60401136e9537662dcf0ea359effd999",
+      "text": "import { requireKnown } from \"../../reality/quantity\";\nimport { createSystemsModel2 } from \"../systems/run\";\nimport { replicaController } from \"./controller\";\nimport type { CompiledProduct } from \"./contracts\";\nimport type { RuntimeUsageObserver } from \"../../reality/metering/contracts\";\nexport function createProductModel2(compiled: CompiledProduct, usage?: RuntimeUsageObserver) {\n  if (compiled.schema !== \"infraforge-compiled-product/1\" || compiled.semantic.versions.compiler !== \"infraforge-product-compiler/1\") throw Error(\"Unsupported historical compiler version; no silent reinterpretation\");\n  const controllers: ReturnType<typeof replicaController>[] = [];\n  const runtime = createSystemsModel2(compiled.input, { usage, deferredClients: compiled.pools.flatMap((p) => p.artifactClients.map((a) => a.id)), crashes: compiled.crashes.map((f) => ({ target: f.target, at: requireKnown(f.at, \"us\"), restartAt: requireKnown(f.restartAt, \"us\") })), install(kernel, context, controls) {\n    for (const p of compiled.pools) controllers.push(replicaController(p, kernel, context, controls, requireKnown(compiled.input.horizon, \"us\")));\n  } });\n  return { horizon: runtime.horizon, advanceTo: runtime.advanceTo, evidence() { return { ...runtime.evidence(), workloadVersion: \"m2h/1\" as const, product: { versions: compiled.semantic.versions, semantic: compiled.semantic, controllers: controllers.map((c) => c.evidence()), scope: \"Internal compiled authored contracts; no provider calibration/public activation\" } }; } };\n}\n"
+    },
+    {
+      "path": "packages/simulation/src/model2/product/semantics.ts",
+      "hash": "ac249089c9cbe0d642d8ed69b96308cd9c2a61c6172b16234f02174386ba1c65"
+    },
+    {
+      "path": "packages/simulation/src/model2/product/workload.ts",
+      "hash": "4da75bfa116c25e30022d91ce83a6e4b1e315535fba9efbb106d16a0c07ad180"
+    },
+    {
+      "path": "packages/simulation/src/model2/provenance.ts",
+      "hash": "263cb2a305aaa75a3154e5a624d606a06eeca46432cc76767a64d903cf5ec664"
+    },
+    {
+      "path": "packages/simulation/src/model2/random.ts",
+      "hash": "14dec6eb72ab9e30ba047ee98f8fc55efdb0c3c7a3f6015d077a788f27c0a925"
+    },
+    {
+      "path": "packages/simulation/src/model2/registry.ts",
+      "hash": "5e6ff45331735eb5426d5ec5aa7314e4559c2f63b4f5e6f41d7e8badf53cad8d"
+    },
+    {
+      "path": "packages/simulation/src/model2/run.ts",
+      "hash": "74f99522da685628b82727817838956464a41534b6543692ec25a19814b70e12"
+    },
+    {
+      "path": "packages/simulation/src/model2/station.ts",
+      "hash": "28d8be7692eefc06673118eee1f8aa02545fb6d8a71033727b39b423c2946a3a"
+    },
+    {
+      "path": "packages/simulation/src/model2/systems/cdn.ts",
+      "hash": "4d48173059b5fe8590e7f094d2c3cfa05c5b703323239f36f51d4f94ebadb4fe"
+    },
+    {
+      "path": "packages/simulation/src/model2/systems/contracts.ts",
+      "hash": "8e010835c272710fffffd9dfcb6d581b0d9738b417719da8b0fb6b8eb60a9361"
+    },
+    {
+      "path": "packages/simulation/src/model2/systems/copy.ts",
+      "hash": "b81954a1546a5ed787c023d08d983e9cf4d41b5fc202704bf93070cdd0fdefef"
+    },
+    {
+      "path": "packages/simulation/src/model2/systems/dns.ts",
+      "hash": "badd416dc452d5ce87e2cd9b1c6c4b4c5f4a3bb4a8c99a84c17729e6f79ad8a8"
+    },
+    {
+      "path": "packages/simulation/src/model2/systems/monitor.ts",
+      "hash": "dc16547adbcc1a568a3bc0169f058f9daaf132fdc9434f3c853d398ce723b17f"
+    },
+    {
+      "path": "packages/simulation/src/model2/systems/policy.ts",
+      "hash": "d55a277fc45d40c0b1c2761a8403bd987308e2cddb433d98800ae0218195b2dd"
+    },
+    {
+      "path": "packages/simulation/src/model2/systems/registry.ts",
+      "hash": "ac46898ef9fe284d9e72f703cc5d43dc9a01b4b89826011166e236d1f4e121a9"
+    },
+    {
+      "path": "packages/simulation/src/model2/systems/run.ts",
+      "hash": "0db7ff8b2e4aa85cc6ee52ecb4a927d44c2588ea2dca08bf108ff2e64cd0883f",
+      "text": "import { requireKnown } from \"../../reality/quantity\";\nimport { createAsyncRuntime } from \"../async/run\";\nimport type { Invocation, Receipt } from \"../workload/contracts\";\nimport type { SystemsInput } from \"./contracts\";\nimport { asyncAdapter, isSystem, validateSystems } from \"./validate\";\nimport { dnsAuthority, dnsResolver } from \"./dns\";\nimport { objectCdn } from \"./cdn\";\nimport { artifactRegistry } from \"./registry\";\nimport { artifactClient } from \"./startup\";\nimport { monitoringAgent, telemetryBackend } from \"./monitor\";\nimport { securityPlane } from \"./security\";\nimport { eventRows, SYSTEM_LIMITS, SYSTEM_POLICY_LEDGER } from \"./policy\";\nimport type { NetworkContext } from \"../network/run\";\nimport type { EventKernel } from \"../time\";\nimport type { RuntimeUsageObserver } from \"../../reality/metering/contracts\";\nconst copy = <T>(v: T): T => JSON.parse(JSON.stringify(v));\nexport interface SystemsExtension {\n  usage?: RuntimeUsageObserver;\n  deferredClients: string[];\n  crashes?: Array<{ target: string; at: number; restartAt: number }>;\n  install(kernel: EventKernel, context: NetworkContext, controls: { artifacts(client: string, replica: string, done: (ok: boolean) => void): void; samples(backend: string, target: string): Array<{ measurementAt: number; arrivedAt: number; values: unknown }> }): void;\n}\nexport function createSystemsModel2(authored: SystemsInput, extension?: SystemsExtension) {\n  validateSystems(authored); const i = copy(authored); i.resources.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));\n  const authorities = new Map<string, ReturnType<typeof dnsAuthority>>(), resolvers = new Map<string, ReturnType<typeof dnsResolver>>(), cdns = new Map<string, ReturnType<typeof objectCdn>>(), registries = new Map<string, ReturnType<typeof artifactRegistry>>(), clients = new Map<string, ReturnType<typeof artifactClient>>(), monitors = new Map<string, ReturnType<typeof monitoringAgent>>(), backends = new Map<string, ReturnType<typeof telemetryBackend>>();\n  let security: ReturnType<typeof securityPlane>, context: NetworkContext, clock: EventKernel;\n  const instrumentation = new Map(i.systems.instrumentation.map((p) => [p.target, { produced: 0, bytes: requireKnown(p.bytes, \"bytes\") }])), observations = eventRows();\n  const commandResults: Array<{ id: string; at: number; outcome: string; reply: unknown }> = []; let commandOffered = 0, commandLive = 0, commandCompleted = 0, commandFailed = 0, commandOmitted = 0, retainedFields = 0;\n  const resultFits = (value: unknown) => { const pending: unknown[] = [value]; let fields = 0; while (pending.length) { if (++fields + retainedFields > SYSTEM_LIMITS.inputFields) return false; const v = pending.pop(); if (v && typeof v === \"object\") for (const child of Object.values(v)) pending.push(child); } retainedFields += fields; return true; };\n  const runtime = createAsyncRuntime(asyncAdapter(i), {\n    usage: extension?.usage,\n    resource(id, kernel, send) {\n      const r = i.resources.find((r) => r.id === id)!; if (!isSystem(r)) return;\n      if (r.kind === \"dns-authority\") { const service = dnsAuthority(r, kernel); authorities.set(id, service); return service; }\n      if (r.kind === \"dns-resolver\") { const service = dnsResolver(r, kernel, send); resolvers.set(id, service); return service; }\n      if (r.kind === \"cdn\") { const service = objectCdn(r, kernel, send); cdns.set(id, service); return service; }\n      if (r.kind === \"registry\") { const service = artifactRegistry(r, kernel, send); registries.set(id, service); return service; }\n      if (r.kind === \"artifact-client\") { const service = artifactClient(r, kernel, send, i.systems.operation); clients.set(id, service); return service; }\n      if (r.kind === \"monitor\") { const service = monitoringAgent(r, kernel, send); monitors.set(id, service); return service; }\n      const service = telemetryBackend(r, kernel); backends.set(id, service); return service;\n    },\n    install(kernel, _trace, network) {\n      context = network; clock = kernel; security = securityPlane(i, kernel, network, (id, name) => resolvers.get(id)?.peek(name));\n      const horizon = requireKnown(i.horizon, \"us\");\n      for (const [id, client] of clients) client.start(network, horizon, extension?.deferredClients.includes(id));\n      for (const [index, crash] of (extension?.crashes ?? []).entries()) {\n        const owner = `restart-${index}`;\n        kernel.schedule(crash.at, 0, JSON.stringify([\"product-crash\", crash.target, index]), () => { network.setReady(crash.target, false, owner); network.abortOwned(crash.target); resolvers.get(crash.target)?.clear(); });\n        kernel.schedule(crash.restartAt, 0, JSON.stringify([\"product-restart\", crash.target, index]), () => network.setReady(crash.target, true, owner));\n      }\n      extension?.install(kernel, network, { artifacts(client, replica, done) { clients.get(client)!.launch(replica, done); }, samples(backend, target) { return backends.get(backend)?.recent(target) ?? []; } });\n      for (const monitor of monitors.values()) monitor.start(horizon);\n      for (const f of [...i.systems.interventions].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))) kernel.schedule(requireKnown(f.at, \"us\"), 0, JSON.stringify([\"systems-intervention\", f.id]), () => {\n        if (f.kind === \"dns-record\") authorities.get(f.target)!.update(f.record);\n        if (f.kind === \"cdn-purge\") cdns.get(f.target)!.purge(f.key);\n        if (f.kind === \"firewall-rules\") security.update(f.target, f.rules);\n      });\n    },\n    connection(path, kernel, send) {\n      // Authored debug commands enter the same network as application work.\n      if (path.id === i.paths[0]!.id) for (const command of [...i.systems.commands].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))) kernel.schedule(requireKnown(command.at, \"us\"), 2, JSON.stringify([\"systems-workload\", command.id]), () => {\n        commandOffered++; commandLive++;\n        const work: Invocation = { rootId: JSON.stringify([\"systems-workload\", command.id]), callId: JSON.stringify([\"systems-workload\", command.id]), attempt: 1, operation: command.operation, offeredAt: kernel.now, message: { request: copy(command.request), bodyBytes: { request: requireKnown(command.bodyBytes, \"bytes\") } } };\n        send(command.source, command.target, work, (outcome) => { commandLive--; if (outcome === \"completed\") commandCompleted++; else commandFailed++; const reply = work.message?.response ?? null; if (commandResults.length < Math.min(i.limits.maxRawResults, SYSTEM_LIMITS.events) && resultFits(reply)) commandResults.push({ id: command.id, at: kernel.now, outcome, reply: copy(reply) }); else commandOmitted++; });\n      });\n      return security.hook(path, send);\n    },\n    receive(target, work, done) {\n      const probe = instrumentation.get(target); if (!probe || (work.message?.request as { kind?: string } | undefined)?.kind !== \"observe\") return;\n      const state = context.observe(target) as Record<string, unknown>, values = Object.fromEntries([\"paused\", \"received\", \"admitted\", \"rejected\", \"completed\", \"failed\", \"queued\", \"serving\", \"waiting\", \"consumedCoreUs\"].map((key) => [key, state[key]]));\n      if (extension) { const cpu = (state.compute as { cpu?: { availableCoreUs: number; appCoreUs: number; competitorCoreUs: number } } | undefined)?.cpu; if (cpu) { values.availableCoreUs = cpu.availableCoreUs; values.totalCoreUs = cpu.appCoreUs + cpu.competitorCoreUs; } }\n      const measuredAt = runtimeNow(); probe.produced++; observations.add(measuredAt, \"measurement\", target, \"actual instrumented station snapshot\");\n      work.message!.response = { ok: true, measurementAt: measuredAt, values: { ...values, endpoint: context.endpoint(target) } }; work.message!.bodyBytes = { response: probe.bytes }; done(\"completed\");\n      return { admitted: true, state: () => \"finished\", cancel: () => \"already-finished\" } satisfies Receipt;\n    },\n  });\n  function runtimeNow() { return clock.now; }\n  return { horizon: runtime.horizon, advanceTo: runtime.advanceTo, evidence() {\n    const e = runtime.evidence(), ids = new Set(i.resources.filter(isSystem).map((r) => r.id));\n    return { ...e, workloadVersion: \"m2g/1\" as const, computeConfiguration: e.computeConfiguration.filter((r) => !ids.has(r.id)), systemConfiguration: copy({ resources: i.resources.filter(isSystem), ...i.systems }), systems: copy({ authorities: [...authorities.values()].map((s) => s.evidence()), resolvers: [...resolvers.values()].map((s) => s.evidence()), cdns: [...cdns.values()].map((s) => s.evidence()), registries: [...registries.values()].map((s) => s.evidence()), clients: [...clients.values()].map((s) => s.evidence()), monitors: [...monitors.values()].map((s) => s.evidence()), backends: [...backends.values()].map((s) => s.evidence()), security: security.evidence(), assessment: security.assessment(), instrumentation: [...instrumentation.entries()].map(([target, p]) => ({ target, ...p })), observations: observations.snapshot(), commands: { offered: commandOffered, live: commandLive, completed: commandCompleted, failed: commandFailed, omitted: commandOmitted, results: commandResults }, policyLedger: SYSTEM_POLICY_LEDGER }), unmodeled: [...e.unmodeled.filter((s) => s !== \"DNS/NAT/ephemeral ports\"), \"DNS delegation/CNAME/AAAA/DNSSEC/NAT\", \"TLS cryptographic processing/framing/revocation/mTLS\", \"full HTTP cache/OCI/observability protocols\", \"target instrumentation CPU and physical telemetry persistence\"] };\n  } };\n}\n"
+    },
+    {
+      "path": "packages/simulation/src/model2/systems/security.ts",
+      "hash": "9a14200ad1e7686caf22ee615857187d210bee4420f2eff6c01eccf9ebe0f620"
+    },
+    {
+      "path": "packages/simulation/src/model2/systems/service.ts",
+      "hash": "1beb97300a8a0258e5881b38d56b57024a55ce1570812969cd0894cc2efc4049"
+    },
+    {
+      "path": "packages/simulation/src/model2/systems/startup.ts",
+      "hash": "81f4a441cfe46fdd222229f5423358727327526fd66851a0cb9feaddcb88e89a"
+    },
+    {
+      "path": "packages/simulation/src/model2/systems/validate.ts",
+      "hash": "863a43535b9682271ab041b75e93a1a716c3ba8caad2abff64a46ab35dd6c3ac"
+    },
+    {
+      "path": "packages/simulation/src/model2/time.ts",
+      "hash": "031badec4030bceae26b51f188a447eae5ffa3873818eadd6ede022095f09bbd"
+    },
+    {
+      "path": "packages/simulation/src/model2/validate.ts",
+      "hash": "689df22f8d7d7c623fbf49a13d611c46463fb367aac3034e7011812ad64be8cd"
+    },
+    {
+      "path": "packages/simulation/src/model2/workload/arrivals.ts",
+      "hash": "9c7e9e6b8577b17c085e293176d2718273373f420585e5e67e9e8cf564463e47"
+    },
+    {
+      "path": "packages/simulation/src/model2/workload/calibration.ts",
+      "hash": "d387956e068294c28e2a2047e38884905b2e5bcfb2f86caf154112f86057208c"
+    },
+    {
+      "path": "packages/simulation/src/model2/workload/contracts.ts",
+      "hash": "ad0754401303b8656f0bcf18995482c1b1b13bff6bd09c56033b17bfbfcd8bc3"
+    },
+    {
+      "path": "packages/simulation/src/model2/workload/evidence.ts",
+      "hash": "6075532792978d0be63820b5c39a63c991d12620bbc293452fe98755718edc56"
+    },
+    {
+      "path": "packages/simulation/src/model2/workload/policy.ts",
+      "hash": "9c4ddc012325e080680ec7962202e80130947671a65230032765b1e829bcc9a2"
+    },
+    {
+      "path": "packages/simulation/src/model2/workload/profiles.ts",
+      "hash": "954ce75d076077fd866633cf573f0709f937941a1961329324f263c448fae001"
+    },
+    {
+      "path": "packages/simulation/src/model2/workload/run.ts",
+      "hash": "e557775d7d8a43d660ce20b7b3ccd2da4b56fa3e4ab6d706fe00fa0b4bf39f5d",
+      "text": "import { EventKernel, lexical } from \"../time\";\nimport { requireKnown } from \"../../reality/quantity\";\nimport { identity, ingestTrace, openRows } from \"./arrivals\";\nimport { ResultBook } from \"./evidence\";\nimport { validateWorkload } from \"./validate\";\nimport { workloadStation } from \"./station\";\nimport { WORKLOAD_POLICY_LEDGER } from \"./policy\";\nimport type { CallerOutcome, Invocation, Receipt, RemoteOutcome, TraceRow, WorkloadInput, WorkStation, StationState } from \"./contracts\";\n\nexport interface WorkEndpoint<M extends StationState> {\n  accept(work: Invocation, done: (outcome: RemoteOutcome) => void): Receipt;\n  pause(value: boolean): void;\n  measure(): M;\n}\nexport interface RuntimeModules<M extends StationState> {\n  station(config: WorkStation, demands: Map<string, { cpuUs: number; ioUs: number }>, kernel: EventKernel, send: (target: string, work: Invocation, done: (outcome: RemoteOutcome) => void) => Receipt): WorkEndpoint<M>;\n  install?(kernel: EventKernel, stations: Map<string, WorkEndpoint<M>>, send: (target: string, work: Invocation, done: (outcome: RemoteOutcome) => void) => Receipt): void;\n  route?(target: string, work: Invocation, done: (outcome: RemoteOutcome) => void, direct: () => Receipt): Receipt;\n  enter?(target: string, work: Invocation, done: (outcome: RemoteOutcome) => void): Receipt;\n}\n\n// Separate internal workload revision; no public export, HTTP route or Model-1 dispatch.\nexport function createWorkloadModel2(authored: WorkloadInput) {\n  return createWorkloadRuntime(authored, { station: workloadStation });\n}\n\n// Resource modules share arrival/identity/caller/evidence ownership, not physics.\nexport function createWorkloadRuntime<M extends StationState>(authored: WorkloadInput, modules: RuntimeModules<M>) {\n  const copy = <T>(value: T): T => JSON.parse(JSON.stringify(value));\n  // Enforce structural budgets before duplicating a potentially large authored trace.\n  const demands = validateWorkload(authored), input = copy(authored);\n  for (const list of [input.resources, input.operations, input.arrivals, input.profiles, input.faults, input.ledger]) list.sort((a, b) => lexical(a.id, b.id));\n  for (const r of input.resources) if (r.kind === \"router\") r.backends.sort(lexical);\n  for (const a of input.arrivals) if (a.kind === \"trace\") a.trace = ingestTrace(a.trace, a.trace.rows, input.limits.maxTraceRows, new Set(input.operations.map((o) => o.id)));\n  const kernel = new EventKernel(input.limits.maxEvents), horizon = requireKnown(input.horizon, \"us\"), step = requireKnown(input.sampleInterval, \"us\");\n  const stations = new Map<string, WorkEndpoint<M>>();\n  const routers = new Map(input.resources.filter((r) => r.kind === \"router\").map((r) => [r.id, { backends: r.backends, next: 0 }]));\n  const send = (target: string, work: Invocation, done: (outcome: RemoteOutcome) => void): Receipt => {\n    const direct = () => {\n      const router = routers.get(target);\n      if (router) return send(router.backends[router.next++ % router.backends.length]!, work, done);\n      return stations.get(target)!.accept(work, done);\n    };\n    return modules.route ? modules.route(target, work, done, direct) : direct();\n  };\n  for (const r of input.resources) if (r.kind !== \"router\") stations.set(r.id, modules.station(r, demands.get(r.id)!, kernel, send));\n  modules.install?.(kernel, stations, send);\n  const operations = new Map(input.operations.map((o) => [o.id, o]));\n  const live = new Map<string, { work: Invocation; receipt?: Receipt }>();\n  const book = new ResultBook(input.limits.maxRawResults);\n  const counts = { offered: 0, admitted: 0, completed: 0, rejected: 0, deadlineExceeded: 0, abandoned: 0, remoteOutcomesAfterCallerStop: 0, cancellationRequested: 0, cancellationConfirmedAtEntry: 0 };\n  const byOperation = new Map(input.operations.map((o) => [o.id, { offered: 0, completed: 0, rejected: 0, deadlineExceeded: 0, abandoned: 0 }]));\n  const sources = new Map(input.arrivals.map((a) => [a.id, { offered: 0 }]));\n  const offer = (source: string, row: TraceRow, next?: () => void) => {\n    if (++counts.offered > input.limits.maxRequests) throw new Error(\"Request execution budget exceeded\");\n    sources.get(source)!.offered++;\n    const operation = operations.get(row.operation)!, perOperation = byOperation.get(row.operation)!; perOperation.offered++;\n    const rootId = identity(\"root\", source, row.id), callId = identity(rootId, \"attempt\", 0, \"entry\");\n    const work: Invocation = { rootId, attempt: 0, callId, operation: operation.id, offeredAt: kernel.now, ...(row.payloadBytes === undefined ? {} : { payloadBytes: row.payloadBytes }) };\n    const pending: { work: Invocation; receipt?: Receipt } = { work }; live.set(rootId, pending);\n    let terminal = false, cancelDeadline: (() => boolean) | undefined, cancelAbandon: (() => boolean) | undefined;\n    const finish = (outcome: CallerOutcome) => {\n      if (terminal) return;\n      terminal = true; live.delete(rootId); cancelDeadline?.(); cancelAbandon?.();\n      const key = outcome === \"deadline-exceeded\" ? \"deadlineExceeded\" : outcome;\n      counts[key]++; perOperation[key]++;\n      book.record({ ...work, at: kernel.now, outcome, responseUs: kernel.now - work.offeredAt }); next?.();\n    };\n    const stop = (outcome: \"deadline-exceeded\" | \"abandoned\") => {\n      finish(outcome);\n      if (operation.onCallerStop === \"request-cancellation\" && pending.receipt) {\n        counts.cancellationRequested++;\n        if (pending.receipt.cancel() === \"cancelled\") counts.cancellationConfirmedAtEntry++;\n      }\n    };\n    cancelDeadline = kernel.schedule(kernel.now + requireKnown(operation.callerTimeout, \"us\"), 1, identity(\"caller-stop\", rootId, 0), () => stop(\"deadline-exceeded\"));\n    if (operation.abandonAfter) cancelAbandon = kernel.schedule(kernel.now + requireKnown(operation.abandonAfter, \"us\"), 1, identity(\"caller-stop\", rootId, 1), () => stop(\"abandoned\"));\n    pending.receipt = (modules.enter ?? send)(operation.entry, work, (outcome) => {\n      if (terminal) { counts.remoteOutcomesAfterCallerStop++; return; }\n      finish(outcome === \"completed\" ? \"completed\" : \"rejected\");\n    });\n    if (pending.receipt.admitted) counts.admitted++;\n  };\n  const scheduleRow = (source: string, row: TraceRow, next?: () => void, offered?: () => void) => {\n    if (row.atUs <= horizon) kernel.schedule(row.atUs, 3, identity(\"arrival\", source, row.id), () => { offer(source, row, next); offered?.(); });\n  };\n  for (const a of input.arrivals) {\n    if (a.kind === \"closed\") {\n      const users = requireKnown(a.users, \"count\"), perUser = requireKnown(a.perUser, \"count\"), think = requireKnown(a.think, \"us\");\n      for (let user = 0; user < users; user++) {\n        const issue = (index: number, at: number) => {\n          if (index < perUser) scheduleRow(a.id, { id: identity(\"user\", user, index), atUs: at, operation: a.operation }, () => issue(index + 1, kernel.now + think));\n        };\n        issue(0, requireKnown(a.start, \"us\"));\n      }\n    } else {\n      const iterator = openRows(a, input.seed);\n      const advance = () => { const row = iterator.next(); if (!row.done) scheduleRow(a.id, row.value, undefined, advance); };\n      advance();\n    }\n  }\n  const faults: Array<{ id: string; at: number; active: boolean }> = [];\n  for (const f of input.faults) for (const active of [true, false]) {\n    const at = requireKnown(f.at, \"us\") + (active ? 0 : requireKnown(f.duration, \"us\"));\n    kernel.schedule(at, active ? 0 : -1, identity(\"fault\", f.id, active ? \"start\" : \"end\"), () => { stations.get(f.target)!.pause(active); faults.push({ id: f.id, at: kernel.now, active }); });\n  }\n  const snapshot = () => ({ at: kernel.now, counts: { ...counts, inFlight: live.size }, resources: [...stations.values()].map((s) => s.measure()) });\n  const samples: ReturnType<typeof snapshot>[] = [];\n  const sample = (at: number) => kernel.schedule(at, 4, identity(\"sample\", at), () => { samples.push(snapshot()); if (at < horizon) sample(Math.min(at + step, horizon)); });\n  sample(0);\n  let failure: string | null = null;\n  return {\n    horizon,\n    advanceTo(until: number) {\n      if (failure) throw new Error(\"Failed execution cannot resume\");\n      if (until > horizon) throw new Error(\"Beyond authored horizon\");\n      try { kernel.advanceTo(until); } catch (e) { failure = (e as Error).message; throw e; }\n    },\n    evidence() {\n      const state = snapshot(), terminal = counts.completed + counts.rejected + counts.deadlineExceeded + counts.abandoned;\n      return copy({ modelVersion: \"2\", workloadVersion: input.workloadVersion, status: \"internal\", seed: input.seed,\n        capture: { throughUs: kernel.now, reachedHorizon: kernel.now === horizon && !failure, failure },\n        ...state, samples, faults, byOperation: Object.fromEntries(byOperation), sources: Object.fromEntries(sources),\n        results: book.raw, resultRetention: { terminal, retained: book.raw.length, omitted: terminal - book.raw.length },\n        distributions: { population: \"terminal caller outcomes by operation/outcome; in-flight requests are right-censored\", censored: live.size, groups: book.summary() },\n        inFlight: [...live.values()].slice(0, input.limits.maxRawResults).map(({ work, receipt }) => ({ ...work, state: receipt?.state(), ageUs: kernel.now - work.offeredAt })),\n        inFlightOmitted: Math.max(0, live.size - input.limits.maxRawResults),\n        execution: { processed: kernel.processed, cancelled: kernel.cancelled, pending: kernel.pending, peakPending: kernel.peakPending },\n        provenance: { profiles: input.profiles, ledger: input.ledger, policyLedger: WORKLOAD_POLICY_LEDGER, configuration: { resources: input.resources, operations: input.operations, limits: input.limits },\n          arrivals: input.arrivals.map((a) => a.kind === \"trace\" ? { id: a.id, kind: a.kind, schema: a.trace.schema, durationUs: a.trace.durationUs, rows: a.trace.rows.length, provenance: a.trace.provenance } : a) },\n        unmodeled: [\"network transport latency\", \"memory\", \"cost\", \"locks\", \"packet loss\"],\n      });\n    },\n  };\n}\n"
+    },
+    {
+      "path": "packages/simulation/src/model2/workload/station.ts",
+      "hash": "5920e45efbd3a9133d1be437a7e280f76031fc80757a7c3da1aadaed0bedcfa8"
+    },
+    {
+      "path": "packages/simulation/src/model2/workload/validate.ts",
+      "hash": "aad06be0f0a043ca2dccf8032c55bd88f3a40605695ce7eb61c2d625b2d0abb5"
+    },
+    {
+      "path": "packages/simulation/src/reality/ledger.ts",
+      "hash": "287a2f8d7255ed5ed30b8715bfce1bf58908990e45ff2816d69060721001593d"
+    },
+    {
+      "path": "packages/simulation/src/reality/metering/combine.ts",
+      "hash": "128b633c31391acb262ec3834c4cee1cd8ee8ca69899849c783952de776d7148"
+    },
+    {
+      "path": "packages/simulation/src/reality/metering/contracts.ts",
+      "hash": "2d18c19146f165586e7fae04e23256b08c008770b1a7790baa794cda55a15303"
+    },
+    {
+      "path": "packages/simulation/src/reality/metering/journal.ts",
+      "hash": "b61718e221f630b3dc512b23af64a94ba7c2c2bfd67b470a5e96752c87293109"
+    },
+    {
+      "path": "packages/simulation/src/reality/metering/link-meter.ts",
+      "hash": "06964c943fd6d716ce2c161a06efd71fb22429d0a93c614ff55126191467e245"
+    },
+    {
+      "path": "packages/simulation/src/reality/metering/measurements.ts",
+      "hash": "315ad5cab4ad5e8d6ab3c5f44f92591b5ba88b1ca33055adeaf2fe0a417712d0"
+    },
+    {
+      "path": "packages/simulation/src/reality/metering/object-meter.ts",
+      "hash": "0f0b2bb1a33d67ff825dd0d4d185938a45bd5793a38b24738c569371d7e43fa3"
+    },
+    {
+      "path": "packages/simulation/src/reality/metering/port.ts",
+      "hash": "28cc8d574312a98adb6bc373e36240f2f4d142d0c6768649110ab196fea73c26"
+    },
+    {
+      "path": "packages/simulation/src/reality/metering/reconcile.ts",
+      "hash": "c55a34d9a8129c83a6f686423b51e13ce4205baa828dfe005edf41e632184dab"
+    },
+    {
+      "path": "packages/simulation/src/reality/metering/replay.ts",
+      "hash": "2eff00ed9814c2c4c43e83ce83ec8cda8e63ce52307cdcebd0b6350818b1528d"
+    },
+    {
+      "path": "packages/simulation/src/reality/metering/run.ts",
+      "hash": "9d24862c71b9ff4e37e28943d111fa671a6d42c5d2b38113b6ec9c114464ae6f",
+      "text": "import { createProductModel2 } from \"../../model2/product/run\";\nimport type { CompiledProduct } from \"../../model2/product/contracts\";\nimport type { ProviderProduct } from \"../provider/contracts\";\nimport { providerEvidence } from \"../provider/run\";\nimport { digest } from \"../provider/fingerprint\";\nimport type { ContentHasher } from \"../provider/fingerprint\";\nimport type { MeteringConfig } from \"./contracts\";\nimport { usageJournal } from \"./journal\";\nimport { reconcileUsage } from \"./reconcile\";\n\nfunction meteredRuntime(compiled: CompiledProduct, config: MeteringConfig, expectedInput: string, hasher: ContentHasher) {\n  if (config.inputFingerprint !== expectedInput) throw Error(\"Usage run must pin the exact compiled input\");\n  for (const id of config.objects) if (!compiled.input.resources.some((r) => r.id === id && r.kind === \"object-store\")) throw Error(`Unknown or unsupported object usage selection: ${id}`);\n  for (const id of config.links) if (!compiled.input.links.some((l) => l.id === id)) throw Error(`Unknown directed-link usage selection: ${id}`);\n  const journal = usageJournal(config, hasher), runtime = createProductModel2(compiled, journal.observer);\n  function evidence() {\n    const model = runtime.evidence();\n    let usage = journal.capture(model.at, model.capture.failure);\n    const errors = reconcileUsage(usage, model);\n    if (errors.length) { errors.forEach(journal.invalidate); usage = journal.capture(model.at, model.capture.failure); }\n    return { model, usage };\n  }\n  return { horizon: runtime.horizon, advanceTo: runtime.advanceTo, evidence, frame() { return journal.frame(evidence().usage); } };\n}\nexport function createMeteredProductModel2(compiled: CompiledProduct, config: MeteringConfig, hasher: ContentHasher) {\n  return meteredRuntime(compiled, config, digest(compiled, hasher), hasher);\n}\nexport function createMeteredProviderModel2(compiled: ProviderProduct, config: MeteringConfig, hasher: ContentHasher) {\n  const { fingerprint, ...payload } = compiled;\n  if (compiled.schema !== \"infraforge-provider-compiled/1\" || digest(payload, hasher) !== fingerprint) throw Error(\"Compiled provider/product content drift\");\n  const runtime = meteredRuntime(compiled.product, config, compiled.fingerprint, hasher);\n  return { horizon: runtime.horizon, advanceTo: runtime.advanceTo, frame: runtime.frame, evidence() { const e = runtime.evidence(); return { ...e, provider: providerEvidence(compiled, e.model) }; } };\n}\n"
+    },
+    {
+      "path": "packages/simulation/src/reality/metering/validation.ts",
+      "hash": "394da2ea9166ce7bd8629c199aa842ec685735d9c55ffd6b1d878ea7d25d0644"
+    },
+    {
+      "path": "packages/simulation/src/reality/metering/windows.ts",
+      "hash": "806d5cce7aecc429608ac29be832a9711b29e47c8fa16623bf5bcff789d339c4"
+    },
+    {
+      "path": "packages/simulation/src/reality/provider/compile.ts",
+      "hash": "ea303a92a8a61419e9da11cc1f9a7271ea0b64a77d62c9e88aa730201bd79981"
+    },
+    {
+      "path": "packages/simulation/src/reality/provider/contracts.ts",
+      "hash": "e55786d3116568926fb9a11b99ee2364edf71180452c504306c1205ef05e5fdf"
+    },
+    {
+      "path": "packages/simulation/src/reality/provider/exact.ts",
+      "hash": "530879c8f4aa6b15d4751dd9518e19cd60c543f5473a2a4bedd6baeeca4ee9e2"
+    },
+    {
+      "path": "packages/simulation/src/reality/provider/facts.ts",
+      "hash": "bea625bf145c7305c8238372f07475cc7388eb681969f95f2799433ec1b7662d"
+    },
+    {
+      "path": "packages/simulation/src/reality/provider/fingerprint.ts",
+      "hash": "5bdbc9a4e9cbccab8d736ca3a39ad3e73db5c5e9f688f8d11a3b09d4c3ce33d3"
+    },
+    {
+      "path": "packages/simulation/src/reality/provider/locations.ts",
+      "hash": "d6930520d0c16df6d9e1f192ec690dfff29aafaec3ec660f80d356d075ac91d9"
+    },
+    {
+      "path": "packages/simulation/src/reality/provider/pricing.ts",
+      "hash": "8ea4502565af2b24b61ac11fdff548fc50b3845571ec86a03ed698604f4ae410"
+    },
+    {
+      "path": "packages/simulation/src/reality/provider/run.ts",
+      "hash": "e8f75e3265841941632fa1c40e1bb2e4baae66a3ca9ed8955f40a36d8328cef2"
+    },
+    {
+      "path": "packages/simulation/src/reality/provider/snapshot.ts",
+      "hash": "727ceb13b5066cfd9fb913cab5ea9135938db287baba4d90d929d0bdbf7a13c5"
+    },
+    {
+      "path": "packages/simulation/src/reality/provider/usage.ts",
+      "hash": "d80e8ee8425fba1fe3bb725321abdf30856b6ab76a51c337543265dc450cce35"
+    },
+    {
+      "path": "packages/simulation/src/reality/provider/validity.ts",
+      "hash": "01fe9fb345b7869bf0acb3e15890766c22e9efd70a210dc20f428fb6222cabfd"
+    },
+    {
+      "path": "packages/simulation/src/reality/quantity.ts",
+      "hash": "42232c722115d8ac039a8f59ae99e51ea7a6cb5cb870bdd6fcfaa8da0c64f459"
+    },
+    {
+      "path": "packages/simulation/tests/async.test.ts",
+      "hash": "c5406f740dea8648a275c11a2b43048c55788d7903b45a8664fb0da9cadb0e12"
+    },
+    {
+      "path": "packages/simulation/tests/asyncFixture.ts",
+      "hash": "fbc9bfa8034081e9cd722d562d90410fd9fe58ebfcef7bdcc5eeb208bccfd429"
+    },
+    {
+      "path": "packages/simulation/tests/compute.test.ts",
+      "hash": "4bd86ebb77a882f746eb80a9a8a746b3349e9c6c6b78b708390a2d08423b32c0"
+    },
+    {
+      "path": "packages/simulation/tests/computeFixture.ts",
+      "hash": "3c0eb9e8e86b3b8e9a12f4e7bbd0cbd1c327cab363b27005aef52c3513c52800"
+    },
+    {
+      "path": "packages/simulation/tests/data.test.ts",
+      "hash": "de680d999f7e417ac69ce8b71050b8c4c8760695944cc9ea991c86b85fb5cbfc"
+    },
+    {
+      "path": "packages/simulation/tests/dataFixture.ts",
+      "hash": "4c9db9d64e3c0032d834a0f14ac47e602a59f6bc61374ab4afdd26b6c7475dfd"
+    },
+    {
+      "path": "packages/simulation/tests/engine.golden.test.ts",
+      "hash": "95e565b4ec2c1e49874c1518f8c036e2d5f3388aa9abbdd50ae349086c6e6a97"
+    },
+    {
+      "path": "packages/simulation/tests/jitterAlignment.test.ts",
+      "hash": "520550a5feb2ea77a9755b6861f655adc0e32cef2eed867f26d63fcca6648816"
+    },
+    {
+      "path": "packages/simulation/tests/meteringBoundaries.test.ts",
+      "hash": "8029062dfd313396aa98f5b4d7b041dfe16b13c0371240bbbefa5fceddd88e4a"
+    },
+    {
+      "path": "packages/simulation/tests/meteringFixture.ts",
+      "hash": "9beafb7ceb4b4507782c73ee01b8038d3eff7909febf6b2b2fa50abf2e8d4069"
+    },
+    {
+      "path": "packages/simulation/tests/meteringJournal.test.ts",
+      "hash": "f6b436982a2dd0b9fe323a57bc1a0f2d6b7f86cea67f3f42b89336f76edf5c1d"
+    },
+    {
+      "path": "packages/simulation/tests/meteringPort.test.ts",
+      "hash": "4931c0f54ad5f26fe57fdd20a55cb1e687c71cb2999308f71d872e60de2000bc"
+    },
+    {
+      "path": "packages/simulation/tests/meteringProduct.test.ts",
+      "hash": "0f2dee5e41225518a2534fb00d69a3ce2a71c85ab29babc55424f4dde004ea03"
+    },
+    {
+      "path": "packages/simulation/tests/model2.test.ts",
+      "hash": "289d2697f405203dd88b69c9c4b11a898e72b37408eb39254ebc07ee275da8c6"
+    },
+    {
+      "path": "packages/simulation/tests/model2Debug.ts",
+      "hash": "da869929241768684604e8f1ca7c7c9b00e2225c55615f1c53a9e9ac16b7a8e9"
+    },
+    {
+      "path": "packages/simulation/tests/model2Exploration.ts",
+      "hash": "5c6cf123ced1599e9928cf4337c053f2a7a2ae9644fd8281d929bd017a01e45d"
+    },
+    {
+      "path": "packages/simulation/tests/model2Fixture.ts",
+      "hash": "48a7ea4af0c586d4d73da9d77e4acd085976a43ce55a6a8d4f18452036705fa5"
+    },
+    {
+      "path": "packages/simulation/tests/network.test.ts",
+      "hash": "7d5146a75fd97320ab8a24b9dbb94652acc3bb76d68eee4c5deab974830c31bd"
+    },
+    {
+      "path": "packages/simulation/tests/networkFixture.ts",
+      "hash": "d25175c211679997142e5869e08d9bbd2c94b7c7b63173147eb5bf7d3bb723bb"
+    },
+    {
+      "path": "packages/simulation/tests/product.test.ts",
+      "hash": "432bb19e6d151ef610047d555dd772182a04355f878a0b21308ab175b243d1cf"
+    },
+    {
+      "path": "packages/simulation/tests/productCases.ts",
+      "hash": "1b40cc7a2817daa5095daa896c56e0e37c1648cfa909f64d55fe28bdd14cdf2b"
+    },
+    {
+      "path": "packages/simulation/tests/productFixture.ts",
+      "hash": "00364a6a8e14fcdc158e5156ef8871fbf5cef16f79235f42fba8be0ef0e3c200"
+    },
+    {
+      "path": "packages/simulation/tests/productSweep.test.ts",
+      "hash": "a233462345f7c0bf0588f2bcd3e999939dc8b0fdc0f98ef931797caf89d68e59"
+    },
+    {
+      "path": "packages/simulation/tests/providerCases.ts",
+      "hash": "b0676af91d3b80bfcdf445b77f9cfe5b8e34946c2f8b0291e3467075f32f174b"
+    },
+    {
+      "path": "packages/simulation/tests/providerFixture.ts",
+      "hash": "cfdf8019c458112c2324eea32cad30c97b3a28bedfee18870318096f351087a9"
+    },
+    {
+      "path": "packages/simulation/tests/providerPricing.test.ts",
+      "hash": "79355d010305498ec6c6c90dd2b7aeafd7bcdf5cc5480fe7299761ea0b3e698a"
+    },
+    {
+      "path": "packages/simulation/tests/providerProduct.test.ts",
+      "hash": "620deeed5aeee52e643a0d1b839bfd19f0f4e52fde8fa0cb413724a7d09d5d79"
+    },
+    {
+      "path": "packages/simulation/tests/systems.test.ts",
+      "hash": "053be0d0f7e38d6d5184e24bda167202f45e45d87748df33a36b033b9a43d56c"
+    },
+    {
+      "path": "packages/simulation/tests/systemsChecks.ts",
+      "hash": "d14bd9741e5a1d57d04c1545ca002ea9a5d21e13af7a1283151d7c47e2dcc48d"
+    },
+    {
+      "path": "packages/simulation/tests/systemsFixture.ts",
+      "hash": "8c6e84b80331c7be08738ff537e676b9401ea71e5e892c4aeeac4d9a922c3c9e"
+    },
+    {
+      "path": "packages/simulation/tests/workload.test.ts",
+      "hash": "ab871ed9e0bcd5218250e4d2e2986a450f6804058ca549084b8ad40b0ba20b5f"
+    },
+    {
+      "path": "packages/simulation/tests/workloadFixture.ts",
+      "hash": "db635fa4b38d11036169db3ffa9a94e7bb22873226fa9af0d2129c3b476cd32a"
+    },
+    {
+      "path": "scripts/reality/artifacts.ts",
+      "hash": "ad4d6589f18044b87cd86b7b7bb1656a6455c7275b9faf1cf57bf30d04e52b11"
+    },
+    {
+      "path": "scripts/reality/async-calibration.ts",
+      "hash": "9dd6766188f2c77d58bc1fe2f8dc9b4927e1e260a0b3ec2782d47792a7d51edb"
+    },
+    {
+      "path": "scripts/reality/async-performance.ts",
+      "hash": "aa96bbbdacbda6b875f5da5ef55cc33b5a9a7e9652c83d78d1d9ca6277fcad6c"
+    },
+    {
+      "path": "scripts/reality/async-proofs.ts",
+      "hash": "02ec38492fc2350b7430433066dca26d27e6772eec3ef99b61feaf4a46646ede"
+    },
+    {
+      "path": "scripts/reality/classify.ts",
+      "hash": "920b32a2667375dfa876dca1b4c69143e832fe547b4fc231263a3a625d3e0c49"
+    },
+    {
+      "path": "scripts/reality/compute-calibration.ts",
+      "hash": "d6e53d11199b3674ce31ecd1e61dd6285f59954162449e2a036c53f72bf50227"
+    },
+    {
+      "path": "scripts/reality/compute-performance.ts",
+      "hash": "d72ebfd82b22cf1af35d6e4f0e350540d575255f988ce5c069ca5c947e44e822"
+    },
+    {
+      "path": "scripts/reality/compute-proofs.ts",
+      "hash": "801be7f1f432be26ce771abbe677a6584bd8d5e8dfe90900cfab56a3075ac6d1"
+    },
+    {
+      "path": "scripts/reality/data-calibration.ts",
+      "hash": "16946bf1bec114657be1d977361905f964b1b074bf35857068f2a5551cca8960"
+    },
+    {
+      "path": "scripts/reality/data-performance.ts",
+      "hash": "3c1733f56d38e6af5f1b0e11ec149f50890dd6eed82968f4640a1875d33bb2dc"
+    },
+    {
+      "path": "scripts/reality/data-proofs.ts",
+      "hash": "12f62f9e1618454cb867e8f806b4af4f2bb8be34b0dbeaefb8b1e545874c3d3c"
+    },
+    {
+      "path": "scripts/reality/inventory.ts",
+      "hash": "7008caaf8e3475f5bf77105978e1f8aa6fc4b0d0320a3b18611f436c1370d414"
+    },
+    {
+      "path": "scripts/reality/measure-compute.ts",
+      "hash": "83001897431b84f99676315619177270dbfc601da2df95fb7011eb1b99e65e0b"
+    },
+    {
+      "path": "scripts/reality/metering-performance.ts",
+      "hash": "9c494a45057eca15f29ae98955ce65ddfd79b72d48d33d4f184c736c8436ae4b"
+    },
+    {
+      "path": "scripts/reality/metering-proofs.ts",
+      "hash": "b364ecfc8d2382a752332fea985f80e952ef60aceb2274e0446ba2badd347e47"
+    },
+    {
+      "path": "scripts/reality/metering-source.ts",
+      "hash": "9acf545d71c4698c1082dadd23e18fe9565ac57b16465931ef69acfac7023aec"
+    },
+    {
+      "path": "scripts/reality/network-calibration.ts",
+      "hash": "cb9c453fbdd0eda342ac08c312a6fd24379fc7bd2f1156d4780b8d68945195a6"
+    },
+    {
+      "path": "scripts/reality/network-performance.ts",
+      "hash": "91f940cc9a5acee450fc807f13a00961ac79156d291e6b3efca7fcecf5bf9c66"
+    },
+    {
+      "path": "scripts/reality/network-proofs.ts",
+      "hash": "b3bfa561c1a1ff9facaa00a852cc1aa39e218e4bbbe73e6ae513cc4d19e8e70d"
+    },
+    {
+      "path": "scripts/reality/product-artifacts.ts",
+      "hash": "f701a3a9594cc4589bcb7ffec936367aca91f6aa1e266489999aece0d06ea733"
+    },
+    {
+      "path": "scripts/reality/product-cases.ts",
+      "hash": "178ea509fdcca979f2ffb6de435d3aae984072867c2ec962e2f6f36595d56324"
+    },
+    {
+      "path": "scripts/reality/product-ledger.ts",
+      "hash": "9ce0f2a93d60c720878050d24e46284948e121642e2fd6b8e76d71a3a195371b"
+    },
+    {
+      "path": "scripts/reality/product-performance.ts",
+      "hash": "bddfec2e84bea54ff294d41cac0ed41e0ea940feb8d23ef157fae5aab36b0f96"
+    },
+    {
+      "path": "scripts/reality/product-proofs.ts",
+      "hash": "d8e98bc06e4f65402a71e313e949ce084037c6e2cfba33288d8e2c068775d3cb"
+    },
+    {
+      "path": "scripts/reality/product-source.ts",
+      "hash": "7a3002bb5e3058b80479059ce80711859c576a71837a6be9b2b79f2b38ed656c"
+    },
+    {
+      "path": "scripts/reality/provider-performance.ts",
+      "hash": "7b2f3d2b1c843bf37fbbd82e12790fad187974552875eb385b57bc394549a54c"
+    },
+    {
+      "path": "scripts/reality/provider-proofs.ts",
+      "hash": "7a68159fff7dffb67ddd418da38f4d367506000833a0a223fb4eff484e349b91"
+    },
+    {
+      "path": "scripts/reality/provider-source.ts",
+      "hash": "f70511410c88111e7a9f980b5708c5afbddc21bd95257bd00bed92b4e37bae43"
+    },
+    {
+      "path": "scripts/reality/scan.ts",
+      "hash": "89b3a86b39308f41fd828f49f630292468646a58430f29fba83c0d3cef8f628a"
+    },
+    {
+      "path": "scripts/reality/shipping-inventory.ts",
+      "hash": "adbb303e61ef71be5d7155f2ceb8547c4826d491982ec7bb62c352042f965575"
+    },
+    {
+      "path": "scripts/reality/shipping-taxonomy.ts",
+      "hash": "c6d955152edb0fc2bfe5aafb53d5304cfb03c5258536f57003b893a1c44918e9"
+    },
+    {
+      "path": "scripts/reality/source-lineage.ts",
+      "hash": "9364351c5925492265de83dace03f1068031dd2ac42a87178a23a029e1d6cb6c",
+      "text": "import { createHash } from \"node:crypto\";\nimport { readFileSync, readdirSync, writeFileSync } from \"node:fs\";\nimport { relative, resolve } from \"node:path\";\nimport { productHash, productRoot } from \"./product-source\";\nimport { providerDigest } from \"./provider-source\";\n\nconst accepted = \"5b4771ac107e447aa08aac146b8ff15f019beac9\";\nconst foundation = \"d1fe122d5a502dc916190a6d487cc72c4965bc0d563a92222166f0c130b74dfe\";\nconst provider = \"11fc05c4f569e1a3faa19b1a8a2ef73eba8706df8790ddf5eb9868b27e434d3c\";\nconst changed = [\"async/commands.ts\", \"async/objects.ts\", \"async/run.ts\", \"network/link.ts\", \"network/run.ts\", \"network/transport.ts\", \"systems/run.ts\", \"product/run.ts\"]\n  .map((p) => `packages/simulation/src/model2/${p}`).concat(\"scripts/reality/provider-proofs.ts\");\nconst artifacts = [\"m2h-ledger\", \"m2h-performance\", \"m2h-proofs\", \"m2h-sweeps\", \"m2i-ec2-source\", \"m2i-heldout-billing\", \"m2i-performance\", \"m2i-proofs\", \"m2i-source-reviews\"].map((p) => `docs/reality/${p}.json`);\nconst normalize = (text: string) => text.replaceAll(\"\\r\\n\", \"\\n\");\nconst sha = (text: string) => createHash(\"sha256\").update(normalize(text)).digest(\"hex\");\nexport interface SourceLineage {\n  schema: string;\n  acceptedSha: string;\n  foundationHash: string;\n  providerHash: string;\n  files: Array<{ path: string; originalSha256: string; currentSha256: string; originalText: string }>;\n  artifacts: Array<{ path: string; sha256: string }>;\n}\nexport const readLineage = (root = productRoot): SourceLineage => JSON.parse(readFileSync(resolve(root, \"docs/reality/m2j-source-lineage.json\"), \"utf8\"));\nexport function sourceProjection(lineage: SourceLineage, read: (path: string) => string) {\n  if (lineage.schema !== \"infraforge-runtime-source-lineage/1\" || lineage.acceptedSha !== accepted || lineage.foundationHash !== foundation || lineage.providerHash !== provider || lineage.files.length !== changed.length || new Set(lineage.files.map((f) => f.path)).size !== changed.length) throw Error(\"Invalid accepted source lineage identity\");\n  const originals = new Map<string, string>();\n  for (const f of lineage.files) {\n    if (!changed.includes(f.path) || sha(f.originalText) !== f.originalSha256 || !/^[a-f0-9]{64}$/.test(f.currentSha256) || sha(read(f.path)) !== f.currentSha256) throw Error(`Unreviewed source lineage drift: ${f.path}`);\n    originals.set(f.path, normalize(f.originalText));\n  }\n  return (path: string) => originals.get(path) ?? normalize(read(path));\n}\nfunction foundationFiles(root: string) {\n  const walk = (path: string): string[] => readdirSync(path, { withFileTypes: true }).flatMap((e) => e.isDirectory() ? walk(resolve(path, e.name)) : e.name.endsWith(\".ts\") ? [resolve(path, e.name)] : []);\n  return [...walk(resolve(root, \"packages/simulation/src/model2\")), ...[\"packages/simulation/tests/productFixture.ts\", \"scripts/reality/product-cases.ts\", \"packages/simulation/tests/productCases.ts\", \"packages/simulation/tests/systemsChecks.ts\"].map((p) => resolve(root, p))].sort().map((p) => relative(root, p).replaceAll(\"\\\\\", \"/\"));\n}\nexport function historicalFoundationHash(root = productRoot, lineage = readLineage(root)) {\n  const original = sourceProjection(lineage, (path) => readFileSync(resolve(root, path), \"utf8\"));\n  const result = productHash(foundationFiles(root).map((p) => [p, original(p)]));\n  if (result !== foundation) throw Error(\"Accepted M2H source fingerprint cannot be reconstructed\");\n  return result;\n}\nexport function historicalProviderHash(root = productRoot, lineage = readLineage(root)) {\n  const original = sourceProjection(lineage, (path) => readFileSync(resolve(root, path), \"utf8\"));\n  const folder = resolve(root, \"packages/simulation/src/reality/provider\");\n  const paths = [...readdirSync(folder).filter((p) => p.endsWith(\".ts\")).map((p) => `packages/simulation/src/reality/provider/${p}`),\n    \"packages/simulation/tests/providerFixture.ts\", \"packages/simulation/tests/providerCases.ts\", \"scripts/reality/provider-source.ts\", \"scripts/reality/provider-proofs.ts\", \"scripts/reality/provider-performance.ts\", \"docs/reality/m2i-ec2-source.json\", \"docs/reality/m2i-source-reviews.json\", \"docs/reality/m2i-heldout-billing.json\"].sort();\n  const result = providerDigest({ foundation: historicalFoundationHash(root, lineage), files: paths.map((p) => [p, original(p)]) });\n  if (result !== provider) throw Error(\"Accepted M2I source fingerprint cannot be reconstructed\");\n  return result;\n}\nexport function verifyHistoricalArtifacts(root = productRoot) {\n  const lineage = readLineage(root);\n  if (lineage.artifacts.length !== 9 || new Set(lineage.artifacts.map((a) => a.path)).size !== 9) throw Error(\"Historical artifact inventory drift\");\n  for (const a of lineage.artifacts) if (!artifacts.includes(a.path) || sha(readFileSync(resolve(root, a.path), \"utf8\")) !== a.sha256) throw Error(`Historical artifact changed: ${a.path}`);\n}\nexport function refreshCurrentSourcePins(root = productRoot) {\n  const lineage = readLineage(root);\n  for (const f of lineage.files) f.currentSha256 = sha(readFileSync(resolve(root, f.path), \"utf8\"));\n  // Original bytes/identities are immutable; verify them before saving the current pins.\n  sourceProjection(lineage, (path) => readFileSync(resolve(root, path), \"utf8\"));\n  historicalFoundationHash(root, lineage); historicalProviderHash(root, lineage); verifyHistoricalArtifacts(root);\n  writeFileSync(resolve(root, \"docs/reality/m2j-source-lineage.json\"), JSON.stringify(lineage, null, 2) + \"\\n\");\n}\nif (import.meta.main) {\n  if (process.argv.includes(\"--refresh-current\")) refreshCurrentSourcePins();\n  console.info(JSON.stringify({ accepted, foundation: historicalFoundationHash(), provider: historicalProviderHash() }));\n  verifyHistoricalArtifacts();\n}\n"
+    },
+    {
+      "path": "scripts/reality/systems-calibration.ts",
+      "hash": "66ddc5dfce7f655c086e9199c9b4191c14821d3c1136383cce6ad1c462f0bd9c"
+    },
+    {
+      "path": "scripts/reality/systems-invariants.ts",
+      "hash": "677c81f72d13387c77eddf503882729017c61928b464737741629a46a925568c"
+    },
+    {
+      "path": "scripts/reality/systems-performance.ts",
+      "hash": "1382b3ba668e8ea7eab9dbbf08f3a7ab8ecc303ea24942ebb81ac832833ce10d"
+    },
+    {
+      "path": "scripts/reality/systems-proofs.ts",
+      "hash": "c4c9951c4a39e261b5a4f582f9df282e45ec8e35c2e991ad38d8c9890240b2b1"
+    },
+    {
+      "path": "scripts/reality/trace-input.ts",
+      "hash": "4d589147df6512ac46cfd9e8e8f92c3fdd89ed1b1c0be06dcb9a5dbdf8c5b2f7"
+    },
+    {
+      "path": "scripts/reality/workload-calibration.ts",
+      "hash": "c0446084a06f305e0fcbea8c8ba4056224a44acf4c12caf4f6d74c625a6e31ce"
+    },
+    {
+      "path": "scripts/reality/workload-performance.ts",
+      "hash": "43618445416187e457e72c4bbb089375f6f0504963b0357ff1fcd116a37e5e0e"
+    },
+    {
+      "path": "scripts/reality/workload-proof.ts",
+      "hash": "ee5a70c38a15702df46e541ca60c829da4d8fa4562951fdb02b8d2537c72b5b4"
+    },
+    {
+      "path": "scripts/tests/asyncCalibration.test.ts",
+      "hash": "c48b3fb7ca4638910ca90d38e0665731dfcbfef304e86f80d324017644b4910b"
+    },
+    {
+      "path": "scripts/tests/boundaries.test.ts",
+      "hash": "0471096a0c3b199a240c5dae8c2b2989d9811c9c65d579e166169d5ca64d52a6"
+    },
+    {
+      "path": "scripts/tests/computeCalibration.test.ts",
+      "hash": "d3e37680875e84518ed1c6298e4b45bc694497f8a3c8c4c5c07007c2afb0452e"
+    },
+    {
+      "path": "scripts/tests/dataCalibration.test.ts",
+      "hash": "3f62fabd2644f90a252b163009ee06f2a328b658e700549c5f104799e914b5c2"
+    },
+    {
+      "path": "scripts/tests/meteringArtifacts.test.ts",
+      "hash": "81ce71873b12794ead1a67daf94259207a1c2c12f21097c54d9f29292e0e7caf"
+    },
+    {
+      "path": "scripts/tests/neon.test.ts",
+      "hash": "ae6e53b813a8bc0ccdebf26cde88ca6d8df3e649b53ec50b98a5cef0b95080a7"
+    },
+    {
+      "path": "scripts/tests/networkCalibration.test.ts",
+      "hash": "5dd1f21be68388bbfb3a0d548bb457204b6b31a2ca740711ef1bed929644357c"
+    },
+    {
+      "path": "scripts/tests/productArtifacts.test.ts",
+      "hash": "3f4ba7553bec836e73149faf3c076c2ad069ac8e8cbf9ea1085a2ee08c3d86e4"
+    },
+    {
+      "path": "scripts/tests/providerArtifacts.test.ts",
+      "hash": "da0010641befa715c4674462837bf1e669e2f711fe41508560cf091a18daaab8"
+    },
+    {
+      "path": "scripts/tests/reality.test.ts",
+      "hash": "113032c2077446da46d587c27c3e0dbb5de62d5756346687a38f7b506bbd57d9"
+    },
+    {
+      "path": "scripts/tests/release.test.ts",
+      "hash": "0fc5664d273145fc9428449f95f41d6d3d73dc9158de2419ffc326ebfb1db21b"
+    },
+    {
+      "path": "scripts/tests/shippingReality.test.ts",
+      "hash": "5d2ca4914467dee9c5e5d18d60517bceca67b161cfb8054b48168bfbc3b7a11d"
+    },
+    {
+      "path": "scripts/tests/systemsCalibration.test.ts",
+      "hash": "d3a3b99240aa100e04ce3230c09d2588d343abe0474af6e567651c93c77b4953"
+    },
+    {
+      "path": "scripts/tests/traceInput.test.ts",
+      "hash": "def0f458ffda10f442503e5d7648de625198a97b7f661aea919021d7e606d281"
+    },
+    {
+      "path": "scripts/tests/workloadCalibration.test.ts",
+      "hash": "f678b70c7642fce5c6c59b09bde9248cf938627bcce5f0d0134e5c40980f23de"
+    }
+  ],
+  "current": [
+    {
+      "path": "apps/backend/internalModel2/authoring.ts",
+      "hash": "fbf3e20b5c82cb9460e087aca74b39f10c1efa5e210b3ae3593beab922067e00"
+    },
+    {
+      "path": "apps/backend/internalModel2/budgets.ts",
+      "hash": "b178baa68e3e01956674aa20a6f89d1028c78a0e2bba5402e0a2521fa569ee3b"
+    },
+    {
+      "path": "apps/backend/internalModel2/capture.ts",
+      "hash": "14bcdf12ec9582182aa22765d71837e6a83a55a399300889969011c4fdfbdbad"
+    },
+    {
+      "path": "apps/backend/internalModel2/captureV1.ts",
+      "hash": "79d219e750a652d60512679657c417688decda158e3f0a7f8b4079e65072484c"
+    },
+    {
+      "path": "apps/backend/internalModel2/captureV2.ts",
+      "hash": "5f79ceafe935865d38441927d1f8faaf2a4b9bbfe3a7389e8299715b6b1e002d"
+    },
+    {
+      "path": "apps/backend/internalModel2/captureV2Validation.ts",
+      "hash": "5c9d6f73957d614fe36a2c400d8c941ac86203eb3933ae1a2ee16b586bb46f02"
+    },
+    {
+      "path": "apps/backend/internalModel2/causalJournal.ts",
+      "hash": "2559e32bdef62bea39cadec1883714e0fe143444174cea6703b8f0293aa173f1"
+    },
+    {
+      "path": "apps/backend/internalModel2/connectedPresentation.ts",
+      "hash": "24a72757ecccec8834a7b4c812c4b1c2d7c7a93c76437b58e7f68246bf8d9505"
+    },
+    {
+      "path": "apps/backend/internalModel2/connectedScope.ts",
+      "hash": "19e15f90e91ae7ff4c56cd75fd573948ed1aeea3a004050d2a7979c6bb651e5f"
+    },
+    {
+      "path": "apps/backend/internalModel2/dockerConnection.ts",
+      "hash": "a7b881e940757e84c841aa120e8334bba0a470eeb607c233ebd4d1e9d2801edd"
+    },
+    {
+      "path": "apps/backend/internalModel2/dockerEndpoint.ts",
+      "hash": "3557be29b4f444b2751846ab5eed4028e0b24e932828ad9d9b6ce750a86926fe"
+    },
+    {
+      "path": "apps/backend/internalModel2/dockerSocket.ts",
+      "hash": "95bc132a8499df43041cda44cc7995294c6d9a915586c763cb23e928c4928b5a"
+    },
+    {
+      "path": "apps/backend/internalModel2/envelope.ts",
+      "hash": "93bff249d6cbe38ffecc26f91711d3a861e2db5fa8f034f022b7a736ad19fccf"
+    },
+    {
+      "path": "apps/backend/internalModel2/envelopeV1.ts",
+      "hash": "96f31e8d251fb4a834909b7a026f681d5862111f54c7ccc82f4d455559900e12"
+    },
+    {
+      "path": "apps/backend/internalModel2/envelopeV2.ts",
+      "hash": "8bc1de674d1e748f295cfa7c251da2f413eae4e5bf3ac1692a82d455713d53e2"
+    },
+    {
+      "path": "apps/backend/internalModel2/execution.ts",
+      "hash": "13fbf196065987d41f56c4b65eee9ded0dcf2cddeb39fdb43dd1e1c1337576ff"
+    },
+    {
+      "path": "apps/backend/internalModel2/identity.ts",
+      "hash": "6fbc37f11514d1fd8cdcd4469ac6c41f1e8d7bfb08ea6c48779be967f09b4397"
+    },
+    {
+      "path": "apps/backend/internalModel2/legacyCompatibility.ts",
+      "hash": "4c50ff9ae9eece3adf505d21af06a117ac4b04ea0d26d41086535c6dd54e5d5c"
+    },
+    {
+      "path": "apps/backend/internalModel2/lessonAuthoring.ts",
+      "hash": "a294d8b97411810edcf09c95d8b7488381503d452aca26fc89b464a98f08d59e"
+    },
+    {
+      "path": "apps/backend/internalModel2/lessonExecution.ts",
+      "hash": "1dd0042dae7965f06cb5700546799ca4bc977e7e67b66713bf02b21172420a0a"
+    },
+    {
+      "path": "apps/backend/internalModel2/lessonLimits.ts",
+      "hash": "3573c50ba67fce80c8161543518a95be642088e3733e581aaa6cf7319958bfe8"
+    },
+    {
+      "path": "apps/backend/internalModel2/lessonPolicy.ts",
+      "hash": "cd1418b2c9c23e31777b6b0cd5506251aac4bf9ce1b7ea52a34386719bf5a5f5"
+    },
+    {
+      "path": "apps/backend/internalModel2/lessonRoutes.ts",
+      "hash": "b42e03dce5f964471d70e56a2fd6f2ac2f5a67f7dca957dd180c48d6d3811503"
+    },
+    {
+      "path": "apps/backend/internalModel2/lessonStore.ts",
+      "hash": "274acae1964be3f882de6b09f6ea9b4b196deaf3c3a8a3ba2d24b442da636ea4"
+    },
+    {
+      "path": "apps/backend/internalModel2/lessonSummary.ts",
+      "hash": "43b128519e8354dec605f7ad8389f1163e97b026e218b88e08a308aa51d4ff13"
+    },
+    {
+      "path": "apps/backend/internalModel2/queue.ts",
+      "hash": "2da5d4496790997de5c9d711f08c3748b8756934d19e6260c7e1f9bc60d45e7d"
+    },
+    {
+      "path": "apps/backend/internalModel2/report.ts",
+      "hash": "8a89f0f5161792d231162302153b936cab52648d48cec9be10c12e0cd71cec63"
+    },
+    {
+      "path": "apps/backend/internalModel2/routes.ts",
+      "hash": "8247de5ac2924d5634548819c517415b9cd1db428ebafbafa894273172572466"
+    },
+    {
+      "path": "apps/backend/internalModel2/sandboxChild.ts",
+      "hash": "cd574b49efd2a476a14c77ea031ba52a45a8f1f108ef29b482cf47ed48f2b352"
+    },
+    {
+      "path": "apps/backend/internalModel2/sandboxDocker.ts",
+      "hash": "c5fbbe8bc9540e434a209301161373e28ea0354ceb3484a1e579d6714cbdd847"
+    },
+    {
+      "path": "apps/backend/internalModel2/sandboxHandshake.ts",
+      "hash": "4c981641e6a3b56f5be84b4b024744d532e6a955de06990307e100b647676bc8"
+    },
+    {
+      "path": "apps/backend/internalModel2/sandboxRunner.ts",
+      "hash": "97a6ea01262ac650e939747883a3b6987eea7b42e1598a3f6ac7fcb1de52a7b2"
+    },
+    {
+      "path": "apps/backend/internalModel2/store.ts",
+      "hash": "e677a061dafd075295d24cb2c0c08ec241c3cc41ceb066c26067b4f986351a26"
+    },
+    {
+      "path": "apps/backend/internalModel2/worker.ts",
+      "hash": "d29a8f70a69b50a7fa46ef1b661a0e43a6dfa7ed65c5e7a93a9ab15a6308b5c1"
+    },
+    {
+      "path": "apps/backend/internalModel2/workspace.ts",
+      "hash": "3b65a3c8d23629753130084be010d917cc82941319b2ad70180d8bfe7462cf4f"
+    },
+    {
+      "path": "apps/backend/zod_schemas/deployment.schema.ts",
+      "hash": "0f2bca50915ed95a8192506bad69e1bca1a8cc93eb3b30b4fdb1aadc7917cb34"
+    },
+    {
+      "path": "apps/backend/zod_schemas/layout.schema.ts",
+      "hash": "7184c880769ae9aad58372dae2e9116bfb8aad39181bd6971f989b998902d2d6"
+    },
+    {
+      "path": "bun.lock",
+      "hash": "cb78121dfe4adc548b069d56500109c870feb859c273be5506a6edf3ad7fdca7"
+    },
+    {
+      "path": "docs/reality/m2i-ec2-source.json",
+      "hash": "3c312582e509b42701b9bcddec6f6fdcaab4b5cc4088a599b905a8258ab864bf"
+    },
+    {
+      "path": "docs/reality/m2i-heldout-billing.json",
+      "hash": "0a448f0c8cd8126f7aae43b6cdaac5faa12f5cee1d7d33432af396a095ba5149"
+    },
+    {
+      "path": "docs/reality/m2i-source-reviews.json",
+      "hash": "493870b3138aa0c1790acc97cc1f3344d036287eac04ea2e9ff391b9967e50ee"
+    },
+    {
+      "path": "docs/reality/m2j-source-lineage.json",
+      "hash": "42af64a52c51688d8c6cd5896cdde4b498e53f270e39c3d0238148ccb8afe62e"
+    },
+    {
+      "path": "packages/catalog/src/aws.catalog.ts",
+      "hash": "e7d1aae5aa2f5013a7dbdbe8bee1149657b67f5244d5d2744474847bf03e5aa3"
+    },
+    {
+      "path": "packages/catalog/src/catalog.types.ts",
+      "hash": "013af33453912c091c887ca9fa0e961fdf2afebdebcc5368733ae6227e1cf82e"
+    },
+    {
+      "path": "packages/catalog/src/digitalocean.catalog.ts",
+      "hash": "af2f9c0431ad7190ec10d8f92f427c187f359e9393bd2866515b3a13c4155c48"
+    },
+    {
+      "path": "packages/catalog/src/index.ts",
+      "hash": "02225be26fa7e3b849a468e5d9d2ada0afc90fa07878869fa2047cf598a2adca"
+    },
+    {
+      "path": "packages/domain/src/examples/SAMPLE_ARCHITECTURE.constants.ts",
+      "hash": "66aa9531f4fecbc5d22e253bd19ed614a6441e6bf0f1b1ee388db9dda8e32dbd"
+    },
+    {
+      "path": "packages/domain/src/examples/index.ts",
+      "hash": "083a236667c5c3ba2fc0d6953ec5bdf1a0909019867ea2f8b7993f5d69cffa84"
+    },
+    {
+      "path": "packages/domain/src/resource/AutoscalingPolicy.interface.ts",
+      "hash": "c4940418804d1762c7f953142ea5f0847933dbfed5c374e699742965e64b9913"
+    },
+    {
+      "path": "packages/domain/src/resource/ChaosType.types.ts",
+      "hash": "ac94ca1910afb96cc477e444603d6acf806f1709f370b3085664e8d2cb6fc3cb"
+    },
+    {
+      "path": "packages/domain/src/resource/ConnectionLine.interface.ts",
+      "hash": "cdb4cf65ead1aae5ef14ae33e8ba3c03df86c4489ed96e5e9a9a7d1247f46094"
+    },
+    {
+      "path": "packages/domain/src/resource/DeploymentChaosNames.enum.ts",
+      "hash": "5cf7aff085a4f5741681fbeb124e5af88ba2acdca6232a0eec347f0e983e99fe"
+    },
+    {
+      "path": "packages/domain/src/resource/RESOURCE_PORTS.constants.ts",
+      "hash": "b9f6359bd3c1689a2d24ea4668a4897815fc603ec20262c4cd7853c119eb8451"
+    },
+    {
+      "path": "packages/domain/src/resource/RESOURCE_TYPES.constants.ts",
+      "hash": "2f1f7b0f314861d8c81989a6b8f52dd65382258ae65ca34e02b2a3fe963a3889"
+    },
+    {
+      "path": "packages/domain/src/resource/Resource.interface.ts",
+      "hash": "57750b61401dd314a45ce8b5243920936ff46f3a91d6af0b483e8fa5c8dbad4b"
+    },
+    {
+      "path": "packages/domain/src/resource/ResourceHealth.enum.ts",
+      "hash": "91c817e4b9b0622bcf3f3019e236cc3e76bc8a530a883ca5cfe4e5480c684bda"
+    },
+    {
+      "path": "packages/domain/src/resource/index.ts",
+      "hash": "37cac2597b6f17fcd1ec756c6088e347b23b1c9d4968b5ac2ec24bd49bb92b00"
+    },
+    {
+      "path": "packages/domain/src/resource/legacy/ResourceState.enum.ts",
+      "hash": "59a37dd676b0741a26de708f6e8bf00245221d7abc45d4d50f2699a2b7fdfce4"
+    },
+    {
+      "path": "packages/domain/src/topology/CONNECTION_RULES.constants.ts",
+      "hash": "4e762f11d51ee3fb019a64c52cad61bdc937438811079eb513b61e2f61e6e55e"
+    },
+    {
+      "path": "packages/domain/src/topology/computeTopology.ts",
+      "hash": "3e80c2ad1271391b8fb1abe4e7c29b4a1e01583c4bbef692e2c3123759798862"
+    },
+    {
+      "path": "packages/domain/src/topology/index.ts",
+      "hash": "764649fab2349e6dc9260aec97e592d5c2305b8d49497f341bd7aa3bd1375cf0"
+    },
+    {
+      "path": "packages/domain/src/validation/index.ts",
+      "hash": "a3b57dce76dd7734feb3f7d1bffc2d5a8544bd8c2ce2ccd8949b16982eb00ab3"
+    },
+    {
+      "path": "packages/domain/src/validation/infrastructureName.ts",
+      "hash": "f2cb762ea2a6d900a64cec5cb305173b1d09c084ff0af85de4e7ce9550942203"
+    },
+    {
+      "path": "packages/domain/src/validation/validateDeploymentReadiness.validation.ts",
+      "hash": "74a059dc480be9adf81d00853405545870cc1275f3a55af13b11517b9c5f9af3"
+    },
+    {
+      "path": "packages/domain/src/workload/DEFAULT_WORKLOAD_PROFILE.constants.ts",
+      "hash": "c413722d1b0ab823cc3ebfd6ad991b61ddc623ae61702978ac1ed62f29554dbb"
+    },
+    {
+      "path": "packages/domain/src/workload/WorkloadProfile.interface.ts",
+      "hash": "3d9e4c044ab2772ef4daa30cf4da47299541454846322e276a73d44925ffd13c"
+    },
+    {
+      "path": "packages/domain/src/workload/index.ts",
+      "hash": "56e263320ea3af3d2ad69c38b118d250de1f475da93c7beec828599a1e6aefa6"
+    },
+    {
+      "path": "packages/domain/src/workload/resolveWorkload.ts",
+      "hash": "a61ea34364140fb88ceb568c882b284bdb232853cca5e0077223ee7a7dc05c9e"
+    },
+    {
+      "path": "packages/simulation/src/internalProduct.ts",
+      "hash": "6bc8af031681a43689fe984c3947a6f5484f2a4d3d2e8a436235da0896f6afa3"
+    },
+    {
+      "path": "packages/simulation/src/model2/async/broker.ts",
+      "hash": "2bdfb66625a8f10c36cb79a2f96b95d79b1b35529f682842647dd306b8194f86"
+    },
+    {
+      "path": "packages/simulation/src/model2/async/client.ts",
+      "hash": "22dd4ceccefa75d2e456df0b41d401048620e554d54eb4a1301b9294b4d87944"
+    },
+    {
+      "path": "packages/simulation/src/model2/async/commands.ts",
+      "hash": "f903f1f33855898911358cedace678fa3fcf4e19b98c8a9912aa4c4797ab7a2f"
+    },
+    {
+      "path": "packages/simulation/src/model2/async/contracts.ts",
+      "hash": "62719aba911e81d1b7a22f7a3d9a6518c11c131bfc61a4c3e4a8e7854093d977"
+    },
+    {
+      "path": "packages/simulation/src/model2/async/objects.ts",
+      "hash": "27b0fb3ca22de983af3b9d14191eb5d28686308e3a7db300634510d532cc48d1"
+    },
+    {
+      "path": "packages/simulation/src/model2/async/policy.ts",
+      "hash": "1c5f8b90787d1d66c148d10fd237fa9000607c3650c46b81b96eea52611bde90"
+    },
+    {
+      "path": "packages/simulation/src/model2/async/publisher.ts",
+      "hash": "8449dcb2528911067deb9b35cf165b3a1ae043957c0e40a71bc51d2422ccf979"
+    },
+    {
+      "path": "packages/simulation/src/model2/async/run.ts",
+      "hash": "ccd71da89de47fd24ada5b6bcab3eea5a2beb903384171f08736b0c2b076c482"
+    },
+    {
+      "path": "packages/simulation/src/model2/async/validate.ts",
+      "hash": "8b84f609883804720f2843e338c3626f0a40ce41e5c193ccc3826541b208ac42"
+    },
+    {
+      "path": "packages/simulation/src/model2/async/worker.ts",
+      "hash": "dfc4f84d922a611872133b0526423f464e11ba59eaa233bb9e2415dfdec5d926"
+    },
+    {
+      "path": "packages/simulation/src/model2/compute/contracts.ts",
+      "hash": "12d2fc95201344d72724172fde1f7362d453676f082bdb8d538c423c80485ec8"
+    },
+    {
+      "path": "packages/simulation/src/model2/compute/memory.ts",
+      "hash": "2646fe1f3749735ac27a41981e996ed2db9072f568e85f43f37cb0be9d7f4ff3"
+    },
+    {
+      "path": "packages/simulation/src/model2/compute/policy.ts",
+      "hash": "93f78ca307a7f4f775bbcd610c2ae65c1c3f84035b75b646f3b7c7167862d198"
+    },
+    {
+      "path": "packages/simulation/src/model2/compute/resource.ts",
+      "hash": "013d8e5c29e5b5f579170689579a2a9704798f028db6753159556335f30da00d"
+    },
+    {
+      "path": "packages/simulation/src/model2/compute/run.ts",
+      "hash": "d3c7a5dd033cc2ad0edae2d8cdd7a82d41083e75258b352732d3b1b338592318"
+    },
+    {
+      "path": "packages/simulation/src/model2/compute/scheduler.ts",
+      "hash": "fc92841b1269816cd09529b4caf75802d40892de7bc56376e001817e2c3a7102"
+    },
+    {
+      "path": "packages/simulation/src/model2/compute/sharing.ts",
+      "hash": "685b4dc2810e6c7a9eec3dcf744e66969c6069d90b9c616ec5ad12a0f54d89b6"
+    },
+    {
+      "path": "packages/simulation/src/model2/compute/validate.ts",
+      "hash": "250efb37a885df20a5c5717d8c2b693de07f3a9435a63ce23927e5a91a873112"
+    },
+    {
+      "path": "packages/simulation/src/model2/contracts.ts",
+      "hash": "3d8b2cc4dc67368d21e2ce7fb54d80594985b7fd11a5215d6c9040a93ea326f0"
+    },
+    {
+      "path": "packages/simulation/src/model2/data/aside.ts",
+      "hash": "024f336d527ce6de207876fac4b4abfd8d5d5c38d709ebb4c8379fdfaad5e98e"
+    },
+    {
+      "path": "packages/simulation/src/model2/data/cache-state.ts",
+      "hash": "c53df1e4b7b07e386ab2c423b2c2bb2d3179ac047566025363968356c40f6eaa"
+    },
+    {
+      "path": "packages/simulation/src/model2/data/cache.ts",
+      "hash": "382fb0dc59d5123a1593b7553df33408e4ae6bed00c07c614d0678860c441d6e"
+    },
+    {
+      "path": "packages/simulation/src/model2/data/contracts.ts",
+      "hash": "d7a8402fbdff6aac651019811ad92dc3661cad77f68a1937f228dd5f5f24bc81"
+    },
+    {
+      "path": "packages/simulation/src/model2/data/database.ts",
+      "hash": "c5055c3fb4f5938cf79992e48990b306829458fc9c97923181fea571912eff47"
+    },
+    {
+      "path": "packages/simulation/src/model2/data/locks.ts",
+      "hash": "e148cfcbb01911d0ecef9fd6deb7d374644284f1ac009136b2f4035c3579bc8d"
+    },
+    {
+      "path": "packages/simulation/src/model2/data/policy.ts",
+      "hash": "e1cf3a5adc7802454391d0667313896cd94e2a8825ceb5719524f4348b2d4fd7"
+    },
+    {
+      "path": "packages/simulation/src/model2/data/run.ts",
+      "hash": "9dc5d9471b9d3a593a1734d308ca3c772bc04d86ea82cd231b60431dae8379bd"
+    },
+    {
+      "path": "packages/simulation/src/model2/data/validate.ts",
+      "hash": "3d13b503edeb833094444d1cb7e185c67004ae629209b890e6b6dbcc4203e5d2"
+    },
+    {
+      "path": "packages/simulation/src/model2/network/contracts.ts",
+      "hash": "8b2ea06859775f6c319ad41f97eb5ec60bd0d938b76b506cdc3f76fa23e95a83"
+    },
+    {
+      "path": "packages/simulation/src/model2/network/link.ts",
+      "hash": "1437d39f13540984fdf1375850fdaa10affbcd7e86cdc879920d0641a912d65c"
+    },
+    {
+      "path": "packages/simulation/src/model2/network/load-balancer.ts",
+      "hash": "dbacadc71af099a5f1411519cf9fa3d4bd0d3d822e209bd24bb4e7b9bda13bbb"
+    },
+    {
+      "path": "packages/simulation/src/model2/network/policy.ts",
+      "hash": "725d44823522c4e1c224e5be8092c9c87a4740d6ac69fa33fe4091eba297c0a0"
+    },
+    {
+      "path": "packages/simulation/src/model2/network/pool.ts",
+      "hash": "91ff22b8d9d56cae0276992874b93ca0f743053955c2f729f069d8fe8bb34422"
+    },
+    {
+      "path": "packages/simulation/src/model2/network/run.ts",
+      "hash": "39f58313c46db44b8d38ff514b37881e094f9fdc3198a89f86a76c83a43bc85c"
+    },
+    {
+      "path": "packages/simulation/src/model2/network/trace.ts",
+      "hash": "4e9f6e93d2672a9d8d4829dbaff5ac27f2c0cc0ddc5dc413ef753c74ca5e4080"
+    },
+    {
+      "path": "packages/simulation/src/model2/network/transport.ts",
+      "hash": "721517a57ec80a025078c713d249acd327a126495f4eb549bda2e1daead8a888"
+    },
+    {
+      "path": "packages/simulation/src/model2/network/validate.ts",
+      "hash": "2155439db5b88fd6d18ab2d54bbddff1b2c9ec50a02422a8a0f30d07427fc3df"
+    },
+    {
+      "path": "packages/simulation/src/model2/product/bounds.ts",
+      "hash": "57884c7f32054ad0db217385ccca25d4e159d65ad2c4487179d4171046e500bc"
+    },
+    {
+      "path": "packages/simulation/src/model2/product/capabilities.ts",
+      "hash": "fb0ffef916a79ffd0fbc682ae345ea22d6d73c5ddb097b42d4154254df571ae2"
+    },
+    {
+      "path": "packages/simulation/src/model2/product/compiler.ts",
+      "hash": "38b39e5f434c61ed1a36a21db81db4edb42f332804d3f1e96eecaeaed78051cb"
+    },
+    {
+      "path": "packages/simulation/src/model2/product/contracts.ts",
+      "hash": "e395feb81322568580278a71cb968502ebe5519426e7231a32cf80d4b56669f5"
+    },
+    {
+      "path": "packages/simulation/src/model2/product/controller-policy.ts",
+      "hash": "b216a1e9eb074a755843c66f8ce172bd07a70c832bc554a9eb6d452b11c34d6f"
+    },
+    {
+      "path": "packages/simulation/src/model2/product/controller.ts",
+      "hash": "d1d2d8cfec74bad127327a40e27ca73834b9338b3c1284c5dba370a99e3c2941"
+    },
+    {
+      "path": "packages/simulation/src/model2/product/faults.ts",
+      "hash": "85fb6f5c87d8d7989ba4a452eec470ce7c7bb61799d4213d7eaaca95f362780e"
+    },
+    {
+      "path": "packages/simulation/src/model2/product/origins.ts",
+      "hash": "da220412c60b75cf8a5c433e00d18e6d70756aa99cefad1d37bb4a6a8697dfac"
+    },
+    {
+      "path": "packages/simulation/src/model2/product/owners.ts",
+      "hash": "7df3d3131b268abcf5c9b2d614f1ddad545381b9b7af4ed0983aba88e50bb70f"
+    },
+    {
+      "path": "packages/simulation/src/model2/product/presentation.ts",
+      "hash": "7c4f16bca8594cdc69d5c5a9903edfa4d7aba8b5feb8095b597c98ff51f4a61e"
+    },
+    {
+      "path": "packages/simulation/src/model2/product/provenance.ts",
+      "hash": "ee1d29b0d3a6db0ec992c4a29f807fd8e1dc1d60ef3b9efb1462ac361bf76df5"
+    },
+    {
+      "path": "packages/simulation/src/model2/product/run.ts",
+      "hash": "e0345bd8265c0534483cf90fe72aae8b42890ebc448baf899e5cdf18690bab56"
+    },
+    {
+      "path": "packages/simulation/src/model2/product/semantics.ts",
+      "hash": "ac249089c9cbe0d642d8ed69b96308cd9c2a61c6172b16234f02174386ba1c65"
+    },
+    {
+      "path": "packages/simulation/src/model2/product/workload.ts",
+      "hash": "4da75bfa116c25e30022d91ce83a6e4b1e315535fba9efbb106d16a0c07ad180"
+    },
+    {
+      "path": "packages/simulation/src/model2/provenance.ts",
+      "hash": "263cb2a305aaa75a3154e5a624d606a06eeca46432cc76767a64d903cf5ec664"
+    },
+    {
+      "path": "packages/simulation/src/model2/random.ts",
+      "hash": "14dec6eb72ab9e30ba047ee98f8fc55efdb0c3c7a3f6015d077a788f27c0a925"
+    },
+    {
+      "path": "packages/simulation/src/model2/registry.ts",
+      "hash": "5e6ff45331735eb5426d5ec5aa7314e4559c2f63b4f5e6f41d7e8badf53cad8d"
+    },
+    {
+      "path": "packages/simulation/src/model2/run.ts",
+      "hash": "74f99522da685628b82727817838956464a41534b6543692ec25a19814b70e12"
+    },
+    {
+      "path": "packages/simulation/src/model2/station.ts",
+      "hash": "28d8be7692eefc06673118eee1f8aa02545fb6d8a71033727b39b423c2946a3a"
+    },
+    {
+      "path": "packages/simulation/src/model2/systems/cdn.ts",
+      "hash": "4d48173059b5fe8590e7f094d2c3cfa05c5b703323239f36f51d4f94ebadb4fe"
+    },
+    {
+      "path": "packages/simulation/src/model2/systems/contracts.ts",
+      "hash": "8e010835c272710fffffd9dfcb6d581b0d9738b417719da8b0fb6b8eb60a9361"
+    },
+    {
+      "path": "packages/simulation/src/model2/systems/copy.ts",
+      "hash": "b81954a1546a5ed787c023d08d983e9cf4d41b5fc202704bf93070cdd0fdefef"
+    },
+    {
+      "path": "packages/simulation/src/model2/systems/dns.ts",
+      "hash": "badd416dc452d5ce87e2cd9b1c6c4b4c5f4a3bb4a8c99a84c17729e6f79ad8a8"
+    },
+    {
+      "path": "packages/simulation/src/model2/systems/monitor.ts",
+      "hash": "dc16547adbcc1a568a3bc0169f058f9daaf132fdc9434f3c853d398ce723b17f"
+    },
+    {
+      "path": "packages/simulation/src/model2/systems/policy.ts",
+      "hash": "d55a277fc45d40c0b1c2761a8403bd987308e2cddb433d98800ae0218195b2dd"
+    },
+    {
+      "path": "packages/simulation/src/model2/systems/registry.ts",
+      "hash": "ac46898ef9fe284d9e72f703cc5d43dc9a01b4b89826011166e236d1f4e121a9"
+    },
+    {
+      "path": "packages/simulation/src/model2/systems/run.ts",
+      "hash": "3a46d37e6c21cdcd6b9953bed0e2a822fd1e5afb52cb925fe3f1d9e74be9f424"
+    },
+    {
+      "path": "packages/simulation/src/model2/systems/security.ts",
+      "hash": "9a14200ad1e7686caf22ee615857187d210bee4420f2eff6c01eccf9ebe0f620"
+    },
+    {
+      "path": "packages/simulation/src/model2/systems/service.ts",
+      "hash": "1beb97300a8a0258e5881b38d56b57024a55ce1570812969cd0894cc2efc4049"
+    },
+    {
+      "path": "packages/simulation/src/model2/systems/startup.ts",
+      "hash": "81f4a441cfe46fdd222229f5423358727327526fd66851a0cb9feaddcb88e89a"
+    },
+    {
+      "path": "packages/simulation/src/model2/systems/validate.ts",
+      "hash": "863a43535b9682271ab041b75e93a1a716c3ba8caad2abff64a46ab35dd6c3ac"
+    },
+    {
+      "path": "packages/simulation/src/model2/time.ts",
+      "hash": "031badec4030bceae26b51f188a447eae5ffa3873818eadd6ede022095f09bbd"
+    },
+    {
+      "path": "packages/simulation/src/model2/validate.ts",
+      "hash": "689df22f8d7d7c623fbf49a13d611c46463fb367aac3034e7011812ad64be8cd"
+    },
+    {
+      "path": "packages/simulation/src/model2/workload/arrivals.ts",
+      "hash": "9c7e9e6b8577b17c085e293176d2718273373f420585e5e67e9e8cf564463e47"
+    },
+    {
+      "path": "packages/simulation/src/model2/workload/calibration.ts",
+      "hash": "d387956e068294c28e2a2047e38884905b2e5bcfb2f86caf154112f86057208c"
+    },
+    {
+      "path": "packages/simulation/src/model2/workload/causal.ts",
+      "hash": "0cdf926baafd2a39667ed6cedab781cfddff536ae331607f499e578718c2c2d5"
+    },
+    {
+      "path": "packages/simulation/src/model2/workload/contracts.ts",
+      "hash": "ad0754401303b8656f0bcf18995482c1b1b13bff6bd09c56033b17bfbfcd8bc3"
+    },
+    {
+      "path": "packages/simulation/src/model2/workload/evidence.ts",
+      "hash": "6075532792978d0be63820b5c39a63c991d12620bbc293452fe98755718edc56"
+    },
+    {
+      "path": "packages/simulation/src/model2/workload/policy.ts",
+      "hash": "9c4ddc012325e080680ec7962202e80130947671a65230032765b1e829bcc9a2"
+    },
+    {
+      "path": "packages/simulation/src/model2/workload/profiles.ts",
+      "hash": "954ce75d076077fd866633cf573f0709f937941a1961329324f263c448fae001"
+    },
+    {
+      "path": "packages/simulation/src/model2/workload/run.ts",
+      "hash": "9ed999193c19fda1300bc1c2012f8a3a726ac7b221e353abc845ea5c6ec2aa10"
+    },
+    {
+      "path": "packages/simulation/src/model2/workload/station.ts",
+      "hash": "5920e45efbd3a9133d1be437a7e280f76031fc80757a7c3da1aadaed0bedcfa8"
+    },
+    {
+      "path": "packages/simulation/src/model2/workload/validate.ts",
+      "hash": "aad06be0f0a043ca2dccf8032c55bd88f3a40605695ce7eb61c2d625b2d0abb5"
+    },
+    {
+      "path": "packages/simulation/src/reality/ledger.ts",
+      "hash": "287a2f8d7255ed5ed30b8715bfce1bf58908990e45ff2816d69060721001593d"
+    },
+    {
+      "path": "packages/simulation/src/reality/metering/combine.ts",
+      "hash": "128b633c31391acb262ec3834c4cee1cd8ee8ca69899849c783952de776d7148"
+    },
+    {
+      "path": "packages/simulation/src/reality/metering/contracts.ts",
+      "hash": "2d18c19146f165586e7fae04e23256b08c008770b1a7790baa794cda55a15303"
+    },
+    {
+      "path": "packages/simulation/src/reality/metering/journal.ts",
+      "hash": "b61718e221f630b3dc512b23af64a94ba7c2c2bfd67b470a5e96752c87293109"
+    },
+    {
+      "path": "packages/simulation/src/reality/metering/link-meter.ts",
+      "hash": "06964c943fd6d716ce2c161a06efd71fb22429d0a93c614ff55126191467e245"
+    },
+    {
+      "path": "packages/simulation/src/reality/metering/measurements.ts",
+      "hash": "315ad5cab4ad5e8d6ab3c5f44f92591b5ba88b1ca33055adeaf2fe0a417712d0"
+    },
+    {
+      "path": "packages/simulation/src/reality/metering/object-meter.ts",
+      "hash": "0f0b2bb1a33d67ff825dd0d4d185938a45bd5793a38b24738c569371d7e43fa3"
+    },
+    {
+      "path": "packages/simulation/src/reality/metering/port.ts",
+      "hash": "28cc8d574312a98adb6bc373e36240f2f4d142d0c6768649110ab196fea73c26"
+    },
+    {
+      "path": "packages/simulation/src/reality/metering/reconcile.ts",
+      "hash": "c55a34d9a8129c83a6f686423b51e13ce4205baa828dfe005edf41e632184dab"
+    },
+    {
+      "path": "packages/simulation/src/reality/metering/replay.ts",
+      "hash": "2eff00ed9814c2c4c43e83ce83ec8cda8e63ce52307cdcebd0b6350818b1528d"
+    },
+    {
+      "path": "packages/simulation/src/reality/metering/run.ts",
+      "hash": "0f31f388effecd7db4926a4771cf8cf159a7bda857000f5dc7b3c4d03044db56"
+    },
+    {
+      "path": "packages/simulation/src/reality/metering/validation.ts",
+      "hash": "394da2ea9166ce7bd8629c199aa842ec685735d9c55ffd6b1d878ea7d25d0644"
+    },
+    {
+      "path": "packages/simulation/src/reality/metering/windows.ts",
+      "hash": "806d5cce7aecc429608ac29be832a9711b29e47c8fa16623bf5bcff789d339c4"
+    },
+    {
+      "path": "packages/simulation/src/reality/provider/compile.ts",
+      "hash": "ea303a92a8a61419e9da11cc1f9a7271ea0b64a77d62c9e88aa730201bd79981"
+    },
+    {
+      "path": "packages/simulation/src/reality/provider/contracts.ts",
+      "hash": "e55786d3116568926fb9a11b99ee2364edf71180452c504306c1205ef05e5fdf"
+    },
+    {
+      "path": "packages/simulation/src/reality/provider/exact.ts",
+      "hash": "530879c8f4aa6b15d4751dd9518e19cd60c543f5473a2a4bedd6baeeca4ee9e2"
+    },
+    {
+      "path": "packages/simulation/src/reality/provider/facts.ts",
+      "hash": "bea625bf145c7305c8238372f07475cc7388eb681969f95f2799433ec1b7662d"
+    },
+    {
+      "path": "packages/simulation/src/reality/provider/fingerprint.ts",
+      "hash": "5bdbc9a4e9cbccab8d736ca3a39ad3e73db5c5e9f688f8d11a3b09d4c3ce33d3"
+    },
+    {
+      "path": "packages/simulation/src/reality/provider/locations.ts",
+      "hash": "d6930520d0c16df6d9e1f192ec690dfff29aafaec3ec660f80d356d075ac91d9"
+    },
+    {
+      "path": "packages/simulation/src/reality/provider/pricing.ts",
+      "hash": "8ea4502565af2b24b61ac11fdff548fc50b3845571ec86a03ed698604f4ae410"
+    },
+    {
+      "path": "packages/simulation/src/reality/provider/run.ts",
+      "hash": "e8f75e3265841941632fa1c40e1bb2e4baae66a3ca9ed8955f40a36d8328cef2"
+    },
+    {
+      "path": "packages/simulation/src/reality/provider/snapshot.ts",
+      "hash": "727ceb13b5066cfd9fb913cab5ea9135938db287baba4d90d929d0bdbf7a13c5"
+    },
+    {
+      "path": "packages/simulation/src/reality/provider/usage.ts",
+      "hash": "d80e8ee8425fba1fe3bb725321abdf30856b6ab76a51c337543265dc450cce35"
+    },
+    {
+      "path": "packages/simulation/src/reality/provider/validity.ts",
+      "hash": "01fe9fb345b7869bf0acb3e15890766c22e9efd70a210dc20f428fb6222cabfd"
+    },
+    {
+      "path": "packages/simulation/src/reality/quantity.ts",
+      "hash": "42232c722115d8ac039a8f59ae99e51ea7a6cb5cb870bdd6fcfaa8da0c64f459"
+    },
+    {
+      "path": "packages/simulation/tests/async.test.ts",
+      "hash": "c5406f740dea8648a275c11a2b43048c55788d7903b45a8664fb0da9cadb0e12"
+    },
+    {
+      "path": "packages/simulation/tests/asyncFixture.ts",
+      "hash": "fbc9bfa8034081e9cd722d562d90410fd9fe58ebfcef7bdcc5eeb208bccfd429"
+    },
+    {
+      "path": "packages/simulation/tests/compute.test.ts",
+      "hash": "4bd86ebb77a882f746eb80a9a8a746b3349e9c6c6b78b708390a2d08423b32c0"
+    },
+    {
+      "path": "packages/simulation/tests/computeFixture.ts",
+      "hash": "3c0eb9e8e86b3b8e9a12f4e7bbd0cbd1c327cab363b27005aef52c3513c52800"
+    },
+    {
+      "path": "packages/simulation/tests/data.test.ts",
+      "hash": "de680d999f7e417ac69ce8b71050b8c4c8760695944cc9ea991c86b85fb5cbfc"
+    },
+    {
+      "path": "packages/simulation/tests/dataFixture.ts",
+      "hash": "4c9db9d64e3c0032d834a0f14ac47e602a59f6bc61374ab4afdd26b6c7475dfd"
+    },
+    {
+      "path": "packages/simulation/tests/engine.golden.test.ts",
+      "hash": "95e565b4ec2c1e49874c1518f8c036e2d5f3388aa9abbdd50ae349086c6e6a97"
+    },
+    {
+      "path": "packages/simulation/tests/jitterAlignment.test.ts",
+      "hash": "520550a5feb2ea77a9755b6861f655adc0e32cef2eed867f26d63fcca6648816"
+    },
+    {
+      "path": "packages/simulation/tests/meteringBoundaries.test.ts",
+      "hash": "8029062dfd313396aa98f5b4d7b041dfe16b13c0371240bbbefa5fceddd88e4a"
+    },
+    {
+      "path": "packages/simulation/tests/meteringFixture.ts",
+      "hash": "9beafb7ceb4b4507782c73ee01b8038d3eff7909febf6b2b2fa50abf2e8d4069"
+    },
+    {
+      "path": "packages/simulation/tests/meteringJournal.test.ts",
+      "hash": "f6b436982a2dd0b9fe323a57bc1a0f2d6b7f86cea67f3f42b89336f76edf5c1d"
+    },
+    {
+      "path": "packages/simulation/tests/meteringPort.test.ts",
+      "hash": "4931c0f54ad5f26fe57fdd20a55cb1e687c71cb2999308f71d872e60de2000bc"
+    },
+    {
+      "path": "packages/simulation/tests/meteringProduct.test.ts",
+      "hash": "0f2dee5e41225518a2534fb00d69a3ce2a71c85ab29babc55424f4dde004ea03"
+    },
+    {
+      "path": "packages/simulation/tests/model2.test.ts",
+      "hash": "289d2697f405203dd88b69c9c4b11a898e72b37408eb39254ebc07ee275da8c6"
+    },
+    {
+      "path": "packages/simulation/tests/model2Debug.ts",
+      "hash": "da869929241768684604e8f1ca7c7c9b00e2225c55615f1c53a9e9ac16b7a8e9"
+    },
+    {
+      "path": "packages/simulation/tests/model2Exploration.ts",
+      "hash": "5c6cf123ced1599e9928cf4337c053f2a7a2ae9644fd8281d929bd017a01e45d"
+    },
+    {
+      "path": "packages/simulation/tests/model2Fixture.ts",
+      "hash": "48a7ea4af0c586d4d73da9d77e4acd085976a43ce55a6a8d4f18452036705fa5"
+    },
+    {
+      "path": "packages/simulation/tests/network.test.ts",
+      "hash": "7d5146a75fd97320ab8a24b9dbb94652acc3bb76d68eee4c5deab974830c31bd"
+    },
+    {
+      "path": "packages/simulation/tests/networkFixture.ts",
+      "hash": "d25175c211679997142e5869e08d9bbd2c94b7c7b63173147eb5bf7d3bb723bb"
+    },
+    {
+      "path": "packages/simulation/tests/product.test.ts",
+      "hash": "432bb19e6d151ef610047d555dd772182a04355f878a0b21308ab175b243d1cf"
+    },
+    {
+      "path": "packages/simulation/tests/productCases.ts",
+      "hash": "1b40cc7a2817daa5095daa896c56e0e37c1648cfa909f64d55fe28bdd14cdf2b"
+    },
+    {
+      "path": "packages/simulation/tests/productFixture.ts",
+      "hash": "00364a6a8e14fcdc158e5156ef8871fbf5cef16f79235f42fba8be0ef0e3c200"
+    },
+    {
+      "path": "packages/simulation/tests/productSweep.test.ts",
+      "hash": "a233462345f7c0bf0588f2bcd3e999939dc8b0fdc0f98ef931797caf89d68e59"
+    },
+    {
+      "path": "packages/simulation/tests/providerCases.ts",
+      "hash": "b0676af91d3b80bfcdf445b77f9cfe5b8e34946c2f8b0291e3467075f32f174b"
+    },
+    {
+      "path": "packages/simulation/tests/providerFixture.ts",
+      "hash": "cfdf8019c458112c2324eea32cad30c97b3a28bedfee18870318096f351087a9"
+    },
+    {
+      "path": "packages/simulation/tests/providerPricing.test.ts",
+      "hash": "79355d010305498ec6c6c90dd2b7aeafd7bcdf5cc5480fe7299761ea0b3e698a"
+    },
+    {
+      "path": "packages/simulation/tests/providerProduct.test.ts",
+      "hash": "620deeed5aeee52e643a0d1b839bfd19f0f4e52fde8fa0cb413724a7d09d5d79"
+    },
+    {
+      "path": "packages/simulation/tests/systems.test.ts",
+      "hash": "053be0d0f7e38d6d5184e24bda167202f45e45d87748df33a36b033b9a43d56c"
+    },
+    {
+      "path": "packages/simulation/tests/systemsChecks.ts",
+      "hash": "d14bd9741e5a1d57d04c1545ca002ea9a5d21e13af7a1283151d7c47e2dcc48d"
+    },
+    {
+      "path": "packages/simulation/tests/systemsFixture.ts",
+      "hash": "8c6e84b80331c7be08738ff537e676b9401ea71e5e892c4aeeac4d9a922c3c9e"
+    },
+    {
+      "path": "packages/simulation/tests/workload.test.ts",
+      "hash": "ab871ed9e0bcd5218250e4d2e2986a450f6804058ca549084b8ad40b0ba20b5f"
+    },
+    {
+      "path": "packages/simulation/tests/workloadFixture.ts",
+      "hash": "db635fa4b38d11036169db3ffa9a94e7bb22873226fa9af0d2129c3b476cd32a"
+    },
+    {
+      "path": "scripts/reality/artifacts.ts",
+      "hash": "ad4d6589f18044b87cd86b7b7bb1656a6455c7275b9faf1cf57bf30d04e52b11"
+    },
+    {
+      "path": "scripts/reality/async-calibration.ts",
+      "hash": "9dd6766188f2c77d58bc1fe2f8dc9b4927e1e260a0b3ec2782d47792a7d51edb"
+    },
+    {
+      "path": "scripts/reality/async-performance.ts",
+      "hash": "aa96bbbdacbda6b875f5da5ef55cc33b5a9a7e9652c83d78d1d9ca6277fcad6c"
+    },
+    {
+      "path": "scripts/reality/async-proofs.ts",
+      "hash": "02ec38492fc2350b7430433066dca26d27e6772eec3ef99b61feaf4a46646ede"
+    },
+    {
+      "path": "scripts/reality/classify.ts",
+      "hash": "920b32a2667375dfa876dca1b4c69143e832fe547b4fc231263a3a625d3e0c49"
+    },
+    {
+      "path": "scripts/reality/compute-calibration.ts",
+      "hash": "d6e53d11199b3674ce31ecd1e61dd6285f59954162449e2a036c53f72bf50227"
+    },
+    {
+      "path": "scripts/reality/compute-performance.ts",
+      "hash": "d72ebfd82b22cf1af35d6e4f0e350540d575255f988ce5c069ca5c947e44e822"
+    },
+    {
+      "path": "scripts/reality/compute-proofs.ts",
+      "hash": "801be7f1f432be26ce771abbe677a6584bd8d5e8dfe90900cfab56a3075ac6d1"
+    },
+    {
+      "path": "scripts/reality/data-calibration.ts",
+      "hash": "16946bf1bec114657be1d977361905f964b1b074bf35857068f2a5551cca8960"
+    },
+    {
+      "path": "scripts/reality/data-performance.ts",
+      "hash": "3c1733f56d38e6af5f1b0e11ec149f50890dd6eed82968f4640a1875d33bb2dc"
+    },
+    {
+      "path": "scripts/reality/data-proofs.ts",
+      "hash": "12f62f9e1618454cb867e8f806b4af4f2bb8be34b0dbeaefb8b1e545874c3d3c"
+    },
+    {
+      "path": "scripts/reality/inventory.ts",
+      "hash": "7008caaf8e3475f5bf77105978e1f8aa6fc4b0d0320a3b18611f436c1370d414"
+    },
+    {
+      "path": "scripts/reality/measure-compute.ts",
+      "hash": "83001897431b84f99676315619177270dbfc601da2df95fb7011eb1b99e65e0b"
+    },
+    {
+      "path": "scripts/reality/metering-performance.ts",
+      "hash": "9c494a45057eca15f29ae98955ce65ddfd79b72d48d33d4f184c736c8436ae4b"
+    },
+    {
+      "path": "scripts/reality/metering-proofs.ts",
+      "hash": "b364ecfc8d2382a752332fea985f80e952ef60aceb2274e0446ba2badd347e47"
+    },
+    {
+      "path": "scripts/reality/metering-source.ts",
+      "hash": "9acf545d71c4698c1082dadd23e18fe9565ac57b16465931ef69acfac7023aec"
+    },
+    {
+      "path": "scripts/reality/network-calibration.ts",
+      "hash": "cb9c453fbdd0eda342ac08c312a6fd24379fc7bd2f1156d4780b8d68945195a6"
+    },
+    {
+      "path": "scripts/reality/network-performance.ts",
+      "hash": "91f940cc9a5acee450fc807f13a00961ac79156d291e6b3efca7fcecf5bf9c66"
+    },
+    {
+      "path": "scripts/reality/network-proofs.ts",
+      "hash": "b3bfa561c1a1ff9facaa00a852cc1aa39e218e4bbbe73e6ae513cc4d19e8e70d"
+    },
+    {
+      "path": "scripts/reality/product-artifacts.ts",
+      "hash": "f701a3a9594cc4589bcb7ffec936367aca91f6aa1e266489999aece0d06ea733"
+    },
+    {
+      "path": "scripts/reality/product-cases.ts",
+      "hash": "178ea509fdcca979f2ffb6de435d3aae984072867c2ec962e2f6f36595d56324"
+    },
+    {
+      "path": "scripts/reality/product-ledger.ts",
+      "hash": "9ce0f2a93d60c720878050d24e46284948e121642e2fd6b8e76d71a3a195371b"
+    },
+    {
+      "path": "scripts/reality/product-performance.ts",
+      "hash": "bddfec2e84bea54ff294d41cac0ed41e0ea940feb8d23ef157fae5aab36b0f96"
+    },
+    {
+      "path": "scripts/reality/product-proofs.ts",
+      "hash": "d8e98bc06e4f65402a71e313e949ce084037c6e2cfba33288d8e2c068775d3cb"
+    },
+    {
+      "path": "scripts/reality/product-source.ts",
+      "hash": "7a3002bb5e3058b80479059ce80711859c576a71837a6be9b2b79f2b38ed656c"
+    },
+    {
+      "path": "scripts/reality/provider-performance.ts",
+      "hash": "7b2f3d2b1c843bf37fbbd82e12790fad187974552875eb385b57bc394549a54c"
+    },
+    {
+      "path": "scripts/reality/provider-proofs.ts",
+      "hash": "7a68159fff7dffb67ddd418da38f4d367506000833a0a223fb4eff484e349b91"
+    },
+    {
+      "path": "scripts/reality/provider-source.ts",
+      "hash": "f70511410c88111e7a9f980b5708c5afbddc21bd95257bd00bed92b4e37bae43"
+    },
+    {
+      "path": "scripts/reality/scan.ts",
+      "hash": "89b3a86b39308f41fd828f49f630292468646a58430f29fba83c0d3cef8f628a"
+    },
+    {
+      "path": "scripts/reality/shipping-inventory.ts",
+      "hash": "adbb303e61ef71be5d7155f2ceb8547c4826d491982ec7bb62c352042f965575"
+    },
+    {
+      "path": "scripts/reality/shipping-taxonomy.ts",
+      "hash": "c6d955152edb0fc2bfe5aafb53d5304cfb03c5258536f57003b893a1c44918e9"
+    },
+    {
+      "path": "scripts/reality/source-lineage.ts",
+      "hash": "a5dd9b0d03922c6f9e9bc6f12666161dd23212bd06a41e0db3707d6d4f101b6c"
+    },
+    {
+      "path": "scripts/reality/systems-calibration.ts",
+      "hash": "66ddc5dfce7f655c086e9199c9b4191c14821d3c1136383cce6ad1c462f0bd9c"
+    },
+    {
+      "path": "scripts/reality/systems-invariants.ts",
+      "hash": "677c81f72d13387c77eddf503882729017c61928b464737741629a46a925568c"
+    },
+    {
+      "path": "scripts/reality/systems-performance.ts",
+      "hash": "1382b3ba668e8ea7eab9dbbf08f3a7ab8ecc303ea24942ebb81ac832833ce10d"
+    },
+    {
+      "path": "scripts/reality/systems-proofs.ts",
+      "hash": "c4c9951c4a39e261b5a4f582f9df282e45ec8e35c2e991ad38d8c9890240b2b1"
+    },
+    {
+      "path": "scripts/reality/trace-input.ts",
+      "hash": "4d589147df6512ac46cfd9e8e8f92c3fdd89ed1b1c0be06dcb9a5dbdf8c5b2f7"
+    },
+    {
+      "path": "scripts/reality/workload-calibration.ts",
+      "hash": "c0446084a06f305e0fcbea8c8ba4056224a44acf4c12caf4f6d74c625a6e31ce"
+    },
+    {
+      "path": "scripts/reality/workload-performance.ts",
+      "hash": "43618445416187e457e72c4bbb089375f6f0504963b0357ff1fcd116a37e5e0e"
+    },
+    {
+      "path": "scripts/reality/workload-proof.ts",
+      "hash": "ee5a70c38a15702df46e541ca60c829da4d8fa4562951fdb02b8d2537c72b5b4"
+    },
+    {
+      "path": "scripts/tests/asyncCalibration.test.ts",
+      "hash": "c48b3fb7ca4638910ca90d38e0665731dfcbfef304e86f80d324017644b4910b"
+    },
+    {
+      "path": "scripts/tests/boundaries.test.ts",
+      "hash": "0471096a0c3b199a240c5dae8c2b2989d9811c9c65d579e166169d5ca64d52a6"
+    },
+    {
+      "path": "scripts/tests/computeCalibration.test.ts",
+      "hash": "d3e37680875e84518ed1c6298e4b45bc694497f8a3c8c4c5c07007c2afb0452e"
+    },
+    {
+      "path": "scripts/tests/dataCalibration.test.ts",
+      "hash": "3f62fabd2644f90a252b163009ee06f2a328b658e700549c5f104799e914b5c2"
+    },
+    {
+      "path": "scripts/tests/meteringArtifacts.test.ts",
+      "hash": "81ce71873b12794ead1a67daf94259207a1c2c12f21097c54d9f29292e0e7caf"
+    },
+    {
+      "path": "scripts/tests/neon.test.ts",
+      "hash": "ae6e53b813a8bc0ccdebf26cde88ca6d8df3e649b53ec50b98a5cef0b95080a7"
+    },
+    {
+      "path": "scripts/tests/networkCalibration.test.ts",
+      "hash": "5dd1f21be68388bbfb3a0d548bb457204b6b31a2ca740711ef1bed929644357c"
+    },
+    {
+      "path": "scripts/tests/productArtifacts.test.ts",
+      "hash": "3f4ba7553bec836e73149faf3c076c2ad069ac8e8cbf9ea1085a2ee08c3d86e4"
+    },
+    {
+      "path": "scripts/tests/providerArtifacts.test.ts",
+      "hash": "da0010641befa715c4674462837bf1e669e2f711fe41508560cf091a18daaab8"
+    },
+    {
+      "path": "scripts/tests/reality.test.ts",
+      "hash": "113032c2077446da46d587c27c3e0dbb5de62d5756346687a38f7b506bbd57d9"
+    },
+    {
+      "path": "scripts/tests/release.test.ts",
+      "hash": "0fc5664d273145fc9428449f95f41d6d3d73dc9158de2419ffc326ebfb1db21b"
+    },
+    {
+      "path": "scripts/tests/shippingReality.test.ts",
+      "hash": "5d2ca4914467dee9c5e5d18d60517bceca67b161cfb8054b48168bfbc3b7a11d"
+    },
+    {
+      "path": "scripts/tests/systemsCalibration.test.ts",
+      "hash": "d3a3b99240aa100e04ce3230c09d2588d343abe0474af6e567651c93c77b4953"
+    },
+    {
+      "path": "scripts/tests/traceInput.test.ts",
+      "hash": "def0f458ffda10f442503e5d7648de625198a97b7f661aea919021d7e606d281"
+    },
+    {
+      "path": "scripts/tests/workloadCalibration.test.ts",
+      "hash": "f678b70c7642fce5c6c59b09bde9248cf938627bcce5f0d0134e5c40980f23de"
+    }
+  ],
+  "execution": [
+    "apps/backend/internalModel2/budgets.ts",
+    "apps/backend/internalModel2/capture.ts",
+    "apps/backend/internalModel2/envelope.ts",
+    "apps/backend/internalModel2/identity.ts",
+    "apps/backend/zod_schemas/deployment.schema.ts",
+    "apps/backend/zod_schemas/layout.schema.ts",
+    "bun.lock",
+    "packages/catalog/src/aws.catalog.ts",
+    "packages/catalog/src/catalog.types.ts",
+    "packages/catalog/src/digitalocean.catalog.ts",
+    "packages/catalog/src/index.ts",
+    "packages/domain/src/examples/SAMPLE_ARCHITECTURE.constants.ts",
+    "packages/domain/src/examples/index.ts",
+    "packages/domain/src/resource/AutoscalingPolicy.interface.ts",
+    "packages/domain/src/resource/ChaosType.types.ts",
+    "packages/domain/src/resource/ConnectionLine.interface.ts",
+    "packages/domain/src/resource/DeploymentChaosNames.enum.ts",
+    "packages/domain/src/resource/RESOURCE_PORTS.constants.ts",
+    "packages/domain/src/resource/RESOURCE_TYPES.constants.ts",
+    "packages/domain/src/resource/Resource.interface.ts",
+    "packages/domain/src/resource/ResourceHealth.enum.ts",
+    "packages/domain/src/resource/index.ts",
+    "packages/domain/src/resource/legacy/ResourceState.enum.ts",
+    "packages/domain/src/topology/CONNECTION_RULES.constants.ts",
+    "packages/domain/src/topology/computeTopology.ts",
+    "packages/domain/src/topology/index.ts",
+    "packages/domain/src/validation/index.ts",
+    "packages/domain/src/validation/infrastructureName.ts",
+    "packages/domain/src/validation/validateDeploymentReadiness.validation.ts",
+    "packages/domain/src/workload/DEFAULT_WORKLOAD_PROFILE.constants.ts",
+    "packages/domain/src/workload/WorkloadProfile.interface.ts",
+    "packages/domain/src/workload/index.ts",
+    "packages/domain/src/workload/resolveWorkload.ts",
+    "packages/simulation/src/internalProduct.ts",
+    "packages/simulation/src/model2/async/broker.ts",
+    "packages/simulation/src/model2/async/client.ts",
+    "packages/simulation/src/model2/async/commands.ts",
+    "packages/simulation/src/model2/async/contracts.ts",
+    "packages/simulation/src/model2/async/objects.ts",
+    "packages/simulation/src/model2/async/policy.ts",
+    "packages/simulation/src/model2/async/publisher.ts",
+    "packages/simulation/src/model2/async/run.ts",
+    "packages/simulation/src/model2/async/validate.ts",
+    "packages/simulation/src/model2/async/worker.ts",
+    "packages/simulation/src/model2/compute/contracts.ts",
+    "packages/simulation/src/model2/compute/memory.ts",
+    "packages/simulation/src/model2/compute/policy.ts",
+    "packages/simulation/src/model2/compute/resource.ts",
+    "packages/simulation/src/model2/compute/run.ts",
+    "packages/simulation/src/model2/compute/scheduler.ts",
+    "packages/simulation/src/model2/compute/sharing.ts",
+    "packages/simulation/src/model2/compute/validate.ts",
+    "packages/simulation/src/model2/contracts.ts",
+    "packages/simulation/src/model2/data/aside.ts",
+    "packages/simulation/src/model2/data/cache-state.ts",
+    "packages/simulation/src/model2/data/cache.ts",
+    "packages/simulation/src/model2/data/contracts.ts",
+    "packages/simulation/src/model2/data/database.ts",
+    "packages/simulation/src/model2/data/locks.ts",
+    "packages/simulation/src/model2/data/policy.ts",
+    "packages/simulation/src/model2/data/run.ts",
+    "packages/simulation/src/model2/data/validate.ts",
+    "packages/simulation/src/model2/network/contracts.ts",
+    "packages/simulation/src/model2/network/link.ts",
+    "packages/simulation/src/model2/network/load-balancer.ts",
+    "packages/simulation/src/model2/network/policy.ts",
+    "packages/simulation/src/model2/network/pool.ts",
+    "packages/simulation/src/model2/network/run.ts",
+    "packages/simulation/src/model2/network/trace.ts",
+    "packages/simulation/src/model2/network/transport.ts",
+    "packages/simulation/src/model2/network/validate.ts",
+    "packages/simulation/src/model2/product/bounds.ts",
+    "packages/simulation/src/model2/product/capabilities.ts",
+    "packages/simulation/src/model2/product/compiler.ts",
+    "packages/simulation/src/model2/product/contracts.ts",
+    "packages/simulation/src/model2/product/controller-policy.ts",
+    "packages/simulation/src/model2/product/controller.ts",
+    "packages/simulation/src/model2/product/faults.ts",
+    "packages/simulation/src/model2/product/origins.ts",
+    "packages/simulation/src/model2/product/owners.ts",
+    "packages/simulation/src/model2/product/presentation.ts",
+    "packages/simulation/src/model2/product/provenance.ts",
+    "packages/simulation/src/model2/product/run.ts",
+    "packages/simulation/src/model2/product/semantics.ts",
+    "packages/simulation/src/model2/product/workload.ts",
+    "packages/simulation/src/model2/provenance.ts",
+    "packages/simulation/src/model2/random.ts",
+    "packages/simulation/src/model2/registry.ts",
+    "packages/simulation/src/model2/run.ts",
+    "packages/simulation/src/model2/station.ts",
+    "packages/simulation/src/model2/systems/cdn.ts",
+    "packages/simulation/src/model2/systems/contracts.ts",
+    "packages/simulation/src/model2/systems/copy.ts",
+    "packages/simulation/src/model2/systems/dns.ts",
+    "packages/simulation/src/model2/systems/monitor.ts",
+    "packages/simulation/src/model2/systems/policy.ts",
+    "packages/simulation/src/model2/systems/registry.ts",
+    "packages/simulation/src/model2/systems/run.ts",
+    "packages/simulation/src/model2/systems/security.ts",
+    "packages/simulation/src/model2/systems/service.ts",
+    "packages/simulation/src/model2/systems/startup.ts",
+    "packages/simulation/src/model2/systems/validate.ts",
+    "packages/simulation/src/model2/time.ts",
+    "packages/simulation/src/model2/validate.ts",
+    "packages/simulation/src/model2/workload/arrivals.ts",
+    "packages/simulation/src/model2/workload/calibration.ts",
+    "packages/simulation/src/model2/workload/contracts.ts",
+    "packages/simulation/src/model2/workload/evidence.ts",
+    "packages/simulation/src/model2/workload/policy.ts",
+    "packages/simulation/src/model2/workload/profiles.ts",
+    "packages/simulation/src/model2/workload/run.ts",
+    "packages/simulation/src/model2/workload/station.ts",
+    "packages/simulation/src/model2/workload/validate.ts",
+    "packages/simulation/src/reality/ledger.ts",
+    "packages/simulation/src/reality/metering/combine.ts",
+    "packages/simulation/src/reality/metering/contracts.ts",
+    "packages/simulation/src/reality/metering/journal.ts",
+    "packages/simulation/src/reality/metering/link-meter.ts",
+    "packages/simulation/src/reality/metering/measurements.ts",
+    "packages/simulation/src/reality/metering/object-meter.ts",
+    "packages/simulation/src/reality/metering/port.ts",
+    "packages/simulation/src/reality/metering/reconcile.ts",
+    "packages/simulation/src/reality/metering/replay.ts",
+    "packages/simulation/src/reality/metering/run.ts",
+    "packages/simulation/src/reality/metering/validation.ts",
+    "packages/simulation/src/reality/metering/windows.ts",
+    "packages/simulation/src/reality/provider/compile.ts",
+    "packages/simulation/src/reality/provider/contracts.ts",
+    "packages/simulation/src/reality/provider/exact.ts",
+    "packages/simulation/src/reality/provider/facts.ts",
+    "packages/simulation/src/reality/provider/fingerprint.ts",
+    "packages/simulation/src/reality/provider/locations.ts",
+    "packages/simulation/src/reality/provider/pricing.ts",
+    "packages/simulation/src/reality/provider/run.ts",
+    "packages/simulation/src/reality/provider/snapshot.ts",
+    "packages/simulation/src/reality/provider/usage.ts",
+    "packages/simulation/src/reality/provider/validity.ts",
+    "packages/simulation/src/reality/quantity.ts"
+  ]
+}

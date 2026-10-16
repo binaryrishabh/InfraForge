@@ -21,7 +21,7 @@ export function createDataRuntime(authored: DataInput, extension?: NetworkExtens
     resource(id, kernel, send) {
       const external = extension?.resource(id, kernel, send); if (external) return external;
       const config = input.resources.find((r) => r.id === id)!; if (!isData(config)) return;
-      if (config.kind === "relational") { const r = relationalDatabase(config, kernel); databases.set(id, r); return r; }
+      if (config.kind === "relational") { const r = relationalDatabase(config, kernel, extension?.causal); databases.set(id, r); return r; }
       if (config.kind === "cache") { const r = keyedCache(config, kernel); caches.set(id, r); return r; }
       const r = cacheAside(config, kernel, send, input.seed); applications.set(id, r); return r;
     },

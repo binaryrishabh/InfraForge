@@ -11,6 +11,7 @@ export function lessonSummary(row: InternalRunRow, policy: unknown, receipt: unk
   try {
     const p = readLessonPolicy(policy, row.inputHash); summary.profile = p.schema; summary.phase = phases[p.phase].label;
     const input = readEnvelope(row.input, row.inputHash, false), capture = readCapture(row.evidence, row.inputHash);
+    if (input.schema !== "infraforge-internal-execution/1" || capture.schema !== "infraforge-internal-evidence/1") throw Error("Object lesson requires v1 evidence");
     if (capture.source !== input.source || capture.sequence !== row.sequence || capture.throughUs !== row.throughUs) throw Error("Capture metadata mismatch");
     const read = capture.model.commands.results.find((result) => result.id === "command-2");
     if (!read) return summary;

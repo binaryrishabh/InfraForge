@@ -11,6 +11,7 @@ test("guided product authoring compiles the actual saved IDs and educational ori
   const runtime = instantiate(input); let evidence: ReturnType<typeof capture> | undefined;
   for (const at of captureCuts(input)) { runtime.advanceTo(at); evidence = capture(runtime, input, (evidence?.sequence ?? 0) + 1, evidence?.checkpoints); }
   expect(evidence!.model.capture.reachedHorizon).toBe(true);
+  if (evidence!.schema !== "infraforge-internal-evidence/1") throw Error("Expected v1 authoring evidence");
   expect(evidence!.model.commands.results).toHaveLength(3);
   expect(evidence!.usage.snapshot.complete).toBe(true);
   expect(Object.keys(input.contract.nodes)).toEqual(["store", "web"]);
