@@ -1,5 +1,16 @@
 # InfraForge project state
 
+**Owner workflow (2026-10-17): revert the temporary A/B/C/D parallel-branch plan.**
+Active engineering work returns to the established **single integration track on
+`develop`**, with `main` reserved for separately approved, validated promotion.
+Do not create or continue parallel A/B/C/D work streams on
+`design/claude-v2`, `work/free-mode-truth`, `work/lesson-runner-host`, or
+`work/model2-connected-stack`. Claude and Codex may work sequentially or
+through clean, explicitly coordinated handoffs; do not split into four independent
+branch owners. Preserve `safety/pre-agent-setup` as the original frozen rescue
+point. Branch deletion itself must be verified separately; this note alone does
+not remove any Git refs.
+
 Latest independently **ACCEPTED INTERNAL engineering milestone: M2M — first
 bounded Model-2 learning experience and isolated lesson runner**.
 Implementation commit `ea1abdbec65a852abb5fc17d41b4cdb22ca37951`
