@@ -6,7 +6,7 @@ import { lessonSource, lessonSourceFiles } from "../../apps/backend/tests/integr
 export function provenance() {
   const root = fileURLToPath(new URL("../../", import.meta.url));
   const files = [...lessonSourceFiles(), ...readdirSync(resolve(root, "scripts/lesson-host")).filter((file) => file.endsWith(".ts") || file === "tsconfig.json").map((file) => `scripts/lesson-host/${file}`),
-    "apps/backend/tests/integration/lessonOrphanChecks.ts", "apps/backend/tests/integration/localHarness.ts"].sort();
+    "apps/backend/tests/integration/lessonOrphanChecks.ts", "apps/backend/tests/integration/lessonFixtureImage.ts", "apps/backend/tests/integration/localHarness.ts"].sort();
   const sha = (text: string) => createHash("sha256").update(text).digest("hex");
   const sources = files.map((file) => ({ file, sha256: sha(readFileSync(resolve(root, file), "utf8").replaceAll("\r\n", "\n")) }));
   return { proofId: randomUUID(), lessonSource: lessonSource(), verifierSource: sha(JSON.stringify(sources)), sources,

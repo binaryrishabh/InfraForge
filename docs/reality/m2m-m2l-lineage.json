@@ -127,6 +127,18 @@
       "hash": "3a2ad8b53bf3b110e82ae0652b1b696546387868284cab8b6bb1753d5ec00e95"
     },
     {
+      "file": "apps/backend/internalModel2/dockerConnection.ts",
+      "hash": "0d1dbd4976c6db84e81435d83446a3d44b65da6db77930bbd979953632e7fea9"
+    },
+    {
+      "file": "apps/backend/internalModel2/dockerEndpoint.ts",
+      "hash": "ed0ccb50351ac1b8da0552163ec804b5d58cfb7b3b01cf6dc586b9dfe27c3b4b"
+    },
+    {
+      "file": "apps/backend/internalModel2/dockerSocket.ts",
+      "hash": "e3528e59e5d822a3066dac75281b25863f4a5961012f5c14cade01a8eb83273b"
+    },
+    {
       "file": "apps/backend/internalModel2/envelope.ts",
       "hash": "ec0118b6fb4e0301689ea4a8c60fa2a8b33e460384d4f9a7814540e785d57089"
     },
@@ -140,11 +152,11 @@
     },
     {
       "file": "apps/backend/internalModel2/lessonAuthoring.ts",
-      "hash": "fdd186918a9b54ca2b5cf38ffc4e9fb9092cc08d1ad9449f799648f383dc5653"
+      "hash": "1957c870365c715d06d69f4f9f61975080e8ec90f0d78f1e3c9b3167d3f4526d"
     },
     {
       "file": "apps/backend/internalModel2/lessonExecution.ts",
-      "hash": "b2ce5f263c52ecfd9668b652da4ba8fda4b0875777b78a06cac9b16c305b03ec"
+      "hash": "ab3780bc94d9dbc203aa9e25a5371b807c4dc7e4420f1098ae4fcc98d5efe279"
     },
     {
       "file": "apps/backend/internalModel2/lessonLimits.ts",
@@ -156,7 +168,7 @@
     },
     {
       "file": "apps/backend/internalModel2/lessonRoutes.ts",
-      "hash": "9db30ed73d1c66cac76260cddb049373f44fb02cfaeeff40c0c9d4dd6b9bbbe2"
+      "hash": "07683bc7230e3c66d5847193370dadba4fffb123fcb895153af0541e5ab71151"
     },
     {
       "file": "apps/backend/internalModel2/lessonStore.ts",
@@ -184,7 +196,7 @@
     },
     {
       "file": "apps/backend/internalModel2/sandboxDocker.ts",
-      "hash": "351fa1b4b62655d7363a5fb4bdb6076ab8da69dfc333f818f680480bfcfaa6a1"
+      "hash": "6a251ec4ede0c89009925aa47f92534177adf1d0ef48a9d0a4df5bc97f53c641"
     },
     {
       "file": "apps/backend/internalModel2/sandboxHandshake.ts",
@@ -192,7 +204,7 @@
     },
     {
       "file": "apps/backend/internalModel2/sandboxRunner.ts",
-      "hash": "085be8693957f3f4f3defb9dcc3945f58e96bfab5bbc032d3cd8a3b82a559435"
+      "hash": "c24ac994911a223a412b3583109583e1ad9e2d47a66bbe86f43a2009680ae3ae"
     },
     {
       "file": "apps/backend/internalModel2/store.ts",

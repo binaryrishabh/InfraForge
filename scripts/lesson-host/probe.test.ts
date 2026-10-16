@@ -3,7 +3,7 @@ import { mkdir, rmdir, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { collect } from "./collect";
 import { evaluate } from "./policy";
-import { command } from "./command";
+import { DockerConnection } from "../../apps/backend/internalModel2/dockerConnection";
 import { probeSandbox } from "./probeSandbox";
 import { lessonSource } from "../../apps/backend/tests/integration/lessonSource";
 import { provenance } from "./identity";
@@ -22,8 +22,10 @@ test.skipIf(process.env.LESSON_HOST_PROBE !== "1")("rootless host enforcement wi
     await mkdir(lock, { mode: 0o700 }); held = true;
     expect(evaluate(await collect(image), image, revision).eligibleForProbes).toBe(true);
     proof.enforcement = await probeSandbox(image, output);
-    expect(await command("docker", ["ps", "--all", "--quiet"])).toBe("");
+    expect((proof.enforcement as { connection: unknown }).connection).toEqual(before.connection);
+    expect(await DockerConnection.use((c) => c.run(["ps", "--all", "--quiet"]))).toBe("");
     const after = evaluate(await collect(image), image, revision); proof.after = after; expect(after.eligibleForProbes).toBe(true);
+    expect(after.connection).toEqual(before.connection);
     proof.success = true;
   } finally {
     if (held) await rmdir(lock);

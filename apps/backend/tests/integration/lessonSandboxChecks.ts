@@ -1,10 +1,10 @@
 import { expect } from "bun:test";
 import { join } from "node:path";
-import { mkdir } from "node:fs/promises";
 import { runSandbox } from "../../internalModel2/sandboxRunner";
 import type { SandboxReceipt } from "../../internalModel2/sandboxRunner";
-import { docker } from "../../internalModel2/sandboxDocker";
+import { DockerConnection } from "../../internalModel2/dockerConnection";
 import { checkOrphanDeadline } from "./lessonOrphanChecks";
+import { withFixtureImage } from "./lessonFixtureImage";
 // This probe replaces the entrypoint in a disposable test image only.
 const fixture = `import { sandboxReady } from './sandboxHandshake';
 import { createInterface } from 'node:readline';
@@ -32,21 +32,12 @@ if(request.fixture==='controls') {
 }
 `;
 export async function checkLessonSandbox(baseImage: string, output: string) {
-  const context = join(output, "fixture"); await mkdir(context, { recursive: true });
-  const tag = `infraforge-m2m-fixture-${crypto.randomUUID()}`;
-  const baseTag = `${tag}-base`;
-  await docker(["tag", baseImage, baseTag]);
-  await Bun.write(join(context, "sandboxChild.ts"), fixture);
-  await Bun.write(join(context, "Dockerfile"), `FROM ${baseTag}\nCOPY --chown=1000:1000 sandboxChild.ts /app/apps/backend/internalModel2/sandboxChild.ts\n`);
-  const build = Bun.spawn(["docker", "build", "--pull=false", "-t", tag, context], { stdout: "pipe", stderr: "pipe" });
-  const logs = Promise.all([new Response(build.stdout).text(), new Response(build.stderr).text()]);
-  if (await build.exited !== 0) throw Error(`Fixture image failed: ${(await logs).join("\n").slice(-4000)}`);
-  await logs;
-  const image = (JSON.parse(await docker(["image", "inspect", tag]))[0]).Id, results: Record<string, any> = {};
-  try {
+  return DockerConnection.use(async (control) => {
+  return withFixtureImage(control, baseImage, join(output, "fixture"), fixture, async (image) => {
+    const results: Record<string, any> = {};
     for (const kind of ["controls", "pids", "cpu", "memory", "wall", "oversized", "malformed"]) {
       let receipt: SandboxReceipt | undefined, failure = "", value: unknown; const start = Date.now();
-      try { await runSandbox(crypto.randomUUID(), image, { fixture: kind }, async (frame) => { if (frame.kind !== "controls") throw Error("Unexpected fixture frame"); value = frame.value; }, async (r) => { receipt = structuredClone(r); }); }
+      try { await runSandbox(control, crypto.randomUUID(), image, { fixture: kind }, async (frame) => { if (frame.kind !== "controls") throw Error("Unexpected fixture frame"); value = frame.value; }, async (r) => { receipt = structuredClone(r); }); }
       catch (error) { failure = error instanceof Error ? error.message : String(error); }
       results[kind] = { elapsedMs: Date.now() - start, receipt, failure, value };
       if (kind === "controls") { expect(failure).toBe(""); expect(value).toMatchObject({ readonly: true, network: true }); expect((value as any).files).toBeLessThan(128); }
@@ -58,7 +49,8 @@ export async function checkLessonSandbox(baseImage: string, output: string) {
       if (kind === "oversized") expect(failure).toContain("line budget");
       if (kind === "malformed") expect(failure).toMatch(/JSON|parse|Expected/i);
     }
-    const orphan = await checkOrphanDeadline(image, output);
-    return { image, baseImage, results, orphan };
-  } finally { await docker(["image", "rm", tag, baseTag]); }
+    const orphan = await checkOrphanDeadline(control, image, output);
+    return { image, baseImage, connection: control.receipt, results, orphan };
+  });
+  });
 }

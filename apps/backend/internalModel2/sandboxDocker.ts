@@ -1,22 +1,9 @@
-import { spawn } from "node:child_process";
+import type { DockerConnection } from "./dockerConnection";
 import { LESSON_SANDBOX as limits } from "./lessonLimits";
 export const containerName = (id: string) => {
   if (!/^[a-f0-9-]{36}$/.test(id)) throw Error("Invalid sandbox identity");
   return `infraforge-model2-${id}`;
 };
-const environment = () => ({ PATH: process.env.PATH ?? process.env.Path ?? "", ...(process.env.HOME ? { HOME: process.env.HOME } : {}), ...(process.env.USERPROFILE ? { USERPROFILE: process.env.USERPROFILE } : {}), ...(process.platform === "win32" ? { SystemRoot: process.env.SystemRoot ?? "C:\\Windows" } : {}) });
-export async function docker(args: string[], cap = 65536) {
-  const child = spawn("docker", args, { env: environment(), windowsHide: true, stdio: ["ignore", "pipe", "pipe"] });
-  let text = "", size = 0, failure: Error | undefined;
-  const kill = (reason: string) => { failure ??= Error(reason); child.kill("SIGKILL"); };
-  const timer = setTimeout(() => kill("Docker control operation timed out"), 5000);
-  for (const stream of [child.stdout, child.stderr]) stream.on("data", (chunk: Buffer) => { size += chunk.length; if (size > cap) kill("Docker control output exceeded its budget"); else text += chunk.toString(); });
-  try {
-    const code = await new Promise<number | null>((resolve, reject) => { child.once("error", reject); child.once("close", resolve); });
-    if (failure || code !== 0) throw failure ?? Error(`Docker operation failed (${code}); no inline fallback`);
-    return text.trim();
-  } finally { clearTimeout(timer); }
-}
 export function createArguments(name: string, image: string, origin?: string) {
   if (!/^sha256:[a-f0-9]{64}$/.test(image)) throw Error("An immutable installed image ID is required");
   if (origin && !/^[a-f0-9-]{36}$/.test(origin)) throw Error("Invalid originating run");
@@ -33,15 +20,14 @@ export function verifyContainer(value: any, name: string, image: string) {
     JSON.stringify(host.CapDrop) !== '["ALL"]' || !host.SecurityOpt?.includes("no-new-privileges=true") || !has("nofile", limits.nofile) || !has("cpu", limits.cpuSeconds) || !has("core", 0)) throw Error("Sandbox enforcement inspection failed before execution");
   return { container: value.Id, image, memoryBytes: host.Memory, memorySwapBytes: host.MemorySwap, nanoCpus: host.NanoCpus, pids: host.PidsLimit, nofile: limits.nofile, cpuSeconds: limits.cpuSeconds, network: host.NetworkMode, readOnly: true, uid: config.User, capabilities: host.CapDrop, security: host.SecurityOpt };
 }
-export const inspectContainer = async (id: string) => JSON.parse(await docker(["inspect", id]))[0];
-export async function removeContainer(name: string, image: string) {
+export const inspectContainer = async (control: DockerConnection, id: string) => JSON.parse(await control.run(["inspect", id]))[0];
+export async function removeContainer(control: DockerConnection, name: string, image: string) {
   try {
-    const value = await inspectContainer(name);
+    const value = await inspectContainer(control, name);
     if (value.Config?.Labels?.["infraforge.model2"] !== name || value.Image !== image) throw Error("Refusing to remove an unrelated container");
-    await docker(["rm", "--force", value.Id]);
+    await control.run(["rm", "--force", value.Id]);
   } catch (error) {
     // A missing container is already reaped. Other cleanup failures remain visible.
-    if ((await docker(["ps", "--all", "--filter", `name=^/${name}$`, "--format", "{{.ID}}"])).length) throw error;
+    if ((await control.run(["ps", "--all", "--filter", `name=^/${name}$`, "--format", "{{.ID}}"])).length) throw error;
   }
 }
-export function attachContainer(id: string) { return spawn("docker", ["start", "--attach", "--interactive", id], { env: environment(), windowsHide: true, stdio: ["pipe", "pipe", "pipe"] }); }

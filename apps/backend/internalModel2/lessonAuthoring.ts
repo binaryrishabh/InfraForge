@@ -7,6 +7,7 @@ import { assessDesign, authoredAssumptions, authoredContract } from "./authoring
 import { admissionSchema, compileEnvelope } from "./envelope";
 import { contentHash } from "./identity";
 import { LESSON_SANDBOX, lessonImage } from "./lessonLimits";
+import { lessonEndpoint } from "./dockerEndpoint";
 import { ConflictError, NotFoundError, ValidationError } from "../utils/errors";
 import { internalDatabase } from "./store";
 export const lessonLayout = { resources: [
@@ -41,7 +42,8 @@ export async function createLessonDesign(owner: string) {
 }
 export async function reviewLesson(owner: string, choice: LessonChoice): Promise<LessonReview> {
   const image = lessonImage();
-  if (!image) throw new ConflictError("The isolated lesson runner is not configured. No inline execution is available.");
+  const endpoint = lessonEndpoint();
+  if (!image || !endpoint) throw new ConflictError("The isolated lesson image and endpoint must be configured. No default-context execution is available.");
   const row = (await internalDatabase.query('SELECT id,name,layout,"updatedAt" AT TIME ZONE \'UTC\' AS "updatedAt","challengeId" FROM "Infrastructure" WHERE id=$1 AND "ownerId"=$2', [choice.infrastructureId, owner])).rows[0];
   if (!row) throw new NotFoundError("Saved design not available");
   if (row.updatedAt.toISOString() !== choice.expectedDesignUpdatedAt) throw new ConflictError("Saved design changed. Refresh and review again.");
@@ -51,7 +53,7 @@ export async function reviewLesson(owner: string, choice: LessonChoice): Promise
   authored.contract.version = LESSON_VERSION;
   const request = admissionSchema.parse({ infrastructureId: choice.infrastructureId, expectedDesignUpdatedAt: choice.expectedDesignUpdatedAt, idempotencyKey: choice.idempotencyKey, workload: authored.workload, contract: authored.contract });
   const envelope = compileEnvelope(randomUUID(), owner, row.layout, row.updatedAt, request);
-  const reviewHash = contentHash({ choice, request, image, source: envelope.source, limits: LESSON_SANDBOX });
+  const reviewHash = contentHash({ choice, request, image, endpoint, source: envelope.source, limits: LESSON_SANDBOX });
   return { choice, draft, image, reviewHash, explanation: ["A 24-byte current object is written, its process crashes, then it restarts with modeled logical state retained.", "Choose when to read it. The result comes from recorded execution; physical durability remains Unknown."],
     review: { request: request as LessonReview["review"]["request"], requestHash: contentHash(request), revision: design.updatedAt, designName: design.name,
       fields: authoringGroups.flatMap((g) => g.fields).map((f) => ({ field: f.label, value: authored.values[f.key]!, unit: f.unit, origin: draft.origin })),

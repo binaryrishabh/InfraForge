@@ -1,5 +1,17 @@
 # InfraForge project state
 
+**Lesson Docker endpoint correction (2026-10-17):** execution/replay/reaping now
+share one explicitly selected local Unix connection, isolated client configuration
+and socket/daemon identity checks. Default-context drift and Docker environment
+overrides do not select the runner. The production contract requires the dedicated
+nonroot Linux user's explicit `/run/user/UID/docker.sock`; missing/invalid or changed
+identity refuses without another daemon. Disposable rootful CI is explicitly marked
+and guarded separately. Existing M2M JSON/provenance remains unchanged with source
+reconstruction, not relabeling. See the [connection mechanism and remaining host
+requirements](reality/lesson-host-readiness.md#pinned-connection-mechanism).
+The intended host still does not exist and is UNVERIFIED. No grants, preview,
+production, Model-1 physics or general shipping activation changes.
+
 **Lesson-runner host checkpoint (2026-10-17): actual host UNVERIFIED.** The owner
 confirmed that no dedicated Linux host is available yet. Repository-side read-only
 preflight and explicitly invoked bounded enforcement probes are prepared under

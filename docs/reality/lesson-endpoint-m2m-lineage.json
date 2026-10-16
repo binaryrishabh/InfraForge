@@ -1,0 +1,425 @@
+{
+  "schema": "infraforge-lesson-endpoint-lineage/1",
+  "accepted": "edf0d924cece280e167b0614b99ff8ba9879039f",
+  "original": [
+    {
+      "file": "apps/backend/Dockerfile",
+      "hash": "c7135eaf89dd175fb6dde9e6c8149610b45c4a4eb526aaaa89c223968f8ad39a"
+    },
+    {
+      "file": "apps/backend/internalModel2/authoring.ts",
+      "hash": "06a33301e5be68dbfdbdfad17c083d49e26859db2fa20a341c703faffa952b17"
+    },
+    {
+      "file": "apps/backend/internalModel2/budgets.ts",
+      "hash": "ec9246ab659fc0f1539829b95ac4ff190865a6c712ac3e537de381e695aeebfa"
+    },
+    {
+      "file": "apps/backend/internalModel2/capture.ts",
+      "hash": "3a2ad8b53bf3b110e82ae0652b1b696546387868284cab8b6bb1753d5ec00e95"
+    },
+    {
+      "file": "apps/backend/internalModel2/envelope.ts",
+      "hash": "ec0118b6fb4e0301689ea4a8c60fa2a8b33e460384d4f9a7814540e785d57089"
+    },
+    {
+      "file": "apps/backend/internalModel2/execution.ts",
+      "hash": "bc494bedf566bae80ce9c04ccf8cad3f8c6050516150e9e5f5def2379119297b"
+    },
+    {
+      "file": "apps/backend/internalModel2/identity.ts",
+      "hash": "78df51ca7d7e795553d49e410cdbdf4da54c311594078c7883ee9309eba56184"
+    },
+    {
+      "file": "apps/backend/internalModel2/lessonAuthoring.ts",
+      "hash": "fdd186918a9b54ca2b5cf38ffc4e9fb9092cc08d1ad9449f799648f383dc5653",
+      "text": "import { randomUUID } from \"node:crypto\";\nimport { authoringGroups } from \"@infraforge/contracts/internal-model2\";\nimport { LESSON_VERSION } from \"@infraforge/contracts/internal-lessons\";\nimport type { LessonChoice, LessonReview } from \"@infraforge/contracts/internal-lessons\";\nimport { restartLesson } from \"@infraforge/contracts/internal-lessons/profile\";\nimport { assessDesign, authoredAssumptions, authoredContract } from \"./authoring\";\nimport { admissionSchema, compileEnvelope } from \"./envelope\";\nimport { contentHash } from \"./identity\";\nimport { LESSON_SANDBOX, lessonImage } from \"./lessonLimits\";\nimport { ConflictError, NotFoundError, ValidationError } from \"../utils/errors\";\nimport { internalDatabase } from \"./store\";\nexport const lessonLayout = { resources: [\n  { id: \"lesson-vm\", type: \"Virtual Machine\", name: \"Application\", x: 0, y: 0 },\n  { id: \"lesson-objects\", type: \"Object Storage\", name: \"Current objects\", x: 200, y: 0 },\n], connectionLines: [{ id: \"lesson-link\", sourceId: \"lesson-vm\", targetId: \"lesson-objects\", sourceType: \"Virtual Machine\", targetType: \"Object Storage\", port: 8080 }] };\nfunction assessLessonDesign(row: Parameters<typeof assessDesign>[0]) {\n  const design = assessDesign(row);\n  if (!design.supported) return design;\n  const layout = row.layout as typeof lessonLayout;\n  const check = (value: object, keys: string[], path: string) => {\n    for (const key of Object.keys(value)) if (!keys.includes(key)) design.reasons.push(`Unmodeled saved setting ${path}.${key}; select a separate lesson design. No saved fields were removed.`);\n  };\n  check(layout, [\"resources\", \"connectionLines\", \"layoutVersion\"], \"layout\");\n  for (const resource of layout.resources) check(resource, [\"id\", \"type\", \"name\", \"x\", \"y\"], resource.id);\n  for (const connection of layout.connectionLines) check(connection, [\"id\", \"sourceId\", \"targetId\", \"sourceType\", \"targetType\", \"port\"], connection.id);\n  if (design.port !== 8080) design.reasons.push(\"This lesson profile requires an explicit port 8080 connection.\");\n  design.supported = design.reasons.length === 0; return design;\n}\nexport async function lessonDesigns(owner: string) {\n  const rows = await internalDatabase.query('SELECT id,name,layout,\"updatedAt\" AT TIME ZONE \\'UTC\\' AS \"updatedAt\",\"challengeId\" FROM \"Infrastructure\" WHERE \"ownerId\"=$1 ORDER BY \"updatedAt\" DESC LIMIT 100', [owner]);\n  return rows.rows.map(assessLessonDesign);\n}\nexport async function createLessonDesign(owner: string) {\n  // One explicit, idempotent new design per owner. Never rewrite a saved layout.\n  const hex = contentHash(`m2m-design/1:${owner}`), id = `${hex.slice(0,8)}-${hex.slice(8,12)}-4${hex.slice(13,16)}-a${hex.slice(17,20)}-${hex.slice(20,32)}`;\n  await internalDatabase.query(`INSERT INTO \"Infrastructure\" (id,\"userId\",\"ownerId\",name,layout,\"updatedAt\")\n    VALUES ($1,$2,$2,'Object restart lesson',$3,now()) ON CONFLICT (id) DO NOTHING`, [id, owner, lessonLayout]);\n  const row = (await internalDatabase.query('SELECT \"ownerId\",layout FROM \"Infrastructure\" WHERE id=$1', [id])).rows[0];\n  if (row?.ownerId !== owner || contentHash(row.layout) !== contentHash(lessonLayout)) throw new ConflictError(\"The lesson design has changed. Select a supported saved design; no fields were overwritten.\");\n  return id;\n}\nexport async function reviewLesson(owner: string, choice: LessonChoice): Promise<LessonReview> {\n  const image = lessonImage();\n  if (!image) throw new ConflictError(\"The isolated lesson runner is not configured. No inline execution is available.\");\n  const row = (await internalDatabase.query('SELECT id,name,layout,\"updatedAt\" AT TIME ZONE \\'UTC\\' AS \"updatedAt\",\"challengeId\" FROM \"Infrastructure\" WHERE id=$1 AND \"ownerId\"=$2', [choice.infrastructureId, owner])).rows[0];\n  if (!row) throw new NotFoundError(\"Saved design not available\");\n  if (row.updatedAt.toISOString() !== choice.expectedDesignUpdatedAt) throw new ConflictError(\"Saved design changed. Refresh and review again.\");\n  const design = assessLessonDesign(row);\n  if (!design.supported || design.port !== 8080) throw new ValidationError(design.reasons.join(\" \") || \"Lesson requires port 8080; the saved design is unchanged.\");\n  const draft = restartLesson(choice.phase), authored = authoredContract(draft, design);\n  authored.contract.version = LESSON_VERSION;\n  const request = admissionSchema.parse({ infrastructureId: choice.infrastructureId, expectedDesignUpdatedAt: choice.expectedDesignUpdatedAt, idempotencyKey: choice.idempotencyKey, workload: authored.workload, contract: authored.contract });\n  const envelope = compileEnvelope(randomUUID(), owner, row.layout, row.updatedAt, request);\n  const reviewHash = contentHash({ choice, request, image, source: envelope.source, limits: LESSON_SANDBOX });\n  return { choice, draft, image, reviewHash, explanation: [\"A 24-byte current object is written, its process crashes, then it restarts with modeled logical state retained.\", \"Choose when to read it. The result comes from recorded execution; physical durability remains Unknown.\"],\n    review: { request: request as LessonReview[\"review\"][\"request\"], requestHash: contentHash(request), revision: design.updatedAt, designName: design.name,\n      fields: authoringGroups.flatMap((g) => g.fields).map((f) => ({ field: f.label, value: authored.values[f.key]!, unit: f.unit, origin: draft.origin })),\n      assumptions: [...authoredAssumptions, \"This versioned teaching profile fixes all engineering inputs. Only the read phase is selectable.\", `Isolated execution limits: ${JSON.stringify(LESSON_SANDBOX)}. These constrain software execution, not modeled cloud resources.`],\n      arrivals: envelope.compiled.input.arrivals.reduce((n, a) => n + (a.kind === \"trace\" ? a.trace.rows.length : 0), 0) } };\n}\n"
+    },
+    {
+      "file": "apps/backend/internalModel2/lessonExecution.ts",
+      "hash": "b2ce5f263c52ecfd9668b652da4ba8fda4b0875777b78a06cac9b16c305b03ec",
+      "text": "import { randomUUID } from \"node:crypto\";\nimport type { WorkerOwnership } from \"../infra/workerOwnership\";\nimport { internalDatabase } from \"./store\";\nimport type { InternalRunRow } from \"./store\";\nimport { captureCuts, readEnvelope } from \"./envelope\";\nimport { readCapture } from \"./capture\";\nimport type { StoredCapture } from \"./capture\";\nimport { contentHash } from \"./identity\";\nimport { scopedLesson, withLessonRunner } from \"./lessonStore\";\nimport { lessonImage } from \"./lessonLimits\";\nimport { runSandbox } from \"./sandboxRunner\";\nimport { removeContainer, containerName, docker, inspectContainer } from \"./sandboxDocker\";\nexport async function executeLesson(id: string, ownership: WorkerOwnership) {\n  const claimed = await ownership.transaction(async (db) => {\n    const row = (await db.query<InternalRunRow>('SELECT * FROM \"InternalModel2Run\" WHERE id=$1 FOR UPDATE', [id])).rows[0];\n    if (!row || ![\"queued\", \"running\"].includes(row.status)) return null;\n    try {\n      if (row.status === \"running\") throw Error(\"Prior lesson delivery stopped; exact continuation is unsupported\");\n      if (!(await db.query('SELECT 1 FROM \"InternalModel2Grant\" WHERE \"userId\"=$1', [row.ownerId])).rowCount) throw Error(\"Lesson authorization revoked\");\n      const record = await scopedLesson(id, row.inputHash), input = readEnvelope(row.input, row.inputHash);\n      if (!record || input.runId !== id || input.ownerId !== row.ownerId || record.policy.image !== lessonImage()) throw Error(\"Reviewed isolation policy is unavailable or incompatible; review a new run\");\n      const token = randomUUID();\n      await db.query('UPDATE \"InternalModel2Run\" SET status=\\'running\\',token=$2,\"updatedAt\"=now() WHERE id=$1', [id, token]);\n      return { row, input, policy: record.policy, token };\n    } catch (error) {\n      await db.query('UPDATE \"InternalModel2Run\" SET status=$2,reason=$3,\"updatedAt\"=now() WHERE id=$1', [id, row.status === \"running\" ? \"interrupted\" : \"failed\", reason(error)]); return null;\n    }\n  });\n  if (!claimed) return;\n  let previous: StoredCapture | undefined, continuing = true;\n  const receipt = async (value: unknown) => ownership.transaction(async (db) => {\n    await db.query(`UPDATE \"InternalModel2LessonRun\" l SET receipt=$3 FROM \"InternalModel2Run\" r WHERE l.\"runId\"=$1 AND r.id=l.\"runId\" AND r.token=$2 AND r.status='running'`, [id, claimed.token, value]);\n  });\n  try {\n    await withLessonRunner(async (signal) => { await reapLessonContainers(); return runSandbox(id, claimed.policy.image, { mode: \"execute\", input: claimed.input, inputHash: claimed.row.inputHash }, async (frame) => {\n      await ownership.assertHeld();\n      if (frame.kind !== \"capture\") throw Error(\"Unexpected execution frame\");\n      const value = readCapture(frame.value, claimed.row.inputHash), expected = (previous?.sequence ?? 0) + 1;\n      if (value.source !== claimed.input.source || value.sequence !== expected || value.throughUs !== captureCuts(claimed.input)[expected - 1] ||\n        contentHash(value.checkpoints.slice(0, -1)) !== contentHash(previous?.checkpoints ?? [])) throw Error(\"Child capture sequence, history or source mismatch\");\n      continuing = await ownership.transaction(async (db) => {\n        const row = (await db.query<InternalRunRow>('SELECT * FROM \"InternalModel2Run\" WHERE id=$1 AND token=$2 AND status=\\'running\\' FOR UPDATE', [id, claimed.token])).rows[0];\n        if (!row) return false;\n        if (row.sequence !== expected - 1) throw Error(\"Durable capture sequence changed\");\n        const grant = (await db.query('SELECT 1 FROM \"InternalModel2Grant\" WHERE \"userId\"=$1', [row.ownerId])).rowCount;\n        const stop = row.cancelRequested || !grant;\n        await db.query(`UPDATE \"InternalModel2Run\" SET evidence=$3,sequence=$4,\"throughUs\"=$5,status=$6,reason=$7,\"updatedAt\"=now() WHERE id=$1 AND token=$2 AND status='running'`,\n          [id, claimed.token, value, value.sequence, value.throughUs, stop ? \"cancelled\" : \"running\", stop ? \"Cancellation or authorization loss; retained committed prefix\" : null]);\n        return !stop;\n      });\n      previous = value;\n      return { sequence: value.sequence, fingerprint: value.fingerprint, continue: continuing };\n    }, receipt, signal); });\n    if (!continuing) return;\n    if (!previous?.model.capture.reachedHorizon || previous.sequence !== captureCuts(claimed.input).length) throw Error(\"Child stopped before the complete modeled horizon\");\n    await ownership.transaction(async (db) => {\n      // Recheck cancellation/grant after successful process exit, before terminal commit.\n      await db.query(`UPDATE \"InternalModel2Run\" SET status=CASE WHEN \"cancelRequested\" OR NOT EXISTS (SELECT 1 FROM \"InternalModel2Grant\" WHERE \"userId\"=\"ownerId\") THEN 'cancelled' ELSE 'completed' END,\"updatedAt\"=now()\n        WHERE id=$1 AND token=$2 AND status='running'`, [id, claimed.token]);\n    });\n  } catch (error) {\n    await ownership.transaction(async (db) => { await db.query(`UPDATE \"InternalModel2Run\" SET status='interrupted',reason=$3,\"updatedAt\"=now() WHERE id=$1 AND token=$2 AND status='running'`, [id, claimed.token, `Isolated execution stopped: ${reason(error)}; last durable prefix retained`]); });\n  }\n}\nexport async function replayLesson(row: InternalRunRow) {\n  const record = await scopedLesson(row.id, row.inputHash);\n  if (!record || record.policy.image !== lessonImage()) throw Error(\"The recorded isolated runner image is unavailable; no inline replay\");\n  readEnvelope(row.input, row.inputHash); readCapture(row.evidence, row.inputHash);\n  let result: unknown;\n  await withLessonRunner(async (signal) => { await reapLessonContainers(); return runSandbox(randomUUID(), record.policy.image, { mode: \"replay\", row }, async (frame) => {\n    if (frame.kind !== \"replay\" || result !== undefined || ![\"MatchesRecordedPrefix\", \"Mismatch\"].includes(frame.value?.kind)) throw Error(\"Invalid replay protocol\");\n    result = frame.value;\n  }, async () => {}, signal, row.id); });\n  if (result === undefined) throw Error(\"No isolated replay result\");\n  return result;\n}\nexport async function reapLessonContainers() {\n  if (!lessonImage()) return;\n  const records = await internalDatabase.query('SELECT l.\"runId\",l.policy,r.status FROM \"InternalModel2LessonRun\" l JOIN \"InternalModel2Run\" r ON r.id=l.\"runId\"');\n  if (!records.rowCount) return;\n  const names = (await docker([\"ps\", \"--all\", \"--filter\", \"label=infraforge.model2\", \"--format\", \"{{.Names}}\"])).split(\"\\n\").filter(Boolean);\n  for (const name of names) {\n    if (!/^infraforge-model2-[a-f0-9-]{36}$/.test(name)) continue;\n    let value;\n    try { value = await inspectContainer(name); }\n    catch (error) {\n      if (!await docker([\"ps\", \"--all\", \"--filter\", `name=^/${name}$`, \"--format\", \"{{.ID}}\"])) continue;\n      throw error;\n    }\n    const origin = value.Config?.Labels?.[\"infraforge.model2.origin\"];\n    const row = records.rows.find((r) => r.runId === origin && r.policy.image === value.Image);\n    if (row && (!value.State.Running || name === containerName(row.runId) && ![\"queued\", \"running\"].includes(row.status))) await removeContainer(name, row.policy.image);\n  }\n}\nconst reason = (error: unknown) => (error instanceof Error ? error.message : \"Lesson execution failed\").slice(0, 400);\n"
+    },
+    {
+      "file": "apps/backend/internalModel2/lessonLimits.ts",
+      "hash": "061f7e3307874128d876aa1c493fb4739ccb8e0aed0e4342287745c8d4ec1a81"
+    },
+    {
+      "file": "apps/backend/internalModel2/lessonPolicy.ts",
+      "hash": "03736442f2f31e0a25903e3fe7c14ae76a82fc4f67d43bac4654deb441cf65a6"
+    },
+    {
+      "file": "apps/backend/internalModel2/lessonRoutes.ts",
+      "hash": "9db30ed73d1c66cac76260cddb049373f44fb02cfaeeff40c0c9d4dd6b9bbbe2",
+      "text": "import { Router } from \"express\";\nimport { z } from \"zod\";\nimport { LESSON_VERSION } from \"@infraforge/contracts/internal-lessons\";\nimport { admissionSchema } from \"./envelope\";\nimport { lessonChoice, lessonSubmission, makeLessonPolicy, readLessonPolicy } from \"./lessonPolicy\";\nimport { lessonImage } from \"./lessonLimits\";\nimport { createLessonDesign, lessonDesigns, reviewLesson } from \"./lessonAuthoring\";\nimport { admit, internalDatabase } from \"./store\";\nimport { ConflictError, ValidationError } from \"../utils/errors\";\nexport const lessonRouter = Router();\nlessonRouter.get(\"/lesson\", async (_req, res) => { res.json({ success: true, workspace: { designs: await lessonDesigns(res.locals.userId), configured: lessonImage() !== null, profile: LESSON_VERSION, operator: res.locals.model2Scope === \"operator\" } }); });\nlessonRouter.post(\"/lesson/design\", async (req, res) => {\n  if (!z.object({}).strict().safeParse(req.body).success) throw new ValidationError(\"Creating the lesson design requires an empty object\");\n  res.status(201).json({ success: true, id: await createLessonDesign(res.locals.userId) });\n});\nlessonRouter.post(\"/lesson/review\", async (req, res) => {\n  const parsed = lessonChoice.safeParse(req.body);\n  if (!parsed.success) throw new ValidationError(\"A supported lesson phase, owned design revision and retry key are required\");\n  res.json({ success: true, lesson: await reviewLesson(res.locals.userId, parsed.data) });\n});\nlessonRouter.post(\"/lesson/runs\", async (req, res) => {\n  const parsed = lessonSubmission.safeParse(req.body);\n  if (!parsed.success) throw new ValidationError(\"Submit the exact reviewed lesson choice and review identity\");\n  const { reviewHash, ...choice } = parsed.data, owner = res.locals.userId;\n  const existing = (await internalDatabase.query(`SELECT r.*,l.policy FROM \"InternalModel2Run\" r JOIN \"InternalModel2LessonRun\" l ON l.\"runId\"=r.id WHERE r.\"ownerId\"=$1 AND r.\"idempotencyKey\"=$2`, [owner, choice.idempotencyKey])).rows[0];\n  // Recover an uncertain admission even if an operator has since changed the image.\n  if (existing) {\n    const policy = readLessonPolicy(existing.policy, existing.inputHash);\n    if (policy.reviewHash !== reviewHash || policy.phase !== choice.phase || existing.input.infrastructureId !== choice.infrastructureId || existing.input.designUpdatedAt !== choice.expectedDesignUpdatedAt) throw new ConflictError(\"Retry key already names another reviewed lesson\");\n    res.json({ success: true, id: existing.id, status: existing.status, inputHash: existing.inputHash, created: false }); return;\n  }\n  const review = await reviewLesson(owner, choice);\n  if (review.reviewHash !== reviewHash) throw new ConflictError(\"Review is stale. Review the current design, teaching profile and isolation image again.\");\n  const result = await admit(owner, admissionSchema.parse(review.review.request), (input) => makeLessonPolicy(input.fingerprint, choice.phase, review.image, reviewHash));\n  res.status(result.created ? 202 : 200).json({ success: true, id: result.run.id, status: result.run.status, inputHash: result.run.inputHash, created: result.created });\n});\n"
+    },
+    {
+      "file": "apps/backend/internalModel2/lessonStore.ts",
+      "hash": "c594a0e1269e049ab51e0480a93185a0201a265f80067385ea1cea2a6150bd87"
+    },
+    {
+      "file": "apps/backend/internalModel2/lessonSummary.ts",
+      "hash": "197cfe944991a549e9b48c1fdb3a8e16ce53c9777f887410e4b6392fd7b5ca46"
+    },
+    {
+      "file": "apps/backend/internalModel2/queue.ts",
+      "hash": "dabb9891e7fe30a01c1df36fa29ec3caf198014dbf8160f2e0b44f118287246a"
+    },
+    {
+      "file": "apps/backend/internalModel2/report.ts",
+      "hash": "00589fcaf78979f53dcc18bd7ab8942ee106d6e7563ea107f83b888088ef67f8"
+    },
+    {
+      "file": "apps/backend/internalModel2/routes.ts",
+      "hash": "f1a58716f3ca41523786d85c9e9458e02695dd5fadff3e4da6b0c424b307ea88"
+    },
+    {
+      "file": "apps/backend/internalModel2/sandboxChild.ts",
+      "hash": "127661af4ec24a45d4e9622956c4700d3692719b32c41fb6e58f702a6bb2b48d"
+    },
+    {
+      "file": "apps/backend/internalModel2/sandboxDocker.ts",
+      "hash": "351fa1b4b62655d7363a5fb4bdb6076ab8da69dfc333f818f680480bfcfaa6a1",
+      "text": "import { spawn } from \"node:child_process\";\nimport { LESSON_SANDBOX as limits } from \"./lessonLimits\";\nexport const containerName = (id: string) => {\n  if (!/^[a-f0-9-]{36}$/.test(id)) throw Error(\"Invalid sandbox identity\");\n  return `infraforge-model2-${id}`;\n};\nconst environment = () => ({ PATH: process.env.PATH ?? process.env.Path ?? \"\", ...(process.env.HOME ? { HOME: process.env.HOME } : {}), ...(process.env.USERPROFILE ? { USERPROFILE: process.env.USERPROFILE } : {}), ...(process.platform === \"win32\" ? { SystemRoot: process.env.SystemRoot ?? \"C:\\\\Windows\" } : {}) });\nexport async function docker(args: string[], cap = 65536) {\n  const child = spawn(\"docker\", args, { env: environment(), windowsHide: true, stdio: [\"ignore\", \"pipe\", \"pipe\"] });\n  let text = \"\", size = 0, failure: Error | undefined;\n  const kill = (reason: string) => { failure ??= Error(reason); child.kill(\"SIGKILL\"); };\n  const timer = setTimeout(() => kill(\"Docker control operation timed out\"), 5000);\n  for (const stream of [child.stdout, child.stderr]) stream.on(\"data\", (chunk: Buffer) => { size += chunk.length; if (size > cap) kill(\"Docker control output exceeded its budget\"); else text += chunk.toString(); });\n  try {\n    const code = await new Promise<number | null>((resolve, reject) => { child.once(\"error\", reject); child.once(\"close\", resolve); });\n    if (failure || code !== 0) throw failure ?? Error(`Docker operation failed (${code}); no inline fallback`);\n    return text.trim();\n  } finally { clearTimeout(timer); }\n}\nexport function createArguments(name: string, image: string, origin?: string) {\n  if (!/^sha256:[a-f0-9]{64}$/.test(image)) throw Error(\"An immutable installed image ID is required\");\n  if (origin && !/^[a-f0-9-]{36}$/.test(origin)) throw Error(\"Invalid originating run\");\n  return [\"create\", \"--pull=never\", \"--name\", name, \"--label\", `infraforge.model2=${name}`, ...(origin ? [\"--label\", `infraforge.model2.origin=${origin}`] : []), \"--interactive\", \"--init\", \"--network=none\", \"--read-only\", \"--cap-drop=ALL\", \"--security-opt=no-new-privileges=true\", \"--user=1000:1000\",\n    `--memory=${limits.memoryBytes}`, `--memory-swap=${limits.memoryBytes}`, \"--cpus=1\", `--pids-limit=${limits.pids}`, `--ulimit=nofile=${limits.nofile}:${limits.nofile}`, `--ulimit=cpu=${limits.cpuSeconds}:${limits.cpuSeconds}`, \"--ulimit=core=0:0\", \"--tmpfs=/tmp:rw,noexec,nosuid,size=16777216\", \"--workdir=/app/apps/backend\",\n    \"--env=NODE_ENV=test\", \"--env=HOME=/tmp\", image, \"timeout\", \"--signal=KILL\", \"--kill-after=1s\", `${limits.wallSeconds}s`, \"bun\", \"--no-env-file\", \"--no-install\", \"internalModel2/sandboxChild.ts\"];\n}\nexport function verifyContainer(value: any, name: string, image: string) {\n  const host = value?.HostConfig, config = value?.Config, u = host?.Ulimits;\n  const has = (name: string, n: number) => Array.isArray(u) && u.some((v: any) => v.Name === name && v.Soft === n && v.Hard === n);\n  if (!/^sha256:[a-f0-9]{64}$/.test(image) || value?.Image !== image || value?.Name !== `/${name}` || config?.Labels?.[\"infraforge.model2\"] !== name ||\n    config.User !== \"1000:1000\" || host.Memory !== limits.memoryBytes || host.MemorySwap !== limits.memoryBytes || host.NanoCpus !== limits.nanoCpus || host.PidsLimit !== limits.pids ||\n    host.NetworkMode !== \"none\" || !host.ReadonlyRootfs || !host.Init || host.Privileged || host.Binds?.length || value.Mounts?.some((m: any) => m.Type !== \"tmpfs\") ||\n    JSON.stringify(host.CapDrop) !== '[\"ALL\"]' || !host.SecurityOpt?.includes(\"no-new-privileges=true\") || !has(\"nofile\", limits.nofile) || !has(\"cpu\", limits.cpuSeconds) || !has(\"core\", 0)) throw Error(\"Sandbox enforcement inspection failed before execution\");\n  return { container: value.Id, image, memoryBytes: host.Memory, memorySwapBytes: host.MemorySwap, nanoCpus: host.NanoCpus, pids: host.PidsLimit, nofile: limits.nofile, cpuSeconds: limits.cpuSeconds, network: host.NetworkMode, readOnly: true, uid: config.User, capabilities: host.CapDrop, security: host.SecurityOpt };\n}\nexport const inspectContainer = async (id: string) => JSON.parse(await docker([\"inspect\", id]))[0];\nexport async function removeContainer(name: string, image: string) {\n  try {\n    const value = await inspectContainer(name);\n    if (value.Config?.Labels?.[\"infraforge.model2\"] !== name || value.Image !== image) throw Error(\"Refusing to remove an unrelated container\");\n    await docker([\"rm\", \"--force\", value.Id]);\n  } catch (error) {\n    // A missing container is already reaped. Other cleanup failures remain visible.\n    if ((await docker([\"ps\", \"--all\", \"--filter\", `name=^/${name}$`, \"--format\", \"{{.ID}}\"])).length) throw error;\n  }\n}\nexport function attachContainer(id: string) { return spawn(\"docker\", [\"start\", \"--attach\", \"--interactive\", id], { env: environment(), windowsHide: true, stdio: [\"pipe\", \"pipe\", \"pipe\"] }); }\n"
+    },
+    {
+      "file": "apps/backend/internalModel2/sandboxHandshake.ts",
+      "hash": "c8b4db105d8de9dedaf5470f37e125f32881f2547f2baae354e4b656194d67e5"
+    },
+    {
+      "file": "apps/backend/internalModel2/sandboxRunner.ts",
+      "hash": "085be8693957f3f4f3defb9dcc3945f58e96bfab5bbc032d3cd8a3b82a559435",
+      "text": "import { LESSON_SANDBOX as limits } from \"./lessonLimits\";\nimport { executionSource } from \"./identity\";\nimport { containerName, createArguments, docker, verifyContainer, inspectContainer, removeContainer, attachContainer } from \"./sandboxDocker\";\nexport interface SandboxReceipt { schema: \"model2-sandbox-receipt/1\"; inspection: ReturnType<typeof verifyContainer>; enforcement?: unknown; exit?: { code: number; oom: boolean; error: string }; elapsedMs?: number }\nexport async function runSandbox(id: string, image: string, input: unknown, onFrame: (value: any) => Promise<unknown>, onReceipt: (receipt: SandboxReceipt) => Promise<void>, signal?: AbortSignal, origin = id) {\n  const name = containerName(id), started = Date.now(), serialized = JSON.stringify(input) + \"\\n\";\n  if (Buffer.byteLength(serialized) > limits.inputBytes) throw Error(\"Sandbox input budget exceeded\");\n  let child: ReturnType<typeof attachContainer> | undefined, deadline: ReturnType<typeof setTimeout> | undefined, failure: Error | undefined;\n  const abort = () => { failure ??= Error(\"Isolated runner ownership lost\"); child?.kill(\"SIGKILL\"); };\n  signal?.addEventListener(\"abort\", abort, { once: true });\n  try {\n    signal?.throwIfAborted();\n    // The database lease cannot outlive a killed parent. Refuse overlap with its\n    // still-running container until the independent inner deadline has stopped it.\n    if (await docker([\"ps\", \"--filter\", \"label=infraforge.model2\", \"--filter\", \"status=running\", \"--format\", \"{{.ID}}\"])) throw Error(\"An isolated executor is still active; no second executor started\");\n    const container = await docker(createArguments(name, image, origin));\n    if (!/^[a-f0-9]{64}$/.test(container)) throw Error(\"Invalid created container identity\");\n    const inspection = verifyContainer(await inspectContainer(container), name, image), receipt: SandboxReceipt = { schema: \"model2-sandbox-receipt/1\", inspection };\n    await onReceipt(receipt);\n    signal?.throwIfAborted();\n    child = attachContainer(container);\n    const running = child;\n    const kill = (reason: string) => { failure ??= Error(reason); running.kill(\"SIGKILL\"); };\n    const exited = new Promise<number | null>((resolve, reject) => { running.once(\"error\", reject); running.once(\"close\", resolve); });\n    // Observe rejection immediately, even while awaiting stream data or a commit.\n    void exited.catch(() => {});\n    deadline = setTimeout(() => kill(\"Sandbox wall deadline exceeded\"), Math.max(1, limits.deadlineMs - (Date.now() - started)));\n    let stderr = 0;\n    running.stderr.on(\"data\", (chunk: Buffer) => { stderr += chunk.length; if (stderr > 16384) kill(\"Sandbox error output budget exceeded\"); });\n    running.stdin.on(\"error\", () => { /* Exit/pipe closure is assessed below. */ });\n    running.stdin.write(serialized);\n    let pending = Buffer.alloc(0), bytes = 0, frames = 0, ready = false, done = false, stopped = false;\n    for await (const chunk of running.stdout) {\n      bytes += chunk.length;\n      if (bytes > limits.outputBytes) throw Error(\"Sandbox output budget exceeded\");\n      pending = Buffer.concat([pending, chunk]);\n      let end: number;\n      while ((end = pending.indexOf(10)) !== -1) {\n        if (end > limits.lineBytes || ++frames > 35) throw Error(\"Sandbox frame budget exceeded\");\n        const frame = JSON.parse(pending.subarray(0, end).toString(\"utf8\")); pending = pending.subarray(end + 1);\n        if (done || stopped) throw Error(\"Unexpected output after terminal frame\");\n        if (!ready) {\n          const e = frame.enforcement, cpu = String(e?.cpu).split(/\\s+/).map(Number);\n          if (frame.kind !== \"ready\" || frame.source !== executionSource || e.memory !== String(limits.memoryBytes) || e.swap !== \"0\" || e.pids !== String(limits.pids) || e.uid !== 1000 || cpu.length !== 2 || cpu[0] !== cpu[1] ||\n            !/Max cpu time\\s+5\\s+5\\s+seconds/.test(e.limits) || !/Max open files\\s+128\\s+128/.test(e.limits) || e.env.some((key: string) => /DATABASE|REDIS|SECRET|TOKEN|AUTH/.test(key))) throw Error(\"Kernel containment verification failed\");\n          receipt.enforcement = e; await onReceipt(receipt); ready = true;\n        } else if (frame.kind === \"done\") done = true;\n        else {\n          const ack = await onFrame(frame);\n          if (ack !== undefined) { running.stdin.write(JSON.stringify(ack) + \"\\n\"); if ((ack as { continue: boolean }).continue === false) stopped = true; }\n        }\n      }\n      if (pending.length > limits.lineBytes) throw Error(\"Sandbox line budget exceeded\");\n    }\n    const code = await exited;\n    if (failure) throw failure;\n    const state = (await inspectContainer(container)).State;\n    receipt.exit = { code: state.ExitCode, oom: state.OOMKilled, error: String(state.Error).slice(0, 500) }; receipt.elapsedMs = Date.now() - started;\n    await onReceipt(receipt);\n    if (code !== 0 || state.ExitCode !== 0 || state.OOMKilled || pending.length || !ready || !done && !stopped) throw Error(`Sandbox ended without a complete protocol (exit ${state.ExitCode}, OOM ${Boolean(state.OOMKilled)})`);\n    return receipt;\n  } finally {\n    clearTimeout(deadline); child?.kill(\"SIGKILL\");\n    signal?.removeEventListener(\"abort\", abort);\n    await removeContainer(name, image);\n  }\n}\n"
+    },
+    {
+      "file": "apps/backend/internalModel2/store.ts",
+      "hash": "03d13363d80ad74e19128fb5e507dd37cb90c0fe8abd221ecb0b645934c9ce2f"
+    },
+    {
+      "file": "apps/backend/internalModel2/worker.ts",
+      "hash": "4f2bb42e0fd5573b40ffc7965851f5d540f282ded472cbe812d9a51543aa6ed1"
+    },
+    {
+      "file": "apps/backend/internalModel2/workspace.ts",
+      "hash": "095d30d6f92651669f39ed01af924844f000277ee1cde3635e23170129df0cba"
+    },
+    {
+      "file": "apps/backend/prisma/migrations/20261020000000_model2_lesson/migration.sql",
+      "hash": "632277aac6ff5b0f7a9d319e2ec61c1bf8301d2e81b6b2748d4f1d1c2e0a48a9"
+    },
+    {
+      "file": "apps/backend/prisma/schema.prisma",
+      "hash": "1f4a92312df9673263f477561641dd8f0c2fcaf4dbc8f56c0de939bbc9fc492e"
+    },
+    {
+      "file": "apps/backend/release/lessonSchema.ts",
+      "hash": "ae8eb75e4187b679cbdd317fa2234b23bba2039642f7a2e689dffb31c9a02f7f"
+    },
+    {
+      "file": "apps/backend/release/migrations.ts",
+      "hash": "c3b531b0f860fc042cdb5efcfadc38a4789f3d5783d2e9a37b1e4f106c87433d"
+    },
+    {
+      "file": "apps/backend/worker.ts",
+      "hash": "104be42d5155f4343684768305dce89c56a6c3740c292b9f485c4791f0514350"
+    },
+    {
+      "file": "apps/web/src/api/internalLesson.api.ts",
+      "hash": "1b3640dac41000a0792c5d8030f0ed236286eebc4eb15cbf398ee3c1e2f4e83f"
+    },
+    {
+      "file": "apps/web/src/api/internalModel2.api.ts",
+      "hash": "41dce2bbe30d646e2f49eea944df3ecfa454298865f0732842f58b3775b9b672"
+    },
+    {
+      "file": "apps/web/src/app/App.tsx",
+      "hash": "97f1bbfb90b13e4ee642a0d5ec4b7772f265e646749d023d66fa528ffbe089d7"
+    },
+    {
+      "file": "apps/web/src/client/httpClient.ts",
+      "hash": "c8d3ee4fcfc2b725b6255f55838939a62aad723f7713f6c27398c3b20be4130d"
+    },
+    {
+      "file": "apps/web/src/components/shell/AppShell.tsx",
+      "hash": "d5fdf2af356f053cd05fc28013eb7612a5cef35fa834dbc491870c26684c37ce"
+    },
+    {
+      "file": "apps/web/src/features/internalLessons/InternalLesson.tsx",
+      "hash": "746f5d0476172bc13aa25c068ef1701b54516d0899f70e079fb5f6c5634c4ed1"
+    },
+    {
+      "file": "apps/web/src/features/internalLessons/LessonHistory.tsx",
+      "hash": "9066deea59069f2df86e9b3c863e9eed2c5a43860fc6307d5d9628755f594224"
+    },
+    {
+      "file": "apps/web/src/features/internalLessons/LessonResult.tsx",
+      "hash": "c5f903895ccc9ada699c7b735a6a59d32393affe54adbefa0cf665d0b18960ce"
+    },
+    {
+      "file": "apps/web/src/features/internalLessons/LessonReview.tsx",
+      "hash": "a24bc797b1019349ceab9defb208dacccb3eb0aade54348c87fd6ecaa7918af9"
+    },
+    {
+      "file": "apps/web/src/features/internalLessons/lessonDraft.ts",
+      "hash": "bb4e464c3ad2aab06182490406129f48ed5bb9714e3d17ce124759d429954818"
+    },
+    {
+      "file": "apps/web/src/features/internalLessons/useLesson.ts",
+      "hash": "37d9a47f211d835aa84060465c7c6d0db990c3b92f42c125a6865d824a75ad4a"
+    },
+    {
+      "file": "apps/web/src/features/internalModel2/AuthoringFields.tsx",
+      "hash": "570160bb865ce8badc87b4c49cb5b44aac647b4011b81ca8b6abcca5dc67f85e"
+    },
+    {
+      "file": "apps/web/src/features/internalModel2/InternalReport.tsx",
+      "hash": "d846e490081ad530c46e52e2fde4c9a22bcd62ecbbe2a0122ce97bc2e751e8d6"
+    },
+    {
+      "file": "apps/web/src/features/internalModel2/InternalWorkspace.tsx",
+      "hash": "ed34d88882f2dfbf9bb0491b630936fae2a744707efe00d8d1b5b10afbd325b9"
+    },
+    {
+      "file": "apps/web/src/features/internalModel2/ReviewPanel.tsx",
+      "hash": "b1ee3615d8b1143674d3e6f590db72ce35807dc1aab41397ef69e69092fe5f75"
+    },
+    {
+      "file": "apps/web/src/features/internalModel2/draft.ts",
+      "hash": "d160fd2628e13a55c8b762cf08d56217fcf89cb82ef21d0c199830a27883fc73"
+    },
+    {
+      "file": "apps/web/src/features/internalModel2/useAuthoring.ts",
+      "hash": "81a59997a9da5b97a51efd9762200d4016ff64e89aa152faae891bd373aa7a33"
+    },
+    {
+      "file": "packages/contracts/src/internal-lessons/index.ts",
+      "hash": "a42ec0230f8d78bbc795f567d4c38c011351435fd80074c34c8f2faac4ef584d"
+    },
+    {
+      "file": "packages/contracts/src/internal-lessons/profile.ts",
+      "hash": "3ec40017e339db52598a9430518997a37b35ab2fae1e755b8ed7fe764510416b"
+    },
+    {
+      "file": "packages/contracts/src/internal-model2/example.ts",
+      "hash": "06f4416e1924431a9a6dd26e518744e5963521554384328065ccd48dc1749260"
+    },
+    {
+      "file": "packages/contracts/src/internal-model2/index.ts",
+      "hash": "36a41bc1a991c97db6104866f4425b97f3a65520329cc189048cc9b161c2581c"
+    }
+  ],
+  "current": [
+    {
+      "file": "apps/backend/Dockerfile",
+      "hash": "c7135eaf89dd175fb6dde9e6c8149610b45c4a4eb526aaaa89c223968f8ad39a"
+    },
+    {
+      "file": "apps/backend/internalModel2/authoring.ts",
+      "hash": "06a33301e5be68dbfdbdfad17c083d49e26859db2fa20a341c703faffa952b17"
+    },
+    {
+      "file": "apps/backend/internalModel2/budgets.ts",
+      "hash": "ec9246ab659fc0f1539829b95ac4ff190865a6c712ac3e537de381e695aeebfa"
+    },
+    {
+      "file": "apps/backend/internalModel2/capture.ts",
+      "hash": "3a2ad8b53bf3b110e82ae0652b1b696546387868284cab8b6bb1753d5ec00e95"
+    },
+    {
+      "file": "apps/backend/internalModel2/dockerConnection.ts",
+      "hash": "0d1dbd4976c6db84e81435d83446a3d44b65da6db77930bbd979953632e7fea9"
+    },
+    {
+      "file": "apps/backend/internalModel2/dockerEndpoint.ts",
+      "hash": "ed0ccb50351ac1b8da0552163ec804b5d58cfb7b3b01cf6dc586b9dfe27c3b4b"
+    },
+    {
+      "file": "apps/backend/internalModel2/dockerSocket.ts",
+      "hash": "e3528e59e5d822a3066dac75281b25863f4a5961012f5c14cade01a8eb83273b"
+    },
+    {
+      "file": "apps/backend/internalModel2/envelope.ts",
+      "hash": "ec0118b6fb4e0301689ea4a8c60fa2a8b33e460384d4f9a7814540e785d57089"
+    },
+    {
+      "file": "apps/backend/internalModel2/execution.ts",
+      "hash": "bc494bedf566bae80ce9c04ccf8cad3f8c6050516150e9e5f5def2379119297b"
+    },
+    {
+      "file": "apps/backend/internalModel2/identity.ts",
+      "hash": "78df51ca7d7e795553d49e410cdbdf4da54c311594078c7883ee9309eba56184"
+    },
+    {
+      "file": "apps/backend/internalModel2/lessonAuthoring.ts",
+      "hash": "1957c870365c715d06d69f4f9f61975080e8ec90f0d78f1e3c9b3167d3f4526d"
+    },
+    {
+      "file": "apps/backend/internalModel2/lessonExecution.ts",
+      "hash": "ab3780bc94d9dbc203aa9e25a5371b807c4dc7e4420f1098ae4fcc98d5efe279"
+    },
+    {
+      "file": "apps/backend/internalModel2/lessonLimits.ts",
+      "hash": "061f7e3307874128d876aa1c493fb4739ccb8e0aed0e4342287745c8d4ec1a81"
+    },
+    {
+      "file": "apps/backend/internalModel2/lessonPolicy.ts",
+      "hash": "03736442f2f31e0a25903e3fe7c14ae76a82fc4f67d43bac4654deb441cf65a6"
+    },
+    {
+      "file": "apps/backend/internalModel2/lessonRoutes.ts",
+      "hash": "07683bc7230e3c66d5847193370dadba4fffb123fcb895153af0541e5ab71151"
+    },
+    {
+      "file": "apps/backend/internalModel2/lessonStore.ts",
+      "hash": "c594a0e1269e049ab51e0480a93185a0201a265f80067385ea1cea2a6150bd87"
+    },
+    {
+      "file": "apps/backend/internalModel2/lessonSummary.ts",
+      "hash": "197cfe944991a549e9b48c1fdb3a8e16ce53c9777f887410e4b6392fd7b5ca46"
+    },
+    {
+      "file": "apps/backend/internalModel2/queue.ts",
+      "hash": "dabb9891e7fe30a01c1df36fa29ec3caf198014dbf8160f2e0b44f118287246a"
+    },
+    {
+      "file": "apps/backend/internalModel2/report.ts",
+      "hash": "00589fcaf78979f53dcc18bd7ab8942ee106d6e7563ea107f83b888088ef67f8"
+    },
+    {
+      "file": "apps/backend/internalModel2/routes.ts",
+      "hash": "f1a58716f3ca41523786d85c9e9458e02695dd5fadff3e4da6b0c424b307ea88"
+    },
+    {
+      "file": "apps/backend/internalModel2/sandboxChild.ts",
+      "hash": "127661af4ec24a45d4e9622956c4700d3692719b32c41fb6e58f702a6bb2b48d"
+    },
+    {
+      "file": "apps/backend/internalModel2/sandboxDocker.ts",
+      "hash": "6a251ec4ede0c89009925aa47f92534177adf1d0ef48a9d0a4df5bc97f53c641"
+    },
+    {
+      "file": "apps/backend/internalModel2/sandboxHandshake.ts",
+      "hash": "c8b4db105d8de9dedaf5470f37e125f32881f2547f2baae354e4b656194d67e5"
+    },
+    {
+      "file": "apps/backend/internalModel2/sandboxRunner.ts",
+      "hash": "c24ac994911a223a412b3583109583e1ad9e2d47a66bbe86f43a2009680ae3ae"
+    },
+    {
+      "file": "apps/backend/internalModel2/store.ts",
+      "hash": "03d13363d80ad74e19128fb5e507dd37cb90c0fe8abd221ecb0b645934c9ce2f"
+    },
+    {
+      "file": "apps/backend/internalModel2/worker.ts",
+      "hash": "4f2bb42e0fd5573b40ffc7965851f5d540f282ded472cbe812d9a51543aa6ed1"
+    },
+    {
+      "file": "apps/backend/internalModel2/workspace.ts",
+      "hash": "095d30d6f92651669f39ed01af924844f000277ee1cde3635e23170129df0cba"
+    },
+    {
+      "file": "apps/backend/prisma/migrations/20261020000000_model2_lesson/migration.sql",
+      "hash": "632277aac6ff5b0f7a9d319e2ec61c1bf8301d2e81b6b2748d4f1d1c2e0a48a9"
+    },
+    {
+      "file": "apps/backend/prisma/schema.prisma",
+      "hash": "1f4a92312df9673263f477561641dd8f0c2fcaf4dbc8f56c0de939bbc9fc492e"
+    },
+    {
+      "file": "apps/backend/release/lessonSchema.ts",
+      "hash": "ae8eb75e4187b679cbdd317fa2234b23bba2039642f7a2e689dffb31c9a02f7f"
+    },
+    {
+      "file": "apps/backend/release/migrations.ts",
+      "hash": "c3b531b0f860fc042cdb5efcfadc38a4789f3d5783d2e9a37b1e4f106c87433d"
+    },
+    {
+      "file": "apps/backend/worker.ts",
+      "hash": "104be42d5155f4343684768305dce89c56a6c3740c292b9f485c4791f0514350"
+    },
+    {
+      "file": "apps/web/src/api/internalLesson.api.ts",
+      "hash": "1b3640dac41000a0792c5d8030f0ed236286eebc4eb15cbf398ee3c1e2f4e83f"
+    },
+    {
+      "file": "apps/web/src/api/internalModel2.api.ts",
+      "hash": "41dce2bbe30d646e2f49eea944df3ecfa454298865f0732842f58b3775b9b672"
+    },
+    {
+      "file": "apps/web/src/app/App.tsx",
+      "hash": "97f1bbfb90b13e4ee642a0d5ec4b7772f265e646749d023d66fa528ffbe089d7"
+    },
+    {
+      "file": "apps/web/src/client/httpClient.ts",
+      "hash": "c8d3ee4fcfc2b725b6255f55838939a62aad723f7713f6c27398c3b20be4130d"
+    },
+    {
+      "file": "apps/web/src/components/shell/AppShell.tsx",
+      "hash": "d5fdf2af356f053cd05fc28013eb7612a5cef35fa834dbc491870c26684c37ce"
+    },
+    {
+      "file": "apps/web/src/features/internalLessons/InternalLesson.tsx",
+      "hash": "746f5d0476172bc13aa25c068ef1701b54516d0899f70e079fb5f6c5634c4ed1"
+    },
+    {
+      "file": "apps/web/src/features/internalLessons/LessonHistory.tsx",
+      "hash": "9066deea59069f2df86e9b3c863e9eed2c5a43860fc6307d5d9628755f594224"
+    },
+    {
+      "file": "apps/web/src/features/internalLessons/LessonResult.tsx",
+      "hash": "c5f903895ccc9ada699c7b735a6a59d32393affe54adbefa0cf665d0b18960ce"
+    },
+    {
+      "file": "apps/web/src/features/internalLessons/LessonReview.tsx",
+      "hash": "a24bc797b1019349ceab9defb208dacccb3eb0aade54348c87fd6ecaa7918af9"
+    },
+    {
+      "file": "apps/web/src/features/internalLessons/lessonDraft.ts",
+      "hash": "bb4e464c3ad2aab06182490406129f48ed5bb9714e3d17ce124759d429954818"
+    },
+    {
+      "file": "apps/web/src/features/internalLessons/useLesson.ts",
+      "hash": "37d9a47f211d835aa84060465c7c6d0db990c3b92f42c125a6865d824a75ad4a"
+    },
+    {
+      "file": "apps/web/src/features/internalModel2/AuthoringFields.tsx",
+      "hash": "570160bb865ce8badc87b4c49cb5b44aac647b4011b81ca8b6abcca5dc67f85e"
+    },
+    {
+      "file": "apps/web/src/features/internalModel2/InternalReport.tsx",
+      "hash": "d846e490081ad530c46e52e2fde4c9a22bcd62ecbbe2a0122ce97bc2e751e8d6"
+    },
+    {
+      "file": "apps/web/src/features/internalModel2/InternalWorkspace.tsx",
+      "hash": "ed34d88882f2dfbf9bb0491b630936fae2a744707efe00d8d1b5b10afbd325b9"
+    },
+    {
+      "file": "apps/web/src/features/internalModel2/ReviewPanel.tsx",
+      "hash": "b1ee3615d8b1143674d3e6f590db72ce35807dc1aab41397ef69e69092fe5f75"
+    },
+    {
+      "file": "apps/web/src/features/internalModel2/draft.ts",
+      "hash": "d160fd2628e13a55c8b762cf08d56217fcf89cb82ef21d0c199830a27883fc73"
+    },
+    {
+      "file": "apps/web/src/features/internalModel2/useAuthoring.ts",
+      "hash": "81a59997a9da5b97a51efd9762200d4016ff64e89aa152faae891bd373aa7a33"
+    },
+    {
+      "file": "packages/contracts/src/internal-lessons/index.ts",
+      "hash": "a42ec0230f8d78bbc795f567d4c38c011351435fd80074c34c8f2faac4ef584d"
+    },
+    {
+      "file": "packages/contracts/src/internal-lessons/profile.ts",
+      "hash": "3ec40017e339db52598a9430518997a37b35ab2fae1e755b8ed7fe764510416b"
+    },
+    {
+      "file": "packages/contracts/src/internal-model2/example.ts",
+      "hash": "06f4416e1924431a9a6dd26e518744e5963521554384328065ccd48dc1749260"
+    },
+    {
+      "file": "packages/contracts/src/internal-model2/index.ts",
+      "hash": "36a41bc1a991c97db6104866f4425b97f3a65520329cc189048cc9b161c2581c"
+    }
+  ]
+}

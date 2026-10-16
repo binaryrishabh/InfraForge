@@ -52,7 +52,8 @@ export function childEnvironment(settings: LocalSettings, inherited: Record<stri
   for (const name of ["PATH", "Path", "SystemRoot", "WINDIR", "ComSpec", "PATHEXT", "TEMP", "TMP", "TMPDIR", "USERPROFILE", "HOME"]) {
     if (inherited[name] !== undefined) env[name] = inherited[name];
   }
-  return { ...env, ...(inherited.M2M_RUN === "1" && inherited.MODEL2_LESSON_IMAGE ? { MODEL2_LESSON_IMAGE: inherited.MODEL2_LESSON_IMAGE } : {}), NODE_ENV: "test", DATABASE_URL: settings.databaseUrl, DO_NOT_TRACK: "1",
+  if (inherited.M2M_RUN === "1" && inherited.MODEL2_LESSON_IMAGE) for (const key of ["MODEL2_LESSON_IMAGE", "MODEL2_LESSON_ENDPOINT", "MODEL2_LESSON_DOCKER_MODE", "M2M_RUN", "INTEGRATION_DISPOSABLE", "CI", "GITHUB_ACTIONS"]) if (inherited[key]) env[key] = inherited[key];
+  return { ...env, NODE_ENV: "test", DATABASE_URL: settings.databaseUrl, DO_NOT_TRACK: "1",
     BETTER_AUTH_URL: `http://localhost:${settings.apiPort}`, APP_ORIGINS: "http://localhost:5173",
     BETTER_AUTH_SECRET: randomUUID() + randomUUID(),
     PORT: String(settings.apiPort), LISTEN_HOST: "127.0.0.1", REDIS_HOST: "127.0.0.1", REDIS_PORT: String(settings.redisPort),

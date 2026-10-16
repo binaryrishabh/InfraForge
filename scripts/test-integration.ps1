@@ -10,6 +10,7 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+if ($LessonOnly) { throw 'Lesson execution requires the explicit Linux rootless endpoint. Use the reviewed host procedure or disposable GitHub CI; Windows/default-context lesson execution is refused.' }
 $repoRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $dockerExe = (Get-Command docker -ErrorAction Stop).Source
 if ($env:DOCKER_HOST) { throw 'Unset DOCKER_HOST and select a local Docker context first.' }

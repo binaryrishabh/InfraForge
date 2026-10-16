@@ -4,10 +4,13 @@ import { homedir, release, arch } from "node:os";
 import { join } from "node:path";
 import { command } from "./command";
 import type { Snapshot } from "./policy";
+import { DockerConnection } from "../../apps/backend/internalModel2/dockerConnection";
+import { lessonEndpoint } from "../../apps/backend/internalModel2/dockerEndpoint";
 export async function collect(image: string): Promise<Snapshot> {
   const s: Snapshot = { platform: process.platform, uid: process.getuid?.(), kernel: release(), arch: arch() };
   if (process.platform !== "linux" || !s.uid) return s;
   const runtime = `/run/user/${s.uid}`, socket = `${runtime}/docker.sock`, endpoint = `unix://${socket}`;
+  s.recommendedEndpoint = endpoint;
   // Failed reads stay Unknown. Raw errors, hostnames, environment values, command
   // lines and daemon IDs are deliberately absent from the retained snapshot.
   const attempt = async (read: () => Promise<void>) => { try { await read(); } catch { /* Unknown */ } };
@@ -16,14 +19,17 @@ export async function collect(image: string): Promise<Snapshot> {
     s.socket = { owner: sock.uid, runtimeOwner: directory.uid, mode: sock.mode & 0o777, runtimeMode: directory.mode & 0o777,
       canonical: await realpath(socket) === socket && await realpath(runtime) === runtime, isSocket: sock.isSocket() };
   });
+  let control: DockerConnection | undefined;
   await attempt(async () => {
-    const context = JSON.parse(await command("docker", ["context", "inspect"]));
+    const selected = lessonEndpoint();
     let rootfulAccessible = false;
     try { await access("/var/run/docker.sock", constants.R_OK | constants.W_OK); rootfulAccessible = true; } catch (e) { if (!["ENOENT", "EACCES"].includes((e as NodeJS.ErrnoException).code ?? "")) throw e; }
-    s.endpoint = { matches: context.length === 1 && context[0]?.Endpoints?.docker?.Host === endpoint,
-      overrides: Object.keys(process.env).some((key) => /^(DOCKER_HOST|DOCKER_CONTEXT|DOCKER_CONFIG|DOCKER_TLS_VERIFY|DOCKER_CERT_PATH)$/.test(key)), rootfulAccessible };
+    s.endpoint = { matches: selected?.purpose === "rootless" && selected.endpoint === endpoint, isolatedConfig: false, normalized: selected?.endpoint, rootfulAccessible };
+    if (s.endpoint.matches) { control = await DockerConnection.open(); s.connection = control.receipt; s.endpoint.isolatedConfig = true; }
   });
-  const docker = (args: string[]) => command("docker", ["--host", endpoint, ...args]);
+  if (!control) return s;
+  try {
+  const docker = (args: string[]) => control!.run(args, 1048576);
   let dataRoot = "", serviceGroup = "";
   await attempt(async () => {
     const info = JSON.parse(await docker(["info", "--format", "{{json .}}"])); dataRoot = info.DockerRootDir;
@@ -73,4 +79,5 @@ export async function collect(image: string): Promise<Snapshot> {
     s.logs = { bounded: s.daemon?.logging === "local" && config["log-opts"] === undefined, driver: s.daemon?.logging ?? "Unknown" };
   });
   return s;
+  } finally { await control.close(); }
 }

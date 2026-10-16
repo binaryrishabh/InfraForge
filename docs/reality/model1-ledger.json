@@ -351,6 +351,21 @@
       "numericSites": 3
     },
     {
+      "file": "apps/backend/internalModel2/dockerConnection.ts",
+      "sha256": "a7b881e940757e84c841aa120e8334bba0a470eeb607c233ebd4d1e9d2801edd",
+      "numericSites": 8
+    },
+    {
+      "file": "apps/backend/internalModel2/dockerEndpoint.ts",
+      "sha256": "3557be29b4f444b2751846ab5eed4028e0b24e932828ad9d9b6ce750a86926fe",
+      "numericSites": 2
+    },
+    {
+      "file": "apps/backend/internalModel2/dockerSocket.ts",
+      "sha256": "95bc132a8499df43041cda44cc7995294c6d9a915586c763cb23e928c4928b5a",
+      "numericSites": 7
+    },
+    {
       "file": "apps/backend/internalModel2/envelope.ts",
       "sha256": "aa4de69e4d1a6f091160c2b0be94a85330d79d1c2940b220a2be900dd0fa8e05",
       "numericSites": 14
@@ -367,12 +382,12 @@
     },
     {
       "file": "apps/backend/internalModel2/lessonAuthoring.ts",
-      "sha256": "377ba76adacec9523a7059a775c09965b79aa01bc707a5e4fdcda2ddc6de2d58",
+      "sha256": "a294d8b97411810edcf09c95d8b7488381503d452aca26fc89b464a98f08d59e",
       "numericSites": 23
     },
     {
       "file": "apps/backend/internalModel2/lessonExecution.ts",
-      "sha256": "d294841f6d1dc79722201395ed8df0cc457e5da0df97d2ccfe389c6a784993c0",
+      "sha256": "1dd0042dae7965f06cb5700546799ca4bc977e7e67b66713bf02b21172420a0a",
       "numericSites": 10
     },
     {
@@ -387,7 +402,7 @@
     },
     {
       "file": "apps/backend/internalModel2/lessonRoutes.ts",
-      "sha256": "a32906c8012205cf3f689dff5cf8b14b21c32d83d6cd62708bc4cc6e4e828846",
+      "sha256": "b42e03dce5f964471d70e56a2fd6f2ac2f5a67f7dca957dd180c48d6d3811503",
       "numericSites": 4
     },
     {
@@ -422,8 +437,8 @@
     },
     {
       "file": "apps/backend/internalModel2/sandboxDocker.ts",
-      "sha256": "50c822005778e9616e99d2f3bb37ec2b6a2f8310a1d8fb7b419984fdccc774d1",
-      "numericSites": 6
+      "sha256": "c5fbbe8bc9540e434a209301161373e28ea0354ceb3484a1e579d6714cbdd847",
+      "numericSites": 2
     },
     {
       "file": "apps/backend/internalModel2/sandboxHandshake.ts",
@@ -432,7 +447,7 @@
     },
     {
       "file": "apps/backend/internalModel2/sandboxRunner.ts",
-      "sha256": "dcb1c202133b2e718a3791ad7a9ffd35e150f67acd33e251cc32893afc018a69",
+      "sha256": "97a6ea01262ac650e939747883a3b6987eea7b42e1598a3f6ac7fcb1de52a7b2",
       "numericSites": 19
     },
     {
@@ -24880,6 +24895,618 @@
       }
     },
     {
+      "id": "m1.apps.backend.internalModel2.dockerConnection.1",
+      "concept": "mode · literal 0o600",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 384,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.internalModel2.dockerConnection.1"
+        ]
+      },
+      "formula": "mode: 0o600",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/internalModel2/dockerConnection.ts#L27",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/internalModel2/dockerConnection.ts",
+        "line": 27,
+        "column": 68
+      }
+    },
+    {
+      "id": "m1.apps.backend.internalModel2.dockerConnection.2",
+      "concept": "dockerConnection.ts · literal 256",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 256,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.internalModel2.dockerConnection.2"
+        ]
+      },
+      "formula": "if (typeof info.ID !== \"string\" || !info.ID.length || info.ID.length > 256 || selected.purpose === \"rootless\" && (!info.SecurityOptions?.includes(\"name=rootless\") || info.CgroupVersion !== \"2\" || info.CgroupDriver !== \"systemd\") || selected.purpose === \"disposable-rootful-ci\" && info.SecurityOptions?.includes(\"name=rootless\")) throw Error(\"Lesson daemon purpose/cgroup identity is incompatible\");",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/internalModel2/dockerConnection.ts#L29",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/internalModel2/dockerConnection.ts",
+        "line": 29,
+        "column": 78
+      }
+    },
+    {
+      "id": "m1.apps.backend.internalModel2.dockerConnection.3",
+      "concept": "dockerConnection.ts · literal 65536",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 65536,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.internalModel2.dockerConnection.3"
+        ]
+      },
+      "formula": "export class DockerConnection { readonly #config: string; readonly #env: NodeJS.ProcessEnv; #stamp = \"\"; #daemon = \"\"; #closed = false; #changed = false; private constructor(readonly selected: DockerEndpoint, config: string) { this.#config = config; this.#env = Object.freeze({ PATH: process.env.PATH ?? process.env.Path ?? \"\" }); } static async use<T>(run: (control: DockerConnection) => Promise<T>) { const control = await DockerConnection.open(); try { return await run(control); } finally { await",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/internalModel2/dockerConnection.ts#L46",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/internalModel2/dockerConnection.ts",
+        "line": 46,
+        "column": 35
+      }
+    },
+    {
+      "id": "m1.apps.backend.internalModel2.dockerConnection.4",
+      "concept": "dockerConnection.ts · literal 5000",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 5000,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.internalModel2.dockerConnection.4"
+        ]
+      },
+      "formula": "export class DockerConnection { readonly #config: string; readonly #env: NodeJS.ProcessEnv; #stamp = \"\"; #daemon = \"\"; #closed = false; #changed = false; private constructor(readonly selected: DockerEndpoint, config: string) { this.#config = config; this.#env = Object.freeze({ PATH: process.env.PATH ?? process.env.Path ?? \"\" }); } static async use<T>(run: (control: DockerConnection) => Promise<T>) { const control = await DockerConnection.open(); try { return await run(control); } finally { await",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/internalModel2/dockerConnection.ts#L46",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/internalModel2/dockerConnection.ts",
+        "line": 46,
+        "column": 52
+      }
+    },
+    {
+      "id": "m1.apps.backend.internalModel2.dockerConnection.5",
+      "concept": "dockerConnection.ts · literal 65536",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 65536,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.internalModel2.dockerConnection.5"
+        ]
+      },
+      "formula": "export class DockerConnection { readonly #config: string; readonly #env: NodeJS.ProcessEnv; #stamp = \"\"; #daemon = \"\"; #closed = false; #changed = false; private constructor(readonly selected: DockerEndpoint, config: string) { this.#config = config; this.#env = Object.freeze({ PATH: process.env.PATH ?? process.env.Path ?? \"\" }); } static async use<T>(run: (control: DockerConnection) => Promise<T>) { const control = await DockerConnection.open(); try { return await run(control); } finally { await",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/internalModel2/dockerConnection.ts#L54",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/internalModel2/dockerConnection.ts",
+        "line": 54,
+        "column": 36
+      }
+    },
+    {
+      "id": "m1.apps.backend.internalModel2.dockerConnection.6",
+      "concept": "dockerConnection.ts · literal 5000",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 5000,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.internalModel2.dockerConnection.6"
+        ]
+      },
+      "formula": "export class DockerConnection { readonly #config: string; readonly #env: NodeJS.ProcessEnv; #stamp = \"\"; #daemon = \"\"; #closed = false; #changed = false; private constructor(readonly selected: DockerEndpoint, config: string) { this.#config = config; this.#env = Object.freeze({ PATH: process.env.PATH ?? process.env.Path ?? \"\" }); } static async use<T>(run: (control: DockerConnection) => Promise<T>) { const control = await DockerConnection.open(); try { return await run(control); } finally { await",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/internalModel2/dockerConnection.ts#L54",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/internalModel2/dockerConnection.ts",
+        "line": 54,
+        "column": 53
+      }
+    },
+    {
+      "id": "m1.apps.backend.internalModel2.dockerConnection.7",
+      "concept": "size · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.internalModel2.dockerConnection.7"
+        ]
+      },
+      "formula": "let text = \"\", size = 0, failure: Error | undefined;",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/internalModel2/dockerConnection.ts#L56",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/internalModel2/dockerConnection.ts",
+        "line": 56,
+        "column": 27
+      }
+    },
+    {
+      "id": "m1.apps.backend.internalModel2.dockerConnection.8",
+      "concept": "dockerConnection.ts · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.internalModel2.dockerConnection.8"
+        ]
+      },
+      "formula": "if (failure || code !== 0) throw failure ?? Error(`Docker operation failed (${code}); no endpoint fallback`);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/internalModel2/dockerConnection.ts#L62",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/internalModel2/dockerConnection.ts",
+        "line": 62,
+        "column": 31
+      }
+    },
+    {
+      "id": "m1.apps.backend.internalModel2.dockerEndpoint.1",
+      "concept": "lessonEndpoint · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.internalModel2.dockerEndpoint.1"
+        ]
+      },
+      "formula": "if (platform !== \"linux\" || !Number.isSafeInteger(uid) || uid! <= 0) throw Error(\"Lesson Docker requires a dedicated nonroot Linux account\");",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/internalModel2/dockerEndpoint.ts#L5",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/internalModel2/dockerEndpoint.ts",
+        "line": 5,
+        "column": 69
+      }
+    },
+    {
+      "id": "m1.apps.backend.internalModel2.dockerEndpoint.2",
+      "concept": "dockerInvocation · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.internalModel2.dockerEndpoint.2"
+        ]
+      },
+      "formula": "if (!args.length || args[0]!.startsWith(\"-\") || args.some((s) => /^(-H|--host(?:=|$)|--context(?:=|$)|--config(?:=|$)|--tls)/.test(s))) throw Error(\"Docker endpoint/config overrides are forbidden\");",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/internalModel2/dockerEndpoint.ts#L13",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/internalModel2/dockerEndpoint.ts",
+        "line": 13,
+        "column": 28
+      }
+    },
+    {
+      "id": "m1.apps.backend.internalModel2.dockerSocket.1",
+      "concept": "expected · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.internalModel2.dockerSocket.1"
+        ]
+      },
+      "formula": "const expected = connection.purpose === \"rootless\" ? connection.uid : 0;",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/internalModel2/dockerSocket.ts#L7",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/internalModel2/dockerSocket.ts",
+        "line": 7,
+        "column": 73
+      }
+    },
+    {
+      "id": "m1.apps.backend.internalModel2.dockerSocket.2",
+      "concept": "socketIdentity · literal 0o777",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 511,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.internalModel2.dockerSocket.2"
+        ]
+      },
+      "formula": "if (!value.isSocket() || Number(value.uid) !== expected || Number(parent.uid) !== expected || await realpath(connection.socket) !== canonical || connection.purpose === \"rootless\" && (parentPath !== dirname(connection.socket) || (Number(parent.mode) & 0o777) !== 0o700 || (Number(value.mode) & 0o607) !== 0o600) || connection.purpose === \"disposable-rootful-ci\" && (Number(parent.mode) & 0o022) !== 0) throw Error(\"Lesson Docker socket identity/ownership refused\");",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/internalModel2/dockerSocket.ts#L10",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/internalModel2/dockerSocket.ts",
+        "line": 10,
+        "column": 113
+      }
+    },
+    {
+      "id": "m1.apps.backend.internalModel2.dockerSocket.3",
+      "concept": "socketIdentity · literal 0o700",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 448,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.internalModel2.dockerSocket.3"
+        ]
+      },
+      "formula": "if (!value.isSocket() || Number(value.uid) !== expected || Number(parent.uid) !== expected || await realpath(connection.socket) !== canonical || connection.purpose === \"rootless\" && (parentPath !== dirname(connection.socket) || (Number(parent.mode) & 0o777) !== 0o700 || (Number(value.mode) & 0o607) !== 0o600) || connection.purpose === \"disposable-rootful-ci\" && (Number(parent.mode) & 0o022) !== 0) throw Error(\"Lesson Docker socket identity/ownership refused\");",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/internalModel2/dockerSocket.ts#L10",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/internalModel2/dockerSocket.ts",
+        "line": 10,
+        "column": 124
+      }
+    },
+    {
+      "id": "m1.apps.backend.internalModel2.dockerSocket.4",
+      "concept": "socketIdentity · literal 0o607",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 391,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.internalModel2.dockerSocket.4"
+        ]
+      },
+      "formula": "if (!value.isSocket() || Number(value.uid) !== expected || Number(parent.uid) !== expected || await realpath(connection.socket) !== canonical || connection.purpose === \"rootless\" && (parentPath !== dirname(connection.socket) || (Number(parent.mode) & 0o777) !== 0o700 || (Number(value.mode) & 0o607) !== 0o600) || connection.purpose === \"disposable-rootful-ci\" && (Number(parent.mode) & 0o022) !== 0) throw Error(\"Lesson Docker socket identity/ownership refused\");",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/internalModel2/dockerSocket.ts#L10",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/internalModel2/dockerSocket.ts",
+        "line": 10,
+        "column": 155
+      }
+    },
+    {
+      "id": "m1.apps.backend.internalModel2.dockerSocket.5",
+      "concept": "socketIdentity · literal 0o600",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 384,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.internalModel2.dockerSocket.5"
+        ]
+      },
+      "formula": "if (!value.isSocket() || Number(value.uid) !== expected || Number(parent.uid) !== expected || await realpath(connection.socket) !== canonical || connection.purpose === \"rootless\" && (parentPath !== dirname(connection.socket) || (Number(parent.mode) & 0o777) !== 0o700 || (Number(value.mode) & 0o607) !== 0o600) || connection.purpose === \"disposable-rootful-ci\" && (Number(parent.mode) & 0o022) !== 0) throw Error(\"Lesson Docker socket identity/ownership refused\");",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/internalModel2/dockerSocket.ts#L10",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/internalModel2/dockerSocket.ts",
+        "line": 10,
+        "column": 166
+      }
+    },
+    {
+      "id": "m1.apps.backend.internalModel2.dockerSocket.6",
+      "concept": "socketIdentity · literal 0o022",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 18,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.internalModel2.dockerSocket.6"
+        ]
+      },
+      "formula": "if (!value.isSocket() || Number(value.uid) !== expected || Number(parent.uid) !== expected || await realpath(connection.socket) !== canonical || connection.purpose === \"rootless\" && (parentPath !== dirname(connection.socket) || (Number(parent.mode) & 0o777) !== 0o700 || (Number(value.mode) & 0o607) !== 0o600) || connection.purpose === \"disposable-rootful-ci\" && (Number(parent.mode) & 0o022) !== 0) throw Error(\"Lesson Docker socket identity/ownership refused\");",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/internalModel2/dockerSocket.ts#L11",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/internalModel2/dockerSocket.ts",
+        "line": 11,
+        "column": 80
+      }
+    },
+    {
+      "id": "m1.apps.backend.internalModel2.dockerSocket.7",
+      "concept": "socketIdentity · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.internalModel2.dockerSocket.7"
+        ]
+      },
+      "formula": "if (!value.isSocket() || Number(value.uid) !== expected || Number(parent.uid) !== expected || await realpath(connection.socket) !== canonical || connection.purpose === \"rootless\" && (parentPath !== dirname(connection.socket) || (Number(parent.mode) & 0o777) !== 0o700 || (Number(value.mode) & 0o607) !== 0o600) || connection.purpose === \"disposable-rootful-ci\" && (Number(parent.mode) & 0o022) !== 0) throw Error(\"Lesson Docker socket identity/ownership refused\");",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/internalModel2/dockerSocket.ts#L11",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/internalModel2/dockerSocket.ts",
+        "line": 11,
+        "column": 91
+      }
+    },
+    {
       "id": "m1.apps.backend.internalModel2.envelope.1",
       "concept": "admissionSchema.workload.readWriteRatio · literal 0",
       "modelVersion": "1",
@@ -25689,7 +26316,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L13",
+          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L14",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -25703,7 +26330,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/lessonAuthoring.ts",
-        "line": 13,
+        "line": 14,
         "column": 71
       }
     },
@@ -25725,7 +26352,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L13",
+          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L14",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -25739,7 +26366,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/lessonAuthoring.ts",
-        "line": 13,
+        "line": 14,
         "column": 77
       }
     },
@@ -25761,7 +26388,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L14",
+          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L15",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -25775,7 +26402,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/lessonAuthoring.ts",
-        "line": 14,
+        "line": 15,
         "column": 79
       }
     },
@@ -25797,7 +26424,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L14",
+          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L15",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -25811,7 +26438,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/lessonAuthoring.ts",
-        "line": 14,
+        "line": 15,
         "column": 87
       }
     },
@@ -25833,7 +26460,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L15",
+          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L16",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -25847,7 +26474,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/lessonAuthoring.ts",
-        "line": 15,
+        "line": 16,
         "column": 161
       }
     },
@@ -25869,7 +26496,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L16",
+          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L17",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -25883,7 +26510,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/lessonAuthoring.ts",
-        "line": 16,
+        "line": 17,
         "column": 66
       }
     },
@@ -25905,7 +26532,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L26",
+          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L27",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -25919,7 +26546,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/lessonAuthoring.ts",
-        "line": 26,
+        "line": 27,
         "column": 23
       }
     },
@@ -25941,7 +26568,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L27",
+          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L28",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -25955,7 +26582,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/lessonAuthoring.ts",
-        "line": 27,
+        "line": 28,
         "column": 48
       }
     },
@@ -25977,7 +26604,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L35",
+          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L36",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -25991,7 +26618,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/lessonAuthoring.ts",
-        "line": 35,
+        "line": 36,
         "column": 71
       }
     },
@@ -26013,7 +26640,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L35",
+          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L36",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -26027,7 +26654,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/lessonAuthoring.ts",
-        "line": 35,
+        "line": 36,
         "column": 73
       }
     },
@@ -26049,7 +26676,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L35",
+          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L36",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -26063,7 +26690,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/lessonAuthoring.ts",
-        "line": 35,
+        "line": 36,
         "column": 89
       }
     },
@@ -26085,7 +26712,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L35",
+          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L36",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -26099,7 +26726,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/lessonAuthoring.ts",
-        "line": 35,
+        "line": 36,
         "column": 91
       }
     },
@@ -26121,7 +26748,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L35",
+          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L36",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -26135,7 +26762,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/lessonAuthoring.ts",
-        "line": 35,
+        "line": 36,
         "column": 109
       }
     },
@@ -26157,7 +26784,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L35",
+          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L36",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -26171,7 +26798,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/lessonAuthoring.ts",
-        "line": 35,
+        "line": 36,
         "column": 112
       }
     },
@@ -26193,7 +26820,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L35",
+          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L36",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -26207,7 +26834,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/lessonAuthoring.ts",
-        "line": 35,
+        "line": 36,
         "column": 130
       }
     },
@@ -26229,7 +26856,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L35",
+          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L36",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -26243,7 +26870,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/lessonAuthoring.ts",
-        "line": 35,
+        "line": 36,
         "column": 133
       }
     },
@@ -26265,7 +26892,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L35",
+          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L36",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -26279,7 +26906,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/lessonAuthoring.ts",
-        "line": 35,
+        "line": 36,
         "column": 150
       }
     },
@@ -26301,7 +26928,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L35",
+          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L36",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -26315,7 +26942,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/lessonAuthoring.ts",
-        "line": 35,
+        "line": 36,
         "column": 153
       }
     },
@@ -26337,7 +26964,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L38",
+          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L39",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -26351,7 +26978,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/lessonAuthoring.ts",
-        "line": 38,
+        "line": 39,
         "column": 118
       }
     },
@@ -26373,7 +27000,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L45",
+          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L47",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -26387,7 +27014,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/lessonAuthoring.ts",
-        "line": 45,
+        "line": 47,
         "column": 223
       }
     },
@@ -26409,7 +27036,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L49",
+          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L51",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -26423,7 +27050,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/lessonAuthoring.ts",
-        "line": 49,
+        "line": 51,
         "column": 44
       }
     },
@@ -26445,7 +27072,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L59",
+          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L61",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -26459,7 +27086,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/lessonAuthoring.ts",
-        "line": 59,
+        "line": 61,
         "column": 115
       }
     },
@@ -26481,7 +27108,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L59",
+          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L61",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -26495,7 +27122,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/lessonAuthoring.ts",
-        "line": 59,
+        "line": 61,
         "column": 119
       }
     },
@@ -26517,7 +27144,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/lessonExecution.ts#L15",
+          "source": "workspace:apps/backend/internalModel2/lessonExecution.ts#L17",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -26531,7 +27158,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/lessonExecution.ts",
-        "line": 15,
+        "line": 17,
         "column": 121
       }
     },
@@ -26553,7 +27180,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/lessonExecution.ts#L38",
+          "source": "workspace:apps/backend/internalModel2/lessonExecution.ts#L40",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -26567,7 +27194,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/lessonExecution.ts",
-        "line": 38,
+        "line": 40,
         "column": 104
       }
     },
@@ -26589,7 +27216,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/lessonExecution.ts#L38",
+          "source": "workspace:apps/backend/internalModel2/lessonExecution.ts#L40",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -26603,7 +27230,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/lessonExecution.ts",
-        "line": 38,
+        "line": 40,
         "column": 109
       }
     },
@@ -26625,7 +27252,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/lessonExecution.ts#L39",
+          "source": "workspace:apps/backend/internalModel2/lessonExecution.ts#L41",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -26639,7 +27266,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/lessonExecution.ts",
-        "line": 39,
+        "line": 41,
         "column": 141
       }
     },
@@ -26661,7 +27288,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/lessonExecution.ts#L40",
+          "source": "workspace:apps/backend/internalModel2/lessonExecution.ts#L42",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -26675,7 +27302,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/lessonExecution.ts",
-        "line": 40,
+        "line": 42,
         "column": 45
       }
     },
@@ -26697,7 +27324,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/lessonExecution.ts#L40",
+          "source": "workspace:apps/backend/internalModel2/lessonExecution.ts#L42",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -26711,7 +27338,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/lessonExecution.ts",
-        "line": 40,
+        "line": 42,
         "column": 49
       }
     },
@@ -26733,7 +27360,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/lessonExecution.ts#L42",
+          "source": "workspace:apps/backend/internalModel2/lessonExecution.ts#L44",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -26747,7 +27374,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/lessonExecution.ts",
-        "line": 42,
+        "line": 44,
         "column": 176
       }
     },
@@ -26769,7 +27396,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/lessonExecution.ts#L44",
+          "source": "workspace:apps/backend/internalModel2/lessonExecution.ts#L46",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -26783,7 +27410,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/lessonExecution.ts",
-        "line": 44,
+        "line": 46,
         "column": 41
       }
     },
@@ -26805,7 +27432,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/lessonExecution.ts#L95",
+          "source": "workspace:apps/backend/internalModel2/lessonExecution.ts#L98",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -26819,7 +27446,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/lessonExecution.ts",
-        "line": 95,
+        "line": 98,
         "column": 111
       }
     },
@@ -26841,7 +27468,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/lessonExecution.ts#L95",
+          "source": "workspace:apps/backend/internalModel2/lessonExecution.ts#L98",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -26855,7 +27482,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/lessonExecution.ts",
-        "line": 95,
+        "line": 98,
         "column": 114
       }
     },
@@ -27237,7 +27864,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/lessonRoutes.ts#L14",
+          "source": "workspace:apps/backend/internalModel2/lessonRoutes.ts#L15",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -27251,7 +27878,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/lessonRoutes.ts",
-        "line": 14,
+        "line": 15,
         "column": 14
       }
     },
@@ -27273,7 +27900,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/lessonRoutes.ts#L25",
+          "source": "workspace:apps/backend/internalModel2/lessonRoutes.ts#L26",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -27287,7 +27914,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/lessonRoutes.ts",
-        "line": 25,
+        "line": 26,
         "column": 236
       }
     },
@@ -27309,7 +27936,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/lessonRoutes.ts#L35",
+          "source": "workspace:apps/backend/internalModel2/lessonRoutes.ts#L36",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -27323,7 +27950,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/lessonRoutes.ts",
-        "line": 35,
+        "line": 36,
         "column": 31
       }
     },
@@ -27345,7 +27972,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/lessonRoutes.ts#L35",
+          "source": "workspace:apps/backend/internalModel2/lessonRoutes.ts#L36",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -27359,7 +27986,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/lessonRoutes.ts",
-        "line": 35,
+        "line": 36,
         "column": 37
       }
     },
@@ -28049,23 +28676,23 @@
     },
     {
       "id": "m1.apps.backend.internalModel2.sandboxDocker.1",
-      "concept": "docker · literal 65536",
+      "concept": "verifyContainer · literal 0",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
       "quantity": {
         "kind": "known",
-        "value": 65536,
+        "value": 0,
         "unit": "code-number",
         "provenance": [
           "m1.apps.backend.internalModel2.sandboxDocker.1"
         ]
       },
-      "formula": "export async function docker(args: string[], cap = 65536) { const child = spawn(\"docker\", args, { env: environment(), windowsHide: true, stdio: [\"ignore\", \"pipe\", \"pipe\"] }); let text = \"\", size = 0, failure: Error | undefined; const kill = (reason: string) => { failure ??= Error(reason); child.kill(\"SIGKILL\"); }; const timer = setTimeout(() => kill(\"Docker control operation timed out\"), 5000); for (const stream of [child.stdout, child.stderr]) stream.on(\"data\", (chunk: Buffer) => { size += chun",
+      "formula": "if (!/^sha256:[a-f0-9]{64}$/.test(image) || value?.Image !== image || value?.Name !== `/${name}` || config?.Labels?.[\"infraforge.model2\"] !== name || config.User !== \"1000:1000\" || host.Memory !== limits.memoryBytes || host.MemorySwap !== limits.memoryBytes || host.NanoCpus !== limits.nanoCpus || host.PidsLimit !== limits.pids || host.NetworkMode !== \"none\" || !host.ReadonlyRootfs || !host.Init || host.Privileged || host.Binds?.length || value.Mounts?.some((m: any) => m.Type !== \"tmpfs\") || JSON",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/sandboxDocker.ts#L8",
+          "source": "workspace:apps/backend/internalModel2/sandboxDocker.ts#L20",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -28079,13 +28706,13 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/sandboxDocker.ts",
-        "line": 8,
-        "column": 52
+        "line": 20,
+        "column": 188
       }
     },
     {
       "id": "m1.apps.backend.internalModel2.sandboxDocker.2",
-      "concept": "size · literal 0",
+      "concept": "inspectContainer · literal 0",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
       "quantity": {
@@ -28096,12 +28723,12 @@
           "m1.apps.backend.internalModel2.sandboxDocker.2"
         ]
       },
-      "formula": "let text = \"\", size = 0, failure: Error | undefined;",
+      "formula": "export const inspectContainer = async (control: DockerConnection, id: string) => JSON.parse(await control.run([\"inspect\", id]))[0];",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/sandboxDocker.ts#L10",
+          "source": "workspace:apps/backend/internalModel2/sandboxDocker.ts#L23",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -28115,152 +28742,8 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/sandboxDocker.ts",
-        "line": 10,
-        "column": 25
-      }
-    },
-    {
-      "id": "m1.apps.backend.internalModel2.sandboxDocker.3",
-      "concept": "timer · literal 5000",
-      "modelVersion": "1",
-      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
-      "quantity": {
-        "kind": "known",
-        "value": 5000,
-        "unit": "code-number",
-        "provenance": [
-          "m1.apps.backend.internalModel2.sandboxDocker.3"
-        ]
-      },
-      "formula": "const timer = setTimeout(() => kill(\"Docker control operation timed out\"), 5000);",
-      "classification": "implementation-policy",
-      "confidence": "high",
-      "provenance": [
-        {
-          "source": "workspace:apps/backend/internalModel2/sandboxDocker.ts#L12",
-          "supports": "implementation",
-          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
-        }
-      ],
-      "assumptions": [
-        "This literal is not evidence of real infrastructure capacity or performance.",
-        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
-      ],
-      "researchedOn": "2026-10-15",
-      "freeMode": "conditional",
-      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
-      "location": {
-        "file": "apps/backend/internalModel2/sandboxDocker.ts",
-        "line": 12,
-        "column": 78
-      }
-    },
-    {
-      "id": "m1.apps.backend.internalModel2.sandboxDocker.4",
-      "concept": "docker · literal 0",
-      "modelVersion": "1",
-      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
-      "quantity": {
-        "kind": "known",
-        "value": 0,
-        "unit": "code-number",
-        "provenance": [
-          "m1.apps.backend.internalModel2.sandboxDocker.4"
-        ]
-      },
-      "formula": "if (failure || code !== 0) throw failure ?? Error(`Docker operation failed (${code}); no inline fallback`);",
-      "classification": "implementation-policy",
-      "confidence": "high",
-      "provenance": [
-        {
-          "source": "workspace:apps/backend/internalModel2/sandboxDocker.ts#L16",
-          "supports": "implementation",
-          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
-        }
-      ],
-      "assumptions": [
-        "This literal is not evidence of real infrastructure capacity or performance.",
-        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
-      ],
-      "researchedOn": "2026-10-15",
-      "freeMode": "conditional",
-      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
-      "location": {
-        "file": "apps/backend/internalModel2/sandboxDocker.ts",
-        "line": 16,
-        "column": 29
-      }
-    },
-    {
-      "id": "m1.apps.backend.internalModel2.sandboxDocker.5",
-      "concept": "verifyContainer · literal 0",
-      "modelVersion": "1",
-      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
-      "quantity": {
-        "kind": "known",
-        "value": 0,
-        "unit": "code-number",
-        "provenance": [
-          "m1.apps.backend.internalModel2.sandboxDocker.5"
-        ]
-      },
-      "formula": "if (!/^sha256:[a-f0-9]{64}$/.test(image) || value?.Image !== image || value?.Name !== `/${name}` || config?.Labels?.[\"infraforge.model2\"] !== name || config.User !== \"1000:1000\" || host.Memory !== limits.memoryBytes || host.MemorySwap !== limits.memoryBytes || host.NanoCpus !== limits.nanoCpus || host.PidsLimit !== limits.pids || host.NetworkMode !== \"none\" || !host.ReadonlyRootfs || !host.Init || host.Privileged || host.Binds?.length || value.Mounts?.some((m: any) => m.Type !== \"tmpfs\") || JSON",
-      "classification": "implementation-policy",
-      "confidence": "high",
-      "provenance": [
-        {
-          "source": "workspace:apps/backend/internalModel2/sandboxDocker.ts#L33",
-          "supports": "implementation",
-          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
-        }
-      ],
-      "assumptions": [
-        "This literal is not evidence of real infrastructure capacity or performance.",
-        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
-      ],
-      "researchedOn": "2026-10-15",
-      "freeMode": "conditional",
-      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
-      "location": {
-        "file": "apps/backend/internalModel2/sandboxDocker.ts",
-        "line": 33,
-        "column": 188
-      }
-    },
-    {
-      "id": "m1.apps.backend.internalModel2.sandboxDocker.6",
-      "concept": "inspectContainer · literal 0",
-      "modelVersion": "1",
-      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
-      "quantity": {
-        "kind": "known",
-        "value": 0,
-        "unit": "code-number",
-        "provenance": [
-          "m1.apps.backend.internalModel2.sandboxDocker.6"
-        ]
-      },
-      "formula": "export const inspectContainer = async (id: string) => JSON.parse(await docker([\"inspect\", id]))[0];",
-      "classification": "implementation-policy",
-      "confidence": "high",
-      "provenance": [
-        {
-          "source": "workspace:apps/backend/internalModel2/sandboxDocker.ts#L36",
-          "supports": "implementation",
-          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
-        }
-      ],
-      "assumptions": [
-        "This literal is not evidence of real infrastructure capacity or performance.",
-        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
-      ],
-      "researchedOn": "2026-10-15",
-      "freeMode": "conditional",
-      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
-      "location": {
-        "file": "apps/backend/internalModel2/sandboxDocker.ts",
-        "line": 36,
-        "column": 97
+        "line": 23,
+        "column": 129
       }
     },
     {
@@ -28281,7 +28764,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/sandboxRunner.ts#L27",
+          "source": "workspace:apps/backend/internalModel2/sandboxRunner.ts#L28",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -28295,7 +28778,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/sandboxRunner.ts",
-        "line": 27,
+        "line": 28,
         "column": 82
       }
     },
@@ -28317,7 +28800,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/sandboxRunner.ts#L28",
+          "source": "workspace:apps/backend/internalModel2/sandboxRunner.ts#L29",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -28331,7 +28814,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/sandboxRunner.ts",
-        "line": 28,
+        "line": 29,
         "column": 18
       }
     },
@@ -28353,7 +28836,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/sandboxRunner.ts#L29",
+          "source": "workspace:apps/backend/internalModel2/sandboxRunner.ts#L30",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -28367,7 +28850,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/sandboxRunner.ts",
-        "line": 29,
+        "line": 30,
         "column": 89
       }
     },
@@ -28389,7 +28872,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/sandboxRunner.ts#L32",
+          "source": "workspace:apps/backend/internalModel2/sandboxRunner.ts#L33",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -28403,7 +28886,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/sandboxRunner.ts",
-        "line": 32,
+        "line": 33,
         "column": 32
       }
     },
@@ -28425,7 +28908,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/sandboxRunner.ts#L32",
+          "source": "workspace:apps/backend/internalModel2/sandboxRunner.ts#L33",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -28439,7 +28922,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/sandboxRunner.ts",
-        "line": 32,
+        "line": 33,
         "column": 44
       }
     },
@@ -28461,7 +28944,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/sandboxRunner.ts#L32",
+          "source": "workspace:apps/backend/internalModel2/sandboxRunner.ts#L33",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -28475,7 +28958,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/sandboxRunner.ts",
-        "line": 32,
+        "line": 33,
         "column": 56
       }
     },
@@ -28497,7 +28980,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/sandboxRunner.ts#L38",
+          "source": "workspace:apps/backend/internalModel2/sandboxRunner.ts#L39",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -28511,7 +28994,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/sandboxRunner.ts",
-        "line": 38,
+        "line": 39,
         "column": 37
       }
     },
@@ -28533,7 +29016,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/sandboxRunner.ts#L38",
+          "source": "workspace:apps/backend/internalModel2/sandboxRunner.ts#L39",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -28547,7 +29030,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/sandboxRunner.ts",
-        "line": 38,
+        "line": 39,
         "column": 47
       }
     },
@@ -28569,7 +29052,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/sandboxRunner.ts#L39",
+          "source": "workspace:apps/backend/internalModel2/sandboxRunner.ts#L40",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -28583,7 +29066,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/sandboxRunner.ts",
-        "line": 39,
+        "line": 40,
         "column": 50
       }
     },
@@ -28605,7 +29088,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/sandboxRunner.ts#L40",
+          "source": "workspace:apps/backend/internalModel2/sandboxRunner.ts#L41",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -28619,7 +29102,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/sandboxRunner.ts",
-        "line": 40,
+        "line": 41,
         "column": 51
       }
     },
@@ -28641,7 +29124,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/sandboxRunner.ts#L40",
+          "source": "workspace:apps/backend/internalModel2/sandboxRunner.ts#L41",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -28655,7 +29138,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/sandboxRunner.ts",
-        "line": 40,
+        "line": 41,
         "column": 111
       }
     },
@@ -28677,7 +29160,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/sandboxRunner.ts#L44",
+          "source": "workspace:apps/backend/internalModel2/sandboxRunner.ts#L45",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -28691,7 +29174,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/sandboxRunner.ts",
-        "line": 44,
+        "line": 45,
         "column": 182
       }
     },
@@ -28713,7 +29196,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/sandboxRunner.ts#L44",
+          "source": "workspace:apps/backend/internalModel2/sandboxRunner.ts#L45",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -28727,7 +29210,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/sandboxRunner.ts",
-        "line": 44,
+        "line": 45,
         "column": 205
       }
     },
@@ -28749,7 +29232,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/sandboxRunner.ts#L44",
+          "source": "workspace:apps/backend/internalModel2/sandboxRunner.ts#L45",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -28763,7 +29246,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/sandboxRunner.ts",
-        "line": 44,
+        "line": 45,
         "column": 214
       }
     },
@@ -28785,7 +29268,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/sandboxRunner.ts#L44",
+          "source": "workspace:apps/backend/internalModel2/sandboxRunner.ts#L45",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -28799,7 +29282,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/sandboxRunner.ts",
-        "line": 44,
+        "line": 45,
         "column": 225
       }
     },
@@ -28821,7 +29304,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/sandboxRunner.ts#L58",
+          "source": "workspace:apps/backend/internalModel2/sandboxRunner.ts#L60",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -28835,7 +29318,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/sandboxRunner.ts",
-        "line": 58,
+        "line": 60,
         "column": 99
       }
     },
@@ -28857,7 +29340,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/sandboxRunner.ts#L58",
+          "source": "workspace:apps/backend/internalModel2/sandboxRunner.ts#L60",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -28871,7 +29354,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/sandboxRunner.ts",
-        "line": 58,
+        "line": 60,
         "column": 102
       }
     },
@@ -28893,7 +29376,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/sandboxRunner.ts#L60",
+          "source": "workspace:apps/backend/internalModel2/sandboxRunner.ts#L62",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -28907,7 +29390,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/sandboxRunner.ts",
-        "line": 60,
+        "line": 62,
         "column": 18
       }
     },
@@ -28929,7 +29412,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/sandboxRunner.ts#L60",
+          "source": "workspace:apps/backend/internalModel2/sandboxRunner.ts#L62",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -28943,7 +29426,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/sandboxRunner.ts",
-        "line": 60,
+        "line": 62,
         "column": 42
       }
     },

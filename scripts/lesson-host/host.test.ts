@@ -6,11 +6,12 @@ import { collect } from "./collect";
 import { probeSandbox } from "./probeSandbox";
 import { mkdir } from "node:fs/promises";
 import { provenance } from "./identity";
+import { DockerConnection } from "../../apps/backend/internalModel2/dockerConnection";
 const image = `sha256:${"a".repeat(64)}`, revision = "b".repeat(40);
 // Synthetic observations exercise policy only. They are never actual-host proof.
 const fixture = (): Snapshot => ({ platform: "linux", uid: 1001, kernel: "unit-fixture", arch: "x64",
   socket: { owner: 1001, runtimeOwner: 1001, mode: 0o660, runtimeMode: 0o700, canonical: true, isSocket: true },
-  endpoint: { matches: true, overrides: false, rootfulAccessible: false },
+  endpoint: { matches: true, isolatedConfig: true, rootfulAccessible: false },
   daemon: { rootless: true, cgroupVersion: "2", driver: "systemd", version: "unit-fixture", kernel: "unit-fixture", logging: "local" },
   owner: { uid: 1001, namespaceSeparated: true, serviceMember: true }, service: { active: "active", delegate: "yes", controllers: ["cpu", "memory", "pids"] },
   image: { id: image, revision, source: "https://github.com/binaryrishabh/InfraForge", volumes: false },
@@ -34,7 +35,7 @@ const failures: Record<string, (s: Snapshot) => void> = {
   "public runtime directory": (s) => { s.socket!.runtimeMode = 0o755; },
   "world accessible socket": (s) => { s.socket!.mode = 0o666; },
   "context mismatch": (s) => { s.endpoint!.matches = false; },
-  "ignored endpoint override": (s) => { s.endpoint!.overrides = true; },
+  "ambient client configuration": (s) => { s.endpoint!.isolatedConfig = false; },
   "rootful daemon access": (s) => { s.endpoint!.rootfulAccessible = true; },
   "wrong daemon owner": (s) => { s.owner!.uid = 0; },
   "same daemon namespace": (s) => { s.owner!.namespaceSeparated = false; },
@@ -69,7 +70,7 @@ test("bounded commands reject failure and excess output", async () => {
   await expect(command(process.execPath, ["-e", "process.stdout.write('x'.repeat(1100000))"])).rejects.toThrow("Inspection unavailable");
 });
 test.skipIf(!process.env.LESSON_HOST_CI_REFUSAL)("actual disposable rootful CI is never host readiness", async () => {
-  const info = JSON.parse(await command("docker", ["info", "--format", "{{json .}}"]));
+  const info = JSON.parse(await DockerConnection.use((c) => c.run(["info", "--format", "{{json .}}"], 1048576)));
   expect(info.SecurityOptions.includes("name=rootless")).toBe(false);
   const result = evaluate(await collect(process.env.MODEL2_LESSON_IMAGE!), process.env.MODEL2_LESSON_IMAGE!, process.env.GITHUB_SHA!);
   expect(result.eligibleForProbes).toBe(false); expect(result.rootlessReady).toBe(false); expect(result.checks.rootless!.status).not.toBe("VERIFIED");

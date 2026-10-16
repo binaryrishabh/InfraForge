@@ -28,6 +28,9 @@ First-party documentation rechecked for this task:
 | [Docker security](https://docs.docker.com/engine/security/) and [socket protection](https://docs.docker.com/engine/security/protect-access/) | Restrict socket and account access. Daemon clients can control that account's containers/mounts; do not share this daemon or expose unauthenticated TCP. |
 | [Container attach](https://docs.docker.com/reference/cli/docker/container/attach/) | Client attachment and container lifecycle differ. Parent/client death must be exercised; the independent in-container deadline remains essential. |
 | [Image inspection](https://docs.docker.com/reference/cli/docker/image/inspect/) | Require the already installed immutable image ID and reviewed revision/source labels; never silently pull or substitute a tag. |
+| [Docker CLI flags/config](https://docs.docker.com/reference/cli/docker/) and [contexts](https://docs.docker.com/engine/manage-resources/contexts/) | Explicit host/config flags override persistent selection. Docker environment variables, TLS settings and client proxy configuration are separate inputs; isolate them as well. |
+| [Docker CLI endpoint resolution](https://github.com/docker/cli/blob/master/cli/command/cli.go) | Explicit host flags select the default-context resolver with that host; a stored currentContext cannot replace it. Never combine host and context flags. |
+| [Container copy](https://docs.docker.com/reference/cli/docker/container/cp/) and [commit](https://docs.docker.com/reference/cli/docker/container/commit/) | Trusted probe fixtures can derive from an installed image through a stopped container on the same Engine connection. No BuildKit builder selection is involved. |
 | [Logging configuration](https://docs.docker.com/engine/logging/configure/) | Parent pipe caps do not bound daemon logs. The default json-file policy can exhaust disk; inspect effective rotation independently. |
 
 Keep the existing engine and executor. Add a **read-only preflight**, followed by
@@ -41,7 +44,7 @@ that these tests can infer. Configured, observed and enforced evidence are disti
 
 `scripts/lesson-host/cli.ts` reads a standard local Linux setup as the dedicated
 nonroot account. It checks `/run/user/UID/docker.sock`, canonical path/ownership,
-private runtime directory, default Docker context, rootful socket access, rootless
+private runtime directory, explicitly configured endpoint, rootful socket access, rootless
 server/kernel/systemd cgroup identity, one same-owner namespaced dockerd in the
 user service, available user controllers, exact installed image/revision/source,
 no implicit image volumes, idle daemon, non-NFS owned data root, conservative
@@ -71,13 +74,63 @@ refuses rootful execution. Its artifact explicitly says `disposable-rootful-CI`
 and `actualHost: UNVERIFIED`. The actual-rootless wrapper remains skipped there.
 Synthetic policy tests prove refusal logic, not a real rootless host.
 
-Important limits to preserve in the operator decision:
+## Pinned connection mechanism
 
-- The production Docker helper strips `DOCKER_HOST`/`DOCKER_CONTEXT` overrides and
-  selects the account's current context. Passing the inspector does not pin that
-  context against later change. The API/worker must run with the verified account,
-  HOME/context and endpoint; repeat after config changes. Runtime connection
-  stability remains an operational gate, not a proven new application guarantee.
+The product no longer selects its daemon from an account's mutable default
+context. Configure **`MODEL2_LESSON_ENDPOINT=unix:///run/user/<actual UID>/docker.sock`**
+for the dedicated nonroot Linux API/worker account. The parser requires that exact
+canonical form for the process UID; missing, foreign-UID, rootful, TCP, SSH,
+Windows, relative, query, escaped or traversal forms refuse. The operator owns
+this setting; requests cannot provide endpoints or Docker flags. No default exists.
+
+`DockerConnection` captures the validated setting once for an execution/replay.
+Every info/image/list/create/inspect/start-attach/remove operation and reaper uses
+that same object. Each CLI invocation gets explicit `--host` and a private empty
+`--config` directory, with a PATH-only environment. Persistent currentContext,
+DOCKER_HOST/CONTEXT/CONFIG, TLS/API-version/proxy/Buildx overrides cannot select a
+different daemon or inject client defaults. Standard CLI API negotiation and
+Node/Bun argument-array pipes remain in use; no new HTTP engine or dependency.
+
+The connection pins a digest of socket device/inode/change-time/ownership/mode
+and parent-directory identity plus a digest of the daemon ID. Production also
+requires rootless/systemd/cgroup-v2 daemon identity. Operations check identity
+before and after commands, attach checks before start, and capture ACKs check the
+socket. A detected identity change permanently invalidates that connection;
+cleanup refuses to contact an alternate daemon. Parent death or unavailable
+cleanup still relies on the independent child deadline and later safe reaping.
+Read-only preflight uses the same selector/connection, reports the normalized
+recommended endpoint and observed connection digests, and ignores default context.
+Evidence is a record, not a secret configuration source.
+
+Disposable rootful GitHub CI explicitly sets endpoint `unix:///var/run/docker.sock`
+and mode `disposable-rootful-ci`. That mode additionally requires NODE_ENV=test,
+CI=true, GITHUB_ACTIONS=true, M2M_RUN=1 and the disposable local-service marker.
+Production mode cannot use it and never falls back to it. Receipts identify the
+mode. Trusted probe images copy one static source file into a uniquely labelled,
+stopped container, then commit it through the same Engine connection. They never
+start that preparation container, pull an image or invoke BuildKit. Only the CI
+bootstrap/package build remains outside the lesson connection lifecycle.
+The Windows PowerShell LessonOnly runner refuses; no named-pipe substitute exists.
+
+Repository tests cover strict forms, all command prefixes, mutable context and
+environment resistance, real create/attach/remove, unavailable socket/client
+refusal, socket replacement/permissions and daemon-ID change. Fresh M2M evidence
+records one endpoint identity for all completed phases. The retained original
+M2M JSON/provenance is unchanged: `lesson-endpoint-m2m-lineage.json` reconstructs
+its original source from frozen changed texts and checked unchanged files, while
+pinning the newly reviewed current source. It does not claim old proof tested
+this mechanism. Core execution, input/capture contracts and historical reports
+are unchanged. No visible surface or shipping classification was upgraded.
+
+Important remaining limits:
+
+- Runtime default-context drift is addressed by the repository mechanism. The
+  actual deployment/account/endpoint is still UNVERIFIED. API and worker must use
+  the same reviewed host, UID and endpoint. A trusted socket owner/root can replace
+  a path between filesystem checks and a CLI connection; those checks are not an
+  atomic OS capability or protection against a compromised owner/proxy. Verify
+  ownership, clients, process configuration and daemon on the actual host. Daemon
+  restart/socket replacement requires a fresh connection and host review as needed.
 - Rootless daemon authority covers its account. Review all socket clients, login
   access, user service/config ownership, daemon/RootlessKit command/config listeners,
   rootful group access and absence of TCP exposure. The inspector cannot certify
@@ -96,6 +149,9 @@ Important limits to preserve in the operator decision:
   Startup cleanup needs the matching retained DB origin/image; parking skips it.
   Never delete unmatched containers or images, and never treat a cleanup failure as
   a completed run. A stale probe lock after SIGKILL requires operator inspection.
+  Empty private Docker client directories can remain under the system temporary
+  directory after parent SIGKILL; they contain no credentials and require normal
+  reviewed temporary-file housekeeping, not a daemon-wide prune.
 - Daemon disappearance, end-to-end cancellation/worker loss and restore/disable
   procedures on the actual deployed service still require a controlled rehearsal.
   Existing M2M durable-prefix CI remains evidence for software behavior only.
@@ -109,8 +165,8 @@ Important limits to preserve in the operator decision:
    systemd reload, enable-linger, permission, firewall or user/group commands from
    this procedure without separate owner authorization. No rootful fallback.
 2. Keep lesson execution parked and grants unchanged. Use the actual API/worker
-   account and HOME/default Docker context, with no Docker endpoint/config/TLS
-   environment overrides. No other workloads may use the daemon during probes.
+   account and explicitly configure its rootless endpoint. Default Docker context
+   and ambient Docker/TLS overrides are ignored. No other workloads may use the daemon during probes.
    A host operator must review daemon command lines/config/listeners, service
    ownership/delegation, runtime/data/config directories, local filesystem and
    capacity. The preflight deliberately stores only relevant sanitized facts.
@@ -124,6 +180,7 @@ Important limits to preserve in the operator decision:
 cd /path/to/reviewed/InfraForge
 IMAGE='sha256:<approved-installed-image-id>'
 REVISION='<approved-40-character-image-revision>'
+export MODEL2_LESSON_ENDPOINT="unix:///run/user/$(id -u)/docker.sock"
 bun --no-env-file scripts/lesson-host/cli.ts "$IMAGE" "$REVISION" "$PWD/host-preflight-unique.json"
 ```
 
@@ -143,14 +200,14 @@ bun --no-env-file test scripts/lesson-host/probe.test.ts
 ```
 
 The directory must be new and absolute. Retain `host-proof.json`,
-`partial-enforcement.json`, fixture source and Dockerfile, and orphan receipt.
+`partial-enforcement.json`, fixture source and `fixture-image.json`, and orphan receipt.
 Hash the files and retain them with the exact checkout SHA/CI status in the host
 review record. Failure is failure/Unknown, never a manufactured success. Do not
 retry until the known failure and any cleanup/lock residue are inspected.
 
 5. Inspect all intended image/container/log/storage residue. No unrelated daemon
    objects are safe to remove. The probe uses exact unique tags; if interrupted,
-   inspect its retained Dockerfile/tags/labels, ensure processes stopped, then ask
+   inspect its retained fixture recipe/tags/labels, ensure processes stopped, then ask
    the owner for only the necessary cleanup. A probe lock is not automatically
    expired or broken. Check available disk and image count over repeated runs.
 6. Rehearse the real API/worker deployment with separate authorized disposable
@@ -178,7 +235,7 @@ retry until the known failure and any cleanup/lock residue are inspected.
 | --- | --- | --- |
 | Linux/kernel/runtime and intended account identity | UNKNOWN | Actual host preflight plus installed runtime versions |
 | Rootless daemon and owner/user namespace | UNKNOWN | Daemon security options, owned process/service/namespace observation |
-| Socket ownership, context and rootful selection refusal | UNKNOWN | Same API/worker identity and canonical private socket, repeat after changes |
+| Socket ownership and runtime connection on intended host | UNKNOWN | Repository selection is pinned; verify actual API/worker UID/configuration, private socket and daemon |
 | Systemd user service and CPU/memory/PID delegation | UNKNOWN | Active user service and actual controllers, then kernel effects |
 | Memory/swap, CPU quota/rlimit, PIDs/FDs | UNKNOWN | Bounded real exhaustion and quota-throttling proof on that host |
 | UID/GID, capabilities, network, readonly, tmpfs/noexec | UNKNOWN | Actual kernel/runtime fixture observations |

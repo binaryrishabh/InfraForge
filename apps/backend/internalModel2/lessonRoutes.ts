@@ -4,11 +4,12 @@ import { LESSON_VERSION } from "@infraforge/contracts/internal-lessons";
 import { admissionSchema } from "./envelope";
 import { lessonChoice, lessonSubmission, makeLessonPolicy, readLessonPolicy } from "./lessonPolicy";
 import { lessonImage } from "./lessonLimits";
+import { lessonEndpoint } from "./dockerEndpoint";
 import { createLessonDesign, lessonDesigns, reviewLesson } from "./lessonAuthoring";
 import { admit, internalDatabase } from "./store";
 import { ConflictError, ValidationError } from "../utils/errors";
 export const lessonRouter = Router();
-lessonRouter.get("/lesson", async (_req, res) => { res.json({ success: true, workspace: { designs: await lessonDesigns(res.locals.userId), configured: lessonImage() !== null, profile: LESSON_VERSION, operator: res.locals.model2Scope === "operator" } }); });
+lessonRouter.get("/lesson", async (_req, res) => { res.json({ success: true, workspace: { designs: await lessonDesigns(res.locals.userId), configured: lessonImage() !== null && lessonEndpoint() !== null, profile: LESSON_VERSION, operator: res.locals.model2Scope === "operator" } }); });
 lessonRouter.post("/lesson/design", async (req, res) => {
   if (!z.object({}).strict().safeParse(req.body).success) throw new ValidationError("Creating the lesson design requires an empty object");
   res.status(201).json({ success: true, id: await createLessonDesign(res.locals.userId) });

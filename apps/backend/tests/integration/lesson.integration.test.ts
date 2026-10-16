@@ -11,6 +11,7 @@ import { lessonSource } from "./lessonSource";
 import { compileEnvelope, admissionSchema } from "../../internalModel2/envelope";
 import { checkLessonSchema } from "../../release/lessonSchema";
 import { checkLessonUpgrade } from "./lessonUpgradeChecks";
+import { DockerConnection } from "../../internalModel2/dockerConnection";
 const suite = process.env.M2M_RUN === "1" ? describe : describe.skip;
 suite("controlled internal object restart lesson", () => {
   test("proves scoped product execution, durable failure boundaries and real OS containment", async () => {
@@ -23,7 +24,8 @@ suite("controlled internal object restart lesson", () => {
       return value.kind === "Unavailable" && /busy|still active/.test(value.reason) ? undefined : value;
     }, "isolated runner cleanup releases replay lease", 30000, 200);
     try {
-      await h.prepare(); sessions = new SessionFixtures(h); const alice = await sessions.create(), bob = await sessions.create(); owners = [alice.user.id, bob.user.id]; h.cookie = alice.cookie;
+      await h.prepare(); proof.actualHost = "UNVERIFIED"; proof.connection = await DockerConnection.use(async (c) => c.receipt);
+      sessions = new SessionFixtures(h); const alice = await sessions.create(), bob = await sessions.create(); owners = [alice.user.id, bob.user.id]; h.cookie = alice.cookie;
       proof.upgrade = await checkLessonUpgrade(h);
       await checkLessonSchema(h.sql);
       await h.sql.query('ALTER TABLE "InternalModel2LessonRun" DISABLE TRIGGER model2_lesson_guard');
@@ -125,6 +127,16 @@ suite("controlled internal object restart lesson", () => {
         await until(async () => (await fetch("http://127.0.0.1:3002/health/ready", { signal: AbortSignal.timeout(1500) }).then((r) => r.ok).catch(() => false)) || undefined, "Model-1 worker starts with lesson runner parked");
       } finally { await h.stop("worker"); process.env.MODEL2_LESSON_IMAGE = pinnedImage; await h.restartApi(); await h.startWorker(); }
       proof.cases.push("missing runner refuses review and replay without inline fallback", "retry recovers original admission after runner configuration changes", "parked lesson runner preserves Model-1 worker startup", "scope downgrade hides advanced owned reports");
+      const pinnedEndpoint = process.env.MODEL2_LESSON_ENDPOINT!;
+      await h.stop("worker"); delete process.env.MODEL2_LESSON_ENDPOINT;
+      try {
+        await h.restartApi(); expect((await h.request(base + "/lesson")).workspace.configured).toBe(false);
+        await h.request(base + "/lesson/review", choice(), "POST", 409);
+        expect((await h.request(base + "/lesson/runs", submission, "POST")).id).toBe(admitted.id);
+        expect((await h.request(`${base}/runs/${complete.id}/replay`)).replay.kind).toBe("Unavailable");
+        await h.startWorker(); await until(async () => (await fetch("http://127.0.0.1:3002/health/ready", { signal: AbortSignal.timeout(1500) }).then((r) => r.ok).catch(() => false)) || undefined, "Model-1 worker with no lesson endpoint");
+      } finally { await h.stop("worker"); process.env.MODEL2_LESSON_ENDPOINT = pinnedEndpoint; await h.restartApi(); await h.startWorker(); }
+      proof.cases.push("missing endpoint refuses review and replay without fallback", "missing endpoint retains exact admission retry", "missing endpoint preserves Model-1 worker startup");
       await alterRecordedField(h, complete.id, "evidence", {}, async () => { const report = (await h.request(`${base}/runs/${complete.id}/report`)).report; expect(report.lesson.kind).toBe("Unknown"); expect(report.replay.compatible).toBe(false); });
       await alterRecordedField(h, complete.id, "evidence", complete.evidence, async () => {});
       proof.cases.push("corrupt evidence remains Unknown");

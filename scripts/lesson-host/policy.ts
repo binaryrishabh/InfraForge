@@ -5,7 +5,9 @@ export type Check = typeof required[number];
 export interface Snapshot {
   platform: string; uid?: number; kernel?: string; arch?: string;
   socket?: { owner: number; runtimeOwner: number; mode: number; runtimeMode: number; canonical: boolean; isSocket: boolean };
-  endpoint?: { matches: boolean; overrides: boolean; rootfulAccessible: boolean };
+  endpoint?: { matches: boolean; isolatedConfig: boolean; rootfulAccessible: boolean; normalized?: string };
+  recommendedEndpoint?: string;
+  connection?: { endpoint: string; purpose: string; socketIdentity: string; daemonIdentity: string };
   daemon?: { rootless: boolean; cgroupVersion: string; driver: string; version: string; kernel: string; logging: string; components?: { name: string; version: string }[] };
   owner?: { uid: number; namespaceSeparated: boolean; serviceMember: boolean };
   service?: { active: string; delegate: string; controllers: string[] };
@@ -21,7 +23,7 @@ export function evaluate(s: Snapshot, image: string, revision: string) {
   add("linuxUser", true, s.platform === "linux" && Number.isInteger(s.uid) && s.uid! > 0, "Run directly on Linux as the dedicated nonroot runner account", { platform: s.platform, uid: s.uid, kernel: s.kernel, arch: s.arch });
   const socket = s.socket;
   add("socket", !!socket, !!socket && socket.isSocket && socket.canonical && socket.owner === s.uid && socket.runtimeOwner === s.uid && (socket.runtimeMode & 0o777) === 0o700 && (socket.mode & 0o607) === 0o600, "Canonical user-owned socket inside private /run/user/UID", socket);
-  add("endpoint", !!s.endpoint, !!s.endpoint && s.endpoint.matches && !s.endpoint.overrides && !s.endpoint.rootfulAccessible, "Unmodified runtime Docker environment selects this socket; rootful socket is inaccessible", s.endpoint);
+  add("endpoint", !!s.endpoint, !!s.endpoint && s.endpoint.matches && s.endpoint.isolatedConfig && !s.endpoint.rootfulAccessible, "Explicit rootless endpoint and isolated client config; rootful socket is inaccessible", s.endpoint);
   add("rootless", !!s.daemon, !!s.daemon?.rootless && s.daemon.driver === "systemd" && s.daemon.cgroupVersion === "2" && s.daemon.kernel === s.kernel, "Rootless daemon, host kernel and systemd cgroup v2 agree", s.daemon);
   add("daemonOwner", !!s.owner, !!s.owner && s.owner.uid === s.uid && s.owner.namespaceSeparated && s.owner.serviceMember, "One owned dockerd in a separate user namespace under the user service", s.owner);
   add("userService", !!s.service, s.service?.active === "active" && ["yes", "true"].includes(s.service.delegate), "Active delegated systemd user Docker service", s.service && { active: s.service.active, delegate: s.service.delegate });
@@ -32,6 +34,8 @@ export function evaluate(s: Snapshot, image: string, revision: string) {
   add("exclusiveDaemon", s.containers !== undefined, s.containers === 0, "Dedicated daemon has no containers before probing; no prune or automatic reaping", { containers: s.containers });
   add("boundedLogs", !!s.logs, s.logs?.bounded === true, "Default local logging driver has a documented rotation bound; verify effective container policy in operator review", s.logs, "configured");
   for (const id of ["resourceEnforcement", "lifecycle", "capacityOverTime", "controlAuthority", "disableRecovery", "runtimeConnectionStability"]) checks[id] = { status: "UNKNOWN", basis: "unknown", detail: "Requires actual-host enforcement or operational review; preflight cannot establish this" };
+  checks.runtimeConnectionStability!.detail = "Repository mechanism selects one explicit endpoint with isolated client config and identity checks; actual deployment/account/daemon verification is still required";
   return { schema: "infraforge-lesson-host/1", kind: "read-only-preflight", checkedAt: new Date().toISOString(), rootlessReady: false,
+    recommendedEndpoint: s.recommendedEndpoint, connection: s.connection,
     eligibleForProbes: required.every((id) => checks[id]!.status === "VERIFIED"), checks };
 }

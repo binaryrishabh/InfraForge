@@ -112,6 +112,9 @@ jobs:
           --health-cmd "redis-cli ping" --health-interval 5s --health-timeout 5s --health-retries 12
     env:
       M2M_RUN: "1"
+      NODE_ENV: test
+      MODEL2_LESSON_ENDPOINT: unix:///var/run/docker.sock
+      MODEL2_LESSON_DOCKER_MODE: disposable-rootful-ci
       INTEGRATION_DISPOSABLE: local-only
       INTEGRATION_DATABASE_URL: postgresql://postgres@127.0.0.1:55432/infraforge_it_4567abcd
       INTEGRATION_REDIS_PORT: "56379"
@@ -127,8 +130,8 @@ jobs:
       - run: bun install --frozen-lockfile
       - run: bun run db:generate
         working-directory: apps/backend
-      - run: docker build --build-arg RELEASE_SHA="${{ inputs.ref || github.sha }}" -f apps/backend/Dockerfile -t infraforge-m2m-proof .
-      - run: echo "MODEL2_LESSON_IMAGE=$(docker image inspect infraforge-m2m-proof --format '{{.Id}}')" >> "$GITHUB_ENV"
+      - run: docker --host "$MODEL2_LESSON_ENDPOINT" build --build-arg RELEASE_SHA="${{ inputs.ref || github.sha }}" -f apps/backend/Dockerfile -t infraforge-m2m-proof .
+      - run: echo "MODEL2_LESSON_IMAGE=$(docker --host "$MODEL2_LESSON_ENDPOINT" image inspect infraforge-m2m-proof --format '{{.Id}}')" >> "$GITHUB_ENV"
       - run: bun --no-env-file node_modules/typescript/bin/tsc --noEmit -p scripts/lesson-host/tsconfig.json
       - run: bun --no-env-file test scripts/lesson-host
         env:

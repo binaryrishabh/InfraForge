@@ -9,7 +9,9 @@ import { contentHash } from "./identity";
 import { scopedLesson, withLessonRunner } from "./lessonStore";
 import { lessonImage } from "./lessonLimits";
 import { runSandbox } from "./sandboxRunner";
-import { removeContainer, containerName, docker, inspectContainer } from "./sandboxDocker";
+import { removeContainer, containerName, inspectContainer } from "./sandboxDocker";
+import { DockerConnection } from "./dockerConnection";
+import { lessonEndpoint } from "./dockerEndpoint";
 export async function executeLesson(id: string, ownership: WorkerOwnership) {
   const claimed = await ownership.transaction(async (db) => {
     const row = (await db.query<InternalRunRow>('SELECT * FROM "InternalModel2Run" WHERE id=$1 FOR UPDATE', [id])).rows[0];
@@ -32,7 +34,7 @@ export async function executeLesson(id: string, ownership: WorkerOwnership) {
     await db.query(`UPDATE "InternalModel2LessonRun" l SET receipt=$3 FROM "InternalModel2Run" r WHERE l."runId"=$1 AND r.id=l."runId" AND r.token=$2 AND r.status='running'`, [id, claimed.token, value]);
   });
   try {
-    await withLessonRunner(async (signal) => { await reapLessonContainers(); return runSandbox(id, claimed.policy.image, { mode: "execute", input: claimed.input, inputHash: claimed.row.inputHash }, async (frame) => {
+    await withLessonRunner((signal) => DockerConnection.use(async (control) => { await reapLessonContainers(control); return runSandbox(control, id, claimed.policy.image, { mode: "execute", input: claimed.input, inputHash: claimed.row.inputHash }, async (frame) => {
       await ownership.assertHeld();
       if (frame.kind !== "capture") throw Error("Unexpected execution frame");
       const value = readCapture(frame.value, claimed.row.inputHash), expected = (previous?.sequence ?? 0) + 1;
@@ -50,7 +52,7 @@ export async function executeLesson(id: string, ownership: WorkerOwnership) {
       });
       previous = value;
       return { sequence: value.sequence, fingerprint: value.fingerprint, continue: continuing };
-    }, receipt, signal); });
+    }, receipt, signal); }));
     if (!continuing) return;
     if (!previous?.model.capture.reachedHorizon || previous.sequence !== captureCuts(claimed.input).length) throw Error("Child stopped before the complete modeled horizon");
     await ownership.transaction(async (db) => {
@@ -67,29 +69,30 @@ export async function replayLesson(row: InternalRunRow) {
   if (!record || record.policy.image !== lessonImage()) throw Error("The recorded isolated runner image is unavailable; no inline replay");
   readEnvelope(row.input, row.inputHash); readCapture(row.evidence, row.inputHash);
   let result: unknown;
-  await withLessonRunner(async (signal) => { await reapLessonContainers(); return runSandbox(randomUUID(), record.policy.image, { mode: "replay", row }, async (frame) => {
+  await withLessonRunner((signal) => DockerConnection.use(async (control) => { await reapLessonContainers(control); return runSandbox(control, randomUUID(), record.policy.image, { mode: "replay", row }, async (frame) => {
     if (frame.kind !== "replay" || result !== undefined || !["MatchesRecordedPrefix", "Mismatch"].includes(frame.value?.kind)) throw Error("Invalid replay protocol");
     result = frame.value;
-  }, async () => {}, signal, row.id); });
+  }, async () => {}, signal, row.id); }));
   if (result === undefined) throw Error("No isolated replay result");
   return result;
 }
-export async function reapLessonContainers() {
-  if (!lessonImage()) return;
+export async function reapLessonContainers(control?: DockerConnection): Promise<void> {
+  if (!lessonImage() || !lessonEndpoint()) return;
+  if (!control) return DockerConnection.use((owned) => reapLessonContainers(owned));
   const records = await internalDatabase.query('SELECT l."runId",l.policy,r.status FROM "InternalModel2LessonRun" l JOIN "InternalModel2Run" r ON r.id=l."runId"');
   if (!records.rowCount) return;
-  const names = (await docker(["ps", "--all", "--filter", "label=infraforge.model2", "--format", "{{.Names}}"])).split("\n").filter(Boolean);
+  const names = (await control.run(["ps", "--all", "--filter", "label=infraforge.model2", "--format", "{{.Names}}"])).split("\n").filter(Boolean);
   for (const name of names) {
     if (!/^infraforge-model2-[a-f0-9-]{36}$/.test(name)) continue;
     let value;
-    try { value = await inspectContainer(name); }
+    try { value = await inspectContainer(control, name); }
     catch (error) {
-      if (!await docker(["ps", "--all", "--filter", `name=^/${name}$`, "--format", "{{.ID}}"])) continue;
+      if (!await control.run(["ps", "--all", "--filter", `name=^/${name}$`, "--format", "{{.ID}}"])) continue;
       throw error;
     }
     const origin = value.Config?.Labels?.["infraforge.model2.origin"];
     const row = records.rows.find((r) => r.runId === origin && r.policy.image === value.Image);
-    if (row && (!value.State.Running || name === containerName(row.runId) && !["queued", "running"].includes(row.status))) await removeContainer(name, row.policy.image);
+    if (row && (!value.State.Running || name === containerName(row.runId) && !["queued", "running"].includes(row.status))) await removeContainer(control, name, row.policy.image);
   }
 }
 const reason = (error: unknown) => (error instanceof Error ? error.message : "Lesson execution failed").slice(0, 400);
