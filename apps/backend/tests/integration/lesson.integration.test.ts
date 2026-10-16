@@ -16,6 +16,10 @@ suite("controlled internal object restart lesson", () => {
     const proof: Record<string, any> = { schema: "infraforge-m2m-preview/1", commit: process.env.GITHUB_SHA ?? "local-working-tree", source: lessonSource(), image: process.env.MODEL2_LESSON_IMAGE, startedAt: new Date().toISOString(), success: false, cases: [], runs: [] };
     let sessions: SessionFixtures | undefined, owners: string[] = [];
     const base = "/internal/model2", read = async (id: string) => (await h.sql.query('SELECT * FROM "InternalModel2Run" WHERE id=$1', [id])).rows[0];
+    const replayReady = (id: string) => until(async () => {
+      const value = (await h.request(`${base}/runs/${id}/replay`)).replay;
+      return value.kind === "Unavailable" && /busy|still active/.test(value.reason) ? undefined : value;
+    }, "isolated runner cleanup releases replay lease", 30000, 200);
     try {
       await h.prepare(); sessions = new SessionFixtures(h); const alice = await sessions.create(), bob = await sessions.create(); owners = [alice.user.id, bob.user.id]; h.cookie = alice.cookie;
       proof.services = { postgres: (await h.sql.query("SHOW server_version")).rows[0].server_version, redis: /^redis_version:(.+)$/m.exec(await h.redis.info("server"))?.[1]?.trim() };
@@ -83,7 +87,7 @@ suite("controlled internal object restart lesson", () => {
           if (["process-death", "ownership-loss", "persistence"].includes(loss)) { expect(row.sequence).toBe(3); expect(row.evidence.fingerprint).toBe(before.evidence.fingerprint); }
           else { expect(row.sequence).toBeGreaterThanOrEqual(4); expect(row.sequence).toBeLessThanOrEqual(6); }
           if (loss === "revoke") await h.sql.query('INSERT INTO "InternalModel2Grant" ("userId",reason,scope) VALUES ($1,\'Restore disposable proof\',\'lesson\')', [alice.user.id]);
-          const replay = (await h.request(`${base}/runs/${run}/replay`)).replay; expect(replay.kind).toBe("MatchesRecordedPrefix"); expect(replay.complete).toBe(false);
+          const replay = await replayReady(run); expect(replay.kind).toBe("MatchesRecordedPrefix"); expect(replay.complete).toBe(false);
           proof.runs.push({ failure: loss, row, policy: (await h.sql.query('SELECT policy FROM "InternalModel2LessonRun" WHERE "runId"=$1', [run])).rows[0].policy, replay });
         } finally { await barrier.close(); }
       }

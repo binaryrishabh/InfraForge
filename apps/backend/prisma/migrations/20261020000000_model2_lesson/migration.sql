@@ -1,7 +1,7 @@
 ALTER TABLE "InternalModel2Grant" ADD COLUMN scope VARCHAR(16) NOT NULL DEFAULT 'operator';
 ALTER TABLE "InternalModel2Grant" ADD CONSTRAINT internal_model2_grant_scope CHECK (scope IN ('operator','lesson'));
 CREATE TABLE "InternalModel2LessonRun" (
-  "runId" TEXT PRIMARY KEY REFERENCES "InternalModel2Run"(id) ON DELETE CASCADE,
+  "runId" TEXT PRIMARY KEY REFERENCES "InternalModel2Run"(id) ON DELETE CASCADE ON UPDATE CASCADE,
   policy JSONB NOT NULL,
   receipt JSONB,
   CONSTRAINT model2_lesson_policy CHECK (COALESCE(jsonb_typeof(policy)='object' AND policy->>'schema'='object-restart/1' AND policy->>'image' ~ '^sha256:[a-f0-9]{64}$'

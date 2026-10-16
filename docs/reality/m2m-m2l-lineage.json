@@ -143,7 +143,7 @@
     },
     {
       "file": "apps/backend/internalModel2/lessonExecution.ts",
-      "hash": "f81ed80a7a0d36df27c6a7e4fff6b06e94e5f9838434bcf3091be7a91dfbd2fa"
+      "hash": "b97461a715591d8e5886034e45a5f9bceaa39c63133884b189a2147f9889de72"
     },
     {
       "file": "apps/backend/internalModel2/lessonLimits.ts",
@@ -207,7 +207,7 @@
     },
     {
       "file": "apps/backend/prisma/migrations/20261020000000_model2_lesson/migration.sql",
-      "hash": "24346ffdab9d0301703a9ca0814cf4b9f86158ad6332ace37625d04835313ce1"
+      "hash": "632277aac6ff5b0f7a9d319e2ec61c1bf8301d2e81b6b2748d4f1d1c2e0a48a9"
     },
     {
       "file": "apps/backend/prisma/schema.prisma",

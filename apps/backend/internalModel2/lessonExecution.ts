@@ -79,7 +79,14 @@ export async function reapLessonContainers() {
   if (!records.rowCount) return;
   const names = (await docker(["ps", "--all", "--filter", "label=infraforge.model2", "--format", "{{.Names}}"])).split("\n").filter(Boolean);
   for (const name of names) {
-    const value = await inspectContainer(name), origin = value.Config?.Labels?.["infraforge.model2.origin"];
+    if (!/^infraforge-model2-[a-f0-9-]{36}$/.test(name)) continue;
+    let value;
+    try { value = await inspectContainer(name); }
+    catch (error) {
+      if (!await docker(["ps", "--all", "--filter", `name=^/${name}$`, "--format", "{{.ID}}"])) continue;
+      throw error;
+    }
+    const origin = value.Config?.Labels?.["infraforge.model2.origin"];
     const row = records.rows.find((r) => r.runId === origin && r.policy.image === value.Image);
     if (row && (!value.State.Running || name === containerName(row.runId) && !["queued", "running"].includes(row.status))) await removeContainer(name, row.policy.image);
   }
