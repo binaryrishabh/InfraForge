@@ -1,5 +1,24 @@
 # InfraForge project state
 
+**Active execution direction (owner, 2026-10-16): do not pause frontend work
+for Claude.** Codex (MODEL GPT-6.1 Sol, REASONING Extra High) may implement
+the complete M2L INTERNAL Model-2 author/review/submit/report/replay workflow
+by extending the **current** React/Tailwind frontend, its existing UI primitives,
+routes and API adapters. Codex owns functionality, tests, modular contracts and
+temporary current-style presentation; this explicitly overrides the older
+interpretation that Codex must not touch any UI. See
+[M2L implementation queue, issue #3](https://github.com/binaryrishabh/InfraForge/issues/3).
+Tomorrow, **2026-10-17**, when Claude Opus 5.5 is available, Claude owns
+independent, comprehensive UI/UX research and redesign of **every screen/corner**,
+including today's new working paths and cinematic/Three.js options when justified.
+Today's UI layout is not a binding design reference; tomorrow's redesign must
+preserve functional contracts, security, performance, accessibility and truthful
+Model-2 evidence. Separate learning/onboarding product opportunities remain in
+[issue #2](https://github.com/binaryrishabh/InfraForge/issues/2).
+**This is a planned work assignment, not implementation completion.**
+No general Model-2 activation, Model-1 retirement, main/production changes or
+new provider/physical-performance claims are authorized by this assignment.
+
 Latest independently accepted INTERNAL product milestone: **M2K — saved-design
 to Model-2 worker, durable evidence and read-only report** at
 `72eed4dbe1783798d3d3db760d10e4fd985bb8a5` on `develop`.
