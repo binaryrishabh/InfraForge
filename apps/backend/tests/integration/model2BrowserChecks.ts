@@ -17,9 +17,12 @@ export async function checkModel2Browser(h: LocalHarness, sessions: SessionFixtu
   const output = join(tmpdir(), "infraforge-m2l"); await mkdir(output, { recursive: true });
   const proof: Record<string, any> = { schema: "infraforge-m2l-browser/1", commit: process.env.GITHUB_SHA, source: workspaceSource(), browser: browser.version(), startedAt: new Date().toISOString(), success: false, cases: [] };
   const cookie = h.cookie, alice = await sessions.create(), bob = await sessions.create(), rows: string[] = [];
-  const server = Bun.spawn([process.execPath, "--no-env-file", "--no-install", "../../node_modules/vite/bin/vite.js", "--host", "127.0.0.1", "--port", "5173", "--strictPort"], {
+  const node = Bun.which("node"); if (!node) throw Error("Node is required for the real Vite browser proof");
+  const server = Bun.spawn([node, "../../node_modules/vite/bin/vite.js", "--host", "127.0.0.1", "--port", "5173", "--strictPort"], {
     cwd: fileURLToPath(new URL("../../../web/", import.meta.url)),
-    env: { PATH: process.env.PATH, VITE_BACKEND_API_URL: h.api, DO_NOT_TRACK: "1" }, stdout: "ignore", stderr: "ignore" });
+    env: { PATH: process.env.PATH, VITE_BACKEND_API_URL: h.api, DO_NOT_TRACK: "1" }, stdout: "pipe", stderr: "pipe" });
+  let serverLog = "";
+  for (const stream of [server.stdout, server.stderr]) void (async () => { for await (const chunk of stream) serverLog = (serverLog + new TextDecoder().decode(chunk)).slice(-12000); })();
   const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
   const addSession = async (ctx: any, value: string) => { const at = value.indexOf("="); await ctx.addCookies([{ name: value.slice(0, at), value: value.slice(at + 1), url: h.api, sameSite: "Lax" }]); };
   await addSession(context, alice.cookie);
@@ -36,7 +39,10 @@ export async function checkModel2Browser(h: LocalHarness, sessions: SessionFixtu
   };
   try {
     await h.stop("worker"); h.cookie = alice.cookie;
-    await until(async () => { try { return (await fetch(h.origin)).ok || undefined; } catch { return undefined; } }, "real Vite browser workspace");
+    await until(async () => {
+      if (server.exitCode !== null) throw Error(`Vite exited ${server.exitCode}: ${serverLog}`);
+      try { return (await fetch("http://127.0.0.1:5173", { signal: AbortSignal.timeout(1500) })).ok || undefined; } catch { return undefined; }
+    }, "real Vite browser workspace");
     await page.goto(h.origin + "/internal/model2");
     await page.getByText("Internal workspace unavailable for this session", { exact: false }).waitFor();
     expect(await page.getByRole("link", { name: "Model 2 · internal" }).count()).toBe(0);
@@ -162,6 +168,7 @@ export async function checkModel2Browser(h: LocalHarness, sessions: SessionFixtu
     proof.success = true;
   } catch (error) {
     proof.failure = error instanceof Error ? error.message : String(error);
+    proof.serverLog = serverLog;
     await page.screenshot({ path: join(output, "failure.png"), fullPage: true }).catch(() => {});
     throw error;
   } finally {
