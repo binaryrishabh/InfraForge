@@ -66,6 +66,13 @@ Retain one host Nginx site, test the entire configuration before reload, and add
 the HTTP ACME webroot needed for portable certificate renewal. TLS is issued explicitly
 after DNS setup. [Nginx configuration/reload](https://nginx.org/en/docs/beginners_guide.html),
 [Certbot webroot](https://eff-certbot.readthedocs.io/en/stable/using.html#webroot).
+The real Ubuntu fixture also rejected relying on the exit status of
+`openssl x509 -checkhost`: its OpenSSL 3.0 printed a hostname mismatch yet continued.
+The installer uses `openssl verify -purpose sslserver -verify_hostname` with the
+provided untrusted chain and the host's trusted CA store. The isolated fixture
+explicitly trusts only its generated self-signed CA via `SSL_CERT_FILE` and tests
+wrong hostname/key refusals. Production does not install that fixture trust.
+[OpenSSL verification options](https://docs.openssl.org/3.0/man1/openssl-verification-options/).
 Neon transaction pooling cannot preserve session advisory locks; API is pooled,
 worker/migration direct, all with verified TLS. [Neon pooling](https://neon.com/docs/connect/connection-pooling),
 [PgBouncer feature matrix](https://www.pgbouncer.org/features.html).

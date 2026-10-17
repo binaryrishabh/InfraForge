@@ -19,7 +19,7 @@ trap 'exit 143' TERM
 bun --no-env-file "$here/render.ts" "$domain" "$mode" "$cert" "$key" > "$work/site"
 if [[ $mode == tls ]]; then
   test -r "$cert" && test -r "$key"
-  openssl x509 -in "$cert" -noout -checkhost "$domain"
+  openssl verify -purpose sslserver -verify_hostname "$domain" -untrusted "$cert" "$cert"
   openssl x509 -in "$cert" -noout -checkend 86400
   test "$(openssl x509 -in "$cert" -pubkey -noout | openssl pkey -pubin -outform DER | sha256sum)" = \
        "$(openssl pkey -in "$key" -pubout -outform DER | sha256sum)"

@@ -143,7 +143,7 @@ For an existing installation, review its server blocks before adopting the manag
 site. The installer refuses to overwrite an unmanaged `infraforge` file. Remove a
 duplicate backend server block only through a reviewed operator change; do not run
 the fresh-host installer over today's host architecture blindly. TLS mode validates
-the hostname, expiry and key match, tests the complete Nginx configuration and restores
+the chain against the host CA store, hostname, expiry and key match, tests the complete Nginx configuration and restores
 the prior site on failure. HTTP mode cannot downgrade a managed TLS site.
 
 HTTPS proxies API/WS to 127.0.0.1:3000/3001, replaces forwarded headers and preserves

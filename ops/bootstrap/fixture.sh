@@ -31,6 +31,7 @@ chmod -R a+rX /var/lib/infraforge/acme
 test "$(curl -fsS -H 'Host: backend.example.invalid' http://127.0.0.1/.well-known/acme-challenge/proof)" = acme
 openssl req -x509 -newkey rsa:2048 -nodes -days 2 -subj /CN=backend.example.invalid \
   -addext subjectAltName=DNS:backend.example.invalid -keyout /tmp/key.pem -out /tmp/cert.pem >/dev/null 2>&1
+export SSL_CERT_FILE=/tmp/cert.pem
 bash ops/bootstrap/nginx.sh backend.example.invalid tls /tmp/cert.pem /tmp/key.pem
 bash ops/bootstrap/nginx.sh backend.example.invalid tls /tmp/cert.pem /tmp/key.pem
 for path in /api/auth/providers /ws; do
