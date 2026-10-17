@@ -22,6 +22,7 @@
     "@infraforge/simulation": "workspace:*",
     "@radix-ui/react-dialog": "1.1.23",
     "@tailwindcss/vite": "4.3.3",
+    "@vercel/analytics": "^2.0.1",
     "axios": "1.20.0",
     "better-auth": "1.7.7",
     "dotenv": "17.4.2",
