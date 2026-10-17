@@ -20,13 +20,6 @@ test("full validation fails closed for every red, skipped, cancelled or missing 
   expect(config.jobs.validation.needs.slice().sort()).toEqual(Object.keys(green).sort());
   expect(config.jobs.validation.steps[1].run).toBe("node scripts/ci/validation.cjs");
   expect(config.jobs.validation.steps[1].env.VALIDATION_RESULTS).toBe("${{ toJSON(needs) }}");
-  const protection = JSON.parse(readFileSync("scripts/ci/main-protection.json", "utf8"));
-  expect(protection.enforce_admins).toBe(true);
-  expect(protection.required_status_checks.strict).toBe(true);
-  const contexts = protection.required_status_checks.checks;
-  expect(contexts).toHaveLength(13);
-  expect(contexts.every((c: any) => c.app_id === 15368)).toBe(true);
-  expect(contexts.map((c: any) => c.context).sort()).toEqual(["Full validation", ...Object.keys(green).filter(j => j !== "checks"), ...config.jobs.checks.strategy.matrix.command.map((c: string) => `checks (${c})`)].sort());
   for (const job of Object.keys(green)) expect(config.jobs[job].if).toBeUndefined();
 });
 test("Analytics review proves the entire prior lock is unchanged and rejects transitive/workspace drift", () => {

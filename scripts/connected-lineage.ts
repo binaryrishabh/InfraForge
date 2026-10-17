@@ -22,12 +22,15 @@ watched.forEach(walk); paths.push(...extra);
 const value = { schema: "infraforge-connected-v1-lineage/1", baseline, source: "bac35c995b5e5d59a9ce901745c014644fdb843183adbcbb761fb99184c11306", runtime: "bun-1.3.14", original: originals, current: [...new Set(paths)].sort().map(path => ({ path, hash: sha(readFileSync(resolve(root, path), "utf8")) })), execution: originalPaths.filter(execSelected) };
 const destination = resolve(root, "apps/backend/internalModel2/legacyRuntime.json");
 let reviewedExecution = JSON.parse(readFileSync(destination, "utf8")).reviewedExecution;
-if (process.argv.includes("--review-analytics")) {
+const reviewSupervision = process.argv.includes("--review-supervision");
+if (process.argv.includes("--review-analytics") || reviewSupervision) {
   console.info(JSON.stringify(reviewAnalyticsLock(gitText("bun.lock"), lf(readFileSync(resolve(root, "bun.lock"), "utf8")))));
   const priorPaths = execFileSync("git", ["ls-tree", "-r", "--name-only", analyticsBaseline], { cwd: root, encoding: "utf8" }).trim().split("\n")
     .filter(p => execSelected(p) || p.startsWith("apps/backend/internalModel2/") && (p.endsWith(".ts") && !p.endsWith("/sandboxChild.ts") || p.endsWith("/legacyRuntime.json"))).sort();
   if (executionSourceFiles().join("\n") !== priorPaths.join("\n")) throw Error("Unreviewed execution inventory change");
   const allowed = new Set(["bun.lock", "apps/backend/internalModel2/legacyRuntime.json", ...["identity", "legacyCompatibility", "envelopeV2", "report"].map(p => `apps/backend/internalModel2/${p}.ts`)]);
+  // This review changes client supervision only; it does not change modeled execution.
+  if (reviewSupervision) for (const file of ["dockerConnection", "sandboxRunner"]) allowed.add(`apps/backend/internalModel2/${file}.ts`);
   const original = priorPaths.map(path => {
     const text = gitText(path), changed = text !== lf(readFileSync(resolve(root, path), "utf8"));
     if (changed && !allowed.has(path)) throw Error(`Not a compatibility-only transition: ${path}`);

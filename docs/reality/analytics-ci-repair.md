@@ -82,12 +82,12 @@ bun --no-env-file scripts/m2m-lineage.ts --refresh-current
 bun --no-env-file scripts/reality/inventory.ts --write
 ```
 
-The generator refuses execution implementation changes outside the six reviewed
+Analytics review mode refuses execution implementation changes outside the six reviewed
 compatibility/identity/lock metadata files. Current lineage pins advance; existing
 original hashes and frozen text remain unchanged. Newly frozen original App.tsx
-text reconstructs the same accepted source. The ledger retains 2,570 literals with
+text reconstructs the same accepted source. The Analytics refresh retained 2,570 literals with
 the same values and classifications: only reviewed file hashes and line citations
-move (App.tsx and the compatibility import in envelopeV2.ts).
+moved (App.tsx and the compatibility import in envelopeV2.ts). The supervision recovery adds four implementation-policy bookkeeping sites; other classification counts are unchanged.
 
 The M2K, M2L, M2M and connected proof JSON, producer identities, original lineage
 digests, 30 Model-1 goldens and ten challenge hashes are not regenerated. Existing
@@ -100,22 +100,31 @@ requires exactly those five successful results; skipped, cancelled, missing or
 failed results refuse. All twelve existing jobs remain unconditional. Tooling tests
 exercise failures for every group and check the repository policy.
 
-`scripts/ci/main-protection.json` is the reproducible classic protection request:
-strict up-to-date checks, all twelve jobs plus the aggregate, GitHub Actions app
-15368 as the check source, admin enforcement, no force pushes/deletions and resolved
-conversations. It does not require a second approver for the single-owner repository.
-Apply only after the repair's exact-SHA main push is green, then read it back:
+The incident introduced administrator-enforced, strict required checks on main and
+then required a temporary PR for the next repair. That contradicted the owner's
+direct-main workflow. The policy file and its mandatory-setting assertions are
+removed; the hosted classic protection introduced by this incident is restored to
+its prior absent state. The full validation aggregate remains unchanged. Main is
+the working branch, and normal hosted CI runs after direct publication.
 
-```sh
-gh api --method PUT repos/binaryrishabh/InfraForge/branches/main/protection \
-  --input scripts/ci/main-protection.json
-gh api repos/binaryrishabh/InfraForge/branches/main/protection
-```
+PR #9's larger integration budget did not resolve the wall-phase stall and is not
+merged. Its useful sandbox phase logging is retained on main; the original
+240-second test budget remains. Its temporary branch is removed after the PR is
+closed. Other branches predate this incident and are preserved.
 
-This is hosted enforcement, not a local hook. Normal red merges must be blocked
-including for the owner. Main stays the active integration branch. Direct pushes
-are subject to required checks too; future unchecked work should use a temporary
-PR into main rather than disable protection. No develop branch is introduced.
+The client supervision defect is independent of the modeled engine: sending a
+signal did not settle pending stream/close promises. A focused fault-injection test
+reproduced that defect. Supervision now rejects on the existing deadlines and on
+ownership cancellation, and a pinned-daemon observation of a failed container can
+terminate a stranded attachment. A zero exit still requires the complete protocol.
+The precise hosted trigger of the missing completion notification remains Unknown;
+clean local wall probes did not reproduce it.
+
+`connected-lineage.ts --review-supervision` explicitly permits only the two reviewed
+client-supervision files in addition to the existing reviewed transition. It freezes
+additional exact historical text where needed while retaining its original hashes,
+source digest and producer evidence. Current pins and the AST inventory are refreshed;
+accepted proof JSON is not rewritten.
 
 Release InfraForge already requires a successful exact-SHA main **push** validation,
 current-main revalidation, `PRODUCTION_RELEASE_ENABLED=true`, protected Production

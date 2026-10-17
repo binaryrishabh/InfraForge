@@ -1,4 +1,5 @@
 import { spawn } from "node:child_process";
+import type { ChildProcess } from "node:child_process";
 import { createHash } from "node:crypto";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
@@ -7,6 +8,26 @@ import { dockerInvocation, lessonEndpoint } from "./dockerEndpoint";
 import type { DockerEndpoint } from "./dockerEndpoint";
 import { socketIdentity } from "./dockerSocket";
 const digest = (value: string) => createHash("sha256").update(value).digest("hex");
+// Sending a signal does not settle a pending pipe read or a missing close event.
+export async function boundProcess<T>(child: ChildProcess, work: () => Promise<T>, timeout: number, message: string, signal?: AbortSignal) {
+  let reject!: (error: Error) => void, stopped = false;
+  const interrupted = new Promise<never>((_resolve, no) => { reject = no; });
+  const stop = (error: Error) => {
+    if (stopped) return; stopped = true; reject(error);
+    child.kill("SIGKILL"); child.stdin?.destroy(); child.stdout?.destroy(); child.stderr?.destroy();
+  };
+  child.once("error", stop);
+  const abort = () => stop(signal?.reason instanceof Error ? signal.reason : Error("Docker operation aborted"));
+  const timer = setTimeout(() => stop(Error(message)), timeout);
+  signal?.addEventListener("abort", abort, { once: true });
+  try {
+    if (signal?.aborted) abort();
+    return await Promise.race([interrupted, ...(stopped ? [] : [work()])]);
+  } finally {
+    clearTimeout(timer); signal?.removeEventListener("abort", abort);
+    child.kill("SIGKILL"); child.stdin?.destroy(); child.stdout?.destroy(); child.stderr?.destroy();
+  }
+}
 export class DockerConnection {
   readonly #config: string;
   readonly #env: NodeJS.ProcessEnv;
@@ -53,15 +74,15 @@ export class DockerConnection {
   }
   async #run(args: string[], cap = 65536, timeout = 5000) {
     const child = spawn("docker", dockerInvocation(this.selected, this.#config, args), { env: this.#env, windowsHide: true, stdio: ["ignore", "pipe", "pipe"] });
-    let text = "", size = 0, failure: Error | undefined;
-    const kill = (reason: string) => { failure ??= Error(reason); child.kill("SIGKILL"); };
-    const timer = setTimeout(() => kill("Docker control operation timed out"), timeout);
-    for (const stream of [child.stdout, child.stderr]) stream.on("data", (chunk: Buffer) => { size += chunk.length; if (size > cap) kill("Docker control output exceeded its budget"); else if (stream === child.stdout) text += chunk.toString(); });
-    try {
-      const code = await new Promise<number | null>((resolve, reject) => { child.once("error", reject); child.once("close", resolve); });
-      if (failure || code !== 0) throw failure ?? Error(`Docker operation failed (${code}); no endpoint fallback`);
+    let text = "", size = 0;
+    const controller = new AbortController();
+    return boundProcess(child, async () => {
+      const exited = new Promise<number | null>((resolve, reject) => { child.once("error", reject); child.once("close", resolve); });
+      for (const stream of [child.stdout, child.stderr]) stream.on("data", (chunk: Buffer) => { size += chunk.length; if (size > cap) controller.abort(Error("Docker control output exceeded its budget")); else if (stream === child.stdout) text += chunk.toString(); });
+      const code = await exited;
+      if (code !== 0) throw Error(`Docker operation failed (${code}); no endpoint fallback`);
       return text.trim();
-    } finally { clearTimeout(timer); }
+    }, timeout, "Docker control operation timed out", controller.signal);
   }
   async close() {
     this.#closed = true;

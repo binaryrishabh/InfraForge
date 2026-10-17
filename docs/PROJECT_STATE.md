@@ -7,11 +7,19 @@ producer evidence. Whole-lock execution hashing remains in place; one explicit
 review reconstructs the prior green execution source without relabeling it.
 All 555 pre-existing lock package records are unchanged. See
 [the compatibility review and merge policy](reality/analytics-ci-repair.md).
-The full validation workflow now has an always-run aggregate that rejects failed,
-skipped, cancelled or missing groups; the checked-in main protection policy requires
-that aggregate and all twelve existing jobs from GitHub Actions, including admins.
-Hosted enforcement must be read back from GitHub; repository files alone do not
-activate branch protection. Model 1 ACTIVE; Model 2 INTERNAL; no activation change.
+The full validation workflow has an always-run aggregate that rejects failed,
+skipped, cancelled or missing groups. The owner works directly on main; the incident's
+required-check branch protection and its checked-in policy are removed to restore
+that workflow. Production still requires successful exact-SHA push validation and
+the disabled release switch. Model 1 ACTIVE; Model 2 INTERNAL; no activation change.
+
+**Lesson supervision recovery (2026-10-17):** sending SIGKILL did not independently
+settle Docker client pipe/close waits. Deadline and ownership cancellation now reject
+those waits explicitly. Verified nonzero container exit is observed through the same
+pinned daemon and retained as failure; zero exit cannot replace a complete protocol.
+The hosted wall-phase trigger is not reproduced locally. The 240-second integration
+budget and all kernel/executor limits remain unchanged; a larger test budget did not
+repair the stall. Only focused supervision tests are run locally for this recovery.
 
 **Current production / branch policy (2026-10-17):** `main` is the sole active
 working branch. The owner completed the production cutover at
