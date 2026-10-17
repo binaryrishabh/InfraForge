@@ -157,5 +157,7 @@ suite("controlled internal object restart lesson", () => {
       proof.rowsRemoved = true; proof.endedAt = new Date().toISOString(); await Bun.write(join(output, "preview-proof.json"), JSON.stringify(proof));
       await h.close(); console.info(`M2M proof: ${join(output, "preview-proof.json")}; success=${proof.success}`);
     }
-  }, 240000);
+  // Product/browser checks precede seven 25s sandbox probes and orphan recovery.
+  // Budget the composed test separately from each executor's unchanged deadline.
+  }, 600000);
 });

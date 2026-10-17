@@ -36,6 +36,7 @@ export async function checkLessonSandbox(baseImage: string, output: string) {
   return withFixtureImage(control, baseImage, join(output, "fixture"), fixture, async (image) => {
     const results: Record<string, any> = {};
     for (const kind of ["controls", "pids", "cpu", "memory", "wall", "oversized", "malformed"]) {
+      console.info(`M2M sandbox phase: ${kind}`);
       let receipt: SandboxReceipt | undefined, failure = "", value: unknown; const start = Date.now();
       try { await runSandbox(control, crypto.randomUUID(), image, { fixture: kind }, async (frame) => { if (frame.kind !== "controls") throw Error("Unexpected fixture frame"); value = frame.value; }, async (r) => { receipt = structuredClone(r); }); }
       catch (error) { failure = error instanceof Error ? error.message : String(error); }
@@ -49,6 +50,7 @@ export async function checkLessonSandbox(baseImage: string, output: string) {
       if (kind === "oversized") expect(failure).toContain("line budget");
       if (kind === "malformed") expect(failure).toMatch(/JSON|parse|Expected/i);
     }
+    console.info("M2M sandbox phase: orphan deadline");
     const orphan = await checkOrphanDeadline(control, image, output);
     return { image, baseImage, connection: control.receipt, results, orphan };
   });
