@@ -2,7 +2,7 @@ import { executionSource } from "./identity";
 import { readEnvelope, captureCuts } from "./envelope";
 import { readCapture, instantiate, capture } from "./capture";
 import type { InternalRunRow } from "./store";
-import { compatibleV1Source } from "./legacyCompatibility";
+import { compatibleV1Source, compatibleReviewedSource } from "./legacyCompatibility";
 import { decodeCausal } from "./causalJournal";
 function recordedCapture(row: InternalRunRow, source: string | null) {
   const evidence = readCapture(row.evidence, row.inputHash);
@@ -20,7 +20,7 @@ export function internalReport(row: InternalRunRow) {
   } catch (e) { problems.push(e instanceof Error ? e.message : "Evidence unavailable"); } }
   else problems.push("No durable execution capture is available");
   const source = evidence?.source ?? (inputValid ? readEnvelope(row.input, row.inputHash, false).source : null);
-  const compatible = source !== null && (source === executionSource || evidence?.schema !== "infraforge-internal-evidence/2" && compatibleV1Source(source, executionSource));
+  const compatible = source !== null && (compatibleReviewedSource(source, executionSource) || evidence?.schema !== "infraforge-internal-evidence/2" && compatibleV1Source(source, executionSource));
   if (row.status !== "completed") unknown.push("This is a retained prefix, not proof of a complete execution. Missing time/work is not zero.");
   if (evidence && !evidence.usage.snapshot.complete) unknown.push(...evidence.usage.snapshot.reasons);
   if (evidence?.schema === "infraforge-internal-evidence/2" && !evidence.completeness.exactCausality) unknown.push("Exact request causality is Unknown: bounded causal/caller evidence was omitted. Missing events are not zero.");

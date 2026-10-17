@@ -139,7 +139,8 @@
     },
     {
       "file": "apps/web/src/app/App.tsx",
-      "hash": "97f1bbfb90b13e4ee642a0d5ec4b7772f265e646749d023d66fa528ffbe089d7"
+      "hash": "97f1bbfb90b13e4ee642a0d5ec4b7772f265e646749d023d66fa528ffbe089d7",
+      "text": "import { lazy, Suspense, useEffect } from \"react\";\nimport { BrowserRouter, Navigate, Route, Routes, useLocation, useParams } from \"react-router-dom\";\nimport { Toaster } from \"sonner\";\nimport { LandingPage } from \"../features/landing/pages/LandingPage\";\nimport { SignInPage } from \"../features/auth/pages/SignInPage\";\nimport { HomePage } from \"../features/dashboard/pages/HomePage\";\nimport { NotFoundPage } from \"../features/dashboard/pages/NotFoundPage\";\nimport { ChallengesPage } from \"../features/challenges/pages/ChallengesPage\";\nimport { ChallengeDetailPage } from \"../features/challenges/pages/ChallengeDetailPage\";\nimport { DesignsPage } from \"../features/designs/DesignsPage\";\nimport { RunHistoryPage } from \"../features/reports/pages/RunHistoryPage\";\nimport { SettingsPage } from \"../features/settings/SettingsPage\";\nimport { AppShell } from \"../components/shell/AppShell\";\nimport { ProtectedRoute } from \"../components/shell/ProtectedRoute\";\nimport { PublicOnlyRoute } from \"../components/shell/PublicOnlyRoute\";\nimport { useAuthStore } from \"../features/auth/store/auth.store\";\nimport { resolvedTheme, usePreferences } from \"./preferences\";\nimport { Loading } from \"../ui/Page\";\n\n// The designer and the evidence views carry most of the code; they load on first visit.\nconst CanvasDesignerPage = lazy(() => import(\"../features/canvas/components/CanvasDesignerPage\").then((m) => ({ default: m.CanvasDesignerPage })));\nconst RunReportPage = lazy(() => import(\"../features/reports/pages/RunReportPage\").then((m) => ({ default: m.RunReportPage })));\nconst ComparePage = lazy(() => import(\"../features/reports/pages/ComparePage\").then((m) => ({ default: m.ComparePage })));\nconst InternalWorkspace = lazy(() => import(\"../features/internalModel2/InternalWorkspace\").then((m) => ({ default: m.InternalWorkspace })));\nconst InternalLesson = lazy(() => import(\"../features/internalLessons/InternalLesson\").then((m) => ({ default: m.InternalLesson })));\n\n// Older links keep working: /dashboard and /reports moved to /home and /runs.\nfunction LegacyReport() {\n  const { deploymentId = \"\" } = useParams();\n  return <Navigate to={`/runs/${encodeURIComponent(deploymentId)}`} replace />;\n}\nfunction LegacyCompare() {\n  const { search } = useLocation();\n  return <Navigate to={`/runs/compare${search}`} replace />;\n}\n\nfunction ThemedToaster() {\n  const theme = usePreferences((s) => s.theme);\n  return <Toaster position=\"bottom-right\" theme={resolvedTheme(theme) === \"ink\" ? \"dark\" : \"light\"} closeButton\n    toastOptions={{ style: { background: \"var(--if-raised)\", border: \"1px solid var(--if-line-strong)\", color: \"var(--if-ink)\", borderRadius: \"6px\", fontFamily: \"var(--font-sans)\" } }} />;\n}\n\nfunction App() {\n  const hydrate = useAuthStore((s) => s.hydrate);\n  useEffect(() => {\n    void hydrate();\n    const refresh = () => { void hydrate(); };\n    const expire = () => useAuthStore.getState().expire();\n    window.addEventListener(\"focus\", refresh);\n    window.addEventListener(\"infraforge:session-ended\", expire);\n    const interval = setInterval(refresh, 60000);\n    const channel = new BroadcastChannel(\"infraforge-session\");\n    channel.onmessage = refresh;\n    return () => {\n      clearInterval(interval); channel.close();\n      window.removeEventListener(\"focus\", refresh);\n      window.removeEventListener(\"infraforge:session-ended\", expire);\n    };\n  }, [hydrate]);\n\n  return (\n    <BrowserRouter>\n      <ThemedToaster />\n      <Routes>\n        <Route path=\"/\" element={<LandingPage />} />\n        <Route element={<PublicOnlyRoute />}>\n          <Route path=\"/signin\" element={<SignInPage key=\"signin\" />} />\n          <Route path=\"/signup\" element={<SignInPage key=\"signup\" mode=\"signup\" />} />\n        </Route>\n        <Route element={<ProtectedRoute />}>\n          <Route element={<AppShell />}>\n            <Route path=\"/home\" element={<HomePage />} />\n            <Route path=\"/challenges\" element={<ChallengesPage />} />\n            <Route path=\"/challenges/:challengeId\" element={<ChallengeDetailPage />} />\n            <Route path=\"/designs\" element={<DesignsPage />} />\n            <Route path=\"/runs\" element={<RunHistoryPage />} />\n            <Route path=\"/runs/compare\" element={<ComparePage />} />\n            <Route path=\"/runs/:deploymentId\" element={<RunReportPage />} />\n            <Route path=\"/settings\" element={<SettingsPage />} />\n            <Route path=\"/internal/model2\" element={<InternalWorkspace />} />\n            <Route path=\"/internal/model2/learn\" element={<InternalLesson />} />\n          </Route>\n          {/* The designer and live runs are full-screen workspaces with their own bar. */}\n          <Route path=\"/design\" element={<Suspense fallback={<div className=\"grid h-dvh place-items-center bg-canvas\"><Loading label=\"Opening the designer…\" /></div>}><CanvasDesignerPage /></Suspense>} />\n          <Route path=\"/dashboard\" element={<Navigate to=\"/home\" replace />} />\n          <Route path=\"/reports\" element={<Navigate to=\"/runs\" replace />} />\n          <Route path=\"/reports/compare\" element={<LegacyCompare />} />\n          <Route path=\"/reports/:deploymentId\" element={<LegacyReport />} />\n        </Route>\n        <Route path=\"*\" element={<NotFoundPage />} />\n      </Routes>\n    </BrowserRouter>\n  );\n}\n\nexport default App;\n"
     },
     {
       "file": "apps/web/src/client/httpClient.ts",
@@ -278,7 +279,7 @@
     },
     {
       "file": "apps/backend/internalModel2/envelopeV2.ts",
-      "hash": "a81987186bcabdd3929dfaa3f4cf46cc11a8e402e8ad18a95c546d816034b2dc"
+      "hash": "b652272a38c64b2601cb56043b3ba137b513d31627d785118e390e98568bc15b"
     },
     {
       "file": "apps/backend/internalModel2/execution.ts",
@@ -286,15 +287,15 @@
     },
     {
       "file": "apps/backend/internalModel2/identity.ts",
-      "hash": "5b31b1a88ab61990d2944e9178d615413328fd49e5bdf8fa877dd56d5648a95d"
+      "hash": "4499f676c79d229caa27f0662d6427072eb411fda36e9d96ac9ee1220222649f"
     },
     {
       "file": "apps/backend/internalModel2/legacyCompatibility.ts",
-      "hash": "4e9e9560ddea1df1ecaddc16206445587d63d7d4666ae00c128369fbdcfd3e84"
+      "hash": "1f20c8743f1b4d596bc2b874d97630ae16ff183df9b06260bb7f054d8e11e71b"
     },
     {
       "file": "apps/backend/internalModel2/legacyRuntime.json",
-      "hash": "ae9fd3c1b1186dad06c1c1fa8d9e83436871102e2849d4b86cd8d0fc79cc1c85"
+      "hash": "65a830911bb6bd8d709d88aff838cc63ca275ca00db4e0c0e4dac22a6b9302b9"
     },
     {
       "file": "apps/backend/internalModel2/lessonAuthoring.ts",
@@ -330,7 +331,7 @@
     },
     {
       "file": "apps/backend/internalModel2/report.ts",
-      "hash": "851158cd55573071e6158348aa057dcef9afeba9457bbe846f672fb461e7b72c"
+      "hash": "ae76f0d880cee26d22b547411d5246d69fd182365800cd22df63c63a9e0119f1"
     },
     {
       "file": "apps/backend/internalModel2/routes.ts",
@@ -394,7 +395,7 @@
     },
     {
       "file": "apps/web/src/app/App.tsx",
-      "hash": "97f1bbfb90b13e4ee642a0d5ec4b7772f265e646749d023d66fa528ffbe089d7"
+      "hash": "b361e58d700518e36a038ba2e1efe703d2a8bca7ade0eb5ff06014ed9e84873f"
     },
     {
       "file": "apps/web/src/client/httpClient.ts",

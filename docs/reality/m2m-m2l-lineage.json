@@ -176,7 +176,7 @@
     },
     {
       "file": "apps/backend/internalModel2/envelopeV2.ts",
-      "hash": "a81987186bcabdd3929dfaa3f4cf46cc11a8e402e8ad18a95c546d816034b2dc"
+      "hash": "b652272a38c64b2601cb56043b3ba137b513d31627d785118e390e98568bc15b"
     },
     {
       "file": "apps/backend/internalModel2/execution.ts",
@@ -184,15 +184,15 @@
     },
     {
       "file": "apps/backend/internalModel2/identity.ts",
-      "hash": "5b31b1a88ab61990d2944e9178d615413328fd49e5bdf8fa877dd56d5648a95d"
+      "hash": "4499f676c79d229caa27f0662d6427072eb411fda36e9d96ac9ee1220222649f"
     },
     {
       "file": "apps/backend/internalModel2/legacyCompatibility.ts",
-      "hash": "4e9e9560ddea1df1ecaddc16206445587d63d7d4666ae00c128369fbdcfd3e84"
+      "hash": "1f20c8743f1b4d596bc2b874d97630ae16ff183df9b06260bb7f054d8e11e71b"
     },
     {
       "file": "apps/backend/internalModel2/legacyRuntime.json",
-      "hash": "ae9fd3c1b1186dad06c1c1fa8d9e83436871102e2849d4b86cd8d0fc79cc1c85"
+      "hash": "65a830911bb6bd8d709d88aff838cc63ca275ca00db4e0c0e4dac22a6b9302b9"
     },
     {
       "file": "apps/backend/internalModel2/lessonAuthoring.ts",
@@ -228,7 +228,7 @@
     },
     {
       "file": "apps/backend/internalModel2/report.ts",
-      "hash": "851158cd55573071e6158348aa057dcef9afeba9457bbe846f672fb461e7b72c"
+      "hash": "ae76f0d880cee26d22b547411d5246d69fd182365800cd22df63c63a9e0119f1"
     },
     {
       "file": "apps/backend/internalModel2/routes.ts",
@@ -292,7 +292,7 @@
     },
     {
       "file": "apps/web/src/app/App.tsx",
-      "hash": "97f1bbfb90b13e4ee642a0d5ec4b7772f265e646749d023d66fa528ffbe089d7"
+      "hash": "b361e58d700518e36a038ba2e1efe703d2a8bca7ade0eb5ff06014ed9e84873f"
     },
     {
       "file": "apps/web/src/client/httpClient.ts",

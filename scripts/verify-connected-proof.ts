@@ -3,16 +3,22 @@ import { strict as assert } from "node:assert";
 import { readEnvelope } from "../apps/backend/internalModel2/envelope";
 import { readCapture } from "../apps/backend/internalModel2/capture";
 import { contentHash, executionSource } from "../apps/backend/internalModel2/identity";
+import { compatibleReviewedSource } from "../apps/backend/internalModel2/legacyCompatibility";
 import { internalReport, replayStored } from "../apps/backend/internalModel2/report";
 import { verifyConnectedState } from "../apps/backend/tests/connectedAssertions";
 import { decodeCausal } from "../apps/backend/internalModel2/causalJournal";
 export function verifyConnectedProof(proof: any) {
-  assert.equal(proof.schema, "infraforge-connected-product-proof/1"); assert.equal(proof.success, true); assert.equal(proof.rowsRemoved, true); assert.equal(proof.source, executionSource); assert.match(proof.commit, /^[a-f0-9]{40}$/);
+  assert.equal(proof.schema, "infraforge-connected-product-proof/1"); assert.equal(proof.success, true); assert.equal(proof.rowsRemoved, true); assert(compatibleReviewedSource(proof.source, executionSource), "Unreviewed connected execution source"); assert.match(proof.commit, /^[a-f0-9]{40}$/);
+  if (proof.source !== executionSource) {
+    assert.equal(proof.commit, "0fb800a58ecc000fecc1f7b6a30015bb7142e26b");
+    assert.equal(contentHash(proof), "dcab60e5b2e2fbf80e2a42f8e62c856474da5528f4e9c763eb2a6b8cb1ecb153", "Retained connected producer evidence changed");
+  }
   for (const name of ["authentication and operator-only scope", "cross-owner refusal", "saved revision and compiler refusal", "atomic outbox and exact retry", "healthy connected identities", "two-target distribution", "app failure and health detection lag", "surviving CPU pressure and DB consequence", "readiness and health recovery", "timeout after commit", "timeout before commit", "causal overflow remains Unknown", "read-only deterministic replay", "actual worker SIGKILL retains durable v2 prefix", "exact retry survives saved revision change", "read-only HTML exposes connected evidence"]) assert(proof.cases.includes(name), `Missing connected case: ${name}`);
   assert(proof.processes.filter((p: any) => p.name === "worker").length >= 3);
   assert.deepEqual(proof.runs.map((r: any) => r.name).sort(), ["healthy", "failure", "late-cancel", "early-cancel", "overflow", "worker-prefix"].sort());
   for (const saved of proof.runs) {
     const row = saved.row, input = readEnvelope(row.input, row.inputHash), e = readCapture(row.evidence, row.inputHash);
+    assert.equal(input.source, proof.source);
     assert.equal(input.schema, "infraforge-internal-execution/2"); assert.equal(e.schema, "infraforge-internal-evidence/2"); if (e.schema !== "infraforge-internal-evidence/2") throw Error("Expected v2 evidence");
     assert.equal(input.runId, row.id); assert.equal(input.ownerId, row.ownerId); assert.equal(e.sequence, row.sequence); assert.equal(e.throughUs, row.throughUs);
     assert.equal(saved.inputBytes, Buffer.byteLength(JSON.stringify(row.input))); assert.equal(saved.evidenceBytes, Buffer.byteLength(JSON.stringify(row.evidence)));

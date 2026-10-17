@@ -1,0 +1,27 @@
+{
+  "required_status_checks": {
+    "strict": true,
+    "checks": [
+      { "context": "Full validation", "app_id": 15368 },
+      { "context": "checks (build --filter=@infraforge/web)", "app_id": 15368 },
+      { "context": "checks (typecheck)", "app_id": 15368 },
+      { "context": "checks (lint)", "app_id": 15368 },
+      { "context": "checks (test)", "app_id": 15368 },
+      { "context": "checks (check:boundaries)", "app_id": 15368 },
+      { "context": "checks (test:tooling)", "app_id": 15368 },
+      { "context": "checks (check:challenges)", "app_id": 15368 },
+      { "context": "checks (audit)", "app_id": 15368 },
+      { "context": "integration", "app_id": 15368 },
+      { "context": "m2m-preview", "app_id": 15368 },
+      { "context": "packaging", "app_id": 15368 },
+      { "context": "operations", "app_id": 15368 }
+    ]
+  },
+  "enforce_admins": true,
+  "required_pull_request_reviews": null,
+  "restrictions": null,
+  "required_linear_history": false,
+  "allow_force_pushes": false,
+  "allow_deletions": false,
+  "required_conversation_resolution": true
+}

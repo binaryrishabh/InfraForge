@@ -2,6 +2,7 @@ import { boundedProduct, canonical, compileProduct, requireKnown } from "@infraf
 import type { ProductContract, SavedProductDesign } from "@infraforge/simulation/internal-product";
 import { LayoutSchema } from "../zod_schemas/layout.schema";
 import { contentHash, executionSource } from "./identity";
+import { compatibleReviewedSource } from "./legacyCompatibility";
 import { INTERNAL_LIMITS as limits, jsonBytes } from "./budgets";
 import { CompilationRefusal, captureCuts, admissionSchema as v1Admission } from "./envelopeV1";
 import type { ExecutionEnvelope } from "./envelopeV1";
@@ -35,9 +36,11 @@ export function readEnvelopeV2(value: unknown, expected: string, compatible = tr
   const e = canonical(value) as ExecutionEnvelopeV2, { fingerprint, ...body } = e;
   if (e.schema !== "infraforge-internal-execution/2" || fingerprint !== expected || contentHash(body) !== fingerprint || e.contract?.version !== CONNECTED_PROFILE || !causalLimits.safeParse(e.causal).success) throw Error("Recorded v2 input is corrupt or incompatible");
   if (compatible) {
-    if (e.source !== executionSource) throw Error("Historical v2 execution source is incompatible");
+    if (!compatibleReviewedSource(e.source, executionSource)) throw Error("Historical v2 execution source is incompatible");
     const rebuilt = compileEnvelopeV2(e.runId, e.ownerId, { resources: e.design.resources, connectionLines: e.design.connections }, new Date(e.designUpdatedAt), { infrastructureId: e.infrastructureId, idempotencyKey: "reconstruction", expectedDesignUpdatedAt: e.designUpdatedAt, workload: v1Admission.shape.workload.parse(e.design.workload), contract: e.contract, execution: e.schema, causal: e.causal });
-    if (rebuilt.fingerprint !== fingerprint) throw Error("Recorded v2 compilation is corrupt or incompatible");
+    // Keep the reviewed historical producer identity; compare every other rebuilt field exactly.
+    const { fingerprint: _currentFingerprint, ...rebuiltBody } = rebuilt;
+    if (contentHash({ ...rebuiltBody, source: e.source }) !== fingerprint) throw Error("Recorded v2 compilation is corrupt or incompatible");
   }
   return e;
 }

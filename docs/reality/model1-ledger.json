@@ -407,7 +407,7 @@
     },
     {
       "file": "apps/backend/internalModel2/envelopeV2.ts",
-      "sha256": "8bc1de674d1e748f295cfa7c251da2f413eae4e5bf3ac1692a82d455713d53e2",
+      "sha256": "2cfc8d1302596846a7c546628c5349e137be156a4108b025cedeab9f58b251b5",
       "numericSites": 3
     },
     {
@@ -417,12 +417,12 @@
     },
     {
       "file": "apps/backend/internalModel2/identity.ts",
-      "sha256": "e3b8bdbf280d412d994a5c148b0abc28dcf29ebf2ceea6afb33310bfdffcf4c3",
+      "sha256": "8409bec2abb0b34328001c7cd2d3681447b26e0766aff2db5f56495aa57a19a5",
       "numericSites": 0
     },
     {
       "file": "apps/backend/internalModel2/legacyCompatibility.ts",
-      "sha256": "4c50ff9ae9eece3adf505d21af06a117ac4b04ea0d26d41086535c6dd54e5d5c",
+      "sha256": "1cf98c2125796ab612efd809b8039d81b27eac4b0d7895275652e1cec7622db5",
       "numericSites": 0
     },
     {
@@ -467,7 +467,7 @@
     },
     {
       "file": "apps/backend/internalModel2/report.ts",
-      "sha256": "8a89f0f5161792d231162302153b936cab52648d48cec9be10c12e0cd71cec63",
+      "sha256": "95a679cb8f6cc1dcf7197466efaff2d0b68fea6f1c9e5bcf18ba303e21bb6c02",
       "numericSites": 4
     },
     {
@@ -797,7 +797,7 @@
     },
     {
       "file": "apps/web/src/app/App.tsx",
-      "sha256": "23b356ef3e3cbcb9b95ebb8b254de229ff1b95750b87e701f9d8a444beeaa4e0",
+      "sha256": "7c57c2cf16c2faa841a3996b80e120c342bf8c6c1b60df07489fdc6ce93f688f",
       "numericSites": 1
     },
     {
@@ -30069,7 +30069,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/envelopeV2.ts#L24",
+          "source": "workspace:apps/backend/internalModel2/envelopeV2.ts#L25",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -30083,7 +30083,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/envelopeV2.ts",
-        "line": 24,
+        "line": 25,
         "column": 60
       }
     },
@@ -30105,7 +30105,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/envelopeV2.ts#L24",
+          "source": "workspace:apps/backend/internalModel2/envelopeV2.ts#L25",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -30119,7 +30119,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/envelopeV2.ts",
-        "line": 24,
+        "line": 25,
         "column": 84
       }
     },
@@ -30141,7 +30141,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/envelopeV2.ts#L24",
+          "source": "workspace:apps/backend/internalModel2/envelopeV2.ts#L25",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -30155,7 +30155,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/envelopeV2.ts",
-        "line": 24,
+        "line": 25,
         "column": 108
       }
     },
@@ -45044,7 +45044,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/app/App.tsx#L51",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/app/App.tsx#L52",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -45058,7 +45058,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/app/App.tsx",
-        "line": 51,
+        "line": 52,
         "column": 43
       }
     },

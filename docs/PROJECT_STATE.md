@@ -1,5 +1,18 @@
 # InfraForge project state
 
+**Analytics CI repair (2026-10-17):** the deliberate frontend Analytics addition
+at `0d45ab67d27d3990475868b8669efa5ea4939ee4` left three strict source inventories
+stale. Current ledger/endpoint/workspace pins are reviewed separately from frozen
+producer evidence. Whole-lock execution hashing remains in place; one explicit
+review reconstructs the prior green execution source without relabeling it.
+All 555 pre-existing lock package records are unchanged. See
+[the compatibility review and merge policy](reality/analytics-ci-repair.md).
+The full validation workflow now has an always-run aggregate that rejects failed,
+skipped, cancelled or missing groups; the checked-in main protection policy requires
+that aggregate and all twelve existing jobs from GitHub Actions, including admins.
+Hosted enforcement must be read back from GitHub; repository files alone do not
+activate branch protection. Model 1 ACTIVE; Model 2 INTERNAL; no activation change.
+
 **Current production / branch policy (2026-10-17):** `main` is the sole active
 working branch. The owner completed the production cutover at
 `0bcf74cf57934a2feda1e03f157bbc8ad933d26f`. Independent public checks verified
