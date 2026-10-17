@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect } from "react";
 import { BrowserRouter, Navigate, Route, Routes, useLocation, useParams } from "react-router-dom";
 import { Toaster } from "sonner";
+import { Analytics } from "@vercel/analytics/react";
 import { LandingPage } from "../features/landing/pages/LandingPage";
 import { SignInPage } from "../features/auth/pages/SignInPage";
 import { HomePage } from "../features/dashboard/pages/HomePage";
@@ -61,6 +62,7 @@ function App() {
   return (
     <BrowserRouter>
       <ThemedToaster />
+      <Analytics />
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route element={<PublicOnlyRoute />}>
