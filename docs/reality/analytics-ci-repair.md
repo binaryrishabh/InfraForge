@@ -33,6 +33,8 @@ entire previous lock. All **555** old package records, integrity hashes, workspa
 dependencies, platform constraints and override data are identical. The new pinned
 package has no dependencies or required peers, only optional peers. Negative tests
 reject backend/transitive changes and a new dependency on the added package.
+Tooling reads the exact frozen baseline lock from the reviewed lineage; it does
+not need older Git objects in GitHub's default shallow checkout.
 
 The project explicitly uses Bun's **hoisted** linker. A declared dependency graph
 alone is not a complete installed-resolution proof: hoisting permits undeclared
@@ -131,6 +133,8 @@ or this repair alone is not release authorization.
   required checks and explicit administrator enforcement.
 - [GitHub branch protection API](https://docs.github.com/en/rest/branches/branch-protection):
   strict checks pinned to an app and hosted configuration readback.
+- [Checkout v4](https://github.com/actions/checkout/tree/v4): the default single-commit
+  checkout, preserved by the history-independent tooling tests.
 
 Local evidence and the final exact-SHA hosted run, protection readback and deployment
 inspection are retained with the task's final report. No production release is

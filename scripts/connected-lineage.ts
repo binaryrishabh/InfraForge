@@ -26,6 +26,7 @@ if (process.argv.includes("--review-analytics")) {
   console.info(JSON.stringify(reviewAnalyticsLock(gitText("bun.lock"), lf(readFileSync(resolve(root, "bun.lock"), "utf8")))));
   const priorPaths = execFileSync("git", ["ls-tree", "-r", "--name-only", analyticsBaseline], { cwd: root, encoding: "utf8" }).trim().split("\n")
     .filter(p => execSelected(p) || p.startsWith("apps/backend/internalModel2/") && (p.endsWith(".ts") && !p.endsWith("/sandboxChild.ts") || p.endsWith("/legacyRuntime.json"))).sort();
+  if (executionSourceFiles().join("\n") !== priorPaths.join("\n")) throw Error("Unreviewed execution inventory change");
   const allowed = new Set(["bun.lock", "apps/backend/internalModel2/legacyRuntime.json", ...["identity", "legacyCompatibility", "envelopeV2", "report"].map(p => `apps/backend/internalModel2/${p}.ts`)]);
   const original = priorPaths.map(path => {
     const text = gitText(path), changed = text !== lf(readFileSync(resolve(root, path), "utf8"));

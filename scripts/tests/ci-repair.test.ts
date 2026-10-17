@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
-import { analyticsBaseline, gitText, reviewAnalyticsLock } from "../review-analytics-lock";
+import { analyticsBaseline, reviewAnalyticsLock } from "../review-analytics-lock";
 import { contentHash, executionSource } from "../../apps/backend/internalModel2/identity";
 import { readEnvelope } from "../../apps/backend/internalModel2/envelope";
 import { compatibleReviewedSource, compatibleV1Source, legacyLineage } from "../../apps/backend/internalModel2/legacyCompatibility";
@@ -15,6 +15,7 @@ test("full validation fails closed for every red, skipped, cancelled or missing 
   }
   const workflow = readFileSync(".github/workflows/validate.yml", "utf8");
   const config = Bun.YAML.parse(workflow) as any;
+  expect(Object.keys(config.jobs).sort()).toEqual(["validation", ...Object.keys(green)].sort());
   expect(config.jobs.validation.if).toBe("always()");
   expect(config.jobs.validation.needs.slice().sort()).toEqual(Object.keys(green).sort());
   expect(config.jobs.validation.steps[1].run).toBe("node scripts/ci/validation.cjs");
@@ -29,7 +30,8 @@ test("full validation fails closed for every red, skipped, cancelled or missing 
   for (const job of Object.keys(green)) expect(config.jobs[job].if).toBeUndefined();
 });
 test("Analytics review proves the entire prior lock is unchanged and rejects transitive/workspace drift", () => {
-  const before = gitText("bun.lock"), after = readFileSync("bun.lock", "utf8");
+  const before = legacyLineage().reviewedExecution!.original.find(p => p.path === "bun.lock")!.text!;
+  const after = readFileSync("bun.lock", "utf8");
   expect(analyticsBaseline).toHaveLength(40);
   expect(reviewAnalyticsLock(before, after).unchangedPackageRecords).toBeGreaterThan(400);
   for (const changed of [after.replace('"zod@4.4.3"', '"zod@4.4.4"'), after.replace('"bullmq": "6.0.8"', '"bullmq": "6.0.9"'), after.replace('"optionalPeers": ["@remix-run/react"', '"dependencies": {"new-code":"1"}, "optionalPeers": ["@remix-run/react"')]) {
