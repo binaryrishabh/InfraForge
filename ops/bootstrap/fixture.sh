@@ -40,6 +40,9 @@ for path in /api/auth/providers /ws; do
 done
 before=$(sha256sum /etc/nginx/sites-available/infraforge)
 if bash ops/bootstrap/nginx.sh 'bad;injection' tls /tmp/cert.pem /tmp/key.pem; then exit 1; fi
+if bash ops/bootstrap/nginx.sh wrong.example.invalid tls /tmp/cert.pem /tmp/key.pem; then exit 1; fi
+openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -out /tmp/wrong-key.pem >/dev/null 2>&1
+if bash ops/bootstrap/nginx.sh backend.example.invalid tls /tmp/cert.pem /tmp/wrong-key.pem; then exit 1; fi
 if bash ops/bootstrap/nginx.sh backend.example.invalid http; then exit 1; fi
 if bash ops/bootstrap/nginx.sh backend.example.invalid tls /tmp/missing.pem /tmp/key.pem; then exit 1; fi
 printf 'invalid directive;\n' > /etc/nginx/conf.d/broken.conf

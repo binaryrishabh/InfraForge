@@ -72,7 +72,7 @@ It installs the current patched apt packages; it is not an OS upgrade/lifecycle 
 `layout.sh` can reapply only the directory contract. A new state directory starts in
 maintenance; re-running never clears maintenance or `release.lock`. Symlinked state
 directories, wrong secret-file ownership or non-0600 secret files refuse. Do not
-normalize the whole checkout manually: Docker COPY owns the runtime permission contract.
+normalize the whole checkout manually: the Docker image owns the runtime permission contract.
 
 Clone `https://github.com/binaryrishabh/InfraForge.git` to the operator's
 `~/InfraForge` (or transfer a verified checkout). Fetch `main`, select the full

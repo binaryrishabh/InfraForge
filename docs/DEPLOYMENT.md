@@ -99,10 +99,11 @@ stops the sole worker and refuses a remaining worker lock before migration. Orig
 migrations and schema guards are unchanged. Prisma 7.9.1 deploy/status/diff and exact
 history/checksum/trigger checks remain mandatory. No database rollback is automatic.
 
-The image now normalizes every COPY with `u=rwX,go=rX` under Dockerfile frontend 1.14.
+The image now recursively normalizes copied and generated trees with `u=rwX,go=rX`
+after generation and before `USER bun`.
 Files remain root-owned and readable by final `USER bun` even when the host checkout
 has 0600 files/0700 directories. No operator chmod recovery or source ownership grant
-to the runtime is required. Generated Prisma/release metadata are built in-image.
+to the runtime is required. Generated Prisma/release metadata are built in-image and covered too.
 
 Exactly one worker starts. Acceptance requires the actual image/SHA and healthy
 API/WS/worker plus public readiness. A failed migration/postcheck leaves services

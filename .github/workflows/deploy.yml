@@ -74,7 +74,7 @@ jobs:
       - name: Recheck main after approval
         env:
           GH_TOKEN: ${{ github.token }}
-        run: test "$(gh api repos/$GITHUB_REPOSITORY/commits/main --jq .sha)" = "$RELEASE_SHA"
+        run: test "$(gh api "repos/$GITHUB_REPOSITORY/commits/main" --jq .sha)" = "$RELEASE_SHA"
       - name: Install pinned frontend release client
         run: npm install --global vercel@64.5.0
       - name: Check Vercel access before touching EC2
@@ -105,7 +105,7 @@ jobs:
       - name: Final public production verification
         run: |
           bun --no-env-file scripts/release/frontend-check.ts "$RELEASE_SHA" "$FRONTEND_ORIGIN" "$BACKEND_ORIGIN"
-          printf 'Accepted backend and frontend `%s`.\n' "$RELEASE_SHA" >> "$GITHUB_STEP_SUMMARY"
+          printf 'Accepted backend and frontend %s.\n' "$RELEASE_SHA" >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v4
         if: always()
         with:

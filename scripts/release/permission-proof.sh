@@ -20,6 +20,7 @@ test "$(docker image inspect "$image" --format '{{.Config.User}}')" = bun
 docker run --rm --network none --workdir /app/apps/backend "$image" sh -ec '
   test "$(id -u)" != 0
   test ! -w release/cli.ts
+  for file in /app/package.json /app/bun.lock /app/bunfig.toml /app/tsconfig.base.json; do test -r "$file"; done
   bun --no-env-file release/cli.ts manifest "$1" > /tmp/manifest.json
   for entry in index.ts worker.ts ws-server.ts health/probe.ts release/cli.ts cutover/cli.ts scripts/recover-ownership.ts; do
     bun build "$entry" --target=bun --outdir=/tmp/entrypoints >/dev/null
@@ -27,8 +28,9 @@ docker run --rm --network none --workdir /app/apps/backend "$image" sh -ec '
   test -r prisma/schema.prisma
   test -r release.json
 ' proof "$sha"
-# Reproduce the original failure with the same restricted context and no COPY modes.
-sed 's/COPY --chmod=u=rwX,go=rX /COPY /g' "$work/apps/backend/Dockerfile" > "$work/unfixed.Dockerfile"
+# Reproduce the original failure with the same context and final normalization removed.
+grep -qx 'RUN chmod -R u=rwX,go=rX /app/apps /app/packages' "$work/apps/backend/Dockerfile"
+sed '/^RUN chmod -R u=rwX,go=rX /d' "$work/apps/backend/Dockerfile" > "$work/unfixed.Dockerfile"
 docker build --build-arg "RELEASE_SHA=$sha" -f "$work/unfixed.Dockerfile" -t "$control" "$work"
 if docker run --rm --network none --workdir /app/apps/backend "$control" bun --no-env-file release/cli.ts manifest "$sha" >"$work/control.log" 2>&1; then
   echo 'Unfixed negative control unexpectedly readable' >&2; exit 1

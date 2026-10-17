@@ -5,10 +5,17 @@ no simulation, database migration, auth architecture or UI behavior is changed.
 
 Docker preserves source metadata on COPY. `--chown=bun` would make source writable by
 the runtime and still leave mode ambiguity; blanket 0755 makes every source executable.
-Use root-owned `COPY --chmod=u=rwX,go=rX`, with Dockerfile frontend 1.14 explicitly
-selected: directories become 0755 and ordinary non-executable source 0644. Host umask
-does not select those modes. The unfixed control tests the same input against the
-same image recipe without the flags, rather than asserting a Dockerfile string.
+The first restrictive-source CI experiment used root-owned `COPY --chmod=u=rwX,go=rX`
+with Dockerfile frontend 1.14. Its non-root manifest still hit EACCES on a nested
+migration SQL file; a successful root build and readable entrypoint were insufficient.
+The final contract is one explicit recursive `RUN chmod -R u=rwX,go=rX /app/apps /app/packages`
+after generation and before `USER bun`. It covers both copied and generated trees,
+keeps source root-owned and removes group/other write permission. Directories become
+0755 and non-executable source 0644. This uses ordinary recursive chmod rather than
+depending on COPY-only handling of the resulting tree. The unfixed control removes
+only that normalization from the same restricted context/image recipe.
+The four top-level workspace/build manifests use numeric COPY mode 0644; the proof
+also checks these as the non-root runtime. They need no recursive copy behavior.
 See [Docker COPY](https://docs.docker.com/reference/dockerfile/#copy---chmod).
 
 Use main push validation followed by `workflow_run`, rather than a second reusable

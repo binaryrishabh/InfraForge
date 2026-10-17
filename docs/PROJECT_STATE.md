@@ -17,7 +17,8 @@ workflow, protected by owner approval, main-only deployment and no admin bypass.
 GitHub accepted these Production environment protections in the actual public repo.
 Release concurrency never cancels active migration. Public backend acceptance precedes
 same-SHA Vercel staging/identity checks/promotion. Direct Vercel main Git deployment
-stays disabled. Docker COPY normalizes permissions independently of checkout umask;
+stays disabled. Final in-image normalization covers source and generated permissions
+independently of checkout umask;
 restricted-source build and unfixed EACCES control are mandatory packaging proofs.
 Reusable Ubuntu host/layout/Nginx setup and a clean-room recovery runbook are at
 [PRODUCTION_BOOTSTRAP.md](PRODUCTION_BOOTSTRAP.md); normal release and historical

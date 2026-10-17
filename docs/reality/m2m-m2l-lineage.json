@@ -116,7 +116,7 @@
   "current": [
     {
       "file": "apps/backend/Dockerfile",
-      "hash": "aa7e86d128d5dac7452ddebb691a0939f959b0d02cd3dc2ff4e523e5f0f3d1c0"
+      "hash": "a4aea45d0c34a2de68e6be87670bca293c96da5d79e2aad2cc5b89bebebc9b5a"
     },
     {
       "file": "apps/backend/internalModel2/authoring.ts",
