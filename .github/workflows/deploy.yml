@@ -1,56 +1,86 @@
 name: Release InfraForge
 
 on:
+  workflow_run:
+    workflows: [Validate workspaces]
+    branches: [main]
+    types: [completed]
   workflow_dispatch:
     inputs:
       release_sha:
-        description: Full approved main commit SHA
+        description: Full current main SHA with successful push CI (retry, no second validation)
         type: string
         required: true
 
 permissions:
   contents: read
+  actions: read
+  deployments: read
 concurrency:
-  group: production-backend
+  group: production-release
   cancel-in-progress: false
 
 jobs:
   release-gate:
+    if: >-
+      vars.PRODUCTION_RELEASE_ENABLED == 'true' &&
+      (github.event_name == 'workflow_dispatch' ||
+       (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push'))
     runs-on: ubuntu-latest
+    outputs:
+      sha: ${{ steps.gate.outputs.sha }}
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0
-      - name: Verify approved main commit
+          ref: main
+          persist-credentials: false
+      - uses: actions/github-script@v7
+        id: gate
         env:
-          RELEASE_SHA: ${{ inputs.release_sha }}
-        run: |
-          set -eu
-          test "$GITHUB_REF" = refs/heads/main
-          echo "$RELEASE_SHA" | grep -Eq '^[a-f0-9]{40}$'
-          git fetch origin main
-          test "$(git rev-parse origin/main)" = "$RELEASE_SHA"
+          REQUESTED_SHA: ${{ inputs.release_sha }}
+        with:
+          script: |
+            const { admitRelease } = require('./scripts/deploy/gate.cjs');
+            core.setOutput('sha', await admitRelease(github, context, process.env.REQUESTED_SHA));
 
-  validate:
+  release:
     needs: release-gate
-    uses: ./.github/workflows/validate.yml
-    with:
-      ref: ${{ inputs.release_sha }}
-
-  deploy-backend:
-    needs: validate
-    environment: production
+    environment: Production
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
+    env:
+      RELEASE_SHA: ${{ needs.release-gate.outputs.sha }}
+      BACKEND_ORIGIN: ${{ vars.PRODUCTION_BACKEND_ORIGIN }}
+      FRONTEND_ORIGIN: ${{ vars.PRODUCTION_FRONTEND_ORIGIN }}
+      VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
     steps:
-      - name: Require pinned SSH host identity
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.RELEASE_SHA }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.14
+      - name: Verify release prerequisites before touching EC2
         env:
-          FINGERPRINT: ${{ secrets.EC2_HOST_FINGERPRINT }}
-        run: test -n "$FINGERPRINT"
-      - name: Release exact commit on EC2
-        uses: appleboy/ssh-action@v1.0.3
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          EC2_USERNAME: ${{ secrets.EC2_USERNAME }}
+          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+          EC2_HOST_FINGERPRINT: ${{ secrets.EC2_HOST_FINGERPRINT }}
+        run: bun --no-env-file scripts/deploy/preflight.ts
+      - name: Recheck main after approval
         env:
-          RELEASE_SHA: ${{ inputs.release_sha }}
+          GH_TOKEN: ${{ github.token }}
+        run: test "$(gh api repos/$GITHUB_REPOSITORY/commits/main --jq .sha)" = "$RELEASE_SHA"
+      - name: Install pinned frontend release client
+        run: npm install --global vercel@64.5.0
+      - name: Check Vercel access before touching EC2
+        run: vercel project inspect "$VERCEL_PROJECT_ID" --token "$VERCEL_TOKEN" > /dev/null
+      - name: Release exact backend commit
+        uses: appleboy/ssh-action@029f5b4aeeeb58fdfe1410a5d17f967dacf36262 # v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
@@ -67,4 +97,19 @@ jobs:
             test "$(git rev-parse origin/main)" = "$RELEASE_SHA"
             git checkout --detach "$RELEASE_SHA"
             test "$(bun --version)" = 1.3.14
-            bun --no-env-file scripts/release.ts apply "$RELEASE_SHA" /etc/infraforge/release.env /var/lib/infraforge/releases
+            bun --no-env-file scripts/deploy/backend.ts "$RELEASE_SHA" /etc/infraforge/release.env /var/lib/infraforge/releases
+      - name: Independently verify public backend
+        run: bun --no-env-file scripts/release/public-check.ts "$RELEASE_SHA" "$BACKEND_ORIGIN"
+      - name: Stage, verify and promote the same frontend commit
+        run: bash scripts/deploy/frontend.sh
+      - name: Final public production verification
+        run: |
+          bun --no-env-file scripts/release/frontend-check.ts "$RELEASE_SHA" "$FRONTEND_ORIGIN" "$BACKEND_ORIGIN"
+          printf 'Accepted backend and frontend `%s`.\n' "$RELEASE_SHA" >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: production-release-receipt
+          path: /tmp/infraforge-production-release.json
+          if-no-files-found: ignore
+          retention-days: 90

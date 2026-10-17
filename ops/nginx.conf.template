@@ -3,7 +3,8 @@
 server {
     listen 80;
     server_name DOMAIN;
-    return 308 https://DOMAIN$request_uri;
+    location ^~ /.well-known/acme-challenge/ { root /var/lib/infraforge/acme; }
+    location / { return 308 https://DOMAIN$request_uri; }
 }
 server {
     listen 443 ssl;

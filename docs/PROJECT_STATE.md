@@ -1,5 +1,36 @@
 # InfraForge project state
 
+**Current production / branch policy (2026-10-17):** `main` is the sole active
+working branch. The owner completed the production cutover at
+`0bcf74cf57934a2feda1e03f157bbc8ad933d26f`. Independent public checks verified
+backend `/health/ready`, credential providers and frontend `/release.json` all
+HTTP 200, exact matching SHA/auth contract 1 and backend maintenance false.
+Frontend is https://infraforge.lapwork.in; backend is
+https://infraforge.backend.lapwork.in. The owner reports healthy API/WS/worker/private
+Redis on EC2 and a fresh Neon database (API pooled, migration/worker direct,
+verified TLS). Those host/database details are owner evidence, not a remote shell audit.
+Model 1 ACTIVE; Model 2 INTERNAL. **Production is live**; earlier PARKED and develop
+policy statements below are historical checkpoints superseded by this paragraph.
+
+**Deployment hardening / portability:** main push CI feeds one exact-SHA release
+workflow, protected by owner approval, main-only deployment and no admin bypass.
+GitHub accepted these Production environment protections in the actual public repo.
+Release concurrency never cancels active migration. Public backend acceptance precedes
+same-SHA Vercel staging/identity checks/promotion. Direct Vercel main Git deployment
+stays disabled. Docker COPY normalizes permissions independently of checkout umask;
+restricted-source build and unfixed EACCES control are mandatory packaging proofs.
+Reusable Ubuntu host/layout/Nginx setup and a clean-room recovery runbook are at
+[PRODUCTION_BOOTSTRAP.md](PRODUCTION_BOOTSTRAP.md); normal release and historical
+cutover material are separated in [DEPLOYMENT.md](DEPLOYMENT.md).
+
+**Automatic activation is deliberately disabled:** repository variable
+`PRODUCTION_RELEASE_ENABLED=false`; required pinned SSH fingerprint/Vercel access
+were absent at inspection. No secret values were inspected and no new production
+release was attempted. The consolidated owner setup command is documented in the
+runbook; actual automated EC2 release and Vercel CLI promotion remain UNVERIFIED.
+No UI/auth/simulation behavior, Model-2 grants or production data were changed.
+The historical engineering acceptance/provenance records below remain intact.
+
 **Connected simulator/product depth (2026-10-17): active engineering track.** The
 new bounded INTERNAL connected web path uses separate execution/evidence v2
 contracts on the existing authenticated Outbox/worker pipeline. It retains actual

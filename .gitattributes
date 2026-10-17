@@ -1,3 +1,12 @@
 # The calibration source hash covers exact benchmark bytes on every checkout.
 scripts/reality/compute-benchmark.mjs text eol=lf
 scripts/reality/network-benchmark.mjs text eol=lf
+scripts/reality/async-benchmark.mjs text eol=lf
+scripts/reality/data-benchmark.mjs text eol=lf
+scripts/reality/systems-benchmark.mjs text eol=lf
+scripts/reality/controlled-service.mjs text eol=lf
+
+# Bootstrap and release shell files must also work from Windows checkouts.
+ops/bootstrap/*.sh text eol=lf
+scripts/deploy/*.sh text eol=lf
+scripts/release/permission-proof.sh text eol=lf

@@ -1,0 +1,7 @@
+FROM oven/bun:1.3.14 AS runtime
+FROM ubuntu:24.04
+RUN apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get install -y nginx openssl curl ca-certificates && rm -rf /var/lib/apt/lists/*
+COPY --from=runtime /usr/local/bin/bun /usr/local/bin/bun
+COPY ops /fixture/ops
+COPY ops/bootstrap/fixture.sh /fixture/prove.sh
+CMD ["bash", "/fixture/prove.sh"]

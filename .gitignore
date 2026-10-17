@@ -37,6 +37,7 @@ coverage
 .eslintcache
 .cache
 .turbo/
+.vercel/
 *.tsbuildinfo
 
 # Project docs (not committed)

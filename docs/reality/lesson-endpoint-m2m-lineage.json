@@ -4,7 +4,8 @@
   "original": [
     {
       "file": "apps/backend/Dockerfile",
-      "hash": "c7135eaf89dd175fb6dde9e6c8149610b45c4a4eb526aaaa89c223968f8ad39a"
+      "hash": "c7135eaf89dd175fb6dde9e6c8149610b45c4a4eb526aaaa89c223968f8ad39a",
+      "text": "FROM oven/bun:1.3.14\nRUN command -v timeout\nARG RELEASE_SHA\nLABEL org.opencontainers.image.source=\"https://github.com/binaryrishabh/InfraForge\" \\\n      org.opencontainers.image.revision=$RELEASE_SHA\nWORKDIR /app\n\n# Install the full workspace from its single lockfile.\nCOPY package.json bun.lock bunfig.toml tsconfig.base.json ./\nCOPY apps/backend/package.json ./apps/backend/\nCOPY apps/web/package.json ./apps/web/\nCOPY packages/domain/package.json ./packages/domain/\nCOPY packages/catalog/package.json ./packages/catalog/\nCOPY packages/contracts/package.json ./packages/contracts/\nCOPY packages/simulation/package.json ./packages/simulation/\nRUN bun install --frozen-lockfile\n\n# Copy authored source; generate the client inside the image.\nCOPY apps/backend/index.ts apps/backend/worker.ts apps/backend/ws-server.ts apps/backend/tsconfig.json apps/backend/prisma.config.ts ./apps/backend/\nCOPY apps/backend/infra ./apps/backend/infra/\nCOPY apps/backend/auth ./apps/backend/auth/\nCOPY apps/backend/health ./apps/backend/health/\nCOPY apps/backend/release ./apps/backend/release/\nCOPY apps/backend/cutover ./apps/backend/cutover/\nCOPY apps/backend/deployments ./apps/backend/deployments/\nCOPY apps/backend/reports ./apps/backend/reports/\nCOPY apps/backend/evidence ./apps/backend/evidence/\nCOPY apps/backend/internalModel2 ./apps/backend/internalModel2/\nCOPY apps/backend/comparison ./apps/backend/comparison/\nCOPY apps/backend/reruns ./apps/backend/reruns/\nCOPY apps/backend/actions ./apps/backend/actions/\nCOPY apps/backend/challenges ./apps/backend/challenges/\nCOPY apps/backend/scripts ./apps/backend/scripts/\nCOPY apps/backend/lib/prisma.ts ./apps/backend/lib/\nCOPY apps/backend/routes ./apps/backend/routes/\nCOPY apps/backend/simulator ./apps/backend/simulator/\nCOPY apps/backend/stages ./apps/backend/stages/\nCOPY apps/backend/utils ./apps/backend/utils/\nCOPY apps/backend/zod_schemas ./apps/backend/zod_schemas/\nCOPY apps/backend/types ./apps/backend/types/\nCOPY apps/backend/prisma ./apps/backend/prisma/\nCOPY packages/domain/src ./packages/domain/src/\nCOPY packages/catalog/src ./packages/catalog/src/\nCOPY packages/contracts/src ./packages/contracts/src/\nCOPY packages/simulation/src ./packages/simulation/src/\n\n# Generate after every authored copy so stale local output cannot replace it.\nRUN cd apps/backend && bun --bun run db:generate\nRUN cd apps/backend && bun --no-env-file release/cli.ts manifest \"$RELEASE_SHA\" > release.json\nUSER bun\n\nCMD [\"bun\", \"run\", \"apps/backend/index.ts\"]\n"
     },
     {
       "file": "apps/backend/internalModel2/authoring.ts",
@@ -217,7 +218,7 @@
   "current": [
     {
       "file": "apps/backend/Dockerfile",
-      "hash": "c7135eaf89dd175fb6dde9e6c8149610b45c4a4eb526aaaa89c223968f8ad39a"
+      "hash": "aa7e86d128d5dac7452ddebb691a0939f959b0d02cd3dc2ff4e523e5f0f3d1c0"
     },
     {
       "file": "apps/backend/internalModel2/authoring.ts",
