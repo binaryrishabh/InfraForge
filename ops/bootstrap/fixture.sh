@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -Eeuo pipefail
+trap 'echo "Bootstrap fixture failed at line $LINENO (exit $?)" >&2' ERR
 cd /fixture
 useradd -m release
 umask 077
@@ -33,10 +34,15 @@ openssl req -x509 -newkey rsa:2048 -nodes -days 2 -subj /CN=backend.example.inva
 bash ops/bootstrap/nginx.sh backend.example.invalid tls /tmp/cert.pem /tmp/key.pem
 bash ops/bootstrap/nginx.sh backend.example.invalid tls /tmp/cert.pem /tmp/key.pem
 for path in /api/auth/providers /ws; do
-  curl --retry 8 --retry-connrefused --retry-delay 1 --cacert /tmp/cert.pem --resolve backend.example.invalid:443:127.0.0.1 -sS -D /tmp/headers \
-    -o /dev/null "https://backend.example.invalid$path"
-  grep -q '503 Service' /tmp/headers
-  grep -qi '^X-InfraForge-Maintenance: true' /tmp/headers
+  ready=false
+  for ((attempt=0; attempt<20; attempt++)); do
+    if curl --max-time 2 --cacert /tmp/cert.pem --resolve backend.example.invalid:443:127.0.0.1 -sS \
+      -D /tmp/infraforge-proxy.headers -o /tmp/infraforge-proxy.body "https://backend.example.invalid$path"; then ready=true; break; fi
+    sleep 0.2
+  done
+  test "$ready" = true
+  grep -q '503 Service' /tmp/infraforge-proxy.headers
+  grep -qi '^X-InfraForge-Maintenance: true' /tmp/infraforge-proxy.headers
 done
 before=$(sha256sum /etc/nginx/sites-available/infraforge)
 if bash ops/bootstrap/nginx.sh 'bad;injection' tls /tmp/cert.pem /tmp/key.pem; then exit 1; fi
@@ -55,9 +61,9 @@ chown release:release /var/lib/infraforge/releases/accepted.json
 rm /var/lib/infraforge/releases/maintenance
 bash ops/bootstrap/layout.sh release
 test ! -e /var/lib/infraforge/releases/maintenance
-curl --cacert /tmp/cert.pem --resolve backend.example.invalid:443:127.0.0.1 -sS -D /tmp/headers \
-  -o /dev/null https://backend.example.invalid/api/auth/providers
-grep -qi '^X-InfraForge-Maintenance: false' /tmp/headers
+curl --max-time 2 --cacert /tmp/cert.pem --resolve backend.example.invalid:443:127.0.0.1 -sS \
+  -D /tmp/infraforge-proxy.headers -o /tmp/infraforge-proxy.body https://backend.example.invalid/api/auth/providers
+grep -qi '^X-InfraForge-Maintenance: false' /tmp/infraforge-proxy.headers
 chmod 0644 /etc/infraforge/release.env
 if bash ops/bootstrap/layout.sh release; then exit 1; fi
 echo 'Bootstrap fixture PASS: repeatable private layout, traversal, HTTP ACME, real TLS maintenance, reload, refusals and configuration rollback.'
