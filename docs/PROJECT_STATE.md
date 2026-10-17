@@ -21,6 +21,19 @@ The hosted wall-phase trigger is not reproduced locally. The 240-second integrat
 budget and all kernel/executor limits remain unchanged; a larger test budget did not
 repair the stall. Only focused supervision tests are run locally for this recovery.
 
+**m2m-preview repair (2026-10-18):** the hosted failures had two independent causes,
+both reproduced locally. Background ownership checks shared the worker's PostgreSQL
+session with lesson capture transactions, so a check queued behind a cancelled or
+lock-blocked capture failed and stopped the worker; checks now queue with the
+session's transactions. Separately, under Bun 1.3.14 an exited Playwright Chromium
+child is finalized later and its extra stdio pipe descriptors are closed a second
+time. Docker clients that had reused those numbers in the following sandbox phases
+lost a pidfd or pipe: locally a spawn `EBADF` that ended the wall phase early, and in
+a focused reproducer a child that never delivered output or close (the earlier
+attachment stall); the hosted match is inferred. Browser children now
+stay reachable for the life of the test process. Kernel/executor limits, deadlines
+and assertions are unchanged.
+
 **Current production / branch policy (2026-10-17):** `main` is the sole active
 working branch. The owner completed the production cutover at
 `0bcf74cf57934a2feda1e03f157bbc8ad933d26f`. Independent public checks verified

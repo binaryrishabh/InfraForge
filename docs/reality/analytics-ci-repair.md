@@ -120,6 +120,17 @@ terminate a stranded attachment. A zero exit still requires the complete protoco
 The precise hosted trigger of the missing completion notification remains Unknown;
 clean local wall probes did not reproduce it.
 
+Correction (2026-10-18): the trigger was outside the runner. The lesson browser proof
+runs Playwright Chromium in the same Bun process just before the sandbox phases.
+Bun 1.3.14 closes an exited child's extra stdio pipes again when it finalizes the
+child, and Docker clients that had reused those descriptor numbers lost their pipes
+or pidfd. Locally, with this recovery's monitor, a `docker` spawn then failed with
+`EBADF` and ended the wall phase within seconds; a focused reproducer shows a child
+whose pipes were taken never delivers output or close, the earlier attachment stall.
+The hosted runs kept no failure text for either, so their match is inferred. Kernel tracing tied every stray close to the browser's fds 3
+and 4. The browser proofs now keep their children reachable; the supervision changes
+above are retained.
+
 `connected-lineage.ts --review-supervision` explicitly permits only the two reviewed
 client-supervision files in addition to the existing reviewed transition. It freezes
 additional exact historical text where needed while retaining its original hashes,

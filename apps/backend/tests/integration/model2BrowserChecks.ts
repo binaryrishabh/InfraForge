@@ -9,11 +9,11 @@ import { captureBarrier, alterRecordedField } from "./model2Barriers";
 import { contentHash } from "../../internalModel2/identity";
 import { educationalExample } from "@infraforge/contracts/internal-model2/example";
 import { workspaceSource } from "./model2WorkspaceSource";
+import { launchBrowser } from "./browserLaunch";
 
 export async function checkModel2Browser(h: LocalHarness, sessions: SessionFixtures, designs: string[]) {
   if (!process.env.MODEL2_BROWSER_MODULE) return { executed: false, reason: "Pinned Playwright runtime is supplied by CI" };
-  const { chromium } = await import(process.env.MODEL2_BROWSER_MODULE);
-  const browser = await chromium.launch({ headless: true });
+  const browser = await launchBrowser(process.env.MODEL2_BROWSER_MODULE);
   const output = join(tmpdir(), "infraforge-m2l"); await mkdir(output, { recursive: true });
   const proof: Record<string, any> = { schema: "infraforge-m2l-browser/1", commit: process.env.GITHUB_SHA, source: workspaceSource(), browser: browser.version(), startedAt: new Date().toISOString(), success: false, cases: [] };
   const cookie = h.cookie, alice = await sessions.create(), bob = await sessions.create(), rows: string[] = [];

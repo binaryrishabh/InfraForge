@@ -2,9 +2,10 @@ import { expect } from "bun:test";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
 import { LocalHarness, until } from "./localHarness";
+import { launchBrowser } from "./browserLaunch";
 export async function checkLessonBrowser(h: LocalHarness, cookie: string, output: string) {
   if (!process.env.MODEL2_BROWSER_MODULE) return { executed: false, reason: "Pinned browser runtime unavailable locally" };
-  const { chromium } = await import(process.env.MODEL2_BROWSER_MODULE), browser = await chromium.launch({ headless: true });
+  const browser = await launchBrowser(process.env.MODEL2_BROWSER_MODULE);
   const context = await browser.newContext({ viewport: { width: 1280, height: 900 } }), at = cookie.indexOf("=");
   await context.addCookies([{ name: cookie.slice(0, at), value: cookie.slice(at + 1), url: h.api, sameSite: "Lax" }]);
   const page = await context.newPage(); page.setDefaultTimeout(20000);

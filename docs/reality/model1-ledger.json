@@ -332,7 +332,7 @@
     },
     {
       "file": "apps/backend/infra/workerOwnership.ts",
-      "sha256": "b82a682131e8d315b776ec8a939310c76aa9d0bc2dbdd6fc8b58fd975c578dc6",
+      "sha256": "f63489b24de1d4fe5eea62da3e3bf4dc5f6df9e404e03948b90c23f1bb80a028",
       "numericSites": 6
     },
     {
@@ -23265,7 +23265,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/infra/workerOwnership.ts#L46",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/infra/workerOwnership.ts#L58",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -23279,7 +23279,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/infra/workerOwnership.ts",
-        "line": 46,
+        "line": 58,
         "column": 24
       }
     },

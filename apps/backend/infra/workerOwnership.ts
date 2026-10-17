@@ -6,7 +6,7 @@ const LOCK = [186542854, 1];
 export class WorkerOwnership {
   private held = false;
   private closing = false;
-  private transactions: Promise<unknown> = Promise.resolve();
+  private queue: Promise<unknown> = Promise.resolve();
 
   private constructor(private readonly client: Client, private readonly onLost: () => void) {
     client.on("error", () => this.lose());
@@ -36,7 +36,19 @@ export class WorkerOwnership {
     }
   }
 
-  async assertHeld() {
+  // The runtime, outbox poller and readiness probe check ownership every second.
+  // Queue those checks like any other use of the session: issued while a lesson
+  // transaction is open, pg would run them inside it, so a failed statement there
+  // (or a statement held at a lock past the query timeout) looked like a lost lock.
+  assertHeld() { return this.serial(() => this.checkHeld()); }
+
+  private serial<T>(operation: () => Promise<T>): Promise<T> {
+    const result = this.queue.then(operation);
+    this.queue = result.catch(() => {});
+    return result;
+  }
+
+  private async checkHeld() {
     if (!this.held) throw new Error("Worker ownership lost");
     try {
       const result = await this.client.query(`SELECT EXISTS (
@@ -50,27 +62,27 @@ export class WorkerOwnership {
     }
   }
 
-  async close() {
+  close() {
     this.closing = true;
-    if (this.held) await this.client.query("SELECT pg_advisory_unlock($1, $2)", LOCK);
-    this.held = false;
-    await this.client.end();
+    return this.serial(async () => {
+      if (this.held) await this.client.query("SELECT pg_advisory_unlock($1, $2)", LOCK);
+      this.held = false;
+      await this.client.end();
+    });
   }
 
   // Internal execution writes use the lock-holding session itself. Losing that
   // session rolls its transaction back before a replacement can own the worker.
   transaction<T>(operation: (client: Client) => Promise<T>): Promise<T> {
-    const result = this.transactions.then(async () => {
-      await this.assertHeld();
+    return this.serial(async () => {
+      await this.checkHeld();
       await this.client.query("BEGIN");
       try {
         const value = await operation(this.client);
-        await this.assertHeld();
+        await this.checkHeld();
         await this.client.query("COMMIT");
         return value;
       } catch (error) { await this.client.query("ROLLBACK").catch(() => {}); throw error; }
     });
-    this.transactions = result.catch(() => {});
-    return result;
   }
 }
