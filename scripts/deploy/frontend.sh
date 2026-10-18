@@ -8,7 +8,8 @@ url=$(vercel deploy --prod --skip-domain --yes --token "$VERCEL_TOKEN" \
   --build-env "RELEASE_SHA=$RELEASE_SHA" --build-env RELEASE_BUILD=1 --meta "githubCommitSha=$RELEASE_SHA")
 [[ $url =~ ^https://[a-zA-Z0-9-]+\.vercel\.app$ ]] || { echo 'Unexpected staged URL' >&2; exit 1; }
 printf '{"sha":"%s","stagedURL":"%s","publicVerified":false}\n' "$RELEASE_SHA" "$url" > /tmp/infraforge-production-release.json
-vercel curl /release.json --deployment "$url" --token "$VERCEL_TOKEN" -- \
+# vercel curl forwards a --token flag to curl itself; the CLI reads VERCEL_TOKEN instead.
+vercel curl "$url/release.json" -- \
   --fail --silent --show-error --max-time 20 --output /tmp/infraforge-staged-release.json
 bun --no-env-file scripts/release/frontend-check.ts "$RELEASE_SHA" "$url" "$BACKEND_ORIGIN" /tmp/infraforge-staged-release.json
 vercel promote "$url" --yes --token "$VERCEL_TOKEN" --timeout 5m
