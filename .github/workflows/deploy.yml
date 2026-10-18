@@ -96,6 +96,8 @@ jobs:
             git fetch origin main
             test "$(git rev-parse origin/main)" = "$RELEASE_SHA"
             git checkout --detach "$RELEASE_SHA"
+            # A non-interactive session skips .bashrc; a user-installed Bun lives here.
+            export PATH="$HOME/.bun/bin:$PATH"
             test "$(bun --version)" = 1.3.14
             bun --no-env-file scripts/deploy/backend.ts "$RELEASE_SHA" /etc/infraforge/release.env /var/lib/infraforge/releases
       - name: Independently verify public backend

@@ -60,7 +60,7 @@ It installs the current patched apt packages; it is not an OS upgrade/lifecycle 
 | Path | Contract |
 | --- | --- |
 | `~/InfraForge` | Release operator's clean repository checkout; exact detached release SHA is normal |
-| `/usr/local/bin/bun` | Bootstrap's pinned runtime when Bun was not already installed |
+| `/usr/local/bin/bun` | Bootstrap's pinned runtime when Bun was not already installed (the release also accepts a 1.3.14 install in `~/.bun/bin`) |
 | `/etc/infraforge` | Operator-owned `0750`; no public traversal requirement |
 | `/etc/infraforge/release.env` | Operator-owned regular file `0600`; operator creates privately; never printed |
 | `/var/lib/infraforge` | Root-owned `0711`, permits Nginx traversal |
