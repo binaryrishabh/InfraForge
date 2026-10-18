@@ -1,7 +1,7 @@
 import { memo, useEffect } from "react";
 import { useCanvasStore } from "../store/canvasStore";
 import { useSimulationStore } from "@/features/monitoring/store/simulationStore";
-import { BezierConnectionLine } from "./BezierConnectionLine";
+import { RailConnection } from "./RailConnection";
 import { ReplicaCard } from "./ReplicaCard";
 import { ProvisioningNode } from "./node/ProvisioningNode";
 import { findFreeReplicaSlot } from "../utils/replicaSlotLayout";
@@ -31,10 +31,6 @@ export const SpawnedReplicaLayer = memo(function SpawnedReplicaLayer() {
   const replicaPositions = useCanvasStore((s) => s.replicaPositions);
   // Measured card heights so lb->replica tubes anchor on real card edges.
   const cardHeights = useCanvasStore((s) => s.cardHeights);
-  // Boolean selectors: stable across 1Hz snapshots, no extra re-renders.
-  const simulationRunning = useSimulationStore(
-    (s) => s.simulatedSeconds > 0 && s.speed > 0,
-  );
   // Subscription-only primitive key: id:status:x:y:poolId per replica.
   const replicaKey = useSimulationStore((s) =>
     s.spawnedVms
@@ -101,7 +97,7 @@ export const SpawnedReplicaLayer = memo(function SpawnedReplicaLayer() {
         style={{ overflow: "visible" }}
       >
         {linkTubes.map(({ vm, lb, x, y, sourceHeight, targetHeight }) => (
-          <BezierConnectionLine
+          <RailConnection
             key={`replica-link-${vm.id}`}
             source={lb}
             target={{ x, y }}
@@ -110,8 +106,6 @@ export const SpawnedReplicaLayer = memo(function SpawnedReplicaLayer() {
             nodeWidth={NODE_CARD_WIDTH}
             sourceHeight={sourceHeight}
             targetHeight={targetHeight}
-            showPackets={liveMode}
-            animatePackets={simulationRunning}
           />
         ))}
       </svg>

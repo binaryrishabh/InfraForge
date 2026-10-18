@@ -2,7 +2,6 @@ import { PanelLeftOpen } from "lucide-react";
 import { RESOURCE_TYPES, type ResourceType } from "@infraforge/domain/resource";
 import { ResourceIcon } from "@/components/common/ResourceIcon";
 import { IconButton } from "@/ui/IconButton";
-import { categoryColor } from "@/theme/categories";
 import { addResource } from "../../actions";
 
 const TYPES = Object.values(RESOURCE_TYPES) as ResourceType[];
@@ -14,7 +13,7 @@ export function PaletteRail({ onExpand }: { onExpand: () => void }) {
       <IconButton label="Show the resource list" icon={<PanelLeftOpen size={16} />} onClick={onExpand} className="mb-1" />
       {TYPES.map((type) => (
         <IconButton key={type} label={`Add ${type}`} onClick={() => addResource(type)}
-          icon={<span style={{ color: categoryColor(type) }} className="inline-flex"><ResourceIcon type={type} size={16} className="" /></span>} />
+          icon={<span className="inline-flex text-ink-2"><ResourceIcon type={type} size={16} className="" /></span>} />
       ))}
     </nav>
   );

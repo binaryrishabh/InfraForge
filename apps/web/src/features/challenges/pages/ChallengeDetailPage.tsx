@@ -14,19 +14,14 @@ import { PredictionList } from "../components/PredictionList";
 import { HintReveal } from "../components/HintReveal";
 import { DIFFICULTY_LABEL, RESULT_LABEL, evaluationContext } from "../challengeLabels";
 import { useOpenChallenge } from "../useOpenChallenge";
-
-function startingPoint(brief: ChallengeBrief) {
-  if (!brief.starter?.resources.length) return "A blank sheet. You place every resource.";
-  const counts = new Map<string, number>();
-  for (const r of brief.starter.resources) counts.set(r.type, (counts.get(r.type) ?? 0) + 1);
-  return `An existing design: ${[...counts].map(([type, n]) => `${n} × ${type}`).join(", ")}, already connected.`;
-}
+import { StarterMap } from "../components/StarterMap";
+import { startingPoint } from "../startingPoint";
 
 function ActionCard({ brief }: { brief: ChallengeBrief }) {
   const { open, busy } = useOpenChallenge();
   const earlier = !brief.workspaceDesignId ? brief.earlierWorkspace : null;
   return (
-    <div className="rounded-lg border border-line bg-raised p-5">
+    <div className="border border-line bg-surface p-5">
       {earlier && <p className="mb-3 text-sm text-ink-2">Version {brief.version} changed this challenge. Your version {earlier.version} design stays in Designs, with its attempts.</p>}
       <Button variant="primary" size="lg" className="w-full" loading={busy === brief.id} icon={<PenTool size={16} aria-hidden="true" />} onClick={() => void open(brief.id)}>
         {brief.workspaceDesignId ? "Continue designing" : earlier ? `Start version ${brief.version}` : "Start designing"}
@@ -59,9 +54,10 @@ export function ChallengeBriefView({ brief }: { brief: ChallengeBrief }) {
           These are the rules its attempts were judged by. <Link to={`/challenges/${brief.id}`} className="font-medium text-accent underline-offset-4 hover:underline">Version {brief.latestVersion} is current</Link>.
         </Notice>}
         <p className="if-eyebrow">{brief.category === "resilience" ? "Resilience · " : ""}{DIFFICULTY_LABEL[brief.difficulty]} · {brief.concepts.join(" · ")} · version {brief.version}</p>
-        <h1 className="if-display mt-3 text-[38px] sm:text-[46px]">{brief.title}</h1>
+        <h1 className="if-display mt-3 text-[40px] sm:text-[60px]">{brief.title}</h1>
         <div className="mt-5 max-w-[64ch] space-y-3 text-[16px] leading-relaxed text-ink-2">{brief.story.map((p) => <p key={p}>{p}</p>)}</div>
-        <p className="mt-5 max-w-[64ch] text-[17px] font-semibold leading-relaxed text-ink"><span className="if-mark">{brief.objective}</span></p>
+        <p className="mt-5 max-w-[64ch] border-l-2 border-accent pl-4 text-[17px] font-semibold leading-relaxed text-ink">{brief.objective}</p>
+        <StarterMap brief={brief} className="mt-8" />
         {!historical && <div className="mt-6 lg:hidden"><ActionCard brief={brief} /></div>}
 
         {brief.experiment && <Section number={1} title="The experiment" className="mt-10">

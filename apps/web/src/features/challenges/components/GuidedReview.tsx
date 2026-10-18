@@ -5,7 +5,7 @@ import { focusMeasurement } from "@/features/reports/resourceFocus";
 
 // A small reading scaffold over the canonical record. Facts are selected by the
 // server; the browser neither evaluates requirements nor manufactures advice.
-export function GuidedReview({ report }: { report: RunReport }) {
+export function GuidedReview({ report, withImprovement = true }: { report: RunReport; withImprovement?: boolean }) {
   const review = report.guidedReview, e = report.challenge;
   if (!review || !e) return null;
   const expectations = [...e.predictions].sort((a, b) => Number(b.outcome === "different") - Number(a.outcome === "different")).slice(0, 2);
@@ -36,7 +36,7 @@ export function GuidedReview({ report }: { report: RunReport }) {
       <h3 className="text-[15px] font-semibold">4. What one thing will you test?</h3>
       <p className="mt-2 mb-3 text-sm text-ink-2">Keep other conditions fixed, make a deliberate change, predict again, then compare. One change makes this pair easier to read; it does not rule out interactions or prove a universal effect.</p>
       <details className="mb-3 text-xs text-ink-3"><summary className="cursor-pointer">Reading CPU</summary><p className="mt-1">CPU is the share of a modeled resource's processing capacity being used at the recorded second. A high value alone does not identify the cause.</p></details>
-      <BeginImprovement report={report} />
+      {withImprovement && <BeginImprovement report={report} />}
     </div>
   </section>;
 }

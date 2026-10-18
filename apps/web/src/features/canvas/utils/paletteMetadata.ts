@@ -1,20 +1,20 @@
 import { CAPACITY } from "@infraforge/simulation/capacity";
 import type { ResourceType } from "@infraforge/domain/resource";
 
-/* Real-product sublabels for palette rows — identity flavor only, never
-consumed by simulation math (Section 6: capacity stays catalog/CAPACITY-derived). */
-export const PRODUCT_SUBLABELS: Record<ResourceType, string> = {
-  DNS: "Route 53 / Cloud DNS",
-  CDN: "CloudFront / CDN",
-  Firewall: "WAF / edge rules",
-  "Load Balancer": "ALB / nginx",
-  "Virtual Machine": "EC2 / Droplets",
-  "Container Registry": "ECR / registry",
-  Cache: "ElastiCache / Redis",
-  Database: "RDS PG / Managed PG",
-  "Object Storage": "S3 / Spaces",
-  "Message Queue": "SQS / RabbitMQ",
-  "Monitoring Agent": "Prometheus-style agent",
+/* What each resource does in the model, in plain words. Deliberately no product names:
+the simulator models roles and declared capacity, not any particular cloud's service. */
+export const ROLE_SUBLABELS: Record<ResourceType, string> = {
+  DNS: "Turns names into addresses",
+  CDN: "Serves cached content near users",
+  Firewall: "Filters traffic at the edge",
+  "Load Balancer": "Spreads requests across targets",
+  "Virtual Machine": "Runs the application",
+  "Container Registry": "Stores images to deploy",
+  Cache: "Answers repeat reads from memory",
+  Database: "Keeps the records",
+  "Object Storage": "Holds files and blobs",
+  "Message Queue": "Buffers work between services",
+  "Monitoring Agent": "Reports what it observes",
 };
 
 /* Generic fallback capacity, compactly formatted: 5000 -> "5k",

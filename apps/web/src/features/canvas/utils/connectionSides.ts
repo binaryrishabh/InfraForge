@@ -4,7 +4,7 @@ import type { Resource } from "@infraforge/domain/resource";
 export type ConnectionSide = "top" | "right" | "bottom" | "left";
 
 /* Which edge of the `from` node a connection to `to` attaches to.
-   Mirrors BezierConnectionLine's axis choice (center offsets cancel). */
+   Mirrors RailConnection's axis choice (center offsets cancel). */
 export function connectionSide(
   fromX: number,
   fromY: number,

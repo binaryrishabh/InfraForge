@@ -1,93 +1,89 @@
 @import "tailwindcss";
 @import "@fontsource-variable/atkinson-hyperlegible-next";
 @import "@fontsource-variable/atkinson-hyperlegible-mono";
-@import "@fontsource-variable/newsreader";
 
-/* InfraForge design tokens.
-   Paper: a warm drafting-sheet theme for reading and designing.
-   Ink: an instrument-panel theme, always used while a run is live and optional app-wide.
+/* InfraForge design tokens: the timetable instrument.
+   Ink (default): a dark bench where the recorded system is the brightest thing on screen.
+   Paper: the same grammar on a light ground for bright rooms.
+   Colour carries one meaning each. Bone neutrals are recorded fact. Warm hues are health
+   (degraded, saturated, failed) and stay quiet until something changes. Chalk blue is
+   the learner: actions, focus and predictions. Unknown is hatched, never a colour or a zero.
    Status never relies on colour alone: every state also has a glyph and a word. */
 
 @custom-variant ink (&:where([data-theme="ink"], [data-theme="ink"] *));
 
-:root, [data-theme="paper"] {
-  color-scheme: light;
-  --if-bg: #F1EEE7;
-  --if-surface: #F8F6F1;
-  --if-raised: #FFFFFF;
-  --if-sunken: #E7E3DA;
-  --if-canvas: #EEEAE2;
-  --if-grid: #D9D3C7;
-  --if-line: #D7D1C5;
-  --if-line-strong: #B4AD9F;
-  --if-ink: #17191D;
-  --if-ink-2: #474B53;
-  --if-ink-3: #5F636B;
-  --if-inverse: #F8F6F1;
-  --if-accent: #1F4E8C;
-  --if-accent-hover: #183F73;
-  --if-accent-soft: #DFE7F2;
-  --if-marker: #F5D85A;
-  --if-marker-soft: #FBF0BF;
-  --if-ok: #206E46;
-  --if-ok-soft: #DCEDE2;
-  --if-warn: #8A5600;
-  --if-warn-soft: #F5E7C8;
-  --if-hot: #A8400C;
-  --if-hot-soft: #F6E0D3;
-  --if-fail: #B0241B;
-  --if-fail-soft: #F5D9D6;
-  --if-focus: #1F4E8C;
-  --if-shadow-1: 0 1px 0 rgb(23 25 29 / 0.04), 0 1px 2px rgb(23 25 29 / 0.06);
-  --if-shadow-2: 0 2px 4px rgb(23 25 29 / 0.06), 0 8px 24px rgb(23 25 29 / 0.10);
-  --if-shadow-3: 0 4px 8px rgb(23 25 29 / 0.08), 0 24px 56px rgb(23 25 29 / 0.18);
-  --if-scrim: rgb(23 25 29 / 0.42);
-  --if-cat-entry: #56607A;
-  --if-cat-traffic: #2F5E8F;
-  --if-cat-compute: #85561C;
-  --if-cat-data: #1F6470;
-  --if-cat-messaging: #85395F;
-  --if-cat-observe: #56631A;
+:root, [data-theme="ink"] {
+  color-scheme: dark;
+  --if-bg: #0c0d0d;
+  --if-surface: #121414;
+  --if-raised: #181b1a;
+  --if-sunken: #08090a;
+  --if-canvas: #0e1010;
+  --if-grid: #1c201e;
+  --if-line: #242826;
+  --if-line-strong: #383d3a;
+  --if-ink: #eeeae2;
+  --if-ink-2: #b4b0a8;
+  --if-ink-3: #85827b;
+  --if-inverse: #0c0d0d;
+  --if-accent: #a9cbff;
+  --if-accent-hover: #c4dbff;
+  --if-accent-soft: #16202d;
+  --if-marker: #a9cbff;
+  --if-marker-soft: #1a2433;
+  --if-ok: #84cfa4;
+  --if-ok-soft: #13221a;
+  --if-warn: #e5b84c;
+  --if-warn-soft: #2a2312;
+  --if-hot: #f08848;
+  --if-hot-soft: #2e1b10;
+  --if-fail: #f2604f;
+  --if-fail-soft: #311512;
+  --if-focus: #a9cbff;
+  --if-read: #8dd5c6;
+  --if-write: #eec986;
+  --if-shadow-1: 0 1px 0 rgb(0 0 0 / 0.4);
+  --if-shadow-2: 0 1px 0 rgb(255 255 255 / 0.03) inset, 0 12px 32px rgb(0 0 0 / 0.45);
+  --if-shadow-3: 0 1px 0 rgb(255 255 255 / 0.04) inset, 0 28px 72px rgb(0 0 0 / 0.6);
+  --if-scrim: rgb(4 5 5 / 0.72);
+  --if-hatch: repeating-linear-gradient(135deg, rgb(238 234 226 / 0.16) 0 1px, transparent 1px 6px);
 }
 
-[data-theme="ink"] {
-  color-scheme: dark;
-  --if-bg: #0F1114;
-  --if-surface: #171A1F;
-  --if-raised: #1E2228;
-  --if-sunken: #0B0D10;
-  --if-canvas: #121418;
-  --if-grid: #23272E;
-  --if-line: #2B3038;
-  --if-line-strong: #434A55;
-  --if-ink: #ECE9E2;
-  --if-ink-2: #B3B6BC;
-  --if-ink-3: #8C9098;
-  --if-inverse: #0F1114;
-  --if-accent: #8FB2E6;
-  --if-accent-hover: #A9C4EC;
-  --if-accent-soft: #1C2A3D;
-  --if-marker: #E8C547;
-  --if-marker-soft: #3A3317;
-  --if-ok: #5BC48A;
-  --if-ok-soft: #15291E;
-  --if-warn: #E3A843;
-  --if-warn-soft: #2E2412;
-  --if-hot: #F08A4B;
-  --if-hot-soft: #331D10;
-  --if-fail: #F2675B;
-  --if-fail-soft: #361614;
-  --if-focus: #8FB2E6;
-  --if-shadow-1: 0 1px 0 rgb(0 0 0 / 0.3);
-  --if-shadow-2: 0 2px 6px rgb(0 0 0 / 0.35), 0 10px 28px rgb(0 0 0 / 0.35);
-  --if-shadow-3: 0 6px 12px rgb(0 0 0 / 0.4), 0 28px 64px rgb(0 0 0 / 0.5);
-  --if-scrim: rgb(0 0 0 / 0.6);
-  --if-cat-entry: #A2ABC0;
-  --if-cat-traffic: #85ABDB;
-  --if-cat-compute: #D9AA6E;
-  --if-cat-data: #73BCC9;
-  --if-cat-messaging: #D891BB;
-  --if-cat-observe: #B3C46F;
+[data-theme="paper"] {
+  color-scheme: light;
+  --if-bg: #f3f2ee;
+  --if-surface: #fafaf7;
+  --if-raised: #ffffff;
+  --if-sunken: #e8e7e1;
+  --if-canvas: #efeee9;
+  --if-grid: #dcdbd4;
+  --if-line: #d9d7cf;
+  --if-line-strong: #b9b6ad;
+  --if-ink: #141615;
+  --if-ink-2: #44484a;
+  --if-ink-3: #5f625f;
+  --if-inverse: #f3f2ee;
+  --if-accent: #1c4f9c;
+  --if-accent-hover: #153d79;
+  --if-accent-soft: #dfe8f6;
+  --if-marker: #1c4f9c;
+  --if-marker-soft: #dfe8f6;
+  --if-ok: #1d6b43;
+  --if-ok-soft: #dcede2;
+  --if-warn: #855400;
+  --if-warn-soft: #f5e7c8;
+  --if-hot: #a3400d;
+  --if-hot-soft: #f6e0d3;
+  --if-fail: #b0241b;
+  --if-fail-soft: #f5d9d6;
+  --if-focus: #1c4f9c;
+  --if-read: #1b6b5e;
+  --if-write: #8a5a0e;
+  --if-shadow-1: 0 1px 0 rgb(20 22 21 / 0.05);
+  --if-shadow-2: 0 2px 4px rgb(20 22 21 / 0.06), 0 10px 28px rgb(20 22 21 / 0.10);
+  --if-shadow-3: 0 4px 8px rgb(20 22 21 / 0.08), 0 28px 64px rgb(20 22 21 / 0.18);
+  --if-scrim: rgb(20 22 21 / 0.42);
+  --if-hatch: repeating-linear-gradient(135deg, rgb(20 22 21 / 0.18) 0 1px, transparent 1px 6px);
 }
 
 /* Density: comfortable by default; compact tightens list rows, report sections and the event log. */
@@ -121,15 +117,18 @@
   --color-fail: var(--if-fail);
   --color-fail-soft: var(--if-fail-soft);
   --color-scrim: var(--if-scrim);
+  --color-read: var(--if-read);
+  --color-write: var(--if-write);
 
   --font-sans: "Atkinson Hyperlegible Next Variable", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "Atkinson Hyperlegible Mono Variable", ui-monospace, "SFMono-Regular", Consolas, monospace;
-  --font-serif: "Newsreader Variable", Georgia, "Times New Roman", serif;
+  /* Display type is the same family set heavy and tight; the serif is gone. */
+  --font-serif: var(--font-sans);
 
-  --radius-xs: 2px;
-  --radius-sm: 3px;
-  --radius-md: 4px;
-  --radius-lg: 6px;
+  --radius-xs: 1px;
+  --radius-sm: 2px;
+  --radius-md: 3px;
+  --radius-lg: 4px;
 
   --shadow-e1: var(--if-shadow-1);
   --shadow-e2: var(--if-shadow-2);
@@ -149,8 +148,9 @@
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
+    font-feature-settings: "ss01";
   }
-  ::selection { background: var(--if-marker); color: #17191D; }
+  ::selection { background: var(--if-accent); color: var(--if-inverse); }
   :focus-visible { outline: 2px solid var(--if-focus); outline-offset: 2px; }
   button, [role="button"], summary { cursor: pointer; }
   button:disabled { cursor: not-allowed; }
@@ -163,33 +163,39 @@
 }
 
 @layer components {
-  .if-display { font-family: var(--font-serif); font-weight: 500; letter-spacing: -0.015em; line-height: 1.08; }
-  .if-title { font-family: var(--font-serif); font-weight: 560; letter-spacing: -0.01em; line-height: 1.2; }
-  .if-eyebrow { font-family: var(--font-mono); font-size: 0.6875rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--if-ink-3); }
-  .if-num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+  .if-display { font-family: var(--font-sans); font-weight: 760; letter-spacing: -0.035em; line-height: 0.98; }
+  .if-title { font-family: var(--font-sans); font-weight: 680; letter-spacing: -0.018em; line-height: 1.15; }
+  /* Small labels are sentence case and quiet; the old monospace caps are gone. */
+  .if-eyebrow { font-family: var(--font-sans); font-size: 0.75rem; font-weight: 600; letter-spacing: 0.01em; color: var(--if-ink-3); }
+  .if-num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
   .if-rule { border-color: var(--if-line); }
-  .if-mark { background: linear-gradient(transparent 55%, var(--if-marker-soft) 55%); }
+  .if-mark { box-shadow: inset 0 -0.42em 0 var(--if-accent-soft); }
+  .if-hatch { background-image: var(--if-hatch); }
   .if-paper-grid {
     background-color: var(--if-canvas);
-    background-image: radial-gradient(var(--if-grid) 1px, transparent 1.2px);
+    background-image:
+      linear-gradient(var(--if-grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--if-grid) 1px, transparent 1px);
+    background-size: 48px 48px;
+    background-position: -1px -1px;
   }
   .if-scroll { scrollbar-width: thin; scrollbar-color: var(--if-line-strong) transparent; }
   .if-scroll::-webkit-scrollbar { width: 8px; height: 8px; }
   .if-scroll::-webkit-scrollbar-thumb { background: var(--if-line-strong); border-radius: 4px; border: 2px solid transparent; background-clip: padding-box; }
 }
 
-/* Live connection traffic: dashes travel along the line. */
+/* Live connection direction: dashes travel along the line. Not traffic volume. */
 @keyframes if-flow { from { stroke-dashoffset: 0; } to { stroke-dashoffset: -20; } }
 .if-flow { animation: if-flow 1.1s linear infinite; }
-/* A faulted card breathes slowly at its edge. The text on the card carries the fact. */
-@keyframes if-fault { 0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--if-fail) 0%, transparent); } 50% { box-shadow: 0 0 0 4px color-mix(in srgb, var(--if-fail) 22%, transparent); } }
+/* A faulted station breathes slowly at its edge. The text on it carries the fact. */
+@keyframes if-fault { 0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--if-fail) 0%, transparent); } 50% { box-shadow: 0 0 0 4px color-mix(in srgb, var(--if-fail) 26%, transparent); } }
 .if-fault { animation: if-fault 2.4s ease-in-out infinite; }
 
 @keyframes if-rise { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
-.if-rise { animation: if-rise 180ms var(--ease-out); }
+.if-rise { animation: if-rise 220ms var(--ease-out); }
 
 @keyframes if-sheet { from { transform: translateY(16px); opacity: 0; } to { transform: none; opacity: 1; } }
-@keyframes if-pop { from { transform: translate(-50%, -48%) scale(0.98); opacity: 0; } to { transform: translate(-50%, -50%); opacity: 1; } }
+@keyframes if-pop { from { transform: translate(-50%, -48%) scale(0.985); opacity: 0; } to { transform: translate(-50%, -50%); opacity: 1; } }
 @keyframes if-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
 .if-pulse { animation: if-pulse 1.6s ease-in-out infinite; }
 

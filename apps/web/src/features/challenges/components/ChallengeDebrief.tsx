@@ -36,14 +36,14 @@ function Sources({ sources }: { sources: string[] }) {
 /* Two separate verdicts. The challenge result says whether the design met its
 requirements; the prediction says whether you foresaw what was recorded. A
 failed design can carry an accurate prediction and the reverse. */
-export function ChallengeDebrief({ evaluation, brief, trace }: { evaluation: ChallengeEvaluation; brief: ChallengeBrief | null; trace?: ExperimentTrace }) {
+export function ChallengeDebrief({ evaluation, brief, trace, showVerdict = true }: { evaluation: ChallengeEvaluation; brief: ChallengeBrief | null; trace?: ExperimentTrace; showVerdict?: boolean }) {
   const matched = evaluation.predictions.filter((p) => p.outcome === "matched").length;
   const briefLink = brief && brief.version < brief.latestVersion ? `/challenges/${evaluation.challengeId}?version=${brief.version}` : `/challenges/${evaluation.challengeId}`;
   return (
     <section aria-labelledby="debrief-title" className="mt-8">
       <p className="if-eyebrow">Judged against {evaluation.title}, version {evaluation.version}</p>
       <h2 id="debrief-title" className="sr-only">Challenge result and prediction</h2>
-      <div className="mt-3 grid gap-px overflow-hidden rounded-lg border border-line bg-line lg:grid-cols-2">
+      {showVerdict && <div className="mt-3 grid gap-px overflow-hidden rounded-lg border border-line bg-line lg:grid-cols-2">
         <div className="bg-raised p-5">
           <h3 className="if-eyebrow">Challenge result</h3>
           <p className="mt-2 flex items-center gap-2 text-[22px]"><StatusMark kind={evaluation.status} label={RESULT_LABEL[evaluation.status]} className="!text-[20px] if-title" /></p>
@@ -56,7 +56,8 @@ export function ChallengeDebrief({ evaluation, brief, trace }: { evaluation: Cha
           <p className="mt-1 text-sm text-ink-2">Locked {evaluation.predictionSubmittedAt ? formatDate(evaluation.predictionSubmittedAt) : "at the start of the attempt"}. It does not change the challenge result.</p>
           {evaluation.reasoning && <p className="mt-2 border-l-2 border-line-strong pl-2.5 text-sm italic text-ink-2">“{evaluation.reasoning}”</p>}
         </div>
-      </div>
+      </div>}
+      {!showVerdict && <p className="mt-2 text-sm text-ink-2">{VERDICT[evaluation.status]} {evaluation.statusDetail}</p>}
 
       {evaluation.experiment && <ExperimentDebrief experiment={evaluation.experiment} evaluationSeconds={evaluation.evaluationSeconds} trace={trace} showTrace={evaluation.status !== "in-progress"} />}
 
@@ -87,7 +88,7 @@ export function ChallengeDebrief({ evaluation, brief, trace }: { evaluation: Cha
                 <p className="mt-0.5 text-xs text-ink-3">{p.detail}</p>
                 <dl className="mt-2 grid grid-cols-[auto_minmax(0,1fr)] items-baseline gap-x-3 gap-y-1.5">
                   <dt className="text-xs text-ink-3">You predicted</dt>
-                  <dd><span className="rounded-xs bg-marker px-1.5 font-semibold text-[#17191D]">{label(brief, p, p.predicted)}</span></dd>
+                  <dd><span className="font-semibold text-accent">{label(brief, p, p.predicted)}</span></dd>
                   <dt className="text-xs text-ink-3">Recorded</dt>
                   <dd className={cx("font-semibold", p.actual === null ? "text-ink-3" : "text-ink")}>{label(brief, p, p.actual)}</dd>
                   <dt className="text-xs text-ink-3">Outcome</dt>
@@ -106,7 +107,7 @@ export function ChallengeDebrief({ evaluation, brief, trace }: { evaluation: Cha
                 {evaluation.predictions.map((p) => (
                   <tr key={p.id} className="border-t border-line align-top">
                     <th scope="row" className="px-3 py-2.5 text-left font-normal text-ink">{phase(brief, p) && <span className="if-eyebrow mb-0.5 block">{phase(brief, p)}</span>}{p.prompt}<span className="mt-0.5 block text-xs text-ink-3">{p.detail}</span></th>
-                    <td className="px-3 py-2.5"><span className="rounded-xs bg-marker px-1.5 font-semibold text-[#17191D]">{label(brief, p, p.predicted)}</span></td>
+                    <td className="px-3 py-2.5"><span className="font-semibold text-accent">{label(brief, p, p.predicted)}</span></td>
                     <td className={cx("px-3 py-2.5 font-semibold", p.actual === null ? "text-ink-3" : "text-ink")}>{label(brief, p, p.actual)}</td>
                     <td className="px-3 py-2.5"><StatusMark size="sm" kind={p.outcome} /></td>
                   </tr>

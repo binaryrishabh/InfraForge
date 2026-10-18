@@ -17,7 +17,7 @@ export function LockedPrediction({ brief, prediction }: { brief: ChallengeBrief;
         {brief.predictions.map((q) => (
           <div key={q.id}>
             <dt className="text-xs text-ink-3">{q.prompt}</dt>
-            <dd className="mt-0.5 inline-block rounded-xs bg-marker px-1.5 text-sm font-semibold text-[#17191D]">{answerLabel(brief, q.id, prediction.answers[q.id] ?? "—")}</dd>
+            <dd className="mt-0.5 text-sm font-semibold text-accent">{answerLabel(brief, q.id, prediction.answers[q.id] ?? "—")}</dd>
           </div>
         ))}
       </dl>

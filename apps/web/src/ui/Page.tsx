@@ -4,7 +4,7 @@ import { cx } from "./cx";
 export function Page({ children, className, width = "default" }: { children: ReactNode; className?: string; width?: "default" | "narrow" | "wide" }) {
   return (
     <div className={cx("mx-auto w-full px-4 pb-20 sm:px-6 lg:px-8",
-      width === "narrow" ? "max-w-[760px]" : width === "wide" ? "max-w-[1360px]" : "max-w-[1160px]", className)}>
+      width === "narrow" ? "max-w-[760px]" : width === "wide" ? "max-w-[1440px]" : "max-w-[1200px]", className)}>
       {children}
     </div>
   );
@@ -12,10 +12,10 @@ export function Page({ children, className, width = "default" }: { children: Rea
 
 export function PageHeader({ eyebrow, title, lede, actions, children }: { eyebrow?: ReactNode; title: ReactNode; lede?: ReactNode; actions?: ReactNode; children?: ReactNode }) {
   return (
-    <header className="flex flex-col gap-4 border-b border-line pt-8 pb-6 sm:pt-12 md:flex-row md:items-end md:justify-between">
+    <header className="flex flex-col gap-4 border-b border-line pt-10 pb-8 sm:pt-14 md:flex-row md:items-end md:justify-between">
       <div className="min-w-0 max-w-[68ch]">
         {eyebrow && <p className="if-eyebrow mb-2">{eyebrow}</p>}
-        <h1 className="if-display text-[34px] text-ink sm:text-[42px]">{title}</h1>
+        <h1 className="if-display text-[38px] text-ink sm:text-[56px]">{title}</h1>
         {lede && <p className="mt-3 text-[16px] leading-relaxed text-ink-2">{lede}</p>}
         {children}
       </div>
@@ -24,7 +24,7 @@ export function PageHeader({ eyebrow, title, lede, actions, children }: { eyebro
   );
 }
 
-/* Numbered report-style section: the number is a marginal note, the title an editorial heading. */
+/* A titled section. The optional number is a quiet index, never decoration. */
 export function Section({ number, title, aside, children, id, className, level = 2 }: {
   number?: string | number; title: ReactNode; aside?: ReactNode; children: ReactNode; id?: string; className?: string; level?: 2 | 3;
 }) {
@@ -32,8 +32,8 @@ export function Section({ number, title, aside, children, id, className, level =
   return (
     <section aria-labelledby={id ? `${id}-title` : undefined} className={cx("border-t border-line pt-5", className)}>
       <div className="mb-4 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-        <Heading id={id ? `${id}-title` : undefined} className={cx("if-title text-ink", level === 2 ? "text-[23px]" : "text-[19px]")}>
-          {number !== undefined && <span className="if-num mr-2.5 align-[0.12em] text-[13px] font-normal text-ink-3">§{number}</span>}
+        <Heading id={id ? `${id}-title` : undefined} className={cx("if-title text-ink", level === 2 ? "text-[22px]" : "text-[18px]")}>
+          {number !== undefined && <span className="if-num mr-2.5 text-[13px] font-normal text-ink-3">{String(number).padStart(2, "0")}</span>}
           {title}
         </Heading>
         {aside && <div className="text-sm text-ink-3">{aside}</div>}
@@ -49,7 +49,7 @@ export function Panel({ children, className, as: As = "div" }: { children: React
 
 export function EmptyState({ title, children, action, icon }: { title: ReactNode; children?: ReactNode; action?: ReactNode; icon?: ReactNode }) {
   return (
-    <div className="flex flex-col items-start gap-3 rounded-lg border border-dashed border-line-strong bg-surface px-6 py-8">
+    <div className="flex flex-col items-start gap-3 border border-dashed border-line-strong bg-surface px-6 py-8">
       {icon && <div aria-hidden="true" className="text-ink-3">{icon}</div>}
       <h3 className="if-title text-[20px] text-ink">{title}</h3>
       {children && <div className="max-w-[60ch] text-sm text-ink-2">{children}</div>}

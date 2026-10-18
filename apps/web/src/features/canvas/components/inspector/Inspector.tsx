@@ -1,7 +1,6 @@
 import { Trash2 } from "lucide-react";
 import { RESOURCE_PORTS, RESOURCE_TYPES, type Resource } from "@infraforge/domain/resource";
 import { ResourceIcon } from "@/components/common/ResourceIcon";
-import { categoryColor } from "@/theme/categories";
 import { Button } from "@/ui/Button";
 import { Field, Input } from "@/ui/Field";
 import { useCanvasStore } from "../../store/canvasStore";
@@ -27,7 +26,7 @@ export function Inspector({ resource }: { resource: Resource | undefined }) {
   return (
     <div>
       <div className="flex items-start gap-3 px-4 pt-4 pb-3">
-        <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-md border border-line bg-surface" style={{ color: categoryColor(resource.type) }}>
+        <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-md border border-line bg-surface text-ink-2">
           <ResourceIcon type={resource.type} size={18} className="" />
         </span>
         <div className="min-w-0">

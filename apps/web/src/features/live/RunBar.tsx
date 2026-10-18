@@ -58,7 +58,7 @@ export function RunBar({ run, deploymentId, phase, challengeTitle, onStop, stopp
           {run?.challengeId ? <span>Challenge attempt</span> : run?.rerunMode ? <span>{run.rerunMode === "exact" ? "Exact rerun" : "Rerun, current design"}</span> : <span>Freeform run</span>}
         </p>
       </div>
-      {challengeTitle && <Tag tone="marker" className="max-lg:hidden" icon={<Lock size={11} aria-hidden="true" />}><span className="max-w-[22ch] truncate">{challengeTitle}</span></Tag>}
+      {challengeTitle && <Tag tone="neutral" className="max-lg:hidden" icon={<Lock size={11} aria-hidden="true" />}><span className="max-w-[22ch] truncate">{challengeTitle}</span></Tag>}
       <dl className="order-last flex w-full items-center gap-4 sm:order-none sm:ml-auto sm:w-auto">
         <div><dt className="if-eyebrow !text-[10px]">Simulated</dt><dd className="if-num text-[17px] leading-tight text-ink">{formatClock(seconds)}{speed === 0 && live && <span className="ml-1.5 text-xs text-warn">paused</span>}</dd></div>
         {target && <div><dt className="if-eyebrow !text-[10px]">{target.reason === "evaluation" ? "Evaluation" : "Matched stop"}</dt>

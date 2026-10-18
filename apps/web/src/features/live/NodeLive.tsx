@@ -1,6 +1,5 @@
 import { RESOURCE_TYPES, type Resource } from "@infraforge/domain/resource";
 import { ResourceIcon } from "@/components/common/ResourceIcon";
-import { categoryColor } from "@/theme/categories";
 import { HealthMark } from "@/ui/HealthMark";
 import { useSimulationStore } from "@/features/monitoring/store/simulationStore";
 import { MeterRow } from "@/features/canvas/components/node/MeterRow";
@@ -20,7 +19,7 @@ export function NodeLive({ deploymentId, resource, resources, controls, ended = 
   return (
     <div>
       <div className="flex items-start gap-3 px-4 pt-4 pb-3">
-        <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-md border border-line bg-raised" style={{ color: categoryColor(resource.type) }}><ResourceIcon type={resource.type} size={18} className="" /></span>
+        <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-md border border-line bg-raised text-ink-2"><ResourceIcon type={resource.type} size={18} className="" /></span>
         <div className="min-w-0 flex-1">
           <p className="if-eyebrow">{resource.type}</p>
           <p className="truncate text-[16px] font-semibold text-ink">{resource.name || resource.id}</p>

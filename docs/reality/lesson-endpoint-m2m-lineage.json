@@ -148,7 +148,8 @@
     },
     {
       "file": "apps/web/src/components/shell/AppShell.tsx",
-      "hash": "d5fdf2af356f053cd05fc28013eb7612a5cef35fa834dbc491870c26684c37ce"
+      "hash": "d5fdf2af356f053cd05fc28013eb7612a5cef35fa834dbc491870c26684c37ce",
+      "text": "import { Suspense, useEffect, useState } from \"react\";\nimport { Link, NavLink, Outlet } from \"react-router-dom\";\nimport { Wordmark } from \"@/ui/Brand\";\nimport { cx } from \"@/ui/cx\";\nimport { Loading, Page } from \"@/ui/Page\";\nimport { AccountMenu } from \"./AccountMenu\";\nimport { capability } from \"@/api/internalLesson.api\";\nimport { useAuthStore } from \"@/features/auth/store/auth.store\";\n\nconst NAV = [\n  { to: \"/home\", label: \"Home\" },\n  { to: \"/challenges\", label: \"Challenges\" },\n  { to: \"/designs\", label: \"Designs\" },\n  { to: \"/runs\", label: \"Runs\" },\n] as const;\n\nexport function SkipLink() {\n  return <a href=\"#main\" className=\"sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:rounded-md focus:bg-ink focus:px-3 focus:py-2 focus:text-inverse\">Skip to content</a>;\n}\n\nfunction NavItems({ className, internal, lesson }: { className?: string; internal: boolean; lesson: boolean }) {\n  return (\n    <ul className={cx(\"flex items-center gap-1\", className)}>\n      {NAV.map((item) => (\n        <li key={item.to}>\n          <NavLink to={item.to} className={({ isActive }) => cx(\"relative inline-flex h-9 items-center rounded-md px-3 text-sm font-medium transition-colors\",\n            isActive ? \"text-ink after:absolute after:inset-x-3 after:-bottom-[11px] after:h-[2px] after:bg-ink\" : \"text-ink-3 hover:bg-sunken hover:text-ink\")}>\n            {item.label}\n          </NavLink>\n        </li>\n      ))}\n      {internal && <li className=\"shrink-0\"><NavLink to={lesson ? \"/internal/model2/learn\" : \"/internal/model2\"} className=\"inline-flex h-9 items-center whitespace-nowrap rounded-md px-3 text-sm text-ink-2 hover:bg-sunken\">Model 2 · internal</NavLink></li>}\n    </ul>\n  );\n}\n\n/* Paper shell: one top bar, four destinations, account on the right.\nNarrow screens keep the same four links in a scrollable second row. */\nexport function AppShell() {\n  const owner = useAuthStore((s) => s.user?.id), [grantedOwner, setGrantedOwner] = useState<string | null>(null);\n  const [lesson, setLesson] = useState(false);\n  useEffect(() => {\n    const controller = new AbortController();\n    if (owner) void capability(controller.signal).then((value) => { if (!controller.signal.aborted) { setGrantedOwner(owner); setLesson(value.scope === \"lesson\"); } }).catch(() => { if (!controller.signal.aborted) setGrantedOwner(null); });\n    return () => controller.abort();\n  }, [owner]);\n  return (\n    <div className=\"min-h-dvh bg-bg text-ink\">\n      <SkipLink />\n      <header className=\"sticky top-0 z-30 border-b border-line bg-bg/95 backdrop-blur-sm\">\n        <div className=\"mx-auto flex h-14 max-w-[1360px] items-center gap-6 px-4 sm:px-6 lg:px-8\">\n          <Link to=\"/home\" aria-label=\"InfraForge home\" className=\"rounded-md\"><Wordmark /></Link>\n          <nav aria-label=\"Primary\" className=\"hidden flex-1 md:block\"><NavItems internal={!!owner && grantedOwner === owner} lesson={lesson} /></nav>\n          <div className=\"ml-auto md:ml-0\"><AccountMenu /></div>\n        </div>\n        <nav aria-label=\"Primary\" className=\"if-scroll overflow-x-auto overflow-y-hidden border-t border-line px-2 md:hidden\"><NavItems internal={!!owner && grantedOwner === owner} lesson={lesson} className=\"h-11\" /></nav>\n      </header>\n      <main id=\"main\" tabIndex={-1} className=\"outline-none\"><Suspense fallback={<Page><Loading label=\"Loading…\" /></Page>}><Outlet /></Suspense></main>\n    </div>\n  );\n}\n"
     },
     {
       "file": "apps/web/src/features/internalLessons/InternalLesson.tsx",
@@ -395,7 +396,7 @@
     },
     {
       "file": "apps/web/src/app/App.tsx",
-      "hash": "b361e58d700518e36a038ba2e1efe703d2a8bca7ade0eb5ff06014ed9e84873f"
+      "hash": "59a75fb0a7e6401bce97522f206312560afa1195d3a5fe4367e3c8965557d147"
     },
     {
       "file": "apps/web/src/client/httpClient.ts",
@@ -403,7 +404,7 @@
     },
     {
       "file": "apps/web/src/components/shell/AppShell.tsx",
-      "hash": "d5fdf2af356f053cd05fc28013eb7612a5cef35fa834dbc491870c26684c37ce"
+      "hash": "cc084954e743c254565b83740703133a682ccc28e8c6a7f1acc231a8e1ac21cb"
     },
     {
       "file": "apps/web/src/features/internalLessons/InternalLesson.tsx",

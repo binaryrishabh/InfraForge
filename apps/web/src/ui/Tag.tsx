@@ -9,7 +9,7 @@ const TONE: Record<Tone, string> = {
   warn: "border-warn/40 text-warn bg-warn-soft",
   hot: "border-hot/40 text-hot bg-hot-soft",
   fail: "border-fail/40 text-fail bg-fail-soft",
-  marker: "border-transparent text-[#17191D] bg-marker",
+  marker: "border-accent/50 text-accent bg-accent-soft",
 };
 
 export function Tag({ tone = "neutral", children, className, icon }: { tone?: Tone; children: ReactNode; className?: string; icon?: ReactNode }) {

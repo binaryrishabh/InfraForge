@@ -14,5 +14,5 @@ function Report({ id }: { id: string }) {
 export function RunReportPage() {
   const { deploymentId = "" } = useParams();
   const userId = useAuthStore((s) => s.user?.id);
-  return <Page width="narrow" className="!max-w-[920px]"><Report key={`${userId}:${deploymentId}`} id={deploymentId} /></Page>;
+  return <Page width="wide"><Report key={`${userId}:${deploymentId}`} id={deploymentId} /></Page>;
 }

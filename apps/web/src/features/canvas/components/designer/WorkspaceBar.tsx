@@ -33,7 +33,7 @@ export function WorkspaceBar({ challengeTitle }: { challengeTitle: string | null
       <span aria-hidden="true" className="h-6 w-px shrink-0 bg-line" />
       <DesignMenu />
       {challengeTitle && (
-        <Tag tone="marker" className="shrink-0 max-md:hidden" icon={<Lock size={11} aria-hidden="true" />}>
+        <Tag tone="neutral" className="shrink-0 max-md:hidden" icon={<Lock size={11} aria-hidden="true" />}>
           <span className="max-w-[24ch] truncate">Challenge · {challengeTitle}</span>
         </Tag>
       )}

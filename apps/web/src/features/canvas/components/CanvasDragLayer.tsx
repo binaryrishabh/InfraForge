@@ -1,6 +1,5 @@
 import { DragOverlay } from "@dnd-kit/core";
 import { ResourceIcon } from "@/components/common/ResourceIcon";
-import { categoryColor } from "@/theme/categories";
 import { useCanvasStore } from "../store/canvasStore";
 import { NODE_CARD_WIDTH, NODE_CARD_HEIGHT, DESIGN_CARD_HEIGHT } from "../utils/nodeGeometry";
 
@@ -17,8 +16,8 @@ export function CanvasDragLayer() {
     <DragOverlay dropAnimation={null}>
       <div className="relative h-0 w-0">
         <div className="pointer-events-none absolute" style={{ left, top }}>
-          <div className="flex flex-col items-center justify-center gap-1.5 rounded-md border-2 border-dashed bg-raised/90 shadow-e2"
-            style={{ width: NODE_CARD_WIDTH, height, transform: `scale(${scale})`, transformOrigin: "top left", borderColor: categoryColor(activeDrag.label), color: categoryColor(activeDrag.label) }}>
+          <div className="flex flex-col items-center justify-center gap-1.5 border-2 border-dashed border-accent bg-surface text-accent"
+            style={{ width: NODE_CARD_WIDTH, height, transform: `scale(${scale})`, transformOrigin: "top left" }}>
             <ResourceIcon type={activeDrag.label} size={20} className="" />
             <span className="if-eyebrow">{activeDrag.label}</span>
           </div>

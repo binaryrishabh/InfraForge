@@ -292,7 +292,7 @@
     },
     {
       "file": "apps/web/src/app/App.tsx",
-      "hash": "b361e58d700518e36a038ba2e1efe703d2a8bca7ade0eb5ff06014ed9e84873f"
+      "hash": "59a75fb0a7e6401bce97522f206312560afa1195d3a5fe4367e3c8965557d147"
     },
     {
       "file": "apps/web/src/client/httpClient.ts",
@@ -300,7 +300,7 @@
     },
     {
       "file": "apps/web/src/components/shell/AppShell.tsx",
-      "hash": "d5fdf2af356f053cd05fc28013eb7612a5cef35fa834dbc491870c26684c37ce"
+      "hash": "cc084954e743c254565b83740703133a682ccc28e8c6a7f1acc231a8e1ac21cb"
     },
     {
       "file": "apps/web/src/features/internalLessons/InternalLesson.tsx",

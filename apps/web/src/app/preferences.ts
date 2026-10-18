@@ -9,8 +9,8 @@ const KEY = "infraforge:preferences";
 function read(): Pick<Preferences, "theme" | "density"> {
   try {
     const value = JSON.parse(localStorage.getItem(KEY) ?? "{}") as Partial<Preferences>;
-    return { theme: value.theme === "ink" || value.theme === "system" ? value.theme : "paper", density: value.density === "compact" ? "compact" : "comfortable" };
-  } catch { return { theme: "paper", density: "comfortable" }; }
+    return { theme: value.theme === "paper" || value.theme === "system" ? value.theme : "ink", density: value.density === "compact" ? "compact" : "comfortable" };
+  } catch { return { theme: "ink", density: "comfortable" }; }
 }
 function write(value: Pick<Preferences, "theme" | "density">) { try { localStorage.setItem(KEY, JSON.stringify(value)); } catch { /* storage unavailable */ } }
 

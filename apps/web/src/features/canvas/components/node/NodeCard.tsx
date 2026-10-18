@@ -2,8 +2,8 @@ import { memo } from "react";
 import { SIMULATION_CONSTANTS } from "@infraforge/simulation/tuning";
 import { RESOURCE_TYPES, type Resource } from "@infraforge/domain/resource";
 import { ResourceIcon } from "@/components/common/ResourceIcon";
-import { categoryColor } from "@/theme/categories";
 import { HealthMark } from "@/ui/HealthMark";
+import { healthState, type HealthState } from "@/ui/health";
 import { cx } from "@/ui/cx";
 import { useSimulationStore } from "@/features/monitoring/store/simulationStore";
 import { CHAOS_LABELS } from "@/features/monitoring/chaosLabels";
@@ -22,8 +22,23 @@ function ExposureMarks({ resource }: { resource: Resource }) {
   return <p className="if-num mt-1 truncate text-[10.5px] text-ink-3">{marks.join(" · ")}</p>;
 }
 
-/* An index card: a type tab with the category colour, the name, and either the
-design facts (capacity, size, exposure) or live telemetry. */
+/* A station tile: the same pictogram and name the maps and timetables use, then either
+the design facts (declared capacity, size, exposure) or the latest recorded measurements.
+The rail along the bottom edge carries recorded health the way the timetable does:
+thin and quiet when healthy, heavier and warmer as it degrades. */
+const RAIL: Record<HealthState, { height: number; color: string }> = {
+  healthy: { height: 2, color: "var(--if-line-strong)" }, unknown: { height: 2, color: "var(--if-line-strong)" },
+  degraded: { height: 3, color: "var(--if-warn)" }, saturated: { height: 5, color: "var(--if-hot)" },
+  failed: { height: 6, color: "var(--if-fail)" }, critical: { height: 6, color: "var(--if-fail)" },
+};
+
+function HealthRail({ state }: { state: HealthState }) {
+  const { height, color } = RAIL[state];
+  // Failed also carries ticks so it reads without colour, as on the timetable.
+  const ticks = state === "failed" || state === "critical" ? "repeating-linear-gradient(115deg, transparent 0 7px, var(--if-bg) 7px 8.5px)" : undefined;
+  return <span aria-hidden="true" className="absolute inset-x-0 bottom-0" style={{ height, background: ticks ? `${ticks}, ${color}` : color }} />;
+}
+
 export const NodeCard = memo(function NodeCard({ resource, mode }: { resource: Resource; mode: "design" | "live" }) {
   const metric = useSimulationStore((s) => (mode === "live" ? s.metrics[resource.id] : undefined));
   const restarting = useSimulationStore((s) => mode === "live" && s.restarting.includes(resource.id));
@@ -38,23 +53,27 @@ export const NodeCard = memo(function NodeCard({ resource, mode }: { resource: R
   const targeted = plan && mode === "design" ? plan : null;
   const capacity = declaredCapacity(resource);
   const pool = resource.type === RESOURCE_TYPES.LoadBalancer && resource.autoscaling?.enabled !== false;
-  const color = categoryColor(resource.type);
+  const health = metric ? healthState(metric.health) : null;
+  const tone = health === "failed" || health === "critical" ? "text-fail" : health === "saturated" ? "text-hot" : health === "degraded" ? "text-warn" : "text-ink";
   return (
-    <div className={cx("relative flex flex-col overflow-hidden rounded-md border bg-raised shadow-e1",
+    <div className={cx("relative flex flex-col overflow-hidden border bg-surface",
       chaos ? "border-fail if-fault" : restarting ? "border-warn" : scheduled || targeted ? "border-dashed border-ink-3" : "border-line-strong")}
       style={{ minHeight: mode === "design" ? DESIGN_CARD_HEIGHT : NODE_CARD_HEIGHT }}>
-      <div className="flex h-7 items-center gap-1.5 border-b border-line bg-surface px-2.5" style={{ boxShadow: `inset 3px 0 0 ${color}` }}>
-        <span style={{ color }} className="inline-flex"><ResourceIcon type={resource.type} size={13} className="" /></span>
-        <span className="if-eyebrow min-w-0 flex-1 truncate !text-[10px]">{resource.type}</span>
-        {mode === "live" && metric && <HealthMark value={metric.health} size="sm" />}
+      <div className="flex items-start gap-2.5 px-2.5 pt-2.5">
+        <span className={cx("flex size-9 shrink-0 items-center justify-center border bg-bg", health && health !== "healthy" ? "border-current border-2" : "border-line-strong", tone)}>
+          <ResourceIcon type={resource.type} size={20} className="" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-[14px] font-semibold leading-tight text-ink" title={resource.name ? `${resource.name} (${resource.id})` : resource.id}>{resource.name || resource.id}</p>
+          <p className="truncate text-[11px] text-ink-3">{resource.name ? <span className="if-num">{resource.id}</span> : resource.type}</p>
+        </div>
+        {mode === "live" && metric && <HealthMark value={metric.health} size="sm" className="mt-0.5 shrink-0" />}
       </div>
-      <div className="flex flex-1 flex-col px-2.5 pt-2 pb-2.5">
-        <p className="truncate text-[14px] font-semibold leading-tight text-ink" title={resource.name ? `${resource.name} (${resource.id})` : resource.id}>{resource.name || resource.id}</p>
-        {resource.name && <p className="if-num truncate text-[10.5px] text-ink-3">{resource.id}</p>}
+      <div className="flex flex-1 flex-col px-2.5 pt-1.5 pb-2.5">
         {mode === "design" ? (
           <div className="mt-auto pt-2">
             <div className="flex items-baseline justify-between gap-2">
-              <span className="if-num text-[15px] text-ink">{capacity.value.toLocaleString()} <span className="text-[11px] text-ink-3">{capacity.unit}</span></span>
+              <span className="if-num text-[15px] font-semibold text-ink">{capacity.value.toLocaleString()} <span className="text-[11px] text-ink-3">{capacity.unit}</span></span>
               <span className="if-num truncate text-[11px] text-ink-2">{resource.skuId ?? "generic"}</span>
             </div>
             {pool && <p className="if-num mt-0.5 truncate text-[10.5px] text-ink-3">autoscaling · target {resource.autoscaling?.targetCpu ?? SIMULATION_CONSTANTS.AUTOSCALING.DEFAULT_TARGET_CPU}% CPU</p>}
@@ -89,6 +108,7 @@ export const NodeCard = memo(function NodeCard({ resource, mode }: { resource: R
       {ended && (
         <div className="if-num border-t border-line bg-surface px-2.5 py-1 text-[10.5px] text-ink-2">Fault ended at {ended.at + ended.duration} s</div>
       )}
+      {health && <HealthRail state={health} />}
     </div>
   );
 });

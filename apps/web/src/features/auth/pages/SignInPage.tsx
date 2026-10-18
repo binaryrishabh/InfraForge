@@ -83,7 +83,7 @@ export function SignInPage({ mode = "signin" }: { mode?: "signin" | "signup" }) 
         </> : field("identifier", "Username or email", "username")}
         {field("password", "Password", signup ? "new-password" : "current-password", signup ? `${PASSWORD_MIN}–${PASSWORD_MAX} characters. A long, unique passphrase works well.` : undefined)}
         {error && <Notice tone="fail" role="alert">{error}</Notice>}
-        <Button type="submit" size="lg" className="w-full" loading={pending === "credentials"} disabled={pending !== null || !capabilities?.credentials}>{signup ? "Create account" : "Sign in"}</Button>
+        <Button type="submit" variant="primary" size="lg" className="w-full" loading={pending === "credentials"} disabled={pending !== null || !capabilities?.credentials}>{signup ? "Create account" : "Sign in"}</Button>
         {capabilities === null && !error && <p role="status" className="text-xs text-ink-3">Loading sign-in options…</p>}
       </form>
       <SocialSignIn providers={capabilities?.providers ?? []} pending={pending} onSignIn={(provider) => void startSocial(provider)} />

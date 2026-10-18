@@ -1,5 +1,11 @@
 # InfraForge project state
 
+**Timetable redesign (2026-10-18):** the web interface was rebuilt around one picture,
+the timetable, with the truth rules in [DESIGN.md](DESIGN.md). The 1100 px designer
+wall is removed. No engine, contract, dependency or execution-identity change; the
+landing run is produced by the Model 1 engine and checked for drift in tooling tests.
+Model 1 ACTIVE; Model 2 INTERNAL.
+
 **Analytics CI repair (2026-10-17):** the deliberate frontend Analytics addition
 at `0d45ab67d27d3990475868b8669efa5ea4939ee4` left three strict source inventories
 stale. Current ledger/endpoint/workspace pins are reviewed separately from frozen
@@ -774,30 +780,27 @@ These are design principles, not a claim that this UI's learning effectiveness w
 
 ## Web interface
 
-One design system replaces the previous UI: Paper and Ink themes, comfortable/compact
-density and reduced motion as CSS tokens; Atkinson Hyperlegible Next/Mono and
-Newsreader (OFL-1.1); small primitives in `apps/web/src/ui`; health and status always
-pair a glyph with a word. Routes: landing, sign-in, `/home` (next step), `/challenges`
-and briefs, `/designs`, `/runs` with kind filter, `/runs/:id` (Observed / Interpreted /
-Unknown, debrief first), `/runs/compare` (no winner), `/settings` and `/design`.
-`/dashboard` and `/reports/*` redirect. The designer has one workspace bar, palette and
-rail, a keyboard-complete canvas and brief/inspector/checks panel. Architecture
-editing/live spatial work is desktop-class: minimum **1100 CSS px**, comprising a
-256px palette, 340px details and 504px drafting area (two 208px cards, 40px gap,
-48px margins). Below that width an original accessible larger-workspace page
-replaces the canvas; no separate mobile geometry/palette/inspector is introduced.
-The heavy workspace is lazy and not mounted on unsupported screens. Resizing
-retains unsaved design state and run-bound last-observed telemetry; new runs and
-account/session reset clear telemetry, and prior-run/other-account frames are
-rejected. This is a browser cache, not simulator checkpoint recovery. At 375px,
-Designer QA verifies the fallback. Other product pages remain responsive.
-Live runs always use Ink; attempts show only speed and stop and say why; freeform runs
-keep load, fault, resize, pool and live edits. Designer, report and compare load on
-demand (main chunk about 254 kB). Resilience attempts add an experiment timeline (keyboard
-and screen-reader readable, announced once per phase), text states such as "Crash on
-app-2 active · 14 simulated seconds remaining" and "Fault ended at second 90", the
-target marked on its card and a static failed tone on edges into failed resources;
-no edge metrics are invented and reduced motion removes the fault outline animation.
+The interface is built on one picture, the timetable: stations with rails running
+left to right through simulated time, described in [DESIGN.md](DESIGN.md) with its
+truth rules (hatching is Unknown and never zero; chalk blue is only the learner;
+trains appear only from a recorded causal journal). Ink is the default theme, Paper
+remains; Atkinson Hyperlegible Next/Mono only; no gradients or glass. Routes:
+landing (a real engine-generated Model 1 run you predict before it plays), sign-in,
+`/home`, `/challenges` and briefs (curriculum lines, starter station maps),
+`/designs` (mini maps), `/runs`, `/runs/:id` (verdict and prediction first, then a
+replay of the retained trace; full evidence record below), `/runs/compare`,
+`/settings`, `/design`, and INTERNAL `/internal/model2`, `/internal/model2/learn`
+and `/internal/model2/runs/:runId/timetable`. `/dashboard` and `/reports/*` redirect.
+
+The designer has no width wall. From 1100 CSS px the palette, sheet and details
+dock side by side; narrower, the palette folds to a rail and details open as a sheet;
+below 640 px both are sheets. Station tiles keep the 208 px card footprint; rails are
+transit-style with no moving dashes, because Model 1 records no per-connection
+traffic. Live runs always use Ink and add a timetable drawn only from the snapshots
+the page received; the run report keeps every second of a resilience experiment
+window. Attempts show only speed and stop; freeform runs keep load, fault, resize,
+pool and live edits. Designer, live run, report, compare and the internal explorer
+load on demand; the main chunk is 351.4 kB (109.5 kB gzip).
 
 ## Verification, failures and cleanup
 

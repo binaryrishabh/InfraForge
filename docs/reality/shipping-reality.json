@@ -1,6 +1,6 @@
 {
   "schema": "infraforge-shipping-reality/2",
-  "scope": "Accepted 474 M2L entries preserved. Guided lesson additions separately reviewed; Model-2 technical shipping remains closed.",
+  "scope": "Separate PRODUCT_UI_VALIDITY from MODEL2_REALITY_SHIPPING_READY. New or changed fingerprints require review; ordinary current Model-1 validation checks inventory coverage only.",
   "entries": [
     {
       "id": "chaos:packages/domain/src/resource/DeploymentChaosNames.enum.ts:CpuSpike:0",
@@ -211,6 +211,39 @@
       "legacyM2gStatus": "REAL"
     },
     {
+      "id": "control:apps/web/src/features/auth/components/AuthLayout.tsx:Timetable-4d7d635d1470ad6a0e26:0",
+      "source": "apps/web/src/features/auth/components/AuthLayout.tsx",
+      "identity": "Timetable-4d7d635d1470ad6a0e26",
+      "description": "Timetable: onCursor={() => {}} label=\"\"",
+      "kind": "control",
+      "category": "INFRA_OUTPUT",
+      "categoryReason": "Infrastructure intent or technical evidence; Model-2 mechanism/evidence required",
+      "ui": {
+        "status": "NOT_APPLICABLE",
+        "behavior": "Separate infrastructure reality gate",
+        "proofs": []
+      },
+      "resources": [
+        "ALL"
+      ],
+      "model1Meaning": "Current published Model-1/product surface: Timetable: onCursor={() => {}} label=\"\"",
+      "model2Owner": "packages/simulation/src/model2/registry.ts",
+      "changesState": false,
+      "effects": {
+        "physics": false,
+        "reachability": false,
+        "security": false,
+        "cost": false,
+        "evidence": true
+      },
+      "provenanceRequirements": [
+        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+      ],
+      "status": "MODEL1_ONLY",
+      "finalProductEligible": false,
+      "plan": "Retain historical Model-1 meaning. Before Model-2 shipping, bind this surface to the appropriate explicit Model-2 workload/resource/evidence contract and prove downstream effects, or remove it."
+    },
+    {
       "id": "control:apps/web/src/features/auth/components/SocialSignIn.tsx:Button-efb4efb085996283a440:0",
       "source": "apps/web/src/features/auth/components/SocialSignIn.tsx",
       "identity": "Button-efb4efb085996283a440",
@@ -249,14 +282,26 @@
       "legacyM2gStatus": "REAL"
     },
     {
-      "id": "control:apps/web/src/features/auth/pages/SignInPage.tsx:Button-22e885b535d2f72636aa:0",
+      "id": "control:apps/web/src/features/auth/pages/SignInPage.tsx:Button-5c7764f12ccf92515b0b:0",
       "source": "apps/web/src/features/auth/pages/SignInPage.tsx",
-      "identity": "Button-22e885b535d2f72636aa",
+      "identity": "Button-5c7764f12ccf92515b0b",
+      "description": "Button: <Button type=\"submit\" variant=\"primary\" size=\"lg\" className=\"w-full\" loading={pending === \"credentials\"} disabled={pending !== null || !capabilities?.credentials}>{signup ? \"Create account\" : \"Sign in\"}</Button>",
       "kind": "control",
+      "category": "PRODUCT_UI_ACTION",
+      "categoryReason": "Software interaction or authored presentation; no infrastructure truth claim",
+      "ui": {
+        "status": "VALID",
+        "behavior": "Button: <Button type=\"submit\" variant=\"primary\" size=\"lg\" className=\"w-full\" loading={pending === \"credentials\"} disabled={pending !== null || !capabilities?.credentials}>{signup ? \"Create account\" : \"Sign in\"}</Button>; reviewed existing handler wiring after a presentation-only change; no simulator claim",
+        "proofs": [
+          "apps/web/src/features/auth/pages/SignInPage.tsx",
+          "apps/web/tests/credentials.test.tsx",
+          "apps/web/tests/sessionIsolation.test.ts"
+        ]
+      },
       "resources": [
         "PRODUCT_UI"
       ],
-      "model1Meaning": "Existing application UI state/authentication/navigation event forwarding, outside infrastructure physics: Button: <Button type=\"submit\" size=\"lg\" className=\"w-full\" loading={pending === \"credentials\"} disabled={pending !== null || !capabilities?.credentials}>{signup ? \"Create account\" : \"Sign in\"}</Button>",
+      "model1Meaning": "Existing application UI state/authentication/navigation event forwarding, outside infrastructure physics: Button: <Button type=\"submit\" variant=\"primary\" size=\"lg\" className=\"w-full\" loading={pending === \"credentials\"} disabled={pending !== null || !capabilities?.credentials}>{signup ? \"Create account\" : \"Sign in\"}</Button>",
       "model2Owner": "NOT_APPLICABLE",
       "changesState": true,
       "effects": {
@@ -272,18 +317,6 @@
       "status": "NOT_APPLICABLE",
       "finalProductEligible": true,
       "plan": "Prove software behavior through PRODUCT_UI_VALIDITY. No physics owner required.",
-      "description": "Button: <Button type=\"submit\" size=\"lg\" className=\"w-full\" loading={pending === \"credentials\"} disabled={pending !== null || !capabilities?.credentials}>{signup ? \"Create account\" : \"Sign in\"}</Button>",
-      "category": "PRODUCT_UI_ACTION",
-      "categoryReason": "Software interaction or authored presentation; no infrastructure truth claim",
-      "ui": {
-        "status": "VALID",
-        "behavior": "Button: <Button type=\"submit\" size=\"lg\" className=\"w-full\" loading={pending === \"credentials\"} disabled={pending !== null || !capabilities?.credentials}>{signup ? \"Create account\" : \"Sign in\"}</Button>; reviewed existing handler wiring and named focused regressions; no simulator claim",
-        "proofs": [
-          "apps/web/src/features/auth/pages/SignInPage.tsx",
-          "apps/web/tests/credentials.test.tsx",
-          "apps/web/tests/sessionIsolation.test.ts"
-        ]
-      },
       "legacyM2gStatus": "REAL"
     },
     {
@@ -325,10 +358,22 @@
       "legacyM2gStatus": "REAL"
     },
     {
-      "id": "control:apps/web/src/features/auth/pages/SignInPage.tsx:form-7317c77180574d8bf3d3:0",
+      "id": "control:apps/web/src/features/auth/pages/SignInPage.tsx:form-b2983b51ca73424e778a:0",
       "source": "apps/web/src/features/auth/pages/SignInPage.tsx",
-      "identity": "form-7317c77180574d8bf3d3",
+      "identity": "form-b2983b51ca73424e778a",
+      "description": "form: onSubmit={(event) => void submit(event)} aria-label={signup ? \"Create an account\" : \"Sign in with a password\"}",
       "kind": "control",
+      "category": "PRODUCT_UI_ACTION",
+      "categoryReason": "Software interaction or authored presentation; no infrastructure truth claim",
+      "ui": {
+        "status": "VALID",
+        "behavior": "form: onSubmit={(event) => void submit(event)} aria-label={signup ? \"Create an account\" : \"Sign in with a password\"}; reviewed existing handler wiring after a presentation-only change; no simulator claim",
+        "proofs": [
+          "apps/web/src/features/auth/pages/SignInPage.tsx",
+          "apps/web/tests/credentials.test.tsx",
+          "apps/web/tests/sessionIsolation.test.ts"
+        ]
+      },
       "resources": [
         "PRODUCT_UI"
       ],
@@ -348,18 +393,6 @@
       "status": "NOT_APPLICABLE",
       "finalProductEligible": true,
       "plan": "Prove software behavior through PRODUCT_UI_VALIDITY. No physics owner required.",
-      "description": "form: onSubmit={(event) => void submit(event)} aria-label={signup ? \"Create an account\" : \"Sign in with a password\"}",
-      "category": "PRODUCT_UI_ACTION",
-      "categoryReason": "Software interaction or authored presentation; no infrastructure truth claim",
-      "ui": {
-        "status": "VALID",
-        "behavior": "form: onSubmit={(event) => void submit(event)} aria-label={signup ? \"Create an account\" : \"Sign in with a password\"}; reviewed existing handler wiring and named focused regressions; no simulator claim",
-        "proofs": [
-          "apps/web/src/features/auth/pages/SignInPage.tsx",
-          "apps/web/tests/credentials.test.tsx",
-          "apps/web/tests/sessionIsolation.test.ts"
-        ]
-      },
       "legacyM2gStatus": "REAL"
     },
     {
@@ -401,74 +434,6 @@
       "legacyM2gStatus": "REAL"
     },
     {
-      "id": "control:apps/web/src/features/canvas/components/BezierConnectionLine.tsx:button-c56f35a3bd50b464d482:0",
-      "source": "apps/web/src/features/canvas/components/BezierConnectionLine.tsx",
-      "identity": "button-c56f35a3bd50b464d482",
-      "kind": "control",
-      "resources": [
-        "ALL"
-      ],
-      "model1Meaning": "Current published Model-1/product surface: button: onPointerDown={(event) => event.stopPropagation()} onClick={(event) => { event.stopPropagation(); onRemove(); }}",
-      "model2Owner": "packages/simulation/src/model2/registry.ts",
-      "changesState": false,
-      "effects": {
-        "physics": false,
-        "reachability": false,
-        "security": false,
-        "cost": false,
-        "evidence": true
-      },
-      "provenanceRequirements": [
-        "Trace input to state owner and downstream proof; record units/domain for numeric values"
-      ],
-      "status": "MODEL1_ONLY",
-      "finalProductEligible": false,
-      "plan": "Retain historical Model-1 meaning. Before Model-2 shipping, bind this surface to the appropriate explicit Model-2 workload/resource/evidence contract and prove downstream effects, or remove it.",
-      "description": "button: onPointerDown={(event) => event.stopPropagation()} onClick={(event) => { event.stopPropagation(); onRemove(); }}",
-      "category": "INFRA_INPUT",
-      "categoryReason": "Infrastructure intent or technical evidence; Model-2 mechanism/evidence required",
-      "ui": {
-        "status": "NOT_APPLICABLE",
-        "behavior": "Separate infrastructure reality gate",
-        "proofs": []
-      },
-      "legacyM2gStatus": "MODEL1_ONLY"
-    },
-    {
-      "id": "control:apps/web/src/features/canvas/components/BezierConnectionLine.tsx:path-618bc29f6d0f7ccd4abc:0",
-      "source": "apps/web/src/features/canvas/components/BezierConnectionLine.tsx",
-      "identity": "path-618bc29f6d0f7ccd4abc",
-      "kind": "control",
-      "resources": [
-        "ALL"
-      ],
-      "model1Meaning": "Current published Model-1/product surface: path: onClick={(event) => { event.stopPropagation(); onSelect(); }}",
-      "model2Owner": "NOT_APPLICABLE",
-      "changesState": false,
-      "effects": {
-        "physics": false,
-        "reachability": false,
-        "security": false,
-        "cost": false,
-        "evidence": false
-      },
-      "provenanceRequirements": [
-        "Reviewed promised software action/presentation and a relevant behavior proof; no simulation-physics owner required"
-      ],
-      "status": "NOT_APPLICABLE",
-      "finalProductEligible": false,
-      "plan": "Prove software behavior through PRODUCT_UI_VALIDITY. No physics owner required.",
-      "description": "path: onClick={(event) => { event.stopPropagation(); onSelect(); }}",
-      "category": "PRESENTATION_ONLY",
-      "categoryReason": "Software interaction or authored presentation; no infrastructure truth claim",
-      "ui": {
-        "status": "REVIEW_REQUIRED",
-        "behavior": "path: onClick={(event) => { event.stopPropagation(); onSelect(); }}",
-        "proofs": []
-      },
-      "legacyM2gStatus": "MODEL1_ONLY"
-    },
-    {
       "id": "control:apps/web/src/features/canvas/components/CanvasBoard.tsx:div-86493cd7c52f69106e2b:0",
       "source": "apps/web/src/features/canvas/components/CanvasBoard.tsx",
       "identity": "div-86493cd7c52f69106e2b",
@@ -492,7 +457,7 @@
       "status": "NOT_APPLICABLE",
       "finalProductEligible": false,
       "plan": "Prove software behavior through PRODUCT_UI_VALIDITY. No physics owner required.",
-      "description": "div: aria-label={label} onPointerDown={viewport.handlePanStart} onPointerMove={viewport.handlePanMove} onPointerUp={viewport.handlePanEnd} onClick={(event) => {\n        if (event.target !== event.currentTarget) return;\n        const store = useCanvasStore.getState();\n        store.setSelectedConnectionId(null); store.setSelectedResourceId(null);\n      }}",
+      "description": "div: aria-label={label} onPointerDown={viewport.handlePanStart} onPointerMove={viewport.handlePanMove} onPointerUp={viewport.handlePanEnd} onClick={(event) => {\r\n        if (event.target !== event.currentTarget) return;\r\n        const store = useCanvasStore.getState();\r\n        store.setSelectedConnectionId(null); store.setSelectedResourceId(null);\r\n      }}",
       "category": "PRESENTATION_ONLY",
       "categoryReason": "Software interaction or authored presentation; no infrastructure truth claim",
       "ui": {
@@ -707,14 +672,22 @@
       "legacyM2gStatus": "MODEL1_ONLY"
     },
     {
-      "id": "control:apps/web/src/features/canvas/components/ConnectionLinesLayer.tsx:BezierConnectionLine-8ccd5fed955eebaab9db:0",
+      "id": "control:apps/web/src/features/canvas/components/ConnectionLinesLayer.tsx:RailConnection-e05c5ceb11413647c985:0",
       "source": "apps/web/src/features/canvas/components/ConnectionLinesLayer.tsx",
-      "identity": "BezierConnectionLine-8ccd5fed955eebaab9db",
+      "identity": "RailConnection-e05c5ceb11413647c985",
+      "description": "RailConnection: label={`${source.name || source.id} to ${target.name || target.id}`} onSelect={() => { const store = useCanvasStore.getState(); store.setSelectedConnectionId(selected ? null : line.id); store.setSelectedResourceId(null); }} onRemove={locked ? undefined : () => deleteConnection(line.id)}",
       "kind": "control",
+      "category": "INFRA_INPUT",
+      "categoryReason": "Infrastructure intent or technical evidence; Model-2 mechanism/evidence required",
+      "ui": {
+        "status": "NOT_APPLICABLE",
+        "behavior": "Separate infrastructure reality gate",
+        "proofs": []
+      },
       "resources": [
         "ALL"
       ],
-      "model1Meaning": "Current published Model-1/product surface: BezierConnectionLine: label={`${source.name || source.id} to ${target.name || target.id}`} onSelect={() => { const store = useCanvasStore.getState(); store.setSelectedConnectionId(selected ? null : line.id); store.setSelectedResourceId(null); }} onRemove={locked ? undefined : () => deleteConnection(line.id)}",
+      "model1Meaning": "Current published Model-1/product surface: RailConnection: label={`${source.name || source.id} to ${target.name || target.id}`} onSelect={() => { const store = useCanvasStore.getState(); store.setSelectedConnectionId(selected ? null : line.id); store.setSelectedResourceId(null); }} onRemove={locked ? undefined : () => deleteConnection(line.id)}",
       "model2Owner": "packages/simulation/src/model2/registry.ts",
       "changesState": false,
       "effects": {
@@ -730,14 +703,6 @@
       "status": "MODEL1_ONLY",
       "finalProductEligible": false,
       "plan": "Retain historical Model-1 meaning. Before Model-2 shipping, bind this surface to the appropriate explicit Model-2 workload/resource/evidence contract and prove downstream effects, or remove it.",
-      "description": "BezierConnectionLine: label={`${source.name || source.id} to ${target.name || target.id}`} onSelect={() => { const store = useCanvasStore.getState(); store.setSelectedConnectionId(selected ? null : line.id); store.setSelectedResourceId(null); }} onRemove={locked ? undefined : () => deleteConnection(line.id)}",
-      "category": "INFRA_INPUT",
-      "categoryReason": "Infrastructure intent or technical evidence; Model-2 mechanism/evidence required",
-      "ui": {
-        "status": "NOT_APPLICABLE",
-        "behavior": "Separate infrastructure reality gate",
-        "proofs": []
-      },
       "legacyM2gStatus": "MODEL1_ONLY"
     },
     {
@@ -945,6 +910,74 @@
       "legacyM2gStatus": "MODEL1_ONLY"
     },
     {
+      "id": "control:apps/web/src/features/canvas/components/RailConnection.tsx:button-0fdbdbf8dc7192c789dd:0",
+      "source": "apps/web/src/features/canvas/components/RailConnection.tsx",
+      "identity": "button-0fdbdbf8dc7192c789dd",
+      "description": "button: onPointerDown={(event) => event.stopPropagation()} onClick={(event) => { event.stopPropagation(); onRemove(); }}",
+      "kind": "control",
+      "category": "INFRA_INPUT",
+      "categoryReason": "Infrastructure intent or technical evidence; Model-2 mechanism/evidence required",
+      "ui": {
+        "status": "NOT_APPLICABLE",
+        "behavior": "Separate infrastructure reality gate",
+        "proofs": []
+      },
+      "resources": [
+        "ALL"
+      ],
+      "model1Meaning": "Current published Model-1/product surface: button: onPointerDown={(event) => event.stopPropagation()} onClick={(event) => { event.stopPropagation(); onRemove(); }}",
+      "model2Owner": "packages/simulation/src/model2/registry.ts",
+      "changesState": false,
+      "effects": {
+        "physics": false,
+        "reachability": false,
+        "security": false,
+        "cost": false,
+        "evidence": true
+      },
+      "provenanceRequirements": [
+        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+      ],
+      "status": "MODEL1_ONLY",
+      "finalProductEligible": false,
+      "plan": "Retain historical Model-1 meaning. Before Model-2 shipping, bind this surface to the appropriate explicit Model-2 workload/resource/evidence contract and prove downstream effects, or remove it.",
+      "legacyM2gStatus": "MODEL1_ONLY"
+    },
+    {
+      "id": "control:apps/web/src/features/canvas/components/RailConnection.tsx:path-618bc29f6d0f7ccd4abc:0",
+      "source": "apps/web/src/features/canvas/components/RailConnection.tsx",
+      "identity": "path-618bc29f6d0f7ccd4abc",
+      "description": "path: onClick={(event) => { event.stopPropagation(); onSelect(); }}",
+      "kind": "control",
+      "category": "PRESENTATION_ONLY",
+      "categoryReason": "Software interaction or authored presentation; no infrastructure truth claim",
+      "ui": {
+        "status": "REVIEW_REQUIRED",
+        "behavior": "path: onClick={(event) => { event.stopPropagation(); onSelect(); }}",
+        "proofs": []
+      },
+      "resources": [
+        "ALL"
+      ],
+      "model1Meaning": "Current published Model-1/product surface: path: onClick={(event) => { event.stopPropagation(); onSelect(); }}",
+      "model2Owner": "NOT_APPLICABLE",
+      "changesState": false,
+      "effects": {
+        "physics": false,
+        "reachability": false,
+        "security": false,
+        "cost": false,
+        "evidence": false
+      },
+      "provenanceRequirements": [
+        "Reviewed promised software action/presentation and a relevant behavior proof; no simulation-physics owner required"
+      ],
+      "status": "NOT_APPLICABLE",
+      "finalProductEligible": false,
+      "plan": "Prove software behavior through PRODUCT_UI_VALIDITY. No physics owner required.",
+      "legacyM2gStatus": "MODEL1_ONLY"
+    },
+    {
       "id": "control:apps/web/src/features/canvas/components/ReplicaCard.tsx:div-3d30088fe3c5ea426d36:0",
       "source": "apps/web/src/features/canvas/components/ReplicaCard.tsx",
       "identity": "div-3d30088fe3c5ea426d36",
@@ -1115,6 +1148,72 @@
       "legacyM2gStatus": "MODEL1_ONLY"
     },
     {
+      "id": "control:apps/web/src/features/canvas/components/designer/DesignWorkspace.tsx:Button-af02e87c6ee92e6c92e4:0",
+      "source": "apps/web/src/features/canvas/components/designer/DesignWorkspace.tsx",
+      "identity": "Button-af02e87c6ee92e6c92e4",
+      "description": "Button: onClick={() => setSheet(\"details\")}",
+      "kind": "control",
+      "category": "PRESENTATION_ONLY",
+      "categoryReason": "Software interaction or authored presentation; no infrastructure truth claim",
+      "ui": {
+        "status": "REVIEW_REQUIRED",
+        "behavior": "Button: onClick={() => setSheet(\"details\")}",
+        "proofs": []
+      },
+      "resources": [
+        "PRODUCT_UI"
+      ],
+      "model1Meaning": "Product interface presentation or interaction outside infrastructure physics: Button: onClick={() => setSheet(\"details\")}",
+      "model2Owner": "NOT_APPLICABLE",
+      "changesState": false,
+      "effects": {
+        "physics": false,
+        "reachability": false,
+        "security": false,
+        "cost": false,
+        "evidence": false
+      },
+      "provenanceRequirements": [
+        "Reviewed promised software action/presentation and a relevant behavior proof; no simulation-physics owner required"
+      ],
+      "status": "NOT_APPLICABLE",
+      "finalProductEligible": false,
+      "plan": "Prove software behavior through PRODUCT_UI_VALIDITY. No physics owner required."
+    },
+    {
+      "id": "control:apps/web/src/features/canvas/components/designer/DesignWorkspace.tsx:Button-c9716e649c0de379ada8:0",
+      "source": "apps/web/src/features/canvas/components/designer/DesignWorkspace.tsx",
+      "identity": "Button-c9716e649c0de379ada8",
+      "description": "Button: onClick={() => setSheet(\"add\")}",
+      "kind": "control",
+      "category": "PRESENTATION_ONLY",
+      "categoryReason": "Software interaction or authored presentation; no infrastructure truth claim",
+      "ui": {
+        "status": "REVIEW_REQUIRED",
+        "behavior": "Button: onClick={() => setSheet(\"add\")}",
+        "proofs": []
+      },
+      "resources": [
+        "PRODUCT_UI"
+      ],
+      "model1Meaning": "Product interface presentation or interaction outside infrastructure physics: Button: onClick={() => setSheet(\"add\")}",
+      "model2Owner": "NOT_APPLICABLE",
+      "changesState": false,
+      "effects": {
+        "physics": false,
+        "reachability": false,
+        "security": false,
+        "cost": false,
+        "evidence": false
+      },
+      "provenanceRequirements": [
+        "Reviewed promised software action/presentation and a relevant behavior proof; no simulation-physics owner required"
+      ],
+      "status": "NOT_APPLICABLE",
+      "finalProductEligible": false,
+      "plan": "Prove software behavior through PRODUCT_UI_VALIDITY. No physics owner required."
+    },
+    {
       "id": "control:apps/web/src/features/canvas/components/designer/DesignWorkspace.tsx:ConfirmDialog-818144f72893d2df67d2:0",
       "source": "apps/web/src/features/canvas/components/designer/DesignWorkspace.tsx",
       "identity": "ConfirmDialog-818144f72893d2df67d2",
@@ -1147,6 +1246,105 @@
         "proofs": []
       },
       "legacyM2gStatus": "MODEL1_ONLY"
+    },
+    {
+      "id": "control:apps/web/src/features/canvas/components/designer/DesignWorkspace.tsx:Dialog-9223503d667bcd7da429:0",
+      "source": "apps/web/src/features/canvas/components/designer/DesignWorkspace.tsx",
+      "identity": "Dialog-9223503d667bcd7da429",
+      "description": "Dialog: onOpenChange={(open) => setSheet(open ? \"details\" : null)}",
+      "kind": "control",
+      "category": "PRESENTATION_ONLY",
+      "categoryReason": "Software interaction or authored presentation; no infrastructure truth claim",
+      "ui": {
+        "status": "REVIEW_REQUIRED",
+        "behavior": "Dialog: onOpenChange={(open) => setSheet(open ? \"details\" : null)}",
+        "proofs": []
+      },
+      "resources": [
+        "PRODUCT_UI"
+      ],
+      "model1Meaning": "Product interface presentation or interaction outside infrastructure physics: Dialog: onOpenChange={(open) => setSheet(open ? \"details\" : null)}",
+      "model2Owner": "NOT_APPLICABLE",
+      "changesState": false,
+      "effects": {
+        "physics": false,
+        "reachability": false,
+        "security": false,
+        "cost": false,
+        "evidence": false
+      },
+      "provenanceRequirements": [
+        "Reviewed promised software action/presentation and a relevant behavior proof; no simulation-physics owner required"
+      ],
+      "status": "NOT_APPLICABLE",
+      "finalProductEligible": false,
+      "plan": "Prove software behavior through PRODUCT_UI_VALIDITY. No physics owner required."
+    },
+    {
+      "id": "control:apps/web/src/features/canvas/components/designer/DesignWorkspace.tsx:Dialog-ce085106de52e1a91f05:0",
+      "source": "apps/web/src/features/canvas/components/designer/DesignWorkspace.tsx",
+      "identity": "Dialog-ce085106de52e1a91f05",
+      "description": "Dialog: onOpenChange={(open) => setSheet(open ? \"add\" : null)}",
+      "kind": "control",
+      "category": "PRESENTATION_ONLY",
+      "categoryReason": "Software interaction or authored presentation; no infrastructure truth claim",
+      "ui": {
+        "status": "REVIEW_REQUIRED",
+        "behavior": "Dialog: onOpenChange={(open) => setSheet(open ? \"add\" : null)}",
+        "proofs": []
+      },
+      "resources": [
+        "PRODUCT_UI"
+      ],
+      "model1Meaning": "Product interface presentation or interaction outside infrastructure physics: Dialog: onOpenChange={(open) => setSheet(open ? \"add\" : null)}",
+      "model2Owner": "NOT_APPLICABLE",
+      "changesState": false,
+      "effects": {
+        "physics": false,
+        "reachability": false,
+        "security": false,
+        "cost": false,
+        "evidence": false
+      },
+      "provenanceRequirements": [
+        "Reviewed promised software action/presentation and a relevant behavior proof; no simulation-physics owner required"
+      ],
+      "status": "NOT_APPLICABLE",
+      "finalProductEligible": false,
+      "plan": "Prove software behavior through PRODUCT_UI_VALIDITY. No physics owner required."
+    },
+    {
+      "id": "control:apps/web/src/features/canvas/components/designer/DesignWorkspace.tsx:PalettePanel-4333db002ceeb364c344:0",
+      "source": "apps/web/src/features/canvas/components/designer/DesignWorkspace.tsx",
+      "identity": "PalettePanel-4333db002ceeb364c344",
+      "description": "PalettePanel: onAdded={() => setSheet(null)}",
+      "kind": "control",
+      "category": "PRESENTATION_ONLY",
+      "categoryReason": "Software interaction or authored presentation; no infrastructure truth claim",
+      "ui": {
+        "status": "REVIEW_REQUIRED",
+        "behavior": "PalettePanel: onAdded={() => setSheet(null)}",
+        "proofs": []
+      },
+      "resources": [
+        "PRODUCT_UI"
+      ],
+      "model1Meaning": "Product interface presentation or interaction outside infrastructure physics: PalettePanel: onAdded={() => setSheet(null)}",
+      "model2Owner": "NOT_APPLICABLE",
+      "changesState": false,
+      "effects": {
+        "physics": false,
+        "reachability": false,
+        "security": false,
+        "cost": false,
+        "evidence": false
+      },
+      "provenanceRequirements": [
+        "Reviewed promised software action/presentation and a relevant behavior proof; no simulation-physics owner required"
+      ],
+      "status": "NOT_APPLICABLE",
+      "finalProductEligible": false,
+      "plan": "Prove software behavior through PRODUCT_UI_VALIDITY. No physics owner required."
     },
     {
       "id": "control:apps/web/src/features/canvas/components/designer/DesignWorkspace.tsx:PalettePanel-c4829b00088ce66675b2:0",
@@ -1183,14 +1381,22 @@
       "legacyM2gStatus": "MODEL1_ONLY"
     },
     {
-      "id": "control:apps/web/src/features/canvas/components/designer/DesignWorkspace.tsx:PaletteRail-72cdc0cf9a90f328f163:0",
+      "id": "control:apps/web/src/features/canvas/components/designer/DesignWorkspace.tsx:PaletteRail-091b347cc153b0aefabf:0",
       "source": "apps/web/src/features/canvas/components/designer/DesignWorkspace.tsx",
-      "identity": "PaletteRail-72cdc0cf9a90f328f163",
+      "identity": "PaletteRail-091b347cc153b0aefabf",
+      "description": "PaletteRail: onExpand={docked ? () => setRail(false) : () => setSheet(\"add\")}",
       "kind": "control",
+      "category": "PRESENTATION_ONLY",
+      "categoryReason": "Software interaction or authored presentation; no infrastructure truth claim",
+      "ui": {
+        "status": "REVIEW_REQUIRED",
+        "behavior": "PaletteRail: onExpand={docked ? () => setRail(false) : () => setSheet(\"add\")}",
+        "proofs": []
+      },
       "resources": [
         "ALL"
       ],
-      "model1Meaning": "Current published Model-1/product surface: PaletteRail: onExpand={() => setRail(false)}",
+      "model1Meaning": "Current published Model-1/product surface: PaletteRail: onExpand={docked ? () => setRail(false) : () => setSheet(\"add\")}",
       "model2Owner": "NOT_APPLICABLE",
       "changesState": false,
       "effects": {
@@ -1206,14 +1412,6 @@
       "status": "NOT_APPLICABLE",
       "finalProductEligible": false,
       "plan": "Prove software behavior through PRODUCT_UI_VALIDITY. No physics owner required.",
-      "description": "PaletteRail: onExpand={() => setRail(false)}",
-      "category": "PRESENTATION_ONLY",
-      "categoryReason": "Software interaction or authored presentation; no infrastructure truth claim",
-      "ui": {
-        "status": "REVIEW_REQUIRED",
-        "behavior": "PaletteRail: onExpand={() => setRail(false)}",
-        "proofs": []
-      },
       "legacyM2gStatus": "MODEL1_ONLY"
     },
     {
@@ -2277,10 +2475,18 @@
       "legacyM2gStatus": "MODEL1_ONLY"
     },
     {
-      "id": "control:apps/web/src/features/canvas/components/node/NodeCard.tsx:HealthMark-db74894535744cf87171:0",
+      "id": "control:apps/web/src/features/canvas/components/node/NodeCard.tsx:HealthMark-39e349479bd7e3b2e63e:0",
       "source": "apps/web/src/features/canvas/components/node/NodeCard.tsx",
-      "identity": "HealthMark-db74894535744cf87171",
+      "identity": "HealthMark-39e349479bd7e3b2e63e",
+      "description": "HealthMark: value={metric.health}",
       "kind": "control",
+      "category": "INFRA_OUTPUT",
+      "categoryReason": "Infrastructure intent or technical evidence; Model-2 mechanism/evidence required",
+      "ui": {
+        "status": "NOT_APPLICABLE",
+        "behavior": "Separate infrastructure reality gate",
+        "proofs": []
+      },
       "resources": [
         "ALL"
       ],
@@ -2300,14 +2506,6 @@
       "status": "MODEL1_ONLY",
       "finalProductEligible": false,
       "plan": "Retain historical Model-1 meaning. Before Model-2 shipping, bind this surface to the appropriate explicit Model-2 workload/resource/evidence contract and prove downstream effects, or remove it.",
-      "description": "HealthMark: value={metric.health}",
-      "category": "INFRA_OUTPUT",
-      "categoryReason": "Infrastructure intent or technical evidence; Model-2 mechanism/evidence required",
-      "ui": {
-        "status": "NOT_APPLICABLE",
-        "behavior": "Separate infrastructure reality gate",
-        "proofs": []
-      },
       "legacyM2gStatus": "MODEL1_ONLY"
     },
     {
@@ -2379,10 +2577,18 @@
       "legacyM2gStatus": "MODEL1_ONLY"
     },
     {
-      "id": "control:apps/web/src/features/canvas/components/palette/PaletteItem.tsx:button-bbe74ec4d43578a14f30:0",
+      "id": "control:apps/web/src/features/canvas/components/palette/PaletteItem.tsx:button-e2f676561721f87850fc:0",
       "source": "apps/web/src/features/canvas/components/palette/PaletteItem.tsx",
-      "identity": "button-bbe74ec4d43578a14f30",
+      "identity": "button-e2f676561721f87850fc",
+      "description": "button: aria-label={`Add ${type}`} onClick={() => { if (addResource(type)) onAdded?.(); }}",
       "kind": "control",
+      "category": "INFRA_INPUT",
+      "categoryReason": "Infrastructure intent or technical evidence; Model-2 mechanism/evidence required",
+      "ui": {
+        "status": "NOT_APPLICABLE",
+        "behavior": "Separate infrastructure reality gate",
+        "proofs": []
+      },
       "resources": [
         "ALL"
       ],
@@ -2402,14 +2608,6 @@
       "status": "MODEL1_ONLY",
       "finalProductEligible": false,
       "plan": "Retain historical Model-1 meaning. Before Model-2 shipping, bind this surface to the appropriate explicit Model-2 workload/resource/evidence contract and prove downstream effects, or remove it.",
-      "description": "button: aria-label={`Add ${type}`} onClick={() => { if (addResource(type)) onAdded?.(); }}",
-      "category": "INFRA_INPUT",
-      "categoryReason": "Infrastructure intent or technical evidence; Model-2 mechanism/evidence required",
-      "ui": {
-        "status": "NOT_APPLICABLE",
-        "behavior": "Separate infrastructure reality gate",
-        "proofs": []
-      },
       "legacyM2gStatus": "MODEL1_ONLY"
     },
     {
@@ -2549,10 +2747,18 @@
       "legacyM2gStatus": "MODEL1_ONLY"
     },
     {
-      "id": "control:apps/web/src/features/canvas/components/palette/PaletteRail.tsx:IconButton-789ee875da46ff940f00:0",
+      "id": "control:apps/web/src/features/canvas/components/palette/PaletteRail.tsx:IconButton-c9099714e445b735dc51:0",
       "source": "apps/web/src/features/canvas/components/palette/PaletteRail.tsx",
-      "identity": "IconButton-789ee875da46ff940f00",
+      "identity": "IconButton-c9099714e445b735dc51",
+      "description": "IconButton: label={`Add ${type}`} onClick={() => addResource(type)}",
       "kind": "control",
+      "category": "INFRA_INPUT",
+      "categoryReason": "Infrastructure intent or technical evidence; Model-2 mechanism/evidence required",
+      "ui": {
+        "status": "NOT_APPLICABLE",
+        "behavior": "Separate infrastructure reality gate",
+        "proofs": []
+      },
       "resources": [
         "ALL"
       ],
@@ -2572,14 +2778,6 @@
       "status": "MODEL1_ONLY",
       "finalProductEligible": false,
       "plan": "Retain historical Model-1 meaning. Before Model-2 shipping, bind this surface to the appropriate explicit Model-2 workload/resource/evidence contract and prove downstream effects, or remove it.",
-      "description": "IconButton: label={`Add ${type}`} onClick={() => addResource(type)}",
-      "category": "INFRA_INPUT",
-      "categoryReason": "Infrastructure intent or technical evidence; Model-2 mechanism/evidence required",
-      "ui": {
-        "status": "NOT_APPLICABLE",
-        "behavior": "Separate infrastructure reality gate",
-        "proofs": []
-      },
       "legacyM2gStatus": "MODEL1_ONLY"
     },
     {
@@ -2821,10 +3019,18 @@
       "legacyM2gStatus": "MODEL1_ONLY"
     },
     {
-      "id": "control:apps/web/src/features/challenges/components/AttemptDialog.tsx:input-ba3c9cab4651894fb8ca:0",
+      "id": "control:apps/web/src/features/challenges/components/AttemptDialog.tsx:input-7d09b6e680db49afed07:0",
       "source": "apps/web/src/features/challenges/components/AttemptDialog.tsx",
-      "identity": "input-ba3c9cab4651894fb8ca",
+      "identity": "input-7d09b6e680db49afed07",
+      "description": "input: value={choice.value} checked={value === choice.value} onChange={() => onChange(choice.value)}",
       "kind": "control",
+      "category": "PRODUCT_UI_ACTION",
+      "categoryReason": "Software interaction or authored presentation; no infrastructure truth claim",
+      "ui": {
+        "status": "REVIEW_REQUIRED",
+        "behavior": "input: value={choice.value} checked={value === choice.value} onChange={() => onChange(choice.value)}",
+        "proofs": []
+      },
       "resources": [
         "ALL"
       ],
@@ -2844,14 +3050,6 @@
       "status": "NOT_APPLICABLE",
       "finalProductEligible": false,
       "plan": "Prove software behavior through PRODUCT_UI_VALIDITY. No physics owner required.",
-      "description": "input: value={choice.value} checked={value === choice.value} onChange={() => onChange(choice.value)}",
-      "category": "PRODUCT_UI_ACTION",
-      "categoryReason": "Software interaction or authored presentation; no infrastructure truth claim",
-      "ui": {
-        "status": "REVIEW_REQUIRED",
-        "behavior": "input: value={choice.value} checked={value === choice.value} onChange={() => onChange(choice.value)}",
-        "proofs": []
-      },
       "legacyM2gStatus": "MODEL1_ONLY"
     },
     {
@@ -3839,6 +4037,204 @@
         "proofs": []
       },
       "legacyM2gStatus": "MODEL1_ONLY"
+    },
+    {
+      "id": "control:apps/web/src/features/connectedRun/ConnectedTimetablePage.tsx:Button-bcd268e0c72f0a9b3222:0",
+      "source": "apps/web/src/features/connectedRun/ConnectedTimetablePage.tsx",
+      "identity": "Button-bcd268e0c72f0a9b3222",
+      "description": "Button: onClick={retry}",
+      "kind": "control",
+      "category": "PRODUCT_UI_ACTION",
+      "categoryReason": "Software interaction or authored presentation; no infrastructure truth claim",
+      "ui": {
+        "status": "REVIEW_REQUIRED",
+        "behavior": "Button: onClick={retry}",
+        "proofs": []
+      },
+      "resources": [
+        "PRODUCT_UI"
+      ],
+      "model1Meaning": "Product interface presentation or interaction outside infrastructure physics: Button: onClick={retry}",
+      "model2Owner": "NOT_APPLICABLE",
+      "changesState": false,
+      "effects": {
+        "physics": false,
+        "reachability": false,
+        "security": false,
+        "cost": false,
+        "evidence": false
+      },
+      "provenanceRequirements": [
+        "Reviewed promised software action/presentation and a relevant behavior proof; no simulation-physics owner required"
+      ],
+      "status": "NOT_APPLICABLE",
+      "finalProductEligible": false,
+      "plan": "Prove software behavior through PRODUCT_UI_VALIDITY. No physics owner required."
+    },
+    {
+      "id": "control:apps/web/src/features/connectedRun/ConnectedTimetablePage.tsx:Timetable-9b4db20afa9df7a9be4d:0",
+      "source": "apps/web/src/features/connectedRun/ConnectedTimetablePage.tsx",
+      "identity": "Timetable-9b4db20afa9df7a9be4d",
+      "description": "Timetable: onCursor={setCursor} label=\"Connected run timetable. Arrow keys step between recorded events.\"",
+      "kind": "control",
+      "category": "INFRA_OUTPUT",
+      "categoryReason": "Infrastructure intent or technical evidence; Model-2 mechanism/evidence required",
+      "ui": {
+        "status": "NOT_APPLICABLE",
+        "behavior": "Separate infrastructure reality gate",
+        "proofs": []
+      },
+      "resources": [
+        "ALL"
+      ],
+      "model1Meaning": "Current published Model-1/product surface: Timetable: onCursor={setCursor} label=\"Connected run timetable. Arrow keys step between recorded events.\"",
+      "model2Owner": "packages/simulation/src/model2/registry.ts",
+      "changesState": false,
+      "effects": {
+        "physics": false,
+        "reachability": false,
+        "security": false,
+        "cost": false,
+        "evidence": true
+      },
+      "provenanceRequirements": [
+        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+      ],
+      "status": "PARTIAL",
+      "finalProductEligible": false,
+      "plan": "INTERNAL connected Model-2 evidence view: draws only the recorded causal journal of an internal run. Remains internal until Model-2 presentation is approved."
+    },
+    {
+      "id": "control:apps/web/src/features/connectedRun/ConnectedTimetablePage.tsx:TrainStops-c0442801520de396106f:0",
+      "source": "apps/web/src/features/connectedRun/ConnectedTimetablePage.tsx",
+      "identity": "TrainStops-c0442801520de396106f",
+      "description": "TrainStops: onClear={() => setFocus(null)} onPick={setCursor}",
+      "kind": "control",
+      "category": "PRODUCT_UI_ACTION",
+      "categoryReason": "Software interaction or authored presentation; no infrastructure truth claim",
+      "ui": {
+        "status": "REVIEW_REQUIRED",
+        "behavior": "TrainStops: onClear={() => setFocus(null)} onPick={setCursor}",
+        "proofs": []
+      },
+      "resources": [
+        "PRODUCT_UI"
+      ],
+      "model1Meaning": "Product interface presentation or interaction outside infrastructure physics: TrainStops: onClear={() => setFocus(null)} onPick={setCursor}",
+      "model2Owner": "NOT_APPLICABLE",
+      "changesState": false,
+      "effects": {
+        "physics": false,
+        "reachability": false,
+        "security": false,
+        "cost": false,
+        "evidence": false
+      },
+      "provenanceRequirements": [
+        "Reviewed promised software action/presentation and a relevant behavior proof; no simulation-physics owner required"
+      ],
+      "status": "NOT_APPLICABLE",
+      "finalProductEligible": false,
+      "plan": "Prove software behavior through PRODUCT_UI_VALIDITY. No physics owner required."
+    },
+    {
+      "id": "control:apps/web/src/features/connectedRun/ConnectedTimetablePage.tsx:button-d4eef8858786c3b4eb81:0",
+      "source": "apps/web/src/features/connectedRun/ConnectedTimetablePage.tsx",
+      "identity": "button-d4eef8858786c3b4eb81",
+      "description": "button: onClick={onClear}",
+      "kind": "control",
+      "category": "PRODUCT_UI_ACTION",
+      "categoryReason": "Software interaction or authored presentation; no infrastructure truth claim",
+      "ui": {
+        "status": "REVIEW_REQUIRED",
+        "behavior": "button: onClick={onClear}",
+        "proofs": []
+      },
+      "resources": [
+        "PRODUCT_UI"
+      ],
+      "model1Meaning": "Product interface presentation or interaction outside infrastructure physics: button: onClick={onClear}",
+      "model2Owner": "NOT_APPLICABLE",
+      "changesState": false,
+      "effects": {
+        "physics": false,
+        "reachability": false,
+        "security": false,
+        "cost": false,
+        "evidence": false
+      },
+      "provenanceRequirements": [
+        "Reviewed promised software action/presentation and a relevant behavior proof; no simulation-physics owner required"
+      ],
+      "status": "NOT_APPLICABLE",
+      "finalProductEligible": false,
+      "plan": "Prove software behavior through PRODUCT_UI_VALIDITY. No physics owner required."
+    },
+    {
+      "id": "control:apps/web/src/features/connectedRun/ConnectedTimetablePage.tsx:button-dca06932d7014d8c8d7a:0",
+      "source": "apps/web/src/features/connectedRun/ConnectedTimetablePage.tsx",
+      "identity": "button-dca06932d7014d8c8d7a",
+      "description": "button: onClick={() => { setFocus(focus === tr.id ? null : tr.id); setCursor(tr.stops[0]!.t); }}",
+      "kind": "control",
+      "category": "PRODUCT_UI_ACTION",
+      "categoryReason": "Software interaction or authored presentation; no infrastructure truth claim",
+      "ui": {
+        "status": "REVIEW_REQUIRED",
+        "behavior": "button: onClick={() => { setFocus(focus === tr.id ? null : tr.id); setCursor(tr.stops[0]!.t); }}",
+        "proofs": []
+      },
+      "resources": [
+        "PRODUCT_UI"
+      ],
+      "model1Meaning": "Product interface presentation or interaction outside infrastructure physics: button: onClick={() => { setFocus(focus === tr.id ? null : tr.id); setCursor(tr.stops[0]!.t); }}",
+      "model2Owner": "NOT_APPLICABLE",
+      "changesState": false,
+      "effects": {
+        "physics": false,
+        "reachability": false,
+        "security": false,
+        "cost": false,
+        "evidence": false
+      },
+      "provenanceRequirements": [
+        "Reviewed promised software action/presentation and a relevant behavior proof; no simulation-physics owner required"
+      ],
+      "status": "NOT_APPLICABLE",
+      "finalProductEligible": false,
+      "plan": "Prove software behavior through PRODUCT_UI_VALIDITY. No physics owner required."
+    },
+    {
+      "id": "control:apps/web/src/features/connectedRun/ConnectedTimetablePage.tsx:button-f550523018edcdbdebae:0",
+      "source": "apps/web/src/features/connectedRun/ConnectedTimetablePage.tsx",
+      "identity": "button-f550523018edcdbdebae",
+      "description": "button: onClick={() => onPick(s.t)}",
+      "kind": "control",
+      "category": "PRODUCT_UI_ACTION",
+      "categoryReason": "Software interaction or authored presentation; no infrastructure truth claim",
+      "ui": {
+        "status": "REVIEW_REQUIRED",
+        "behavior": "button: onClick={() => onPick(s.t)}",
+        "proofs": []
+      },
+      "resources": [
+        "PRODUCT_UI"
+      ],
+      "model1Meaning": "Product interface presentation or interaction outside infrastructure physics: button: onClick={() => onPick(s.t)}",
+      "model2Owner": "NOT_APPLICABLE",
+      "changesState": false,
+      "effects": {
+        "physics": false,
+        "reachability": false,
+        "security": false,
+        "cost": false,
+        "evidence": false
+      },
+      "provenanceRequirements": [
+        "Reviewed promised software action/presentation and a relevant behavior proof; no simulation-physics owner required"
+      ],
+      "status": "NOT_APPLICABLE",
+      "finalProductEligible": false,
+      "plan": "Prove software behavior through PRODUCT_UI_VALIDITY. No physics owner required."
     },
     {
       "id": "control:apps/web/src/features/dashboard/pages/HomePage.tsx:Button-250e48fe27a81c5cfc9d:0",
@@ -6699,16 +7095,57 @@
       "plan": "Preserve API/auth/retry/accessibility semantics during Claude redesign; reprove replacement control fingerprints"
     },
     {
-      "id": "control:apps/web/src/features/landing/components/HeroDiagram.tsx:HealthMark-b082ba8ef0932486fa63:0",
-      "source": "apps/web/src/features/landing/components/HeroDiagram.tsx",
-      "identity": "HealthMark-b082ba8ef0932486fa63",
+      "id": "control:apps/web/src/features/landing/components/HeroInstrument.tsx:Timetable-a7fafef25002a4f927a0:0",
+      "source": "apps/web/src/features/landing/components/HeroInstrument.tsx",
+      "identity": "Timetable-a7fafef25002a4f927a0",
+      "description": "Timetable: onCursor={setCursor} label=\"Recorded run timetable. After you answer, use the arrow keys to move through every second.\"",
       "kind": "control",
+      "category": "INFRA_OUTPUT",
+      "categoryReason": "Infrastructure intent or technical evidence; Model-2 mechanism/evidence required",
+      "ui": {
+        "status": "NOT_APPLICABLE",
+        "behavior": "Separate infrastructure reality gate",
+        "proofs": []
+      },
+      "resources": [
+        "ALL"
+      ],
+      "model1Meaning": "Current published Model-1/product surface: Timetable: onCursor={setCursor} label=\"Recorded run timetable. After you answer, use the arrow keys to move through every second.\"",
+      "model2Owner": "packages/simulation/src/model2/registry.ts",
+      "changesState": false,
+      "effects": {
+        "physics": false,
+        "reachability": false,
+        "security": false,
+        "cost": false,
+        "evidence": true
+      },
+      "provenanceRequirements": [
+        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+      ],
+      "status": "MODEL1_ONLY",
+      "finalProductEligible": false,
+      "plan": "Retain historical Model-1 meaning. Before Model-2 shipping, bind this surface to the appropriate explicit Model-2 workload/resource/evidence contract and prove downstream effects, or remove it."
+    },
+    {
+      "id": "control:apps/web/src/features/landing/components/HeroInstrument.tsx:button-d20df752a66e9fa8ccb3:0",
+      "source": "apps/web/src/features/landing/components/HeroInstrument.tsx",
+      "identity": "button-d20df752a66e9fa8ccb3",
+      "description": "button: onClick={() => commit(c)}",
+      "kind": "control",
+      "category": "PRODUCT_UI_ACTION",
+      "categoryReason": "Software interaction or authored presentation; no infrastructure truth claim",
+      "ui": {
+        "status": "REVIEW_REQUIRED",
+        "behavior": "button: onClick={() => commit(c)}",
+        "proofs": []
+      },
       "resources": [
         "PRODUCT_UI"
       ],
-      "model1Meaning": "Existing application UI state/authentication/navigation event forwarding, outside infrastructure physics: HealthMark: value=\"healthy\" label=\"Overall healthy\"",
+      "model1Meaning": "Product interface presentation or interaction outside infrastructure physics: button: onClick={() => commit(c)}",
       "model2Owner": "NOT_APPLICABLE",
-      "changesState": true,
+      "changesState": false,
       "effects": {
         "physics": false,
         "reachability": false,
@@ -6721,16 +7158,7 @@
       ],
       "status": "NOT_APPLICABLE",
       "finalProductEligible": false,
-      "plan": "Prove software behavior through PRODUCT_UI_VALIDITY. No physics owner required.",
-      "description": "HealthMark: value=\"healthy\" label=\"Overall healthy\"",
-      "category": "PRODUCT_UI_ACTION",
-      "categoryReason": "Software interaction or authored presentation; no infrastructure truth claim",
-      "ui": {
-        "status": "REVIEW_REQUIRED",
-        "behavior": "HealthMark: value=\"healthy\" label=\"Overall healthy\"",
-        "proofs": []
-      },
-      "legacyM2gStatus": "REAL"
+      "plan": "Prove software behavior through PRODUCT_UI_VALIDITY. No physics owner required."
     },
     {
       "id": "control:apps/web/src/features/live/EventsLog.tsx:div-3e3c4bc42b6da6034242:0",
@@ -6799,6 +7227,72 @@
         "proofs": []
       },
       "legacyM2gStatus": "MODEL1_ONLY"
+    },
+    {
+      "id": "control:apps/web/src/features/live/LiveTimetable.tsx:Timetable-cfb7a6fdbf9be1519a2d:0",
+      "source": "apps/web/src/features/live/LiveTimetable.tsx",
+      "identity": "Timetable-cfb7a6fdbf9be1519a2d",
+      "description": "Timetable: onCursor={setPinned} label=\"Live run timetable. Arrow keys move between received seconds.\"",
+      "kind": "control",
+      "category": "INFRA_OUTPUT",
+      "categoryReason": "Infrastructure intent or technical evidence; Model-2 mechanism/evidence required",
+      "ui": {
+        "status": "NOT_APPLICABLE",
+        "behavior": "Separate infrastructure reality gate",
+        "proofs": []
+      },
+      "resources": [
+        "ALL"
+      ],
+      "model1Meaning": "Current published Model-1/product surface: Timetable: onCursor={setPinned} label=\"Live run timetable. Arrow keys move between received seconds.\"",
+      "model2Owner": "packages/simulation/src/model2/registry.ts",
+      "changesState": false,
+      "effects": {
+        "physics": false,
+        "reachability": false,
+        "security": false,
+        "cost": false,
+        "evidence": true
+      },
+      "provenanceRequirements": [
+        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+      ],
+      "status": "MODEL1_ONLY",
+      "finalProductEligible": false,
+      "plan": "Retain historical Model-1 meaning. Before Model-2 shipping, bind this surface to the appropriate explicit Model-2 workload/resource/evidence contract and prove downstream effects, or remove it."
+    },
+    {
+      "id": "control:apps/web/src/features/live/LiveTimetable.tsx:button-211bdeb5c56fb4f27dd9:0",
+      "source": "apps/web/src/features/live/LiveTimetable.tsx",
+      "identity": "button-211bdeb5c56fb4f27dd9",
+      "description": "button: onClick={() => setPinned(null)}",
+      "kind": "control",
+      "category": "PRESENTATION_ONLY",
+      "categoryReason": "Software interaction or authored presentation; no infrastructure truth claim",
+      "ui": {
+        "status": "REVIEW_REQUIRED",
+        "behavior": "button: onClick={() => setPinned(null)}",
+        "proofs": []
+      },
+      "resources": [
+        "PRODUCT_UI"
+      ],
+      "model1Meaning": "Product interface presentation or interaction outside infrastructure physics: button: onClick={() => setPinned(null)}",
+      "model2Owner": "NOT_APPLICABLE",
+      "changesState": false,
+      "effects": {
+        "physics": false,
+        "reachability": false,
+        "security": false,
+        "cost": false,
+        "evidence": false
+      },
+      "provenanceRequirements": [
+        "Reviewed promised software action/presentation and a relevant behavior proof; no simulation-physics owner required"
+      ],
+      "status": "NOT_APPLICABLE",
+      "finalProductEligible": false,
+      "plan": "Prove software behavior through PRODUCT_UI_VALIDITY. No physics owner required."
     },
     {
       "id": "control:apps/web/src/features/live/LiveWorkspace.tsx:Button-19c4c0c82faf38d975d8:0",
@@ -6935,6 +7429,39 @@
         "proofs": []
       },
       "legacyM2gStatus": "MODEL1_ONLY"
+    },
+    {
+      "id": "control:apps/web/src/features/live/LiveWorkspace.tsx:Button-dbbed053427345b040f5:0",
+      "source": "apps/web/src/features/live/LiveWorkspace.tsx",
+      "identity": "Button-dbbed053427345b040f5",
+      "description": "Button: onClick={() => setTimetable(!showTimetable)}",
+      "kind": "control",
+      "category": "PRESENTATION_ONLY",
+      "categoryReason": "Software interaction or authored presentation; no infrastructure truth claim",
+      "ui": {
+        "status": "REVIEW_REQUIRED",
+        "behavior": "Button: onClick={() => setTimetable(!showTimetable)}",
+        "proofs": []
+      },
+      "resources": [
+        "PRODUCT_UI"
+      ],
+      "model1Meaning": "Product interface presentation or interaction outside infrastructure physics: Button: onClick={() => setTimetable(!showTimetable)}",
+      "model2Owner": "NOT_APPLICABLE",
+      "changesState": false,
+      "effects": {
+        "physics": false,
+        "reachability": false,
+        "security": false,
+        "cost": false,
+        "evidence": false
+      },
+      "provenanceRequirements": [
+        "Reviewed promised software action/presentation and a relevant behavior proof; no simulation-physics owner required"
+      ],
+      "status": "NOT_APPLICABLE",
+      "finalProductEligible": false,
+      "plan": "Prove software behavior through PRODUCT_UI_VALIDITY. No physics owner required."
     },
     {
       "id": "control:apps/web/src/features/live/LiveWorkspace.tsx:Dialog-88acd72b5407fcde7bb3:0",
@@ -7889,6 +8416,171 @@
       "legacyM2gStatus": "MODEL1_ONLY"
     },
     {
+      "id": "control:apps/web/src/features/replay/MomentReadout.tsx:HealthMark-5f30ab30917ca8e512a0:0",
+      "source": "apps/web/src/features/replay/MomentReadout.tsx",
+      "identity": "HealthMark-5f30ab30917ca8e512a0",
+      "description": "HealthMark: value={system?.health} label={system ? `System ${system.health}` : \"System not retained\"}",
+      "kind": "control",
+      "category": "INFRA_OUTPUT",
+      "categoryReason": "Infrastructure intent or technical evidence; Model-2 mechanism/evidence required",
+      "ui": {
+        "status": "NOT_APPLICABLE",
+        "behavior": "Separate infrastructure reality gate",
+        "proofs": []
+      },
+      "resources": [
+        "ALL"
+      ],
+      "model1Meaning": "Current published Model-1/product surface: HealthMark: value={system?.health} label={system ? `System ${system.health}` : \"System not retained\"}",
+      "model2Owner": "packages/simulation/src/model2/registry.ts",
+      "changesState": false,
+      "effects": {
+        "physics": false,
+        "reachability": false,
+        "security": false,
+        "cost": false,
+        "evidence": true
+      },
+      "provenanceRequirements": [
+        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+      ],
+      "status": "MODEL1_ONLY",
+      "finalProductEligible": false,
+      "plan": "Retain historical Model-1 meaning. Before Model-2 shipping, bind this surface to the appropriate explicit Model-2 workload/resource/evidence contract and prove downstream effects, or remove it."
+    },
+    {
+      "id": "control:apps/web/src/features/replay/MomentReadout.tsx:HealthMark-8947949aa70c5e988363:0",
+      "source": "apps/web/src/features/replay/MomentReadout.tsx",
+      "identity": "HealthMark-8947949aa70c5e988363",
+      "description": "HealthMark: value={sample?.health} label={sample ? undefined : \"Not retained\"}",
+      "kind": "control",
+      "category": "INFRA_OUTPUT",
+      "categoryReason": "Infrastructure intent or technical evidence; Model-2 mechanism/evidence required",
+      "ui": {
+        "status": "NOT_APPLICABLE",
+        "behavior": "Separate infrastructure reality gate",
+        "proofs": []
+      },
+      "resources": [
+        "ALL"
+      ],
+      "model1Meaning": "Current published Model-1/product surface: HealthMark: value={sample?.health} label={sample ? undefined : \"Not retained\"}",
+      "model2Owner": "packages/simulation/src/model2/registry.ts",
+      "changesState": false,
+      "effects": {
+        "physics": false,
+        "reachability": false,
+        "security": false,
+        "cost": false,
+        "evidence": true
+      },
+      "provenanceRequirements": [
+        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+      ],
+      "status": "MODEL1_ONLY",
+      "finalProductEligible": false,
+      "plan": "Retain historical Model-1 meaning. Before Model-2 shipping, bind this surface to the appropriate explicit Model-2 workload/resource/evidence contract and prove downstream effects, or remove it."
+    },
+    {
+      "id": "control:apps/web/src/features/replay/ReplayStage.tsx:StationMap-c17431afa5ea3519648c:0",
+      "source": "apps/web/src/features/replay/ReplayStage.tsx",
+      "identity": "StationMap-c17431afa5ea3519648c",
+      "description": "StationMap: label={`Architecture at ${formatTime(t, model.unit)}`} onSelect={(id) => setSelected((s) => s === id ? null : id)}",
+      "kind": "control",
+      "category": "INFRA_OUTPUT",
+      "categoryReason": "Infrastructure intent or technical evidence; Model-2 mechanism/evidence required",
+      "ui": {
+        "status": "NOT_APPLICABLE",
+        "behavior": "Separate infrastructure reality gate",
+        "proofs": []
+      },
+      "resources": [
+        "ALL"
+      ],
+      "model1Meaning": "Current published Model-1/product surface: StationMap: label={`Architecture at ${formatTime(t, model.unit)}`} onSelect={(id) => setSelected((s) => s === id ? null : id)}",
+      "model2Owner": "packages/simulation/src/model2/registry.ts",
+      "changesState": false,
+      "effects": {
+        "physics": false,
+        "reachability": false,
+        "security": false,
+        "cost": false,
+        "evidence": true
+      },
+      "provenanceRequirements": [
+        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+      ],
+      "status": "MODEL1_ONLY",
+      "finalProductEligible": false,
+      "plan": "Retain historical Model-1 meaning. Before Model-2 shipping, bind this surface to the appropriate explicit Model-2 workload/resource/evidence contract and prove downstream effects, or remove it."
+    },
+    {
+      "id": "control:apps/web/src/features/replay/ReplayStage.tsx:Timetable-f411517300e141736cfa:0",
+      "source": "apps/web/src/features/replay/ReplayStage.tsx",
+      "identity": "Timetable-f411517300e141736cfa",
+      "description": "Timetable: onCursor={setCursor} label=\"Recorded run timetable. Use arrow keys to move between retained seconds.\"",
+      "kind": "control",
+      "category": "INFRA_OUTPUT",
+      "categoryReason": "Infrastructure intent or technical evidence; Model-2 mechanism/evidence required",
+      "ui": {
+        "status": "NOT_APPLICABLE",
+        "behavior": "Separate infrastructure reality gate",
+        "proofs": []
+      },
+      "resources": [
+        "ALL"
+      ],
+      "model1Meaning": "Current published Model-1/product surface: Timetable: onCursor={setCursor} label=\"Recorded run timetable. Use arrow keys to move between retained seconds.\"",
+      "model2Owner": "packages/simulation/src/model2/registry.ts",
+      "changesState": false,
+      "effects": {
+        "physics": false,
+        "reachability": false,
+        "security": false,
+        "cost": false,
+        "evidence": true
+      },
+      "provenanceRequirements": [
+        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+      ],
+      "status": "MODEL1_ONLY",
+      "finalProductEligible": false,
+      "plan": "Retain historical Model-1 meaning. Before Model-2 shipping, bind this surface to the appropriate explicit Model-2 workload/resource/evidence contract and prove downstream effects, or remove it."
+    },
+    {
+      "id": "control:apps/web/src/features/replay/ReplayStage.tsx:button-ef8681362487f9a3bbfd:0",
+      "source": "apps/web/src/features/replay/ReplayStage.tsx",
+      "identity": "button-ef8681362487f9a3bbfd",
+      "description": "button: onClick={() => { setCursor(c.simulatedSecond!); if (c.resourceId) setSelected(c.resourceId); }}",
+      "kind": "control",
+      "category": "PRESENTATION_ONLY",
+      "categoryReason": "Software interaction or authored presentation; no infrastructure truth claim",
+      "ui": {
+        "status": "REVIEW_REQUIRED",
+        "behavior": "button: onClick={() => { setCursor(c.simulatedSecond!); if (c.resourceId) setSelected(c.resourceId); }}",
+        "proofs": []
+      },
+      "resources": [
+        "PRODUCT_UI"
+      ],
+      "model1Meaning": "Product interface presentation or interaction outside infrastructure physics: button: onClick={() => { setCursor(c.simulatedSecond!); if (c.resourceId) setSelected(c.resourceId); }}",
+      "model2Owner": "NOT_APPLICABLE",
+      "changesState": false,
+      "effects": {
+        "physics": false,
+        "reachability": false,
+        "security": false,
+        "cost": false,
+        "evidence": false
+      },
+      "provenanceRequirements": [
+        "Reviewed promised software action/presentation and a relevant behavior proof; no simulation-physics owner required"
+      ],
+      "status": "NOT_APPLICABLE",
+      "finalProductEligible": false,
+      "plan": "Prove software behavior through PRODUCT_UI_VALIDITY. No physics owner required."
+    },
+    {
       "id": "control:apps/web/src/features/reports/components/ComparePicker.tsx:Button-5ad51918b764d60986da:0",
       "source": "apps/web/src/features/reports/components/ComparePicker.tsx",
       "identity": "Button-5ad51918b764d60986da",
@@ -8116,7 +8808,7 @@
       "status": "NOT_APPLICABLE",
       "finalProductEligible": false,
       "plan": "Prove software behavior through PRODUCT_UI_VALIDITY. No physics owner required.",
-      "description": "Button: onClick={() => {\n        const canvas = useCanvasStore.getState();\n        if (canvas.activeDeploymentId || (!canvas.currentLayoutSaved && canvas.resources.length)) setConfirm(true);\n        else void open();\n      }}",
+      "description": "Button: onClick={() => {\r\n        const canvas = useCanvasStore.getState();\r\n        if (canvas.activeDeploymentId || (!canvas.currentLayoutSaved && canvas.resources.length)) setConfirm(true);\r\n        else void open();\r\n      }}",
       "category": "PRODUCT_UI_ACTION",
       "categoryReason": "Software interaction or authored presentation; no infrastructure truth claim",
       "ui": {
@@ -9215,6 +9907,72 @@
       "legacyM2gStatus": "REAL"
     },
     {
+      "id": "control:apps/web/src/features/timetable/Timetable.tsx:canvas-edd3a3342112a689919a:0",
+      "source": "apps/web/src/features/timetable/Timetable.tsx",
+      "identity": "canvas-edd3a3342112a689919a",
+      "description": "canvas: onPointerDown={(e) => { e.currentTarget.setPointerCapture(e.pointerId); pick(e); }} onPointerMove={(e) => { if (e.buttons & 1) pick(e); }}",
+      "kind": "control",
+      "category": "PRESENTATION_ONLY",
+      "categoryReason": "Software interaction or authored presentation; no infrastructure truth claim",
+      "ui": {
+        "status": "REVIEW_REQUIRED",
+        "behavior": "canvas: onPointerDown={(e) => { e.currentTarget.setPointerCapture(e.pointerId); pick(e); }} onPointerMove={(e) => { if (e.buttons & 1) pick(e); }}",
+        "proofs": []
+      },
+      "resources": [
+        "PRODUCT_UI"
+      ],
+      "model1Meaning": "Product interface presentation or interaction outside infrastructure physics: canvas: onPointerDown={(e) => { e.currentTarget.setPointerCapture(e.pointerId); pick(e); }} onPointerMove={(e) => { if (e.buttons & 1) pick(e); }}",
+      "model2Owner": "NOT_APPLICABLE",
+      "changesState": false,
+      "effects": {
+        "physics": false,
+        "reachability": false,
+        "security": false,
+        "cost": false,
+        "evidence": false
+      },
+      "provenanceRequirements": [
+        "Reviewed promised software action/presentation and a relevant behavior proof; no simulation-physics owner required"
+      ],
+      "status": "NOT_APPLICABLE",
+      "finalProductEligible": false,
+      "plan": "Prove software behavior through PRODUCT_UI_VALIDITY. No physics owner required."
+    },
+    {
+      "id": "control:apps/web/src/features/timetable/Timetable.tsx:div-6f3dcd974658c3e54391:0",
+      "source": "apps/web/src/features/timetable/Timetable.tsx",
+      "identity": "div-6f3dcd974658c3e54391",
+      "description": "div: aria-label={label} onKeyDown={key}",
+      "kind": "control",
+      "category": "PRESENTATION_ONLY",
+      "categoryReason": "Software interaction or authored presentation; no infrastructure truth claim",
+      "ui": {
+        "status": "REVIEW_REQUIRED",
+        "behavior": "div: aria-label={label} onKeyDown={key}",
+        "proofs": []
+      },
+      "resources": [
+        "PRODUCT_UI"
+      ],
+      "model1Meaning": "Product interface presentation or interaction outside infrastructure physics: div: aria-label={label} onKeyDown={key}",
+      "model2Owner": "NOT_APPLICABLE",
+      "changesState": false,
+      "effects": {
+        "physics": false,
+        "reachability": false,
+        "security": false,
+        "cost": false,
+        "evidence": false
+      },
+      "provenanceRequirements": [
+        "Reviewed promised software action/presentation and a relevant behavior proof; no simulation-physics owner required"
+      ],
+      "status": "NOT_APPLICABLE",
+      "finalProductEligible": false,
+      "plan": "Prove software behavior through PRODUCT_UI_VALIDITY. No physics owner required."
+    },
+    {
       "id": "control:apps/web/src/ui/Button.tsx:button-93cc419c4190f9199cac:0",
       "source": "apps/web/src/ui/Button.tsx",
       "identity": "button-93cc419c4190f9199cac",
@@ -9714,7 +10472,7 @@
       "status": "NOT_APPLICABLE",
       "finalProductEligible": false,
       "plan": "Prove software behavior through PRODUCT_UI_VALIDITY. No physics owner required.",
-      "description": "Radix.Content: onCloseAutoFocus={(event) => {\n            // Back to the control that opened it; a dialog the page opened itself hands focus to the main content.\n            const target = opener?.isConnected ? opener : document.getElementById(\"main\");\n            if (target) { event.preventDefault(); target.focus(); }\n          }} onPointerDownOutside={outside} onEscapeKeyDown={(event) => { if (busy) event.preventDefault(); }}",
+      "description": "Radix.Content: onCloseAutoFocus={(event) => {\r\n            // Back to the control that opened it; a dialog the page opened itself hands focus to the main content.\r\n            const target = opener?.isConnected ? opener : document.getElementById(\"main\");\r\n            if (target) { event.preventDefault(); target.focus(); }\r\n          }} onPointerDownOutside={outside} onEscapeKeyDown={(event) => { if (busy) event.preventDefault(); }}",
       "category": "PRESENTATION_ONLY",
       "categoryReason": "Software interaction or authored presentation; no infrastructure truth claim",
       "ui": {
@@ -10473,14 +11231,22 @@
       "legacyM2gStatus": "MODEL1_ONLY"
     },
     {
-      "id": "display:apps/web/src/features/canvas/components/ConnectionLinesLayer.tsx:42b60f90dbec9399c682:0",
+      "id": "display:apps/web/src/features/canvas/components/ConnectionLinesLayer.tsx:9e1b321d2a0db34b8147:0",
       "source": "apps/web/src/features/canvas/components/ConnectionLinesLayer.tsx",
-      "identity": "42b60f90dbec9399c682",
+      "identity": "9e1b321d2a0db34b8147",
+      "description": "connectionLines.map((line) => { const source = byId.get(line.sourceId), target = byId.get(line.targetId); if (!source || !target) return null; const selected = selectedConnectionId === line.id; // Qualitative only: a line takes the health recorded for the resource it feeds. Model 1 records no // per-connection traffic, so nothing moves along the rails. const health = metrics?.[target.id]?.health; const tone = health === \"failed\" || health === \"saturated\" ? \"fail\" : health === \"degraded\" ? \"warn\" : null; return ( <RailConnection key={line.id} source={source} target={target} port={line.port} isSelected={selected} scale={scale} nodeWidth={NODE_CARD_WIDTH} sourceHeight={cardHeights[source.id] ?? nodeHeight} targetHeight={cardHeights[target.id] ?? nodeHeight} tone={tone} label={`${source.name |",
       "kind": "display",
+      "category": "INFRA_OUTPUT",
+      "categoryReason": "Infrastructure intent or technical evidence; Model-2 mechanism/evidence required",
+      "ui": {
+        "status": "NOT_APPLICABLE",
+        "behavior": "Separate infrastructure reality gate",
+        "proofs": []
+      },
       "resources": [
         "ALL"
       ],
-      "model1Meaning": "Current published Model-1/product surface: connectionLines.map((line) => { const source = byId.get(line.sourceId), target = byId.get(line.targetId); if (!source || !target) return null; const selected = selectedConnectionId === line.id; // Qualitative only: a line takes the health recorded for the resource it feeds. A failed resource // serves no requests in this model, so its incoming lines stop moving. const health = metrics?.[target.id]?.health; const tone = health === \"failed\" || health === \"saturated\" ? \"fail\" : health === \"degraded\" ? \"warn\" : null; return ( <BezierConnectionLine key={line.id} source={source} target={target} port={line.port} isSelected={selected} scale={scale} nodeWidth={NODE_CARD_WIDTH} sourceHeight={cardHeights[source.id] ?? nodeHeight} targetHeight={cardHeights[target.id] ?? nodeHeight} showPackets={liveMo",
+      "model1Meaning": "Current published Model-1/product surface: connectionLines.map((line) => { const source = byId.get(line.sourceId), target = byId.get(line.targetId); if (!source || !target) return null; const selected = selectedConnectionId === line.id; // Qualitative only: a line takes the health recorded for the resource it feeds. Model 1 records no // per-connection traffic, so nothing moves along the rails. const health = metrics?.[target.id]?.health; const tone = health === \"failed\" || health === \"saturated\" ? \"fail\" : health === \"degraded\" ? \"warn\" : null; return ( <RailConnection key={line.id} source={source} target={target} port={line.port} isSelected={selected} scale={scale} nodeWidth={NODE_CARD_WIDTH} sourceHeight={cardHeights[source.id] ?? nodeHeight} targetHeight={cardHeights[target.id] ?? nodeHeight} tone={tone} label={`${source.name |",
       "model2Owner": "packages/simulation/src/model2/registry.ts",
       "changesState": false,
       "effects": {
@@ -10496,14 +11262,6 @@
       "status": "MODEL1_ONLY",
       "finalProductEligible": false,
       "plan": "Retain historical Model-1 meaning. Before Model-2 shipping, bind this surface to the appropriate explicit Model-2 workload/resource/evidence contract and prove downstream effects, or remove it.",
-      "description": "connectionLines.map((line) => { const source = byId.get(line.sourceId), target = byId.get(line.targetId); if (!source || !target) return null; const selected = selectedConnectionId === line.id; // Qualitative only: a line takes the health recorded for the resource it feeds. A failed resource // serves no requests in this model, so its incoming lines stop moving. const health = metrics?.[target.id]?.health; const tone = health === \"failed\" || health === \"saturated\" ? \"fail\" : health === \"degraded\" ? \"warn\" : null; return ( <BezierConnectionLine key={line.id} source={source} target={target} port={line.port} isSelected={selected} scale={scale} nodeWidth={NODE_CARD_WIDTH} sourceHeight={cardHeights[source.id] ?? nodeHeight} targetHeight={cardHeights[target.id] ?? nodeHeight} showPackets={liveMo",
-      "category": "INFRA_OUTPUT",
-      "categoryReason": "Infrastructure intent or technical evidence; Model-2 mechanism/evidence required",
-      "ui": {
-        "status": "NOT_APPLICABLE",
-        "behavior": "Separate infrastructure reality gate",
-        "proofs": []
-      },
       "legacyM2gStatus": "MODEL1_ONLY"
     },
     {
@@ -10541,14 +11299,22 @@
       "legacyM2gStatus": "MODEL1_ONLY"
     },
     {
-      "id": "display:apps/web/src/features/canvas/components/SpawnedReplicaLayer.tsx:190b56b71cef15a53ee6:0",
+      "id": "display:apps/web/src/features/canvas/components/SpawnedReplicaLayer.tsx:9761ec7041f132a48a7b:0",
       "source": "apps/web/src/features/canvas/components/SpawnedReplicaLayer.tsx",
-      "identity": "190b56b71cef15a53ee6",
+      "identity": "9761ec7041f132a48a7b",
+      "description": "linkTubes.map(({ vm, lb, x, y, sourceHeight, targetHeight }) => ( <RailConnection key={`replica-link-${vm.id}`} source={lb} target={{ x, y }} port={80} scale={scale} nodeWidth={NODE_CARD_WIDTH} sourceHeight={sourceHeight} targetHeight={targetHeight} /> ))",
       "kind": "display",
+      "category": "INFRA_OUTPUT",
+      "categoryReason": "Infrastructure intent or technical evidence; Model-2 mechanism/evidence required",
+      "ui": {
+        "status": "NOT_APPLICABLE",
+        "behavior": "Separate infrastructure reality gate",
+        "proofs": []
+      },
       "resources": [
         "ALL"
       ],
-      "model1Meaning": "Current published Model-1/product surface: linkTubes.map(({ vm, lb, x, y, sourceHeight, targetHeight }) => ( <BezierConnectionLine key={`replica-link-${vm.id}`} source={lb} target={{ x, y }} port={80} scale={scale} nodeWidth={NODE_CARD_WIDTH} sourceHeight={sourceHeight} targetHeight={targetHeight} showPackets={liveMode} animatePackets={simulationRunning} /> ))",
+      "model1Meaning": "Current published Model-1/product surface: linkTubes.map(({ vm, lb, x, y, sourceHeight, targetHeight }) => ( <RailConnection key={`replica-link-${vm.id}`} source={lb} target={{ x, y }} port={80} scale={scale} nodeWidth={NODE_CARD_WIDTH} sourceHeight={sourceHeight} targetHeight={targetHeight} /> ))",
       "model2Owner": "packages/simulation/src/model2/registry.ts",
       "changesState": false,
       "effects": {
@@ -10564,14 +11330,6 @@
       "status": "MODEL1_ONLY",
       "finalProductEligible": false,
       "plan": "Retain historical Model-1 meaning. Before Model-2 shipping, bind this surface to the appropriate explicit Model-2 workload/resource/evidence contract and prove downstream effects, or remove it.",
-      "description": "linkTubes.map(({ vm, lb, x, y, sourceHeight, targetHeight }) => ( <BezierConnectionLine key={`replica-link-${vm.id}`} source={lb} target={{ x, y }} port={80} scale={scale} nodeWidth={NODE_CARD_WIDTH} sourceHeight={sourceHeight} targetHeight={targetHeight} showPackets={liveMode} animatePackets={simulationRunning} /> ))",
-      "category": "INFRA_OUTPUT",
-      "categoryReason": "Infrastructure intent or technical evidence; Model-2 mechanism/evidence required",
-      "ui": {
-        "status": "NOT_APPLICABLE",
-        "behavior": "Separate infrastructure reality gate",
-        "proofs": []
-      },
       "legacyM2gStatus": "MODEL1_ONLY"
     },
     {
@@ -10607,6 +11365,39 @@
         "proofs": []
       },
       "legacyM2gStatus": "MODEL1_ONLY"
+    },
+    {
+      "id": "display:apps/web/src/features/canvas/components/designer/DesignWorkspace.tsx:2237a9c54e09a6df97b6:0",
+      "source": "apps/web/src/features/canvas/components/designer/DesignWorkspace.tsx",
+      "identity": "2237a9c54e09a6df97b6",
+      "description": "!docked && <> <Dialog open={sheet === \"add\"} onOpenChange={(open) => setSheet(open ? \"add\" : null)} title=\"Add a resource\" size=\"md\"> <div className=\"-mx-5 -my-4 h-[60dvh]\"><PalettePanel draggable={false} onAdded={() => setSheet(null)} /></div> </Dialog> <Dialog open={sheet === \"details\"} onOpenChange={(open) => setSheet(open ? \"details\" : null)} title=\"Design details\" size=\"md\"> <div className=\"-mx-5 -my-4 h-[70dvh]\">{panel(\"sheet\")}</div> </Dialog> </>",
+      "kind": "display",
+      "category": "PRESENTATION_ONLY",
+      "categoryReason": "Software interaction or authored presentation; no infrastructure truth claim",
+      "ui": {
+        "status": "REVIEW_REQUIRED",
+        "behavior": "!docked && <> <Dialog open={sheet === \"add\"} onOpenChange={(open) => setSheet(open ? \"add\" : null)} title=\"Add a resource\" size=\"md\"> <div className=\"-mx-5 -my-4 h-[60dvh]\"><PalettePanel draggable={false} onAdded={() => setSheet(null)} /></div> </Dialog> <Dialog open={sheet === \"details\"} onOpenChange={(open) => setSheet(open ? \"details\" : null)} title=\"Design details\" size=\"md\"> <div className=\"-mx-5 -my-4 h-[70dvh]\">{panel(\"sheet\")}</div> </Dialog> </>",
+        "proofs": []
+      },
+      "resources": [
+        "PRODUCT_UI"
+      ],
+      "model1Meaning": "Product interface presentation or interaction outside infrastructure physics: !docked && <> <Dialog open={sheet === \"add\"} onOpenChange={(open) => setSheet(open ? \"add\" : null)} title=\"Add a resource\" size=\"md\"> <div className=\"-mx-5 -my-4 h-[60dvh]\"><PalettePanel draggable={false} onAdded={() => setSheet(null)} /></div> </Dialog> <Dialog open={sheet === \"details\"} onOpenChange={(open) => setSheet(open ? \"details\" : null)} title=\"Design details\" size=\"md\"> <div className=\"-mx-5 -my-4 h-[70dvh]\">{panel(\"sheet\")}</div> </Dialog> </>",
+      "model2Owner": "NOT_APPLICABLE",
+      "changesState": false,
+      "effects": {
+        "physics": false,
+        "reachability": false,
+        "security": false,
+        "cost": false,
+        "evidence": false
+      },
+      "provenanceRequirements": [
+        "Reviewed promised software action/presentation and a relevant behavior proof; no simulation-physics owner required"
+      ],
+      "status": "NOT_APPLICABLE",
+      "finalProductEligible": false,
+      "plan": "Prove software behavior through PRODUCT_UI_VALIDITY. No physics owner required."
     },
     {
       "id": "display:apps/web/src/features/canvas/components/designer/SidePanel.tsx:e1ffc9de9d0bd55f057d:0",
@@ -11425,40 +12216,6 @@
       "legacyM2gStatus": "MODEL1_ONLY"
     },
     {
-      "id": "display:apps/web/src/features/canvas/components/inspector/Inspector.tsx:401bfa267115e15d4298:0",
-      "source": "apps/web/src/features/canvas/components/inspector/Inspector.tsx",
-      "identity": "401bfa267115e15d4298",
-      "kind": "display",
-      "resources": [
-        "ALL"
-      ],
-      "model1Meaning": "Current published Model-1/product surface: { color: categoryColor(resource.type) }",
-      "model2Owner": "NOT_APPLICABLE",
-      "changesState": false,
-      "effects": {
-        "physics": false,
-        "reachability": false,
-        "security": false,
-        "cost": false,
-        "evidence": false
-      },
-      "provenanceRequirements": [
-        "Reviewed promised software action/presentation and a relevant behavior proof; no simulation-physics owner required"
-      ],
-      "status": "NOT_APPLICABLE",
-      "finalProductEligible": false,
-      "plan": "Prove software behavior through PRODUCT_UI_VALIDITY. No physics owner required.",
-      "description": "{ color: categoryColor(resource.type) }",
-      "category": "PRESENTATION_ONLY",
-      "categoryReason": "Software interaction or authored presentation; no infrastructure truth claim",
-      "ui": {
-        "status": "REVIEW_REQUIRED",
-        "behavior": "{ color: categoryColor(resource.type) }",
-        "proofs": []
-      },
-      "legacyM2gStatus": "MODEL1_ONLY"
-    },
-    {
       "id": "display:apps/web/src/features/canvas/components/inspector/Inspector.tsx:41dbccdcd3080c39a2f1:0",
       "source": "apps/web/src/features/canvas/components/inspector/Inspector.tsx",
       "identity": "41dbccdcd3080c39a2f1",
@@ -12003,40 +12760,6 @@
       "legacyM2gStatus": "MODEL1_ONLY"
     },
     {
-      "id": "display:apps/web/src/features/canvas/components/node/NodeCard.tsx:120933b7356fa7c7b9ec:0",
-      "source": "apps/web/src/features/canvas/components/node/NodeCard.tsx",
-      "identity": "120933b7356fa7c7b9ec",
-      "kind": "display",
-      "resources": [
-        "ALL"
-      ],
-      "model1Meaning": "Current published Model-1/product surface: resource.name && <p className=\"if-num truncate text-[10.5px] text-ink-3\">{resource.id}</p>",
-      "model2Owner": "NOT_APPLICABLE",
-      "changesState": false,
-      "effects": {
-        "physics": false,
-        "reachability": false,
-        "security": false,
-        "cost": false,
-        "evidence": false
-      },
-      "provenanceRequirements": [
-        "Reviewed promised software action/presentation and a relevant behavior proof; no simulation-physics owner required"
-      ],
-      "status": "NOT_APPLICABLE",
-      "finalProductEligible": false,
-      "plan": "Prove software behavior through PRODUCT_UI_VALIDITY. No physics owner required.",
-      "description": "resource.name && <p className=\"if-num truncate text-[10.5px] text-ink-3\">{resource.id}</p>",
-      "category": "PRESENTATION_ONLY",
-      "categoryReason": "Software interaction or authored presentation; no infrastructure truth claim",
-      "ui": {
-        "status": "REVIEW_REQUIRED",
-        "behavior": "resource.name && <p className=\"if-num truncate text-[10.5px] text-ink-3\">{resource.id}</p>",
-        "proofs": []
-      },
-      "legacyM2gStatus": "MODEL1_ONLY"
-    },
-    {
       "id": "display:apps/web/src/features/canvas/components/node/NodeCard.tsx:16c46be170807e9c929d:0",
       "source": "apps/web/src/features/canvas/components/node/NodeCard.tsx",
       "identity": "16c46be170807e9c929d",
@@ -12377,37 +13100,37 @@
       "legacyM2gStatus": "MODEL1_ONLY"
     },
     {
-      "id": "display:apps/web/src/features/canvas/components/node/NodeCard.tsx:b8ad8c594c247c585344:0",
+      "id": "display:apps/web/src/features/canvas/components/node/NodeCard.tsx:bf9f541b88aa278f28de:0",
       "source": "apps/web/src/features/canvas/components/node/NodeCard.tsx",
-      "identity": "b8ad8c594c247c585344",
+      "identity": "bf9f541b88aa278f28de",
+      "description": "resource.name ? <span className=\"if-num\">{resource.id}</span> : resource.type",
       "kind": "display",
+      "category": "PRESENTATION_ONLY",
+      "categoryReason": "Software interaction or authored presentation; no infrastructure truth claim",
+      "ui": {
+        "status": "REVIEW_REQUIRED",
+        "behavior": "resource.name ? <span className=\"if-num\">{resource.id}</span> : resource.type",
+        "proofs": []
+      },
       "resources": [
         "ALL"
       ],
-      "model1Meaning": "Current published Model-1/product surface: mode === \"design\" ? ( <div className=\"mt-auto pt-2\"> <div className=\"flex items-baseline justify-between gap-2\"> <span className=\"if-num text-[15px] text-ink\">{capacity.value.toLocaleString()} <span className=\"text-[11px] text-ink-3\">{capacity.unit}</span></span> <span className=\"if-num truncate text-[11px] text-ink-2\">{resource.skuId ?? \"generic\"}</span> </div> {pool && <p className=\"if-num mt-0.5 truncate text-[10.5px] text-ink-3\">autoscaling · target {resource.autoscaling?.targetCpu ?? SIMULATION_CONSTANTS.AUTOSCALING.DEFAULT_TARGET_CPU}% CPU</p>} <ExposureMarks resource={resource} /> </div> ) : !metric ? ( <p role=\"status\" className=\"mt-3 text-xs text-ink-3\">Waiting for the first measurement…</p> ) : ( <div className=\"mt-1.5 flex flex-col gap-1\"> <MeterRow label=\"CPU\" value={metric.cpu",
-      "model2Owner": "packages/simulation/src/model2/registry.ts",
+      "model1Meaning": "Current published Model-1/product surface: resource.name ? <span className=\"if-num\">{resource.id}</span> : resource.type",
+      "model2Owner": "NOT_APPLICABLE",
       "changesState": false,
       "effects": {
         "physics": false,
         "reachability": false,
         "security": false,
         "cost": false,
-        "evidence": true
+        "evidence": false
       },
       "provenanceRequirements": [
-        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+        "Reviewed promised software action/presentation and a relevant behavior proof; no simulation-physics owner required"
       ],
-      "status": "MODEL1_ONLY",
+      "status": "NOT_APPLICABLE",
       "finalProductEligible": false,
-      "plan": "Retain historical Model-1 meaning. Before Model-2 shipping, bind this surface to the appropriate explicit Model-2 workload/resource/evidence contract and prove downstream effects, or remove it.",
-      "description": "mode === \"design\" ? ( <div className=\"mt-auto pt-2\"> <div className=\"flex items-baseline justify-between gap-2\"> <span className=\"if-num text-[15px] text-ink\">{capacity.value.toLocaleString()} <span className=\"text-[11px] text-ink-3\">{capacity.unit}</span></span> <span className=\"if-num truncate text-[11px] text-ink-2\">{resource.skuId ?? \"generic\"}</span> </div> {pool && <p className=\"if-num mt-0.5 truncate text-[10.5px] text-ink-3\">autoscaling · target {resource.autoscaling?.targetCpu ?? SIMULATION_CONSTANTS.AUTOSCALING.DEFAULT_TARGET_CPU}% CPU</p>} <ExposureMarks resource={resource} /> </div> ) : !metric ? ( <p role=\"status\" className=\"mt-3 text-xs text-ink-3\">Waiting for the first measurement…</p> ) : ( <div className=\"mt-1.5 flex flex-col gap-1\"> <MeterRow label=\"CPU\" value={metric.cpu",
-      "category": "COST_INPUT_OR_OUTPUT",
-      "categoryReason": "Infrastructure intent or technical evidence; Model-2 mechanism/evidence required",
-      "ui": {
-        "status": "NOT_APPLICABLE",
-        "behavior": "Separate infrastructure reality gate",
-        "proofs": []
-      },
+      "plan": "Prove software behavior through PRODUCT_UI_VALIDITY. No physics owner required.",
       "legacyM2gStatus": "MODEL1_ONLY"
     },
     {
@@ -12547,37 +13270,37 @@
       "legacyM2gStatus": "MODEL1_ONLY"
     },
     {
-      "id": "display:apps/web/src/features/canvas/components/node/NodeCard.tsx:e6a2bf80c1d51ee9095a:1",
+      "id": "display:apps/web/src/features/canvas/components/node/NodeCard.tsx:ffd58153bc2f59562c25:0",
       "source": "apps/web/src/features/canvas/components/node/NodeCard.tsx",
-      "identity": "e6a2bf80c1d51ee9095a",
+      "identity": "ffd58153bc2f59562c25",
+      "description": "mode === \"design\" ? ( <div className=\"mt-auto pt-2\"> <div className=\"flex items-baseline justify-between gap-2\"> <span className=\"if-num text-[15px] font-semibold text-ink\">{capacity.value.toLocaleString()} <span className=\"text-[11px] text-ink-3\">{capacity.unit}</span></span> <span className=\"if-num truncate text-[11px] text-ink-2\">{resource.skuId ?? \"generic\"}</span> </div> {pool && <p className=\"if-num mt-0.5 truncate text-[10.5px] text-ink-3\">autoscaling · target {resource.autoscaling?.targetCpu ?? SIMULATION_CONSTANTS.AUTOSCALING.DEFAULT_TARGET_CPU}% CPU</p>} <ExposureMarks resource={resource} /> </div> ) : !metric ? ( <p role=\"status\" className=\"mt-3 text-xs text-ink-3\">Waiting for the first measurement…</p> ) : ( <div className=\"mt-1.5 flex flex-col gap-1\"> <MeterRow label=\"CPU\" val",
       "kind": "display",
+      "category": "COST_INPUT_OR_OUTPUT",
+      "categoryReason": "Infrastructure intent or technical evidence; Model-2 mechanism/evidence required",
+      "ui": {
+        "status": "NOT_APPLICABLE",
+        "behavior": "Separate infrastructure reality gate",
+        "proofs": []
+      },
       "resources": [
         "ALL"
       ],
-      "model1Meaning": "Current published Model-1/product surface: resource.type",
-      "model2Owner": "NOT_APPLICABLE",
+      "model1Meaning": "Current published Model-1/product surface: mode === \"design\" ? ( <div className=\"mt-auto pt-2\"> <div className=\"flex items-baseline justify-between gap-2\"> <span className=\"if-num text-[15px] font-semibold text-ink\">{capacity.value.toLocaleString()} <span className=\"text-[11px] text-ink-3\">{capacity.unit}</span></span> <span className=\"if-num truncate text-[11px] text-ink-2\">{resource.skuId ?? \"generic\"}</span> </div> {pool && <p className=\"if-num mt-0.5 truncate text-[10.5px] text-ink-3\">autoscaling · target {resource.autoscaling?.targetCpu ?? SIMULATION_CONSTANTS.AUTOSCALING.DEFAULT_TARGET_CPU}% CPU</p>} <ExposureMarks resource={resource} /> </div> ) : !metric ? ( <p role=\"status\" className=\"mt-3 text-xs text-ink-3\">Waiting for the first measurement…</p> ) : ( <div className=\"mt-1.5 flex flex-col gap-1\"> <MeterRow label=\"CPU\" val",
+      "model2Owner": "packages/simulation/src/model2/registry.ts",
       "changesState": false,
       "effects": {
         "physics": false,
         "reachability": false,
         "security": false,
         "cost": false,
-        "evidence": false
+        "evidence": true
       },
       "provenanceRequirements": [
-        "Reviewed promised software action/presentation and a relevant behavior proof; no simulation-physics owner required"
+        "Trace input to state owner and downstream proof; record units/domain for numeric values"
       ],
-      "status": "NOT_APPLICABLE",
+      "status": "MODEL1_ONLY",
       "finalProductEligible": false,
-      "plan": "Prove software behavior through PRODUCT_UI_VALIDITY. No physics owner required.",
-      "description": "resource.type",
-      "category": "PRESENTATION_ONLY",
-      "categoryReason": "Software interaction or authored presentation; no infrastructure truth claim",
-      "ui": {
-        "status": "REVIEW_REQUIRED",
-        "behavior": "resource.type",
-        "proofs": []
-      },
+      "plan": "Retain historical Model-1 meaning. Before Model-2 shipping, bind this surface to the appropriate explicit Model-2 workload/resource/evidence contract and prove downstream effects, or remove it.",
       "legacyM2gStatus": "MODEL1_ONLY"
     },
     {
@@ -13261,6 +13984,39 @@
       "legacyM2gStatus": "MODEL1_ONLY"
     },
     {
+      "id": "display:apps/web/src/features/challenges/components/StarterMap.tsx:8b812607a658a8306f5c:0",
+      "source": "apps/web/src/features/challenges/components/StarterMap.tsx",
+      "identity": "8b812607a658a8306f5c",
+      "description": "starter?.resources.length ? ( <StationMap nodes={starter.resources.map((r) => ({ id: r.id, type: r.type, label: r.name ?? r.id }))} edges={starter.connectionLines.map((c) => ({ source: c.sourceId, target: c.targetId }))} marked={brief.experiment?.target.resourceId ?? null} markLabel={brief.experiment ? `${faultLabel(brief.experiment.fault)} at ${brief.experiment.atSimulatedSecond}s` : undefined} label={startingPoint(brief)} className={cx(\"mx-auto\", compact ? \"max-h-[220px]\" : \"mt-2 max-h-[340px]\")} /> ) : <p className=\"py-10 text-center text-sm text-ink-2\">You place every resource.</p>",
+      "kind": "display",
+      "category": "PRESENTATION_ONLY",
+      "categoryReason": "Software interaction or authored presentation; no infrastructure truth claim",
+      "ui": {
+        "status": "REVIEW_REQUIRED",
+        "behavior": "starter?.resources.length ? ( <StationMap nodes={starter.resources.map((r) => ({ id: r.id, type: r.type, label: r.name ?? r.id }))} edges={starter.connectionLines.map((c) => ({ source: c.sourceId, target: c.targetId }))} marked={brief.experiment?.target.resourceId ?? null} markLabel={brief.experiment ? `${faultLabel(brief.experiment.fault)} at ${brief.experiment.atSimulatedSecond}s` : undefined} label={startingPoint(brief)} className={cx(\"mx-auto\", compact ? \"max-h-[220px]\" : \"mt-2 max-h-[340px]\")} /> ) : <p className=\"py-10 text-center text-sm text-ink-2\">You place every resource.</p>",
+        "proofs": []
+      },
+      "resources": [
+        "PRODUCT_UI"
+      ],
+      "model1Meaning": "Product interface presentation or interaction outside infrastructure physics: starter?.resources.length ? ( <StationMap nodes={starter.resources.map((r) => ({ id: r.id, type: r.type, label: r.name ?? r.id }))} edges={starter.connectionLines.map((c) => ({ source: c.sourceId, target: c.targetId }))} marked={brief.experiment?.target.resourceId ?? null} markLabel={brief.experiment ? `${faultLabel(brief.experiment.fault)} at ${brief.experiment.atSimulatedSecond}s` : undefined} label={startingPoint(brief)} className={cx(\"mx-auto\", compact ? \"max-h-[220px]\" : \"mt-2 max-h-[340px]\")} /> ) : <p className=\"py-10 text-center text-sm text-ink-2\">You place every resource.</p>",
+      "model2Owner": "NOT_APPLICABLE",
+      "changesState": false,
+      "effects": {
+        "physics": false,
+        "reachability": false,
+        "security": false,
+        "cost": false,
+        "evidence": false
+      },
+      "provenanceRequirements": [
+        "Reviewed promised software action/presentation and a relevant behavior proof; no simulation-physics owner required"
+      ],
+      "status": "NOT_APPLICABLE",
+      "finalProductEligible": false,
+      "plan": "Prove software behavior through PRODUCT_UI_VALIDITY. No physics owner required."
+    },
+    {
       "id": "display:apps/web/src/features/challenges/components/TraceCharts.tsx:85cb720469d08b43ccdf:0",
       "source": "apps/web/src/features/challenges/components/TraceCharts.tsx",
       "identity": "85cb720469d08b43ccdf",
@@ -13499,14 +14255,22 @@
       "legacyM2gStatus": "MODEL1_ONLY"
     },
     {
-      "id": "display:apps/web/src/features/designs/DesignsPage.tsx:8ca4b1936ae4f05f3b55:0",
+      "id": "display:apps/web/src/features/designs/DesignsPage.tsx:33ac0ced8e895c5d0326:0",
       "source": "apps/web/src/features/designs/DesignsPage.tsx",
-      "identity": "8ca4b1936ae4f05f3b55",
+      "identity": "33ac0ced8e895c5d0326",
+      "description": "loading ? <Loading label=\"Loading designs…\" /> : error || !data ? ( <div className=\"mt-8\"><Notice tone=\"fail\" role=\"alert\">{error}</Notice><Button className=\"mt-3\" size=\"sm\" onClick={retry}>Try again</Button></div> ) : data.length === 0 ? ( <div className=\"mt-8\"><EmptyState title=\"No saved designs yet.\" action={<Button size=\"sm\" onClick={() => navigate(\"/design\")}>Open the designer</Button>}> Designs you save, and the workspaces of challenges you open, appear here.</EmptyState></div> ) : ( <ul className=\"mt-2\"> {data.map((design) => { const count = design.layout?.resources?.length ?? 0; const links = design.layout?.connectionLines?.length ?? 0; return ( <li key={design.id} className=\"flex items-center gap-4 border-b border-line py-[var(--if-list-y)]\"> <span className=\"flex h-14 w-[120px] s",
       "kind": "display",
+      "category": "INFRA_OUTPUT",
+      "categoryReason": "Infrastructure intent or technical evidence; Model-2 mechanism/evidence required",
+      "ui": {
+        "status": "NOT_APPLICABLE",
+        "behavior": "Separate infrastructure reality gate",
+        "proofs": []
+      },
       "resources": [
         "ALL"
       ],
-      "model1Meaning": "Current published Model-1/product surface: loading ? <Loading label=\"Loading designs…\" /> : error || !data ? ( <div className=\"mt-8\"><Notice tone=\"fail\" role=\"alert\">{error}</Notice><Button className=\"mt-3\" size=\"sm\" onClick={retry}>Try again</Button></div> ) : data.length === 0 ? ( <div className=\"mt-8\"><EmptyState title=\"No saved designs yet.\" action={<Button size=\"sm\" onClick={() => navigate(\"/design\")}>Open the designer</Button>}> Designs you save, and the workspaces of challenges you open, appear here.</EmptyState></div> ) : ( <ul className=\"mt-2\"> {data.map((design) => { const count = design.layout?.resources?.length ?? 0; const links = design.layout?.connectionLines?.length ?? 0; return ( <li key={design.id} className=\"flex items-center gap-4 border-b border-line py-[var(--if-list-y)]\"> <div className=\"min-w-0 flex-1\"> <p cl",
+      "model1Meaning": "Current published Model-1/product surface: loading ? <Loading label=\"Loading designs…\" /> : error || !data ? ( <div className=\"mt-8\"><Notice tone=\"fail\" role=\"alert\">{error}</Notice><Button className=\"mt-3\" size=\"sm\" onClick={retry}>Try again</Button></div> ) : data.length === 0 ? ( <div className=\"mt-8\"><EmptyState title=\"No saved designs yet.\" action={<Button size=\"sm\" onClick={() => navigate(\"/design\")}>Open the designer</Button>}> Designs you save, and the workspaces of challenges you open, appear here.</EmptyState></div> ) : ( <ul className=\"mt-2\"> {data.map((design) => { const count = design.layout?.resources?.length ?? 0; const links = design.layout?.connectionLines?.length ?? 0; return ( <li key={design.id} className=\"flex items-center gap-4 border-b border-line py-[var(--if-list-y)]\"> <span className=\"flex h-14 w-[120px] s",
       "model2Owner": "packages/simulation/src/model2/registry.ts",
       "changesState": false,
       "effects": {
@@ -13522,25 +14286,25 @@
       "status": "MODEL1_ONLY",
       "finalProductEligible": false,
       "plan": "Retain historical Model-1 meaning. Before Model-2 shipping, bind this surface to the appropriate explicit Model-2 workload/resource/evidence contract and prove downstream effects, or remove it.",
-      "description": "loading ? <Loading label=\"Loading designs…\" /> : error || !data ? ( <div className=\"mt-8\"><Notice tone=\"fail\" role=\"alert\">{error}</Notice><Button className=\"mt-3\" size=\"sm\" onClick={retry}>Try again</Button></div> ) : data.length === 0 ? ( <div className=\"mt-8\"><EmptyState title=\"No saved designs yet.\" action={<Button size=\"sm\" onClick={() => navigate(\"/design\")}>Open the designer</Button>}> Designs you save, and the workspaces of challenges you open, appear here.</EmptyState></div> ) : ( <ul className=\"mt-2\"> {data.map((design) => { const count = design.layout?.resources?.length ?? 0; const links = design.layout?.connectionLines?.length ?? 0; return ( <li key={design.id} className=\"flex items-center gap-4 border-b border-line py-[var(--if-list-y)]\"> <div className=\"min-w-0 flex-1\"> <p cl",
-      "category": "INFRA_OUTPUT",
-      "categoryReason": "Infrastructure intent or technical evidence; Model-2 mechanism/evidence required",
-      "ui": {
-        "status": "NOT_APPLICABLE",
-        "behavior": "Separate infrastructure reality gate",
-        "proofs": []
-      },
       "legacyM2gStatus": "MODEL1_ONLY"
     },
     {
-      "id": "display:apps/web/src/features/designs/DesignsPage.tsx:abc6185f19a41f9079fe:0",
+      "id": "display:apps/web/src/features/designs/DesignsPage.tsx:61887fbc1dc7daeb314e:0",
       "source": "apps/web/src/features/designs/DesignsPage.tsx",
-      "identity": "abc6185f19a41f9079fe",
+      "identity": "61887fbc1dc7daeb314e",
+      "description": "data.map((design) => { const count = design.layout?.resources?.length ?? 0; const links = design.layout?.connectionLines?.length ?? 0; return ( <li key={design.id} className=\"flex items-center gap-4 border-b border-line py-[var(--if-list-y)]\"> <span className=\"flex h-14 w-[120px] shrink-0 items-center justify-center border border-line bg-canvas text-ink-2 max-sm:hidden\"> <MiniMap className=\"max-h-12 max-w-[108px]\" nodes={(design.layout?.resources ?? []).map((r) => ({ id: r.id, type: r.type, label: r.name || r.id }))} edges={(design.layout?.connectionLines ?? []).map((c) => ({ source: c.sourceId, target: c.targetId }))} /> </span> <div className=\"min-w-0 flex-1\"> <p className=\"flex flex-wrap items-center gap-2\"> <Link to={`/design?design=${design.id}`} className=\"truncate text-[16px] font-s",
       "kind": "display",
+      "category": "INFRA_OUTPUT",
+      "categoryReason": "Infrastructure intent or technical evidence; Model-2 mechanism/evidence required",
+      "ui": {
+        "status": "NOT_APPLICABLE",
+        "behavior": "Separate infrastructure reality gate",
+        "proofs": []
+      },
       "resources": [
         "ALL"
       ],
-      "model1Meaning": "Current published Model-1/product surface: data.map((design) => { const count = design.layout?.resources?.length ?? 0; const links = design.layout?.connectionLines?.length ?? 0; return ( <li key={design.id} className=\"flex items-center gap-4 border-b border-line py-[var(--if-list-y)]\"> <div className=\"min-w-0 flex-1\"> <p className=\"flex flex-wrap items-center gap-2\"> <Link to={`/design?design=${design.id}`} className=\"truncate text-[16px] font-semibold text-ink underline-offset-4 hover:underline\">{design.name}</Link> {design.challengeId && <Tag tone=\"marker\">Challenge workspace{design.challengeVersion ? ` · v${design.challengeVersion}` : \"\"}</Tag>} </p> <p className=\"mt-0.5 text-[13px] text-ink-3\">{count} {count === 1 ? \"resource\" : \"resources\"} · {links} {links === 1 ? \"connection\" : \"connections\"} · updated <time dateTime={design",
+      "model1Meaning": "Current published Model-1/product surface: data.map((design) => { const count = design.layout?.resources?.length ?? 0; const links = design.layout?.connectionLines?.length ?? 0; return ( <li key={design.id} className=\"flex items-center gap-4 border-b border-line py-[var(--if-list-y)]\"> <span className=\"flex h-14 w-[120px] shrink-0 items-center justify-center border border-line bg-canvas text-ink-2 max-sm:hidden\"> <MiniMap className=\"max-h-12 max-w-[108px]\" nodes={(design.layout?.resources ?? []).map((r) => ({ id: r.id, type: r.type, label: r.name || r.id }))} edges={(design.layout?.connectionLines ?? []).map((c) => ({ source: c.sourceId, target: c.targetId }))} /> </span> <div className=\"min-w-0 flex-1\"> <p className=\"flex flex-wrap items-center gap-2\"> <Link to={`/design?design=${design.id}`} className=\"truncate text-[16px] font-s",
       "model2Owner": "packages/simulation/src/model2/registry.ts",
       "changesState": false,
       "effects": {
@@ -13555,16 +14319,7 @@
       ],
       "status": "MODEL1_ONLY",
       "finalProductEligible": false,
-      "plan": "Retain historical Model-1 meaning. Before Model-2 shipping, bind this surface to the appropriate explicit Model-2 workload/resource/evidence contract and prove downstream effects, or remove it.",
-      "description": "data.map((design) => { const count = design.layout?.resources?.length ?? 0; const links = design.layout?.connectionLines?.length ?? 0; return ( <li key={design.id} className=\"flex items-center gap-4 border-b border-line py-[var(--if-list-y)]\"> <div className=\"min-w-0 flex-1\"> <p className=\"flex flex-wrap items-center gap-2\"> <Link to={`/design?design=${design.id}`} className=\"truncate text-[16px] font-semibold text-ink underline-offset-4 hover:underline\">{design.name}</Link> {design.challengeId && <Tag tone=\"marker\">Challenge workspace{design.challengeVersion ? ` · v${design.challengeVersion}` : \"\"}</Tag>} </p> <p className=\"mt-0.5 text-[13px] text-ink-3\">{count} {count === 1 ? \"resource\" : \"resources\"} · {links} {links === 1 ? \"connection\" : \"connections\"} · updated <time dateTime={design",
-      "category": "INFRA_OUTPUT",
-      "categoryReason": "Infrastructure intent or technical evidence; Model-2 mechanism/evidence required",
-      "ui": {
-        "status": "NOT_APPLICABLE",
-        "behavior": "Separate infrastructure reality gate",
-        "proofs": []
-      },
-      "legacyM2gStatus": "MODEL1_ONLY"
+      "plan": "Retain historical Model-1 meaning. Before Model-2 shipping, bind this surface to the appropriate explicit Model-2 workload/resource/evidence contract and prove downstream effects, or remove it."
     },
     {
       "id": "display:apps/web/src/features/live/GatesPanel.tsx:895cd73fc436d3cf2943:0",
@@ -13633,6 +14388,72 @@
         "proofs": []
       },
       "legacyM2gStatus": "MODEL1_ONLY"
+    },
+    {
+      "id": "display:apps/web/src/features/live/LiveTimetable.tsx:aa5e5cd7bea8726dfeae:0",
+      "source": "apps/web/src/features/live/LiveTimetable.tsx",
+      "identity": "aa5e5cd7bea8726dfeae",
+      "description": "cursor === null ? \"Waiting for the first snapshot.\" : notReceived ? <>Second <span className=\"if-num text-ink\">{cursor}</span> was not received in this view.</> : <>Second <span className=\"if-num text-ink\">{cursor}</span>{pinned === null && \" (latest)\"} · {hot.length ? hot.map(([id, s]) => `${stations.find((x) => x.id === id)?.label ?? id} ${healthLabel(s.health).toLowerCase()}`).join(\", \") : \"every resource healthy\"}</>",
+      "kind": "display",
+      "category": "INFRA_OUTPUT",
+      "categoryReason": "Infrastructure intent or technical evidence; Model-2 mechanism/evidence required",
+      "ui": {
+        "status": "NOT_APPLICABLE",
+        "behavior": "Separate infrastructure reality gate",
+        "proofs": []
+      },
+      "resources": [
+        "ALL"
+      ],
+      "model1Meaning": "Current published Model-1/product surface: cursor === null ? \"Waiting for the first snapshot.\" : notReceived ? <>Second <span className=\"if-num text-ink\">{cursor}</span> was not received in this view.</> : <>Second <span className=\"if-num text-ink\">{cursor}</span>{pinned === null && \" (latest)\"} · {hot.length ? hot.map(([id, s]) => `${stations.find((x) => x.id === id)?.label ?? id} ${healthLabel(s.health).toLowerCase()}`).join(\", \") : \"every resource healthy\"}</>",
+      "model2Owner": "packages/simulation/src/model2/registry.ts",
+      "changesState": false,
+      "effects": {
+        "physics": false,
+        "reachability": false,
+        "security": false,
+        "cost": false,
+        "evidence": true
+      },
+      "provenanceRequirements": [
+        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+      ],
+      "status": "MODEL1_ONLY",
+      "finalProductEligible": false,
+      "plan": "Retain historical Model-1 meaning. Before Model-2 shipping, bind this surface to the appropriate explicit Model-2 workload/resource/evidence contract and prove downstream effects, or remove it."
+    },
+    {
+      "id": "display:apps/web/src/features/live/LiveTimetable.tsx:b986b8f291de377335b3:0",
+      "source": "apps/web/src/features/live/LiveTimetable.tsx",
+      "identity": "b986b8f291de377335b3",
+      "description": "hot.length ? hot.map(([id, s]) => `${stations.find((x) => x.id === id)?.label ?? id} ${healthLabel(s.health).toLowerCase()}`).join(\", \") : \"every resource healthy\"",
+      "kind": "display",
+      "category": "INFRA_OUTPUT",
+      "categoryReason": "Infrastructure intent or technical evidence; Model-2 mechanism/evidence required",
+      "ui": {
+        "status": "NOT_APPLICABLE",
+        "behavior": "Separate infrastructure reality gate",
+        "proofs": []
+      },
+      "resources": [
+        "ALL"
+      ],
+      "model1Meaning": "Current published Model-1/product surface: hot.length ? hot.map(([id, s]) => `${stations.find((x) => x.id === id)?.label ?? id} ${healthLabel(s.health).toLowerCase()}`).join(\", \") : \"every resource healthy\"",
+      "model2Owner": "packages/simulation/src/model2/registry.ts",
+      "changesState": false,
+      "effects": {
+        "physics": false,
+        "reachability": false,
+        "security": false,
+        "cost": false,
+        "evidence": true
+      },
+      "provenanceRequirements": [
+        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+      ],
+      "status": "MODEL1_ONLY",
+      "finalProductEligible": false,
+      "plan": "Retain historical Model-1 meaning. Before Model-2 shipping, bind this surface to the appropriate explicit Model-2 workload/resource/evidence contract and prove downstream effects, or remove it."
     },
     {
       "id": "display:apps/web/src/features/live/LiveWorkspace.tsx:0401f45b194b1b513e8e:0",
@@ -13800,40 +14621,6 @@
       "ui": {
         "status": "NOT_APPLICABLE",
         "behavior": "Separate infrastructure reality gate",
-        "proofs": []
-      },
-      "legacyM2gStatus": "MODEL1_ONLY"
-    },
-    {
-      "id": "display:apps/web/src/features/live/NodeLive.tsx:401bfa267115e15d4298:0",
-      "source": "apps/web/src/features/live/NodeLive.tsx",
-      "identity": "401bfa267115e15d4298",
-      "kind": "display",
-      "resources": [
-        "ALL"
-      ],
-      "model1Meaning": "Current published Model-1/product surface: { color: categoryColor(resource.type) }",
-      "model2Owner": "NOT_APPLICABLE",
-      "changesState": false,
-      "effects": {
-        "physics": false,
-        "reachability": false,
-        "security": false,
-        "cost": false,
-        "evidence": false
-      },
-      "provenanceRequirements": [
-        "Reviewed promised software action/presentation and a relevant behavior proof; no simulation-physics owner required"
-      ],
-      "status": "NOT_APPLICABLE",
-      "finalProductEligible": false,
-      "plan": "Prove software behavior through PRODUCT_UI_VALIDITY. No physics owner required.",
-      "description": "{ color: categoryColor(resource.type) }",
-      "category": "PRESENTATION_ONLY",
-      "categoryReason": "Software interaction or authored presentation; no infrastructure truth claim",
-      "ui": {
-        "status": "REVIEW_REQUIRED",
-        "behavior": "{ color: categoryColor(resource.type) }",
         "proofs": []
       },
       "legacyM2gStatus": "MODEL1_ONLY"
@@ -14517,6 +15304,237 @@
         "proofs": []
       },
       "legacyM2gStatus": "MODEL1_ONLY"
+    },
+    {
+      "id": "display:apps/web/src/features/replay/MomentReadout.tsx:36409557e24fbc273cf7:0",
+      "source": "apps/web/src/features/replay/MomentReadout.tsx",
+      "identity": "36409557e24fbc273cf7",
+      "description": "model.stations.map((s) => { const sample = model.lanes[s.id] ? sampleAt(model.lanes[s.id]!.samples, t, 1) : null; return ( <tr key={s.id} className=\"border-t border-line\"> <th scope=\"row\" className=\"py-1.5 pr-2 font-medium text-ink\"><span className=\"inline-flex items-center gap-2\"><StationGlyph type={s.type ?? \"\"} size={14} className=\"text-ink-3\" />{s.label}</span></th> <td className=\"py-1.5\"><HealthMark size=\"sm\" value={sample?.health} label={sample ? undefined : \"Not retained\"} /></td> <td className=\"if-num py-1.5 text-right text-ink-2\">{sample?.cpu !== undefined ? `${sample.cpu}%` : \"—\"}</td> </tr> ); })",
+      "kind": "display",
+      "category": "INFRA_OUTPUT",
+      "categoryReason": "Infrastructure intent or technical evidence; Model-2 mechanism/evidence required",
+      "ui": {
+        "status": "NOT_APPLICABLE",
+        "behavior": "Separate infrastructure reality gate",
+        "proofs": []
+      },
+      "resources": [
+        "ALL"
+      ],
+      "model1Meaning": "Current published Model-1/product surface: model.stations.map((s) => { const sample = model.lanes[s.id] ? sampleAt(model.lanes[s.id]!.samples, t, 1) : null; return ( <tr key={s.id} className=\"border-t border-line\"> <th scope=\"row\" className=\"py-1.5 pr-2 font-medium text-ink\"><span className=\"inline-flex items-center gap-2\"><StationGlyph type={s.type ?? \"\"} size={14} className=\"text-ink-3\" />{s.label}</span></th> <td className=\"py-1.5\"><HealthMark size=\"sm\" value={sample?.health} label={sample ? undefined : \"Not retained\"} /></td> <td className=\"if-num py-1.5 text-right text-ink-2\">{sample?.cpu !== undefined ? `${sample.cpu}%` : \"—\"}</td> </tr> ); })",
+      "model2Owner": "packages/simulation/src/model2/registry.ts",
+      "changesState": false,
+      "effects": {
+        "physics": false,
+        "reachability": false,
+        "security": false,
+        "cost": false,
+        "evidence": true
+      },
+      "provenanceRequirements": [
+        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+      ],
+      "status": "MODEL1_ONLY",
+      "finalProductEligible": false,
+      "plan": "Retain historical Model-1 meaning. Before Model-2 shipping, bind this surface to the appropriate explicit Model-2 workload/resource/evidence contract and prove downstream effects, or remove it."
+    },
+    {
+      "id": "display:apps/web/src/features/replay/MomentReadout.tsx:94357fd0cb26202cd5a2:0",
+      "source": "apps/web/src/features/replay/MomentReadout.tsx",
+      "identity": "94357fd0cb26202cd5a2",
+      "description": "sample?.cpu !== undefined ? `${sample.cpu}%` : \"—\"",
+      "kind": "display",
+      "category": "INFRA_OUTPUT",
+      "categoryReason": "Infrastructure intent or technical evidence; Model-2 mechanism/evidence required",
+      "ui": {
+        "status": "NOT_APPLICABLE",
+        "behavior": "Separate infrastructure reality gate",
+        "proofs": []
+      },
+      "resources": [
+        "ALL"
+      ],
+      "model1Meaning": "Current published Model-1/product surface: sample?.cpu !== undefined ? `${sample.cpu}%` : \"—\"",
+      "model2Owner": "packages/simulation/src/model2/registry.ts",
+      "changesState": false,
+      "effects": {
+        "physics": false,
+        "reachability": false,
+        "security": false,
+        "cost": false,
+        "evidence": true
+      },
+      "provenanceRequirements": [
+        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+      ],
+      "status": "MODEL1_ONLY",
+      "finalProductEligible": false,
+      "plan": "Retain historical Model-1 meaning. Before Model-2 shipping, bind this surface to the appropriate explicit Model-2 workload/resource/evidence contract and prove downstream effects, or remove it."
+    },
+    {
+      "id": "display:apps/web/src/features/replay/ReplayStage.tsx:3fb5f63667152a75ba55:0",
+      "source": "apps/web/src/features/replay/ReplayStage.tsx",
+      "identity": "3fb5f63667152a75ba55",
+      "description": "snapshot ? statesFromCheckpoint(snapshot) : undefined",
+      "kind": "display",
+      "category": "INFRA_OUTPUT",
+      "categoryReason": "Infrastructure intent or technical evidence; Model-2 mechanism/evidence required",
+      "ui": {
+        "status": "NOT_APPLICABLE",
+        "behavior": "Separate infrastructure reality gate",
+        "proofs": []
+      },
+      "resources": [
+        "ALL"
+      ],
+      "model1Meaning": "Current published Model-1/product surface: snapshot ? statesFromCheckpoint(snapshot) : undefined",
+      "model2Owner": "packages/simulation/src/model2/registry.ts",
+      "changesState": false,
+      "effects": {
+        "physics": false,
+        "reachability": false,
+        "security": false,
+        "cost": false,
+        "evidence": true
+      },
+      "provenanceRequirements": [
+        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+      ],
+      "status": "MODEL1_ONLY",
+      "finalProductEligible": false,
+      "plan": "Retain historical Model-1 meaning. Before Model-2 shipping, bind this surface to the appropriate explicit Model-2 workload/resource/evidence contract and prove downstream effects, or remove it."
+    },
+    {
+      "id": "display:apps/web/src/features/replay/ReplayStage.tsx:692398516f86df987c29:0",
+      "source": "apps/web/src/features/replay/ReplayStage.tsx",
+      "identity": "692398516f86df987c29",
+      "description": "snapshot.simulatedSeconds",
+      "kind": "display",
+      "category": "INFRA_OUTPUT",
+      "categoryReason": "Infrastructure intent or technical evidence; Model-2 mechanism/evidence required",
+      "ui": {
+        "status": "NOT_APPLICABLE",
+        "behavior": "Separate infrastructure reality gate",
+        "proofs": []
+      },
+      "resources": [
+        "ALL"
+      ],
+      "model1Meaning": "Current published Model-1/product surface: snapshot.simulatedSeconds",
+      "model2Owner": "packages/simulation/src/model2/registry.ts",
+      "changesState": false,
+      "effects": {
+        "physics": false,
+        "reachability": false,
+        "security": false,
+        "cost": false,
+        "evidence": true
+      },
+      "provenanceRequirements": [
+        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+      ],
+      "status": "MODEL1_ONLY",
+      "finalProductEligible": false,
+      "plan": "Retain historical Model-1 meaning. Before Model-2 shipping, bind this surface to the appropriate explicit Model-2 workload/resource/evidence contract and prove downstream effects, or remove it."
+    },
+    {
+      "id": "display:apps/web/src/features/replay/ReplayStage.tsx:a7c41608482e8b0e5a6c:0",
+      "source": "apps/web/src/features/replay/ReplayStage.tsx",
+      "identity": "a7c41608482e8b0e5a6c",
+      "description": "model ? <> <div className=\"grid gap-px border border-line bg-line lg:grid-cols-[minmax(0,1fr)_340px]\"> <figure className=\"if-paper-grid relative min-w-0 overflow-hidden bg-canvas p-3\"> <figcaption className=\"absolute left-4 top-3 text-xs text-ink-3\">The recorded architecture at <span className=\"if-num text-ink\">{formatTime(t, model.unit)}</span></figcaption> <StationMap nodes={topology.nodes} edges={topology.edges} states={statesAt(model, t)} label={`Architecture at ${formatTime(t, model.unit)}`} marked={experiment!.targetResourceId} markLabel={faultLabel(experiment!.fault)} selected={selected} onSelect={(id) => setSelected((s) => s === id ? null : id)} className=\"mx-auto mt-6 max-h-[420px]\" /> {!topology.connectionsKnown && !topology.loading && <p className=\"mt-2 text-xs text-ink-3\">This ",
+      "kind": "display",
+      "category": "INFRA_OUTPUT",
+      "categoryReason": "Infrastructure intent or technical evidence; Model-2 mechanism/evidence required",
+      "ui": {
+        "status": "NOT_APPLICABLE",
+        "behavior": "Separate infrastructure reality gate",
+        "proofs": []
+      },
+      "resources": [
+        "ALL"
+      ],
+      "model1Meaning": "Current published Model-1/product surface: model ? <> <div className=\"grid gap-px border border-line bg-line lg:grid-cols-[minmax(0,1fr)_340px]\"> <figure className=\"if-paper-grid relative min-w-0 overflow-hidden bg-canvas p-3\"> <figcaption className=\"absolute left-4 top-3 text-xs text-ink-3\">The recorded architecture at <span className=\"if-num text-ink\">{formatTime(t, model.unit)}</span></figcaption> <StationMap nodes={topology.nodes} edges={topology.edges} states={statesAt(model, t)} label={`Architecture at ${formatTime(t, model.unit)}`} marked={experiment!.targetResourceId} markLabel={faultLabel(experiment!.fault)} selected={selected} onSelect={(id) => setSelected((s) => s === id ? null : id)} className=\"mx-auto mt-6 max-h-[420px]\" /> {!topology.connectionsKnown && !topology.loading && <p className=\"mt-2 text-xs text-ink-3\">This ",
+      "model2Owner": "packages/simulation/src/model2/registry.ts",
+      "changesState": false,
+      "effects": {
+        "physics": false,
+        "reachability": false,
+        "security": false,
+        "cost": false,
+        "evidence": true
+      },
+      "provenanceRequirements": [
+        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+      ],
+      "status": "MODEL1_ONLY",
+      "finalProductEligible": false,
+      "plan": "Retain historical Model-1 meaning. Before Model-2 shipping, bind this surface to the appropriate explicit Model-2 workload/resource/evidence contract and prove downstream effects, or remove it."
+    },
+    {
+      "id": "display:apps/web/src/features/replay/ReplayStage.tsx:af9c1517fccc30a3f035:0",
+      "source": "apps/web/src/features/replay/ReplayStage.tsx",
+      "identity": "af9c1517fccc30a3f035",
+      "description": "snapshot ? <>The last recorded snapshot{snapshot.simulatedSeconds != null ? <> at <span className=\"if-num text-ink\">{snapshot.simulatedSeconds}s</span></> : null}. Only this moment is retained for this run.</> : \"No snapshot was retained; the map shows the architecture only.\"",
+      "kind": "display",
+      "category": "INFRA_OUTPUT",
+      "categoryReason": "Infrastructure intent or technical evidence; Model-2 mechanism/evidence required",
+      "ui": {
+        "status": "NOT_APPLICABLE",
+        "behavior": "Separate infrastructure reality gate",
+        "proofs": []
+      },
+      "resources": [
+        "ALL"
+      ],
+      "model1Meaning": "Current published Model-1/product surface: snapshot ? <>The last recorded snapshot{snapshot.simulatedSeconds != null ? <> at <span className=\"if-num text-ink\">{snapshot.simulatedSeconds}s</span></> : null}. Only this moment is retained for this run.</> : \"No snapshot was retained; the map shows the architecture only.\"",
+      "model2Owner": "packages/simulation/src/model2/registry.ts",
+      "changesState": false,
+      "effects": {
+        "physics": false,
+        "reachability": false,
+        "security": false,
+        "cost": false,
+        "evidence": true
+      },
+      "provenanceRequirements": [
+        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+      ],
+      "status": "MODEL1_ONLY",
+      "finalProductEligible": false,
+      "plan": "Retain historical Model-1 meaning. Before Model-2 shipping, bind this surface to the appropriate explicit Model-2 workload/resource/evidence contract and prove downstream effects, or remove it."
+    },
+    {
+      "id": "display:apps/web/src/features/replay/ReplayStage.tsx:bef78d3b9cecd7d54aee:0",
+      "source": "apps/web/src/features/replay/ReplayStage.tsx",
+      "identity": "bef78d3b9cecd7d54aee",
+      "description": "snapshot.simulatedSeconds != null ? <> at <span className=\"if-num text-ink\">{snapshot.simulatedSeconds}s</span></> : null",
+      "kind": "display",
+      "category": "INFRA_OUTPUT",
+      "categoryReason": "Infrastructure intent or technical evidence; Model-2 mechanism/evidence required",
+      "ui": {
+        "status": "NOT_APPLICABLE",
+        "behavior": "Separate infrastructure reality gate",
+        "proofs": []
+      },
+      "resources": [
+        "ALL"
+      ],
+      "model1Meaning": "Current published Model-1/product surface: snapshot.simulatedSeconds != null ? <> at <span className=\"if-num text-ink\">{snapshot.simulatedSeconds}s</span></> : null",
+      "model2Owner": "packages/simulation/src/model2/registry.ts",
+      "changesState": false,
+      "effects": {
+        "physics": false,
+        "reachability": false,
+        "security": false,
+        "cost": false,
+        "evidence": true
+      },
+      "provenanceRequirements": [
+        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+      ],
+      "status": "MODEL1_ONLY",
+      "finalProductEligible": false,
+      "plan": "Retain historical Model-1 meaning. Before Model-2 shipping, bind this surface to the appropriate explicit Model-2 workload/resource/evidence contract and prove downstream effects, or remove it."
     },
     {
       "id": "display:apps/web/src/features/reports/components/ActionTimeline.tsx:99ab86e1e61d78ee3dd6:0",
@@ -15605,6 +16623,72 @@
         "proofs": []
       },
       "legacyM2gStatus": "MODEL1_ONLY"
+    },
+    {
+      "id": "display:apps/web/src/features/timetable/Legend.tsx:095a2926c8ebd8742c24:0",
+      "source": "apps/web/src/features/timetable/Legend.tsx",
+      "identity": "095a2926c8ebd8742c24",
+      "description": "cpu && <li className=\"inline-flex items-center gap-1.5\"><span aria-hidden=\"true\" className=\"inline-block h-3 w-5 bg-ink/15\" /> Modeled CPU, 0–100%</li>",
+      "kind": "display",
+      "category": "PRESENTATION_ONLY",
+      "categoryReason": "Software interaction or authored presentation; no infrastructure truth claim",
+      "ui": {
+        "status": "REVIEW_REQUIRED",
+        "behavior": "cpu && <li className=\"inline-flex items-center gap-1.5\"><span aria-hidden=\"true\" className=\"inline-block h-3 w-5 bg-ink/15\" /> Modeled CPU, 0–100%</li>",
+        "proofs": []
+      },
+      "resources": [
+        "PRODUCT_UI"
+      ],
+      "model1Meaning": "Product interface presentation or interaction outside infrastructure physics: cpu && <li className=\"inline-flex items-center gap-1.5\"><span aria-hidden=\"true\" className=\"inline-block h-3 w-5 bg-ink/15\" /> Modeled CPU, 0–100%</li>",
+      "model2Owner": "NOT_APPLICABLE",
+      "changesState": false,
+      "effects": {
+        "physics": false,
+        "reachability": false,
+        "security": false,
+        "cost": false,
+        "evidence": false
+      },
+      "provenanceRequirements": [
+        "Reviewed promised software action/presentation and a relevant behavior proof; no simulation-physics owner required"
+      ],
+      "status": "NOT_APPLICABLE",
+      "finalProductEligible": false,
+      "plan": "Prove software behavior through PRODUCT_UI_VALIDITY. No physics owner required."
+    },
+    {
+      "id": "display:apps/web/src/features/timetable/StationMap.tsx:7eea3b6470faee8f4f26:0",
+      "source": "apps/web/src/features/timetable/StationMap.tsx",
+      "identity": "7eea3b6470faee8f4f26",
+      "description": "placed.map((p) => { const { x, y } = at.get(p.id)!, node = byId.get(p.id)!, st = states?.[p.id], h = healthState(st?.health); const tone = h === \"failed\" || h === \"critical\" ? \"text-fail\" : h === \"saturated\" ? \"text-hot\" : h === \"degraded\" ? \"text-warn\" : \"text-ink\"; const interactive = !!onSelect; return ( <g key={p.id} transform={`translate(${x} ${y})`} {...(interactive ? { role: \"button\", tabIndex: 0, \"aria-pressed\": selected === p.id, \"aria-label\": `${node.label}, ${node.type ?? \"resource\"}${st?.health ? `, ${h}` : \"\"}`, onClick: () => onSelect(p.id), onKeyDown: (ev: React.KeyboardEvent) => { if (ev.key === \"Enter\" || ev.key === \" \") { ev.preventDefault(); onSelect(p.id); } } } : {})} className={cx(interactive && \"cursor-pointer outline-none [&:focus-visible>rect:first-child]:stroke-ac",
+      "kind": "display",
+      "category": "INFRA_OUTPUT",
+      "categoryReason": "Infrastructure intent or technical evidence; Model-2 mechanism/evidence required",
+      "ui": {
+        "status": "NOT_APPLICABLE",
+        "behavior": "Separate infrastructure reality gate",
+        "proofs": []
+      },
+      "resources": [
+        "ALL"
+      ],
+      "model1Meaning": "Current published Model-1/product surface: placed.map((p) => { const { x, y } = at.get(p.id)!, node = byId.get(p.id)!, st = states?.[p.id], h = healthState(st?.health); const tone = h === \"failed\" || h === \"critical\" ? \"text-fail\" : h === \"saturated\" ? \"text-hot\" : h === \"degraded\" ? \"text-warn\" : \"text-ink\"; const interactive = !!onSelect; return ( <g key={p.id} transform={`translate(${x} ${y})`} {...(interactive ? { role: \"button\", tabIndex: 0, \"aria-pressed\": selected === p.id, \"aria-label\": `${node.label}, ${node.type ?? \"resource\"}${st?.health ? `, ${h}` : \"\"}`, onClick: () => onSelect(p.id), onKeyDown: (ev: React.KeyboardEvent) => { if (ev.key === \"Enter\" || ev.key === \" \") { ev.preventDefault(); onSelect(p.id); } } } : {})} className={cx(interactive && \"cursor-pointer outline-none [&:focus-visible>rect:first-child]:stroke-ac",
+      "model2Owner": "packages/simulation/src/model2/registry.ts",
+      "changesState": false,
+      "effects": {
+        "physics": false,
+        "reachability": false,
+        "security": false,
+        "cost": false,
+        "evidence": true
+      },
+      "provenanceRequirements": [
+        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+      ],
+      "status": "MODEL1_ONLY",
+      "finalProductEligible": false,
+      "plan": "Retain historical Model-1 meaning. Before Model-2 shipping, bind this surface to the appropriate explicit Model-2 workload/resource/evidence contract and prove downstream effects, or remove it."
     },
     {
       "id": "field:packages/domain/src/resource/AutoscalingPolicy.interface.ts:AutoscalingPolicy.enabled:0",

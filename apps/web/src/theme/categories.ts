@@ -20,6 +20,3 @@ export const CATEGORY_LABEL: Record<ResourceCategory, string> = {
   entry: "Entry and edge", traffic: "Traffic and security", compute: "Compute",
   data: "Data", messaging: "Messaging", observe: "Observability",
 };
-
-// Category colour is identity only; it never carries state.
-export const categoryColor = (type: ResourceType) => `var(--if-cat-${CATEGORY_OF[type] ?? "entry"})`;

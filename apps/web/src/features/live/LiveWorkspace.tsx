@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { PanelRight, Plus } from "lucide-react";
+import { ChartGantt, PanelRight, Plus } from "lucide-react";
 import { DeploymentStatus } from "@infraforge/contracts/deployment";
 import { useDeploymentSocket } from "@/features/deployment/hooks/useDeploymentSocket";
 import { useCanvasStore } from "@/features/canvas/store/canvasStore";
 import { useLiveTopologySync } from "@/features/canvas/hooks/useLiveTopologySync";
 import { CanvasDnd } from "@/features/canvas/components/CanvasDnd";
 import { CanvasBoard } from "@/features/canvas/components/CanvasBoard";
+import { fitCanvasView } from "@/features/canvas/hooks/useCanvasViewport";
 import { PalettePanel } from "@/features/canvas/components/palette/PalettePanel";
 import { ZoomControls } from "@/features/canvas/components/ZoomControls";
 import { useChallengeBrief } from "@/features/challenges/useChallengeBrief";
@@ -22,12 +23,13 @@ import { useStopRun } from "./useStopRun";
 import { runPhase } from "./runState";
 import { leaveRun } from "./leaveRun";
 import { ExperimentStrip } from "./ExperimentStrip";
+import { LiveTimetable } from "./LiveTimetable";
 import { useExperimentPlan } from "@/features/challenges/experimentPlanStore";
 import { recordedPlan } from "@/features/challenges/experiment";
 import { plural } from "@/lib/format";
 
-/* The live run: always in the ink theme so it reads as an instrument, distinct
-from the paper design sheet. The architecture stays in the middle; state and
+/* The live run: always in the ink theme so it reads as an instrument. The architecture
+stays in the middle, the run so far grows along the timetable beneath it, and state and
 controls live in one bar and one column. */
 export function LiveWorkspace({ deploymentId }: { deploymentId: string }) {
   const { deployment, status, completedStages, timeline } = useDeploymentSocket(deploymentId);
@@ -44,6 +46,11 @@ export function LiveWorkspace({ deploymentId }: { deploymentId: string }) {
   const [tab, setTab] = useState<LiveTab>("controls");
   const [panelOpen, setPanelOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
+  const roomy = useMediaQuery("(min-height: 720px)");
+  const [timetable, setTimetable] = useState<boolean | null>(null);
+  const showTimetable = (timetable ?? (wide && roomy)) && !!deployment?.liveTopology;
+  // Opening or closing the timetable changes the canvas height; keep the whole architecture in view.
+  useEffect(() => { const frame = requestAnimationFrame(fitCanvasView); return () => cancelAnimationFrame(frame); }, [showTimetable]);
 
   // Portalled dialogs and toasts read the theme from the document root, so the whole page switches to ink.
   useEffect(() => {
@@ -78,7 +85,7 @@ export function LiveWorkspace({ deploymentId }: { deploymentId: string }) {
   return (
     <div data-theme="ink" className="flex h-dvh flex-col overflow-hidden bg-bg text-ink">
       <RunBar run={deployment} deploymentId={deploymentId} phase={phase} challengeTitle={brief?.data?.title ?? null} onStop={stop} stopping={stopping} />
-      {plan && deployment?.evaluationStopAtSimulatedSeconds != null && <ExperimentStrip plan={plan} evaluationSeconds={deployment.evaluationStopAtSimulatedSeconds} />}
+      {plan && deployment?.evaluationStopAtSimulatedSeconds != null && <ExperimentStrip plan={plan} evaluationSeconds={deployment.evaluationStopAtSimulatedSeconds} compact={!!showTimetable} />}
       <CanvasDnd>
         <div className="relative flex min-h-0 flex-1">
           <main id="main" tabIndex={-1} className="relative flex min-w-0 flex-1 flex-col outline-none" aria-label="Live architecture">
@@ -111,10 +118,12 @@ export function LiveWorkspace({ deploymentId }: { deploymentId: string }) {
                 <Button variant="ghost" size="sm" onClick={leaveRun}>Back to the designer</Button>
               </div>
             )}
+            {showTimetable && <LiveTimetable deploymentId={deploymentId} resources={resources} seconds={seconds} plan={plan} evaluation={deployment?.evaluationStopAtSimulatedSeconds ?? null} />}
             <div className="flex h-10 shrink-0 items-center justify-between border-t border-line bg-surface px-3 text-xs text-ink-3">
               <span className="min-w-0 truncate"><span className="if-num">{plural(resources.length, "resource")} · revision {deployment?.topologyRevision ?? 0}{challenge ? " · design locked for this attempt" : ""}</span>
-                {isLive && <span className="max-md:hidden"> · Moving lines show direction while the run advances, not traffic volume.</span>}</span>
+                {isLive && <span className="max-md:hidden"> · Lines are declared connections, not measured traffic.</span>}</span>
               <div className="flex items-center gap-1">
+                {deployment?.liveTopology && <Button size="sm" variant="ghost" aria-pressed={!!showTimetable} icon={<ChartGantt size={14} aria-hidden="true" />} onClick={() => setTimetable(!showTimetable)}>Timetable</Button>}
                 {!wide && <Button size="sm" variant="ghost" icon={<PanelRight size={14} aria-hidden="true" />} onClick={() => setPanelOpen(true)}>Details</Button>}
                 <ZoomControls />
               </div>

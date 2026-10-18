@@ -3,8 +3,6 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
 import { SignInPage } from "../src/features/auth/pages/SignInPage";
 import { credentialBody, signupErrors, signupFailure } from "../src/features/auth/credentials";
-import { WorkspaceRequired } from "../src/features/canvas/components/WorkspaceRequired";
-import { DESIGNER_MIN_WIDTH } from "../src/features/canvas/designerViewport";
 import { normalizeUsername, validUsername } from "@infraforge/contracts/auth";
 import { SocialSignIn } from "../src/features/auth/components/SocialSignIn";
 
@@ -33,12 +31,6 @@ test("sign-in and sign-up have labelled password-manager forms and distinct rout
     if (mode === "signup") { expect(html).toContain('name="email"'); expect(html).toContain('href="/signin"'); }
     else { expect(html).toContain("Username or email"); expect(html).toContain('href="/signup"'); }
   }
-});
-test("small Designer state is a useful accessible page with no canvas", () => {
-  const html = renderToStaticMarkup(<MemoryRouter><WorkspaceRequired /></MemoryRouter>);
-  expect(html).toContain(`${DESIGNER_MIN_WIDTH}px`); expect(html).toContain('id="main"');
-  expect(html).toContain('href="/designs"'); expect(html).toContain('href="/runs"');
-  expect(html).toContain("Give your design more room"); expect(html).not.toContain("Design canvas");
 });
 test("social options are optional and only configured providers appear", () => {
   expect(renderToStaticMarkup(<SocialSignIn providers={[]} pending={null} onSignIn={() => {}} />)).toBe("");

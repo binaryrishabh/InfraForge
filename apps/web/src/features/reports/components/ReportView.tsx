@@ -19,6 +19,8 @@ import { RunFamily } from "./RunFamily";
 import { OpenDesignToImprove } from "./OpenDesignToImprove";
 import { runKind, runStatus } from "../runKind";
 import { STAGE_LABEL, STAGE_STATUS_LABEL } from "../labels";
+import { ReplayStage } from "@/features/replay/ReplayStage";
+import { NextExperiment } from "@/features/replay/NextExperiment";
 
 const active = (status: string) => ["pending", "running", "live"].includes(status);
 
@@ -27,11 +29,13 @@ function Debrief({ report }: { report: RunReport }) {
   // The exact version this attempt was judged by, so labels and the explanation match its rules.
   const load = useCallback(() => getChallenge(id, version || undefined), [id, version]);
   const { data } = useRequest(load);
-  return <><GuidedReview report={report} /><ChallengeDebrief evaluation={report.challenge!} brief={data} trace={report.experimentTrace} /></>;
+  return <><GuidedReview report={report} withImprovement={false} /><ChallengeDebrief evaluation={report.challenge!} brief={data} trace={report.experimentTrace} showVerdict={false} /></>;
 }
 
-/* A lab report: what ran, the challenge verdict if any, what was recorded,
-the final state, the gates, the actions, lineage, and the limits of the evidence. */
+/* A run's page. The verdict and the recorded run come first, as something to move
+through; the next experiment follows; the complete evidence record (what ran, every
+recorded fact, the gates, actions, lineage and the limits of the evidence) stays on the
+page in full, folded below so it never stands between the learner and the result. */
 export function ReportView({ report }: { report: RunReport }) {
   const { run, topology } = report;
   const status = runStatus(run.status);
@@ -54,7 +58,7 @@ export function ReportView({ report }: { report: RunReport }) {
       <Link to="/runs" className="inline-flex items-center gap-1 text-sm font-medium text-ink-2 hover:text-ink"><ArrowLeft size={14} aria-hidden="true" /> Runs</Link>
       <header className="mt-4">
         <p className="if-eyebrow">{kind.label}{kind.detail ? ` · ${kind.detail}` : ""}</p>
-        <h1 className="if-display mt-2 text-[34px] sm:text-[42px]">{run.infrastructureName}</h1>
+        <h1 className="if-display mt-2 text-[36px] sm:text-[52px]">{run.infrastructureName}</h1>
         <p className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-ink-2">
           <StatusMark kind={status.kind} label={status.label} />
           <span>Started <time dateTime={run.createdAt}>{formatDate(run.createdAt)}</time></span>
@@ -76,6 +80,14 @@ export function ReportView({ report }: { report: RunReport }) {
         {run.learning.sourceRunId ? <Link to={`/runs/${run.learning.sourceRunId}`} className="mt-1 inline-block text-accent underline">Read the source attempt</Link> : <p className="mt-1 text-ink-3">The source attempt was deleted. Your hypothesis is retained; its comparison is unavailable.</p>}
       </aside>}
 
+      <div className="mt-8"><ReplayStage report={report} /></div>
+      {report.challenge && eligible && <NextExperiment report={report} />}
+
+      <details className="group mt-10 border-t border-line pt-2" open={!report.challenge}>
+        <summary className="flex cursor-pointer list-none flex-wrap items-baseline justify-between gap-3 py-3 marker:hidden [&::-webkit-details-marker]:hidden">
+          <span className="text-[19px] font-semibold text-ink"><span aria-hidden="true" className="mr-2 inline-block text-ink-3 transition-transform group-open:rotate-90">›</span>Full evidence record</span>
+          <span className="text-sm text-ink-3">Every recorded fact, its source and the limits of the evidence</span>
+        </summary>
       {report.challenge && <Debrief report={report} />}
 
       <ReportSection number={num.ran} title="What ran">
@@ -167,6 +179,7 @@ export function ReportView({ report }: { report: RunReport }) {
       <ReportSection number={num.next} title="What to inspect next">
         <ul className="list-disc space-y-2 pl-5">{report.inspectNext.map((step) => <li key={step}>{step}</li>)}</ul>
       </ReportSection>
+      </details>
     </article>
   );
 }

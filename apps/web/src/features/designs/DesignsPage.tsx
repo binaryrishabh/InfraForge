@@ -14,6 +14,7 @@ import { Tag } from "@/ui/Tag";
 import { NameDialog, TypeToConfirmDialog } from "@/ui/ConfirmDialogs";
 import { useCanvasStore } from "@/features/canvas/store/canvasStore";
 import { requestNewDesign } from "@/features/canvas/designActions";
+import { MiniMap } from "@/features/timetable/MiniMap";
 
 type Pending = { kind: "rename" | "delete"; design: Infrastructure } | null;
 
@@ -59,10 +60,14 @@ export function DesignsPage() {
             const links = design.layout?.connectionLines?.length ?? 0;
             return (
               <li key={design.id} className="flex items-center gap-4 border-b border-line py-[var(--if-list-y)]">
+                <span className="flex h-14 w-[120px] shrink-0 items-center justify-center border border-line bg-canvas text-ink-2 max-sm:hidden">
+                  <MiniMap className="max-h-12 max-w-[108px]" nodes={(design.layout?.resources ?? []).map((r) => ({ id: r.id, type: r.type, label: r.name || r.id }))}
+                    edges={(design.layout?.connectionLines ?? []).map((c) => ({ source: c.sourceId, target: c.targetId }))} />
+                </span>
                 <div className="min-w-0 flex-1">
                   <p className="flex flex-wrap items-center gap-2">
                     <Link to={`/design?design=${design.id}`} className="truncate text-[16px] font-semibold text-ink underline-offset-4 hover:underline">{design.name}</Link>
-                    {design.challengeId && <Tag tone="marker">Challenge workspace{design.challengeVersion ? ` · v${design.challengeVersion}` : ""}</Tag>}
+                    {design.challengeId && <Tag tone="neutral">Challenge workspace{design.challengeVersion ? ` · v${design.challengeVersion}` : ""}</Tag>}
                   </p>
                   <p className="mt-0.5 text-[13px] text-ink-3">{count} {count === 1 ? "resource" : "resources"} · {links} {links === 1 ? "connection" : "connections"} · updated <time dateTime={design.updatedAt} title={formatDate(design.updatedAt)}>{relativeTime(design.updatedAt)}</time></p>
                 </div>

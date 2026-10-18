@@ -26,8 +26,8 @@ export function PredictionQuestionField({ question, index, value, onChange, desi
       <div className="mt-2 grid gap-2 sm:grid-cols-2">
         {predictionChoices(question, designTypes).map((choice) => (
           <label key={choice.value} className={cx("flex cursor-pointer items-center gap-2.5 rounded-md border px-3 py-2 text-sm transition-colors",
-            value === choice.value ? "border-ink bg-marker-soft text-ink" : "border-line-strong text-ink-2 hover:border-ink-3")}>
-            <input type="radio" name={`prediction-${question.id}`} value={choice.value} checked={value === choice.value} onChange={() => onChange(choice.value)} className="accent-[var(--if-ink)]" />
+            value === choice.value ? "border-accent bg-accent-soft text-ink" : "border-line-strong text-ink-2 hover:border-ink-3")}>
+            <input type="radio" name={`prediction-${question.id}`} value={choice.value} checked={value === choice.value} onChange={() => onChange(choice.value)} className="accent-[var(--if-accent)]" />
             {choice.label}
           </label>
         ))}

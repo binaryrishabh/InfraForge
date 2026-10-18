@@ -9,6 +9,7 @@ import { Button } from "@/ui/Button";
 import { StatusMark } from "@/ui/StatusMark";
 import { DIFFICULTY_LABEL, RESULT_LABEL } from "../challengeLabels";
 import { LearningHistory } from "../components/LearningHistory";
+import { CurriculumLine } from "../components/CurriculumLine";
 
 export function ChallengeRow({ challenge, index }: { challenge: ChallengeSummary; index: number }) {
   const latest = challenge.latest;
@@ -48,7 +49,9 @@ export function ChallengesPage() {
         lede="Each challenge fixes the traffic, the moment it is judged and the requirements. You design, commit to a prediction, run once, and compare what you expected with what was recorded." />
       {loading ? <Loading label="Loading challenges…" /> : error || !data ? (
         <div className="mt-8"><Notice tone="fail" role="alert">{error}</Notice><Button className="mt-3" size="sm" onClick={retry}>Try again</Button></div>
-      ) : (["design", "resilience"] as const).map((category, n) => {
+      ) : <>
+      <CurriculumLine challenges={data} className="mt-8 border border-line bg-surface p-6" />
+      {(["design", "resilience"] as const).map((category, n) => {
         const items = data.filter((c) => c.category === category);
         if (!items.length) return null;
         const offset = category === "design" ? 0 : data.filter((c) => c.category === "design").length;
@@ -58,7 +61,7 @@ export function ChallengesPage() {
             <ol className="mt-3 border-b border-line">{items.map((challenge, index) => <ChallengeRow key={challenge.id} challenge={challenge} index={offset + index} />)}</ol>
           </Section>
         );
-      })}
+      })}</>}
       <p className="mt-6 max-w-[70ch] text-sm text-ink-3">Results come from fixed rules applied to recorded run evidence. There are no scores or rankings: a requirement is met or it is not, and a prediction matches what was recorded or it does not.</p>
       <LearningHistory />
     </Page>

@@ -1,4 +1,8 @@
 import { useEffect, useState } from "react";
+import { PanelRight, Plus } from "lucide-react";
+import { useMediaQuery } from "@/lib/useMediaQuery";
+import { Button } from "@/ui/Button";
+import { Dialog } from "@/ui/Dialog";
 import { useCanvasKeyboardShortcuts } from "../../hooks/useCanvasKeyboardShortcuts";
 import { ConfirmDialog } from "@/ui/ConfirmDialogs";
 import { useChallengeBrief } from "@/features/challenges/useChallengeBrief";
@@ -21,8 +25,9 @@ import { ImprovementNotice } from "./ImprovementNotice";
 import { LearningContextNotice } from "@/features/challenges/components/LearningContextNotice";
 import { useChallengeImprovement } from "@/features/challenges/learningContext";
 
-/* One desktop Designer: palette, drafting sheet and details. The page gate
-mounts this implementation only when all three have usable space. */
+/* One Designer at every width. With room for all three, the palette, drafting sheet and
+details sit side by side. Narrower, the palette folds to a rail and details open as a
+sheet; on a phone both open as sheets so the drafting sheet keeps the whole screen. */
 const RAIL_KEY = "infraforge:palette-rail";
 const readRail = () => { try { return localStorage.getItem(RAIL_KEY) === "1"; } catch { return false; } };
 
@@ -44,6 +49,8 @@ export function DesignWorkspace() {
   const preflight = useChallengePreflight(challengeId, learning?.version);
   const [tab, setTab] = useState<SideTab>(selection ? "inspect" : challengeId ? "brief" : "inspect");
   const [railOnly, setRailOnly] = useState(readRail);
+  const docked = useMediaQuery("(min-width: 1100px)"), roomy = useMediaQuery("(min-width: 640px)");
+  const [sheet, setSheet] = useState<"add" | "details" | null>(null);
   const setRail = (value: boolean) => { setRailOnly(value); try { localStorage.setItem(RAIL_KEY, value ? "1" : "0"); } catch { /* storage unavailable */ } };
 
   // A new selection brings the inspector forward; entering a challenge brings the brief forward.
@@ -63,19 +70,37 @@ export function DesignWorkspace() {
         <ImprovementNotice />
         <LearningContextNotice />
         <div className="relative flex min-h-0 flex-1">
-          <aside className={`shrink-0 border-r border-line bg-surface ${railOnly ? "w-14" : "w-64"}`}>
-            {railOnly ? <PaletteRail onExpand={() => setRail(false)} /> : <PalettePanel onCollapse={() => setRail(true)} />}
-          </aside>
+          {roomy && (
+            <aside className={`shrink-0 border-r border-line bg-surface ${railOnly || !docked ? "w-14" : "w-64"}`}>
+              {railOnly || !docked ? <PaletteRail onExpand={docked ? () => setRail(false) : () => setSheet("add")} /> : <PalettePanel onCollapse={() => setRail(true)} />}
+            </aside>
+          )}
           <main id="main" tabIndex={-1} className="relative flex min-w-0 flex-1 flex-col outline-none" aria-label="Design canvas">
             <CanvasBoard label={`Canvas for ${useCanvasStore.getState().currentLayoutName ?? "untitled design"}. Tab through resources; Enter inspects.`} />
             <CanvasEmptyState />
             {route.loading && <p role="status" className="absolute top-3 left-1/2 z-30 -translate-x-1/2 rounded-md border border-line bg-raised px-3 py-1.5 text-sm shadow-e2">Opening design…</p>}
+            {!docked && (
+              <div className="absolute top-3 right-3 z-20 flex gap-2">
+                {!roomy && <Button size="sm" variant="secondary" className="bg-surface" icon={<Plus size={14} aria-hidden="true" />} onClick={() => setSheet("add")}>Add</Button>}
+                <Button size="sm" variant="secondary" className="bg-surface" icon={<PanelRight size={14} aria-hidden="true" />} onClick={() => setSheet("details")}>
+                  {selection ? "Inspect" : challengeId ? "Brief" : "Details"}
+                </Button>
+              </div>
+            )}
           </main>
-          <aside className="w-[340px] shrink-0 border-l border-line bg-surface" aria-label="Design details">{panel("side")}</aside>
+          {docked && <aside className="w-[340px] shrink-0 border-l border-line bg-surface" aria-label="Design details">{panel("side")}</aside>}
         </div>
         <StatusBar onChecks={() => setTab("checks")} />
       </div>
 
+      {!docked && <>
+        <Dialog open={sheet === "add"} onOpenChange={(open) => setSheet(open ? "add" : null)} title="Add a resource" size="md">
+          <div className="-mx-5 -my-4 h-[60dvh]"><PalettePanel draggable={false} onAdded={() => setSheet(null)} /></div>
+        </Dialog>
+        <Dialog open={sheet === "details"} onOpenChange={(open) => setSheet(open ? "details" : null)} title="Design details" size="md">
+          <div className="-mx-5 -my-4 h-[70dvh]">{panel("sheet")}</div>
+        </Dialog>
+      </>}
       <DesignDialogs />
       {brief?.data && modal?.type === "attempt" && (
         <AttemptDialog brief={brief.data} preflight={preflight.data} open onOpenChange={(open) => { if (!open) useCanvasStore.getState().setModalState(null); }} />
