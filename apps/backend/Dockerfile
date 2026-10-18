@@ -44,6 +44,10 @@ COPY packages/domain/src ./packages/domain/src/
 COPY packages/catalog/src ./packages/catalog/src/
 COPY packages/contracts/src ./packages/contracts/src/
 COPY packages/simulation/src ./packages/simulation/src/
+COPY packages/domain/tsconfig.json ./packages/domain/
+COPY packages/catalog/tsconfig.json ./packages/catalog/
+COPY packages/contracts/tsconfig.json ./packages/contracts/
+COPY packages/simulation/tsconfig.json ./packages/simulation/
 
 # Generate after every authored copy so stale local output cannot replace it.
 RUN cd apps/backend && bun --bun run db:generate

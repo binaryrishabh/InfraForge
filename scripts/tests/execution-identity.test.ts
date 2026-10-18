@@ -56,7 +56,7 @@ test("every execution workspace dependency and imported backend source is pinned
     expect(digest(changed({ [path]: tree.read(path) + "\n// execution change\n" }))).not.toBe(digest(original));
   }
   expect(() => changed({ "apps/backend/internalModel2/store.ts": 'import "web-only-fixture";' })).toThrow("Undeclared");
-  expect(() => changed({ "apps/backend/internalModel2/store.ts": "require(variable);" })).toThrow("Dynamic");
+  expect(() => changed({ "apps/backend/internalModel2/store.ts": "require(variable);" })).toThrow("dynamic execution loader");
   const manifestPath = "packages/simulation/package.json", manifest = JSON.parse(tree.read(manifestPath));
   manifest.exports["./internal-product"].node = "./src/uninventoried.ts";
   expect(() => changed({ [manifestPath]: JSON.stringify(manifest) })).toThrow("Unreviewed workspace export condition");
@@ -73,8 +73,9 @@ test("history reconstructs without Git and only reviewed digests resolve", () =>
   expect(JSON.parse(isolated.stdout.toString()).current).toBe(executionSource);
   const table = JSON.parse(readFileSync("apps/backend/executionIdentity/executionTransitions.json", "utf8"));
   const pin = JSON.parse(readFileSync("apps/backend/executionIdentity/transitionPin.json", "utf8"));
-  expect(table.entries.length).toBe(21);
+  expect(table.entries.length).toBe(22);
   for (const row of table.entries) expect(compatibleReviewedSource(row.source, executionSource)).toBe(true);
+  expect(compatibleReviewedSource("dcf73dace76edc0afead6158b34785f511ba6b21fd34ce5490d11fe78e20f4ad", executionSource)).toBe(true);
   expect(compatibleReviewedSource("f".repeat(64), executionSource)).toBe(false);
   expect(compatibleReviewedSource(table.entries[0].source, "0".repeat(64))).toBe(false);
   for (const mutate of [
@@ -92,6 +93,7 @@ test("installed execution imports resolve within the declared closure", async ()
 }, 180000);
 test("runtime image includes the identity implementation and committed transitions", () => {
   const context = ignore().add(readFileSync(".dockerignore", "utf8"));
-  for (const path of tree.paths.filter(path => path.startsWith("apps/backend/executionIdentity/"))) expect(context.ignores(path)).toBe(false);
+  for (const [path] of original.files) expect(context.ignores(path!)).toBe(false);
   expect(readFileSync("apps/backend/Dockerfile", "utf8")).toContain("COPY apps/backend/executionIdentity ./apps/backend/executionIdentity/");
+  for (const workspace of ["domain", "catalog", "contracts", "simulation"]) expect(readFileSync("apps/backend/Dockerfile", "utf8")).toContain(`COPY packages/${workspace}/tsconfig.json ./packages/${workspace}/`);
 });

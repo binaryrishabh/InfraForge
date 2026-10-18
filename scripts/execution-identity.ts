@@ -6,12 +6,15 @@ import { diskTree, executionDescriptor, repositoryRoot } from "../apps/backend/e
 import type { SourceTree } from "../apps/backend/executionIdentity/descriptor";
 import { digest, lf, sha256 } from "../apps/backend/executionIdentity/hash";
 import { wholeLockIdentity } from "../apps/backend/executionIdentity/legacy";
-import { validateTransitions } from "../apps/backend/executionIdentity/transitions";
+import { loadTransitions } from "../apps/backend/executionIdentity/transitions";
+import { historicalDescriptor } from "./historical-execution-descriptor";
+import { dependencyClosure, parseLock } from "../apps/backend/executionIdentity/dependencies";
 import type { TransitionTable } from "../apps/backend/executionIdentity/transitions";
 import { verifyInstalled } from "../apps/backend/executionIdentity/installed";
 
 export const firstCommit = "72bb3a2";
 export const lastCommit = "1d4b3211f6169d1dda2b9fcab33c7b02b6705c9b";
+export const priorV2Commit = "2e581a4";
 const folder = resolve(repositoryRoot, "apps/backend/executionIdentity");
 const fixture = resolve(repositoryRoot, "scripts/fixtures/execution-identity-history.json.gz");
 type History = { blobs: Record<string, string>; trees: Record<string, Record<string, string>> };
@@ -45,20 +48,27 @@ function buildTransitions() {
   const first = git(["rev-parse", firstCommit]).trim();
   const commits = git(["rev-list", "--reverse", "--ancestry-path", `${first}^..${lastCommit}`]).trim().split("\n");
   if (!commits.includes(first) || !commits.includes(lastCommit)) throw Error("Incomplete connected history");
-  const baseline = gitTree(lastCommit), prior = executionDescriptor(baseline, runtime);
+  const baseline = gitTree(lastCommit), prior = historicalDescriptor(baseline, runtime);
+  if (current.runtime !== prior.runtime) throw Error("Runtime review required for execution transition");
   // This migration may change identity machinery only. Further engine changes need a new review.
   const oldFiles = new Map(prior.files as [string, string][]);
   for (const [path, hash] of current.files as [string, string][]) {
     if (path === "apps/backend/internalModel2/sandboxRunner.ts" && hash !== "23692677a70e09f45ec9c0ebdcf294ac61c57f71507b7b7b065eecc9b149db34") throw Error("Unreviewed sandbox readiness transition");
     if (path.startsWith("apps/backend/executionIdentity/") || ["identity", "legacyCompatibility", "sandboxRunner"].some(name => path === `apps/backend/internalModel2/${name}.ts`)) continue;
+    if (path.endsWith(".json") && baseline.paths.includes(path) && sha256(baseline.read(path)) === hash) continue;
     if (oldFiles.get(path) !== hash) throw Error(`Not an identity-only transition: ${path}`);
   }
   for (const [path] of prior.files) if (!current.files.some(([file]) => file === path)) throw Error(`Removed execution source: ${path}`);
-  if (digest(prior.dependencies) !== digest(current.dependencies) || digest(prior.settings) !== digest(current.settings)) throw Error("Execution dependencies changed during migration");
+  // Parser dependencies used solely by identity verification do not change the modeled engine.
+  const roots = Object.fromEntries(current.dependencies.roots.map(root => [root.name, Object.fromEntries(root.edges.filter(edge =>
+    !current.imports.some(item => item.specifier === edge.name && item.file.startsWith("apps/backend/executionIdentity/")) ||
+    current.imports.some(item => item.specifier === edge.name && !item.file.startsWith("apps/backend/executionIdentity/")))
+    .map(edge => [edge.name, edge.range]))]));
+  if (digest(prior.dependencies) !== digest(dependencyClosure(parseLock(diskTree().read("bun.lock")), roots)) || digest(prior.settings) !== digest(current.settings)) throw Error("Execution dependencies changed during migration");
   const table: TransitionTable = { schema: "execution-source-transitions/1", first, last: lastCommit, descriptors: { [target]: current }, entries: [] };
   const history: History = { blobs: {}, trees: {} };
-  function retain(commit: string, source?: string) {
-    const tree = gitTree(commit), descriptor = executionDescriptor(tree, runtime), hash = digest(descriptor);
+  function retain(commit: string, source?: string, kind?: "descriptor") {
+    const tree = gitTree(commit), descriptor = historicalDescriptor(tree, runtime), hash = digest(descriptor);
     if (digest(descriptor.dependencies) !== digest(prior.dependencies) || digest(descriptor.settings) !== digest(prior.settings)) throw Error(`Historical dependency review required: ${commit}`);
     if (!source) {
       const reviewed = new Set(["captureV1", "dockerConnection", "envelopeV2", "identity", "legacyCompatibility", "report", "sandboxRunner"].map(name => `apps/backend/internalModel2/${name}.ts`));
@@ -70,8 +80,8 @@ function buildTransitions() {
     const includeSandbox = !identitySource.includes('e.name !== "sandboxChild.ts"');
     const recorded = source ?? wholeLockIdentity(tree, runtime, includeSandbox);
     table.descriptors[hash] = descriptor;
-    table.entries.push({ commit, source: recorded, descriptor: hash, target,
-      review: source ? "Retained v1 replay adapter and frozen legacyRuntime reconstruction" : "Connected replay adapter; identity/compatibility, capture validation and sandbox supervision revisions retained; modeled engine unchanged" });
+    table.entries.push({ commit, source: recorded, descriptor: hash, target, ...(kind ? { kind } : {}),
+      review: kind ? "Committed v2 engine unchanged; config inventory, import and hook validation, transition loading and parser dependency reviewed" : source ? "Retained v1 replay adapter and frozen legacyRuntime reconstruction" : "Connected replay adapter; identity/compatibility, capture validation and sandbox supervision revisions retained; modeled engine unchanged" });
     const files = [...new Set([...descriptor.files.map(([path]) => path!), "bun.lock", "bunfig.toml", "package.json", ...["apps/backend", "apps/web", "packages/catalog", "packages/contracts", "packages/domain", "packages/simulation"].map(path => `${path}/package.json`)])];
     history.trees[commit] = Object.fromEntries(files.map(path => {
       const text = tree.read(path), hash = sha256(text); history.blobs[hash] = text; return [path, hash];
@@ -80,6 +90,8 @@ function buildTransitions() {
   for (const commit of commits) retain(commit);
   const legacy = JSON.parse(readFileSync(resolve(repositoryRoot, "apps/backend/internalModel2/legacyRuntime.json"), "utf8"));
   retain(legacy.baseline, legacy.source);
+  const v2Commit = git(["rev-parse", priorV2Commit]).trim();
+  retain(v2Commit, digest(historicalDescriptor(gitTree(v2Commit), runtime)), "descriptor");
   if (!table.entries.some(row => row.source === legacy.reviewedExecution.source)) throw Error("Reviewed connected identity missing");
   const text = JSON.stringify(table, null, 2) + "\n";
   writeFileSync(resolve(folder, "executionTransitions.json"), text);
@@ -90,10 +102,8 @@ function buildTransitions() {
   console.info(JSON.stringify({ commits: commits.length, entries: table.entries.length, descriptors: Object.keys(table.descriptors).length, current: target }));
 }
 
-export function checkTransitions() {
-  const table = JSON.parse(readFileSync(resolve(folder, "executionTransitions.json"), "utf8")) as TransitionTable;
-  const pin = JSON.parse(readFileSync(resolve(folder, "transitionPin.json"), "utf8"));
-  const mapping = validateTransitions(table, pin.digest), archive = readFileSync(fixture);
+export function checkTransitions(root = repositoryRoot) {
+  const { table, pin, mappings: mapping } = loadTransitions(root), archive = readFileSync(resolve(root, "scripts/fixtures/execution-identity-history.json.gz"));
   if (sha256(archive.toString("base64")) !== pin.history) throw Error("Historical execution snapshots changed");
   const history = JSON.parse(gunzipSync(archive).toString()) as History;
   if (digest(Object.keys(history.trees).sort()) !== digest(table.entries.map(row => row.commit).sort())) throw Error("Historical transition coverage changed");
@@ -103,17 +113,18 @@ export function checkTransitions() {
     const tree: SourceTree = { paths: Object.keys(files), read: path => {
       const text = history.blobs[files[path]!]; if (text === undefined) throw Error(`Missing snapshot source: ${path}`); return text;
     } };
-    if (digest(executionDescriptor(tree, table.descriptors[row.descriptor]!.runtime)) !== row.descriptor) throw Error("Historical closure does not reconstruct");
+    if (digest(historicalDescriptor(tree, table.descriptors[row.descriptor]!.runtime)) !== row.descriptor) throw Error("Historical closure does not reconstruct");
     let source: string;
-    if (row.source.startsWith("bac35c99")) {
-      const legacy = JSON.parse(readFileSync(resolve(repositoryRoot, "apps/backend/internalModel2/legacyRuntime.json"), "utf8"));
+    if (row.kind === "descriptor") source = row.descriptor;
+    else if (row.source.startsWith("bac35c99")) {
+      const legacy = JSON.parse(readFileSync(resolve(root, "apps/backend/internalModel2/legacyRuntime.json"), "utf8"));
       source = digest({ runtime: legacy.runtime, files: legacy.execution.map((path: string) => [path, tree.read(path)]) });
     } else source = wholeLockIdentity(tree, table.descriptors[row.descriptor]!.runtime, !tree.read("apps/backend/internalModel2/identity.ts").includes('e.name !== "sandboxChild.ts"'));
     if (source !== row.source) throw Error(`Historical whole-lock identity does not reconstruct: ${row.commit}`);
   }
-  const descriptor = executionDescriptor(), current = digest(descriptor);
+  const descriptor = executionDescriptor(diskTree(root)), current = digest(descriptor);
   if (table.last !== lastCommit || !table.entries.some(row => row.commit === lastCommit && mapping.get(row.source) === current)) throw Error("Migration HEAD does not map to current execution");
-  verifyInstalled(descriptor, repositoryRoot);
+  verifyInstalled(descriptor, root);
   return { schema: descriptor.schema, current, historicalEntries: table.entries.length, packages: descriptor.dependencies.packages.length };
 }
 if (import.meta.main) {

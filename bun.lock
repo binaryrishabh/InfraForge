@@ -21,6 +21,7 @@
         "@infraforge/simulation": "workspace:*",
         "@prisma/adapter-pg": "7.9.1",
         "@prisma/client": "7.9.1",
+        "acorn": "8.18.0",
         "better-auth": "1.7.7",
         "bullmq": "6.0.8",
         "cors": "2.8.6",

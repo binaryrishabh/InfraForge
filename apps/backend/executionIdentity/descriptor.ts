@@ -1,11 +1,14 @@
 import { readdirSync, readFileSync } from "node:fs";
-import { posix, resolve } from "node:path";
+import { posix, relative, resolve } from "node:path";
 import { builtinModules } from "node:module";
 import { dependencyClosure, parseLock, requireWorkspace } from "./dependencies";
 import type { Manifest } from "./dependencies";
 import { lf, sha256 } from "./hash";
+import { configurationInventory, verifyInstallation } from "./configuration";
+import { executable, executionImports } from "./loading";
+import type { SourceTree } from "./sourceTree";
+export type { SourceTree } from "./sourceTree";
 
-export interface SourceTree { paths: string[]; read(path: string): string }
 export const repositoryRoot = resolve(import.meta.dir, "../../..");
 export function diskTree(root = repositoryRoot): SourceTree {
   const paths: string[] = [];
@@ -17,9 +20,13 @@ export function diskTree(root = repositoryRoot): SourceTree {
       else paths.push(next);
     }
   }
-  for (const path of ["apps/backend", "packages"]) walk(path);
+  for (const path of ["apps", "packages"]) walk(path);
   paths.push("bun.lock", "package.json", "bunfig.toml", "tsconfig.base.json");
-  return { paths: paths.sort(), read: path => lf(readFileSync(resolve(root, path), "utf8")) };
+  for (const name of ["tsconfig.json", "jsconfig.json"]) {
+    if (readdirSync(root).includes(name)) paths.push(name);
+  }
+  return { paths: paths.sort(), read: path => lf(readFileSync(resolve(root, path), "utf8")),
+    resolveImport: (specifier, importer) => relative(root, Bun.resolveSync(specifier, resolve(root, posix.dirname(importer)))).replaceAll("\\", "/") };
 }
 
 const engineFolders = ["packages/simulation/src/model2/", "packages/simulation/src/reality/", "packages/domain/src/", "packages/catalog/src/"];
@@ -34,7 +41,9 @@ export const packageName = (specifier: string) => specifier.startsWith("@") ? sp
 
 export function executionDescriptor(tree = diskTree(), runtime = `bun-${Bun.version}`) {
   const available = new Set(tree.paths), files = new Set<string>();
+  const configure = configurationInventory(tree, files);
   const lock = parseLock(tree.read("bun.lock"));
+  verifyInstallation(tree, Object.keys(lock.workspaces));
   const manifests = Object.fromEntries([...workspacePaths, "apps/backend"].map(path => {
     const manifest = JSON.parse(tree.read(`${path}/package.json`)) as Manifest;
     requireWorkspace(lock, path, manifest);
@@ -44,23 +53,25 @@ export function executionDescriptor(tree = diskTree(), runtime = `bun-${Bun.vers
   for (const path of workspacePaths) roots[manifests[path]!.name] = { ...manifests[path]!.dependencies, ...manifests[path]!.optionalDependencies, ...manifests[path]!.peerDependencies };
   roots[manifests["apps/backend"]!.name] = {};
   const imports: Array<{ file: string; specifier: string }> = [];
-  const transpiler = new Bun.Transpiler({ loader: "ts", target: "bun" });
   function local(path: string) {
-    const found = [path, `${path}.ts`, `${path}.tsx`, `${path}/index.ts`].find(candidate => available.has(candidate));
+    const extensions = ["ts", "tsx", "js", "jsx", "mjs", "cjs", "mts", "cts", "json"];
+    const found = [path, ...extensions.map(ext => `${path}.${ext}`), ...extensions.map(ext => `${path}/index.${ext}`)].find(candidate => available.has(candidate));
     if (!found || found.startsWith("../") || found.includes("/.env")) throw Error(`Unresolved execution source: ${path}`);
     visit(found);
   }
   function visit(path: string) {
     if (files.has(path)) return;
     files.add(path);
-    if (!/\.tsx?$/.test(path)) return;
+    if (path.endsWith(".json")) return;
+    if (!executable.test(path)) throw Error(`Unsupported execution source: ${path}`);
+    configure(path);
     const source = tree.read(path);
-    // Nonliteral module loading needs an explicit, reviewed entrypoint inventory.
-    if (/\b(?:import|require)\s*\(\s*[^\s'"`]/.test(source)) throw Error(`Dynamic execution import: ${path}`);
-    for (const entry of transpiler.scan(source).imports) {
+    for (const entry of executionImports(source, path)) {
       const specifier = entry.path;
       if (builtins.has(specifier)) continue;
-      if (specifier.startsWith(".")) { local(posix.normalize(posix.join(posix.dirname(path), specifier))); continue; }
+      if (specifier.startsWith(".")) {
+        local(tree.resolveImport?.(specifier, path) ?? posix.normalize(posix.join(posix.dirname(path), specifier))); continue;
+      }
       const name = packageName(specifier);
       const owner = Object.keys(manifests).find(folder => path.startsWith(`${folder}/`));
       if (!owner) throw Error(`No execution workspace for ${path}`);
@@ -77,7 +88,10 @@ export function executionDescriptor(tree = diskTree(), runtime = `bun-${Bun.vers
         if (entry && typeof entry === "object" && Object.keys(entry).some(condition => !["types", "default"].includes(condition))) throw Error(`Unreviewed workspace export condition: ${specifier}`);
         const target = typeof entry === "string" ? entry : entry?.default;
         if (!target) throw Error(`Unresolved workspace export: ${specifier}`);
-        local(posix.join(folder, target));
+        const expected = posix.normalize(posix.join(folder, target));
+        const actual = tree.resolveImport?.(specifier, path) ?? expected;
+        if (actual !== expected) throw Error(`Unexpected workspace resolution: ${path} -> ${specifier}: ${actual}`);
+        local(actual);
       } else imports.push({ file: path, specifier });
     }
   }
@@ -89,15 +103,12 @@ export function executionDescriptor(tree = diskTree(), runtime = `bun-${Bun.vers
   const dependencies = dependencyClosure(lock, roots);
   const install = Bun.TOML.parse(tree.read("bunfig.toml"));
   const root = JSON.parse(tree.read("package.json"));
-  if (root.patchedDependencies || root.trustedDependencies || root.scripts?.postinstall || root.scripts?.preinstall || root.packageExtensions) throw Error("Unreviewed root install hooks/settings");
   for (const [name, version] of Object.entries(dependencies.overrides)) if (root.overrides?.[name] !== version) throw Error(`Stale execution override: ${name}`);
   for (const name of Object.keys(root.overrides ?? {})) {
     if (name.slice(1).includes("@")) throw Error(`Unreviewed scoped override: ${name}`);
     if (dependencies.packages.some(item => item.name === name) && lock.overrides?.[name] !== root.overrides[name]) throw Error(`Unresolved execution override: ${name}`);
   }
   const workspaces = Object.entries(manifests).map(([path, value]) => {
-    const scripts = value.scripts as Record<string, string> | undefined;
-    if (scripts?.preinstall || scripts?.install || scripts?.postinstall || value.patchedDependencies || value.trustedDependencies) throw Error(`Unreviewed workspace install hook: ${path}`);
     const { devDependencies: _dev, scripts: _scripts, ...manifest } = value;
     // Backend dependency roots are imports, not unrelated API-only packages.
     return [path, path === "apps/backend" ? { ...manifest, dependencies: roots[value.name] } : manifest];

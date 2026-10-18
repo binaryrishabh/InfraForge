@@ -43,6 +43,10 @@ packages/contracts/src/*/**
 !packages/simulation/
 packages/simulation/**
 !packages/simulation/package.json
+!packages/domain/tsconfig.json
+!packages/catalog/tsconfig.json
+!packages/contracts/tsconfig.json
+!packages/simulation/tsconfig.json
 !packages/simulation/src/
 packages/simulation/src/**
 !packages/simulation/src/*.ts

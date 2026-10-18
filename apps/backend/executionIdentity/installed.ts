@@ -7,12 +7,14 @@ import type { Instance } from "./dependencies";
 export function verifyInstalled(descriptor: ExecutionDescriptor, root: string) {
   const packages = new Map(descriptor.dependencies.packages.map(item => [item.id, item]));
   const directories = new Map<string, string>();
+  const candidates = new Map<string, string | undefined>();
   function locate(name: string, from: string): string | undefined {
     let folder = from;
     while (folder === root || folder.startsWith(root + "/") || folder.startsWith(root + "\\")) {
       const path = join(folder, "node_modules", name, "package.json");
-      if (existsSync(path)) {
-        const actual = realpathSync(dirname(path));
+      if (!candidates.has(path)) candidates.set(path, existsSync(path) ? realpathSync(dirname(path)) : undefined);
+      const actual = candidates.get(path);
+      if (actual) {
         if (relative(root, actual).startsWith("..")) throw Error(`Execution dependency outside runtime tree: ${name}`);
         return actual;
       }

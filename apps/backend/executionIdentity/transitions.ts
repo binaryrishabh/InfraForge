@@ -6,7 +6,7 @@ import type { ExecutionDescriptor } from "./descriptor";
 export interface TransitionTable {
   schema: string; first: string; last: string;
   descriptors: Record<string, ExecutionDescriptor>;
-  entries: Array<{ commit: string; source: string; descriptor: string; target: string; review: string }>;
+  entries: Array<{ commit: string; source: string; descriptor: string; target: string; review: string; kind?: "descriptor" }>;
 }
 export function validateTransitions(table: TransitionTable, expectedHash: string) {
   if (digest(table) !== expectedHash || table.schema !== "execution-source-transitions/1") throw Error("Execution transition table changed");
@@ -20,17 +20,19 @@ export function validateTransitions(table: TransitionTable, expectedHash: string
   if (!table.entries.some(row => row.commit === table.first) || !table.entries.some(row => row.commit === table.last)) throw Error("Incomplete execution transition coverage");
   return mappings;
 }
-let cached: Map<string, string> | undefined;
+export function loadTransitions(root: string) {
+  const folder = resolve(root, "apps/backend/executionIdentity");
+  const pin = JSON.parse(readFileSync(resolve(folder, "transitionPin.json"), "utf8"));
+  const text = readFileSync(resolve(folder, "executionTransitions.json"), "utf8").replaceAll("\r\n", "\n");
+  if (sha256(text) !== pin.bytes) throw Error("Execution transition bytes changed");
+  const table = JSON.parse(text) as TransitionTable;
+  return { table, pin, mappings: validateTransitions(table, pin.digest) };
+}
+const cached = new Map<string, Map<string, string>>();
 export function compatibleTransition(recorded: string, current: string, root: string) {
   if (recorded === current) return true;
   try {
-    if (!cached) {
-      const folder = resolve(root, "apps/backend/executionIdentity");
-      const pin = JSON.parse(readFileSync(resolve(folder, "transitionPin.json"), "utf8"));
-      const text = readFileSync(resolve(folder, "executionTransitions.json"), "utf8");
-      if (sha256(text.replaceAll("\r\n", "\n")) !== pin.bytes) throw Error("Execution transition bytes changed");
-      cached = validateTransitions(JSON.parse(text), pin.digest);
-    }
-    return cached.get(recorded) === current;
+    if (!cached.has(root)) cached.set(root, loadTransitions(root).mappings);
+    return cached.get(root)!.get(recorded) === current;
   } catch { return false; }
 }
