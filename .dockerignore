@@ -99,6 +99,10 @@ apps/backend/evidence/**
 apps/backend/internalModel2/**
 !apps/backend/internalModel2/*.ts
 !apps/backend/internalModel2/legacyRuntime.json
+!apps/backend/executionIdentity/
+apps/backend/executionIdentity/**
+!apps/backend/executionIdentity/*.ts
+!apps/backend/executionIdentity/*.json
 !apps/backend/comparison/
 apps/backend/comparison/**
 !apps/backend/comparison/*.ts

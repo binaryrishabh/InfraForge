@@ -1,7 +1,10 @@
 import { createHash } from "node:crypto";
-import { readdirSync, readFileSync } from "node:fs";
+import { readdirSync } from "node:fs";
 import { relative, resolve } from "node:path";
 import { canonical } from "@infraforge/simulation/internal-product";
+import { executionDescriptor, repositoryRoot } from "../executionIdentity/descriptor";
+import { verifyInstalled } from "../executionIdentity/installed";
+import { digest } from "../executionIdentity/hash";
 export const hasher = { algorithm: "sha256-utf8/1" as const, hash: (text: string) => createHash("sha256").update(text).digest("hex") };
 export const contentHash = (value: unknown) => hasher.hash(JSON.stringify(canonical(value)));
 const root = resolve(import.meta.dir, "../../..");
@@ -15,4 +18,6 @@ export function executionSourceFiles() {
   return files;
 }
 // Frozen with this process/image; changing execution source requires a new process.
-export const executionSource = contentHash({ runtime: `bun-${Bun.version}`, files: executionSourceFiles().map((p) => [p, readFileSync(resolve(root, p), "utf8").replaceAll("\r\n", "\n")]) });
+export const executionIdentity = executionDescriptor();
+verifyInstalled(executionIdentity, repositoryRoot);
+export const executionSource = digest(executionIdentity);

@@ -26,6 +26,7 @@ COPY apps/backend/deployments ./apps/backend/deployments/
 COPY apps/backend/reports ./apps/backend/reports/
 COPY apps/backend/evidence ./apps/backend/evidence/
 COPY apps/backend/internalModel2 ./apps/backend/internalModel2/
+COPY apps/backend/executionIdentity ./apps/backend/executionIdentity/
 COPY apps/backend/comparison ./apps/backend/comparison/
 COPY apps/backend/reruns ./apps/backend/reruns/
 COPY apps/backend/actions ./apps/backend/actions/

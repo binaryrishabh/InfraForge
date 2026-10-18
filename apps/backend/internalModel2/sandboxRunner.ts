@@ -4,7 +4,9 @@ import { containerName, createArguments, verifyContainer, inspectContainer, remo
 import type { DockerConnection } from "./dockerConnection";
 import { boundProcess } from "./dockerConnection";
 export interface SandboxReceipt { schema: "model2-sandbox-receipt/1"; connection?: DockerConnection["receipt"]; inspection: ReturnType<typeof verifyContainer>; enforcement?: unknown; exit?: { code: number; oom: boolean; error: string }; elapsedMs?: number; errorOutput?: string }
-export async function runSandbox(control: DockerConnection, id: string, image: string, input: unknown, onFrame: (value: any) => Promise<unknown>, onReceipt: (receipt: SandboxReceipt) => Promise<void>, signal?: AbortSignal, origin = id) {
+export async function runSandbox(control: DockerConnection, id: string, image: string, input: unknown, onFrame: (value: any) => Promise<unknown>, onReceipt: (receipt: SandboxReceipt) => Promise<void>, signal?: AbortSignal, origin = id, expectedSource = executionSource) {
+  // Trusted containment fixtures pin the source of their immutable derivative image.
+  if (!/^[a-f0-9]{64}$/.test(expectedSource)) throw Error("Invalid sandbox execution source pin");
   const name = containerName(id), started = Date.now(), serialized = JSON.stringify(input) + "\n";
   if (Buffer.byteLength(serialized) > limits.inputBytes) throw Error("Sandbox input budget exceeded");
   let child: Awaited<ReturnType<DockerConnection["attach"]>> | undefined, monitoring: ReturnType<typeof setInterval> | undefined, monitorStopped = false;
@@ -59,7 +61,7 @@ export async function runSandbox(control: DockerConnection, id: string, image: s
           if (done || stopped) throw Error("Unexpected output after terminal frame");
           if (!ready) {
             const e = frame.enforcement, cpu = String(e?.cpu).split(/\s+/).map(Number);
-            if (frame.kind !== "ready" || frame.source !== executionSource || e.memory !== String(limits.memoryBytes) || e.swap !== "0" || e.pids !== String(limits.pids) || e.uid !== 1000 || cpu.length !== 2 || cpu[0] !== cpu[1] ||
+            if (frame.kind !== "ready" || frame.source !== expectedSource || e.memory !== String(limits.memoryBytes) || e.swap !== "0" || e.pids !== String(limits.pids) || e.uid !== 1000 || cpu.length !== 2 || cpu[0] !== cpu[1] ||
               !/Max cpu time\s+5\s+5\s+seconds/.test(e.limits) || !/Max open files\s+128\s+128/.test(e.limits) || e.env.some((key: string) => /DATABASE|REDIS|SECRET|TOKEN|AUTH/.test(key))) throw Error("Kernel containment verification failed");
             receipt.enforcement = e; await onReceipt(receipt); ready = true;
           } else if (frame.kind === "done") done = true;

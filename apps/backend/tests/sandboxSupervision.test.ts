@@ -5,6 +5,7 @@ import { boundProcess } from "../internalModel2/dockerConnection";
 import { runSandbox } from "../internalModel2/sandboxRunner";
 import { LESSON_SANDBOX as limits } from "../internalModel2/lessonLimits";
 import { executionSource } from "../internalModel2/identity";
+import { fixtureExecutionSource } from "./integration/lessonFixtureImage";
 
 // Simulated attachment events test supervision, never actual kernel enforcement.
 function fixture() {
@@ -78,3 +79,22 @@ test("successful execution still requires ready, complete output and actual atta
   const receipt = await pending;
   expect(receipt.exit).toEqual({ code: 0, oom: false, error: "" }); expect(f.removed).toBe(true);
 }, 2000);
+
+const fixtureSource = fixtureExecutionSource('import { sandboxReady } from "./sandboxHandshake"; console.log(sandboxReady());');
+for (const expected of [undefined, fixtureSource, "0".repeat(64)]) {
+  test(`derivative fixture source requires its explicit trusted pin (${expected === fixtureSource ? "matching" : expected ? "wrong" : "production default"})`, async () => {
+    expect(fixtureSource).not.toBe(executionSource);
+    const f = fixture();
+    const pending = runSandbox(f.control, f.id, f.image, { fixture: "controls" }, async () => {}, async () => {}, undefined, f.id, expected);
+    void pending.catch(() => {});
+    try {
+      await f.ready; await Bun.sleep(10);
+      f.child.stdout.write(JSON.stringify({ kind: "ready", source: fixtureSource, enforcement: { memory: String(limits.memoryBytes), swap: "0", pids: String(limits.pids), uid: 1000, cpu: "100000 100000", limits: "Max cpu time 5 5 seconds\nMax open files 128 128", env: [] } }) + "\n");
+      f.child.stdout.end(JSON.stringify({ kind: "done" }) + "\n"); f.child.stderr.end();
+      f.value.State.Running = false; f.child.emit("close", 0);
+      if (expected === fixtureSource) expect((await pending).exit?.code).toBe(0);
+      else await expect(pending).rejects.toThrow("Kernel containment verification failed");
+      expect(f.removed).toBe(true);
+    } finally { f.release(); await pending.catch(() => {}); }
+  }, 2000);
+}

@@ -5,11 +5,12 @@ import { runSandbox } from "../../internalModel2/sandboxRunner";
 import { DockerConnection } from "../../internalModel2/dockerConnection";
 import { containerName, inspectContainer, removeContainer } from "../../internalModel2/sandboxDocker";
 import { until } from "./localHarness";
-export async function checkOrphanDeadline(control: DockerConnection, image: string, output: string) {
+import { executionSource } from "../../internalModel2/identity";
+export async function checkOrphanDeadline(control: DockerConnection, image: string, output: string, expectedSource = executionSource) {
   const id = crypto.randomUUID(), name = containerName(id), receiptPath = join(output, `orphan-ready-${id}.json`), script = join(output, `orphan-parent-${id}.ts`);
   const runner = fileURLToPath(new URL("../../internalModel2/sandboxRunner.ts", import.meta.url)).replaceAll("\\", "/");
   const connector = fileURLToPath(new URL("../../internalModel2/dockerConnection.ts", import.meta.url)).replaceAll("\\", "/");
-  await Bun.write(script, `import {runSandbox} from ${JSON.stringify(runner)}; import {DockerConnection} from ${JSON.stringify(connector)}; await DockerConnection.use(async(c)=>{if(JSON.stringify(c.receipt)!==${JSON.stringify(JSON.stringify(control.receipt))})throw Error('Orphan endpoint identity changed');await runSandbox(c,${JSON.stringify(id)},${JSON.stringify(image)},{fixture:'wall'},async()=>{},async(r)=>{if(r.enforcement)await Bun.write(${JSON.stringify(receiptPath)},JSON.stringify(r))})});`);
+  await Bun.write(script, `import {runSandbox} from ${JSON.stringify(runner)}; import {DockerConnection} from ${JSON.stringify(connector)}; await DockerConnection.use(async(c)=>{if(JSON.stringify(c.receipt)!==${JSON.stringify(JSON.stringify(control.receipt))})throw Error('Orphan endpoint identity changed');await runSandbox(c,${JSON.stringify(id)},${JSON.stringify(image)},{fixture:'wall'},async()=>{},async(r)=>{if(r.enforcement)await Bun.write(${JSON.stringify(receiptPath)},JSON.stringify(r))},undefined,${JSON.stringify(id)},${JSON.stringify(expectedSource)})});`);
   const env = Object.fromEntries(Object.entries(process.env).filter(([key]) => /^(PATH|MODEL2_LESSON_ENDPOINT|MODEL2_LESSON_DOCKER_MODE|NODE_ENV|CI|GITHUB_ACTIONS|M2M_RUN|INTEGRATION_DISPOSABLE)$/i.test(key))) as Record<string, string>;
   const parent = Bun.spawn([process.execPath, "--no-env-file", "--no-install", script], { env, stdout: "ignore", stderr: "ignore" }), started = Date.now();
   try {

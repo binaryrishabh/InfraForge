@@ -45,14 +45,15 @@ async function keepSandboxEvidence(control: DockerConnection, output: string, ev
 }
 export async function checkLessonSandbox(baseImage: string, output: string) {
   return DockerConnection.use(async (control) => {
-  return withFixtureImage(control, baseImage, join(output, "fixture"), fixture, async (image) => {
+  return withFixtureImage(control, baseImage, join(output, "fixture"), fixture, async (image, fixtureSource) => {
     const results: Record<string, any> = {}, phases: Array<Record<string, unknown>> = [], since = Date.now();
     const evidence: Record<string, unknown> = { image, connection: control.receipt, results, phases };
     try {
     for (const kind of ["controls", "pids", "cpu", "memory", "wall", "oversized", "malformed"]) {
       console.info(`M2M sandbox phase: ${kind}`);
       let receipt: SandboxReceipt | undefined, failure = "", value: unknown; const start = Date.now(), clock = performance.now();
-      try { await runSandbox(control, crypto.randomUUID(), image, { fixture: kind }, async (frame) => { if (frame.kind !== "controls") throw Error("Unexpected fixture frame"); value = frame.value; }, async (r) => { receipt = structuredClone(r); }); }
+      const id = crypto.randomUUID();
+      try { await runSandbox(control, id, image, { fixture: kind }, async (frame) => { if (frame.kind !== "controls") throw Error("Unexpected fixture frame"); value = frame.value; }, async (r) => { receipt = structuredClone(r); }, undefined, id, fixtureSource); }
       catch (error) { failure = error instanceof Error ? error.message : String(error); }
       results[kind] = { elapsedMs: Date.now() - start, receipt, failure, value };
       // Wall-clock and monotonic time separately, so a clock step cannot pass as a short phase.
@@ -67,7 +68,7 @@ export async function checkLessonSandbox(baseImage: string, output: string) {
       if (kind === "malformed") expect(failure).toMatch(/JSON|parse|Expected/i);
     }
     console.info("M2M sandbox phase: orphan deadline");
-    const orphan = await checkOrphanDeadline(control, image, output);
+    const orphan = await checkOrphanDeadline(control, image, output, fixtureSource);
     await keepSandboxEvidence(control, output, evidence, since);
     return { image, baseImage, connection: control.receipt, results, orphan };
     } catch (error) {

@@ -9,14 +9,15 @@ import { withFixtureImage } from "../../apps/backend/tests/integration/lessonFix
 import { fixture } from "./fixture";
 export async function probeSandbox(baseImage: string, output: string) {
   return DockerConnection.use(async (control) => {
-  return withFixtureImage(control, baseImage, join(output, "bounded-fixture"), fixture, async (image) => {
+  return withFixtureImage(control, baseImage, join(output, "bounded-fixture"), fixture, async (image, fixtureSource) => {
   const results: Record<string, unknown> = {};
     for (const kind of ["controls", "quota", "pids", "cpu", "memory", "wall"]) {
       let receipt: SandboxReceipt | undefined, value: any, failure = "";
-      try { await runSandbox(control, randomUUID(), image, { fixture: kind }, async (frame) => {
+      const id = randomUUID();
+      try { await runSandbox(control, id, image, { fixture: kind }, async (frame) => {
         if (frame.kind === "probe-ready") return { continue: true };
         if (frame.kind !== "controls") throw Error("Unexpected probe frame"); value = frame.value;
-      }, async (r) => { receipt = structuredClone(r); }); }
+      }, async (r) => { receipt = structuredClone(r); }, undefined, id, fixtureSource); }
       catch (error) { failure = error instanceof Error ? error.message : "Probe failed"; }
       results[kind] = { receipt, value, failure };
       await Bun.write(join(output, "partial-enforcement.json"), JSON.stringify({ baseImage, image, results }));
@@ -36,7 +37,7 @@ export async function probeSandbox(baseImage: string, output: string) {
       if (kind === "cpu") { expect(receipt?.exit?.oom).toBe(false); expect(receipt?.exit?.code).not.toBe(0); expect(receipt?.elapsedMs).toBeLessThan(15000); }
       if (kind === "wall") { expect(receipt?.elapsedMs).toBeGreaterThanOrEqual(14000); expect(receipt?.elapsedMs).toBeLessThan(25000); }
     }
-    const orphan = await checkOrphanDeadline(control, image, output);
+    const orphan = await checkOrphanDeadline(control, image, output, fixtureSource);
     return { baseImage, image, connection: control.receipt, fixture, results, orphan };
   });
   });

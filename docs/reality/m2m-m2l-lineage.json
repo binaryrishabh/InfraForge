@@ -116,7 +116,7 @@
   "current": [
     {
       "file": "apps/backend/Dockerfile",
-      "hash": "a4aea45d0c34a2de68e6be87670bca293c96da5d79e2aad2cc5b89bebebc9b5a"
+      "hash": "ea8e32d37a16ee69724e52bcb9db788e92c7704bd8d5a2bebacd64fa98abf997"
     },
     {
       "file": "apps/backend/internalModel2/authoring.ts",
@@ -184,11 +184,11 @@
     },
     {
       "file": "apps/backend/internalModel2/identity.ts",
-      "hash": "4499f676c79d229caa27f0662d6427072eb411fda36e9d96ac9ee1220222649f"
+      "hash": "860099cce68ce65344a008a8221b1e515c620e0841d6955ab19a5ae91cbd9126"
     },
     {
       "file": "apps/backend/internalModel2/legacyCompatibility.ts",
-      "hash": "1f20c8743f1b4d596bc2b874d97630ae16ff183df9b06260bb7f054d8e11e71b"
+      "hash": "136ffce6a0868465877026a1a01f657d330f8c65bc6683bc5cb250f9f9efd428"
     },
     {
       "file": "apps/backend/internalModel2/legacyRuntime.json",
@@ -248,7 +248,7 @@
     },
     {
       "file": "apps/backend/internalModel2/sandboxRunner.ts",
-      "hash": "c17f6851fecee4e8e352216a6f40c5474181f5372868b17c5e89945527b34ea3"
+      "hash": "9ca20d04b1ea9ee642dcbe20b1391ef5f74ebdb918c8dfc6f0f406d41da4b1ae"
     },
     {
       "file": "apps/backend/internalModel2/store.ts",

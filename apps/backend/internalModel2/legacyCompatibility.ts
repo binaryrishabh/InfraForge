@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { canonical } from "@infraforge/simulation/internal-product";
 import { executionSourceFiles } from "./identity";
+import { compatibleTransition } from "../executionIdentity/transitions";
 interface SourceFile { path: string; hash: string; text?: string }
 interface Lineage { baseline: string; source: string; runtime: string; original: SourceFile[]; current: Array<{ path: string; hash: string }>; execution: string[];
   reviewedExecution?: { baseline: string; source: string; original: SourceFile[]; context: SourceFile[]; inventory: string[] } }
@@ -33,6 +34,9 @@ function verifyDependencyContext(line: Lineage) {
 }
 // One reviewed transition, not a version-wide or arbitrary historical-source allowance.
 export function compatibleReviewedSource(recorded: string, current: string) {
+  return compatibleTransition(recorded, current, root);
+}
+export function frozenReviewedSource(recorded: string, current: string) {
   if (recorded === current) return true;
   try {
     const line = legacyLineage(), review = line.reviewedExecution;
@@ -54,7 +58,10 @@ export function compatibleReviewedSource(recorded: string, current: string) {
   } catch { return false; }
 }
 export function compatibleV1Source(recorded: string, current: string) {
-  if (compatibleReviewedSource(recorded, current)) return true;
+  return compatibleTransition(recorded, current, root);
+}
+export function frozenV1Source(recorded: string, current: string) {
+  if (frozenReviewedSource(recorded, current)) return true;
   try {
     const line = legacyLineage(); if (recorded !== line.source || line.runtime !== `bun-${Bun.version}`) return false;
     if (verified === undefined) {
