@@ -224,7 +224,7 @@
   "current": [
     {
       "file": "apps/backend/Dockerfile",
-      "hash": "c1417ea261233a2b4cdddb28a4e9bad6a84ede5fbaba315724501d8443839ad7"
+      "hash": "48193675a7d8982bea794b3e4206add75d83590aa89815f1e4b7e465e42d9cae"
     },
     {
       "file": "apps/backend/internalModel2/authoring.ts",
@@ -300,7 +300,7 @@
     },
     {
       "file": "apps/backend/internalModel2/legacyRuntime.json",
-      "hash": "76f8962863f8d505f5ab2fe5c7aad0e3dd92a63b5d17c61fee5582c7d9e6ce14"
+      "hash": "197bcba3eb59efa431c89a4bf48058fb50f23de7057b537e169c221dda2481e3"
     },
     {
       "file": "apps/backend/internalModel2/lessonAuthoring.ts",
@@ -340,7 +340,7 @@
     },
     {
       "file": "apps/backend/internalModel2/routes.ts",
-      "hash": "8836fa4e797c992866a320ad386a93c48369df30f5bd9b13e2950bcb9a5b8e96"
+      "hash": "c0e0fd7ae87b93cbf55b0be74d278c59fa730a1b4b8e736d25a1ba8c0e58a82b"
     },
     {
       "file": "apps/backend/internalModel2/sandboxChild.ts",

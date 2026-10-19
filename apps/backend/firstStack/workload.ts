@@ -3,6 +3,7 @@ import { firstStackLimits as limits } from "@infraforge/contracts/first-stack";
 import type { FirstStackSidecar, RecordedScheduleHeader, RecordedScheduleRow, ResolvedSchedule, ScheduleTransform } from "@infraforge/contracts/first-stack";
 import { canonical, hash } from "./canonical";
 import { requireCapability } from "../capabilities/policy";
+import { createHash } from "node:crypto";
 
 const id = z.string().min(1).max(256).refine(s => !Object.hasOwn(Object.prototype, s));
 const integer = z.number().int().min(0).max(Number.MAX_SAFE_INTEGER);
@@ -47,18 +48,20 @@ export async function resolveWorkload(chunks: AsyncIterable<Uint8Array>, options
   const dataset = new Set(options.sidecar.database.keys), ids = new Set<string>();
   let header: RecordedScheduleHeader | undefined, bytes = 0, lineNumber = 0, lineLength = 0, previous = -1;
   const rows: RecordedScheduleRow[] = [], line = new Uint8Array(limits.lineBytes);
+  const normalizedContent = createHash("sha256");
   const decoder = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true });
   const acceptLine = () => {
     lineNumber++;
+    if (header && rows.length >= limits.rows) refuse("ROW_BUDGET", `line.${lineNumber}`, "Schedule row budget exceeded before parsing");
     let text: string;
     try { text = decoder.decode(line.subarray(0, lineLength)); }
     catch { return refuse("INVALID_UTF8", `line.${lineNumber}`, "Malformed UTF-8"); }
     if (text.endsWith("\r")) text = text.slice(0, -1);
+    normalizedContent.update(text).update("\n");
     if (!text.length) refuse("EMPTY_LINE", `line.${lineNumber}`, "Empty JSONL lines are not supported");
     let value: unknown;
     try { value = JSON.parse(text); } catch { return refuse("INVALID_JSON", `line.${lineNumber}`, "Malformed JSON line"); }
     if (!header) { header = parsed(headerSchema, value, "header"); return; }
-    if (rows.length >= limits.rows) refuse("ROW_BUDGET", `line.${lineNumber}`, "Schedule row budget exceeded");
     const row = parsed(rowSchema, value, `line.${lineNumber}`);
     if (ids.has(row.id)) refuse("DUPLICATE_ID", row.id, "Duplicate schedule row ID");
     if (row.atUs < previous || row.atUs > header.durationUs) refuse("ROW_TIME", row.id, "Rows must be nondecreasing and within duration");
@@ -91,7 +94,7 @@ export async function resolveWorkload(chunks: AsyncIterable<Uint8Array>, options
   const distinctKeys = new Set<string>();
   const scale = (at: number) => {
     const product = BigInt(at) * BigInt(transform.timeScale.numerator), divisor = BigInt(transform.timeScale.denominator);
-    if (product % divisor !== 0n) refuse("TRANSFORM_PRECISION", "transform", "Transform must retain integer microseconds");
+    if (product % divisor !== BigInt(0)) refuse("TRANSFORM_PRECISION", "transform", "Transform must retain integer microseconds");
     const result = Number(product / divisor) + transform.shiftUs;
     if (!Number.isSafeInteger(result) || result > limits.durationUs) refuse("TRANSFORM_BUDGET", "transform", "Transformed schedule exceeds the review horizon");
     return result;
@@ -114,8 +117,13 @@ export async function resolveWorkload(chunks: AsyncIterable<Uint8Array>, options
   if (distinctKeys.size > limits.keys) refuse("KEY_BUDGET", "parameters", "Distinct key budget exceeded");
   const canonicalParameters = { ...parameters, rows: [...parameters.rows].sort((a, b) => lexical(a.id, b.id)) };
   const scheduleHash = hash({ header, rows }), parametersHash = hash(canonicalParameters);
+  if (options.sidecar.workload && (options.sidecar.workload.scheduleHash !== scheduleHash || options.sidecar.workload.parametersHash !== parametersHash)) refuse("WORKLOAD_REFERENCE", "workload", "Recording does not match the saved workload references");
   const body = { schema: "infraforge-first-stack-resolved/1" as const, header: { ...header, durationUs: scale(header.durationUs) },
     transform, scheduleHash, parametersHash, application: structuredClone(options.sidecar.application), rows: resolved,
+    normalizedContentHash: normalizedContent.digest("hex"),
+    executedScheduleHash: hash({ header: { ...header, durationUs: scale(header.durationUs) }, rows: resolved }),
+    profileHash: hash({ profile: options.sidecar.profile, compiler: options.sidecar.compiler, application: options.sidecar.application,
+      operations: [...options.sidecar.operations].sort((a, b) => lexical(a.id, b.id)), database: options.sidecar.database }),
     unknown: ["Physical timing calibration", ...(rows.some(r => r.sentAtUs === undefined) ? ["Missing observed send times"] : []),
       ...(rows.some(r => r.generatorLost === undefined) ? ["Missing generator loss observations"] : [])] };
   capability(options.owner, { capability: "load.recorded.accept", bytes, rows: rows.length, durationSeconds: body.header.durationUs / 1_000_000,

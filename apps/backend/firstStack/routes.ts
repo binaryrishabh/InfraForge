@@ -5,6 +5,8 @@ import { createFirstStackService, FirstStackRefusal } from "./service";
 import type { FirstStackRepository } from "./service";
 import { resolveWorkload, WorkloadRefusal } from "./workload";
 import { readImportContext } from "./importStream";
+import { requireCapability } from "../capabilities/policy";
+import { firstStackLimits as limits } from "@infraforge/contracts/first-stack";
 
 export function createFirstStackRouter(repository: FirstStackRepository) {
   const router = Router(), service = createFirstStackService(repository);
@@ -18,6 +20,7 @@ export function createFirstStackRouter(repository: FirstStackRepository) {
     req.once("aborted", () => abort.abort());
     res.once("close", () => { if (!res.writableEnded) abort.abort(); });
     try {
+      requireCapability(res.locals.userId, { capability: "load.recorded.accept", bytes: limits.scheduleBytes + limits.parameterBytes, rows: limits.rows, durationSeconds: limits.durationUs / 1_000_000, scale: 1 });
       const { context, schedule } = await readImportContext(req);
       const review = await service.review(res.locals.userId, context.infrastructureId, context.expectedDesignUpdatedAt);
       if (!review.ok) throw new FirstStackRefusal(review.diagnostics);

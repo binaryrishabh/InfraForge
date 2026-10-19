@@ -1,6 +1,6 @@
 {
   "schema": "execution-loading-analysis/1",
-  "policy": "149415738d69781bbe46456ffc0d2277827563ba1151a3df6d3690c9084903d4",
+  "policy": "0b5eeb07f448c35e53fe074a6f6741d93315b28851795511b32b2a851b25ae3e",
   "modules": {
     "apps/backend/actions/contract.ts": {
       "hash": "cb4d5860ab0805ccf009c47e453ed89c12e52e564c95e470a1cfbb23e18fb24d",
@@ -963,6 +963,153 @@
         }
       ]
     },
+    "apps/backend/firstStack/authoring.ts": {
+      "hash": "b313c8dec9cc93dc3e677e31b8099f2ab516f14832c484b81409f7b0c73c82e5",
+      "requests": [
+        {
+          "path": "zod",
+          "kind": "import-statement"
+        },
+        {
+          "path": "@infraforge/contracts/first-stack",
+          "kind": "import-statement"
+        },
+        {
+          "path": "../zod_schemas/layout.schema",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./canonical",
+          "kind": "import-statement"
+        }
+      ]
+    },
+    "apps/backend/firstStack/canonical.ts": {
+      "hash": "7aef83a695fa126e961a2813576d5a54b31e0177daab81ba405ca097f6ba6d46",
+      "requests": [
+        {
+          "path": "node:crypto",
+          "kind": "import-statement"
+        }
+      ]
+    },
+    "apps/backend/firstStack/importStream.ts": {
+      "hash": "0d2f232bd112e59bb0fe67270444ffe81d9ebc3084bcd324866e0c06f00d2c7e",
+      "requests": [
+        {
+          "path": "zod",
+          "kind": "import-statement"
+        },
+        {
+          "path": "@infraforge/contracts/first-stack",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./workload",
+          "kind": "import-statement"
+        }
+      ]
+    },
+    "apps/backend/firstStack/persistence.ts": {
+      "hash": "eb20a534aca49aefc93cb0afcc6bf85a1d478a4e58244d9d67d4959a6417c582",
+      "requests": [
+        {
+          "path": "../lib/prisma",
+          "kind": "import-statement"
+        }
+      ]
+    },
+    "apps/backend/firstStack/routes.ts": {
+      "hash": "c4c564e79be83c1109970036de39bc1974ade955e44615497a43bc7768f8dcb9",
+      "requests": [
+        {
+          "path": "express",
+          "kind": "import-statement"
+        },
+        {
+          "path": "zod",
+          "kind": "import-statement"
+        },
+        {
+          "path": "../utils/errors",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./service",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./workload",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./importStream",
+          "kind": "import-statement"
+        },
+        {
+          "path": "../capabilities/policy",
+          "kind": "import-statement"
+        },
+        {
+          "path": "@infraforge/contracts/first-stack",
+          "kind": "import-statement"
+        }
+      ]
+    },
+    "apps/backend/firstStack/service.ts": {
+      "hash": "2c73f9473a46f1e0f27bc99835062e90d86b64b1e0f519747b926cb7efa1048e",
+      "requests": [
+        {
+          "path": "node:crypto",
+          "kind": "import-statement"
+        },
+        {
+          "path": "../capabilities/policy",
+          "kind": "import-statement"
+        },
+        {
+          "path": "../utils/errors",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./canonical",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./authoring",
+          "kind": "import-statement"
+        },
+        {
+          "path": "@infraforge/contracts/first-stack",
+          "kind": "import-statement"
+        }
+      ]
+    },
+    "apps/backend/firstStack/workload.ts": {
+      "hash": "2d32b90d5017367e2f849c36a344dc0842a7b8841d64411af91f8286c8ce8649",
+      "requests": [
+        {
+          "path": "zod",
+          "kind": "import-statement"
+        },
+        {
+          "path": "@infraforge/contracts/first-stack",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./canonical",
+          "kind": "import-statement"
+        },
+        {
+          "path": "../capabilities/policy",
+          "kind": "import-statement"
+        },
+        {
+          "path": "node:crypto",
+          "kind": "import-statement"
+        }
+      ]
+    },
     "apps/backend/health/readiness.ts": {
       "hash": "da5016d24607720121c87a222779bd576f39fd3b82af1057ed4b319faf1dde09",
       "requests": [
@@ -1748,7 +1895,7 @@
       ]
     },
     "apps/backend/internalModel2/routes.ts": {
-      "hash": "b6d53a55e7d6a5795f10f66f9685f7e02b914a66c1ea6a0c0259e0f6e19c0112",
+      "hash": "49a0a407f5f75a7b267099e0e158750d9f4014992b1b852be7392b9f492ef3da",
       "requests": [
         {
           "path": "../runRecords/adapters",
@@ -1804,6 +1951,14 @@
         },
         {
           "path": "./lessonPolicy",
+          "kind": "import-statement"
+        },
+        {
+          "path": "../firstStack/routes",
+          "kind": "import-statement"
+        },
+        {
+          "path": "../firstStack/persistence",
           "kind": "import-statement"
         }
       ]
@@ -2986,7 +3141,7 @@
       ]
     },
     "apps/backend/zod_schemas/layout.schema.ts": {
-      "hash": "7184c880769ae9aad58372dae2e9116bfb8aad39181bd6971f989b998902d2d6",
+      "hash": "1cacd80fdec3a62f1cb28fb8d0495a45c549dded770d72a6aa827d52ac13c126",
       "requests": [
         {
           "path": "zod",
@@ -3130,6 +3285,10 @@
           "kind": "import-statement"
         }
       ]
+    },
+    "packages/contracts/src/first-stack/index.ts": {
+      "hash": "1ca85e7811b3077bacb57363d48988dbd51c01c83d705a94050e0cdb93ff4c2a",
+      "requests": []
     },
     "packages/contracts/src/infrastructure/Infrastructure.interface.ts": {
       "hash": "d649d3b57a440dc89f6a210ad0fd7227121fbc912e069aabd4cd55d60ae58fc7",

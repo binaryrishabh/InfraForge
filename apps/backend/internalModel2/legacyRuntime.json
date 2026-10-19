@@ -126,7 +126,8 @@
     },
     {
       "path": "apps/backend/zod_schemas/layout.schema.ts",
-      "hash": "7184c880769ae9aad58372dae2e9116bfb8aad39181bd6971f989b998902d2d6"
+      "hash": "7184c880769ae9aad58372dae2e9116bfb8aad39181bd6971f989b998902d2d6",
+      "text": "import * as z from \"zod\";\nimport { RESOURCE_TYPES } from \"@infraforge/domain/resource\";\n\nconst ResourceIdSchema = z.string().min(1).refine(\n  (id) => !Object.hasOwn(Object.prototype, id),\n  \"Resource IDs cannot use reserved object property names\",\n);\n\nconst ResourceSchema = z.object({\n  id: ResourceIdSchema,\n  type: z.enum(RESOURCE_TYPES),\n  x: z.number(),\n  y: z.number(),\n  skuId: z.string().optional(),\n  autoscaling: z.object({\n    enabled: z.boolean().optional(),\n    minReplicas: z.number().int().positive().optional(),\n    maxReplicas: z.number().int().positive().optional(),\n    targetCpu: z.number().min(0).max(100).optional(),\n  }).optional(),\n  public: z.boolean().optional(),\n  encryption: z.boolean().optional(),\n  openPorts: z.array(z.number().int().min(0).max(65535)).optional(),\n  size: z.enum([\"small\", \"medium\", \"large\"]).optional(),\n  region: z.string().optional(),\n  name: z.string().optional(),\n}).catchall(z.json());\n\nconst ConnectionSchema = z.object({\n  id: z.string().min(1),\n  sourceId: ResourceIdSchema,\n  targetId: ResourceIdSchema,\n  sourceType: z.string(),\n  targetType: z.string(),\n  port: z.number().int().min(0).max(65535),\n}).catchall(z.json());\n\nexport const LayoutSchema = z.object({\n  resources: z.array(ResourceSchema).default([]),\n  connectionLines: z.array(ConnectionSchema).default([]),\n  layoutVersion: z.number().int().positive().optional(),\n}).catchall(z.json());\n\nexport const LiveTopologySchema = z.object({\n  resources: z.array(ResourceSchema).min(1),\n  connectionLines: z.array(ConnectionSchema),\n});\n"
     },
     {
       "path": "bun.lock",
@@ -835,7 +836,8 @@
     },
     {
       "path": "scripts/reality/classify.ts",
-      "hash": "920b32a2667375dfa876dca1b4c69143e832fe547b4fc231263a3a625d3e0c49"
+      "hash": "920b32a2667375dfa876dca1b4c69143e832fe547b4fc231263a3a625d3e0c49",
+      "text": "import type { NumericSite } from \"./scan\";\nimport type { RealityEntry } from \"../../packages/simulation/src/reality/ledger\";\nimport type { Unit } from \"../../packages/simulation/src/reality/quantity\";\n\nexport const AUDIT_SHA = \"361a3b1afe33740d8f45d9c79601c6476657d602\";\nexport function classify(site: NumericSite): RealityEntry {\n  const { file, symbol, context } = site;\n  let classification: RealityEntry[\"classification\"] = \"implementation-policy\", unit: Unit = \"code-number\";\n  let scope = \"Application bookkeeping, presentation or operational guard; not infrastructure physics\";\n  let assumptions = [\"This literal is not evidence of real infrastructure capacity or performance.\"];\n  let replacement = \"Retain as an implementation policy; separate from modeled infrastructure measurements.\";\n  if (/packages\\/simulation\\//.test(file)) {\n    classification = \"educational-assumption\"; scope = \"Published Model-1 engine behavior\";\n    assumptions = [\"Fixed educational coefficients; no application benchmark or provider measurement establishes a universal value.\"];\n    replacement = \"M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.\";\n    if (/capacity\\.ts/.test(file)) unit = \"requests/s\";\n    if (/cost\\.ts/.test(file)) { classification = \"approximation\"; unit = symbol.includes(\"MONTHLY\") ? \"USD/month\" : \"code-number\";\n      replacement = \"M2G: dated provider/region tariffs, billing units, minimums and explicit missing cost components.\"; }\n    if (/DURATION|SECONDS|TICKS/.test(symbol)) unit = \"seconds\";\n    if (/RPS_PER|QPS_PER/.test(symbol)) unit = \"mixed\";\n    if (/DEGRADED_AT|SATURATED_AT|TARGET_CPU|SCALE_DOWN_AT|CPU_SPIKE_BOOST/.test(symbol)) unit = \"percent\";\n    if (/CACHE_HIT_RATIO|FACTOR|MULTIPLIER|AMPLIFICATION|MAX_RETRY_BOOST/.test(symbol)) unit = \"ratio\";\n    if (/MAX_LOAD_FRACTION|MAX_EFFECTIVE_LOAD|VM_WRITE_CPU_TAX/.test(symbol)) unit = \"ratio\";\n    if (/PAYLOAD_KB/.test(symbol)) unit = \"kB-label\";\n    if (/BANDWIDTH_CAPACITY_KBPS/.test(symbol)) unit = \"kB/s\";\n    if (/MEMORY_LEAK_RATE|KBPS_PER_GBPS/.test(symbol)) unit = \"mixed\";\n    if (/DB_POOL_PER|MAX_DB_CONNECTIONS|DEFAULT_MAX_CAP/.test(symbol)) unit = \"count\";\n    if (/SPAWN_Y_GAP|spawnOrigin/.test(symbol)) { classification = \"implementation-policy\"; unit = \"code-number\"; scope = \"Canvas layout, not physics\"; }\n    if (/engineHelpers/.test(file) && /mulberry32|round1/.test(symbol)) { classification = \"implementation-policy\"; unit = \"code-number\"; scope = \"Replay RNG/rounding algorithm, not a measured stochastic process\"; }\n    if (/targetRps/.test(symbol) && [60, 3600].includes(site.value)) { classification = \"derived\"; unit = \"seconds\"; assumptions = [\"Exact minute/hour conversion; workload rate itself is selected configuration.\"]; replacement = \"Retain explicit unit conversions in M2.\"; }\n    if (/engineRouting/.test(file)) { classification = \"derived\"; assumptions = [\"Graph traversal, equal splitting and fixed read/miss/write fractions; no request completion, queue or path latency is calculated.\"]; }\n    if ([0, 1].includes(site.value) && /length|\\[0\\]|Counter|hotTicks|coldTicks|inDegree|remainingTicks|const remaining|let monthlyTotal|let (cpu|stress|boost)|processed/.test(context)) {\n      classification = \"implementation-policy\"; unit = \"code-number\"; scope = \"Initialization, indexing, count arithmetic or discrete tick lifecycle\";\n    }\n  } else if (/packages\\/catalog\\/src\\/.+catalog\\.ts/.test(file)) {\n    scope = \"Historical provider-labelled catalog snapshot 2026-08; field validity is independent\";\n    classification = /monthlyPriceUsd|maxConnections|networkGbps/.test(symbol) ? \"approximation\" : \"unverified\";\n    unit = symbol.endsWith(\"vCpu\") ? \"cores\" : symbol.endsWith(\"ramGb\") ? \"GB-label\" : symbol.endsWith(\"monthlyPriceUsd\") ? \"USD/month\" : symbol.endsWith(\"networkGbps\") ? \"Gbps\" : symbol.endsWith(\"maxConnections\") ? \"count\" : \"ratio\";\n    assumptions = [\"Repository snapshot is implementation provenance only; provider identity does not verify this exact field.\", \"No region/date/credit-mode/guaranteed-versus-burst contract is captured per field.\"];\n    replacement = \"M2G: verify each SKU field independently against a dated provider specification; separate limits, estimates and tariff terms.\";\n    if (symbol.startsWith(\"AWS_COMPUTE.\") && symbol.endsWith(\"baselineFactor\") && /baselineFactor: 0\\.(40|60)/.test(context) && /t3\\.(medium|large)/.test(context)) {\n      classification = \"obsolete\"; assumptions.push(\"Published T3 per-vCPU baseline is 20% for medium and 30% for large; Model 1 stores 40%/60%. Preserve historical behavior.\");\n    }\n  } else if (/workload|DeployDialog/.test(file)) {\n    classification = \"educational-assumption\"; scope = \"Selectable example workload/default or workload validation bound\";\n    assumptions = [\"A preset becomes captured configuration when selected; it is not observed production demand.\"];\n    replacement = \"M2B: request classes and measured/configured service-demand profiles, explicit arrival model and assumptions.\";\n  } else if (/challenges\\/definitions|challenges\\/starter/.test(file)) {\n    classification = \"calibrated-model\"; scope = \"Immutable educational scenario, calibrated against Model 1 only\";\n    assumptions = [\"Passing/failing engine fixtures establish educational behavior, not real cloud accuracy.\"];\n    replacement = \"Keep V1 immutable. Later M2K publishes newly calibrated Model-2 challenge versions.\";\n  } else if (/evidence|experimentTrace|challenges\\/validate|comparison|reports/.test(file)) {\n    classification = \"implementation-policy\"; scope = \"Evidence retention, authoring, comparison or report presentation guard\";\n    assumptions = [\"Bounds govern what can be claimed, not infrastructure capacity. Missing evidence remains unknown.\"];\n    replacement = \"Keep existing historical report semantics; design separate versioned M2 evidence with units/provenance.\";\n  } else if (/example|preset/i.test(file)) {\n    classification = \"educational-assumption\"; scope = \"Example architecture/configuration, including nonphysical layout coordinates\";\n    replacement = \"Label examples as configuration; never infer provider capacity from layout or resource count alone.\";\n  } else if (/RESOURCE_PORTS|securityScan|CONNECTION_RULES|validation/.test(file)) {\n    scope = \"Default protocol ports, topology/readiness rules or limited static security checks\";\n    assumptions = [\"Defaults are configurable conventions; static checks do not simulate firewalls, TLS or prove security.\"];\n    replacement = \"M2: explicit listener/protocol/reachability and security policy; retain static warnings separately.\";\n    if (/RESOURCE_PORTS|openPorts/.test(file + context)) unit = \"port\";\n  }\n  const internalProductSource = /apps\\/backend\\/internalModel2\\/|apps\\/backend\\/release\\/(model2Schema|lessonSchema)|packages\\/simulation\\/src\\/internalProduct|apps\\/web\\/src\\/features\\/(internalModel2|internalLessons)\\/|apps\\/web\\/src\\/api\\/internal(Model2|Lesson).api|packages\\/contracts\\/src\\/internal-(model2|lessons)\\//.test(file);\n  if (file === \"packages/contracts/src/internal-lessons/index.ts\") {\n    classification = \"educational-assumption\"; unit = \"us\"; scope = \"Versioned authored lesson read times; no physical or provider calibration\";\n    assumptions = [\"Explicit selectable teaching configuration only; the recorded contract retains its educational provenance.\"];\n    replacement = \"Keep the lesson version and review identity when changing the authored schedule; never present it as cloud timing.\";\n  }\n  const evidence: RealityEntry[\"provenance\"] = [{ source: internalProductSource ? `workspace:${file}#L${site.line}` : `repo:${AUDIT_SHA}/${file}#L${site.line}`, supports: \"implementation\", detail: internalProductSource ? \"Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption.\" : \"Exact historical literal and source expression; not external validation.\" }];\n  if (file === \"apps/backend/stages/costEstimation.stages.ts\" && context.includes(\"GENERIC_MONTHLY_USD\") && site.value === 10) {\n    classification = \"approximation\"; unit = \"USD/month\"; scope = \"Historical fallback price in deployment-time cost estimation\";\n    assumptions = [\"Fallback estimate, not a documented provider tariff; runtime cost.ts contains the matching historical fallback.\"];\n    replacement = \"M2G: missing tariff remains Unknown; derive priced components from dated provider/service/region billing rules.\";\n  }\n  if (classification === \"obsolete\") evidence.push({ source: \"https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/burstable-credits-baseline-concepts.html\", supports: \"qualitative\",\n    detail: \"Contradicts this stored coefficient: EC2 t3.medium/large baselines are 20%/30% per vCPU. Exact replacement facts are separately recorded in provider-facts.json; this source does not validate the stored value.\" });\n  if (file.includes(\"apps/web/src/features/monitoring/store/\") && /metrics|cpu|health|loadFraction|simulatedSeconds|burnRate|accumulatedCost/.test(symbol + context)) {\n    classification = \"placeholder\"; scope = \"Client initial/missing-snapshot defaults, not an infrastructure measurement\";\n    assumptions = [\"Zero/initial values can be UI state without retained measurements; they do not establish measured zero usage.\"];\n    replacement = \"M2 evidence/UI must keep missing or stale measurements explicit; use Unknown instead of numeric substitution.\";\n  }\n  if (classification === \"calibrated-model\") evidence.push({ source: \"apps/backend/tests/challengeHarness.ts\", supports: \"exact\", detail: \"Deterministic starter/reference tests support scenario outcomes only, not physical accuracy.\" });\n  if (classification === \"implementation-policy\") assumptions.push(\"Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim.\");\n  return { id: site.id, concept: `${symbol || file.split(\"/\").at(-1)} · literal ${site.text}`, modelVersion: \"1\", scope,\n    quantity: { kind: \"known\", value: site.value, unit, provenance: [site.id] }, formula: context,\n    classification, confidence: classification === \"implementation-policy\" ? \"high\" : classification === \"calibrated-model\" ? \"conditional\" : \"low\",\n    provenance: evidence, assumptions, researchedOn: \"2026-10-15\", freeMode: classification === \"implementation-policy\" ? \"conditional\" : \"forbidden\", replacement };\n}\n"
     },
     {
       "path": "scripts/reality/compute-calibration.ts",
@@ -1151,7 +1153,7 @@
     },
     {
       "path": "apps/backend/internalModel2/routes.ts",
-      "hash": "b6d53a55e7d6a5795f10f66f9685f7e02b914a66c1ea6a0c0259e0f6e19c0112"
+      "hash": "49a0a407f5f75a7b267099e0e158750d9f4014992b1b852be7392b9f492ef3da"
     },
     {
       "path": "apps/backend/internalModel2/sandboxChild.ts",
@@ -1187,7 +1189,7 @@
     },
     {
       "path": "apps/backend/zod_schemas/layout.schema.ts",
-      "hash": "7184c880769ae9aad58372dae2e9116bfb8aad39181bd6971f989b998902d2d6"
+      "hash": "1cacd80fdec3a62f1cb28fb8d0495a45c549dded770d72a6aa827d52ac13c126"
     },
     {
       "path": "bun.lock",
@@ -1927,7 +1929,7 @@
     },
     {
       "path": "scripts/reality/classify.ts",
-      "hash": "920b32a2667375dfa876dca1b4c69143e832fe547b4fc231263a3a625d3e0c49"
+      "hash": "f6ee5dcce12fda433caef0f8ada45dac6d2ef27e4d5e06c3d6b1f7f43782580d"
     },
     {
       "path": "scripts/reality/composition-host-proof.ts",
@@ -1962,12 +1964,16 @@
       "hash": "12f62f9e1618454cb867e8f806b4af4f2bb8be34b0dbeaefb8b1e545874c3d3c"
     },
     {
+      "path": "scripts/reality/first-stack-baseline.ts",
+      "hash": "c2d917f046db32db64acb48aa908ec1b7c7b94c8b2bd708c8b593f829880eabb"
+    },
+    {
       "path": "scripts/reality/inventory.ts",
       "hash": "7008caaf8e3475f5bf77105978e1f8aa6fc4b0d0320a3b18611f436c1370d414"
     },
     {
       "path": "scripts/reality/launch-contract.ts",
-      "hash": "0f0d108a78a3b6c997654ff9999a6b0be685108773909f8f44ebb85fa5d582f9"
+      "hash": "e879b2d360fed6e815bf9f205230a65314856ce2b428553a8e19c436f582d376"
     },
     {
       "path": "scripts/reality/measure-compute.ts",
@@ -2127,7 +2133,11 @@
     },
     {
       "path": "scripts/tests/execution-identity.test.ts",
-      "hash": "9af2a27a3af807c65af4a47b0cdd8c9d29d483d33f981587abe165bd416fb190"
+      "hash": "dc7d460a8e19364040f7e1e6a32c9351a781f870dea2f3f8209e1a572acb2e72"
+    },
+    {
+      "path": "scripts/tests/first-stack-profile.test.ts",
+      "hash": "7f2cfd282e4b9d3b24a9aecabdff1e07f1cc14e415863125df36ade8f28f4676"
     },
     {
       "path": "scripts/tests/fixtures/execution-launch-probe.ts",

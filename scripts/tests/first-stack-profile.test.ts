@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
-import { digest } from "../../apps/backend/executionIdentity/hash";
+import { digest, sourceHash } from "../../apps/backend/executionIdentity/hash";
 import { firstStackClaims, firstStackScopeExamples, firstStackFieldDisposition } from "../../packages/contracts/src/first-stack";
 import { exposedFields, readManifest } from "../reality/launch-contract";
 
@@ -21,4 +21,13 @@ test("every legacy resource and edge field has an authoring disposition", () => 
   for (const field of exposedFields().filter(f => /^(Resource|ConnectionLine)\.[^.]+$/.test(f.key))) {
     expect(Object.hasOwn(firstStackFieldDisposition, field.key.split(".")[1]!)).toBe(true);
   }
+});
+test("first stack source review binds new behavior and its acceptance tests independently", () => {
+  const lock = JSON.parse(readFileSync("docs/reality/first-stack-source-review.json", "utf8"));
+  const baseline = JSON.parse(readFileSync("docs/reality/first-stack-baseline.json", "utf8"));
+  expect(lock.schema).toBe("infraforge-first-stack-source-review/1");
+  expect(lock.baseline).toBe(baseline.source);
+  expect(lock.files).toHaveLength(13);
+  expect(lock.acceptance).toHaveLength(4);
+  for (const { path, hash } of [...lock.files, ...lock.acceptance]) expect(sourceHash(readFileSync(path, "utf8"))).toBe(hash);
 });

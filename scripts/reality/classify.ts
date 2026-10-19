@@ -62,7 +62,14 @@ export function classify(site: NumericSite): RealityEntry {
     replacement = "M2: explicit listener/protocol/reachability and security policy; retain static warnings separately.";
     if (/RESOURCE_PORTS|openPorts/.test(file + context)) unit = "port";
   }
-  const internalProductSource = /apps\/backend\/internalModel2\/|apps\/backend\/release\/(model2Schema|lessonSchema)|packages\/simulation\/src\/internalProduct|apps\/web\/src\/features\/(internalModel2|internalLessons)\/|apps\/web\/src\/api\/internal(Model2|Lesson).api|packages\/contracts\/src\/internal-(model2|lessons)\//.test(file);
+  const firstStackSource = /apps\/backend\/firstStack\/|packages\/contracts\/src\/first-stack\//.test(file);
+  if (firstStackSource) {
+    classification = "implementation-policy"; unit = "code-number";
+    scope = "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics";
+    assumptions = ["Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing."];
+    replacement = "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.";
+  }
+  const internalProductSource = firstStackSource || /apps\/backend\/internalModel2\/|apps\/backend\/release\/(model2Schema|lessonSchema)|packages\/simulation\/src\/internalProduct|apps\/web\/src\/features\/(internalModel2|internalLessons)\/|apps\/web\/src\/api\/internal(Model2|Lesson).api|packages\/contracts\/src\/internal-(model2|lessons)\//.test(file);
   if (file === "packages/contracts/src/internal-lessons/index.ts") {
     classification = "educational-assumption"; unit = "us"; scope = "Versioned authored lesson read times; no physical or provider calibration";
     assumptions = ["Explicit selectable teaching configuration only; the recorded contract retains its educational provenance."];

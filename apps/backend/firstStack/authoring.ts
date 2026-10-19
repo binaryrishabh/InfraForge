@@ -10,9 +10,15 @@ const positive = count.positive();
 const amount = z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER);
 const time = amount.max(limits.durationUs);
 const cores = z.number().positive().max(1024);
+const port = z.number().int().min(1).max(65535);
 const digest = z.string().regex(/^[a-f0-9]{64}$/);
 export const sourceSchema = z.object({ id, version: id, origin: z.enum(["authored", "measured"]),
-  workloadDomain: id, runtime: id, hardware: id, sources: z.array(id).min(1).max(32) }).strict();
+  workloadDomain: id, runtime: id, hardware: id, sources: z.array(id).min(1).max(32),
+  measurement: z.object({ uncertainty: id, fitIdentity: id, holdoutIdentity: id.nullable(), conditions: id,
+    cpuMethod: z.enum(["thread-core-time", "process-core-time"]) }).strict().optional(),
+}).strict().superRefine((source, context) => {
+  if (source.origin === "measured" && !source.measurement) context.addIssue({ code: "custom", path: ["measurement"], message: "Measured demand needs core-time methodology, conditions, uncertainty and fit/holdout identity; response latency is not CPU demand." });
+});
 export const sidecarSchema = z.object({
   schema: z.literal("infraforge-first-stack-sidecar/1"), profile: z.literal(FIRST_STACK_PROFILE), compiler: z.literal(FIRST_STACK_COMPILER),
   designRevision: digest, application: sourceSchema,
@@ -21,9 +27,11 @@ export const sidecarSchema = z.object({
     cpuUs: time, parallelism: cores, blockingUs: time, residentBytes: amount.nullable() }).strict()).min(1).max(limits.operations),
   nodes: z.array(z.object({ id, owner: z.enum(["load-balancer", "compute", "relational", "keyed-cache"]),
     host: id, cores, memoryBytes: amount.nullable(), reservationBytes: amount.nullable(),
-    workers: positive, queue: count, cancellation: z.enum(["detach", "request-cancellation"]) }).strict()).min(3).max(11),
+    workers: positive, queue: count, listenerPort: port, cancellation: z.enum(["detach", "request-cancellation"]) }).strict()).min(3).max(11),
+  caller: z.object({ entry: id, port, transport: z.literal("plain-serial/1"), connections: positive, pending: count,
+    timeoutUs: time.positive(), requestBytes: amount.nullable(), responseBytes: amount.nullable(), requestLink: id, responseLink: id }).strict(),
   paths: z.array(z.object({ id, source: id, target: id, purpose: z.enum(["routing", "dependency"]),
-    port: z.number().int().min(1).max(65535), transport: z.literal("plain-serial/1"), connections: positive,
+    port, transport: z.literal("plain-serial/1"), connections: positive,
     pending: count, timeoutUs: time.positive(), requestBytes: amount.nullable(), responseBytes: amount.nullable(),
     requestLink: id, responseLink: id }).strict()).max(32),
   links: z.array(z.object({ id, bytesPerSecond: amount.positive(), latencyUs: time, queueBytes: amount }).strict()).max(64),
@@ -33,6 +41,7 @@ export const sidecarSchema = z.object({
     allUnhealthy: z.literal("reject") }).strict(),
   database: z.object({ semantics: z.literal("read-committed-keyed/1"), keys: z.array(id).min(1).max(limits.keys),
     maxSessions: positive, activeTransactions: positive, pendingQueries: count,
+    initial: z.array(z.object({ key: id, version: amount, bytes: amount }).strict()).max(limits.keys),
     plans: z.array(z.object({ id, kind: z.enum(["read", "write"]), keys: z.union([z.literal("recorded"), z.array(id).min(1).max(128)]),
       cpuUs: time, parallelism: cores, blockingUs: time, logBytes: amount,
       statementTimeoutUs: time.positive(), lockTimeoutUs: time.positive(), transactionTimeoutUs: time.positive(),
@@ -54,6 +63,9 @@ export function reviewSidecar(layout: unknown, candidate: unknown) {
   unique(original.resources.map(n => n.id), "resources"); unique(original.connectionLines.map(e => e.id), "connectionLines");
   for (const field of ["nodes", "paths", "links", "placement", "operations"] as const) unique(sidecar[field].map(x => x.id), field);
   unique(sidecar.database.keys, "database.keys"); unique(sidecar.database.plans.map(p => p.id), "database.plans");
+  if (sidecar.database.keys.some(key => Buffer.byteLength(key) > limits.keyBytes)) refuse("database.keys", "Key byte budget exceeded.");
+  unique(sidecar.database.initial.map(r => r.key), "database.initial");
+  for (const r of sidecar.database.initial) if (!sidecar.database.keys.includes(r.key)) refuse("database.initial", "Initial row outside the declared dataset.");
   const types = new Map(original.resources.map(n => [n.id, n.type]));
   const countType = (type: string) => original.resources.filter(n => n.type === type).length;
   if (countType("Load Balancer") !== 1 || countType("Database") !== 1 || countType("Virtual Machine") < 1 || countType("Virtual Machine") > limits.apps || countType("Cache") > 1) refuse("resources", "Require one LB, 1..8 apps, one DB and at most one future cache.", "FIRST_STACK_SCOPE");
@@ -81,6 +93,9 @@ export function reviewSidecar(layout: unknown, candidate: unknown) {
   for (const h of sidecar.placement) if (!sidecar.nodes.some(n => n.host === h.id)) refuse(`placement.${h.id}`, "Unowned host.");
   const lb = original.resources.find(n => n.type === "Load Balancer")?.id, db = original.resources.find(n => n.type === "Database")?.id;
   const apps = original.resources.filter(n => n.type === "Virtual Machine").map(n => n.id);
+  if (sidecar.caller.entry !== lb || sidecar.nodes.find(n => n.id === lb)?.listenerPort !== sidecar.caller.port) refuse("caller", "Explicit caller entry and port must match the LB listener.");
+  for (const link of [sidecar.caller.requestLink, sidecar.caller.responseLink]) if (!sidecar.links.some(l => l.id === link)) refuse("caller", "Missing caller directed link owner.");
+  if (sidecar.caller.requestBytes === null || sidecar.caller.responseBytes === null) refuse("caller", "Unknown caller bytes require explicit mapping.");
   const wanted = new Set(apps.flatMap(app => [JSON.stringify([lb, app]), JSON.stringify([app, db])]));
   const edges = new Set<string>();
   for (const [i, edge] of original.connectionLines.entries()) {
@@ -90,7 +105,7 @@ export function reviewSidecar(layout: unknown, candidate: unknown) {
     if (edge.sourceType !== types.get(edge.sourceId) || edge.targetType !== types.get(edge.targetId)) refuse(`connectionLines.${i}`, "Endpoint type does not match its owner.");
     for (const key of Object.keys(edge)) if (!["id", "sourceId", "targetId", "sourceType", "targetType", "port"].includes(key)) refuse(`connectionLines.${i}.${key}`, "Unowned edge setting.");
     const p = sidecar.paths.find(p => p.id === edge.id);
-    if (!p || p.source !== edge.sourceId || p.target !== edge.targetId || p.port !== edge.port || p.purpose !== (edge.sourceId === lb ? "routing" : "dependency")) refuse(`paths.${edge.id}`, "Supply matching directed transport, listener port and purpose.");
+    if (!p || p.source !== edge.sourceId || p.target !== edge.targetId || p.port !== edge.port || p.port !== sidecar.nodes.find(n => n.id === edge.targetId)?.listenerPort || p.purpose !== (edge.sourceId === lb ? "routing" : "dependency")) refuse(`paths.${edge.id}`, "Supply matching directed transport, listener port and purpose.");
   }
   if (edges.size !== wanted.size || [...wanted].some(e => !edges.has(e))) refuse("connectionLines", "Each app needs LB routing and DB dependency edges.");
   for (const p of sidecar.paths) {

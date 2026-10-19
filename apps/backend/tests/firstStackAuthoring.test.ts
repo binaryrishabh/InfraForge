@@ -22,7 +22,7 @@ test("legacy fields and geometry round-trip; capacity/security are never inferre
   expect(reviewSidecar(layout, sidecar).ok).toBe(true);
 });
 test("missing app, transport, host and stale/ambiguous bindings produce field diagnostics", () => {
-  for (const change of ["app", "path", "host", "owner", "stale", "duplicate", "port", "direction", "security", "autoscaling"] as const) {
+  for (const change of ["app", "path", "host", "owner", "stale", "duplicate", "port", "listener", "caller", "initial", "direction", "security", "autoscaling"] as const) {
     const f = firstStackFixture();
     if (change === "app") delete (f.sidecar.nodes[1] as Partial<typeof f.sidecar.nodes[number]>).workers;
     if (change === "path") f.sidecar.paths.length = 0;
@@ -31,6 +31,9 @@ test("missing app, transport, host and stale/ambiguous bindings produce field di
     if (change === "stale") f.sidecar.designRevision = "0".repeat(64);
     if (change === "duplicate") f.layout.resources.push(f.layout.resources[0]!);
     if (change === "port") f.sidecar.paths[0]!.port++;
+    if (change === "listener") f.sidecar.nodes[1]!.listenerPort++;
+    if (change === "caller") f.sidecar.caller.entry = "db";
+    if (change === "initial") f.sidecar.database.initial[0]!.key = "outside";
     if (change === "direction") f.layout.connectionLines[0]!.targetId = "db";
     if (change === "security") Object.assign(f.layout.resources[0]!, { encryption: true });
     if (change === "autoscaling") Object.assign(f.layout.resources[0]!, { autoscaling: { enabled: true } });
@@ -48,6 +51,14 @@ test("shared-host Unknown reservations refuse, explicit fitting reservations adm
   expect(reviewSidecar(f.layout, f.sidecar).ok).toBe(true);
   f.sidecar.nodes[2]!.reservationBytes = 51;
   expect(reviewSidecar(f.layout, f.sidecar).ok).toBe(false);
+});
+test("measured demand requires method, conditions, uncertainty and fit/holdout identity", () => {
+  const f = firstStackFixture(); f.sidecar.application.origin = "measured";
+  expect(reviewSidecar(f.layout, f.sidecar).ok).toBe(false);
+  f.sidecar.application.measurement = { uncertainty: "Unknown", fitIdentity: "test-fit", holdoutIdentity: null, conditions: "test-only", cpuMethod: "thread-core-time" };
+  const review = reviewSidecar(f.layout, f.sidecar);
+  expect(review.ok).toBe(true);
+  if (review.ok) expect(review.claims.timing).toBe("assumption-only");
 });
 export function authoringRepository() {
   const fixture = firstStackFixture();

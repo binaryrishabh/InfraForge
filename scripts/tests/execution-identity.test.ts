@@ -74,12 +74,13 @@ test("history reconstructs without Git and only reviewed digests resolve", () =>
   expect(JSON.parse(isolated.stdout.toString()).current).toBe(executionSource);
   const table = JSON.parse(readFileSync("apps/backend/executionIdentity/executionTransitions.json", "utf8"));
   const pin = JSON.parse(readFileSync("apps/backend/executionIdentity/transitionPin.json", "utf8"));
-  expect(table.entries.length).toBe(36);
+  expect(table.entries.length).toBe(37);
   expect(table.entries.find((row: { source: string }) => row.source === "02c54db8f4bb73b5e340ae79dbfd6ece39c52360ab776ac285988e33e92e8240"))
     .toMatchObject({ commit: "3837b94eb9a388be402bde3a0ca7fac61e667942", algorithm: "analysis-boundary/1", target: executionSource });
   expect(table.entries.find((row: { source: string }) => row.source === "eb55b982fb58025a377481e44ddfc77ef0beb75771ea6c9d719d46e0208f51ef"))
     .toMatchObject({ commit: "a77220eb8409b38186bddc38576e1adf45cb460a", algorithm: "analysis-boundary/1", target: executionSource });
   for (const [commit, source] of [
+    ["bd5777e2157339f1a583fb4986843be8a046f0d2", "45396dc813a395a9dcadfc89a5cbe9e27efa2447374e177bf0db3cad503d2858"],
     ["bc5714b47270a22d1f30c052b96ed67d26512579", "f2d3b73f5acc0560ffa562870ea36ad02a6cd9936146580c0fc68ac3c79310b1"],
     ["c0df52cd00cf223029f283df711971cdff558fe8", "2d2a4ae6bfc6a9bf99f8fee4f9a0d0afba3e44e55e957e65b9e28482efb9aa6f"],
     ["31c4a92c18ae3b191eea4cedc115f2a1955959b5", "c8b2354692035a916fc98afe1c0aa4dd68c77b0c68c54871d79ce609bf1571ee"],

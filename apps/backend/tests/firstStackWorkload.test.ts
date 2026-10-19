@@ -18,7 +18,10 @@ test("canonical LF/CRLF, byte chunks, ties and parameters have identical resolve
   const crlf = await resolveWorkload(chunks(jsonl([header, ...rows], "\r\n"), 7), options());
   const reversed = { ...options(), parameters: { ...params(), rows: params().rows.reverse() } };
   const tieOrder = await resolveWorkload(chunks(jsonl([header, ...[...rows].reverse()])), reversed);
-  expect(crlf).toEqual(lf); expect(tieOrder).toEqual(lf);
+  expect(crlf).toEqual(lf);
+  expect(tieOrder.executedScheduleHash).toBe(lf.executedScheduleHash);
+  expect(tieOrder.scheduleHash).toBe(lf.scheduleHash);
+  expect(tieOrder.normalizedContentHash).not.toBe(lf.normalizedContentHash);
   expect(lf.rows.map(r => r.id)).toEqual(["a", "b"]);
   expect(lf.rows.map(r => r.keys)).toEqual([["hot"], ["hot"]]);
   expect(lf.unknown).toContain("Missing observed send times");
@@ -29,6 +32,17 @@ test("authored spacing remains authored and changes identity independently from 
   const b = await resolveWorkload(chunks(jsonl([{ ...header, origin: "authored-schedule" }, ...rows])), options());
   expect(b.header.origin).toBe("authored-schedule"); expect(b.application).toEqual(a.application);
   expect(b.identity).not.toBe(a.identity);
+});
+test("workload references refuse stale content and profile demand changes have a separate identity", async () => {
+  const text = jsonl([header, ...rows]), first = await resolveWorkload(chunks(text), options());
+  const o = options(); o.sidecar.workload = { scheduleHash: first.scheduleHash, parametersHash: first.parametersHash };
+  expect((await resolveWorkload(chunks(text), o)).identity).toBe(first.identity);
+  o.sidecar.operations[0]!.cpuUs++;
+  const changed = await resolveWorkload(chunks(text), o);
+  expect(changed.scheduleHash).toBe(first.scheduleHash);
+  expect(changed.profileHash).not.toBe(first.profileHash); expect(changed.identity).not.toBe(first.identity);
+  o.sidecar.workload.parametersHash = "0".repeat(64);
+  await expect(resolveWorkload(chunks(text), o)).rejects.toThrow("saved workload references");
 });
 test("exact same-time hot keys survive the typed application adapter and child copy without fallback", async () => {
   const o = options(); o.sidecar.operations[0]!.id = "light";

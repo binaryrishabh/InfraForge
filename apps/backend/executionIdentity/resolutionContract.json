@@ -830,6 +830,12 @@
     },
     {
       "owner": "@infraforge/contracts@workspace:packages/contracts:156",
+      "file": "src/first-stack/index.ts",
+      "key": "@infraforge/contracts/src/first-stack/index.ts",
+      "hash": "1ca85e7811b3077bacb57363d48988dbd51c01c83d705a94050e0cdb93ff4c2a"
+    },
+    {
+      "owner": "@infraforge/contracts@workspace:packages/contracts:156",
       "file": "src/internal-lessons/index.ts",
       "key": "@infraforge/contracts/src/internal-lessons/index.ts",
       "hash": "389067a4ce744e3c4c30fe229d07d2adb1f796f1ef834ac7ce26f6712cbea45f"
@@ -43843,6 +43849,86 @@
       "kind": "import-statement",
       "targetOwner": "acorn@8.18.0:177",
       "targetFile": "dist/acorn.mjs"
+    },
+    {
+      "owner": null,
+      "file": "apps/backend/firstStack/authoring.ts",
+      "specifier": "@infraforge/contracts/first-stack",
+      "kind": "import-statement",
+      "targetOwner": "@infraforge/contracts@workspace:packages/contracts:156",
+      "targetFile": "src/first-stack/index.ts"
+    },
+    {
+      "owner": null,
+      "file": "apps/backend/firstStack/authoring.ts",
+      "specifier": "zod",
+      "kind": "import-statement",
+      "targetOwner": "zod@4.4.3:12",
+      "targetFile": "index.js"
+    },
+    {
+      "owner": null,
+      "file": "apps/backend/firstStack/importStream.ts",
+      "specifier": "@infraforge/contracts/first-stack",
+      "kind": "import-statement",
+      "targetOwner": "@infraforge/contracts@workspace:packages/contracts:156",
+      "targetFile": "src/first-stack/index.ts"
+    },
+    {
+      "owner": null,
+      "file": "apps/backend/firstStack/importStream.ts",
+      "specifier": "zod",
+      "kind": "import-statement",
+      "targetOwner": "zod@4.4.3:12",
+      "targetFile": "index.js"
+    },
+    {
+      "owner": null,
+      "file": "apps/backend/firstStack/routes.ts",
+      "specifier": "@infraforge/contracts/first-stack",
+      "kind": "import-statement",
+      "targetOwner": "@infraforge/contracts@workspace:packages/contracts:156",
+      "targetFile": "src/first-stack/index.ts"
+    },
+    {
+      "owner": null,
+      "file": "apps/backend/firstStack/routes.ts",
+      "specifier": "express",
+      "kind": "import-statement",
+      "targetOwner": "express@5.2.1:219",
+      "targetFile": "index.js"
+    },
+    {
+      "owner": null,
+      "file": "apps/backend/firstStack/routes.ts",
+      "specifier": "zod",
+      "kind": "import-statement",
+      "targetOwner": "zod@4.4.3:12",
+      "targetFile": "index.js"
+    },
+    {
+      "owner": null,
+      "file": "apps/backend/firstStack/service.ts",
+      "specifier": "@infraforge/contracts/first-stack",
+      "kind": "import-statement",
+      "targetOwner": "@infraforge/contracts@workspace:packages/contracts:156",
+      "targetFile": "src/first-stack/index.ts"
+    },
+    {
+      "owner": null,
+      "file": "apps/backend/firstStack/workload.ts",
+      "specifier": "@infraforge/contracts/first-stack",
+      "kind": "import-statement",
+      "targetOwner": "@infraforge/contracts@workspace:packages/contracts:156",
+      "targetFile": "src/first-stack/index.ts"
+    },
+    {
+      "owner": null,
+      "file": "apps/backend/firstStack/workload.ts",
+      "specifier": "zod",
+      "kind": "import-statement",
+      "targetOwner": "zod@4.4.3:12",
+      "targetFile": "index.js"
     },
     {
       "owner": null,

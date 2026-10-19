@@ -1,4 +1,5 @@
 import { buildCompositionTransitions } from "./stage1-identity";
+import { reviewStage2Modules, writeStage2ReviewLock, buildStage2Transitions } from "./stage2-authoring";
 import { reviewStage0Syntax, refreshStage0Transitions } from "./stage0-identity";
 import { historicalAnalysisDescriptor } from "./historical-analysis-descriptor";
 import { execFileSync, spawnSync } from "node:child_process";
@@ -169,7 +170,10 @@ export function checkTransitions(root = repositoryRoot, read?: (path: string) =>
   return { schema: descriptor.schema, current, historicalEntries: table.entries.length, packages: descriptor.dependencies.packages.length };
 }
 if (import.meta.main) {
-  if (process.argv.includes("--review-stage0-syntax")) reviewStage0Syntax();
+  if (process.argv.includes("--review-stage2-modules")) reviewStage2Modules();
+  else if (process.argv.includes("--write-stage2-review-lock")) writeStage2ReviewLock();
+  else if (process.argv.includes("--build-stage2-transitions")) buildStage2Transitions();
+  else if (process.argv.includes("--review-stage0-syntax")) reviewStage0Syntax();
   else if (process.argv.includes("--review-stage0-transitions")) refreshStage0Transitions();
   else if (process.argv.includes("--build-analysis")) console.info(JSON.stringify(checkLoadingAnalysis(true)));
   else if (process.argv.includes("--build-composition-transitions")) buildCompositionTransitions();

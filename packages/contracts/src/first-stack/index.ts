@@ -17,6 +17,8 @@ export const firstStackScopeExamples = [1, 2, 8].flatMap(apps => [
 export interface FirstStackSource {
   id: string; version: string; origin: "authored" | "measured";
   workloadDomain: string; runtime: string; hardware: string; sources: string[];
+  measurement?: { uncertainty: string; fitIdentity: string; holdoutIdentity: string | null;
+    conditions: string; cpuMethod: "thread-core-time" | "process-core-time" };
 }
 export interface FirstStackOperation {
   id: string; kind: "cpu-control" | "point-read" | "range-read" | "update" | "hot-update" | "cache-read" | "health-read";
@@ -28,7 +30,9 @@ export interface FirstStackSidecar {
   designRevision: string; application: FirstStackSource; operations: FirstStackOperation[];
   nodes: Array<{ id: string; owner: "load-balancer" | "compute" | "relational" | "keyed-cache";
     host: string; cores: number; memoryBytes: number | null; reservationBytes: number | null;
-    workers: number; queue: number; cancellation: "detach" | "request-cancellation" }>;
+    workers: number; queue: number; listenerPort: number; cancellation: "detach" | "request-cancellation" }>;
+  caller: { entry: string; port: number; transport: "plain-serial/1"; connections: number; pending: number;
+    timeoutUs: number; requestBytes: number | null; responseBytes: number | null; requestLink: string; responseLink: string };
   paths: Array<{ id: string; source: string; target: string; purpose: "routing" | "dependency";
     port: number; transport: "plain-serial/1"; connections: number; pending: number;
     timeoutUs: number; requestBytes: number | null; responseBytes: number | null;
@@ -39,7 +43,7 @@ export interface FirstStackSidecar {
     timeoutUs: number; healthOperation: string; intervalUs: number; healthy: number; unhealthy: number;
     allUnhealthy: "reject" };
   database: { semantics: "read-committed-keyed/1"; keys: string[]; maxSessions: number;
-    activeTransactions: number; pendingQueries: number;
+    activeTransactions: number; pendingQueries: number; initial: Array<{ key: string; version: number; bytes: number }>;
     plans: Array<{ id: string; kind: "read" | "write"; keys: "recorded" | string[];
       cpuUs: number; parallelism: number; blockingUs: number; logBytes: number;
       statementTimeoutUs: number; lockTimeoutUs: number; transactionTimeoutUs: number;
@@ -70,6 +74,8 @@ export interface ScheduleTransform {
 export interface ResolvedSchedule {
   schema: "infraforge-first-stack-resolved/1"; header: RecordedScheduleHeader;
   transform: ScheduleTransform; scheduleHash: string; parametersHash: string; identity: string;
+  profileHash: string;
+  normalizedContentHash: string; executedScheduleHash: string;
   application: FirstStackSource; rows: Array<RecordedScheduleRow & {
     plan: string; keys: string[]; requestBytes: number; responseBytes: number; deadlineUs: number;
   }>;

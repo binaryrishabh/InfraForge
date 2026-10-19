@@ -164,7 +164,7 @@
     }
   },
   "apps/backend/executionIdentity/loading.ts": {
-    "hash": "52cb31fe190a0ec8c151cadf3e773a37663012a2129d1a5f1536995aca1db7d4",
+    "hash": "fe7ee4f704f5553742d9c939959975ab698631cb48ef1f9799ae63bc41b4e9fd",
     "capabilities": [
       "computed-data",
       "verifier",
@@ -172,7 +172,7 @@
     ],
     "review": "Fixed data indexing; resource adapters require the separate documented review",
     "globals": {
-      "hash": "52cb31fe190a0ec8c151cadf3e773a37663012a2129d1a5f1536995aca1db7d4",
+      "hash": "fe7ee4f704f5553742d9c939959975ab698631cb48ef1f9799ae63bc41b4e9fd",
       "names": [
         "Bun"
       ]
@@ -1041,5 +1041,76 @@
       "computed-data"
     ],
     "review": "Composition module: reviewed fixed configuration/identity/measurement indexing; no dynamic loading or host access"
+  },
+  "apps/backend/firstStack/authoring.ts": {
+    "hash": "b313c8dec9cc93dc3e677e31b8099f2ab516f14832c484b81409f7b0c73c82e5",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Internal authoring/stream parser only: bounded fixed JSON data indexing, exact named UTF-8/byte primitives; no evaluator, dynamic loader, engine dispatch or activation"
+  },
+  "apps/backend/firstStack/canonical.ts": {
+    "hash": "7aef83a695fa126e961a2813576d5a54b31e0177daab81ba405ca097f6ba6d46",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Internal authoring/stream parser only: bounded fixed JSON data indexing, exact named UTF-8/byte primitives; no evaluator, dynamic loader, engine dispatch or activation"
+  },
+  "apps/backend/firstStack/importStream.ts": {
+    "hash": "0d2f232bd112e59bb0fe67270444ffe81d9ebc3084bcd324866e0c06f00d2c7e",
+    "capabilities": [
+      "computed-data"
+    ],
+    "globals": {
+      "hash": "0d2f232bd112e59bb0fe67270444ffe81d9ebc3084bcd324866e0c06f00d2c7e",
+      "names": [
+        "Uint8Array",
+        "TextDecoder"
+      ]
+    },
+    "review": "Internal authoring/stream parser only: bounded fixed JSON data indexing, exact named UTF-8/byte primitives; no evaluator, dynamic loader, engine dispatch or activation"
+  },
+  "apps/backend/firstStack/persistence.ts": {
+    "hash": "eb20a534aca49aefc93cb0afcc6bf85a1d478a4e58244d9d67d4959a6417c582",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Internal authoring/stream parser only: bounded fixed JSON data indexing, exact named UTF-8/byte primitives; no evaluator, dynamic loader, engine dispatch or activation"
+  },
+  "apps/backend/firstStack/routes.ts": {
+    "hash": "c4c564e79be83c1109970036de39bc1974ade955e44615497a43bc7768f8dcb9",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Internal authoring/stream parser only: bounded fixed JSON data indexing, exact named UTF-8/byte primitives; no evaluator, dynamic loader, engine dispatch or activation"
+  },
+  "apps/backend/firstStack/service.ts": {
+    "hash": "2c73f9473a46f1e0f27bc99835062e90d86b64b1e0f519747b926cb7efa1048e",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Internal authoring/stream parser only: bounded fixed JSON data indexing, exact named UTF-8/byte primitives; no evaluator, dynamic loader, engine dispatch or activation"
+  },
+  "apps/backend/firstStack/workload.ts": {
+    "hash": "2d32b90d5017367e2f849c36a344dc0842a7b8841d64411af91f8286c8ce8649",
+    "capabilities": [
+      "computed-data"
+    ],
+    "globals": {
+      "hash": "2d32b90d5017367e2f849c36a344dc0842a7b8841d64411af91f8286c8ce8649",
+      "names": [
+        "Uint8Array",
+        "TextDecoder",
+        "setImmediate"
+      ]
+    },
+    "review": "Internal authoring/stream parser only: bounded fixed JSON data indexing, exact named UTF-8/byte primitives; no evaluator, dynamic loader, engine dispatch or activation"
+  },
+  "packages/contracts/src/first-stack/index.ts": {
+    "hash": "1ca85e7811b3077bacb57363d48988dbd51c01c83d705a94050e0cdb93ff4c2a",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Internal authoring/stream parser only: bounded fixed JSON data indexing, exact named UTF-8/byte primitives; no evaluator, dynamic loader, engine dispatch or activation"
   }
 }

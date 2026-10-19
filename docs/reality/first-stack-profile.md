@@ -54,3 +54,83 @@ window and completeness stay separate. Timing p50/p95/p99 requires at least
 Supported compute subtotal requires eligible usage and a frozen quote; otherwise
 subtotal and full cost are Unknown. These are future execution/report obligations,
 not implemented measurements (`packages/simulation/src/model2/workload/evidence.ts:23`).
+
+## Internal API and retention
+
+All routes are below `/api/internal/model2/first-stack`, after the existing
+session/grant middleware, and require operator scope. There is no web control or
+public API. `POST /review`, `/save`, `/copy` take `infrastructureId`,
+`expectedDesignUpdatedAt` and `sidecar`. Review may omit the sidecar to inspect the
+saved draft. Save locks the owned row, validates the content-addressed revision,
+and accepts a new sidecar once; the same content is idempotent. Changed content
+requires a reviewed copy. Copy sets migration provenance on the server, preserving
+the source layout and original row. Fixed challenge inputs refuse authoring
+(`apps/backend/firstStack/service.ts:23`). Ordinary layout saves can retain stale
+sidecars; review then refuses until an explicit new copy is reviewed.
+
+`POST /workload/resolve` uses content type
+`application/x-infraforge-first-stack-import`. Its first UTF-8 JSON line is the
+bounded context `{infrastructureId, expectedDesignUpdatedAt, parameters,
+transform?}`; the remaining bytes are the JSONL schedule (explicit schedule header
+then rows). Context is framing, not part of the recording hash. The parameter
+sidecar is `infraforge-first-stack-parameters/1`, with exactly one row ID → finite
+plan/exact keys/optional response byte mapping. Bodies, SQL and user code refuse.
+Unknown request/response bytes require explicit operation mappings. AtUs is the
+schedule offer time; optional intendedAtUs, sentAtUs and generatorLost are retained
+separately. Missing generator observations stay Unknown. A conflicting per-row
+deadline refuses; operation deadlines are pinned (`apps/backend/firstStack/workload.ts:9`).
+
+The resolver checks capability before consuming schedule bytes and again against
+the resolved facts. It caps context before parse and schedule bytes/lines/rows
+while streaming, rejects malformed UTF-8, canonicalizes timestamp/ID ties and
+parameter ID order, and records original schedule/parameter hashes separately
+from transform/resolved identity. Time scaling uses an explicit rational and
+shift; noninteger microseconds and transformed overflow refuse. Authored origin
+is never promoted to observed recording. The application adapter retains exact
+keys through existing child work without cycle/uniform selection
+(`apps/backend/firstStack/workload.ts:125`).
+
+Resolution retains no server-side workload and creates no run, Outbox or executor.
+The response is a review artifact for the caller; normalized retained-content
+storage, deletion policy and atomic run locks remain slice 11 work. Save currently
+stores only sidecar references, not schedule bodies. This avoids a new database
+schema or weakening existing internal run SQL limits
+(`apps/backend/firstStack/routes.ts:15`).
+
+## Source review and regeneration
+
+The Stage 2 producer refuses any engine, dependency, historical qualifier or
+unrelated host edit. It checks exact integration deltas, pins the new authoring
+sources and acceptance tests separately, replays all eight historical fixtures,
+and retains the exact merged Stage 1 descriptor/source snapshot. New first-stack
+behavior has its own review lock; compatibility applies only to preserved old
+runtime compositions (`scripts/stage2-authoring.ts:31`).
+
+```text
+bun --no-env-file scripts/execution-identity.ts --review-stage2-modules
+bun --no-env-file scripts/execution-capabilities.ts --review-imports
+bun --no-env-file scripts/execution-identity.ts --build-analysis
+bun --no-env-file scripts/stage1-lineage.ts --review-analysis-pin
+bun --no-env-file scripts/execution-capabilities.ts --review-imports
+bun --no-env-file scripts/execution-resolution.ts --build-contract
+# Rebuild analysis and review its pin/imports once after resolution changes.
+bun --no-env-file scripts/execution-identity.ts --build-analysis
+bun --no-env-file scripts/stage1-lineage.ts --review-analysis-pin
+bun --no-env-file scripts/execution-capabilities.ts --review-imports
+bun --no-env-file scripts/connected-lineage.ts
+bun --no-env-file scripts/lesson-endpoint-lineage.ts --refresh-current
+bun --no-env-file scripts/m2m-lineage.ts --refresh-current
+bun --no-env-file scripts/execution-identity.ts --write-stage2-review-lock
+bun --no-env-file scripts/execution-identity.ts --build-stage2-transitions
+bun --no-env-file scripts/reality/launch-contract.ts --write
+bun --no-env-file scripts/reality/run-record-schema.ts --write
+bun --no-env-file scripts/reality/shipping-inventory.ts --write
+bun --no-env-file scripts/reality/inventory.ts --write
+bun --no-env-file scripts/execution-identity.ts --check
+bun --no-env-file scripts/execution-resolution.ts
+```
+
+UI handoff: the lead owns semantic inspector fields and diagnostics, immutable
+revision/copy review, workload file/parameter selection, transform/cancel review,
+and evidence/Unknown labels. This change adds data/API plumbing only; it introduces
+no visual design, browser eligibility or public Model 2 journey.
