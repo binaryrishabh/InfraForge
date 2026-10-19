@@ -247,3 +247,16 @@ rule. The bounded lesson-host enforcement fixture is distinct from the integrati
 containment fixture and has its own exact alternative review; changing either
 fixture still fails closed. Row 30 retains the committed 435856da descriptor from
 91654e8 using the frozen launch-boundary reconstruction.
+
+Runtime loading analysis uses an explicitly pinned analysisContract.json to fit
+the sandbox's unchanged five-second CPU limit. Only exact LF-normalized source
+hashes reuse its literal-import analysis. The pin binds the entire contract; its
+policy key binds loading.ts, Bun, selected implementations and non-core
+capability reviews. Core verifier source always receives full analysis. Closure
+discovery, resource/source hashing and installed resolution verification still
+run. Changed source takes the full policy path. CI --check regenerates the
+contract without cached analysis and compares it. After policy/source review,
+run scripts/execution-identity.ts --build-analysis, refresh exact core review
+hashes, and follow the existing transition process. The image also includes the
+Dockerfile metadata inventoried by the descriptor. Row 31 preserves committed
+9ccb5023 (fb4f336); engine implementation and sandbox limits are unchanged.

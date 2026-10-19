@@ -222,7 +222,7 @@
   "current": [
     {
       "file": "apps/backend/Dockerfile",
-      "hash": "49d377567dd41d03ff819e622d19b8f01990ca255518bbaa71bf712f3ee1fd87"
+      "hash": "171155c10fae46042fc13e2971da8f68d68abdf564f0a730e3ccb6d88c6d79c6"
     },
     {
       "file": "apps/backend/internalModel2/authoring.ts",

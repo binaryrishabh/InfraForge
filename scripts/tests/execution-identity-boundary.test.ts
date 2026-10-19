@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { executionDescriptor, diskTree, repositoryRoot } from "../../apps/backend/executionIdentity/descriptor";
 import { digest, sourceHash, sha256 } from "../../apps/backend/executionIdentity/hash";
-import { verifyModuleLoading, verifyInstalledModuleLoading } from "../../apps/backend/executionIdentity/loading";
+import { verifyModuleLoading, verifyInstalledModuleLoading, validateLoadingAnalysis, readLoadingAnalysis, withFullLoadingAnalysis } from "../../apps/backend/executionIdentity/loading";
 import { parseLock } from "../../apps/backend/executionIdentity/dependencies";
 import { fixture } from "../../apps/backend/tests/integration/lessonSandboxChecks";
 import { fixture as hostFixture } from "../lesson-host/fixture";
@@ -16,6 +16,19 @@ function changed(edits: Record<string, string>) {
     resourceBytes: path => Buffer.from(edits[path] ?? tree.read(path)).toString("base64") });
 }
 const original = executionDescriptor(tree);
+
+test("reviewed analysis binds exact source, policy and LF-normalized cache bytes", () => {
+  const path = "packages/simulation/src/model2/random.ts", text = tree.read(path);
+  const approved = readLoadingAnalysis();
+  expect(approved.modules[path]!.hash).toBe(sourceHash(text));
+  expect(verifyModuleLoading(text, path)).toEqual(withFullLoadingAnalysis(() => verifyModuleLoading(text, path)));
+  const cache = tree.read("apps/backend/executionIdentity/analysisContract.json");
+  expect(validateLoadingAnalysis(cache.replaceAll("\n", "\r\n"))).toEqual(approved);
+  expect(() => validateLoadingAnalysis(cache + " ")).toThrow("bytes changed");
+  expect(() => validateLoadingAnalysis(cache, "changed policy")).toThrow("policy changed");
+  expect(() => verifyModuleLoading(text + "\nself.Function('return 1')();", path)).toThrow("dynamic execution loader");
+  expect(() => withFullLoadingAnalysis(() => verifyModuleLoading("window.eval('x')", path))).toThrow("dynamic execution loader");
+});
 
 test.each([
   `self.Function("return import('three')")();`,

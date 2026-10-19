@@ -16,7 +16,7 @@ COPY packages/simulation/package.json ./packages/simulation/
 RUN bun install --frozen-lockfile
 
 # Copy authored source; generate the client inside the image.
-COPY apps/backend/index.ts apps/backend/worker.ts apps/backend/ws-server.ts apps/backend/tsconfig.json apps/backend/prisma.config.ts apps/backend/docker-compose.yml ./apps/backend/
+COPY apps/backend/Dockerfile apps/backend/index.ts apps/backend/worker.ts apps/backend/ws-server.ts apps/backend/tsconfig.json apps/backend/prisma.config.ts apps/backend/docker-compose.yml ./apps/backend/
 COPY apps/backend/infra ./apps/backend/infra/
 COPY apps/backend/auth ./apps/backend/auth/
 COPY apps/backend/health ./apps/backend/health/

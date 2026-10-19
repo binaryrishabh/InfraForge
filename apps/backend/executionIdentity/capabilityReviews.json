@@ -119,7 +119,7 @@
     }
   },
   "apps/backend/executionIdentity/descriptor.ts": {
-    "hash": "87baccc1b24571dd1b0635b29316f012fd592793e8976707533503c0b81be3d2",
+    "hash": "a58c63e35282a73225ad2c7d5c9b9e483ac28f79999621ae91eec484a3aa2378",
     "capabilities": [
       "computed-data",
       "verifier",
@@ -127,7 +127,7 @@
     ],
     "review": "Fixed data indexing; resource adapters require the separate documented review",
     "globals": {
-      "hash": "87baccc1b24571dd1b0635b29316f012fd592793e8976707533503c0b81be3d2",
+      "hash": "a58c63e35282a73225ad2c7d5c9b9e483ac28f79999621ae91eec484a3aa2378",
       "names": [
         "Bun"
       ]
@@ -164,7 +164,7 @@
     }
   },
   "apps/backend/executionIdentity/loading.ts": {
-    "hash": "bcb5bba4297066bfac6ea23e3fc20e6a7c35c83940da1341b9d0ac8b964138f7",
+    "hash": "31597708b9ff5f05f972b3a5236147fcbd19dd3e1e3545d23afdbb68939fa844",
     "capabilities": [
       "computed-data",
       "verifier",
@@ -172,7 +172,7 @@
     ],
     "review": "Fixed data indexing; resource adapters require the separate documented review",
     "globals": {
-      "hash": "bcb5bba4297066bfac6ea23e3fc20e6a7c35c83940da1341b9d0ac8b964138f7",
+      "hash": "31597708b9ff5f05f972b3a5236147fcbd19dd3e1e3545d23afdbb68939fa844",
       "names": [
         "Bun"
       ]

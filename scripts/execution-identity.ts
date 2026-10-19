@@ -14,6 +14,8 @@ import { verifiedHistoricalDescriptor } from "./historical-verified-descriptor";
 import { historicalDescriptor } from "./historical-execution-descriptor";
 import type { TransitionTable } from "../apps/backend/executionIdentity/transitions";
 import { verifyInstalled } from "../apps/backend/executionIdentity/installed";
+import { executable, verifyModuleLoading, withFullLoadingAnalysis, loadingPolicyFingerprint, readLoadingAnalysis } from "../apps/backend/executionIdentity/loading";
+import type { AnalysisContract } from "../apps/backend/executionIdentity/loading";
 
 export const firstCommit = "72bb3a2";
 export const lastCommit = "1d4b3211f6169d1dda2b9fcab33c7b02b6705c9b";
@@ -29,6 +31,21 @@ export function frozenHistoryText(commit: string, path: string) {
   return text;
 }
 function git(args: string[]) { return lf(execFileSync("git", args, { cwd: repositoryRoot, encoding: "utf8", maxBuffer: 64 * 1024 * 1024 })); }
+export function checkLoadingAnalysis(write = false) {
+  const tree = diskTree();
+  const contract = withFullLoadingAnalysis(() => {
+    const descriptor = executionDescriptor(tree);
+    const modules = Object.fromEntries(descriptor.files.map(([path]) => path!).filter(path => executable.test(path) && !path.startsWith("apps/backend/executionIdentity/")).sort().map(path =>
+      [path, { hash: sha256(lf(tree.read(path))), requests: verifyModuleLoading(tree.read(path), path) }]));
+    return { schema: "execution-loading-analysis/1", policy: loadingPolicyFingerprint(), modules } satisfies AnalysisContract;
+  });
+  if (write) {
+    const text = JSON.stringify(contract, null, 2) + "\n", path = resolve(folder, "loading.ts"), source = diskTree().read("apps/backend/executionIdentity/loading.ts");
+    writeFileSync(resolve(folder, "analysisContract.json"), text);
+    writeFileSync(path, source.replace(/const analysisPin = "[a-f0-9]{64}";/, `const analysisPin = "${sha256(text)}";`));
+  } else if (JSON.stringify(contract) !== JSON.stringify(readLoadingAnalysis())) throw Error("Reviewed loading analysis changed");
+  return { analysedModules: Object.keys(contract.modules).length };
+}
 function gitTree(commit: string): SourceTree {
   const paths = git(["ls-tree", "-r", "--name-only", commit]).trim().split("\n").filter(path =>
     (path === ".dockerignore" || !path.split("/").some(part => part.startsWith(".") || ["tests", "generated", "node_modules"].includes(part))) &&
@@ -88,6 +105,7 @@ function buildTransitions() {
     // with the existing frozen host/import/launch reconstruction algorithm.
     reviewedHosts["b04389078881cb89124edd1191c049b9c5abb0d17f18472857cf9310a03262e6"] = "f8e7c33";
     reviewedHosts["435856da26ac9b492b5a52a7b777ade046326ba7a3533a59450f16e148c410e1"] = "91654e8";
+    reviewedHosts["9ccb50238354fe57acf551042b399677c0cd606df2c3f22bf1c1b94f02a87b3d"] = "fb4f336";
     const reviewedCommit = reviewedHosts[previousTarget];
     if (!reviewedCommit) throw Error("A new committed host transition needs explicit review");
     const hostCommit = git(["rev-parse", reviewedCommit]).trim(), hostTree = gitTree(hostCommit);
@@ -101,7 +119,7 @@ function buildTransitions() {
       return diskTree().read(path);
     } };
     const importBoundary = ["3886e64e2954e8513647ece8fa126af4dcad33cf2c63ad1eed89b15edca969c1", "421000e5a4f5be3dd3c1464f4a9fd44ea75f7236bb6222a5410e5f89f0aa381d"].includes(previousTarget);
-    const launchBoundary = ["f4890c845828de4f5280bff19cb35851a7241a8129bde4e233956f65bdd94219", "b04389078881cb89124edd1191c049b9c5abb0d17f18472857cf9310a03262e6", "435856da26ac9b492b5a52a7b777ade046326ba7a3533a59450f16e148c410e1"].includes(previousTarget);
+    const launchBoundary = ["f4890c845828de4f5280bff19cb35851a7241a8129bde4e233956f65bdd94219", "b04389078881cb89124edd1191c049b9c5abb0d17f18472857cf9310a03262e6", "435856da26ac9b492b5a52a7b777ade046326ba7a3533a59450f16e148c410e1", "9ccb50238354fe57acf551042b399677c0cd606df2c3f22bf1c1b94f02a87b3d"].includes(previousTarget);
     const frozen = (launchBoundary ? historicalLaunchDescriptor : importBoundary ? historicalImportDescriptor : historicalHostDescriptor)(hostSnapshot, "bun-1.3.14");
     if (digest(frozen) !== previousTarget) throw Error("Committed host descriptor does not reconstruct");
     const retainedPaths = [...new Set([...storedFiles.map(([path]) => path), "package.json", "bun.lock", "bunfig.toml", ...["apps/backend", "apps/web", "packages/catalog", "packages/contracts", "packages/domain", "packages/simulation"].map(path => `${path}/package.json`)])];
@@ -148,7 +166,8 @@ export function checkTransitions(root = repositoryRoot, read?: (path: string) =>
   return { schema: descriptor.schema, current, historicalEntries: table.entries.length, packages: descriptor.dependencies.packages.length };
 }
 if (import.meta.main) {
-  if (process.argv.includes("--build-transitions")) buildTransitions();
-  else if (process.argv.includes("--check")) console.info(JSON.stringify(checkTransitions()));
+  if (process.argv.includes("--build-analysis")) console.info(JSON.stringify(checkLoadingAnalysis(true)));
+  else if (process.argv.includes("--build-transitions")) buildTransitions();
+  else if (process.argv.includes("--check")) console.info(JSON.stringify({ ...checkLoadingAnalysis(), ...checkTransitions() }));
   else console.info(digest(executionDescriptor(diskTree())));
 }

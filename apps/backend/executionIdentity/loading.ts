@@ -1,5 +1,6 @@
 import { parse } from "acorn";
-import { lf, sourceHash } from "./hash";
+import { readFileSync } from "node:fs";
+import { lf, sourceHash, digest } from "./hash";
 import reviews from "./capabilityReviews.json";
 import selected from "./resolutionContract.json";
 
@@ -96,11 +97,39 @@ const executionGlobals = new Set([
 ]);
 const checked = new Map<string, { text: string; requests: ReturnType<Bun.Transpiler["scan"]>["imports"] }>();
 const scans = new Map<string, { text: string; imports: ReturnType<Bun.Transpiler["scan"]>["imports"] }>();
+type Requests = ReturnType<Bun.Transpiler["scan"]>["imports"];
+export interface AnalysisContract { schema: string; policy: string; modules: Record<string, { hash: string; requests: Requests }> }
+// This pin is an explicit review of the generated analysis, never a writable
+// runtime cache. Core verifier files are always analysed and cannot pin themselves.
+const analysisPin = "3df0f00e97e81cda21a31833b6c190eb6bb64b90792cd28b31737cafe9c6c0d1";
+let fullAnalysis = false, approvedAnalysis: AnalysisContract | undefined;
+export function withFullLoadingAnalysis<T>(run: () => T): T {
+  const previous = fullAnalysis; fullAnalysis = true;
+  try { return run(); } finally { fullAnalysis = previous; }
+}
+export function loadingPolicyFingerprint() {
+  const source = lf(readFileSync(new URL(import.meta.url), "utf8"));
+  if (source.split(analysisPin).length !== 2) throw Error("Ambiguous loading analysis pin");
+  // Core review hashes depend on this pin; they are excluded from this key and
+  // their source always takes the full analysis path. Other permissions are bound.
+  return digest({ source: source.replace(analysisPin, ""), runtime: Bun.version, selected,
+    reviews: Object.fromEntries(Object.entries(reviews).filter(([path]) => !path.startsWith("apps/backend/executionIdentity/"))) });
+}
+export function validateLoadingAnalysis(source: string, policy = loadingPolicyFingerprint()) {
+  const text = lf(source);
+  if (sourceHash(text) !== analysisPin) throw Error("Loading analysis bytes changed; rebuild the reviewed contract");
+  const contract = JSON.parse(text) as AnalysisContract;
+  if (contract.schema !== "execution-loading-analysis/1" || contract.policy !== policy) throw Error("Loading analysis policy changed; rebuild the reviewed contract");
+  return contract;
+}
+export function readLoadingAnalysis() {
+  return validateLoadingAnalysis(readFileSync(new URL("./analysisContract.json", import.meta.url), "utf8"));
+}
 const codeHosts = new Set(["vm", "node:vm", "worker_threads", "node:worker_threads", "inspector", "node:inspector", "inspector/promises", "node:inspector/promises", "repl", "node:repl", "child_process", "node:child_process"]);
 interface Review { hash: string; capabilities: string[]; globals?: { hash: string; names: string[] }; alternatives?: Review[] }
 export function executionImports(text: string, path: string) {
   const previous = scans.get(path);
-  if (previous?.text === text) return previous.imports;
+  if (!fullAnalysis && previous?.text === text) return previous.imports;
   const requests = verifyModuleLoading(text, path);
   const scanner = sourceScanner(path);
   const imports = [...scanner.scan(text).imports, ...scanner.scan(emittedCode(text, path)).imports, ...requests]
@@ -113,8 +142,13 @@ export function executionImports(text: string, path: string) {
 export function verifyModuleLoading(text: string, path: string) {
   text = lf(text);
   const previousAnalysis = checked.get(path);
-  if (previousAnalysis?.text === text) return previousAnalysis.requests;
+  if (!fullAnalysis && previousAnalysis?.text === text) return previousAnalysis.requests;
   const normalized = path.replaceAll("\\", "/");
+  if (!fullAnalysis) {
+    approvedAnalysis ??= readLoadingAnalysis();
+    const approved = Object.entries(approvedAnalysis.modules).find(([file]) => normalized === file || normalized.endsWith("/" + file))?.[1];
+    if (approved?.hash === sourceHash(text)) return approved.requests;
+  }
   const review = Object.entries(reviews as Record<string, Review>).find(([file]) => normalized === file || normalized.endsWith("/" + file))?.[1];
   const exact = review && [review, ...(review.alternatives ?? [])].find(candidate => candidate.hash === sourceHash(text));
   if (exact?.capabilities.some(capability => ["generated-client", "trusted-resolver", "trusted-fixture"].includes(capability))) {

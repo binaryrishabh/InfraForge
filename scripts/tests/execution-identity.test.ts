@@ -74,7 +74,7 @@ test("history reconstructs without Git and only reviewed digests resolve", () =>
   expect(JSON.parse(isolated.stdout.toString()).current).toBe(executionSource);
   const table = JSON.parse(readFileSync("apps/backend/executionIdentity/executionTransitions.json", "utf8"));
   const pin = JSON.parse(readFileSync("apps/backend/executionIdentity/transitionPin.json", "utf8"));
-  expect(table.entries.length).toBe(30);
+  expect(table.entries.length).toBe(31);
   for (const row of table.entries) expect(compatibleReviewedSource(row.source, executionSource)).toBe(true);
   expect(compatibleReviewedSource("dcf73dace76edc0afead6158b34785f511ba6b21fd34ce5490d11fe78e20f4ad", executionSource)).toBe(true);
   expect(compatibleReviewedSource("f".repeat(64), executionSource)).toBe(false);
@@ -96,5 +96,6 @@ test("runtime image includes the identity implementation and committed transitio
   const context = ignore().add(readFileSync(".dockerignore", "utf8"));
   for (const [path] of original.files) expect(context.ignores(path!)).toBe(path!.includes("/generated/"));
   expect(readFileSync("apps/backend/Dockerfile", "utf8")).toContain("COPY apps/backend/executionIdentity ./apps/backend/executionIdentity/");
+  expect(readFileSync("apps/backend/Dockerfile", "utf8")).toContain("COPY apps/backend/Dockerfile apps/backend/index.ts");
   for (const workspace of ["domain", "catalog", "contracts", "simulation"]) expect(readFileSync("apps/backend/Dockerfile", "utf8")).toContain(`COPY packages/${workspace}/tsconfig.json ./packages/${workspace}/`);
 }, 120000);

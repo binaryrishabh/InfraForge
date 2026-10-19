@@ -118,6 +118,7 @@ export function executionDescriptor(tree = diskTree(), runtime = `bun-${Bun.vers
   visit("apps/backend/executionIdentity/resourceInventory.json");
   const resources = [...new Set(resourcePaths as string[])].sort().map(path => [path, sha256(tree.resourceBytes?.(path) ?? tree.read(path))]);
   visit("apps/backend/executionIdentity/capabilityImportReviews.json");
+  visit("apps/backend/executionIdentity/analysisContract.json");
   verifyCapabilityImports(tree, directCapabilities, capabilityEdges, review);
   const dependencies = dependencyClosure(lock, roots);
   const install = Bun.TOML.parse(tree.read("bunfig.toml"));
