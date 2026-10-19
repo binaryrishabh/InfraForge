@@ -12,6 +12,8 @@ import { grantScope, lessonRecord } from "./lessonStore";
 import { replayLesson } from "./lessonExecution";
 import { lessonSummary } from "./lessonSummary";
 import { readLessonPolicy } from "./lessonPolicy";
+import { createFirstStackRouter } from "../firstStack/routes";
+import { firstStackRepository } from "../firstStack/persistence";
 export const internalModel2Router = Router();
 internalModel2Router.use(async (_req, res, next) => {
   const scope = await grantScope(res.locals.userId);
@@ -19,6 +21,7 @@ internalModel2Router.use(async (_req, res, next) => {
   res.locals.model2Scope = scope;
   res.set("Cache-Control", "no-store"); res.set("X-Content-Type-Options", "nosniff"); next();
 });
+internalModel2Router.use("/first-stack", createFirstStackRouter(firstStackRepository));
 internalModel2Router.use(json({ limit: "256kb" }));
 internalModel2Router.get("/capability", (_req, res) => { res.json({ scope: res.locals.model2Scope }); });
 internalModel2Router.use(lessonRouter);

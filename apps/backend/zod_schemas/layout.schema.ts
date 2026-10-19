@@ -39,6 +39,8 @@ export const LayoutSchema = z.object({
   resources: z.array(ResourceSchema).default([]),
   connectionLines: z.array(ConnectionSchema).default([]),
   layoutVersion: z.number().int().positive().optional(),
+  // Internal semantic review data is additive; stale drafts remain readable.
+  firstStack: z.json().optional(),
 }).catchall(z.json());
 
 export const LiveTopologySchema = z.object({
