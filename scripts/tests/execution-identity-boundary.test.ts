@@ -70,7 +70,13 @@ test("resource access is enumerable and JSON/WASM content changes identity", () 
     for (const content of ['{"value":1}', '{"value":99}']) expect(() => changed({ "apps/backend/internalModel2/store.ts": source, "apps/backend/executionIdentity/review-data.json": content })).toThrow("dynamic execution loader");
     expect(() => verifyInstalledModuleLoading(source, "/fixture/node_modules/pg/lib/client.js", "pg/lib/client.js")).toThrow("dynamic package loader");
   }
-  for (const [extension, values] of [["json", ['{"value":1}', '{"value":99}']], ["wasm", ["\u0000asm\u0001", "\u0000asm\u0002"]]] as const) {
+  const wasm = (value: number) => String.fromCharCode(0,97,115,109,1,0,0,0,1,5,1,96,0,1,127,3,2,1,0,7,10,1,6,97,110,115,119,101,114,0,0,10,6,1,4,0,65,value,11);
+  for (const value of [1, 2]) {
+    const bytes = Uint8Array.from(wasm(value), character => character.charCodeAt(0));
+    const answer = new WebAssembly.Instance(new WebAssembly.Module(bytes)).exports.answer as () => number;
+    expect(answer()).toBe(value);
+  }
+  for (const [extension, values] of [["json", ['{"value":1}', '{"value":99}']], ["wasm", [wasm(1), wasm(2)]]] as const) {
     const path = `apps/backend/resources/fixture.${extension}`;
     const base = { "apps/backend/executionIdentity/resourceInventory.json": JSON.stringify([path]), [path]: values[0] };
     const first = changed(base), second = changed({ ...base, [path]: values[1] });
