@@ -20,8 +20,12 @@ test("marketing build emits three pages sharing exactly two external fonts", () 
     for (const font of html.matchAll(/url\((\/marketing\/[^)]+\.woff2)\)/g)) {
       expect(readFileSync(join(output, font[1]!)).length).toBeGreaterThan(0);
     }
-    expect(html).toContain('name="twitter:card" content="summary"');
-    expect(html).not.toContain('property="og:image"');
+    expect(html).toContain('name="twitter:card" content="summary_large_image"');
+    // each page shares its own approved 1200x630 preview, served from the build output
+    const image = html.match(/<meta property="og:image" content="https:\/\/infraforge\.lapwork\.in(\/marketing\/og-[a-z]+\.[0-9a-f]{12}\.png)">/)?.[1];
+    expect(image).toContain(`og-${name}.`);
+    expect(readFileSync(join(output, image!)).subarray(1, 4).toString()).toBe("PNG");
+    expect(html).toContain('<meta property="og:image:width" content="1200">');
     const url = `https://infraforge.lapwork.in/${name === "index" ? "" : name}`;
     expect(html).toContain(`<link rel="canonical" href="${url}">`);
     expect(html).toContain(`<meta property="og:url" content="${url}">`);

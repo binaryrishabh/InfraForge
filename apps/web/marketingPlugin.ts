@@ -37,7 +37,7 @@ export function marketingPages(): Plugin {
             const file = page || url.pathname.slice(1);
             const content = readFileSync(join(devOutput, file));
             res.setHeader("Content-Type", file.endsWith(".html") ? "text/html; charset=utf-8"
-              : file.endsWith(".woff2") ? "font/woff2" : file.endsWith(".xml") ? "application/xml" : "text/plain; charset=utf-8");
+              : file.endsWith(".woff2") ? "font/woff2" : file.endsWith(".png") ? "image/png" : file.endsWith(".xml") ? "application/xml" : "text/plain; charset=utf-8");
             res.end(content);
           } catch (error) { next(error); }
           return;

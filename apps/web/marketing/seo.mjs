@@ -1,3 +1,5 @@
+import { ogUrl } from "./assets.mjs";
+
 export const origin = "https://infraforge.lapwork.in";
 const escape = (text) => text.replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("<", "&lt;");
 const text = (html) => html.replace(/<[^>]*>/g, "").replace(/&(?:amp|lt|gt|quot|#39);/g,
@@ -38,7 +40,12 @@ export function addSeo(html, page) {
 <meta property="og:title" content="${escape(title)}">
 <meta property="og:description" content="${escape(description)}">
 <meta property="og:url" content="${url}">
-<meta name="twitter:card" content="summary">
+<meta property="og:image" content="${origin}${ogUrl(page)}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="${escape(title)}">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="${origin}${ogUrl(page)}">
 <script type="application/ld+json">${JSON.stringify({ "@context": "https://schema.org", "@graph": graph }).replaceAll("<", "\\u003c")}</script>`;
   return html.replace("</head>", `${tags}</head>`);
 }

@@ -2,13 +2,14 @@ import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { dirname, resolve, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
-import { emitFonts } from "./assets.mjs";
+import { emitFonts, emitOgImages } from "./assets.mjs";
 import { addSeo, origin } from "./seo.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const output = resolve(process.argv[2] || join(here, "../dist"));
 mkdirSync(output, { recursive: true });
 emitFonts(output);
+emitOgImages(output);
 for (const [generator, page] of [["motion/hero.mjs", "index"], ["sections/engineering-site.mjs", "engineering"], ["sections/learning2.mjs", "learning"]]) {
   const result = spawnSync(process.execPath, [join(here, generator), output], { stdio: "inherit" });
   if (result.status !== 0) throw new Error(`Marketing generator failed: ${generator}`);
