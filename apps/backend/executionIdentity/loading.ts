@@ -175,6 +175,7 @@ export function verifyModuleLoading(text: string, path: string) {
       if (resolve) literals.push({ path: String(((grandparent!.arguments as Syntax[])[0]!).value), kind: "require-resolve" });
       if (direct) literals.push({ path: String(((parent!.arguments as Syntax[])[0]!).value), kind: "require-call" });
     }
+    if (!propertyName && global(node, "Symbol") && !(parent?.type === "MemberExpression" && parent.object === node) && !(parent?.type === "CallExpression" && parent.callee === node) && !(parent?.type === "UnaryExpression" && parent.operator === "typeof")) reject();
     if (!propertyName && !presence && ["Object", "Reflect"].some(name => global(node, name)) && !(parent?.type === "MemberExpression" && parent.object === node)) reject();
     if (!propertyName && !presence && ["module", "globalThis", "global", "process", "Bun"].some(name => global(node, name)) && !(parent?.type === "MemberExpression" && parent.object === node) && !(parent?.type === "UnaryExpression" && parent.operator === "typeof")) reject();
     if (node.type === "CallExpression" && syntax(node.callee) && node.callee.type === "MemberExpression" && identifier(node.callee.object, "require")) {

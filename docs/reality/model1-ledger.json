@@ -337,7 +337,7 @@
     },
     {
       "file": "apps/backend/executionIdentity/loading.ts",
-      "sha256": "bc6458a9f1d4dc4d816c3894aed0e6628a0057a76d1211a56ba08e2bc5d1c86d",
+      "sha256": "9d5b209b8d8d4b75c410253dc67f0805f1259e2bdfc16be8a6d62727bad22c33",
       "numericSites": 15
     },
     {
@@ -357,7 +357,7 @@
     },
     {
       "file": "apps/backend/executionIdentity/transitions.ts",
-      "sha256": "6e988249f3bc2285649f158af6669114038e9e0ea55c062aefcaf884a3ce2cf7",
+      "sha256": "3d6841cad589c15d429b9d8a0e6f7143a193f971677c9d68902497dbc4f715bc",
       "numericSites": 0
     },
     {
@@ -23393,7 +23393,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/loading.ts#L181",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/loading.ts#L182",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -23407,7 +23407,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/executionIdentity/loading.ts",
-        "line": 181,
+        "line": 182,
         "column": 51
       }
     },
@@ -23429,7 +23429,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/loading.ts#L181",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/loading.ts#L182",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -23443,7 +23443,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/executionIdentity/loading.ts",
-        "line": 181,
+        "line": 182,
         "column": 94
       }
     },

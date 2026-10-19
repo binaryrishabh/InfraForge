@@ -193,3 +193,12 @@ existing model caller data fields remain exact-byte reviews. Literal require.res
 is inventoried with its own runtime resolution kind. Row 25 preserves committed
 26b81b30… (23203fa) before these further policy changes. A table rebuild retains the
 committed HEAD target; uncommitted intermediate descriptors are never historical sources.
+
+The readiness-only supervision unit probe has a second exact child-import alternative;
+new probe bytes are refused. Row 26 retains committed 3886e64e… (53188f7) before this
+review-data addition. Its frozen reconstruction adds the explicitly inventoried import
+review file to the preceding host algorithm. No engine or dependency implementation changed.
+
+Intrinsic Symbol values cannot escape or be replaced by unreviewed code; otherwise a
+forged Symbol.iterator could turn the fixed-symbol exception into constructor access.
+The split-key and forged-intrinsic cases are both negative regressions.

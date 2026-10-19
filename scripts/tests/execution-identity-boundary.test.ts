@@ -21,6 +21,7 @@ test("computed and aliased reflection cannot create an untracked loader in eithe
     `const reflect = Reflect; reflect.get(() => {}, 'constructor')("return import('three')")();`,
     `const object = Object; object.getPrototypeOf(() => {}).constructor("return import('three')")();`,
     `globalThis.WebAssembly.compile(new Uint8Array());`,
+    `Symbol={iterator:'constructor'}; (()=>{})[Symbol.iterator]("return import('three')")();`,
     `Error.prepareStackTrace = (_, frames) => frames[1].getFunction();`,
     `const E=Error; E.prepareStackTrace = (_, frames) => frames[1].getFunction();`,
     `const load=(function(){})['caller']; load('three');`,
