@@ -39,7 +39,7 @@ export function createFirstStackService(repository: FirstStackRepository, capabi
       });
     },
     async save(owner: string, id: string, expected: string, candidate: unknown, copy: boolean) {
-      bounded(candidate);
+      bounded(candidate ?? null);
       return repository.transaction(async tx => {
         const row = await owned(tx, owner, id, expected);
         const review = reviewSidecar(row.layout, candidate);

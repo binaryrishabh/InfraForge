@@ -57,7 +57,7 @@ export interface RecordedScheduleHeader {
 export interface RecordedScheduleRow {
   id: string; atUs: number; operation: string;
   requestBytes?: number; responseBytes?: number; deadlineUs?: number;
-  intendedAtUs?: number; generatorLost?: boolean;
+  intendedAtUs?: number; sentAtUs?: number; generatorLost?: boolean;
 }
 export interface RecordedParameters {
   schema: "infraforge-first-stack-parameters/1";
