@@ -1,0 +1,34 @@
+[
+  {
+    "composition": "m2b/1",
+    "evidenceSha256": "faa27f1b07ed64b901f0fac8d845f275b65c7dc1d5a7ea7881ce4cb16d602ecf"
+  },
+  {
+    "composition": "m2c/1",
+    "evidenceSha256": "627045428312d4a7880dfd4af6cfb102df7c3d4c86905e16778e846c0495cac7"
+  },
+  {
+    "composition": "m2d/1",
+    "evidenceSha256": "bafae30ed58bd38153ff8f4722eb1cfcf78e6a2aba2a4a08f719a299ff15aa23"
+  },
+  {
+    "composition": "m2d/1-lb",
+    "evidenceSha256": "7baba18c8858d5f0d3a62a48b476dd3dd39c54731616f854e1a5fc035779d3f7"
+  },
+  {
+    "composition": "m2e/1",
+    "evidenceSha256": "e9810727efcacc6459994fd5b5285966fa3d9e007264b2bd7776a91370566899"
+  },
+  {
+    "composition": "m2f/1",
+    "evidenceSha256": "c079f58644563b737f4cffa3960eb65043b96ee18a38e562c49ded14ca2bd84a"
+  },
+  {
+    "composition": "m2g/1",
+    "evidenceSha256": "fba08e69fc5a333af6d00ff80a012fcd513499e90f132e656ae81a2b3dc51b88"
+  },
+  {
+    "composition": "m2h/1",
+    "evidenceSha256": "4e95fe38c9dd02cc60f700c301476ecc53ad495f83ad98469c6f0811b65ae224"
+  }
+]
