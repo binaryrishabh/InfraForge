@@ -15,8 +15,3 @@ export function installDesign(design: Infrastructure) {
   store.setEmptyCanvasStateDismissed(false);
   useSimulationStore.getState().reset();
 }
-
-export const hasUnsavedWork = () => {
-  const store = useCanvasStore.getState();
-  return !store.currentLayoutSaved && store.resources.length > 0;
-};

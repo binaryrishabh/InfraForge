@@ -1142,8 +1142,8 @@
     },
     {
       "file": "apps/web/src/features/canvas/designLoader.ts",
-      "sha256": "06cfffdcba543eec5009bff1613739da7d13b68622d313872cd0f6b9aa2605dd",
-      "numericSites": 1
+      "sha256": "23935ee957a8b842e54aec9e6720065bf650fc9c0234130d9ae7185b0a780176",
+      "numericSites": 0
     },
     {
       "file": "apps/web/src/features/canvas/history.ts",
@@ -55700,42 +55700,6 @@
         "file": "apps/web/src/features/canvas/designActions.ts",
         "line": 99,
         "column": 81
-      }
-    },
-    {
-      "id": "m1.apps.web.src.features.canvas.designLoader.1",
-      "concept": "hasUnsavedWork · literal 0",
-      "modelVersion": "1",
-      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
-      "quantity": {
-        "kind": "known",
-        "value": 0,
-        "unit": "code-number",
-        "provenance": [
-          "m1.apps.web.src.features.canvas.designLoader.1"
-        ]
-      },
-      "formula": "return !store.currentLayoutSaved && store.resources.length > 0;",
-      "classification": "implementation-policy",
-      "confidence": "high",
-      "provenance": [
-        {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/canvas/designLoader.ts#L21",
-          "supports": "implementation",
-          "detail": "Exact historical literal and source expression; not external validation."
-        }
-      ],
-      "assumptions": [
-        "This literal is not evidence of real infrastructure capacity or performance.",
-        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
-      ],
-      "researchedOn": "2026-10-15",
-      "freeMode": "conditional",
-      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
-      "location": {
-        "file": "apps/web/src/features/canvas/designLoader.ts",
-        "line": 21,
-        "column": 64
       }
     },
     {
