@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { executionDescriptor, diskTree, repositoryRoot } from "../../apps/backend/executionIdentity/descriptor";
 import { digest } from "../../apps/backend/executionIdentity/hash";
-import { verifyInstalledModuleLoading } from "../../apps/backend/executionIdentity/loading";
+import { verifyModuleLoading, verifyInstalledModuleLoading } from "../../apps/backend/executionIdentity/loading";
 import { parseLock } from "../../apps/backend/executionIdentity/dependencies";
 import { fixture } from "../../apps/backend/tests/integration/lessonSandboxChecks";
 import { retireInternalRuns } from "../../apps/backend/internalModel2/execution";
@@ -15,6 +15,49 @@ function changed(edits: Record<string, string>) {
     resourceBytes: path => Buffer.from(edits[path] ?? tree.read(path)).toString("base64") });
 }
 const original = executionDescriptor(tree);
+
+test.each([
+  `self.Function("return import('three')")();`,
+  `window.Function("return import('three')")();`,
+  `self.eval("import('three')");`,
+  `unknownExecutionHost.Function("return import('three')")();`,
+])("free global aliases cannot construct execution code: %s", source => {
+  expect(() => verifyModuleLoading(source, "global-alias-fixture.ts")).toThrow("dynamic execution loader");
+  expect(() => verifyInstalledModuleLoading(source, "/fixture/node_modules/pg/lib/client.js", "pg/lib/client.js")).toThrow("dynamic package loader");
+});
+
+test("free names fail closed even in typeof, shorthand, initializers and separate scopes", () => {
+  for (const source of [
+    "typeof self;", "const value = { unknownExecutionHost };", "frames; top; parent;",
+    "process.version;", "Bun.version;", "require('./leaf');", "module.exports;",
+    "function f(value = unknownExecutionHost) { var unknownExecutionHost = {}; }",
+    "switch (unknownExecutionHost) { case 1: let unknownExecutionHost; }",
+    "class Local { static { var unknownExecutionHost = {}; } } unknownExecutionHost;",
+    "try {} catch (unknownExecutionHost) {} unknownExecutionHost;",
+    "{ let unknownExecutionHost = {}; } unknownExecutionHost;",
+    "for (let unknownExecutionHost of []) {} unknownExecutionHost;",
+  ]) expect(() => verifyModuleLoading(source, "global-scope-fixture.ts")).toThrow("dynamic execution loader");
+});
+
+test("local bindings and non-reference identifier names need no global capability", () => {
+  for (const source of [
+    `import {join as self} from 'node:path'; const path = self('a', 'b'); export {path as window};`,
+    `function use({self: window}, ...parent) { const {value: frames = window} = parent; return frames; }`,
+    `const self = function window() { return window; }; const parent = class frames { method() { return frames; } };`,
+    `try { throw 1; } catch (self) { const window = self; }`,
+    `const value = {self: 1, window() { return this.self; }}; value.self; outer: for (;;) { break outer; }`,
+  ]) expect(() => verifyModuleLoading(source, "local-scope-fixture.ts")).not.toThrow();
+});
+
+test("an existing execution file passes without an exact-byte global exception", () => {
+  const path = "packages/simulation/src/model2/random.ts";
+  expect(original.files.some(([file]) => file === path)).toBe(true);
+  expect(() => verifyModuleLoading(tree.read(path), path)).not.toThrow();
+  expect(() => verifyModuleLoading(tree.read(path) + "\n// ordinary execution edit\n", path)).not.toThrow();
+  const host = "apps/backend/utils/config.ts";
+  expect(() => verifyModuleLoading(tree.read(host), host)).not.toThrow();
+  expect(() => verifyModuleLoading(tree.read(host) + "\n// invalidates host review\n", host)).toThrow("dynamic execution loader");
+});
 
 test("computed and aliased reflection cannot create an untracked loader in either module policy", () => {
   const sources = [
@@ -58,7 +101,7 @@ test("real hosts, injected ownership, schema and generator inputs cannot change 
   for (const path of ["apps/backend/infra/workerOwnership.ts", "apps/backend/worker.ts", "apps/backend/prisma/schema.prisma", "apps/backend/prisma.config.ts"]) {
     const value = tree.read(path) + "\n// alternate host or generator\n";
     if (path.endsWith("schema.prisma")) expect(digest(changed({ [path]: value }))).not.toBe(digest(original));
-    else expect(() => changed({ [path]: value })).toThrow("Unreviewed execution capability import");
+    else expect(() => changed({ [path]: value })).toThrow("Unreviewed");
     expect(original.files.some(([file]) => file === path)).toBe(true);
   }
   const ownership = "apps/backend/infra/workerOwnership.ts";
@@ -116,13 +159,13 @@ test("the immutable containment probe has an exact review, not a child-path exem
 test("privileged resources and loaders cannot escape through verifier helpers, re-exports or package wrappers", () => {
   const readers = [
     `import {diskTree} from '../executionIdentity/descriptor'; export const value=JSON.parse(diskTree().read('apps/backend/resources/review-data.json'));`,
-    `import express from 'express'; export const reader=express.static(process.env.ROOT);`,
-    `import {DockerConnection} from './dockerConnection'; DockerConnection.use(c=>c.run(['exec',process.env.CONTAINER,'cat',process.env.FILE]));`,
+    `import express from 'express'; export const reader=express.static('/fixture');`,
+    `import {DockerConnection} from './dockerConnection'; DockerConnection.use(c=>c.run(['exec','fixture','cat','/input']));`,
   ];
   for (const source of readers) for (const value of [1,99]) expect(() => changed({ 'apps/backend/internalModel2/store.ts': source, 'apps/backend/resources/review-data.json': JSON.stringify({value}) })).toThrow('Unreviewed execution capability import');
-  expect(() => changed({ 'apps/backend/internalModel2/store.ts': `import {reader} from './review-reader'; reader().read(process.env.FILE);`, 'apps/backend/internalModel2/review-reader.ts': `export {diskTree as reader} from '../executionIdentity/descriptor';` })).toThrow('Unreviewed execution capability import');
+  expect(() => changed({ 'apps/backend/internalModel2/store.ts': `import {reader} from './review-reader'; reader().read('/input');`, 'apps/backend/internalModel2/review-reader.ts': `export {diskTree as reader} from '../executionIdentity/descriptor';` })).toThrow('Unreviewed execution capability import');
   for (const source of [`import.meta.resolve('three');`, `const meta=import.meta; meta.resolve('three');`]) expect(() => changed({'apps/backend/internalModel2/store.ts':source})).toThrow('dynamic execution loader');
-  expect(() => changed({'apps/backend/internalModel2/store.ts':`require.resolve('three');`})).toThrow('Undeclared execution import');
+  expect(() => changed({'apps/backend/internalModel2/store.ts':`require.resolve('three');`})).toThrow('dynamic execution loader');
 }, 120000);
 
 

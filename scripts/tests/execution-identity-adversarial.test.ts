@@ -38,11 +38,12 @@ test("a second JavaScript module and its package imports belong to the closure",
     expect(digest(descriptor)).not.toBe(digest(changed({ ...edits, [leaf]: "export const value = 99;" })));
     expect(() => changed({ ...edits, [leaf]: 'import "three";' })).toThrow("Undeclared execution import");
   }
-  for (const call of ['require("./review-leaf.js")', 'import("./review-leaf.js")']) {
-    const edits = { "apps/backend/internalModel2/store.ts": `${call};`, "apps/backend/internalModel2/review-leaf.js": "export const value = 1;" };
+  {
+    const edits = { "apps/backend/internalModel2/store.ts": 'import("./review-leaf.js");', "apps/backend/internalModel2/review-leaf.js": "export const value = 1;" };
     expect(digest(changed(edits))).not.toBe(digest(changed({ ...edits, "apps/backend/internalModel2/review-leaf.js": "export const value = 99;" })));
   }
-  for (const source of ['require("three");', 'import("three");', 'import(`th${"ree"}`);']) expect(() => changed({ "apps/backend/internalModel2/store.ts": source })).toThrow("Undeclared execution import");
+  expect(() => changed({ "apps/backend/internalModel2/store.ts": 'require("./review-leaf.js");' })).toThrow("dynamic execution loader");
+  for (const source of ['import("three");', 'import(`th${"ree"}`);']) expect(() => changed({ "apps/backend/internalModel2/store.ts": source })).toThrow("Undeclared execution import");
 }, 120000);
 
 test("the build rejects authored modules missing from the descriptor", async () => {
@@ -92,7 +93,7 @@ test("loader values cannot escape in authored or installed package modules", () 
     // An existing reviewed file does not exempt different bytes.
     expect(() => verifyInstalledModuleLoading(source, "/fixture/node_modules/express/lib/view.js", "express/lib/view.js")).toThrow("Unreviewed dynamic package loader");
   }
-  const cachedPath = "cache-regression.js", valid = 'require("./review-leaf.js");';
+  const cachedPath = "cache-regression.js", valid = 'import("./review-leaf.js");';
   verifyModuleLoading(valid, cachedPath);
   expect(() => verifyModuleLoading('const load = require; load("three");', cachedPath)).toThrow();
   expect(executionImports(valid, cachedPath).some(item => item.path === "./review-leaf.js")).toBe(true);

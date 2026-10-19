@@ -34,9 +34,10 @@ const identifier = (node: unknown, name: string) => syntax(node) && node.type ==
 interface Scope { parent?: Scope; function: boolean; bindings: Set<string> }
 function globalReferences(ast: Syntax) {
   const scopes = new Map<Syntax, Scope>();
+  const bindings = new Set<Syntax>();
   function bind(pattern: unknown, scope: Scope) {
     if (!syntax(pattern)) return;
-    if (pattern.type === "Identifier") scope.bindings.add(String(pattern.name));
+    if (pattern.type === "Identifier") { scope.bindings.add(String(pattern.name)); bindings.add(pattern); }
     else if (pattern.type === "RestElement") bind(pattern.argument, scope);
     else if (pattern.type === "AssignmentPattern") bind(pattern.left, scope);
     else if (pattern.type === "ArrayPattern") for (const item of pattern.elements as unknown[]) bind(item, scope);
@@ -47,29 +48,52 @@ function globalReferences(ast: Syntax) {
       bind(node.id, parent);
       for (const item of (node.specifiers ?? []) as Syntax[]) bind(item.local, parent);
     }
-    const fn = ["Program", "FunctionDeclaration", "FunctionExpression", "ArrowFunctionExpression"].includes(node.type);
+    const fn = ["Program", "FunctionDeclaration", "FunctionExpression", "ArrowFunctionExpression", "StaticBlock"].includes(node.type);
     const nested = fn || ["BlockStatement", "CatchClause", "ForStatement", "ForInStatement", "ForOfStatement", "SwitchStatement", "ClassExpression", "ClassDeclaration", "StaticBlock"].includes(node.type);
     const scope = nested ? { parent, function: fn, bindings: new Set<string>() } : parent;
     scopes.set(node, scope);
     if (fn) { bind(node.id, scope); for (const param of (node.params ?? []) as Syntax[]) bind(param, scope); }
+    if (["FunctionDeclaration", "FunctionExpression"].includes(node.type)) scope.bindings.add("arguments");
+    if (["ClassExpression", "ClassDeclaration"].includes(node.type)) bind(node.id, scope);
     if (node.type === "CatchClause") bind(node.param, scope);
     if (node.type === "VariableDeclaration") {
       let owner = scope;
       if (node.kind === "var") while (!owner.function && owner.parent) owner = owner.parent;
       for (const item of node.declarations as Syntax[]) bind(item.id, owner);
     }
-    for (const value of Object.values(node)) {
-      if (syntax(value)) collect(value, scope);
+    for (const [key, value] of Object.entries(node)) {
+      // Body vars are not visible to parameter initializers. A switch's lexical
+      // declarations likewise cannot bind its discriminant in the outer scope.
+      const childScope = fn && key === "body" && syntax(value) && value.type === "BlockStatement" ? { parent: scope, function: true, bindings: new Set<string>() } : node.type === "SwitchStatement" && key === "discriminant" ? parent : scope;
+      if (syntax(value)) collect(value, childScope);
       else if (Array.isArray(value)) for (const child of value) if (syntax(child)) collect(child, scope);
     }
   }
   collect(ast, { function: true, bindings: new Set() });
   return (node: unknown, name: string) => {
-    if (!identifier(node, name)) return false;
+    if (!identifier(node, name) || bindings.has(node as Syntax)) return false;
     for (let scope = scopes.get(node as Syntax); scope; scope = scope.parent) if (scope.bindings.has(name)) return false;
     return true;
   };
 }
+function identifierReference(node: Syntax, parent?: Syntax, grandparent?: Syntax) {
+  if (node.type !== "Identifier") return false;
+  if (parent?.type === "MemberExpression" && parent.property === node && !parent.computed) return false;
+  if (["Property", "MethodDefinition", "PropertyDefinition"].includes(parent?.type ?? "") && parent?.key === node && !parent.computed && !parent.shorthand) return false;
+  if (["ImportSpecifier", "ImportDefaultSpecifier", "ImportNamespaceSpecifier", "MetaProperty"].includes(parent?.type ?? "")) return false;
+  if (parent?.type === "ExportSpecifier" && (parent.exported === node || grandparent?.source)) return false;
+  if (["LabeledStatement", "BreakStatement", "ContinueStatement"].includes(parent?.type ?? "") && parent?.label === node) return false;
+  return true;
+}
+
+// Reviewed free globals used by the authored execution closure. Host objects and
+// unknown names are capabilities, never inferred from a list of global aliases.
+const executionGlobals = new Set([
+  "AbortController", "Array", "BigInt", "Boolean", "Buffer", "Date", "Error",
+  "JSON", "Map", "Math", "NaN", "Number", "Object", "Promise", "Set", "String",
+  "Symbol", "URL", "WeakMap", "clearInterval", "clearTimeout", "console",
+  "parseInt", "setInterval", "setTimeout", "structuredClone", "undefined",
+]);
 const checked = new Map<string, { text: string; requests: ReturnType<Bun.Transpiler["scan"]>["imports"] }>();
 const scans = new Map<string, { text: string; imports: ReturnType<Bun.Transpiler["scan"]>["imports"] }>();
 const codeHosts = new Set(["vm", "node:vm", "worker_threads", "node:worker_threads", "inspector", "node:inspector", "inspector/promises", "node:inspector/promises", "repl", "node:repl", "child_process", "node:child_process"]);
@@ -116,6 +140,8 @@ export function verifyModuleLoading(text: string, path: string) {
   const normalizedPath = path.replaceAll("\\", "/");
   const reviewed = Object.entries(reviews).find(([file]) => normalizedPath === file || normalizedPath.endsWith("/" + file));
   const permissions = reviewed && reviewed[1].hash === sha256(text) ? reviewed[1].capabilities : [];
+  const globalReview = reviewed && "globals" in reviewed[1] ? reviewed[1].globals : undefined;
+  const reviewedGlobals = globalReview?.hash === sha256(text) ? globalReview.names : [];
   const computedReview = permissions.includes("computed-data");
   const resourceReview = permissions.includes("resources");
   const verifierReview = permissions.includes("verifier");
@@ -123,6 +149,7 @@ export function verifyModuleLoading(text: string, path: string) {
   function reject() { throw Error(`Unreviewed dynamic execution loader: ${path}`); }
   function resourceHost(name: string) { return ["fs", "node:fs", "fs/promises", "node:fs/promises", "node:sqlite", "sqlite", "bun:sqlite", "node:wasi", "wasi"].includes(name); }
   function visit(node: Syntax, parent?: Syntax, grandparent?: Syntax) {
+    if (identifierReference(node, parent, grandparent) && global(node, String(node.name)) && !executionGlobals.has(String(node.name)) && !reviewedGlobals.includes(String(node.name))) reject();
     if (["ImportDeclaration", "ExportNamedDeclaration", "ExportAllDeclaration"].includes(node.type) && literal(node.source)) literals.push({ path: String((node.source as Syntax).value), kind: "import-statement" });
     if (["ImportDeclaration", "ExportNamedDeclaration", "ExportAllDeclaration"].includes(node.type) && syntax(node.source) && ["module", "node:module"].includes(String(node.source.value))) {
       const specifiers = node.specifiers as Syntax[];

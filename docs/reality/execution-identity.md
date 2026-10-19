@@ -220,3 +220,16 @@ realpath lookup; every selected module byte hash and every edge target is still 
 Regressions cover distinct import/require targets and a conflicting second target in a
 shared resolution context. Row 28 preserves f4890c84… (4c92f13), including its static
 launch data; no verification result is persisted or inherited by another process.
+
+Free identifiers in execution code must now belong to the explicit, reviewed
+executionGlobals set in loading.ts, derived from the authored closure's actual
+built-in usage. Unknown global aliases are refused, including in typeof checks.
+Imports, parameters, destructuring, declarations and catch bindings are resolved
+lexically; property names, labels and export names are not variable references.
+Function parameter initializers, switch discriminants and class static blocks
+retain their separate scopes. Existing host access to process, Bun and WebAssembly
+requires exact bytes and specific names in the globals capability reviews; a
+computed-data review alone does not grant host globals. Generated and resolver
+exceptions retain their existing exact-byte reviews. Row 29 preserves committed
+b0438907 (f8e7c33) with the frozen launch-boundary algorithm; engine, host
+implementation and dependency bytes remain unchanged.

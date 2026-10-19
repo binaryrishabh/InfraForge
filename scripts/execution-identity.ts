@@ -84,6 +84,9 @@ function buildTransitions() {
   const previousTarget = committedTable.entries[0]!.target;
   if (previousTarget !== source && previousTarget !== target && !table.entries.some(row => row.source === previousTarget)) {
     const reviewedHosts: Record<string,string> = { "fe8fd0f18c15de1e762ebbdfd3474f1a35a56d4f46acca85db90221ed8fb21a7": "20af730", "26b81b300de225a6a27d512eb696ad448502d11a073817b9ad203bb1c531f90f": "23203fa", "3886e64e2954e8513647ece8fa126af4dcad33cf2c63ad1eed89b15edca969c1": "53188f7", "421000e5a4f5be3dd3c1464f4a9fd44ea75f7236bb6222a5410e5f89f0aa381d": "c1edd9f", "f4890c845828de4f5280bff19cb35851a7241a8129bde4e233956f65bdd94219": "4c92f13" };
+    // Global-name boundary tightening only; preserve the last committed target
+    // with the existing frozen host/import/launch reconstruction algorithm.
+    reviewedHosts["b04389078881cb89124edd1191c049b9c5abb0d17f18472857cf9310a03262e6"] = "f8e7c33";
     const reviewedCommit = reviewedHosts[previousTarget];
     if (!reviewedCommit) throw Error("A new committed host transition needs explicit review");
     const hostCommit = git(["rev-parse", reviewedCommit]).trim(), hostTree = gitTree(hostCommit);
@@ -97,7 +100,7 @@ function buildTransitions() {
       return diskTree().read(path);
     } };
     const importBoundary = ["3886e64e2954e8513647ece8fa126af4dcad33cf2c63ad1eed89b15edca969c1", "421000e5a4f5be3dd3c1464f4a9fd44ea75f7236bb6222a5410e5f89f0aa381d"].includes(previousTarget);
-    const launchBoundary = previousTarget === "f4890c845828de4f5280bff19cb35851a7241a8129bde4e233956f65bdd94219";
+    const launchBoundary = ["f4890c845828de4f5280bff19cb35851a7241a8129bde4e233956f65bdd94219", "b04389078881cb89124edd1191c049b9c5abb0d17f18472857cf9310a03262e6"].includes(previousTarget);
     const frozen = (launchBoundary ? historicalLaunchDescriptor : importBoundary ? historicalImportDescriptor : historicalHostDescriptor)(hostSnapshot, "bun-1.3.14");
     if (digest(frozen) !== previousTarget) throw Error("Committed host descriptor does not reconstruct");
     const retainedPaths = [...new Set([...storedFiles.map(([path]) => path), "package.json", "bun.lock", "bunfig.toml", ...["apps/backend", "apps/web", "packages/catalog", "packages/contracts", "packages/domain", "packages/simulation"].map(path => `${path}/package.json`)])];

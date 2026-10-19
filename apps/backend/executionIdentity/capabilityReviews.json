@@ -96,7 +96,13 @@
       "computed-data",
       "verifier"
     ],
-    "review": "Fixed data indexing; resource adapters require the separate documented review"
+    "review": "Fixed data indexing; resource adapters require the separate documented review",
+    "globals": {
+      "hash": "ddbe09df52369a9f8950a3000211539ce6c3ce0d2193c2f4350aff52ad1d3313",
+      "names": [
+        "Bun"
+      ]
+    }
   },
   "apps/backend/executionIdentity/dependencies.ts": {
     "hash": "f32628d51520c06c8d1d1f6c557ae792b2b9b013ca274036cadd5f9aba6a067d",
@@ -104,7 +110,13 @@
       "computed-data",
       "verifier"
     ],
-    "review": "Fixed data indexing; resource adapters require the separate documented review"
+    "review": "Fixed data indexing; resource adapters require the separate documented review",
+    "globals": {
+      "hash": "f32628d51520c06c8d1d1f6c557ae792b2b9b013ca274036cadd5f9aba6a067d",
+      "names": [
+        "Bun"
+      ]
+    }
   },
   "apps/backend/executionIdentity/descriptor.ts": {
     "hash": "732c864b9bbd42488679aa4d3bf25481578e02a4f67796c0e5f9bcd031ad8e73",
@@ -113,7 +125,13 @@
       "verifier",
       "resources"
     ],
-    "review": "Fixed data indexing; resource adapters require the separate documented review"
+    "review": "Fixed data indexing; resource adapters require the separate documented review",
+    "globals": {
+      "hash": "732c864b9bbd42488679aa4d3bf25481578e02a4f67796c0e5f9bcd031ad8e73",
+      "names": [
+        "Bun"
+      ]
+    }
   },
   "apps/backend/executionIdentity/installed.ts": {
     "hash": "b9a033dc1db48976bcd2445c91e1ff45a1d66734b95d774ff560ffeee8e8392e",
@@ -122,7 +140,13 @@
       "verifier",
       "resources"
     ],
-    "review": "Fixed data indexing; resource adapters require the separate documented review"
+    "review": "Fixed data indexing; resource adapters require the separate documented review",
+    "globals": {
+      "hash": "b9a033dc1db48976bcd2445c91e1ff45a1d66734b95d774ff560ffeee8e8392e",
+      "names": [
+        "process"
+      ]
+    }
   },
   "apps/backend/executionIdentity/launch.ts": {
     "hash": "fc45ba776364ba64b5edcb5ee3e5a87a7dff35894d662af29002455e07c828bf",
@@ -130,16 +154,29 @@
       "computed-data",
       "verifier"
     ],
-    "review": "Fixed data indexing; resource adapters require the separate documented review"
+    "review": "Fixed data indexing; resource adapters require the separate documented review",
+    "globals": {
+      "hash": "fc45ba776364ba64b5edcb5ee3e5a87a7dff35894d662af29002455e07c828bf",
+      "names": [
+        "Bun",
+        "process"
+      ]
+    }
   },
   "apps/backend/executionIdentity/loading.ts": {
-    "hash": "9d5b209b8d8d4b75c410253dc67f0805f1259e2bdfc16be8a6d62727bad22c33",
+    "hash": "4f6de00ed191f60080a662862454e05a148fa448678cde7f9a5e87949d773c52",
     "capabilities": [
       "computed-data",
       "verifier",
       "resources"
     ],
-    "review": "Fixed data indexing; resource adapters require the separate documented review"
+    "review": "Fixed data indexing; resource adapters require the separate documented review",
+    "globals": {
+      "hash": "4f6de00ed191f60080a662862454e05a148fa448678cde7f9a5e87949d773c52",
+      "names": [
+        "Bun"
+      ]
+    }
   },
   "apps/backend/executionIdentity/resources.ts": {
     "hash": "2cdb00d367fa2b9b72b6c94d5dbaa271e1c8098fd0bdd0f1ea0d7a80ecccb872",
@@ -148,7 +185,13 @@
       "verifier",
       "resources"
     ],
-    "review": "Fixed data indexing; resource adapters require the separate documented review"
+    "review": "Fixed data indexing; resource adapters require the separate documented review",
+    "globals": {
+      "hash": "2cdb00d367fa2b9b72b6c94d5dbaa271e1c8098fd0bdd0f1ea0d7a80ecccb872",
+      "names": [
+        "WebAssembly"
+      ]
+    }
   },
   "apps/backend/executionIdentity/transitions.ts": {
     "hash": "bbd509438d7d4786fddc4c11044bae02003d16b5a8e59de89ce0370597497ad4",
@@ -200,7 +243,13 @@
       "computed-data",
       "resources"
     ],
-    "review": "Fixed data indexing; resource adapters require the separate documented review"
+    "review": "Fixed data indexing; resource adapters require the separate documented review",
+    "globals": {
+      "hash": "614e7e40f425cfd19edc0c8d789e9b0cf622e291d9f110d4026c3ca0911cff02",
+      "names": [
+        "process"
+      ]
+    }
   },
   "apps/backend/internalModel2/dockerSocket.ts": {
     "hash": "95bc132a8499df43041cda44cc7995294c6d9a915586c763cb23e928c4928b5a",
@@ -231,7 +280,13 @@
       "computed-data",
       "resources"
     ],
-    "review": "Fixed data indexing; resource adapters require the separate documented review"
+    "review": "Fixed data indexing; resource adapters require the separate documented review",
+    "globals": {
+      "hash": "41a89f66dcc23b9fc43cd3466459285155c279d12911bf56f2605f661cf7b553",
+      "names": [
+        "Bun"
+      ]
+    }
   },
   "apps/backend/internalModel2/lessonAuthoring.ts": {
     "hash": "a294d8b97411810edcf09c95d8b7488381503d452aca26fc89b464a98f08d59e",
@@ -267,7 +322,13 @@
       "computed-data",
       "resources"
     ],
-    "review": "Fixed data indexing; resource adapters require the separate documented review"
+    "review": "Fixed data indexing; resource adapters require the separate documented review",
+    "globals": {
+      "hash": "4c981641e6a3b56f5be84b4b024744d532e6a955de06990307e100b647676bc8",
+      "names": [
+        "process"
+      ]
+    }
   },
   "apps/backend/internalModel2/workspace.ts": {
     "hash": "3b65a3c8d23629753130084be010d917cc82941319b2ad70180d8bfe7462cf4f",
@@ -341,7 +402,13 @@
       "computed-data",
       "resources"
     ],
-    "review": "Fixed data indexing; resource adapters require the separate documented review"
+    "review": "Fixed data indexing; resource adapters require the separate documented review",
+    "globals": {
+      "hash": "c7ce7e7be1868c70f750ec03d038f142d72f4d7c3c01cedb2a1ca5d2cf38f637",
+      "names": [
+        "process"
+      ]
+    }
   },
   "apps/backend/reports/routes.ts": {
     "hash": "5c408ef767b6b96cce88e1dd1314ef81cef58a8b008f42678b81ed38463724e5",
@@ -747,14 +814,26 @@
     "capabilities": [
       "trusted-resolver"
     ],
-    "review": "Verifier-only enumerated specifier resolver with actual import versus require conditions"
+    "review": "Verifier-only enumerated specifier resolver with actual import versus require conditions",
+    "globals": {
+      "hash": "b1d87373c2d9a2420d376462ac056e2359dcad065803c6c1480769712270be7c",
+      "names": [
+        "Bun"
+      ]
+    }
   },
   "apps/backend/internalModel2/sandboxChild.ts": {
     "hash": "f6f0846f2b54e99fe7c110198f0bc34a24c288bd49152e277158f27ebafa80b7",
     "capabilities": [
       "trusted-fixture"
     ],
-    "review": "Existing immutable containment probe only: fixed /bin/sleep PID exhaustion, filesystem/network denial and cgroup/proc observations; production child bytes receive no exemption"
+    "review": "Existing immutable containment probe only: fixed /bin/sleep PID exhaustion, filesystem/network denial and cgroup/proc observations; production child bytes receive no exemption",
+    "globals": {
+      "hash": "cd574b49efd2a476a14c77ea031ba52a45a8f1f108ef29b482cf47ed48f2b352",
+      "names": [
+        "process"
+      ]
+    }
   },
   "apps/backend/executionIdentity/capabilities.ts": {
     "hash": "ccbfa47c7b2948d2040e63d51ecbecbfce66f8c9d646043c09f8bbddefb287c8",
@@ -763,5 +842,104 @@
       "verifier"
     ],
     "review": "Pure import-capability propagation, exact importer hashes and two reviewed narrow facades"
+  },
+  "apps/backend/auth/auth.ts": {
+    "hash": "710c686efad2c1844548b40f29ab0404e873d68f6bc0af6479ea7466bbedb0eb",
+    "capabilities": [],
+    "review": "Existing host configuration/lifecycle access only; exact source bytes, no global-alias permission for new code",
+    "globals": {
+      "hash": "710c686efad2c1844548b40f29ab0404e873d68f6bc0af6479ea7466bbedb0eb",
+      "names": [
+        "process"
+      ]
+    }
+  },
+  "apps/backend/executionIdentity/launcher.ts": {
+    "hash": "96bcf521c2e3623cbb14097559f9e8d3645cdbc0a50bd03f208483d84a3e5042",
+    "capabilities": [],
+    "review": "Existing host configuration/lifecycle access only; exact source bytes, no global-alias permission for new code",
+    "globals": {
+      "hash": "96bcf521c2e3623cbb14097559f9e8d3645cdbc0a50bd03f208483d84a3e5042",
+      "names": [
+        "process"
+      ]
+    }
+  },
+  "apps/backend/health/readiness.ts": {
+    "hash": "da5016d24607720121c87a222779bd576f39fd3b82af1057ed4b319faf1dde09",
+    "capabilities": [],
+    "review": "Existing host configuration/lifecycle access only; exact source bytes, no global-alias permission for new code",
+    "globals": {
+      "hash": "da5016d24607720121c87a222779bd576f39fd3b82af1057ed4b319faf1dde09",
+      "names": [
+        "process"
+      ]
+    }
+  },
+  "apps/backend/infra/redis.ts": {
+    "hash": "5a1bdf586a8feffde62b20e051d6fbee6eaf0f8e4c6a4289582a8ee32dd3a776",
+    "capabilities": [],
+    "review": "Existing host configuration/lifecycle access only; exact source bytes, no global-alias permission for new code",
+    "globals": {
+      "hash": "5a1bdf586a8feffde62b20e051d6fbee6eaf0f8e4c6a4289582a8ee32dd3a776",
+      "names": [
+        "process"
+      ]
+    }
+  },
+  "apps/backend/internalModel2/dockerEndpoint.ts": {
+    "hash": "3557be29b4f444b2751846ab5eed4028e0b24e932828ad9d9b6ce750a86926fe",
+    "capabilities": [],
+    "review": "Existing host configuration/lifecycle access only; exact source bytes, no global-alias permission for new code",
+    "globals": {
+      "hash": "3557be29b4f444b2751846ab5eed4028e0b24e932828ad9d9b6ce750a86926fe",
+      "names": [
+        "process"
+      ]
+    }
+  },
+  "apps/backend/internalModel2/lessonLimits.ts": {
+    "hash": "3573c50ba67fce80c8161543518a95be642088e3733e581aaa6cf7319958bfe8",
+    "capabilities": [],
+    "review": "Existing host configuration/lifecycle access only; exact source bytes, no global-alias permission for new code",
+    "globals": {
+      "hash": "3573c50ba67fce80c8161543518a95be642088e3733e581aaa6cf7319958bfe8",
+      "names": [
+        "process"
+      ]
+    }
+  },
+  "apps/backend/prisma.config.ts": {
+    "hash": "6b9525330101ac4e17f5a3c3ba0ec54c5261754045c6b758930a8e6861dc67fc",
+    "capabilities": [],
+    "review": "Existing host configuration/lifecycle access only; exact source bytes, no global-alias permission for new code",
+    "globals": {
+      "hash": "6b9525330101ac4e17f5a3c3ba0ec54c5261754045c6b758930a8e6861dc67fc",
+      "names": [
+        "process"
+      ]
+    }
+  },
+  "apps/backend/utils/config.ts": {
+    "hash": "4273035814aab98b5c1fc8a9305d81da3d552575623d19349dcb7e6a9a2c6173",
+    "capabilities": [],
+    "review": "Existing host configuration/lifecycle access only; exact source bytes, no global-alias permission for new code",
+    "globals": {
+      "hash": "4273035814aab98b5c1fc8a9305d81da3d552575623d19349dcb7e6a9a2c6173",
+      "names": [
+        "process"
+      ]
+    }
+  },
+  "apps/backend/worker.ts": {
+    "hash": "3897f1a4eb78fb97abd758b708e4b1721d5e9e545ac107253191d09451e851a0",
+    "capabilities": [],
+    "review": "Existing host configuration/lifecycle access only; exact source bytes, no global-alias permission for new code",
+    "globals": {
+      "hash": "3897f1a4eb78fb97abd758b708e4b1721d5e9e545ac107253191d09451e851a0",
+      "names": [
+        "process"
+      ]
+    }
   }
 }
