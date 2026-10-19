@@ -116,7 +116,7 @@
   "current": [
     {
       "file": "apps/backend/Dockerfile",
-      "hash": "9099a50ccb8cbe80683f8005056361baaae94114b045ec45660f43bcbb935aee"
+      "hash": "49d377567dd41d03ff819e622d19b8f01990ca255518bbaa71bf712f3ee1fd87"
     },
     {
       "file": "apps/backend/internalModel2/authoring.ts",
@@ -180,7 +180,7 @@
     },
     {
       "file": "apps/backend/internalModel2/execution.ts",
-      "hash": "bc494bedf566bae80ce9c04ccf8cad3f8c6050516150e9e5f5def2379119297b"
+      "hash": "4388f6c805dd59a8ca8e8aeecfef599ab3598719a2eca7d577d4f791e30ed678"
     },
     {
       "file": "apps/backend/internalModel2/identity.ts",
@@ -200,7 +200,7 @@
     },
     {
       "file": "apps/backend/internalModel2/lessonExecution.ts",
-      "hash": "ab3780bc94d9dbc203aa9e25a5371b807c4dc7e4420f1098ae4fcc98d5efe279"
+      "hash": "52cbd3437d4a4af179850a001e82633144fae302a7781b651256c39e1c41ef52"
     },
     {
       "file": "apps/backend/internalModel2/lessonLimits.ts",
@@ -280,7 +280,7 @@
     },
     {
       "file": "apps/backend/worker.ts",
-      "hash": "104be42d5155f4343684768305dce89c56a6c3740c292b9f485c4791f0514350"
+      "hash": "cf8e7524384ac0ac39d89c68d3760c2c97d276cd14a190ceed2b0749af5908cc"
     },
     {
       "file": "apps/web/src/api/internalLesson.api.ts",
