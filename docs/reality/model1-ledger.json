@@ -842,7 +842,7 @@
     },
     {
       "file": "apps/web/src/api/infrastructure.api.ts",
-      "sha256": "41535d48119dcf60c10d84d360ed755489c9d944d923a224125d4239bd39bb5d",
+      "sha256": "08eaab0ab9f0f35caef2d75f56f6ac326f634c3f44dd6eac8614d66f5aa84074",
       "numericSites": 0
     },
     {
@@ -1952,7 +1952,7 @@
     },
     {
       "file": "apps/web/src/ui/Page.tsx",
-      "sha256": "0ca601fa6da77c8f794932a09138a17f7042d962168633e43b9d0dbd9cb74e31",
+      "sha256": "ccab70da79a0d336ec4b35b3e44778a7b95cf552c44600ff54f0397611d61c36",
       "numericSites": 6
     },
     {

@@ -43,10 +43,6 @@ export function Section({ number, title, aside, children, id, className, level =
   );
 }
 
-export function Panel({ children, className, as: As = "div" }: { children: ReactNode; className?: string; as?: "div" | "section" | "article" | "aside" }) {
-  return <As className={cx("rounded-lg border border-line bg-raised", className)}>{children}</As>;
-}
-
 export function EmptyState({ title, children, action, icon }: { title: ReactNode; children?: ReactNode; action?: ReactNode; icon?: ReactNode }) {
   return (
     <div className="flex flex-col items-start gap-3 border border-dashed border-line-strong bg-surface px-6 py-8">
@@ -86,14 +82,4 @@ export function Loading({ label }: { label: string }) {
 
 export function Kbd({ children }: { children: ReactNode }) {
   return <kbd className="if-num inline-flex h-5 min-w-5 items-center justify-center rounded-sm border border-line-strong bg-surface px-1 text-[11px] text-ink-2">{children}</kbd>;
-}
-
-export function Stat({ label, value, note, className }: { label: ReactNode; value: ReactNode; note?: ReactNode; className?: string }) {
-  return (
-    <div className={cx("min-w-0", className)}>
-      <dt className="if-eyebrow">{label}</dt>
-      <dd className="if-num mt-1 text-[20px] text-ink">{value}</dd>
-      {note && <dd className="mt-0.5 text-xs text-ink-3">{note}</dd>}
-    </div>
-  );
 }
