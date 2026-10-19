@@ -74,7 +74,9 @@ test("history reconstructs without Git and only reviewed digests resolve", () =>
   expect(JSON.parse(isolated.stdout.toString()).current).toBe(executionSource);
   const table = JSON.parse(readFileSync("apps/backend/executionIdentity/executionTransitions.json", "utf8"));
   const pin = JSON.parse(readFileSync("apps/backend/executionIdentity/transitionPin.json", "utf8"));
-  expect(table.entries.length).toBe(31);
+  expect(table.entries.length).toBe(32);
+  expect(table.entries.find((row: { source: string }) => row.source === "02c54db8f4bb73b5e340ae79dbfd6ece39c52360ab776ac285988e33e92e8240"))
+    .toMatchObject({ commit: "3837b94eb9a388be402bde3a0ca7fac61e667942", algorithm: "analysis-boundary/1", target: executionSource });
   for (const row of table.entries) expect(compatibleReviewedSource(row.source, executionSource)).toBe(true);
   expect(compatibleReviewedSource("dcf73dace76edc0afead6158b34785f511ba6b21fd34ce5490d11fe78e20f4ad", executionSource)).toBe(true);
   expect(compatibleReviewedSource("f".repeat(64), executionSource)).toBe(false);
@@ -97,5 +99,6 @@ test("runtime image includes the identity implementation and committed transitio
   for (const [path] of original.files) expect(context.ignores(path!)).toBe(path!.includes("/generated/"));
   expect(readFileSync("apps/backend/Dockerfile", "utf8")).toContain("COPY apps/backend/executionIdentity ./apps/backend/executionIdentity/");
   expect(readFileSync("apps/backend/Dockerfile", "utf8")).toContain("COPY apps/backend/Dockerfile apps/backend/index.ts");
+  for (const folder of ["capabilities", "runRecords"]) expect(readFileSync("apps/backend/Dockerfile", "utf8")).toContain(`COPY apps/backend/${folder} ./apps/backend/${folder}/`);
   for (const workspace of ["domain", "catalog", "contracts", "simulation"]) expect(readFileSync("apps/backend/Dockerfile", "utf8")).toContain(`COPY packages/${workspace}/tsconfig.json ./packages/${workspace}/`);
 }, 120000);

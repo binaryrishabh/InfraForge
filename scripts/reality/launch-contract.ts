@@ -25,6 +25,7 @@ export const surfaces: Array<[string, string[]]> = [
   ["packages/simulation/src/model2/network/contracts.ts", ["LinkConfig", "PoolConfig", "PathConfig", "RetryPolicy", "LoadBalancer"]],
   ["packages/simulation/src/model2/data/contracts.ts", ["Row", "Statement", "TransactionPlan", "RelationalConfig", "CacheConfig", "AsideConfig"]],
   ["packages/simulation/src/model2/systems/contracts.ts", ["Listener", "DialConfig"]],
+  ["packages/simulation/src/reality/provider/contracts.ts", ["Usage", "Estimate"]],
 ];
 export interface SurfaceField { key: string; file: string; line: number }
 export function exposedFields(read = (file: string) => readFileSync(resolve(root, file), "utf8")): SurfaceField[] {
@@ -41,6 +42,69 @@ export function exposedFields(read = (file: string) => readFileSync(resolve(root
     for (const node of tree.statements) if ((ts.isInterfaceDeclaration(node) || ts.isTypeAliasDeclaration(node)) &&
       (!names.length || names.includes(node.name.text))) add(node, node.name.text);
     for (const name of names) if (!tree.statements.some(n => (ts.isInterfaceDeclaration(n) || ts.isTypeAliasDeclaration(n)) && n.name.text === name)) throw Error(`Missing launch surface ${file}:${name}`);
+  }
+  // The saved-layout API accepts catchall JSON, so also inspect its actual
+  // declared validation shape. A server-only setting must not escape coverage.
+  const file = "apps/backend/zod_schemas/layout.schema.ts";
+  const tree = ts.createSourceFile(file, read(file).replaceAll("\r\n", "\n"), ts.ScriptTarget.Latest, true);
+  const objectShape = (node: ts.Node): ts.ObjectLiteralExpression | undefined => {
+    if (ts.isCallExpression(node) && node.expression.getText(tree) === "z.object" && node.arguments[0] && ts.isObjectLiteralExpression(node.arguments[0])) return node.arguments[0];
+    return ts.forEachChild(node, objectShape);
+  };
+  const addShape = (object: ts.ObjectLiteralExpression, prefix: string) => {
+    for (const member of object.properties) if (ts.isPropertyAssignment(member)) {
+      const key = `${prefix}.${member.name.getText(tree)}`;
+      if (!found.has(key)) found.set(key, { key, file, line: tree.getLineAndCharacterOfPosition(member.getStart(tree)).line + 1 });
+      const nested = objectShape(member.initializer);
+      if (nested) addShape(nested, key === "Resource.autoscaling" ? "AutoscalingPolicy" : key);
+    }
+  };
+  const schemas: Record<string, string> = { ResourceSchema: "Resource", ConnectionSchema: "ConnectionLine", LayoutSchema: "SavedLayout" };
+  for (const statement of tree.statements) if (ts.isVariableStatement(statement)) for (const node of statement.declarationList.declarations) {
+    const prefix = schemas[node.name.getText(tree)], shape = node.initializer && objectShape(node.initializer);
+    if (prefix && shape) addShape(shape, prefix);
+  }
+  // Presentation keys and connected JSON projections are runtime-built rather
+  // than declared interfaces. Inventory their actual AST output keys as well.
+  for (const file of ["packages/simulation/src/model2/product/presentation.ts", "apps/backend/internalModel2/connectedPresentation.ts", "apps/backend/internalModel2/captureV2.ts"]) {
+    const tree = ts.createSourceFile(file, read(file).replaceAll("\r\n", "\n"), ts.ScriptTarget.Latest, true);
+    const put = (key: string, node: ts.Node) => found.set(key, { key, file, line: tree.getLineAndCharacterOfPosition(node.getStart(tree)).line + 1 });
+    const metric = (node: ts.Node) => {
+      let keys: string[] = [];
+      if (ts.isStringLiteral(node)) keys = [node.text];
+      if (ts.isTemplateExpression(node)) {
+        keys = [node.head.text];
+        for (const span of node.templateSpans) {
+          let values = ["*"];
+          if (span.expression.getText(tree) === "key") for (let parent: ts.Node | undefined = node.parent; parent; parent = parent.parent) {
+            if (ts.isForOfStatement(parent) && ts.isVariableDeclarationList(parent.initializer) && parent.initializer.declarations[0]?.name.getText(tree) === "key") {
+              const expression = ts.isAsExpression(parent.expression) ? parent.expression.expression : parent.expression;
+              if (ts.isArrayLiteralExpression(expression)) values = expression.elements.filter(ts.isStringLiteral).map(e => e.text);
+              break;
+            }
+          }
+          keys = keys.flatMap(key => values.map(value => key + value + span.literal.text));
+        }
+      }
+      for (const key of keys) put(`Model2Metric.${key}`, node);
+    };
+    const projection = (node: ts.Node, prefix: string) => {
+      if (ts.isPropertyAssignment(node) || ts.isShorthandPropertyAssignment(node)) {
+        const key = `${prefix}.${node.name.getText(tree).replaceAll('"', "")}`;
+        put(key, node);
+        if (ts.isPropertyAssignment(node)) ts.forEachChild(node.initializer, child => projection(child, key));
+      } else ts.forEachChild(node, child => projection(child, prefix));
+    };
+    const visit = (node: ts.Node) => {
+      if (file.endsWith("captureV2.ts")) { projection(node, "ConnectedOutput"); return; }
+      if (ts.isElementAccessExpression(node) && ["values", "p.values"].includes(node.expression.getText(tree))) metric(node.argumentExpression);
+      if (file.endsWith("connectedPresentation.ts") && ts.isCallExpression(node) && node.expression.getText(tree) === "observed" && node.arguments[0]) metric(node.arguments[0]);
+      if (ts.isVariableDeclaration(node) && node.name.getText(tree) === "values" && node.initializer && ts.isObjectLiteralExpression(node.initializer)) {
+        for (const property of node.initializer.properties) if (ts.isPropertyAssignment(property) && ts.isStringLiteral(property.name)) metric(property.name);
+      }
+      ts.forEachChild(node, visit);
+    };
+    visit(tree);
   }
   return [...found.values()].sort((a, b) => a.key.localeCompare(b.key));
 }

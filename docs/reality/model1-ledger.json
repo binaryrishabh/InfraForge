@@ -12,7 +12,7 @@
     },
     {
       "file": "apps/backend/actions/persistence.ts",
-      "sha256": "5e3db86aa7cab4937aee4fd4d0cc168049547372f0c0f3e8d0b9f022ce45ca85",
+      "sha256": "9ad2fcce32947759633b93a8a7745e727c5ecaad3d8fa4bcbe87594b6eb8360a",
       "numericSites": 6
     },
     {
@@ -54,6 +54,11 @@
       "file": "apps/backend/auth/settings.ts",
       "sha256": "e28ad7ebc6152f6eb950bc132b17ace681df3e305e8605e20d72aedbadcf69ed",
       "numericSites": 1
+    },
+    {
+      "file": "apps/backend/capabilities/policy.ts",
+      "sha256": "d9af0d49ae23895501a4c38535e8bacfc758d96442ea23f476c9e4ab0e8dc2f1",
+      "numericSites": 5
     },
     {
       "file": "apps/backend/challenges/criteria.ts",
@@ -147,8 +152,8 @@
     },
     {
       "file": "apps/backend/challenges/improvementRoutes.ts",
-      "sha256": "e6530d3316f1c21b430e16274ac315aab05f7fcb67d541252cf119f2bc4d0442",
-      "numericSites": 5
+      "sha256": "f4473d42616536bdce7bb42fec1cc697fc74d493d5a9e48f25268e455816e46e",
+      "numericSites": 6
     },
     {
       "file": "apps/backend/challenges/improvements.ts",
@@ -177,8 +182,8 @@
     },
     {
       "file": "apps/backend/challenges/routes.ts",
-      "sha256": "27f09838f2abd8c7fce40ffb91283c382b3ba08f349eb46726e977e5de25d741",
-      "numericSites": 27
+      "sha256": "2f5fc279b36fb2a7b30bd58b8df853e607a025ce8490c3df724c9444606b13e1",
+      "numericSites": 28
     },
     {
       "file": "apps/backend/challenges/starter.ts",
@@ -337,7 +342,7 @@
     },
     {
       "file": "apps/backend/executionIdentity/loading.ts",
-      "sha256": "31597708b9ff5f05f972b3a5236147fcbd19dd3e1e3545d23afdbb68939fa844",
+      "sha256": "195ff17f50682afeb8687b807df6107600d1ffd5aa6bb0722d7575291719387b",
       "numericSites": 14
     },
     {
@@ -357,7 +362,7 @@
     },
     {
       "file": "apps/backend/executionIdentity/transitions.ts",
-      "sha256": "bbd509438d7d4786fddc4c11044bae02003d16b5a8e59de89ce0370597497ad4",
+      "sha256": "4e923c61939a89a6fd2af65805a5186ff564cffc589e12c6bdda606661c6633e",
       "numericSites": 0
     },
     {
@@ -497,8 +502,8 @@
     },
     {
       "file": "apps/backend/internalModel2/lessonAuthoring.ts",
-      "sha256": "a294d8b97411810edcf09c95d8b7488381503d452aca26fc89b464a98f08d59e",
-      "numericSites": 23
+      "sha256": "897c5defa910002651327293bc4d0fea6724a31488322fa9af484841e555cd25",
+      "numericSites": 25
     },
     {
       "file": "apps/backend/internalModel2/lessonExecution.ts",
@@ -542,7 +547,7 @@
     },
     {
       "file": "apps/backend/internalModel2/routes.ts",
-      "sha256": "8247de5ac2924d5634548819c517415b9cd1db428ebafbafa894273172572466",
+      "sha256": "b6d53a55e7d6a5795f10f66f9685f7e02b914a66c1ea6a0c0259e0f6e19c0112",
       "numericSites": 5
     },
     {
@@ -567,8 +572,8 @@
     },
     {
       "file": "apps/backend/internalModel2/store.ts",
-      "sha256": "e677a061dafd075295d24cb2c0c08ec241c3cc41ceb066c26067b4f986351a26",
-      "numericSites": 10
+      "sha256": "774c25a0b79814f6474af2ceadf168104f8c2f15c7b77561fab2cb52e086e7ff",
+      "numericSites": 15
     },
     {
       "file": "apps/backend/internalModel2/worker.ts",
@@ -642,7 +647,7 @@
     },
     {
       "file": "apps/backend/reports/routes.ts",
-      "sha256": "5c408ef767b6b96cce88e1dd1314ef81cef58a8b008f42678b81ed38463724e5",
+      "sha256": "ec62872773374fdcb582bb95b425cae6e01d60a3788da56d1e026fbad09821b8",
       "numericSites": 26
     },
     {
@@ -657,18 +662,28 @@
     },
     {
       "file": "apps/backend/reruns/routes.ts",
-      "sha256": "cde19329e22f39d51ed92af1fdcb09adc43687705d114260747c48c6e26eaa76",
-      "numericSites": 5
+      "sha256": "9c17ccce9e94c39865eda309749791b5bb34094d4f5437ed8efad1deca4590a5",
+      "numericSites": 6
     },
     {
       "file": "apps/backend/routes/deployment.routes.ts",
-      "sha256": "dd8d8242171f40b83ed775dd778f5c79c60140b99e3b6e8f0bb82838a7799637",
-      "numericSites": 1
+      "sha256": "6b60afcc28757765daf8e17a7f592a666f67d1b29155efe4182affea32e65d04",
+      "numericSites": 2
     },
     {
       "file": "apps/backend/routes/infrastructure.routes.ts",
-      "sha256": "3d22c2106fc3ec9c200435898fac523bec8bb957a488a8d1b29cb2a2a1e09bf9",
-      "numericSites": 6
+      "sha256": "81b3a654726293f6093c47e410fc4679af6f758acb7f18971d7d9ae662b00f66",
+      "numericSites": 8
+    },
+    {
+      "file": "apps/backend/runRecords/adapters.ts",
+      "sha256": "bd481b939d21f1a2047a4242b5d1ebf0b9d13236f57a108e69f5ff31056be23a",
+      "numericSites": 2
+    },
+    {
+      "file": "apps/backend/runRecords/schema.ts",
+      "sha256": "9c7a1734f95031abbbfab5e8a0e13d98cc2234c7a13af91806daba96c743f37b",
+      "numericSites": 1
     },
     {
       "file": "apps/backend/scripts/recover-ownership.ts",
@@ -722,7 +737,7 @@
     },
     {
       "file": "apps/backend/simulator/simulator.ts",
-      "sha256": "1bcc89f59a26ad154bf3a51d5e948bd9e674cdaf124ad150391f20eb039533a3",
+      "sha256": "0ab9f204190aa6bcc1609f33f26b85fa3949e1de14ea711db4f1eee3e34bf6a0",
       "numericSites": 12
     },
     {
@@ -824,6 +839,11 @@
       "file": "apps/backend/zod_schemas/layout.schema.ts",
       "sha256": "7184c880769ae9aad58372dae2e9116bfb8aad39181bd6971f989b998902d2d6",
       "numericSites": 9
+    },
+    {
+      "file": "apps/web/src/api/capabilities.api.ts",
+      "sha256": "cb1dbd5599ecaef096cf774552ccc6391ef127f446997cd69e90ee0c7d2eafc2",
+      "numericSites": 0
     },
     {
       "file": "apps/web/src/api/challenges.api.ts",
@@ -1057,7 +1077,7 @@
     },
     {
       "file": "apps/web/src/features/canvas/components/designer/WorkspaceBar.tsx",
-      "sha256": "19cbf055202d2fbc2857538725f752ef716a7d06448b1fbe72c2cfbb40923584",
+      "sha256": "71c953497efce5df2e1f524ab67311e7a9a3ac2cb2d022476d5468ae151bc651",
       "numericSites": 10
     },
     {
@@ -1262,7 +1282,7 @@
     },
     {
       "file": "apps/web/src/features/challenges/components/AttemptDialog.tsx",
-      "sha256": "dfdeae98960dae748c08214f9fe13b458a1cd4d2d621179e96e379e177de9721",
+      "sha256": "ccab51d8b586feb9d6e84ac11c2cc836aca0f85e65fcfc89db1aa0235082599e",
       "numericSites": 5
     },
     {
@@ -1747,7 +1767,7 @@
     },
     {
       "file": "apps/web/src/features/reports/components/RerunDialog.tsx",
-      "sha256": "aec2b321a36bba94a216217566ca85c2883d556e6702fe2ae2b21c5d75020b10",
+      "sha256": "f9b06c1156d66878470b8dd83fc830d3169ee9985cb648e8bd3dc385fd1ad498",
       "numericSites": 2
     },
     {
@@ -2051,6 +2071,11 @@
       "numericSites": 1
     },
     {
+      "file": "packages/contracts/src/deployment/CapabilityAvailability.interface.ts",
+      "sha256": "e5ad284cdf651518904cb50191cfbeabbcde8a7c694ef8e0d6f8a51481260091",
+      "numericSites": 0
+    },
+    {
       "file": "packages/contracts/src/deployment/ChaosEvents.interface.ts",
       "sha256": "9dabee479fe2d771e99c5f6ca4df035f6794bcc74a0afb7810d864c80d58524a",
       "numericSites": 0
@@ -2092,7 +2117,7 @@
     },
     {
       "file": "packages/contracts/src/deployment/index.ts",
-      "sha256": "4da8de8a72774989b505b52126354c823effd5e6c7fc80a49d13bdd62207fead",
+      "sha256": "34348b8297738d50348683917271a19f7a37f0661d39169a3f85638a22ff8a8d",
       "numericSites": 0
     },
     {
@@ -2152,7 +2177,7 @@
     },
     {
       "file": "packages/contracts/src/reports/index.ts",
-      "sha256": "3a7abc56fe6f17f8cc706d215cf553ccbd7b9d5cff64acf260fcefaaaf15fbd4",
+      "sha256": "fdd57bd8f4cf443cd764aabed5f99937da5042e3c0c9d336b2c796f91ff6b61c",
       "numericSites": 0
     },
     {
@@ -2163,6 +2188,11 @@
     {
       "file": "packages/contracts/src/reports/rerun.ts",
       "sha256": "83b127284ccd121bb524071dde63060a3580fdfb207c2bf402b712c5ce76f141",
+      "numericSites": 0
+    },
+    {
+      "file": "packages/contracts/src/reports/runRecord.ts",
+      "sha256": "57569562574fe58dbbeaa8df5a67a4960b72403cb3549300f967e685aa82dc10",
       "numericSites": 0
     },
     {
@@ -2965,7 +2995,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/actions/persistence.ts#L36",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/actions/persistence.ts#L37",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -2979,7 +3009,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/actions/persistence.ts",
-        "line": 36,
+        "line": 37,
         "column": 36
       }
     },
@@ -3001,7 +3031,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/actions/persistence.ts#L36",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/actions/persistence.ts#L37",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -3015,7 +3045,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/actions/persistence.ts",
-        "line": 36,
+        "line": 37,
         "column": 97
       }
     },
@@ -3037,7 +3067,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/actions/persistence.ts#L36",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/actions/persistence.ts#L37",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -3051,7 +3081,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/actions/persistence.ts",
-        "line": 36,
+        "line": 37,
         "column": 110
       }
     },
@@ -3073,7 +3103,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/actions/persistence.ts#L43",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/actions/persistence.ts#L45",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -3087,7 +3117,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/actions/persistence.ts",
-        "line": 43,
+        "line": 45,
         "column": 109
       }
     },
@@ -3109,7 +3139,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/actions/persistence.ts#L46",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/actions/persistence.ts#L48",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -3123,7 +3153,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/actions/persistence.ts",
-        "line": 46,
+        "line": 48,
         "column": 40
       }
     },
@@ -3145,7 +3175,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/actions/persistence.ts#L49",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/actions/persistence.ts#L51",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -3159,7 +3189,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/actions/persistence.ts",
-        "line": 49,
+        "line": 51,
         "column": 118
       }
     },
@@ -3449,6 +3479,186 @@
         "file": "apps/backend/auth/settings.ts",
         "line": 11,
         "column": 66
+      }
+    },
+    {
+      "id": "m1.apps.backend.capabilities.policy.1",
+      "concept": "policy.ts · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.capabilities.policy.1"
+        ]
+      },
+      "formula": "export type CapabilityRequest = | { capability: \"run.start\"; purpose: \"engineer\" | \"learner\" | \"operator\"; engine: \"1\" | \"2\"; profile: string | null; durationSeconds: number | null } | { capability: \"load.recorded.accept\"; bytes: number; rows: number; durationSeconds: number; scale: number } | { capability: \"design.persist\"; operation: \"create\" | \"update\"; countDelta: 0 | 1 } | { capability: \"artifact.export\"; artifactId: string; format: \"html\" | \"json\"; scope: \"run\" | \"design\" } | { capability:",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/capabilities/policy.ts#L6",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/capabilities/policy.ts",
+        "line": 6,
+        "column": 81
+      }
+    },
+    {
+      "id": "m1.apps.backend.capabilities.policy.2",
+      "concept": "policy.ts · literal 1",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.capabilities.policy.2"
+        ]
+      },
+      "formula": "export type CapabilityRequest = | { capability: \"run.start\"; purpose: \"engineer\" | \"learner\" | \"operator\"; engine: \"1\" | \"2\"; profile: string | null; durationSeconds: number | null } | { capability: \"load.recorded.accept\"; bytes: number; rows: number; durationSeconds: number; scale: number } | { capability: \"design.persist\"; operation: \"create\" | \"update\"; countDelta: 0 | 1 } | { capability: \"artifact.export\"; artifactId: string; format: \"html\" | \"json\"; scope: \"run\" | \"design\" } | { capability:",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/capabilities/policy.ts#L6",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/capabilities/policy.ts",
+        "line": 6,
+        "column": 85
+      }
+    },
+    {
+      "id": "m1.apps.backend.capabilities.policy.3",
+      "concept": "requireCapability · literal 403",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 403,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.capabilities.policy.3"
+        ]
+      },
+      "formula": "throw new AppError(decision.reason, 403);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/capabilities/policy.ts#L30",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/capabilities/policy.ts",
+        "line": 30,
+        "column": 62
+      }
+    },
+    {
+      "id": "m1.apps.backend.capabilities.policy.4",
+      "concept": "executionAllowance · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.capabilities.policy.4"
+        ]
+      },
+      "formula": "if (durationSeconds !== null && (!Number.isFinite(durationSeconds) || durationSeconds <= 0)) throw new AppError(\"Invalid recorded run horizon\", 400);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/capabilities/policy.ts#L36",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/capabilities/policy.ts",
+        "line": 36,
+        "column": 92
+      }
+    },
+    {
+      "id": "m1.apps.backend.capabilities.policy.5",
+      "concept": "executionAllowance · literal 400",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 400,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.capabilities.policy.5"
+        ]
+      },
+      "formula": "throw new AppError(\"Invalid recorded run horizon\", 400);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/capabilities/policy.ts#L36",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/capabilities/policy.ts",
+        "line": 36,
+        "column": 147
       }
     },
     {
@@ -12325,7 +12535,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/challenges/improvementRoutes.ts#L14",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/challenges/improvementRoutes.ts#L15",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -12339,7 +12549,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/challenges/improvementRoutes.ts",
-        "line": 14,
+        "line": 15,
         "column": 56
       }
     },
@@ -12361,7 +12571,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/challenges/improvementRoutes.ts#L14",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/challenges/improvementRoutes.ts#L15",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -12375,12 +12585,48 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/challenges/improvementRoutes.ts",
-        "line": 14,
+        "line": 15,
         "column": 127
       }
     },
     {
       "id": "m1.apps.backend.challenges.improvementRoutes.3",
+      "concept": "design.countDelta · literal 1",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.challenges.improvementRoutes.3"
+        ]
+      },
+      "formula": "countDelta: 1",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/challenges/improvementRoutes.ts#L29",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/challenges/improvementRoutes.ts",
+        "line": 29,
+        "column": 97
+      }
+    },
+    {
+      "id": "m1.apps.backend.challenges.improvementRoutes.4",
       "concept": "design.data.layout.layoutVersion · literal 3",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
@@ -12389,46 +12635,10 @@
         "value": 3,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.challenges.improvementRoutes.3"
-        ]
-      },
-      "formula": "layoutVersion: 3",
-      "classification": "implementation-policy",
-      "confidence": "high",
-      "provenance": [
-        {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/challenges/improvementRoutes.ts#L30",
-          "supports": "implementation",
-          "detail": "Exact historical literal and source expression; not external validation."
-        }
-      ],
-      "assumptions": [
-        "This literal is not evidence of real infrastructure capacity or performance.",
-        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
-      ],
-      "researchedOn": "2026-10-15",
-      "freeMode": "conditional",
-      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
-      "location": {
-        "file": "apps/backend/challenges/improvementRoutes.ts",
-        "line": 30,
-        "column": 111
-      }
-    },
-    {
-      "id": "m1.apps.backend.challenges.improvementRoutes.4",
-      "concept": "improvementRoutes.ts · literal 201",
-      "modelVersion": "1",
-      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
-      "quantity": {
-        "kind": "known",
-        "value": 201,
-        "unit": "code-number",
-        "provenance": [
           "m1.apps.backend.challenges.improvementRoutes.4"
         ]
       },
-      "formula": "res.status(201).json({ success: true, infrastructure: design });",
+      "formula": "layoutVersion: 3",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
@@ -12448,28 +12658,28 @@
       "location": {
         "file": "apps/backend/challenges/improvementRoutes.ts",
         "line": 32,
-        "column": 14
+        "column": 111
       }
     },
     {
       "id": "m1.apps.backend.challenges.improvementRoutes.5",
-      "concept": "improvementRoutes.ts · literal 65536",
+      "concept": "improvementRoutes.ts · literal 201",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
       "quantity": {
         "kind": "known",
-        "value": 65536,
+        "value": 201,
         "unit": "code-number",
         "provenance": [
           "m1.apps.backend.challenges.improvementRoutes.5"
         ]
       },
-      "formula": "if (!body.success || Buffer.byteLength(JSON.stringify(body.data), \"utf8\") > 65536) throw new ValidationError(\"A bounded design and source attempt are required.\");",
+      "formula": "res.status(201).json({ success: true, infrastructure: design });",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/challenges/improvementRoutes.ts#L37",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/challenges/improvementRoutes.ts#L34",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -12483,7 +12693,43 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/challenges/improvementRoutes.ts",
-        "line": 37,
+        "line": 34,
+        "column": 14
+      }
+    },
+    {
+      "id": "m1.apps.backend.challenges.improvementRoutes.6",
+      "concept": "improvementRoutes.ts · literal 65536",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 65536,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.challenges.improvementRoutes.6"
+        ]
+      },
+      "formula": "if (!body.success || Buffer.byteLength(JSON.stringify(body.data), \"utf8\") > 65536) throw new ValidationError(\"A bounded design and source attempt are required.\");",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/challenges/improvementRoutes.ts#L39",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/challenges/improvementRoutes.ts",
+        "line": 39,
         "column": 79
       }
     },
@@ -13009,7 +13255,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/challenges/routes.ts#L25",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/challenges/routes.ts#L26",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -13023,7 +13269,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/challenges/routes.ts",
-        "line": 25,
+        "line": 26,
         "column": 32
       }
     },
@@ -13045,7 +13291,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/challenges/routes.ts#L26",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/challenges/routes.ts#L27",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -13059,7 +13305,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/challenges/routes.ts",
-        "line": 26,
+        "line": 27,
         "column": 24
       }
     },
@@ -13081,7 +13327,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/challenges/routes.ts#L32",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/challenges/routes.ts#L33",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -13095,7 +13341,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/challenges/routes.ts",
-        "line": 32,
+        "line": 33,
         "column": 77
       }
     },
@@ -13117,7 +13363,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/challenges/routes.ts#L32",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/challenges/routes.ts#L33",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -13131,7 +13377,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/challenges/routes.ts",
-        "line": 32,
+        "line": 33,
         "column": 84
       }
     },
@@ -13153,7 +13399,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/challenges/routes.ts#L41",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/challenges/routes.ts#L42",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -13167,7 +13413,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/challenges/routes.ts",
-        "line": 41,
+        "line": 42,
         "column": 60
       }
     },
@@ -13189,7 +13435,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/challenges/routes.ts#L42",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/challenges/routes.ts#L43",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -13203,7 +13449,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/challenges/routes.ts",
-        "line": 42,
+        "line": 43,
         "column": 42
       }
     },
@@ -13225,7 +13471,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/challenges/routes.ts#L42",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/challenges/routes.ts#L43",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -13239,7 +13485,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/challenges/routes.ts",
-        "line": 42,
+        "line": 43,
         "column": 76
       }
     },
@@ -13261,7 +13507,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/challenges/routes.ts#L73",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/challenges/routes.ts#L74",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -13275,7 +13521,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/challenges/routes.ts",
-        "line": 73,
+        "line": 74,
         "column": 131
       }
     },
@@ -13297,7 +13543,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/challenges/routes.ts#L74",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/challenges/routes.ts#L75",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -13311,7 +13557,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/challenges/routes.ts",
-        "line": 74,
+        "line": 75,
         "column": 63
       }
     },
@@ -13333,7 +13579,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/challenges/routes.ts#L81",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/challenges/routes.ts#L82",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -13347,7 +13593,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/challenges/routes.ts",
-        "line": 81,
+        "line": 82,
         "column": 63
       }
     },
@@ -13369,7 +13615,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/challenges/routes.ts#L81",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/challenges/routes.ts#L82",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -13383,7 +13629,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/challenges/routes.ts",
-        "line": 81,
+        "line": 82,
         "column": 70
       }
     },
@@ -13405,7 +13651,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/challenges/routes.ts#L81",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/challenges/routes.ts#L82",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -13419,7 +13665,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/challenges/routes.ts",
-        "line": 81,
+        "line": 82,
         "column": 82
       }
     },
@@ -13441,7 +13687,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/challenges/routes.ts#L87",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/challenges/routes.ts#L88",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -13455,7 +13701,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/challenges/routes.ts",
-        "line": 87,
+        "line": 88,
         "column": 71
       }
     },
@@ -13477,7 +13723,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/challenges/routes.ts#L87",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/challenges/routes.ts#L88",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -13491,7 +13737,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/challenges/routes.ts",
-        "line": 87,
+        "line": 88,
         "column": 119
       }
     },
@@ -13513,7 +13759,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/challenges/routes.ts#L88",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/challenges/routes.ts#L89",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -13527,7 +13773,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/challenges/routes.ts",
-        "line": 88,
+        "line": 89,
         "column": 35
       }
     },
@@ -13549,7 +13795,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/challenges/routes.ts#L88",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/challenges/routes.ts#L89",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -13563,7 +13809,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/challenges/routes.ts",
-        "line": 88,
+        "line": 89,
         "column": 114
       }
     },
@@ -13585,7 +13831,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/challenges/routes.ts#L101",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/challenges/routes.ts#L102",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -13599,7 +13845,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/challenges/routes.ts",
-        "line": 101,
+        "line": 102,
         "column": 65
       }
     },
@@ -13621,7 +13867,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/challenges/routes.ts#L103",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/challenges/routes.ts#L104",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -13635,7 +13881,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/challenges/routes.ts",
-        "line": 103,
+        "line": 104,
         "column": 76
       }
     },
@@ -13657,7 +13903,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/challenges/routes.ts#L103",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/challenges/routes.ts#L104",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -13671,7 +13917,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/challenges/routes.ts",
-        "line": 103,
+        "line": 104,
         "column": 79
       }
     },
@@ -13693,7 +13939,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/challenges/routes.ts#L105",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/challenges/routes.ts#L106",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -13707,12 +13953,48 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/challenges/routes.ts",
-        "line": 105,
+        "line": 106,
         "column": 94
       }
     },
     {
       "id": "m1.apps.backend.challenges.routes.21",
+      "concept": "countDelta · literal 1",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.challenges.routes.21"
+        ]
+      },
+      "formula": "countDelta: 1",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/challenges/routes.ts#L131",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/challenges/routes.ts",
+        "line": 131,
+        "column": 95
+      }
+    },
+    {
+      "id": "m1.apps.backend.challenges.routes.22",
       "concept": "routes.ts · literal 201",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
@@ -13721,7 +14003,7 @@
         "value": 201,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.challenges.routes.21"
+          "m1.apps.backend.challenges.routes.22"
         ]
       },
       "formula": "res.status(201).json({ success: true, designId: design.id, created: true });",
@@ -13729,7 +14011,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/challenges/routes.ts#L132",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/challenges/routes.ts#L134",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -13743,12 +14025,12 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/challenges/routes.ts",
-        "line": 132,
+        "line": 134,
         "column": 14
       }
     },
     {
-      "id": "m1.apps.backend.challenges.routes.22",
+      "id": "m1.apps.backend.challenges.routes.23",
       "concept": "previewBody.layout.resources · literal 500",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
@@ -13757,7 +14039,7 @@
         "value": 500,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.challenges.routes.22"
+          "m1.apps.backend.challenges.routes.23"
         ]
       },
       "formula": "resources: LayoutSchema.shape.resources.unwrap().max(500)",
@@ -13765,7 +14047,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/challenges/routes.ts#L136",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/challenges/routes.ts#L138",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -13779,12 +14061,12 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/challenges/routes.ts",
-        "line": 136,
+        "line": 138,
         "column": 56
       }
     },
     {
-      "id": "m1.apps.backend.challenges.routes.23",
+      "id": "m1.apps.backend.challenges.routes.24",
       "concept": "previewBody.layout.connectionLines · literal 1000",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
@@ -13793,7 +14075,7 @@
         "value": 1000,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.challenges.routes.23"
+          "m1.apps.backend.challenges.routes.24"
         ]
       },
       "formula": "connectionLines: LayoutSchema.shape.connectionLines.unwrap().max(1000)",
@@ -13801,7 +14083,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/challenges/routes.ts#L137",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/challenges/routes.ts#L139",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -13815,12 +14097,12 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/challenges/routes.ts",
-        "line": 137,
+        "line": 139,
         "column": 68
       }
     },
     {
-      "id": "m1.apps.backend.challenges.routes.24",
+      "id": "m1.apps.backend.challenges.routes.25",
       "concept": "routes.ts · literal 65536",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
@@ -13829,7 +14111,7 @@
         "value": 65536,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.challenges.routes.24"
+          "m1.apps.backend.challenges.routes.25"
         ]
       },
       "formula": "if (!parsed.success || Buffer.byteLength(JSON.stringify(parsed.data), \"utf8\") > 65536) throw new ValidationError(\"A bounded canvas layout is required.\");",
@@ -13837,7 +14119,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/challenges/routes.ts#L142",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/challenges/routes.ts#L144",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -13851,12 +14133,12 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/challenges/routes.ts",
-        "line": 142,
+        "line": 144,
         "column": 83
       }
     },
     {
-      "id": "m1.apps.backend.challenges.routes.25",
+      "id": "m1.apps.backend.challenges.routes.26",
       "concept": "attemptBody.improvement.hypothesis · literal 1",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
@@ -13865,7 +14147,7 @@
         "value": 1,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.challenges.routes.25"
+          "m1.apps.backend.challenges.routes.26"
         ]
       },
       "formula": "hypothesis: z.string().trim().min(1).max(HYPOTHESIS_MAX)",
@@ -13873,7 +14155,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/challenges/routes.ts#L148",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/challenges/routes.ts#L150",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -13887,12 +14169,12 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/challenges/routes.ts",
-        "line": 148,
+        "line": 150,
         "column": 60
       }
     },
     {
-      "id": "m1.apps.backend.challenges.routes.26",
+      "id": "m1.apps.backend.challenges.routes.27",
       "concept": "run · literal 0",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
@@ -13901,7 +14183,7 @@
         "value": 0,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.challenges.routes.26"
+          "m1.apps.backend.challenges.routes.27"
         ]
       },
       "formula": "if ((review.count === 0) !== (improvement.intent === \"repeat\")) throw new ConflictError(\"No simulation-relevant change requires an explicit repeat; a changed design is an improvement experiment.\");",
@@ -13909,7 +14191,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/challenges/routes.ts#L176",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/challenges/routes.ts#L178",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -13923,12 +14205,12 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/challenges/routes.ts",
-        "line": 176,
+        "line": 178,
         "column": 29
       }
     },
     {
-      "id": "m1.apps.backend.challenges.routes.27",
+      "id": "m1.apps.backend.challenges.routes.28",
       "concept": "routes.ts · literal 201",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
@@ -13937,7 +14219,7 @@
         "value": 201,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.challenges.routes.27"
+          "m1.apps.backend.challenges.routes.28"
         ]
       },
       "formula": "res.status(201).json({ success: true, createdDeployment: run });",
@@ -13945,7 +14227,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/challenges/routes.ts#L197",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/challenges/routes.ts#L200",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -13959,7 +14241,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/challenges/routes.ts",
-        "line": 197,
+        "line": 200,
         "column": 14
       }
     },
@@ -32177,7 +32459,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L14",
+          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L15",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -32191,7 +32473,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/lessonAuthoring.ts",
-        "line": 14,
+        "line": 15,
         "column": 71
       }
     },
@@ -32213,7 +32495,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L14",
+          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L15",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -32227,7 +32509,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/lessonAuthoring.ts",
-        "line": 14,
+        "line": 15,
         "column": 77
       }
     },
@@ -32249,7 +32531,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L15",
+          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L16",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -32263,7 +32545,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/lessonAuthoring.ts",
-        "line": 15,
+        "line": 16,
         "column": 79
       }
     },
@@ -32285,7 +32567,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L15",
+          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L16",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -32299,7 +32581,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/lessonAuthoring.ts",
-        "line": 15,
+        "line": 16,
         "column": 87
       }
     },
@@ -32321,7 +32603,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L16",
+          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L17",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -32335,7 +32617,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/lessonAuthoring.ts",
-        "line": 16,
+        "line": 17,
         "column": 161
       }
     },
@@ -32357,7 +32639,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L17",
+          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L18",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -32371,7 +32653,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/lessonAuthoring.ts",
-        "line": 17,
+        "line": 18,
         "column": 66
       }
     },
@@ -32393,7 +32675,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L27",
+          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L28",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -32407,7 +32689,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/lessonAuthoring.ts",
-        "line": 27,
+        "line": 28,
         "column": 23
       }
     },
@@ -32429,7 +32711,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L28",
+          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L29",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -32443,7 +32725,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/lessonAuthoring.ts",
-        "line": 28,
+        "line": 29,
         "column": 48
       }
     },
@@ -32465,7 +32747,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L36",
+          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L37",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -32479,7 +32761,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/lessonAuthoring.ts",
-        "line": 36,
+        "line": 37,
         "column": 71
       }
     },
@@ -32501,7 +32783,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L36",
+          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L37",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -32515,7 +32797,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/lessonAuthoring.ts",
-        "line": 36,
+        "line": 37,
         "column": 73
       }
     },
@@ -32537,7 +32819,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L36",
+          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L37",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -32551,7 +32833,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/lessonAuthoring.ts",
-        "line": 36,
+        "line": 37,
         "column": 89
       }
     },
@@ -32573,7 +32855,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L36",
+          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L37",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -32587,7 +32869,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/lessonAuthoring.ts",
-        "line": 36,
+        "line": 37,
         "column": 91
       }
     },
@@ -32609,7 +32891,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L36",
+          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L37",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -32623,7 +32905,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/lessonAuthoring.ts",
-        "line": 36,
+        "line": 37,
         "column": 109
       }
     },
@@ -32645,7 +32927,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L36",
+          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L37",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -32659,7 +32941,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/lessonAuthoring.ts",
-        "line": 36,
+        "line": 37,
         "column": 112
       }
     },
@@ -32681,7 +32963,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L36",
+          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L37",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -32695,7 +32977,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/lessonAuthoring.ts",
-        "line": 36,
+        "line": 37,
         "column": 130
       }
     },
@@ -32717,7 +32999,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L36",
+          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L37",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -32731,7 +33013,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/lessonAuthoring.ts",
-        "line": 36,
+        "line": 37,
         "column": 133
       }
     },
@@ -32753,7 +33035,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L36",
+          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L37",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -32767,7 +33049,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/lessonAuthoring.ts",
-        "line": 36,
+        "line": 37,
         "column": 150
       }
     },
@@ -32789,7 +33071,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L36",
+          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L37",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -32803,13 +33085,13 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/lessonAuthoring.ts",
-        "line": 36,
+        "line": 37,
         "column": 153
       }
     },
     {
       "id": "m1.apps.backend.internalModel2.lessonAuthoring.19",
-      "concept": "row · literal 0",
+      "concept": "existing · literal 0",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
       "quantity": {
@@ -32820,12 +33102,12 @@
           "m1.apps.backend.internalModel2.lessonAuthoring.19"
         ]
       },
-      "formula": "const row = (await internalDatabase.query('SELECT \"ownerId\",layout FROM \"Infrastructure\" WHERE id=$1', [id])).rows[0];",
+      "formula": "const existing = (await internalDatabase.query('SELECT \"ownerId\",layout FROM \"Infrastructure\" WHERE id=$1', [id])).rows[0];",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L39",
+          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L38",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -32839,12 +33121,48 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/lessonAuthoring.ts",
-        "line": 39,
-        "column": 118
+        "line": 38,
+        "column": 123
       }
     },
     {
       "id": "m1.apps.backend.internalModel2.lessonAuthoring.20",
+      "concept": "createLessonDesign.countDelta · literal 1",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.internalModel2.lessonAuthoring.20"
+        ]
+      },
+      "formula": "countDelta: 1",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L43",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/internalModel2/lessonAuthoring.ts",
+        "line": 43,
+        "column": 93
+      }
+    },
+    {
+      "id": "m1.apps.backend.internalModel2.lessonAuthoring.21",
       "concept": "row · literal 0",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
@@ -32853,51 +33171,15 @@
         "value": 0,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.internalModel2.lessonAuthoring.20"
-        ]
-      },
-      "formula": "const row = (await internalDatabase.query('SELECT id,name,layout,\"updatedAt\" AT TIME ZONE \\'UTC\\' AS \"updatedAt\",\"challengeId\" FROM \"Infrastructure\" WHERE id=$1 AND \"ownerId\"=$2', [choice.infrastructureId, owner])).rows[0];",
-      "classification": "implementation-policy",
-      "confidence": "high",
-      "provenance": [
-        {
-          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L47",
-          "supports": "implementation",
-          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
-        }
-      ],
-      "assumptions": [
-        "This literal is not evidence of real infrastructure capacity or performance.",
-        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
-      ],
-      "researchedOn": "2026-10-15",
-      "freeMode": "conditional",
-      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
-      "location": {
-        "file": "apps/backend/internalModel2/lessonAuthoring.ts",
-        "line": 47,
-        "column": 223
-      }
-    },
-    {
-      "id": "m1.apps.backend.internalModel2.lessonAuthoring.21",
-      "concept": "reviewLesson · literal 8080",
-      "modelVersion": "1",
-      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
-      "quantity": {
-        "kind": "known",
-        "value": 8080,
-        "unit": "code-number",
-        "provenance": [
           "m1.apps.backend.internalModel2.lessonAuthoring.21"
         ]
       },
-      "formula": "if (!design.supported || design.port !== 8080) throw new ValidationError(design.reasons.join(\" \") || \"Lesson requires port 8080; the saved design is unchanged.\");",
+      "formula": "const row = (await internalDatabase.query('SELECT \"ownerId\",layout FROM \"Infrastructure\" WHERE id=$1', [id])).rows[0];",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L51",
+          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L46",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -32911,13 +33193,13 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/lessonAuthoring.ts",
-        "line": 51,
-        "column": 44
+        "line": 46,
+        "column": 118
       }
     },
     {
       "id": "m1.apps.backend.internalModel2.lessonAuthoring.22",
-      "concept": "reviewLesson.review.arrivals · literal 0",
+      "concept": "row · literal 0",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
       "quantity": {
@@ -32928,12 +33210,12 @@
           "m1.apps.backend.internalModel2.lessonAuthoring.22"
         ]
       },
-      "formula": "arrivals: envelope.compiled.input.arrivals.reduce((n, a) => n + (a.kind === \"trace\" ? a.trace.rows.length : 0), 0)",
+      "formula": "const row = (await internalDatabase.query('SELECT id,name,layout,\"updatedAt\" AT TIME ZONE \\'UTC\\' AS \"updatedAt\",\"challengeId\" FROM \"Infrastructure\" WHERE id=$1 AND \"ownerId\"=$2', [choice.infrastructureId, owner])).rows[0];",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L61",
+          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L54",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -32947,12 +33229,48 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/lessonAuthoring.ts",
-        "line": 61,
-        "column": 115
+        "line": 54,
+        "column": 223
       }
     },
     {
       "id": "m1.apps.backend.internalModel2.lessonAuthoring.23",
+      "concept": "reviewLesson · literal 8080",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 8080,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.internalModel2.lessonAuthoring.23"
+        ]
+      },
+      "formula": "if (!design.supported || design.port !== 8080) throw new ValidationError(design.reasons.join(\" \") || \"Lesson requires port 8080; the saved design is unchanged.\");",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L58",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/internalModel2/lessonAuthoring.ts",
+        "line": 58,
+        "column": 44
+      }
+    },
+    {
+      "id": "m1.apps.backend.internalModel2.lessonAuthoring.24",
       "concept": "reviewLesson.review.arrivals · literal 0",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
@@ -32961,7 +33279,7 @@
         "value": 0,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.internalModel2.lessonAuthoring.23"
+          "m1.apps.backend.internalModel2.lessonAuthoring.24"
         ]
       },
       "formula": "arrivals: envelope.compiled.input.arrivals.reduce((n, a) => n + (a.kind === \"trace\" ? a.trace.rows.length : 0), 0)",
@@ -32969,7 +33287,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L61",
+          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L68",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -32983,7 +33301,43 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/lessonAuthoring.ts",
-        "line": 61,
+        "line": 68,
+        "column": 115
+      }
+    },
+    {
+      "id": "m1.apps.backend.internalModel2.lessonAuthoring.25",
+      "concept": "reviewLesson.review.arrivals · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.internalModel2.lessonAuthoring.25"
+        ]
+      },
+      "formula": "arrivals: envelope.compiled.input.arrivals.reduce((n, a) => n + (a.kind === \"trace\" ? a.trace.rows.length : 0), 0)",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/internalModel2/lessonAuthoring.ts#L68",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/internalModel2/lessonAuthoring.ts",
+        "line": 68,
         "column": 119
       }
     },
@@ -34229,7 +34583,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/routes.ts#L30",
+          "source": "workspace:apps/backend/internalModel2/routes.ts#L32",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -34243,7 +34597,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/routes.ts",
-        "line": 30,
+        "line": 32,
         "column": 33
       }
     },
@@ -34265,7 +34619,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/routes.ts#L30",
+          "source": "workspace:apps/backend/internalModel2/routes.ts#L32",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -34279,7 +34633,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/routes.ts",
-        "line": 30,
+        "line": 32,
         "column": 39
       }
     },
@@ -34301,7 +34655,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/routes.ts#L32",
+          "source": "workspace:apps/backend/internalModel2/routes.ts#L34",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -34315,7 +34669,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/routes.ts",
-        "line": 32,
+        "line": 34,
         "column": 59
       }
     },
@@ -34337,7 +34691,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/routes.ts#L43",
+          "source": "workspace:apps/backend/internalModel2/routes.ts#L45",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -34351,7 +34705,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/routes.ts",
-        "line": 43,
+        "line": 45,
         "column": 42
       }
     },
@@ -34373,7 +34727,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/routes.ts#L67",
+          "source": "workspace:apps/backend/internalModel2/routes.ts#L76",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -34387,7 +34741,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/routes.ts",
-        "line": 67,
+        "line": 76,
         "column": 95
       }
     },
@@ -35525,7 +35879,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/store.ts#L13",
+          "source": "workspace:apps/backend/internalModel2/store.ts#L14",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -35539,7 +35893,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/store.ts",
-        "line": 13,
+        "line": 14,
         "column": 108
       }
     },
@@ -35561,7 +35915,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/store.ts#L13",
+          "source": "workspace:apps/backend/internalModel2/store.ts#L14",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -35575,7 +35929,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/store.ts",
-        "line": 13,
+        "line": 14,
         "column": 129
       }
     },
@@ -35597,7 +35951,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/store.ts#L15",
+          "source": "workspace:apps/backend/internalModel2/store.ts#L16",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -35611,7 +35965,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/store.ts",
-        "line": 15,
+        "line": 16,
         "column": 174
       }
     },
@@ -35633,7 +35987,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/store.ts#L25",
+          "source": "workspace:apps/backend/internalModel2/store.ts#L26",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -35647,7 +36001,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/store.ts",
-        "line": 25,
+        "line": 26,
         "column": 125
       }
     },
@@ -35669,7 +36023,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/store.ts#L27",
+          "source": "workspace:apps/backend/internalModel2/store.ts#L28",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -35683,7 +36037,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/store.ts",
-        "line": 27,
+        "line": 28,
         "column": 177
       }
     },
@@ -35705,7 +36059,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/store.ts#L33",
+          "source": "workspace:apps/backend/internalModel2/store.ts#L34",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -35719,7 +36073,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/store.ts",
-        "line": 33,
+        "line": 34,
         "column": 136
       }
     },
@@ -35741,7 +36095,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/store.ts#L35",
+          "source": "workspace:apps/backend/internalModel2/store.ts#L36",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -35755,13 +36109,13 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/store.ts",
-        "line": 35,
+        "line": 36,
         "column": 221
       }
     },
     {
       "id": "m1.apps.backend.internalModel2.store.8",
-      "concept": "row · literal 0",
+      "concept": "admit.rows · literal 0",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
       "quantity": {
@@ -35772,12 +36126,12 @@
           "m1.apps.backend.internalModel2.store.8"
         ]
       },
-      "formula": "const row = (await client.query<InternalRunRow>(`INSERT INTO \"InternalModel2Run\" (id,\"ownerId\",\"infrastructureId\",\"idempotencyKey\",\"requestHash\",input,\"inputHash\") VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *`, [id, owner, request.infrastructureId, request.idempotencyKey, requestHash, envelope, envelope.fingerprint])).rows[0]!;",
+      "formula": "rows: traces.reduce((n, a) => n + (a.kind === \"trace\" ? a.trace.rows.length : 0), 0)",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/store.ts#L41",
+          "source": "workspace:apps/backend/internalModel2/store.ts#L42",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -35791,13 +36145,13 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/store.ts",
-        "line": 41,
-        "column": 165
+        "line": 42,
+        "column": 223
       }
     },
     {
       "id": "m1.apps.backend.internalModel2.store.9",
-      "concept": "row · literal 0",
+      "concept": "admit.rows · literal 0",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
       "quantity": {
@@ -35808,12 +36162,12 @@
           "m1.apps.backend.internalModel2.store.9"
         ]
       },
-      "formula": "const row = (await internalDatabase.query<InternalRunRow>('SELECT * FROM \"InternalModel2Run\" WHERE id=$1 AND \"ownerId\"=$2', [id, owner])).rows[0];",
+      "formula": "rows: traces.reduce((n, a) => n + (a.kind === \"trace\" ? a.trace.rows.length : 0), 0)",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/store.ts#L48",
+          "source": "workspace:apps/backend/internalModel2/store.ts#L42",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -35827,12 +36181,120 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/store.ts",
-        "line": 48,
-        "column": 146
+        "line": 42,
+        "column": 227
       }
     },
     {
       "id": "m1.apps.backend.internalModel2.store.10",
+      "concept": "admit.durationSeconds · literal 1_000_000",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1000000,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.internalModel2.store.10"
+        ]
+      },
+      "formula": "durationSeconds: requireKnown(envelope.contract.horizon, \"us\") / 1_000_000",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/internalModel2/store.ts#L42",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/internalModel2/store.ts",
+        "line": 42,
+        "column": 296
+      }
+    },
+    {
+      "id": "m1.apps.backend.internalModel2.store.11",
+      "concept": "admit.scale · literal 1",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.internalModel2.store.11"
+        ]
+      },
+      "formula": "scale: 1",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/internalModel2/store.ts#L42",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/internalModel2/store.ts",
+        "line": 42,
+        "column": 314
+      }
+    },
+    {
+      "id": "m1.apps.backend.internalModel2.store.12",
+      "concept": "admit.durationSeconds · literal 1_000_000",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1000000,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.internalModel2.store.12"
+        ]
+      },
+      "formula": "durationSeconds: requireKnown(envelope.contract.horizon, \"us\") / 1_000_000",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/internalModel2/store.ts#L43",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/internalModel2/store.ts",
+        "line": 43,
+        "column": 213
+      }
+    },
+    {
+      "id": "m1.apps.backend.internalModel2.store.13",
       "concept": "row · literal 0",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
@@ -35841,15 +36303,15 @@
         "value": 0,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.internalModel2.store.10"
+          "m1.apps.backend.internalModel2.store.13"
         ]
       },
-      "formula": "const row = (await internalDatabase.query<InternalRunRow>(`UPDATE \"InternalModel2Run\" SET \"cancelRequested\"=true, status=CASE WHEN status='queued' THEN 'cancelled' ELSE status END, reason=CASE WHEN status='queued' THEN 'Cancelled before execution' ELSE reason END,\"updatedAt\"=now() WHERE id=$1 AND \"ownerId\"=$2 AND status IN ('queued','running') AND EXISTS (SELECT 1 FROM \"InternalModel2Grant\" WHERE \"userId\"=$2) RETURNING *`, [id, owner])).rows[0];",
+      "formula": "const row = (await client.query<InternalRunRow>(`INSERT INTO \"InternalModel2Run\" (id,\"ownerId\",\"infrastructureId\",\"idempotencyKey\",\"requestHash\",input,\"inputHash\") VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *`, [id, owner, request.infrastructureId, request.idempotencyKey, requestHash, envelope, envelope.fingerprint])).rows[0]!;",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/store.ts#L56",
+          "source": "workspace:apps/backend/internalModel2/store.ts#L45",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -35863,7 +36325,79 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/store.ts",
-        "line": 56,
+        "line": 45,
+        "column": 165
+      }
+    },
+    {
+      "id": "m1.apps.backend.internalModel2.store.14",
+      "concept": "row · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.internalModel2.store.14"
+        ]
+      },
+      "formula": "const row = (await internalDatabase.query<InternalRunRow>('SELECT * FROM \"InternalModel2Run\" WHERE id=$1 AND \"ownerId\"=$2', [id, owner])).rows[0];",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/internalModel2/store.ts#L52",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/internalModel2/store.ts",
+        "line": 52,
+        "column": 146
+      }
+    },
+    {
+      "id": "m1.apps.backend.internalModel2.store.15",
+      "concept": "row · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.internalModel2.store.15"
+        ]
+      },
+      "formula": "const row = (await internalDatabase.query<InternalRunRow>(`UPDATE \"InternalModel2Run\" SET \"cancelRequested\"=true, status=CASE WHEN status='queued' THEN 'cancelled' ELSE status END, reason=CASE WHEN status='queued' THEN 'Cancelled before execution' ELSE reason END,\"updatedAt\"=now() WHERE id=$1 AND \"ownerId\"=$2 AND status IN ('queued','running') AND EXISTS (SELECT 1 FROM \"InternalModel2Grant\" WHERE \"userId\"=$2) RETURNING *`, [id, owner])).rows[0];",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/internalModel2/store.ts#L60",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/internalModel2/store.ts",
+        "line": 60,
         "column": 107
       }
     },
@@ -40061,7 +40595,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/reports/routes.ts#L18",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/reports/routes.ts#L19",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -40075,7 +40609,7 @@
       "replacement": "Keep existing historical report semantics; design separate versioned M2 evidence with units/provenance.",
       "location": {
         "file": "apps/backend/reports/routes.ts",
-        "line": 18,
+        "line": 19,
         "column": 143
       }
     },
@@ -40097,7 +40631,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/reports/routes.ts#L23",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/reports/routes.ts#L24",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -40111,7 +40645,7 @@
       "replacement": "Keep existing historical report semantics; design separate versioned M2 evidence with units/provenance.",
       "location": {
         "file": "apps/backend/reports/routes.ts",
-        "line": 23,
+        "line": 24,
         "column": 97
       }
     },
@@ -40133,7 +40667,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/reports/routes.ts#L25",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/reports/routes.ts#L26",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -40147,7 +40681,7 @@
       "replacement": "Keep existing historical report semantics; design separate versioned M2 evidence with units/provenance.",
       "location": {
         "file": "apps/backend/reports/routes.ts",
-        "line": 25,
+        "line": 26,
         "column": 67
       }
     },
@@ -40169,7 +40703,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/reports/routes.ts#L25",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/reports/routes.ts#L26",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -40183,7 +40717,7 @@
       "replacement": "Keep existing historical report semantics; design separate versioned M2 evidence with units/provenance.",
       "location": {
         "file": "apps/backend/reports/routes.ts",
-        "line": 25,
+        "line": 26,
         "column": 74
       }
     },
@@ -40205,7 +40739,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/reports/routes.ts#L25",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/reports/routes.ts#L26",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -40219,7 +40753,7 @@
       "replacement": "Keep existing historical report semantics; design separate versioned M2 evidence with units/provenance.",
       "location": {
         "file": "apps/backend/reports/routes.ts",
-        "line": 25,
+        "line": 26,
         "column": 87
       }
     },
@@ -40241,7 +40775,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/reports/routes.ts#L33",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/reports/routes.ts#L34",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -40255,7 +40789,7 @@
       "replacement": "Keep existing historical report semantics; design separate versioned M2 evidence with units/provenance.",
       "location": {
         "file": "apps/backend/reports/routes.ts",
-        "line": 33,
+        "line": 34,
         "column": 114
       }
     },
@@ -40277,7 +40811,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/reports/routes.ts#L34",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/reports/routes.ts#L35",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -40291,7 +40825,7 @@
       "replacement": "Keep existing historical report semantics; design separate versioned M2 evidence with units/provenance.",
       "location": {
         "file": "apps/backend/reports/routes.ts",
-        "line": 34,
+        "line": 35,
         "column": 25
       }
     },
@@ -40313,7 +40847,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/reports/routes.ts#L35",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/reports/routes.ts#L36",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -40327,7 +40861,7 @@
       "replacement": "Keep existing historical report semantics; design separate versioned M2 evidence with units/provenance.",
       "location": {
         "file": "apps/backend/reports/routes.ts",
-        "line": 35,
+        "line": 36,
         "column": 41
       }
     },
@@ -40349,7 +40883,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/reports/routes.ts#L35",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/reports/routes.ts#L36",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -40363,7 +40897,7 @@
       "replacement": "Keep existing historical report semantics; design separate versioned M2 evidence with units/provenance.",
       "location": {
         "file": "apps/backend/reports/routes.ts",
-        "line": 35,
+        "line": 36,
         "column": 64
       }
     },
@@ -40385,7 +40919,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/reports/routes.ts#L35",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/reports/routes.ts#L36",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -40399,7 +40933,7 @@
       "replacement": "Keep existing historical report semantics; design separate versioned M2 evidence with units/provenance.",
       "location": {
         "file": "apps/backend/reports/routes.ts",
-        "line": 35,
+        "line": 36,
         "column": 96
       }
     },
@@ -40421,7 +40955,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/reports/routes.ts#L35",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/reports/routes.ts#L36",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -40435,7 +40969,7 @@
       "replacement": "Keep existing historical report semantics; design separate versioned M2 evidence with units/provenance.",
       "location": {
         "file": "apps/backend/reports/routes.ts",
-        "line": 35,
+        "line": 36,
         "column": 119
       }
     },
@@ -40457,7 +40991,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/reports/routes.ts#L50",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/reports/routes.ts#L51",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -40471,7 +41005,7 @@
       "replacement": "Keep existing historical report semantics; design separate versioned M2 evidence with units/provenance.",
       "location": {
         "file": "apps/backend/reports/routes.ts",
-        "line": 50,
+        "line": 51,
         "column": 170
       }
     },
@@ -40493,7 +41027,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/reports/routes.ts#L51",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/reports/routes.ts#L52",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -40507,7 +41041,7 @@
       "replacement": "Keep existing historical report semantics; design separate versioned M2 evidence with units/provenance.",
       "location": {
         "file": "apps/backend/reports/routes.ts",
-        "line": 51,
+        "line": 52,
         "column": 280
       }
     },
@@ -40529,7 +41063,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/reports/routes.ts#L52",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/reports/routes.ts#L53",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -40543,7 +41077,7 @@
       "replacement": "Keep existing historical report semantics; design separate versioned M2 evidence with units/provenance.",
       "location": {
         "file": "apps/backend/reports/routes.ts",
-        "line": 52,
+        "line": 53,
         "column": 237
       }
     },
@@ -40565,7 +41099,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/reports/routes.ts#L54",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/reports/routes.ts#L55",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -40579,7 +41113,7 @@
       "replacement": "Keep existing historical report semantics; design separate versioned M2 evidence with units/provenance.",
       "location": {
         "file": "apps/backend/reports/routes.ts",
-        "line": 54,
+        "line": 55,
         "column": 66
       }
     },
@@ -40601,7 +41135,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/reports/routes.ts#L66",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/reports/routes.ts#L67",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -40615,7 +41149,7 @@
       "replacement": "Keep existing historical report semantics; design separate versioned M2 evidence with units/provenance.",
       "location": {
         "file": "apps/backend/reports/routes.ts",
-        "line": 66,
+        "line": 67,
         "column": 206
       }
     },
@@ -40637,7 +41171,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/reports/routes.ts#L68",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/reports/routes.ts#L69",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -40651,7 +41185,7 @@
       "replacement": "Keep existing historical report semantics; design separate versioned M2 evidence with units/provenance.",
       "location": {
         "file": "apps/backend/reports/routes.ts",
-        "line": 68,
+        "line": 69,
         "column": 79
       }
     },
@@ -40673,7 +41207,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/reports/routes.ts#L68",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/reports/routes.ts#L69",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -40687,7 +41221,7 @@
       "replacement": "Keep existing historical report semantics; design separate versioned M2 evidence with units/provenance.",
       "location": {
         "file": "apps/backend/reports/routes.ts",
-        "line": 68,
+        "line": 69,
         "column": 82
       }
     },
@@ -40709,7 +41243,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/reports/routes.ts#L68",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/reports/routes.ts#L69",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -40723,7 +41257,7 @@
       "replacement": "Keep existing historical report semantics; design separate versioned M2 evidence with units/provenance.",
       "location": {
         "file": "apps/backend/reports/routes.ts",
-        "line": 68,
+        "line": 69,
         "column": 198
       }
     },
@@ -40745,7 +41279,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/reports/routes.ts#L68",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/reports/routes.ts#L69",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -40759,7 +41293,7 @@
       "replacement": "Keep existing historical report semantics; design separate versioned M2 evidence with units/provenance.",
       "location": {
         "file": "apps/backend/reports/routes.ts",
-        "line": 68,
+        "line": 69,
         "column": 227
       }
     },
@@ -40781,7 +41315,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/reports/routes.ts#L83",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/reports/routes.ts#L84",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -40795,7 +41329,7 @@
       "replacement": "Keep existing historical report semantics; design separate versioned M2 evidence with units/provenance.",
       "location": {
         "file": "apps/backend/reports/routes.ts",
-        "line": 83,
+        "line": 84,
         "column": 69
       }
     },
@@ -40817,7 +41351,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/reports/routes.ts#L84",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/reports/routes.ts#L85",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -40831,7 +41365,7 @@
       "replacement": "Keep existing historical report semantics; design separate versioned M2 evidence with units/provenance.",
       "location": {
         "file": "apps/backend/reports/routes.ts",
-        "line": 84,
+        "line": 85,
         "column": 50
       }
     },
@@ -40853,7 +41387,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/reports/routes.ts#L87",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/reports/routes.ts#L88",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -40867,7 +41401,7 @@
       "replacement": "Keep existing historical report semantics; design separate versioned M2 evidence with units/provenance.",
       "location": {
         "file": "apps/backend/reports/routes.ts",
-        "line": 87,
+        "line": 88,
         "column": 46
       }
     },
@@ -40889,7 +41423,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/reports/routes.ts#L88",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/reports/routes.ts#L89",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -40903,7 +41437,7 @@
       "replacement": "Keep existing historical report semantics; design separate versioned M2 evidence with units/provenance.",
       "location": {
         "file": "apps/backend/reports/routes.ts",
-        "line": 88,
+        "line": 89,
         "column": 78
       }
     },
@@ -40925,7 +41459,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/reports/routes.ts#L89",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/reports/routes.ts#L90",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -40939,7 +41473,7 @@
       "replacement": "Keep existing historical report semantics; design separate versioned M2 evidence with units/provenance.",
       "location": {
         "file": "apps/backend/reports/routes.ts",
-        "line": 89,
+        "line": 90,
         "column": 52
       }
     },
@@ -40961,7 +41495,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/reports/routes.ts#L97",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/reports/routes.ts#L98",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -40975,7 +41509,7 @@
       "replacement": "Keep existing historical report semantics; design separate versioned M2 evidence with units/provenance.",
       "location": {
         "file": "apps/backend/reports/routes.ts",
-        "line": 97,
+        "line": 98,
         "column": 115
       }
     },
@@ -41105,7 +41639,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/reruns/routes.ts#L24",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/reruns/routes.ts#L25",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -41119,7 +41653,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/reruns/routes.ts",
-        "line": 24,
+        "line": 25,
         "column": 56
       }
     },
@@ -41141,7 +41675,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/reruns/routes.ts#L24",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/reruns/routes.ts#L25",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -41155,7 +41689,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/reruns/routes.ts",
-        "line": 24,
+        "line": 25,
         "column": 63
       }
     },
@@ -41177,7 +41711,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/reruns/routes.ts#L25",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/reruns/routes.ts#L26",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -41191,7 +41725,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/reruns/routes.ts",
-        "line": 25,
+        "line": 26,
         "column": 68
       }
     },
@@ -41213,7 +41747,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/reruns/routes.ts#L29",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/reruns/routes.ts#L30",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -41227,12 +41761,48 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/reruns/routes.ts",
-        "line": 29,
+        "line": 30,
         "column": 83
       }
     },
     {
       "id": "m1.apps.backend.reruns.routes.5",
+      "concept": "run.profile · literal 2",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 2,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.reruns.routes.5"
+        ]
+      },
+      "formula": "profile: runInputs.version === 2 ? runInputs.simulationModelVersion : null",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/reruns/routes.ts#L60",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/reruns/routes.ts",
+        "line": 60,
+        "column": 134
+      }
+    },
+    {
+      "id": "m1.apps.backend.reruns.routes.6",
       "concept": "routes.ts · literal 201",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
@@ -41241,7 +41811,7 @@
         "value": 201,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.reruns.routes.5"
+          "m1.apps.backend.reruns.routes.6"
         ]
       },
       "formula": "res.status(201).json({ success: true, createdDeployment: run });",
@@ -41249,7 +41819,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/reruns/routes.ts#L67",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/reruns/routes.ts#L69",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -41263,7 +41833,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/reruns/routes.ts",
-        "line": 67,
+        "line": 69,
         "column": 14
       }
     },
@@ -41285,7 +41855,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/routes/deployment.routes.ts#L33",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/routes/deployment.routes.ts#L35",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -41299,12 +41869,84 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/routes/deployment.routes.ts",
-        "line": 33,
+        "line": 35,
         "column": 14
       }
     },
     {
+      "id": "m1.apps.backend.routes.deployment.routes.2",
+      "concept": "availability.save.countDelta · literal 1",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.routes.deployment.routes.2"
+        ]
+      },
+      "formula": "countDelta: 1",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/routes/deployment.routes.ts#L42",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/routes/deployment.routes.ts",
+        "line": 42,
+        "column": 105
+      }
+    },
+    {
       "id": "m1.apps.backend.routes.infrastructure.routes.1",
+      "concept": "countDelta · literal 1",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.routes.infrastructure.routes.1"
+        ]
+      },
+      "formula": "countDelta: 1",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/routes/infrastructure.routes.ts#L18",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/routes/infrastructure.routes.ts",
+        "line": 18,
+        "column": 105
+      }
+    },
+    {
+      "id": "m1.apps.backend.routes.infrastructure.routes.2",
       "concept": "infrastructure.routes.ts · literal 201",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
@@ -41313,7 +41955,7 @@
         "value": 201,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.routes.infrastructure.routes.1"
+          "m1.apps.backend.routes.infrastructure.routes.2"
         ]
       },
       "formula": "res.status(201).json({ success: true, message: \"The infrastructure created successfully\", createdInfrastructure });",
@@ -41321,7 +41963,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/routes/infrastructure.routes.ts#L25",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/routes/infrastructure.routes.ts#L27",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -41335,43 +41977,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/routes/infrastructure.routes.ts",
-        "line": 25,
-        "column": 14
-      }
-    },
-    {
-      "id": "m1.apps.backend.routes.infrastructure.routes.2",
-      "concept": "infrastructure.routes.ts · literal 200",
-      "modelVersion": "1",
-      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
-      "quantity": {
-        "kind": "known",
-        "value": 200,
-        "unit": "code-number",
-        "provenance": [
-          "m1.apps.backend.routes.infrastructure.routes.2"
-        ]
-      },
-      "formula": "res.status(200).json({ success: true, message: \"Get all infrastructure\", allInfrastructure });",
-      "classification": "implementation-policy",
-      "confidence": "high",
-      "provenance": [
-        {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/routes/infrastructure.routes.ts#L38",
-          "supports": "implementation",
-          "detail": "Exact historical literal and source expression; not external validation."
-        }
-      ],
-      "assumptions": [
-        "This literal is not evidence of real infrastructure capacity or performance.",
-        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
-      ],
-      "researchedOn": "2026-10-15",
-      "freeMode": "conditional",
-      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
-      "location": {
-        "file": "apps/backend/routes/infrastructure.routes.ts",
-        "line": 38,
+        "line": 27,
         "column": 14
       }
     },
@@ -41388,12 +41994,12 @@
           "m1.apps.backend.routes.infrastructure.routes.3"
         ]
       },
-      "formula": "res.status(200).json({ success: true, message: \"The infrastructure successfully fetched\", infrastructure });",
+      "formula": "res.status(200).json({ success: true, message: \"Get all infrastructure\", allInfrastructure });",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/routes/infrastructure.routes.ts#L59",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/routes/infrastructure.routes.ts#L40",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -41407,7 +42013,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/routes/infrastructure.routes.ts",
-        "line": 59,
+        "line": 40,
         "column": 14
       }
     },
@@ -41424,12 +42030,12 @@
           "m1.apps.backend.routes.infrastructure.routes.4"
         ]
       },
-      "formula": "res.status(200).json({ success: true, message: \"Infrastructure successfully updated\", updatedInfrastructure });",
+      "formula": "res.status(200).json({ success: true, message: \"The infrastructure successfully fetched\", infrastructure });",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/routes/infrastructure.routes.ts#L83",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/routes/infrastructure.routes.ts#L61",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -41443,29 +42049,29 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/routes/infrastructure.routes.ts",
-        "line": 83,
+        "line": 61,
         "column": 14
       }
     },
     {
       "id": "m1.apps.backend.routes.infrastructure.routes.5",
-      "concept": "infrastructure.routes.ts · literal 200",
+      "concept": "countDelta · literal 0",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
       "quantity": {
         "kind": "known",
-        "value": 200,
+        "value": 0,
         "unit": "code-number",
         "provenance": [
           "m1.apps.backend.routes.infrastructure.routes.5"
         ]
       },
-      "formula": "return res.status(200).json({ success: true, message: \"Infrastructure deleted successfully!\", deletedInfrastructure });",
+      "formula": "countDelta: 0",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/routes/infrastructure.routes.ts#L106",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/routes/infrastructure.routes.ts#L82",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -41479,8 +42085,8 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/routes/infrastructure.routes.ts",
-        "line": 106,
-        "column": 21
+        "line": 82,
+        "column": 105
       }
     },
     {
@@ -41496,12 +42102,12 @@
           "m1.apps.backend.routes.infrastructure.routes.6"
         ]
       },
-      "formula": "res.status(200).json({ success: true, message: \"Fetched all the deployments related to the provided infrastructure id\", deployments });",
+      "formula": "res.status(200).json({ success: true, message: \"Infrastructure successfully updated\", updatedInfrastructure });",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/routes/infrastructure.routes.ts#L129",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/routes/infrastructure.routes.ts#L87",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -41515,8 +42121,188 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/routes/infrastructure.routes.ts",
-        "line": 129,
+        "line": 87,
         "column": 14
+      }
+    },
+    {
+      "id": "m1.apps.backend.routes.infrastructure.routes.7",
+      "concept": "infrastructure.routes.ts · literal 200",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 200,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.routes.infrastructure.routes.7"
+        ]
+      },
+      "formula": "return res.status(200).json({ success: true, message: \"Infrastructure deleted successfully!\", deletedInfrastructure });",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/routes/infrastructure.routes.ts#L110",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/routes/infrastructure.routes.ts",
+        "line": 110,
+        "column": 21
+      }
+    },
+    {
+      "id": "m1.apps.backend.routes.infrastructure.routes.8",
+      "concept": "infrastructure.routes.ts · literal 200",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 200,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.routes.infrastructure.routes.8"
+        ]
+      },
+      "formula": "res.status(200).json({ success: true, message: \"Fetched all the deployments related to the provided infrastructure id\", deployments });",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/routes/infrastructure.routes.ts#L133",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/routes/infrastructure.routes.ts",
+        "line": 133,
+        "column": 14
+      }
+    },
+    {
+      "id": "m1.apps.backend.runRecords.adapters.1",
+      "concept": "model1RunRecord.engine.version · literal 2",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 2,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.runRecords.adapters.1"
+        ]
+      },
+      "formula": "version: input?.version === 2 ? input.simulationModelVersion : null",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/runRecords/adapters.ts#L16",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/runRecords/adapters.ts",
+        "line": 16,
+        "column": 57
+      }
+    },
+    {
+      "id": "m1.apps.backend.runRecords.adapters.2",
+      "concept": "model2RunRecord.experiment.horizonSeconds · literal 1_000_000",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1000000,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.runRecords.adapters.2"
+        ]
+      },
+      "formula": "horizonSeconds: input ? requireKnown(input.contract.horizon, \"us\") / 1_000_000 : null",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/runRecords/adapters.ts#L31",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/runRecords/adapters.ts",
+        "line": 31,
+        "column": 131
+      }
+    },
+    {
+      "id": "m1.apps.backend.runRecords.schema.1",
+      "concept": "RunRecordSchema.id · literal 1",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.runRecords.schema.1"
+        ]
+      },
+      "formula": "id: z.string().min(1)",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/runRecords/schema.ts#L5",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/runRecords/schema.ts",
+        "line": 5,
+        "column": 68
       }
     },
     {
@@ -42149,7 +42935,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/simulator/simulator.ts#L40",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/simulator/simulator.ts#L42",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -42163,7 +42949,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/simulator/simulator.ts",
-        "line": 40,
+        "line": 42,
         "column": 25
       }
     },
@@ -42185,7 +42971,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/simulator/simulator.ts#L41",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/simulator/simulator.ts#L43",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -42199,7 +42985,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/simulator/simulator.ts",
-        "line": 41,
+        "line": 43,
         "column": 60
       }
     },
@@ -42221,7 +43007,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/simulator/simulator.ts#L41",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/simulator/simulator.ts#L43",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -42235,7 +43021,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/simulator/simulator.ts",
-        "line": 41,
+        "line": 43,
         "column": 87
       }
     },
@@ -42257,7 +43043,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/simulator/simulator.ts#L42",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/simulator/simulator.ts#L44",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -42271,7 +43057,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/simulator/simulator.ts",
-        "line": 42,
+        "line": 44,
         "column": 55
       }
     },
@@ -42293,7 +43079,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/simulator/simulator.ts#L43",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/simulator/simulator.ts#L45",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -42307,7 +43093,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/simulator/simulator.ts",
-        "line": 43,
+        "line": 45,
         "column": 105
       }
     },
@@ -42329,7 +43115,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/simulator/simulator.ts#L44",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/simulator/simulator.ts#L46",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -42343,7 +43129,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/simulator/simulator.ts",
-        "line": 44,
+        "line": 46,
         "column": 94
       }
     },
@@ -42358,42 +43144,6 @@
         "unit": "code-number",
         "provenance": [
           "m1.apps.backend.simulator.simulator.7"
-        ]
-      },
-      "formula": "runtimeTimer = setTimeout(() => { runtimeCycle = cycle(); }, 1000);",
-      "classification": "implementation-policy",
-      "confidence": "high",
-      "provenance": [
-        {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/simulator/simulator.ts#L70",
-          "supports": "implementation",
-          "detail": "Exact historical literal and source expression; not external validation."
-        }
-      ],
-      "assumptions": [
-        "This literal is not evidence of real infrastructure capacity or performance.",
-        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
-      ],
-      "researchedOn": "2026-10-15",
-      "freeMode": "conditional",
-      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
-      "location": {
-        "file": "apps/backend/simulator/simulator.ts",
-        "line": 70,
-        "column": 97
-      }
-    },
-    {
-      "id": "m1.apps.backend.simulator.simulator.8",
-      "concept": "startRuntime · literal 1000",
-      "modelVersion": "1",
-      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
-      "quantity": {
-        "kind": "known",
-        "value": 1000,
-        "unit": "code-number",
-        "provenance": [
-          "m1.apps.backend.simulator.simulator.8"
         ]
       },
       "formula": "runtimeTimer = setTimeout(() => { runtimeCycle = cycle(); }, 1000);",
@@ -42416,6 +43166,42 @@
       "location": {
         "file": "apps/backend/simulator/simulator.ts",
         "line": 72,
+        "column": 97
+      }
+    },
+    {
+      "id": "m1.apps.backend.simulator.simulator.8",
+      "concept": "startRuntime · literal 1000",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1000,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.simulator.simulator.8"
+        ]
+      },
+      "formula": "runtimeTimer = setTimeout(() => { runtimeCycle = cycle(); }, 1000);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/simulator/simulator.ts#L74",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/simulator/simulator.ts",
+        "line": 74,
         "column": 64
       }
     },
@@ -42437,7 +43223,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/simulator/simulator.ts#L118",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/simulator/simulator.ts#L120",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -42451,7 +43237,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/simulator/simulator.ts",
-        "line": 118,
+        "line": 120,
         "column": 90
       }
     },
@@ -42473,7 +43259,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/simulator/simulator.ts#L121",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/simulator/simulator.ts#L123",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -42487,7 +43273,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/simulator/simulator.ts",
-        "line": 121,
+        "line": 123,
         "column": 28
       }
     },
@@ -42509,7 +43295,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/simulator/simulator.ts#L121",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/simulator/simulator.ts#L123",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -42523,7 +43309,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/simulator/simulator.ts",
-        "line": 121,
+        "line": 123,
         "column": 75
       }
     },
@@ -42545,7 +43331,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/simulator/simulator.ts#L125",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/simulator/simulator.ts#L127",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -42559,7 +43345,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/simulator/simulator.ts",
-        "line": 125,
+        "line": 127,
         "column": 29
       }
     },
@@ -53632,7 +54418,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/canvas/components/designer/WorkspaceBar.tsx#L23",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/canvas/components/designer/WorkspaceBar.tsx#L25",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -53646,7 +54432,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/features/canvas/components/designer/WorkspaceBar.tsx",
-        "line": 23,
+        "line": 25,
         "column": 62
       }
     },
@@ -53668,7 +54454,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/canvas/components/designer/WorkspaceBar.tsx#L24",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/canvas/components/designer/WorkspaceBar.tsx#L26",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -53682,7 +54468,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/features/canvas/components/designer/WorkspaceBar.tsx",
-        "line": 24,
+        "line": 26,
         "column": 62
       }
     },
@@ -53704,7 +54490,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/canvas/components/designer/WorkspaceBar.tsx#L27",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/canvas/components/designer/WorkspaceBar.tsx#L29",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -53718,7 +54504,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/features/canvas/components/designer/WorkspaceBar.tsx",
-        "line": 27,
+        "line": 29,
         "column": 62
       }
     },
@@ -53740,7 +54526,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/canvas/components/designer/WorkspaceBar.tsx#L32",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/canvas/components/designer/WorkspaceBar.tsx#L34",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -53754,7 +54540,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/features/canvas/components/designer/WorkspaceBar.tsx",
-        "line": 32,
+        "line": 34,
         "column": 174
       }
     },
@@ -53776,7 +54562,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/canvas/components/designer/WorkspaceBar.tsx#L36",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/canvas/components/designer/WorkspaceBar.tsx#L38",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -53790,7 +54576,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/features/canvas/components/designer/WorkspaceBar.tsx",
-        "line": 36,
+        "line": 38,
         "column": 82
       }
     },
@@ -53805,78 +54591,6 @@
         "unit": "code-number",
         "provenance": [
           "m1.apps.web.src.features.canvas.components.designer.WorkspaceBar.6"
-        ]
-      },
-      "formula": "return ( <header className=\"relative z-30 flex h-14 shrink-0 items-center gap-1 border-b border-line bg-surface px-2 sm:gap-2 sm:px-3\"> <Link to=\"/home\" aria-label=\"InfraForge home\" className=\"inline-flex size-9 shrink-0 items-center justify-center rounded-md text-ink hover:bg-sunken\"><BrandMark size={20} /></Link> <span aria-hidden=\"true\" className=\"h-6 w-px shrink-0 bg-line\" /> <DesignMenu /> {challengeTitle && ( <Tag tone=\"neutral\" className=\"shrink-0 max-md:hidden\" icon={<Lock size={11} aria",
-      "classification": "implementation-policy",
-      "confidence": "high",
-      "provenance": [
-        {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/canvas/components/designer/WorkspaceBar.tsx#L41",
-          "supports": "implementation",
-          "detail": "Exact historical literal and source expression; not external validation."
-        }
-      ],
-      "assumptions": [
-        "This literal is not evidence of real infrastructure capacity or performance.",
-        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
-      ],
-      "researchedOn": "2026-10-15",
-      "freeMode": "conditional",
-      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
-      "location": {
-        "file": "apps/web/src/features/canvas/components/designer/WorkspaceBar.tsx",
-        "line": 41,
-        "column": 62
-      }
-    },
-    {
-      "id": "m1.apps.web.src.features.canvas.components.designer.WorkspaceBar.7",
-      "concept": "WorkspaceBar · literal 16",
-      "modelVersion": "1",
-      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
-      "quantity": {
-        "kind": "known",
-        "value": 16,
-        "unit": "code-number",
-        "provenance": [
-          "m1.apps.web.src.features.canvas.components.designer.WorkspaceBar.7"
-        ]
-      },
-      "formula": "return ( <header className=\"relative z-30 flex h-14 shrink-0 items-center gap-1 border-b border-line bg-surface px-2 sm:gap-2 sm:px-3\"> <Link to=\"/home\" aria-label=\"InfraForge home\" className=\"inline-flex size-9 shrink-0 items-center justify-center rounded-md text-ink hover:bg-sunken\"><BrandMark size={20} /></Link> <span aria-hidden=\"true\" className=\"h-6 w-px shrink-0 bg-line\" /> <DesignMenu /> {challengeTitle && ( <Tag tone=\"neutral\" className=\"shrink-0 max-md:hidden\" icon={<Lock size={11} aria",
-      "classification": "implementation-policy",
-      "confidence": "high",
-      "provenance": [
-        {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/canvas/components/designer/WorkspaceBar.tsx#L42",
-          "supports": "implementation",
-          "detail": "Exact historical literal and source expression; not external validation."
-        }
-      ],
-      "assumptions": [
-        "This literal is not evidence of real infrastructure capacity or performance.",
-        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
-      ],
-      "researchedOn": "2026-10-15",
-      "freeMode": "conditional",
-      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
-      "location": {
-        "file": "apps/web/src/features/canvas/components/designer/WorkspaceBar.tsx",
-        "line": 42,
-        "column": 68
-      }
-    },
-    {
-      "id": "m1.apps.web.src.features.canvas.components.designer.WorkspaceBar.8",
-      "concept": "WorkspaceBar · literal 14",
-      "modelVersion": "1",
-      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
-      "quantity": {
-        "kind": "known",
-        "value": 14,
-        "unit": "code-number",
-        "provenance": [
-          "m1.apps.web.src.features.canvas.components.designer.WorkspaceBar.8"
         ]
       },
       "formula": "return ( <header className=\"relative z-30 flex h-14 shrink-0 items-center gap-1 border-b border-line bg-surface px-2 sm:gap-2 sm:px-3\"> <Link to=\"/home\" aria-label=\"InfraForge home\" className=\"inline-flex size-9 shrink-0 items-center justify-center rounded-md text-ink hover:bg-sunken\"><BrandMark size={20} /></Link> <span aria-hidden=\"true\" className=\"h-6 w-px shrink-0 bg-line\" /> <DesignMenu /> {challengeTitle && ( <Tag tone=\"neutral\" className=\"shrink-0 max-md:hidden\" icon={<Lock size={11} aria",
@@ -53899,6 +54613,78 @@
       "location": {
         "file": "apps/web/src/features/canvas/components/designer/WorkspaceBar.tsx",
         "line": 43,
+        "column": 62
+      }
+    },
+    {
+      "id": "m1.apps.web.src.features.canvas.components.designer.WorkspaceBar.7",
+      "concept": "WorkspaceBar · literal 16",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 16,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.features.canvas.components.designer.WorkspaceBar.7"
+        ]
+      },
+      "formula": "return ( <header className=\"relative z-30 flex h-14 shrink-0 items-center gap-1 border-b border-line bg-surface px-2 sm:gap-2 sm:px-3\"> <Link to=\"/home\" aria-label=\"InfraForge home\" className=\"inline-flex size-9 shrink-0 items-center justify-center rounded-md text-ink hover:bg-sunken\"><BrandMark size={20} /></Link> <span aria-hidden=\"true\" className=\"h-6 w-px shrink-0 bg-line\" /> <DesignMenu /> {challengeTitle && ( <Tag tone=\"neutral\" className=\"shrink-0 max-md:hidden\" icon={<Lock size={11} aria",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/canvas/components/designer/WorkspaceBar.tsx#L44",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/features/canvas/components/designer/WorkspaceBar.tsx",
+        "line": 44,
+        "column": 68
+      }
+    },
+    {
+      "id": "m1.apps.web.src.features.canvas.components.designer.WorkspaceBar.8",
+      "concept": "WorkspaceBar · literal 14",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 14,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.features.canvas.components.designer.WorkspaceBar.8"
+        ]
+      },
+      "formula": "return ( <header className=\"relative z-30 flex h-14 shrink-0 items-center gap-1 border-b border-line bg-surface px-2 sm:gap-2 sm:px-3\"> <Link to=\"/home\" aria-label=\"InfraForge home\" className=\"inline-flex size-9 shrink-0 items-center justify-center rounded-md text-ink hover:bg-sunken\"><BrandMark size={20} /></Link> <span aria-hidden=\"true\" className=\"h-6 w-px shrink-0 bg-line\" /> <DesignMenu /> {challengeTitle && ( <Tag tone=\"neutral\" className=\"shrink-0 max-md:hidden\" icon={<Lock size={11} aria",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/canvas/components/designer/WorkspaceBar.tsx#L45",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/features/canvas/components/designer/WorkspaceBar.tsx",
+        "line": 45,
         "column": 91
       }
     },
@@ -53920,7 +54706,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/canvas/components/designer/WorkspaceBar.tsx#L46",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/canvas/components/designer/WorkspaceBar.tsx#L48",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -53934,7 +54720,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/features/canvas/components/designer/WorkspaceBar.tsx",
-        "line": 46,
+        "line": 48,
         "column": 41
       }
     },
@@ -53956,7 +54742,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/canvas/components/designer/WorkspaceBar.tsx#L46",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/canvas/components/designer/WorkspaceBar.tsx#L48",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -53970,7 +54756,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/features/canvas/components/designer/WorkspaceBar.tsx",
-        "line": 46,
+        "line": 48,
         "column": 81
       }
     },
@@ -61660,7 +62446,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/challenges/components/AttemptDialog.tsx#L25",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/challenges/components/AttemptDialog.tsx#L26",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -61674,7 +62460,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/features/challenges/components/AttemptDialog.tsx",
-        "line": 25,
+        "line": 26,
         "column": 115
       }
     },
@@ -61696,7 +62482,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/challenges/components/AttemptDialog.tsx#L58",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/challenges/components/AttemptDialog.tsx#L61",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -61710,7 +62496,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/features/challenges/components/AttemptDialog.tsx",
-        "line": 58,
+        "line": 61,
         "column": 66
       }
     },
@@ -61732,7 +62518,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/challenges/components/AttemptDialog.tsx#L86",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/challenges/components/AttemptDialog.tsx#L89",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -61746,8 +62532,8 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/features/challenges/components/AttemptDialog.tsx",
-        "line": 86,
-        "column": 151
+        "line": 89,
+        "column": 190
       }
     },
     {
@@ -61768,7 +62554,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/challenges/components/AttemptDialog.tsx#L91",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/challenges/components/AttemptDialog.tsx#L94",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -61782,7 +62568,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/features/challenges/components/AttemptDialog.tsx",
-        "line": 91,
+        "line": 94,
         "column": 124
       }
     },
@@ -61804,7 +62590,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/challenges/components/AttemptDialog.tsx#L114",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/challenges/components/AttemptDialog.tsx#L117",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -61818,7 +62604,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/features/challenges/components/AttemptDialog.tsx",
-        "line": 114,
+        "line": 117,
         "column": 194
       }
     },
@@ -74836,7 +75622,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/reports/components/RerunDialog.tsx#L84",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/reports/components/RerunDialog.tsx#L86",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -74850,7 +75636,7 @@
       "replacement": "Keep existing historical report semantics; design separate versioned M2 evidence with units/provenance.",
       "location": {
         "file": "apps/web/src/features/reports/components/RerunDialog.tsx",
-        "line": 84,
+        "line": 86,
         "column": 108
       }
     },
@@ -74872,7 +75658,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/reports/components/RerunDialog.tsx#L103",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/reports/components/RerunDialog.tsx#L105",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -74886,7 +75672,7 @@
       "replacement": "Keep existing historical report semantics; design separate versioned M2 evidence with units/provenance.",
       "location": {
         "file": "apps/web/src/features/reports/components/RerunDialog.tsx",
-        "line": 103,
+        "line": 105,
         "column": 86
       }
     },

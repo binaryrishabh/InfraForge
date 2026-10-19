@@ -1,6 +1,6 @@
 {
   "schema": "execution-loading-analysis/1",
-  "policy": "4399f4fc8371e51bad11757683958945530306d804d71b150c64f9bb34c0b7bd",
+  "policy": "3353da96ffe23a33c9d6b51a31d60fb64e7120e8c8e0e2180436fe60d9a80551",
   "modules": {
     "apps/backend/actions/contract.ts": {
       "hash": "cb4d5860ab0805ccf009c47e453ed89c12e52e564c95e470a1cfbb23e18fb24d",
@@ -20,8 +20,12 @@
       ]
     },
     "apps/backend/actions/persistence.ts": {
-      "hash": "5e3db86aa7cab4937aee4fd4d0cc168049547372f0c0f3e8d0b9f022ce45ca85",
+      "hash": "9ad2fcce32947759633b93a8a7745e727c5ecaad3d8fa4bcbe87594b6eb8360a",
       "requests": [
+        {
+          "path": "../capabilities/policy",
+          "kind": "import-statement"
+        },
         {
           "path": "../lib/prisma",
           "kind": "import-statement"
@@ -177,6 +181,15 @@
     "apps/backend/auth/settings.ts": {
       "hash": "e28ad7ebc6152f6eb950bc132b17ace681df3e305e8605e20d72aedbadcf69ed",
       "requests": []
+    },
+    "apps/backend/capabilities/policy.ts": {
+      "hash": "d9af0d49ae23895501a4c38535e8bacfc758d96442ea23f476c9e4ab0e8dc2f1",
+      "requests": [
+        {
+          "path": "../utils/errors",
+          "kind": "import-statement"
+        }
+      ]
     },
     "apps/backend/challenges/criteria.ts": {
       "hash": "ee00b07a68f911681b241a81f98153f5d55ae734489db2ee4a7ebce625ba2e0e",
@@ -504,8 +517,12 @@
       ]
     },
     "apps/backend/challenges/improvementRoutes.ts": {
-      "hash": "e6530d3316f1c21b430e16274ac315aab05f7fcb67d541252cf119f2bc4d0442",
+      "hash": "f4473d42616536bdce7bb42fec1cc697fc74d493d5a9e48f25268e455816e46e",
       "requests": [
+        {
+          "path": "../capabilities/policy",
+          "kind": "import-statement"
+        },
         {
           "path": "express",
           "kind": "import-statement"
@@ -633,8 +650,12 @@
       ]
     },
     "apps/backend/challenges/routes.ts": {
-      "hash": "27f09838f2abd8c7fce40ffb91283c382b3ba08f349eb46726e977e5de25d741",
+      "hash": "2f5fc279b36fb2a7b30bd58b8df853e607a025ce8490c3df724c9444606b13e1",
       "requests": [
+        {
+          "path": "../capabilities/policy",
+          "kind": "import-statement"
+        },
         {
           "path": "express",
           "kind": "import-statement"
@@ -1475,8 +1496,12 @@
       ]
     },
     "apps/backend/internalModel2/lessonAuthoring.ts": {
-      "hash": "a294d8b97411810edcf09c95d8b7488381503d452aca26fc89b464a98f08d59e",
+      "hash": "897c5defa910002651327293bc4d0fea6724a31488322fa9af484841e555cd25",
       "requests": [
+        {
+          "path": "../capabilities/policy",
+          "kind": "import-statement"
+        },
         {
           "path": "node:crypto",
           "kind": "import-statement"
@@ -1723,8 +1748,16 @@
       ]
     },
     "apps/backend/internalModel2/routes.ts": {
-      "hash": "8247de5ac2924d5634548819c517415b9cd1db428ebafbafa894273172572466",
+      "hash": "b6d53a55e7d6a5795f10f66f9685f7e02b914a66c1ea6a0c0259e0f6e19c0112",
       "requests": [
+        {
+          "path": "../runRecords/adapters",
+          "kind": "import-statement"
+        },
+        {
+          "path": "../capabilities/policy",
+          "kind": "import-statement"
+        },
         {
           "path": "express",
           "kind": "import-statement"
@@ -1852,8 +1885,12 @@
       ]
     },
     "apps/backend/internalModel2/store.ts": {
-      "hash": "e677a061dafd075295d24cb2c0c08ec241c3cc41ceb066c26067b4f986351a26",
+      "hash": "774c25a0b79814f6474af2ceadf168104f8c2f15c7b77561fab2cb52e086e7ff",
       "requests": [
+        {
+          "path": "../capabilities/policy",
+          "kind": "import-statement"
+        },
         {
           "path": "pg",
           "kind": "import-statement"
@@ -2187,8 +2224,12 @@
       ]
     },
     "apps/backend/reports/routes.ts": {
-      "hash": "5c408ef767b6b96cce88e1dd1314ef81cef58a8b008f42678b81ed38463724e5",
+      "hash": "ec62872773374fdcb582bb95b425cae6e01d60a3788da56d1e026fbad09821b8",
       "requests": [
+        {
+          "path": "../runRecords/adapters",
+          "kind": "import-statement"
+        },
         {
           "path": "express",
           "kind": "import-statement"
@@ -2261,8 +2302,12 @@
       ]
     },
     "apps/backend/reruns/routes.ts": {
-      "hash": "cde19329e22f39d51ed92af1fdcb09adc43687705d114260747c48c6e26eaa76",
+      "hash": "9c17ccce9e94c39865eda309749791b5bb34094d4f5437ed8efad1deca4590a5",
       "requests": [
+        {
+          "path": "../capabilities/policy",
+          "kind": "import-statement"
+        },
         {
           "path": "express",
           "kind": "import-statement"
@@ -2302,8 +2347,12 @@
       ]
     },
     "apps/backend/routes/deployment.routes.ts": {
-      "hash": "dd8d8242171f40b83ed775dd778f5c79c60140b99e3b6e8f0bb82838a7799637",
+      "hash": "6b60afcc28757765daf8e17a7f592a666f67d1b29155efe4182affea32e65d04",
       "requests": [
+        {
+          "path": "../capabilities/policy",
+          "kind": "import-statement"
+        },
         {
           "path": "express",
           "kind": "import-statement"
@@ -2343,8 +2392,12 @@
       ]
     },
     "apps/backend/routes/infrastructure.routes.ts": {
-      "hash": "3d22c2106fc3ec9c200435898fac523bec8bb957a488a8d1b29cb2a2a1e09bf9",
+      "hash": "81b3a654726293f6093c47e410fc4679af6f758acb7f18971d7d9ae662b00f66",
       "requests": [
+        {
+          "path": "../capabilities/policy",
+          "kind": "import-statement"
+        },
         {
           "path": "express",
           "kind": "import-statement"
@@ -2363,6 +2416,44 @@
         },
         {
           "path": "../zod_schemas/infrastructure.schema",
+          "kind": "import-statement"
+        }
+      ]
+    },
+    "apps/backend/runRecords/adapters.ts": {
+      "hash": "bd481b939d21f1a2047a4242b5d1ebf0b9d13236f57a108e69f5ff31056be23a",
+      "requests": [
+        {
+          "path": "../reports/report",
+          "kind": "import-statement"
+        },
+        {
+          "path": "../deployments/runInputs",
+          "kind": "import-statement"
+        },
+        {
+          "path": "../internalModel2/report",
+          "kind": "import-statement"
+        },
+        {
+          "path": "../internalModel2/envelope",
+          "kind": "import-statement"
+        },
+        {
+          "path": "@infraforge/simulation/internal-product",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./schema",
+          "kind": "import-statement"
+        }
+      ]
+    },
+    "apps/backend/runRecords/schema.ts": {
+      "hash": "9c7a1734f95031abbbfab5e8a0e13d98cc2234c7a13af91806daba96c743f37b",
+      "requests": [
+        {
+          "path": "zod",
           "kind": "import-statement"
         }
       ]
@@ -2503,8 +2594,12 @@
       ]
     },
     "apps/backend/simulator/simulator.ts": {
-      "hash": "1bcc89f59a26ad154bf3a51d5e948bd9e674cdaf124ad150391f20eb039533a3",
+      "hash": "0ab9f204190aa6bcc1609f33f26b85fa3949e1de14ea711db4f1eee3e34bf6a0",
       "requests": [
+        {
+          "path": "../capabilities/policy",
+          "kind": "import-statement"
+        },
         {
           "path": "../lib/prisma",
           "kind": "import-statement"
@@ -2953,6 +3048,10 @@
       "hash": "d3b00007417fddaa3f7cd3aef981ec3a34a5bf11dd89d3f2c267ad2d9fa9d8e7",
       "requests": []
     },
+    "packages/contracts/src/deployment/CapabilityAvailability.interface.ts": {
+      "hash": "e5ad284cdf651518904cb50191cfbeabbcde8a7c694ef8e0d6f8a51481260091",
+      "requests": []
+    },
     "packages/contracts/src/deployment/ChaosEvents.interface.ts": {
       "hash": "9dabee479fe2d771e99c5f6ca4df035f6794bcc74a0afb7810d864c80d58524a",
       "requests": []
@@ -2991,7 +3090,7 @@
       "requests": []
     },
     "packages/contracts/src/deployment/index.ts": {
-      "hash": "4da8de8a72774989b505b52126354c823effd5e6c7fc80a49d13bdd62207fead",
+      "hash": "34348b8297738d50348683917271a19f7a37f0661d39169a3f85638a22ff8a8d",
       "requests": [
         {
           "path": "./DEPLOYMENT_STAGES_NAMES.constants",
@@ -3074,7 +3173,7 @@
       "requests": []
     },
     "packages/contracts/src/reports/index.ts": {
-      "hash": "3a7abc56fe6f17f8cc706d215cf553ccbd7b9d5cff64acf260fcefaaaf15fbd4",
+      "hash": "fdd57bd8f4cf443cd764aabed5f99937da5042e3c0c9d336b2c796f91ff6b61c",
       "requests": [
         {
           "path": "./experimentTrace",
@@ -3088,6 +3187,10 @@
     },
     "packages/contracts/src/reports/rerun.ts": {
       "hash": "83b127284ccd121bb524071dde63060a3580fdfb207c2bf402b712c5ce76f141",
+      "requests": []
+    },
+    "packages/contracts/src/reports/runRecord.ts": {
+      "hash": "57569562574fe58dbbeaa8df5a67a4960b72403cb3549300f967e685aa82dc10",
       "requests": []
     },
     "packages/contracts/src/run-inputs/RunInputs.interface.ts": {

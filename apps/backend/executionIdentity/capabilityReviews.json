@@ -42,7 +42,7 @@
     "review": "Fixed data indexing; resource adapters require the separate documented review"
   },
   "apps/backend/challenges/routes.ts": {
-    "hash": "27f09838f2abd8c7fce40ffb91283c382b3ba08f349eb46726e977e5de25d741",
+    "hash": "2f5fc279b36fb2a7b30bd58b8df853e607a025ce8490c3df724c9444606b13e1",
     "capabilities": [
       "computed-data"
     ],
@@ -164,7 +164,7 @@
     }
   },
   "apps/backend/executionIdentity/loading.ts": {
-    "hash": "31597708b9ff5f05f972b3a5236147fcbd19dd3e1e3545d23afdbb68939fa844",
+    "hash": "195ff17f50682afeb8687b807df6107600d1ffd5aa6bb0722d7575291719387b",
     "capabilities": [
       "computed-data",
       "verifier",
@@ -172,7 +172,7 @@
     ],
     "review": "Fixed data indexing; resource adapters require the separate documented review",
     "globals": {
-      "hash": "31597708b9ff5f05f972b3a5236147fcbd19dd3e1e3545d23afdbb68939fa844",
+      "hash": "195ff17f50682afeb8687b807df6107600d1ffd5aa6bb0722d7575291719387b",
       "names": [
         "Bun"
       ]
@@ -194,7 +194,7 @@
     }
   },
   "apps/backend/executionIdentity/transitions.ts": {
-    "hash": "bbd509438d7d4786fddc4c11044bae02003d16b5a8e59de89ce0370597497ad4",
+    "hash": "4e923c61939a89a6fd2af65805a5186ff564cffc589e12c6bdda606661c6633e",
     "capabilities": [
       "computed-data",
       "verifier",
@@ -289,7 +289,7 @@
     }
   },
   "apps/backend/internalModel2/lessonAuthoring.ts": {
-    "hash": "a294d8b97411810edcf09c95d8b7488381503d452aca26fc89b464a98f08d59e",
+    "hash": "897c5defa910002651327293bc4d0fea6724a31488322fa9af484841e555cd25",
     "capabilities": [
       "computed-data"
     ],
@@ -411,7 +411,7 @@
     }
   },
   "apps/backend/reports/routes.ts": {
-    "hash": "5c408ef767b6b96cce88e1dd1314ef81cef58a8b008f42678b81ed38463724e5",
+    "hash": "ec62872773374fdcb582bb95b425cae6e01d60a3788da56d1e026fbad09821b8",
     "capabilities": [
       "computed-data"
     ],

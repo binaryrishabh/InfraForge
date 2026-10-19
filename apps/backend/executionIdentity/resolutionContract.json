@@ -808,7 +808,7 @@
       "owner": "@infraforge/contracts@workspace:packages/contracts:156",
       "file": "src/deployment/index.ts",
       "key": "@infraforge/contracts/src/deployment/index.ts",
-      "hash": "4da8de8a72774989b505b52126354c823effd5e6c7fc80a49d13bdd62207fead"
+      "hash": "34348b8297738d50348683917271a19f7a37f0661d39169a3f85638a22ff8a8d"
     },
     {
       "owner": "@infraforge/contracts@workspace:packages/contracts:156",
@@ -862,7 +862,7 @@
       "owner": "@infraforge/contracts@workspace:packages/contracts:156",
       "file": "src/reports/index.ts",
       "key": "@infraforge/contracts/src/reports/index.ts",
-      "hash": "3a7abc56fe6f17f8cc706d215cf553ccbd7b9d5cff64acf260fcefaaaf15fbd4"
+      "hash": "fdd57bd8f4cf443cd764aabed5f99937da5042e3c0c9d336b2c796f91ff6b61c"
     },
     {
       "owner": "@infraforge/domain@workspace:packages/domain:157",
@@ -44234,6 +44234,22 @@
       "specifier": "express",
       "kind": "import-statement",
       "targetOwner": "express@5.2.1:219",
+      "targetFile": "index.js"
+    },
+    {
+      "owner": null,
+      "file": "apps/backend/runRecords/adapters.ts",
+      "specifier": "@infraforge/simulation/internal-product",
+      "kind": "import-statement",
+      "targetOwner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "targetFile": "src/internalProduct.ts"
+    },
+    {
+      "owner": null,
+      "file": "apps/backend/runRecords/schema.ts",
+      "specifier": "zod",
+      "kind": "import-statement",
+      "targetOwner": "zod@4.4.3:12",
       "targetFile": "index.js"
     },
     {

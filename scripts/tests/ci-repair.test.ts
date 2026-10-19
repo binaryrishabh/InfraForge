@@ -50,7 +50,11 @@ test("reviewed sources reconstruct historical execution without rewriting accept
 test("the frozen Analytics review retains its pins, historical bytes, runtime and inventory", () => {
   const line = legacyLineage();
   const frozen = JSON.parse(frozenHistoryText(lastCommit, "apps/backend/internalModel2/legacyRuntime.json"));
-  expect(contentHash(line)).toBe(contentHash(frozen));
+  // Current-source review moves forward; the frozen scientific lineage does not.
+  expect(line.reviewedExecution).toEqual(frozen.reviewedExecution);
+  expect(line.execution).toEqual(frozen.execution);
+  expect(line.original.map(({ path, hash }) => ({ path, hash }))).toEqual(frozen.original.map(({ path, hash }: { path: string; hash: string }) => ({ path, hash })));
+  for (const pin of line.current) expect(hasher.hash(readFileSync(pin.path, "utf8").replaceAll("\r\n", "\n"))).toBe(pin.hash);
   expect(line.runtime).toBe("bun-1.3.14");
   const review = line.reviewedExecution!;
   expect(review.inventory).toEqual(review.original.map(pin => pin.path));

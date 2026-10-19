@@ -118,6 +118,12 @@ apps/backend/reruns/**
 !apps/backend/actions/
 apps/backend/actions/**
 !apps/backend/actions/*.ts
+!apps/backend/capabilities/
+apps/backend/capabilities/**
+!apps/backend/capabilities/*.ts
+!apps/backend/runRecords/
+apps/backend/runRecords/**
+!apps/backend/runRecords/*.ts
 !apps/backend/challenges/
 apps/backend/challenges/**
 !apps/backend/challenges/*.ts

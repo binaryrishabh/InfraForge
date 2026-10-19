@@ -31,6 +31,8 @@ COPY apps/backend/resources ./apps/backend/resources/
 COPY apps/backend/comparison ./apps/backend/comparison/
 COPY apps/backend/reruns ./apps/backend/reruns/
 COPY apps/backend/actions ./apps/backend/actions/
+COPY apps/backend/capabilities ./apps/backend/capabilities/
+COPY apps/backend/runRecords ./apps/backend/runRecords/
 COPY apps/backend/challenges ./apps/backend/challenges/
 COPY apps/backend/scripts ./apps/backend/scripts/
 COPY apps/backend/lib/prisma.ts ./apps/backend/lib/

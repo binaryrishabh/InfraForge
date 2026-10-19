@@ -1619,15 +1619,23 @@
       "legacyM2gStatus": "MODEL1_ONLY"
     },
     {
-      "id": "control:apps/web/src/features/canvas/components/designer/WorkspaceBar.tsx:Button-a32f4b5ff65d3091ce21:0",
+      "id": "control:apps/web/src/features/canvas/components/designer/WorkspaceBar.tsx:Button-140a821e998d3400c63b:0",
       "source": "apps/web/src/features/canvas/components/designer/WorkspaceBar.tsx",
-      "identity": "Button-a32f4b5ff65d3091ce21",
+      "identity": "Button-140a821e998d3400c63b",
+      "description": "Button: onClick={() => void save()}",
       "kind": "control",
+      "category": "UNREVIEWED",
+      "categoryReason": "Classification requires semantic review; new surfaces fail closed",
+      "ui": {
+        "status": "NOT_APPLICABLE",
+        "behavior": "Unreviewed",
+        "proofs": []
+      },
       "resources": [
         "ALL"
       ],
-      "model1Meaning": "Current published Model-1/product surface: Button: onClick={requestRun} aria-label={challenge ? \"Predict and run\" : undefined}",
-      "model2Owner": "NOT_APPLICABLE",
+      "model1Meaning": "New visible surface requires explicit semantic review",
+      "model2Owner": "UNASSIGNED",
       "changesState": false,
       "effects": {
         "physics": false,
@@ -1637,31 +1645,30 @@
         "evidence": false
       },
       "provenanceRequirements": [
-        "Reviewed promised software action/presentation and a relevant behavior proof; no simulation-physics owner required"
+        "Trace input to state owner and downstream proof; record units/domain for numeric values"
       ],
-      "status": "NOT_APPLICABLE",
+      "status": "UNKNOWN",
       "finalProductEligible": false,
-      "plan": "Prove software behavior through PRODUCT_UI_VALIDITY. No physics owner required.",
-      "description": "Button: onClick={requestRun} aria-label={challenge ? \"Predict and run\" : undefined}",
-      "category": "PRODUCT_UI_ACTION",
-      "categoryReason": "Software interaction or authored presentation; no infrastructure truth claim",
-      "ui": {
-        "status": "REVIEW_REQUIRED",
-        "behavior": "Button: onClick={requestRun} aria-label={challenge ? \"Predict and run\" : undefined}",
-        "proofs": []
-      },
-      "legacyM2gStatus": "MODEL1_ONLY"
+      "plan": "Implement and prove the real mechanism or remove before Model-2 shipping"
     },
     {
-      "id": "control:apps/web/src/features/canvas/components/designer/WorkspaceBar.tsx:Button-c92cf6c254c269cb2f44:0",
+      "id": "control:apps/web/src/features/canvas/components/designer/WorkspaceBar.tsx:Button-9fbe06cf758b304c6d3a:0",
       "source": "apps/web/src/features/canvas/components/designer/WorkspaceBar.tsx",
-      "identity": "Button-c92cf6c254c269cb2f44",
+      "identity": "Button-9fbe06cf758b304c6d3a",
+      "description": "Button: onClick={requestRun} aria-label={challenge ? \"Predict and run\" : undefined}",
       "kind": "control",
+      "category": "UNREVIEWED",
+      "categoryReason": "Classification requires semantic review; new surfaces fail closed",
+      "ui": {
+        "status": "NOT_APPLICABLE",
+        "behavior": "Unreviewed",
+        "proofs": []
+      },
       "resources": [
         "ALL"
       ],
-      "model1Meaning": "Current published Model-1/product surface: Button: onClick={() => void save()}",
-      "model2Owner": "NOT_APPLICABLE",
+      "model1Meaning": "New visible surface requires explicit semantic review",
+      "model2Owner": "UNASSIGNED",
       "changesState": false,
       "effects": {
         "physics": false,
@@ -1671,20 +1678,11 @@
         "evidence": false
       },
       "provenanceRequirements": [
-        "Reviewed promised software action/presentation and a relevant behavior proof; no simulation-physics owner required"
+        "Trace input to state owner and downstream proof; record units/domain for numeric values"
       ],
-      "status": "NOT_APPLICABLE",
+      "status": "UNKNOWN",
       "finalProductEligible": false,
-      "plan": "Prove software behavior through PRODUCT_UI_VALIDITY. No physics owner required.",
-      "description": "Button: onClick={() => void save()}",
-      "category": "PRODUCT_UI_ACTION",
-      "categoryReason": "Software interaction or authored presentation; no infrastructure truth claim",
-      "ui": {
-        "status": "REVIEW_REQUIRED",
-        "behavior": "Button: onClick={() => void save()}",
-        "proofs": []
-      },
-      "legacyM2gStatus": "MODEL1_ONLY"
+      "plan": "Implement and prove the real mechanism or remove before Model-2 shipping"
     },
     {
       "id": "control:apps/web/src/features/canvas/components/designer/WorkspaceBar.tsx:IconButton-9b885adfead71fc7da25:0",
@@ -2781,15 +2779,23 @@
       "legacyM2gStatus": "MODEL1_ONLY"
     },
     {
-      "id": "control:apps/web/src/features/challenges/components/AttemptDialog.tsx:Button-a6f41c50bee216f106c5:0",
+      "id": "control:apps/web/src/features/challenges/components/AttemptDialog.tsx:Button-e463c2d978c08e935aaa:0",
       "source": "apps/web/src/features/challenges/components/AttemptDialog.tsx",
-      "identity": "Button-a6f41c50bee216f106c5",
+      "identity": "Button-e463c2d978c08e935aaa",
+      "description": "Button: <Button type=\"submit\" form=\"attempt-form\" variant=\"primary\" loading={busy} disabled={!answered || !valid || !reviewedReady || availability?.run.allowed === false} icon={<Lock size={14} aria-hidden=\"true\" />}>Lock prediction and run</Button>",
       "kind": "control",
+      "category": "UNREVIEWED",
+      "categoryReason": "Classification requires semantic review; new surfaces fail closed",
+      "ui": {
+        "status": "NOT_APPLICABLE",
+        "behavior": "Unreviewed",
+        "proofs": []
+      },
       "resources": [
         "ALL"
       ],
-      "model1Meaning": "Current published Model-1/product surface: Button: <Button type=\"submit\" form=\"attempt-form\" variant=\"primary\" loading={busy} disabled={!answered || !valid || !reviewedReady} icon={<Lock size={14} aria-hidden=\"true\" />}>Lock prediction and run</Button>",
-      "model2Owner": "NOT_APPLICABLE",
+      "model1Meaning": "New visible surface requires explicit semantic review",
+      "model2Owner": "UNASSIGNED",
       "changesState": false,
       "effects": {
         "physics": false,
@@ -2799,20 +2805,11 @@
         "evidence": false
       },
       "provenanceRequirements": [
-        "Reviewed promised software action/presentation and a relevant behavior proof; no simulation-physics owner required"
+        "Trace input to state owner and downstream proof; record units/domain for numeric values"
       ],
-      "status": "NOT_APPLICABLE",
+      "status": "UNKNOWN",
       "finalProductEligible": false,
-      "plan": "Prove software behavior through PRODUCT_UI_VALIDITY. No physics owner required.",
-      "description": "Button: <Button type=\"submit\" form=\"attempt-form\" variant=\"primary\" loading={busy} disabled={!answered || !valid || !reviewedReady} icon={<Lock size={14} aria-hidden=\"true\" />}>Lock prediction and run</Button>",
-      "category": "PRODUCT_UI_ACTION",
-      "categoryReason": "Software interaction or authored presentation; no infrastructure truth claim",
-      "ui": {
-        "status": "REVIEW_REQUIRED",
-        "behavior": "Button: <Button type=\"submit\" form=\"attempt-form\" variant=\"primary\" loading={busy} disabled={!answered || !valid || !reviewedReady} icon={<Lock size={14} aria-hidden=\"true\" />}>Lock prediction and run</Button>",
-        "proofs": []
-      },
-      "legacyM2gStatus": "MODEL1_ONLY"
+      "plan": "Implement and prove the real mechanism or remove before Model-2 shipping"
     },
     {
       "id": "control:apps/web/src/features/challenges/components/AttemptDialog.tsx:Button-fc08cb8f88b2544d2640:0",
@@ -2849,15 +2846,23 @@
       "legacyM2gStatus": "MODEL1_ONLY"
     },
     {
-      "id": "control:apps/web/src/features/challenges/components/AttemptDialog.tsx:Dialog-d99a89bc7bbbb42bc9a1:0",
+      "id": "control:apps/web/src/features/challenges/components/AttemptDialog.tsx:Dialog-6c1ac18ecb05ceaaa140:0",
       "source": "apps/web/src/features/challenges/components/AttemptDialog.tsx",
-      "identity": "Dialog-d99a89bc7bbbb42bc9a1",
+      "identity": "Dialog-6c1ac18ecb05ceaaa140",
+      "description": "Dialog: onOpenChange={onOpenChange}",
       "kind": "control",
+      "category": "UNREVIEWED",
+      "categoryReason": "Classification requires semantic review; new surfaces fail closed",
+      "ui": {
+        "status": "NOT_APPLICABLE",
+        "behavior": "Unreviewed",
+        "proofs": []
+      },
       "resources": [
         "ALL"
       ],
-      "model1Meaning": "Current published Model-1/product surface: Dialog: onOpenChange={onOpenChange}",
-      "model2Owner": "NOT_APPLICABLE",
+      "model1Meaning": "New visible surface requires explicit semantic review",
+      "model2Owner": "UNASSIGNED",
       "changesState": false,
       "effects": {
         "physics": false,
@@ -2867,20 +2872,11 @@
         "evidence": false
       },
       "provenanceRequirements": [
-        "Reviewed promised software action/presentation and a relevant behavior proof; no simulation-physics owner required"
+        "Trace input to state owner and downstream proof; record units/domain for numeric values"
       ],
-      "status": "NOT_APPLICABLE",
+      "status": "UNKNOWN",
       "finalProductEligible": false,
-      "plan": "Prove software behavior through PRODUCT_UI_VALIDITY. No physics owner required.",
-      "description": "Dialog: onOpenChange={onOpenChange}",
-      "category": "PRODUCT_UI_ACTION",
-      "categoryReason": "Software interaction or authored presentation; no infrastructure truth claim",
-      "ui": {
-        "status": "REVIEW_REQUIRED",
-        "behavior": "Dialog: onOpenChange={onOpenChange}",
-        "proofs": []
-      },
-      "legacyM2gStatus": "MODEL1_ONLY"
+      "plan": "Implement and prove the real mechanism or remove before Model-2 shipping"
     },
     {
       "id": "control:apps/web/src/features/challenges/components/AttemptDialog.tsx:ImprovementReview-75bbcaff8d703a8c0a0c:0",
@@ -9329,15 +9325,23 @@
       "legacyM2gStatus": "MODEL1_ONLY"
     },
     {
-      "id": "control:apps/web/src/features/reports/components/RerunDialog.tsx:form-473cc7de26e19f05cce3:0",
+      "id": "control:apps/web/src/features/reports/components/RerunDialog.tsx:form-76214d2e8af07dda9801:0",
       "source": "apps/web/src/features/reports/components/RerunDialog.tsx",
-      "identity": "form-473cc7de26e19f05cce3",
+      "identity": "form-76214d2e8af07dda9801",
+      "description": "form: onSubmit={async (event) => {\n      event.preventDefault(); if (busy) return;\n      setBusy(true); onBusy(true); setError(null);\n      const owner = useAuthStore.getState().user?.id;\n      try {\n        const run = await createRerun(id, mode, matched, mode === \"current-design\" ? options.currentDesign.inputHash ?? undefined : undefined);\n        if (!mounted.current || !owner || useAuthStore.getState().user?.id !== owner) return;\n        if (!run.liveTopology) throw new Error(\"No captured topology\");\n        const store = useCanvasStore.getState();\n        store.loadRunTopology(run.id, run.liveTopology, run.topologyRevision, run.infrastructureId, run.runName);\n        store.setIsDeploying(true); store.setLiveLocked(false);\n        // A rerun is always a freeform run, even when its sour",
       "kind": "control",
+      "category": "UNREVIEWED",
+      "categoryReason": "Classification requires semantic review; new surfaces fail closed",
+      "ui": {
+        "status": "NOT_APPLICABLE",
+        "behavior": "Unreviewed",
+        "proofs": []
+      },
       "resources": [
         "ALL"
       ],
-      "model1Meaning": "Current published Model-1/product surface: form: onSubmit={async (event) => {\r\n      event.preventDefault(); if (busy) return;\r\n      setBusy(true); onBusy(true); setError(null);\r\n      const owner = useAuthStore.getState().user?.id;\r\n      try {\r\n        const run = await createRerun(id, mode, matched, mode === \"current-design\" ? options.currentDesign.inputHash ?? undefined : undefined);\r\n        if (!mounted.current || !owner || useAuthStore.getState().user?.id !== owner) return;\r\n        if (!run.liveTopology) throw new Error(\"No captured topology\");\r\n        const store = useCanvasStore.getState();\r\n        store.loadRunTopology(run.id, run.liveTopology, run.topologyRevision, run.infrastructureId, run.runName);\r\n        store.setIsDeploying(true); store.setLiveLocked(false);\r\n        // A rerun is always a freeform run, even wh",
-      "model2Owner": "NOT_APPLICABLE",
+      "model1Meaning": "New visible surface requires explicit semantic review",
+      "model2Owner": "UNASSIGNED",
       "changesState": false,
       "effects": {
         "physics": false,
@@ -9347,20 +9351,11 @@
         "evidence": false
       },
       "provenanceRequirements": [
-        "Reviewed promised software action/presentation and a relevant behavior proof; no simulation-physics owner required"
+        "Trace input to state owner and downstream proof; record units/domain for numeric values"
       ],
-      "status": "NOT_APPLICABLE",
+      "status": "UNKNOWN",
       "finalProductEligible": false,
-      "plan": "Prove software behavior through PRODUCT_UI_VALIDITY. No physics owner required.",
-      "description": "form: onSubmit={async (event) => {\r\n      event.preventDefault(); if (busy) return;\r\n      setBusy(true); onBusy(true); setError(null);\r\n      const owner = useAuthStore.getState().user?.id;\r\n      try {\r\n        const run = await createRerun(id, mode, matched, mode === \"current-design\" ? options.currentDesign.inputHash ?? undefined : undefined);\r\n        if (!mounted.current || !owner || useAuthStore.getState().user?.id !== owner) return;\r\n        if (!run.liveTopology) throw new Error(\"No captured topology\");\r\n        const store = useCanvasStore.getState();\r\n        store.loadRunTopology(run.id, run.liveTopology, run.topologyRevision, run.infrastructureId, run.runName);\r\n        store.setIsDeploying(true); store.setLiveLocked(false);\r\n        // A rerun is always a freeform run, even wh",
-      "category": "PRODUCT_UI_ACTION",
-      "categoryReason": "Software interaction or authored presentation; no infrastructure truth claim",
-      "ui": {
-        "status": "REVIEW_REQUIRED",
-        "behavior": "form: onSubmit={async (event) => {\r\n      event.preventDefault(); if (busy) return;\r\n      setBusy(true); onBusy(true); setError(null);\r\n      const owner = useAuthStore.getState().user?.id;\r\n      try {\r\n        const run = await createRerun(id, mode, matched, mode === \"current-design\" ? options.currentDesign.inputHash ?? undefined : undefined);\r\n        if (!mounted.current || !owner || useAuthStore.getState().user?.id !== owner) return;\r\n        if (!run.liveTopology) throw new Error(\"No captured topology\");\r\n        const store = useCanvasStore.getState();\r\n        store.loadRunTopology(run.id, run.liveTopology, run.topologyRevision, run.infrastructureId, run.runName);\r\n        store.setIsDeploying(true); store.setLiveLocked(false);\r\n        // A rerun is always a freeform run, even wh",
-        "proofs": []
-      },
-      "legacyM2gStatus": "MODEL1_ONLY"
+      "plan": "Implement and prove the real mechanism or remove before Model-2 shipping"
     },
     {
       "id": "control:apps/web/src/features/reports/components/RerunDialog.tsx:input-875b2fa901feca82d99a:0",

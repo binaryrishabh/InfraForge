@@ -1731,7 +1731,239 @@
           "anchor": "export function qualifyConnected"
         }
       ]
+    },
+    {
+      "id": "SavedLayout",
+      "fields": [
+        "SavedLayout.resources",
+        "SavedLayout.connectionLines",
+        "SavedLayout.layoutVersion"
+      ],
+      "mechanism": "Versioned saved canvas shape, with graph bindings independent of layout coordinates.",
+      "model1": "supported-logical",
+      "model2": "supported-logical",
+      "scope": "Storage metadata only; arbitrary catchall fields remain unsupported and do not become engine settings.",
+      "sources": [
+        {
+          "file": "apps/backend/zod_schemas/layout.schema.ts",
+          "anchor": "export const LayoutSchema"
+        }
+      ]
+    },
+    {
+      "id": "Estimate",
+      "fields": [
+        "Estimate.amount",
+        "Estimate.currency",
+        "Estimate.kind",
+        "Estimate.provenance",
+        "Estimate.reason",
+        "Estimate.rule",
+        "Estimate.usage"
+      ],
+      "mechanism": "Exact rational tariff arithmetic over explicitly covered usage; missing/mixed/duplicate components produce Unknown.",
+      "model1": "unsupported",
+      "model2": "assumption-only",
+      "scope": "Label a selected supported compute subtotal with its tariff scope and exclusions. It is conditional on observed-model/authored usage, not an externally reconciled bill. Full-stack cost stays Unknown until every component reconciles. Connected admission currently excludes provider bindings.",
+      "sources": [
+        {
+          "file": "packages/simulation/src/reality/provider/pricing.ts",
+          "anchor": "export function sumEstimates"
+        },
+        {
+          "file": "docs/reality/m2i-provider-foundation.md",
+          "anchor": "#"
+        }
+      ]
+    },
+    {
+      "id": "Usage",
+      "fields": [
+        "Usage.basis",
+        "Usage.fromUs",
+        "Usage.id",
+        "Usage.meter",
+        "Usage.provenance",
+        "Usage.quantity",
+        "Usage.resource",
+        "Usage.scope",
+        "Usage.toUs"
+      ],
+      "mechanism": "Observed-model/authored/derived usage with explicit meter, interval, scope and provenance.",
+      "model1": "unsupported",
+      "model2": "supported-logical",
+      "scope": "Software usage accounting is not provider billing. Byte-us and instance-us retain units; absent meters remain Unknown.",
+      "sources": [
+        {
+          "file": "packages/simulation/src/reality/provider/contracts.ts",
+          "anchor": "export interface Usage"
+        },
+        {
+          "file": "docs/reality/m2j-usage-evidence.md",
+          "anchor": "#"
+        }
+      ]
+    },
+    {
+      "id": "ConnectedOutput",
+      "fields": [
+        "ConnectedOutput.active",
+        "ConnectedOutput.admitted",
+        "ConnectedOutput.atUs",
+        "ConnectedOutput.cancelled",
+        "ConnectedOutput.checkpoints",
+        "ConnectedOutput.completed",
+        "ConnectedOutput.completeness",
+        "ConnectedOutput.completeness.callerOmitted",
+        "ConnectedOutput.completeness.causalOmitted",
+        "ConnectedOutput.completeness.exactCausality",
+        "ConnectedOutput.completeness.throughUs",
+        "ConnectedOutput.connected",
+        "ConnectedOutput.connected.database",
+        "ConnectedOutput.connected.database.id",
+        "ConnectedOutput.connected.database.logicalReads",
+        "ConnectedOutput.connected.database.logicalWrites",
+        "ConnectedOutput.connected.database.queued",
+        "ConnectedOutput.connected.database.sessions",
+        "ConnectedOutput.connected.database.transactions",
+        "ConnectedOutput.connected.resources",
+        "ConnectedOutput.connected.routing",
+        "ConnectedOutput.consumedCoreUs",
+        "ConnectedOutput.counts",
+        "ConnectedOutput.cpu",
+        "ConnectedOutput.durableAcknowledgedCommits",
+        "ConnectedOutput.endpoints",
+        "ConnectedOutput.failed",
+        "ConnectedOutput.fingerprint",
+        "ConnectedOutput.generatedLogBytes",
+        "ConnectedOutput.id",
+        "ConnectedOutput.input",
+        "ConnectedOutput.locks",
+        "ConnectedOutput.logicalReads",
+        "ConnectedOutput.logicalWrites",
+        "ConnectedOutput.memory",
+        "ConnectedOutput.model",
+        "ConnectedOutput.model.callers",
+        "ConnectedOutput.model.callers.byOperation",
+        "ConnectedOutput.model.callers.inFlight",
+        "ConnectedOutput.model.callers.inFlightOmitted",
+        "ConnectedOutput.model.callers.results",
+        "ConnectedOutput.model.callers.retention",
+        "ConnectedOutput.model.capture",
+        "ConnectedOutput.model.causal",
+        "ConnectedOutput.model.counts",
+        "ConnectedOutput.model.database",
+        "ConnectedOutput.model.endpoints",
+        "ConnectedOutput.model.faults",
+        "ConnectedOutput.model.network",
+        "ConnectedOutput.model.network.links",
+        "ConnectedOutput.model.network.paths",
+        "ConnectedOutput.model.resources",
+        "ConnectedOutput.model.routing",
+        "ConnectedOutput.objects",
+        "ConnectedOutput.presentation",
+        "ConnectedOutput.queries",
+        "ConnectedOutput.queryClasses",
+        "ConnectedOutput.queued",
+        "ConnectedOutput.reasons",
+        "ConnectedOutput.received",
+        "ConnectedOutput.rejected",
+        "ConnectedOutput.rows",
+        "ConnectedOutput.schema",
+        "ConnectedOutput.sequence",
+        "ConnectedOutput.serving",
+        "ConnectedOutput.sessions",
+        "ConnectedOutput.source",
+        "ConnectedOutput.statements",
+        "ConnectedOutput.throughUs",
+        "ConnectedOutput.transactions",
+        "ConnectedOutput.usage",
+        "ConnectedOutput.waiters",
+        "ConnectedOutput.waiting",
+        "ConnectedOutput.workers"
+      ],
+      "mechanism": "Actual retained connected evidence projection: callers, resource queues/core-time, LB health/routing, keyed transactions, paths, journal and completeness.",
+      "model1": "unsupported",
+      "model2": "supported-logical",
+      "scope": "Observed means simulated state, never real telemetry. Retention omission and horizon censoring keep causal certainty Unknown; logical log acknowledgement is not physical durability. No missing state becomes zero.",
+      "sources": [
+        {
+          "file": "apps/backend/internalModel2/captureV2.ts",
+          "anchor": "export function captureV2"
+        },
+        {
+          "file": "apps/backend/internalModel2/report.ts",
+          "anchor": "export function internalReport"
+        }
+      ]
+    },
+    {
+      "id": "Model2Metric",
+      "fields": [
+        "Model2Metric.*.*.eligible",
+        "Model2Metric.*.*.selected",
+        "Model2Metric.*.aborted",
+        "Model2Metric.*.allocatedEntryBytes",
+        "Model2Metric.*.cancelled",
+        "Model2Metric.*.committed",
+        "Model2Metric.*.cpu",
+        "Model2Metric.*.cpuConsumed",
+        "Model2Metric.*.hits",
+        "Model2Metric.*.inFlight",
+        "Model2Metric.*.live",
+        "Model2Metric.*.logicalReads",
+        "Model2Metric.*.logicalWrites",
+        "Model2Metric.*.memory",
+        "Model2Metric.*.misses",
+        "Model2Metric.*.queued",
+        "Model2Metric.*.sessions",
+        "Model2Metric.caller.admitted",
+        "Model2Metric.caller.completed",
+        "Model2Metric.caller.deadlineExceeded",
+        "Model2Metric.caller.inFlight",
+        "Model2Metric.caller.offered",
+        "Model2Metric.caller.rejected"
+      ],
+      "mechanism": "Presentation of modeled queue/CPU/memory, caller outcomes, LB selection/eligibility, DB transactions and optional keyed-cache counters.",
+      "model1": "unsupported",
+      "model2": "supported-logical",
+      "scope": "CPU is an interpreted retained-interval core-time ratio; complete memory requires identified modeled ownership. Caller timeout differs from remote completion. Cache counters are module-only; connected admission excludes cache. No calibrated throughput/latency claim.",
+      "sources": [
+        {
+          "file": "packages/simulation/src/model2/product/presentation.ts",
+          "anchor": "export function presentModel2"
+        },
+        {
+          "file": "apps/backend/internalModel2/connectedPresentation.ts",
+          "anchor": "export function connectedPresentation"
+        }
+      ]
+    },
+    {
+      "id": "ExcludedModel2Metric",
+      "fields": [
+        "Model2Metric.*.*.freshness",
+        "Model2Metric.*.cachedAnswers",
+        "Model2Metric.*.desired",
+        "Model2Metric.*.inService",
+        "Model2Metric.*.originRequests",
+        "Model2Metric.*.ready",
+        "Model2Metric.cost.total"
+      ],
+      "mechanism": "Unknown full cost and low-level breadth outside the admitted first connected stack.",
+      "model1": "unsupported",
+      "model2": "unsupported",
+      "scope": "cost.total explicitly stays Unknown. DNS/CDN/monitor/controller/broker outputs do not imply first-stack availability or a complete bill.",
+      "sources": [
+        {
+          "file": "packages/simulation/src/model2/product/presentation.ts",
+          "anchor": "export function presentModel2"
+        },
+        {
+          "file": "apps/backend/internalModel2/connectedScope.ts",
+          "anchor": "export function qualifyConnected"
+        }
+      ]
     }
   ]
 }
-

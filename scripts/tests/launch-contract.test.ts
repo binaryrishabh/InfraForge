@@ -16,6 +16,23 @@ test("new exposed settings fail until explicitly reviewed, including nested fiel
   expect(validateLaunchClaims(readManifest(), fields)).toContain("Exposed field has no claim: Resource.newControl");
   expect(validateLaunchClaims(readManifest(), fields)).toContain("Exposed field has no claim: Resource.newControl.demand");
 });
+test("server-only saved settings cannot hide behind catchall JSON", () => {
+  const fields = exposedFields(file => {
+    const text = readFileSync(resolve(root, file), "utf8");
+    return file.endsWith("layout.schema.ts") ? text.replace("skuId: z.string()", "serverOnly: z.number(), skuId: z.string()") : text;
+  });
+  expect(validateLaunchClaims(readManifest(), fields)).toContain("Exposed field has no claim: Resource.serverOnly");
+});
+test("new runtime-built metric and raw evidence outputs also require claims", () => {
+  const fields = exposedFields(file => {
+    let text = readFileSync(resolve(root, file), "utf8");
+    if (file.endsWith("connectedPresentation.ts")) text = text.replace('["offered",', '["unreviewedMetric", "offered",');
+    if (file.endsWith("captureV2.ts")) text = text.replace("input: e.fingerprint", "unreviewedOutput: true, input: e.fingerprint");
+    return text;
+  });
+  expect(validateLaunchClaims(readManifest(), fields)).toContain("Exposed field has no claim: Model2Metric.caller.unreviewedMetric");
+  expect(validateLaunchClaims(readManifest(), fields)).toContain("Exposed field has no claim: ConnectedOutput.unreviewedOutput");
+});
 test("missing, duplicate, stale and incomplete claims are rejected", () => {
   const missing = readManifest(); missing.claims[0]!.fields.pop();
   expect(validateLaunchClaims(missing).some(e => e.includes("no claim"))).toBe(true);

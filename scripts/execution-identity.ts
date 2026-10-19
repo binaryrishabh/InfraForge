@@ -1,3 +1,5 @@
+import { reviewStage0Syntax, refreshStage0Transitions } from "./stage0-identity";
+import { historicalAnalysisDescriptor } from "./historical-analysis-descriptor";
 import { execFileSync, spawnSync } from "node:child_process";
 import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
@@ -46,7 +48,7 @@ export function checkLoadingAnalysis(write = false) {
   } else if (JSON.stringify(contract) !== JSON.stringify(readLoadingAnalysis())) throw Error("Reviewed loading analysis changed");
   return { analysedModules: Object.keys(contract.modules).length };
 }
-function gitTree(commit: string): SourceTree {
+export function gitTree(commit: string): SourceTree {
   const paths = git(["ls-tree", "-r", "--name-only", commit]).trim().split("\n").filter(path =>
     (path === ".dockerignore" || !path.split("/").some(part => part.startsWith(".") || ["tests", "generated", "node_modules"].includes(part))) &&
     (path.startsWith("apps/backend/") || path.startsWith("packages/") || ["package.json", "bun.lock", "bunfig.toml", "tsconfig.base.json", "apps/web/package.json", ".dockerignore"].includes(path)));
@@ -151,7 +153,7 @@ export function checkTransitions(root = repositoryRoot, read?: (path: string) =>
     const tree: SourceTree = { paths: Object.keys(files), read: path => {
       const text = history.blobs[files[path]!]; if (text === undefined) throw Error(`Missing snapshot source: ${path}`); return text;
     } };
-    if (digest((row.algorithm === "launch-boundary/1" ? historicalLaunchDescriptor : row.algorithm === "import-boundary/1" ? historicalImportDescriptor : row.algorithm === "host-boundary/1" ? historicalHostDescriptor : row.commit.startsWith("2da5b74") ? verifiedHistoricalDescriptor : historicalDescriptor)(tree, table.descriptors[row.descriptor]!.runtime)) !== row.descriptor) throw Error("Historical closure does not reconstruct");
+    if (digest((row.algorithm === "analysis-boundary/1" ? historicalAnalysisDescriptor : row.algorithm === "launch-boundary/1" ? historicalLaunchDescriptor : row.algorithm === "import-boundary/1" ? historicalImportDescriptor : row.algorithm === "host-boundary/1" ? historicalHostDescriptor : row.commit.startsWith("2da5b74") ? verifiedHistoricalDescriptor : historicalDescriptor)(tree, table.descriptors[row.descriptor]!.runtime)) !== row.descriptor) throw Error("Historical closure does not reconstruct");
     let source: string;
     if (row.kind === "descriptor") source = row.descriptor;
     else if (row.source.startsWith("bac35c99")) {
@@ -166,7 +168,9 @@ export function checkTransitions(root = repositoryRoot, read?: (path: string) =>
   return { schema: descriptor.schema, current, historicalEntries: table.entries.length, packages: descriptor.dependencies.packages.length };
 }
 if (import.meta.main) {
-  if (process.argv.includes("--build-analysis")) console.info(JSON.stringify(checkLoadingAnalysis(true)));
+  if (process.argv.includes("--review-stage0-syntax")) reviewStage0Syntax();
+  else if (process.argv.includes("--review-stage0-transitions")) refreshStage0Transitions();
+  else if (process.argv.includes("--build-analysis")) console.info(JSON.stringify(checkLoadingAnalysis(true)));
   else if (process.argv.includes("--build-transitions")) buildTransitions();
   else if (process.argv.includes("--check")) console.info(JSON.stringify({ ...checkLoadingAnalysis(), ...checkTransitions() }));
   else console.info(digest(executionDescriptor(diskTree())));
