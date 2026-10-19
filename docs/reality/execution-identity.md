@@ -233,3 +233,17 @@ computed-data review alone does not grant host globals. Generated and resolver
 exceptions retain their existing exact-byte reviews. Row 29 preserves committed
 b0438907 (f8e7c33) with the frozen launch-boundary algorithm; engine, host
 implementation and dependency bytes remain unchanged.
+
+CI source verification requires Prisma generation after the frozen install. The
+checker never imports application modules: diskTree resolves their literal imports
+and reads the actual generated runtime as part of the hashed closure. Substituting
+expected generated hashes when output is absent would omit verification of the
+build's output. CI therefore generates first, then runs both identity checks.
+
+Source hashes use sourceHash (LF normalization); canonical data, resource bytes
+and frozen historical algorithms keep their separate byte/content contracts.
+Authored review, importer, descriptor and installed-module checks share this source
+rule. The bounded lesson-host enforcement fixture is distinct from the integration
+containment fixture and has its own exact alternative review; changing either
+fixture still fails closed. Row 30 retains the committed 435856da descriptor from
+91654e8 using the frozen launch-boundary reconstruction.

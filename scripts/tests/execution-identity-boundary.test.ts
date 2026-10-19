@@ -1,9 +1,10 @@
 import { expect, test } from "bun:test";
 import { executionDescriptor, diskTree, repositoryRoot } from "../../apps/backend/executionIdentity/descriptor";
-import { digest } from "../../apps/backend/executionIdentity/hash";
+import { digest, sourceHash, sha256 } from "../../apps/backend/executionIdentity/hash";
 import { verifyModuleLoading, verifyInstalledModuleLoading } from "../../apps/backend/executionIdentity/loading";
 import { parseLock } from "../../apps/backend/executionIdentity/dependencies";
 import { fixture } from "../../apps/backend/tests/integration/lessonSandboxChecks";
+import { fixture as hostFixture } from "../lesson-host/fixture";
 import { retireInternalRuns } from "../../apps/backend/internalModel2/execution";
 import { verifyResolutionSelections } from "../../apps/backend/executionIdentity/installed";
 import { resolve } from "node:path";
@@ -151,9 +152,28 @@ test("Three changes and ordinary web edits stay identity-neutral", () => {
 
 test("the immutable containment probe has an exact review, not a child-path exemption", () => {
   const path = "apps/backend/internalModel2/sandboxChild.ts";
-  expect(digest(changed({ [path]: fixture }))).not.toBe(digest(original));
-  expect(() => changed({ [path]: fixture + "\n// probe edit\n" })).toThrow("dynamic execution loader");
+  for (const source of [fixture, hostFixture]) {
+    expect(digest(changed({ [path]: source }))).not.toBe(digest(original));
+    expect(digest(changed({ [path]: source.replaceAll("\n", "\r\n") }))).toBe(digest(changed({ [path]: source })));
+    expect(() => changed({ [path]: source + "\n// probe edit\n" })).toThrow("dynamic execution loader");
+  }
 }, 120000);
+
+test("source reviews and descriptors normalize LF while resource bytes remain exact", () => {
+  const path = "apps/backend/utils/config.ts", source = tree.read(path), crlf = source.replaceAll("\n", "\r\n");
+  expect(sourceHash(source)).toBe(sourceHash(crlf));
+  expect(sha256(source)).not.toBe(sha256(crlf));
+  expect(() => verifyModuleLoading(crlf, path)).not.toThrow();
+  expect(() => verifyModuleLoading(crlf + "\r\n// edit", path)).toThrow();
+  expect(digest(executionDescriptor({ ...tree, read: file => tree.read(file).replaceAll("\n", "\r\n") }))).toBe(digest(original));
+  const installed = "import {value} from './value'; export {value};\n";
+  expect(() => verifyInstalledModuleLoading(installed.replaceAll("\n", "\r\n"), "/fixture/pure.js", "pure.js")).not.toThrow();
+}, 120000);
+
+test("descriptor construction analyses source without executing application modules", () => {
+  const path = "packages/simulation/src/model2/random.ts";
+  expect(() => changed({ [path]: tree.read(path) + '\nthrow Error("application code must not execute in metadata checks");\n' })).not.toThrow();
+});
 
 
 test("privileged resources and loaders cannot escape through verifier helpers, re-exports or package wrappers", () => {

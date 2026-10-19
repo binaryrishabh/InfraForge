@@ -2,7 +2,7 @@ import { existsSync, readFileSync, realpathSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import type { ExecutionDescriptor } from "./descriptor";
 import { executionResolve } from "./resolution";
-import { sha256, lf } from "./hash";
+import { sourceHash } from "./hash";
 import { verifyLaunch } from "./launch";
 import type { Instance } from "./dependencies";
 
@@ -72,7 +72,7 @@ export function verifyInstalled(descriptor: ExecutionDescriptor, root: string, r
     const contract = JSON.parse(readFileSync(resolve(root, "apps/backend/executionIdentity/resolutionContract.json"), "utf8"));
     for (const module of contract.modules) {
       const directory = directories.get(module.owner);
-      if (!directory || relative(directory, resolve(directory, module.file)).startsWith("..") || sha256(lf(readFileSync(resolve(directory, module.file), "utf8"))) !== module.hash) throw Error("Selected execution implementation drift");
+      if (!directory || relative(directory, resolve(directory, module.file)).startsWith("..") || sourceHash(readFileSync(resolve(directory, module.file), "utf8")) !== module.hash) throw Error("Selected execution implementation drift");
     }
     verifyResolutionSelections(contract.imports, directories, root);
 

@@ -87,6 +87,7 @@ function buildTransitions() {
     // Global-name boundary tightening only; preserve the last committed target
     // with the existing frozen host/import/launch reconstruction algorithm.
     reviewedHosts["b04389078881cb89124edd1191c049b9c5abb0d17f18472857cf9310a03262e6"] = "f8e7c33";
+    reviewedHosts["435856da26ac9b492b5a52a7b777ade046326ba7a3533a59450f16e148c410e1"] = "91654e8";
     const reviewedCommit = reviewedHosts[previousTarget];
     if (!reviewedCommit) throw Error("A new committed host transition needs explicit review");
     const hostCommit = git(["rev-parse", reviewedCommit]).trim(), hostTree = gitTree(hostCommit);
@@ -100,7 +101,7 @@ function buildTransitions() {
       return diskTree().read(path);
     } };
     const importBoundary = ["3886e64e2954e8513647ece8fa126af4dcad33cf2c63ad1eed89b15edca969c1", "421000e5a4f5be3dd3c1464f4a9fd44ea75f7236bb6222a5410e5f89f0aa381d"].includes(previousTarget);
-    const launchBoundary = ["f4890c845828de4f5280bff19cb35851a7241a8129bde4e233956f65bdd94219", "b04389078881cb89124edd1191c049b9c5abb0d17f18472857cf9310a03262e6"].includes(previousTarget);
+    const launchBoundary = ["f4890c845828de4f5280bff19cb35851a7241a8129bde4e233956f65bdd94219", "b04389078881cb89124edd1191c049b9c5abb0d17f18472857cf9310a03262e6", "435856da26ac9b492b5a52a7b777ade046326ba7a3533a59450f16e148c410e1"].includes(previousTarget);
     const frozen = (launchBoundary ? historicalLaunchDescriptor : importBoundary ? historicalImportDescriptor : historicalHostDescriptor)(hostSnapshot, "bun-1.3.14");
     if (digest(frozen) !== previousTarget) throw Error("Committed host descriptor does not reconstruct");
     const retainedPaths = [...new Set([...storedFiles.map(([path]) => path), "package.json", "bun.lock", "bunfig.toml", ...["apps/backend", "apps/web", "packages/catalog", "packages/contracts", "packages/domain", "packages/simulation"].map(path => `${path}/package.json`)])];

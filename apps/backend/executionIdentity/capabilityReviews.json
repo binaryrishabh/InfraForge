@@ -119,7 +119,7 @@
     }
   },
   "apps/backend/executionIdentity/descriptor.ts": {
-    "hash": "732c864b9bbd42488679aa4d3bf25481578e02a4f67796c0e5f9bcd031ad8e73",
+    "hash": "87baccc1b24571dd1b0635b29316f012fd592793e8976707533503c0b81be3d2",
     "capabilities": [
       "computed-data",
       "verifier",
@@ -127,14 +127,14 @@
     ],
     "review": "Fixed data indexing; resource adapters require the separate documented review",
     "globals": {
-      "hash": "732c864b9bbd42488679aa4d3bf25481578e02a4f67796c0e5f9bcd031ad8e73",
+      "hash": "87baccc1b24571dd1b0635b29316f012fd592793e8976707533503c0b81be3d2",
       "names": [
         "Bun"
       ]
     }
   },
   "apps/backend/executionIdentity/installed.ts": {
-    "hash": "b9a033dc1db48976bcd2445c91e1ff45a1d66734b95d774ff560ffeee8e8392e",
+    "hash": "f47990e38ca9d424778ea2f551500f7cc34fb68f85c8eec2307005eb04a9e582",
     "capabilities": [
       "computed-data",
       "verifier",
@@ -142,7 +142,7 @@
     ],
     "review": "Fixed data indexing; resource adapters require the separate documented review",
     "globals": {
-      "hash": "b9a033dc1db48976bcd2445c91e1ff45a1d66734b95d774ff560ffeee8e8392e",
+      "hash": "f47990e38ca9d424778ea2f551500f7cc34fb68f85c8eec2307005eb04a9e582",
       "names": [
         "process"
       ]
@@ -164,7 +164,7 @@
     }
   },
   "apps/backend/executionIdentity/loading.ts": {
-    "hash": "4f6de00ed191f60080a662862454e05a148fa448678cde7f9a5e87949d773c52",
+    "hash": "bcb5bba4297066bfac6ea23e3fc20e6a7c35c83940da1341b9d0ac8b964138f7",
     "capabilities": [
       "computed-data",
       "verifier",
@@ -172,7 +172,7 @@
     ],
     "review": "Fixed data indexing; resource adapters require the separate documented review",
     "globals": {
-      "hash": "4f6de00ed191f60080a662862454e05a148fa448678cde7f9a5e87949d773c52",
+      "hash": "bcb5bba4297066bfac6ea23e3fc20e6a7c35c83940da1341b9d0ac8b964138f7",
       "names": [
         "Bun"
       ]
@@ -833,10 +833,19 @@
       "names": [
         "process"
       ]
-    }
+    },
+    "alternatives": [
+      {
+        "hash": "a3f1c5bf0b4a7a081b34c0e3853d010997d05132831208beeb0d6e43f73a5efd",
+        "capabilities": [
+          "trusted-fixture"
+        ],
+        "review": "Existing bounded lesson-host Linux enforcement probe only; finite CPU/memory/PID/FD stress and cgroup/network/filesystem observations"
+      }
+    ]
   },
   "apps/backend/executionIdentity/capabilities.ts": {
-    "hash": "ccbfa47c7b2948d2040e63d51ecbecbfce66f8c9d646043c09f8bbddefb287c8",
+    "hash": "afbf1d43d2c8f4c430a900945e730726a8da53e7ecff0a5988d3cf196d96d6e3",
     "capabilities": [
       "computed-data",
       "verifier"

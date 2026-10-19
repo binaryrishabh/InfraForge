@@ -2,7 +2,7 @@ import { executionResolve } from "../apps/backend/executionIdentity/resolution";
 import { builtinModules } from "node:module";
 import { readFileSync, realpathSync, writeFileSync } from "node:fs";
 import { dirname, isAbsolute, relative, resolve } from "node:path";
-import { sha256, lf } from "../apps/backend/executionIdentity/hash";
+import { sourceHash, lf } from "../apps/backend/executionIdentity/hash";
 import { executionDescriptor, executionHosts, packageName, repositoryRoot } from "../apps/backend/executionIdentity/descriptor";
 import type { ExecutionDescriptor } from "../apps/backend/executionIdentity/descriptor";
 import { verifyInstalled } from "../apps/backend/executionIdentity/installed";
@@ -29,13 +29,13 @@ export async function checkExecutionResolution(descriptor: ExecutionDescriptor =
           const path = relative(root, args.path).replaceAll("\\", "/");
           if (path.startsWith("../")) throw Error(`Execution module outside runtime tree: ${path}`);
           if (!path.split("/").includes("node_modules")) {
-            if (inventory.get(path) !== sha256(text)) throw Error(`Uninventoried authored execution module: ${path}`);
+            if (inventory.get(path) !== sourceHash(text)) throw Error(`Uninventoried authored execution module: ${path}`);
             authored.add(path);
           }
           const owner = owners.find(([, directory]) => args.path.startsWith(directory + "/"));
           if (path.split("/").includes("node_modules") && !owner) throw Error(`Unpinned installed execution module: ${path}`);
           const key = owner ? `${packages.get(owner[0])!.name}/${relative(owner[1], args.path).replaceAll("\\", "/")}` : args.path;
-          if (owner) modules.push({ owner: owner[0], file: relative(owner[1], args.path).replaceAll("\\", "/"), key, hash: sha256(text) });
+          if (owner) modules.push({ owner: owner[0], file: relative(owner[1], args.path).replaceAll("\\", "/"), key, hash: sourceHash(text) });
           if (path.endsWith(".json")) return { contents: text, loader: "json" };
           if (!executable.test(path)) throw Error(`Unsupported executable module: ${path}`);
           if (!review || !owner) verifyInstalledModuleLoading(text, args.path, key);

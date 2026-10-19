@@ -3,7 +3,7 @@ import { posix, relative, resolve } from "node:path";
 import { builtinModules } from "node:module";
 import { dependencyClosure, parseLock, requireWorkspace } from "./dependencies";
 import type { Manifest } from "./dependencies";
-import { lf, sha256 } from "./hash";
+import { lf, sha256, sourceHash } from "./hash";
 import { configurationInventory, verifyInstallation } from "./configuration";
 import { executable, executionImports } from "./loading";
 import { pureBuiltin, verifyCapabilityImports } from "./capabilities";
@@ -132,7 +132,7 @@ export function executionDescriptor(tree = diskTree(), runtime = `bun-${Bun.vers
     // Backend dependency roots are imports, not unrelated API-only packages.
     return [path, path === "apps/backend" ? { ...manifest, dependencies: roots[value.name] } : manifest];
   });
-  return { schema: "execution-source/2", runtime, resources, files: [...files].sort().map(path => [path, sha256(tree.read(path))]),
+  return { schema: "execution-source/2", runtime, resources, files: [...files].sort().map(path => [path, sourceHash(tree.read(path))]),
     workspaces, dependencies, settings: { install, packageManager: root.packageManager, launch: launchContract }, imports: imports.sort((a, b) => `${a.file}:${a.specifier}`.localeCompare(`${b.file}:${b.specifier}`)) };
 }
 export const executionHosts = ["apps/backend/worker.ts", "apps/backend/index.ts", "apps/backend/ws-server.ts", "apps/backend/internalModel2/sandboxChild.ts"];

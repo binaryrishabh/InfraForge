@@ -1,5 +1,5 @@
 import { parse } from "acorn";
-import { sha256 } from "./hash";
+import { lf, sourceHash } from "./hash";
 import reviews from "./capabilityReviews.json";
 import selected from "./resolutionContract.json";
 
@@ -97,6 +97,7 @@ const executionGlobals = new Set([
 const checked = new Map<string, { text: string; requests: ReturnType<Bun.Transpiler["scan"]>["imports"] }>();
 const scans = new Map<string, { text: string; imports: ReturnType<Bun.Transpiler["scan"]>["imports"] }>();
 const codeHosts = new Set(["vm", "node:vm", "worker_threads", "node:worker_threads", "inspector", "node:inspector", "inspector/promises", "node:inspector/promises", "repl", "node:repl", "child_process", "node:child_process"]);
+interface Review { hash: string; capabilities: string[]; globals?: { hash: string; names: string[] }; alternatives?: Review[] }
 export function executionImports(text: string, path: string) {
   const previous = scans.get(path);
   if (previous?.text === text) return previous.imports;
@@ -110,11 +111,13 @@ export function executionImports(text: string, path: string) {
 
 // Only literal imports and direct require calls are enumerable. Loader values cannot escape.
 export function verifyModuleLoading(text: string, path: string) {
+  text = lf(text);
   const previousAnalysis = checked.get(path);
   if (previousAnalysis?.text === text) return previousAnalysis.requests;
   const normalized = path.replaceAll("\\", "/");
-  const review = Object.entries(reviews).find(([file]) => normalized === file || normalized.endsWith("/" + file));
-  if (review && review[1].hash === sha256(text) && review[1].capabilities.some(capability => ["generated-client", "trusted-resolver", "trusted-fixture"].includes(capability))) {
+  const review = Object.entries(reviews as Record<string, Review>).find(([file]) => normalized === file || normalized.endsWith("/" + file))?.[1];
+  const exact = review && [review, ...(review.alternatives ?? [])].find(candidate => candidate.hash === sourceHash(text));
+  if (exact?.capabilities.some(capability => ["generated-client", "trusted-resolver", "trusted-fixture"].includes(capability))) {
     const requests = [...sourceScanner(path).scan(text).imports];
     const ast = parse(emittedCode(text, path), { ecmaVersion: "latest", sourceType: "module" });
     const visit = (node: Syntax) => {
@@ -135,13 +138,10 @@ export function verifyModuleLoading(text: string, path: string) {
   const ast = parse(code, { ecmaVersion: "latest", sourceType: "module", allowReturnOutsideFunction: true, allowAwaitOutsideFunction: true });
   const global = globalReferences(ast as unknown as Syntax);
   // Authored exceptions are frozen adapters, not path-wide permissions.
-  const processAdapter = path.replaceAll("\\", "/").endsWith("apps/backend/internalModel2/dockerConnection.ts") && sha256(text) === "614e7e40f425cfd19edc0c8d789e9b0cf622e291d9f110d4026c3ca0911cff02";
-  const errorAdapter = path.replaceAll("\\", "/").endsWith("apps/backend/utils/errors.ts") && sha256(text) === "bb936198f6a1a31a0c5b70cfd945e7922f69438e0888af6ec0c2fa54350b89fa";
-  const normalizedPath = path.replaceAll("\\", "/");
-  const reviewed = Object.entries(reviews).find(([file]) => normalizedPath === file || normalizedPath.endsWith("/" + file));
-  const permissions = reviewed && reviewed[1].hash === sha256(text) ? reviewed[1].capabilities : [];
-  const globalReview = reviewed && "globals" in reviewed[1] ? reviewed[1].globals : undefined;
-  const reviewedGlobals = globalReview?.hash === sha256(text) ? globalReview.names : [];
+  const processAdapter = normalized.endsWith("apps/backend/internalModel2/dockerConnection.ts") && sourceHash(text) === "614e7e40f425cfd19edc0c8d789e9b0cf622e291d9f110d4026c3ca0911cff02";
+  const errorAdapter = normalized.endsWith("apps/backend/utils/errors.ts") && sourceHash(text) === "bb936198f6a1a31a0c5b70cfd945e7922f69438e0888af6ec0c2fa54350b89fa";
+  const permissions = exact?.capabilities ?? [];
+  const reviewedGlobals = review?.globals?.hash === sourceHash(text) ? review.globals.names : [];
   const computedReview = permissions.includes("computed-data");
   const resourceReview = permissions.includes("resources");
   const verifierReview = permissions.includes("verifier");
@@ -219,11 +219,11 @@ export function verifyModuleLoading(text: string, path: string) {
 }
 
 export function verifyInstalledModuleLoading(text: string, path: string, key: string) {
-  const pinned = (selected.modules as Array<{ key: string; hash: string }>).some(module => module.key === key && module.hash === sha256(text));
+  const pinned = (selected.modules as Array<{ key: string; hash: string }>).some(module => module.key === key && module.hash === sourceHash(text));
   // Reviewed selected implementation bytes, never a package/path-wide exception.
   if (pinned) return;
   try { verifyModuleLoading(text, path); } catch (error) {
-    if (reviewedLoaders.get(key) !== sha256(text)) throw Error(`Unreviewed dynamic package loader: ${key}`, { cause: error });
+    if (reviewedLoaders.get(key) !== sourceHash(text)) throw Error(`Unreviewed dynamic package loader: ${key}`, { cause: error });
   }
 }
 
