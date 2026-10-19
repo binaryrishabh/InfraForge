@@ -41,6 +41,17 @@ the real receipt chain or rejects synchronously. Plug-in order is retained in
 composition evidence. A plug-in needs no kernel or peer-resource implementation
 change. These are trusted modules, not an untrusted-code sandbox.
 
+`composition/token-bucket.ts` is the extension proof. Its module owns the
+configuration validator and an O(1), scoped request admission mechanism. It uses
+authored integer capacity/initial credits and discrete refill tokens/period;
+missing values are refused. It forwards the original cancellation receipt and
+does not refund credits after downstream failure/cancellation. Refills are lazy,
+bounded and observable without mutating state. Scope includes a target and an
+optional operation. The state retains the full numerical configuration and policy
+revision. No kernel, host or peer-resource source changed to add it: verify all
+88 LF-normalized source hashes with
+`bun --no-env-file scripts/reality/composition-host-proof.ts`.
+
 The pre-refactor evidence hashes in `stage1-composition-hashes.json` were captured
 using the existing workload, compute, network, LB, data, async, systems and product
 fixtures. Run `bun --no-env-file scripts/reality/composition-proofs.ts` to compare
