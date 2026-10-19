@@ -7,6 +7,7 @@ import type { SourceTree } from "../apps/backend/executionIdentity/descriptor";
 import { digest, lf, sha256 } from "../apps/backend/executionIdentity/hash";
 import { wholeLockIdentity } from "../apps/backend/executionIdentity/legacy";
 import { loadTransitions } from "../apps/backend/executionIdentity/transitions";
+import { historicalLaunchDescriptor } from "./historical-launch-descriptor";
 import { historicalImportDescriptor } from "./historical-import-descriptor";
 import { historicalHostDescriptor } from "./historical-host-descriptor";
 import { verifiedHistoricalDescriptor } from "./historical-verified-descriptor";
@@ -82,7 +83,7 @@ function buildTransitions() {
   const committedTable = JSON.parse(git(["show", "HEAD:apps/backend/executionIdentity/executionTransitions.json"])) as TransitionTable;
   const previousTarget = committedTable.entries[0]!.target;
   if (previousTarget !== source && previousTarget !== target && !table.entries.some(row => row.source === previousTarget)) {
-    const reviewedHosts: Record<string,string> = { "fe8fd0f18c15de1e762ebbdfd3474f1a35a56d4f46acca85db90221ed8fb21a7": "20af730", "26b81b300de225a6a27d512eb696ad448502d11a073817b9ad203bb1c531f90f": "23203fa", "3886e64e2954e8513647ece8fa126af4dcad33cf2c63ad1eed89b15edca969c1": "53188f7", "421000e5a4f5be3dd3c1464f4a9fd44ea75f7236bb6222a5410e5f89f0aa381d": "c1edd9f" };
+    const reviewedHosts: Record<string,string> = { "fe8fd0f18c15de1e762ebbdfd3474f1a35a56d4f46acca85db90221ed8fb21a7": "20af730", "26b81b300de225a6a27d512eb696ad448502d11a073817b9ad203bb1c531f90f": "23203fa", "3886e64e2954e8513647ece8fa126af4dcad33cf2c63ad1eed89b15edca969c1": "53188f7", "421000e5a4f5be3dd3c1464f4a9fd44ea75f7236bb6222a5410e5f89f0aa381d": "c1edd9f", "f4890c845828de4f5280bff19cb35851a7241a8129bde4e233956f65bdd94219": "4c92f13" };
     const reviewedCommit = reviewedHosts[previousTarget];
     if (!reviewedCommit) throw Error("A new committed host transition needs explicit review");
     const hostCommit = git(["rev-parse", reviewedCommit]).trim(), hostTree = gitTree(hostCommit);
@@ -96,11 +97,12 @@ function buildTransitions() {
       return diskTree().read(path);
     } };
     const importBoundary = ["3886e64e2954e8513647ece8fa126af4dcad33cf2c63ad1eed89b15edca969c1", "421000e5a4f5be3dd3c1464f4a9fd44ea75f7236bb6222a5410e5f89f0aa381d"].includes(previousTarget);
-    const frozen = (importBoundary ? historicalImportDescriptor : historicalHostDescriptor)(hostSnapshot, "bun-1.3.14");
+    const launchBoundary = previousTarget === "f4890c845828de4f5280bff19cb35851a7241a8129bde4e233956f65bdd94219";
+    const frozen = (launchBoundary ? historicalLaunchDescriptor : importBoundary ? historicalImportDescriptor : historicalHostDescriptor)(hostSnapshot, "bun-1.3.14");
     if (digest(frozen) !== previousTarget) throw Error("Committed host descriptor does not reconstruct");
     const retainedPaths = [...new Set([...storedFiles.map(([path]) => path), "package.json", "bun.lock", "bunfig.toml", ...["apps/backend", "apps/web", "packages/catalog", "packages/contracts", "packages/domain", "packages/simulation"].map(path => `${path}/package.json`)])];
     history.trees[hostCommit] = Object.fromEntries(retainedPaths.map(path => { const text = hostSnapshot.read(path), hash = sha256(text); history.blobs[hash] = text; return [path, hash]; }));
-    table.entries.push({ commit: hostCommit, source: previousTarget, descriptor: previousTarget, target, kind: "descriptor", algorithm: importBoundary ? "import-boundary/1" : "host-boundary/1", review: "Committed host descriptor retained; reviewed containment/capability boundary hardening; production child, engine, schema and dependency bytes unchanged" });
+    table.entries.push({ commit: hostCommit, source: previousTarget, descriptor: previousTarget, target, kind: "descriptor", algorithm: launchBoundary ? "launch-boundary/1" : importBoundary ? "import-boundary/1" : "host-boundary/1", review: "Committed host descriptor retained; reviewed containment/capability boundary hardening; production child, engine, schema and dependency bytes unchanged" });
   }
   table.descriptors[target] = current;
   for (const row of table.entries) {
@@ -127,7 +129,7 @@ export function checkTransitions(root = repositoryRoot, read?: (path: string) =>
     const tree: SourceTree = { paths: Object.keys(files), read: path => {
       const text = history.blobs[files[path]!]; if (text === undefined) throw Error(`Missing snapshot source: ${path}`); return text;
     } };
-    if (digest((row.algorithm === "import-boundary/1" ? historicalImportDescriptor : row.algorithm === "host-boundary/1" ? historicalHostDescriptor : row.commit.startsWith("2da5b74") ? verifiedHistoricalDescriptor : historicalDescriptor)(tree, table.descriptors[row.descriptor]!.runtime)) !== row.descriptor) throw Error("Historical closure does not reconstruct");
+    if (digest((row.algorithm === "launch-boundary/1" ? historicalLaunchDescriptor : row.algorithm === "import-boundary/1" ? historicalImportDescriptor : row.algorithm === "host-boundary/1" ? historicalHostDescriptor : row.commit.startsWith("2da5b74") ? verifiedHistoricalDescriptor : historicalDescriptor)(tree, table.descriptors[row.descriptor]!.runtime)) !== row.descriptor) throw Error("Historical closure does not reconstruct");
     let source: string;
     if (row.kind === "descriptor") source = row.descriptor;
     else if (row.source.startsWith("bac35c99")) {

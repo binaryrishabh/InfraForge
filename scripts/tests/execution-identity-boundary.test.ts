@@ -5,6 +5,8 @@ import { verifyInstalledModuleLoading } from "../../apps/backend/executionIdenti
 import { parseLock } from "../../apps/backend/executionIdentity/dependencies";
 import { fixture } from "../../apps/backend/tests/integration/lessonSandboxChecks";
 import { retireInternalRuns } from "../../apps/backend/internalModel2/execution";
+import { verifyResolutionSelections } from "../../apps/backend/executionIdentity/installed";
+import { resolve } from "node:path";
 import { verifyLaunch } from "../../apps/backend/executionIdentity/launch";
 
 const tree = diskTree();
@@ -131,4 +133,13 @@ test("unrecognized drivers cannot claim the ordinary backend host identity or in
   let used = false;
   await expect(retireInternalRuns({ transaction: async () => { used = true; } } as never)).rejects.toThrow("Unreviewed Model-2 execution host");
   expect(used).toBe(false);
+}, 120000);
+
+
+test("deduplicated resolution still checks every target and separates require/import conditions", () => {
+  const root=resolve(repositoryRoot,"scripts/tests/fixtures/virtual"), directory=resolve(root,"package");
+  const directories=new Map([["pkg",directory]]), edge={owner:"pkg",file:"a.js",specifier:"dependency",kind:"require-call",targetOwner:"pkg",targetFile:"require.js"};
+  const resolver=(_name:string,_from:string,kind:string)=>resolve(directory,kind==="require-call" ? "require.js" : "import.js");
+  expect(()=>verifyResolutionSelections([edge,{...edge,file:"b.js",kind:"import-statement",targetFile:"import.js"}],directories,root,resolver,path=>path)).not.toThrow();
+  expect(()=>verifyResolutionSelections([edge,{...edge,file:"b.js",targetFile:"other.js"}],directories,root,resolver,path=>path)).toThrow("Selected execution entrypoint drift");
 }, 120000);

@@ -213,3 +213,10 @@ accepts only the mechanically added host checks; all prior workflow bytes remain
 Known tooling and explicit disposable integration drivers are metadata-only contexts;
 worker startup itself also checks its host before opening the ownership session. They
 cannot turn a test/tooling main into the worker claim/commit implementation.
+
+Installed verification deduplicates identical directory/specifier/kind resolutions and
+physical-path probes only within one invocation. Equal absolute names need no second
+realpath lookup; every selected module byte hash and every edge target is still checked.
+Regressions cover distinct import/require targets and a conflicting second target in a
+shared resolution context. Row 28 preserves f4890c84… (4c92f13), including its static
+launch data; no verification result is persisted or inherited by another process.

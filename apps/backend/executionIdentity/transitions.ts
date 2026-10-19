@@ -5,7 +5,7 @@ import { digest, sha256 } from "./hash";
 export interface TransitionTable {
   schema: string; first: string; last: string;
   descriptors: Record<string, { schema: string; runtime: string; [key: string]: unknown }>;
-  entries: Array<{ commit: string; source: string; descriptor: string; target: string; review: string; kind?: "descriptor"; algorithm?: "host-boundary/1" | "import-boundary/1" }>;
+  entries: Array<{ commit: string; source: string; descriptor: string; target: string; review: string; kind?: "descriptor"; algorithm?: "host-boundary/1" | "import-boundary/1" | "launch-boundary/1" }>;
 }
 export function validateTransitions(table: TransitionTable, expectedHash: string) {
   if (digest(table) !== expectedHash || table.schema !== "execution-source-transitions/1") throw Error("Execution transition table changed");

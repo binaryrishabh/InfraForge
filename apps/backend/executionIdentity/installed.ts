@@ -74,11 +74,26 @@ export function verifyInstalled(descriptor: ExecutionDescriptor, root: string, r
       const directory = directories.get(module.owner);
       if (!directory || relative(directory, resolve(directory, module.file)).startsWith("..") || sha256(lf(readFileSync(resolve(directory, module.file), "utf8"))) !== module.hash) throw Error("Selected execution implementation drift");
     }
-    for (const selection of contract.imports) {
-      const from = selection.owner === null ? root : directories.get(selection.owner);
-      const target = directories.get(selection.targetOwner);
-      if (!from || !target || realpathSync(executionResolve(selection.specifier, resolve(from, selection.file), selection.kind)) !== realpathSync(resolve(target, selection.targetFile))) throw Error("Selected execution entrypoint drift");
-    }
+    verifyResolutionSelections(contract.imports, directories, root);
+
   }
   return directories;
+}
+
+
+interface Selection { owner: string | null; file: string; specifier: string; kind: string; targetOwner: string; targetFile: string }
+export function verifyResolutionSelections(selections: Selection[], directories: Map<string,string>, root: string,
+  resolver = executionResolve, canonical = realpathSync as (path: string) => string) {
+  const resolutions = new Map<string,string>(), physical = new Map<string,string>();
+  const real = (path: string) => { if (!physical.has(path)) physical.set(path, canonical(path)); return physical.get(path)!; };
+  for (const selection of selections) {
+    const from = selection.owner === null ? root : directories.get(selection.owner), target = directories.get(selection.targetOwner);
+    if (!from || !target) throw Error("Selected execution entrypoint drift");
+    const importer = resolve(from, selection.file), key = JSON.stringify([dirname(importer), selection.specifier, selection.kind]);
+    if (!resolutions.has(key)) resolutions.set(key, resolve(resolver(selection.specifier, importer, selection.kind)));
+    const actual = resolutions.get(key)!, expected = resolve(target, selection.targetFile);
+    // Equal absolute names identify the same file without probing it twice. All
+    // selected bytes were checked above. Every edge still compares its own target.
+    if (actual !== expected && real(actual) !== real(expected)) throw Error("Selected execution entrypoint drift");
+  }
 }
