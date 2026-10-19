@@ -133,7 +133,7 @@
     "review": "Fixed data indexing; resource adapters require the separate documented review"
   },
   "apps/backend/executionIdentity/loading.ts": {
-    "hash": "9a1771963efa95e7fda1b8368a91da13c8800b3c7d8a92aa3d9326c2b45aa38c",
+    "hash": "67fc08feb27d5c6e7ac07aac6df8c0b55b63e709b1e802496b2347391213af40",
     "capabilities": [
       "computed-data",
       "verifier",
@@ -151,7 +151,7 @@
     "review": "Fixed data indexing; resource adapters require the separate documented review"
   },
   "apps/backend/executionIdentity/transitions.ts": {
-    "hash": "cb81260e0eb95ffff0f5891a263db1f047e1f940ae674f5c0bd8ee875c931cd8",
+    "hash": "6e988249f3bc2285649f158af6669114038e9e0ea55c062aefcaf884a3ce2cf7",
     "capabilities": [
       "computed-data",
       "verifier",
@@ -748,5 +748,12 @@
       "trusted-resolver"
     ],
     "review": "Verifier-only enumerated specifier resolver with actual import versus require conditions"
+  },
+  "apps/backend/internalModel2/sandboxChild.ts": {
+    "hash": "f6f0846f2b54e99fe7c110198f0bc34a24c288bd49152e277158f27ebafa80b7",
+    "capabilities": [
+      "trusted-fixture"
+    ],
+    "review": "Existing immutable containment probe only: fixed /bin/sleep PID exhaustion, filesystem/network denial and cgroup/proc observations; production child bytes receive no exemption"
   }
 }

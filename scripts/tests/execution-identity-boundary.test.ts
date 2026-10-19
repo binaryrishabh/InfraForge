@@ -3,6 +3,7 @@ import { executionDescriptor, diskTree, repositoryRoot } from "../../apps/backen
 import { digest } from "../../apps/backend/executionIdentity/hash";
 import { verifyInstalledModuleLoading } from "../../apps/backend/executionIdentity/loading";
 import { parseLock } from "../../apps/backend/executionIdentity/dependencies";
+import { fixture } from "../../apps/backend/tests/integration/lessonSandboxChecks";
 import { verifyLaunch } from "../../apps/backend/executionIdentity/launch";
 
 const tree = diskTree();
@@ -88,4 +89,11 @@ test("Three changes and ordinary web edits stay identity-neutral", () => {
   expect(digest(changed({ "bun.lock": JSON.stringify(lock), "apps/web/src/identity-fixture.ts": "export const revision = 99;" }))).toBe(digest(original));
   delete lock.packages.three; delete lock.workspaces["apps/web"]!.dependencies!.three; delete web.dependencies.three;
   expect(digest(changed({ "bun.lock": JSON.stringify(lock), "apps/web/package.json": JSON.stringify(web) }))).toBe(digest(original));
+}, 120000);
+
+
+test("the immutable containment probe has an exact review, not a child-path exemption", () => {
+  const path = "apps/backend/internalModel2/sandboxChild.ts";
+  expect(digest(changed({ [path]: fixture }))).not.toBe(digest(original));
+  expect(() => changed({ [path]: fixture + "\n// probe edit\n" })).toThrow("dynamic execution loader");
 }, 120000);

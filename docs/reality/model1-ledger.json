@@ -292,7 +292,7 @@
     },
     {
       "file": "apps/backend/executionIdentity/configuration.ts",
-      "sha256": "1a207bc644b2f47c5eafd8f6518b8f3d5556bc322db388304bce33036470a52b",
+      "sha256": "ddbe09df52369a9f8950a3000211539ce6c3ce0d2193c2f4350aff52ad1d3313",
       "numericSites": 1
     },
     {
@@ -302,7 +302,7 @@
     },
     {
       "file": "apps/backend/executionIdentity/descriptor.ts",
-      "sha256": "7512db638ef8c480db8075a3c2b215de3bf8c77838411a7a231f0f391ee9f20f",
+      "sha256": "359d3c9803b4a4d2cfc1a954f22b8b3ba4b523be7a2093611eb6a54e57a53440",
       "numericSites": 4
     },
     {
@@ -312,8 +312,18 @@
     },
     {
       "file": "apps/backend/executionIdentity/installed.ts",
-      "sha256": "79ce74fedb3299e976f5f40f01009c89afe58f4d7314296d0497e726b31ac262",
+      "sha256": "f91a553879a5cbf507cf027a83bf815db7588ff267d70b4317ad4c8733e1fd5a",
       "numericSites": 2
+    },
+    {
+      "file": "apps/backend/executionIdentity/launch.ts",
+      "sha256": "6e97081b55a20a8b7a37350f7ad0a2e348da3cb25606a9399786983246741a9e",
+      "numericSites": 2
+    },
+    {
+      "file": "apps/backend/executionIdentity/launcher.ts",
+      "sha256": "96bcf521c2e3623cbb14097559f9e8d3645cdbc0a50bd03f208483d84a3e5042",
+      "numericSites": 1
     },
     {
       "file": "apps/backend/executionIdentity/legacy.ts",
@@ -322,17 +332,27 @@
     },
     {
       "file": "apps/backend/executionIdentity/loading.ts",
-      "sha256": "83f7750d1c7c0dd08614812f1ca607c53e7551077927e23d4b2c72a747c08936",
-      "numericSites": 9
+      "sha256": "67fc08feb27d5c6e7ac07aac6df8c0b55b63e709b1e802496b2347391213af40",
+      "numericSites": 14
+    },
+    {
+      "file": "apps/backend/executionIdentity/resolution.ts",
+      "sha256": "b1d87373c2d9a2420d376462ac056e2359dcad065803c6c1480769712270be7c",
+      "numericSites": 0
+    },
+    {
+      "file": "apps/backend/executionIdentity/resources.ts",
+      "sha256": "2cdb00d367fa2b9b72b6c94d5dbaa271e1c8098fd0bdd0f1ea0d7a80ecccb872",
+      "numericSites": 1
     },
     {
       "file": "apps/backend/executionIdentity/sourceTree.ts",
-      "sha256": "a27e245ada0f35882cf2beb934d8f19375cc41375c914d5a695df8becee42c68",
+      "sha256": "b6def36fb80463496fc24cabf7dd200f099beeca55d592bfdae9a1564dc8cedf",
       "numericSites": 0
     },
     {
       "file": "apps/backend/executionIdentity/transitions.ts",
-      "sha256": "fa90d5fc9cbde71c95ed3e69a99c3cca0e013b336af6afc78ee4a812f9d48eea",
+      "sha256": "6e988249f3bc2285649f158af6669114038e9e0ea55c062aefcaf884a3ce2cf7",
       "numericSites": 0
     },
     {
@@ -562,7 +582,7 @@
     },
     {
       "file": "apps/backend/prisma.config.ts",
-      "sha256": "c1bcbd0ff267c8b6885cd467ed8122cf6508bdac6c929d69f9b512ccde65a033",
+      "sha256": "6b9525330101ac4e17f5a3c3ba0ec54c5261754045c6b758930a8e6861dc67fc",
       "numericSites": 0
     },
     {
@@ -747,7 +767,7 @@
     },
     {
       "file": "apps/backend/utils/config.ts",
-      "sha256": "df4a54b43b569e53705aea67daee318a285e8fc5995437e110ba70bc6dc9d1d7",
+      "sha256": "4273035814aab98b5c1fc8a9305d81da3d552575623d19349dcb7e6a9a2c6173",
       "numericSites": 1
     },
     {
@@ -21964,7 +21984,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/configuration.ts#L53",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/configuration.ts#L59",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -21978,7 +21998,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/executionIdentity/configuration.ts",
-        "line": 53,
+        "line": 59,
         "column": 29
       }
     },
@@ -22468,7 +22488,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/descriptor.ts#L40",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/descriptor.ts#L41",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -22482,7 +22502,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/executionIdentity/descriptor.ts",
-        "line": 40,
+        "line": 41,
         "column": 106
       }
     },
@@ -22504,7 +22524,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/descriptor.ts#L40",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/descriptor.ts#L41",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -22518,7 +22538,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/executionIdentity/descriptor.ts",
-        "line": 40,
+        "line": 41,
         "column": 109
       }
     },
@@ -22540,7 +22560,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/descriptor.ts#L40",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/descriptor.ts#L41",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -22554,7 +22574,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/executionIdentity/descriptor.ts",
-        "line": 40,
+        "line": 41,
         "column": 145
       }
     },
@@ -22576,7 +22596,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/descriptor.ts#L108",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/descriptor.ts#L122",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -22590,7 +22610,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/executionIdentity/descriptor.ts",
-        "line": 108,
+        "line": 122,
         "column": 20
       }
     },
@@ -22720,7 +22740,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/installed.ts#L51",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/installed.ts#L55",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -22734,7 +22754,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/executionIdentity/installed.ts",
-        "line": 51,
+        "line": 55,
         "column": 40
       }
     },
@@ -22756,7 +22776,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/installed.ts#L58",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/installed.ts#L62",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -22770,13 +22790,121 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/executionIdentity/installed.ts",
-        "line": 58,
+        "line": 62,
         "column": 122
       }
     },
     {
+      "id": "m1.apps.backend.executionIdentity.launch.1",
+      "concept": "i · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.executionIdentity.launch.1"
+        ]
+      },
+      "formula": "for (let i = 0; i < args.length; i++) { const arg = args[i]!; if ([\"--no-env-file\", \"--no-install\", \"--bun\", \"--watch\"].includes(arg)) continue; throw Error(`Unreviewed execution launch option: ${arg.split(\"=\")[0]}`); }",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/launch.ts#L7",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/executionIdentity/launch.ts",
+        "line": 7,
+        "column": 16
+      }
+    },
+    {
+      "id": "m1.apps.backend.executionIdentity.launch.2",
+      "concept": "verifyLaunch · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.executionIdentity.launch.2"
+        ]
+      },
+      "formula": "throw Error(`Unreviewed execution launch option: ${arg.split(\"=\")[0]}`);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/launch.ts#L10",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/executionIdentity/launch.ts",
+        "line": 10,
+        "column": 71
+      }
+    },
+    {
+      "id": "m1.apps.backend.executionIdentity.launcher.1",
+      "concept": "launcher.ts · literal 2",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 2,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.executionIdentity.launcher.1"
+        ]
+      },
+      "formula": "switch (process.argv[2]) { case \"api\": await import(\"../index\"); break; case \"worker\": await import(\"../worker\"); break; case \"ws\": await import(\"../ws-server\"); break; default: throw Error(\"Expected execution host: api, worker or ws\"); }",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/launcher.ts#L4",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/executionIdentity/launcher.ts",
+        "line": 4,
+        "column": 22
+      }
+    },
+    {
       "id": "m1.apps.backend.executionIdentity.loading.1",
-      "concept": "direct · literal 1",
+      "concept": "verifyModuleLoading · literal 1",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
       "quantity": {
@@ -22787,12 +22915,12 @@
           "m1.apps.backend.executionIdentity.loading.1"
         ]
       },
-      "formula": "const direct = parent?.type === \"CallExpression\" && parent.callee === node && (parent.arguments as Syntax[]).length === 1 && literal((parent.arguments as Syntax[])[0]);",
+      "formula": "if (review && review[1].hash === sha256(text) && review[1].capabilities.some(capability => [\"generated-client\", \"trusted-resolver\", \"trusted-fixture\"].includes(capability))) { const requests = [...sourceScanner(path).scan(text).imports]; const ast = parse(emittedCode(text, path), { ecmaVersion: \"latest\", sourceType: \"module\" }); const visit = (node: Syntax) => { if (node.type === \"ImportExpression\") { if (!literal(node.source)) throw Error(`Unreviewed generated import: ${path}`); requests.push({",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/loading.ts#L133",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/loading.ts#L93",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -22806,29 +22934,29 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/executionIdentity/loading.ts",
-        "line": 133,
-        "column": 127
+        "line": 93,
+        "column": 24
       }
     },
     {
       "id": "m1.apps.backend.executionIdentity.loading.2",
-      "concept": "direct · literal 0",
+      "concept": "verifyModuleLoading · literal 1",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
       "quantity": {
         "kind": "known",
-        "value": 0,
+        "value": 1,
         "unit": "code-number",
         "provenance": [
           "m1.apps.backend.executionIdentity.loading.2"
         ]
       },
-      "formula": "const direct = parent?.type === \"CallExpression\" && parent.callee === node && (parent.arguments as Syntax[]).length === 1 && literal((parent.arguments as Syntax[])[0]);",
+      "formula": "if (review && review[1].hash === sha256(text) && review[1].capabilities.some(capability => [\"generated-client\", \"trusted-resolver\", \"trusted-fixture\"].includes(capability))) { const requests = [...sourceScanner(path).scan(text).imports]; const ast = parse(emittedCode(text, path), { ecmaVersion: \"latest\", sourceType: \"module\" }); const visit = (node: Syntax) => { if (node.type === \"ImportExpression\") { if (!literal(node.source)) throw Error(`Unreviewed generated import: ${path}`); requests.push({",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/loading.ts#L133",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/loading.ts#L93",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -22842,13 +22970,13 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/executionIdentity/loading.ts",
-        "line": 133,
-        "column": 171
+        "line": 93,
+        "column": 59
       }
     },
     {
       "id": "m1.apps.backend.executionIdentity.loading.3",
-      "concept": "resolve · literal 1",
+      "concept": "permissions · literal 1",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
       "quantity": {
@@ -22859,12 +22987,12 @@
           "m1.apps.backend.executionIdentity.loading.3"
         ]
       },
-      "formula": "const resolve = parent?.type === \"MemberExpression\" && parent.object === node && !parent.computed && identifier(parent.property, \"resolve\") && grandparent?.type === \"CallExpression\" && grandparent.callee === parent && (grandparent.arguments as Syntax[]).length === 1 && literal((grandparent.arguments as Syntax[])[0]);",
+      "formula": "const permissions = reviewed && reviewed[1].hash === sha256(text) ? reviewed[1].capabilities : [];",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/loading.ts#L134",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/loading.ts#L118",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -22878,29 +23006,29 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/executionIdentity/loading.ts",
-        "line": 134,
-        "column": 272
+        "line": 118,
+        "column": 44
       }
     },
     {
       "id": "m1.apps.backend.executionIdentity.loading.4",
-      "concept": "resolve · literal 0",
+      "concept": "permissions · literal 1",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
       "quantity": {
         "kind": "known",
-        "value": 0,
+        "value": 1,
         "unit": "code-number",
         "provenance": [
           "m1.apps.backend.executionIdentity.loading.4"
         ]
       },
-      "formula": "const resolve = parent?.type === \"MemberExpression\" && parent.object === node && !parent.computed && identifier(parent.property, \"resolve\") && grandparent?.type === \"CallExpression\" && grandparent.callee === parent && (grandparent.arguments as Syntax[]).length === 1 && literal((grandparent.arguments as Syntax[])[0]);",
+      "formula": "const permissions = reviewed && reviewed[1].hash === sha256(text) ? reviewed[1].capabilities : [];",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/loading.ts#L134",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/loading.ts#L118",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -22914,29 +23042,29 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/executionIdentity/loading.ts",
-        "line": 134,
-        "column": 321
+        "line": 118,
+        "column": 80
       }
     },
     {
       "id": "m1.apps.backend.executionIdentity.loading.5",
-      "concept": "visit · literal 0",
+      "concept": "direct · literal 1",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
       "quantity": {
         "kind": "known",
-        "value": 0,
+        "value": 1,
         "unit": "code-number",
         "provenance": [
           "m1.apps.backend.executionIdentity.loading.5"
         ]
       },
-      "formula": "if (direct && ([\"module\", \"node:module\", \"bun\", \"process\", \"node:process\"].includes(String(((parent!.arguments as Syntax[])[0]!).value)) || forbiddenHost(String(((parent!.arguments as Syntax[])[0]!).value)))) reject();",
+      "formula": "const direct = parent?.type === \"CallExpression\" && parent.callee === node && (parent.arguments as Syntax[]).length === 1 && literal((parent.arguments as Syntax[])[0]);",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/loading.ts#L137",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/loading.ts#L161",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -22950,13 +23078,13 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/executionIdentity/loading.ts",
-        "line": 137,
-        "column": 131
+        "line": 161,
+        "column": 127
       }
     },
     {
       "id": "m1.apps.backend.executionIdentity.loading.6",
-      "concept": "visit · literal 0",
+      "concept": "direct · literal 0",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
       "quantity": {
@@ -22967,12 +23095,12 @@
           "m1.apps.backend.executionIdentity.loading.6"
         ]
       },
-      "formula": "if (direct && ([\"module\", \"node:module\", \"bun\", \"process\", \"node:process\"].includes(String(((parent!.arguments as Syntax[])[0]!).value)) || forbiddenHost(String(((parent!.arguments as Syntax[])[0]!).value)))) reject();",
+      "formula": "const direct = parent?.type === \"CallExpression\" && parent.callee === node && (parent.arguments as Syntax[]).length === 1 && literal((parent.arguments as Syntax[])[0]);",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/loading.ts#L137",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/loading.ts#L161",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -22986,49 +23114,13 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/executionIdentity/loading.ts",
-        "line": 137,
-        "column": 201
+        "line": 161,
+        "column": 171
       }
     },
     {
       "id": "m1.apps.backend.executionIdentity.loading.7",
-      "concept": "visit.path · literal 0",
-      "modelVersion": "1",
-      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
-      "quantity": {
-        "kind": "known",
-        "value": 0,
-        "unit": "code-number",
-        "provenance": [
-          "m1.apps.backend.executionIdentity.loading.7"
-        ]
-      },
-      "formula": "path: String(((parent!.arguments as Syntax[])[0]!).value)",
-      "classification": "implementation-policy",
-      "confidence": "high",
-      "provenance": [
-        {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/loading.ts#L138",
-          "supports": "implementation",
-          "detail": "Exact historical literal and source expression; not external validation."
-        }
-      ],
-      "assumptions": [
-        "This literal is not evidence of real infrastructure capacity or performance.",
-        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
-      ],
-      "researchedOn": "2026-10-15",
-      "freeMode": "conditional",
-      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
-      "location": {
-        "file": "apps/backend/executionIdentity/loading.ts",
-        "line": 138,
-        "column": 81
-      }
-    },
-    {
-      "id": "m1.apps.backend.executionIdentity.loading.8",
-      "concept": "visit · literal 1",
+      "concept": "resolve · literal 1",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
       "quantity": {
@@ -23036,15 +23128,15 @@
         "value": 1,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.executionIdentity.loading.8"
+          "m1.apps.backend.executionIdentity.loading.7"
         ]
       },
-      "formula": "if ((node.arguments as Syntax[]).length !== 1 || !literal((node.arguments as Syntax[])[0])) reject();",
+      "formula": "const resolve = parent?.type === \"MemberExpression\" && parent.object === node && !parent.computed && identifier(parent.property, \"resolve\") && grandparent?.type === \"CallExpression\" && grandparent.callee === parent && (grandparent.arguments as Syntax[]).length === 1 && literal((grandparent.arguments as Syntax[])[0]);",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/loading.ts#L142",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/loading.ts#L162",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -23058,8 +23150,44 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/executionIdentity/loading.ts",
-        "line": 142,
-        "column": 51
+        "line": 162,
+        "column": 272
+      }
+    },
+    {
+      "id": "m1.apps.backend.executionIdentity.loading.8",
+      "concept": "resolve · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.executionIdentity.loading.8"
+        ]
+      },
+      "formula": "const resolve = parent?.type === \"MemberExpression\" && parent.object === node && !parent.computed && identifier(parent.property, \"resolve\") && grandparent?.type === \"CallExpression\" && grandparent.callee === parent && (grandparent.arguments as Syntax[]).length === 1 && literal((grandparent.arguments as Syntax[])[0]);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/loading.ts#L162",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/executionIdentity/loading.ts",
+        "line": 162,
+        "column": 321
       }
     },
     {
@@ -23075,12 +23203,12 @@
           "m1.apps.backend.executionIdentity.loading.9"
         ]
       },
-      "formula": "if ((node.arguments as Syntax[]).length !== 1 || !literal((node.arguments as Syntax[])[0])) reject();",
+      "formula": "if (direct && !resourceReview && !verifierReview && resourceHost(String(((parent!.arguments as Syntax[])[0]!).value))) reject();",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/loading.ts#L142",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/loading.ts#L165",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -23094,8 +23222,224 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/executionIdentity/loading.ts",
-        "line": 142,
+        "line": 165,
+        "column": 112
+      }
+    },
+    {
+      "id": "m1.apps.backend.executionIdentity.loading.10",
+      "concept": "visit · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.executionIdentity.loading.10"
+        ]
+      },
+      "formula": "if (direct && ([\"module\", \"node:module\", \"bun\", \"process\", \"node:process\"].includes(String(((parent!.arguments as Syntax[])[0]!).value)) || forbiddenHost(String(((parent!.arguments as Syntax[])[0]!).value)))) reject();",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/loading.ts#L166",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/executionIdentity/loading.ts",
+        "line": 166,
+        "column": 131
+      }
+    },
+    {
+      "id": "m1.apps.backend.executionIdentity.loading.11",
+      "concept": "visit · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.executionIdentity.loading.11"
+        ]
+      },
+      "formula": "if (direct && ([\"module\", \"node:module\", \"bun\", \"process\", \"node:process\"].includes(String(((parent!.arguments as Syntax[])[0]!).value)) || forbiddenHost(String(((parent!.arguments as Syntax[])[0]!).value)))) reject();",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/loading.ts#L166",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/executionIdentity/loading.ts",
+        "line": 166,
+        "column": 201
+      }
+    },
+    {
+      "id": "m1.apps.backend.executionIdentity.loading.12",
+      "concept": "visit.path · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.executionIdentity.loading.12"
+        ]
+      },
+      "formula": "path: String(((parent!.arguments as Syntax[])[0]!).value)",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/loading.ts#L167",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/executionIdentity/loading.ts",
+        "line": 167,
+        "column": 81
+      }
+    },
+    {
+      "id": "m1.apps.backend.executionIdentity.loading.13",
+      "concept": "visit · literal 1",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.executionIdentity.loading.13"
+        ]
+      },
+      "formula": "if ((node.arguments as Syntax[]).length !== 1 || !literal((node.arguments as Syntax[])[0])) reject();",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/loading.ts#L172",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/executionIdentity/loading.ts",
+        "line": 172,
+        "column": 51
+      }
+    },
+    {
+      "id": "m1.apps.backend.executionIdentity.loading.14",
+      "concept": "visit · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.executionIdentity.loading.14"
+        ]
+      },
+      "formula": "if ((node.arguments as Syntax[]).length !== 1 || !literal((node.arguments as Syntax[])[0])) reject();",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/loading.ts#L172",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/executionIdentity/loading.ts",
+        "line": 172,
         "column": 94
+      }
+    },
+    {
+      "id": "m1.apps.backend.executionIdentity.resources.1",
+      "concept": "expected · literal 1",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.executionIdentity.resources.1"
+        ]
+      },
+      "formula": "const expected = executionIdentity.resources.find(([name]) => name === path)?.[1];",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/resources.ts#L10",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/executionIdentity/resources.ts",
+        "line": 10,
+        "column": 82
       }
     },
     {

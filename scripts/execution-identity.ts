@@ -7,6 +7,7 @@ import type { SourceTree } from "../apps/backend/executionIdentity/descriptor";
 import { digest, lf, sha256 } from "../apps/backend/executionIdentity/hash";
 import { wholeLockIdentity } from "../apps/backend/executionIdentity/legacy";
 import { loadTransitions } from "../apps/backend/executionIdentity/transitions";
+import { historicalHostDescriptor } from "./historical-host-descriptor";
 import { verifiedHistoricalDescriptor } from "./historical-verified-descriptor";
 import { historicalDescriptor } from "./historical-execution-descriptor";
 import type { TransitionTable } from "../apps/backend/executionIdentity/transitions";
@@ -28,7 +29,7 @@ export function frozenHistoryText(commit: string, path: string) {
 function git(args: string[]) { return lf(execFileSync("git", args, { cwd: repositoryRoot, encoding: "utf8", maxBuffer: 64 * 1024 * 1024 })); }
 function gitTree(commit: string): SourceTree {
   const paths = git(["ls-tree", "-r", "--name-only", commit]).trim().split("\n").filter(path =>
-    !path.split("/").some(part => part.startsWith(".") || ["tests", "generated", "node_modules"].includes(part)) &&
+    (path === ".dockerignore" || !path.split("/").some(part => part.startsWith(".") || ["tests", "generated", "node_modules"].includes(part))) &&
     (path.startsWith("apps/backend/") || path.startsWith("packages/") || ["package.json", "bun.lock", "bunfig.toml", "tsconfig.base.json", "apps/web/package.json", ".dockerignore"].includes(path)));
   const result = spawnSync("git", ["cat-file", "--batch"], { cwd: repositoryRoot, input: paths.map(path => `${commit}:${path}\n`).join(""), maxBuffer: 64 * 1024 * 1024 });
   if (result.status !== 0) throw Error("Cannot read execution history");
@@ -67,6 +68,24 @@ function buildTransitions() {
   const history = JSON.parse(gunzipSync(archive).toString()) as History;
   const paths = [...new Set([...prior.files.map(([path]) => path!), "package.json", "bun.lock", "bunfig.toml", ...["apps/backend", "apps/web", "packages/catalog", "packages/contracts", "packages/domain", "packages/simulation"].map(path => `${path}/package.json`)])];
   history.trees[commit] = Object.fromEntries(paths.map(path => { const text = baseline.read(path), hash = sha256(text); history.blobs[hash] = text; return [path, hash]; }));
+  const previousTarget = table.entries[0]!.target;
+  if (previousTarget !== source && !table.entries.some(row => row.source === previousTarget)) {
+    const hostCommit = git(["rev-parse", "20af730"]).trim(), hostTree = gitTree(hostCommit);
+    const stored = table.descriptors[previousTarget]!;
+    const storedFiles = stored.files as [string, string][];
+    const hostPaths = [...new Set([...hostTree.paths, ...storedFiles.map(([path]) => path)])];
+    const hostSnapshot: SourceTree = { paths: hostPaths, read: path => {
+      if (hostTree.paths.includes(path)) return hostTree.read(path);
+      const pin = storedFiles.find(([file]) => file === path)?.[1];
+      if (!path.includes("/generated/") || !pin || sha256(diskTree().read(path)) !== pin) throw Error(`Missing committed generation output: ${path}`);
+      return diskTree().read(path);
+    } };
+    const frozen = historicalHostDescriptor(hostSnapshot, "bun-1.3.14");
+    if (digest(frozen) !== previousTarget) throw Error("Committed host descriptor does not reconstruct");
+    const retainedPaths = [...new Set([...storedFiles.map(([path]) => path), "package.json", "bun.lock", "bunfig.toml", ...["apps/backend", "apps/web", "packages/catalog", "packages/contracts", "packages/domain", "packages/simulation"].map(path => `${path}/package.json`)])];
+    history.trees[hostCommit] = Object.fromEntries(retainedPaths.map(path => { const text = hostSnapshot.read(path), hash = sha256(text); history.blobs[hash] = text; return [path, hash]; }));
+    table.entries.push({ commit: hostCommit, source: previousTarget, descriptor: previousTarget, target, kind: "descriptor", algorithm: "host-boundary/1", review: "Committed host descriptor retained; exact existing containment fixture review only; production child, engine, schema and dependency bytes unchanged" });
+  }
   table.descriptors[target] = current;
   for (const row of table.entries) {
     row.target = target;
@@ -92,7 +111,7 @@ export function checkTransitions(root = repositoryRoot, read?: (path: string) =>
     const tree: SourceTree = { paths: Object.keys(files), read: path => {
       const text = history.blobs[files[path]!]; if (text === undefined) throw Error(`Missing snapshot source: ${path}`); return text;
     } };
-    if (digest((row.commit.startsWith("2da5b74") ? verifiedHistoricalDescriptor : historicalDescriptor)(tree, table.descriptors[row.descriptor]!.runtime)) !== row.descriptor) throw Error("Historical closure does not reconstruct");
+    if (digest((row.algorithm === "host-boundary/1" ? historicalHostDescriptor : row.commit.startsWith("2da5b74") ? verifiedHistoricalDescriptor : historicalDescriptor)(tree, table.descriptors[row.descriptor]!.runtime)) !== row.descriptor) throw Error("Historical closure does not reconstruct");
     let source: string;
     if (row.kind === "descriptor") source = row.descriptor;
     else if (row.source.startsWith("bac35c99")) {

@@ -6,7 +6,7 @@ import { DockerConnection } from "../../internalModel2/dockerConnection";
 import { checkOrphanDeadline } from "./lessonOrphanChecks";
 import { withFixtureImage } from "./lessonFixtureImage";
 // This probe replaces the entrypoint in a disposable test image only.
-const fixture = `import { sandboxReady } from './sandboxHandshake';
+export const fixture = `import { sandboxReady } from './sandboxHandshake';
 import { createInterface } from 'node:readline';
 import { openSync, writeFileSync } from 'node:fs';
 const lines=createInterface({input:process.stdin})[Symbol.asyncIterator]();

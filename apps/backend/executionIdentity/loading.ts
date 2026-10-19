@@ -90,7 +90,7 @@ export function verifyModuleLoading(text: string, path: string) {
   if (previousAnalysis?.text === text) return previousAnalysis.requests;
   const normalized = path.replaceAll("\\", "/");
   const review = Object.entries(reviews).find(([file]) => normalized === file || normalized.endsWith("/" + file));
-  if (review && review[1].hash === sha256(text) && review[1].capabilities.some(capability => ["generated-client", "trusted-resolver"].includes(capability))) {
+  if (review && review[1].hash === sha256(text) && review[1].capabilities.some(capability => ["generated-client", "trusted-resolver", "trusted-fixture"].includes(capability))) {
     const requests = [...sourceScanner(path).scan(text).imports];
     const ast = parse(emittedCode(text, path), { ecmaVersion: "latest", sourceType: "module" });
     const visit = (node: Syntax) => {

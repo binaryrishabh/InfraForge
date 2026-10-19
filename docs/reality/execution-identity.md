@@ -110,7 +110,7 @@ parent digest or persisting filesystem results across checks.
 Root test defaults and the historical tests remain unchanged. The new negative
 test that performs two full builds has its own explicit timeout.
 
-Boundary hardening (October 2026): every module is parsed; there is no sensitive-token
+Boundary hardening (October 2026): every unreviewed module is parsed; there is no sensitive-token
 shortcut. Unknown computed property reads can recover reflective capabilities even
 from ordinary data objects, so they are refused. Existing data indexing is reviewed
 by exact authored-file bytes in `capabilityReviews.json`; these permissions authorize
@@ -168,3 +168,11 @@ The boundary regression fixtures use in-memory source trees and resources. Trans
 fixtures also use injected in-memory reads. The fresh-process launch probe is committed
 under `scripts/tests/fixtures`. Identity tests have explicit budgets for the larger host
 closure; global test timeouts are unchanged.
+
+The existing immutable Linux containment probe has its own exact-byte `trusted-fixture`
+review, restricted to the sandbox child path. Its deliberate read-only/network/PID probes
+are not production permissions, and changing even a comment invalidates the review.
+The committed `fe8fd0f1…` host descriptor is preserved as row 24 (commit `20af730`),
+using a frozen host algorithm with archived review/selection data and verified generated
+bytes. The final replay target adds this fixture review only. The numeric source ledger
+is refreshed with the existing inventory script after the boundary source review.
