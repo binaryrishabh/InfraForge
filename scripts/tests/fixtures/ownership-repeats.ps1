@@ -1,6 +1,6 @@
 param([Parameter(Mandatory)][string]$Baseline, [int]$Repeats = 5)
 $ErrorActionPreference = 'Stop'
-$dockerExe = (Get-Command docker -CommandType Application -ErrorAction Stop).Source
+$dockerExe = (Get-Command docker -CommandType Application -ErrorAction Stop | Select-Object -First 1).Source
 if ($env:DOCKER_HOST) { throw 'Ownership fixtures require a local Docker context without DOCKER_HOST' }
 $fixtureContext = (& $dockerExe context show).Trim()
 if ($LASTEXITCODE -ne 0) { throw 'Cannot select Docker context' }
