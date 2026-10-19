@@ -3,17 +3,19 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import path from "path";
 import { webRelease } from "./releaseConfig.js";
+import { marketingPages } from "./marketingPlugin.js";
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
   const release = webRelease({ ...loadEnv(mode, process.cwd(), ""), ...process.env });
   return {
-    plugins: [react(), tailwindcss(), {
+    plugins: [react(), tailwindcss(), marketingPages(), {
       name: 'release-identity',
       generateBundle() {
         this.emitFile({ type: 'asset', fileName: 'release.json', source: JSON.stringify(release) });
       }
     }],
+    build: { rollupOptions: { input: path.resolve(import.meta.dirname, "app.html") } },
     resolve: {
       alias: {
         "@": path.resolve(import.meta.dirname, "./src")

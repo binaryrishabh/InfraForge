@@ -5,8 +5,11 @@ output is `dist`. Vite runs this after the SPA build and regenerates the dev
 output when marketing sources change. Each page generator also accepts an
 output directory as its first argument. No generated HTML belongs beside source.
 
+The SPA entry is `app.html`. Vercel's `cleanUrls` setting resolves its rewrite
+destination `/app` to that file; static marketing files take filesystem priority.
+
 `motion/hero.mjs`, `sections/engineering-site.mjs` and `sections/learning2.mjs`
-retain the approved presentation. Their closure includes `object/`, the seven
+retain the approved presentation. Their closure includes `object/`, the six
 MIT kit modules and license, the inline turn helper, motion styles/timeline/sound,
 the shared section helpers, and the `engineer` and `late` captured stages.
 Learning renders its miniature live; `learn` and `healthy` stages are unused.
@@ -24,7 +27,7 @@ apply to TypeScript; its default JavaScript parsing still covers these modules.
 No gate exclusion or engine identity classification is changed. Import-boundary
 checks include these modules and keep their Node imports outside browser source.
 
-For visual verification, run `scripts/visual-proof.mjs` with Node from a directory
+For visual verification, run the root `scripts/marketing-visual-proof.mjs` with Node from a directory
 containing Playwright, pngjs and pixelmatch. Pass the reference directory, built
 site URL and evidence output directory. See the script's usage comment. Reference
 HTML must come from the unchanged approved generators before integration.

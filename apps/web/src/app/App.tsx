@@ -2,7 +2,6 @@ import { lazy, Suspense, useEffect } from "react";
 import { BrowserRouter, Navigate, Route, Routes, useLocation, useParams } from "react-router-dom";
 import { Toaster } from "sonner";
 import { Analytics } from "@vercel/analytics/react";
-import { LandingPage } from "../features/landing/pages/LandingPage";
 import { SignInPage } from "../features/auth/pages/SignInPage";
 import { HomePage } from "../features/dashboard/pages/HomePage";
 import { NotFoundPage } from "../features/dashboard/pages/NotFoundPage";
@@ -42,6 +41,11 @@ function ThemedToaster() {
     toastOptions={{ style: { background: "var(--if-raised)", border: "1px solid var(--if-line-strong)", color: "var(--if-ink)", borderRadius: "6px", fontFamily: "var(--font-sans)" } }} />;
 }
 
+function MarketingHome() {
+  useEffect(() => { window.location.replace("/"); }, []);
+  return null;
+}
+
 function App() {
   const hydrate = useAuthStore((s) => s.hydrate);
   useEffect(() => {
@@ -65,7 +69,7 @@ function App() {
       <ThemedToaster />
       <Analytics />
       <Routes>
-        <Route path="/" element={<LandingPage />} />
+        <Route path="/" element={<MarketingHome />} />
         <Route element={<PublicOnlyRoute />}>
           <Route path="/signin" element={<SignInPage key="signin" />} />
           <Route path="/signup" element={<SignInPage key="signup" mode="signup" />} />

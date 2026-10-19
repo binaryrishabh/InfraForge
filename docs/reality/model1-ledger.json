@@ -887,7 +887,7 @@
     },
     {
       "file": "apps/web/src/app/App.tsx",
-      "sha256": "39b07fdd558afe6bcb9d5f27cdd64b246f7788254a5709d5a294c81425a91eb3",
+      "sha256": "53625e22a5e224af9c9aac187b8cf22e4692e75b9cb9f341628283300af84394",
       "numericSites": 1
     },
     {
@@ -47686,7 +47686,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/app/App.tsx#L53",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/app/App.tsx#L57",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -47700,7 +47700,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/app/App.tsx",
-        "line": 53,
+        "line": 57,
         "column": 43
       }
     },
