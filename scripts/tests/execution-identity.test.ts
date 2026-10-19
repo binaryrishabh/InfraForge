@@ -53,7 +53,8 @@ test("every execution workspace dependency and imported backend source is pinned
     expect(digest(changed({ "bun.lock": JSON.stringify(lock), [path]: JSON.stringify(manifest) }))).not.toBe(digest(original));
   }
   for (const path of ["apps/backend/utils/config.ts", "packages/contracts/src/internal-model2/index.ts", "apps/backend/internalModel2/sandboxChild.ts"]) {
-    expect(digest(changed({ [path]: tree.read(path) + "\n// execution change\n" }))).not.toBe(digest(original));
+    if (path.endsWith("sandboxChild.ts")) expect(() => changed({ [path]: tree.read(path) + "\n// execution change\n" })).toThrow("Unreviewed execution capability import");
+    else expect(digest(changed({ [path]: tree.read(path) + "\n// execution change\n" }))).not.toBe(digest(original));
   }
   expect(() => changed({ "apps/backend/internalModel2/store.ts": 'import "web-only-fixture";' })).toThrow("Undeclared");
   expect(() => changed({ "apps/backend/internalModel2/store.ts": "require(variable);" })).toThrow("dynamic execution loader");
@@ -73,7 +74,7 @@ test("history reconstructs without Git and only reviewed digests resolve", () =>
   expect(JSON.parse(isolated.stdout.toString()).current).toBe(executionSource);
   const table = JSON.parse(readFileSync("apps/backend/executionIdentity/executionTransitions.json", "utf8"));
   const pin = JSON.parse(readFileSync("apps/backend/executionIdentity/transitionPin.json", "utf8"));
-  expect(table.entries.length).toBe(24);
+  expect(table.entries.length).toBe(25);
   for (const row of table.entries) expect(compatibleReviewedSource(row.source, executionSource)).toBe(true);
   expect(compatibleReviewedSource("dcf73dace76edc0afead6158b34785f511ba6b21fd34ce5490d11fe78e20f4ad", executionSource)).toBe(true);
   expect(compatibleReviewedSource("f".repeat(64), executionSource)).toBe(false);

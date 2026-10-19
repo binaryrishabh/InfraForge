@@ -68,9 +68,13 @@ function buildTransitions() {
   const history = JSON.parse(gunzipSync(archive).toString()) as History;
   const paths = [...new Set([...prior.files.map(([path]) => path!), "package.json", "bun.lock", "bunfig.toml", ...["apps/backend", "apps/web", "packages/catalog", "packages/contracts", "packages/domain", "packages/simulation"].map(path => `${path}/package.json`)])];
   history.trees[commit] = Object.fromEntries(paths.map(path => { const text = baseline.read(path), hash = sha256(text); history.blobs[hash] = text; return [path, hash]; }));
-  const previousTarget = table.entries[0]!.target;
+  const committedTable = JSON.parse(git(["show", "HEAD:apps/backend/executionIdentity/executionTransitions.json"])) as TransitionTable;
+  const previousTarget = committedTable.entries[0]!.target;
   if (previousTarget !== source && !table.entries.some(row => row.source === previousTarget)) {
-    const hostCommit = git(["rev-parse", "20af730"]).trim(), hostTree = gitTree(hostCommit);
+    const reviewedHosts: Record<string,string> = { "fe8fd0f18c15de1e762ebbdfd3474f1a35a56d4f46acca85db90221ed8fb21a7": "20af730", "26b81b300de225a6a27d512eb696ad448502d11a073817b9ad203bb1c531f90f": "23203fa" };
+    const reviewedCommit = reviewedHosts[previousTarget];
+    if (!reviewedCommit) throw Error("A new committed host transition needs explicit review");
+    const hostCommit = git(["rev-parse", reviewedCommit]).trim(), hostTree = gitTree(hostCommit);
     const stored = table.descriptors[previousTarget]!;
     const storedFiles = stored.files as [string, string][];
     const hostPaths = [...new Set([...hostTree.paths, ...storedFiles.map(([path]) => path)])];
@@ -84,7 +88,7 @@ function buildTransitions() {
     if (digest(frozen) !== previousTarget) throw Error("Committed host descriptor does not reconstruct");
     const retainedPaths = [...new Set([...storedFiles.map(([path]) => path), "package.json", "bun.lock", "bunfig.toml", ...["apps/backend", "apps/web", "packages/catalog", "packages/contracts", "packages/domain", "packages/simulation"].map(path => `${path}/package.json`)])];
     history.trees[hostCommit] = Object.fromEntries(retainedPaths.map(path => { const text = hostSnapshot.read(path), hash = sha256(text); history.blobs[hash] = text; return [path, hash]; }));
-    table.entries.push({ commit: hostCommit, source: previousTarget, descriptor: previousTarget, target, kind: "descriptor", algorithm: "host-boundary/1", review: "Committed host descriptor retained; exact existing containment fixture review only; production child, engine, schema and dependency bytes unchanged" });
+    table.entries.push({ commit: hostCommit, source: previousTarget, descriptor: previousTarget, target, kind: "descriptor", algorithm: "host-boundary/1", review: "Committed host descriptor retained; reviewed containment/capability boundary hardening; production child, engine, schema and dependency bytes unchanged" });
   }
   table.descriptors[target] = current;
   for (const row of table.entries) {

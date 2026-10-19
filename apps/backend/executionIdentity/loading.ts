@@ -138,6 +138,7 @@ export function verifyModuleLoading(text: string, path: string) {
     if (node.type === "Property" && parent?.type === "ObjectPattern" && (node.computed && !literal(node.key) || identifier(node.key, "constructor") || syntax(node.key) && node.key.value === "constructor")) reject();
     if (!resourceReview && !verifierReview && ["ImportDeclaration", "ExportNamedDeclaration", "ExportAllDeclaration", "ImportExpression"].includes(node.type) && syntax(node.source) && resourceHost(String(node.source.value))) reject();
     if (!resourceReview && !verifierReview && ["WebAssembly", "fetch", "XMLHttpRequest", "EventSource"].some(name => global(node, name))) reject();
+    if (node.type === "MetaProperty" && identifier(node.meta, "import") && !(parent?.type === "MemberExpression" && parent.object === node && !parent.computed && ["url", "dir", "path", "file", "main"].some(name => identifier(parent!.property, name)))) reject();
     if (node.type === "MemberExpression") {
       if (!verifierReview && ["globalThis", "global"].some(name => global(node.object, name))) reject();
       const property = node.property as Syntax;
@@ -148,6 +149,7 @@ export function verifyModuleLoading(text: string, path: string) {
       const primitiveKey = property.type === "Literal" && ["string", "number"].includes(typeof property.value);
       if (node.computed && !primitiveKey && !fixedSymbol && !computedReview && !verifierReview) reject();
       if (global(node.object, "Bun") && !["version", "sleep", "nanoseconds"].includes(String(name)) && !verifierReview) reject();
+      if (["caller", "callee", "arguments"].includes(String(name)) && !computedReview && !verifierReview) reject();
       if (["require", "createRequire", "_load", "getBuiltinModule", "mainModule", "binding", "_linkedBinding", "dlopen"].includes(String(name))) reject();
       if (name === "constructor" && !errorAdapter) reject();
       if (!verifierReview && (global(node.object, "Reflect") || global(node.object, "Object") && ["getOwnPropertyDescriptor", "getOwnPropertyDescriptors", "getPrototypeOf", "setPrototypeOf"].includes(String(name)))) reject();
@@ -157,6 +159,12 @@ export function verifyModuleLoading(text: string, path: string) {
       if (global(node.object, "Bun") && ["plugin", "dlopen", "spawn", "spawnSync"].includes(String(name))) reject();
       if (["globalThis", "global", "process", "Bun"].some(name => global(node.object, name)) && node.computed && !literal(property)) reject();
     }
+    if (!propertyName && !errorAdapter && ["Error", "EvalError", "TypeError", "RangeError", "ReferenceError", "SyntaxError", "URIError", "AggregateError"].some(name => global(node, name))) {
+      const construct = ["CallExpression", "NewExpression"].includes(parent?.type ?? "") && parent?.callee === node;
+      const check = parent?.type === "BinaryExpression" && parent.operator === "instanceof" && parent.right === node;
+      const inherit = ["ClassDeclaration", "ClassExpression"].includes(parent?.type ?? "") && parent?.superClass === node;
+      if (!construct && !check && !inherit && !(parent?.type === "UnaryExpression" && parent.operator === "typeof")) reject();
+    }
     if (identifier(node, "require")) {
       const direct = parent?.type === "CallExpression" && parent.callee === node && (parent.arguments as Syntax[]).length === 1 && literal((parent.arguments as Syntax[])[0]);
       const resolve = parent?.type === "MemberExpression" && parent.object === node && !parent.computed && identifier(parent.property, "resolve") && grandparent?.type === "CallExpression" && grandparent.callee === parent && (grandparent.arguments as Syntax[]).length === 1 && literal((grandparent.arguments as Syntax[])[0]);
@@ -164,6 +172,7 @@ export function verifyModuleLoading(text: string, path: string) {
       if (!direct && !resolve && !typeOf) reject();
       if (direct && !resourceReview && !verifierReview && resourceHost(String(((parent!.arguments as Syntax[])[0]!).value))) reject();
       if (direct && (["module", "node:module", "bun", "process", "node:process"].includes(String(((parent!.arguments as Syntax[])[0]!).value)) || forbiddenHost(String(((parent!.arguments as Syntax[])[0]!).value)))) reject();
+      if (resolve) literals.push({ path: String(((grandparent!.arguments as Syntax[])[0]!).value), kind: "require-resolve" });
       if (direct) literals.push({ path: String(((parent!.arguments as Syntax[])[0]!).value), kind: "require-call" });
     }
     if (!propertyName && !presence && ["Object", "Reflect"].some(name => global(node, name)) && !(parent?.type === "MemberExpression" && parent.object === node)) reject();

@@ -6,6 +6,7 @@ import type { Manifest } from "./dependencies";
 import { lf, sha256 } from "./hash";
 import { configurationInventory, verifyInstallation } from "./configuration";
 import { executable, executionImports } from "./loading";
+import { pureBuiltin, verifyCapabilityImports } from "./capabilities";
 import { launchContract, verifyLaunch } from "./launch";
 import type { SourceTree } from "./sourceTree";
 export type { SourceTree } from "./sourceTree";
@@ -40,7 +41,7 @@ export const workspacePaths = ["packages/simulation", "packages/domain", "packag
 const builtins = new Set([...builtinModules, ...builtinModules.map(name => `node:${name}`), "bun"]);
 export const packageName = (specifier: string) => specifier.startsWith("@") ? specifier.split("/").slice(0, 2).join("/") : specifier.split("/")[0]!;
 
-export function executionDescriptor(tree = diskTree(), runtime = `bun-${Bun.version}`) {
+export function executionDescriptor(tree = diskTree(), runtime = `bun-${Bun.version}`, review?: (required: Record<string,string>) => void) {
   verifyLaunch();
   const available = new Set(tree.paths), files = new Set<string>();
   const configure = configurationInventory(tree, files);
@@ -54,11 +55,13 @@ export function executionDescriptor(tree = diskTree(), runtime = `bun-${Bun.vers
   const roots: Record<string, Record<string, string>> = {};
   for (const path of workspacePaths) roots[manifests[path]!.name] = { ...manifests[path]!.dependencies, ...manifests[path]!.optionalDependencies, ...manifests[path]!.peerDependencies };
   roots[manifests["apps/backend"]!.name] = {};
+  const directCapabilities = new Set<string>(), capabilityEdges: Array<[string,string]> = [];
   const imports: Array<{ file: string; specifier: string; kind: string }> = [];
-  function local(path: string) {
+  function local(path: string, importer?: string) {
     const extensions = ["ts", "tsx", "js", "jsx", "mjs", "cjs", "mts", "cts", "json"];
     const found = [path, ...extensions.map(ext => `${path}.${ext}`), ...extensions.map(ext => `${path}/index.${ext}`)].find(candidate => available.has(candidate));
     if (!found || found.startsWith("../") || found.includes("/.env")) throw Error(`Unresolved execution source: ${path}`);
+    if (importer) capabilityEdges.push([importer, found]);
     visit(found);
   }
   function visit(path: string) {
@@ -70,9 +73,9 @@ export function executionDescriptor(tree = diskTree(), runtime = `bun-${Bun.vers
     const source = tree.read(path);
     for (const entry of executionImports(source, path)) {
       const specifier = entry.path;
-      if (builtins.has(specifier)) continue;
+      if (builtins.has(specifier)) { if (!pureBuiltin(specifier.replace(/^node:/, ""))) directCapabilities.add(path); continue; }
       if (specifier.startsWith(".")) {
-        local(tree.resolveImport?.(specifier, path) ?? posix.normalize(posix.join(posix.dirname(path), specifier))); continue;
+        local(tree.resolveImport?.(specifier, path) ?? posix.normalize(posix.join(posix.dirname(path), specifier)), path); continue;
       }
       const name = packageName(specifier);
       const owner = Object.keys(manifests).find(folder => path.startsWith(`${folder}/`));
@@ -93,8 +96,8 @@ export function executionDescriptor(tree = diskTree(), runtime = `bun-${Bun.vers
         const expected = posix.normalize(posix.join(folder, target));
         const actual = tree.resolveImport?.(specifier, path) ?? expected;
         if (actual !== expected) throw Error(`Unexpected workspace resolution: ${path} -> ${specifier}: ${actual}`);
-        local(actual);
-      } else imports.push({ file: path, specifier, kind: entry.kind });
+        local(actual, path);
+      } else { directCapabilities.add(path); imports.push({ file: path, specifier, kind: entry.kind }); }
     }
   }
   for (const path of wholeLockFiles(tree).filter(path => path !== "bun.lock")) visit(path);
@@ -114,6 +117,8 @@ export function executionDescriptor(tree = diskTree(), runtime = `bun-${Bun.vers
   visit("apps/backend/executionIdentity/resolutionContract.json");
   visit("apps/backend/executionIdentity/resourceInventory.json");
   const resources = [...new Set(resourcePaths as string[])].sort().map(path => [path, sha256(tree.resourceBytes?.(path) ?? tree.read(path))]);
+  visit("apps/backend/executionIdentity/capabilityImportReviews.json");
+  verifyCapabilityImports(tree, directCapabilities, capabilityEdges, review);
   const dependencies = dependencyClosure(lock, roots);
   const install = Bun.TOML.parse(tree.read("bunfig.toml"));
   const root = JSON.parse(tree.read("package.json"));

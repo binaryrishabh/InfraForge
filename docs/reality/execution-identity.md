@@ -176,3 +176,20 @@ The committed `fe8fd0f1…` host descriptor is preserved as row 24 (commit `20af73
 using a frozen host algorithm with archived review/selection data and verified generated
 bytes. The final replay target adds this fixture review only. The numeric source ledger
 is refreshed with the existing inventory script after the boundary source review.
+
+Resource/loader privileges also propagate over the resolved authored import graph,
+including re-exports and registry APIs. All 99 current consumers have exact-byte
+import reviews in capabilityImportReviews.json; unreviewed consumers fail closed.
+Only two exact reviewed facades stop propagation: identity/hash metadata and the
+inventoried resource API. Thus generic diskTree, Docker/process adapters and package
+wrappers cannot become new resource/loading APIs through aliases. New privileged
+call sites require an explicit source review with:
+
+    bun --no-env-file scripts/execution-capabilities.ts --review-imports
+
+The builtin data-only interface list is closed. Import-meta loader access/aliasing,
+Error stack-hook capabilities and legacy function caller/callee access are refused;
+existing model caller data fields remain exact-byte reviews. Literal require.resolve
+is inventoried with its own runtime resolution kind. Row 25 preserves committed
+26b81b30… (23203fa) before these further policy changes. A table rebuild retains the
+committed HEAD target; uncommitted intermediate descriptors are never historical sources.

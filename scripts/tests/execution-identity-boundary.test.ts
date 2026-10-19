@@ -21,6 +21,9 @@ test("computed and aliased reflection cannot create an untracked loader in eithe
     `const reflect = Reflect; reflect.get(() => {}, 'constructor')("return import('three')")();`,
     `const object = Object; object.getPrototypeOf(() => {}).constructor("return import('three')")();`,
     `globalThis.WebAssembly.compile(new Uint8Array());`,
+    `Error.prepareStackTrace = (_, frames) => frames[1].getFunction();`,
+    `const E=Error; E.prepareStackTrace = (_, frames) => frames[1].getFunction();`,
+    `const load=(function(){})['caller']; load('three');`,
     `RegExp.prototype.toString = () => 'constructor'; (() => {})[/key/]("return import('three')")();`,
   ];
   for (const source of sources) {
@@ -50,11 +53,12 @@ test("fresh processes reject alternative resolution conditions and loading optio
 test("real hosts, injected ownership, schema and generator inputs cannot change under one identity", () => {
   for (const path of ["apps/backend/infra/workerOwnership.ts", "apps/backend/worker.ts", "apps/backend/prisma/schema.prisma", "apps/backend/prisma.config.ts"]) {
     const value = tree.read(path) + "\n// alternate host or generator\n";
-    expect(digest(changed({ [path]: value }))).not.toBe(digest(original));
+    if (path.endsWith("schema.prisma")) expect(digest(changed({ [path]: value }))).not.toBe(digest(original));
+    else expect(() => changed({ [path]: value })).toThrow("Unreviewed execution capability import");
     expect(original.files.some(([file]) => file === path)).toBe(true);
   }
   const ownership = "apps/backend/infra/workerOwnership.ts";
-  expect(digest(changed({ [ownership]: tree.read(ownership).replace('await this.client.query("BEGIN");', 'throw Error("alternate-host");') }))).not.toBe(digest(original));
+  expect(() => changed({ [ownership]: tree.read(ownership).replace('await this.client.query("BEGIN");', 'throw Error("alternate-host");') })).toThrow("Unreviewed execution capability import");
   expect(() => changed({ "apps/backend/lib/generated/prisma/internal/class.ts": tree.read("apps/backend/lib/generated/prisma/internal/class.ts") + "\n// generated mutation\n" })).toThrow();
 }, 120000);
 
@@ -102,4 +106,17 @@ test("the immutable containment probe has an exact review, not a child-path exem
   const path = "apps/backend/internalModel2/sandboxChild.ts";
   expect(digest(changed({ [path]: fixture }))).not.toBe(digest(original));
   expect(() => changed({ [path]: fixture + "\n// probe edit\n" })).toThrow("dynamic execution loader");
+}, 120000);
+
+
+test("privileged resources and loaders cannot escape through verifier helpers, re-exports or package wrappers", () => {
+  const readers = [
+    `import {diskTree} from '../executionIdentity/descriptor'; export const value=JSON.parse(diskTree().read('apps/backend/resources/review-data.json'));`,
+    `import express from 'express'; export const reader=express.static(process.env.ROOT);`,
+    `import {DockerConnection} from './dockerConnection'; DockerConnection.use(c=>c.run(['exec',process.env.CONTAINER,'cat',process.env.FILE]));`,
+  ];
+  for (const source of readers) for (const value of [1,99]) expect(() => changed({ 'apps/backend/internalModel2/store.ts': source, 'apps/backend/resources/review-data.json': JSON.stringify({value}) })).toThrow('Unreviewed execution capability import');
+  expect(() => changed({ 'apps/backend/internalModel2/store.ts': `import {reader} from './review-reader'; reader().read(process.env.FILE);`, 'apps/backend/internalModel2/review-reader.ts': `export {diskTree as reader} from '../executionIdentity/descriptor';` })).toThrow('Unreviewed execution capability import');
+  for (const source of [`import.meta.resolve('three');`, `const meta=import.meta; meta.resolve('three');`]) expect(() => changed({'apps/backend/internalModel2/store.ts':source})).toThrow('dynamic execution loader');
+  expect(() => changed({'apps/backend/internalModel2/store.ts':`require.resolve('three');`})).toThrow('Undeclared execution import');
 }, 120000);

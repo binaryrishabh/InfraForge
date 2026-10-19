@@ -107,7 +107,7 @@
     "review": "Fixed data indexing; resource adapters require the separate documented review"
   },
   "apps/backend/executionIdentity/descriptor.ts": {
-    "hash": "359d3c9803b4a4d2cfc1a954f22b8b3ba4b523be7a2093611eb6a54e57a53440",
+    "hash": "732c864b9bbd42488679aa4d3bf25481578e02a4f67796c0e5f9bcd031ad8e73",
     "capabilities": [
       "computed-data",
       "verifier",
@@ -133,7 +133,7 @@
     "review": "Fixed data indexing; resource adapters require the separate documented review"
   },
   "apps/backend/executionIdentity/loading.ts": {
-    "hash": "67fc08feb27d5c6e7ac07aac6df8c0b55b63e709b1e802496b2347391213af40",
+    "hash": "bc6458a9f1d4dc4d816c3894aed0e6628a0057a76d1211a56ba08e2bc5d1c86d",
     "capabilities": [
       "computed-data",
       "verifier",
@@ -755,5 +755,13 @@
       "trusted-fixture"
     ],
     "review": "Existing immutable containment probe only: fixed /bin/sleep PID exhaustion, filesystem/network denial and cgroup/proc observations; production child bytes receive no exemption"
+  },
+  "apps/backend/executionIdentity/capabilities.ts": {
+    "hash": "ccbfa47c7b2948d2040e63d51ecbecbfce66f8c9d646043c09f8bbddefb287c8",
+    "capabilities": [
+      "computed-data",
+      "verifier"
+    ],
+    "review": "Pure import-capability propagation, exact importer hashes and two reviewed narrow facades"
   }
 }
