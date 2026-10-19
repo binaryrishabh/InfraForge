@@ -80,6 +80,9 @@ test("resource access is enumerable and JSON/WASM content changes identity", () 
 }, 120000);
 
 test("Three changes and ordinary web edits stay identity-neutral", () => {
+  const source = tree.paths.find(path => path.startsWith("apps/web/src/") && path.endsWith(".tsx"))!;
+  expect(source).toBeDefined();
+  expect(digest(changed({ [source]: tree.read(source) + "\n// frontend-only edit\n" }))).toBe(digest(original));
   const lock = parseLock(tree.read("bun.lock")), web = JSON.parse(tree.read("apps/web/package.json"));
   lock.packages.three![0] = "three@99.0.0";
   expect(digest(changed({ "bun.lock": JSON.stringify(lock), "apps/web/src/identity-fixture.ts": "export const revision = 99;" }))).toBe(digest(original));
