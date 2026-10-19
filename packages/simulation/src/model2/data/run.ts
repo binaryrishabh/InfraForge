@@ -5,6 +5,7 @@ import { isData, networkAdapter, validateData } from "./validate";
 import { relationalDatabase } from "./database";
 import { keyedCache } from "./cache";
 import { cacheAside } from "./aside";
+import { dataModules } from "./modules";
 import { DATA_POLICY_LEDGER } from "./policy";
 import type { NetworkExtension } from "../network/run";
 const copy = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
@@ -16,19 +17,19 @@ export function createDataRuntime(authored: DataInput, extension?: NetworkExtens
   const input = copy(authored);
   input.resources.sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
   const databases = new Map<string, ReturnType<typeof relationalDatabase>>(), caches = new Map<string, ReturnType<typeof keyedCache>>(), applications = new Map<string, ReturnType<typeof cacheAside>>();
+  const modules = dataModules(input, { databases, caches, applications });
   const runtime = createNetworkRuntime(networkAdapter(input), {
     ...extension,
     resource(id, kernel, send) {
       const external = extension?.resource(id, kernel, send); if (external) return external;
-      const config = input.resources.find((r) => r.id === id)!; if (!isData(config)) return;
-      if (config.kind === "relational") { const r = relationalDatabase(config, kernel, extension?.causal); databases.set(id, r); return r; }
-      if (config.kind === "cache") { const r = keyedCache(config, kernel); caches.set(id, r); return r; }
-      const r = cacheAside(config, kernel, send, input.seed); applications.set(id, r); return r;
+      const config = input.resources.find((r) => r.id === id)!;
+      if (modules.has(config.kind)) return modules.create(config, { clock: extension?.clockFor?.(id, kernel) ?? kernel, send, causal: extension?.causal, cpu: extension?.cpuFor?.(id, kernel) });
     },
     disconnected(target, session) { databases.get(target)?.closeSession(session); extension?.disconnected?.(target, session); },
     install(kernel, trace, context) {
       extension?.install?.(kernel, trace, context);
       for (const i of input.dataInterventions) {
+        const clock = extension?.clockFor?.(i.target, kernel) ?? kernel;
         const apply = (active: boolean) => {
           const config = input.resources.find((r) => r.id === i.target)!;
           if (i.kind === "flush") caches.get(i.target)!.flush();
@@ -38,8 +39,8 @@ export function createDataRuntime(authored: DataInput, extension?: NetworkExtens
           }
           trace("data-intervention", i.id, active ? "applied" : "ended");
         };
-        kernel.schedule(requireKnown(i.at, "us"), 0, JSON.stringify(["data-intervention", i.id]), () => apply(true));
-        if ("duration" in i) kernel.schedule(requireKnown(i.at, "us") + requireKnown(i.duration, "us"), -1, JSON.stringify(["data-intervention-end", i.id]), () => apply(false));
+        clock.schedule(requireKnown(i.at, "us"), 0, JSON.stringify(["data-intervention", i.id]), () => apply(true));
+        if ("duration" in i) clock.schedule(requireKnown(i.at, "us") + requireKnown(i.duration, "us"), -1, JSON.stringify(["data-intervention-end", i.id]), () => apply(false));
       }
     },
   });

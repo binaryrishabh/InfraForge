@@ -1,14 +1,14 @@
 import { requireKnown } from "../../reality/quantity";
 import { cpuScheduler } from "../compute/scheduler";
-import type { EventKernel } from "../time";
+import type { EventClock } from "../time";
 import type { Invocation, Receipt, RemoteOutcome } from "../workload/contracts";
 import type { RelationalConfig, DataRequest, DataReply, TransactionPlan } from "./contracts";
 import { lockManager } from "./locks";
 import type { CausalObserver } from "../workload/causal";
 
 interface Tx { work: Invocation; plan: TransactionPlan; step: number; phase: "queued" | "lock" | "cpu" | "wait" | "commit"; terminal: boolean; writes: Map<string, { version: number; bytes: number }>; rows: DataReply["rows"]; cancelTx?: () => boolean; cancelStatement?: () => boolean; cancelLock?: () => boolean; cancelWait?: () => boolean; done(outcome: RemoteOutcome): void; session: string }
-export function relationalDatabase(config: RelationalConfig, kernel: EventKernel, causal?: CausalObserver) {
-  const cpu = cpuScheduler(config.id, requireKnown(config.execution.cores, "cores"), kernel), locks = lockManager();
+export function relationalDatabase(config: RelationalConfig, kernel: EventClock, causal?: CausalObserver, ownedCpu?: ReturnType<typeof cpuScheduler>) {
+  const cpu = ownedCpu ?? cpuScheduler(config.id, requireKnown(config.execution.cores, "cores"), kernel), locks = lockManager();
   const rows = new Map(config.initial.map((r) => [r.key, { version: r.version, bytes: requireKnown(r.bytes, "bytes") }]));
   const keyspace = new Set(config.keys);
   const sessions = new Map<string, Tx | undefined>(), active = new Map<string, Tx>(), queue = new Map<string, Tx>();

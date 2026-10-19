@@ -1,15 +1,15 @@
 import { requireKnown } from "../../reality/quantity";
 import { cpuScheduler } from "../compute/scheduler";
-import type { EventKernel } from "../time";
+import type { EventClock } from "../time";
 import type { Invocation, Receipt, RemoteOutcome } from "../workload/contracts";
 import type { CacheConfig, DataReply, DataRequest } from "./contracts";
 import { DATA_LIMITS } from "./policy";
 import { expireOwned, evictOwned } from "./cache-state";
 interface Entry { version: number; bytes: number; expires: number; sequence: number }
 interface Command { work: Invocation; done(outcome: RemoteOutcome): void; terminal: boolean }
-export function keyedCache(config: CacheConfig, kernel: EventKernel) {
+export function keyedCache(config: CacheConfig, kernel: EventClock, ownedCpu?: ReturnType<typeof cpuScheduler>) {
   const entries = new Map<string, Entry>(), generations = new Map<string, number>(), queue = new Map<string, Command>(), active = new Map<string, Command>();
-  const cpu = cpuScheduler(config.id, requireKnown(config.execution.cores, "cores"), kernel), capacity = requireKnown(config.capacity, "bytes"), overhead = requireKnown(config.entryOverhead, "bytes");
+  const cpu = ownedCpu ?? cpuScheduler(config.id, requireKnown(config.execution.cores, "cores"), kernel), capacity = requireKnown(config.capacity, "bytes"), overhead = requireKnown(config.entryOverhead, "bytes");
   let epoch = 0, sequence = 0, used = 0, paused = false, received = 0, admitted = 0, rejected = 0, completed = 0, failed = 0, cancelled = 0, attemptedLookups = 0, lookupFailures = 0, lookupCancelled = 0, lookups = 0, hits = 0, misses = 0, fills = 0, evictions = 0, expirations = 0, invalidations = 0, staleFillRefused = 0, allocationRefused = 0;
   const token = (key: string) => JSON.stringify([epoch, generations.get(key) ?? 0]);
   let expirationCursor = entries.keys();

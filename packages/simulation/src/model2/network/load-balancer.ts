@@ -1,5 +1,5 @@
 import { requireKnown } from "../../reality/quantity";
-import type { EventKernel } from "../time";
+import type { EventClock } from "../time";
 import { lexical } from "../time";
 import { keyedUniform } from "../random";
 import type { Invocation, OperationClass, Receipt, RemoteOutcome } from "../workload/contracts";
@@ -8,7 +8,7 @@ import type { pathTransport } from "./transport";
 import type { CausalObserver } from "../workload/causal";
 
 interface Request { work: Invocation; done(outcome: RemoteOutcome): void; receipt?: Receipt; timer?: () => boolean; retryTimer?: () => boolean; attempt: number; backend?: string; retrying: boolean; terminal: boolean }
-export function loadBalancer(config: LoadBalancer, kernel: EventKernel, paths: Map<string, ReturnType<typeof pathTransport>>, operations: Map<string, OperationClass>, seed: string, horizon: number, trace: Trace, causal?: CausalObserver) {
+export function loadBalancer(config: LoadBalancer, kernel: EventClock, paths: Map<string, ReturnType<typeof pathTransport>>, operations: Map<string, OperationClass>, seed: string, horizon: number, trace: Trace, causal?: CausalObserver) {
   const members = [...config.backends].sort().map((id) => ({ id, health: config.health.initial === "eligible", draining: false, successes: 0, failures: 0, outstanding: 0, selected: 0, probes: 0, cancelCheck: undefined as (() => boolean) | undefined }));
   const active = new Map<string, Request>(), pending = new Map<string, Request>();
   const membersById = new Map(members.map((m) => [m.id, m]));

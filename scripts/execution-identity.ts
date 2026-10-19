@@ -1,3 +1,4 @@
+import { buildCompositionTransitions } from "./stage1-identity";
 import { reviewStage0Syntax, refreshStage0Transitions } from "./stage0-identity";
 import { historicalAnalysisDescriptor } from "./historical-analysis-descriptor";
 import { execFileSync, spawnSync } from "node:child_process";
@@ -171,6 +172,7 @@ if (import.meta.main) {
   if (process.argv.includes("--review-stage0-syntax")) reviewStage0Syntax();
   else if (process.argv.includes("--review-stage0-transitions")) refreshStage0Transitions();
   else if (process.argv.includes("--build-analysis")) console.info(JSON.stringify(checkLoadingAnalysis(true)));
+  else if (process.argv.includes("--build-composition-transitions")) buildCompositionTransitions();
   else if (process.argv.includes("--build-transitions")) buildTransitions();
   else if (process.argv.includes("--check")) console.info(JSON.stringify({ ...checkLoadingAnalysis(), ...checkTransitions() }));
   else console.info(digest(executionDescriptor(diskTree())));

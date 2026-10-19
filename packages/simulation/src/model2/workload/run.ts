@@ -1,4 +1,4 @@
-import { EventKernel, lexical } from "../time";
+import { EventKernel, lexical, type EventClock } from "../time";
 import { requireKnown } from "../../reality/quantity";
 import { identity, ingestTrace, openRows } from "./arrivals";
 import { ResultBook } from "./evidence";
@@ -14,6 +14,7 @@ export interface WorkEndpoint<M extends StationState> {
   measure(): M;
 }
 export interface RuntimeModules<M extends StationState> {
+  clockFor?(id: string, kernel: EventKernel): EventClock;
   causal?: CausalObserver;
   station(config: WorkStation, demands: Map<string, { cpuUs: number; ioUs: number }>, kernel: EventKernel, send: (target: string, work: Invocation, done: (outcome: RemoteOutcome) => void) => Receipt): WorkEndpoint<M>;
   install?(kernel: EventKernel, stations: Map<string, WorkEndpoint<M>>, send: (target: string, work: Invocation, done: (outcome: RemoteOutcome) => void) => Receipt): void;
@@ -106,7 +107,7 @@ export function createWorkloadRuntime<M extends StationState>(authored: Workload
   const faults: Array<{ id: string; at: number; active: boolean }> = [];
   for (const f of input.faults) for (const active of [true, false]) {
     const at = requireKnown(f.at, "us") + (active ? 0 : requireKnown(f.duration, "us"));
-    kernel.schedule(at, active ? 0 : -1, identity("fault", f.id, active ? "start" : "end"), () => { stations.get(f.target)!.pause(active); faults.push({ id: f.id, at: kernel.now, active }); });
+    (modules.clockFor?.(f.target, kernel) ?? kernel).schedule(at, active ? 0 : -1, identity("fault", f.id, active ? "start" : "end"), () => { stations.get(f.target)!.pause(active); faults.push({ id: f.id, at: kernel.now, active }); });
   }
   const snapshot = () => ({ at: kernel.now, counts: { ...counts, inFlight: live.size }, resources: [...stations.values()].map((s) => s.measure()) });
   const samples: ReturnType<typeof snapshot>[] = [];

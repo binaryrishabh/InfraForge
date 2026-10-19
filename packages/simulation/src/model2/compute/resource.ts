@@ -1,5 +1,5 @@
 import { requireKnown } from "../../reality/quantity";
-import type { EventKernel } from "../time";
+import type { EventClock } from "../time";
 import type { Invocation, Receipt, RemoteOutcome } from "../workload/contracts";
 import type { ComputeResource, ComputeProfile, ComputeState } from "./contracts";
 import { identity } from "../workload/arrivals";
@@ -9,10 +9,10 @@ import type { CausalObserver } from "../workload/causal";
 
 interface Call { work: Invocation; phase: "queued" | "cpu" | "wait" | "dependency" | "finished";
   done(outcome: RemoteOutcome): void; child?: Receipt; cancelWait?: () => boolean; waitRemaining: number; waitSince: number }
-export function computeResource(config: ComputeResource, profiles: Map<string, ComputeProfile>, kernel: EventKernel,
-  send: (target: string, work: Invocation, done: Call["done"]) => Receipt, causal?: CausalObserver) {
+export function computeResource(config: ComputeResource, profiles: Map<string, ComputeProfile>, kernel: EventClock,
+  send: (target: string, work: Invocation, done: Call["done"]) => Receipt, causal?: CausalObserver, ownedCpu?: ReturnType<typeof cpuScheduler>) {
   const workers = requireKnown(config.workers, "count"), capacity = requireKnown(config.queueCapacity, "count");
-  const scheduler = cpuScheduler(config.id, requireKnown(config.cores, "cores"), kernel, config.quota ? { budget: requireKnown(config.quota.budget, "cpu-us"), period: requireKnown(config.quota.period, "us") } : undefined);
+  const scheduler = ownedCpu ?? cpuScheduler(config.id, requireKnown(config.cores, "cores"), kernel, config.quota ? { budget: requireKnown(config.quota.budget, "cpu-us"), period: requireKnown(config.quota.period, "us") } : undefined);
   const memory = residentMemory(config, profiles), active = new Map<string, Call>(), queue = new Map<string, Call>();
   let paused = false, received = 0, admitted = 0, rejected = 0, completed = 0, failed = 0, cancelled = 0, allocationRejected = 0, pumping = false;
   let occupancyAt = kernel.now, occupancy = 0;

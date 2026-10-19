@@ -3,6 +3,7 @@ import { readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { relative, resolve } from "node:path";
 import { productHash, productRoot } from "./product-source";
 import { providerDigest } from "./provider-source";
+import { stage1BaselineText } from "../stage1-lineage";
 import { baselinePaths, baselineText } from "../../apps/backend/internalModel2/legacyCompatibility";
 
 const accepted = "5b4771ac107e447aa08aac146b8ff15f019beac9";
@@ -26,10 +27,10 @@ export function sourceProjection(lineage: SourceLineage, read: (path: string) =>
   if (lineage.schema !== "infraforge-runtime-source-lineage/1" || lineage.acceptedSha !== accepted || lineage.foundationHash !== foundation || lineage.providerHash !== provider || lineage.files.length !== changed.length || new Set(lineage.files.map((f) => f.path)).size !== changed.length) throw Error("Invalid accepted source lineage identity");
   const originals = new Map<string, string>();
   for (const f of lineage.files) {
-    if (!changed.includes(f.path) || sha(f.originalText) !== f.originalSha256 || !/^[a-f0-9]{64}$/.test(f.currentSha256) || sha(baselineText(f.path, read(f.path))) !== f.currentSha256) throw Error(`Unreviewed source lineage drift: ${f.path}`);
+    if (!changed.includes(f.path) || sha(f.originalText) !== f.originalSha256 || !/^[a-f0-9]{64}$/.test(f.currentSha256) || sha(baselineText(f.path, stage1BaselineText(f.path, read(f.path)))) !== f.currentSha256) throw Error(`Unreviewed source lineage drift: ${f.path}`);
     originals.set(f.path, normalize(f.originalText));
   }
-  return (path: string) => originals.get(path) ?? baselineText(path, read(path));
+  return (path: string) => originals.get(path) ?? baselineText(path, stage1BaselineText(path, read(path)));
 }
 function foundationFiles(root: string) {
   const walk = (path: string): string[] => readdirSync(path, { withFileTypes: true }).flatMap((e) => e.isDirectory() ? walk(resolve(path, e.name)) : e.name.endsWith(".ts") ? [resolve(path, e.name)] : []);

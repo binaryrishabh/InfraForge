@@ -68,3 +68,5 @@ export class EventKernel {
     this.now = micros(until);
   }
 }
+
+export type EventClock = Pick<EventKernel, "now" | "schedule">;

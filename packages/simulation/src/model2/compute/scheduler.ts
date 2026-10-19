@@ -1,8 +1,8 @@
-import { lexical, type EventKernel } from "../time";
+import { lexical, type EventClock } from "../time";
 import { fairShares } from "./sharing";
 
 interface Job { id: string; cap: number; remaining: number; competitor: boolean; done(): void }
-export function cpuScheduler(id: string, initialCapacity: number, kernel: EventKernel, quota?: { budget: number; period: number }) {
+export function cpuScheduler(id: string, initialCapacity: number, kernel: EventClock, quota?: { budget: number; period: number }) {
   const jobs = new Map<string, Job>(); let rates = new Map<string, number>();
   let capacity = initialCapacity, paused = false, anchor = kernel.now, available = 0, app = 0, competitor = 0, throttled = 0, pressure = 0;
   let budget = quota?.budget ?? Infinity, period = quota ? Math.floor(kernel.now / quota.period) : 0;

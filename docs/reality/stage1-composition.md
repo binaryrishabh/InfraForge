@@ -1,0 +1,72 @@
+# Internal composition and ownership
+
+Model 1 remains active. `createStackComposition` is an internal, opt-in composition
+for the load-balancer, application compute, relational and optional keyed-cache
+stack. It reuses the event heap, schedulers, transport, work identities and data
+mechanisms. It introduces no calibration or provider-performance claim.
+
+`composition/registry.ts` resolves a kind to one trusted, statically imported
+module. A module owns its versioned request-port manifest, validation and factory.
+Unknown kinds, duplicate owners and incompatible host APIs fail before factory
+effects. The clock/send/causal/CPU interfaces live in `composition/host.ts`.
+Compute, relational, cache, cache-aside and LB factories now register through
+their respective `module.ts`/`modules.ts` files. Family validators and adapters
+remain available to the pinned m2b–m2h compatibility compositions; the old entry
+points keep their evidence formats, scheduling keys and per-resource owners.
+
+The new composition optionally binds CPU consumers to explicit physical host
+owners. Each host has one capped-equal-fluid scheduler. Member leases namespace
+call IDs, suspend only owned work, preserve already consumed service and release
+their outstanding callbacks on retirement. Pool core-time is authoritative;
+member available-core-time fields refer to the same host and are not additive.
+Version 1 requires member capacity to match the declared host and refuses shared
+per-role quotas/capacity interventions rather than inventing their semantics.
+
+Memory is an explicit, authored reservation/admission budget. Known reservations
+cannot exceed the known owner capacity, Unknown cannot be admitted as zero, and
+release is idempotent. This is not a complete resident-process model. Relational
+and cache process coverage remains Unknown where the underlying modules say so.
+
+Lifecycle identities follow create → register → ready → drain → retire. A reused
+identity receives a new generation; stale handles fail closed. Owned clock
+callbacks use identity/generation/key and are removed on retirement. The stack
+wrapper gates drain through network readiness, refuses retirement with live work,
+then releases CPU and memory leases. It materializes the authored resources once;
+lazy scaling, rematerializing resource state and general membership policies are
+later work, not implied by the lifecycle service.
+
+Independent request mechanisms implement `RequestPlugin`, validate their own
+configuration and receive only a generation-scoped clock. A gate forwards through
+the real receipt chain or rejects synchronously. Plug-in order is retained in
+composition evidence. A plug-in needs no kernel or peer-resource implementation
+change. These are trusted modules, not an untrusted-code sandbox.
+
+The pre-refactor evidence hashes in `stage1-composition-hashes.json` were captured
+using the existing workload, compute, network, LB, data, async, systems and product
+fixtures. Run `bun --no-env-file scripts/reality/composition-proofs.ts` to compare
+all eight. Never regenerate that baseline to accommodate a refactor.
+
+Historical source projection is separate from accepted evidence. After reviewing
+a change, run `scripts/stage1-lineage.ts --write --review-modules`; it refuses to
+write unless all eight pinned replays match. The original legacyRuntime metadata
+stays frozen. Historical foundation/provider/metering proofs reconstruct through
+the composition projection and their existing frozen projections.
+
+Execution identity refresh order, using `bun --no-env-file` for every script:
+
+1. Generate Prisma with the backend's `db:generate` script.
+2. Refresh the exact module reviews with `scripts/stage1-lineage.ts --review-modules`.
+3. Run `scripts/execution-identity.ts --build-analysis`.
+4. Run `scripts/stage1-lineage.ts --review-analysis-pin`, followed by
+   `scripts/execution-capabilities.ts --review-imports`.
+5. Run `scripts/execution-resolution.ts --build-contract`. If selected source
+   bytes changed, repeat steps 3–4 to bind the new selection contract. This is
+   needed because both the module reviews and selection contract bind the analysis.
+6. Run `scripts/execution-identity.ts --build-composition-transitions`, supplying
+   `--composition-baseline=<local-commit>` for a subsequent committed step.
+7. Run `scripts/execution-identity.ts --check` and `scripts/execution-resolution.ts`.
+
+The transition builder preserves the committed prior descriptor and compressed
+source snapshot, checks the permitted source scope and all eight replay hashes,
+and records an explicit reviewed target. It does not present different execution
+descriptors as identical source or silently relabel historical results.

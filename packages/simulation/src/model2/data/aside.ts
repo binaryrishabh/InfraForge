@@ -1,11 +1,11 @@
 import type { Deliver } from "../compute/run";
-import type { EventKernel } from "../time";
+import type { EventClock } from "../time";
 import { keyedUniform } from "../random";
 import type { Invocation, Receipt, RemoteOutcome } from "../workload/contracts";
 import type { AsideConfig, DataRequest, DataReply } from "./contracts";
 import { DATA_LIMITS } from "./policy";
 
-export function cacheAside(config: AsideConfig, kernel: EventKernel, send: Deliver, seed: string) {
+export function cacheAside(config: AsideConfig, kernel: EventClock, send: Deliver, seed: string) {
   const live = new Map<string, { done(outcome: RemoteOutcome): void; work: Invocation; terminal: boolean }>();
   const fills = new Map<string, Array<(reply: DataReply | undefined) => void>>();
   let received = 0, completed = 0, failed = 0, cacheFailures = 0, fetches = 0, coalesced = 0, invalidations = 0;
