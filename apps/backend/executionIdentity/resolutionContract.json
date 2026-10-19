@@ -1058,9 +1058,21 @@
     },
     {
       "owner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "file": "src/model2/composition/registry.ts",
+      "key": "@infraforge/simulation/src/model2/composition/registry.ts",
+      "hash": "d43fb175574f9e146a92ae6acd0b1c2e6ee6de66d90cd0962b7794ff52f7f08f"
+    },
+    {
+      "owner": "@infraforge/simulation@workspace:packages/simulation:158",
       "file": "src/model2/compute/memory.ts",
       "key": "@infraforge/simulation/src/model2/compute/memory.ts",
       "hash": "2646fe1f3749735ac27a41981e996ed2db9072f568e85f43f37cb0be9d7f4ff3"
+    },
+    {
+      "owner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "file": "src/model2/compute/module.ts",
+      "key": "@infraforge/simulation/src/model2/compute/module.ts",
+      "hash": "b997e48ff95b8cccd52b892504a86c7c3fbfb6a4063e52b207db04f1a8a5a2c8"
     },
     {
       "owner": "@infraforge/simulation@workspace:packages/simulation:158",
@@ -1072,19 +1084,19 @@
       "owner": "@infraforge/simulation@workspace:packages/simulation:158",
       "file": "src/model2/compute/resource.ts",
       "key": "@infraforge/simulation/src/model2/compute/resource.ts",
-      "hash": "013d8e5c29e5b5f579170689579a2a9704798f028db6753159556335f30da00d"
+      "hash": "5bd17b10f89b28b2fe44e5b5e51f78757d7c69626f3d9884ae822a25959164eb"
     },
     {
       "owner": "@infraforge/simulation@workspace:packages/simulation:158",
       "file": "src/model2/compute/run.ts",
       "key": "@infraforge/simulation/src/model2/compute/run.ts",
-      "hash": "d3c7a5dd033cc2ad0edae2d8cdd7a82d41083e75258b352732d3b1b338592318"
+      "hash": "7a4c73f7eacea18a68cbbcf92e09ee96bfe410a161800be8a605c3e2f8a5909b"
     },
     {
       "owner": "@infraforge/simulation@workspace:packages/simulation:158",
       "file": "src/model2/compute/scheduler.ts",
       "key": "@infraforge/simulation/src/model2/compute/scheduler.ts",
-      "hash": "fc92841b1269816cd09529b4caf75802d40892de7bc56376e001817e2c3a7102"
+      "hash": "366692549da7837ab51943097f5d41f9e42de7e5760f9c586f3ed71cae09f4b6"
     },
     {
       "owner": "@infraforge/simulation@workspace:packages/simulation:158",
@@ -1102,7 +1114,7 @@
       "owner": "@infraforge/simulation@workspace:packages/simulation:158",
       "file": "src/model2/data/aside.ts",
       "key": "@infraforge/simulation/src/model2/data/aside.ts",
-      "hash": "024f336d527ce6de207876fac4b4abfd8d5d5c38d709ebb4c8379fdfaad5e98e"
+      "hash": "0c0376662639ae5d148ee717417c6af26def45ef317fa75d4b31ed82a1a12d11"
     },
     {
       "owner": "@infraforge/simulation@workspace:packages/simulation:158",
@@ -1114,19 +1126,25 @@
       "owner": "@infraforge/simulation@workspace:packages/simulation:158",
       "file": "src/model2/data/cache.ts",
       "key": "@infraforge/simulation/src/model2/data/cache.ts",
-      "hash": "382fb0dc59d5123a1593b7553df33408e4ae6bed00c07c614d0678860c441d6e"
+      "hash": "4583301bdf46d350d8e05de2a6515f4af9e83fd25e378996a134e9b6699823b8"
     },
     {
       "owner": "@infraforge/simulation@workspace:packages/simulation:158",
       "file": "src/model2/data/database.ts",
       "key": "@infraforge/simulation/src/model2/data/database.ts",
-      "hash": "c5055c3fb4f5938cf79992e48990b306829458fc9c97923181fea571912eff47"
+      "hash": "d034b9d22fec068c8588a841c0a90671fc10a816a55a3e780843a3d020e7b137"
     },
     {
       "owner": "@infraforge/simulation@workspace:packages/simulation:158",
       "file": "src/model2/data/locks.ts",
       "key": "@infraforge/simulation/src/model2/data/locks.ts",
       "hash": "e148cfcbb01911d0ecef9fd6deb7d374644284f1ac009136b2f4035c3579bc8d"
+    },
+    {
+      "owner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "file": "src/model2/data/modules.ts",
+      "key": "@infraforge/simulation/src/model2/data/modules.ts",
+      "hash": "cc19eb6234e3703b16540f3c82991eaeabb42d68e9aa260c12963200f294339f"
     },
     {
       "owner": "@infraforge/simulation@workspace:packages/simulation:158",
@@ -1138,7 +1156,7 @@
       "owner": "@infraforge/simulation@workspace:packages/simulation:158",
       "file": "src/model2/data/run.ts",
       "key": "@infraforge/simulation/src/model2/data/run.ts",
-      "hash": "9dc5d9471b9d3a593a1734d308ca3c772bc04d86ea82cd231b60431dae8379bd"
+      "hash": "46073b69a60109a63a3a33d2cb8ce42d69c1f180a68cea282753231701a4c708"
     },
     {
       "owner": "@infraforge/simulation@workspace:packages/simulation:158",
@@ -1162,7 +1180,13 @@
       "owner": "@infraforge/simulation@workspace:packages/simulation:158",
       "file": "src/model2/network/load-balancer.ts",
       "key": "@infraforge/simulation/src/model2/network/load-balancer.ts",
-      "hash": "dbacadc71af099a5f1411519cf9fa3d4bd0d3d822e209bd24bb4e7b9bda13bbb"
+      "hash": "baee14b77dbde52219d6464866690432e2d2021e1ebbad2e7935d9e28b1fd025"
+    },
+    {
+      "owner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "file": "src/model2/network/module.ts",
+      "key": "@infraforge/simulation/src/model2/network/module.ts",
+      "hash": "74c92532aaf08e9bf6e5f32c95c396cd7383aca979ed0aa3ac6bbfdd88d0ddb2"
     },
     {
       "owner": "@infraforge/simulation@workspace:packages/simulation:158",
@@ -1180,7 +1204,7 @@
       "owner": "@infraforge/simulation@workspace:packages/simulation:158",
       "file": "src/model2/network/run.ts",
       "key": "@infraforge/simulation/src/model2/network/run.ts",
-      "hash": "39f58313c46db44b8d38ff514b37881e094f9fdc3198a89f86a76c83a43bc85c"
+      "hash": "dbe08ad71c7f9495e6617baa383e176899949c251db59beec5ce31261fa4c54c"
     },
     {
       "owner": "@infraforge/simulation@workspace:packages/simulation:158",
@@ -1360,7 +1384,7 @@
       "owner": "@infraforge/simulation@workspace:packages/simulation:158",
       "file": "src/model2/time.ts",
       "key": "@infraforge/simulation/src/model2/time.ts",
-      "hash": "031badec4030bceae26b51f188a447eae5ffa3873818eadd6ede022095f09bbd"
+      "hash": "f35e34b5b779891fbb136cf7a1873c81d4340d68b59fe8d3758f5910344e5ef2"
     },
     {
       "owner": "@infraforge/simulation@workspace:packages/simulation:158",
@@ -1390,7 +1414,7 @@
       "owner": "@infraforge/simulation@workspace:packages/simulation:158",
       "file": "src/model2/workload/run.ts",
       "key": "@infraforge/simulation/src/model2/workload/run.ts",
-      "hash": "9ed999193c19fda1300bc1c2012f8a3a726ac7b221e353abc845ea5c6ec2aa10"
+      "hash": "64f172cd1c7b0c4d1b164a0f9060a8eeca2932ee643be3e1c9c77d47736b02d1"
     },
     {
       "owner": "@infraforge/simulation@workspace:packages/simulation:158",
@@ -12974,6 +12998,30 @@
     },
     {
       "owner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "file": "src/model2/compute/module.ts",
+      "specifier": "../composition/registry",
+      "kind": "import-statement",
+      "targetOwner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "targetFile": "src/model2/composition/registry.ts"
+    },
+    {
+      "owner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "file": "src/model2/compute/module.ts",
+      "specifier": "./resource",
+      "kind": "import-statement",
+      "targetOwner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "targetFile": "src/model2/compute/resource.ts"
+    },
+    {
+      "owner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "file": "src/model2/compute/module.ts",
+      "specifier": "./validate",
+      "kind": "import-statement",
+      "targetOwner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "targetFile": "src/model2/compute/validate.ts"
+    },
+    {
+      "owner": "@infraforge/simulation@workspace:packages/simulation:158",
       "file": "src/model2/compute/resource.ts",
       "specifier": "../../reality/quantity",
       "kind": "import-statement",
@@ -13047,18 +13095,18 @@
     {
       "owner": "@infraforge/simulation@workspace:packages/simulation:158",
       "file": "src/model2/compute/run.ts",
-      "specifier": "./policy",
+      "specifier": "./module",
       "kind": "import-statement",
       "targetOwner": "@infraforge/simulation@workspace:packages/simulation:158",
-      "targetFile": "src/model2/compute/policy.ts"
+      "targetFile": "src/model2/compute/module.ts"
     },
     {
       "owner": "@infraforge/simulation@workspace:packages/simulation:158",
       "file": "src/model2/compute/run.ts",
-      "specifier": "./resource",
+      "specifier": "./policy",
       "kind": "import-statement",
       "targetOwner": "@infraforge/simulation@workspace:packages/simulation:158",
-      "targetFile": "src/model2/compute/resource.ts"
+      "targetFile": "src/model2/compute/policy.ts"
     },
     {
       "owner": "@infraforge/simulation@workspace:packages/simulation:158",
@@ -13198,6 +13246,46 @@
     },
     {
       "owner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "file": "src/model2/data/modules.ts",
+      "specifier": "../composition/registry",
+      "kind": "import-statement",
+      "targetOwner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "targetFile": "src/model2/composition/registry.ts"
+    },
+    {
+      "owner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "file": "src/model2/data/modules.ts",
+      "specifier": "./aside",
+      "kind": "import-statement",
+      "targetOwner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "targetFile": "src/model2/data/aside.ts"
+    },
+    {
+      "owner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "file": "src/model2/data/modules.ts",
+      "specifier": "./cache",
+      "kind": "import-statement",
+      "targetOwner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "targetFile": "src/model2/data/cache.ts"
+    },
+    {
+      "owner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "file": "src/model2/data/modules.ts",
+      "specifier": "./database",
+      "kind": "import-statement",
+      "targetOwner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "targetFile": "src/model2/data/database.ts"
+    },
+    {
+      "owner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "file": "src/model2/data/modules.ts",
+      "specifier": "./validate",
+      "kind": "import-statement",
+      "targetOwner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "targetFile": "src/model2/data/validate.ts"
+    },
+    {
+      "owner": "@infraforge/simulation@workspace:packages/simulation:158",
       "file": "src/model2/data/run.ts",
       "specifier": "../../reality/quantity",
       "kind": "import-statement",
@@ -13215,26 +13303,10 @@
     {
       "owner": "@infraforge/simulation@workspace:packages/simulation:158",
       "file": "src/model2/data/run.ts",
-      "specifier": "./aside",
+      "specifier": "./modules",
       "kind": "import-statement",
       "targetOwner": "@infraforge/simulation@workspace:packages/simulation:158",
-      "targetFile": "src/model2/data/aside.ts"
-    },
-    {
-      "owner": "@infraforge/simulation@workspace:packages/simulation:158",
-      "file": "src/model2/data/run.ts",
-      "specifier": "./cache",
-      "kind": "import-statement",
-      "targetOwner": "@infraforge/simulation@workspace:packages/simulation:158",
-      "targetFile": "src/model2/data/cache.ts"
-    },
-    {
-      "owner": "@infraforge/simulation@workspace:packages/simulation:158",
-      "file": "src/model2/data/run.ts",
-      "specifier": "./database",
-      "kind": "import-statement",
-      "targetOwner": "@infraforge/simulation@workspace:packages/simulation:158",
-      "targetFile": "src/model2/data/database.ts"
+      "targetFile": "src/model2/data/modules.ts"
     },
     {
       "owner": "@infraforge/simulation@workspace:packages/simulation:158",
@@ -13334,6 +13406,38 @@
     },
     {
       "owner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "file": "src/model2/network/module.ts",
+      "specifier": "../../reality/quantity",
+      "kind": "import-statement",
+      "targetOwner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "targetFile": "src/reality/quantity.ts"
+    },
+    {
+      "owner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "file": "src/model2/network/module.ts",
+      "specifier": "../composition/registry",
+      "kind": "import-statement",
+      "targetOwner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "targetFile": "src/model2/composition/registry.ts"
+    },
+    {
+      "owner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "file": "src/model2/network/module.ts",
+      "specifier": "./load-balancer",
+      "kind": "import-statement",
+      "targetOwner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "targetFile": "src/model2/network/load-balancer.ts"
+    },
+    {
+      "owner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "file": "src/model2/network/module.ts",
+      "specifier": "./validate",
+      "kind": "import-statement",
+      "targetOwner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "targetFile": "src/model2/network/validate.ts"
+    },
+    {
+      "owner": "@infraforge/simulation@workspace:packages/simulation:158",
       "file": "src/model2/network/pool.ts",
       "specifier": "../../reality/quantity",
       "kind": "import-statement",
@@ -13375,10 +13479,10 @@
     {
       "owner": "@infraforge/simulation@workspace:packages/simulation:158",
       "file": "src/model2/network/run.ts",
-      "specifier": "./load-balancer",
+      "specifier": "./module",
       "kind": "import-statement",
       "targetOwner": "@infraforge/simulation@workspace:packages/simulation:158",
-      "targetFile": "src/model2/network/load-balancer.ts"
+      "targetFile": "src/model2/network/module.ts"
     },
     {
       "owner": "@infraforge/simulation@workspace:packages/simulation:158",

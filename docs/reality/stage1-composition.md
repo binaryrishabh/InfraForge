@@ -57,11 +57,12 @@ using the existing workload, compute, network, LB, data, async, systems and prod
 fixtures. Run `bun --no-env-file scripts/reality/composition-proofs.ts` to compare
 all eight. Never regenerate that baseline to accommodate a refactor.
 
-Historical source projection is separate from accepted evidence. After reviewing
+Historical source lineage is separate from accepted evidence. After reviewing
 a change, run `scripts/stage1-lineage.ts --write --review-modules`; it refuses to
-write unless all eight pinned replays match. The original legacyRuntime metadata
-stays frozen. Historical foundation/provider/metering proofs reconstruct through
-the composition projection and their existing frozen projections.
+write unless all eight pinned replays match. Refresh connected lineage with
+`scripts/connected-lineage.ts`; it retains original source bytes and records the
+current pins. Historical foundation/provider/metering proofs reconstruct through
+that retained source and their existing frozen projections.
 
 Execution identity refresh order, using `bun --no-env-file` for every script:
 
@@ -73,11 +74,21 @@ Execution identity refresh order, using `bun --no-env-file` for every script:
 5. Run `scripts/execution-resolution.ts --build-contract`. If selected source
    bytes changed, repeat steps 3–4 to bind the new selection contract. This is
    needed because both the module reviews and selection contract bind the analysis.
-6. Run `scripts/execution-identity.ts --build-composition-transitions`, supplying
-   `--composition-baseline=<local-commit>` for a subsequent committed step.
-7. Run `scripts/execution-identity.ts --check` and `scripts/execution-resolution.ts`.
+6. Refresh `scripts/connected-lineage.ts`, then
+   `scripts/lesson-endpoint-lineage.ts --refresh-current` and
+   `scripts/m2m-lineage.ts --refresh-current`.
+7. Run `scripts/execution-identity.ts --build-composition-transitions`.
+8. Regenerate `scripts/reality/launch-contract.ts --write`,
+   `scripts/reality/run-record-schema.ts --write`,
+   `scripts/reality/shipping-inventory.ts --write`, and
+   `scripts/reality/inventory.ts --write`.
+9. Run `scripts/execution-identity.ts --check` and `scripts/execution-resolution.ts`.
 
-The transition builder preserves the committed prior descriptor and compressed
-source snapshot, checks the permitted source scope and all eight replay hashes,
-and records an explicit reviewed target. It does not present different execution
-descriptors as identical source or silently relabel historical results.
+The transition builder is pinned to accepted main `31c4a92` and composition
+`c0df52c`. It preserves both histories and their compressed source snapshots,
+checks the permitted source scope, all eight replay hashes and all 88 host/peer
+source hashes, and records an explicit reviewed target. The frozen archive also
+supports regeneration in clones without the old composition Git objects. A new
+execution change requires its own scope review and transition; this command is
+not a general approval for subsequent changes. Different execution descriptors
+remain distinct, and historical results are not silently relabelled.

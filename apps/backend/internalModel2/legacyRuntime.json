@@ -322,7 +322,8 @@
     },
     {
       "path": "packages/simulation/src/model2/compute/scheduler.ts",
-      "hash": "fc92841b1269816cd09529b4caf75802d40892de7bc56376e001817e2c3a7102"
+      "hash": "fc92841b1269816cd09529b4caf75802d40892de7bc56376e001817e2c3a7102",
+      "text": "import { lexical, type EventKernel } from \"../time\";\nimport { fairShares } from \"./sharing\";\n\ninterface Job { id: string; cap: number; remaining: number; competitor: boolean; done(): void }\nexport function cpuScheduler(id: string, initialCapacity: number, kernel: EventKernel, quota?: { budget: number; period: number }) {\n  const jobs = new Map<string, Job>(); let rates = new Map<string, number>();\n  let capacity = initialCapacity, paused = false, anchor = kernel.now, available = 0, app = 0, competitor = 0, throttled = 0, pressure = 0;\n  let budget = quota?.budget ?? Infinity, period = quota ? Math.floor(kernel.now / quota.period) : 0;\n  let cancelBoundary: (() => boolean) | undefined, updating = false, boundaries = 0;\n  const projection = () => {\n    const dt = kernel.now - anchor, totalRate = [...rates.values()].reduce((a, b) => a + b, 0);\n    const serviceDt = totalRate > 0 ? Math.min(dt, budget / totalRate) : 0;\n    let usedApp = 0, usedCompetitor = 0;\n    const remaining = new Map<string, number>();\n    for (const j of jobs.values()) {\n      const consumed = Math.min(j.remaining, (rates.get(j.id) ?? 0) * serviceDt);\n      remaining.set(j.id, Math.max(0, j.remaining - consumed));\n      if (j.competitor) usedCompetitor += consumed; else usedApp += consumed;\n    }\n    const wanted = [...jobs.values()].reduce((sum, j) => sum + j.cap, 0);\n    const granted = [...rates.values()].reduce((a, b) => a + b, 0);\n    return { remaining, usedApp, usedCompetitor, available: capacity * dt,\n      throttled: !paused && jobs.size && quota ? (budget <= 0 ? dt : usedApp + usedCompetitor >= budget && totalRate > 0 ? dt - serviceDt : 0) : 0,\n      pressure: paused ? 0 : Math.max(0, wanted * dt - granted * serviceDt) };\n  };\n  const settle = () => {\n    const p = projection(); available += p.available; app += p.usedApp; competitor += p.usedCompetitor; throttled += p.throttled; pressure += p.pressure;\n    for (const [key, remaining] of p.remaining) jobs.get(key)!.remaining = remaining;\n    budget = Math.max(0, budget - p.usedApp - p.usedCompetitor); anchor = kernel.now;\n    if (quota && Math.floor(kernel.now / quota.period) > period) { period = Math.floor(kernel.now / quota.period); budget = quota.budget; }\n  };\n  const reschedule = () => {\n    if (updating) return;\n    cancelBoundary?.(); cancelBoundary = undefined;\n    rates = fairShares([...jobs.values()], paused || budget <= 0 ? 0 : capacity);\n    if (!jobs.size) return;\n    let delay = !paused && [...jobs.values()].some((j) => j.remaining <= 0) ? 0 : Infinity;\n    for (const j of jobs.values()) { const rate = rates.get(j.id) ?? 0; if (rate > 0) delay = Math.min(delay, Math.max(1, Math.ceil(j.remaining / rate))); }\n    const totalRate = [...rates.values()].reduce((a, b) => a + b, 0);\n    if (quota) {\n      if (totalRate > 0) delay = Math.min(delay, Math.max(1, Math.ceil(budget / totalRate)));\n      // Replenishment is a meaningful boundary, not a scheduling quantum.\n      if (!paused) delay = Math.min(delay, (period + 1) * quota.period - kernel.now);\n    }\n    if (!Number.isFinite(delay)) return;\n    cancelBoundary = kernel.schedule(kernel.now + delay, 2, JSON.stringify([\"cpu-boundary\", id]), () => {\n      boundaries++; settle(); updating = true;\n      const finished = [...jobs.values()].filter((j) => j.remaining <= 0).sort((a, b) => lexical(a.id, b.id));\n      for (const j of finished) jobs.delete(j.id);\n      for (const j of finished) j.done();\n      updating = false; reschedule();\n    });\n  };\n  return {\n    add(job: { id: string; demand: number; cap: number; competitor?: boolean; done(): void }) {\n      settle(); if (jobs.has(job.id)) throw new Error(\"Duplicate runnable invocation\");\n      if (job.demand <= 0) { job.done(); reschedule(); return; }\n      jobs.set(job.id, { id: job.id, cap: job.cap, remaining: job.demand, competitor: job.competitor ?? false, done: job.done }); reschedule();\n    },\n    remove(key: string) { settle(); jobs.delete(key); reschedule(); },\n    pause(value: boolean) { settle(); paused = value; reschedule(); },\n    capacity(value: number) { settle(); capacity = value; reschedule(); },\n    measure() {\n      const p = projection(), remainingBudget = quota && Math.floor(kernel.now / quota.period) > period ? quota.budget : Math.max(0, budget - p.usedApp - p.usedCompetitor);\n      return { capacity, runnable: jobs.size, receivingShare: [...rates.values()].filter((r) => r > 0).length,\n        contended: !paused && [...jobs.values()].some((j) => (rates.get(j.id) ?? 0) < j.cap), paused,\n        throttled: !paused && jobs.size > 0 && remainingBudget <= 0,\n        appCoreUs: app + p.usedApp, competitorCoreUs: competitor + p.usedCompetitor, availableCoreUs: available + p.available,\n        throttledWallUs: throttled + p.throttled, unsatisfiedParallelismUs: pressure + p.pressure,\n        quotaRemainingCoreUs: quota ? remainingBudget : null,\n        allocations: [...jobs.values()].sort((a, b) => lexical(a.id, b.id)).map((j) => ({ id: j.id, cores: rates.get(j.id) ?? 0, remainingCoreUs: p.remaining.get(j.id)! })), boundaries };\n    },\n  };\n}\n"
     },
     {
       "path": "packages/simulation/src/model2/compute/sharing.ts",
@@ -338,7 +339,8 @@
     },
     {
       "path": "packages/simulation/src/model2/data/aside.ts",
-      "hash": "024f336d527ce6de207876fac4b4abfd8d5d5c38d709ebb4c8379fdfaad5e98e"
+      "hash": "024f336d527ce6de207876fac4b4abfd8d5d5c38d709ebb4c8379fdfaad5e98e",
+      "text": "import type { Deliver } from \"../compute/run\";\nimport type { EventKernel } from \"../time\";\nimport { keyedUniform } from \"../random\";\nimport type { Invocation, Receipt, RemoteOutcome } from \"../workload/contracts\";\nimport type { AsideConfig, DataRequest, DataReply } from \"./contracts\";\nimport { DATA_LIMITS } from \"./policy\";\n\nexport function cacheAside(config: AsideConfig, kernel: EventKernel, send: Deliver, seed: string) {\n  const live = new Map<string, { done(outcome: RemoteOutcome): void; work: Invocation; terminal: boolean }>();\n  const fills = new Map<string, Array<(reply: DataReply | undefined) => void>>();\n  let received = 0, completed = 0, failed = 0, cacheFailures = 0, fetches = 0, coalesced = 0, invalidations = 0;\n  const results: Array<{ root: string; key: string; at: number; version?: number; source: string; ok: boolean }> = []; let omitted = 0;\n  return {\n    accept(work: Invocation, done: (outcome: RemoteOutcome) => void): Receipt {\n      received++; let childSequence = 0; const owner = { work, done, terminal: false }; live.set(work.callId, owner);\n      let ordinal = 0; try { const root = JSON.parse(work.rootId) as string[]; const row = root[2]!; ordinal = /^\\d+$/.test(row) ? Number(row) : Number(JSON.parse(row).at(-1)) || 0; } catch { /* Non-workload proof roots use the first cycle key. */ }\n      const key = (work.message?.request as DataRequest | undefined)?.key ?? config.keys[config.access === \"cycle\" ? ordinal % config.keys.length : Math.floor(keyedUniform(seed, config.id, work.rootId, \"data-key\") * config.keys.length)]!;\n      const finish = (reply: DataReply | undefined, source: string) => {\n        if (owner.terminal) return; owner.terminal = true; live.delete(work.callId); const ok = !!reply?.ok;\n        if (ok) completed++; else failed++;\n        if (work.message) work.message.response = reply;\n        if (results.length < DATA_LIMITS.terminalRows) results.push({ root: work.rootId, key, at: kernel.now, version: reply?.version ?? reply?.rows?.[0]?.version, source, ok }); else omitted++;\n        done(ok ? \"completed\" : \"rejected\");\n      };\n      const request = (target: string, body: DataRequest, next: (reply: DataReply | undefined) => void) => {\n        const child: Invocation = { ...work, parentCallId: work.callId, callId: JSON.stringify([...JSON.parse(work.callId), \"data\", config.id, childSequence++, target]), message: { request: body } };\n        send(target, child, (outcome) => next(outcome === \"completed\" ? child.message!.response as DataReply : undefined));\n      };\n      if (config.operations[work.operation] === \"write\") {\n        fetches++; request(config.database, { kind: \"query\", key }, (reply) => {\n          if (!reply?.ok || !config.invalidateWrites) { finish(reply, \"database-write\"); return; }\n          request(config.cache, { kind: \"invalidate\", key }, (invalidated) => { if (invalidated?.ok) invalidations++; finish(reply, invalidated?.ok ? \"write-invalidated\" : \"write-invalidation-failed\"); });\n        });\n      } else request(config.cache, { kind: \"get\", key }, (cached) => {\n        if (cached?.hit) { finish(cached, \"cache-hit\"); return; }\n        if (!cached?.ok) { cacheFailures++; if (config.onCacheFailure === \"fail\") { finish(undefined, \"cache-failed\"); return; } }\n        const ready = (reply: DataReply | undefined) => finish(reply, \"database-fetch\");\n        if (config.coalesce && fills.has(key)) { coalesced++; fills.get(key)!.push(ready); return; }\n        const waiters = [ready]; if (config.coalesce) fills.set(key, waiters);\n        const complete = (reply: DataReply | undefined) => { if (config.coalesce) fills.delete(key); for (const waiter of waiters) waiter(reply); };\n        fetches++; request(config.database, { kind: \"query\", key }, (reply) => {\n          const row = reply?.rows?.find((r) => r.key === key);\n          if (!reply?.ok || !row) { complete(reply); return; }\n          if (!cached?.ok) { complete(reply); return; } // Failure fallback never fabricates a cache acknowledgement.\n          request(config.cache, { kind: \"set\", key, row, token: cached.token }, () => complete(reply));\n        });\n      });\n      // Application policy detaches from child work; caller cancellation cannot erase a fill.\n      return { admitted: true, state: () => owner.terminal ? \"finished\" : \"waiting\", cancel: () => owner.terminal ? \"already-finished\" : \"unsupported\" };\n    },\n    pause() { throw new Error(\"Cache-aside process suspension is outside this policy\"); },\n    measure: () => ({ id: config.id, paused: false, received, admitted: received, rejected: 0, completed, failed, cancelled: 0, queued: 0, serving: 0, waiting: live.size, consumedCoreUs: 0, busySlotUs: 0 }),\n    evidence: () => ({ id: config.id, received, completed, failed, live: live.size, databaseFetches: fetches, cacheFailures, coalescedWaiters: coalesced, fillsInProgress: fills.size, invalidations, results, omitted }),\n  };\n}\n"
     },
     {
       "path": "packages/simulation/src/model2/data/cache-state.ts",
@@ -346,7 +348,8 @@
     },
     {
       "path": "packages/simulation/src/model2/data/cache.ts",
-      "hash": "382fb0dc59d5123a1593b7553df33408e4ae6bed00c07c614d0678860c441d6e"
+      "hash": "382fb0dc59d5123a1593b7553df33408e4ae6bed00c07c614d0678860c441d6e",
+      "text": "import { requireKnown } from \"../../reality/quantity\";\nimport { cpuScheduler } from \"../compute/scheduler\";\nimport type { EventKernel } from \"../time\";\nimport type { Invocation, Receipt, RemoteOutcome } from \"../workload/contracts\";\nimport type { CacheConfig, DataReply, DataRequest } from \"./contracts\";\nimport { DATA_LIMITS } from \"./policy\";\nimport { expireOwned, evictOwned } from \"./cache-state\";\ninterface Entry { version: number; bytes: number; expires: number; sequence: number }\ninterface Command { work: Invocation; done(outcome: RemoteOutcome): void; terminal: boolean }\nexport function keyedCache(config: CacheConfig, kernel: EventKernel) {\n  const entries = new Map<string, Entry>(), generations = new Map<string, number>(), queue = new Map<string, Command>(), active = new Map<string, Command>();\n  const cpu = cpuScheduler(config.id, requireKnown(config.execution.cores, \"cores\"), kernel), capacity = requireKnown(config.capacity, \"bytes\"), overhead = requireKnown(config.entryOverhead, \"bytes\");\n  let epoch = 0, sequence = 0, used = 0, paused = false, received = 0, admitted = 0, rejected = 0, completed = 0, failed = 0, cancelled = 0, attemptedLookups = 0, lookupFailures = 0, lookupCancelled = 0, lookups = 0, hits = 0, misses = 0, fills = 0, evictions = 0, expirations = 0, invalidations = 0, staleFillRefused = 0, allocationRefused = 0;\n  const token = (key: string) => JSON.stringify([epoch, generations.get(key) ?? 0]);\n  let expirationCursor = entries.keys();\n  let busyUs = 0, busyStart = kernel.now;\n  const remove = (key: string) => { const e = entries.get(key); if (e) { used -= e.bytes + overhead; entries.delete(key); } };\n  const expire = (key: string) => { if (expireOwned(entries, key, kernel.now, remove)) expirations++; };\n  const finish = (c: Command, reply: DataReply, cancel = false) => {\n    if (c.terminal) return; c.terminal = true;\n    if (active.has(c.work.callId)) { busyUs += kernel.now - busyStart; cpu.remove(c.work.callId); } active.delete(c.work.callId); queue.delete(c.work.callId);\n    if (cancel) cancelled++; else if (reply.ok) completed++; else failed++;\n    if ((c.work.message?.request as DataRequest | undefined)?.kind === \"get\" && !reply.ok) { if (cancel) lookupCancelled++; else lookupFailures++; }\n    if (c.work.message) c.work.message.response = reply;\n    c.done(cancel ? \"cancelled\" : reply.ok ? \"completed\" : \"rejected\"); pump();\n  };\n  const apply = (request: DataRequest): DataReply => {\n    if (!request || typeof request.key !== \"string\" || !request.key.length || request.key.length > DATA_LIMITS.keyCharacters) return { ok: false, reason: \"invalid-cache-key\" };\n    expire(request.key);\n    if (request.kind === \"get\") { lookups++; const e = entries.get(request.key); if (e) { hits++; e.sequence = sequence++; entries.delete(request.key); entries.set(request.key, e); return { ok: true, hit: true, key: request.key, version: e.version, bytes: e.bytes, token: token(request.key) }; } misses++; return { ok: true, hit: false, key: request.key, token: token(request.key) }; }\n    if (request.kind === \"invalidate\") { if (!generations.has(request.key) && generations.size >= DATA_LIMITS.keys) return { ok: false, reason: \"key-budget\" }; remove(request.key); generations.set(request.key, (generations.get(request.key) ?? 0) + 1); invalidations++; return { ok: true }; }\n    if (request.kind !== \"set\" || !request.row) return { ok: false, reason: \"unsupported-cache-command\" };\n    if (!Number.isSafeInteger(request.row.bytes) || request.row.bytes < 0 || !Number.isSafeInteger(request.row.version) || request.row.version < 1) return { ok: false, reason: \"invalid-cache-row\" };\n    if (request.token !== undefined && request.token !== token(request.key)) { staleFillRefused++; return { ok: false, reason: \"invalidated-fill\" }; }\n    // Lazy removal is an execution policy. Observation never expires/mutates entries.\n    for (let i = 0; i < DATA_LIMITS.expirationScan; i++) { const next = expirationCursor.next(); if (next.done) { expirationCursor = entries.keys(); break; } expire(next.value); }\n    const bytes = request.row.bytes + overhead, existing = entries.get(request.key), required = used - (existing ? existing.bytes + overhead : 0) + bytes;\n    if (bytes > capacity || (!existing && entries.size >= DATA_LIMITS.keys) || (required > capacity && config.policy === \"no-eviction\")) { allocationRefused++; return { ok: false, reason: \"cache-capacity\" }; }\n    remove(request.key);\n    evictOwned(entries, () => used + bytes <= capacity, (key, entry) => { const expired = entry.expires <= kernel.now; remove(key); if (expired) expirations++; else evictions++; });\n    entries.set(request.key, { ...request.row, expires: kernel.now + requireKnown(config.ttl, \"us\"), sequence: sequence++ }); used += bytes; fills++; return { ok: true };\n  };\n  const pump = () => {\n    if (paused || active.size || !queue.size) return;\n    const c = queue.values().next().value!; queue.delete(c.work.callId); active.set(c.work.callId, c); busyStart = kernel.now;\n    cpu.add({ id: c.work.callId, demand: requireKnown(config.commandCpu, \"cpu-us\"), cap: 1, done: () => finish(c, apply(c.work.message?.request as DataRequest)) });\n  };\n  for (const row of config.initial) { const bytes = requireKnown(row.bytes, \"bytes\"); entries.set(row.key, { version: row.version, bytes, expires: requireKnown(config.ttl, \"us\"), sequence: sequence++ }); used += bytes + overhead; }\n  return {\n    accept(work: Invocation, done: Command[\"done\"]): Receipt {\n      received++;\n      const isLookup = (work.message?.request as DataRequest | undefined)?.kind === \"get\"; if (isLookup) attemptedLookups++;\n      if (paused || (active.size && queue.size >= requireKnown(config.execution.queueCapacity, \"count\"))) { rejected++; if (isLookup) lookupFailures++; done(\"rejected\"); return { admitted: false, state: () => \"finished\", cancel: () => \"already-finished\" }; }\n      admitted++; const c = { work, done, terminal: false }; queue.set(work.callId, c); pump();\n      return { admitted: true, state: () => c.terminal ? \"finished\" : queue.has(work.callId) ? \"queued\" : \"serving\", cancel() { if (c.terminal) return \"already-finished\"; finish(c, { ok: false, reason: \"cancelled\" }, true); return \"cancelled\"; } };\n    },\n    flush() { entries.clear(); generations.clear(); used = 0; epoch++; },\n    pause(value: boolean) { paused = value; cpu.pause(value); if (value) for (const c of [...active.values(), ...queue.values()]) finish(c, { ok: false, reason: \"cache-unavailable\" }); else pump(); },\n    measure: () => ({ id: config.id, paused, received, admitted, rejected, completed, failed, cancelled, queued: queue.size, serving: active.size, waiting: 0, consumedCoreUs: cpu.measure().appCoreUs, busySlotUs: busyUs + (active.size ? kernel.now - busyStart : 0) }),\n    evidence: () => ({ id: config.id, lookups: attemptedLookups, executedLookups: lookups, lookupFailures, lookupCancelled, liveLookups: [...active.values(), ...queue.values()].filter((c) => (c.work.message?.request as DataRequest | undefined)?.kind === \"get\").length, hits, misses, fills, evictions, expirations, invalidations, staleFillRefused, allocationRefused, epoch, allocatedEntryBytes: used, capacityBytes: capacity,\n      entries: [...entries].sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0).map(([key, e]) => ({ key, ...e, expired: e.expires <= kernel.now })), logicallyLiveEntries: [...entries.values()].filter((e) => e.expires > kernel.now).length, cpu: cpu.measure(), residentProcessBytes: \"Unknown; entry budget excludes unmodeled runtime/allocator/native state\" }),\n  };\n}\n"
     },
     {
       "path": "packages/simulation/src/model2/data/contracts.ts",
@@ -541,7 +544,8 @@
     },
     {
       "path": "packages/simulation/src/model2/time.ts",
-      "hash": "031badec4030bceae26b51f188a447eae5ffa3873818eadd6ede022095f09bbd"
+      "hash": "031badec4030bceae26b51f188a447eae5ffa3873818eadd6ede022095f09bbd",
+      "text": "export type Micros = number & { readonly __unit: \"us\" };\nexport function micros(value: number): Micros {\n  if (!Number.isSafeInteger(value) || value < 0) throw new Error(\"Time must be nonnegative safe integer microseconds\");\n  return value as Micros;\n}\nexport const lexical = (a: string, b: string) => a < b ? -1 : a > b ? 1 : 0;\ninterface Event { at: Micros; priority: number; key: string; run: () => void; index: number }\nconst compare = (a: Event, b: Event) => a.at - b.at || a.priority - b.priority || lexical(a.key, b.key);\n\n// Event time is independent of wall time and UI playback speed. Equal-time order is contractual.\nexport class EventKernel {\n  now = micros(0);\n  processed = 0;\n  peakPending = 0;\n  cancelled = 0;\n  private heap: Event[] = [];\n  private keys = new Set<string>();\n  constructor(readonly maxEvents: number) {\n    if (!Number.isSafeInteger(maxEvents) || maxEvents <= 0) throw new Error(\"Invalid event budget\");\n  }\n  schedule(at: number, priority: number, key: string, run: () => void) {\n    if (at < this.now || !Number.isSafeInteger(priority) || !key || this.keys.has(key)) throw new Error(\"Past, invalid or duplicate event\");\n    if (this.heap.length + this.processed >= this.maxEvents) throw new Error(\"Event budget exhausted; evidence is incomplete\");\n    const event = { at: micros(at), priority, key, run, index: this.heap.length };\n    this.keys.add(key); this.heap.push(event);\n    let i = this.heap.length - 1;\n    while (i > 0) {\n      const parent = (i - 1) >>> 1;\n      if (compare(this.heap[parent]!, event) <= 0) break;\n      this.heap[i] = this.heap[parent]!; this.heap[i]!.index = i; i = parent;\n    }\n    this.heap[i] = event; event.index = i; this.peakPending = Math.max(this.peakPending, this.heap.length);\n    // Indexed removal releases callbacks immediately, without accumulating tombstones.\n    return () => {\n      if (event.index < 0) return false;\n      this.remove(event.index); this.cancelled++; return true;\n    };\n  }\n  get pending() { return this.heap.length; }\n  private remove(index: number) {\n    const removed = this.heap[index]!, last = this.heap.pop()!;\n    removed.index = -1; this.keys.delete(removed.key);\n    if (index >= this.heap.length) return removed;\n    let i = index;\n    if (i > 0 && compare(last, this.heap[(i - 1) >>> 1]!) < 0) {\n      while (i > 0) {\n        const parent = (i - 1) >>> 1;\n        if (compare(this.heap[parent]!, last) <= 0) break;\n        this.heap[i] = this.heap[parent]!; this.heap[i]!.index = i; i = parent;\n      }\n    } else {\n      while (i * 2 + 1 < this.heap.length) {\n        let child = i * 2 + 1;\n        if (child + 1 < this.heap.length && compare(this.heap[child + 1]!, this.heap[child]!) < 0) child++;\n        if (compare(last, this.heap[child]!) <= 0) break;\n        this.heap[i] = this.heap[child]!; this.heap[i]!.index = i; i = child;\n      }\n    }\n    this.heap[i] = last; last.index = i; return removed;\n  }\n  advanceTo(until: number) {\n    micros(until);\n    if (until < this.now) throw new Error(\"Cannot reverse simulation time\");\n    while (this.heap[0] && this.heap[0].at <= until) {\n      const event = this.remove(0);\n      this.now = event.at; this.processed++; event.run();\n    }\n    this.now = micros(until);\n  }\n}\n"
     },
     {
       "path": "packages/simulation/src/model2/validate.ts",
@@ -1354,6 +1358,30 @@
       "hash": "dfc4f84d922a611872133b0526423f464e11ba59eaa233bb9e2415dfdec5d926"
     },
     {
+      "path": "packages/simulation/src/model2/composition/budgets.ts",
+      "hash": "65f93e3c87ec3693dc4e402acdcc3478115fdc93da31696d9355e1a9686992c2"
+    },
+    {
+      "path": "packages/simulation/src/model2/composition/host.ts",
+      "hash": "362ed8b4509ff784cba57017b4581914c8af56e576c3be27de61c74c1ad29b94"
+    },
+    {
+      "path": "packages/simulation/src/model2/composition/lifecycle.ts",
+      "hash": "33554d10000b6ffcd1bf17c3235bfe99cd0a995968978bd1cd8a1a426531fbd9"
+    },
+    {
+      "path": "packages/simulation/src/model2/composition/registry.ts",
+      "hash": "d43fb175574f9e146a92ae6acd0b1c2e6ee6de66d90cd0962b7794ff52f7f08f"
+    },
+    {
+      "path": "packages/simulation/src/model2/composition/run.ts",
+      "hash": "60ff6580adae20b7ffbf3c7344a62ab49ca6f0d72bde3af1b3bb24a72350af3e"
+    },
+    {
+      "path": "packages/simulation/src/model2/composition/token-bucket.ts",
+      "hash": "7249dd2c41c95973e4b70fb64756497491a23f2ddcbbbae3c8ebb6f062b418e2"
+    },
+    {
       "path": "packages/simulation/src/model2/compute/contracts.ts",
       "hash": "12d2fc95201344d72724172fde1f7362d453676f082bdb8d538c423c80485ec8"
     },
@@ -1362,20 +1390,24 @@
       "hash": "2646fe1f3749735ac27a41981e996ed2db9072f568e85f43f37cb0be9d7f4ff3"
     },
     {
+      "path": "packages/simulation/src/model2/compute/module.ts",
+      "hash": "b997e48ff95b8cccd52b892504a86c7c3fbfb6a4063e52b207db04f1a8a5a2c8"
+    },
+    {
       "path": "packages/simulation/src/model2/compute/policy.ts",
       "hash": "93f78ca307a7f4f775bbcd610c2ae65c1c3f84035b75b646f3b7c7167862d198"
     },
     {
       "path": "packages/simulation/src/model2/compute/resource.ts",
-      "hash": "013d8e5c29e5b5f579170689579a2a9704798f028db6753159556335f30da00d"
+      "hash": "5bd17b10f89b28b2fe44e5b5e51f78757d7c69626f3d9884ae822a25959164eb"
     },
     {
       "path": "packages/simulation/src/model2/compute/run.ts",
-      "hash": "d3c7a5dd033cc2ad0edae2d8cdd7a82d41083e75258b352732d3b1b338592318"
+      "hash": "7a4c73f7eacea18a68cbbcf92e09ee96bfe410a161800be8a605c3e2f8a5909b"
     },
     {
       "path": "packages/simulation/src/model2/compute/scheduler.ts",
-      "hash": "fc92841b1269816cd09529b4caf75802d40892de7bc56376e001817e2c3a7102"
+      "hash": "366692549da7837ab51943097f5d41f9e42de7e5760f9c586f3ed71cae09f4b6"
     },
     {
       "path": "packages/simulation/src/model2/compute/sharing.ts",
@@ -1391,7 +1423,7 @@
     },
     {
       "path": "packages/simulation/src/model2/data/aside.ts",
-      "hash": "024f336d527ce6de207876fac4b4abfd8d5d5c38d709ebb4c8379fdfaad5e98e"
+      "hash": "0c0376662639ae5d148ee717417c6af26def45ef317fa75d4b31ed82a1a12d11"
     },
     {
       "path": "packages/simulation/src/model2/data/cache-state.ts",
@@ -1399,7 +1431,7 @@
     },
     {
       "path": "packages/simulation/src/model2/data/cache.ts",
-      "hash": "382fb0dc59d5123a1593b7553df33408e4ae6bed00c07c614d0678860c441d6e"
+      "hash": "4583301bdf46d350d8e05de2a6515f4af9e83fd25e378996a134e9b6699823b8"
     },
     {
       "path": "packages/simulation/src/model2/data/contracts.ts",
@@ -1407,11 +1439,15 @@
     },
     {
       "path": "packages/simulation/src/model2/data/database.ts",
-      "hash": "c5055c3fb4f5938cf79992e48990b306829458fc9c97923181fea571912eff47"
+      "hash": "d034b9d22fec068c8588a841c0a90671fc10a816a55a3e780843a3d020e7b137"
     },
     {
       "path": "packages/simulation/src/model2/data/locks.ts",
       "hash": "e148cfcbb01911d0ecef9fd6deb7d374644284f1ac009136b2f4035c3579bc8d"
+    },
+    {
+      "path": "packages/simulation/src/model2/data/modules.ts",
+      "hash": "cc19eb6234e3703b16540f3c82991eaeabb42d68e9aa260c12963200f294339f"
     },
     {
       "path": "packages/simulation/src/model2/data/policy.ts",
@@ -1419,7 +1455,7 @@
     },
     {
       "path": "packages/simulation/src/model2/data/run.ts",
-      "hash": "9dc5d9471b9d3a593a1734d308ca3c772bc04d86ea82cd231b60431dae8379bd"
+      "hash": "46073b69a60109a63a3a33d2cb8ce42d69c1f180a68cea282753231701a4c708"
     },
     {
       "path": "packages/simulation/src/model2/data/validate.ts",
@@ -1435,7 +1471,11 @@
     },
     {
       "path": "packages/simulation/src/model2/network/load-balancer.ts",
-      "hash": "dbacadc71af099a5f1411519cf9fa3d4bd0d3d822e209bd24bb4e7b9bda13bbb"
+      "hash": "baee14b77dbde52219d6464866690432e2d2021e1ebbad2e7935d9e28b1fd025"
+    },
+    {
+      "path": "packages/simulation/src/model2/network/module.ts",
+      "hash": "74c92532aaf08e9bf6e5f32c95c396cd7383aca979ed0aa3ac6bbfdd88d0ddb2"
     },
     {
       "path": "packages/simulation/src/model2/network/policy.ts",
@@ -1447,7 +1487,7 @@
     },
     {
       "path": "packages/simulation/src/model2/network/run.ts",
-      "hash": "39f58313c46db44b8d38ff514b37881e094f9fdc3198a89f86a76c83a43bc85c"
+      "hash": "dbe08ad71c7f9495e6617baa383e176899949c251db59beec5ce31261fa4c54c"
     },
     {
       "path": "packages/simulation/src/model2/network/trace.ts",
@@ -1587,7 +1627,7 @@
     },
     {
       "path": "packages/simulation/src/model2/time.ts",
-      "hash": "031badec4030bceae26b51f188a447eae5ffa3873818eadd6ede022095f09bbd"
+      "hash": "f35e34b5b779891fbb136cf7a1873c81d4340d68b59fe8d3758f5910344e5ef2"
     },
     {
       "path": "packages/simulation/src/model2/validate.ts",
@@ -1623,7 +1663,7 @@
     },
     {
       "path": "packages/simulation/src/model2/workload/run.ts",
-      "hash": "9ed999193c19fda1300bc1c2012f8a3a726ac7b221e353abc845ea5c6ec2aa10"
+      "hash": "64f172cd1c7b0c4d1b164a0f9060a8eeca2932ee643be3e1c9c77d47736b02d1"
     },
     {
       "path": "packages/simulation/src/model2/workload/station.ts",
@@ -1742,6 +1782,10 @@
       "hash": "fbc9bfa8034081e9cd722d562d90410fd9fe58ebfcef7bdcc5eeb208bccfd429"
     },
     {
+      "path": "packages/simulation/tests/composition.test.ts",
+      "hash": "cf9cd2ce0b9a2573fcb7cd981955c1b3d310441b37aace29dac94d6bcac69a7d"
+    },
+    {
       "path": "packages/simulation/tests/compute.test.ts",
       "hash": "4bd86ebb77a882f746eb80a9a8a746b3349e9c6c6b78b708390a2d08423b32c0"
     },
@@ -1854,6 +1898,10 @@
       "hash": "8c6e84b80331c7be08738ff537e676b9401ea71e5e892c4aeeac4d9a922c3c9e"
     },
     {
+      "path": "packages/simulation/tests/tokenBucket.test.ts",
+      "hash": "d914a584fa430a317ef34d0070c6c4d44ed696b30adf3ef419a51738bf45156f"
+    },
+    {
       "path": "packages/simulation/tests/workload.test.ts",
       "hash": "ab871ed9e0bcd5218250e4d2e2986a450f6804058ca549084b8ad40b0ba20b5f"
     },
@@ -1880,6 +1928,14 @@
     {
       "path": "scripts/reality/classify.ts",
       "hash": "920b32a2667375dfa876dca1b4c69143e832fe547b4fc231263a3a625d3e0c49"
+    },
+    {
+      "path": "scripts/reality/composition-host-proof.ts",
+      "hash": "391c0d07c7d5fcd4f84498cabdcea3ade2037db343b3e23b070c604d16ac7c93"
+    },
+    {
+      "path": "scripts/reality/composition-proofs.ts",
+      "hash": "6a2629475d2956346876d98cc1ff42fd49f4d19e0fb34fa10cbb7d77104ca812"
     },
     {
       "path": "scripts/reality/compute-calibration.ts",
@@ -2046,6 +2102,10 @@
       "hash": "eccfe1838bc631091775ae57faa66610cb19c38515a6acc49e1e9958c98bf433"
     },
     {
+      "path": "scripts/tests/compositionReplay.test.ts",
+      "hash": "b6b68de921a15d15cd63d52bd3803eb19ef73274e1d7324a35c658c7270733d3"
+    },
+    {
       "path": "scripts/tests/computeCalibration.test.ts",
       "hash": "d3e37680875e84518ed1c6298e4b45bc694497f8a3c8c4c5c07007c2afb0452e"
     },
@@ -2067,7 +2127,7 @@
     },
     {
       "path": "scripts/tests/execution-identity.test.ts",
-      "hash": "6f7849728843077fd2801cc93422ccd5d733c27eb8107e831d96b7951658a852"
+      "hash": "9af2a27a3af807c65af4a47b0cdd8c9d29d483d33f981587abe165bd416fb190"
     },
     {
       "path": "scripts/tests/fixtures/execution-launch-probe.ts",

@@ -1,6 +1,6 @@
 {
   "schema": "execution-loading-analysis/1",
-  "policy": "3353da96ffe23a33c9d6b51a31d60fb64e7120e8c8e0e2180436fe60d9a80551",
+  "policy": "149415738d69781bbe46456ffc0d2277827563ba1151a3df6d3690c9084903d4",
   "modules": {
     "apps/backend/actions/contract.ts": {
       "hash": "cb4d5860ab0805ccf009c47e453ed89c12e52e564c95e470a1cfbb23e18fb24d",
@@ -3756,6 +3756,73 @@
         }
       ]
     },
+    "packages/simulation/src/model2/composition/budgets.ts": {
+      "hash": "65f93e3c87ec3693dc4e402acdcc3478115fdc93da31696d9355e1a9686992c2",
+      "requests": [
+        {
+          "path": "../../reality/quantity",
+          "kind": "import-statement"
+        },
+        {
+          "path": "../compute/scheduler",
+          "kind": "import-statement"
+        }
+      ]
+    },
+    "packages/simulation/src/model2/composition/host.ts": {
+      "hash": "362ed8b4509ff784cba57017b4581914c8af56e576c3be27de61c74c1ad29b94",
+      "requests": []
+    },
+    "packages/simulation/src/model2/composition/lifecycle.ts": {
+      "hash": "33554d10000b6ffcd1bf17c3235bfe99cd0a995968978bd1cd8a1a426531fbd9",
+      "requests": []
+    },
+    "packages/simulation/src/model2/composition/registry.ts": {
+      "hash": "d43fb175574f9e146a92ae6acd0b1c2e6ee6de66d90cd0962b7794ff52f7f08f",
+      "requests": []
+    },
+    "packages/simulation/src/model2/composition/run.ts": {
+      "hash": "60ff6580adae20b7ffbf3c7344a62ab49ca6f0d72bde3af1b3bb24a72350af3e",
+      "requests": [
+        {
+          "path": "../../reality/quantity",
+          "kind": "import-statement"
+        },
+        {
+          "path": "../data/run",
+          "kind": "import-statement"
+        },
+        {
+          "path": "../data/validate",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./budgets",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./lifecycle",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./registry",
+          "kind": "import-statement"
+        }
+      ]
+    },
+    "packages/simulation/src/model2/composition/token-bucket.ts": {
+      "hash": "7249dd2c41c95973e4b70fb64756497491a23f2ddcbbbae3c8ebb6f062b418e2",
+      "requests": [
+        {
+          "path": "../../reality/quantity",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./registry",
+          "kind": "import-statement"
+        }
+      ]
+    },
     "packages/simulation/src/model2/compute/contracts.ts": {
       "hash": "12d2fc95201344d72724172fde1f7362d453676f082bdb8d538c423c80485ec8",
       "requests": []
@@ -3769,12 +3836,29 @@
         }
       ]
     },
+    "packages/simulation/src/model2/compute/module.ts": {
+      "hash": "b997e48ff95b8cccd52b892504a86c7c3fbfb6a4063e52b207db04f1a8a5a2c8",
+      "requests": [
+        {
+          "path": "../composition/registry",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./resource",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./validate",
+          "kind": "import-statement"
+        }
+      ]
+    },
     "packages/simulation/src/model2/compute/policy.ts": {
       "hash": "93f78ca307a7f4f775bbcd610c2ae65c1c3f84035b75b646f3b7c7167862d198",
       "requests": []
     },
     "packages/simulation/src/model2/compute/resource.ts": {
-      "hash": "013d8e5c29e5b5f579170689579a2a9704798f028db6753159556335f30da00d",
+      "hash": "5bd17b10f89b28b2fe44e5b5e51f78757d7c69626f3d9884ae822a25959164eb",
       "requests": [
         {
           "path": "../../reality/quantity",
@@ -3795,7 +3879,7 @@
       ]
     },
     "packages/simulation/src/model2/compute/run.ts": {
-      "hash": "d3c7a5dd033cc2ad0edae2d8cdd7a82d41083e75258b352732d3b1b338592318",
+      "hash": "7a4c73f7eacea18a68cbbcf92e09ee96bfe410a161800be8a605c3e2f8a5909b",
       "requests": [
         {
           "path": "../../reality/quantity",
@@ -3811,6 +3895,10 @@
         },
         {
           "path": "./resource",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./module",
           "kind": "import-statement"
         },
         {
@@ -3832,7 +3920,7 @@
       ]
     },
     "packages/simulation/src/model2/compute/scheduler.ts": {
-      "hash": "fc92841b1269816cd09529b4caf75802d40892de7bc56376e001817e2c3a7102",
+      "hash": "366692549da7837ab51943097f5d41f9e42de7e5760f9c586f3ed71cae09f4b6",
       "requests": [
         {
           "path": "../time",
@@ -3875,7 +3963,7 @@
       "requests": []
     },
     "packages/simulation/src/model2/data/aside.ts": {
-      "hash": "024f336d527ce6de207876fac4b4abfd8d5d5c38d709ebb4c8379fdfaad5e98e",
+      "hash": "0c0376662639ae5d148ee717417c6af26def45ef317fa75d4b31ed82a1a12d11",
       "requests": [
         {
           "path": "../random",
@@ -3892,7 +3980,7 @@
       "requests": []
     },
     "packages/simulation/src/model2/data/cache.ts": {
-      "hash": "382fb0dc59d5123a1593b7553df33408e4ae6bed00c07c614d0678860c441d6e",
+      "hash": "4583301bdf46d350d8e05de2a6515f4af9e83fd25e378996a134e9b6699823b8",
       "requests": [
         {
           "path": "../../reality/quantity",
@@ -3917,7 +4005,7 @@
       "requests": []
     },
     "packages/simulation/src/model2/data/database.ts": {
-      "hash": "c5055c3fb4f5938cf79992e48990b306829458fc9c97923181fea571912eff47",
+      "hash": "d034b9d22fec068c8588a841c0a90671fc10a816a55a3e780843a3d020e7b137",
       "requests": [
         {
           "path": "../../reality/quantity",
@@ -3942,12 +4030,37 @@
         }
       ]
     },
+    "packages/simulation/src/model2/data/modules.ts": {
+      "hash": "cc19eb6234e3703b16540f3c82991eaeabb42d68e9aa260c12963200f294339f",
+      "requests": [
+        {
+          "path": "../composition/registry",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./validate",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./database",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./cache",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./aside",
+          "kind": "import-statement"
+        }
+      ]
+    },
     "packages/simulation/src/model2/data/policy.ts": {
       "hash": "e1cf3a5adc7802454391d0667313896cd94e2a8825ceb5719524f4348b2d4fd7",
       "requests": []
     },
     "packages/simulation/src/model2/data/run.ts": {
-      "hash": "9dc5d9471b9d3a593a1734d308ca3c772bc04d86ea82cd231b60431dae8379bd",
+      "hash": "46073b69a60109a63a3a33d2cb8ce42d69c1f180a68cea282753231701a4c708",
       "requests": [
         {
           "path": "../../reality/quantity",
@@ -3971,6 +4084,10 @@
         },
         {
           "path": "./aside",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./modules",
           "kind": "import-statement"
         },
         {
@@ -4022,7 +4139,7 @@
       ]
     },
     "packages/simulation/src/model2/network/load-balancer.ts": {
-      "hash": "dbacadc71af099a5f1411519cf9fa3d4bd0d3d822e209bd24bb4e7b9bda13bbb",
+      "hash": "baee14b77dbde52219d6464866690432e2d2021e1ebbad2e7935d9e28b1fd025",
       "requests": [
         {
           "path": "../../reality/quantity",
@@ -4034,6 +4151,27 @@
         },
         {
           "path": "../random",
+          "kind": "import-statement"
+        }
+      ]
+    },
+    "packages/simulation/src/model2/network/module.ts": {
+      "hash": "74c92532aaf08e9bf6e5f32c95c396cd7383aca979ed0aa3ac6bbfdd88d0ddb2",
+      "requests": [
+        {
+          "path": "../composition/registry",
+          "kind": "import-statement"
+        },
+        {
+          "path": "../../reality/quantity",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./load-balancer",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./validate",
           "kind": "import-statement"
         }
       ]
@@ -4052,7 +4190,7 @@
       ]
     },
     "packages/simulation/src/model2/network/run.ts": {
-      "hash": "39f58313c46db44b8d38ff514b37881e094f9fdc3198a89f86a76c83a43bc85c",
+      "hash": "dbe08ad71c7f9495e6617baa383e176899949c251db59beec5ce31261fa4c54c",
       "requests": [
         {
           "path": "../../reality/quantity",
@@ -4079,7 +4217,7 @@
           "kind": "import-statement"
         },
         {
-          "path": "./load-balancer",
+          "path": "./module",
           "kind": "import-statement"
         },
         {
@@ -4612,7 +4750,7 @@
       ]
     },
     "packages/simulation/src/model2/time.ts": {
-      "hash": "031badec4030bceae26b51f188a447eae5ffa3873818eadd6ede022095f09bbd",
+      "hash": "f35e34b5b779891fbb136cf7a1873c81d4340d68b59fe8d3758f5910344e5ef2",
       "requests": []
     },
     "packages/simulation/src/model2/validate.ts": {
@@ -4688,7 +4826,7 @@
       ]
     },
     "packages/simulation/src/model2/workload/run.ts": {
-      "hash": "9ed999193c19fda1300bc1c2012f8a3a726ac7b221e353abc845ea5c6ec2aa10",
+      "hash": "64f172cd1c7b0c4d1b164a0f9060a8eeca2932ee643be3e1c9c77d47736b02d1",
       "requests": [
         {
           "path": "../time",
