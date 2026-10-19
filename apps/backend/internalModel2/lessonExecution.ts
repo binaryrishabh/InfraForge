@@ -1,3 +1,4 @@
+import { assertExecutionHost } from "../executionIdentity/launch";
 import { randomUUID } from "node:crypto";
 import type { WorkerOwnership } from "../infra/workerOwnership";
 import { internalDatabase } from "./store";
@@ -13,6 +14,7 @@ import { removeContainer, containerName, inspectContainer } from "./sandboxDocke
 import { DockerConnection } from "./dockerConnection";
 import { lessonEndpoint } from "./dockerEndpoint";
 export async function executeLesson(id: string, ownership: WorkerOwnership) {
+  assertExecutionHost();
   const claimed = await ownership.transaction(async (db) => {
     const row = (await db.query<InternalRunRow>('SELECT * FROM "InternalModel2Run" WHERE id=$1 FOR UPDATE', [id])).rows[0];
     if (!row || !["queued", "running"].includes(row.status)) return null;

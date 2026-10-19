@@ -202,3 +202,14 @@ review file to the preceding host algorithm. No engine or dependency implementat
 Intrinsic Symbol values cannot escape or be replaced by unreviewed code; otherwise a
 forged Symbol.iterator could turn the fixed-symbol exception into constructor access.
 The split-key and forged-intrinsic cases are both negative regressions.
+
+Actual entrypoints are closed to the shipped hosts, explicit metadata tools and test
+contexts. Runtime host working directories are constrained. Claim/commit workflows
+require the real worker or its worker launcher role; a metadata/test driver cannot
+inject an alternative ownership implementation. These checks execute before database
+access. Row 27 retains committed 421000e5… (c1edd9f). The workflow transition guard
+accepts only the mechanically added host checks; all prior workflow bytes remain equal.
+
+Known tooling and explicit disposable integration drivers are metadata-only contexts;
+worker startup itself also checks its host before opening the ownership session. They
+cannot turn a test/tooling main into the worker claim/commit implementation.

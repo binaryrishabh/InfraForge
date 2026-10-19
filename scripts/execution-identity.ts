@@ -62,6 +62,16 @@ function buildTransitions() {
       if (diskTree().read(path).trim() !== baseline.read(path).replace(/import "dotenv\/config";?/, "").trim()) throw Error("Unexpected runtime config edit");
       continue;
     }
+    if (path === "apps/backend/worker.ts") {
+      const stripped = diskTree().read(path).replace('import { assertExecutionHost } from "./executionIdentity/launch";\n', "").replace("assertExecutionHost();\n", "");
+      if (stripped !== baseline.read(path)) throw Error("Unexpected worker host edit");
+      continue;
+    }
+    if (["apps/backend/internalModel2/execution.ts", "apps/backend/internalModel2/lessonExecution.ts"].includes(path)) {
+      const stripped = diskTree().read(path).replace('import { assertExecutionHost } from "../executionIdentity/launch";\n', "").replaceAll("  assertExecutionHost();\n", "");
+      if (stripped !== baseline.read(path)) throw Error("Unexpected host-workflow edit");
+      continue;
+    }
     if (!baseline.paths.includes(path) || sha256(baseline.read(path)) !== hash) throw Error(`Not a boundary-only transition: ${path}`);
   }
   const archive = readFileSync(fixture);
@@ -72,7 +82,7 @@ function buildTransitions() {
   const committedTable = JSON.parse(git(["show", "HEAD:apps/backend/executionIdentity/executionTransitions.json"])) as TransitionTable;
   const previousTarget = committedTable.entries[0]!.target;
   if (previousTarget !== source && previousTarget !== target && !table.entries.some(row => row.source === previousTarget)) {
-    const reviewedHosts: Record<string,string> = { "fe8fd0f18c15de1e762ebbdfd3474f1a35a56d4f46acca85db90221ed8fb21a7": "20af730", "26b81b300de225a6a27d512eb696ad448502d11a073817b9ad203bb1c531f90f": "23203fa", "3886e64e2954e8513647ece8fa126af4dcad33cf2c63ad1eed89b15edca969c1": "53188f7" };
+    const reviewedHosts: Record<string,string> = { "fe8fd0f18c15de1e762ebbdfd3474f1a35a56d4f46acca85db90221ed8fb21a7": "20af730", "26b81b300de225a6a27d512eb696ad448502d11a073817b9ad203bb1c531f90f": "23203fa", "3886e64e2954e8513647ece8fa126af4dcad33cf2c63ad1eed89b15edca969c1": "53188f7", "421000e5a4f5be3dd3c1464f4a9fd44ea75f7236bb6222a5410e5f89f0aa381d": "c1edd9f" };
     const reviewedCommit = reviewedHosts[previousTarget];
     if (!reviewedCommit) throw Error("A new committed host transition needs explicit review");
     const hostCommit = git(["rev-parse", reviewedCommit]).trim(), hostTree = gitTree(hostCommit);
@@ -85,7 +95,7 @@ function buildTransitions() {
       if (!path.includes("/generated/") || !pin || sha256(diskTree().read(path)) !== pin) throw Error(`Missing committed generation output: ${path}`);
       return diskTree().read(path);
     } };
-    const importBoundary = previousTarget === "3886e64e2954e8513647ece8fa126af4dcad33cf2c63ad1eed89b15edca969c1";
+    const importBoundary = ["3886e64e2954e8513647ece8fa126af4dcad33cf2c63ad1eed89b15edca969c1", "421000e5a4f5be3dd3c1464f4a9fd44ea75f7236bb6222a5410e5f89f0aa381d"].includes(previousTarget);
     const frozen = (importBoundary ? historicalImportDescriptor : historicalHostDescriptor)(hostSnapshot, "bun-1.3.14");
     if (digest(frozen) !== previousTarget) throw Error("Committed host descriptor does not reconstruct");
     const retainedPaths = [...new Set([...storedFiles.map(([path]) => path), "package.json", "bun.lock", "bunfig.toml", ...["apps/backend", "apps/web", "packages/catalog", "packages/contracts", "packages/domain", "packages/simulation"].map(path => `${path}/package.json`)])];

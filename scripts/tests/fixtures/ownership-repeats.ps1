@@ -1,9 +1,10 @@
 param([Parameter(Mandatory)][string]$Baseline, [int]$Repeats = 5)
 $ErrorActionPreference = 'Stop'
+$dockerExe = (Get-Command docker -CommandType Application -ErrorAction Stop).Source
 if ($env:DOCKER_HOST) { throw 'Ownership fixtures require a local Docker context without DOCKER_HOST' }
-$fixtureContext = (& docker context show).Trim()
+$fixtureContext = (& $dockerExe context show).Trim()
 if ($LASTEXITCODE -ne 0) { throw 'Cannot select Docker context' }
-$endpoint = (& docker context inspect $fixtureContext --format '{{.Endpoints.docker.Host}}').Trim()
+$endpoint = (& $dockerExe context inspect $fixtureContext --format '{{.Endpoints.docker.Host}}').Trim()
 if ($LASTEXITCODE -ne 0 -or $endpoint -notmatch '^(npipe:////\./pipe/|unix:///)') { throw 'Ownership fixtures require a local Docker endpoint' }
 $env:DOCKER_CONTEXT = $fixtureContext
 $root = (Resolve-Path (Join-Path $PSScriptRoot '../../..')).Path
@@ -14,14 +15,14 @@ $evidence = Join-Path ([IO.Path]::GetTempPath()) "infraforge-e3-ownership-$run"
 [IO.Directory]::CreateDirectory($evidence) | Out-Null
 $labels = @('--label', 'infraforge.project=binaryrishabh/InfraForge', '--label', 'infraforge.purpose=integration', '--label', "infraforge.run=$run", '--label', 'infraforge.temporary=true')
 $results = @()
-function Docker([string[]]$arguments) { $output = & docker @arguments; if ($LASTEXITCODE -ne 0) { throw "Docker $($arguments[0]) failed" }; return $output }
+function Docker([string[]]$arguments) { $output = & $dockerExe @arguments; if ($LASTEXITCODE -ne 0) { throw "Docker $($arguments[0]) failed" }; return $output }
 try {
   Docker (@('network', 'create') + $labels + @("$prefix-net")) | Out-Null
   Docker (@('volume', 'create') + $labels + @("$prefix-data")) | Out-Null
   Docker (@('run', '-d', '--pull=never') + $labels + @('--name', "$prefix-pg", '--network', "$prefix-net", '--publish', '127.0.0.1::5432', '--mount', "type=volume,source=$prefix-data,target=/var/lib/postgresql", '--env', 'POSTGRES_HOST_AUTH_METHOD=trust', '--env', "POSTGRES_DB=infraforge_it_$run", 'postgres:18-alpine')) | Out-Null
   Docker (@('run', '-d', '--pull=never') + $labels + @('--name', "$prefix-redis", '--network', "$prefix-net", '--publish', '127.0.0.1::6379', '--tmpfs', '/data', 'redis:8-alpine')) | Out-Null
   $deadline = [DateTime]::UtcNow.AddSeconds(40)
-  do { & docker exec "$prefix-pg" pg_isready -h 127.0.0.1 -U postgres *> $null; if ($LASTEXITCODE -eq 0) { break }; if ([DateTime]::UtcNow -gt $deadline) { throw 'Postgres readiness timed out' }; Start-Sleep -Milliseconds 200 } while ($true)
+  do { & $dockerExe exec "$prefix-pg" pg_isready -h 127.0.0.1 -U postgres *> $null; if ($LASTEXITCODE -eq 0) { break }; if ([DateTime]::UtcNow -gt $deadline) { throw 'Postgres readiness timed out' }; Start-Sleep -Milliseconds 200 } while ($true)
   $pg = (Docker @('inspect', "$prefix-pg", '--format', '{{(index (index .NetworkSettings.Ports "5432/tcp") 0).HostPort}}')).Trim()
   $redis = (Docker @('inspect', "$prefix-redis", '--format', '{{(index (index .NetworkSettings.Ports "6379/tcp") 0).HostPort}}')).Trim()
   foreach ($checkout in @(@{ name = 'baseline'; path = $Baseline }, @{ name = 'HEAD'; path = $root })) {

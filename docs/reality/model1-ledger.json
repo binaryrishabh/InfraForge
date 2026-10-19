@@ -322,8 +322,8 @@
     },
     {
       "file": "apps/backend/executionIdentity/launch.ts",
-      "sha256": "6e97081b55a20a8b7a37350f7ad0a2e348da3cb25606a9399786983246741a9e",
-      "numericSites": 2
+      "sha256": "fc45ba776364ba64b5edcb5ee3e5a87a7dff35894d662af29002455e07c828bf",
+      "numericSites": 3
     },
     {
       "file": "apps/backend/executionIdentity/launcher.ts",
@@ -482,7 +482,7 @@
     },
     {
       "file": "apps/backend/internalModel2/execution.ts",
-      "sha256": "13fbf196065987d41f56c4b65eee9ded0dcf2cddeb39fdb43dd1e1c1337576ff",
+      "sha256": "bcfb03d5e9e15a170f8371866a927835a00d11dfe0e19041a10ac51bfa4f9a5e",
       "numericSites": 8
     },
     {
@@ -502,7 +502,7 @@
     },
     {
       "file": "apps/backend/internalModel2/lessonExecution.ts",
-      "sha256": "1dd0042dae7965f06cb5700546799ca4bc977e7e67b66713bf02b21172420a0a",
+      "sha256": "5ad06458a5030dd8c2025f6e2b4155b711d618f4da67b74b284c60a1a08906fa",
       "numericSites": 10
     },
     {
@@ -802,7 +802,7 @@
     },
     {
       "file": "apps/backend/worker.ts",
-      "sha256": "785f61cdfcc3d0fa01d992675212e52e281e2fa7fee13408b9ded3a2468d4b9b",
+      "sha256": "3897f1a4eb78fb97abd758b708e4b1721d5e9e545ac107253191d09451e851a0",
       "numericSites": 23
     },
     {
@@ -22801,23 +22801,23 @@
     },
     {
       "id": "m1.apps.backend.executionIdentity.launch.1",
-      "concept": "i · literal 0",
+      "concept": "assertExecutionHost · literal 2",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
       "quantity": {
         "kind": "known",
-        "value": 0,
+        "value": 2,
         "unit": "code-number",
         "provenance": [
           "m1.apps.backend.executionIdentity.launch.1"
         ]
       },
-      "formula": "for (let i = 0; i < args.length; i++) { const arg = args[i]!; if ([\"--no-env-file\", \"--no-install\", \"--bun\", \"--watch\"].includes(arg)) continue; throw Error(`Unreviewed execution launch option: ${arg.split(\"=\")[0]}`); }",
+      "formula": "if (main !== \"apps/backend/worker.ts\" && !(main === \"apps/backend/executionIdentity/launcher.ts\" && process.argv[2] === \"worker\")) throw Error(\"Unreviewed Model-2 execution host\");",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/launch.ts#L7",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/launch.ts#L9",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -22831,13 +22831,13 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/executionIdentity/launch.ts",
-        "line": 7,
-        "column": 16
+        "line": 9,
+        "column": 116
       }
     },
     {
       "id": "m1.apps.backend.executionIdentity.launch.2",
-      "concept": "verifyLaunch · literal 0",
+      "concept": "i · literal 0",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
       "quantity": {
@@ -22848,12 +22848,12 @@
           "m1.apps.backend.executionIdentity.launch.2"
         ]
       },
-      "formula": "throw Error(`Unreviewed execution launch option: ${arg.split(\"=\")[0]}`);",
+      "formula": "for (let i = 0; i < args.length; i++) { const arg = args[i]!; if ([\"--no-env-file\", \"--no-install\", \"--bun\", \"--watch\"].includes(arg)) continue; throw Error(`Unreviewed execution launch option: ${arg.split(\"=\")[0]}`); }",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/launch.ts#L10",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/launch.ts#L19",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -22867,7 +22867,43 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/executionIdentity/launch.ts",
-        "line": 10,
+        "line": 19,
+        "column": 16
+      }
+    },
+    {
+      "id": "m1.apps.backend.executionIdentity.launch.3",
+      "concept": "verifyLaunch · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.executionIdentity.launch.3"
+        ]
+      },
+      "formula": "throw Error(`Unreviewed execution launch option: ${arg.split(\"=\")[0]}`);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/launch.ts#L22",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/executionIdentity/launch.ts",
+        "line": 22,
         "column": 71
       }
     },
@@ -31889,7 +31925,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/execution.ts#L22",
+          "source": "workspace:apps/backend/internalModel2/execution.ts#L26",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -31903,7 +31939,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/execution.ts",
-        "line": 22,
+        "line": 26,
         "column": 121
       }
     },
@@ -31925,7 +31961,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/execution.ts#L37",
+          "source": "workspace:apps/backend/internalModel2/execution.ts#L41",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -31939,7 +31975,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/execution.ts",
-        "line": 37,
+        "line": 41,
         "column": 18
       }
     },
@@ -31961,7 +31997,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/execution.ts#L40",
+          "source": "workspace:apps/backend/internalModel2/execution.ts#L44",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -31975,7 +32011,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/execution.ts",
-        "line": 40,
+        "line": 44,
         "column": 186
       }
     },
@@ -31997,7 +32033,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/execution.ts#L40",
+          "source": "workspace:apps/backend/internalModel2/execution.ts#L44",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -32011,7 +32047,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/execution.ts",
-        "line": 40,
+        "line": 44,
         "column": 189
       }
     },
@@ -32033,7 +32069,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/execution.ts#L44",
+          "source": "workspace:apps/backend/internalModel2/execution.ts#L48",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -32047,7 +32083,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/execution.ts",
-        "line": 44,
+        "line": 48,
         "column": 175
       }
     },
@@ -32069,7 +32105,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/execution.ts#L60",
+          "source": "workspace:apps/backend/internalModel2/execution.ts#L64",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -32083,7 +32119,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/execution.ts",
-        "line": 60,
+        "line": 64,
         "column": 64
       }
     },
@@ -32105,7 +32141,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/execution.ts#L70",
+          "source": "workspace:apps/backend/internalModel2/execution.ts#L74",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -32119,7 +32155,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/execution.ts",
-        "line": 70,
+        "line": 74,
         "column": 114
       }
     },
@@ -32141,7 +32177,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/execution.ts#L70",
+          "source": "workspace:apps/backend/internalModel2/execution.ts#L74",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -32155,7 +32191,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/execution.ts",
-        "line": 70,
+        "line": 74,
         "column": 117
       }
     },
@@ -33005,7 +33041,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/lessonExecution.ts#L17",
+          "source": "workspace:apps/backend/internalModel2/lessonExecution.ts#L19",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -33019,7 +33055,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/lessonExecution.ts",
-        "line": 17,
+        "line": 19,
         "column": 121
       }
     },
@@ -33041,7 +33077,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/lessonExecution.ts#L40",
+          "source": "workspace:apps/backend/internalModel2/lessonExecution.ts#L42",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -33055,7 +33091,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/lessonExecution.ts",
-        "line": 40,
+        "line": 42,
         "column": 104
       }
     },
@@ -33077,7 +33113,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/lessonExecution.ts#L40",
+          "source": "workspace:apps/backend/internalModel2/lessonExecution.ts#L42",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -33091,7 +33127,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/lessonExecution.ts",
-        "line": 40,
+        "line": 42,
         "column": 109
       }
     },
@@ -33113,7 +33149,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/lessonExecution.ts#L41",
+          "source": "workspace:apps/backend/internalModel2/lessonExecution.ts#L43",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -33127,7 +33163,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/lessonExecution.ts",
-        "line": 41,
+        "line": 43,
         "column": 141
       }
     },
@@ -33149,7 +33185,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/lessonExecution.ts#L42",
+          "source": "workspace:apps/backend/internalModel2/lessonExecution.ts#L44",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -33163,7 +33199,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/lessonExecution.ts",
-        "line": 42,
+        "line": 44,
         "column": 45
       }
     },
@@ -33185,7 +33221,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/lessonExecution.ts#L42",
+          "source": "workspace:apps/backend/internalModel2/lessonExecution.ts#L44",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -33199,7 +33235,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/lessonExecution.ts",
-        "line": 42,
+        "line": 44,
         "column": 49
       }
     },
@@ -33221,7 +33257,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/lessonExecution.ts#L44",
+          "source": "workspace:apps/backend/internalModel2/lessonExecution.ts#L46",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -33235,7 +33271,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/lessonExecution.ts",
-        "line": 44,
+        "line": 46,
         "column": 176
       }
     },
@@ -33257,7 +33293,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/lessonExecution.ts#L46",
+          "source": "workspace:apps/backend/internalModel2/lessonExecution.ts#L48",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -33271,7 +33307,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/lessonExecution.ts",
-        "line": 46,
+        "line": 48,
         "column": 41
       }
     },
@@ -33293,7 +33329,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/lessonExecution.ts#L98",
+          "source": "workspace:apps/backend/internalModel2/lessonExecution.ts#L100",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -33307,7 +33343,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/lessonExecution.ts",
-        "line": 98,
+        "line": 100,
         "column": 111
       }
     },
@@ -33329,7 +33365,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/internalModel2/lessonExecution.ts#L98",
+          "source": "workspace:apps/backend/internalModel2/lessonExecution.ts#L100",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -33343,7 +33379,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/internalModel2/lessonExecution.ts",
-        "line": 98,
+        "line": 100,
         "column": 114
       }
     },
@@ -43912,7 +43948,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L48",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L50",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -43926,7 +43962,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/worker.ts",
-        "line": 48,
+        "line": 50,
         "column": 16
       }
     },
@@ -43948,7 +43984,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L63",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L65",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -43962,7 +43998,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/worker.ts",
-        "line": 63,
+        "line": 65,
         "column": 25
       }
     },
@@ -43984,7 +44020,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L93",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L95",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -43998,7 +44034,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/worker.ts",
-        "line": 93,
+        "line": 95,
         "column": 13
       }
     },
@@ -44020,7 +44056,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L128",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L130",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -44034,7 +44070,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/worker.ts",
-        "line": 128,
+        "line": 130,
         "column": 44
       }
     },
@@ -44056,7 +44092,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L158",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L160",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -44070,7 +44106,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/worker.ts",
-        "line": 158,
+        "line": 160,
         "column": 35
       }
     },
@@ -44092,7 +44128,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L180",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L182",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -44106,7 +44142,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/worker.ts",
-        "line": 180,
+        "line": 182,
         "column": 33
       }
     },
@@ -44128,7 +44164,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L190",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L192",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -44142,7 +44178,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/worker.ts",
-        "line": 190,
+        "line": 192,
         "column": 90
       }
     },
@@ -44164,7 +44200,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L190",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L192",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -44178,7 +44214,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/worker.ts",
-        "line": 190,
+        "line": 192,
         "column": 97
       }
     },
@@ -44200,7 +44236,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L260",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L262",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -44214,7 +44250,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/worker.ts",
-        "line": 260,
+        "line": 262,
         "column": 31
       }
     },
@@ -44236,7 +44272,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L333",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L335",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -44250,7 +44286,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/worker.ts",
-        "line": 333,
+        "line": 335,
         "column": 32
       }
     },
@@ -44272,7 +44308,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L366",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L368",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -44286,7 +44322,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/worker.ts",
-        "line": 366,
+        "line": 368,
         "column": 30
       }
     },
@@ -44308,7 +44344,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L412",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L414",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -44322,7 +44358,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/worker.ts",
-        "line": 412,
+        "line": 414,
         "column": 27
       }
     },
@@ -44344,7 +44380,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L423",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L425",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -44358,7 +44394,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/worker.ts",
-        "line": 423,
+        "line": 425,
         "column": 22
       }
     },
@@ -44380,7 +44416,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L424",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L426",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -44394,7 +44430,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/worker.ts",
-        "line": 424,
+        "line": 426,
         "column": 22
       }
     },
@@ -44416,7 +44452,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L434",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L436",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -44430,7 +44466,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/worker.ts",
-        "line": 434,
+        "line": 436,
         "column": 61
       }
     },
@@ -44452,7 +44488,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L443",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L445",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -44466,7 +44502,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/worker.ts",
-        "line": 443,
+        "line": 445,
         "column": 52
       }
     },
@@ -44488,7 +44524,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L445",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L447",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -44502,7 +44538,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/worker.ts",
-        "line": 445,
+        "line": 447,
         "column": 34
       }
     },
@@ -44524,7 +44560,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L445",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L447",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -44538,7 +44574,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/worker.ts",
-        "line": 445,
+        "line": 447,
         "column": 40
       }
     },
@@ -44560,7 +44596,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L448",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L450",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -44574,7 +44610,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/worker.ts",
-        "line": 448,
+        "line": 450,
         "column": 56
       }
     },
@@ -44596,7 +44632,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L456",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L458",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -44610,7 +44646,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/worker.ts",
-        "line": 456,
+        "line": 458,
         "column": 50
       }
     },
@@ -44632,7 +44668,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L456",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L458",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -44646,7 +44682,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/worker.ts",
-        "line": 456,
+        "line": 458,
         "column": 54
       }
     },
@@ -44668,7 +44704,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L466",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L468",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -44682,7 +44718,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/worker.ts",
-        "line": 466,
+        "line": 468,
         "column": 18
       }
     },
@@ -44704,7 +44740,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L467",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L469",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -44718,7 +44754,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/worker.ts",
-        "line": 467,
+        "line": 469,
         "column": 26
       }
     },

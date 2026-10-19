@@ -125,7 +125,7 @@
     "review": "Fixed data indexing; resource adapters require the separate documented review"
   },
   "apps/backend/executionIdentity/launch.ts": {
-    "hash": "6e97081b55a20a8b7a37350f7ad0a2e348da3cb25606a9399786983246741a9e",
+    "hash": "fc45ba776364ba64b5edcb5ee3e5a87a7dff35894d662af29002455e07c828bf",
     "capabilities": [
       "computed-data",
       "verifier"
@@ -241,7 +241,7 @@
     "review": "Fixed data indexing; resource adapters require the separate documented review"
   },
   "apps/backend/internalModel2/lessonExecution.ts": {
-    "hash": "1dd0042dae7965f06cb5700546799ca4bc977e7e67b66713bf02b21172420a0a",
+    "hash": "5ad06458a5030dd8c2025f6e2b4155b711d618f4da67b74b284c60a1a08906fa",
     "capabilities": [
       "computed-data"
     ],

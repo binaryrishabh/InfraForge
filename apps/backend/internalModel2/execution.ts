@@ -1,3 +1,4 @@
+import { assertExecutionHost } from "../executionIdentity/launch";
 import { randomUUID } from "node:crypto";
 import type { WorkerOwnership } from "../infra/workerOwnership";
 import type { InternalRunRow } from "./store";
@@ -7,6 +8,7 @@ import type { StoredCapture, CaptureCheckpoint } from "./capture";
 import { lessonRecord } from "./lessonStore";
 import { executeLesson } from "./lessonExecution";
 export async function retireInternalRuns(ownership: WorkerOwnership) {
+  assertExecutionHost();
   await ownership.transaction(async (db) => {
     await db.query(`UPDATE "InternalModel2Run" SET status='interrupted',reason='Worker restarted; last durable prefix retained. Exact continuation is unsupported.',"updatedAt"=now() WHERE status='running'`);
     await db.query(`UPDATE "InternalModel2Run" r SET status='failed',reason='Durable queue delivery exhausted before execution',"updatedAt"=now()
@@ -14,9 +16,11 @@ export async function retireInternalRuns(ownership: WorkerOwnership) {
   });
 }
 export async function failInternalDelivery(ownership: WorkerOwnership, id: string) {
+  assertExecutionHost();
   await ownership.transaction(async (db) => { await db.query(`UPDATE "InternalModel2Run" SET status='failed',reason='Durable queue delivery exhausted before execution',"updatedAt"=now() WHERE id=$1 AND status='queued'`, [id]); });
 }
 export async function executeInternalRun(id: string, ownership: WorkerOwnership) {
+  assertExecutionHost();
   if (await lessonRecord(id)) { await executeLesson(id, ownership); return; }
   const claimed = await ownership.transaction(async (db) => {
     const row = (await db.query<InternalRunRow>('SELECT * FROM "InternalModel2Run" WHERE id=$1 FOR UPDATE', [id])).rows[0];

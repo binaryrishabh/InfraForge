@@ -1,3 +1,4 @@
+import { assertExecutionHost } from "./executionIdentity/launch";
 import { Worker } from "bullmq";
 import { redis } from "./infra/redis";
 import { prisma } from "./lib/prisma";
@@ -39,6 +40,7 @@ import { internalModel2Queue } from "./internalModel2/queue";
 import { reapLessonContainers } from "./internalModel2/lessonExecution";
 import { deploymentFailureStatus, isRetiredDeployment } from "./utils/deploymentJobPolicy";
 
+assertExecutionHost();
 await assertRuntimeSchema();
 const databaseUrl = workerDatabaseUrl(process.env);
 if (config.NODE_ENV === "production") await verifyWorkerSession(databaseUrl);

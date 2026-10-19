@@ -4,6 +4,7 @@ import { digest } from "../../apps/backend/executionIdentity/hash";
 import { verifyInstalledModuleLoading } from "../../apps/backend/executionIdentity/loading";
 import { parseLock } from "../../apps/backend/executionIdentity/dependencies";
 import { fixture } from "../../apps/backend/tests/integration/lessonSandboxChecks";
+import { retireInternalRuns } from "../../apps/backend/internalModel2/execution";
 import { verifyLaunch } from "../../apps/backend/executionIdentity/launch";
 
 const tree = diskTree();
@@ -120,4 +121,14 @@ test("privileged resources and loaders cannot escape through verifier helpers, r
   expect(() => changed({ 'apps/backend/internalModel2/store.ts': `import {reader} from './review-reader'; reader().read(process.env.FILE);`, 'apps/backend/internalModel2/review-reader.ts': `export {diskTree as reader} from '../executionIdentity/descriptor';` })).toThrow('Unreviewed execution capability import');
   for (const source of [`import.meta.resolve('three');`, `const meta=import.meta; meta.resolve('three');`]) expect(() => changed({'apps/backend/internalModel2/store.ts':source})).toThrow('dynamic execution loader');
   expect(() => changed({'apps/backend/internalModel2/store.ts':`require.resolve('three');`})).toThrow('Undeclared execution import');
+}, 120000);
+
+
+test("unrecognized drivers cannot claim the ordinary backend host identity or inject ownership", async () => {
+  const child = Bun.spawnSync([process.execPath, "--no-env-file", `${repositoryRoot}/scripts/tests/fixtures/unreviewed-host.ts`], { cwd: repositoryRoot, env: { PATH: process.env.PATH ?? "", SystemRoot: process.env.SystemRoot ?? "/" } });
+  expect(child.exitCode).not.toBe(0);
+  expect(child.stderr.toString()).toContain("Unreviewed execution entrypoint");
+  let used = false;
+  await expect(retireInternalRuns({ transaction: async () => { used = true; } } as never)).rejects.toThrow("Unreviewed Model-2 execution host");
+  expect(used).toBe(false);
 }, 120000);
