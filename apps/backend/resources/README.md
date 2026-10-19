@@ -1,0 +1,1 @@
+Execution resources must be listed in ../executionIdentity/resourceInventory.json. Use executionResource or compileExecutionWasm; direct filesystem and WebAssembly capabilities require an exact-byte review. JSON and WASM bytes enter the descriptor, and are checked again when read.

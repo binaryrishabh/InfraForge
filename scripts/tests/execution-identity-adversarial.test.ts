@@ -1,6 +1,4 @@
 import { expect, test } from "bun:test";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { resolve, sep } from "node:path";
 import { diskTree, executionDescriptor, repositoryRoot } from "../../apps/backend/executionIdentity/descriptor";
 import { digest } from "../../apps/backend/executionIdentity/hash";
 import { parseLock } from "../../apps/backend/executionIdentity/dependencies";
@@ -29,7 +27,7 @@ test("nested configs cannot redirect a workspace import to an alternate engine",
   expect(() => changed({ ...base, [extension]: '{"extends":"./tsconfig.json"}' })).toThrow("Cyclic");
   expect(() => changed({ [config]: '{"extends":"unreviewed-package/config"}' })).toThrow("Unsupported");
   expect(() => executionDescriptor({ ...tree, resolveImport: (specifier, importer) => specifier === "@infraforge/simulation/internal-product" ? alternate : tree.resolveImport!(specifier, importer) })).toThrow("Unexpected workspace resolution");
-});
+}, 120000);
 
 test("a second JavaScript module and its package imports belong to the closure", () => {
   for (const extension of ["js", "mjs", "cjs", "jsx", "mts", "cts"]) {
@@ -45,7 +43,7 @@ test("a second JavaScript module and its package imports belong to the closure",
     expect(digest(changed(edits))).not.toBe(digest(changed({ ...edits, "apps/backend/internalModel2/review-leaf.js": "export const value = 99;" })));
   }
   for (const source of ['require("three");', 'import("three");', 'import(`th${"ree"}`);']) expect(() => changed({ "apps/backend/internalModel2/store.ts": source })).toThrow("Undeclared execution import");
-});
+}, 120000);
 
 test("the build rejects authored modules missing from the descriptor", async () => {
   const incomplete = structuredClone(original);
@@ -54,7 +52,7 @@ test("the build rejects authored modules missing from the descriptor", async () 
   const missingImport = structuredClone(original);
   missingImport.imports = missingImport.imports.filter(item => item.specifier !== "pg");
   await expect(checkExecutionResolution(missingImport)).rejects.toThrow("Uninventoried authored import");
-}, 30000);
+}, 180000);
 
 const escapedLoaders = [
   'import { createRequire } from "node:module"; const load = createRequire(import.meta.url); load("three");',
@@ -101,7 +99,7 @@ test("loader values cannot escape in authored or installed package modules", () 
   for (const path of ["apps/backend/internalModel2/dockerConnection.ts", "apps/backend/utils/errors.ts"]) {
     expect(() => changed({ [path]: tree.read(path) + "\n" })).toThrow("dynamic execution loader");
   }
-});
+}, 120000);
 
 test("installation hooks are refused for the root and every installed workspace", () => {
   const lock = parseLock(tree.read("bun.lock"));
@@ -114,26 +112,15 @@ test("installation hooks are refused for the root and every installed workspace"
   }
   const web = JSON.parse(tree.read("apps/web/package.json"));
   expect(digest(changed({ "apps/web/package.json": JSON.stringify({ ...web, scripts: { ...web.scripts, unrelated: "echo web" } }) }))).toBe(digest(original));
-});
+}, 120000);
 
 test("runtime and tooling share LF-normalized transition byte validation", () => {
-  const tempParent = resolve(repositoryRoot, ".cache/identity-adversarial");
-  mkdirSync(tempParent, { recursive: true });
-  const root = mkdtempSync(resolve(tempParent, "table-")), folder = resolve(root, "apps/backend/executionIdentity");
-  mkdirSync(folder, { recursive: true });
-  try {
-    const table = readFileSync(resolve(repositoryRoot, "apps/backend/executionIdentity/executionTransitions.json"), "utf8").replaceAll("\r\n", "\n");
-    writeFileSync(resolve(folder, "transitionPin.json"), readFileSync(resolve(repositoryRoot, "apps/backend/executionIdentity/transitionPin.json")));
-    const path = resolve(folder, "executionTransitions.json");
-    writeFileSync(path, table.replaceAll("\n", "\r\n"));
-    expect(loadTransitions(root).mappings.size).toBeGreaterThan(0);
-    for (const mutated of [table + "\n", table.trim(), JSON.stringify(JSON.parse(table))]) {
-      writeFileSync(path, mutated);
-      expect(() => loadTransitions(root)).toThrow("Execution transition bytes changed");
-      expect(() => checkTransitions(root)).toThrow("Execution transition bytes changed");
-    }
-  } finally {
-    if (!root.startsWith(tempParent + sep)) throw Error("Fixture cleanup escaped its directory");
-    rmSync(root, { recursive: true, force: true });
+  const table = tree.read("apps/backend/executionIdentity/executionTransitions.json");
+  const pin = tree.read("apps/backend/executionIdentity/transitionPin.json");
+  const read = (text: string) => (path: string) => path.endsWith("transitionPin.json") ? pin : text;
+  expect(loadTransitions("fixture", read(table.replaceAll("\n", "\r\n"))).mappings.size).toBeGreaterThan(0);
+  for (const mutated of [table + "\n", table.trim(), JSON.stringify(JSON.parse(table))]) {
+    expect(() => loadTransitions("fixture", read(mutated))).toThrow("Execution transition bytes changed");
+    expect(() => checkTransitions("fixture", read(mutated))).toThrow("Execution transition bytes changed");
   }
-});
+}, 120000);

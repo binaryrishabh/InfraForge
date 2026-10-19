@@ -1,6 +1,7 @@
 # Keep the build context limited to the current backend workspace inputs.
 **
 
+!.dockerignore
 !package.json
 !bun.lock
 !bunfig.toml
@@ -69,6 +70,7 @@ packages/simulation/src/reality/*/**
 apps/backend/**
 !apps/backend/package.json
 !apps/backend/Dockerfile
+!apps/backend/docker-compose.yml
 !apps/backend/index.ts
 !apps/backend/worker.ts
 !apps/backend/ws-server.ts
@@ -177,3 +179,12 @@ apps/backend/prisma/migrations/*/**
 **/AGENTS.md
 **/SKILL.md
 **/skills-lock.json
+
+# The launch contract is a descriptor input.
+!.dockerignore
+
+!apps/backend/resources/
+apps/backend/resources/**
+!apps/backend/resources/*.json
+!apps/backend/resources/*.wasm
+!apps/backend/resources/README.md

@@ -1,10 +1,14 @@
 import { existsSync, readFileSync, realpathSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import type { ExecutionDescriptor } from "./descriptor";
+import { executionResolve } from "./resolution";
+import { sha256, lf } from "./hash";
+import { verifyLaunch } from "./launch";
 import type { Instance } from "./dependencies";
 
 // Check the actual hoisted tree, including nested instances and absent optional peers.
-export function verifyInstalled(descriptor: ExecutionDescriptor, root: string) {
+export function verifyInstalled(descriptor: ExecutionDescriptor, root: string, review = false) {
+  verifyLaunch();
   const packages = new Map(descriptor.dependencies.packages.map(item => [item.id, item]));
   const directories = new Map<string, string>();
   const candidates = new Map<string, string | undefined>();
@@ -59,10 +63,22 @@ export function verifyInstalled(descriptor: ExecutionDescriptor, root: string) {
     if (!workspace) throw Error(`Missing execution workspace: ${entry.name}`);
     for (const edge of entry.edges) checkEdge(edge, resolve(root, workspace));
   }
-  for (const { file, specifier } of descriptor.imports) {
-    const actual = Bun.resolveSync(specifier, dirname(resolve(root, file)));
+  for (const { file, specifier, kind } of descriptor.imports) {
+    const actual = executionResolve(specifier, resolve(root, file), kind);
     if (relative(root, actual).startsWith("..")) throw Error(`Execution import escaped runtime tree: ${specifier}`);
     if (![...directories.values()].some(directory => actual.startsWith(directory + "/") || actual.startsWith(directory + "\\"))) throw Error(`Unpinned execution import: ${specifier}`);
+  }
+  if (!review) {
+    const contract = JSON.parse(readFileSync(resolve(root, "apps/backend/executionIdentity/resolutionContract.json"), "utf8"));
+    for (const module of contract.modules) {
+      const directory = directories.get(module.owner);
+      if (!directory || relative(directory, resolve(directory, module.file)).startsWith("..") || sha256(lf(readFileSync(resolve(directory, module.file), "utf8"))) !== module.hash) throw Error("Selected execution implementation drift");
+    }
+    for (const selection of contract.imports) {
+      const from = selection.owner === null ? root : directories.get(selection.owner);
+      const target = directories.get(selection.targetOwner);
+      if (!from || !target || realpathSync(executionResolve(selection.specifier, resolve(from, selection.file), selection.kind)) !== realpathSync(resolve(target, selection.targetFile))) throw Error("Selected execution entrypoint drift");
+    }
   }
   return directories;
 }

@@ -1,5 +1,7 @@
-import { parse, tokenizer } from "acorn";
+import { parse } from "acorn";
 import { sha256 } from "./hash";
+import reviews from "./capabilityReviews.json";
+import selected from "./resolutionContract.json";
 
 export const executable = /\.(?:[cm]?[jt]s|[jt]sx)$/;
 export function loaderFor(path: string): "ts" | "tsx" | "js" | "jsx" {
@@ -86,24 +88,40 @@ export function executionImports(text: string, path: string) {
 export function verifyModuleLoading(text: string, path: string) {
   const previousAnalysis = checked.get(path);
   if (previousAnalysis?.text === text) return previousAnalysis.requests;
+  const normalized = path.replaceAll("\\", "/");
+  const review = Object.entries(reviews).find(([file]) => normalized === file || normalized.endsWith("/" + file));
+  if (review && review[1].hash === sha256(text) && review[1].capabilities.some(capability => ["generated-client", "trusted-resolver"].includes(capability))) {
+    const requests = [...sourceScanner(path).scan(text).imports];
+    const ast = parse(emittedCode(text, path), { ecmaVersion: "latest", sourceType: "module" });
+    const visit = (node: Syntax) => {
+      if (node.type === "ImportExpression") {
+        if (!literal(node.source)) throw Error(`Unreviewed generated import: ${path}`);
+        requests.push({ path: String((node.source as Syntax).value), kind: "dynamic-import" });
+      }
+      for (const value of Object.values(node)) {
+        if (syntax(value)) visit(value);
+        else if (Array.isArray(value)) for (const child of value) if (syntax(child)) visit(child);
+      }
+    };
+    visit(ast as unknown as Syntax);
+    return requests;
+  }
   const literals: ReturnType<Bun.Transpiler["scan"]>["imports"] = [];
   const code = emittedCode(text, path);
-  // Token values decode escaped identifiers too. Most authored modules contain no loader capability.
-  const sensitive = new Set(["require", "createRequire", "_load", "eval", "Function", "constructor", "Worker", "Reflect", "getOwnPropertyDescriptor", "getOwnPropertyDescriptors", "module", "node:module", "bun", "node:process", "globalThis", "global", "process", "Bun", "getBuiltinModule", "mainModule", ...codeHosts]);
-  let capability = false, previous = "";
-  for (const token of tokenizer(code, { ecmaVersion: "latest", sourceType: "module" })) {
-    const value = (token as typeof token & { value?: unknown }).value;
-    if (sensitive.has(String(value)) || previous === "import" && token.type.label === "(") { capability = true; break; }
-    previous = token.type.label;
-  }
-  if (!capability) { checked.set(path, { text, requests: literals }); return literals; }
   const ast = parse(code, { ecmaVersion: "latest", sourceType: "module", allowReturnOutsideFunction: true, allowAwaitOutsideFunction: true });
   const global = globalReferences(ast as unknown as Syntax);
   // Authored exceptions are frozen adapters, not path-wide permissions.
   const processAdapter = path.replaceAll("\\", "/").endsWith("apps/backend/internalModel2/dockerConnection.ts") && sha256(text) === "614e7e40f425cfd19edc0c8d789e9b0cf622e291d9f110d4026c3ca0911cff02";
   const errorAdapter = path.replaceAll("\\", "/").endsWith("apps/backend/utils/errors.ts") && sha256(text) === "bb936198f6a1a31a0c5b70cfd945e7922f69438e0888af6ec0c2fa54350b89fa";
+  const normalizedPath = path.replaceAll("\\", "/");
+  const reviewed = Object.entries(reviews).find(([file]) => normalizedPath === file || normalizedPath.endsWith("/" + file));
+  const permissions = reviewed && reviewed[1].hash === sha256(text) ? reviewed[1].capabilities : [];
+  const computedReview = permissions.includes("computed-data");
+  const resourceReview = permissions.includes("resources");
+  const verifierReview = permissions.includes("verifier");
   const forbiddenHost = (name: string) => codeHosts.has(name) && !(processAdapter && ["child_process", "node:child_process"].includes(name));
   function reject() { throw Error(`Unreviewed dynamic execution loader: ${path}`); }
+  function resourceHost(name: string) { return ["fs", "node:fs", "fs/promises", "node:fs/promises", "node:sqlite", "sqlite", "bun:sqlite", "node:wasi", "wasi"].includes(name); }
   function visit(node: Syntax, parent?: Syntax, grandparent?: Syntax) {
     if (["ImportDeclaration", "ExportNamedDeclaration", "ExportAllDeclaration"].includes(node.type) && literal(node.source)) literals.push({ path: String((node.source as Syntax).value), kind: "import-statement" });
     if (["ImportDeclaration", "ExportNamedDeclaration", "ExportAllDeclaration"].includes(node.type) && syntax(node.source) && ["module", "node:module"].includes(String(node.source.value))) {
@@ -118,12 +136,22 @@ export function verifyModuleLoading(text: string, path: string) {
     const presence = parent?.type === "BinaryExpression" && parent.operator === "in" && parent.right === node;
     if (!propertyName && (node.type === "Identifier" && ["createRequire", "_load", "eval", "Function"].includes(String(node.name)) || global(node, "Worker"))) reject();
     if (node.type === "Property" && parent?.type === "ObjectPattern" && (node.computed && !literal(node.key) || identifier(node.key, "constructor") || syntax(node.key) && node.key.value === "constructor")) reject();
+    if (!resourceReview && !verifierReview && ["ImportDeclaration", "ExportNamedDeclaration", "ExportAllDeclaration", "ImportExpression"].includes(node.type) && syntax(node.source) && resourceHost(String(node.source.value))) reject();
+    if (!resourceReview && !verifierReview && ["WebAssembly", "fetch", "XMLHttpRequest", "EventSource"].some(name => global(node, name))) reject();
     if (node.type === "MemberExpression") {
+      if (!verifierReview && ["globalThis", "global"].some(name => global(node.object, name))) reject();
       const property = node.property as Syntax;
       const name = node.computed ? property.value : property.name;
+      // Unknown keys can extract Function from any object through its prototype.
+      // No spelling shortcut: parse every module, including innocent-looking aliases.
+      const fixedSymbol = syntax(node.property) && node.property.type === "MemberExpression" && global(node.property.object, "Symbol") && !node.property.computed && ["iterator", "asyncIterator", "toStringTag"].some(name => identifier((node.property as Syntax).property, name));
+      const primitiveKey = property.type === "Literal" && ["string", "number"].includes(typeof property.value);
+      if (node.computed && !primitiveKey && !fixedSymbol && !computedReview && !verifierReview) reject();
+      if (global(node.object, "Bun") && !["version", "sleep", "nanoseconds"].includes(String(name)) && !verifierReview) reject();
       if (["require", "createRequire", "_load", "getBuiltinModule", "mainModule", "binding", "_linkedBinding", "dlopen"].includes(String(name))) reject();
       if (name === "constructor" && !errorAdapter) reject();
-      if (global(node.object, "Reflect") && name === "get" || global(node.object, "Object") && ["getOwnPropertyDescriptor", "getOwnPropertyDescriptors"].includes(String(name))) reject();
+      if (!verifierReview && (global(node.object, "Reflect") || global(node.object, "Object") && ["getOwnPropertyDescriptor", "getOwnPropertyDescriptors", "getPrototypeOf", "setPrototypeOf"].includes(String(name)))) reject();
+      if (["__proto__", "__lookupGetter__", "__lookupSetter__", "__defineGetter__", "__defineSetter__"].includes(String(name))) reject();
       if (["globalThis", "global"].some(name => global(node.object, name)) && ["eval", "Function", "process", "Bun", "global", "globalThis", "module"].includes(String(name))) reject();
       if (global(node.object, "module") && !["exports", "filename", "id"].includes(String(name))) reject();
       if (global(node.object, "Bun") && ["plugin", "dlopen", "spawn", "spawnSync"].includes(String(name))) reject();
@@ -134,9 +162,11 @@ export function verifyModuleLoading(text: string, path: string) {
       const resolve = parent?.type === "MemberExpression" && parent.object === node && !parent.computed && identifier(parent.property, "resolve") && grandparent?.type === "CallExpression" && grandparent.callee === parent && (grandparent.arguments as Syntax[]).length === 1 && literal((grandparent.arguments as Syntax[])[0]);
       const typeOf = parent?.type === "UnaryExpression" && parent.operator === "typeof";
       if (!direct && !resolve && !typeOf) reject();
+      if (direct && !resourceReview && !verifierReview && resourceHost(String(((parent!.arguments as Syntax[])[0]!).value))) reject();
       if (direct && (["module", "node:module", "bun", "process", "node:process"].includes(String(((parent!.arguments as Syntax[])[0]!).value)) || forbiddenHost(String(((parent!.arguments as Syntax[])[0]!).value)))) reject();
       if (direct) literals.push({ path: String(((parent!.arguments as Syntax[])[0]!).value), kind: "require-call" });
     }
+    if (!propertyName && !presence && ["Object", "Reflect"].some(name => global(node, name)) && !(parent?.type === "MemberExpression" && parent.object === node)) reject();
     if (!propertyName && !presence && ["module", "globalThis", "global", "process", "Bun"].some(name => global(node, name)) && !(parent?.type === "MemberExpression" && parent.object === node) && !(parent?.type === "UnaryExpression" && parent.operator === "typeof")) reject();
     if (node.type === "CallExpression" && syntax(node.callee) && node.callee.type === "MemberExpression" && identifier(node.callee.object, "require")) {
       if ((node.arguments as Syntax[]).length !== 1 || !literal((node.arguments as Syntax[])[0])) reject();
@@ -152,6 +182,9 @@ export function verifyModuleLoading(text: string, path: string) {
 }
 
 export function verifyInstalledModuleLoading(text: string, path: string, key: string) {
+  const pinned = (selected.modules as Array<{ key: string; hash: string }>).some(module => module.key === key && module.hash === sha256(text));
+  // Reviewed selected implementation bytes, never a package/path-wide exception.
+  if (pinned) return;
   try { verifyModuleLoading(text, path); } catch (error) {
     if (reviewedLoaders.get(key) !== sha256(text)) throw Error(`Unreviewed dynamic package loader: ${key}`, { cause: error });
   }

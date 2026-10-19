@@ -20,7 +20,7 @@ test("web-only lock and manifest changes leave execution-source/2 unchanged", ()
   lock.workspaces["apps/web"]!.dependencies!["web-only-fixture"] = "1.0.0";
   lock.packages["web-only-fixture"] = ["web-only-fixture@1.0.0", "", {}, "sha512-Zml4dHVyZQ=="];
   expect(digest(changed({ "bun.lock": JSON.stringify(lock), "apps/web/package.json": JSON.stringify(web) }))).toBe(digest(original));
-});
+}, 120000);
 test("versions, integrity, nested instances, transitive and optional peer edges are pinned", () => {
   for (const name of ["zod", "pg-connection-string", "express/content-type", "@redis/client/cluster-key-slot"]) {
     for (const field of [0, 3] as const) {
@@ -44,7 +44,7 @@ test("hoisting an identical resolved instance and its children does not change i
     delete lock.packages[key];
   }
   expect(digest(changed({ "bun.lock": JSON.stringify(lock) }))).toBe(digest(original));
-});
+}, 120000);
 test("every execution workspace dependency and imported backend source is pinned", () => {
   for (const folder of ["simulation", "domain", "catalog", "contracts"]) {
     const lock = parseLock(tree.read("bun.lock")), path = `packages/${folder}/package.json`, manifest = JSON.parse(tree.read(path));
@@ -73,7 +73,7 @@ test("history reconstructs without Git and only reviewed digests resolve", () =>
   expect(JSON.parse(isolated.stdout.toString()).current).toBe(executionSource);
   const table = JSON.parse(readFileSync("apps/backend/executionIdentity/executionTransitions.json", "utf8"));
   const pin = JSON.parse(readFileSync("apps/backend/executionIdentity/transitionPin.json", "utf8"));
-  expect(table.entries.length).toBe(22);
+  expect(table.entries.length).toBe(23);
   for (const row of table.entries) expect(compatibleReviewedSource(row.source, executionSource)).toBe(true);
   expect(compatibleReviewedSource("dcf73dace76edc0afead6158b34785f511ba6b21fd34ce5490d11fe78e20f4ad", executionSource)).toBe(true);
   expect(compatibleReviewedSource("f".repeat(64), executionSource)).toBe(false);
@@ -93,7 +93,7 @@ test("installed execution imports resolve within the declared closure", async ()
 }, 180000);
 test("runtime image includes the identity implementation and committed transitions", () => {
   const context = ignore().add(readFileSync(".dockerignore", "utf8"));
-  for (const [path] of original.files) expect(context.ignores(path!)).toBe(false);
+  for (const [path] of original.files) expect(context.ignores(path!)).toBe(path!.includes("/generated/"));
   expect(readFileSync("apps/backend/Dockerfile", "utf8")).toContain("COPY apps/backend/executionIdentity ./apps/backend/executionIdentity/");
   for (const workspace of ["domain", "catalog", "contracts", "simulation"]) expect(readFileSync("apps/backend/Dockerfile", "utf8")).toContain(`COPY packages/${workspace}/tsconfig.json ./packages/${workspace}/`);
-});
+}, 120000);

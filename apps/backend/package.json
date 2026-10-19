@@ -4,14 +4,14 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "bun --watch run index.ts",
-    "test": "bun test",
+    "dev": "bun --no-env-file --no-install --watch run index.ts",
+    "test": "bun --no-env-file --no-install test",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "db:generate": "bun --no-env-file --no-install run --bun prisma generate --config prisma.config.ts",
     "db:migrate": "bun --no-env-file --no-install run --bun prisma migrate deploy --config prisma.config.ts",
-    "dev:api": "bun --watch run index.ts",
-    "dev:worker": "bun --watch run worker.ts",
-    "dev:ws": "bun --watch run ws-server.ts",
+    "dev:api": "bun --no-env-file --no-install --watch run index.ts",
+    "dev:worker": "bun --no-env-file --no-install --watch run worker.ts",
+    "dev:ws": "bun --no-env-file --no-install --watch run ws-server.ts",
     "test:integration": "bun --no-env-file --no-install test tests/integration"
   },
   "devDependencies": {

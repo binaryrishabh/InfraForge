@@ -64,7 +64,7 @@ services:
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
       GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID:-}
       GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET:-}
-    command: [bun, run, index.ts]
+    command: [bun, --no-env-file, --no-install, executionIdentity/launcher.ts, api]
     healthcheck:
       <<: *health
       test: [CMD, bun, health/probe.ts, "3000"]
@@ -75,7 +75,7 @@ services:
       <<: *environment
       DATABASE_URL: ${WORKER_DATABASE_URL:?Set a session-preserving PostgreSQL worker URL}
       WORKER_DATABASE_MODE: ${WORKER_DATABASE_MODE:?Set direct or session after checking the provider}
-    command: [bun, run, worker.ts]
+    command: [bun, --no-env-file, --no-install, executionIdentity/launcher.ts, worker]
     healthcheck:
       <<: *health
       test: [CMD, bun, health/probe.ts, "3002"]
@@ -84,7 +84,7 @@ services:
     <<: *app
     ports: ["127.0.0.1:${WS_PORT:-3001}:3001"]
     environment: *auth
-    command: [bun, run, ws-server.ts]
+    command: [bun, --no-env-file, --no-install, executionIdentity/launcher.ts, ws]
     healthcheck:
       <<: *health
       test: [CMD, bun, health/probe.ts, "3001"]

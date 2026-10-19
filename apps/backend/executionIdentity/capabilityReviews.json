@@ -1,0 +1,752 @@
+{
+  "apps/backend/auth/settings.ts": {
+    "hash": "e28ad7ebc6152f6eb950bc132b17ace681df3e305e8605e20d72aedbadcf69ed",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "apps/backend/challenges/criteria.ts": {
+    "hash": "ee00b07a68f911681b241a81f98153f5d55ae734489db2ee4a7ebce625ba2e0e",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "apps/backend/challenges/designChanges.ts": {
+    "hash": "eda9ade895999dc1d6adf4e8dcca65612a4ed76e60a8f1c92c20d7035ddbadc2",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "apps/backend/challenges/evaluate.ts": {
+    "hash": "be526570a68e9e9473cd249b034ece6faaac2066a631c5e2c4abcb6bd7d510d7",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "apps/backend/challenges/experiment.ts": {
+    "hash": "e738ee6f0aaf7a79b8da37839feec97e73d54f0b3767e4e3d31c43ded4f67350",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "apps/backend/challenges/prediction.ts": {
+    "hash": "a55090937468866b3c49ed62fef00185edd9035c552b204d8d23d0502fffa2f7",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "apps/backend/challenges/routes.ts": {
+    "hash": "27f09838f2abd8c7fce40ffb91283c382b3ba08f349eb46726e977e5de25d741",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "apps/backend/challenges/starter.ts": {
+    "hash": "45a07e7ac5fcc29457a6fe6ba960eb6938a1bc08157948e9ca115a5b88c3c10e",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "apps/backend/comparison/classify.ts": {
+    "hash": "46124579892ebdb63011178f6d4435a35b369d1204a412df692a861afcc145da",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "apps/backend/comparison/conduct.ts": {
+    "hash": "faf8dd0a96cc7212faaaa46122954d4e08eb436c5253ac01865a24031636d730",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "apps/backend/comparison/design.ts": {
+    "hash": "5285976417f0297e7b7b7b20c7c707c651ea1f088d034e473ee513a6dbc38899",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "apps/backend/evidence/contract.ts": {
+    "hash": "34261bf0121e9d4dd9a70918a0b7ddbacf13a5ae9e8b2a7bdd62243446e45ed0",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "apps/backend/evidence/report.ts": {
+    "hash": "5e18425e3d7b9d08788914ec5d44cb4643f7d6652845255df07e65642d011f9e",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "apps/backend/executionIdentity/configuration.ts": {
+    "hash": "ddbe09df52369a9f8950a3000211539ce6c3ce0d2193c2f4350aff52ad1d3313",
+    "capabilities": [
+      "computed-data",
+      "verifier"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "apps/backend/executionIdentity/dependencies.ts": {
+    "hash": "f32628d51520c06c8d1d1f6c557ae792b2b9b013ca274036cadd5f9aba6a067d",
+    "capabilities": [
+      "computed-data",
+      "verifier"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "apps/backend/executionIdentity/descriptor.ts": {
+    "hash": "359d3c9803b4a4d2cfc1a954f22b8b3ba4b523be7a2093611eb6a54e57a53440",
+    "capabilities": [
+      "computed-data",
+      "verifier",
+      "resources"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "apps/backend/executionIdentity/installed.ts": {
+    "hash": "f91a553879a5cbf507cf027a83bf815db7588ff267d70b4317ad4c8733e1fd5a",
+    "capabilities": [
+      "computed-data",
+      "verifier",
+      "resources"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "apps/backend/executionIdentity/launch.ts": {
+    "hash": "6e97081b55a20a8b7a37350f7ad0a2e348da3cb25606a9399786983246741a9e",
+    "capabilities": [
+      "computed-data",
+      "verifier"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "apps/backend/executionIdentity/loading.ts": {
+    "hash": "9a1771963efa95e7fda1b8368a91da13c8800b3c7d8a92aa3d9326c2b45aa38c",
+    "capabilities": [
+      "computed-data",
+      "verifier",
+      "resources"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "apps/backend/executionIdentity/resources.ts": {
+    "hash": "2cdb00d367fa2b9b72b6c94d5dbaa271e1c8098fd0bdd0f1ea0d7a80ecccb872",
+    "capabilities": [
+      "computed-data",
+      "verifier",
+      "resources"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "apps/backend/executionIdentity/transitions.ts": {
+    "hash": "cb81260e0eb95ffff0f5891a263db1f047e1f940ae674f5c0bd8ee875c931cd8",
+    "capabilities": [
+      "computed-data",
+      "verifier",
+      "resources"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "apps/backend/internalModel2/authoring.ts": {
+    "hash": "fbf3e20b5c82cb9460e087aca74b39f10c1efa5e210b3ae3593beab922067e00",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "apps/backend/internalModel2/captureV2.ts": {
+    "hash": "5f79ceafe935865d38441927d1f8faaf2a4b9bbfe3a7389e8299715b6b1e002d",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "apps/backend/internalModel2/causalJournal.ts": {
+    "hash": "2559e32bdef62bea39cadec1883714e0fe143444174cea6703b8f0293aa173f1",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "apps/backend/internalModel2/connectedPresentation.ts": {
+    "hash": "24a72757ecccec8834a7b4c812c4b1c2d7c7a93c76437b58e7f68246bf8d9505",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "apps/backend/internalModel2/connectedScope.ts": {
+    "hash": "19e15f90e91ae7ff4c56cd75fd573948ed1aeea3a004050d2a7979c6bb651e5f",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "apps/backend/internalModel2/dockerConnection.ts": {
+    "hash": "614e7e40f425cfd19edc0c8d789e9b0cf622e291d9f110d4026c3ca0911cff02",
+    "capabilities": [
+      "computed-data",
+      "resources"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "apps/backend/internalModel2/dockerSocket.ts": {
+    "hash": "95bc132a8499df43041cda44cc7995294c6d9a915586c763cb23e928c4928b5a",
+    "capabilities": [
+      "computed-data",
+      "resources"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "apps/backend/internalModel2/envelopeV1.ts": {
+    "hash": "96f31e8d251fb4a834909b7a026f681d5862111f54c7ccc82f4d455559900e12",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "apps/backend/internalModel2/identity.ts": {
+    "hash": "ec834a91facb42bd67fd1d983dd57a4cd1164467bfdd93560dca39334ce19947",
+    "capabilities": [
+      "computed-data",
+      "resources"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "apps/backend/internalModel2/legacyCompatibility.ts": {
+    "hash": "41a89f66dcc23b9fc43cd3466459285155c279d12911bf56f2605f661cf7b553",
+    "capabilities": [
+      "computed-data",
+      "resources"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "apps/backend/internalModel2/lessonAuthoring.ts": {
+    "hash": "a294d8b97411810edcf09c95d8b7488381503d452aca26fc89b464a98f08d59e",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "apps/backend/internalModel2/lessonExecution.ts": {
+    "hash": "1dd0042dae7965f06cb5700546799ca4bc977e7e67b66713bf02b21172420a0a",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "apps/backend/internalModel2/lessonSummary.ts": {
+    "hash": "43b128519e8354dec605f7ad8389f1163e97b026e218b88e08a308aa51d4ff13",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "apps/backend/internalModel2/report.ts": {
+    "hash": "95a679cb8f6cc1dcf7197466efaff2d0b68fea6f1c9e5bcf18ba303e21bb6c02",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "apps/backend/internalModel2/sandboxHandshake.ts": {
+    "hash": "4c981641e6a3b56f5be84b4b024744d532e6a955de06990307e100b647676bc8",
+    "capabilities": [
+      "computed-data",
+      "resources"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "apps/backend/internalModel2/workspace.ts": {
+    "hash": "3b65a3c8d23629753130084be010d917cc82941319b2ad70180d8bfe7462cf4f",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "apps/backend/lib/generated/prisma/client.ts": {
+    "hash": "9b0239b3cc7aef90877f18ed7bf9caa90ce4574bfc57463cc23513dd7a607048",
+    "capabilities": [
+      "generated-client"
+    ],
+    "review": "Generated Prisma runtime: fixed imports and embedded compiler; schema and generator are inventoried"
+  },
+  "apps/backend/lib/generated/prisma/enums.ts": {
+    "hash": "ebbdce75bbdd503c5172913fdc7b0523216ce8a6e6ed3ee4611ab10bea9c1e20",
+    "capabilities": [
+      "generated-client"
+    ],
+    "review": "Generated Prisma runtime: fixed imports and embedded compiler; schema and generator are inventoried"
+  },
+  "apps/backend/lib/generated/prisma/internal/class.ts": {
+    "hash": "d2847d470b96bada1f89ff8db6bba3c98cd4a426128ee2fa046f7cc85a5bb8e5",
+    "capabilities": [
+      "generated-client"
+    ],
+    "review": "Generated Prisma runtime: fixed imports and embedded compiler; schema and generator are inventoried"
+  },
+  "apps/backend/lib/generated/prisma/internal/prismaNamespace.ts": {
+    "hash": "5649f051e1eceda4fad06265fc4820d387151fef7981326f9695e1e6b6d2eb43",
+    "capabilities": [
+      "generated-client"
+    ],
+    "review": "Generated Prisma runtime: fixed imports and embedded compiler; schema and generator are inventoried"
+  },
+  "apps/backend/release/credentialSchema.ts": {
+    "hash": "6ba47f47089be38386b53ed90e8c8f8635753d0f83cd1503a3d8ed6ebe8a1589",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "apps/backend/release/lessonSchema.ts": {
+    "hash": "7182d7d383f0f5bc1ffde2354dfabd5e20e4c572e702125ac09f9828a5b7c4c5",
+    "capabilities": [
+      "computed-data",
+      "resources"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "apps/backend/release/migrations.ts": {
+    "hash": "19a7eb34c9971df6f014c8b4be40a640837e5f20fdb23fef2ba856d7ed7e2e0c",
+    "capabilities": [
+      "computed-data",
+      "resources"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "apps/backend/release/model2Schema.ts": {
+    "hash": "938f32e0a1b5371155aced66767440a78dd80e2e4a34bdac50c86374b9ca0a39",
+    "capabilities": [
+      "computed-data",
+      "resources"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "apps/backend/release/runtime.ts": {
+    "hash": "c7ce7e7be1868c70f750ec03d038f142d72f4d7c3c01cedb2a1ca5d2cf38f637",
+    "capabilities": [
+      "computed-data",
+      "resources"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "apps/backend/reports/routes.ts": {
+    "hash": "5c408ef767b6b96cce88e1dd1314ef81cef58a8b008f42678b81ed38463724e5",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "apps/backend/simulator/actionApplication.ts": {
+    "hash": "45e496a4f0e9ede3a1c5039a91b2b39f98fe05af899875097a29eba702b2b578",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "apps/backend/simulator/actionCompletion.ts": {
+    "hash": "1ce9336c52f6806bc47eb0fc0473b6eeb9afdc595a737514cd4777f521d0bd6e",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "apps/backend/stages/costEstimation.stages.ts": {
+    "hash": "435031c18a8120afe19a5e3fe7a14453e9ae198f469a4e39a44e245dc79bd431",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "apps/backend/utils/rateLimiter.ts": {
+    "hash": "aa6f0feea500b4930ed8bd62235f3dbdf29cd962374b7c746391179fac7fd590",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "packages/contracts/src/internal-lessons/profile.ts": {
+    "hash": "de1ccfe5162f778697bb6e1326c83cbd3561ddfed603d16e6fd2d74868a43086",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "packages/domain/src/topology/computeTopology.ts": {
+    "hash": "3e80c2ad1271391b8fb1abe4e7c29b4a1e01583c4bbef692e2c3123759798862",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "packages/domain/src/validation/validateDeploymentReadiness.validation.ts": {
+    "hash": "74a059dc480be9adf81d00853405545870cc1275f3a55af13b11517b9c5f9af3",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "packages/simulation/src/cost.ts": {
+    "hash": "45f08bd7babb140f6420bedb9e56261288f67f5b98ffbc7bd304317ce502bc70",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "packages/simulation/src/engineInitialState.ts": {
+    "hash": "3bb2c9646fd0b05db0e381d43214464f61d8d7f11c1c86d5a62f5366f4dc5736",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "packages/simulation/src/enginePools.ts": {
+    "hash": "c90750ead1704bea84a9127b99dab970725934ff914a33b06184dc0f88b77976",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "packages/simulation/src/engineRouting.ts": {
+    "hash": "c031270c4f217ab1a6148ed983081408b1d7422cdd10c7d998ad0510b50c505f",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "packages/simulation/src/engineTick.ts": {
+    "hash": "a1fe14168ceb23911fac99656fe7d8164f0061526806b973bfbc9dd4a92c78e2",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "packages/simulation/src/model2/async/commands.ts": {
+    "hash": "f903f1f33855898911358cedace678fa3fcf4e19b98c8a9912aa4c4797ab7a2f",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "packages/simulation/src/model2/async/validate.ts": {
+    "hash": "8b84f609883804720f2843e338c3626f0a40ce41e5c193ccc3826541b208ac42",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "packages/simulation/src/model2/compute/memory.ts": {
+    "hash": "2646fe1f3749735ac27a41981e996ed2db9072f568e85f43f37cb0be9d7f4ff3",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "packages/simulation/src/model2/compute/run.ts": {
+    "hash": "d3c7a5dd033cc2ad0edae2d8cdd7a82d41083e75258b352732d3b1b338592318",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "packages/simulation/src/model2/compute/sharing.ts": {
+    "hash": "685b4dc2810e6c7a9eec3dcf744e66969c6069d90b9c616ec5ad12a0f54d89b6",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "packages/simulation/src/model2/compute/validate.ts": {
+    "hash": "250efb37a885df20a5c5717d8c2b693de07f3a9435a63ce23927e5a91a873112",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "packages/simulation/src/model2/data/aside.ts": {
+    "hash": "024f336d527ce6de207876fac4b4abfd8d5d5c38d709ebb4c8379fdfaad5e98e",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "packages/simulation/src/model2/data/database.ts": {
+    "hash": "c5055c3fb4f5938cf79992e48990b306829458fc9c97923181fea571912eff47",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "packages/simulation/src/model2/data/validate.ts": {
+    "hash": "3d13b503edeb833094444d1cb7e185c67004ae629209b890e6b6dbcc4203e5d2",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "packages/simulation/src/model2/network/load-balancer.ts": {
+    "hash": "dbacadc71af099a5f1411519cf9fa3d4bd0d3d822e209bd24bb4e7b9bda13bbb",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "packages/simulation/src/model2/network/run.ts": {
+    "hash": "39f58313c46db44b8d38ff514b37881e094f9fdc3198a89f86a76c83a43bc85c",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "packages/simulation/src/model2/network/trace.ts": {
+    "hash": "4e9f6e93d2672a9d8d4829dbaff5ac27f2c0cc0ddc5dc413ef753c74ca5e4080",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "packages/simulation/src/model2/network/transport.ts": {
+    "hash": "721517a57ec80a025078c713d249acd327a126495f4eb549bda2e1daead8a888",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "packages/simulation/src/model2/network/validate.ts": {
+    "hash": "2155439db5b88fd6d18ab2d54bbddff1b2c9ec50a02422a8a0f30d07427fc3df",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "packages/simulation/src/model2/product/compiler.ts": {
+    "hash": "38b39e5f434c61ed1a36a21db81db4edb42f332804d3f1e96eecaeaed78051cb",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "packages/simulation/src/model2/product/controller.ts": {
+    "hash": "d1d2d8cfec74bad127327a40e27ca73834b9338b3c1284c5dba370a99e3c2941",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "packages/simulation/src/model2/product/origins.ts": {
+    "hash": "da220412c60b75cf8a5c433e00d18e6d70756aa99cefad1d37bb4a6a8697dfac",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "packages/simulation/src/model2/product/owners.ts": {
+    "hash": "7df3d3131b268abcf5c9b2d614f1ddad545381b9b7af4ed0983aba88e50bb70f",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "packages/simulation/src/model2/product/presentation.ts": {
+    "hash": "7c4f16bca8594cdc69d5c5a9903edfa4d7aba8b5feb8095b597c98ff51f4a61e",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "packages/simulation/src/model2/product/semantics.ts": {
+    "hash": "ac249089c9cbe0d642d8ed69b96308cd9c2a61c6172b16234f02174386ba1c65",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "packages/simulation/src/model2/product/workload.ts": {
+    "hash": "4da75bfa116c25e30022d91ce83a6e4b1e315535fba9efbb106d16a0c07ad180",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "packages/simulation/src/model2/run.ts": {
+    "hash": "74f99522da685628b82727817838956464a41534b6543692ec25a19814b70e12",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "packages/simulation/src/model2/station.ts": {
+    "hash": "28d8be7692eefc06673118eee1f8aa02545fb6d8a71033727b39b423c2946a3a",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "packages/simulation/src/model2/systems/cdn.ts": {
+    "hash": "4d48173059b5fe8590e7f094d2c3cfa05c5b703323239f36f51d4f94ebadb4fe",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "packages/simulation/src/model2/systems/run.ts": {
+    "hash": "3a46d37e6c21cdcd6b9953bed0e2a822fd1e5afb52cb925fe3f1d9e74be9f424",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "packages/simulation/src/model2/systems/service.ts": {
+    "hash": "1beb97300a8a0258e5881b38d56b57024a55ce1570812969cd0894cc2efc4049",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "packages/simulation/src/model2/systems/startup.ts": {
+    "hash": "81f4a441cfe46fdd222229f5423358727327526fd66851a0cb9feaddcb88e89a",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "packages/simulation/src/model2/systems/validate.ts": {
+    "hash": "863a43535b9682271ab041b75e93a1a716c3ba8caad2abff64a46ab35dd6c3ac",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "packages/simulation/src/model2/time.ts": {
+    "hash": "031badec4030bceae26b51f188a447eae5ffa3873818eadd6ede022095f09bbd",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "packages/simulation/src/model2/validate.ts": {
+    "hash": "689df22f8d7d7c623fbf49a13d611c46463fb367aac3034e7011812ad64be8cd",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "packages/simulation/src/model2/workload/evidence.ts": {
+    "hash": "6075532792978d0be63820b5c39a63c991d12620bbc293452fe98755718edc56",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "packages/simulation/src/model2/workload/profiles.ts": {
+    "hash": "954ce75d076077fd866633cf573f0709f937941a1961329324f263c448fae001",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "packages/simulation/src/model2/workload/run.ts": {
+    "hash": "9ed999193c19fda1300bc1c2012f8a3a726ac7b221e353abc845ea5c6ec2aa10",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "packages/simulation/src/model2/workload/validate.ts": {
+    "hash": "aad06be0f0a043ca2dccf8032c55bd88f3a40605695ce7eb61c2d625b2d0abb5",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "packages/simulation/src/reality/metering/combine.ts": {
+    "hash": "128b633c31391acb262ec3834c4cee1cd8ee8ca69899849c783952de776d7148",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "packages/simulation/src/reality/metering/journal.ts": {
+    "hash": "b61718e221f630b3dc512b23af64a94ba7c2c2bfd67b470a5e96752c87293109",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "packages/simulation/src/reality/metering/link-meter.ts": {
+    "hash": "06964c943fd6d716ce2c161a06efd71fb22429d0a93c614ff55126191467e245",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "packages/simulation/src/reality/metering/object-meter.ts": {
+    "hash": "0f0b2bb1a33d67ff825dd0d4d185938a45bd5793a38b24738c569371d7e43fa3",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "packages/simulation/src/reality/metering/reconcile.ts": {
+    "hash": "c55a34d9a8129c83a6f686423b51e13ce4205baa828dfe005edf41e632184dab",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "packages/simulation/src/reality/metering/windows.ts": {
+    "hash": "806d5cce7aecc429608ac29be832a9711b29e47c8fa16623bf5bcff789d339c4",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "packages/simulation/src/reality/provider/compile.ts": {
+    "hash": "ea303a92a8a61419e9da11cc1f9a7271ea0b64a77d62c9e88aa730201bd79981",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "packages/simulation/src/reality/provider/pricing.ts": {
+    "hash": "8ea4502565af2b24b61ac11fdff548fc50b3845571ec86a03ed698604f4ae410",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "packages/simulation/src/reality/provider/snapshot.ts": {
+    "hash": "727ceb13b5066cfd9fb913cab5ea9135938db287baba4d90d929d0bdbf7a13c5",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "packages/simulation/src/topology.ts": {
+    "hash": "0627477879408b377ef5fcd8bf393647feafa55e394cd4f1f93578832e3b2e83",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Fixed data indexing; resource adapters require the separate documented review"
+  },
+  "apps/backend/executionIdentity/resolution.ts": {
+    "hash": "b1d87373c2d9a2420d376462ac056e2359dcad065803c6c1480769712270be7c",
+    "capabilities": [
+      "trusted-resolver"
+    ],
+    "review": "Verifier-only enumerated specifier resolver with actual import versus require conditions"
+  }
+}

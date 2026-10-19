@@ -7,8 +7,8 @@ unchanged.
 
 The descriptor pins Bun's version, LF-normalized execution source hashes, workspace
 exports and runtime manifests, install configuration, and the resolved Bun lock
-graph. Its roots are simulation, domain, catalog and contracts, plus the backend
-dependencies imported by `internalModel2` and its local imports. It includes
+graph. Its roots are simulation, domain, catalog and contracts, plus the real API, worker, WebSocket and sandbox hosts and their transitive backend
+imports, including injected WorkerOwnership implementations. It includes
 contracts source, the explicit sandbox child entrypoint and imported backend
 source outside the original inventory. Registry instances include name, version,
 integrity, full metadata, dependency and peer edges, nested assignments, platform
@@ -48,7 +48,7 @@ New dynamic loading requires review. Installation must use the committed lock wi
 `bun install --frozen-lockfile`; these checks do not attest arbitrary modifications
 to installed package contents. Runtime images retain their separate provenance.
 
-One shared token/AST policy rejects loader factories, escaping `require`, computed
+One shared AST policy rejects loader factories, escaping `require`, computed
 host-loader access, constructor/reflection access, VM/inspector evaluation, worker
 entrypoints and subprocess loaders in authored and installed code. The authored
 Docker adapter and error stack-trimming helper are exact-hash reviews; edits need
@@ -109,3 +109,62 @@ parent digest or persisting filesystem results across checks.
 
 Root test defaults and the historical tests remain unchanged. The new negative
 test that performs two full builds has its own explicit timeout.
+
+Boundary hardening (October 2026): every module is parsed; there is no sensitive-token
+shortcut. Unknown computed property reads can recover reflective capabilities even
+from ordinary data objects, so they are refused. Existing data indexing is reviewed
+by exact authored-file bytes in `capabilityReviews.json`; these permissions authorize
+computed data access only, not loader factories or resource access. Core verification,
+four generated Prisma modules and the import/require resolver have separately scoped
+exact-byte reviews. Changing reviewed bytes requires another review. The Prisma schema,
+config, generated runtime bytes, locked generator dependency closure and migration SQL
+are descriptor inputs. Generated files are produced in the image, never copied from the
+checkout.
+
+The closed launch contract requires Bun 1.3.14 and `--no-env-file`; additional conditions,
+preloads, eval/print wrappers, defines, hot reload and unknown flags are refused.
+`BUN_OPTIONS`, `NODE_OPTIONS` and `BUN_PRELOAD` are refused. Runtime bunfig settings
+and nested bunfig scopes are refused. Dockerfile, Compose and .dockerignore are hashed;
+shipped host commands use `executionIdentity/launcher.ts`, which verifies identity
+before importing the host. Runtime configuration comes from the supplied environment;
+backend config and Prisma config no longer discover dotenv files.
+
+`resolutionContract.json` pins selected installed module bytes and every observed import
+edge, including distinct import/require entrypoints. Startup verifies those bytes and
+resolves the recorded edges again. Compilation checks the real hosts, launcher, resource
+API and internal modules against the same authored inventory and selected implementations.
+Installed implementation exceptions match both module key and exact file hash, including
+multiple versions of one package. `--build-contract` is an explicit dependency review
+operation: it records the selected implementations, not an install or startup shortcut.
+Frozen installation and image provenance still cover native adapter artifacts and OS
+facilities; arbitrary mutable runtime files are not an execution input facility.
+
+New filesystem/SQLite/WASI reads, Bun host APIs, WebAssembly and file-fetch capabilities
+are refused outside exact reviewed adapters. Existing exceptions are identity/transition
+verification, migration/schema checks, release metadata, Docker socket ownership and
+cgroup/proc containment probes. These are not path-wide exemptions. Application data
+resources use `executionResource` or `compileExecutionWasm` with paths enumerated in
+`resourceInventory.json`. JSON/WASM bytes are hashed without UTF-8 loss, and rechecked
+when read. Unknown paths fail closed, including environment-selected paths. Ordinary
+network/database requests and sandbox stdin remain external request inputs at the
+reviewed hosts; they do not provide a new source/resource loader.
+
+The boundary transition preserves the `13dfdafc…` descriptor from `2da5b74` as its
+23rd historical row and freezes that descriptor algorithm separately in tooling.
+Original recorded sources, descriptors and snapshots remain intact. The new replay
+target represents the reviewed boundary tightening: modeled engine, lock, host behavior
+and schema are unchanged; dotenv discovery is removed and supplied environment retained.
+The generator is rerun and its runtime bytes are pinned. Regenerating the boundary table
+only accepts source equality with that committed baseline apart from these named changes.
+
+Review commands, before the ordinary checks:
+
+```text
+bun --no-env-file scripts/execution-resolution.ts --build-contract
+bun --no-env-file scripts/execution-identity.ts --build-transitions
+```
+
+The boundary regression fixtures use in-memory source trees and resources. Transition-byte
+fixtures also use injected in-memory reads. The fresh-process launch probe is committed
+under `scripts/tests/fixtures`. Identity tests have explicit budgets for the larger host
+closure; global test timeouts are unchanged.

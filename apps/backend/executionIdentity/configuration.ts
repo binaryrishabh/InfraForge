@@ -28,6 +28,12 @@ export function configurationInventory(tree: SourceTree, files: Set<string>) {
   return (file: string) => {
     let folder = posix.dirname(file);
     for (;;) {
+      const bunfig = folder === "." ? "bunfig.toml" : `${folder}/bunfig.toml`;
+      if (available.has(bunfig)) {
+        const value = Bun.TOML.parse(tree.read(bunfig));
+        if (folder !== "." || Object.keys(value).some(key => key !== "install")) throw Error(`Unsupported execution loading configuration: ${bunfig}`);
+        files.add(bunfig);
+      }
       for (const name of ["tsconfig.json", "jsconfig.json"]) {
         const path = folder === "." ? name : `${folder}/${name}`;
         if (available.has(path)) config(path);

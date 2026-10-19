@@ -6,6 +6,7 @@ import type { Manifest } from "./dependencies";
 import { lf, sha256 } from "./hash";
 import { configurationInventory, verifyInstallation } from "./configuration";
 import { executable, executionImports } from "./loading";
+import { launchContract, verifyLaunch } from "./launch";
 import type { SourceTree } from "./sourceTree";
 export type { SourceTree } from "./sourceTree";
 
@@ -14,18 +15,18 @@ export function diskTree(root = repositoryRoot): SourceTree {
   const paths: string[] = [];
   function walk(path: string) {
     for (const entry of readdirSync(resolve(root, path), { withFileTypes: true })) {
-      if (entry.name.startsWith(".") || ["node_modules", "tests", "dist", "generated"].includes(entry.name)) continue;
+      if (entry.name.startsWith(".") || ["node_modules", "tests", "dist"].includes(entry.name)) continue;
       const next = path ? `${path}/${entry.name}` : entry.name;
       if (entry.isDirectory()) walk(next);
       else paths.push(next);
     }
   }
   for (const path of ["apps", "packages"]) walk(path);
-  paths.push("bun.lock", "package.json", "bunfig.toml", "tsconfig.base.json");
+  paths.push("bun.lock", "package.json", "bunfig.toml", "tsconfig.base.json", ".dockerignore");
   for (const name of ["tsconfig.json", "jsconfig.json"]) {
     if (readdirSync(root).includes(name)) paths.push(name);
   }
-  return { paths: paths.sort(), read: path => lf(readFileSync(resolve(root, path), "utf8")),
+  return { paths: paths.sort(), read: path => lf(readFileSync(resolve(root, path), "utf8")), resourceBytes: path => readFileSync(resolve(root, path)).toString("base64"),
     resolveImport: (specifier, importer) => relative(root, Bun.resolveSync(specifier, resolve(root, posix.dirname(importer)))).replaceAll("\\", "/") };
 }
 
@@ -40,6 +41,7 @@ const builtins = new Set([...builtinModules, ...builtinModules.map(name => `node
 export const packageName = (specifier: string) => specifier.startsWith("@") ? specifier.split("/").slice(0, 2).join("/") : specifier.split("/")[0]!;
 
 export function executionDescriptor(tree = diskTree(), runtime = `bun-${Bun.version}`) {
+  verifyLaunch();
   const available = new Set(tree.paths), files = new Set<string>();
   const configure = configurationInventory(tree, files);
   const lock = parseLock(tree.read("bun.lock"));
@@ -52,7 +54,7 @@ export function executionDescriptor(tree = diskTree(), runtime = `bun-${Bun.vers
   const roots: Record<string, Record<string, string>> = {};
   for (const path of workspacePaths) roots[manifests[path]!.name] = { ...manifests[path]!.dependencies, ...manifests[path]!.optionalDependencies, ...manifests[path]!.peerDependencies };
   roots[manifests["apps/backend"]!.name] = {};
-  const imports: Array<{ file: string; specifier: string }> = [];
+  const imports: Array<{ file: string; specifier: string; kind: string }> = [];
   function local(path: string) {
     const extensions = ["ts", "tsx", "js", "jsx", "mjs", "cjs", "mts", "cts", "json"];
     const found = [path, ...extensions.map(ext => `${path}.${ext}`), ...extensions.map(ext => `${path}/index.${ext}`)].find(candidate => available.has(candidate));
@@ -92,14 +94,26 @@ export function executionDescriptor(tree = diskTree(), runtime = `bun-${Bun.vers
         const actual = tree.resolveImport?.(specifier, path) ?? expected;
         if (actual !== expected) throw Error(`Unexpected workspace resolution: ${path} -> ${specifier}: ${actual}`);
         local(actual);
-      } else imports.push({ file: path, specifier });
+      } else imports.push({ file: path, specifier, kind: entry.kind });
     }
   }
   for (const path of wholeLockFiles(tree).filter(path => path !== "bun.lock")) visit(path);
   for (const path of tree.paths.filter(path => path.startsWith("packages/contracts/src/") && path.endsWith(".ts"))) visit(path);
   for (const path of ["tsconfig.base.json", "apps/backend/tsconfig.json"]) visit(path);
+  // Execution capabilities are injected by these hosts, not just internalModel2 imports.
+  for (const path of executionHosts) visit(path);
+  for (const path of ["apps/backend/prisma.config.ts"]) visit(path);
+  for (const path of tree.paths.filter(path => path.startsWith("apps/backend/prisma/") && /(?:\.prisma|\.sql|\.toml)$/.test(path))) files.add(path);
+  for (const path of ["apps/backend/Dockerfile", "apps/backend/docker-compose.yml", ".dockerignore"]) files.add(path);
   // The sandbox child is an explicit dynamic entrypoint, with its own image provenance as well.
   visit("apps/backend/internalModel2/sandboxChild.ts");
+  const resourcePaths: unknown = JSON.parse(tree.read("apps/backend/executionIdentity/resourceInventory.json"));
+  if (!Array.isArray(resourcePaths) || resourcePaths.some(path => typeof path !== "string" || !/^apps\/backend\/resources\/[a-zA-Z0-9_/-]+\.(json|wasm)$/.test(path) || path.includes("..") || !available.has(path))) throw Error("Unreviewed execution resource path");
+  visit("apps/backend/executionIdentity/resources.ts");
+  visit("apps/backend/executionIdentity/launcher.ts");
+  visit("apps/backend/executionIdentity/resolutionContract.json");
+  visit("apps/backend/executionIdentity/resourceInventory.json");
+  const resources = [...new Set(resourcePaths as string[])].sort().map(path => [path, sha256(tree.resourceBytes?.(path) ?? tree.read(path))]);
   const dependencies = dependencyClosure(lock, roots);
   const install = Bun.TOML.parse(tree.read("bunfig.toml"));
   const root = JSON.parse(tree.read("package.json"));
@@ -113,7 +127,8 @@ export function executionDescriptor(tree = diskTree(), runtime = `bun-${Bun.vers
     // Backend dependency roots are imports, not unrelated API-only packages.
     return [path, path === "apps/backend" ? { ...manifest, dependencies: roots[value.name] } : manifest];
   });
-  return { schema: "execution-source/2", runtime, files: [...files].sort().map(path => [path, sha256(tree.read(path))]),
-    workspaces, dependencies, settings: { install, packageManager: root.packageManager }, imports: imports.sort((a, b) => `${a.file}:${a.specifier}`.localeCompare(`${b.file}:${b.specifier}`)) };
+  return { schema: "execution-source/2", runtime, resources, files: [...files].sort().map(path => [path, sha256(tree.read(path))]),
+    workspaces, dependencies, settings: { install, packageManager: root.packageManager, launch: launchContract }, imports: imports.sort((a, b) => `${a.file}:${a.specifier}`.localeCompare(`${b.file}:${b.specifier}`)) };
 }
+export const executionHosts = ["apps/backend/worker.ts", "apps/backend/index.ts", "apps/backend/ws-server.ts", "apps/backend/internalModel2/sandboxChild.ts"];
 export type ExecutionDescriptor = ReturnType<typeof executionDescriptor>;

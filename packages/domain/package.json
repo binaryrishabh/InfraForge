@@ -26,7 +26,7 @@
   },
   "scripts": {
     "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.test.json",
-    "test": "bun test tests",
+    "test": "bun --no-env-file --no-install test tests",
     "lint": "eslint src tests"
   },
   "devDependencies": {

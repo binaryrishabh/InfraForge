@@ -6,7 +6,7 @@ LABEL org.opencontainers.image.source="https://github.com/binaryrishabh/InfraFor
 WORKDIR /app
 
 # Install the full workspace from its single lockfile.
-COPY --chmod=0644 package.json bun.lock bunfig.toml tsconfig.base.json ./
+COPY --chmod=0644 package.json bun.lock bunfig.toml tsconfig.base.json .dockerignore ./
 COPY apps/backend/package.json ./apps/backend/
 COPY apps/web/package.json ./apps/web/
 COPY packages/domain/package.json ./packages/domain/
@@ -16,7 +16,7 @@ COPY packages/simulation/package.json ./packages/simulation/
 RUN bun install --frozen-lockfile
 
 # Copy authored source; generate the client inside the image.
-COPY apps/backend/index.ts apps/backend/worker.ts apps/backend/ws-server.ts apps/backend/tsconfig.json apps/backend/prisma.config.ts ./apps/backend/
+COPY apps/backend/index.ts apps/backend/worker.ts apps/backend/ws-server.ts apps/backend/tsconfig.json apps/backend/prisma.config.ts apps/backend/docker-compose.yml ./apps/backend/
 COPY apps/backend/infra ./apps/backend/infra/
 COPY apps/backend/auth ./apps/backend/auth/
 COPY apps/backend/health ./apps/backend/health/
@@ -27,6 +27,7 @@ COPY apps/backend/reports ./apps/backend/reports/
 COPY apps/backend/evidence ./apps/backend/evidence/
 COPY apps/backend/internalModel2 ./apps/backend/internalModel2/
 COPY apps/backend/executionIdentity ./apps/backend/executionIdentity/
+COPY apps/backend/resources ./apps/backend/resources/
 COPY apps/backend/comparison ./apps/backend/comparison/
 COPY apps/backend/reruns ./apps/backend/reruns/
 COPY apps/backend/actions ./apps/backend/actions/
@@ -56,4 +57,4 @@ RUN cd apps/backend && bun --no-env-file release/cli.ts manifest "$RELEASE_SHA" 
 RUN chmod -R u=rwX,go=rX /app/apps /app/packages
 USER bun
 
-CMD ["bun", "run", "apps/backend/index.ts"]
+CMD ["bun", "--no-env-file", "--no-install", "apps/backend/executionIdentity/launcher.ts", "api"]

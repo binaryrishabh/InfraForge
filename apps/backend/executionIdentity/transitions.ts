@@ -1,11 +1,10 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { digest, sha256 } from "./hash";
-import type { ExecutionDescriptor } from "./descriptor";
 
 export interface TransitionTable {
   schema: string; first: string; last: string;
-  descriptors: Record<string, ExecutionDescriptor>;
+  descriptors: Record<string, { schema: string; runtime: string; [key: string]: unknown }>;
   entries: Array<{ commit: string; source: string; descriptor: string; target: string; review: string; kind?: "descriptor" }>;
 }
 export function validateTransitions(table: TransitionTable, expectedHash: string) {
@@ -20,10 +19,10 @@ export function validateTransitions(table: TransitionTable, expectedHash: string
   if (!table.entries.some(row => row.commit === table.first) || !table.entries.some(row => row.commit === table.last)) throw Error("Incomplete execution transition coverage");
   return mappings;
 }
-export function loadTransitions(root: string) {
+export function loadTransitions(root: string, read = (path: string) => readFileSync(path, "utf8")) {
   const folder = resolve(root, "apps/backend/executionIdentity");
-  const pin = JSON.parse(readFileSync(resolve(folder, "transitionPin.json"), "utf8"));
-  const text = readFileSync(resolve(folder, "executionTransitions.json"), "utf8").replaceAll("\r\n", "\n");
+  const pin = JSON.parse(read(resolve(folder, "transitionPin.json")));
+  const text = read(resolve(folder, "executionTransitions.json")).replaceAll("\r\n", "\n");
   if (sha256(text) !== pin.bytes) throw Error("Execution transition bytes changed");
   const table = JSON.parse(text) as TransitionTable;
   return { table, pin, mappings: validateTransitions(table, pin.digest) };

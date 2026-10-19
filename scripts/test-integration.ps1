@@ -168,6 +168,7 @@ try {
             $value = [Environment]::GetEnvironmentVariable($name)
             if ($null -ne $value) { $start.Environment[$name] = $value }
         }
+        $start.Environment['TURBO_CACHE_DIR'] = Join-Path $repoRoot '.turbo/cache'
         $start.Environment['INTEGRATION_RUN'] = '1'
         if ($AuthOnly) { $start.Environment['INTEGRATION_AUTH_ONLY'] = '1' }
         if ($LearningOnly) { $start.Environment['INTEGRATION_LEARNING_ONLY'] = '1' }
