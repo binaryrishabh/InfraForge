@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { firstStackLimits as limits } from "@infraforge/contracts/first-stack";
-import type { FirstStackSidecar, RecordedScheduleHeader, RecordedScheduleRow, ResolvedSchedule, ScheduleTransform } from "@infraforge/contracts/first-stack";
+import type { FirstStackSemantic, RecordedScheduleHeader, RecordedScheduleRow, ResolvedSchedule, ScheduleTransform } from "@infraforge/contracts/first-stack";
 import { canonical, hash } from "./canonical";
 import { requireCapability } from "../capabilities/policy";
 import { createHash } from "node:crypto";
@@ -31,7 +31,7 @@ const lexical = (a: string, b: string) => a < b ? -1 : a > b ? 1 : 0;
 // Byte/line caps apply while scanning, before UTF-8 decode, JSON.parse or row materialization.
 // Nothing is persisted; a failed/cancelled import returns no partial schedule.
 export async function resolveWorkload(chunks: AsyncIterable<Uint8Array>, options: {
-  owner: string; sidecar: FirstStackSidecar; parameters: unknown; transform?: unknown; signal?: AbortSignal;
+  owner: string; sidecar: FirstStackSemantic; parameters: unknown; transform?: unknown; signal?: AbortSignal;
   capability?: typeof requireCapability;
 }): Promise<ResolvedSchedule> {
   const capability = options.capability ?? requireCapability;

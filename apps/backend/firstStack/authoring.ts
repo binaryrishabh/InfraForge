@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { FIRST_STACK_COMPILER, FIRST_STACK_PROFILE, firstStackClaims, firstStackLimits as limits } from "@infraforge/contracts/first-stack";
-import type { FirstStackDiagnostic, FirstStackSidecar } from "@infraforge/contracts/first-stack";
+import type { FirstStackDiagnostic, FirstStackSemantic } from "@infraforge/contracts/first-stack";
 import { LayoutSchema } from "../zod_schemas/layout.schema";
 import { designRevision } from "./canonical";
 
@@ -51,13 +51,26 @@ export const sidecarSchema = z.object({
   migration: z.object({ kind: z.literal("reviewed-copy"), fromInfrastructureId: id, fromRevision: digest, reviewedBy: id }).strict().optional(),
 }).strict();
 
+const poolSchema = z.object({ reuse: z.boolean(), establishUs: time, acquireTimeoutUs: time.positive(),
+  connectTimeoutUs: time.positive(), responseTimeoutUs: time.positive(), idleTimeoutUs: time.positive().nullable(),
+  remoteCancellation: z.enum(["detach", "request-cancellation"]) }).strict();
+export const sidecarV2Schema = sidecarSchema.extend({
+  schema: z.literal("infraforge-first-stack-sidecar/2"), compiler: z.literal("first-stack-compiler/2"),
+  links: z.array(sidecarSchema.shape.links.element.extend({ from: id, to: id })).max(64),
+  paths: z.array(sidecarSchema.shape.paths.element.extend({ pool: poolSchema })).max(32),
+  caller: sidecarSchema.shape.caller.extend({ pool: poolSchema }),
+  nodes: z.array(sidecarSchema.shape.nodes.element.extend({ alive: z.boolean(), ready: z.boolean() })).min(3).max(11),
+  balancer: sidecarSchema.shape.balancer.extend({ initial: z.enum(["eligible", "ineligible"]),
+    healthTimeoutUs: time.positive(), healthKeys: z.array(id).min(1).max(128) }),
+});
+
 export function reviewSidecar(layout: unknown, candidate: unknown) {
   const diagnostics: FirstStackDiagnostic[] = [];
   const refuse = (path: string, message: string, code = "FIRST_STACK_FIELD") => diagnostics.push({ code, path, message });
-  const saved = LayoutSchema.safeParse(layout), parsed = sidecarSchema.safeParse(candidate);
+  const saved = LayoutSchema.safeParse(layout), parsed = z.discriminatedUnion("schema", [sidecarSchema, sidecarV2Schema]).safeParse(candidate);
   for (const result of [saved, parsed]) if (!result.success) for (const e of result.error.issues) refuse(e.path.join("."), e.message);
   if (!saved.success || !parsed.success) return { ok: false as const, diagnostics };
-  const original = saved.data, sidecar: FirstStackSidecar = parsed.data;
+  const original = saved.data, sidecar: FirstStackSemantic = parsed.data;
   if (sidecar.designRevision !== designRevision(original)) refuse("designRevision", "Saved design changed; review its current immutable revision.", "STALE_REVISION");
   const unique = (values: string[], path: string) => { if (new Set(values).size !== values.length) refuse(path, "Duplicate identities refuse ambiguous bindings."); };
   unique(original.resources.map(n => n.id), "resources"); unique(original.connectionLines.map(e => e.id), "connectionLines");
@@ -124,6 +137,22 @@ export function reviewSidecar(layout: unknown, candidate: unknown) {
     if (p && ["update", "hot-update"].includes(op.kind) && p.kind !== "write") refuse(`operations.${i}.plan`, "Update operations require write plans.");
   }
   for (const p of plans.values()) if (p.keys !== "recorded" && p.keys.some(k => !sidecar.database.keys.includes(k))) refuse(`database.plans.${p.id}.keys`, "Plan key outside the finite dataset.");
+  if (sidecar.schema === "infraforge-first-stack-sidecar/2") {
+    const used = new Set<string>();
+    for (const p of [{ ...sidecar.caller, id: "$caller", source: "$caller", target: sidecar.caller.entry }, ...sidecar.paths]) {
+      for (const [linkId, from, to] of [[p.requestLink, p.source, p.target], [p.responseLink, p.target, p.source]]) {
+        used.add(linkId!);
+        const l = sidecar.links.find(l => l.id === linkId);
+        if (!l || l.from !== from || l.to !== to) refuse(`paths.${p.id}`, `Link ${linkId} must explicitly run ${from} → ${to}.`, "DIRECTED_LINK");
+      }
+      if (p.timeoutUs !== p.pool.responseTimeoutUs) refuse(`paths.${p.id}.timeoutUs`, "Match the explicit pool response timeout; conflicting policies cannot be compiled.");
+    }
+    for (const l of sidecar.links) if (!used.has(l.id)) refuse(`links.${l.id}`, "Remove the unowned link or bind it to an explicit path.");
+    const healthPlan = health && plans.get(health.plan);
+    if (new Set(sidecar.balancer.healthKeys).size !== sidecar.balancer.healthKeys.length || sidecar.balancer.healthKeys.some(k => !sidecar.database.keys.includes(k)) ||
+      (healthPlan?.keys !== "recorded" && JSON.stringify(healthPlan?.keys) !== JSON.stringify(sidecar.balancer.healthKeys))) refuse("balancer.healthKeys", "Supply exact finite health keys matching the read-only health plan.");
+    if (sidecar.balancer.healthTimeoutUs > sidecar.balancer.intervalUs) refuse("balancer.healthTimeoutUs", "Overlapping health probes are unsupported; timeout must not exceed interval.");
+  }
   return diagnostics.length ? { ok: false as const, diagnostics } : { ok: true as const, diagnostics, sidecar,
     claims: firstStackClaims, executable: false as const,
     unknown: ["Full resident memory", "Full cost", "Physical timing calibration", ...(apps.length === 1 ? ["Single app: no application redundancy"] : [])] };

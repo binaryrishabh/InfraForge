@@ -54,6 +54,23 @@ export interface FirstStackSidecar {
   migration?: { kind: "reviewed-copy"; fromInfrastructureId: string; fromRevision: string; reviewedBy: string };
 }
 export interface FirstStackDiagnostic { code: string; path: string; message: string }
+// V1 remains an authoring-only artifact. Upgrading requires a reviewed copy;
+// none of these values may be inferred from a saved V1 sidecar.
+export const FIRST_STACK_EXECUTION_COMPILER = "first-stack-compiler/2";
+export interface FirstStackPoolPolicy {
+  reuse: boolean; establishUs: number; acquireTimeoutUs: number; connectTimeoutUs: number;
+  responseTimeoutUs: number; idleTimeoutUs: number | null;
+  remoteCancellation: "detach" | "request-cancellation";
+}
+export interface FirstStackSidecarV2 extends Omit<FirstStackSidecar, "schema" | "compiler" | "links" | "paths" | "caller" | "nodes" | "balancer"> {
+  schema: "infraforge-first-stack-sidecar/2"; compiler: "first-stack-compiler/2";
+  links: Array<FirstStackSidecar["links"][number] & { from: string; to: string }>;
+  paths: Array<FirstStackSidecar["paths"][number] & { pool: FirstStackPoolPolicy }>;
+  caller: FirstStackSidecar["caller"] & { pool: FirstStackPoolPolicy };
+  nodes: Array<FirstStackSidecar["nodes"][number] & { alive: boolean; ready: boolean }>;
+  balancer: FirstStackSidecar["balancer"] & { initial: "eligible" | "ineligible"; healthTimeoutUs: number; healthKeys: string[] };
+}
+export type FirstStackSemantic = FirstStackSidecar | FirstStackSidecarV2;
 export interface RecordedScheduleHeader {
   schema: "infraforge-first-stack-schedule/1"; unit: "us"; durationUs: number;
   origin: "observed-recording" | "authored-schedule"; provenance: string;
