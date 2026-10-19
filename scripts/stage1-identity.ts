@@ -96,6 +96,9 @@ export function buildCompositionTransitions() {
   for (const row of table.entries) row.target = target;
   for (const key of Object.keys(table.descriptors)) if (key !== target && !table.entries.some(row => row.descriptor === key)) delete table.descriptors[key];
   const text = JSON.stringify(table, null, 2) + "\n", archive = gzipSync(JSON.stringify(history), { level: 9 });
+  // RFC 1952 OS=255 (unknown): identical history must have identical pins on
+  // Windows and Linux. The compressor otherwise emits platform-specific bytes.
+  archive[9] = 255;
   writeFileSync(resolve(repositoryRoot, folder + "executionTransitions.json"), text);
   writeFileSync(resolve(repositoryRoot, archivePath), archive);
   writeFileSync(resolve(repositoryRoot, folder + "transitionPin.json"), JSON.stringify({ digest: digest(table), bytes: sha256(text), history: sha256(archive.toString("base64")) }, null, 2) + "\n");
