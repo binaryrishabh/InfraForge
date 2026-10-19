@@ -1,5 +1,4 @@
 import type { ChallengeDifficulty, ChallengeStatus } from "@infraforge/contracts/challenges";
-import type { StatusKind } from "@/ui/status";
 
 export const DIFFICULTY_LABEL: Record<ChallengeDifficulty, string> = { starter: "Starter", core: "Core", advanced: "Advanced" };
 
@@ -10,8 +9,6 @@ export const RESULT_LABEL: Record<ChallengeStatus, string> = {
   "not-evaluated": "Not evaluated",
   unavailable: "Recorded under other rules",
 };
-
-export const statusKind = (status: ChallengeStatus | null | undefined): StatusKind => status ?? "not-started";
 
 /** What a brief's evaluation note adds beyond the second itself, e.g. "After the ramp to full traffic." */
 export function evaluationContext(note: string, seconds: number) {

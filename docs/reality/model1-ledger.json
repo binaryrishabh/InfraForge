@@ -1257,7 +1257,7 @@
     },
     {
       "file": "apps/web/src/features/challenges/challengeLabels.ts",
-      "sha256": "1de61caa7789a3a045c680d8619fb87c897c59de956939344dac963c2bb86f55",
+      "sha256": "a900d0a8410f2d3c958f1eae5136f5696ccaacc5e3fcfe60582ff071187f40f3",
       "numericSites": 2
     },
     {
@@ -61588,7 +61588,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/challenges/challengeLabels.ts#L20",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/challenges/challengeLabels.ts#L17",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -61602,7 +61602,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/features/challenges/challengeLabels.ts",
-        "line": 20,
+        "line": 17,
         "column": 22
       }
     },
@@ -61624,7 +61624,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/challenges/challengeLabels.ts#L20",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/challenges/challengeLabels.ts#L17",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -61638,7 +61638,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/features/challenges/challengeLabels.ts",
-        "line": 20,
+        "line": 17,
         "column": 52
       }
     },
