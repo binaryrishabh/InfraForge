@@ -11,7 +11,7 @@ const require = createRequire(join(process.cwd(), "package.json"));
 const { chromium } = require("playwright");
 const { PNG } = require("pngjs");
 const { default: pixelmatch } = await import(pathToFileURL(require.resolve("pixelmatch")).href);
-const [reference, built, evidence, executablePath] = process.argv.slice(2);
+const [reference, built, evidence, executablePath, only] = process.argv.slice(2);
 if (!evidence) throw new Error("Expected reference directory, built URL, evidence directory, optional Chromium executable");
 mkdirSync(evidence, { recursive: true });
 const server = createServer((req, res) => {
@@ -26,10 +26,12 @@ const browser = await chromium.launch({ headless: true, ...(executablePath ? { e
 const results = [];
 try {
   for (const scenario of [
+    { page: "index", mode: "dark-intro", scroll: 0 },
     { page: "index", mode: "intro", scroll: 0 },
     { page: "index", mode: "scroll-0.4", scroll: 0.4 },
     ...["engineering", "learning"].flatMap((page) => ["light", "dark"].map((mode) => ({ page, mode }))),
   ]) {
+    if (only && `${scenario.page}-${scenario.mode}` !== only) continue;
     const captures = [];
     for (const [label, url] of [["reference", `${referenceUrl}/${scenario.page}.html`], ["built", `${built}/${scenario.page === "index" ? "" : scenario.page}`]]) {
       const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1, colorScheme: "light" });
@@ -44,7 +46,7 @@ try {
         const nativeFrame = window.requestAnimationFrame.bind(window);
         Object.defineProperty(performance, "now", { value: () => now });
         window.requestAnimationFrame = (callback) => {
-          if (frozen) return nativeFrame(callback);
+          if (frozen) return nativeFrame(() => callback(now));
           queue.set(++id, callback); return id;
         };
         window.cancelAnimationFrame = (key) => queue.delete(key);
@@ -62,7 +64,7 @@ try {
       await page.goto(`${url}${scenario.page === "index" ? "" : `?mode=${scenario.mode}`}`, { waitUntil: "networkidle" });
       await page.evaluate(() => document.fonts.ready);
       if (scenario.page === "index") {
-        await page.evaluate(() => window.__proofAdvance(16000));
+        await page.evaluate((duration) => window.__proofAdvance(duration), scenario.mode === "dark-intro" ? 1000 : 16000);
         if (scenario.scroll) {
           await page.evaluate((fraction) => window.scrollTo(0, fraction * (document.querySelector(".track").offsetHeight - innerHeight)), scenario.scroll);
           await page.evaluate(() => window.__proofAdvance(3000));
