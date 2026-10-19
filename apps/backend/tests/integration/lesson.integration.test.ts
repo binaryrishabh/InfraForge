@@ -1,3 +1,4 @@
+import { rejects } from "node:assert/strict";
 import { describe, expect, test } from "bun:test";
 import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
@@ -29,7 +30,7 @@ suite("controlled internal object restart lesson", () => {
       proof.upgrade = await checkLessonUpgrade(h);
       await checkLessonSchema(h.sql);
       await h.sql.query('ALTER TABLE "InternalModel2LessonRun" DISABLE TRIGGER model2_lesson_guard');
-      try { await expect(checkLessonSchema(h.sql)).rejects.toThrow(); }
+      try { await rejects(checkLessonSchema(h.sql)); }
       finally { await h.sql.query('ALTER TABLE "InternalModel2LessonRun" ENABLE TRIGGER model2_lesson_guard'); }
       proof.services = { postgres: (await h.sql.query("SHOW server_version")).rows[0].server_version, redis: /^redis_version:(.+)$/m.exec(await h.redis.info("server"))?.[1]?.trim() };
       expect((await fetch(h.api + base + "/lesson", { headers: { Origin: h.origin } })).status).toBe(401);
@@ -53,7 +54,7 @@ suite("controlled internal object restart lesson", () => {
       expect((await h.sql.query('SELECT count(*)::int AS n FROM "InternalModel2Run"')).rows[0].n).toBe(0);
       const bypassId = crypto.randomUUID(), bypassLayout = (await h.sql.query('SELECT layout FROM "Infrastructure" WHERE id=$1', [id])).rows[0].layout;
       const bypass = compileEnvelope(bypassId, alice.user.id, bypassLayout, new Date(design.updatedAt), admissionSchema.parse(review.review.request));
-      await expect(h.sql.query(`INSERT INTO "InternalModel2Run" (id,"ownerId","infrastructureId","idempotencyKey","requestHash",input,"inputHash") VALUES ($1,$2,$3,'no-metadata',$4,$5,$6)`, [bypassId, alice.user.id, id, "0".repeat(64), bypass, bypass.fingerprint])).rejects.toThrow();
+      await rejects(h.sql.query(`INSERT INTO "InternalModel2Run" (id,"ownerId","infrastructureId","idempotencyKey","requestHash",input,"inputHash") VALUES ($1,$2,$3,'no-metadata',$4,$5,$6)`, [bypassId, alice.user.id, id, "0".repeat(64), bypass, bypass.fingerprint]));
       expect((await h.sql.query('SELECT 1 FROM "InternalModel2Run" WHERE id=$1', [bypassId])).rowCount).toBe(0);
       await h.request(base + "/lesson/review", { ...choice(), phase: "invented" }, "POST", 400);
       await h.request(base + "/lesson/review", { ...choice(), contract: {} }, "POST", 400);
@@ -88,8 +89,8 @@ suite("controlled internal object restart lesson", () => {
         expect(replay.kind).toBe("MatchesRecordedPrefix"); expect(replay.complete).toBe(true); expect(await read(run)).toEqual(before);
         const record = (await h.sql.query('SELECT * FROM "InternalModel2LessonRun" WHERE "runId"=$1', [run])).rows[0];
         expect(record.receipt.exit).toMatchObject({ code: 0, oom: false }); expect(record.receipt.enforcement.memory).toBe("536870912");
-        await expect(h.sql.query('UPDATE "InternalModel2LessonRun" SET policy=\'{}\' WHERE "runId"=$1', [run])).rejects.toThrow();
-        await expect(h.sql.query('DELETE FROM "InternalModel2LessonRun" WHERE "runId"=$1', [run])).rejects.toThrow();
+        await rejects(h.sql.query('UPDATE "InternalModel2LessonRun" SET policy=\'{}\' WHERE "runId"=$1', [run]));
+        await rejects(h.sql.query('DELETE FROM "InternalModel2LessonRun" WHERE "runId"=$1', [run]));
         proof.runs.push({ phase, row, ...record, report, replay });
       }
       proof.cases.push("three supported phases execute in isolated worker", "isolated replay writes nothing", "kernel enforcement receipts", "immutable policy and terminal persistence");

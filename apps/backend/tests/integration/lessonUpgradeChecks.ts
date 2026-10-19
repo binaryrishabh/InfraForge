@@ -1,3 +1,4 @@
+import { rejects } from "node:assert/strict";
 import { expect } from "bun:test";
 import { readdir } from "node:fs/promises";
 import { Pool } from "pg";
@@ -24,9 +25,9 @@ export async function checkLessonUpgrade(h: LocalHarness) {
     expect(after).toEqual(before); expect((await db.query('SELECT * FROM "Infrastructure"')).rows).toEqual(saved);
     expect((await db.query('SELECT scope FROM "InternalModel2Grant"')).rows[0].scope).toBe("operator");
     await checkSchemaGuards(db);
-    await expect(db.query('UPDATE "InternalModel2Grant" SET scope=\'public\'')).rejects.toThrow();
+    await rejects(db.query('UPDATE "InternalModel2Grant" SET scope=\'public\''));
     await db.query('UPDATE "InternalModel2Grant" SET scope=\'lesson\'');
-    await expect(insert(crypto.randomUUID())).rejects.toThrow("immutable lesson metadata");
+    await rejects(insert(crypto.randomUUID()), /immutable lesson metadata/);
     expect((await db.query('SELECT count(*)::int AS n FROM "InternalModel2Run"')).rows[0].n).toBe(1);
     const jsonHash = (value: unknown) => contentHash(JSON.parse(JSON.stringify(value)));
     return { before: jsonHash(before), after: jsonHash(after), saved: jsonHash(saved), existingGrantScope: "operator", invalidScopeRejected: true, unscopedAdmissionRejected: true };

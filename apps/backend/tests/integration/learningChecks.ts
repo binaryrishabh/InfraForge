@@ -1,3 +1,4 @@
+import { rejects } from "node:assert/strict";
 import { expect } from "bun:test";
 import { LocalHarness, until } from "./localHarness";
 import { SessionFixtures } from "./sessionFixtures";
@@ -55,8 +56,8 @@ export async function checkLearningExperiments(harness: LocalHarness, sessions: 
     for (const key of ["challengeId", "challengeVersion", "challengeSpecHash", "evaluationStopAtSimulatedSeconds", "challengeExperiment", "seed"]) expect(improved[key]).toEqual(source[key]);
     expect(improved.runInputs.workloadProfile).toEqual(source.runInputs.workloadProfile);
     expect(improved).toMatchObject({ improvementSourceId: source.id, learningHypothesis: hypothesis, learningIntent: "improvement", sourceRunId: null, rerunMode: null });
-    await expect(harness.sql.query('UPDATE "Deployment" SET "learningHypothesis"=\'Changed after run\' WHERE id=$1', [improved.id])).rejects.toThrow("immutable");
-    await expect(harness.sql.query('UPDATE "Deployment" SET "improvementSourceId"=$1 WHERE id=$2', [improved.id, source.id])).rejects.toThrow("immutable");
+    await rejects(harness.sql.query('UPDATE "Deployment" SET "learningHypothesis"=\'Changed after run\' WHERE id=$1', [improved.id]), /immutable/);
+    await rejects(harness.sql.query('UPDATE "Deployment" SET "improvementSourceId"=$1 WHERE id=$2', [improved.id, source.id]), /immutable/);
     await finish(improved.id);
     const comparison = (await harness.request(`/deployments/compare?a=${source.id}&b=${improved.id}`)).comparison;
     expect(comparison).toMatchObject({ challengeConditions: "same", lineage: "source-and-improvement", designChangeReview: { count: 1, classification: "one-change" } });

@@ -1,3 +1,4 @@
+import { rejects } from "node:assert/strict";
 import { expect } from "bun:test";
 import { randomBytes, randomUUID } from "node:crypto";
 import { connect as connectTcp } from "node:net";
@@ -159,7 +160,7 @@ export async function checkUserIsolation(harness: LocalHarness, fixtures: Sessio
       expect((error as Error).message).toContain(message);
     };
     await rejectedRecovery(recovery, "active");
-    await expect(harness.sql.query('UPDATE "Infrastructure" SET "ownerId"=$1 WHERE id=$2', [bob.user.id, legacyId])).rejects.toThrow("no active runs");
+    await rejects(harness.sql.query('UPDATE "Infrastructure" SET "ownerId"=$1 WHERE id=$2', [bob.user.id, legacyId]), /no active runs/);
     const queue = new Queue("deployments", { connection: { host: "127.0.0.1", port: harness.settings.redisPort } });
     try {
       await queue.add("deployment-created", { deploymentId: legacyRun }, { jobId: randomUUID() });
@@ -179,7 +180,7 @@ export async function checkUserIsolation(harness: LocalHarness, fixtures: Sessio
     expect((await recoverOwnership(fixtures.prisma, { ...recovery, apply: true })).applied).toBe(true);
     expect((await harness.sql.query('SELECT "userId" FROM "Infrastructure" WHERE id=$1',[legacyId])).rows[0].userId).toBe("test-user");
     await rejectedRecovery({ ...recovery, apply: true }, "already assigned");
-    await expect(harness.sql.query('UPDATE "Infrastructure" SET "ownerId"=$1 WHERE id=$2', [alice.user.id, legacyId])).rejects.toThrow("unassigned design");
+    await rejects(harness.sql.query('UPDATE "Infrastructure" SET "ownerId"=$1 WHERE id=$2', [alice.user.id, legacyId]), /unassigned design/);
 
     phase("upgrade rejection: missing session");
     expect(await rejectedUpgrade("", harness.origin)).toBe(401);

@@ -1,3 +1,4 @@
+import { rejects } from "node:assert/strict";
 import { expect } from "bun:test";
 import type { ChallengeBrief, ChallengeSummary } from "@infraforge/contracts/challenges";
 import type { RunReport } from "@infraforge/contracts/reports";
@@ -27,7 +28,7 @@ export async function checkChallengeAttempts(harness: LocalHarness, sessions: Se
   expect((await harness.request(`/challenges/${definition.id}/workspace`, {}, "POST", 200)).designId).toBe(created.designId);
   await harness.request(`/infrastructure/${created.designId}`, { layout: { ...REFERENCE[definition.id]!, layoutVersion: 3 }, challengeId: "cache-matters" }, "PUT");
   expect((await harness.sql.query('SELECT "challengeId" FROM "Infrastructure" WHERE id=$1', [created.designId])).rows[0].challengeId).toBe(definition.id);
-  await expect(harness.sql.query('UPDATE "Infrastructure" SET "challengeId"=NULL WHERE id=$1', [created.designId])).rejects.toThrow("immutable");
+  await rejects(harness.sql.query('UPDATE "Infrastructure" SET "challengeId"=NULL WHERE id=$1', [created.designId]), /immutable/);
   const freeform = (await harness.request("/infrastructure", { name: "Freeform design", layout, challengeId: definition.id }, "POST", 201)).createdInfrastructure;
   designs.push(freeform.id);
   expect(freeform.challengeId).toBeNull();
@@ -60,15 +61,15 @@ export async function checkChallengeAttempts(harness: LocalHarness, sessions: Se
   // Recorded by the insert itself, before the worker can start the simulation.
   expect(Math.abs(row.predictionSubmittedAt.getTime() - row.createdAt.getTime())).toBeLessThan(5000);
   await attempt({ infrastructureId: created.designId, prediction }, 409);
-  await expect(harness.sql.query(`UPDATE "Deployment" SET "challengePrediction"='{"answers":{},"reasoning":null}' WHERE id=$1`, [run.id])).rejects.toThrow("immutable");
-  await expect(harness.sql.query('UPDATE "Deployment" SET "evaluationStopAtSimulatedSeconds"=999 WHERE id=$1', [run.id])).rejects.toThrow("immutable");
+  await rejects(harness.sql.query(`UPDATE "Deployment" SET "challengePrediction"='{"answers":{},"reasoning":null}' WHERE id=$1`, [run.id]), /immutable/);
+  await rejects(harness.sql.query('UPDATE "Deployment" SET "evaluationStopAtSimulatedSeconds"=999 WHERE id=$1', [run.id]), /immutable/);
 
   await until(async () => (await read(run.id)).status === "live" || undefined, "challenge attempt live", 30000, 500);
   for (const [path, body] of [["load", { targetLoadFraction: 1.5 }], ["chaos", { type: "crash", resourceId: "vm1" }],
     ["scale-pool", { lbId: "lb", delta: 1 }], ["scale-vertical", { resourceId: "vm1", skuId: "m5.xlarge" }]] as const) {
     await harness.request(`/deployments/${run.id}/${path}`, body, "POST", 409);
   }
-  await expect(harness.sql.query(`INSERT INTO "RunAction" (id,"deploymentId",sequence,kind,parameters) VALUES (gen_random_uuid()::text,$1,999,'load','{"targetLoadFraction":1}')`, [run.id])).rejects.toThrow("Challenge attempts");
+  await rejects(harness.sql.query(`INSERT INTO "RunAction" (id,"deploymentId",sequence,kind,parameters) VALUES (gen_random_uuid()::text,$1,999,'load','{"targetLoadFraction":1}')`, [run.id]), /Challenge attempts/);
   await harness.request(`/deployments/${run.id}/speed`, { speed: 60 }, "POST", 202);
   const done = await until(async () => { const r = await read(run.id); return r.status === "torn-down" ? r : undefined; }, "challenge evaluation stop", 40000, 500);
   expect(done.terminalSnapshot.simulatedSeconds).toBe(definition.evaluationSeconds);

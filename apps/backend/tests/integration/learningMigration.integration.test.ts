@@ -1,3 +1,4 @@
+import { rejects } from "node:assert/strict";
 import { expect, test } from "bun:test";
 import { randomUUID } from "node:crypto";
 import { readdir } from "node:fs/promises";
@@ -40,20 +41,20 @@ integration("migration 17 preserves populated schema 16 and enforces immutable s
         "challengeSpecHash","challengePrediction","predictionSubmittedAt","evaluationStopAtSimulatedSeconds","improvementSourceId","learningHypothesis","learningIntent","updatedAt")
       SELECT $1,"infrastructureId","ownerId",jsonb_set("runInputs",'{seed}',to_jsonb($3::text)),$3,"workloadProfile","challengeId","challengeVersion",
         "challengeSpecHash","challengePrediction",now(),"evaluationStopAtSimulatedSeconds",$2,$4,'improvement',now() FROM "Deployment" WHERE id=$5`, [id, parent, seed, hypothesis, source]);
-    await expect(insert(randomUUID(), source, "different-seed")).rejects.toThrow("identical challenge conditions");
-    await expect(insert(randomUUID(), source, input.seed, null)).rejects.toThrow("check constraint");
-    const self = randomUUID(); await expect(insert(self, self)).rejects.toThrow("same-owner source");
+    await rejects(insert(randomUUID(), source, "different-seed"), /identical challenge conditions/);
+    await rejects(insert(randomUUID(), source, input.seed, null), /check constraint/);
+    const self = randomUUID(); await rejects(insert(self, self), /same-owner source/);
     await db.query('UPDATE "Deployment" SET "runtimeActive"=true WHERE id=$1', [source]);
-    await expect(insert(randomUUID(), source)).rejects.toThrow("same-owner source");
+    await rejects(insert(randomUUID(), source), /same-owner source/);
     await db.query('UPDATE "Deployment" SET "runtimeActive"=false WHERE id=$1', [source]);
     const child = randomUUID(); await insert(child, source);
-    await expect(db.query('UPDATE "Deployment" SET "improvementSourceId"=$1 WHERE id=$2', [child, source])).rejects.toThrow("immutable");
-    await expect(db.query('UPDATE "Deployment" SET "learningIntent"=\'repeat\' WHERE id=$1', [child])).rejects.toThrow("immutable");
+    await rejects(db.query('UPDATE "Deployment" SET "improvementSourceId"=$1 WHERE id=$2', [child, source]), /immutable/);
+    await rejects(db.query('UPDATE "Deployment" SET "learningIntent"=\'repeat\' WHERE id=$1', [child]), /immutable/);
     await db.query('UPDATE "Deployment" SET status=\'failed\' WHERE id=$1', [child]);
     await db.query('DELETE FROM "Deployment" WHERE id=$1', [source]);
     expect((await db.query('SELECT "improvementSourceId","learningHypothesis","learningIntent" FROM "Deployment" WHERE id=$1', [child])).rows[0]).toEqual({ improvementSourceId: null, learningHypothesis: "A learner-owned hypothesis", learningIntent: "improvement" });
     await db.query('DROP TRIGGER deployment_learning_guard ON "Deployment"');
-    await expect(checkSchemaGuards(db)).rejects.toThrow("guards");
+    await rejects(checkSchemaGuards(db), /guards/);
   } finally {
     await db.end(); if (created) await admin.query(`DROP DATABASE "${name}"`); await admin.end();
   }

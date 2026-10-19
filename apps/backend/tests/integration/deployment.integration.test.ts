@@ -1,3 +1,4 @@
+import { rejects } from "node:assert/strict";
 import { describe, expect, test } from "bun:test";
 import { randomUUID } from "node:crypto";
 import { join } from "node:path";
@@ -201,9 +202,9 @@ integration("local deployment lifecycle", () => {
       await harness.request(`/infrastructure/${infrastructureId}`, { layout: editedSavedLayout }, "PUT");
       await harness.request(`/infrastructure/${infrastructureId}`, undefined, "DELETE", 409);
       await harness.request("/infrastructure", undefined, "DELETE", 404);
-      await expect(harness.sql.query('UPDATE "Deployment" SET "runInputs" = NULL WHERE id = $1', [id])).rejects.toThrow("immutable");
-      await expect(harness.sql.query('UPDATE "Deployment" SET seed = $1 WHERE id = $2', ["stale", id])).rejects.toThrow("immutable");
-      await expect(harness.sql.query('DELETE FROM "Infrastructure" WHERE id = $1', [infrastructureId])).rejects.toThrow("active");
+      await rejects(harness.sql.query('UPDATE "Deployment" SET "runInputs" = NULL WHERE id = $1', [id]), /immutable/);
+      await rejects(harness.sql.query('UPDATE "Deployment" SET seed = $1 WHERE id = $2', ["stale", id]), /immutable/);
+      await rejects(harness.sql.query('DELETE FROM "Infrastructure" WHERE id = $1', [infrastructureId]), /active/);
       // Deliver the same deployment twice through the real outbox poller.
       await harness.sql.query('INSERT INTO "Outbox" (id, "eventType", payload) VALUES ($1, $2, $3)',
         [randomUUID(), "deployment-created", JSON.stringify(outbox.rows[0].payload)]);

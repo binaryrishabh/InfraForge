@@ -56,7 +56,7 @@ integration("migration 15 preserves history and enforces bounded immutable sampl
     const saved = (await db.query('SELECT * FROM "RunEvidenceSample" WHERE "deploymentId"=$1', [resilience])).rows;
     expect(saved).toHaveLength(1); expect(saved[0].sampledAt).toEqual(first.sampledAt);
     const conflict = { ...payload, resources: [{ ...payload.resources[0]!, cpu: 99 }] };
-    await expect(persistEvidence(resilience, [{ ...first, payload: conflict, hash: sampleHash(conflict) }, { ...first, simulatedSeconds: 31 }], client)).rejects.toThrow("Conflicting");
+    await rejects(persistEvidence(resilience, [{ ...first, payload: conflict, hash: sampleHash(conflict) }, { ...first, simulatedSeconds: 31 }], client), /Conflicting/);
     expect((await db.query('SELECT count(*)::int AS count FROM "RunEvidenceSample"')).rows[0].count).toBe(1);
     const insert = (runId: string, second: number, data: unknown = payload) => db.query('INSERT INTO "RunEvidenceSample" ("deploymentId","simulatedSeconds","sampledAt",payload,hash) VALUES ($1,$2,now(),$3,$4)', [runId, second, data, first.hash]);
     await rejects(insert(resilience, 30), /duplicate key/);
