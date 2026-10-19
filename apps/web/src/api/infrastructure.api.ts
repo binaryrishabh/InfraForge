@@ -2,7 +2,6 @@ import { http as axios } from "../client/httpClient";
 
 import type { Infrastructure } from "@infraforge/contracts/infrastructure";
 import { API_URL } from "../client/httpClient";
-import type { Deployment } from "@infraforge/contracts/deployment";
 
 /* ------------------Infrastructure api calls--------------- */
 // get all Infrastructure
@@ -48,13 +47,4 @@ export const deleteInfrastructure = async(infrastructureId: string): Promise<Inf
   const deletedInfrastructure = response.data.deletedInfrastructure;
 
   return deletedInfrastructure;
-}
-
-// get all the deployment of an Infrastructure
-export const getDeploymentsOfInfrastructure = async(infrastructureId: string): Promise<Deployment[]> => {
-  const response = await axios.get(`${API_URL}/infrastructure/${infrastructureId}/deployments`);
-
-  const deployments = response.data.deployments;
-
-  return deployments;
 }
