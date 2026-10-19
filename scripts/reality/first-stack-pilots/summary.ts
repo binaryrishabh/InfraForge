@@ -54,11 +54,11 @@ export async function buildSummary(dir: string) {
     if (r.kind === "root") { if (server.has(r.id)) throw Error(`Duplicate server root ${r.id}`); server.set(r.id, r); }
     else if (r.kind === "sample") samples.push(r); else startupErrors.push(r);
   }
-  const windows: Row[] = [], candidateCpu: number[] = [], candidateIds = new Set<string>(), allClientIds = new Set<string>();
+  const windows: Row[] = [], candidateCpu: number[] = [], candidateIds = new Set<string>(), allClientIds = new Map<string, Row>();
   for (const w of campaign.windows) {
     const observed: Row[] = [], warmup: Row[] = [], generatorSamples: Row[] = []; let end: Row | undefined;
     for await (const r of rows(capture(dir, `${w.id}.jsonl`))) {
-      if (r.kind === "root") { if (allClientIds.has(r.id)) throw Error("Cross-window duplicate root"); allClientIds.add(r.id); (r.phase === "observed" ? observed : warmup).push(r); }
+      if (r.kind === "root") { if (allClientIds.has(r.id)) throw Error("Cross-window duplicate root"); allClientIds.set(r.id, { outcome: r.outcome }); (r.phase === "observed" ? observed : warmup).push(r); }
       else if (r.kind === "sample") generatorSamples.push(r); else if (r.kind === "end") end = r;
     }
     const total = observed.length + warmup.length;
@@ -96,12 +96,12 @@ export async function buildSummary(dir: string) {
       eventLoopDelayMaxUs: samples.length ? Math.max(...samples.map((r) => r.eventLoopDelayUs?.max ?? 0)) : null,
       maxQueue: samples.length ? Math.max(...samples.map((r) => r.queued)) : null, maxPoolQueue: samples.length ? Math.max(...samples.map((r) => r.poolQueued)) : null },
     reconciliation: { serverRoots: server.size, joinedRoots: matchedServer.length, serverWithoutGenerator: server.size - matchedServer.length,
-      serverCompletedAfterCallerFailure: matchedServer.filter((s) => s.serverAfterDeadline).length },
+      serverCompletedDespiteCallerFailure: matchedServer.filter((s) => s.outcome === "completed" && allClientIds.get(s.id)?.outcome !== "completed").length },
     demandCandidate: { status: "unpromoted-local-input-only", operation: "cpu", subset: "observed, successful, exploratory rate levels only; no holdout/discovery/warmup", threadCpuUs: candidate,
       rootIdentitySha256: textHash([...candidateIds].sort().join("\n")), provider: null, usableAsPublicProfile: false,
       holdoutMeanRelativeErrors: windows.filter((w) => w.operation === "cpu" && w.split === "holdout").map((w) => ({ id: w.id,
         samples: w.observed.threadCpuUs?.count ?? 0, relativeError: candidate && w.observed.threadCpuUs ? (w.observed.threadCpuUs.mean - candidate.mean) / candidate.mean : null })) },
-    failures: campaign.failures, startupErrors, windows, artifacts,
+    failures: campaign.failures, startupErrors, priorAttempts: readdirSync(dir).includes("prior-attempts.json") ? JSON.parse(readFileSync(resolve(dir, "prior-attempts.json"), "utf8")) : [], windows, artifacts,
     interpretation: "Rates are discovery candidates, not established knees. Cohort throughput uses intended observed arrivals, including their later terminal outcomes. Quantiles are empirical successful-cohort descriptions, not tail confidence intervals. No engine comparison, demand activation, provider timing, full memory or whole-stack calibration is established.",
   };
 }
@@ -117,6 +117,11 @@ export function validateSummary(s: Row) {
     if (Object.values(p.outcomes).reduce((n: number, c: any) => n + c, 0) !== p.offered || p.sent + (p.outcomes["generator-drop"] ?? 0) !== p.offered) throw Error("Population conservation");
     if (p.serverSeen + p.sentWithoutServer !== p.sent || p.serverSeen > p.sent || p.serverSeen < 0 || p.sentWithoutServer < 0) throw Error("Server population conservation");
     for (const key of ["offered", "sent", "serverSeen", "sentWithoutServer"]) if (!Number.isSafeInteger(p[key]) || p[key] < 0) throw Error("Invalid count");
+    if (Object.values(p.outcomes).some((n) => !Number.isSafeInteger(n) || Number(n) < 0)) throw Error("Invalid outcome count");
+    for (const name of ["completedLatencyFromIntendedUs", "generatorLagUs", "workerQueueUs", "poolWaitUs", "threadCpuUs", "dispatchToCompleteUs"]) {
+      const d = p[name]; if (d === null) continue;
+      if (!Number.isSafeInteger(d.count) || d.count < 1 || [d.min, d.mean, d.p50, d.p95, d.p99, d.max].some((n) => !Number.isFinite(n) || n < 0) || !(d.min <= d.p50 && d.p50 <= d.p95 && d.p95 <= d.p99 && d.p99 <= d.max)) throw Error("Invalid distribution");
+    }
   }
   for (const operation of ["cpu", "point-read"]) {
     const cells = s.windows.filter((w: Row) => w.operation === operation && ["holdout", "exploratory"].includes(w.split));
@@ -124,6 +129,10 @@ export function validateSummary(s: Row) {
     if (cells.some((w: Row) => w.warmupS !== 30 || w.observeS !== 60 || w.rate > 1000)) throw Error("Campaign window cap");
     const holdoutRate = operation === "cpu" ? s.frozenDesign.cpuRates[1] : s.frozenDesign.pointRates[1];
     if (cells.some((w: Row) => (w.rate === holdoutRate) !== (w.split === "holdout"))) throw Error("Holdout contamination");
+    if (!s.failures.length) {
+      const rates = operation === "cpu" ? s.frozenDesign.cpuRates : s.frozenDesign.pointRates;
+      if (new Set(rates).size !== 4 || rates.some((rate: number) => cells.filter((w: Row) => w.rate === rate && w.status === "complete").length !== 3)) throw Error("Four rates and three repeats required");
+    }
   }
 }
 if (import.meta.main) {

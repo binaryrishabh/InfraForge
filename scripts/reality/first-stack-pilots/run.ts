@@ -9,11 +9,11 @@ if (output.startsWith(resolve(source, "../../.."))) throw Error("Raw captures mu
 const manifest = JSON.parse(readFileSync(resolve(source, "manifest.json"), "utf8"));
 if (Object.values(manifest.limits).reduce((sum: number, l: any) => sum + l.cpus, 0) > 4 || Object.values(manifest.limits).reduce((sum: number, l: any) => sum + l.memoryMiB, 0) > 6144) throw Error("Shared laptop resource cap exceeded");
 mkdirSync(output, { recursive: true });
-const prefix = `ifg-g1-${Date.now()}`, network = `${prefix}-net`, names: string[] = [];
+const prefix = `ifg-g1-${Date.now()}`, network = `${prefix}-net`, volume = `${prefix}-raw`, names: string[] = [];
 const docker = (args: string[], timeout = 30000) => execFileSync("docker", args, { encoding: "utf8", timeout, maxBuffer: 8 * 1024 * 1024 }).trim();
 // Keep the harness mount distinct from the database name: this Bun build treats
 // an existing /pilot path as a socket path when the URL database is also pilot.
-const mounts = ["--mount", `type=bind,source=${source},target=/harness,readonly`, "--mount", `type=bind,source=${output},target=/out`];
+const mounts = ["--mount", `type=bind,source=${source},target=/harness,readonly`, "--mount", `type=volume,source=${volume},target=/out`];
 const limits = (role: string) => ["--cpus", String(manifest.limits[role].cpus), "--memory", `${manifest.limits[role].memoryMiB}m`, "--memory-swap", `${manifest.limits[role].memoryMiB}m`, "--pids-limit", "128"];
 const record: any = { schema: manifest.schema, startedAt: new Date().toISOString(), manifest, windows: [], failures: [],
   sourceHashes: Object.fromEntries(["app.ts", "worker.ts", "generator.ts", "telemetry.ts", "run.ts", "manifest.json"].map((p) => [p, createHash("sha256").update(readFileSync(resolve(source, p), "utf8").replaceAll("\r\n", "\n")).digest("hex")])),
@@ -26,17 +26,17 @@ async function window(operation: string, rate: number, id: string, warmupS: numb
   const config = { ...manifest.generator, operation, rate, id, warmupS, observeS, split, label };
   const row: any = { ...config, startedAt: new Date().toISOString(), status: "running" }; record.windows.push(row); save();
   const name = `${prefix}-gen`; names.push(name);
-  const child = Bun.spawn(["docker", "run", "--rm", "--name", name, ...limits("generator"), "--network", network, ...mounts,
-    manifest.images.runtime, "bun", "--no-env-file", "/harness/generator.ts", JSON.stringify(config)], { stdout: "pipe", stderr: "pipe" });
-  const timeout = setTimeout(() => { try { docker(["kill", name]); } catch {} }, (warmupS + observeS + 15) * 1000);
-  const exit = await child.exited; clearTimeout(timeout);
-  row.status = exit === 0 ? "complete" : "failed"; row.exit = exit; row.endedAt = new Date().toISOString();
-  row.stderr = await new Response(child.stderr).text(); save(); console.log(`${id}: ${row.status} @ ${rate}/s`);
-  if (exit !== 0) record.failures.push({ id, reason: row.stderr });
+  try {
+    docker(["run", "--rm", "--name", name, ...limits("generator"), "--network", network, ...mounts,
+      manifest.images.runtime, "bun", "--no-env-file", "/harness/generator.ts", JSON.stringify(config)], (warmupS + observeS + 15) * 1000);
+    row.status = "complete"; row.exit = 0; row.stderr = "";
+  } catch (error) { row.status = "failed"; row.exit = null; row.stderr = String(error); record.failures.push({ id, reason: row.stderr }); try { docker(["rm", "-f", name]); } catch {} }
+  row.endedAt = new Date().toISOString(); save(); console.log(`${id}: ${row.status} @ ${rate}/s`);
 }
 try {
   record.images = Object.fromEntries(Object.entries(manifest.images).map(([role, image]) => [role, JSON.parse(docker(["image", "inspect", String(image), "--format", "{{json .Id}}" ]))])); save();
   docker(["network", "create", "--internal", network]);
+  docker(["volume", "create", volume]); record.rawFilesystem = "Docker native volume; exported after capture; no per-root Windows bind writes"; save();
   const pg = `${prefix}-pg`; names.push(pg);
   docker(["run", "-d", "--name", pg, "--network", network, "--network-alias", "pg", ...limits("postgres"), "-e", "POSTGRES_HOST_AUTH_METHOD=trust", "-e", "POSTGRES_DB=pilot", manifest.images.postgres]);
   for (let i = 0; ; i++) { try { docker(["exec", pg, "pg_isready", "-h", "127.0.0.1", "-U", "postgres", "-d", "pilot"]); break; } catch { if (i > 30) throw Error("PostgreSQL readiness failed"); await Bun.sleep(500); } }
@@ -49,6 +49,7 @@ try {
   // Read only selected non-secret fields from Docker metadata.
   record.containerLimits = [pg, app].map((name) => ({ name, cpu: docker(["inspect", name, "--format", "{{.HostConfig.NanoCpus}}"]), memory: docker(["inspect", name, "--format", "{{.HostConfig.Memory}}"]), memorySwap: docker(["inspect", name, "--format", "{{.HostConfig.MemorySwap}}"]), pids: docker(["inspect", name, "--format", "{{.HostConfig.PidsLimit}}"] ) })); save();
   for (const [i, d] of manifest.discovery.entries()) await window(d.operation, d.rate, `discovery-${i}`, 2, 5, "discovery", "discovery");
+  docker(["cp", `${app}:/out/.`, output]);
   const cpuRows = manifest.discovery.flatMap((d: any, i: number) => d.operation === "cpu" ? readFileSync(resolve(output, `discovery-${i}.jsonl`), "utf8").trim().split("\n").map((s) => JSON.parse(s)).filter((r) => r.kind === "root" && r.phase === "observed" && r.outcome === "completed") : []);
   const appRows = readFileSync(resolve(output, "app.jsonl"), "utf8").trim().split("\n").map((s) => JSON.parse(s));
   const ids = new Set(cpuRows.map((r: any) => r.id)), demands = appRows.filter((r) => ids.has(r.id) && typeof r.threadCpuUs === "number").map((r) => r.threadCpuUs);
@@ -75,6 +76,8 @@ try {
 } catch (e) { record.failures.push({ reason: String(e) }); process.exitCode = 1; }
 finally {
   record.endedAt = new Date().toISOString();
+  const app = names.find((name) => name.endsWith("-app"));
+  if (app) { try { docker(["stop", "--time", "3", app]); docker(["cp", `${app}:/out/.`, output], 120000); } catch (e) { record.failures.push({ reason: `Raw export failed: ${String(e)}` }); } }
   for (const name of names.reverse()) { try { if (name.endsWith("-app") || name.endsWith("-pg")) { const logs = Bun.spawnSync(["docker", "logs", name]); writeFileSync(resolve(output, `${name.endsWith("-app") ? "app" : "pg"}-container.log`), Buffer.concat([logs.stdout, logs.stderr])); } docker(["rm", "-f", "-v", name]); } catch {} }
-  try { docker(["network", "rm", network]); } catch {} save();
+  try { docker(["network", "rm", network]); } catch {} try { docker(["volume", "rm", volume]); } catch {} save();
 }

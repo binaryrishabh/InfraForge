@@ -22,7 +22,9 @@ bun --no-env-file node_modules/typescript/bin/tsc --noEmit -p scripts/reality/fi
 The runner refuses an existing capture directory and stores its campaign status
 before starting work. CPU, PostgreSQL and generator limits total 3.25 CPUs and
 3328 MiB, with swap disabled and a 128-process ceiling per container. Only one
-generator/window runs at a time. Trust authentication is confined to an internal
+generator/window runs at a time. Traces are written to a Docker native volume,
+then copied to the external directory before the volume is removed. This avoids
+per-root Windows file-sharing latency. Trust authentication is confined to an internal
 bridge without published ports; it is a disposable fixture, not deployment advice.
 The scripts use only Bun built-ins, so the immutable Bun image is the entire app
 and generator dependency closure; no npm package installation is done in the pilot.
@@ -43,7 +45,8 @@ uses 30/300/1000/15 requests/s; a knee above the safety ceiling stays Unknown.
 The entire second rate is a holdout. No fit or profile activation occurs. A seeded
 Fisher-Yates shuffle orders four rates × three repeats per handler; each has 30 s
 warmup and 60 s observation. Each handler sweep has a 30-minute hard stop and an
-individual generator has a wall watchdog. A separate 90-second empty/IPC control
+individual Docker CLI has a synchronous wall watchdog with explicit container
+removal on timeout. A separate 90-second empty/IPC control
 precedes the two sweeps. Scheduled main windows total 37.5 minutes, plus discovery
 and setup. Worker/pool changes are separate campaigns, not concurrent variants.
 Randomized low-rate windows are recovery candidates; causal recovery requires
