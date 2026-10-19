@@ -1,5 +1,10 @@
 # Stage 0: first-stack launch contract
 
+The additive [first-stack authoring profile](first-stack-profile.md) freezes
+`first-stack/1` separately from historical connected admission. It is an internal
+preview contract with no execution or activation. Timing stays assumption-only,
+and full cost stays Unknown (`packages/contracts/src/first-stack/index.ts:2`).
+
 The launch target is a calibrated narrow web/API stack: load balancer, application compute, PostgreSQL-oriented keyed relational operations and optional keyed cache. This contract does not activate Model 2. Model 1 stays active and Model 2 stays internal; existing composition versions and historical reports retain their identities (`packages/simulation/src/model2/registry.ts:10`; `apps/backend/internalModel2/envelopeV2.ts:34`).
 
 The current connected API is a regression fixture with exactly one LB, two separate application VMs and one database, not the permanent universal schema. It excludes cache, controllers, provider bindings, legacy SKU/security settings, retries and general arbitrary application execution (`apps/backend/internalModel2/connectedScope.ts:9`; `apps/backend/internalModel2/connectedScope.ts:26`). Cache has separate logical mechanisms but needs a later explicit admission contract (`packages/simulation/src/model2/data/contracts.ts:18`; `packages/simulation/src/model2/data/run.ts:22`).

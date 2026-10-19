@@ -3,6 +3,7 @@
   "private": true,
   "type": "module",
   "exports": {
+    "./first-stack": "./src/first-stack/index.ts",
     "./internal-lessons": "./src/internal-lessons/index.ts",
     "./internal-lessons/profile": "./src/internal-lessons/profile.ts",
     "./internal-model2": "./src/internal-model2/index.ts",

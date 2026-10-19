@@ -6,6 +6,7 @@ export const root = resolve(import.meta.dir, "../..");
 // This inventory is independent of the claim entries. Include dormant legacy
 // fields as well as controls currently visible in the first-stack inspector.
 export const surfaces: Array<[string, string[]]> = [
+  ["packages/contracts/src/first-stack/index.ts", []],
   ["packages/domain/src/resource/Resource.interface.ts", ["Resource"]],
   ["packages/domain/src/resource/AutoscalingPolicy.interface.ts", ["AutoscalingPolicy"]],
   ["packages/domain/src/resource/ConnectionLine.interface.ts", ["ConnectionLine"]],
