@@ -5,13 +5,6 @@ export const plural = (count: number, one: string, many = `${one}s`) => `${count
 
 export const formatUsd = (value: number, digits = 2) => `$${value.toLocaleString(undefined, { minimumFractionDigits: digits, maximumFractionDigits: digits })}`;
 
-export function formatSimSeconds(total: number) {
-  const s = Math.max(0, Math.round(total));
-  if (s < 60) return `${s} s`;
-  const m = Math.floor(s / 60), r = s % 60;
-  return r ? `${m} min ${r} s` : `${m} min`;
-}
-
 // Simulated clock: t+mm:ss
 export function formatClock(total: number) {
   const s = Math.max(0, Math.floor(total));

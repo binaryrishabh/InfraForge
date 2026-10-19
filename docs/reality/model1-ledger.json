@@ -1892,8 +1892,8 @@
     },
     {
       "file": "apps/web/src/lib/format.ts",
-      "sha256": "5d063212e86460c1ae10fcc964dae7ec2e98ac2f3dad4595448a8fc10b4b4f8f",
-      "numericSites": 24
+      "sha256": "c131e7e085b69c95ec0490780b98c9a25ff38b0494eb389b91cd2fee1d2d3b5f",
+      "numericSites": 20
     },
     {
       "file": "apps/web/src/lib/useMediaQuery.ts",
@@ -88403,43 +88403,7 @@
           "m1.apps.web.src.lib.format.3"
         ]
       },
-      "formula": "const s = Math.max(0, Math.round(total));",
-      "classification": "implementation-policy",
-      "confidence": "high",
-      "provenance": [
-        {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/lib/format.ts#L9",
-          "supports": "implementation",
-          "detail": "Exact historical literal and source expression; not external validation."
-        }
-      ],
-      "assumptions": [
-        "This literal is not evidence of real infrastructure capacity or performance.",
-        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
-      ],
-      "researchedOn": "2026-10-15",
-      "freeMode": "conditional",
-      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
-      "location": {
-        "file": "apps/web/src/lib/format.ts",
-        "line": 9,
-        "column": 22
-      }
-    },
-    {
-      "id": "m1.apps.web.src.lib.format.4",
-      "concept": "formatSimSeconds · literal 60",
-      "modelVersion": "1",
-      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
-      "quantity": {
-        "kind": "known",
-        "value": 60,
-        "unit": "code-number",
-        "provenance": [
-          "m1.apps.web.src.lib.format.4"
-        ]
-      },
-      "formula": "if (s < 60) return `${s} s`;",
+      "formula": "const s = Math.max(0, Math.floor(total));",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
@@ -88459,12 +88423,12 @@
       "location": {
         "file": "apps/web/src/lib/format.ts",
         "line": 10,
-        "column": 11
+        "column": 22
       }
     },
     {
-      "id": "m1.apps.web.src.lib.format.5",
-      "concept": "m · literal 60",
+      "id": "m1.apps.web.src.lib.format.4",
+      "concept": "formatClock · literal 60",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
       "quantity": {
@@ -88472,10 +88436,10 @@
         "value": 60,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.web.src.lib.format.5"
+          "m1.apps.web.src.lib.format.4"
         ]
       },
-      "formula": "const m = Math.floor(s / 60), r = s % 60;",
+      "formula": "return `${String(Math.floor(s / 60)).padStart(2, \"0\")}:${String(s % 60).padStart(2, \"0\")}`;",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
@@ -88495,12 +88459,48 @@
       "location": {
         "file": "apps/web/src/lib/format.ts",
         "line": 11,
-        "column": 28
+        "column": 35
+      }
+    },
+    {
+      "id": "m1.apps.web.src.lib.format.5",
+      "concept": "formatClock · literal 2",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 2,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.lib.format.5"
+        ]
+      },
+      "formula": "return `${String(Math.floor(s / 60)).padStart(2, \"0\")}:${String(s % 60).padStart(2, \"0\")}`;",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/lib/format.ts#L11",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/lib/format.ts",
+        "line": 11,
+        "column": 49
       }
     },
     {
       "id": "m1.apps.web.src.lib.format.6",
-      "concept": "r · literal 60",
+      "concept": "formatClock · literal 60",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
       "quantity": {
@@ -88511,7 +88511,7 @@
           "m1.apps.web.src.lib.format.6"
         ]
       },
-      "formula": "const m = Math.floor(s / 60), r = s % 60;",
+      "formula": "return `${String(Math.floor(s / 60)).padStart(2, \"0\")}:${String(s % 60).padStart(2, \"0\")}`;",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
@@ -88531,28 +88531,28 @@
       "location": {
         "file": "apps/web/src/lib/format.ts",
         "line": 11,
-        "column": 41
+        "column": 71
       }
     },
     {
       "id": "m1.apps.web.src.lib.format.7",
-      "concept": "s · literal 0",
+      "concept": "formatClock · literal 2",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
       "quantity": {
         "kind": "known",
-        "value": 0,
+        "value": 2,
         "unit": "code-number",
         "provenance": [
           "m1.apps.web.src.lib.format.7"
         ]
       },
-      "formula": "const s = Math.max(0, Math.floor(total));",
+      "formula": "return `${String(Math.floor(s / 60)).padStart(2, \"0\")}:${String(s % 60).padStart(2, \"0\")}`;",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/lib/format.ts#L17",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/lib/format.ts#L11",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -88566,13 +88566,13 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/lib/format.ts",
-        "line": 17,
-        "column": 22
+        "line": 11,
+        "column": 84
       }
     },
     {
       "id": "m1.apps.web.src.lib.format.8",
-      "concept": "formatClock · literal 60",
+      "concept": "requestsPerSecond · literal 60",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
       "quantity": {
@@ -88583,156 +88583,12 @@
           "m1.apps.web.src.lib.format.8"
         ]
       },
-      "formula": "return `${String(Math.floor(s / 60)).padStart(2, \"0\")}:${String(s % 60).padStart(2, \"0\")}`;",
-      "classification": "implementation-policy",
-      "confidence": "high",
-      "provenance": [
-        {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/lib/format.ts#L18",
-          "supports": "implementation",
-          "detail": "Exact historical literal and source expression; not external validation."
-        }
-      ],
-      "assumptions": [
-        "This literal is not evidence of real infrastructure capacity or performance.",
-        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
-      ],
-      "researchedOn": "2026-10-15",
-      "freeMode": "conditional",
-      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
-      "location": {
-        "file": "apps/web/src/lib/format.ts",
-        "line": 18,
-        "column": 35
-      }
-    },
-    {
-      "id": "m1.apps.web.src.lib.format.9",
-      "concept": "formatClock · literal 2",
-      "modelVersion": "1",
-      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
-      "quantity": {
-        "kind": "known",
-        "value": 2,
-        "unit": "code-number",
-        "provenance": [
-          "m1.apps.web.src.lib.format.9"
-        ]
-      },
-      "formula": "return `${String(Math.floor(s / 60)).padStart(2, \"0\")}:${String(s % 60).padStart(2, \"0\")}`;",
-      "classification": "implementation-policy",
-      "confidence": "high",
-      "provenance": [
-        {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/lib/format.ts#L18",
-          "supports": "implementation",
-          "detail": "Exact historical literal and source expression; not external validation."
-        }
-      ],
-      "assumptions": [
-        "This literal is not evidence of real infrastructure capacity or performance.",
-        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
-      ],
-      "researchedOn": "2026-10-15",
-      "freeMode": "conditional",
-      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
-      "location": {
-        "file": "apps/web/src/lib/format.ts",
-        "line": 18,
-        "column": 49
-      }
-    },
-    {
-      "id": "m1.apps.web.src.lib.format.10",
-      "concept": "formatClock · literal 60",
-      "modelVersion": "1",
-      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
-      "quantity": {
-        "kind": "known",
-        "value": 60,
-        "unit": "code-number",
-        "provenance": [
-          "m1.apps.web.src.lib.format.10"
-        ]
-      },
-      "formula": "return `${String(Math.floor(s / 60)).padStart(2, \"0\")}:${String(s % 60).padStart(2, \"0\")}`;",
-      "classification": "implementation-policy",
-      "confidence": "high",
-      "provenance": [
-        {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/lib/format.ts#L18",
-          "supports": "implementation",
-          "detail": "Exact historical literal and source expression; not external validation."
-        }
-      ],
-      "assumptions": [
-        "This literal is not evidence of real infrastructure capacity or performance.",
-        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
-      ],
-      "researchedOn": "2026-10-15",
-      "freeMode": "conditional",
-      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
-      "location": {
-        "file": "apps/web/src/lib/format.ts",
-        "line": 18,
-        "column": 71
-      }
-    },
-    {
-      "id": "m1.apps.web.src.lib.format.11",
-      "concept": "formatClock · literal 2",
-      "modelVersion": "1",
-      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
-      "quantity": {
-        "kind": "known",
-        "value": 2,
-        "unit": "code-number",
-        "provenance": [
-          "m1.apps.web.src.lib.format.11"
-        ]
-      },
-      "formula": "return `${String(Math.floor(s / 60)).padStart(2, \"0\")}:${String(s % 60).padStart(2, \"0\")}`;",
-      "classification": "implementation-policy",
-      "confidence": "high",
-      "provenance": [
-        {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/lib/format.ts#L18",
-          "supports": "implementation",
-          "detail": "Exact historical literal and source expression; not external validation."
-        }
-      ],
-      "assumptions": [
-        "This literal is not evidence of real infrastructure capacity or performance.",
-        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
-      ],
-      "researchedOn": "2026-10-15",
-      "freeMode": "conditional",
-      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
-      "location": {
-        "file": "apps/web/src/lib/format.ts",
-        "line": 18,
-        "column": 84
-      }
-    },
-    {
-      "id": "m1.apps.web.src.lib.format.12",
-      "concept": "requestsPerSecond · literal 60",
-      "modelVersion": "1",
-      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
-      "quantity": {
-        "kind": "known",
-        "value": 60,
-        "unit": "code-number",
-        "provenance": [
-          "m1.apps.web.src.lib.format.12"
-        ]
-      },
       "formula": "return w.targetThroughput / (w.throughputUnit === \"per-minute\" ? 60 : 3600);",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/lib/format.ts#L22",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/lib/format.ts#L15",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -88746,12 +88602,12 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/lib/format.ts",
-        "line": 22,
+        "line": 15,
         "column": 68
       }
     },
     {
-      "id": "m1.apps.web.src.lib.format.13",
+      "id": "m1.apps.web.src.lib.format.9",
       "concept": "requestsPerSecond · literal 3600",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
@@ -88760,7 +88616,7 @@
         "value": 3600,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.web.src.lib.format.13"
+          "m1.apps.web.src.lib.format.9"
         ]
       },
       "formula": "return w.targetThroughput / (w.throughputUnit === \"per-minute\" ? 60 : 3600);",
@@ -88768,7 +88624,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/lib/format.ts#L22",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/lib/format.ts#L15",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -88782,12 +88638,12 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/lib/format.ts",
-        "line": 22,
+        "line": 15,
         "column": 73
       }
     },
     {
-      "id": "m1.apps.web.src.lib.format.14",
+      "id": "m1.apps.web.src.lib.format.10",
       "concept": "shape · literal 3",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
@@ -88796,7 +88652,7 @@
         "value": 3,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.web.src.lib.format.14"
+          "m1.apps.web.src.lib.format.10"
         ]
       },
       "formula": "const shape = w.trafficShape === \"peak\" ? `bursts to ${w.peakMultiplier ?? 3}×` : \"steady\";",
@@ -88804,7 +88660,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/lib/format.ts#L27",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/lib/format.ts#L20",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -88818,12 +88674,12 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/lib/format.ts",
-        "line": 27,
+        "line": 20,
         "column": 78
       }
     },
     {
-      "id": "m1.apps.web.src.lib.format.15",
+      "id": "m1.apps.web.src.lib.format.11",
       "concept": "reads · literal 100",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
@@ -88832,7 +88688,7 @@
         "value": 100,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.web.src.lib.format.15"
+          "m1.apps.web.src.lib.format.11"
         ]
       },
       "formula": "const reads = w.readWriteRatio !== undefined ? `${Math.round(w.readWriteRatio * 100)}% reads` : null;",
@@ -88840,7 +88696,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/lib/format.ts#L28",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/lib/format.ts#L21",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -88854,12 +88710,12 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/lib/format.ts",
-        "line": 28,
+        "line": 21,
         "column": 83
       }
     },
     {
-      "id": "m1.apps.web.src.lib.format.16",
+      "id": "m1.apps.web.src.lib.format.12",
       "concept": "diff · literal 1000",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
@@ -88868,7 +88724,7 @@
         "value": 1000,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.web.src.lib.format.16"
+          "m1.apps.web.src.lib.format.12"
         ]
       },
       "formula": "const diff = Math.round((now - new Date(iso).getTime()) / 1000);",
@@ -88876,7 +88732,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/lib/format.ts#L38",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/lib/format.ts#L31",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -88890,12 +88746,12 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/lib/format.ts",
-        "line": 38,
+        "line": 31,
         "column": 61
       }
     },
     {
-      "id": "m1.apps.web.src.lib.format.17",
+      "id": "m1.apps.web.src.lib.format.13",
       "concept": "relativeTime · literal 60",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
@@ -88904,7 +88760,7 @@
         "value": 60,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.web.src.lib.format.17"
+          "m1.apps.web.src.lib.format.13"
         ]
       },
       "formula": "if (diff < 60) return \"just now\";",
@@ -88912,7 +88768,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/lib/format.ts#L40",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/lib/format.ts#L33",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -88926,12 +88782,12 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/lib/format.ts",
-        "line": 40,
+        "line": 33,
         "column": 14
       }
     },
     {
-      "id": "m1.apps.web.src.lib.format.18",
+      "id": "m1.apps.web.src.lib.format.14",
       "concept": "relativeTime · literal 3600",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
@@ -88940,7 +88796,7 @@
         "value": 3600,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.web.src.lib.format.18"
+          "m1.apps.web.src.lib.format.14"
         ]
       },
       "formula": "if (diff < 3600) return `${Math.floor(diff / 60)} min ago`;",
@@ -88948,7 +88804,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/lib/format.ts#L41",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/lib/format.ts#L34",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -88962,12 +88818,12 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/lib/format.ts",
-        "line": 41,
+        "line": 34,
         "column": 14
       }
     },
     {
-      "id": "m1.apps.web.src.lib.format.19",
+      "id": "m1.apps.web.src.lib.format.15",
       "concept": "relativeTime · literal 60",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
@@ -88976,7 +88832,7 @@
         "value": 60,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.web.src.lib.format.19"
+          "m1.apps.web.src.lib.format.15"
         ]
       },
       "formula": "return `${Math.floor(diff / 60)} min ago`;",
@@ -88984,7 +88840,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/lib/format.ts#L41",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/lib/format.ts#L34",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -88998,8 +88854,152 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/lib/format.ts",
-        "line": 41,
+        "line": 34,
         "column": 48
+      }
+    },
+    {
+      "id": "m1.apps.web.src.lib.format.16",
+      "concept": "relativeTime · literal 86400",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 86400,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.lib.format.16"
+        ]
+      },
+      "formula": "if (diff < 86400) return `${Math.floor(diff / 3600)} h ago`;",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/lib/format.ts#L35",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/lib/format.ts",
+        "line": 35,
+        "column": 14
+      }
+    },
+    {
+      "id": "m1.apps.web.src.lib.format.17",
+      "concept": "relativeTime · literal 3600",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 3600,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.lib.format.17"
+        ]
+      },
+      "formula": "return `${Math.floor(diff / 3600)} h ago`;",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/lib/format.ts#L35",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/lib/format.ts",
+        "line": 35,
+        "column": 49
+      }
+    },
+    {
+      "id": "m1.apps.web.src.lib.format.18",
+      "concept": "relativeTime · literal 86400",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 86400,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.lib.format.18"
+        ]
+      },
+      "formula": "if (diff < 86400 * 14) return `${Math.floor(diff / 86400)} d ago`;",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/lib/format.ts#L36",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/lib/format.ts",
+        "line": 36,
+        "column": 14
+      }
+    },
+    {
+      "id": "m1.apps.web.src.lib.format.19",
+      "concept": "relativeTime · literal 14",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 14,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.lib.format.19"
+        ]
+      },
+      "formula": "if (diff < 86400 * 14) return `${Math.floor(diff / 86400)} d ago`;",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/lib/format.ts#L36",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/lib/format.ts",
+        "line": 36,
+        "column": 22
       }
     },
     {
@@ -89015,156 +89015,12 @@
           "m1.apps.web.src.lib.format.20"
         ]
       },
-      "formula": "if (diff < 86400) return `${Math.floor(diff / 3600)} h ago`;",
-      "classification": "implementation-policy",
-      "confidence": "high",
-      "provenance": [
-        {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/lib/format.ts#L42",
-          "supports": "implementation",
-          "detail": "Exact historical literal and source expression; not external validation."
-        }
-      ],
-      "assumptions": [
-        "This literal is not evidence of real infrastructure capacity or performance.",
-        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
-      ],
-      "researchedOn": "2026-10-15",
-      "freeMode": "conditional",
-      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
-      "location": {
-        "file": "apps/web/src/lib/format.ts",
-        "line": 42,
-        "column": 14
-      }
-    },
-    {
-      "id": "m1.apps.web.src.lib.format.21",
-      "concept": "relativeTime · literal 3600",
-      "modelVersion": "1",
-      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
-      "quantity": {
-        "kind": "known",
-        "value": 3600,
-        "unit": "code-number",
-        "provenance": [
-          "m1.apps.web.src.lib.format.21"
-        ]
-      },
-      "formula": "return `${Math.floor(diff / 3600)} h ago`;",
-      "classification": "implementation-policy",
-      "confidence": "high",
-      "provenance": [
-        {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/lib/format.ts#L42",
-          "supports": "implementation",
-          "detail": "Exact historical literal and source expression; not external validation."
-        }
-      ],
-      "assumptions": [
-        "This literal is not evidence of real infrastructure capacity or performance.",
-        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
-      ],
-      "researchedOn": "2026-10-15",
-      "freeMode": "conditional",
-      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
-      "location": {
-        "file": "apps/web/src/lib/format.ts",
-        "line": 42,
-        "column": 49
-      }
-    },
-    {
-      "id": "m1.apps.web.src.lib.format.22",
-      "concept": "relativeTime · literal 86400",
-      "modelVersion": "1",
-      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
-      "quantity": {
-        "kind": "known",
-        "value": 86400,
-        "unit": "code-number",
-        "provenance": [
-          "m1.apps.web.src.lib.format.22"
-        ]
-      },
-      "formula": "if (diff < 86400 * 14) return `${Math.floor(diff / 86400)} d ago`;",
-      "classification": "implementation-policy",
-      "confidence": "high",
-      "provenance": [
-        {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/lib/format.ts#L43",
-          "supports": "implementation",
-          "detail": "Exact historical literal and source expression; not external validation."
-        }
-      ],
-      "assumptions": [
-        "This literal is not evidence of real infrastructure capacity or performance.",
-        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
-      ],
-      "researchedOn": "2026-10-15",
-      "freeMode": "conditional",
-      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
-      "location": {
-        "file": "apps/web/src/lib/format.ts",
-        "line": 43,
-        "column": 14
-      }
-    },
-    {
-      "id": "m1.apps.web.src.lib.format.23",
-      "concept": "relativeTime · literal 14",
-      "modelVersion": "1",
-      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
-      "quantity": {
-        "kind": "known",
-        "value": 14,
-        "unit": "code-number",
-        "provenance": [
-          "m1.apps.web.src.lib.format.23"
-        ]
-      },
-      "formula": "if (diff < 86400 * 14) return `${Math.floor(diff / 86400)} d ago`;",
-      "classification": "implementation-policy",
-      "confidence": "high",
-      "provenance": [
-        {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/lib/format.ts#L43",
-          "supports": "implementation",
-          "detail": "Exact historical literal and source expression; not external validation."
-        }
-      ],
-      "assumptions": [
-        "This literal is not evidence of real infrastructure capacity or performance.",
-        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
-      ],
-      "researchedOn": "2026-10-15",
-      "freeMode": "conditional",
-      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
-      "location": {
-        "file": "apps/web/src/lib/format.ts",
-        "line": 43,
-        "column": 22
-      }
-    },
-    {
-      "id": "m1.apps.web.src.lib.format.24",
-      "concept": "relativeTime · literal 86400",
-      "modelVersion": "1",
-      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
-      "quantity": {
-        "kind": "known",
-        "value": 86400,
-        "unit": "code-number",
-        "provenance": [
-          "m1.apps.web.src.lib.format.24"
-        ]
-      },
       "formula": "return `${Math.floor(diff / 86400)} d ago`;",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/lib/format.ts#L43",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/lib/format.ts#L36",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -89178,7 +89034,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/lib/format.ts",
-        "line": 43,
+        "line": 36,
         "column": 54
       }
     },
