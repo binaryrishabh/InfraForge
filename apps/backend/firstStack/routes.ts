@@ -7,6 +7,7 @@ import { resolveWorkload, WorkloadRefusal } from "./workload";
 import { readImportContext } from "./importStream";
 import { requireCapability } from "../capabilities/policy";
 import { firstStackLimits as limits } from "@infraforge/contracts/first-stack";
+import { FirstStackCompileRefusal } from "@infraforge/simulation/internal-first-stack";
 
 export function createFirstStackRouter(repository: FirstStackRepository) {
   const router = Router(), service = createFirstStackService(repository);
@@ -34,6 +35,17 @@ export function createFirstStackRouter(repository: FirstStackRepository) {
     }
   });
   router.use(json({ limit: "16mb" }));
+  router.post("/compile", async (req, res) => {
+    const parsed = z.object({ infrastructureId: z.uuid(), expectedDesignUpdatedAt: z.iso.datetime(), workload: z.json(), policy: z.json() }).strict().safeParse(req.body);
+    if (!parsed.success) { res.status(422).json({ diagnostics: parsed.error.issues.map(e => ({ code: "FIRST_STACK_FIELD", path: e.path.join("."), message: e.message })) }); return; }
+    try {
+      const input = parsed.data;
+      res.json(await service.compile(res.locals.userId, input.infrastructureId, input.expectedDesignUpdatedAt, input.workload, input.policy));
+    } catch (e) {
+      if (e instanceof FirstStackCompileRefusal) { res.status(422).json({ diagnostics: e.diagnostics }); return; }
+      throw e;
+    }
+  });
   const request = z.object({ infrastructureId: z.uuid(), expectedDesignUpdatedAt: z.iso.datetime(), sidecar: z.json().optional() }).strict();
   for (const action of ["review", "save", "copy"] as const) router.post(`/${action}`, async (req, res) => {
     const input = request.safeParse(req.body);

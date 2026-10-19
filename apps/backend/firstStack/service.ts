@@ -4,6 +4,7 @@ import { ConflictError, NotFoundError, ValidationError } from "../utils/errors";
 import { canonical, designRevision, hash, withoutSidecar } from "./canonical";
 import { reviewSidecar } from "./authoring";
 import { firstStackLimits } from "@infraforge/contracts/first-stack";
+import { prepareFirstStackExecution } from "./execution";
 
 export interface FirstStackDesign {
   id: string; name: string; ownerId: string; layout: Record<string, unknown>;
@@ -30,6 +31,14 @@ export function createFirstStackService(repository: FirstStackRepository, capabi
     return row;
   };
   return {
+    async compile(owner: string, id: string, expected: string, workload: unknown, policy: unknown) {
+      bounded({ workload, policy });
+      return repository.transaction(async tx => {
+        const row = await owned(tx, owner, id, expected);
+        const prepared = prepareFirstStackExecution(owner, row.layout, row.layout.firstStack, workload, policy, capability);
+        return { executable: false as const, lock: prepared.lock, compiled: prepared.compiled };
+      });
+    },
     async review(owner: string, id: string, expected: string, candidate?: unknown) {
       bounded(candidate ?? null);
       return repository.transaction(async tx => {
