@@ -1,10 +1,9 @@
 import { expect, test } from "bun:test";
 import { firstStackLimits } from "@infraforge/contracts/first-stack";
-import { resolveWorkload, identityTransform, recordedApplicationInput } from "../firstStack/workload";
+import { resolveWorkload, identityTransform } from "../firstStack/workload";
 import { readImportContext } from "../firstStack/importStream";
 import { firstStackFixture } from "./firstStackFixture";
-import { verticalFixture } from "../../../packages/simulation/tests/networkFixture";
-import { createNetworkRuntime } from "../../../packages/simulation/src/model2/network/run";
+import { hash } from "../firstStack/canonical";
 
 const header = { schema: "infraforge-first-stack-schedule/1", unit: "us", durationUs: 1000, origin: "observed-recording", provenance: "explicit test recording" };
 const rows = [{ id: "b", atUs: 10, operation: "read", intendedAtUs: 9, sentAtUs: 10, generatorLost: false }, { id: "a", atUs: 10, operation: "read" }];
@@ -12,6 +11,15 @@ const params = () => ({ schema: "infraforge-first-stack-parameters/1", rows: row
 const jsonl = (lines: unknown[], newline = "\n") => lines.map(x => JSON.stringify(x)).join(newline) + newline;
 async function* chunks(text: string | Uint8Array, size = 4096) { const bytes = typeof text === "string" ? new TextEncoder().encode(text) : text; for (let at = 0; at < bytes.length; at += size) yield bytes.subarray(at, at + size); }
 const options = () => ({ owner: "owner", sidecar: firstStackFixture().sidecar, parameters: params() });
+
+test("normalizing JSONL framing preserves distinct literal keys inside data", async () => {
+  expect(hash({ key: "a\r\nb" })).not.toBe(hash({ key: "a\nb" }));
+  const o = options(), p = params();
+  o.sidecar.database.keys = ["a\r\nb", "a\nb"];
+  p.rows[0]!.keys = ["a\r\nb"]; p.rows[1]!.keys = ["a\nb"];
+  const schedule = await resolveWorkload(chunks(jsonl([header, ...rows], "\r\n")), { ...o, parameters: p });
+  expect(schedule.rows.map(row => row.keys)).toEqual([["a\nb"], ["a\r\nb"]]);
+});
 
 test("canonical LF/CRLF, byte chunks, ties and parameters have identical resolved identity", async () => {
   const lf = await resolveWorkload(chunks(jsonl([header, ...rows]), 1), options());
@@ -43,30 +51,6 @@ test("workload references refuse stale content and profile demand changes have a
   expect(changed.profileHash).not.toBe(first.profileHash); expect(changed.identity).not.toBe(first.identity);
   o.sidecar.workload.parametersHash = "0".repeat(64);
   await expect(resolveWorkload(chunks(text), o)).rejects.toThrow("saved workload references");
-});
-test("exact same-time hot keys survive the typed application adapter and child copy without fallback", async () => {
-  const o = options(); o.sidecar.operations[0]!.id = "light";
-  const schedule = await resolveWorkload(chunks(jsonl([header, ...rows.map(row => ({ ...row, operation: "light" }))])), o);
-  const input = verticalFixture({ horizon: 20000 });
-  input.arrivals = [{ id: "recorded", kind: "trace", trace: { schema: "infraforge-arrivals/1", unit: "us", durationUs: 1000,
-    provenance: "test recording", rows: schedule.rows.map(({ id, atUs, operation }) => ({ id, atUs, operation })) } }];
-  const delivered: Array<{ root: string; call: string; parent?: string; key: string }> = [];
-  const runtime = createNetworkRuntime(input, { resource: () => undefined, receive(target, work) {
-    if (target === "lb" && JSON.parse(work.rootId)[0] === "root") {
-      work.message = { request: recordedApplicationInput(schedule, JSON.parse(work.rootId)[2]) };
-    }
-    if (target === "dep" && work.message) delivered.push({ root: work.rootId, call: work.callId, parent: work.parentCallId,
-      key: (work.message.request as { key: string }).key });
-    return undefined;
-  } });
-  runtime.advanceTo(runtime.horizon);
-  expect(delivered).toHaveLength(2);
-  expect(delivered.map(row => row.key)).toEqual(["hot", "hot"]);
-  expect(new Set(delivered.map(row => row.root)).size).toBe(2);
-  expect(delivered.every(row => row.parent && row.call !== row.parent)).toBe(true);
-  expect(runtime.evidence().counts.completed).toBe(2);
-  expect(schedule.rows.map(row => row.keys)).toEqual([["hot"], ["hot"]]);
-  expect(() => recordedApplicationInput(schedule, "absent")).toThrow("Unknown recorded row");
 });
 test("malformed units, times, operations, duplicate IDs and unsupported payloads refuse", async () => {
   for (const lines of [

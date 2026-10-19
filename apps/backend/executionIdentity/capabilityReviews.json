@@ -164,7 +164,7 @@
     }
   },
   "apps/backend/executionIdentity/loading.ts": {
-    "hash": "fe7ee4f704f5553742d9c939959975ab698631cb48ef1f9799ae63bc41b4e9fd",
+    "hash": "cf907e0de5d95daa398e20cd9567a902a0738d847983ef9639009d83ff3330ad",
     "capabilities": [
       "computed-data",
       "verifier",
@@ -172,7 +172,7 @@
     ],
     "review": "Fixed data indexing; resource adapters require the separate documented review",
     "globals": {
-      "hash": "fe7ee4f704f5553742d9c939959975ab698631cb48ef1f9799ae63bc41b4e9fd",
+      "hash": "cf907e0de5d95daa398e20cd9567a902a0738d847983ef9639009d83ff3330ad",
       "names": [
         "Bun"
       ]
@@ -1050,7 +1050,7 @@
     "review": "Internal authoring/stream parser only: bounded fixed JSON data indexing, exact named UTF-8/byte primitives; no evaluator, dynamic loader, engine dispatch or activation"
   },
   "apps/backend/firstStack/canonical.ts": {
-    "hash": "7aef83a695fa126e961a2813576d5a54b31e0177daab81ba405ca097f6ba6d46",
+    "hash": "49f240e1016d0540eb13f3908543c2016986a87eb0b0dce5669dfeab376fa2f4",
     "capabilities": [
       "computed-data"
     ],

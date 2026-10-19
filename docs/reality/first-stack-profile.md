@@ -88,7 +88,8 @@ from transform/resolved identity. Time scaling uses an explicit rational and
 shift; noninteger microseconds and transformed overflow refuse. Authored origin
 is never promoted to observed recording. The application adapter retains exact
 keys through existing child work without cycle/uniform selection
-(`apps/backend/firstStack/workload.ts:125`).
+(`apps/backend/firstStack/workload.ts:136`;
+`scripts/tests/first-stack-child.test.ts:17`).
 
 Resolution retains no server-side workload and creates no run, Outbox or executor.
 The response is a review artifact for the caller; normalized retained-content

@@ -74,13 +74,13 @@ export function writeStage2ReviewLock() {
   writeFileSync(resolve(root, lockPath), JSON.stringify({ schema: "infraforge-first-stack-source-review/1", baseline: baseline.source,
     scope: "Internal sidecar save/review and recorded schedule resolution only; no execution or activation",
     files: [...added, ...changed].sort().map(path => ({ path, hash: sha256(tree.read(path)) })),
-    acceptance: ["apps/backend/tests/firstStackAuthoring.test.ts", "apps/backend/tests/firstStackWorkload.test.ts", "apps/backend/tests/firstStackRoutes.test.ts", "apps/backend/tests/firstStackFixture.ts"].map(path => ({ path, hash: sha256(tree.read(path)) })),
+    acceptance: ["apps/backend/tests/firstStackAuthoring.test.ts", "apps/backend/tests/firstStackWorkload.test.ts", "apps/backend/tests/firstStackRoutes.test.ts", "apps/backend/tests/firstStackFixture.ts", "scripts/tests/first-stack-child.test.ts"].map(path => ({ path, hash: sha256(readFileSync(resolve(root, path), "utf8").replaceAll("\r\n", "\n")) })),
   }, null, 2) + "\n");
 }
 export function buildStage2Transitions() {
   const tree = scope(), lock = JSON.parse(readFileSync(resolve(root, lockPath), "utf8"));
   if (lock.baseline !== baseline.source || digest(lock.files.map((p: { path: string }) => p.path)) !== digest([...added, ...changed].sort())) throw Error("Invalid authoring review lock");
-  for (const { path, hash } of [...lock.files, ...lock.acceptance]) if (sha256(tree.read(path)) !== hash) throw Error(`Authoring source needs review: ${path}`);
+  for (const { path, hash } of [...lock.files, ...lock.acceptance]) if (sha256(readFileSync(resolve(root, path), "utf8").replaceAll("\r\n", "\n")) !== hash) throw Error(`Authoring source needs review: ${path}`);
   verifyCompositionHost();
   if (digest(compositionProofs()) !== digest(baseline.compositions)) throw Error("Historical composition evidence changed");
   const current = executionDescriptor(), target = digest(current), allowed = new Set([...added, ...changed, ...generated]);

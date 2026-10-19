@@ -2136,8 +2136,12 @@
       "hash": "dc7d460a8e19364040f7e1e6a32c9351a781f870dea2f3f8209e1a572acb2e72"
     },
     {
+      "path": "scripts/tests/first-stack-child.test.ts",
+      "hash": "ab66542a22e211ee5086173170ab9efe9797499ea86983772a650bb4f4550069"
+    },
+    {
       "path": "scripts/tests/first-stack-profile.test.ts",
-      "hash": "7f2cfd282e4b9d3b24a9aecabdff1e07f1cc14e415863125df36ade8f28f4676"
+      "hash": "23fd8e2fffa4f7ad59f590be0c950bfa022f499b0eab6c1a99ef2c5ac42d7ece"
     },
     {
       "path": "scripts/tests/fixtures/execution-launch-probe.ts",

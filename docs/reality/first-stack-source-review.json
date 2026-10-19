@@ -17,7 +17,7 @@
     },
     {
       "path": "apps/backend/firstStack/canonical.ts",
-      "hash": "7aef83a695fa126e961a2813576d5a54b31e0177daab81ba405ca097f6ba6d46"
+      "hash": "49f240e1016d0540eb13f3908543c2016986a87eb0b0dce5669dfeab376fa2f4"
     },
     {
       "path": "apps/backend/firstStack/importStream.ts",
@@ -63,7 +63,7 @@
     },
     {
       "path": "apps/backend/tests/firstStackWorkload.test.ts",
-      "hash": "e47dbe7ef34771869aca5b6950735df8fa75916023f03140cefcf6829932217c"
+      "hash": "76098ab2b47ff0280d32f620c49ef13fb1d66f0251e4536dfdb646c92fd1bed1"
     },
     {
       "path": "apps/backend/tests/firstStackRoutes.test.ts",
@@ -72,6 +72,10 @@
     {
       "path": "apps/backend/tests/firstStackFixture.ts",
       "hash": "ab7973f509cc59ec019b782f6972c48ec66a254260f0367e2ba1df6c40ccc083"
+    },
+    {
+      "path": "scripts/tests/first-stack-child.test.ts",
+      "hash": "ab66542a22e211ee5086173170ab9efe9797499ea86983772a650bb4f4550069"
     }
   ]
 }
