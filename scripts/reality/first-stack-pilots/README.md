@@ -11,6 +11,7 @@ Run from the repository root, with Bun 1.3.14 and the manifest's images availabl
 ```powershell
 bun --no-env-file scripts/reality/first-stack-pilots/run.ts C:/external/new-g1-capture
 # After all containers have stopped:
+bun --no-env-file scripts/reality/first-stack-pilots/archive.ts C:/external/new-g1-capture
 bun --no-env-file scripts/reality/first-stack-pilots/summary.ts C:/external/new-g1-capture docs/reality/g1-local-pilot.json
 bun --no-env-file scripts/reality/first-stack-pilots/verify.ts C:/external/new-g1-capture
 # Ordinary CI/static verification needs no Docker or raw artifacts:
@@ -80,8 +81,13 @@ by 60 seconds; it is not a wall-window completion counter. Missing distributions
 are null, never zero. Gzip JSONL only after capture ends; the producer accepts raw
 or `.gz` streams and pins exact binary hashes of all external artifacts. Source
 and summary text hashes normalize CRLF to LF. Preserve failed captures separately.
+`collect-attempts.ts` creates a pinned index of earlier closed captures, retaining
+their failures and exact artifact identities outside the successful demand subset.
+`close-interrupted.ts` only annotates administrative interruption after its
+containers stop; it never repairs populations or invents unrun cells.
 The static verifier checks the pinned summary and digest; passing an external raw
-directory additionally reconstructs every population and binary identity.
+directory additionally reconstructs every population and binary identity. Current
+capture sources and summary producer/schema/verifier identities are checked too.
 
 The only allowed inference is a description of these handlers under these recorded
 host/runtime/limits. No Model 2 output comparison is performed. The exported demand

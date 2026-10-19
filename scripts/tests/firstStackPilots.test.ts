@@ -1,5 +1,8 @@
 import { expect, test } from "bun:test";
-import { distribution, population, textHash, validateSummary } from "../reality/first-stack-pilots/summary";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { resolve } from "node:path";
+import { buildSummary, distribution, population, textHash, validateSummary } from "../reality/first-stack-pilots/summary";
+import { verifyPinned } from "../reality/first-stack-pilots/verify";
 
 test("pilot text identity is independent of checkout line endings", () => {
   expect(textHash("one\r\ntwo\r\n")).toBe(textHash("one\ntwo\n"));
@@ -29,4 +32,30 @@ test("duplicate roots cannot silently overwrite offered work", () => {
 });
 test("public timing promotion is rejected before inspecting a pilot record", () => {
   expect(() => validateSummary({ schema: "infraforge-g1-summary/1", scope: "local-semantic-pilot-only", timingPromotion: true, evidenceLabel: "supported-calibrated" })).toThrow("claim boundary");
+});
+test("setup failure produces Unknown measurements without inventing a completed campaign", async () => {
+  const base = resolve(import.meta.dir, "../../.cache"); mkdirSync(base, { recursive: true });
+  const dir = mkdtempSync(resolve(base, "pilot-test-"));
+  try {
+    const manifest = JSON.parse(readFileSync(new URL("../reality/first-stack-pilots/manifest.json", import.meta.url), "utf8"));
+    const sourceHashes = Object.fromEntries(["app.ts", "worker.ts", "generator.ts", "telemetry.ts", "run.ts", "manifest.json"].map((name) => [name, textHash(readFileSync(new URL(`../reality/first-stack-pilots/${name}`, import.meta.url), "utf8"))]));
+    writeFileSync(resolve(dir, "campaign.json"), JSON.stringify({ manifest, sourceHashes, windows: [], failures: [{ reason: "authored startup failure fixture" }], endedAt: "2000-01-01T00:00:00.000Z" }));
+    const s = await buildSummary(dir); validateSummary(s);
+    expect(s.appEnvironment).toBeNull(); expect(s.reconciliation).toBeNull(); expect(s.demandCandidate.threadCpuUs).toBeNull();
+    expect(s.windows).toEqual([]); expect(s.failures).toHaveLength(1);
+    const corrupt = structuredClone(s); corrupt.missingCounters.perQueryDbCpu = 0 as never;
+    expect(() => validateSummary(corrupt)).toThrow("Unknown");
+  } finally { if (!dir.startsWith(base + "/") && !dir.startsWith(base + "\\")) throw Error("Temporary path escaped workspace cache"); rmSync(dir, { recursive: true, force: true }); }
+});
+test("retained G1 evidence verifies without Docker and rejects changed populations or holdout membership", () => {
+  const summary = verifyPinned(resolve(import.meta.dir, "../../docs/reality/g1-local-pilot.json"));
+  expect(summary.windows.filter((w: any) => w.status === "complete")).toHaveLength(31);
+  expect(summary.priorAttempts).toHaveLength(5);
+  const lost = structuredClone(summary); lost.windows[0].observed.offered++;
+  expect(() => validateSummary(lost)).toThrow("Population conservation");
+  const contaminated = structuredClone(summary);
+  contaminated.windows.find((w: any) => w.split === "holdout").split = "exploratory";
+  expect(() => validateSummary(contaminated)).toThrow("Holdout contamination");
+  const timing = structuredClone(summary); timing.timingPromotion = true;
+  expect(() => validateSummary(timing)).toThrow("claim boundary");
 });

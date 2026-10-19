@@ -3,13 +3,14 @@
   "$id": "infraforge-g1-summary/1",
   "title": "Immutable local semantic pilot summary",
   "type": "object",
-  "required": ["schema", "scope", "timingPromotion", "evidenceLabel", "manifest", "sourceHashes", "hostCpu", "images", "frozenDesign", "missingCounters", "demandCandidate", "failures", "windows", "artifacts"],
+  "required": ["schema", "scope", "timingPromotion", "evidenceLabel", "manifest", "sourceHashes", "producerHashes", "hostCpu", "images", "frozenDesign", "missingCounters", "demandCandidate", "failures", "windows", "artifacts"],
   "properties": {
     "schema": { "const": "infraforge-g1-summary/1" },
     "scope": { "const": "local-semantic-pilot-only" },
     "timingPromotion": { "const": false },
     "evidenceLabel": { "const": "assumption-only" },
     "sourceHashes": { "type": "object", "additionalProperties": { "type": "string", "pattern": "^[a-f0-9]{64}$" } },
+    "producerHashes": { "type": "object", "additionalProperties": { "type": "string", "pattern": "^[a-f0-9]{64}$" } },
     "missingCounters": { "type": "object", "additionalProperties": { "type": "null" } },
     "failures": { "type": "array" },
     "demandCandidate": {
@@ -22,6 +23,6 @@
   },
   "$defs": {
     "distribution": { "oneOf": [{ "type": "null" }, { "type": "object", "required": ["count", "mean", "min", "p50", "p95", "p99", "max"], "properties": { "count": { "type": "integer", "minimum": 1 }, "mean": { "type": "number" }, "min": { "type": "number" }, "p50": { "type": "number" }, "p95": { "type": "number" }, "p99": { "type": "number" }, "max": { "type": "number" } }, "additionalProperties": false }] },
-    "population": { "type": "object", "required": ["offered", "sent", "outcomes", "serverSeen", "sentWithoutServer", "threadCpuUs", "poolWaitUs"], "properties": { "offered": { "type": "integer", "minimum": 0 }, "sent": { "type": "integer", "minimum": 0 }, "outcomes": { "type": "object", "additionalProperties": { "type": "integer", "minimum": 0 } }, "threadCpuUs": { "$ref": "#/$defs/distribution" }, "poolWaitUs": { "$ref": "#/$defs/distribution" } } }
+    "population": { "type": ["object", "null"], "required": ["offered", "sent", "outcomes", "serverSeen", "sentWithoutServer", "threadCpuUs", "poolWaitUs"], "properties": { "offered": { "type": "integer", "minimum": 0 }, "sent": { "type": "integer", "minimum": 0 }, "outcomes": { "type": "object", "additionalProperties": { "type": "integer", "minimum": 0 } }, "threadCpuUs": { "$ref": "#/$defs/distribution" }, "poolWaitUs": { "$ref": "#/$defs/distribution" } } }
   }
 }
