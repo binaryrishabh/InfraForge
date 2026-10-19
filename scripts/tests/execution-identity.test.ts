@@ -74,9 +74,11 @@ test("history reconstructs without Git and only reviewed digests resolve", () =>
   expect(JSON.parse(isolated.stdout.toString()).current).toBe(executionSource);
   const table = JSON.parse(readFileSync("apps/backend/executionIdentity/executionTransitions.json", "utf8"));
   const pin = JSON.parse(readFileSync("apps/backend/executionIdentity/transitionPin.json", "utf8"));
-  expect(table.entries.length).toBe(32);
+  expect(table.entries.length).toBe(33);
   expect(table.entries.find((row: { source: string }) => row.source === "02c54db8f4bb73b5e340ae79dbfd6ece39c52360ab776ac285988e33e92e8240"))
     .toMatchObject({ commit: "3837b94eb9a388be402bde3a0ca7fac61e667942", algorithm: "analysis-boundary/1", target: executionSource });
+  expect(table.entries.find((row: { source: string }) => row.source === "eb55b982fb58025a377481e44ddfc77ef0beb75771ea6c9d719d46e0208f51ef"))
+    .toMatchObject({ commit: "a77220eb8409b38186bddc38576e1adf45cb460a", algorithm: "analysis-boundary/1", target: executionSource });
   for (const row of table.entries) expect(compatibleReviewedSource(row.source, executionSource)).toBe(true);
   expect(compatibleReviewedSource("dcf73dace76edc0afead6158b34785f511ba6b21fd34ce5490d11fe78e20f4ad", executionSource)).toBe(true);
   expect(compatibleReviewedSource("f".repeat(64), executionSource)).toBe(false);

@@ -90,3 +90,5 @@ Syntax/import review refreshes exact source hashes with existing permissions; it
 
 The frozen `analysis-boundary/1` reconstruction adds the pre-stage-0 loading-analysis contract to the earlier launch descriptor, preserving its exact source identity (`scripts/historical-analysis-descriptor.ts:5`). Backend image context and copy steps include both new source directories (`.dockerignore:121`; `apps/backend/Dockerfile:34`). Changed UI fingerprints are refreshed as UNREVIEWED, with no inherited browser or physics eligibility.
 
+
+The merge preparation rebases stage 0 onto reviewed local main `7b02e3e67e6eec4403a467eedbfe85c39f6e1a58`. The regeneration guard compares permitted stage-0 edits with that exact integration base; the original `3837b94` replay baseline is retained independently (`scripts/stage0-identity.ts:11`). The accepted pre-rebase stage-0 source is also archived and mapped, yielding 33 historical transitions; regeneration can reuse that archive without the old commit being reachable (`scripts/stage0-identity.ts:48`; `scripts/tests/execution-identity.test.ts:77`).

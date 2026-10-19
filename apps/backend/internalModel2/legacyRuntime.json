@@ -1187,7 +1187,7 @@
     },
     {
       "path": "bun.lock",
-      "hash": "53271ade285d16a18d400a60088b06ba357c8f8f089ea2e95fcda887752af6a3"
+      "hash": "71c05de0302998913bf22461502c80812d90d317dc51f908f17623e873013855"
     },
     {
       "path": "docs/reality/m2i-ec2-source.json",
@@ -2067,7 +2067,7 @@
     },
     {
       "path": "scripts/tests/execution-identity.test.ts",
-      "hash": "d93d4cf5b1437b0bdcdc262955af6e33aef4fb68928e381860b1ad33464908c3"
+      "hash": "6f7849728843077fd2801cc93422ccd5d733c27eb8107e831d96b7951658a852"
     },
     {
       "path": "scripts/tests/fixtures/execution-launch-probe.ts",
