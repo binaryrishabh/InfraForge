@@ -1,3 +1,4 @@
+import { requireCapability } from "../capabilities/policy";
 import { randomUUID } from "node:crypto";
 import { authoringGroups } from "@infraforge/contracts/internal-model2";
 import { LESSON_VERSION } from "@infraforge/contracts/internal-lessons";
@@ -34,6 +35,12 @@ export async function lessonDesigns(owner: string) {
 export async function createLessonDesign(owner: string) {
   // One explicit, idempotent new design per owner. Never rewrite a saved layout.
   const hex = contentHash(`m2m-design/1:${owner}`), id = `${hex.slice(0,8)}-${hex.slice(8,12)}-4${hex.slice(13,16)}-a${hex.slice(17,20)}-${hex.slice(20,32)}`;
+  const existing = (await internalDatabase.query('SELECT "ownerId",layout FROM "Infrastructure" WHERE id=$1', [id])).rows[0];
+  if (existing) {
+    if (existing.ownerId !== owner || contentHash(existing.layout) !== contentHash(lessonLayout)) throw new ConflictError("The lesson design has changed. Select a supported saved design.");
+    return id;
+  }
+  requireCapability(owner, { capability: "design.persist", operation: "create", countDelta: 1 });
   await internalDatabase.query(`INSERT INTO "Infrastructure" (id,"userId","ownerId",name,layout,"updatedAt")
     VALUES ($1,$2,$2,'Object restart lesson',$3,now()) ON CONFLICT (id) DO NOTHING`, [id, owner, lessonLayout]);
   const row = (await internalDatabase.query('SELECT "ownerId",layout FROM "Infrastructure" WHERE id=$1', [id])).rows[0];

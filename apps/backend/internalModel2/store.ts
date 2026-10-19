@@ -1,3 +1,4 @@
+import { requireCapability } from "../capabilities/policy";
 import { Pool } from "pg";
 import { randomUUID } from "node:crypto";
 import type { z } from "zod";
@@ -6,7 +7,7 @@ import { ConflictError, NotFoundError, ValidationError } from "../utils/errors";
 import { admissionSchema, compileEnvelope } from "./envelope";
 import { contentHash } from "./identity";
 import { INTERNAL_LIMITS as limits } from "./budgets";
-import { boundedProduct } from "@infraforge/simulation/internal-product";
+import { boundedProduct, requireKnown } from "@infraforge/simulation/internal-product";
 import { jsonBytes } from "./budgets";
 import type { ExecutionEnvelope } from "./envelope";
 import type { LessonPolicy } from "./lessonPolicy";
@@ -37,6 +38,9 @@ export async function admit(owner: string, request: z.infer<typeof admissionSche
     if (design.challengeId) throw new ValidationError("Published challenge workspaces are excluded from internal Model-2 admission");
     if (design.updatedAt.toISOString() !== request.expectedDesignUpdatedAt) throw new ConflictError("Saved design changed; review it before creating a new internal run");
     const id = randomUUID(), envelope = compileEnvelope(id, owner, design.layout, design.updatedAt, request);
+    const traces = envelope.compiled.input.arrivals.filter(a => a.kind === "trace");
+    if (traces.length) requireCapability(owner, { capability: "load.recorded.accept", bytes: Buffer.byteLength(JSON.stringify(traces), "utf8"), rows: traces.reduce((n, a) => n + (a.kind === "trace" ? a.trace.rows.length : 0), 0), durationSeconds: requireKnown(envelope.contract.horizon, "us") / 1_000_000, scale: 1 });
+    requireCapability(owner, { capability: "run.start", purpose: lesson ? "learner" : "operator", engine: "2", profile: envelope.contract.version, durationSeconds: requireKnown(envelope.contract.horizon, "us") / 1_000_000 });
     const row = (await client.query<InternalRunRow>(`INSERT INTO "InternalModel2Run" (id,"ownerId","infrastructureId","idempotencyKey","requestHash",input,"inputHash")
       VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *`, [id, owner, request.infrastructureId, request.idempotencyKey, requestHash, envelope, envelope.fingerprint])).rows[0]!;
     if (lesson) await client.query('INSERT INTO "InternalModel2LessonRun" ("runId",policy) VALUES ($1,$2)', [id, lesson(envelope)]);

@@ -1,3 +1,4 @@
+import { executionAllowance } from "../capabilities/policy";
 import { prisma } from "../lib/prisma";
 import { publishSimulationSnapshot } from "../infra/pubsub";
 import { createInitialState } from "@infraforge/simulation/engine";
@@ -32,6 +33,7 @@ async function initialize(deploymentId: string) {
   if (!deployment || deployment.status !== "running" || !deployment.ownerId) return false;
   const input = readRunInputs(deployment.runInputs);
   assertSimulationContext(input);
+  const allowance = executionAllowance(deployment.autoStopAtSimulatedSeconds ?? deployment.evaluationStopAtSimulatedSeconds);
   const state = createInitialState(deploymentId, input.resources, input.connectionLines, input.workloadProfile, engineSeed(input.seed));
   // A recorded plan that cannot be read is never guessed at: the fault is not scheduled and the attempt is not judged.
   const plan = deployment.challengeExperiment == null ? null : readRecordedExperiment(deployment.challengeExperiment);
@@ -42,7 +44,7 @@ async function initialize(deploymentId: string) {
     lastCheckpointAt: Date.now(), accumulatedCostUsd: 0,
     topology: { resources: input.resources, connectionLines: input.connectionLines }, topologyRevision: 0,
     actions: new Map(), acknowledge: null, metricsComputedAt: null, metricsTopologyRevision: 0,
-    autoStopAtSimulatedSeconds: deployment.autoStopAtSimulatedSeconds ?? deployment.evaluationStopAtSimulatedSeconds,
+    autoStopAtSimulatedSeconds: allowance.durationSeconds,
     stopTrigger: deployment.evaluationStopAtSimulatedSeconds != null ? "challenge-evaluation" : "matched-stop", finishMatchedStop: null,
     experiment: plan ? { plan, phase: "scheduled" } : null,
     evidence: deployment.challengeId ? createEvidenceBuffer(plan, deployment.evaluationStopAtSimulatedSeconds) : null };

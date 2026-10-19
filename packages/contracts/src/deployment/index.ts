@@ -6,3 +6,4 @@ export * from "./DeploymentStageStatus.enum";
 export * from "./DeploymentStatus.enum";
 export type * from "./DeploymentTimeline.interface";
 export * from "./DeploymentTimelineEventNames.enum";
+export type * from "./CapabilityAvailability.interface";

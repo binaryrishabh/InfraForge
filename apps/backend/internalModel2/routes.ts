@@ -1,3 +1,5 @@
+import { model2RunRecord } from "../runRecords/adapters";
+import { requireCapability } from "../capabilities/policy";
 import { Router, json } from "express";
 import { z } from "zod";
 import { NotFoundError, ValidationError } from "../utils/errors";
@@ -52,9 +54,16 @@ internalModel2Router.get("/runs/:id/report", async (req, res) => {
   const row = await ownedRun(String(req.params.id), res.locals.userId), report = internalReport(row);
   const record = await lessonRecord(row.id);
   if (req.query.format === "html") {
+    requireCapability(res.locals.userId, { capability: "artifact.export", artifactId: row.id, format: "html", scope: "run" });
     res.set("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; frame-ancestors 'none'");
     res.type("html").send(reportHtml(report));
   } else res.json({ success: true, report: record ? { ...report, lesson: lessonSummary(row, record.policy, record.receipt) } : report });
+});
+internalModel2Router.get("/runs/:id/record", async (req, res) => {
+  const row = await ownedRun(String(req.params.id), res.locals.userId);
+  const lesson = await lessonRecord(row.id);
+  const profile = lesson ? readLessonPolicy(lesson.policy, row.inputHash).schema : undefined;
+  res.json({ success: true, record: model2RunRecord(row, profile) });
 });
 internalModel2Router.get("/runs/:id/input", async (req, res) => { const row = await ownedRun(String(req.params.id), res.locals.userId); res.json({ success: true, input: row.input, inputHash: row.inputHash }); });
 internalModel2Router.get("/runs/:id/replay", async (req, res) => {

@@ -1,3 +1,4 @@
+import { model1RunRecord } from "../runRecords/adapters";
 import { Router } from "express";
 import { z } from "zod";
 import { prisma } from "../lib/prisma";
@@ -89,7 +90,7 @@ reportRouter.get("/history", async (req, res) => {
     nextCursor: rows.length > limit ? rows[limit - 1]!.id : null });
 });
 
-reportRouter.get("/:deploymentId/report", async (req, res) => {
+reportRouter.get(["/:deploymentId/report", "/:deploymentId/record"], async (req, res) => {
   const parsed = z.uuid().safeParse(req.params.deploymentId);
   if (!parsed.success) throw new ValidationError("A valid deployment ID is required.");
   const report = await prisma.$transaction(async (tx) => {
@@ -97,7 +98,8 @@ reportRouter.get("/:deploymentId/report", async (req, res) => {
       select: { ...selection, evidenceSamples: evidenceSelection, actions: { orderBy: { sequence: "desc" }, take: 501 } } });
     if (!row) throw new NotFoundError("Run not found");
     const durableChaosCount = await tx.runAction.count({ where: { deploymentId: row.id, kind: "chaos" } });
-    return buildRunReport({ ...row, actionCount: row._count.actions, durableChaosCount });
+    const stored = { ...row, actionCount: row._count.actions, durableChaosCount };
+    return req.path.endsWith("/record") ? model1RunRecord(stored) : buildRunReport(stored);
   }, { isolationLevel: "RepeatableRead" });
-  res.json({ success: true, report });
+  res.json(req.path.endsWith("/record") ? { success: true, record: report } : { success: true, report });
 });

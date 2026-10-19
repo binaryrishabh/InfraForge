@@ -1,3 +1,4 @@
+import { useCapabilityAvailability } from "@/api/capabilities.api";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { Undo2, Redo2, Save, Play, Lock } from "lucide-react";
@@ -20,6 +21,7 @@ async function save() {
 /* The designer's single bar: where you are, what this design is, its save state,
 history, and the one primary action (run, or start a challenge attempt). */
 export function WorkspaceBar({ challengeTitle }: { challengeTitle: string | null }) {
+  const availability = useCapabilityAvailability();
   const canUndo = useCanvasStore((s) => s.undoStack.length > 0);
   const canRedo = useCanvasStore((s) => s.redoStack.length > 0);
   const saved = useCanvasStore((s) => s.currentLayoutSaved);
@@ -41,8 +43,8 @@ export function WorkspaceBar({ challengeTitle }: { challengeTitle: string | null
         <IconButton label="Undo (Ctrl+Z)" icon={<Undo2 size={16} />} onClick={undo} disabled={!canUndo || busy} className="max-sm:hidden" />
         <IconButton label="Redo (Ctrl+Shift+Z)" icon={<Redo2 size={16} />} onClick={redo} disabled={!canRedo || busy} className="max-sm:hidden" />
         <Button variant="secondary" size="sm" className="max-sm:hidden" icon={<Save size={14} aria-hidden="true" />}
-          onClick={() => void save()} disabled={busy || empty || (hasId && saved)}>{hasId && saved ? "Saved" : "Save"}</Button>
-        <Button variant="primary" size="sm" onClick={requestRun} disabled={busy || empty} aria-label={challenge ? "Predict and run" : undefined}
+          onClick={() => void save()} title={availability?.save.reason} disabled={busy || empty || availability?.save.allowed === false || (hasId && saved)}>{hasId && saved ? "Saved" : "Save"}</Button>
+        <Button variant="primary" size="sm" onClick={requestRun} title={availability?.run.reason} disabled={busy || empty || availability?.run.allowed === false} aria-label={challenge ? "Predict and run" : undefined}
           icon={challenge ? <Lock size={14} aria-hidden="true" /> : <Play size={14} aria-hidden="true" />}>
           {challenge ? <><span className="hidden sm:inline">Predict and run</span><span className="sm:hidden">Run</span></> : "Run"}
         </Button>

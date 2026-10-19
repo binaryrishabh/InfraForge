@@ -1,3 +1,4 @@
+import { requireCapability } from "../capabilities/policy";
 import { Router } from "express";
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
@@ -127,6 +128,7 @@ challengeRouter.post("/:id/workspace", async (req, res) => {
     if (!copied.success) throw new ValidationError("That earlier workspace's design cannot be read, so it cannot be copied.");
     layout = copied.data;
   }
+  requireCapability(ownerId, { capability: "design.persist", operation: "create", countDelta: 1 });
   const design = await prisma.infrastructure.create({ data: { name: definition.title, userId: ownerId, ownerId,
     challengeId: definition.id, challengeVersion: definition.version, layout: storedJson(layout) }, select: { id: true } });
   res.status(201).json({ success: true, designId: design.id, created: true });
@@ -184,6 +186,7 @@ challengeRouter.post("/:id/attempts", async (req, res) => {
     }
     const prediction = readPrediction(body.data.prediction, definition, runInputs.resources.map((r) => r.type));
     const experiment = recordedExperiment(definition);
+    requireCapability(ownerId, { capability: "run.start", purpose: "learner", engine: "1", profile: runInputs.simulationModelVersion, durationSeconds: definition.evaluationSeconds });
     const created = await tx.deployment.create({ data: { id: randomUUID(), infrastructureId: design.id, ownerId, runName: design.name,
       resourceCount: runInputs.resources.length, workloadProfile: runInputs.workloadProfile, seed: runInputs.seed, runInputs,
       liveTopology: { resources: runInputs.resources, connectionLines: runInputs.connectionLines },

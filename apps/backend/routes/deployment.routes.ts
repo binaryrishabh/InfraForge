@@ -1,3 +1,4 @@
+import { authorizeCapability, requireCapability } from "../capabilities/policy";
 import { Router } from "express";
 import { randomUUID } from "node:crypto";
 import { prisma } from "../lib/prisma";
@@ -22,6 +23,7 @@ deploymentRouter.post("/", async (req, res) => {
     const infrastructure = await tx.infrastructure.findUnique({ where: { id: infrastructureId, ownerId: res.locals.userId } });
     if (!infrastructure) throw new NotFoundError("Infrastructure not found");
     const runInputs = captureRunInputs(infrastructure.layout, workloadProfile);
+    requireCapability(infrastructure.ownerId!, { capability: "run.start", purpose: "engineer", engine: "1", profile: runInputs.simulationModelVersion, durationSeconds: null });
     const run = await tx.deployment.create({ data: { id: randomUUID(), infrastructureId,
       ownerId: infrastructure.ownerId, runName: infrastructure.name,
       resourceCount: runInputs.resources.length, workloadProfile: runInputs.workloadProfile,
@@ -31,6 +33,15 @@ deploymentRouter.post("/", async (req, res) => {
     return run;
   });
   res.status(201).json({ success: true, message: "Deployment created", createdDeployment });
+});
+
+deploymentRouter.get("/capabilities", (_req, res) => {
+  const subject = { ownerId: res.locals.userId };
+  res.json({ success: true, availability: {
+    run: authorizeCapability(subject, { capability: "run.start", purpose: "engineer", engine: "1", profile: null, durationSeconds: null }),
+    save: authorizeCapability(subject, { capability: "design.persist", operation: "create", countDelta: 1 }),
+    export: authorizeCapability(subject, { capability: "artifact.export", artifactId: "availability", format: "html", scope: "run" }),
+  } });
 });
 
 deploymentRouter.get("/live", async (_req, res) => {

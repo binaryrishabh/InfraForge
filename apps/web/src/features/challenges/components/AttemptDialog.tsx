@@ -1,3 +1,4 @@
+import { useCapabilityAvailability } from "@/api/capabilities.api";
 import { useState, type FormEvent } from "react";
 import { Lock } from "lucide-react";
 import { toast } from "sonner";
@@ -40,7 +41,9 @@ export function PredictionQuestionField({ question, index, value, onChange, desi
 changed afterwards; they are compared with the recorded run but never affect
 whether the requirements were met. */
 export function AttemptDialog({ brief, preflight, open, onOpenChange }: { brief: ChallengeBrief; preflight: ChallengePreflight | null; open: boolean; onOpenChange: (open: boolean) => void }) {
+  const availability = useCapabilityAvailability();
   const resources = useCanvasStore((s) => s.resources);
+  const capabilityReason = availability?.run.allowed === false ? availability.run.reason : null;
   const saved = useCanvasStore((s) => s.currentLayoutSaved);
   const designTypes = [...new Set(resources.map((r) => r.type))];
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -83,9 +86,9 @@ export function AttemptDialog({ brief, preflight, open, onOpenChange }: { brief:
       description="Commit to what you expect before the simulator runs. Your answers are locked when the attempt starts."
       footer={<>
         <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={busy}>Keep designing</Button>
-        <Button type="submit" form="attempt-form" variant="primary" loading={busy} disabled={!answered || !valid || !reviewedReady} icon={<Lock size={14} aria-hidden="true" />}>Lock prediction and run</Button>
+        <Button type="submit" form="attempt-form" variant="primary" loading={busy} disabled={!answered || !valid || !reviewedReady || availability?.run.allowed === false} icon={<Lock size={14} aria-hidden="true" />}>Lock prediction and run</Button>
       </>}>
-      <form id="attempt-form" onSubmit={submit} className="flex flex-col gap-5">
+      <>{capabilityReason && <Notice tone="warn">{capabilityReason}</Notice>}<form id="attempt-form" onSubmit={submit} className="flex flex-col gap-5">
         {learning && <ImprovementReview context={learning} review={reviewed.review} error={reviewed.error} acceptedHash={acceptedHash} onAccept={setAcceptedHash} />}
         <section aria-labelledby="attempt-conditions" className="rounded-md bg-surface px-4 py-3">
           <h3 id="attempt-conditions" className="flex items-center gap-1.5 text-[13px] font-semibold text-ink"><Lock size={13} aria-hidden="true" /> Fixed for every attempt</h3>
@@ -115,7 +118,7 @@ export function AttemptDialog({ brief, preflight, open, onOpenChange }: { brief:
         </Field>
         {!saved && <p className="text-xs text-ink-3">Unsaved canvas changes are saved to this challenge design first.</p>}
         {error && <Notice tone="fail" role="alert">{error}</Notice>}
-      </form>
+      </form></>
     </Dialog>
   );
 }

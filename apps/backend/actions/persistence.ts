@@ -1,3 +1,4 @@
+import { requireCapability } from "../capabilities/policy";
 import type { ActionRequest } from "@infraforge/contracts/actions";
 import { prisma } from "../lib/prisma";
 import { storedJson } from "../utils/json";
@@ -38,6 +39,7 @@ export async function requestRunAction(deploymentId: string, ownerId: string, in
     }
     const topology = LayoutSchema.parse(run.liveTopology);
     validateActionTarget(request, topology, run.runInputs);
+    if (request.kind !== "teardown") requireCapability(ownerId, { capability: "run.control", runId: deploymentId, control: request.kind });
     if (request.kind === "topology") {
       if (request.parameters.expectedRevision !== run.topologyRevision) throw new ConflictError("Live topology changed. Re-enter the environment before editing again.");
       request = { ...request, parameters: { ...request.parameters, acceptedRevision: run.topologyRevision + 1 } };

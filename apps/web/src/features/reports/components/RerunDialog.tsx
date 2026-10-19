@@ -1,3 +1,4 @@
+import { useCapabilityAvailability } from "@/api/capabilities.api";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { RotateCw } from "lucide-react";
@@ -51,6 +52,7 @@ export function RerunChoices({ options, mode, onMode, matched, onMatched }: {
 }
 
 function Form({ id, options, close, onBusy }: { id: string; options: RerunOptions; close: () => void; onBusy: (value: boolean) => void }) {
+  const availability = useCapabilityAvailability();
   const [mode, setMode] = useState<RerunMode>(options.exact.available ? "exact" : "current-design");
   const [matched, setMatched] = useState(options.matchedStop.defaultEnabled);
   const [busy, setBusy] = useState(false);
@@ -77,7 +79,7 @@ function Form({ id, options, close, onBusy }: { id: string; options: RerunOption
       } catch { setError("The rerun was not created. The source or design may have changed, or your session ended. Close and reopen to refresh."); }
       finally { if (mounted.current) { setBusy(false); onBusy(false); } }
     }}>
-      <fieldset disabled={busy}><RerunChoices options={options} mode={mode} onMode={setMode} matched={matched} onMatched={setMatched} /></fieldset>
+      <fieldset disabled={busy || availability?.run.allowed === false}><>{availability?.run.allowed === false && <Notice tone="warn">{availability.run.reason}</Notice>}<RerunChoices options={options} mode={mode} onMode={setMode} matched={matched} onMatched={setMatched} /></></fieldset>
       {error && <Notice tone="fail" role="alert" className="mt-4">{error}</Notice>}
       <div className="mt-5 flex flex-wrap justify-end gap-2">
         <Button variant="ghost" onClick={close} disabled={busy}>Cancel</Button>

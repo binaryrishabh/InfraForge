@@ -1,3 +1,4 @@
+import { requireCapability } from "../capabilities/policy";
 import { Router } from "express";
 import { z } from "zod";
 import { prisma } from "../lib/prisma";
@@ -56,6 +57,7 @@ rerunRouter.post("/:id/reruns", async (req, res) => {
     const input = readRunInputs(source.runInputs);
     const runInputs = mode === "exact" ? input : currentDesignInput(input, design!.layout);
     if (mode === "current-design" && body.data.expectedInputHash !== rerunInputHash(runInputs)) throw new ConflictError("The saved design changed since preview. Refresh the preview before running.");
+    requireCapability(res.locals.userId, { capability: "run.start", purpose: "engineer", engine: "1", profile: runInputs.version === 2 ? runInputs.simulationModelVersion : null, durationSeconds: body.data.matchedStop ? options.matchedStop.target : null });
     const created = await tx.deployment.create({ data: { infrastructureId: source.infrastructureId, ownerId: res.locals.userId,
       runName: source.runName, sourceRunId: source.id, rerunMode: mode,
       autoStopAtSimulatedSeconds: body.data.matchedStop ? options.matchedStop.target : null,

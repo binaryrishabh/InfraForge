@@ -1,3 +1,4 @@
+import { requireCapability } from "../capabilities/policy";
 import { Router } from "express";
 import { z } from "zod";
 import { prisma } from "../lib/prisma";
@@ -25,6 +26,7 @@ improvementRouter.post("/:id/improvement-workspace", async (req, res) => {
     const source = await tx.deployment.findFirst({ where: { id: body.data.sourceRunId, ownerId } });
     if (!source) throw new NotFoundError("Source attempt not found");
     const { definition, input } = improvementSource(source, String(req.params.id));
+    requireCapability(ownerId, { capability: "design.persist", operation: "create", countDelta: 1 });
     return tx.infrastructure.create({ data: { ownerId, userId: ownerId, name: definition.title,
       challengeId: definition.id, challengeVersion: definition.version,
       layout: storedJson({ resources: input.resources, connectionLines: input.connectionLines, layoutVersion: 3 }) } });

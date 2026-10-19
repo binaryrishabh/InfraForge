@@ -1,3 +1,4 @@
+import { requireCapability } from "../capabilities/policy";
 import { Router } from "express";
 import { prisma } from "../lib/prisma";
 import { ValidationError, NotFoundError } from "../utils/errors";
@@ -14,6 +15,7 @@ infrastructureRouter.post("/", async (req, res) => {
     throw new ValidationError(errorMessages);
   }
   const { name, layout } = infrastructureResult.data;
+  requireCapability(res.locals.userId, { capability: "design.persist", operation: "create", countDelta: 1 });
   const createdInfrastructure = await prisma.infrastructure.create({
     data: {
       name,
@@ -76,6 +78,8 @@ infrastructureRouter.put("/:infrastructureId", async (req, res) => {
     const errorMessages = infrastructureResult.error.issues.map(err => err.message).join(", ");
     throw new ValidationError(errorMessages);
   }
+  if (!await prisma.infrastructure.findUnique({ where: { id: infrastructureId, ownerId: res.locals.userId } })) throw new NotFoundError("Infrastructure not found");
+  requireCapability(res.locals.userId, { capability: "design.persist", operation: "update", countDelta: 0 });
   const updatedInfrastructure = await prisma.infrastructure.update({
     where: { id: infrastructureId, ownerId: res.locals.userId },
     data: infrastructureResult.data
