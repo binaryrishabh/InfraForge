@@ -62,13 +62,14 @@ export interface FirstStackPoolPolicy {
   responseTimeoutUs: number; idleTimeoutUs: number | null;
   remoteCancellation: "detach" | "request-cancellation";
 }
-export interface FirstStackSidecarV2 extends Omit<FirstStackSidecar, "schema" | "compiler" | "links" | "paths" | "caller" | "nodes" | "balancer"> {
+export interface FirstStackSidecarV2 extends Omit<FirstStackSidecar, "schema" | "compiler" | "links" | "paths" | "caller" | "nodes" | "balancer" | "workload"> {
   schema: "infraforge-first-stack-sidecar/2"; compiler: "first-stack-compiler/2";
   links: Array<FirstStackSidecar["links"][number] & { from: string; to: string }>;
   paths: Array<FirstStackSidecar["paths"][number] & { pool: FirstStackPoolPolicy }>;
   caller: FirstStackSidecar["caller"] & { pool: FirstStackPoolPolicy };
   nodes: Array<FirstStackSidecar["nodes"][number] & { alive: boolean; ready: boolean }>;
   balancer: FirstStackSidecar["balancer"] & { initial: "eligible" | "ineligible"; healthTimeoutUs: number; healthKeys: string[] };
+  workload: { scheduleHash: string; parametersHash: string; resolvedIdentity: string; executedScheduleHash: string } | null;
 }
 export type FirstStackSemantic = FirstStackSidecar | FirstStackSidecarV2;
 export interface RecordedScheduleHeader {

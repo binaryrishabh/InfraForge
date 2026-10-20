@@ -6,7 +6,7 @@ import { prepareFirstStackExecution } from "../../apps/backend/firstStack/execut
 export async function firstStackCompileFixture(apps = 2, options: { shared?: boolean; write?: boolean; range?: boolean } = {}) {
   const fixture = firstStackFixture(apps), old = fixture.sidecar;
   const pool = { reuse: true, establishUs: 2, acquireTimeoutUs: 90000, connectTimeoutUs: 90000, responseTimeoutUs: 90000, idleTimeoutUs: null, remoteCancellation: "detach" as const };
-  const sidecar: FirstStackSidecarV2 = { ...old, schema: "infraforge-first-stack-sidecar/2", compiler: "first-stack-compiler/2",
+  const sidecar: FirstStackSidecarV2 = { ...old, schema: "infraforge-first-stack-sidecar/2", compiler: "first-stack-compiler/2", workload: null,
     nodes: old.nodes.map(n => ({ ...n, host: options.shared && n.owner === "compute" ? "shared-apps" : n.host,
       alive: true, ready: true, memoryBytes: null, reservationBytes: n.owner === "load-balancer" ? 0 : 100,
       workers: 32, queue: 64 })),
@@ -33,7 +33,7 @@ export async function firstStackCompileFixture(apps = 2, options: { shared?: boo
   async function* stream() { yield new TextEncoder().encode([header, ...rows].map(x => JSON.stringify(x)).join("\n") + "\n"); }
   const schedule = await resolveWorkload(stream(), { owner: "qualification", sidecar,
     parameters: { schema: "infraforge-first-stack-parameters/1", rows: rows.map(r => ({ id: r.id, plan: options.write ? "write-plan" : "read-plan", keys: options.range ? ["hot", "cold"] : ["hot"] })) } });
-  sidecar.workload = { scheduleHash: schedule.scheduleHash, parametersHash: schedule.parametersHash };
+  sidecar.workload = { scheduleHash: schedule.scheduleHash, parametersHash: schedule.parametersHash, resolvedIdentity: schedule.identity, executedScheduleHash: schedule.executedScheduleHash };
   const policy = { seed: "first-stack-slice04", horizonUs: 90000, sampleIntervalUs: 1000, maxEvents: 100000, maxSamples: 100, maxRawResults: 24 };
   return { ...fixture, sidecar, schedule, policy, prepare: () => prepareFirstStackExecution("qualification", fixture.layout, sidecar, schedule, policy) };
 }

@@ -20,10 +20,11 @@ export function createFirstStackRuntime(sidecar: FirstStackSidecarV2, schedule: 
           if (target === lb || apps.has(target)) {
             const identity: unknown = JSON.parse(work.rootId);
             if (!Array.isArray(identity)) refuse("work.rootId", "Malformed identified work.");
-            if (identity[0] === "root") {
+            if (identity[0] === "root" && identity[1] === "recorded") {
               const row = rows.get(identity[2]);
               if (!row || row.operation !== work.operation) refuse("work.rootId", "No exact recorded row/operation binding; key fallback is forbidden.");
-              work.message = { request: { kind: "first-stack-keyed/2", plan: row.plan, keys: [...row.keys], ...(row.keys.length === 1 ? { key: row.keys[0] } : {}) } };
+              if (target === lb) work.message = { request: { kind: "first-stack-keyed/2", plan: row.plan, keys: [...row.keys], ...(row.keys.length === 1 ? { key: row.keys[0] } : {}) } };
+              else if (!work.message) refuse("application", "Recorded input was lost between entry and application; child transport must preserve the exact message.");
             } else if (identity[0] === "health" && work.operation === sidecar.balancer.healthOperation) {
               work.message = { request: { kind: "first-stack-keyed/2", keys: [...sidecar.balancer.healthKeys],
                 ...(sidecar.balancer.healthKeys.length === 1 ? { key: sidecar.balancer.healthKeys[0] } : {}) } };

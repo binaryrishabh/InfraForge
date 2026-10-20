@@ -94,7 +94,12 @@ test("tampered recording, stale demand, unpinned workload and unsupported inputs
   const variable = await firstStackCompileFixture(); variable.schedule.rows[0]!.responseBytes++;
   variable.schedule.executedScheduleHash = hash({ header: variable.schedule.header, rows: variable.schedule.rows });
   const { identity: _identity, ...body } = variable.schedule; variable.schedule.identity = hash(body);
+  expect(() => variable.prepare()).toThrow("immutable reviewed workload");
+  variable.sidecar.workload!.resolvedIdentity = variable.schedule.identity;
+  variable.sidecar.workload!.executedScheduleHash = variable.schedule.executedScheduleHash;
   expect(() => variable.prepare()).toThrow("fixed bytes per operation");
+  const changedLock = (await firstStackCompileFixture()).prepare(); changedLock.lock.compiledHash = "0".repeat(64);
+  expect(() => runFirstStackQualification(changedLock)).toThrow("Reviewed inputs changed");
 });
 
 test("hot-key writes share one DB lock owner across all apps", async () => {

@@ -62,6 +62,7 @@ export const sidecarV2Schema = sidecarSchema.extend({
   nodes: z.array(sidecarSchema.shape.nodes.element.extend({ alive: z.boolean(), ready: z.boolean() })).min(3).max(11),
   balancer: sidecarSchema.shape.balancer.extend({ initial: z.enum(["eligible", "ineligible"]),
     healthTimeoutUs: time.positive(), healthKeys: z.array(id).min(1).max(128) }),
+  workload: z.object({ scheduleHash: digest, parametersHash: digest, resolvedIdentity: digest, executedScheduleHash: digest }).strict().nullable(),
 });
 
 export function reviewSidecar(layout: unknown, candidate: unknown) {

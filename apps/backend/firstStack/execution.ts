@@ -23,8 +23,8 @@ const policySchema = z.object({ seed: id, horizonUs: time.positive(), sampleInte
   maxEvents: amount.positive().max(2_000_000), maxSamples: amount.positive().max(10_000), maxRawResults: amount.max(limits.rows) }).strict();
 function refuse(path: string, message: string): never { throw new FirstStackCompileRefusal([{ code: "FIRST_STACK_EXECUTION", path, message }]); }
 
-// Operator qualification tools call this trusted internal function. It is not
-// mounted on HTTP or dispatched by the worker; execution-host admission is later.
+// The operator-only compile preview and qualification tools share this boundary.
+// It validates inputs without creating a runtime; execution-host admission is later.
 export function prepareFirstStackExecution(owner: string, layout: unknown, candidate: unknown, recording: unknown, policy: unknown, capability = requireCapability) {
   capability(owner, { capability: "load.recorded.accept", bytes: limits.scheduleBytes, rows: limits.rows, durationSeconds: limits.durationUs / 1_000_000, scale: 1 });
   if (Buffer.byteLength(canonical({ candidate, recording, policy })) > limits.semanticBytes) refuse("input", "Reduce the semantic input below 16 MiB.");
@@ -41,6 +41,7 @@ export function prepareFirstStackExecution(owner: string, layout: unknown, candi
     operations: [...sidecar.operations].sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0), database: sidecar.database });
   if (profile !== schedule.profileHash || canonical(schedule.application) !== canonical(sidecar.application)) refuse("workload.profileHash", "Demand profile changed; resolve the recording against this exact reviewed revision.");
   if (!sidecar.workload || sidecar.workload.scheduleHash !== schedule.scheduleHash || sidecar.workload.parametersHash !== schedule.parametersHash) refuse("workload", "Pin both resolved schedule and parameter hashes in the reviewed V2 sidecar before compilation.");
+  if (sidecar.workload.resolvedIdentity !== schedule.identity || sidecar.workload.executedScheduleHash !== schedule.executedScheduleHash) refuse("workload.resolvedIdentity", "Executed content does not match the immutable reviewed workload; resolve and review an explicit sidecar copy.");
   const seen = new Set<string>();
   let previous: ResolvedSchedule["rows"][number] | undefined;
   for (const row of schedule.rows) {
@@ -63,7 +64,10 @@ export function runFirstStackQualification(prepared: ReturnType<typeof prepareFi
   // Recompile to detect mutation between review and execution; no caller may
   // replace compiled resource/host inputs under an earlier lock.
   const compiled = compileFirstStack(prepared.sidecar, prepared.schedule, prepared.policy);
-  if (hash(compiled) !== prepared.compiledHash || hash(prepared.sidecar) !== prepared.lock.sidecarHash || prepared.schedule.identity !== prepared.lock.workloadIdentity || hash((({ identity: _identity, ...body }) => body)(prepared.schedule)) !== prepared.schedule.identity) refuse("lock", "Reviewed inputs changed; prepare a new immutable compile lock.");
+  const expectedLock = { schema: "infraforge-first-stack-compile-lock/2", compiler: prepared.sidecar.compiler, composition: compiled.revision,
+    designRevision: prepared.sidecar.designRevision, sidecarHash: hash(prepared.sidecar), workloadIdentity: prepared.schedule.identity,
+    executedScheduleHash: prepared.schedule.executedScheduleHash, profileHash: prepared.schedule.profileHash, compiledHash: hash(compiled) };
+  if (expectedLock.compiledHash !== prepared.compiledHash || hash(expectedLock) !== hash(prepared.lock) || hash((({ identity: _identity, ...body }) => body)(prepared.schedule)) !== prepared.schedule.identity) refuse("lock", "Reviewed inputs changed; prepare a new immutable compile lock.");
   const runtime = createFirstStackRuntime(prepared.sidecar, prepared.schedule, prepared.policy, causal);
   runtime.advanceTo(runtime.horizon);
   return { lock: prepared.lock, evidence: runtime.evidence() };
