@@ -2,16 +2,20 @@ import type { FirstStackSidecarV2, ResolvedSchedule } from "@infraforge/contract
 import { createStackComposition } from "../model2/composition/run";
 import { manifest } from "../model2/composition/registry";
 import type { CausalObserver } from "../model2/workload/causal";
+import { diagnosticJournal } from "./journal";
+import { FIRST_STACK_ENVELOPE } from "./bounds";
 import { compileFirstStack, refuse, type FirstStackExecutionPolicy } from "./compiler";
 
 // Internal in-process qualification path only. No product dispatcher or HTTP
 // executor uses this runner; public isolation/admission are separate stages.
 export function createFirstStackRuntime(sidecar: FirstStackSidecarV2, schedule: ResolvedSchedule, policy: FirstStackExecutionPolicy, causal?: CausalObserver) {
   const compiled = compileFirstStack(sidecar, schedule, policy);
+  const journal = diagnosticJournal();
+  const observer: CausalObserver = event => { journal.record(event); causal?.(event); };
   const rows = new Map(schedule.rows.map(r => [r.id, r]));
   const lb = sidecar.caller.entry, apps = new Set(sidecar.nodes.filter(n => n.owner === "compute").map(n => n.id));
   const db = sidecar.nodes.find(n => n.owner === "relational")!.id;
-  const runtime = createStackComposition(compiled.input, { ...compiled.composition, causal, plugins: [{
+  const runtime = createStackComposition(compiled.input, { ...compiled.composition, causal: observer, plugins: [{
     manifest: manifest("first-stack-recorded-input", "first-stack-recorded-input/2"),
     validate() { if (rows.size !== schedule.rows.length) refuse("rows", "Duplicate recorded row IDs."); },
     instantiate() {
@@ -37,8 +41,8 @@ export function createFirstStackRuntime(sidecar: FirstStackSidecarV2, schedule: 
       };
     },
   }] });
-  return { horizon: runtime.horizon, advanceTo: runtime.advanceTo, evidence() {
-    return { ...runtime.evidence(), firstStack: { compiler: sidecar.compiler, composition: compiled.revision,
+  return { horizon: runtime.horizon, advanceTo: runtime.advanceTo, advanceSlice: runtime.advanceSlice, journal, evidence() {
+    return { ...runtime.evidence(), firstStack: { envelope: FIRST_STACK_ENVELOPE.revision, compiler: sidecar.compiler, composition: compiled.revision,
       workload: schedule.identity, executedSchedule: schedule.executedScheduleHash, profile: schedule.profileHash,
       recordingOrigin: schedule.header.origin, demand: schedule.application,
       timing: "assumption-only", counting: "supported-logical", fullMemory: "Unknown", fullCost: "Unknown", activeEngine: "1" } };

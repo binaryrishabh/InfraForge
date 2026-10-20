@@ -72,7 +72,7 @@ export function createComputeRuntime(authored: ComputeInput, compose?: (kernel: 
       }
     },
   });
-  return { horizon: runtime.horizon, advanceTo: runtime.advanceTo,
+  return { horizon: runtime.horizon, advanceTo: runtime.advanceTo, advanceSlice: runtime.advanceSlice,
     evidence() { const e = runtime.evidence();
       const intervals = e.samples.slice(1).flatMap((sample, index) => sample.resources.flatMap((resource) => {
         const current = resource.compute?.cpu, previous = e.samples[index]!.resources.find((r) => r.id === resource.id)?.compute?.cpu;

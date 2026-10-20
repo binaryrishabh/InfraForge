@@ -2182,6 +2182,27 @@
       ]
     },
     {
+      "id": "FirstStackExecutionBounds",
+      "fields": [
+        "WorkloadInput.limits.maxGroups",
+        "WorkloadInput.limits.maxLiveCalls",
+        "WorkloadInput.limits.maxPendingEvents",
+        "WorkloadInput.limits.maxRawBytes",
+        "WorkloadInput.limits.maxRetainedSamples",
+        "WorkloadInput.limits.maxSampleBytes",
+        "WorkloadInput.limits.maxTraceBytes"
+      ],
+      "mechanism": "Optional finite first-stack pending/live-state and reducer/diagnostic retention budgets, deterministic event slices and byte-bounded captures.",
+      "model1": "unsupported",
+      "model2": "supported-logical",
+      "scope": "Internal qualification only. Aggregate terminal observations survive diagnostic omission; executor exhaustion preserves acknowledged prefixes without declaring modeled infrastructure failure. CPU/RSS/time observations are cooperative, not OS containment or laptop/server readiness. Public execute/replay and Model 2 activation remain unavailable.",
+      "sources": [
+        { "file": "packages/simulation/src/firstStack/bounds.ts", "anchor": "export const FIRST_STACK_ENVELOPE" },
+        { "file": "apps/backend/firstStack/boundedExecution.ts", "anchor": "export async function executeFirstStackBounded" },
+        { "file": "scripts/fixtures/first-stack-bounded-execution.test.ts", "anchor": "successful bounded execution has explicit completeness" }
+      ]
+    },
+    {
       "id": "FirstStackCompileTimingV2",
       "fields": [
         "FirstStackPoolPolicy.acquireTimeoutUs",

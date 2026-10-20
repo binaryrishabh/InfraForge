@@ -28,11 +28,11 @@ test("first stack source review binds new behavior and its acceptance tests inde
   const baseline = JSON.parse(readFileSync("docs/reality/first-stack-baseline.json", "utf8"));
   expect(lock.schema).toBe("infraforge-first-stack-source-review/1");
   expect(lock.baseline).toBe(baseline.source);
-  expect(lock.files).toHaveLength(18);
-  expect(lock.acceptance).toHaveLength(9);
+  expect(lock.files).toHaveLength(31);
+  expect(lock.acceptance).toHaveLength(13);
   for (const { path, hash } of [...lock.files, ...lock.acceptance]) expect(sourceHash(readFileSync(path, "utf8"))).toBe(hash);
 });
 
 test("first stack V2 retained proof reproduces independently of its observers", async () => {
-  expect(await verifyFirstStackCompileProof()).toEqual({ cases: 4, unchangedHostAndPeerFiles: 88, observerEqual: true, repeatBytesEqual: true });
+  expect(await verifyFirstStackCompileProof()).toEqual({ cases: 4, reconstructedOriginalHostFiles: 88, observerEqual: true, repeatBytesEqual: true });
 });

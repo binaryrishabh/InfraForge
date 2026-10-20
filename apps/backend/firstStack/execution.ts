@@ -1,7 +1,7 @@
 import { z } from "zod";
 import type { ResolvedSchedule } from "@infraforge/contracts/first-stack";
 import { firstStackLimits as limits } from "@infraforge/contracts/first-stack";
-import { compileFirstStack, createFirstStackRuntime, FirstStackCompileRefusal } from "@infraforge/simulation/internal-first-stack";
+import { compileFirstStack, createFirstStackRuntime, FirstStackCompileRefusal, boundedJson } from "@infraforge/simulation/internal-first-stack";
 import type { CausalObserver } from "@infraforge/simulation/internal-product";
 import { reviewSidecar, sourceSchema } from "./authoring";
 import { hash, canonical } from "./canonical";
@@ -27,7 +27,8 @@ function refuse(path: string, message: string): never { throw new FirstStackComp
 // It validates inputs without creating a runtime; execution-host admission is later.
 export function prepareFirstStackExecution(owner: string, layout: unknown, candidate: unknown, recording: unknown, policy: unknown, capability = requireCapability) {
   capability(owner, { capability: "load.recorded.accept", bytes: limits.scheduleBytes, rows: limits.rows, durationSeconds: limits.durationUs / 1_000_000, scale: 1 });
-  if (Buffer.byteLength(canonical({ candidate, recording, policy })) > limits.semanticBytes) refuse("input", "Reduce the semantic input below 16 MiB.");
+  try { boundedJson({ layout, candidate, recording, policy }, limits.semanticBytes); }
+  catch { refuse("input", "Reduce the complete semantic input below 16 MiB of finite JSON data."); }
   const review = reviewSidecar(layout, candidate);
   if (!review.ok) throw new FirstStackCompileRefusal(review.diagnostics);
   if (review.sidecar.schema !== "infraforge-first-stack-sidecar/2") refuse("schema", "V1 is review-only; create a reviewed V2 copy with explicit directed links, pool policy and readiness.");
@@ -60,7 +61,7 @@ export function prepareFirstStackExecution(owner: string, layout: unknown, candi
       executedScheduleHash: schedule.executedScheduleHash, profileHash: schedule.profileHash, compiledHash: hash(compiled) } };
 }
 
-export function runFirstStackQualification(prepared: ReturnType<typeof prepareFirstStackExecution>, causal?: CausalObserver) {
+export function instantiatePreparedFirstStack(prepared: ReturnType<typeof prepareFirstStackExecution>, causal?: CausalObserver) {
   // Recompile to detect mutation between review and execution; no caller may
   // replace compiled resource/host inputs under an earlier lock.
   const compiled = compileFirstStack(prepared.sidecar, prepared.schedule, prepared.policy);
@@ -68,7 +69,11 @@ export function runFirstStackQualification(prepared: ReturnType<typeof prepareFi
     designRevision: prepared.sidecar.designRevision, sidecarHash: hash(prepared.sidecar), workloadIdentity: prepared.schedule.identity,
     executedScheduleHash: prepared.schedule.executedScheduleHash, profileHash: prepared.schedule.profileHash, compiledHash: hash(compiled) };
   if (expectedLock.compiledHash !== prepared.compiledHash || hash(expectedLock) !== hash(prepared.lock) || hash((({ identity: _identity, ...body }) => body)(prepared.schedule)) !== prepared.schedule.identity) refuse("lock", "Reviewed inputs changed; prepare a new immutable compile lock.");
-  const runtime = createFirstStackRuntime(prepared.sidecar, prepared.schedule, prepared.policy, causal);
+  return createFirstStackRuntime(prepared.sidecar, prepared.schedule, prepared.policy, causal);
+}
+
+export function runFirstStackQualification(prepared: ReturnType<typeof prepareFirstStackExecution>, causal?: CausalObserver) {
+  const runtime = instantiatePreparedFirstStack(prepared, causal);
   runtime.advanceTo(runtime.horizon);
   return { lock: prepared.lock, evidence: runtime.evidence() };
 }

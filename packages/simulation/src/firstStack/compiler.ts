@@ -1,4 +1,4 @@
-import type { FirstStackDiagnostic, FirstStackSidecarV2, ResolvedSchedule } from "@infraforge/contracts/first-stack";
+import type { FirstStackSidecarV2, ResolvedSchedule } from "@infraforge/contracts/first-stack";
 import type { DataInput, TransactionPlan } from "../model2/data/contracts";
 import type { ComputeProfile, ComputeResource } from "../model2/compute/contracts";
 import type { PathConfig } from "../model2/network/contracts";
@@ -6,15 +6,11 @@ import type { StackComposition } from "../model2/composition/run";
 import type { RealityEntry } from "../reality/ledger";
 import type { Quantity, Unit } from "../reality/quantity";
 import { validateData } from "../model2/data/validate";
+import { FIRST_STACK_ENVELOPE as envelope, firstStackPreflight, refuse } from "./bounds";
 import { lexical } from "../model2/time";
 
 export const COMPOSITION_REVISION = "first-stack-composition/2";
-export class FirstStackCompileRefusal extends Error {
-  constructor(readonly diagnostics: FirstStackDiagnostic[]) { super(diagnostics.map(d => `${d.path}: ${d.message}`).join("; ")); }
-}
-export function refuse(path: string, message: string, code = "FIRST_STACK_COMPILE"): never {
-  throw new FirstStackCompileRefusal([{ code, path, message }]);
-}
+export { FirstStackCompileRefusal, refuse } from "./bounds";
 
 // Trusted typed boundary: backend review validates the complete V2 sidecar and
 // verifies workload identities before this compiler is called. No legacy cast.
@@ -30,6 +26,7 @@ export function compileFirstStack(sidecar: FirstStackSidecarV2, schedule: Resolv
   for (const n of nodes) if (n.memoryBytes !== null) refuse(`nodes.${n.id}.memoryBytes`, "Full process memory coverage is unavailable; keep this Unknown and supply the separate explicit host reservation.");
   if (schedule.header.durationUs > policy.horizonUs) refuse("horizonUs", "The execution horizon must cover the recorded offer duration.");
   if (policy.horizonUs > 300_000_000 || schedule.rows.length > 20_000 || policy.maxEvents > 2_000_000) refuse("policy", "Exceeds the internal first-stack software envelope; reduce horizon, rows or events.");
+  firstStackPreflight(sidecar, schedule, policy);
   const health = sidecar.operations.find(o => o.id === sidecar.balancer.healthOperation)!;
   const operations = [...sidecar.operations].sort((a, b) => lexical(a.id, b.id));
   if (!health || health.kind !== "health-read") refuse("balancer.healthOperation", "Supply a separately identified DB-backed health read.");
@@ -121,7 +118,9 @@ export function compileFirstStack(sidecar: FirstStackSidecarV2, schedule: Resolv
     endpoints: Object.fromEntries(nodes.map(n => [n.id, { alive: n.alive, ready: n.ready }])),
     faults: [], interventions: [], networkInterventions: [], dataInterventions: [],
     horizon: q("policy.horizon", policy.horizonUs, "us"), sampleInterval: q("policy.sample", policy.sampleIntervalUs, "us"),
-    limits: { maxEvents: policy.maxEvents, maxSamples: policy.maxSamples, maxRequests: Math.max(1, schedule.rows.length), maxRawResults: policy.maxRawResults, maxTraceRows: Math.max(1, schedule.rows.length) } };
+    limits: { maxEvents: policy.maxEvents, maxSamples: policy.maxSamples, maxRequests: Math.max(1, schedule.rows.length), maxRawResults: policy.maxRawResults, maxTraceRows: Math.max(1, schedule.rows.length),
+      maxPendingEvents: envelope.pendingEvents, maxLiveCalls: envelope.liveCalls, maxRetainedSamples: envelope.retainedSamples,
+      maxSampleBytes: envelope.sampleBytes, maxRawBytes: envelope.rawBytes, maxGroups: envelope.operations * 4, maxTraceBytes: envelope.rawBytes } };
   input.resources.sort((a, b) => lexical(a.id, b.id)); ledger.sort((a, b) => lexical(a.id, b.id));
   try { validateData(input); } catch (e) { refuse("stage1", `Stage 1 refused this composition: ${e instanceof Error ? e.message : String(e)}. Review the named demand, transport or budget field.`); }
   return { revision: COMPOSITION_REVISION, input, composition };

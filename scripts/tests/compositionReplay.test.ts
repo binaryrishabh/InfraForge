@@ -7,6 +7,6 @@ test("pinned m2b–m2h fixture evidence retains pre-registry SHA-256 hashes", ()
   expect(hashes).toEqual(compositionProofs());
 });
 
-test("independent mechanism leaves all 88 kernel, host and peer source hashes unchanged", () => {
+test("independent extension reconstructs its original 88 source hashes after reviewed host bounds", () => {
   expect(verifyCompositionHost()).toBe(88);
 });

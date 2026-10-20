@@ -65,6 +65,7 @@ test("every execution workspace dependency and imported backend source is pinned
   expect(() => changed({ "bun.lock": JSON.stringify(lock) })).toThrow("Unresolved");
   expect(() => changed({ "bun.lock": JSON.stringify({ ...lock, patchedDependencies: {} }) })).toThrow("Unreviewed");
 }, 60000);
+// History reconstruction includes the retained source archive and a clean child-process verification.
 test("history reconstructs without Git and only reviewed digests resolve", () => {
   expect(checkTransitions().current).toBe(executionSource);
   const isolated = Bun.spawnSync([process.execPath, "--no-env-file", `${repositoryRoot}/scripts/execution-identity.ts`, "--check"], {

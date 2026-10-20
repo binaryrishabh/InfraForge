@@ -69,7 +69,7 @@ export interface WorkloadInput {
   faults: FaultPlan[];
   horizon: Quantity<"us">;
   sampleInterval: Quantity<"us">;
-  limits: { maxEvents: number; maxSamples: number; maxRequests: number; maxRawResults: number; maxTraceRows: number };
+  limits: { maxEvents: number; maxSamples: number; maxRequests: number; maxRawResults: number; maxTraceRows: number; maxPendingEvents?: number; maxLiveCalls?: number; maxRetainedSamples?: number; maxSampleBytes?: number; maxRawBytes?: number; maxGroups?: number; maxTraceBytes?: number };
 }
 export interface StationState {
   id: string;

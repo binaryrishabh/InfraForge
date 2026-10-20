@@ -61,8 +61,12 @@ change use that producer's `--write` flag. Its authored 24-root schedule is shar
 by the 1/2/4/8-app cases. The artifact pins compiled inputs, evidence, routing,
 foreground/health commits, contention and repeated/observer byte equality, plus
 the shared-host case. It does not establish cloud performance or safe public
-executor capacity. The eight historical composition hashes and all 88 Stage 1
-host/peer source hashes remain frozen. Verification is also in `test:tooling`.
+executor capacity. The original slice 04 artifact remains retained; the current
+producer writes `first-stack-bounds-compile-proof.json`. Slice 10a separately
+reviews optional host bounds and reconstructs the original 88-file Stage 1
+extension scope, while all eight historical composition hashes still match.
+See `first-stack-bounds.md` for execution, retention and refresh instructions.
+Verification is also in `test:tooling`.
 Sources: `scripts/reality/first-stack-compile-proof.ts:9`;
 `scripts/tests/first-stack-compile.test.ts:25`;
 `scripts/reality/composition-host-proof.ts:18`.

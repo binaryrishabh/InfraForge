@@ -8,8 +8,15 @@ function files(folder: string): string[] {
   return readdirSync(resolve(root, folder), { withFileTypes: true }).flatMap(entry => entry.isDirectory() ? files(`${folder}/${entry.name}`) : entry.name.endsWith(".ts") ? [`${folder}/${entry.name}`] : []);
 }
 export function compositionHostProof() {
+  const review = JSON.parse(readFileSync(resolve(root, "docs/reality/first-stack-bounds-host.json"), "utf8")) as { schema: string; files: Array<{ path: string; currentHash: string; originalHash: string; originalText: string }> };
+  if (review.schema !== "first-stack-bounds-host-review/1") throw Error("Unknown bounds host review");
+  const hash = (text: string) => createHash("sha256").update(text.replaceAll("\r\n", "\n")).digest("hex");
+  for (const file of review.files) if (hash(readFileSync(resolve(root, file.path), "utf8")) !== file.currentHash || hash(file.originalText) !== file.originalHash) throw Error(`Unreviewed bounds host drift: ${file.path}`);
+  // Reconstruct the original independent-extension scope. Fresh bounded-host
+  // behavior is qualified separately; the immutable Stage 1 baseline stays intact.
+
   return files("packages/simulation/src/model2").filter(path => path !== extension).sort().map(path => ({
-    path, sha256: createHash("sha256").update(readFileSync(resolve(root, path), "utf8").replaceAll("\r\n", "\n")).digest("hex"),
+    path, sha256: createHash("sha256").update((review.files.find(file => file.path === path)?.originalText ?? readFileSync(resolve(root, path), "utf8")).replaceAll("\r\n", "\n")).digest("hex"),
   }));
 }
 export function verifyCompositionHost() {

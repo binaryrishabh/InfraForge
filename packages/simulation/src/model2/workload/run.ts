@@ -1,3 +1,4 @@
+import { utf8Bytes } from "../time";
 import { EventKernel, lexical, type EventClock } from "../time";
 import { requireKnown } from "../../reality/quantity";
 import { identity, ingestTrace, openRows } from "./arrivals";
@@ -35,7 +36,7 @@ export function createWorkloadRuntime<M extends StationState>(authored: Workload
   for (const list of [input.resources, input.operations, input.arrivals, input.profiles, input.faults, input.ledger]) list.sort((a, b) => lexical(a.id, b.id));
   for (const r of input.resources) if (r.kind === "router") r.backends.sort(lexical);
   for (const a of input.arrivals) if (a.kind === "trace") a.trace = ingestTrace(a.trace, a.trace.rows, input.limits.maxTraceRows, new Set(input.operations.map((o) => o.id)));
-  const kernel = new EventKernel(input.limits.maxEvents), horizon = requireKnown(input.horizon, "us"), step = requireKnown(input.sampleInterval, "us");
+  const kernel = new EventKernel(input.limits.maxEvents, input.limits.maxPendingEvents), horizon = requireKnown(input.horizon, "us"), step = requireKnown(input.sampleInterval, "us");
   const stations = new Map<string, WorkEndpoint<M>>();
   const routers = new Map(input.resources.filter((r) => r.kind === "router").map((r) => [r.id, { backends: r.backends, next: 0 }]));
   const send = (target: string, work: Invocation, done: (outcome: RemoteOutcome) => void): Receipt => {
@@ -50,11 +51,12 @@ export function createWorkloadRuntime<M extends StationState>(authored: Workload
   modules.install?.(kernel, stations, send);
   const operations = new Map(input.operations.map((o) => [o.id, o]));
   const live = new Map<string, { work: Invocation; receipt?: Receipt }>();
-  const book = new ResultBook(input.limits.maxRawResults);
+  const book = new ResultBook(input.limits.maxRawResults, input.limits.maxRawBytes, input.limits.maxGroups);
   const counts = { offered: 0, admitted: 0, completed: 0, rejected: 0, deadlineExceeded: 0, abandoned: 0, remoteOutcomesAfterCallerStop: 0, cancellationRequested: 0, cancellationConfirmedAtEntry: 0 };
   const byOperation = new Map(input.operations.map((o) => [o.id, { offered: 0, completed: 0, rejected: 0, deadlineExceeded: 0, abandoned: 0 }]));
   const sources = new Map(input.arrivals.map((a) => [a.id, { offered: 0 }]));
   const offer = (source: string, row: TraceRow, next?: () => void) => {
+    if (live.size >= (input.limits.maxLiveCalls ?? Infinity)) throw new Error("Executor live-caller budget exhausted");
     if (++counts.offered > input.limits.maxRequests) throw new Error("Request execution budget exceeded");
     sources.get(source)!.offered++;
     const operation = operations.get(row.operation)!, perOperation = byOperation.get(row.operation)!; perOperation.offered++;
@@ -111,7 +113,14 @@ export function createWorkloadRuntime<M extends StationState>(authored: Workload
   }
   const snapshot = () => ({ at: kernel.now, counts: { ...counts, inFlight: live.size }, resources: [...stations.values()].map((s) => s.measure()) });
   const samples: ReturnType<typeof snapshot>[] = [];
-  const sample = (at: number) => kernel.schedule(at, 4, identity("sample", at), () => { samples.push(snapshot()); if (at < horizon) sample(Math.min(at + step, horizon)); });
+  let sampleBytes = 0, sampleOmitted = 0;
+  const sample = (at: number) => kernel.schedule(at, 4, identity("sample", at), () => {
+    const value = snapshot();
+    const bytes = input.limits.maxSampleBytes === undefined ? 0 : utf8Bytes(JSON.stringify(value));
+    if (samples.length < (input.limits.maxRetainedSamples ?? Infinity) && sampleBytes + bytes <= (input.limits.maxSampleBytes ?? Infinity)) { samples.push(value); sampleBytes += bytes; }
+    else sampleOmitted++;
+    if (at < horizon) sample(Math.min(at + step, horizon));
+  });
   sample(0);
   let failure: string | null = null;
   return {
@@ -121,11 +130,17 @@ export function createWorkloadRuntime<M extends StationState>(authored: Workload
       if (until > horizon) throw new Error("Beyond authored horizon");
       try { kernel.advanceTo(until); } catch (e) { failure = (e as Error).message; throw e; }
     },
+    advanceSlice(until: number, events: number) {
+      if (failure) throw new Error("Failed execution cannot resume");
+      if (until > horizon) throw new Error("Beyond authored horizon");
+      try { return kernel.advanceSlice(until, events); } catch (e) { failure = (e as Error).message; throw e; }
+    },
     evidence() {
       const state = snapshot(), terminal = counts.completed + counts.rejected + counts.deadlineExceeded + counts.abandoned;
       return copy({ modelVersion: "2", workloadVersion: input.workloadVersion, status: "internal", seed: input.seed,
-        capture: { throughUs: kernel.now, reachedHorizon: kernel.now === horizon && !failure, failure },
-        ...state, samples, faults, byOperation: Object.fromEntries(byOperation), sources: Object.fromEntries(sources),
+        capture: { throughUs: kernel.now, reachedHorizon: kernel.now === horizon && !failure && (kernel.nextAt === undefined || kernel.nextAt > horizon), failure,
+          ...(input.limits.maxPendingEvents === undefined ? {} : { timestampComplete: kernel.nextAt === undefined || kernel.nextAt > kernel.now }) },
+        ...state, samples, ...(input.limits.maxRetainedSamples === undefined ? {} : { sampleRetention: { retained: samples.length, omitted: sampleOmitted, bytes: sampleBytes, policy: "bounded prefix; cumulative terminal aggregates remain independent" } }), faults, byOperation: Object.fromEntries(byOperation), sources: Object.fromEntries(sources),
         results: book.raw, resultRetention: { terminal, retained: book.raw.length, omitted: terminal - book.raw.length },
         distributions: { population: "terminal caller outcomes by operation/outcome; in-flight requests are right-censored", censored: live.size, groups: book.summary() },
         inFlight: [...live.values()].slice(0, input.limits.maxRawResults).map(({ work, receipt }) => ({ ...work, state: receipt?.state(), ageUs: kernel.now - work.offeredAt })),

@@ -100,7 +100,7 @@ export function createStackComposition(authored: DataInput, composition: StackCo
   });
   const identityFor = (id: string): LifecycleIdentity => { const identity = identities.get(id); if (!identity) throw Error("Unknown lifecycle resource"); return identity; };
   return {
-    horizon: runtime.horizon, advanceTo: runtime.advanceTo,
+    horizon: runtime.horizon, advanceTo: runtime.advanceTo, advanceSlice: runtime.advanceSlice,
     drain(id: string) { const identity = identityFor(id); lifecycle.drain(identity); context.setReady(id, false, "composition-drain"); },
     retire(id: string) {
       const identity = identityFor(id);

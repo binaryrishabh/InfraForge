@@ -1,3 +1,5 @@
+import { boundsHostPaths } from "./stage2-bounds-host";
+import { gitTree } from "./execution-identity";
 import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
@@ -15,7 +17,9 @@ const lockPath = "docs/reality/first-stack-source-review.json";
 const added = ["authoring", "canonical", "execution", "importStream", "persistence", "routes", "service", "workload"].map(p => `apps/backend/firstStack/${p}.ts`);
 added.push("packages/contracts/src/first-stack/index.ts");
 added.push("packages/simulation/src/internalFirstStack.ts", "packages/simulation/src/firstStack/compiler.ts", "packages/simulation/src/firstStack/run.ts");
+added.push("apps/backend/firstStack/boundedExecution.ts", "packages/simulation/src/firstStack/bounds.ts", "packages/simulation/src/firstStack/journal.ts");
 const changed = ["apps/backend/internalModel2/routes.ts", "apps/backend/zod_schemas/layout.schema.ts", "apps/backend/Dockerfile", ".dockerignore", "packages/contracts/package.json", "packages/simulation/package.json"];
+changed.push(...boundsHostPaths);
 const generated = ["loading.ts", "capabilityReviews.json", "capabilityImportReviews.json", "analysisContract.json", "resolutionContract.json"].map(p => folder + p);
 generated.push("apps/backend/internalModel2/legacyRuntime.json");
 let retainedOriginal: { blobs: Record<string, string>; trees: Record<string, Record<string, string>> } | undefined;
@@ -66,20 +70,20 @@ function scope() {
 }
 export function reviewStage2Modules() {
   const tree = scope(), file = resolve(root, folder + "capabilityReviews.json"), reviews = JSON.parse(readFileSync(file, "utf8"));
-  for (const path of added) {
+  for (const path of [...added, ...boundsHostPaths]) {
     const globals = path.endsWith("workload.ts") ? ["Uint8Array", "TextDecoder", "setImmediate"] : path.endsWith("importStream.ts") ? ["Uint8Array", "TextDecoder"] : [];
     const hash = sha256(tree.read(path));
     reviews[path] = { hash, capabilities: ["computed-data"], ...(globals.length ? { globals: { hash, names: globals } } : {}),
-      review: "Internal first-stack V2 review/compiler/qualification: fixed JSON indexing and statically imported Stage 1 registry/host composition; bounded recorded keys and DB health; no evaluator, dynamic loader, product dispatch, HTTP executor or activation" };
+      review: "Internal first-stack V2 review/compiler/qualification: fixed JSON indexing and statically imported Stage 1 registry/host composition; bounded recorded keys and DB health; opt-in host bounds, finite reducers and cooperative qualification only; no evaluator, dynamic loader, product dispatch, HTTP executor or activation" };
   }
   writeFileSync(file, JSON.stringify(reviews, null, 2) + "\n");
 }
 export function writeStage2ReviewLock() {
   const tree = scope();
   writeFileSync(resolve(root, lockPath), JSON.stringify({ schema: "infraforge-first-stack-source-review/1", baseline: baseline.source,
-    scope: "Internal V1 review and V2 compiler/composition qualification only; pinned Stage 1 registry/host and historical runtime bytes preserved; no product dispatch, HTTP executor or activation",
+    scope: "Internal V1 review and V2 compiler/composition qualification only; optional bounded host separately reviewed; original Stage 1 host reconstructed and eight historical replay hashes preserved; no product dispatch, HTTP executor or activation",
     files: [...added, ...changed].sort().map(path => ({ path, hash: sha256(tree.read(path)) })),
-    acceptance: ["apps/backend/tests/firstStackAuthoring.test.ts", "apps/backend/tests/firstStackWorkload.test.ts", "apps/backend/tests/firstStackRoutes.test.ts", "apps/backend/tests/firstStackFixture.ts", "scripts/tests/first-stack-child.test.ts", "scripts/tests/first-stack-compile.test.ts", "scripts/fixtures/first-stack-compile.ts", "scripts/reality/first-stack-compile-proof.ts", "scripts/tests/execution-identity.test.ts"].map(path => ({ path, hash: sha256(readFileSync(resolve(root, path), "utf8").replaceAll("\r\n", "\n")) })),
+    acceptance: ["apps/backend/tests/firstStackAuthoring.test.ts", "apps/backend/tests/firstStackWorkload.test.ts", "apps/backend/tests/firstStackRoutes.test.ts", "apps/backend/tests/firstStackFixture.ts", "scripts/tests/first-stack-child.test.ts", "scripts/tests/first-stack-compile.test.ts", "scripts/fixtures/first-stack-compile.ts", "scripts/reality/first-stack-compile-proof.ts", "scripts/tests/execution-identity.test.ts", "scripts/tests/first-stack-bounds.test.ts", "scripts/reality/first-stack-bounds-proof.ts", "scripts/stage2-bounds-host.ts", "scripts/fixtures/first-stack-bounded-execution.test.ts"].map(path => ({ path, hash: sha256(readFileSync(resolve(root, path), "utf8").replaceAll("\r\n", "\n")) })),
   }, null, 2) + "\n");
 }
 export function buildStage2Transitions() {
@@ -137,6 +141,22 @@ export function buildStage2Transitions() {
   table.descriptors[baseline.source] = baseline.descriptor;
   if (!table.entries.some(row => row.source === baseline.source)) table.entries.push({ commit: baseline.commit, source: baseline.source, descriptor: baseline.source, target, kind: "descriptor", algorithm: "analysis-boundary/1",
     review: "Stage 2 authoring only: exact scoped internal review/save/import additions; Stage 1 and all legacy runtime bytes/eight replay hashes preserved; no first-stack executor or activation" });
+  // Retain the accepted slice 04 compiler as its own original source. This is
+  // compatibility for unchanged historical fixtures, not a bounds proof.
+  const compilerCommit = "8141673ffcb48d0ac6d9855ea9fe46a563095cc4", compilerSource = "34d9ef73cce761afb1e2c62d01ebca6152840c21a912a6657affe2ff4fbf33e3";
+  if (!table.entries.some(row => row.source === compilerSource)) {
+    const stored = table.descriptors[compilerSource]; if (!stored) throw Error("Missing accepted compiler descriptor");
+    const originalTree = gitTree(compilerCommit), pins = new Map(stored.files as [string, string][]);
+    const paths = [...new Set([...pins.keys(), "package.json", "bun.lock", "bunfig.toml", ...["apps/backend", "apps/web", "packages/domain", "packages/catalog", "packages/contracts", "packages/simulation"].map(p => p + "/package.json")])];
+    history.trees[compilerCommit] = Object.fromEntries(paths.map(path => {
+      const text = originalTree.paths.includes(path) ? originalTree.read(path) : tree.read(path), hash = sha256(text);
+      if (pins.has(path) && pins.get(path) !== hash) throw Error(`Accepted compiler snapshot drift: ${path}`);
+      history.blobs[hash] = text; return [path, hash];
+    }));
+    const frozen = history.trees[compilerCommit]!;
+    if (digest(historicalAnalysisDescriptor({ paths: Object.keys(frozen), read: p => history.blobs[frozen[p]!]! }, "bun-1.3.14")) !== compilerSource) throw Error("Compiler descriptor does not reconstruct");
+    table.entries.push({ commit: compilerCommit, source: compilerSource, descriptor: compilerSource, target, kind: "descriptor", algorithm: "analysis-boundary/1", review: "Slice 10a: optional execution bounds preserve old fixture outcomes; original compiler source retained; first-stack bounded behavior has separate new proof; no activation" });
+  }
   table.descriptors[target] = current;
   for (const row of table.entries) row.target = target;
   for (const key of Object.keys(table.descriptors)) if (key !== target && !table.entries.some(row => row.descriptor === key)) delete table.descriptors[key];
