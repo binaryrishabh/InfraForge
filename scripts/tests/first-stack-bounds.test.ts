@@ -1,4 +1,7 @@
 import { afterAll, expect, test } from "bun:test";
+import { createWorkloadRuntime } from "../../packages/simulation/src/model2/workload/run";
+import { workloadStation } from "../../packages/simulation/src/model2/workload/station";
+import { workloadFixture } from "../../packages/simulation/tests/workloadFixture";
 import { verticalFixture } from "../../packages/simulation/tests/networkFixture";
 import { createNetworkModel2 } from "../../packages/simulation/src/model2/network/run";
 import { EventKernel, utf8Bytes, micros } from "../../packages/simulation/src/model2/time";
@@ -90,6 +93,34 @@ test("retained sample prefix is finite while cumulative counts remain complete",
   runtime.advanceTo(runtime.horizon); const e = runtime.evidence();
   expect(e.samples).toHaveLength(128); expect(e.sampleRetention?.omitted).toBe(773);
   expect(e.counts.completed).toBe(24); expect(e.distributions.censored).toBe(0);
+});
+
+test("variable-size samples close retention at the first omission and keep exactly a prefix", () => {
+  const run = (maxSampleBytes?: number) => {
+    const input = workloadFixture({ cpu: 1, count: 1, horizon: 30, sample: 10 });
+    input.limits.maxRetainedSamples = 10;
+    if (maxSampleBytes !== undefined) input.limits.maxSampleBytes = maxSampleBytes;
+    let measurements = 0;
+    const runtime = createWorkloadRuntime(input, { station(...args) {
+      const station = workloadStation(...args);
+      return { ...station, measure() {
+        measurements++;
+        return { ...station.measure(), diagnostic: measurements === 2 ? "x".repeat(4096) : "" };
+      } };
+    } });
+    runtime.advanceTo(runtime.horizon);
+    const measuredBeforeEvidence = measurements;
+    return { evidence: runtime.evidence(), measuredBeforeEvidence };
+  };
+  const full = run(), bounded = run(1024), first = full.evidence.samples[0]!, later = full.evidence.samples[2]!;
+  expect(full.evidence.samples.map(sample => sample.at)).toEqual([0, 10, 20, 30]);
+  expect(Buffer.byteLength(JSON.stringify(full.evidence.samples[1]))).toBeGreaterThan(1024);
+  expect(Buffer.byteLength(JSON.stringify(first)) + Buffer.byteLength(JSON.stringify(later))).toBeLessThanOrEqual(1024);
+  expect(bounded.evidence.samples).toEqual(full.evidence.samples.slice(0, 1));
+  expect(bounded.evidence.sampleRetention).toMatchObject({ retained: 1, omitted: 3 });
+  expect(bounded.measuredBeforeEvidence).toBe(2); expect(full.measuredBeforeEvidence).toBe(4);
+  expect(bounded.evidence.counts).toEqual(full.evidence.counts);
+  expect(bounded.evidence.distributions).toEqual(full.evidence.distributions);
 });
 
 test("fresh bounds proof retains the original eight composition replays", async () => {

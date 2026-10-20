@@ -113,12 +113,16 @@ export function createWorkloadRuntime<M extends StationState>(authored: Workload
   }
   const snapshot = () => ({ at: kernel.now, counts: { ...counts, inFlight: live.size }, resources: [...stations.values()].map((s) => s.measure()) });
   const samples: ReturnType<typeof snapshot>[] = [];
-  let sampleBytes = 0, sampleOmitted = 0;
+  let sampleBytes = 0, sampleOmitted = 0, sampleRetentionClosed = false;
   const sample = (at: number) => kernel.schedule(at, 4, identity("sample", at), () => {
-    const value = snapshot();
-    const bytes = input.limits.maxSampleBytes === undefined ? 0 : utf8Bytes(JSON.stringify(value));
-    if (samples.length < (input.limits.maxRetainedSamples ?? Infinity) && sampleBytes + bytes <= (input.limits.maxSampleBytes ?? Infinity)) { samples.push(value); sampleBytes += bytes; }
-    else sampleOmitted++;
+    if (sampleRetentionClosed || samples.length >= (input.limits.maxRetainedSamples ?? Infinity)) {
+      sampleRetentionClosed = true; sampleOmitted++;
+    } else {
+      const value = snapshot();
+      const bytes = input.limits.maxSampleBytes === undefined ? 0 : utf8Bytes(JSON.stringify(value));
+      if (sampleBytes + bytes <= (input.limits.maxSampleBytes ?? Infinity)) { samples.push(value); sampleBytes += bytes; }
+      else { sampleRetentionClosed = true; sampleOmitted++; }
+    }
     if (at < horizon) sample(Math.min(at + step, horizon));
   });
   sample(0);
