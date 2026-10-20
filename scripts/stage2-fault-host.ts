@@ -1,11 +1,13 @@
 import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync } from "node:fs";
-import { sourceHash } from "../apps/backend/executionIdentity/hash";
+import { relative } from "node:path";
+import { digest, sourceHash } from "../apps/backend/executionIdentity/hash";
+import { loadTransitions } from "../apps/backend/executionIdentity/transitions";
 
 // Separate slice 09 review: the bounds/PG/Stage 1 baseline artifacts stay intact.
-const baseline = "7a75f8b6c09353e54544feb17840dfb25019affb";
+const baseline = "ca812b96fb39c0fbb03bcfcd8d1e9b0ec80a252d";
 const pins: Record<string, string> = {
-  "packages/simulation/src/model2/composition/run.ts": "4861bf6e7cc0046c665e01316327c582781f5e08205a77080a037a40e0685e12",
+  "packages/simulation/src/model2/composition/run.ts": "597fec1e7bdafdabe5f42948860a4ef4d9503c5d03a78184cb527f24286eaac7",
   "packages/simulation/src/model2/network/contracts.ts": "a55f006f05a61fd5214a2be8d5174f197c398f7c3eb78efdb520ecb9796a32a5",
   "packages/simulation/src/model2/network/load-balancer.ts": "baee14b77dbde52219d6464866690432e2d2021e1ebbad2e7935d9e28b1fd025",
   "packages/simulation/src/model2/network/run.ts": "6ea7acfd0a369416b9306a5d0761cefd80c547faa744bc7d41182808d9a848b6"
@@ -22,6 +24,11 @@ export function beforeFaultHost(path: string, current: string) {
   return file.original;
 }
 if (import.meta.main && process.argv.includes("--write")) {
+  const { table } = loadTransitions(process.cwd(), path => execFileSync("git", ["show", `${baseline}:${relative(process.cwd(), path).replaceAll("\\", "/")}`], { maxBuffer: 64 * 1024 * 1024 }));
+  const source = "aab124470309d4ba3058d536203bf7d9bc60cb2352c05775bfc54d439391810e";
+  const descriptor = table.descriptors[source];
+  if (!descriptor || digest(descriptor) !== source) throw Error("Accepted pre-fault descriptor drift");
+  writeFileSync("docs/reality/first-stack-fault-baseline.json", JSON.stringify({ commit: baseline, source, descriptor }, null, 2) + "\n");
   const files = faultHostPaths.map(path => {
     const original = execFileSync("git", ["show", `${baseline}:${path}`], { encoding: "utf8" }).replaceAll("\r\n", "\n");
     if (sourceHash(original) !== pins[path]) throw Error(`Unexpected pre-fault host: ${path}`);

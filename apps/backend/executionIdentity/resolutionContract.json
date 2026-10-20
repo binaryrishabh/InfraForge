@@ -832,7 +832,7 @@
       "owner": "@infraforge/contracts@workspace:packages/contracts:156",
       "file": "src/first-stack/index.ts",
       "key": "@infraforge/contracts/src/first-stack/index.ts",
-      "hash": "864a22fcccf0e5ac0df642702318d1b185161cf1238ef9362b0886a9f4733001"
+      "hash": "9554f181d2a5ae0ab48cec7b6b7649bb3594aa5c96cd74e57e98b8241b764f8d"
     },
     {
       "owner": "@infraforge/contracts@workspace:packages/contracts:156",
@@ -1006,13 +1006,19 @@
       "owner": "@infraforge/simulation@workspace:packages/simulation:158",
       "file": "src/firstStack/bounds.ts",
       "key": "@infraforge/simulation/src/firstStack/bounds.ts",
-      "hash": "6f5cc1ce4f70c35c013f0d55eb96c33d414ac4a97ba9f5fbe08733c81b072d37"
+      "hash": "686c2892c2deff32e8ea0d88f587d3eaaf38d3382ec02aa2231a006f50832244"
     },
     {
       "owner": "@infraforge/simulation@workspace:packages/simulation:158",
       "file": "src/firstStack/compiler.ts",
       "key": "@infraforge/simulation/src/firstStack/compiler.ts",
-      "hash": "a4db9eeb1b766a3a91ac604a3237394ded354b638da85bb7c0693dc4e14f2820"
+      "hash": "a25f3771b3e437694e57a959cd3cf16612a965e9736d392107b3c6f232923485"
+    },
+    {
+      "owner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "file": "src/firstStack/faults.ts",
+      "key": "@infraforge/simulation/src/firstStack/faults.ts",
+      "hash": "48f06ca4ba56c79e578804b1f37d9286d80ec1dd5a43462e79bb29c30a7f1120"
     },
     {
       "owner": "@infraforge/simulation@workspace:packages/simulation:158",
@@ -1030,7 +1036,7 @@
       "owner": "@infraforge/simulation@workspace:packages/simulation:158",
       "file": "src/firstStack/run.ts",
       "key": "@infraforge/simulation/src/firstStack/run.ts",
-      "hash": "eeb63d60962d3ee1cdeadbff5a91198c65aa36e81bc237f84488489fb1e538ff"
+      "hash": "5876dea937caa081a6f5b7f2328fcf11bbbf7e620b3bda9e777cdf6f20eca894"
     },
     {
       "owner": "@infraforge/simulation@workspace:packages/simulation:158",
@@ -1126,7 +1132,7 @@
       "owner": "@infraforge/simulation@workspace:packages/simulation:158",
       "file": "src/model2/composition/run.ts",
       "key": "@infraforge/simulation/src/model2/composition/run.ts",
-      "hash": "597fec1e7bdafdabe5f42948860a4ef4d9503c5d03a78184cb527f24286eaac7"
+      "hash": "3da5e36608f9be27870019770054a43f1cae56a96837968efe49282499d4f10f"
     },
     {
       "owner": "@infraforge/simulation@workspace:packages/simulation:158",
@@ -1246,7 +1252,7 @@
       "owner": "@infraforge/simulation@workspace:packages/simulation:158",
       "file": "src/model2/network/contracts.ts",
       "key": "@infraforge/simulation/src/model2/network/contracts.ts",
-      "hash": "a55f006f05a61fd5214a2be8d5174f197c398f7c3eb78efdb520ecb9796a32a5"
+      "hash": "0a90e10e85873db466bc7589be7f30d85a4e6cd06c39028a197def74f99c4a34"
     },
     {
       "owner": "@infraforge/simulation@workspace:packages/simulation:158",
@@ -1258,7 +1264,7 @@
       "owner": "@infraforge/simulation@workspace:packages/simulation:158",
       "file": "src/model2/network/load-balancer.ts",
       "key": "@infraforge/simulation/src/model2/network/load-balancer.ts",
-      "hash": "baee14b77dbde52219d6464866690432e2d2021e1ebbad2e7935d9e28b1fd025"
+      "hash": "3ac9f613bef26a6045755c3ec16a61e80e6ecc38c69df04f909f6866a57fcfb4"
     },
     {
       "owner": "@infraforge/simulation@workspace:packages/simulation:158",
@@ -1282,7 +1288,7 @@
       "owner": "@infraforge/simulation@workspace:packages/simulation:158",
       "file": "src/model2/network/run.ts",
       "key": "@infraforge/simulation/src/model2/network/run.ts",
-      "hash": "6ea7acfd0a369416b9306a5d0761cefd80c547faa744bc7d41182808d9a848b6"
+      "hash": "225fc688e205a39275840649d82f89fa201900e6514bc7d5ff1820ea5ab63070"
     },
     {
       "owner": "@infraforge/simulation@workspace:packages/simulation:158",
@@ -12805,6 +12811,30 @@
     {
       "owner": "@infraforge/simulation@workspace:packages/simulation:158",
       "file": "src/firstStack/compiler.ts",
+      "specifier": "./bounds",
+      "kind": "import-statement",
+      "targetOwner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "targetFile": "src/firstStack/bounds.ts"
+    },
+    {
+      "owner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "file": "src/firstStack/compiler.ts",
+      "specifier": "./faults",
+      "kind": "import-statement",
+      "targetOwner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "targetFile": "src/firstStack/faults.ts"
+    },
+    {
+      "owner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "file": "src/firstStack/faults.ts",
+      "specifier": "../reality/quantity",
+      "kind": "import-statement",
+      "targetOwner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "targetFile": "src/reality/quantity.ts"
+    },
+    {
+      "owner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "file": "src/firstStack/faults.ts",
       "specifier": "./bounds",
       "kind": "import-statement",
       "targetOwner": "@infraforge/simulation@workspace:packages/simulation:158",

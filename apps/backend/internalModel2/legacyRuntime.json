@@ -1391,7 +1391,7 @@
     },
     {
       "path": "packages/simulation/src/model2/composition/run.ts",
-      "hash": "597fec1e7bdafdabe5f42948860a4ef4d9503c5d03a78184cb527f24286eaac7"
+      "hash": "3da5e36608f9be27870019770054a43f1cae56a96837968efe49282499d4f10f"
     },
     {
       "path": "packages/simulation/src/model2/composition/token-bucket.ts",
@@ -1487,7 +1487,7 @@
     },
     {
       "path": "packages/simulation/src/model2/network/contracts.ts",
-      "hash": "a55f006f05a61fd5214a2be8d5174f197c398f7c3eb78efdb520ecb9796a32a5"
+      "hash": "0a90e10e85873db466bc7589be7f30d85a4e6cd06c39028a197def74f99c4a34"
     },
     {
       "path": "packages/simulation/src/model2/network/link.ts",
@@ -1495,7 +1495,7 @@
     },
     {
       "path": "packages/simulation/src/model2/network/load-balancer.ts",
-      "hash": "baee14b77dbde52219d6464866690432e2d2021e1ebbad2e7935d9e28b1fd025"
+      "hash": "3ac9f613bef26a6045755c3ec16a61e80e6ecc38c69df04f909f6866a57fcfb4"
     },
     {
       "path": "packages/simulation/src/model2/network/module.ts",
@@ -1511,7 +1511,7 @@
     },
     {
       "path": "packages/simulation/src/model2/network/run.ts",
-      "hash": "6ea7acfd0a369416b9306a5d0761cefd80c547faa744bc7d41182808d9a848b6"
+      "hash": "225fc688e205a39275840649d82f89fa201900e6514bc7d5ff1820ea5ab63070"
     },
     {
       "path": "packages/simulation/src/model2/network/trace.ts",
@@ -1967,7 +1967,7 @@
     },
     {
       "path": "scripts/reality/composition-host-proof.ts",
-      "hash": "46cb2f662b8456f319eef0deb61360e6b791a92003311b2e4be41bccb7aeb045"
+      "hash": "5b92ca3ccc240fd826ac6e98ec7061a2beb845509208669d52efbea23dc30f5f"
     },
     {
       "path": "scripts/reality/composition-proofs.ts",
@@ -2007,7 +2007,7 @@
     },
     {
       "path": "scripts/reality/first-stack-bounds-proof.ts",
-      "hash": "57b9156beb213122109461a5ab518f15cef0ca7f1bfad1ef01ea114aaad4d27a"
+      "hash": "b4be47434bb4f598706e06f3154830028883b84a570d06eb518cd4458e62836c"
     },
     {
       "path": "scripts/reality/first-stack-cache-proof.ts",
@@ -2015,7 +2015,11 @@
     },
     {
       "path": "scripts/reality/first-stack-compile-proof.ts",
-      "hash": "d623a844dd3f1702aef67bc9464a7283cda55f825eafdbb77b1bf8b19e36d251"
+      "hash": "5411bf7a161f090bc9f9444a2a3a2205c1c14e9b98c02f484d9cf143b1eaf078"
+    },
+    {
+      "path": "scripts/reality/first-stack-fault-proof.ts",
+      "hash": "6088de8f1a030f50ed51f4c23e59e3ae172ebd685197ba260bda0b4eed66d4e0"
     },
     {
       "path": "scripts/reality/first-stack-pilots/app.ts",
@@ -2267,7 +2271,7 @@
     },
     {
       "path": "scripts/tests/execution-identity.test.ts",
-      "hash": "e6ebf04f2cba2288d6e5f9076b257ed6a553d833e4cbbb7b8575608ccd149916"
+      "hash": "ac86628383074225626004bfa31c84c88f6d7f40df7c84cb742ea34bfa3ab239"
     },
     {
       "path": "scripts/tests/finite-io.test.ts",
@@ -2290,12 +2294,16 @@
       "hash": "59c23c540b907add8f9162ac8239bc1dcc7e1df0e0072ab514b0ca9bb274589a"
     },
     {
+      "path": "scripts/tests/first-stack-faults.test.ts",
+      "hash": "e9ffa93d0e2767fdc6ffac19c5c2d4180608f8c1f04f57f2b4446c4cca80ced5"
+    },
+    {
       "path": "scripts/tests/first-stack-isolation.test.ts",
       "hash": "085f35d80a5c6af5fea42e3cdf131902ed292ebdc508a7b9a1e4b4dd01f311c4"
     },
     {
       "path": "scripts/tests/first-stack-profile.test.ts",
-      "hash": "3643f25cfcab920b479d49fdf3a995a127b20befc4ae5d22131904f86f27337b"
+      "hash": "7af05c1d23ade801ac63edb24648343855cacc228a3ce347d3d1e4087bdc7226"
     },
     {
       "path": "scripts/tests/firstStackPilots.test.ts",

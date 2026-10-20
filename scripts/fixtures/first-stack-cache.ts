@@ -8,8 +8,10 @@ export async function firstStackCacheFixture(options: { apps?: number; coalesce?
   capacityBytes?: number; eviction?: "lru" | "no-eviction"; policyCpuUs?: number | null; cacheAlive?: boolean; onFailure?: "database" | "fail";
   readBlockingUs?: number; rows?: Array<{ id: string; atUs: number; key: string; operation?: string }> } = {}) {
   const f = await firstStackCompileFixture(options.apps ?? 1), layout = structuredClone(f.layout);
+  const { faults, retry, ...base } = f.sidecar;
+  if (faults.length || retry) throw Error("Cache fixture requires a scenario-free base");
   layout.resources.push({ id: "cache", type: "Cache", x: 30, y: 20 });
-  const sidecar: FirstStackSidecarV3 = { ...f.sidecar, schema: "infraforge-first-stack-sidecar/3", compiler: "first-stack-compiler/3", workload: null,
+  const sidecar: FirstStackSidecarV3 = { ...base, faults: [], schema: "infraforge-first-stack-sidecar/3", compiler: "first-stack-compiler/3", workload: null,
     nodes: [...f.sidecar.nodes, { ...f.sidecar.nodes.find(n => n.id === "db")!, id: "cache", owner: "keyed-cache", host: "host-cache", listenerPort: 6379, alive: options.cacheAlive ?? true }],
     placement: [...f.sidecar.placement, { id: "host-cache", cores: 1, memoryBytes: 1024 }],
     operations: [...f.sidecar.operations.map(o => ({ ...o, ...(o.id === "read" ? { kind: "cache-read" as const } : {}) })),

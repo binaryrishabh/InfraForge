@@ -73,3 +73,14 @@ export function refreshPostgresTransitions() {
   writeTransitionStore(repositoryRoot, table, history);
   console.log(JSON.stringify({ entries: table.entries.length, current: target, historicalCompositions: 8 }));
 }
+
+// Refresh shared acceptance receipts without broadening the independently
+// retained PostgreSQL source review to later non-PG mechanism changes.
+export function refreshPostgresAcceptance() {
+  const reviewed = JSON.parse(get(reviewPath));
+  const paths = ["packages/simulation/tests/postgresSessions.test.ts", "scripts/tests/g5Pilot.test.ts", "scripts/tests/execution-identity.test.ts"];
+  if (reviewed.schema !== "infraforge-postgres-session-source-review/1" || reviewed.baseline !== baseline ||
+    digest(reviewed.acceptance.map((f: { path: string }) => f.path)) !== digest(paths)) throw Error("Invalid PostgreSQL acceptance inventory");
+  reviewed.acceptance = paths.map(path => ({ path, sha256: sha256(get(path)) }));
+  put(reviewPath, reviewed);
+}

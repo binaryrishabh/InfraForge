@@ -164,7 +164,7 @@
     }
   },
   "apps/backend/executionIdentity/loading.ts": {
-    "hash": "eed20f4ea60346b38f85453cb359faad5f869f85cd2cb9e002d62a9105066eae",
+    "hash": "582eeb3f22ff420aa9ced940983343bcb9316c2745ef514ec44b8c7985340c63",
     "capabilities": [
       "computed-data",
       "verifier",
@@ -172,7 +172,7 @@
     ],
     "review": "Fixed data indexing; resource adapters require the separate documented review",
     "globals": {
-      "hash": "eed20f4ea60346b38f85453cb359faad5f869f85cd2cb9e002d62a9105066eae",
+      "hash": "582eeb3f22ff420aa9ced940983343bcb9316c2745ef514ec44b8c7985340c63",
       "names": [
         "Bun"
       ]
@@ -564,18 +564,18 @@
     "review": "Fixed data indexing; resource adapters require the separate documented review"
   },
   "packages/simulation/src/model2/network/load-balancer.ts": {
-    "hash": "baee14b77dbde52219d6464866690432e2d2021e1ebbad2e7935d9e28b1fd025",
+    "hash": "3ac9f613bef26a6045755c3ec16a61e80e6ecc38c69df04f909f6866a57fcfb4",
     "capabilities": [
       "computed-data"
     ],
-    "review": "Composition module: reviewed fixed configuration/identity/measurement indexing; no dynamic loading or host access"
+    "review": "Reviewed finite fault and read retry source: fixed schema/record indexing, deterministic same-clock crash cleanup and generation replacement, health epoch invalidation, bounded foreground read allowlist, scenario evidence and preflight. Existing computed-data capability only; no dynamic loader, evaluator, host access or activation."
   },
   "packages/simulation/src/model2/network/run.ts": {
-    "hash": "6ea7acfd0a369416b9306a5d0761cefd80c547faa744bc7d41182808d9a848b6",
+    "hash": "225fc688e205a39275840649d82f89fa201900e6514bc7d5ff1820ea5ab63070",
     "capabilities": [
       "computed-data"
     ],
-    "review": "Internal first-stack V2 review/compiler/qualification: fixed JSON indexing and statically imported Stage 1 registry/host composition; bounded recorded keys and DB health; opt-in host bounds, finite reducers and cooperative qualification only; no evaluator, dynamic loader, product dispatch, HTTP executor or activation"
+    "review": "Reviewed finite fault and read retry source: fixed schema/record indexing, deterministic same-clock crash cleanup and generation replacement, health epoch invalidation, bounded foreground read allowlist, scenario evidence and preflight. Existing computed-data capability only; no dynamic loader, evaluator, host access or activation."
   },
   "packages/simulation/src/model2/network/trace.ts": {
     "hash": "39450faa91d34f0073fa480eb75200312d2cd3b041420f6131cb609e15792553",
@@ -979,11 +979,11 @@
     "review": "Composition module: reviewed fixed configuration/identity/measurement indexing; no dynamic loading or host access"
   },
   "packages/simulation/src/model2/composition/run.ts": {
-    "hash": "597fec1e7bdafdabe5f42948860a4ef4d9503c5d03a78184cb527f24286eaac7",
+    "hash": "3da5e36608f9be27870019770054a43f1cae56a96837968efe49282499d4f10f",
     "capabilities": [
       "computed-data"
     ],
-    "review": "Internal first-stack V2 review/compiler/qualification: fixed JSON indexing and statically imported Stage 1 registry/host composition; bounded recorded keys and DB health; opt-in host bounds, finite reducers and cooperative qualification only; no evaluator, dynamic loader, product dispatch, HTTP executor or activation"
+    "review": "Reviewed finite fault and read retry source: fixed schema/record indexing, deterministic same-clock crash cleanup and generation replacement, health epoch invalidation, bounded foreground read allowlist, scenario evidence and preflight. Existing computed-data capability only; no dynamic loader, evaluator, host access or activation."
   },
   "packages/simulation/src/model2/composition/token-bucket.ts": {
     "hash": "7249dd2c41c95973e4b70fb64756497491a23f2ddcbbbae3c8ebb6f062b418e2",
@@ -1042,11 +1042,11 @@
     "review": "Composition module: reviewed fixed configuration/identity/measurement indexing; no dynamic loading or host access"
   },
   "apps/backend/firstStack/authoring.ts": {
-    "hash": "76c06e94d0dd4c567da9369480aa7328fd00544977f30f708b74fe54163dc5c7",
+    "hash": "633fa5fb7dc6f67fa65537e7e0516b110684611c75e405d7f87c217e40500445",
     "capabilities": [
       "computed-data"
     ],
-    "review": "Internal first-stack V2 review/compiler/qualification: fixed JSON indexing and statically imported Stage 1 registry/host composition; bounded recorded keys and DB health; opt-in host bounds, finite reducers and cooperative qualification only; no evaluator, dynamic loader, product dispatch, HTTP executor or activation"
+    "review": "Reviewed cache/fault rebase: existing computed-data indexing only; finite non-cache scenario compilation, bounded read retries and scenario evidence; cache V3 keeps empty faults and forbids retries in schema, type and trusted compiler. No dynamic loader, evaluator, host access or activation."
   },
   "apps/backend/firstStack/canonical.ts": {
     "hash": "49f240e1016d0540eb13f3908543c2016986a87eb0b0dce5669dfeab376fa2f4",
@@ -1106,11 +1106,11 @@
     "review": "Internal first-stack V2 review/compiler/qualification: fixed JSON indexing and statically imported Stage 1 registry/host composition; bounded recorded keys and DB health; opt-in host bounds, finite reducers and cooperative qualification only; no evaluator, dynamic loader, product dispatch, HTTP executor or activation"
   },
   "packages/contracts/src/first-stack/index.ts": {
-    "hash": "864a22fcccf0e5ac0df642702318d1b185161cf1238ef9362b0886a9f4733001",
+    "hash": "9554f181d2a5ae0ab48cec7b6b7649bb3594aa5c96cd74e57e98b8241b764f8d",
     "capabilities": [
       "computed-data"
     ],
-    "review": "Internal first-stack V2 review/compiler/qualification: fixed JSON indexing and statically imported Stage 1 registry/host composition; bounded recorded keys and DB health; opt-in host bounds, finite reducers and cooperative qualification only; no evaluator, dynamic loader, product dispatch, HTTP executor or activation"
+    "review": "Reviewed cache/fault rebase: existing computed-data indexing only; finite non-cache scenario compilation, bounded read retries and scenario evidence; cache V3 keeps empty faults and forbids retries in schema, type and trusted compiler. No dynamic loader, evaluator, host access or activation."
   },
   "apps/backend/firstStack/execution.ts": {
     "hash": "21276fb41c16f9e3e1da909ad95e9ff473381f870fc06eec1f18a5d996fc4127",
@@ -1127,18 +1127,18 @@
     "review": "Internal first-stack V2 review/compiler/qualification: fixed JSON indexing and statically imported Stage 1 registry/host composition; bounded recorded keys and DB health; opt-in host bounds, finite reducers and cooperative qualification only; no evaluator, dynamic loader, product dispatch, HTTP executor or activation"
   },
   "packages/simulation/src/firstStack/compiler.ts": {
-    "hash": "a4db9eeb1b766a3a91ac604a3237394ded354b638da85bb7c0693dc4e14f2820",
+    "hash": "a25f3771b3e437694e57a959cd3cf16612a965e9736d392107b3c6f232923485",
     "capabilities": [
       "computed-data"
     ],
-    "review": "Internal first-stack V2 review/compiler/qualification: fixed JSON indexing and statically imported Stage 1 registry/host composition; bounded recorded keys and DB health; opt-in host bounds, finite reducers and cooperative qualification only; no evaluator, dynamic loader, product dispatch, HTTP executor or activation"
+    "review": "Reviewed cache/fault rebase: existing computed-data indexing only; finite non-cache scenario compilation, bounded read retries and scenario evidence; cache V3 keeps empty faults and forbids retries in schema, type and trusted compiler. No dynamic loader, evaluator, host access or activation."
   },
   "packages/simulation/src/firstStack/run.ts": {
-    "hash": "eeb63d60962d3ee1cdeadbff5a91198c65aa36e81bc237f84488489fb1e538ff",
+    "hash": "5876dea937caa081a6f5b7f2328fcf11bbbf7e620b3bda9e777cdf6f20eca894",
     "capabilities": [
       "computed-data"
     ],
-    "review": "Reviewed V2 finite IO branch and V3 strict recorded-key cache branch; combined cache/IO composition explicitly refused. Fixed immutable row/key and role indexing, optional observer only; no evaluator, dynamic loader, host access or activation."
+    "review": "Reviewed cache/fault rebase: existing computed-data indexing only; finite non-cache scenario compilation, bounded read retries and scenario evidence; cache V3 keeps empty faults and forbids retries in schema, type and trusted compiler. No dynamic loader, evaluator, host access or activation."
   },
   "apps/backend/firstStack/boundedExecution.ts": {
     "hash": "9699fc959bca20eb76c802668980b659325b59118e270295d0a4a8b2b8baf2a9",
@@ -1154,11 +1154,11 @@
     "review": "Isolated first-stack data protocol, fixed local Docker CLI, cgroup/rlimit inspection, finite stream framing and durable event-prefix replay; no arbitrary evaluator or code supplied by a run; no public dispatch or Model 2 activation"
   },
   "packages/simulation/src/firstStack/bounds.ts": {
-    "hash": "6f5cc1ce4f70c35c013f0d55eb96c33d414ac4a97ba9f5fbe08733c81b072d37",
+    "hash": "686c2892c2deff32e8ea0d88f587d3eaaf38d3382ec02aa2231a006f50832244",
     "capabilities": [
       "computed-data"
     ],
-    "review": "Internal first-stack V2 review/compiler/qualification: fixed JSON indexing and statically imported Stage 1 registry/host composition; bounded recorded keys and DB health; opt-in host bounds, finite reducers and cooperative qualification only; no evaluator, dynamic loader, product dispatch, HTTP executor or activation"
+    "review": "Reviewed cache/fault rebase: existing computed-data indexing only; finite non-cache scenario compilation, bounded read retries and scenario evidence; cache V3 keeps empty faults and forbids retries in schema, type and trusted compiler. No dynamic loader, evaluator, host access or activation."
   },
   "packages/simulation/src/firstStack/journal.ts": {
     "hash": "786bc65fab84faf4dc0ce2de5001261aa977c004f311139e5b93635e8149b7bf",
@@ -1319,10 +1319,17 @@
     "review": "Internal first-stack V2 review/compiler/qualification: fixed JSON indexing and statically imported Stage 1 registry/host composition; bounded recorded keys and DB health; opt-in host bounds, finite reducers and cooperative qualification only; no evaluator, dynamic loader, product dispatch, HTTP executor or activation"
   },
   "packages/simulation/src/model2/network/contracts.ts": {
-    "hash": "a55f006f05a61fd5214a2be8d5174f197c398f7c3eb78efdb520ecb9796a32a5",
+    "hash": "0a90e10e85873db466bc7589be7f30d85a4e6cd06c39028a197def74f99c4a34",
     "capabilities": [
       "computed-data"
     ],
-    "review": "Composition module: reviewed fixed configuration/identity/measurement indexing; no dynamic loading or host access"
+    "review": "Internal first-stack V2 review/compiler/qualification: fixed JSON indexing and statically imported Stage 1 registry/host composition; bounded recorded keys and DB health; opt-in host bounds, finite reducers and cooperative qualification only; no evaluator, dynamic loader, product dispatch, HTTP executor or activation"
+  },
+  "packages/simulation/src/firstStack/faults.ts": {
+    "hash": "48f06ca4ba56c79e578804b1f37d9286d80ec1dd5a43462e79bb29c30a7f1120",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Internal first-stack V2 review/compiler/qualification: fixed JSON indexing and statically imported Stage 1 registry/host composition; bounded recorded keys and DB health; opt-in host bounds, finite reducers and cooperative qualification only; no evaluator, dynamic loader, product dispatch, HTTP executor or activation"
   }
 }

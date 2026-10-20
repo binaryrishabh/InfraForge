@@ -32,6 +32,8 @@ export async function firstStackCompileProof() {
 }
 export async function verifyFirstStackCompileProof(write = false) {
   const current = await firstStackCompileProof();
+  const previous = JSON.parse(readFileSync("docs/reality/first-stack-bounds-compile-proof.json", "utf8"));
+  if (hash(current.runs) !== hash(previous.runs) || hash(current.sharedHost) !== hash(previous.sharedHost)) throw Error("Scenario-free compiler fixtures changed from slice 10a");
   if (write) writeFileSync(artifact, JSON.stringify(current, null, 2) + "\n");
   if (hash(current) !== hash(JSON.parse(readFileSync(artifact, "utf8")))) throw Error("First-stack V2 proof changed; review and run its producer with --write");
   return { cases: current.runs.length, reconstructedOriginalHostFiles: current.reconstructedOriginalHostFiles, observerEqual: true, repeatBytesEqual: true };

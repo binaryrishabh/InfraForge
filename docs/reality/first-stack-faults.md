@@ -2,7 +2,7 @@
 
 Model 1 remains active. This internal qualification path adds no public executor,
 activation or timing promotion. Timing remains assumption-only; full memory and
-full cost remain Unknown. Cache lifecycle and policy children await slice 08.
+full cost remain Unknown. Cache V3 remains separately reviewed; combining cache with faults or retries requires a new composition revision.
 
 V1 sidecars remain review-only with an empty fault tuple. V2 accepts up to 64
 `first-stack-fault/1` commands: `app-process-crash`, `directed-delay` and
@@ -59,11 +59,23 @@ write new `first-stack-faults-compile-proof.json` and
 `first-stack-faults-bounds-proof.json`, preserving the prior artifacts.
 `first-stack-fault-proof.json` pins five crash/shared-host/link/write cases and
 repeated/observer equality, with independent acceptance for equal-time commit and
-completion, multiple generations, cleanup, refusal and retry conservation.
+completion/deadline, multiple generations, cleanup, refusal and retry conservation.
 Use each producer's `--write` only after review; regenerate the fault host review
-before source-review/identity refresh. Follow the analysis/import/resolution,
+before source-review/identity refresh. The separate
+`first-stack-fault-baseline.json` pins the exact accepted `ca812b96fb39c0fbb03bcfcd8d1e9b0ec80a252d` descriptor,
+including previously merged hardening; unrelated inherited sources must still
+match those exact hashes. The host producer reads that commit's transition manifest,
+pin and Merkle pack through the verified transition loader. To move this baseline,
+review the full main commit, its descriptor digest and the four original host hashes,
+update the producer's exact pins, then run `scripts/stage2-fault-host.ts --write`.
+That source is retained as its own historical transition. Follow the analysis/import/resolution,
 lineage, Stage 2 review-lock/transitions and generated-inventory order in
-`first-stack-bounds.md`. No local measurement campaign is required by this slice.
+`first-stack-bounds.md`. If the shared identity acceptance changes, refresh its
+PostgreSQL receipt with
+`bun --no-env-file scripts/execution-identity.ts --review-pg-acceptance` before
+connected lineage and the Stage 2 lock. This updates acceptance hashes only;
+retained PostgreSQL source pins and original bytes remain unchanged.
+No local measurement campaign is required by this slice.
 
 UI needs: immutable command/retry review, directed link selection, separate process
 readiness and health eligibility timestamps, root/attempt/commit reconciliation,

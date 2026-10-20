@@ -103,7 +103,31 @@ test("crash before equal-time generic DB commit aborts; a prior commit survives 
   expect(outcomes).toEqual(["aborted", "committed"]);
 });
 
+test("process fault precedes an equal-time transport response deadline", async () => {
+  const f = await firstStackFaultFixture();
+  f.sidecar.faults = [{ schema: "first-stack-fault/1", id: "slow-response", kind: "directed-delay", target: f.sidecar.paths.find(p => p.target === "app-1")!.responseLink, atUs: 5000, durationUs: 14000, delayUs: 10000 }];
+  const baseline: CausalEvent[] = []; runFirstStackQualification(f.prepare(), e => baseline.push(e));
+  const deadline = baseline.find(e => e.kind === "attempt-terminal" && String(e.detail.id).includes("app-1") && e.detail.detail === "response-timeout")!;
+  expect(deadline).toBeDefined();
+  f.sidecar.faults.push({ schema: "first-stack-fault/1", id: "deadline-tie", kind: "app-process-crash", target: "app-1", atUs: deadline.atUs, downtimeUs: 1000, recoveryUs: 500 });
+  const actual: CausalEvent[] = []; runFirstStackQualification(f.prepare(), e => actual.push(e));
+  const terminal = actual.find(e => e.kind === "attempt-terminal" && e.detail.id === deadline.detail.id)!;
+  expect(terminal.atUs).toBe(deadline.atUs); expect(terminal.detail.detail).toBe("reset");
+});
+
 test("retained fault proof pins current source, repeated outcomes and observer equality", async () => {
   const { faultProof } = await import("../reality/first-stack-fault-proof");
   expect(await faultProof()).toMatchObject({ cases: 5, observerEqual: true, repeatedBytesEqual: true });
+});
+
+test("cache V3 keeps faults and retries outside its reviewed composition", async () => {
+  const { firstStackCacheFixture } = await import("../fixtures/first-stack-cache");
+  const { sidecarV3Schema } = await import("../../apps/backend/firstStack/authoring");
+  const { compileFirstStack } = await import("../../packages/simulation/src/firstStack/compiler");
+  const f = await firstStackCacheFixture(), fault = await firstStackFaultFixture();
+  for (const overlay of [{ faults: fault.sidecar.faults }, { retry: fault.sidecar.retry }]) {
+    const candidate = { ...f.sidecar, ...overlay };
+    expect(sidecarV3Schema.safeParse(candidate).success).toBe(false);
+    expect(() => compileFirstStack(candidate as typeof f.sidecar, f.schedule, f.policy)).toThrow("separately reviewed composition revision");
+  }
 });

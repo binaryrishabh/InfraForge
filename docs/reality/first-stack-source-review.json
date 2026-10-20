@@ -13,7 +13,7 @@
     },
     {
       "path": "apps/backend/firstStack/authoring.ts",
-      "hash": "76c06e94d0dd4c567da9369480aa7328fd00544977f30f708b74fe54163dc5c7"
+      "hash": "633fa5fb7dc6f67fa65537e7e0516b110684611c75e405d7f87c217e40500445"
     },
     {
       "path": "apps/backend/firstStack/boundedExecution.ts",
@@ -61,7 +61,7 @@
     },
     {
       "path": "packages/contracts/src/first-stack/index.ts",
-      "hash": "864a22fcccf0e5ac0df642702318d1b185161cf1238ef9362b0886a9f4733001"
+      "hash": "9554f181d2a5ae0ab48cec7b6b7649bb3594aa5c96cd74e57e98b8241b764f8d"
     },
     {
       "path": "packages/simulation/package.json",
@@ -69,11 +69,11 @@
     },
     {
       "path": "packages/simulation/src/firstStack/bounds.ts",
-      "hash": "6f5cc1ce4f70c35c013f0d55eb96c33d414ac4a97ba9f5fbe08733c81b072d37"
+      "hash": "686c2892c2deff32e8ea0d88f587d3eaaf38d3382ec02aa2231a006f50832244"
     },
     {
       "path": "packages/simulation/src/firstStack/compiler.ts",
-      "hash": "a4db9eeb1b766a3a91ac604a3237394ded354b638da85bb7c0693dc4e14f2820"
+      "hash": "a25f3771b3e437694e57a959cd3cf16612a965e9736d392107b3c6f232923485"
     },
     {
       "path": "packages/simulation/src/firstStack/journal.ts",
@@ -81,7 +81,7 @@
     },
     {
       "path": "packages/simulation/src/firstStack/run.ts",
-      "hash": "eeb63d60962d3ee1cdeadbff5a91198c65aa36e81bc237f84488489fb1e538ff"
+      "hash": "5876dea937caa081a6f5b7f2328fcf11bbbf7e620b3bda9e777cdf6f20eca894"
     },
     {
       "path": "packages/simulation/src/internalFirstStack.ts",
@@ -89,7 +89,7 @@
     },
     {
       "path": "packages/simulation/src/model2/composition/run.ts",
-      "hash": "597fec1e7bdafdabe5f42948860a4ef4d9503c5d03a78184cb527f24286eaac7"
+      "hash": "3da5e36608f9be27870019770054a43f1cae56a96837968efe49282499d4f10f"
     },
     {
       "path": "packages/simulation/src/model2/compute/run.ts",
@@ -117,11 +117,11 @@
     },
     {
       "path": "packages/simulation/src/model2/network/contracts.ts",
-      "hash": "a55f006f05a61fd5214a2be8d5174f197c398f7c3eb78efdb520ecb9796a32a5"
+      "hash": "0a90e10e85873db466bc7589be7f30d85a4e6cd06c39028a197def74f99c4a34"
     },
     {
       "path": "packages/simulation/src/model2/network/run.ts",
-      "hash": "6ea7acfd0a369416b9306a5d0761cefd80c547faa744bc7d41182808d9a848b6"
+      "hash": "225fc688e205a39275840649d82f89fa201900e6514bc7d5ff1820ea5ab63070"
     },
     {
       "path": "packages/simulation/src/model2/network/trace.ts",
@@ -146,6 +146,14 @@
     {
       "path": "packages/simulation/src/model2/workload/run.ts",
       "hash": "148d2c0ab514c88476636fc611b5cc7759b48027431c2139ce9f5d408da99e3c"
+    },
+    {
+      "path": "packages/simulation/src/firstStack/faults.ts",
+      "hash": "48f06ca4ba56c79e578804b1f37d9286d80ec1dd5a43462e79bb29c30a7f1120"
+    },
+    {
+      "path": "packages/simulation/src/model2/network/load-balancer.ts",
+      "hash": "3ac9f613bef26a6045755c3ec16a61e80e6ecc38c69df04f909f6866a57fcfb4"
     }
   ],
   "acceptance": [
@@ -179,11 +187,11 @@
     },
     {
       "path": "scripts/reality/first-stack-compile-proof.ts",
-      "hash": "d623a844dd3f1702aef67bc9464a7283cda55f825eafdbb77b1bf8b19e36d251"
+      "hash": "5411bf7a161f090bc9f9444a2a3a2205c1c14e9b98c02f484d9cf143b1eaf078"
     },
     {
       "path": "scripts/tests/execution-identity.test.ts",
-      "hash": "e6ebf04f2cba2288d6e5f9076b257ed6a553d833e4cbbb7b8575608ccd149916"
+      "hash": "ac86628383074225626004bfa31c84c88f6d7f40df7c84cb742ea34bfa3ab239"
     },
     {
       "path": "scripts/tests/first-stack-bounds.test.ts",
@@ -191,15 +199,31 @@
     },
     {
       "path": "scripts/reality/first-stack-bounds-proof.ts",
-      "hash": "57b9156beb213122109461a5ab518f15cef0ca7f1bfad1ef01ea114aaad4d27a"
+      "hash": "b4be47434bb4f598706e06f3154830028883b84a570d06eb518cd4458e62836c"
     },
     {
       "path": "scripts/stage2-bounds-host.ts",
-      "hash": "8cd959b67f792094a6774471a562f11f72e9409dd245d5dc8acaf3c5f38ad5a3"
+      "hash": "6a721a491f3ce734af1f19fa724c2cafd4eeb11a6a6971ec71c3a46e2757d6a5"
     },
     {
       "path": "scripts/fixtures/first-stack-bounded-execution.test.ts",
       "hash": "65da6c5a4e8cfc213ab3f9d224183b24931543062899384a7851d9562c4c843d"
+    },
+    {
+      "path": "scripts/tests/first-stack-faults.test.ts",
+      "hash": "e9ffa93d0e2767fdc6ffac19c5c2d4180608f8c1f04f57f2b4446c4cca80ced5"
+    },
+    {
+      "path": "scripts/fixtures/first-stack-faults.ts",
+      "hash": "3e7127c380a58b2270d21b9575e8b5b91edee87ccfcc3a2d325e431d684c6059"
+    },
+    {
+      "path": "scripts/reality/first-stack-fault-proof.ts",
+      "hash": "6088de8f1a030f50ed51f4c23e59e3ae172ebd685197ba260bda0b4eed66d4e0"
+    },
+    {
+      "path": "scripts/stage2-fault-host.ts",
+      "hash": "0a34559f87ce66bdb8cefe4c2551db14d932e504fa738b334f228c1c9d47fac5"
     }
   ]
 }

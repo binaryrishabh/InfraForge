@@ -1,7 +1,7 @@
 import { historicalIsolationDescriptor } from "./historical-isolation-descriptor";
 import { reviewHardeningSyntax, refreshHardeningTransitions, refreshHardeningAcceptance } from "./hardening-identity";
 import { buildCompositionTransitions } from "./stage1-identity";
-import { reviewPostgresSessions, reviewPostgresSyntax, refreshPostgresTransitions } from "./postgres-session-identity";
+import { refreshPostgresAcceptance, reviewPostgresSessions, reviewPostgresSyntax, refreshPostgresTransitions } from "./postgres-session-identity";
 import { reviewStage2Modules, writeStage2ReviewLock, buildStage2Transitions } from "./stage2-authoring";
 import { writeFiniteIoReview, reviewFiniteIoSyntax, reviewFiniteIoImports, refreshFiniteIoTransitions } from "./finite-io-identity";
 import { reviewStage0Syntax, refreshStage0Transitions } from "./stage0-identity";
@@ -174,6 +174,7 @@ if (import.meta.main) {
   else if (process.argv.includes("--review-hardening-syntax")) reviewHardeningSyntax();
   else if (process.argv.includes("--review-hardening-acceptance")) refreshHardeningAcceptance();
   else if (process.argv.includes("--review-hardening-transitions")) refreshHardeningTransitions();
+  else if (process.argv.includes("--review-pg-acceptance")) refreshPostgresAcceptance();
   else if (process.argv.includes("--write-pg-review")) reviewPostgresSessions();
   else if (process.argv.includes("--review-pg-syntax")) reviewPostgresSyntax();
   else if (process.argv.includes("--refresh-pg-transitions")) refreshPostgresTransitions();

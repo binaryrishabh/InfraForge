@@ -1,0 +1,895 @@
+{
+  "schema": "first-stack-fault-proof/1",
+  "scope": "Non-cache finite logical scenarios only. Model 1 active; timing assumption-only; full memory/cost Unknown; no host or cloud calibration claim.",
+  "hostReconstruction": 88,
+  "sources": [
+    {
+      "path": "packages/simulation/src/model2/composition/run.ts",
+      "hash": "3da5e36608f9be27870019770054a43f1cae56a96837968efe49282499d4f10f"
+    },
+    {
+      "path": "packages/simulation/src/model2/network/contracts.ts",
+      "hash": "0a90e10e85873db466bc7589be7f30d85a4e6cd06c39028a197def74f99c4a34"
+    },
+    {
+      "path": "packages/simulation/src/model2/network/load-balancer.ts",
+      "hash": "3ac9f613bef26a6045755c3ec16a61e80e6ecc38c69df04f909f6866a57fcfb4"
+    },
+    {
+      "path": "packages/simulation/src/model2/network/run.ts",
+      "hash": "225fc688e205a39275840649d82f89fa201900e6514bc7d5ff1820ea5ab63070"
+    },
+    {
+      "path": "packages/contracts/src/first-stack/index.ts",
+      "hash": "9554f181d2a5ae0ab48cec7b6b7649bb3594aa5c96cd74e57e98b8241b764f8d"
+    },
+    {
+      "path": "apps/backend/firstStack/authoring.ts",
+      "hash": "633fa5fb7dc6f67fa65537e7e0516b110684611c75e405d7f87c217e40500445"
+    },
+    {
+      "path": "packages/simulation/src/firstStack/compiler.ts",
+      "hash": "a25f3771b3e437694e57a959cd3cf16612a965e9736d392107b3c6f232923485"
+    },
+    {
+      "path": "packages/simulation/src/firstStack/run.ts",
+      "hash": "5876dea937caa081a6f5b7f2328fcf11bbbf7e620b3bda9e777cdf6f20eca894"
+    },
+    {
+      "path": "packages/simulation/src/firstStack/faults.ts",
+      "hash": "48f06ca4ba56c79e578804b1f37d9286d80ec1dd5a43462e79bb29c30a7f1120"
+    },
+    {
+      "path": "packages/simulation/src/firstStack/bounds.ts",
+      "hash": "686c2892c2deff32e8ea0d88f587d3eaaf38d3382ec02aa2231a006f50832244"
+    },
+    {
+      "path": "scripts/fixtures/first-stack-faults.ts",
+      "hash": "3e7127c380a58b2270d21b9575e8b5b91edee87ccfcc3a2d325e431d684c6059"
+    },
+    {
+      "path": "scripts/tests/first-stack-faults.test.ts",
+      "hash": "e9ffa93d0e2767fdc6ffac19c5c2d4180608f8c1f04f57f2b4446c4cca80ced5"
+    },
+    {
+      "path": "scripts/stage2-fault-host.ts",
+      "hash": "0a34559f87ce66bdb8cefe4c2551db14d932e504fa738b334f228c1c9d47fac5"
+    },
+    {
+      "path": "scripts/reality/first-stack-fault-proof.ts",
+      "hash": "6088de8f1a030f50ed51f4c23e59e3ae172ebd685197ba260bda0b4eed66d4e0"
+    }
+  ],
+  "runs": [
+    {
+      "mode": "crash",
+      "lock": {
+        "schema": "infraforge-first-stack-compile-lock/2",
+        "compiler": "first-stack-compiler/2",
+        "composition": "first-stack-composition/2",
+        "designRevision": "c25afc05973778a6db5b74bc155c3d90be46b3c1e66e728516338138e49c5d8c",
+        "sidecarHash": "ff2f127cc2bddda99976289fd74ae8fffcfcb54e5bca1265a26738af2d2bad1f",
+        "workloadIdentity": "d9f2afcff3fd53eae9fe1ca1a2237fe39c46cdb9fdbd452feb26ac2a4c0a5ea5",
+        "executedScheduleHash": "19c91a8847440bcff6a00c8424d49a9cc36b6896b6e83c6bad00c6880dffdee9",
+        "profileHash": "feee54986bd2c4619a780cc7e5678f14a494ff5df27f8639ed1df386e6466b42",
+        "compiledHash": "b681cbafc30242ad56624cb5bd2a68e858c65e0f3bf1cf0c6df2ee639181751f"
+      },
+      "scenario": [
+        {
+          "schema": "first-stack-fault/1",
+          "id": "app-loss",
+          "kind": "app-process-crash",
+          "target": "app-1",
+          "atUs": 5500,
+          "downtimeUs": 1500,
+          "recoveryUs": 1000
+        }
+      ],
+      "retry": {
+        "schema": "first-stack-read-retry/1",
+        "owner": "load-balancer",
+        "operations": [
+          "read"
+        ],
+        "maxAttempts": 2,
+        "backoffUs": 100,
+        "maxConcurrentRetries": 4
+      },
+      "evidence": "77f91871add4c521c72e89c60deb1fa11d3733079ad473b2b8068494de517004",
+      "journal": "ea8e82ad605375a88d77f2c9fcc519b6b62e0b06e06c9dc6c35497109be1426d",
+      "counts": {
+        "offered": 8,
+        "admitted": 8,
+        "completed": 8,
+        "rejected": 0,
+        "deadlineExceeded": 0,
+        "abandoned": 0,
+        "remoteOutcomesAfterCallerStop": 0,
+        "cancellationRequested": 0,
+        "cancellationConfirmedAtEntry": 0,
+        "inFlight": 0
+      },
+      "attempts": 9,
+      "retries": 1,
+      "lifecycle": [
+        {
+          "id": "app-0",
+          "generation": 1,
+          "state": "ready"
+        },
+        {
+          "id": "app-1",
+          "generation": 2,
+          "state": "ready"
+        },
+        {
+          "id": "db",
+          "generation": 1,
+          "state": "ready"
+        },
+        {
+          "id": "first-stack-recorded-input",
+          "generation": 1,
+          "state": "ready"
+        },
+        {
+          "id": "lb",
+          "generation": 1,
+          "state": "ready"
+        }
+      ],
+      "transactions": {
+        "admitted": 25,
+        "committed": 25,
+        "aborted": 0,
+        "cancelled": 0,
+        "live": 0
+      },
+      "cpu": [
+        {
+          "id": "host-app-0",
+          "capacity": 1,
+          "runnable": 0,
+          "receivingShare": 0,
+          "contended": false,
+          "paused": false,
+          "throttled": false,
+          "appCoreUs": 2490,
+          "competitorCoreUs": 0,
+          "availableCoreUs": 24500,
+          "throttledWallUs": 0,
+          "unsatisfiedParallelismUs": 440,
+          "quotaRemainingCoreUs": null,
+          "allocations": [],
+          "boundaries": 15,
+          "members": 1
+        },
+        {
+          "id": "host-app-1",
+          "capacity": 1,
+          "runnable": 0,
+          "receivingShare": 0,
+          "contended": false,
+          "paused": false,
+          "throttled": false,
+          "appCoreUs": 974,
+          "competitorCoreUs": 0,
+          "availableCoreUs": 24500,
+          "throttledWallUs": 0,
+          "unsatisfiedParallelismUs": 0,
+          "quotaRemainingCoreUs": null,
+          "allocations": [],
+          "boundaries": 10,
+          "members": 1
+        },
+        {
+          "id": "host-db",
+          "capacity": 1,
+          "runnable": 0,
+          "receivingShare": 0,
+          "contended": false,
+          "paused": false,
+          "throttled": false,
+          "appCoreUs": 5000,
+          "competitorCoreUs": 0,
+          "availableCoreUs": 24500,
+          "throttledWallUs": 0,
+          "unsatisfiedParallelismUs": 3268,
+          "quotaRemainingCoreUs": null,
+          "allocations": [],
+          "boundaries": 18,
+          "members": 1
+        }
+      ],
+      "memory": [
+        {
+          "id": "host-app-0",
+          "capacityBytes": 1024,
+          "reservedBytes": 100,
+          "availableBytes": 924,
+          "leases": 1
+        },
+        {
+          "id": "host-app-1",
+          "capacityBytes": 1024,
+          "reservedBytes": 100,
+          "availableBytes": 924,
+          "leases": 1
+        },
+        {
+          "id": "host-db",
+          "capacityBytes": 1024,
+          "reservedBytes": 100,
+          "availableBytes": 924,
+          "leases": 1
+        },
+        {
+          "id": "host-lb",
+          "capacityBytes": 1024,
+          "reservedBytes": 0,
+          "availableBytes": 1024,
+          "leases": 0
+        }
+      ],
+      "observerEqual": true,
+      "repeatedBytesEqual": true
+    },
+    {
+      "mode": "shared-crash",
+      "lock": {
+        "schema": "infraforge-first-stack-compile-lock/2",
+        "compiler": "first-stack-compiler/2",
+        "composition": "first-stack-composition/2",
+        "designRevision": "c25afc05973778a6db5b74bc155c3d90be46b3c1e66e728516338138e49c5d8c",
+        "sidecarHash": "05ff0863bd80bc40e0ee525239f0221858edc8a41036f06a0bbbb671c5664f4f",
+        "workloadIdentity": "d9f2afcff3fd53eae9fe1ca1a2237fe39c46cdb9fdbd452feb26ac2a4c0a5ea5",
+        "executedScheduleHash": "19c91a8847440bcff6a00c8424d49a9cc36b6896b6e83c6bad00c6880dffdee9",
+        "profileHash": "feee54986bd2c4619a780cc7e5678f14a494ff5df27f8639ed1df386e6466b42",
+        "compiledHash": "e066d80f96e05a3cfa50345aa3f484a9f6913cd7739ec6ea199ce805ad6563b8"
+      },
+      "scenario": [
+        {
+          "schema": "first-stack-fault/1",
+          "id": "app-loss",
+          "kind": "app-process-crash",
+          "target": "app-1",
+          "atUs": 5500,
+          "downtimeUs": 1500,
+          "recoveryUs": 1000
+        }
+      ],
+      "retry": {
+        "schema": "first-stack-read-retry/1",
+        "owner": "load-balancer",
+        "operations": [
+          "read"
+        ],
+        "maxAttempts": 2,
+        "backoffUs": 100,
+        "maxConcurrentRetries": 4
+      },
+      "evidence": "edd57ad2b6dcafe1c0ec26943dd226e4546271875d58ec1f9f64dc35896968ec",
+      "journal": "ecab80a94775d1e24a18bdd4630e188711bc887f4af1a082006e56691ba9880e",
+      "counts": {
+        "offered": 8,
+        "admitted": 8,
+        "completed": 8,
+        "rejected": 0,
+        "deadlineExceeded": 0,
+        "abandoned": 0,
+        "remoteOutcomesAfterCallerStop": 0,
+        "cancellationRequested": 0,
+        "cancellationConfirmedAtEntry": 0,
+        "inFlight": 0
+      },
+      "attempts": 9,
+      "retries": 1,
+      "lifecycle": [
+        {
+          "id": "app-0",
+          "generation": 1,
+          "state": "ready"
+        },
+        {
+          "id": "app-1",
+          "generation": 2,
+          "state": "ready"
+        },
+        {
+          "id": "db",
+          "generation": 1,
+          "state": "ready"
+        },
+        {
+          "id": "first-stack-recorded-input",
+          "generation": 1,
+          "state": "ready"
+        },
+        {
+          "id": "lb",
+          "generation": 1,
+          "state": "ready"
+        }
+      ],
+      "transactions": {
+        "admitted": 25,
+        "committed": 25,
+        "aborted": 0,
+        "cancelled": 0,
+        "live": 0
+      },
+      "cpu": [
+        {
+          "id": "shared-apps",
+          "capacity": 1,
+          "runnable": 0,
+          "receivingShare": 0,
+          "contended": false,
+          "paused": false,
+          "throttled": false,
+          "appCoreUs": 3464,
+          "competitorCoreUs": 0,
+          "availableCoreUs": 24500,
+          "throttledWallUs": 0,
+          "unsatisfiedParallelismUs": 596,
+          "quotaRemainingCoreUs": null,
+          "allocations": [],
+          "boundaries": 18,
+          "members": 2
+        },
+        {
+          "id": "host-db",
+          "capacity": 1,
+          "runnable": 0,
+          "receivingShare": 0,
+          "contended": false,
+          "paused": false,
+          "throttled": false,
+          "appCoreUs": 5000,
+          "competitorCoreUs": 0,
+          "availableCoreUs": 24500,
+          "throttledWallUs": 0,
+          "unsatisfiedParallelismUs": 3268,
+          "quotaRemainingCoreUs": null,
+          "allocations": [],
+          "boundaries": 18,
+          "members": 1
+        }
+      ],
+      "memory": [
+        {
+          "id": "host-db",
+          "capacityBytes": 1024,
+          "reservedBytes": 100,
+          "availableBytes": 924,
+          "leases": 1
+        },
+        {
+          "id": "host-lb",
+          "capacityBytes": 1024,
+          "reservedBytes": 0,
+          "availableBytes": 1024,
+          "leases": 0
+        },
+        {
+          "id": "shared-apps",
+          "capacityBytes": 200,
+          "reservedBytes": 200,
+          "availableBytes": 0,
+          "leases": 2
+        }
+      ],
+      "observerEqual": true,
+      "repeatedBytesEqual": true
+    },
+    {
+      "mode": "partition",
+      "lock": {
+        "schema": "infraforge-first-stack-compile-lock/2",
+        "compiler": "first-stack-compiler/2",
+        "composition": "first-stack-composition/2",
+        "designRevision": "c25afc05973778a6db5b74bc155c3d90be46b3c1e66e728516338138e49c5d8c",
+        "sidecarHash": "d51db1b8ee63a0b17faa2e6638446db26c1546fdb489b7caf0f0dad72dae110e",
+        "workloadIdentity": "d9f2afcff3fd53eae9fe1ca1a2237fe39c46cdb9fdbd452feb26ac2a4c0a5ea5",
+        "executedScheduleHash": "19c91a8847440bcff6a00c8424d49a9cc36b6896b6e83c6bad00c6880dffdee9",
+        "profileHash": "feee54986bd2c4619a780cc7e5678f14a494ff5df27f8639ed1df386e6466b42",
+        "compiledHash": "1e237984904076926f475c1257e2535692da3be4a972961a328c87f917dfad25"
+      },
+      "scenario": [
+        {
+          "schema": "first-stack-fault/1",
+          "id": "request-loss",
+          "kind": "directed-partition",
+          "target": "lb-0:req",
+          "atUs": 5000,
+          "durationUs": 1500
+        }
+      ],
+      "retry": {
+        "schema": "first-stack-read-retry/1",
+        "owner": "load-balancer",
+        "operations": [
+          "read"
+        ],
+        "maxAttempts": 2,
+        "backoffUs": 100,
+        "maxConcurrentRetries": 4
+      },
+      "evidence": "59e82c3a35b71df0af89d9b5db2d77c92a5c411da930eb1fc023c93fff8ed565",
+      "journal": "df74b25f9a26d77aab2d1bf90847d1a637156e23edf5e27e9b0eb337c268a735",
+      "counts": {
+        "offered": 8,
+        "admitted": 8,
+        "completed": 8,
+        "rejected": 0,
+        "deadlineExceeded": 0,
+        "abandoned": 0,
+        "remoteOutcomesAfterCallerStop": 0,
+        "cancellationRequested": 0,
+        "cancellationConfirmedAtEntry": 0,
+        "inFlight": 0
+      },
+      "attempts": 10,
+      "retries": 2,
+      "lifecycle": [
+        {
+          "id": "app-0",
+          "generation": 1,
+          "state": "ready"
+        },
+        {
+          "id": "app-1",
+          "generation": 1,
+          "state": "ready"
+        },
+        {
+          "id": "db",
+          "generation": 1,
+          "state": "ready"
+        },
+        {
+          "id": "first-stack-recorded-input",
+          "generation": 1,
+          "state": "ready"
+        },
+        {
+          "id": "lb",
+          "generation": 1,
+          "state": "ready"
+        }
+      ],
+      "transactions": {
+        "admitted": 25,
+        "committed": 25,
+        "aborted": 0,
+        "cancelled": 0,
+        "live": 0
+      },
+      "cpu": [
+        {
+          "id": "host-app-0",
+          "capacity": 1,
+          "runnable": 0,
+          "receivingShare": 0,
+          "contended": false,
+          "paused": false,
+          "throttled": false,
+          "appCoreUs": 880,
+          "competitorCoreUs": 0,
+          "availableCoreUs": 24500,
+          "throttledWallUs": 0,
+          "unsatisfiedParallelismUs": 0,
+          "quotaRemainingCoreUs": null,
+          "allocations": [],
+          "boundaries": 10,
+          "members": 1
+        },
+        {
+          "id": "host-app-1",
+          "capacity": 1,
+          "runnable": 0,
+          "receivingShare": 0,
+          "contended": false,
+          "paused": false,
+          "throttled": false,
+          "appCoreUs": 2490,
+          "competitorCoreUs": 0,
+          "availableCoreUs": 24500,
+          "throttledWallUs": 0,
+          "unsatisfiedParallelismUs": 1800,
+          "quotaRemainingCoreUs": null,
+          "allocations": [],
+          "boundaries": 15,
+          "members": 1
+        },
+        {
+          "id": "host-db",
+          "capacity": 1,
+          "runnable": 0,
+          "receivingShare": 0,
+          "contended": false,
+          "paused": false,
+          "throttled": false,
+          "appCoreUs": 5000,
+          "competitorCoreUs": 0,
+          "availableCoreUs": 24500,
+          "throttledWallUs": 0,
+          "unsatisfiedParallelismUs": 3504,
+          "quotaRemainingCoreUs": null,
+          "allocations": [],
+          "boundaries": 18,
+          "members": 1
+        }
+      ],
+      "memory": [
+        {
+          "id": "host-app-0",
+          "capacityBytes": 1024,
+          "reservedBytes": 100,
+          "availableBytes": 924,
+          "leases": 1
+        },
+        {
+          "id": "host-app-1",
+          "capacityBytes": 1024,
+          "reservedBytes": 100,
+          "availableBytes": 924,
+          "leases": 1
+        },
+        {
+          "id": "host-db",
+          "capacityBytes": 1024,
+          "reservedBytes": 100,
+          "availableBytes": 924,
+          "leases": 1
+        },
+        {
+          "id": "host-lb",
+          "capacityBytes": 1024,
+          "reservedBytes": 0,
+          "availableBytes": 1024,
+          "leases": 0
+        }
+      ],
+      "observerEqual": true,
+      "repeatedBytesEqual": true
+    },
+    {
+      "mode": "delay",
+      "lock": {
+        "schema": "infraforge-first-stack-compile-lock/2",
+        "compiler": "first-stack-compiler/2",
+        "composition": "first-stack-composition/2",
+        "designRevision": "c25afc05973778a6db5b74bc155c3d90be46b3c1e66e728516338138e49c5d8c",
+        "sidecarHash": "ff98555e264db0dab789a5596f6b266c1ee79866506ec8f3b1bc8e740016e4ab",
+        "workloadIdentity": "d9f2afcff3fd53eae9fe1ca1a2237fe39c46cdb9fdbd452feb26ac2a4c0a5ea5",
+        "executedScheduleHash": "19c91a8847440bcff6a00c8424d49a9cc36b6896b6e83c6bad00c6880dffdee9",
+        "profileHash": "feee54986bd2c4619a780cc7e5678f14a494ff5df27f8639ed1df386e6466b42",
+        "compiledHash": "d06b1123b77422bebf9e6d2e008d7710fba0a2369b0336264582940f907d59d3"
+      },
+      "scenario": [
+        {
+          "schema": "first-stack-fault/1",
+          "id": "response-delay",
+          "kind": "directed-delay",
+          "target": "lb-0:res",
+          "atUs": 5000,
+          "durationUs": 1500,
+          "delayUs": 1000
+        }
+      ],
+      "retry": {
+        "schema": "first-stack-read-retry/1",
+        "owner": "load-balancer",
+        "operations": [
+          "read"
+        ],
+        "maxAttempts": 2,
+        "backoffUs": 100,
+        "maxConcurrentRetries": 4
+      },
+      "evidence": "16de62b4975ebdf9cb921719a6d0fc27a29da44670ea3ff27bad00fa5f8e88c1",
+      "journal": "53223f0545d00170390b107997edd16ec73050cad47b23d32f67cbdd8d9e0e41",
+      "counts": {
+        "offered": 8,
+        "admitted": 8,
+        "completed": 8,
+        "rejected": 0,
+        "deadlineExceeded": 0,
+        "abandoned": 0,
+        "remoteOutcomesAfterCallerStop": 0,
+        "cancellationRequested": 0,
+        "cancellationConfirmedAtEntry": 0,
+        "inFlight": 0
+      },
+      "attempts": 8,
+      "retries": 0,
+      "lifecycle": [
+        {
+          "id": "app-0",
+          "generation": 1,
+          "state": "ready"
+        },
+        {
+          "id": "app-1",
+          "generation": 1,
+          "state": "ready"
+        },
+        {
+          "id": "db",
+          "generation": 1,
+          "state": "ready"
+        },
+        {
+          "id": "first-stack-recorded-input",
+          "generation": 1,
+          "state": "ready"
+        },
+        {
+          "id": "lb",
+          "generation": 1,
+          "state": "ready"
+        }
+      ],
+      "transactions": {
+        "admitted": 26,
+        "committed": 26,
+        "aborted": 0,
+        "cancelled": 0,
+        "live": 0
+      },
+      "cpu": [
+        {
+          "id": "host-app-0",
+          "capacity": 1,
+          "runnable": 0,
+          "receivingShare": 0,
+          "contended": false,
+          "paused": false,
+          "throttled": false,
+          "appCoreUs": 1690,
+          "competitorCoreUs": 0,
+          "availableCoreUs": 24500,
+          "throttledWallUs": 0,
+          "unsatisfiedParallelismUs": 20,
+          "quotaRemainingCoreUs": null,
+          "allocations": [],
+          "boundaries": 13,
+          "members": 1
+        },
+        {
+          "id": "host-app-1",
+          "capacity": 1,
+          "runnable": 0,
+          "receivingShare": 0,
+          "contended": false,
+          "paused": false,
+          "throttled": false,
+          "appCoreUs": 1690,
+          "competitorCoreUs": 0,
+          "availableCoreUs": 24500,
+          "throttledWallUs": 0,
+          "unsatisfiedParallelismUs": 0,
+          "quotaRemainingCoreUs": null,
+          "allocations": [],
+          "boundaries": 13,
+          "members": 1
+        },
+        {
+          "id": "host-db",
+          "capacity": 1,
+          "runnable": 0,
+          "receivingShare": 0,
+          "contended": false,
+          "paused": false,
+          "throttled": false,
+          "appCoreUs": 5200,
+          "competitorCoreUs": 0,
+          "availableCoreUs": 24500,
+          "throttledWallUs": 0,
+          "unsatisfiedParallelismUs": 3968,
+          "quotaRemainingCoreUs": null,
+          "allocations": [],
+          "boundaries": 18,
+          "members": 1
+        }
+      ],
+      "memory": [
+        {
+          "id": "host-app-0",
+          "capacityBytes": 1024,
+          "reservedBytes": 100,
+          "availableBytes": 924,
+          "leases": 1
+        },
+        {
+          "id": "host-app-1",
+          "capacityBytes": 1024,
+          "reservedBytes": 100,
+          "availableBytes": 924,
+          "leases": 1
+        },
+        {
+          "id": "host-db",
+          "capacityBytes": 1024,
+          "reservedBytes": 100,
+          "availableBytes": 924,
+          "leases": 1
+        },
+        {
+          "id": "host-lb",
+          "capacityBytes": 1024,
+          "reservedBytes": 0,
+          "availableBytes": 1024,
+          "leases": 0
+        }
+      ],
+      "observerEqual": true,
+      "repeatedBytesEqual": true
+    },
+    {
+      "mode": "write-crash",
+      "lock": {
+        "schema": "infraforge-first-stack-compile-lock/2",
+        "compiler": "first-stack-compiler/2",
+        "composition": "first-stack-composition/2",
+        "designRevision": "c25afc05973778a6db5b74bc155c3d90be46b3c1e66e728516338138e49c5d8c",
+        "sidecarHash": "c71820fef19a2f5a46fbef6b96c42664dde8266e5303ed4eecd3662a3618b447",
+        "workloadIdentity": "5eab2d9b7c6692f9e9d21d6f549eb88286c819894817b37160829bfc615c7cc6",
+        "executedScheduleHash": "80c24939e21e21821889b9cc599fd5869133e0148ccb4b2d7b461606b1331de3",
+        "profileHash": "b6ca6c85f5bba7246f6935095e42b0c67f6ec6d95f91a3fb1b9500dcaefb7e9b",
+        "compiledHash": "e4e783fd8c9956e2c0d88e4dc07583ffdd8cea229d6cf9962501aac38f9aae61"
+      },
+      "scenario": [
+        {
+          "schema": "first-stack-fault/1",
+          "id": "app-loss",
+          "kind": "app-process-crash",
+          "target": "app-1",
+          "atUs": 5500,
+          "downtimeUs": 1500,
+          "recoveryUs": 1000
+        }
+      ],
+      "retry": null,
+      "evidence": "8ae5ad36f3ff71a97423bbc2aff37aa3ffb1279c4a603340a1049383b5dd7ad9",
+      "journal": "bb395c43a49835dbcc269391d9195322fb2804cedfd5e74f224600c4901de013",
+      "counts": {
+        "offered": 8,
+        "admitted": 8,
+        "completed": 7,
+        "rejected": 1,
+        "deadlineExceeded": 0,
+        "abandoned": 0,
+        "remoteOutcomesAfterCallerStop": 0,
+        "cancellationRequested": 0,
+        "cancellationConfirmedAtEntry": 0,
+        "inFlight": 0
+      },
+      "attempts": 8,
+      "retries": 0,
+      "lifecycle": [
+        {
+          "id": "app-0",
+          "generation": 1,
+          "state": "ready"
+        },
+        {
+          "id": "app-1",
+          "generation": 2,
+          "state": "ready"
+        },
+        {
+          "id": "db",
+          "generation": 1,
+          "state": "ready"
+        },
+        {
+          "id": "first-stack-recorded-input",
+          "generation": 1,
+          "state": "ready"
+        },
+        {
+          "id": "lb",
+          "generation": 1,
+          "state": "ready"
+        }
+      ],
+      "transactions": {
+        "admitted": 24,
+        "committed": 24,
+        "aborted": 0,
+        "cancelled": 0,
+        "live": 0
+      },
+      "cpu": [
+        {
+          "id": "host-app-0",
+          "capacity": 1,
+          "runnable": 0,
+          "receivingShare": 0,
+          "contended": false,
+          "paused": false,
+          "throttled": false,
+          "appCoreUs": 2090,
+          "competitorCoreUs": 0,
+          "availableCoreUs": 24500,
+          "throttledWallUs": 0,
+          "unsatisfiedParallelismUs": 20,
+          "quotaRemainingCoreUs": null,
+          "allocations": [],
+          "boundaries": 14,
+          "members": 1
+        },
+        {
+          "id": "host-app-1",
+          "capacity": 1,
+          "runnable": 0,
+          "receivingShare": 0,
+          "contended": false,
+          "paused": false,
+          "throttled": false,
+          "appCoreUs": 974,
+          "competitorCoreUs": 0,
+          "availableCoreUs": 24500,
+          "throttledWallUs": 0,
+          "unsatisfiedParallelismUs": 0,
+          "quotaRemainingCoreUs": null,
+          "allocations": [],
+          "boundaries": 10,
+          "members": 1
+        },
+        {
+          "id": "host-db",
+          "capacity": 1,
+          "runnable": 0,
+          "receivingShare": 0,
+          "contended": false,
+          "paused": false,
+          "throttled": false,
+          "appCoreUs": 4800,
+          "competitorCoreUs": 0,
+          "availableCoreUs": 24500,
+          "throttledWallUs": 0,
+          "unsatisfiedParallelismUs": 3208,
+          "quotaRemainingCoreUs": null,
+          "allocations": [],
+          "boundaries": 17,
+          "members": 1
+        }
+      ],
+      "memory": [
+        {
+          "id": "host-app-0",
+          "capacityBytes": 1024,
+          "reservedBytes": 100,
+          "availableBytes": 924,
+          "leases": 1
+        },
+        {
+          "id": "host-app-1",
+          "capacityBytes": 1024,
+          "reservedBytes": 100,
+          "availableBytes": 924,
+          "leases": 1
+        },
+        {
+          "id": "host-db",
+          "capacityBytes": 1024,
+          "reservedBytes": 100,
+          "availableBytes": 924,
+          "leases": 1
+        },
+        {
+          "id": "host-lb",
+          "capacityBytes": 1024,
+          "reservedBytes": 0,
+          "availableBytes": 1024,
+          "leases": 0
+        }
+      ],
+      "observerEqual": true,
+      "repeatedBytesEqual": true
+    }
+  ]
+}

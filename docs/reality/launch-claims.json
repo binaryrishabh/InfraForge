@@ -2311,6 +2311,83 @@
           "anchor": "No universal bytes/key"
         }
       ]
+    },
+    {
+      "id": "FirstStackFiniteScenario",
+      "fields": [
+        "FirstStackFault.id",
+        "FirstStackFault.kind",
+        "FirstStackFault.schema",
+        "FirstStackFault.target",
+        "FirstStackSidecarV2.faults",
+        "FirstStackSidecarV2.retry",
+        "FirstStackSidecarV2.retry.maxAttempts",
+        "FirstStackSidecarV2.retry.maxConcurrentRetries",
+        "FirstStackSidecarV2.retry.operations",
+        "FirstStackSidecarV2.retry.owner",
+        "FirstStackSidecarV2.retry.schema",
+        "RetryPolicy.operations"
+      ],
+      "mechanism": "Finite non-cache process/link commands, generation cleanup and single-LB read retry allowlist.",
+      "model1": "unsupported",
+      "model2": "supported-logical",
+      "scope": "Internal qualification only: app crashes, directed delay/partition and at most two idempotent-read attempts. Ambiguous writes never auto-retry. Cache/DB/LB crashes and CPU competitors unavailable. Connected admission still excludes retries. No activation, full resident memory or full cost claim.",
+      "sources": [
+        {
+          "file": "packages/simulation/src/firstStack/faults.ts",
+          "anchor": "export function compileScenario"
+        },
+        {
+          "file": "scripts/tests/first-stack-faults.test.ts",
+          "anchor": "process fault precedes an equal-time transport response deadline"
+        }
+      ]
+    },
+    {
+      "id": "FirstStackScenarioTiming",
+      "fields": [
+        "FirstStackFault.atUs",
+        "FirstStackFault.delayUs",
+        "FirstStackFault.downtimeUs",
+        "FirstStackFault.durationUs",
+        "FirstStackFault.recoveryUs",
+        "FirstStackSidecarV2.retry.backoffUs"
+      ],
+      "mechanism": "Explicit authored fault, recovery, directed link and deterministic retry timing.",
+      "model1": "unsupported",
+      "model2": "assumption-only",
+      "scope": "Conditional authored scenario timing only. Process readiness is separate from successful LB probe eligibility. No physical/cloud timing calibration or managed recovery claim.",
+      "sources": [
+        {
+          "file": "packages/simulation/src/firstStack/faults.ts",
+          "anchor": "const end = f.atUs"
+        },
+        {
+          "file": "docs/reality/first-stack-faults.md",
+          "anchor": "Model 1 remains active."
+        }
+      ]
+    },
+    {
+      "id": "FirstStackCacheScenarioRefusal",
+      "fields": [
+        "FirstStackSidecarV3.faults",
+        "FirstStackSidecarV3.retry"
+      ],
+      "mechanism": "Cache V3 retains an empty fault tuple and no retry overlay.",
+      "model1": "unsupported",
+      "model2": "unsupported",
+      "scope": "Combining cache policy children with process/link faults or read retries requires a separately reviewed composition revision. Schema and trusted compiler refuse these overlays; no combined lifecycle claim.",
+      "sources": [
+        {
+          "file": "apps/backend/firstStack/authoring.ts",
+          "anchor": "faults: z.tuple([]), retry: z.never().optional()"
+        },
+        {
+          "file": "scripts/tests/first-stack-faults.test.ts",
+          "anchor": "cache V3 keeps faults and retries outside its reviewed composition"
+        }
+      ]
     }
   ]
 }

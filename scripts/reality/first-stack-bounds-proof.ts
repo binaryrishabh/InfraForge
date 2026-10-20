@@ -29,6 +29,8 @@ export async function boundsProof() {
 }
 export async function verifyBoundsProof(write = false) {
   const actual = await boundsProof();
+  const previous = JSON.parse(readFileSync("docs/reality/first-stack-bounds-proof.json", "utf8"));
+  if (digest(actual.cases) !== digest(previous.cases)) throw Error("Scenario-free bounded fixtures changed from slice 10a");
   if (write) writeFileSync(path, JSON.stringify(actual, null, 2) + "\n");
   if (digest(actual) !== digest(JSON.parse(readFileSync(path, "utf8")))) throw Error("Bounds proof drift; review and run --write");
   return { cases: actual.cases.length, historicalCompositions: actual.historicalCompositions.length };

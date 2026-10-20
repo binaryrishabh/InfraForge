@@ -342,7 +342,7 @@
     },
     {
       "file": "apps/backend/executionIdentity/loading.ts",
-      "sha256": "eed20f4ea60346b38f85453cb359faad5f869f85cd2cb9e002d62a9105066eae",
+      "sha256": "582eeb3f22ff420aa9ced940983343bcb9316c2745ef514ec44b8c7985340c63",
       "numericSites": 14
     },
     {
@@ -372,8 +372,8 @@
     },
     {
       "file": "apps/backend/firstStack/authoring.ts",
-      "sha256": "76c06e94d0dd4c567da9369480aa7328fd00544977f30f708b74fe54163dc5c7",
-      "numericSites": 40
+      "sha256": "633fa5fb7dc6f67fa65537e7e0516b110684611c75e405d7f87c217e40500445",
+      "numericSites": 44
     },
     {
       "file": "apps/backend/firstStack/boundedExecution.ts",
@@ -2252,8 +2252,8 @@
     },
     {
       "file": "packages/contracts/src/first-stack/index.ts",
-      "sha256": "864a22fcccf0e5ac0df642702318d1b185161cf1238ef9362b0886a9f4733001",
-      "numericSites": 24
+      "sha256": "9554f181d2a5ae0ab48cec7b6b7649bb3594aa5c96cd74e57e98b8241b764f8d",
+      "numericSites": 25
     },
     {
       "file": "packages/contracts/src/infrastructure/Infrastructure.interface.ts",
@@ -2512,13 +2512,18 @@
     },
     {
       "file": "packages/simulation/src/firstStack/bounds.ts",
-      "sha256": "6f5cc1ce4f70c35c013f0d55eb96c33d414ac4a97ba9f5fbe08733c81b072d37",
-      "numericSites": 44
+      "sha256": "686c2892c2deff32e8ea0d88f587d3eaaf38d3382ec02aa2231a006f50832244",
+      "numericSites": 46
     },
     {
       "file": "packages/simulation/src/firstStack/compiler.ts",
-      "sha256": "a4db9eeb1b766a3a91ac604a3237394ded354b638da85bb7c0693dc4e14f2820",
+      "sha256": "a25f3771b3e437694e57a959cd3cf16612a965e9736d392107b3c6f232923485",
       "numericSites": 21
+    },
+    {
+      "file": "packages/simulation/src/firstStack/faults.ts",
+      "sha256": "48f06ca4ba56c79e578804b1f37d9286d80ec1dd5a43462e79bb29c30a7f1120",
+      "numericSites": 15
     },
     {
       "file": "packages/simulation/src/firstStack/io.ts",
@@ -2532,8 +2537,8 @@
     },
     {
       "file": "packages/simulation/src/firstStack/run.ts",
-      "sha256": "eeb63d60962d3ee1cdeadbff5a91198c65aa36e81bc237f84488489fb1e538ff",
-      "numericSites": 8
+      "sha256": "5876dea937caa081a6f5b7f2328fcf11bbbf7e620b3bda9e777cdf6f20eca894",
+      "numericSites": 11
     },
     {
       "file": "packages/simulation/src/internalFirstStack.ts",
@@ -26905,7 +26910,7 @@
     },
     {
       "id": "m1.apps.backend.firstStack.authoring.23",
-      "concept": "sidecarV2Schema.links · literal 64",
+      "concept": "sidecarV2Schema.faults · literal 64",
       "modelVersion": "1",
       "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
       "quantity": {
@@ -26916,12 +26921,12 @@
           "m1.apps.backend.firstStack.authoring.23"
         ]
       },
-      "formula": "links: z.array(sidecarSchema.shape.links.element.extend({ from: id, to: id })).max(64)",
+      "formula": "faults: z.array(z.discriminatedUnion(\"kind\", [ z.object({ schema: z.literal(\"first-stack-fault/1\"), id, atUs: time, target: id, kind: z.literal(\"app-process-crash\"), downtimeUs: time.positive(), recoveryUs: time.positive() }).strict(), z.object({ schema: z.literal(\"first-stack-fault/1\"), id, atUs: time, target: id, kind: z.literal(\"directed-delay\"), durationUs: time.positive(), delayUs: time }).strict(), z.object({ schema: z.literal(\"first-stack-fault/1\"), id, atUs: time, target: id, kind: z.lit",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/firstStack/authoring.ts#L59",
+          "source": "workspace:apps/backend/firstStack/authoring.ts#L62",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -26935,12 +26940,156 @@
       "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
       "location": {
         "file": "apps/backend/firstStack/authoring.ts",
-        "line": 59,
-        "column": 86
+        "line": 62,
+        "column": 11
       }
     },
     {
       "id": "m1.apps.backend.firstStack.authoring.24",
+      "concept": "sidecarV2Schema.retry.operations · literal 1",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.authoring.24"
+        ]
+      },
+      "formula": "operations: z.array(id).min(1).max(limits.operations)",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/authoring.ts#L63",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/authoring.ts",
+        "line": 63,
+        "column": 131
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.authoring.25",
+      "concept": "sidecarV2Schema.retry.maxAttempts · literal 2",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 2,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.authoring.25"
+        ]
+      },
+      "formula": "maxAttempts: z.literal(2)",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/authoring.ts#L64",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/authoring.ts",
+        "line": 64,
+        "column": 28
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.authoring.26",
+      "concept": "sidecarV2Schema.retry.maxConcurrentRetries · literal 10000",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 10000,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.authoring.26"
+        ]
+      },
+      "formula": "maxConcurrentRetries: positive.max(10000)",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/authoring.ts#L64",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/authoring.ts",
+        "line": 64,
+        "column": 95
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.authoring.27",
+      "concept": "sidecarV2Schema.links · literal 64",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 64,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.authoring.27"
+        ]
+      },
+      "formula": "links: z.array(sidecarSchema.shape.links.element.extend({ from: id, to: id })).max(64)",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/authoring.ts#L66",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/authoring.ts",
+        "line": 66,
+        "column": 86
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.authoring.28",
       "concept": "sidecarV2Schema.paths · literal 32",
       "modelVersion": "1",
       "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
@@ -26949,7 +27098,7 @@
         "value": 32,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.firstStack.authoring.24"
+          "m1.apps.backend.firstStack.authoring.28"
         ]
       },
       "formula": "paths: z.array(sidecarSchema.shape.paths.element.extend({ pool: poolSchema })).max(32)",
@@ -26957,7 +27106,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/firstStack/authoring.ts#L60",
+          "source": "workspace:apps/backend/firstStack/authoring.ts#L67",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -26971,12 +27120,12 @@
       "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
       "location": {
         "file": "apps/backend/firstStack/authoring.ts",
-        "line": 60,
+        "line": 67,
         "column": 86
       }
     },
     {
-      "id": "m1.apps.backend.firstStack.authoring.25",
+      "id": "m1.apps.backend.firstStack.authoring.29",
       "concept": "sidecarV2Schema.nodes · literal 3",
       "modelVersion": "1",
       "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
@@ -26985,154 +27134,10 @@
         "value": 3,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.firstStack.authoring.25"
-        ]
-      },
-      "formula": "nodes: z.array(sidecarSchema.shape.nodes.element.extend({ alive: z.boolean(), ready: z.boolean() })).min(3).max(11)",
-      "classification": "implementation-policy",
-      "confidence": "high",
-      "provenance": [
-        {
-          "source": "workspace:apps/backend/firstStack/authoring.ts#L62",
-          "supports": "implementation",
-          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
-        }
-      ],
-      "assumptions": [
-        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
-        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
-      ],
-      "researchedOn": "2026-10-15",
-      "freeMode": "conditional",
-      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
-      "location": {
-        "file": "apps/backend/firstStack/authoring.ts",
-        "line": 62,
-        "column": 108
-      }
-    },
-    {
-      "id": "m1.apps.backend.firstStack.authoring.26",
-      "concept": "sidecarV2Schema.nodes · literal 11",
-      "modelVersion": "1",
-      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
-      "quantity": {
-        "kind": "known",
-        "value": 11,
-        "unit": "code-number",
-        "provenance": [
-          "m1.apps.backend.firstStack.authoring.26"
-        ]
-      },
-      "formula": "nodes: z.array(sidecarSchema.shape.nodes.element.extend({ alive: z.boolean(), ready: z.boolean() })).min(3).max(11)",
-      "classification": "implementation-policy",
-      "confidence": "high",
-      "provenance": [
-        {
-          "source": "workspace:apps/backend/firstStack/authoring.ts#L62",
-          "supports": "implementation",
-          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
-        }
-      ],
-      "assumptions": [
-        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
-        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
-      ],
-      "researchedOn": "2026-10-15",
-      "freeMode": "conditional",
-      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
-      "location": {
-        "file": "apps/backend/firstStack/authoring.ts",
-        "line": 62,
-        "column": 115
-      }
-    },
-    {
-      "id": "m1.apps.backend.firstStack.authoring.27",
-      "concept": "sidecarV2Schema.balancer.healthKeys · literal 1",
-      "modelVersion": "1",
-      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
-      "quantity": {
-        "kind": "known",
-        "value": 1,
-        "unit": "code-number",
-        "provenance": [
-          "m1.apps.backend.firstStack.authoring.27"
-        ]
-      },
-      "formula": "healthKeys: z.array(id).min(1).max(128)",
-      "classification": "implementation-policy",
-      "confidence": "high",
-      "provenance": [
-        {
-          "source": "workspace:apps/backend/firstStack/authoring.ts#L64",
-          "supports": "implementation",
-          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
-        }
-      ],
-      "assumptions": [
-        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
-        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
-      ],
-      "researchedOn": "2026-10-15",
-      "freeMode": "conditional",
-      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
-      "location": {
-        "file": "apps/backend/firstStack/authoring.ts",
-        "line": 64,
-        "column": 67
-      }
-    },
-    {
-      "id": "m1.apps.backend.firstStack.authoring.28",
-      "concept": "sidecarV2Schema.balancer.healthKeys · literal 128",
-      "modelVersion": "1",
-      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
-      "quantity": {
-        "kind": "known",
-        "value": 128,
-        "unit": "code-number",
-        "provenance": [
-          "m1.apps.backend.firstStack.authoring.28"
-        ]
-      },
-      "formula": "healthKeys: z.array(id).min(1).max(128)",
-      "classification": "implementation-policy",
-      "confidence": "high",
-      "provenance": [
-        {
-          "source": "workspace:apps/backend/firstStack/authoring.ts#L64",
-          "supports": "implementation",
-          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
-        }
-      ],
-      "assumptions": [
-        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
-        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
-      ],
-      "researchedOn": "2026-10-15",
-      "freeMode": "conditional",
-      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
-      "location": {
-        "file": "apps/backend/firstStack/authoring.ts",
-        "line": 64,
-        "column": 74
-      }
-    },
-    {
-      "id": "m1.apps.backend.firstStack.authoring.29",
-      "concept": "sidecarV3Schema.links · literal 128",
-      "modelVersion": "1",
-      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
-      "quantity": {
-        "kind": "known",
-        "value": 128,
-        "unit": "code-number",
-        "provenance": [
           "m1.apps.backend.firstStack.authoring.29"
         ]
       },
-      "formula": "links: z.array(sidecarV2Schema.shape.links.element).max(128)",
+      "formula": "nodes: z.array(sidecarSchema.shape.nodes.element.extend({ alive: z.boolean(), ready: z.boolean() })).min(3).max(11)",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
@@ -27152,28 +27157,28 @@
       "location": {
         "file": "apps/backend/firstStack/authoring.ts",
         "line": 69,
-        "column": 59
+        "column": 108
       }
     },
     {
       "id": "m1.apps.backend.firstStack.authoring.30",
-      "concept": "sidecarV3Schema.cache.roles · literal 1",
+      "concept": "sidecarV2Schema.nodes · literal 11",
       "modelVersion": "1",
       "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
       "quantity": {
         "kind": "known",
-        "value": 1,
+        "value": 11,
         "unit": "code-number",
         "provenance": [
           "m1.apps.backend.firstStack.authoring.30"
         ]
       },
-      "formula": "roles: z.array(z.object({ app: id, policy: id, internal: sidecarV2Schema.shape.paths.element, database: sidecarV2Schema.shape.paths.element }).strict()).min(1).max(limits.apps)",
+      "formula": "nodes: z.array(sidecarSchema.shape.nodes.element.extend({ alive: z.boolean(), ready: z.boolean() })).min(3).max(11)",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/firstStack/authoring.ts#L76",
+          "source": "workspace:apps/backend/firstStack/authoring.ts#L69",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -27187,13 +27192,13 @@
       "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
       "location": {
         "file": "apps/backend/firstStack/authoring.ts",
-        "line": 76,
-        "column": 70
+        "line": 69,
+        "column": 115
       }
     },
     {
       "id": "m1.apps.backend.firstStack.authoring.31",
-      "concept": "reviewSidecar · literal 1",
+      "concept": "sidecarV2Schema.balancer.healthKeys · literal 1",
       "modelVersion": "1",
       "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
       "quantity": {
@@ -27204,12 +27209,12 @@
           "m1.apps.backend.firstStack.authoring.31"
         ]
       },
-      "formula": "if (countType(\"Load Balancer\") !== 1 || countType(\"Database\") !== 1 || countType(\"Virtual Machine\") < 1 || countType(\"Virtual Machine\") > limits.apps || countType(\"Cache\") > 1) refuse(\"resources\", \"Require one LB, 1..8 apps, one DB and at most one future cache.\", \"FIRST_STACK_SCOPE\");",
+      "formula": "healthKeys: z.array(id).min(1).max(128)",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/firstStack/authoring.ts#L97",
+          "source": "workspace:apps/backend/firstStack/authoring.ts#L71",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -27223,29 +27228,29 @@
       "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
       "location": {
         "file": "apps/backend/firstStack/authoring.ts",
-        "line": 97,
-        "column": 38
+        "line": 71,
+        "column": 67
       }
     },
     {
       "id": "m1.apps.backend.firstStack.authoring.32",
-      "concept": "reviewSidecar · literal 1",
+      "concept": "sidecarV2Schema.balancer.healthKeys · literal 128",
       "modelVersion": "1",
       "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
       "quantity": {
         "kind": "known",
-        "value": 1,
+        "value": 128,
         "unit": "code-number",
         "provenance": [
           "m1.apps.backend.firstStack.authoring.32"
         ]
       },
-      "formula": "if (countType(\"Load Balancer\") !== 1 || countType(\"Database\") !== 1 || countType(\"Virtual Machine\") < 1 || countType(\"Virtual Machine\") > limits.apps || countType(\"Cache\") > 1) refuse(\"resources\", \"Require one LB, 1..8 apps, one DB and at most one future cache.\", \"FIRST_STACK_SCOPE\");",
+      "formula": "healthKeys: z.array(id).min(1).max(128)",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/firstStack/authoring.ts#L97",
+          "source": "workspace:apps/backend/firstStack/authoring.ts#L71",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -27259,29 +27264,29 @@
       "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
       "location": {
         "file": "apps/backend/firstStack/authoring.ts",
-        "line": 97,
-        "column": 69
+        "line": 71,
+        "column": 74
       }
     },
     {
       "id": "m1.apps.backend.firstStack.authoring.33",
-      "concept": "reviewSidecar · literal 1",
+      "concept": "sidecarV3Schema.links · literal 128",
       "modelVersion": "1",
       "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
       "quantity": {
         "kind": "known",
-        "value": 1,
+        "value": 128,
         "unit": "code-number",
         "provenance": [
           "m1.apps.backend.firstStack.authoring.33"
         ]
       },
-      "formula": "if (countType(\"Load Balancer\") !== 1 || countType(\"Database\") !== 1 || countType(\"Virtual Machine\") < 1 || countType(\"Virtual Machine\") > limits.apps || countType(\"Cache\") > 1) refuse(\"resources\", \"Require one LB, 1..8 apps, one DB and at most one future cache.\", \"FIRST_STACK_SCOPE\");",
+      "formula": "links: z.array(sidecarV2Schema.shape.links.element).max(128)",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/firstStack/authoring.ts#L97",
+          "source": "workspace:apps/backend/firstStack/authoring.ts#L77",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -27295,13 +27300,13 @@
       "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
       "location": {
         "file": "apps/backend/firstStack/authoring.ts",
-        "line": 97,
-        "column": 105
+        "line": 77,
+        "column": 59
       }
     },
     {
       "id": "m1.apps.backend.firstStack.authoring.34",
-      "concept": "reviewSidecar · literal 1",
+      "concept": "sidecarV3Schema.cache.roles · literal 1",
       "modelVersion": "1",
       "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
       "quantity": {
@@ -27312,12 +27317,12 @@
           "m1.apps.backend.firstStack.authoring.34"
         ]
       },
-      "formula": "if (countType(\"Load Balancer\") !== 1 || countType(\"Database\") !== 1 || countType(\"Virtual Machine\") < 1 || countType(\"Virtual Machine\") > limits.apps || countType(\"Cache\") > 1) refuse(\"resources\", \"Require one LB, 1..8 apps, one DB and at most one future cache.\", \"FIRST_STACK_SCOPE\");",
+      "formula": "roles: z.array(z.object({ app: id, policy: id, internal: sidecarV2Schema.shape.paths.element, database: sidecarV2Schema.shape.paths.element }).strict()).min(1).max(limits.apps)",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/firstStack/authoring.ts#L97",
+          "source": "workspace:apps/backend/firstStack/authoring.ts#L84",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -27331,8 +27336,8 @@
       "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
       "location": {
         "file": "apps/backend/firstStack/authoring.ts",
-        "line": 97,
-        "column": 177
+        "line": 84,
+        "column": 70
       }
     },
     {
@@ -27348,12 +27353,12 @@
           "m1.apps.backend.firstStack.authoring.35"
         ]
       },
-      "formula": "if (h && peers.length > 1 && (h.memoryBytes === null || peers.some(p => p.reservationBytes === null))) refuse(`placement.${n.host}`, \"Shared-host reservations cannot treat Unknown as zero.\");",
+      "formula": "if (countType(\"Load Balancer\") !== 1 || countType(\"Database\") !== 1 || countType(\"Virtual Machine\") < 1 || countType(\"Virtual Machine\") > limits.apps || countType(\"Cache\") > 1) refuse(\"resources\", \"Require one LB, 1..8 apps, one DB and at most one future cache.\", \"FIRST_STACK_SCOPE\");",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/firstStack/authoring.ts#L116",
+          "source": "workspace:apps/backend/firstStack/authoring.ts#L105",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -27367,29 +27372,29 @@
       "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
       "location": {
         "file": "apps/backend/firstStack/authoring.ts",
-        "line": 116,
-        "column": 29
+        "line": 105,
+        "column": 38
       }
     },
     {
       "id": "m1.apps.backend.firstStack.authoring.36",
-      "concept": "reviewSidecar · literal 0",
+      "concept": "reviewSidecar · literal 1",
       "modelVersion": "1",
       "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
       "quantity": {
         "kind": "known",
-        "value": 0,
+        "value": 1,
         "unit": "code-number",
         "provenance": [
           "m1.apps.backend.firstStack.authoring.36"
         ]
       },
-      "formula": "if (h?.memoryBytes !== null && h && peers.every(p => p.reservationBytes !== null) && peers.reduce((s, p) => s + p.reservationBytes!, 0) > h.memoryBytes) refuse(`placement.${n.host}.memoryBytes`, \"Known reservations exceed capacity.\");",
+      "formula": "if (countType(\"Load Balancer\") !== 1 || countType(\"Database\") !== 1 || countType(\"Virtual Machine\") < 1 || countType(\"Virtual Machine\") > limits.apps || countType(\"Cache\") > 1) refuse(\"resources\", \"Require one LB, 1..8 apps, one DB and at most one future cache.\", \"FIRST_STACK_SCOPE\");",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/firstStack/authoring.ts#L117",
+          "source": "workspace:apps/backend/firstStack/authoring.ts#L105",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -27403,8 +27408,8 @@
       "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
       "location": {
         "file": "apps/backend/firstStack/authoring.ts",
-        "line": 117,
-        "column": 138
+        "line": 105,
+        "column": 69
       }
     },
     {
@@ -27420,12 +27425,12 @@
           "m1.apps.backend.firstStack.authoring.37"
         ]
       },
-      "formula": "if (types.get(cache.node) !== \"Cache\" || countType(\"Cache\") !== 1) refuse(\"cache.node\", \"V3 requires one matching cache canvas owner.\");",
+      "formula": "if (countType(\"Load Balancer\") !== 1 || countType(\"Database\") !== 1 || countType(\"Virtual Machine\") < 1 || countType(\"Virtual Machine\") > limits.apps || countType(\"Cache\") > 1) refuse(\"resources\", \"Require one LB, 1..8 apps, one DB and at most one future cache.\", \"FIRST_STACK_SCOPE\");",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/firstStack/authoring.ts#L170",
+          "source": "workspace:apps/backend/firstStack/authoring.ts#L105",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -27439,8 +27444,8 @@
       "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
       "location": {
         "file": "apps/backend/firstStack/authoring.ts",
-        "line": 170,
-        "column": 69
+        "line": 105,
+        "column": 105
       }
     },
     {
@@ -27456,12 +27461,12 @@
           "m1.apps.backend.firstStack.authoring.38"
         ]
       },
-      "formula": "if (!sidecar.database.keys.includes(row.key) || row.version < 1) refuse(\"cache.initial\", \"Initial cache keys/versions must belong to the bounded dataset.\");",
+      "formula": "if (countType(\"Load Balancer\") !== 1 || countType(\"Database\") !== 1 || countType(\"Virtual Machine\") < 1 || countType(\"Virtual Machine\") > limits.apps || countType(\"Cache\") > 1) refuse(\"resources\", \"Require one LB, 1..8 apps, one DB and at most one future cache.\", \"FIRST_STACK_SCOPE\");",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/firstStack/authoring.ts#L172",
+          "source": "workspace:apps/backend/firstStack/authoring.ts#L105",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -27475,12 +27480,48 @@
       "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
       "location": {
         "file": "apps/backend/firstStack/authoring.ts",
-        "line": 172,
-        "column": 100
+        "line": 105,
+        "column": 177
       }
     },
     {
       "id": "m1.apps.backend.firstStack.authoring.39",
+      "concept": "reviewSidecar · literal 1",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.authoring.39"
+        ]
+      },
+      "formula": "if (h && peers.length > 1 && (h.memoryBytes === null || peers.some(p => p.reservationBytes === null))) refuse(`placement.${n.host}`, \"Shared-host reservations cannot treat Unknown as zero.\");",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/authoring.ts#L124",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/authoring.ts",
+        "line": 124,
+        "column": 29
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.authoring.40",
       "concept": "reviewSidecar · literal 0",
       "modelVersion": "1",
       "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
@@ -27489,15 +27530,15 @@
         "value": 0,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.firstStack.authoring.39"
+          "m1.apps.backend.firstStack.authoring.40"
         ]
       },
-      "formula": "if (cache.initial.reduce((sum, r) => sum + r.bytes + cache.entryOverheadBytes, 0) > cache.capacityBytes) refuse(\"cache.initial\", \"Initial entries exceed the explicit cache entry budget.\");",
+      "formula": "if (h?.memoryBytes !== null && h && peers.every(p => p.reservationBytes !== null) && peers.reduce((s, p) => s + p.reservationBytes!, 0) > h.memoryBytes) refuse(`placement.${n.host}.memoryBytes`, \"Known reservations exceed capacity.\");",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/firstStack/authoring.ts#L173",
+          "source": "workspace:apps/backend/firstStack/authoring.ts#L125",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -27511,12 +27552,120 @@
       "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
       "location": {
         "file": "apps/backend/firstStack/authoring.ts",
-        "line": 173,
+        "line": 125,
+        "column": 138
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.authoring.41",
+      "concept": "reviewSidecar · literal 1",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.authoring.41"
+        ]
+      },
+      "formula": "if (types.get(cache.node) !== \"Cache\" || countType(\"Cache\") !== 1) refuse(\"cache.node\", \"V3 requires one matching cache canvas owner.\");",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/authoring.ts#L178",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/authoring.ts",
+        "line": 178,
+        "column": 69
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.authoring.42",
+      "concept": "reviewSidecar · literal 1",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.authoring.42"
+        ]
+      },
+      "formula": "if (!sidecar.database.keys.includes(row.key) || row.version < 1) refuse(\"cache.initial\", \"Initial cache keys/versions must belong to the bounded dataset.\");",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/authoring.ts#L180",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/authoring.ts",
+        "line": 180,
+        "column": 100
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.authoring.43",
+      "concept": "reviewSidecar · literal 0",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.authoring.43"
+        ]
+      },
+      "formula": "if (cache.initial.reduce((sum, r) => sum + r.bytes + cache.entryOverheadBytes, 0) > cache.capacityBytes) refuse(\"cache.initial\", \"Initial entries exceed the explicit cache entry budget.\");",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/authoring.ts#L181",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/authoring.ts",
+        "line": 181,
         "column": 84
       }
     },
     {
-      "id": "m1.apps.backend.firstStack.authoring.40",
+      "id": "m1.apps.backend.firstStack.authoring.44",
       "concept": "reviewSidecar.unknown · literal 1",
       "modelVersion": "1",
       "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
@@ -27525,7 +27674,7 @@
         "value": 1,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.firstStack.authoring.40"
+          "m1.apps.backend.firstStack.authoring.44"
         ]
       },
       "formula": "unknown: [\"Full resident memory\", \"Full cost\", \"Physical timing calibration\", ...(apps.length === 1 ? [\"Single app: no application redundancy\"] : [])]",
@@ -27533,7 +27682,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/firstStack/authoring.ts#L189",
+          "source": "workspace:apps/backend/firstStack/authoring.ts#L197",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -27547,7 +27696,7 @@
       "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
       "location": {
         "file": "apps/backend/firstStack/authoring.ts",
-        "line": 189,
+        "line": 197,
         "column": 103
       }
     },
@@ -110363,6 +110512,42 @@
       }
     },
     {
+      "id": "m1.packages.contracts.src.first-stack.index.25",
+      "concept": "index.ts · literal 2",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 2,
+        "unit": "code-number",
+        "provenance": [
+          "m1.packages.contracts.src.first-stack.index.25"
+        ]
+      },
+      "formula": "export interface FirstStackSidecarV2 extends Omit<FirstStackSidecar, \"schema\" | \"compiler\" | \"links\" | \"paths\" | \"caller\" | \"nodes\" | \"balancer\" | \"workload\" | \"faults\"> { faults: FirstStackFault[]; retry?: { schema: \"first-stack-read-retry/1\"; owner: \"load-balancer\"; operations: string[]; maxAttempts: 2; backoffUs: number; maxConcurrentRetries: number }; schema: \"infraforge-first-stack-sidecar/2\"; compiler: \"first-stack-compiler/2\"; links: Array<FirstStackSidecar[\"links\"][number] & { from: stri",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:packages/contracts/src/first-stack/index.ts#L68",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "packages/contracts/src/first-stack/index.ts",
+        "line": 68,
+        "column": 18
+      }
+    },
+    {
       "id": "m1.packages.contracts.src.internal-lessons.index.1",
       "concept": "phases.before.atUs · literal 8000",
       "modelVersion": "1",
@@ -123666,6 +123851,41 @@
     },
     {
       "id": "m1.packages.simulation.src.firstStack.bounds.43",
+      "concept": "minimumEvents · literal 2",
+      "modelVersion": "1",
+      "scope": "Published Model-1 engine behavior",
+      "quantity": {
+        "kind": "known",
+        "value": 2,
+        "unit": "code-number",
+        "provenance": [
+          "m1.packages.simulation.src.firstStack.bounds.43"
+        ]
+      },
+      "formula": "const minimumEvents = schedule.rows.length + probes + sidecar.faults.length * 2;",
+      "classification": "educational-assumption",
+      "confidence": "low",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/bounds.ts#L75",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "Fixed educational coefficients; no application benchmark or provider measurement establishes a universal value."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
+      "location": {
+        "file": "packages/simulation/src/firstStack/bounds.ts",
+        "line": 75,
+        "column": 81
+      }
+    },
+    {
+      "id": "m1.packages.simulation.src.firstStack.bounds.44",
       "concept": "firstStackPreflight.paths · literal 1",
       "modelVersion": "1",
       "scope": "Initialization, indexing, count arithmetic or discrete tick lifecycle",
@@ -123674,7 +123894,7 @@
         "value": 1,
         "unit": "code-number",
         "provenance": [
-          "m1.packages.simulation.src.firstStack.bounds.43"
+          "m1.packages.simulation.src.firstStack.bounds.44"
         ]
       },
       "formula": "paths: sidecar.paths.length + 1",
@@ -123701,19 +123921,19 @@
       }
     },
     {
-      "id": "m1.packages.simulation.src.firstStack.bounds.44",
-      "concept": "firstStackPreflight.attemptsPerRoot · literal 1",
+      "id": "m1.packages.simulation.src.firstStack.bounds.45",
+      "concept": "firstStackPreflight.attemptsPerRoot · literal 2",
       "modelVersion": "1",
       "scope": "Published Model-1 engine behavior",
       "quantity": {
         "kind": "known",
-        "value": 1,
+        "value": 2,
         "unit": "code-number",
         "provenance": [
-          "m1.packages.simulation.src.firstStack.bounds.44"
+          "m1.packages.simulation.src.firstStack.bounds.45"
         ]
       },
-      "formula": "attemptsPerRoot: 1",
+      "formula": "attemptsPerRoot: sidecar.retry ? 2 : 1",
       "classification": "educational-assumption",
       "confidence": "low",
       "provenance": [
@@ -123732,7 +123952,42 @@
       "location": {
         "file": "packages/simulation/src/firstStack/bounds.ts",
         "line": 79,
-        "column": 55
+        "column": 71
+      }
+    },
+    {
+      "id": "m1.packages.simulation.src.firstStack.bounds.46",
+      "concept": "firstStackPreflight.attemptsPerRoot · literal 1",
+      "modelVersion": "1",
+      "scope": "Published Model-1 engine behavior",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.packages.simulation.src.firstStack.bounds.46"
+        ]
+      },
+      "formula": "attemptsPerRoot: sidecar.retry ? 2 : 1",
+      "classification": "educational-assumption",
+      "confidence": "low",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/bounds.ts#L79",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "Fixed educational coefficients; no application benchmark or provider measurement establishes a universal value."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
+      "location": {
+        "file": "packages/simulation/src/firstStack/bounds.ts",
+        "line": 79,
+        "column": 75
       }
     },
     {
@@ -123753,7 +124008,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L25",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L26",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -123767,7 +124022,7 @@
       "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
       "location": {
         "file": "packages/simulation/src/firstStack/compiler.ts",
-        "line": 25,
+        "line": 26,
         "column": 35
       }
     },
@@ -123789,7 +124044,7 @@
       "confidence": "low",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L25",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L26",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -123802,7 +124057,7 @@
       "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
       "location": {
         "file": "packages/simulation/src/firstStack/compiler.ts",
-        "line": 25,
+        "line": 26,
         "column": 54
       }
     },
@@ -123824,7 +124079,7 @@
       "confidence": "low",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L25",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L26",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -123837,7 +124092,7 @@
       "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
       "location": {
         "file": "packages/simulation/src/firstStack/compiler.ts",
-        "line": 25,
+        "line": 26,
         "column": 90
       }
     },
@@ -123859,7 +124114,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L25",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L26",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -123873,7 +124128,7 @@
       "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
       "location": {
         "file": "packages/simulation/src/firstStack/compiler.ts",
-        "line": 25,
+        "line": 26,
         "column": 103
       }
     },
@@ -123895,7 +124150,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L25",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L26",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -123909,7 +124164,7 @@
       "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
       "location": {
         "file": "packages/simulation/src/firstStack/compiler.ts",
-        "line": 25,
+        "line": 26,
         "column": 107
       }
     },
@@ -123931,7 +124186,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L25",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L26",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -123945,7 +124200,7 @@
       "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
       "location": {
         "file": "packages/simulation/src/firstStack/compiler.ts",
-        "line": 25,
+        "line": 26,
         "column": 178
       }
     },
@@ -123967,7 +124222,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L25",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L26",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -123981,7 +124236,7 @@
       "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
       "location": {
         "file": "packages/simulation/src/firstStack/compiler.ts",
-        "line": 25,
+        "line": 26,
         "column": 182
       }
     },
@@ -124003,7 +124258,7 @@
       "confidence": "low",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L27",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L28",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -124016,7 +124271,7 @@
       "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
       "location": {
         "file": "packages/simulation/src/firstStack/compiler.ts",
-        "line": 27,
+        "line": 28,
         "column": 31
       }
     },
@@ -124038,7 +124293,7 @@
       "confidence": "low",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L30",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L31",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -124051,7 +124306,7 @@
       "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
       "location": {
         "file": "packages/simulation/src/firstStack/compiler.ts",
-        "line": 30,
+        "line": 31,
         "column": 26
       }
     },
@@ -124073,7 +124328,7 @@
       "confidence": "low",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L30",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L31",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -124086,7 +124341,7 @@
       "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
       "location": {
         "file": "packages/simulation/src/firstStack/compiler.ts",
-        "line": 30,
+        "line": 31,
         "column": 64
       }
     },
@@ -124108,7 +124363,7 @@
       "confidence": "low",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L30",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L31",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -124121,7 +124376,7 @@
       "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
       "location": {
         "file": "packages/simulation/src/firstStack/compiler.ts",
-        "line": 30,
+        "line": 31,
         "column": 93
       }
     },
@@ -124143,7 +124398,7 @@
       "confidence": "low",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L37",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L38",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -124156,7 +124411,7 @@
       "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
       "location": {
         "file": "packages/simulation/src/firstStack/compiler.ts",
-        "line": 37,
+        "line": 38,
         "column": 37
       }
     },
@@ -124178,7 +124433,7 @@
       "confidence": "low",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L60",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L61",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -124191,7 +124446,7 @@
       "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
       "location": {
         "file": "packages/simulation/src/firstStack/compiler.ts",
-        "line": 60,
+        "line": 61,
         "column": 156
       }
     },
@@ -124213,7 +124468,7 @@
       "confidence": "low",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L60",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L61",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -124226,7 +124481,7 @@
       "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
       "location": {
         "file": "packages/simulation/src/firstStack/compiler.ts",
-        "line": 60,
+        "line": 61,
         "column": 160
       }
     },
@@ -124248,7 +124503,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L85",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L86",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -124262,7 +124517,7 @@
       "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
       "location": {
         "file": "packages/simulation/src/firstStack/compiler.ts",
-        "line": 85,
+        "line": 86,
         "column": 89
       }
     },
@@ -124284,7 +124539,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L86",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L87",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -124298,7 +124553,7 @@
       "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
       "location": {
         "file": "packages/simulation/src/firstStack/compiler.ts",
-        "line": 86,
+        "line": 87,
         "column": 19
       }
     },
@@ -124320,7 +124575,7 @@
       "confidence": "low",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L95",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L96",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -124333,7 +124588,7 @@
       "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
       "location": {
         "file": "packages/simulation/src/firstStack/compiler.ts",
-        "line": 95,
+        "line": 96,
         "column": 65
       }
     },
@@ -124355,7 +124610,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L128",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L129",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -124369,7 +124624,7 @@
       "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
       "location": {
         "file": "packages/simulation/src/firstStack/compiler.ts",
-        "line": 128,
+        "line": 129,
         "column": 97
       }
     },
@@ -124391,7 +124646,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L128",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L129",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -124405,7 +124660,7 @@
       "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
       "location": {
         "file": "packages/simulation/src/firstStack/compiler.ts",
-        "line": 128,
+        "line": 129,
         "column": 183
       }
     },
@@ -124427,7 +124682,7 @@
       "confidence": "low",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L130",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L131",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -124440,7 +124695,7 @@
       "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
       "location": {
         "file": "packages/simulation/src/firstStack/compiler.ts",
-        "line": 130,
+        "line": 131,
         "column": 110
       }
     },
@@ -124462,7 +124717,7 @@
       "confidence": "low",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L161",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L164",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -124475,8 +124730,535 @@
       "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
       "location": {
         "file": "packages/simulation/src/firstStack/compiler.ts",
-        "line": 161,
+        "line": 164,
         "column": 78
+      }
+    },
+    {
+      "id": "m1.packages.simulation.src.firstStack.faults.1",
+      "concept": "compileScenario · literal 64",
+      "modelVersion": "1",
+      "scope": "Published Model-1 engine behavior",
+      "quantity": {
+        "kind": "known",
+        "value": 64,
+        "unit": "code-number",
+        "provenance": [
+          "m1.packages.simulation.src.firstStack.faults.1"
+        ]
+      },
+      "formula": "if (sidecar.faults.length > 64) refuse(\"faults\", \"At most 64 finite fault commands are supported.\");",
+      "classification": "educational-assumption",
+      "confidence": "low",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/faults.ts#L14",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "Fixed educational coefficients; no application benchmark or provider measurement establishes a universal value."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
+      "location": {
+        "file": "packages/simulation/src/firstStack/faults.ts",
+        "line": 14,
+        "column": 31
+      }
+    },
+    {
+      "id": "m1.packages.simulation.src.firstStack.faults.2",
+      "concept": "compileScenario · literal -1",
+      "modelVersion": "1",
+      "scope": "Published Model-1 engine behavior",
+      "quantity": {
+        "kind": "known",
+        "value": -1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.packages.simulation.src.firstStack.faults.2"
+        ]
+      },
+      "formula": "for (const f of [...sidecar.faults].sort((a, b) => a.atUs - b.atUs || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))) { if (seen.has(f.id)) refuse(\"faults\", \"Duplicate fault command ID.\"); seen.add(f.id); const end = f.atUs + (f.kind === \"app-process-crash\" ? f.downtimeUs + f.recoveryUs : f.durationUs); const owner = `${f.kind === \"app-process-crash\" ? \"process\" : \"link\"}:${f.target}`; if (!Number.isSafeInteger(f.atUs) || !Number.isSafeInteger(end) || f.atUs < 0 || end > horizon || end <= f.atUs || (",
+      "classification": "educational-assumption",
+      "confidence": "low",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/faults.ts#L15",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "Fixed educational coefficients; no application benchmark or provider measurement establishes a universal value."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
+      "location": {
+        "file": "packages/simulation/src/firstStack/faults.ts",
+        "line": 15,
+        "column": 89
+      }
+    },
+    {
+      "id": "m1.packages.simulation.src.firstStack.faults.3",
+      "concept": "compileScenario · literal 1",
+      "modelVersion": "1",
+      "scope": "Published Model-1 engine behavior",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.packages.simulation.src.firstStack.faults.3"
+        ]
+      },
+      "formula": "for (const f of [...sidecar.faults].sort((a, b) => a.atUs - b.atUs || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))) { if (seen.has(f.id)) refuse(\"faults\", \"Duplicate fault command ID.\"); seen.add(f.id); const end = f.atUs + (f.kind === \"app-process-crash\" ? f.downtimeUs + f.recoveryUs : f.durationUs); const owner = `${f.kind === \"app-process-crash\" ? \"process\" : \"link\"}:${f.target}`; if (!Number.isSafeInteger(f.atUs) || !Number.isSafeInteger(end) || f.atUs < 0 || end > horizon || end <= f.atUs || (",
+      "classification": "educational-assumption",
+      "confidence": "low",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/faults.ts#L15",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "Fixed educational coefficients; no application benchmark or provider measurement establishes a universal value."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
+      "location": {
+        "file": "packages/simulation/src/firstStack/faults.ts",
+        "line": 15,
+        "column": 107
+      }
+    },
+    {
+      "id": "m1.packages.simulation.src.firstStack.faults.4",
+      "concept": "compileScenario · literal 0",
+      "modelVersion": "1",
+      "scope": "Published Model-1 engine behavior",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.packages.simulation.src.firstStack.faults.4"
+        ]
+      },
+      "formula": "for (const f of [...sidecar.faults].sort((a, b) => a.atUs - b.atUs || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))) { if (seen.has(f.id)) refuse(\"faults\", \"Duplicate fault command ID.\"); seen.add(f.id); const end = f.atUs + (f.kind === \"app-process-crash\" ? f.downtimeUs + f.recoveryUs : f.durationUs); const owner = `${f.kind === \"app-process-crash\" ? \"process\" : \"link\"}:${f.target}`; if (!Number.isSafeInteger(f.atUs) || !Number.isSafeInteger(end) || f.atUs < 0 || end > horizon || end <= f.atUs || (",
+      "classification": "educational-assumption",
+      "confidence": "low",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/faults.ts#L15",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "Fixed educational coefficients; no application benchmark or provider measurement establishes a universal value."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
+      "location": {
+        "file": "packages/simulation/src/firstStack/faults.ts",
+        "line": 15,
+        "column": 111
+      }
+    },
+    {
+      "id": "m1.packages.simulation.src.firstStack.faults.5",
+      "concept": "compileScenario · literal 0",
+      "modelVersion": "1",
+      "scope": "Published Model-1 engine behavior",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.packages.simulation.src.firstStack.faults.5"
+        ]
+      },
+      "formula": "if (!Number.isSafeInteger(f.atUs) || !Number.isSafeInteger(end) || f.atUs < 0 || end > horizon || end <= f.atUs || (intervals.get(owner) ?? -1) >= f.atUs) refuse(`faults.${f.id}`, \"Require finite non-overlapping owner intervals within the horizon (including process recovery).\");",
+      "classification": "educational-assumption",
+      "confidence": "low",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/faults.ts#L19",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "Fixed educational coefficients; no application benchmark or provider measurement establishes a universal value."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
+      "location": {
+        "file": "packages/simulation/src/firstStack/faults.ts",
+        "line": 19,
+        "column": 81
+      }
+    },
+    {
+      "id": "m1.packages.simulation.src.firstStack.faults.6",
+      "concept": "compileScenario · literal -1",
+      "modelVersion": "1",
+      "scope": "Published Model-1 engine behavior",
+      "quantity": {
+        "kind": "known",
+        "value": -1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.packages.simulation.src.firstStack.faults.6"
+        ]
+      },
+      "formula": "if (!Number.isSafeInteger(f.atUs) || !Number.isSafeInteger(end) || f.atUs < 0 || end > horizon || end <= f.atUs || (intervals.get(owner) ?? -1) >= f.atUs) refuse(`faults.${f.id}`, \"Require finite non-overlapping owner intervals within the horizon (including process recovery).\");",
+      "classification": "educational-assumption",
+      "confidence": "low",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/faults.ts#L19",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "Fixed educational coefficients; no application benchmark or provider measurement establishes a universal value."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
+      "location": {
+        "file": "packages/simulation/src/firstStack/faults.ts",
+        "line": 19,
+        "column": 146
+      }
+    },
+    {
+      "id": "m1.packages.simulation.src.firstStack.faults.7",
+      "concept": "compileScenario · literal 0",
+      "modelVersion": "1",
+      "scope": "Published Model-1 engine behavior",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.packages.simulation.src.firstStack.faults.7"
+        ]
+      },
+      "formula": "if (n?.owner !== \"compute\" || !n.alive || !n.ready || f.downtimeUs <= 0 || f.recoveryUs <= 0) refuse(`faults.${f.id}`, \"Crash needs an initially ready compute process and positive explicit downtime and recovery delay.\");",
+      "classification": "educational-assumption",
+      "confidence": "low",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/faults.ts#L24",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "Fixed educational coefficients; no application benchmark or provider measurement establishes a universal value."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
+      "location": {
+        "file": "packages/simulation/src/firstStack/faults.ts",
+        "line": 24,
+        "column": 77
+      }
+    },
+    {
+      "id": "m1.packages.simulation.src.firstStack.faults.8",
+      "concept": "compileScenario · literal 0",
+      "modelVersion": "1",
+      "scope": "Published Model-1 engine behavior",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.packages.simulation.src.firstStack.faults.8"
+        ]
+      },
+      "formula": "if (n?.owner !== \"compute\" || !n.alive || !n.ready || f.downtimeUs <= 0 || f.recoveryUs <= 0) refuse(`faults.${f.id}`, \"Crash needs an initially ready compute process and positive explicit downtime and recovery delay.\");",
+      "classification": "educational-assumption",
+      "confidence": "low",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/faults.ts#L24",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "Fixed educational coefficients; no application benchmark or provider measurement establishes a universal value."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
+      "location": {
+        "file": "packages/simulation/src/firstStack/faults.ts",
+        "line": 24,
+        "column": 98
+      }
+    },
+    {
+      "id": "m1.packages.simulation.src.firstStack.faults.9",
+      "concept": "compileScenario · literal 0",
+      "modelVersion": "1",
+      "scope": "Published Model-1 engine behavior",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.packages.simulation.src.firstStack.faults.9"
+        ]
+      },
+      "formula": "if (!sidecar.links.some(l => l.id === f.target) || f.durationUs <= 0) refuse(`faults.${f.id}`, \"Name one explicit directed link with a positive duration.\");",
+      "classification": "educational-assumption",
+      "confidence": "low",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/faults.ts#L27",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "Fixed educational coefficients; no application benchmark or provider measurement establishes a universal value."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
+      "location": {
+        "file": "packages/simulation/src/firstStack/faults.ts",
+        "line": 27,
+        "column": 74
+      }
+    },
+    {
+      "id": "m1.packages.simulation.src.firstStack.faults.10",
+      "concept": "compileScenario · literal 0",
+      "modelVersion": "1",
+      "scope": "Initialization, indexing, count arithmetic or discrete tick lifecycle",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.packages.simulation.src.firstStack.faults.10"
+        ]
+      },
+      "formula": "if (!Number.isSafeInteger(retry.backoffUs) || retry.backoffUs <= 0 || !Number.isSafeInteger(retry.maxConcurrentRetries) || retry.maxConcurrentRetries < 1 || retry.maxConcurrentRetries > 10000 || retry.schema !== \"first-stack-read-retry/1\" || retry.owner !== \"load-balancer\" || retry.maxAttempts !== 2 || !retry.operations.length || new Set(retry.operations).size !== retry.operations.length) refuse(\"retry\", \"Require one LB retry owner, at most two attempts and unique read operations.\");",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/faults.ts#L34",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "Fixed educational coefficients; no application benchmark or provider measurement establishes a universal value.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
+      "location": {
+        "file": "packages/simulation/src/firstStack/faults.ts",
+        "line": 34,
+        "column": 70
+      }
+    },
+    {
+      "id": "m1.packages.simulation.src.firstStack.faults.11",
+      "concept": "compileScenario · literal 1",
+      "modelVersion": "1",
+      "scope": "Initialization, indexing, count arithmetic or discrete tick lifecycle",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.packages.simulation.src.firstStack.faults.11"
+        ]
+      },
+      "formula": "if (!Number.isSafeInteger(retry.backoffUs) || retry.backoffUs <= 0 || !Number.isSafeInteger(retry.maxConcurrentRetries) || retry.maxConcurrentRetries < 1 || retry.maxConcurrentRetries > 10000 || retry.schema !== \"first-stack-read-retry/1\" || retry.owner !== \"load-balancer\" || retry.maxAttempts !== 2 || !retry.operations.length || new Set(retry.operations).size !== retry.operations.length) refuse(\"retry\", \"Require one LB retry owner, at most two attempts and unique read operations.\");",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/faults.ts#L34",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "Fixed educational coefficients; no application benchmark or provider measurement establishes a universal value.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
+      "location": {
+        "file": "packages/simulation/src/firstStack/faults.ts",
+        "line": 34,
+        "column": 157
+      }
+    },
+    {
+      "id": "m1.packages.simulation.src.firstStack.faults.12",
+      "concept": "compileScenario · literal 10000",
+      "modelVersion": "1",
+      "scope": "Published Model-1 engine behavior",
+      "quantity": {
+        "kind": "known",
+        "value": 10000,
+        "unit": "code-number",
+        "provenance": [
+          "m1.packages.simulation.src.firstStack.faults.12"
+        ]
+      },
+      "formula": "if (!Number.isSafeInteger(retry.backoffUs) || retry.backoffUs <= 0 || !Number.isSafeInteger(retry.maxConcurrentRetries) || retry.maxConcurrentRetries < 1 || retry.maxConcurrentRetries > 10000 || retry.schema !== \"first-stack-read-retry/1\" || retry.owner !== \"load-balancer\" || retry.maxAttempts !== 2 || !retry.operations.length || new Set(retry.operations).size !== retry.operations.length) refuse(\"retry\", \"Require one LB retry owner, at most two attempts and unique read operations.\");",
+      "classification": "educational-assumption",
+      "confidence": "low",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/faults.ts#L34",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "Fixed educational coefficients; no application benchmark or provider measurement establishes a universal value."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
+      "location": {
+        "file": "packages/simulation/src/firstStack/faults.ts",
+        "line": 34,
+        "column": 191
+      }
+    },
+    {
+      "id": "m1.packages.simulation.src.firstStack.faults.13",
+      "concept": "compileScenario · literal 2",
+      "modelVersion": "1",
+      "scope": "Published Model-1 engine behavior",
+      "quantity": {
+        "kind": "known",
+        "value": 2,
+        "unit": "code-number",
+        "provenance": [
+          "m1.packages.simulation.src.firstStack.faults.13"
+        ]
+      },
+      "formula": "if (!Number.isSafeInteger(retry.backoffUs) || retry.backoffUs <= 0 || !Number.isSafeInteger(retry.maxConcurrentRetries) || retry.maxConcurrentRetries < 1 || retry.maxConcurrentRetries > 10000 || retry.schema !== \"first-stack-read-retry/1\" || retry.owner !== \"load-balancer\" || retry.maxAttempts !== 2 || !retry.operations.length || new Set(retry.operations).size !== retry.operations.length) refuse(\"retry\", \"Require one LB retry owner, at most two attempts and unique read operations.\");",
+      "classification": "educational-assumption",
+      "confidence": "low",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/faults.ts#L34",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "Fixed educational coefficients; no application benchmark or provider measurement establishes a universal value."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
+      "location": {
+        "file": "packages/simulation/src/firstStack/faults.ts",
+        "line": 34,
+        "column": 304
+      }
+    },
+    {
+      "id": "m1.packages.simulation.src.firstStack.faults.14",
+      "concept": "compileScenario.maxAttempts · literal 2",
+      "modelVersion": "1",
+      "scope": "Published Model-1 engine behavior",
+      "quantity": {
+        "kind": "known",
+        "value": 2,
+        "unit": "code-number",
+        "provenance": [
+          "m1.packages.simulation.src.firstStack.faults.14"
+        ]
+      },
+      "formula": "maxAttempts: q(\"retry.attempts\", 2, \"count\")",
+      "classification": "educational-assumption",
+      "confidence": "low",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/faults.ts#L41",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "Fixed educational coefficients; no application benchmark or provider measurement establishes a universal value."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
+      "location": {
+        "file": "packages/simulation/src/firstStack/faults.ts",
+        "line": 41,
+        "column": 93
+      }
+    },
+    {
+      "id": "m1.packages.simulation.src.firstStack.faults.15",
+      "concept": "compileScenario.jitter · literal 0",
+      "modelVersion": "1",
+      "scope": "Published Model-1 engine behavior",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.packages.simulation.src.firstStack.faults.15"
+        ]
+      },
+      "formula": "jitter: q(\"retry.jitter\", 0, \"ratio\")",
+      "classification": "educational-assumption",
+      "confidence": "low",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/faults.ts#L42",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "Fixed educational coefficients; no application benchmark or provider measurement establishes a universal value."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
+      "location": {
+        "file": "packages/simulation/src/firstStack/faults.ts",
+        "line": 42,
+        "column": 33
       }
     },
     {
@@ -124974,6 +125756,111 @@
         "file": "packages/simulation/src/firstStack/run.ts",
         "line": 37,
         "column": 99
+      }
+    },
+    {
+      "id": "m1.packages.simulation.src.firstStack.run.9",
+      "concept": "createFirstStackRuntime.firstStack.scenario.commands · literal -1",
+      "modelVersion": "1",
+      "scope": "Published Model-1 engine behavior",
+      "quantity": {
+        "kind": "known",
+        "value": -1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.packages.simulation.src.firstStack.run.9"
+        ]
+      },
+      "formula": "commands: [...sidecar.faults].sort((a, b) => a.atUs - b.atUs || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))",
+      "classification": "educational-assumption",
+      "confidence": "low",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/run.ts#L52",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "Fixed educational coefficients; no application benchmark or provider measurement establishes a universal value."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
+      "location": {
+        "file": "packages/simulation/src/firstStack/run.ts",
+        "line": 52,
+        "column": 180
+      }
+    },
+    {
+      "id": "m1.packages.simulation.src.firstStack.run.10",
+      "concept": "createFirstStackRuntime.firstStack.scenario.commands · literal 1",
+      "modelVersion": "1",
+      "scope": "Published Model-1 engine behavior",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.packages.simulation.src.firstStack.run.10"
+        ]
+      },
+      "formula": "commands: [...sidecar.faults].sort((a, b) => a.atUs - b.atUs || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))",
+      "classification": "educational-assumption",
+      "confidence": "low",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/run.ts#L52",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "Fixed educational coefficients; no application benchmark or provider measurement establishes a universal value."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
+      "location": {
+        "file": "packages/simulation/src/firstStack/run.ts",
+        "line": 52,
+        "column": 198
+      }
+    },
+    {
+      "id": "m1.packages.simulation.src.firstStack.run.11",
+      "concept": "createFirstStackRuntime.firstStack.scenario.commands · literal 0",
+      "modelVersion": "1",
+      "scope": "Published Model-1 engine behavior",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.packages.simulation.src.firstStack.run.11"
+        ]
+      },
+      "formula": "commands: [...sidecar.faults].sort((a, b) => a.atUs - b.atUs || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))",
+      "classification": "educational-assumption",
+      "confidence": "low",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/run.ts#L52",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "Fixed educational coefficients; no application benchmark or provider measurement establishes a universal value."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
+      "location": {
+        "file": "packages/simulation/src/firstStack/run.ts",
+        "line": 52,
+        "column": 202
       }
     },
     {
