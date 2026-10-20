@@ -23,7 +23,7 @@ export interface IsolationReceipt {
   schema: "first-stack-isolation-receipt/1"; daemon: string; image: string;
   container: string | null; enforcement: unknown; elapsedMs: number;
   exit: { code: number; oom: boolean } | null; outputBytes: number;
-  cleanup: "not-created" | "removed" | "failed";
+  cleanup: "not-created" | "unconfirmed" | "removed" | "failed";
 }
 export async function runFirstStackContainer(control: IsolationControl, configuration: IsolationConfiguration,
   request: IsolationRequest, authority: IsolationAuthority, signal?: AbortSignal) {
@@ -32,11 +32,11 @@ export async function runFirstStackContainer(control: IsolationControl, configur
   return contained(control, configuration, request, authority, signal);
 }
 // An operator-only measurement entrypoint, not an execution-readiness override.
-// Two named probes are permitted for characterization, never by a product host.
+// Verification is serial, including operator characterization.
 export function probeFirstStackContainer(control: IsolationControl, configuration: Omit<IsolationConfiguration, "qualification">,
-  request: IsolationRequest | { mode: "probe"; input: string; expected?: never }, authority: IsolationAuthority, signal?: AbortSignal, secondProbe = false) {
+  request: IsolationRequest | { mode: "probe"; input: string; expected?: never }, authority: IsolationAuthority, signal?: AbortSignal) {
   if (activeEntrypoint() !== "scripts/first-stack-host/qualify.ts") throw Error("Host probes require the explicit offline qualification command");
-  return contained(control, configuration, request, authority, signal, secondProbe ? `infraforge-first-stack-probe-${randomUUID()}` : executorName);
+  return contained(control, configuration, request, authority, signal);
 }
 async function contained(control: IsolationControl, configuration: Omit<IsolationConfiguration, "qualification">,
   request: IsolationRequest | { mode: "probe"; input: string; expected?: never }, authority: IsolationAuthority, signal?: AbortSignal, name = executorName) {
@@ -70,6 +70,7 @@ async function contained(control: IsolationControl, configuration: Omit<Isolatio
     // Docker's name reservation is atomic across independent worker/API
     // processes. Never use a ps-then-create check, a random fallback, --rm, or
     // cleanup-by-name after a create conflict.
+    receipt.cleanup = "unconfirmed";
     const id = await bounded(control.run(firstStackContainerArguments(configuration.image, token, name)));
     if (!/^[a-f0-9]{64}$/.test(id)) throw Error("Invalid created executor identity");
     receipt.container = id;

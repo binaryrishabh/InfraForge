@@ -2,7 +2,7 @@ import { FIRST_STACK_ISOLATION as limits, executorName, imagePattern } from "./i
 
 export function firstStackContainerArguments(image: string, token: string, name = executorName) {
   if (!imagePattern.test(image) || !/^[a-f0-9-]{36}$/.test(token) ||
-    !/^infraforge-first-stack-(executor|probe-[a-f0-9-]{36})$/.test(name)) throw Error("Invalid first-stack container identity");
+    name !== executorName) throw Error("Invalid first-stack container identity");
   return ["create", "--pull=never", "--name", name, "--label", `infraforge.first-stack=${token}`,
     "--interactive", "--init", "--network=none", "--cgroupns=private", "--read-only", "--cap-drop=ALL",
     "--security-opt=no-new-privileges=true", "--user=1000:1000", "--log-driver=none",
@@ -21,7 +21,7 @@ export function verifyFirstStackContainer(value: any, image: string, token: stri
   if (value?.Image !== image || value?.Name !== `/${name}` || config?.Labels?.["infraforge.first-stack"] !== token ||
     config?.User !== "1000:1000" || JSON.stringify(config.Entrypoint) !== '["timeout"]' ||
     JSON.stringify(config.Cmd) !== JSON.stringify(command) || config.WorkingDir !== "/app/apps/backend" ||
-    config.Env?.some((v: string) => !/^(PATH|HOME|NODE_ENV|BUN_INSTALL|LANG|LC_ALL)=/.test(v)) ||
+    config.Env?.some((v: string) => !/^(PATH|HOME|NODE_ENV|BUN_INSTALL|BUN_INSTALL_BIN|LANG|LC_ALL)=/.test(v) && v !== "BUN_RUNTIME_TRANSPILER_CACHE_PATH=0") ||
     host?.Memory !== limits.memoryBytes || host.MemorySwap !== limits.memoryBytes || host.NanoCpus !== limits.nanoCpus ||
     host.PidsLimit !== limits.pids || host.NetworkMode !== "none" || !host.ReadonlyRootfs || !host.Init ||
     host.Privileged || host.Binds?.length || host.CapAdd?.length || host.Devices?.length ||

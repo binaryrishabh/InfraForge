@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 
 // Host containment, never a modeled infrastructure limit. Production capacity
-// stays one even when an operator characterizes two disposable probe containers.
+// stays one: browsers simulate; servers verify scored/shared runs serially.
 export const FIRST_STACK_ISOLATION = Object.freeze({
   schema: "first-stack-isolation/1", memoryBytes: 768 * 1024 * 1024,
   nanoCpus: 500_000_000, pids: 64, nofile: 128, cpuSeconds: 20,

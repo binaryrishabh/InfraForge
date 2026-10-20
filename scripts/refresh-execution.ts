@@ -82,7 +82,10 @@ if (import.meta.main) {
     run(["scripts/connected-lineage.ts"]);
     run(["scripts/m2m-lineage.ts", "--refresh-current"]);
     run(["scripts/lesson-endpoint-lineage.ts", "--refresh-current"]);
-    refreshTransitions(baseline, review);
+    // Loading analysis and its in-module pin changed in child processes above.
+    // Reconstruct the transition in a fresh process, not this process's cached
+    // pre-refresh loading module.
+    run(["scripts/refresh-execution.ts", `--baseline=${baseline}`, `--review=${review}`, "--transitions-only"]);
     for (const script of ["launch-contract", "run-record-schema", "shipping-inventory", "inventory"]) run([`scripts/reality/${script}.ts`, "--write"]);
     run(["scripts/execution-identity.ts", "--check"]);
     run(["scripts/execution-resolution.ts"]);

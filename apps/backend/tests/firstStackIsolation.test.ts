@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import { EventEmitter } from "node:events";
 import { PassThrough } from "node:stream";
 import { runFirstStackContainer } from "../firstStack/isolationRunner";
-import { boundedLines } from "../firstStack/isolationProtocol";
+import { boundedLines, inputDigest, isolatedCut } from "../firstStack/isolationProtocol";
 import { FIRST_STACK_ISOLATION as limits, assertQualified, isolationPolicyHash, qualificationChecks, type HostQualification } from "../firstStack/isolationPolicy";
 import { firstStackContainerArguments, verifyFirstStackContainer } from "../firstStack/isolationContainer";
 
@@ -62,7 +62,7 @@ test("atomic create conflict never removes or attaches the other executor", asyn
   const first = runFirstStackContainer(f.control, f.config, { mode: "execute", input: "{}" }, f.authority, stop.signal);
   await f.ready;
   const second = await runFirstStackContainer(f.control, f.config, { mode: "execute", input: "{}" }, f.authority);
-  expect(second.status).toBe("interrupted"); expect(second.receipt.cleanup).toBe("not-created"); expect(f.removed).toBe(0);
+  expect(second.status).toBe("interrupted"); expect(second.receipt.cleanup).toBe("unconfirmed"); expect(f.removed).toBe(0);
   stop.abort(); expect((await first).receipt.cleanup).toBe("removed");
 });
 test("cancellation breaks a silent pipe without close and database loss breaks hung authority", async () => {
@@ -100,5 +100,29 @@ test("stream framing bounds unfinished lines, total bytes, frame count and trail
   for (const chunks of [[Buffer.alloc(9)], [Buffer.from("1234\n1234\n")], [Buffer.from("\n\n\n")], [Buffer.from("unfinished")]]) {
     const work = async () => { for await (const _line of boundedLines((async function* () { yield* chunks; })(), 8, 9, 2)) { /* consume */ } };
     await expect(work()).rejects.toThrow();
+  }
+});
+test("persistence failure and revocation retain the acknowledged prefix without another ACK", async () => {
+  for (const mode of ["persistence", "revocation"]) {
+    const f = fixture(); let commits = 0, held = true, writes = "";
+    f.child.stdin.on("data", (chunk: Buffer) => { writes += chunk.toString(); });
+    const cut = (sequence: number) => isolatedCut({
+      schema: "first-stack-cut/1", sequence, throughUs: sequence, envelope: "first-stack-envelope/1",
+      effectiveLimits: { wallMs: 60000, cpuUs: 20000000, rssBytes: 536870912, frameBytes: 1048576, summaryBytes: 10485760, captureBytes: 33554432 },
+      lock: {} as any, timestampComplete: false, unfinished: { notYetOffered: 1, callers: 0, pendingEvents: 1 },
+      counts: {}, execution: { processed: sequence, pending: 1, cancelled: 0, peakPending: 1 },
+      completeness: { horizonReached: false, allRootsTerminal: false, aggregates: "observed-prefix", usage: "prefix-only", journalComplete: true },
+      distributions: null, omissions: { raw: 0, samples: 0, journal: 0 }, interruption: null,
+    }, f.config.source, inputDigest("{}"));
+    const run = runFirstStackContainer(f.control, f.config, { mode: "execute", input: "{}" }, {
+      assertHeld: async () => { if (!held) throw Error("revoked"); },
+      commit: async () => { commits++; if (mode === "revocation") held = false; else if (commits === 2) throw Error("database unavailable"); },
+    });
+    await f.ready; await Bun.sleep(10); f.handshake(); f.send({ kind: "cut", value: cut(1) });
+    if (mode === "persistence") f.send({ kind: "cut", value: cut(2) });
+    const result = await run;
+    expect(result.status).toBe("interrupted"); expect(result.durablePrefix?.cut.sequence).toBe(1);
+    expect(result.summary).toBeNull(); expect(result.receipt.cleanup).toBe("removed");
+    expect(writes.split("\n").filter(line => line.includes('"kind":"ack"')).length).toBe(mode === "persistence" ? 1 : 0);
   }
 });

@@ -93,10 +93,7 @@ try {
   const replay = await observe("replay", () => withFirstStackOwnership(stack!.databaseUrl, { check: async client => { await client.query("SELECT 1"); }, commit: async () => { throw Error("Replay must not write"); } },
     (authority, signal) => probeFirstStackContainer(control, configuration, { mode: "replay", input, expected: one.durablePrefix! }, authority, signal)));
   check("replay", replay.replay?.kind === "MatchesRecordedPrefix" && (await db.query("SELECT sequence FROM first_stack_probe WHERE id='one'")).rows[0].sequence === one.durablePrefix.cut.sequence, replay);
-  // Two is characterization only. The production gate remains capacity=1.
-  const two = await observe("two", () => Promise.all([false, true].map(second => probeFirstStackContainer(control, configuration,
-    { mode: "execute", input }, actor, undefined, second))));
-  report.observations.two = two.map(r => ({ status: r.status, receipt: r.receipt, interruption: r.interruption }));
+  report.observations.capacity = "One verifier at a time; browser simulations do not consume this capacity";
   const stress = await fixtureImage();
   for (const kind of ["controls", "pids", "quota", "memory", "output", "cpu", "wall"]) {
     console.info(`First-stack host probe: ${kind}`);
@@ -153,16 +150,16 @@ try {
   await barrier;
   const duplicate = await probeFirstStackContainer(control, configuration, { mode: "replay", input, expected: one.durablePrefix! }, actor);
   cancel.abort(); const heldResult = await heldRun;
-  check("exclusive", duplicate.status === "interrupted" && duplicate.receipt.container === null && duplicate.receipt.cleanup === "not-created" && heldResult.receipt.cleanup === "removed", { duplicate, held: heldResult });
+  check("exclusive", duplicate.status === "interrupted" && duplicate.receipt.container === null && duplicate.receipt.cleanup === "unconfirmed" && heldResult.receipt.cleanup === "removed", { duplicate, held: heldResult });
   const orphan = await observe("workerDeath", () => orphanProof(control, configuration, input, output));
   check("workerDeath", orphan.passed, orphan);
   const allSamples = Object.entries(report.observations).filter(([k]) => k.endsWith("Samples")).flatMap(([, v]) => v as any[]);
   check("apiResponsive", allSamples.length > 0 && allSamples.every(s => s.health?.every((h: any) => h.ok && h.ms < 3000)), { samples: allSamples.length,
     maxMs: Math.max(...allSamples.flatMap(s => s.health?.map((h: any) => h.ms) ?? [Infinity])) });
-  check("headroom", allSamples.length > 0 && allSamples.every(s => s.hostFreeBytes >= 512 * 1024 * 1024) && two.every(r => r.status === "completed"),
-    { minimumHostFreeBytes: Math.min(...allSamples.map(s => s.hostFreeBytes)), concurrencyTwoCompleted: two.every(r => r.status === "completed"),
+  check("headroom", allSamples.length > 0 && allSamples.every(s => s.hostFreeBytes >= 512 * 1024 * 1024) && one.status === "completed",
+    { minimumHostFreeBytes: Math.min(...allSamples.map(s => s.hostFreeBytes)), capacity: 1,
       daemonOverhead: "Included in whole-host available memory; not separately attributed. Docker Desktop VM and Windows measurements are distinct.",
-      limits: "Proof containers <= 2.25 CPUs / 3456 MiB while two executors run; no production two-worker entitlement" });
+      limits: "Proof topology <= 1.75 CPUs / 2688 MiB with one verifier; capacity remains one" });
   }
 } catch (error) {
   report.failure = error instanceof Error ? error.message : "Qualification failed";

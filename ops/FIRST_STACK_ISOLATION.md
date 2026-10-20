@@ -1,7 +1,14 @@
 # First-stack execution containment and host qualification
 
-Model 1 remains active. This slice supplies the first-stack isolated execution
-and deterministic replay boundary for the later owned run store/queue. It does
+Model 1 remains active. The owner decision is browser simulation with serial
+server verification for scored/shared runs, using the same pinned engine and
+seed. This slice supplies that isolated rerun/replay boundary for the later
+owned submission store/queue. Browser results are untrusted: the server must
+resolve an approved engine/image and immutable input/seed itself, re-run, and
+compare the resulting evidence before issuing a score/shared verification mark.
+An arbitrary browser fingerprint or a prefix match alone cannot grant a score.
+The browser executor and public submission/scoring integration are later slices.
+This slice does
 not install public admission routes, activate Model 2, or qualify a deployment.
 The old internal/lesson routes retain their separate policies; lesson readiness
 does not enable this executor.
@@ -62,7 +69,7 @@ bun --no-env-file --no-install scripts/first-stack-host/qualify.ts --endpoint=np
 
 `--containment-only` permits exit zero when the serial containment checks pass;
 `qualification.json` still has `qualified:false` because actual DB-loss,
-API/worker/DB/Redis overhead and two-run headroom were not measured. It is not
+API/worker/DB/Redis overhead and deployment headroom were not measured. It is not
 a readiness bypass. This is the required mode while the shared laptop is
 restricted to one container. Linux CI uses the same serial mode and must not be
 presented as Docker Desktop or EC2 capacity evidence.
@@ -105,8 +112,7 @@ never mount its socket in an executor or expose this CLI through HTTP. A rootles
 daemon may be selected by its explicit `/run/user/UID/docker.sock`; it must
 actually enforce cgroup v2 controls. There is no default-context fallback.
 
-Full mode tests one run then two simultaneous probe runs; two is measurement
-only, and product capacity stays one. It samples actual API liveness/readiness,
+Full mode tests one verifier at a time. It samples actual API liveness/readiness,
 worker readiness, per-service Docker statistics and whole-host free memory.
 It terminates a real lock-holding database session after a committed prefix.
 Cancellation/revocation use explicit authority changes. Kernel memory, CPU,
@@ -117,12 +123,10 @@ or calibrated performance claims. Missing samples fail closed.
 
 Configured disposable topology totals: API 384 MiB/0.35 CPU, worker
 768 MiB/0.5 CPU, DB 512 MiB/0.25 CPU and Redis 256 MiB/0.15 CPU;
-with two executors, 3456 MiB/2.25 CPU. CPU ceilings may overcommit the 2-vCPU
-host during this stress characterization. The production Compose stack's
+with one verifier, 2688 MiB/1.75 CPU. The production Compose stack's
 external DB and optional WS topology differ: review these differences, actual
 external DB latency, host daemon/OS overhead, and the existing
-`BACKEND_CAPACITY.md` budget before activation. A failed two-run stress
-measurement cannot authorize a second production worker. Builds, backup jobs
+`BACKEND_CAPACITY.md` budget before activation. No second verifier is authorized. Builds, backup jobs
 and migrations must not overlap execution on the 4-GiB host.
 
 Retain `evidence.json`, `qualification.json`, fixture hashes, immutable image
