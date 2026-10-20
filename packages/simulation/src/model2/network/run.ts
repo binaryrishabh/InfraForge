@@ -26,6 +26,7 @@ export interface NetworkContext {
   setAvailable(id: string, alive: boolean): void;
   abortOwned(id: string): void;
   retireOwner?(id: string): void;
+  crashOwner?(id: string): void;
   drain(lb: string, backend: string, grace: number): void;
   backend(lb: string, backend: string): { health: boolean; draining: boolean; outstanding: number };
 }
@@ -70,6 +71,12 @@ export function createNetworkRuntime(authored: NetworkInput, extension?: Network
     const links = new Map(input.links.map((l) => [l.id, networkLink(l, kernel, trace.emit, extension?.usage)]));
     const paths = new Map<string, ReturnType<typeof pathTransport>>();
     context.retireOwner = (id) => { for (const r of input.resources) if (r.id === id || r.id.startsWith(id + "/")) context.setReady(r.id, false, "terminated"); for (const p of input.paths) if (p.source === id || p.source.startsWith(id + "/")) paths.get(JSON.stringify([p.source, p.target]))!.reset(); };
+    context.crashOwner = (id) => {
+      for (const lb of lbs.values()) if (input.resources.some(r => r.kind === "load-balancer" && r.id === lb.measure().id && r.backends.includes(id))) lb.invalidate(id);
+      context.setReady(id, false, "process"); context.setAvailable(id, false);
+      context.abortOwned(id);
+      for (const p of input.paths) if (p.source === id || p.target === id) paths.get(JSON.stringify([p.source, p.target]))!.reset();
+    };
     const send = (source: string, target: string, work: Invocation, done: (outcome: RemoteOutcome) => void) => { const path = paths.get(JSON.stringify([source, target])); if (!path) throw Error("Missing explicit transport path"); return path.exchange(work, (result) => done(result.ok ? "completed" : "rejected")); };
     let liveCalls = 0;
     const callBudget = input.limits.maxLiveCalls === undefined ? undefined : { enter() {

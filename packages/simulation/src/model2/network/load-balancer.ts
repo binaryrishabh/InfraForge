@@ -9,7 +9,7 @@ import type { CausalObserver } from "../workload/causal";
 
 interface Request { work: Invocation; done(outcome: RemoteOutcome): void; receipt?: Receipt; timer?: () => boolean; retryTimer?: () => boolean; attempt: number; backend?: string; retrying: boolean; terminal: boolean }
 export function loadBalancer(config: LoadBalancer, kernel: EventClock, paths: Map<string, ReturnType<typeof pathTransport>>, operations: Map<string, OperationClass>, seed: string, horizon: number, trace: Trace, causal?: CausalObserver) {
-  const members = [...config.backends].sort().map((id) => ({ id, health: config.health.initial === "eligible", draining: false, successes: 0, failures: 0, outstanding: 0, selected: 0, probes: 0, cancelCheck: undefined as (() => boolean) | undefined }));
+  const members = [...config.backends].sort().map((id) => ({ id, health: config.health.initial === "eligible", draining: false, successes: 0, failures: 0, outstanding: 0, selected: 0, probes: 0, epoch: 0, cancelCheck: undefined as (() => boolean) | undefined }));
   const active = new Map<string, Request>(), pending = new Map<string, Request>();
   const membersById = new Map(members.map((m) => [m.id, m]));
   let received = 0, completed = 0, rejected = 0, cancelled = 0, attempts = 0, retries = 0, retryLimited = 0, activeRetries = 0, cursor = 0, pumping = false;
@@ -41,9 +41,10 @@ export function loadBalancer(config: LoadBalancer, kernel: EventClock, paths: Ma
       if (result.ok) { finish(r, "completed"); return; }
       const policy = config.retry, op = operations.get(r.work.operation)!;
       const safe = !result.ambiguous || ["read-only", "idempotent"].includes(op.idempotency) || policy?.allowAmbiguousNonIdempotent;
-      if (!policy || r.attempt >= requireKnown(policy.maxAttempts, "count") || !policy.retryOn.includes(result.reason!) || !safe) { finish(r, "rejected"); return; }
+      if (!policy || (policy.operations && !policy.operations.includes(op.id)) || r.attempt >= requireKnown(policy.maxAttempts, "count") || !policy.retryOn.includes(result.reason!) || !safe) { finish(r, "rejected"); return; }
       const jitter = 1 + requireKnown(policy.jitter, "ratio") * (2 * keyedUniform(seed, config.id, work.callId, "retry-backoff") - 1);
       const delay = Math.ceil(requireKnown(policy.backoff, "us") * 2 ** (r.attempt - 1) * jitter);
+      if (policy.operations && kernel.now + delay >= r.work.offeredAt + requireKnown(op.callerTimeout, "us")) { finish(r, "rejected"); return; }
       trace("retry-scheduled", work.callId, `${result.reason}:${delay}us`, work.rootId, work.attempt);
       r.retryTimer = kernel.schedule(kernel.now + delay, 3, JSON.stringify(["retry", config.id, r.work.callId, r.attempt]), () => attempt(r));
     });
@@ -59,10 +60,12 @@ export function loadBalancer(config: LoadBalancer, kernel: EventClock, paths: Ma
     let probe = 0;
     const check = () => {
       if (member.draining) return;
+      const epoch = member.epoch;
       const number = probe++, key = JSON.stringify(["health", config.id, member.id, number]); member.probes++;
       let terminal = false, receipt: Receipt | undefined;
       const observe = (ok: boolean, reason: string) => {
         if (terminal) return; terminal = true; timeout();
+        if (epoch !== member.epoch) return;
         if (ok) { member.successes++; member.failures = 0; if (member.successes >= requireKnown(config.health.healthy, "count")) member.health = true; }
         else { member.failures++; member.successes = 0; if (member.failures >= requireKnown(config.health.unhealthy, "count")) member.health = false; }
         trace("health-observation", key, `${reason}:eligible=${member.health}`);
@@ -76,6 +79,7 @@ export function loadBalancer(config: LoadBalancer, kernel: EventClock, paths: Ma
     member.cancelCheck = kernel.schedule(0, 3, JSON.stringify(["health-check", config.id, member.id]), check);
   }
   return {
+    invalidate(id: string) { const m = membersById.get(id); if (!m) throw Error("Unknown backend"); m.epoch++; m.health = false; m.successes = 0; m.failures = 0; },
     backend(id: string) { const member = membersById.get(id); if (!member) throw Error("Unknown backend"); return { health: member.health, draining: member.draining, outstanding: member.outstanding }; },
     accept(work: Invocation, done: Request["done"]): Receipt {
       received++;
@@ -90,6 +94,6 @@ export function loadBalancer(config: LoadBalancer, kernel: EventClock, paths: Ma
     },
     drain(backend: string, grace: number) { const m = members.find((m) => m.id === backend)!; m.draining = true; m.cancelCheck?.(); path(backend).drain(grace); trace("backend-draining", config.id, `${backend}:${grace}us`); },
     measure: () => ({ id: config.id, received, completed, rejected, cancelled, active: active.size, pending: pending.size, attempts, retries, retryLimited, activeRetries,
-      backends: members.map(({ cancelCheck: _cancel, ...m }) => ({ ...m })) }),
+      backends: members.map(({ cancelCheck: _cancel, epoch: _epoch, ...m }) => ({ ...m })) }),
   };
 }

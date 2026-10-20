@@ -72,11 +72,11 @@ export function firstStackPreflight(sidecar: FirstStackExecutable, schedule: Res
   const probes = apps * (Math.floor(policy.horizonUs / sidecar.balancer.intervalUs) + 1);
   // Transparent lower bound, not an exact forecast: foreground arrivals plus
   // probe starts alone. Queueing, path completion/deadline work adds more.
-  const minimumEvents = schedule.rows.length + probes;
+  const minimumEvents = schedule.rows.length + probes + sidecar.faults.length * 2;
   if (!Number.isSafeInteger(probes) || minimumEvents > policy.maxEvents) refuse("envelope.events", "Offered roots and health probes alone exceed the event budget; shorten the horizon or reduce the workload.");
   return { revision: e.revision, dictionaryBytes, roots: schedule.rows.length, operations: sidecar.operations.length, apps,
     probes: { upperScheduledStarts: probes }, minimumEvents,
-    paths: sidecar.paths.length + 1, attemptsPerRoot: 1, retry: "unsupported in compiler/2",
+    paths: sidecar.paths.length + 1, attemptsPerRoot: sidecar.retry ? 2 : 1, retry: sidecar.retry ? "first-stack-read-retry/1; one LB owner" : "unsupported in compiler/2",
     liveCallsUpperBound: e.liveCalls, pendingEventsUpperBound: e.pendingEvents,
     eventForecast: { kind: "unknown", reason: "Completion, queue/deadline ordering and downstream fan-out depend on execution; runtime caps remain authoritative" },
     rssForecast: { kind: "unknown", reason: "Logical object counts do not predict process RSS; isolated host qualification remains required" },

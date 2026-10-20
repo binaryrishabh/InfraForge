@@ -25,6 +25,7 @@ export interface RequestPlugin {
 export interface StackComposition {
   hosts: Array<{ id: string; cores: Quantity<"cores">; memory: Quantity<"bytes"> }>;
   bindings: Array<{ resource: string; host: string; reservedMemory: Quantity<"bytes"> }>;
+  processFaults?: Array<{ id: string; target: string; atUs: number; readyAtUs: number }>;
   plugins?: RequestPlugin[];
   causal?: CausalObserver;
   storage?: FiniteIoProfile;
@@ -79,25 +80,51 @@ export function createStackComposition(authored: DataInput, composition: StackCo
   }
   // Validate every plug-in before allocating resources or scheduling any work.
   for (const plugin of plugins) plugin.validate();
+  const renewCpu = new Map<string, () => void>();
   let context: NetworkContext;
   const runtime = createDataRuntime(input, {
     databaseIoFor(id, clock) { if (!storage) return undefined; io ??= finiteIoRuntime(storage, clock); return io.forRole(id); },
     causal: composition.causal,
     resource: () => undefined,
-    clockFor: (id, clock) => lifecycle.clock(identities.get(id)!, clock),
+    clockFor: (id, clock) => ({ get now() { return clock.now; }, schedule: (at, priority, key, run) => lifecycle.schedule(identities.get(id)!, clock, at, priority, key, run) }),
     cpuFor(id, clock: EventKernel) {
       const binding = bindingByResource.get(id); if (!binding) return undefined;
       if (leases.has(id)) throw Error("Duplicate runtime CPU binding");
-      const config = hostConfigs.get(binding.host)!, identity = identities.get(id)!;
+      const config = hostConfigs.get(binding.host)!;
       const pool = pools.get(config.id) ?? hostCpuPool(config.id, config.cores, clock); pools.set(config.id, pool);
-      const reservation = memory.get(config.id)!.reserve(identity, binding.reservedMemory);
-      if (!reservation) throw Error("Host memory admission rejected");
-      const lease = pool.lease(identity); leases.set(id, lease);
-      lifecycle.own(identity, () => { lease.release(); reservation.release(); });
-      return lease.scheduler;
+      let consumed = 0, competitor = 0, live = true;
+      const acquire = () => {
+        const identity = identities.get(id)!;
+        const reservation = memory.get(config.id)!.reserve(identity, binding.reservedMemory);
+        if (!reservation) throw Error("Host memory admission rejected");
+        const lease = pool.lease(identity); leases.set(id, lease); live = true;
+        lifecycle.own(identity, () => { const m = lease.scheduler.measure(); consumed += m.appCoreUs; competitor += m.competitorCoreUs; lease.release(); reservation.release(); live = false; });
+        return lease.scheduler;
+      };
+      let scheduler = acquire();
+      renewCpu.set(id, () => { scheduler = acquire(); scheduler.pause(true); });
+      return { add: job => scheduler.add(job), remove: job => scheduler.remove(job), pause: value => scheduler.pause(value), capacity: value => scheduler.capacity(value),
+        measure() { const m = scheduler.measure(); return { ...m, appCoreUs: consumed + (live ? m.appCoreUs : 0), competitorCoreUs: competitor + (live ? m.competitorCoreUs : 0) }; } };
     },
     install(clock, _trace, network) {
       context = network;
+      for (const fault of composition.processFaults ?? []) {
+        if (resources.get(fault.target)?.kind !== "compute" || !bindingByResource.has(fault.target) || !Number.isSafeInteger(fault.atUs) || fault.atUs < 0 || !Number.isSafeInteger(fault.readyAtUs) || fault.readyAtUs <= fault.atUs) throw Error("Invalid process fault owner/timing");
+        clock.schedule(fault.atUs, 0, JSON.stringify(["process-crash", fault.id]), () => {
+          network.crashOwner!(fault.target);
+          const identity = identities.get(fault.target)!;
+          const observed = network.observe(fault.target) as Record<string, unknown>;
+          if (["queued", "serving", "waiting"].some(k => typeof observed[k] === "number" && observed[k] > 0)) throw Error("Process still owns live work");
+          lifecycle.retire(identity);
+          composition.causal?.({ atUs: clock.now, kind: "process-crash", resource: fault.target, detail: { generation: identity.generation } });
+        });
+        clock.schedule(fault.readyAtUs, 0, JSON.stringify(["process-ready", fault.id]), () => {
+          const identity = lifecycle.create(fault.target); identities.set(fault.target, identity); lifecycle.register(identity);
+          renewCpu.get(fault.target)!();
+          network.setAvailable(fault.target, true); network.setReady(fault.target, true, "process"); lifecycle.ready(identity);
+          composition.causal?.({ atUs: clock.now, kind: "process-ready", resource: fault.target, detail: { generation: identity.generation, eligibility: "requires successful LB health probe" } });
+        });
+      }
       for (const identity of identities.values()) if (input.endpoints[identity.id]!.alive && input.endpoints[identity.id]!.ready) lifecycle.ready(identity);
       // Registration order is execution order and is retained in the lock.
       for (const plugin of plugins) {

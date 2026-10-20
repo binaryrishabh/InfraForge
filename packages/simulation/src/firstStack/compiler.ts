@@ -7,6 +7,7 @@ import type { RealityEntry } from "../reality/ledger";
 import type { Quantity, Unit } from "../reality/quantity";
 import { validateData } from "../model2/data/validate";
 import { FIRST_STACK_ENVELOPE as envelope, firstStackPreflight, refuse } from "./bounds";
+import { compileScenario } from "./faults";
 import { lexical } from "../model2/time";
 
 export const COMPOSITION_REVISION = "first-stack-composition/2";
@@ -153,6 +154,8 @@ export function compileFirstStack(sidecar: FirstStackExecutable, schedule: Resol
       input.paths.push(path(role.internal), path(role.database));
     }
   }
+  if (sidecar.schema === "infraforge-first-stack-sidecar/2") compileScenario(sidecar, input, composition, q);
+  else if (sidecar.faults.length || sidecar.retry) refuse("faults", "Cache plus faults or retries requires a separately reviewed composition revision.");
   input.resources.sort((a, b) => lexical(a.id, b.id)); ledger.sort((a, b) => lexical(a.id, b.id));
   try { validateData(input); } catch (e) { refuse("stage1", `Stage 1 refused this composition: ${e instanceof Error ? e.message : String(e)}. Review the named demand, transport or budget field.`); }
   return { revision, input, composition };

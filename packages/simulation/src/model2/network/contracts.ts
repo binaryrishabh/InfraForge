@@ -17,6 +17,7 @@ export interface PathConfig {
   bytes: Record<string, { request: Quantity<"bytes">; response: Quantity<"bytes"> }>;
 }
 export interface RetryPolicy {
+  operations?: string[];
   maxAttempts: Quantity<"count">; backoff: Quantity<"us">; jitter: Quantity<"ratio">;
   maxConcurrentRetries: Quantity<"count">;
   retryOn: FailureReason[]; allowAmbiguousNonIdempotent: boolean;

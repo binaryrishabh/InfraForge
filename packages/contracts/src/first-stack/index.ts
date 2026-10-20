@@ -62,7 +62,10 @@ export interface FirstStackPoolPolicy {
   responseTimeoutUs: number; idleTimeoutUs: number | null;
   remoteCancellation: "detach" | "request-cancellation";
 }
-export interface FirstStackSidecarV2 extends Omit<FirstStackSidecar, "schema" | "compiler" | "links" | "paths" | "caller" | "nodes" | "balancer" | "workload"> {
+export interface FirstStackSidecarV2 extends Omit<FirstStackSidecar, "schema" | "compiler" | "links" | "paths" | "caller" | "nodes" | "balancer" | "workload" | "faults"> {
+  faults: FirstStackFault[];
+  retry?: { schema: "first-stack-read-retry/1"; owner: "load-balancer"; operations: string[];
+    maxAttempts: 2; backoffUs: number; maxConcurrentRetries: number };
   schema: "infraforge-first-stack-sidecar/2"; compiler: "first-stack-compiler/2";
   links: Array<FirstStackSidecar["links"][number] & { from: string; to: string }>;
   paths: Array<FirstStackSidecar["paths"][number] & { pool: FirstStackPoolPolicy }>;
@@ -72,7 +75,9 @@ export interface FirstStackSidecarV2 extends Omit<FirstStackSidecar, "schema" | 
   workload: { scheduleHash: string; parametersHash: string; resolvedIdentity: string; executedScheduleHash: string } | null;
 }
 // Reviewed optional-cache copy. V2 remains the frozen cache-free composition.
-export interface FirstStackSidecarV3 extends Omit<FirstStackSidecarV2, "schema" | "compiler"> {
+export interface FirstStackSidecarV3 extends Omit<FirstStackSidecarV2, "schema" | "compiler" | "faults" | "retry"> {
+  faults: [];
+  retry?: never;
   schema: "infraforge-first-stack-sidecar/3"; compiler: "first-stack-compiler/3";
   cache: { node: string; semantics: "keyed-cache/1"; capacityBytes: number; entryOverheadBytes: number;
     ttlUs: number; commandCpuUs: number; policy: "lru" | "no-eviction";
@@ -85,6 +90,11 @@ export interface FirstStackSidecarV3 extends Omit<FirstStackSidecarV2, "schema" 
 }
 export type FirstStackExecutable = FirstStackSidecarV2 | FirstStackSidecarV3;
 export type FirstStackSemantic = FirstStackSidecar | FirstStackExecutable;
+export type FirstStackFault = { id: string; atUs: number; target: string } & (
+  { kind: "app-process-crash"; schema: "first-stack-fault/1"; downtimeUs: number; recoveryUs: number } |
+  { kind: "directed-delay"; schema: "first-stack-fault/1"; durationUs: number; delayUs: number } |
+  { kind: "directed-partition"; schema: "first-stack-fault/1"; durationUs: number }
+);
 export interface RecordedScheduleHeader {
   schema: "infraforge-first-stack-schedule/1"; unit: "us"; durationUs: number;
   origin: "observed-recording" | "authored-schedule"; provenance: string;

@@ -55,6 +55,13 @@ const poolSchema = z.object({ reuse: z.boolean(), establishUs: time, acquireTime
   connectTimeoutUs: time.positive(), responseTimeoutUs: time.positive(), idleTimeoutUs: time.positive().nullable(),
   remoteCancellation: z.enum(["detach", "request-cancellation"]) }).strict();
 export const sidecarV2Schema = sidecarSchema.extend({
+  faults: z.array(z.discriminatedUnion("kind", [
+    z.object({ schema: z.literal("first-stack-fault/1"), id, atUs: time, target: id, kind: z.literal("app-process-crash"), downtimeUs: time.positive(), recoveryUs: time.positive() }).strict(),
+    z.object({ schema: z.literal("first-stack-fault/1"), id, atUs: time, target: id, kind: z.literal("directed-delay"), durationUs: time.positive(), delayUs: time }).strict(),
+    z.object({ schema: z.literal("first-stack-fault/1"), id, atUs: time, target: id, kind: z.literal("directed-partition"), durationUs: time.positive() }).strict(),
+  ])).max(64),
+  retry: z.object({ schema: z.literal("first-stack-read-retry/1"), owner: z.literal("load-balancer"), operations: z.array(id).min(1).max(limits.operations),
+    maxAttempts: z.literal(2), backoffUs: time.positive(), maxConcurrentRetries: positive.max(10000) }).strict().optional(),
   schema: z.literal("infraforge-first-stack-sidecar/2"), compiler: z.literal("first-stack-compiler/2"),
   links: z.array(sidecarSchema.shape.links.element.extend({ from: id, to: id })).max(64),
   paths: z.array(sidecarSchema.shape.paths.element.extend({ pool: poolSchema })).max(32),
@@ -66,6 +73,7 @@ export const sidecarV2Schema = sidecarSchema.extend({
 });
 
 export const sidecarV3Schema = sidecarV2Schema.extend({
+  faults: z.tuple([]), retry: z.never().optional(),
   links: z.array(sidecarV2Schema.shape.links.element).max(128),
   schema: z.literal("infraforge-first-stack-sidecar/3"), compiler: z.literal("first-stack-compiler/3"),
   cache: z.object({ node: id, semantics: z.literal("keyed-cache/1"), capacityBytes: amount, entryOverheadBytes: amount,
