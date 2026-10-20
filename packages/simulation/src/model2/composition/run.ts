@@ -111,7 +111,7 @@ export function createStackComposition(authored: DataInput, composition: StackCo
     },
     evidence() {
       return { ...runtime.evidence(), composition: {
-        revision: "stack-composition/1", modules: [manifest("compute", "m2c/1"), manifest("relational", "m2e/1"), manifest("keyed-cache", "m2e/1"), manifest("cache-aside", "m2e/1"), manifest("load-balancer", "m2d/1"), ...registry.lock()],
+        revision: "stack-composition/1", modules: [manifest("compute", "m2c/1"), manifest("relational", input.workloadVersion === "m2e-pg/1" ? "m2e-pg/1" : "m2e/1"), manifest("keyed-cache", "m2e/1"), manifest("cache-aside", "m2e/1"), manifest("load-balancer", "m2d/1"), ...registry.lock()],
         pluginOrder: plugins.map(p => p.manifest.id), hosts: JSON.parse(JSON.stringify(hosts)), bindings: JSON.parse(JSON.stringify(bindings)), lifecycle: lifecycle.snapshot(),
         cpu: [...pools.values()].map(p => p.measure()), memory: [...memory.values()].map(m => m.measure()), mechanisms: gates.map(g => g.measure()),
         memoryCoverage: "Authored reservation admission only; full resident memory remains Unknown where module coverage is partial",

@@ -16,7 +16,7 @@ export function dataModules(input: DataInput, instances: {
   let validated = false;
   const validate = (config: DataInput["resources"][number]) => { if (!input.resources.includes(config)) throw Error("Foreign data configuration"); if (!validated) { validateData(input); validated = true; } };
   return new ModuleRegistry<DataInput["resources"][number], ModuleHost, WorkEndpoint<ComputeState>>()
-    .register("relational", { manifest: manifest("relational", "m2e/1"), validate,
+    .register("relational", { manifest: manifest("relational", input.workloadVersion === "m2e-pg/1" ? "m2e-pg/1" : "m2e/1"), validate,
       instantiate(config, host) { const resource = relationalDatabase(config, host.clock, host.causal, host.cpu); instances.databases.set(config.id, resource); return resource; } })
     .register("cache", { manifest: manifest("keyed-cache", "m2e/1"), validate,
       instantiate(config, host) { const resource = keyedCache(config, host.clock, host.cpu); instances.caches.set(config.id, resource); return resource; } })

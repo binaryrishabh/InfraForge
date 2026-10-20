@@ -9,7 +9,7 @@ export const isData = (r: DataInput["resources"][number]): r is DataResource => 
 export const networkAdapter = (input: DataInput): NetworkInput => ({ ...input, workloadVersion: "m2d/1", resources: input.resources.map((r) => isData(r) ? { ...r.execution, id: r.id, downstream: undefined } : r) });
 export function validateData(input: DataInput) {
   const adapter = networkAdapter(input); validateNetwork(adapter); validateComputeInput(computeAdapter(adapter));
-  if (input.workloadVersion !== "m2e/1" || input.dataInterventions.length > caps.interventions) throw new Error("Invalid data revision/budget");
+  if (!["m2e/1", "m2e-pg/1"].includes(input.workloadVersion) || input.dataInterventions.length > caps.interventions) throw new Error("Invalid data revision/budget");
   const ledger = new Map(input.ledger.map((e) => [e.id, e.quantity])), horizon = requireKnown(input.horizon, "us");
   const num = <U extends Unit>(q: Quantity<U>, unit: U, min = 0, integer = true) => {
     const n = requireKnown(q, unit); if (n < min || (integer && !Number.isSafeInteger(n))) throw new Error(`Invalid data ${unit}`);
@@ -35,11 +35,11 @@ export function validateData(input: DataInput) {
       } else {
         const dataset = new Set(r.keys);
         if (!r.keys.length || r.keys.length > caps.keys || r.keys.some((k) => !validKey(k)) || dataset.size !== r.keys.length || r.initial.some((row) => !dataset.has(row.key))) throw new Error("Invalid bounded database dataset");
-        if (r.semantics !== "read-committed-keyed/1" || num(r.maxSessions, "count", 1) > caps.sessions || num(r.activeTransactions, "count", 1) > caps.activeTransactions) throw new Error("Invalid relational policy/budget");
+        if (r.semantics !== (input.workloadVersion === "m2e-pg/1" ? "postgresql-keyed/1" : "read-committed-keyed/1") || num(r.maxSessions, "count", 1) > caps.sessions || num(r.activeTransactions, "count", 1) > caps.activeTransactions) throw new Error("Invalid relational policy/budget");
         num(r.pendingQueries, "count");
         for (const op of input.operations) {
           const p = r.plans[op.id]; if (!p || !p.statements.length || p.statements.length > caps.statements || !["logical-only", "authored-log-ack"].includes(p.durability)) throw new Error("Missing/bounded transaction plan");
-          for (const t of [p.statementTimeout, p.lockTimeout, p.transactionTimeout]) micros(horizon + num(t, "us", 1));
+          for (const t of [p.statementTimeout, p.lockTimeout, p.transactionTimeout]) micros(horizon + num(t, "us", r.semantics === "postgresql-keyed/1" ? 0 : 1));
           micros(horizon + num(p.commitWait, "us")); if (p.durability === "logical-only" && requireKnown(p.commitWait, "us") !== 0) throw new Error("Logical commit cannot invent durability wait");
           for (const s of p.statements) {
             if (!["snapshot-read", "write", "insert", "lock-read"].includes(s.kind) || !s.keys.length || s.keys.length > caps.keysPerStatement || s.keys.some((k) => !validKey(k)) || new Set(s.keys).size !== s.keys.length) throw new Error("Invalid keyed statement");

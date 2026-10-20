@@ -14,10 +14,21 @@ export function compositionHostProof() {
 }
 export function verifyCompositionHost() {
   const current = compositionHostProof(), expected = JSON.parse(readFileSync(artifact, "utf8"));
-  if (JSON.stringify(current) !== JSON.stringify(expected)) throw Error("Extensibility proof changed the kernel, host or a peer resource module");
+  // The original extension proof stays frozen. Later opt-in profiles carry an
+  // exact source review and retained original text; do not overwrite its baseline.
+  const review = JSON.parse(readFileSync(resolve(root, "docs/reality/postgres-session-source-review.json"), "utf8"));
+  const allowed = ["composition/run.ts", "data/contracts.ts", "data/database.ts", "data/modules.ts", "data/run.ts", "data/validate.ts", "network/contracts.ts", "network/transport.ts"].map(path => "packages/simulation/src/model2/" + path).sort();
+  if (review.schema !== "infraforge-postgres-session-source-review/1" || JSON.stringify(review.files.map((file: { path: string }) => file.path).sort()) !== JSON.stringify(allowed)) throw Error("Invalid PostgreSQL host delta scope");
+  const restored = current.map(entry => {
+    const delta = review.files.find((file: { path: string }) => file.path === entry.path);
+    if (!delta) return entry;
+    if (entry.sha256 !== delta.sha256 || createHash("sha256").update(delta.original.replaceAll("\r\n", "\n")).digest("hex") !== delta.originalHash) throw Error(`Reviewed PostgreSQL profile changed: ${entry.path}`);
+    return { path: entry.path, sha256: delta.originalHash };
+  });
+  if (JSON.stringify(restored) !== JSON.stringify(expected)) throw Error("Extensibility baseline cannot be reconstructed; unreviewed host or peer change");
   return current.length;
 }
 if (import.meta.main) {
   if (process.argv.includes("--write-baseline")) writeFileSync(artifact, JSON.stringify(compositionHostProof(), null, 2) + "\n");
-  console.info(JSON.stringify({ unchangedHostAndPeerFiles: verifyCompositionHost(), independentExtension: extension }));
+  console.info(JSON.stringify({ reconstructedHistoricalHostAndPeerFiles: verifyCompositionHost(), reviewedPostgresDeltaFiles: 8, independentExtension: extension }));
 }

@@ -26,6 +26,22 @@ export function createDataRuntime(authored: DataInput, extension?: NetworkExtens
       if (modules.has(config.kind)) return modules.create(config, { clock: extension?.clockFor?.(id, kernel) ?? kernel, send, causal: extension?.causal, cpu: extension?.cpuFor?.(id, kernel) });
     },
     disconnected(target, session) { databases.get(target)?.closeSession(session); extension?.disconnected?.(target, session); },
+    connection(path, kernel, send, context) {
+      const external = extension?.connection?.(path, kernel, send, context);
+      const config = input.resources.find(r => r.id === path.target);
+      if (config?.kind !== "relational" || config.semantics !== "postgresql-keyed/1") return external;
+      if (external) throw Error("PostgreSQL session owner cannot be combined with another connection gate");
+      return {
+        holdLeaseUntilRemoteTerminal: true,
+        open(id, done) {
+          const opened = databases.get(path.target)!.openSession(id);
+          done(undefined, opened ? undefined : "backend-rejected");
+          return () => false;
+        },
+        close(id) { databases.get(path.target)!.closeSession(id); },
+        returnTraffic(id) { return databases.get(path.target)!.sessionAlive(id); },
+      };
+    },
     install(kernel, trace, context) {
       extension?.install?.(kernel, trace, context);
       for (const i of input.dataInterventions) {
@@ -45,7 +61,7 @@ export function createDataRuntime(authored: DataInput, extension?: NetworkExtens
     },
   });
   return { horizon: runtime.horizon, advanceTo: runtime.advanceTo, evidence() {
-    const e = runtime.evidence(), dataIds = new Set(input.resources.filter(isData).map((r) => r.id)); return { ...e, computeConfiguration: e.computeConfiguration.filter((r) => !dataIds.has(r.id)), workloadVersion: "m2e/1" as const, data: copy({ databases: [...databases.values()].map((d) => d.evidence()), caches: [...caches.values()].map((c) => c.evidence()), applications: [...applications.values()].map((a) => a.evidence()), policyLedger: DATA_POLICY_LEDGER }),
+    const e = runtime.evidence(), dataIds = new Set(input.resources.filter(isData).map((r) => r.id)); return { ...e, computeConfiguration: e.computeConfiguration.filter((r) => !dataIds.has(r.id)), workloadVersion: input.workloadVersion, data: copy({ databases: [...databases.values()].map((d) => d.evidence()), caches: [...caches.values()].map((c) => c.evidence()), applications: [...applications.values()].map((a) => a.evidence()), policyLedger: DATA_POLICY_LEDGER }),
       dataConfiguration: copy(input.resources.filter(isData)), unmodeled: [...e.unmodeled.filter((x) => x !== "database query/lock/cache mechanisms"), "physical storage/buffer-cache/WAL fsync/replication/failover", "full SQL/MVCC/Redis protocols"] };
   } };
 }

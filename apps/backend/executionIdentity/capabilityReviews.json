@@ -164,7 +164,7 @@
     }
   },
   "apps/backend/executionIdentity/loading.ts": {
-    "hash": "719ab1c74fca01bcf1b4d96b49d99907740c39e92fdd6a13967cac32ada03f50",
+    "hash": "77293b43e5368b02c7197259df04ab3569786a980a75f8db7248ece21641b831",
     "capabilities": [
       "computed-data",
       "verifier",
@@ -172,7 +172,7 @@
     ],
     "review": "Fixed data indexing; resource adapters require the separate documented review",
     "globals": {
-      "hash": "719ab1c74fca01bcf1b4d96b49d99907740c39e92fdd6a13967cac32ada03f50",
+      "hash": "77293b43e5368b02c7197259df04ab3569786a980a75f8db7248ece21641b831",
       "names": [
         "Bun"
       ]
@@ -551,14 +551,14 @@
     "review": "Composition module: reviewed fixed configuration/identity/measurement indexing; no dynamic loading or host access"
   },
   "packages/simulation/src/model2/data/database.ts": {
-    "hash": "d034b9d22fec068c8588a841c0a90671fc10a816a55a3e780843a3d020e7b137",
+    "hash": "818065a584a3bec6f3e837bf8bfa6a199e49178fc720bc58565d09667e1b5daf",
     "capabilities": [
       "computed-data"
     ],
     "review": "Composition module: reviewed fixed configuration/identity/measurement indexing; no dynamic loading or host access"
   },
   "packages/simulation/src/model2/data/validate.ts": {
-    "hash": "3d13b503edeb833094444d1cb7e185c67004ae629209b890e6b6dbcc4203e5d2",
+    "hash": "0dff55eb16a9abad7fd12db65b0a1298df89cfddfffa543e7b640e6e8188ac44",
     "capabilities": [
       "computed-data"
     ],
@@ -586,7 +586,7 @@
     "review": "Fixed data indexing; resource adapters require the separate documented review"
   },
   "packages/simulation/src/model2/network/transport.ts": {
-    "hash": "721517a57ec80a025078c713d249acd327a126495f4eb549bda2e1daead8a888",
+    "hash": "997f92945e84a7a8dbc23b4830bce0b92374af68604e1bf9cddec4a775db08e1",
     "capabilities": [
       "computed-data"
     ],
@@ -980,7 +980,7 @@
     "review": "Composition module: reviewed fixed configuration/identity/measurement indexing; no dynamic loading or host access"
   },
   "packages/simulation/src/model2/composition/run.ts": {
-    "hash": "60ff6580adae20b7ffbf3c7344a62ab49ca6f0d72bde3af1b3bb24a72350af3e",
+    "hash": "c33b191c6b0fd13003dc7c317cdcaf4a8ddcdd8ffaa7875c847143d465dd983b",
     "capabilities": [
       "computed-data"
     ],
@@ -1022,14 +1022,14 @@
     "review": "Composition module: reviewed fixed configuration/identity/measurement indexing; no dynamic loading or host access"
   },
   "packages/simulation/src/model2/data/modules.ts": {
-    "hash": "cc19eb6234e3703b16540f3c82991eaeabb42d68e9aa260c12963200f294339f",
+    "hash": "d3d197b1907e1476d3db95b2ec5d7f705043e0916143fb9d8bd803428b73c142",
     "capabilities": [
       "computed-data"
     ],
     "review": "Composition module: reviewed fixed configuration/identity/measurement indexing; no dynamic loading or host access"
   },
   "packages/simulation/src/model2/data/run.ts": {
-    "hash": "46073b69a60109a63a3a33d2cb8ce42d69c1f180a68cea282753231701a4c708",
+    "hash": "44cffa676dba668b72635efeb72ee5c4e5c8bc45926798cca68081baadb75ed8",
     "capabilities": [
       "computed-data"
     ],

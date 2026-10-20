@@ -48,6 +48,7 @@ export type Trace = (kind: string, id: string, detail: string, root?: string, at
 export interface TransportResult { ok: boolean; reason?: FailureReason; ambiguous: boolean }
 export interface ConnectionRoute { target: string; request: string[]; response: string[] }
 export interface ConnectionHook {
+  holdLeaseUntilRemoteTerminal?: boolean;
   open(id: string, done: (route?: ConnectionRoute, failure?: FailureReason) => void): () => boolean;
   close(id: string): void;
   returnTraffic?(id: string): boolean;

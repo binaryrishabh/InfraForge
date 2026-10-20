@@ -354,7 +354,8 @@
     },
     {
       "path": "packages/simulation/src/model2/data/contracts.ts",
-      "hash": "d7a8402fbdff6aac651019811ad92dc3661cad77f68a1937f228dd5f5f24bc81"
+      "hash": "d7a8402fbdff6aac651019811ad92dc3661cad77f68a1937f228dd5f5f24bc81",
+      "text": "import type { Quantity } from \"../../reality/quantity\";\nimport type { ComputeResource } from \"../compute/contracts\";\nimport type { NetworkInput } from \"../network/contracts\";\n\nexport interface Row { key: string; version: number; bytes: Quantity<\"bytes\"> }\nexport interface Statement {\n  kind: \"snapshot-read\" | \"write\" | \"insert\" | \"lock-read\";\n  keys: string[]; cpu: Quantity<\"cpu-us\">; parallelism: Quantity<\"cores\">; blockingWait: Quantity<\"us\">;\n  logBytes: Quantity<\"bytes\">; insertBytes?: Quantity<\"bytes\">;\n}\nexport interface TransactionPlan { statements: Statement[]; statementTimeout: Quantity<\"us\">; lockTimeout: Quantity<\"us\">; transactionTimeout: Quantity<\"us\">; commitWait: Quantity<\"us\">; durability: \"logical-only\" | \"authored-log-ack\" }\nexport interface RelationalConfig {\n  id: string; kind: \"relational\"; semantics: \"read-committed-keyed/1\";\n  execution: ComputeResource; maxSessions: Quantity<\"count\">; activeTransactions: Quantity<\"count\">; pendingQueries: Quantity<\"count\">;\n  keys: string[]; initial: Row[]; plans: Record<string, TransactionPlan>;\n}\nexport interface CacheConfig {\n  id: string; kind: \"cache\"; semantics: \"keyed-cache/1\"; execution: ComputeResource;\n  capacity: Quantity<\"bytes\">; entryOverhead: Quantity<\"bytes\">; policy: \"lru\" | \"no-eviction\";\n  ttl: Quantity<\"us\">; initial: Row[]; commandCpu: Quantity<\"cpu-us\">;\n}\nexport interface AsideConfig {\n  id: string; kind: \"cache-aside\"; execution: ComputeResource; cache: string; database: string;\n  keys: string[]; access: \"cycle\" | \"keyed-uniform\"; coalesce: boolean; onCacheFailure: \"fail\" | \"database\";\n  invalidateWrites: boolean; operations: Record<string, \"read\" | \"write\">;\n}\nexport type DataResource = RelationalConfig | CacheConfig | AsideConfig;\nexport type DataIntervention = { id: string; at: Quantity<\"us\"> } & (\n  { kind: \"flush\"; target: string } | { kind: \"session-capacity\"; target: string; sessions: Quantity<\"count\">; duration: Quantity<\"us\"> } | { kind: \"cpu-capacity\"; target: string; cores: Quantity<\"cores\">; duration: Quantity<\"us\"> });\nexport interface DataInput extends Omit<NetworkInput, \"workloadVersion\" | \"resources\"> {\n  workloadVersion: \"m2e/1\";\n  resources: Array<NetworkInput[\"resources\"][number] | DataResource>;\n  dataInterventions: DataIntervention[];\n}\nexport interface DataRequest { kind: \"get\" | \"set\" | \"invalidate\" | \"query\"; key: string; row?: { version: number; bytes: number }; token?: string }\nexport interface DataReply { ok: boolean; hit?: boolean; key?: string; version?: number; bytes?: number; token?: string; rows?: Array<{ key: string; version: number; bytes: number }>; reason?: string; durable?: boolean }\n"
     },
     {
       "path": "packages/simulation/src/model2/data/database.ts",
@@ -376,11 +377,13 @@
     },
     {
       "path": "packages/simulation/src/model2/data/validate.ts",
-      "hash": "3d13b503edeb833094444d1cb7e185c67004ae629209b890e6b6dbcc4203e5d2"
+      "hash": "3d13b503edeb833094444d1cb7e185c67004ae629209b890e6b6dbcc4203e5d2",
+      "text": "import { requireKnown, type Quantity, type Unit } from \"../../reality/quantity\";\nimport { micros } from \"../time\";\nimport type { NetworkInput } from \"../network/contracts\";\nimport type { DataInput, DataResource } from \"./contracts\";\nimport { DATA_LIMITS as caps } from \"./policy\";\nimport { validateNetwork, computeAdapter } from \"../network/validate\";\nimport { validateComputeInput } from \"../compute/run\";\nexport const isData = (r: DataInput[\"resources\"][number]): r is DataResource => [\"relational\", \"cache\", \"cache-aside\"].includes(r.kind);\nexport const networkAdapter = (input: DataInput): NetworkInput => ({ ...input, workloadVersion: \"m2d/1\", resources: input.resources.map((r) => isData(r) ? { ...r.execution, id: r.id, downstream: undefined } : r) });\nexport function validateData(input: DataInput) {\n  const adapter = networkAdapter(input); validateNetwork(adapter); validateComputeInput(computeAdapter(adapter));\n  if (input.workloadVersion !== \"m2e/1\" || input.dataInterventions.length > caps.interventions) throw new Error(\"Invalid data revision/budget\");\n  const ledger = new Map(input.ledger.map((e) => [e.id, e.quantity])), horizon = requireKnown(input.horizon, \"us\");\n  const num = <U extends Unit>(q: Quantity<U>, unit: U, min = 0, integer = true) => {\n    const n = requireKnown(q, unit); if (n < min || (integer && !Number.isSafeInteger(n))) throw new Error(`Invalid data ${unit}`);\n    for (const id of q.provenance) { const e = ledger.get(id); if (!e || e.kind !== \"known\" || e.unit !== unit || e.value !== n) throw new Error(`Missing data provenance ${id}`); } return n;\n  };\n  const resources = new Map(input.resources.map((r) => [r.id, r])), pairs = new Set(input.paths.map((p) => JSON.stringify([p.source, p.target])));\n  const validKey = (key: string) => typeof key === \"string\" && key.length > 0 && key.length <= caps.keyCharacters;\n  for (const r of input.resources) if (isData(r)) {\n    if (r.execution.id !== r.id || r.execution.downstream || r.execution.quota || input.interventions.some((i) => i.target === r.id) || input.faults.some((f) => f.target === r.id)) throw new Error(\"Data resource owns its execution/fault policy; unsupported generic intervention\");\n    if (r.execution.memory.coverage !== \"partial\" || r.execution.memory.policy !== \"observe\" || Object.keys(r.execution.memory).some((key) => ![\"coverage\", \"policy\"].includes(key))) throw new Error(\"Data process memory is Unknown; generic compute memory policy is unsupported\");\n    if (r.kind === \"cache-aside\") {\n      if (!r.keys.length || r.keys.length > caps.keys || r.keys.some((k) => !validKey(k)) || new Set(r.keys).size !== r.keys.length || ![\"cycle\", \"keyed-uniform\"].includes(r.access) || ![\"fail\", \"database\"].includes(r.onCacheFailure) || typeof r.coalesce !== \"boolean\" || typeof r.invalidateWrites !== \"boolean\") throw new Error(\"Invalid cache-aside key/policy\");\n      if (resources.get(r.cache)?.kind !== \"cache\" || resources.get(r.database)?.kind !== \"relational\" || !pairs.has(JSON.stringify([r.id, r.cache])) || !pairs.has(JSON.stringify([r.id, r.database]))) throw new Error(\"Missing cache-aside resource/path\");\n      for (const op of input.operations) if (![\"read\", \"write\"].includes(r.operations[op.id]!)) throw new Error(\"Missing authored cache-aside operation\");\n      if (input.networkInterventions.some((i) => i.target === r.id)) throw new Error(\"Cache-aside suspension/restart policy is unmodeled\");\n    } else {\n      if (r.initial.length > caps.keys || new Set(r.initial.map((x) => x.key)).size !== r.initial.length) throw new Error(\"Invalid data inventory/budget\");\n      for (const row of r.initial) if (!validKey(row.key) || !Number.isSafeInteger(row.version) || row.version < 1 || !Number.isSafeInteger(num(row.bytes, \"bytes\") * caps.keys)) throw new Error(\"Invalid row/version/bytes\");\n      if (r.kind === \"cache\") {\n        const size = num(r.capacity, \"bytes\"), overhead = num(r.entryOverhead, \"bytes\");\n        if (r.semantics !== \"keyed-cache/1\" || ![\"lru\", \"no-eviction\"].includes(r.policy) || r.initial.reduce((n, x) => n + num(x.bytes, \"bytes\") + overhead, 0) > size) throw new Error(\"Invalid initial cache budget/policy\");\n        micros(horizon + num(r.ttl, \"us\", 1)); num(r.commandCpu, \"cpu-us\", Number.MIN_VALUE, false);\n      } else {\n        const dataset = new Set(r.keys);\n        if (!r.keys.length || r.keys.length > caps.keys || r.keys.some((k) => !validKey(k)) || dataset.size !== r.keys.length || r.initial.some((row) => !dataset.has(row.key))) throw new Error(\"Invalid bounded database dataset\");\n        if (r.semantics !== \"read-committed-keyed/1\" || num(r.maxSessions, \"count\", 1) > caps.sessions || num(r.activeTransactions, \"count\", 1) > caps.activeTransactions) throw new Error(\"Invalid relational policy/budget\");\n        num(r.pendingQueries, \"count\");\n        for (const op of input.operations) {\n          const p = r.plans[op.id]; if (!p || !p.statements.length || p.statements.length > caps.statements || ![\"logical-only\", \"authored-log-ack\"].includes(p.durability)) throw new Error(\"Missing/bounded transaction plan\");\n          for (const t of [p.statementTimeout, p.lockTimeout, p.transactionTimeout]) micros(horizon + num(t, \"us\", 1));\n          micros(horizon + num(p.commitWait, \"us\")); if (p.durability === \"logical-only\" && requireKnown(p.commitWait, \"us\") !== 0) throw new Error(\"Logical commit cannot invent durability wait\");\n          for (const s of p.statements) {\n            if (![\"snapshot-read\", \"write\", \"insert\", \"lock-read\"].includes(s.kind) || !s.keys.length || s.keys.length > caps.keysPerStatement || s.keys.some((k) => !validKey(k)) || new Set(s.keys).size !== s.keys.length) throw new Error(\"Invalid keyed statement\");\n            const demand = num(s.cpu, \"cpu-us\", Number.MIN_VALUE, false); num(s.parallelism, \"cores\", Number.MIN_VALUE, false); num(s.blockingWait, \"us\"); num(s.logBytes, \"bytes\");\n            if (s.keys.some((k) => k !== \"$key\" && !dataset.has(k))) throw new Error(\"Statement outside logical dataset\");\n            if (s.kind === \"insert\") { if (!s.insertBytes) throw new Error(\"Insert needs authored row size\"); num(s.insertBytes, \"bytes\"); }\n            micros(horizon + Math.ceil(demand / requireKnown(r.execution.cores, \"cores\")) + requireKnown(s.blockingWait, \"us\"));\n          }\n        }\n        for (const path of input.paths.filter((p) => p.target === r.id)) if (requireKnown(path.pool.streams, \"count\") !== 1) throw new Error(\"Relational session has one transaction at a time; multiplexing requires a future session policy\");\n      }\n    }\n  }\n  const ids = new Set<string>(), spans = new Map<string, number>();\n  for (const i of [...input.dataInterventions].sort((a, b) => requireKnown(a.at, \"us\") - requireKnown(b.at, \"us\"))) {\n    if (!i.id || ids.has(i.id)) throw new Error(\"Duplicate data intervention\"); ids.add(i.id); const at = num(i.at, \"us\"), r = resources.get(i.target);\n    if (i.kind === \"flush\") { if (r?.kind !== \"cache\") throw new Error(\"Flush targets cache only\"); }\n    else {\n      if (r?.kind !== \"relational\") throw new Error(\"Data capacity intervention requires relational resource\");\n      const key = JSON.stringify([i.kind, i.target]); if (at < (spans.get(key) ?? 0)) throw new Error(\"Overlapping data interventions\"); spans.set(key, micros(at + num(i.duration, \"us\", 1)));\n      if (i.kind === \"session-capacity\") { if (num(i.sessions, \"count\") > caps.sessions) throw new Error(\"Session limit budget\"); }\n      else num(i.cores, \"cores\", 0, false);\n    }\n  }\n}\n"
     },
     {
       "path": "packages/simulation/src/model2/network/contracts.ts",
-      "hash": "8b2ea06859775f6c319ad41f97eb5ec60bd0d938b76b506cdc3f76fa23e95a83"
+      "hash": "8b2ea06859775f6c319ad41f97eb5ec60bd0d938b76b506cdc3f76fa23e95a83",
+      "text": "import type { Quantity } from \"../../reality/quantity\";\nimport type { ComputeInput, ComputeResource } from \"../compute/contracts\";\n\nexport interface LinkConfig {\n  id: string; from: string; to: string; policy: \"fifo-message/1\";\n  bandwidth: Quantity<\"bytes/s\">; propagation: Quantity<\"us\">; bufferBytes: Quantity<\"bytes\">;\n}\nexport interface PoolConfig {\n  mode: \"serial\" | \"multiplexed\"; reuse: boolean;\n  maxConnections: Quantity<\"count\">; streams: Quantity<\"count\">; pending: Quantity<\"count\">;\n  establish: Quantity<\"us\">; acquireTimeout: Quantity<\"us\">; connectTimeout: Quantity<\"us\">;\n  responseTimeout: Quantity<\"us\">; idleTimeout?: Quantity<\"us\">;\n  remoteCancellation: \"detach\" | \"request-cancellation\";\n}\nexport interface PathConfig {\n  id: string; source: string; target: string; request: string[]; response: string[]; pool: PoolConfig;\n  bytes: Record<string, { request: Quantity<\"bytes\">; response: Quantity<\"bytes\"> }>;\n}\nexport interface RetryPolicy {\n  maxAttempts: Quantity<\"count\">; backoff: Quantity<\"us\">; jitter: Quantity<\"ratio\">;\n  maxConcurrentRetries: Quantity<\"count\">;\n  retryOn: FailureReason[]; allowAmbiguousNonIdempotent: boolean;\n}\nexport interface LoadBalancer {\n  id: string; kind: \"load-balancer\"; backends: string[]; policy: \"round-robin\" | \"least-outstanding\";\n  maxOutstanding: Quantity<\"count\">; maxPending: Quantity<\"count\">; pendingTimeout: Quantity<\"us\">;\n  health: { interval: Quantity<\"us\">; timeout: Quantity<\"us\">; healthy: Quantity<\"count\">; unhealthy: Quantity<\"count\">;\n    operation: string; initial: \"eligible\" | \"ineligible\" };\n  retry?: RetryPolicy;\n}\nexport type NetworkIntervention = { id: string; at: Quantity<\"us\"> } & (\n  { kind: \"partition\"; target: string; duration: Quantity<\"us\"> } |\n  { kind: \"bandwidth\"; target: string; duration: Quantity<\"us\">; bandwidth: Quantity<\"bytes/s\"> } |\n  { kind: \"delay\"; target: string; duration: Quantity<\"us\">; delay: Quantity<\"us\"> } |\n  { kind: \"service-state\"; target: string; duration: Quantity<\"us\">; alive: boolean; ready: boolean } |\n  { kind: \"drain\"; target: string; backend: string; grace: Quantity<\"us\"> } |\n  { kind: \"reset\"; target: string });\nexport interface NetworkInput extends Omit<ComputeInput, \"workloadVersion\" | \"resources\"> {\n  workloadVersion: \"m2d/1\";\n  resources: Array<ComputeResource | Extract<ComputeInput[\"resources\"][number], { kind: \"database\" }> | LoadBalancer>;\n  links: LinkConfig[]; paths: PathConfig[]; networkInterventions: NetworkIntervention[];\n  endpoints: Record<string, { alive: boolean; ready: boolean }>;\n}\nexport const RETRYABLE_FAILURES = [\"acquire-timeout\", \"connect-timeout\", \"response-timeout\", \"reset\", \"drained\", \"pool-overflow\", \"link-overflow\", \"backend-rejected\"] as const;\nexport type FailureReason = typeof RETRYABLE_FAILURES[number];\nexport interface TraceEvent { at: number; kind: string; id: string; root?: string; attempt?: number; detail: string }\nexport type Trace = (kind: string, id: string, detail: string, root?: string, attempt?: number) => void;\nexport interface TransportResult { ok: boolean; reason?: FailureReason; ambiguous: boolean }\nexport interface ConnectionRoute { target: string; request: string[]; response: string[] }\nexport interface ConnectionHook {\n  open(id: string, done: (route?: ConnectionRoute, failure?: FailureReason) => void): () => boolean;\n  close(id: string): void;\n  returnTraffic?(id: string): boolean;\n}\n"
     },
     {
       "path": "packages/simulation/src/model2/network/link.ts",
@@ -411,7 +414,8 @@
     },
     {
       "path": "packages/simulation/src/model2/network/transport.ts",
-      "hash": "721517a57ec80a025078c713d249acd327a126495f4eb549bda2e1daead8a888"
+      "hash": "721517a57ec80a025078c713d249acd327a126495f4eb549bda2e1daead8a888",
+      "text": "import { requireKnown } from \"../../reality/quantity\";\nimport type { Deliver } from \"../compute/run\";\nimport type { Invocation, Receipt } from \"../workload/contracts\";\nimport type { EventKernel } from \"../time\";\nimport type { ConnectionHook, FailureReason, PathConfig, Trace, TransportResult } from \"./contracts\";\nimport type { networkLink } from \"./link\";\nimport { connectionPool, type Lease } from \"./pool\";\n\nexport function pathTransport(config: PathConfig, kernel: EventKernel, links: Map<string, ReturnType<typeof networkLink>>, deliver: Deliver, alive: (id: string) => boolean, trace: Trace, disconnected?: (session: string, target: string) => void, hook?: ConnectionHook) {\n  const targets = new Map<string, string>();\n  const pool = connectionPool(config.id, config.pool, kernel, (route = config) => alive(route.target) && [...route.request, ...route.response].every((id) => links.get(id)!.reachable()), (kind, id, detail, root, attempt) => { trace(kind, id, detail, root, attempt); if (kind === \"connection-closed\") { disconnected?.(id, targets.get(id) ?? config.target); targets.delete(id); } }, hook);\n  let offered = 0, completed = 0, failed = 0, cancelled = 0, remoteAfterStop = 0, live = 0;\n  const reasons: Record<string, number> = {}, latency = { connectionWaitUs: 0, requestTransportUs: 0, remoteServiceUs: 0, responseTransportUs: 0 };\n  return {\n    exchange(work: Invocation, done: (result: TransportResult) => void): Receipt {\n      offered++; live++; const start = kernel.now, key = work.callId;\n      trace(\"path-offered\", key, `${config.id}:${work.operation}:request=${requireKnown(config.bytes[work.operation]!.request, \"bytes\")}:response=${requireKnown(config.bytes[work.operation]!.response, \"bytes\")}`, work.rootId, work.attempt);\n      let terminal = false, delivered = false, state: ReturnType<Receipt[\"state\"]> = \"queued\", lease: Lease | undefined, remote: Receipt | undefined;\n      let cancelAcquire: (() => boolean) | undefined, cancelTimeout: (() => boolean) | undefined, cancelTransfer: (() => boolean) | undefined;\n      const finish = (result: TransportResult, isCancellation = false) => {\n        if (terminal) return; terminal = true; state = \"finished\"; live--; cancelAcquire?.(); cancelTimeout?.(); cancelTransfer?.();\n        if (result.ok) completed++; else if (isCancellation) cancelled++; else { failed++; reasons[result.reason!] = (reasons[result.reason!] ?? 0) + 1; }\n        trace(\"transport-terminal\", key, result.ok ? \"completed\" : isCancellation ? \"cancelled\" : result.reason!, work.rootId, work.attempt);\n        if (!result.ok && !isCancellation && [\"response-timeout\", \"reset\", \"drained\"].includes(result.reason!)) lease?.fail(result.reason!); else lease?.release();\n        if (!result.ok && delivered && config.pool.remoteCancellation === \"request-cancellation\") remote?.cancel();\n        done(result);\n      };\n      let endpoints = { origin: config.source, destination: config.target };\n      const sendBytes = (ids: string[], bytes: number, direction: \"request\" | \"response\", end: () => void) => {\n        let hop = 0;\n        const next = () => {\n          if (terminal) return;\n          if (hop === ids.length) { end(); return; }\n          const index = hop++, link = links.get(ids[index]!)!;\n          cancelTransfer = link.transmit(JSON.stringify([key, direction, index]), bytes, (outcome) => {\n            if (terminal) return;\n            trace(\"transfer\", key, `${direction}:${ids[index]}:${outcome}`, work.rootId, work.attempt);\n            if (outcome === \"delivered\") next();\n            else if (outcome === \"overflow\") finish({ ok: false, reason: \"link-overflow\", ambiguous: delivered });\n            // Partition silently discards modeled messages. Only the owning timeout detects it.\n          }, { path: config.id, direction, hop: index, origin: direction === \"request\" ? endpoints.origin : endpoints.destination, destination: direction === \"request\" ? endpoints.destination : endpoints.origin, callId: work.callId, rootId: work.rootId, attempt: work.attempt });\n        }; next();\n      };\n      const totalBytes = (envelope: number, body = 0) => { const total = envelope + body; if (!Number.isSafeInteger(body) || body < 0 || !Number.isSafeInteger(total)) throw new Error(\"Invalid logical message body size\"); return total; };\n      cancelAcquire = pool.acquire(key, (acquired) => {\n        if (terminal) { acquired.release(); return; }\n        lease = acquired; const route = acquired.route ?? config; endpoints = { origin: config.source, destination: route.target }; targets.set(acquired.connection, route.target); state = \"serving\"; const readyAt = kernel.now; latency.connectionWaitUs += readyAt - start;\n        trace(\"connection-acquired\", key, acquired.connection, work.rootId, work.attempt);\n        cancelTimeout = kernel.schedule(kernel.now + requireKnown(config.pool.responseTimeout, \"us\"), 1, JSON.stringify([\"upstream-timeout\", config.id, key]), () => finish({ ok: false, reason: \"response-timeout\", ambiguous: delivered }));\n        const bytes = config.bytes[work.operation]!;\n        sendBytes(route.request, totalBytes(requireKnown(bytes.request, \"bytes\"), work.message?.bodyBytes?.request), \"request\", () => {\n          delivered = true; state = \"waiting\"; const deliveredAt = kernel.now; latency.requestTransportUs += deliveredAt - readyAt;\n          trace(\"request-delivered\", key, route.target, work.rootId, work.attempt);\n          if (!alive(route.target)) return;\n          const request: Invocation = { ...work, sessionId: acquired.connection, ...(work.message ? { message: { request: JSON.parse(JSON.stringify(work.message.request)) } } : {}) };\n          remote = deliver(route.target, request, (outcome) => {\n            if (terminal) { remoteAfterStop++; trace(\"remote-after-transport-stop\", key, outcome, work.rootId, work.attempt); return; }\n            if (!alive(route.target)) return;\n            if (hook?.returnTraffic && !hook.returnTraffic(acquired.connection)) { finish({ ok: false, reason: \"reset\", ambiguous: true }); return; }\n            const serviceEnd = kernel.now; latency.remoteServiceUs += serviceEnd - deliveredAt;\n            sendBytes(route.response, totalBytes(requireKnown(bytes.response, \"bytes\"), request.message?.bodyBytes?.response), \"response\", () => {\n              if (work.message && request.message?.response !== undefined) work.message.response = JSON.parse(JSON.stringify(request.message.response));\n              latency.responseTransportUs += kernel.now - serviceEnd;\n              finish(outcome === \"completed\" ? { ok: true, ambiguous: false } : { ok: false, reason: \"backend-rejected\", ambiguous: true });\n            });\n          });\n        });\n      }, (reason: FailureReason) => finish({ ok: false, reason, ambiguous: delivered }));\n      return { admitted: !terminal, state: () => state, cancel: () => {\n        if (terminal) return \"already-finished\";\n        finish({ ok: false, reason: \"reset\", ambiguous: delivered }, true); return \"cancelled\";\n      } };\n    },\n    reset: () => pool.reset(), drain: (grace: number) => pool.drain(grace),\n    measure: () => ({ id: config.id, source: config.source, target: config.target, offered, completed, failed, cancelled, live, remoteOutcomesAfterStop: remoteAfterStop, reasons: { ...reasons }, completedPhaseDurationsUs: { ...latency }, pool: pool.measure() }),\n  };\n}\n"
     },
     {
       "path": "packages/simulation/src/model2/network/validate.ts",
@@ -1377,7 +1381,7 @@
     },
     {
       "path": "packages/simulation/src/model2/composition/run.ts",
-      "hash": "60ff6580adae20b7ffbf3c7344a62ab49ca6f0d72bde3af1b3bb24a72350af3e"
+      "hash": "c33b191c6b0fd13003dc7c317cdcaf4a8ddcdd8ffaa7875c847143d465dd983b"
     },
     {
       "path": "packages/simulation/src/model2/composition/token-bucket.ts",
@@ -1437,11 +1441,11 @@
     },
     {
       "path": "packages/simulation/src/model2/data/contracts.ts",
-      "hash": "d7a8402fbdff6aac651019811ad92dc3661cad77f68a1937f228dd5f5f24bc81"
+      "hash": "bcf44a048f028d99554a82a344a5535ab182a803645bd143e146a6f42d727f26"
     },
     {
       "path": "packages/simulation/src/model2/data/database.ts",
-      "hash": "d034b9d22fec068c8588a841c0a90671fc10a816a55a3e780843a3d020e7b137"
+      "hash": "818065a584a3bec6f3e837bf8bfa6a199e49178fc720bc58565d09667e1b5daf"
     },
     {
       "path": "packages/simulation/src/model2/data/locks.ts",
@@ -1449,7 +1453,7 @@
     },
     {
       "path": "packages/simulation/src/model2/data/modules.ts",
-      "hash": "cc19eb6234e3703b16540f3c82991eaeabb42d68e9aa260c12963200f294339f"
+      "hash": "d3d197b1907e1476d3db95b2ec5d7f705043e0916143fb9d8bd803428b73c142"
     },
     {
       "path": "packages/simulation/src/model2/data/policy.ts",
@@ -1457,15 +1461,15 @@
     },
     {
       "path": "packages/simulation/src/model2/data/run.ts",
-      "hash": "46073b69a60109a63a3a33d2cb8ce42d69c1f180a68cea282753231701a4c708"
+      "hash": "44cffa676dba668b72635efeb72ee5c4e5c8bc45926798cca68081baadb75ed8"
     },
     {
       "path": "packages/simulation/src/model2/data/validate.ts",
-      "hash": "3d13b503edeb833094444d1cb7e185c67004ae629209b890e6b6dbcc4203e5d2"
+      "hash": "0dff55eb16a9abad7fd12db65b0a1298df89cfddfffa543e7b640e6e8188ac44"
     },
     {
       "path": "packages/simulation/src/model2/network/contracts.ts",
-      "hash": "8b2ea06859775f6c319ad41f97eb5ec60bd0d938b76b506cdc3f76fa23e95a83"
+      "hash": "a55f006f05a61fd5214a2be8d5174f197c398f7c3eb78efdb520ecb9796a32a5"
     },
     {
       "path": "packages/simulation/src/model2/network/link.ts",
@@ -1497,7 +1501,7 @@
     },
     {
       "path": "packages/simulation/src/model2/network/transport.ts",
-      "hash": "721517a57ec80a025078c713d249acd327a126495f4eb549bda2e1daead8a888"
+      "hash": "997f92945e84a7a8dbc23b4830bce0b92374af68604e1bf9cddec4a775db08e1"
     },
     {
       "path": "packages/simulation/src/model2/network/validate.ts",
@@ -1856,6 +1860,10 @@
       "hash": "d25175c211679997142e5869e08d9bbd2c94b7c7b63173147eb5bf7d3bb723bb"
     },
     {
+      "path": "packages/simulation/tests/postgresSessions.test.ts",
+      "hash": "104534f8e87117728641e07ba090e204cc12b27f3343087137047abadbb8ad69"
+    },
+    {
       "path": "packages/simulation/tests/product.test.ts",
       "hash": "432bb19e6d151ef610047d555dd772182a04355f878a0b21308ab175b243d1cf"
     },
@@ -1933,7 +1941,7 @@
     },
     {
       "path": "scripts/reality/composition-host-proof.ts",
-      "hash": "391c0d07c7d5fcd4f84498cabdcea3ade2037db343b3e23b070c604d16ac7c93"
+      "hash": "e2abd811ec82fc01a763f682d209985725f23fb4173afafb81566016a163520c"
     },
     {
       "path": "scripts/reality/composition-proofs.ts",
@@ -1970,6 +1978,58 @@
     {
       "path": "scripts/reality/first-stack-compile-proof.ts",
       "hash": "279c44a0aaf086256a685e37e49a6c285780f8f33e1db984f127e4a7aa83f899"
+    },
+    {
+      "path": "scripts/reality/first-stack-pilots/app.ts",
+      "hash": "996434d2429d60d043609db9d425307e377e1c82c99e9f7f642d95f3c8dee3f4"
+    },
+    {
+      "path": "scripts/reality/first-stack-pilots/archive.ts",
+      "hash": "c7bfb63188afd3403d4c01f6df84901bed43a5f6f7c3771522b4abf5da9f30ce"
+    },
+    {
+      "path": "scripts/reality/first-stack-pilots/close-interrupted.ts",
+      "hash": "4ef2b59e624ce91c6bc1807c3f15127781a792244a872a2a775ebb56ef95cfee"
+    },
+    {
+      "path": "scripts/reality/first-stack-pilots/collect-attempts.ts",
+      "hash": "acfba6fd0fa6e0531822e45c95d0e6217d280f1a4c3eb5f160d5483d28529610"
+    },
+    {
+      "path": "scripts/reality/first-stack-pilots/g5-probe.ts",
+      "hash": "e4cf5242cbb56cc0459332c4e850cff2b13000b7b1fc46b371b1f9ea25b53c6e"
+    },
+    {
+      "path": "scripts/reality/first-stack-pilots/g5-run.ts",
+      "hash": "4707ae6798d72ae3dfb467486c6c83ce27a92d289580f4fa87c03b2ec9f8cb70"
+    },
+    {
+      "path": "scripts/reality/first-stack-pilots/g5-summary.ts",
+      "hash": "f94ae408a45d5111c5974eb4aae84316d6122556fb37db61d75d8f8d97ce1981"
+    },
+    {
+      "path": "scripts/reality/first-stack-pilots/generator.ts",
+      "hash": "d0897581f54c3088321c06fae7ecde17639a7902c63cb40ac53318250f2cb795"
+    },
+    {
+      "path": "scripts/reality/first-stack-pilots/run.ts",
+      "hash": "e564d47dcc97cfaa65e22d413cc2f10d6b8b67f64466b151d7f8d129384b4d0b"
+    },
+    {
+      "path": "scripts/reality/first-stack-pilots/summary.ts",
+      "hash": "b75af4dbc5968f5a35ccb1c11885dab92b3fe69409ecd95c4e38f2d7f3f78030"
+    },
+    {
+      "path": "scripts/reality/first-stack-pilots/telemetry.ts",
+      "hash": "64fe885f44abc08fc4dc4119a8f82d34bf4f50a298ede0ce55ea4225a80f3b6c"
+    },
+    {
+      "path": "scripts/reality/first-stack-pilots/verify.ts",
+      "hash": "3d805c59d604e830a0b87c1f93f46a483350ba86af8186ea71ebcdc44885a91c"
+    },
+    {
+      "path": "scripts/reality/first-stack-pilots/worker.ts",
+      "hash": "ef8c1fdaa869055c8b47bbb101355ee8ad10464aace163c9889066df69468b3b"
     },
     {
       "path": "scripts/reality/inventory.ts",
@@ -2137,7 +2197,7 @@
     },
     {
       "path": "scripts/tests/execution-identity.test.ts",
-      "hash": "0818ef84f473eedd220e3ef46beb0329c613349530b7cba852a9bc94f9bb8950"
+      "hash": "ba942971f759f487d75ac2f53f61d02aee36ba8a14665222a2769f4dcb248692"
     },
     {
       "path": "scripts/tests/first-stack-child.test.ts",
@@ -2152,12 +2212,20 @@
       "hash": "f77982e3ef2cb986b59058e61f6536926a88a6b4b7ca92b4b4ca3fda950625f6"
     },
     {
+      "path": "scripts/tests/firstStackPilots.test.ts",
+      "hash": "4221c7bc3304c6e44c264a116e2e7037e539e7ed880ce29ecf6f0ed48ca084dd"
+    },
+    {
       "path": "scripts/tests/fixtures/execution-launch-probe.ts",
       "hash": "9c91911450ba57ea9c556e3363d8a7f28af5d2aa4c9185fbb46ac12acbdff998"
     },
     {
       "path": "scripts/tests/fixtures/unreviewed-host.ts",
       "hash": "8b5893720f4b693e3ce32ec4b99700cb45d9bd393128459110c88f3ad66bab06"
+    },
+    {
+      "path": "scripts/tests/g5Pilot.test.ts",
+      "hash": "644635e1a4b8a7fd460b97e77a3da429505635f76661aa5f924f9c9e5c59947e"
     },
     {
       "path": "scripts/tests/landingSample.test.ts",
