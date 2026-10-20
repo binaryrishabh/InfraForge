@@ -12,6 +12,7 @@ export const databasePoolPolicy: PoolConfig = {
   idle_in_transaction_session_timeout: 30000,
   keepAlive: true,
 };
+export const databaseAdapterPolicy = { disposeExternalPool: true };
 
 export function redisPolicy(consumer = false): RedisOptions {
   return {
@@ -31,9 +32,9 @@ export function outboxRetryDelay(failures: number, random = Math.random): number
 
 // Fixed labels only. Never pass exception messages, URLs or request data here.
 export function operationalWarning(label: string) {
-  let last = -Infinity;
+  let last: number | undefined;
   return () => {
-    if (Date.now() - last < 30000) return;
+    if (last !== undefined && Date.now() - last < 30000) return;
     last = Date.now();
     console.error(label);
   };

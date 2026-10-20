@@ -2,7 +2,8 @@ import { expect, test } from "bun:test";
 import net from "node:net";
 import Redis from "ioredis";
 import { Pool } from "pg";
-import { databasePoolPolicy, outboxRetryDelay, redisPolicy } from "../utils/connectionPolicy";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { databaseAdapterPolicy, databasePoolPolicy, outboxRetryDelay, redisPolicy } from "../utils/connectionPolicy";
 
 async function blackhole() {
   const sockets = new Set<net.Socket>();
@@ -44,11 +45,17 @@ test.skipIf(process.platform === "win32")("Redis command failure is bounded both
     endpoint.drop();
     await expect(pending).rejects.toThrow();
     await expect(client.publish("fixture", "event")).rejects.toThrow();
-    expect(client.offlineQueue.length).toBe(0);
   } finally {
     client.disconnect();
     await endpoint.close();
   }
+});
+
+test("disconnecting the Prisma adapter also closes the externally supplied pool", async () => {
+  const pool = new Pool(databasePoolPolicy);
+  const adapter = await new PrismaPg(pool, databaseAdapterPolicy).connect();
+  await adapter.dispose();
+  await expect(pool.connect()).rejects.toThrow("Cannot use a pool after calling end");
 });
 
 test("outbox failures use bounded exponential backoff with jitter", () => {

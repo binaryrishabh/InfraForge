@@ -5,7 +5,7 @@ import { operationalWarning } from "./connectionPolicy";
 const warn = operationalWarning("Request failed unexpectedly; response contains no internal details.");
 
 export const errorHandler = (err: any, req: Request, res: Response, next: NextFunction) => {
-    if (res.headersSent) { next(err); return; }
+    if (res.headersSent) { warn(); res.destroy(); return; }
     if (err?.type === "entity.parse.failed") {
         res.status(400).json({ success: false, message: "Invalid JSON body" });
         return;

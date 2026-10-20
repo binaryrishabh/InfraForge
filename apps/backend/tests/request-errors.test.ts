@@ -1,6 +1,27 @@
 import { expect, test } from "bun:test";
 import express from "express";
 import { errorHandler } from "../utils/middleware";
+import type { Request, Response } from "express";
+
+test("unexpected and post-header errors never log exception data or forward it to the default handler", () => {
+  const logs: unknown[] = [];
+  const original = console.error;
+  console.error = (...args) => { logs.push(...args); };
+  let response: unknown;
+  let destroyed = false;
+  let forwarded = false;
+  const res = { headersSent: false, status: () => res, json: (body: unknown) => { response = body; }, destroy: () => { destroyed = true; } };
+  const error = new Error("fixture-sensitive-query-argument");
+  try {
+    errorHandler(error, {} as Request, res as unknown as Response, () => { forwarded = true; });
+    expect(response).toEqual({ success: false, message: "Internal server error" });
+    res.headersSent = true;
+    errorHandler(error, {} as Request, res as unknown as Response, () => { forwarded = true; });
+    expect(destroyed).toBe(true);
+    expect(forwarded).toBe(false);
+    expect(logs.join(" ")).not.toContain(error.message);
+  } finally { console.error = original; }
+});
 
 test("returns client errors for malformed, oversized and unsupported JSON and remains available", async () => {
   const app = express();
