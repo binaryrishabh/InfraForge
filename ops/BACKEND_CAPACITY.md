@@ -40,3 +40,32 @@ space for old/new images and Redis AOF. No production sizing, limits or deployme
 was changed by writing this policy.
 
 Resource driver reference: [Docker container driver](https://docs.docker.com/build/builders/drivers/docker-container/).
+
+## PostgreSQL and Neon connection allowance
+
+Budget **54 steady application client slots**, not 54 always-open backends:
+Prisma 10 × 3 processes = 30 (`apps/backend/utils/connectionPolicy.ts`);
+readiness 1 × 3 = 3 (`apps/backend/health/readiness.ts`); worker ownership = 1
+(`apps/backend/infra/workerOwnership.ts`); internal store default pool 10 × API
+and worker = 20 (`apps/backend/internalModel2/store.ts`, installed pg-pool max=10).
+API/WS use transaction pooling; the worker needs direct/session-preserving access.
+With that topology, budget 32 pooled client slots and 22 direct/session slots.
+
+To admit all 54 concurrently without connection starvation, require **at least
+54 unreserved backend slots available to this application**, with relevant role/
+database limits and pooler allowance also sufficient (at least 32 pooled active
+slots in the applicable pool(s)). Neon's documented seven reserved superuser
+slots make the exact no-other-consumer floor **max_connections >= 61**. Add every
+other consumer plus migration/backup/probe/operator allowance; 61 alone supplies
+no operational margin. With an explicit 10-slot operations reserve the floor is
+**max_connections >= 71 + other-consumer slots**. These are derived requirements,
+not an observed production setting. Do not confuse 10,000 pooler clients with
+available simultaneous database work. For the documented 0.25 CU example,
+104 total − 7 reserved = 97 usable: 54 steady + 10 operational leaves 33 for
+other consumers. This arithmetic does not establish the actual Neon compute,
+role caps, shared pool usage or measured query capacity, which remain Unknown.
+
+An operator must verify `SHOW max_connections`, effective reserved slots,
+role/database connection limits, active consumers and pooler settings before
+deployment; no production database was queried here. Source: [Neon connection
+pooling limits](https://neon.com/docs/connect/connection-pooling#understanding-connection-pool-limits).
