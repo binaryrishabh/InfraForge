@@ -8,7 +8,7 @@ docker run -d --name "$name" --network none --cpus=1 --memory=768m \
   -e POSTGRES_HOST_AUTH_METHOD=trust postgres:18 >/dev/null
 ready=false
 for _ in {1..30}; do
-  if docker exec "$name" pg_isready -U postgres >/dev/null 2>&1; then ready=true; break; fi
+  if docker exec "$name" pg_isready -h 127.0.0.1 -U postgres >/dev/null 2>&1; then ready=true; break; fi
   sleep 1
 done
 [[ $ready == true ]] || { echo 'Disposable backup fixture startup failed' >&2; exit 1; }
