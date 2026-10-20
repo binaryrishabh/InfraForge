@@ -27,7 +27,22 @@ export function validateCompute(input: ComputeInput) {
     components(p.residentComponents ?? [], ["admitted", "active"]);
   }
   const resources = new Map(input.resources.map((r) => [r.id, r]));
+  if (input.resources.some(r => r.kind === "compute" && r.downstreamByOperation)) for (const op of input.operations) {
+    const visiting = new Set<string>(), visited = new Set<string>();
+    const visit = (id: string) => {
+      if (visiting.has(id)) throw Error("Operation dependency cycle");
+      if (visited.has(id)) return;
+      const r = resources.get(id); if (!r) throw Error("Unknown operation dependency");
+      visiting.add(id);
+      const targets = r.kind === "router" ? r.backends : r.kind === "compute" && r.downstreamByOperation ? [r.downstreamByOperation[op.id]!] : r.downstream ? [r.downstream] : [];
+      for (const target of targets) visit(target);
+      visiting.delete(id); visited.add(id);
+    };
+    for (const id of resources.keys()) visit(id);
+  }
   for (const r of input.resources) if (r.kind === "compute") {
+    if (r.downstreamByOperation && (r.downstream || Object.keys(r.downstreamByOperation).length !== input.operations.length ||
+      input.operations.some(op => !resources.has(r.downstreamByOperation![op.id]!)))) throw Error("Explicit complete operation dependencies required");
     if (!Number.isFinite(requireKnown(r.cores, "cores") * requireKnown(input.horizon, "us"))) throw new Error("Available core-time overflow");
     if (r.scheduler !== "capped-equal-fluid/1" || requireKnown(r.workers, "count") > COMPUTE_LIMITS.workers || !["observe", "reject-allocation"].includes(r.memory.policy)) throw new Error("Unsupported scheduler/workers/memory policy");
     if (!["complete-model", "partial"].includes(r.memory.coverage)) throw new Error("Resident process coverage required");

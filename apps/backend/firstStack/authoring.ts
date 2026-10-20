@@ -65,13 +65,25 @@ export const sidecarV2Schema = sidecarSchema.extend({
   workload: z.object({ scheduleHash: digest, parametersHash: digest, resolvedIdentity: digest, executedScheduleHash: digest }).strict().nullable(),
 });
 
+export const sidecarV3Schema = sidecarV2Schema.extend({
+  links: z.array(sidecarV2Schema.shape.links.element).max(128),
+  schema: z.literal("infraforge-first-stack-sidecar/3"), compiler: z.literal("first-stack-compiler/3"),
+  cache: z.object({ node: id, semantics: z.literal("keyed-cache/1"), capacityBytes: amount, entryOverheadBytes: amount,
+    ttlUs: time.positive(), commandCpuUs: time.positive(), policy: z.enum(["lru", "no-eviction"]),
+    initial: sidecarSchema.shape.database.shape.initial, coalesce: z.boolean(), onFailure: z.enum(["fail", "database"]),
+    invalidateWrites: z.literal(true), policyCpuUs: time.nullable(),
+    roles: z.array(z.object({ app: id, policy: id, internal: sidecarV2Schema.shape.paths.element,
+      database: sidecarV2Schema.shape.paths.element }).strict()).min(1).max(limits.apps) }).strict(),
+});
+
 export function reviewSidecar(layout: unknown, candidate: unknown) {
   const diagnostics: FirstStackDiagnostic[] = [];
   const refuse = (path: string, message: string, code = "FIRST_STACK_FIELD") => diagnostics.push({ code, path, message });
-  const saved = LayoutSchema.safeParse(layout), parsed = z.discriminatedUnion("schema", [sidecarSchema, sidecarV2Schema]).safeParse(candidate);
+  const saved = LayoutSchema.safeParse(layout), parsed = z.discriminatedUnion("schema", [sidecarSchema, sidecarV2Schema, sidecarV3Schema]).safeParse(candidate);
   for (const result of [saved, parsed]) if (!result.success) for (const e of result.error.issues) refuse(e.path.join("."), e.message);
   if (!saved.success || !parsed.success) return { ok: false as const, diagnostics };
   const original = saved.data, sidecar: FirstStackSemantic = parsed.data;
+  const cache = sidecar.schema === "infraforge-first-stack-sidecar/3" ? sidecar.cache : undefined;
   if (sidecar.designRevision !== designRevision(original)) refuse("designRevision", "Saved design changed; review its current immutable revision.", "STALE_REVISION");
   const unique = (values: string[], path: string) => { if (new Set(values).size !== values.length) refuse(path, "Duplicate identities refuse ambiguous bindings."); };
   unique(original.resources.map(n => n.id), "resources"); unique(original.connectionLines.map(e => e.id), "connectionLines");
@@ -86,7 +98,7 @@ export function reviewSidecar(layout: unknown, candidate: unknown) {
   const owners: Record<string, string> = { "Load Balancer": "load-balancer", "Virtual Machine": "compute", Database: "relational", Cache: "keyed-cache" };
   for (const [i, n] of original.resources.entries()) {
     if (!owners[n.type]) refuse(`resources.${i}.type`, "Resource kind is unsupported.");
-    if (n.type === "Cache") refuse(`resources.${i}.type`, "Cache layout is retained; executable cache review requires the later cache bridge.", "CACHE_DEFERRED");
+    if (n.type === "Cache" && !cache) refuse(`resources.${i}.type`, "Cache layout is retained; executable cache review requires the later cache bridge.", "CACHE_DEFERRED");
     const binding = sidecar.nodes.find(s => s.id === n.id);
     if (!binding || binding.owner !== owners[n.type]) refuse(`nodes.${n.id}`, "Supply the matching explicit semantic owner.");
     for (const [key, value] of Object.entries(n)) {
@@ -110,7 +122,7 @@ export function reviewSidecar(layout: unknown, candidate: unknown) {
   if (sidecar.caller.entry !== lb || sidecar.nodes.find(n => n.id === lb)?.listenerPort !== sidecar.caller.port) refuse("caller", "Explicit caller entry and port must match the LB listener.");
   for (const link of [sidecar.caller.requestLink, sidecar.caller.responseLink]) if (!sidecar.links.some(l => l.id === link)) refuse("caller", "Missing caller directed link owner.");
   if (sidecar.caller.requestBytes === null || sidecar.caller.responseBytes === null) refuse("caller", "Unknown caller bytes require explicit mapping.");
-  const wanted = new Set(apps.flatMap(app => [JSON.stringify([lb, app]), JSON.stringify([app, db])]));
+  const wanted = new Set(apps.flatMap(app => [JSON.stringify([lb, app]), JSON.stringify([app, db]), ...(cache ? [JSON.stringify([app, cache.node])] : [])]));
   const edges = new Set<string>();
   for (const [i, edge] of original.connectionLines.entries()) {
     const pair = JSON.stringify([edge.sourceId, edge.targetId]);
@@ -133,14 +145,14 @@ export function reviewSidecar(layout: unknown, candidate: unknown) {
   for (const [i, op] of sidecar.operations.entries()) {
     const p = plans.get(op.plan);
     if (!p) refuse(`operations.${i}.plan`, "Unknown finite plan.");
-    if (op.kind === "cache-read") refuse(`operations.${i}.kind`, "Cache bridge is deferred.");
-    if (p && ["point-read", "range-read", "health-read"].includes(op.kind) && p.kind !== "read") refuse(`operations.${i}.plan`, "Read operations require read-only plans.");
+    if (op.kind === "cache-read" && !cache) refuse(`operations.${i}.kind`, "Cache bridge is deferred.");
+    if (p && ["point-read", "range-read", "health-read", "cache-read"].includes(op.kind) && p.kind !== "read") refuse(`operations.${i}.plan`, "Read operations require read-only plans.");
     if (p && ["update", "hot-update"].includes(op.kind) && p.kind !== "write") refuse(`operations.${i}.plan`, "Update operations require write plans.");
   }
   for (const p of plans.values()) if (p.keys !== "recorded" && p.keys.some(k => !sidecar.database.keys.includes(k))) refuse(`database.plans.${p.id}.keys`, "Plan key outside the finite dataset.");
-  if (sidecar.schema === "infraforge-first-stack-sidecar/2") {
+  if (sidecar.schema !== "infraforge-first-stack-sidecar/1") {
     const used = new Set<string>();
-    for (const p of [{ ...sidecar.caller, id: "$caller", source: "$caller", target: sidecar.caller.entry }, ...sidecar.paths]) {
+    for (const p of [{ ...sidecar.caller, id: "$caller", source: "$caller", target: sidecar.caller.entry }, ...sidecar.paths, ...(cache ? cache.roles.flatMap(r => [r.internal, r.database]) : [])]) {
       for (const [linkId, from, to] of [[p.requestLink, p.source, p.target], [p.responseLink, p.target, p.source]]) {
         used.add(linkId!);
         const l = sidecar.links.find(l => l.id === linkId);
@@ -153,6 +165,24 @@ export function reviewSidecar(layout: unknown, candidate: unknown) {
     if (new Set(sidecar.balancer.healthKeys).size !== sidecar.balancer.healthKeys.length || sidecar.balancer.healthKeys.some(k => !sidecar.database.keys.includes(k)) ||
       (healthPlan?.keys !== "recorded" && JSON.stringify(healthPlan?.keys) !== JSON.stringify(sidecar.balancer.healthKeys))) refuse("balancer.healthKeys", "Supply exact finite health keys matching the read-only health plan.");
     if (sidecar.balancer.healthTimeoutUs > sidecar.balancer.intervalUs) refuse("balancer.healthTimeoutUs", "Overlapping health probes are unsupported; timeout must not exceed interval.");
+  }
+  if (cache) {
+    if (types.get(cache.node) !== "Cache" || countType("Cache") !== 1) refuse("cache.node", "V3 requires one matching cache canvas owner.");
+    unique(cache.initial.map(r => r.key), "cache.initial");
+    for (const row of cache.initial) if (!sidecar.database.keys.includes(row.key) || row.version < 1) refuse("cache.initial", "Initial cache keys/versions must belong to the bounded dataset.");
+    if (cache.initial.reduce((sum, r) => sum + r.bytes + cache.entryOverheadBytes, 0) > cache.capacityBytes) refuse("cache.initial", "Initial entries exceed the explicit cache entry budget.");
+    unique(cache.roles.map(r => r.app), "cache.roles");
+    unique([...sidecar.paths.map(p => p.id), ...cache.roles.flatMap(r => [r.internal.id, r.database.id])], "cache.paths");
+    if (cache.roles.length !== apps.length) refuse("cache.roles", "Exactly one owned policy per app required.");
+    for (const r of cache.roles) {
+      if (!apps.includes(r.app) || r.policy !== `${r.app}/cache-policy` || types.has(r.policy)) refuse("cache.roles", "Explicit app/cache-policy ownership required.");
+      if (r.internal.source !== r.app || r.internal.target !== r.policy || r.database.source !== r.policy || r.database.target !== db ||
+        r.internal.purpose !== "dependency" || r.database.purpose !== "dependency" || r.database.port !== sidecar.nodes.find(n => n.id === db)?.listenerPort ||
+        r.internal.requestBytes === null || r.internal.responseBytes === null || r.database.requestBytes === null || r.database.responseBytes === null) refuse("cache.roles", "Explicit known compute/policy/DB paths required.");
+    }
+    for (const op of sidecar.operations.filter(o => o.kind === "cache-read" || ["update", "hot-update"].includes(o.kind))) {
+      if (plans.get(op.plan)?.keys !== "recorded") refuse(`operations.${op.id}`, "Cache and invalidating writes require the exact recorded point key.");
+    }
   }
   return diagnostics.length ? { ok: false as const, diagnostics } : { ok: true as const, diagnostics, sidecar,
     claims: firstStackClaims, executable: false as const,

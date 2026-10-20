@@ -1,4 +1,4 @@
-import type { FirstStackSidecarV2, ResolvedSchedule } from "@infraforge/contracts/first-stack";
+import type { FirstStackExecutable, ResolvedSchedule } from "@infraforge/contracts/first-stack";
 import type { DataInput, TransactionPlan } from "../model2/data/contracts";
 import type { ComputeProfile, ComputeResource } from "../model2/compute/contracts";
 import type { PathConfig } from "../model2/network/contracts";
@@ -14,13 +14,15 @@ export { FirstStackCompileRefusal, refuse } from "./bounds";
 
 // Trusted typed boundary: backend review validates the complete V2 sidecar and
 // verifies workload identities before this compiler is called. No legacy cast.
-export function compileFirstStack(sidecar: FirstStackSidecarV2, schedule: ResolvedSchedule, policy: {
+export function compileFirstStack(sidecar: FirstStackExecutable, schedule: ResolvedSchedule, policy: {
   seed: string; horizonUs: number; sampleIntervalUs: number; maxEvents: number; maxSamples: number; maxRawResults: number;
 }) {
-  if (sidecar.schema !== "infraforge-first-stack-sidecar/2" || sidecar.compiler !== "first-stack-compiler/2") refuse("schema", "Supply a reviewed V2 copy with directed links, pool and readiness policy; V1 cannot execute.");
+  if (!((sidecar.schema === "infraforge-first-stack-sidecar/2" && sidecar.compiler === "first-stack-compiler/2") || (sidecar.schema === "infraforge-first-stack-sidecar/3" && sidecar.compiler === "first-stack-compiler/3"))) refuse("schema", "Supply a reviewed V2 copy with directed links, pool and readiness policy; V1 cannot execute.");
+  const cache = sidecar.schema === "infraforge-first-stack-sidecar/3" ? sidecar.cache : undefined;
+  const revision = cache ? "first-stack-composition/3" : COMPOSITION_REVISION;
   const nodes = [...sidecar.nodes].sort((a, b) => lexical(a.id, b.id)), apps = nodes.filter(n => n.owner === "compute");
   const lb = nodes.find(n => n.owner === "load-balancer"), db = nodes.find(n => n.owner === "relational");
-  if (!lb || !db || apps.length < 1 || apps.length > 8 || nodes.length !== apps.length + 2) refuse("nodes", "Require exactly one LB, 1..8 compute apps and one relational DB, without cache.");
+  if (!lb || !db || apps.length < 1 || apps.length > 8 || nodes.length !== apps.length + 2 + (cache ? 1 : 0) || nodes.filter(n => n.owner === "keyed-cache").length !== (cache ? 1 : 0)) refuse("nodes", "Require exactly one LB, 1..8 compute apps and one relational DB and the explicitly versioned optional cache.");
   if (sidecar.database.keys.includes("$key")) refuse("database.keys", "The literal key $key is reserved by Stage 1 parameter substitution; choose a different explicit dataset key.", "RESERVED_KEY");
   if (lb.reservationBytes !== 0) refuse(`nodes.${lb.id}.reservationBytes`, "The logical LB has no CPU/memory demand owner in Stage 1; explicitly author zero reservation for that role. Full LB process memory remains Unknown.");
   for (const n of nodes) if (n.memoryBytes !== null) refuse(`nodes.${n.id}.memoryBytes`, "Full process memory coverage is unavailable; keep this Unknown and supply the separate explicit host reservation.");
@@ -31,7 +33,7 @@ export function compileFirstStack(sidecar: FirstStackSidecarV2, schedule: Resolv
   const operations = [...sidecar.operations].sort((a, b) => lexical(a.id, b.id));
   if (!health || health.kind !== "health-read") refuse("balancer.healthOperation", "Supply a separately identified DB-backed health read.");
   for (const op of operations) {
-    if (["cpu-control", "cache-read"].includes(op.kind)) refuse(`operations.${op.id}`, "This revision composes DB-backed work only; CPU-only and cache policy need an operation-specific dependency revision.", "OPERATION_UNSUPPORTED");
+    if (op.kind === "cpu-control" || (op.kind === "cache-read" && !cache)) refuse(`operations.${op.id}`, "This revision composes DB-backed work only; CPU-only and cache policy need an operation-specific dependency revision.", "OPERATION_UNSUPPORTED");
     if (op.cpuUs + op.blockingUs <= 0) refuse(`operations.${op.id}`, "Stage 1 compute service must advance virtual time; supply explicit positive demand.");
     if (op.requestBytes === null || op.responseBytes === null) refuse(`operations.${op.id}`, "Supply explicit operation byte mappings; Unknown cannot enter transport.", "UNKNOWN_BYTES");
   }
@@ -45,7 +47,7 @@ export function compileFirstStack(sidecar: FirstStackSidecarV2, schedule: Resolv
     if (value === null || !Number.isFinite(value)) return refuse(path, `Supply a known ${unit} value; Unknown is not zero.`, "UNKNOWN_INPUT");
     const id = `first-stack.${path}`;
     const quantity: Quantity<U> = { kind: "known", value, unit, provenance: [id] };
-    ledger.push({ id, concept: path, modelVersion: "2", scope: COMPOSITION_REVISION, validityDomain: sidecar.application.workloadDomain,
+    ledger.push({ id, concept: path, modelVersion: "2", scope: revision, validityDomain: sidecar.application.workloadDomain,
       quantity, formula: "Explicit reviewed input or compiler policy constant", classification: "user-input", confidence: "conditional",
       provenance: sidecar.sources.map(source => ({ source, supports: "implementation", detail: "Reviewed conditional composition input; not cloud calibration" })),
       assumptions: ["All composed timing remains assumption-only; full resident memory and cost remain Unknown"],
@@ -55,17 +57,22 @@ export function compileFirstStack(sidecar: FirstStackSidecarV2, schedule: Resolv
   const context = { labels: { application: sidecar.application.id, runtime: sidecar.application.runtime, hardware: sidecar.application.hardware }, quantities: {} };
   const profiles: ComputeProfile[] = operations.map(op => ({ schema: "infraforge-compute-demand/1", id: op.id, version: sidecar.application.version,
     application: sidecar.application.id, operation: op.id, stage: "compute", method: sidecar.application.origin === "measured" ? "measured" : "synthetic",
-    cpu: q(`operations.${op.id}.cpu`, op.cpuUs, "cpu-us"), blockingWait: q(`operations.${op.id}.blocking`, op.blockingUs, "us"),
+    cpu: q(`operations.${op.id}.cpu`, op.cpuUs + (cache && (op.kind === "cache-read" || ["update", "hot-update"].includes(op.kind)) ? cache.policyCpuUs ?? 0 : 0), "cpu-us"), blockingWait: q(`operations.${op.id}.blocking`, op.blockingUs, "us"),
     maxCpuParallelism: q(`operations.${op.id}.parallelism`, op.parallelism, "cores"), residentCoverage: "partial",
     ...(op.residentBytes === null ? {} : { requestResidentBytes: q(`operations.${op.id}.resident`, op.residentBytes, "bytes") }),
     obtainedBy: `Reviewed ${sidecar.application.origin} demand ${sidecar.application.id}/${sidecar.application.version}`,
     evidence: sidecar.application.sources, date: "2026-10-20", validity: { exact: context.labels, ranges: {} },
     uncertainty: ["Compiler transcription date is not a measurement date; composed timing is assumption-only", ...(sidecar.application.measurement ? [sidecar.application.measurement.uncertainty] : [])], freeMode: "forbidden" }));
-  const compute = (n: typeof nodes[number]): ComputeResource => ({ id: n.id, kind: "compute", cores: q(`nodes.${n.id}.cores`, n.cores, "cores"),
+  const computeConfigs = new Map<string, ComputeResource>();
+  const compute = (n: typeof nodes[number]): ComputeResource => {
+    const old = computeConfigs.get(n.id); if (old) return old;
+    const value: ComputeResource = { id: n.id, kind: "compute", cores: q(`nodes.${n.id}.cores`, n.cores, "cores"),
     workers: q(`nodes.${n.id}.workers`, n.workers, "count"), queueCapacity: q(`nodes.${n.id}.queue`, n.queue, "count"),
     profiles: Object.fromEntries(operations.map(op => [op.id, op.id])), context,
     cancellation: n.cancellation === "detach" ? "unsupported" : "cooperative", scheduler: "capped-equal-fluid/1",
-    memory: { coverage: "partial", policy: "observe" } });
+    memory: { coverage: "partial", policy: "observe" } };
+    computeConfigs.set(n.id, value); return value;
+  };
   const plans: Record<string, TransactionPlan> = {};
   for (const op of operations) {
     const plan = sidecar.database.plans.find(p => p.id === op.plan);
@@ -84,7 +91,7 @@ export function compileFirstStack(sidecar: FirstStackSidecarV2, schedule: Resolv
       statementTimeout: q(`plans.${op.id}.statementTimeout`, plan.statementTimeoutUs, "us"), lockTimeout: q(`plans.${op.id}.lockTimeout`, plan.lockTimeoutUs, "us"),
       transactionTimeout: q(`plans.${op.id}.transactionTimeout`, plan.transactionTimeoutUs, "us"), commitWait: q(`plans.${op.id}.commitWait`, plan.commitWaitUs, "us"), durability: plan.durability };
   }
-  const path = (p: FirstStackSidecarV2["paths"][number]): PathConfig => ({ id: p.id, source: p.source, target: p.target, request: [p.requestLink], response: [p.responseLink],
+  const path = (p: FirstStackExecutable["paths"][number]): PathConfig => ({ id: p.id, source: p.source, target: p.target, request: [p.requestLink], response: [p.responseLink],
     pool: { mode: "serial", streams: q(`paths.${p.id}.streams`, 1, "count"), reuse: p.pool.reuse,
       maxConnections: q(`paths.${p.id}.connections`, p.connections, "count"), pending: q(`paths.${p.id}.pending`, p.pending, "count"),
       establish: q(`paths.${p.id}.establish`, p.pool.establishUs, "us"), acquireTimeout: q(`paths.${p.id}.acquireTimeout`, p.pool.acquireTimeoutUs, "us"),
@@ -100,7 +107,7 @@ export function compileFirstStack(sidecar: FirstStackSidecarV2, schedule: Resolv
     bindings: nodes.filter(n => n.owner !== "load-balancer").map(n => ({ resource: n.id, host: n.host, reservedMemory: q(`nodes.${n.id}.reservation`, n.reservationBytes, "bytes") })),
   };
   const input: DataInput = { modelVersion: "2", workloadVersion: "m2e/1", seed: policy.seed, ledger, profiles,
-    resources: [...apps.map(n => ({ ...compute(n), downstream: db.id })), { id: db.id, kind: "relational", semantics: sidecar.database.semantics,
+    resources: [...apps.map(n => cache ? ({ ...compute(n), downstreamByOperation: Object.fromEntries(operations.map(op => [op.id, op.kind === "cache-read" || ["update", "hot-update"].includes(op.kind) ? cache.roles.find(r => r.app === n.id)!.policy : db.id])) }) : ({ ...compute(n), downstream: db.id })), { id: db.id, kind: "relational", semantics: sidecar.database.semantics,
       execution: compute(db), maxSessions: q("database.sessions", sidecar.database.maxSessions, "count"), activeTransactions: q("database.active", sidecar.database.activeTransactions, "count"),
       pendingQueries: q("database.pending", sidecar.database.pendingQueries, "count"), keys: [...sidecar.database.keys].sort(lexical),
       initial: [...sidecar.database.initial].sort((a, b) => lexical(a.key, b.key)).map(r => ({ ...r, bytes: q(`database.initial.${r.key}.bytes`, r.bytes, "bytes") })), plans },
@@ -121,9 +128,34 @@ export function compileFirstStack(sidecar: FirstStackSidecarV2, schedule: Resolv
     limits: { maxEvents: policy.maxEvents, maxSamples: policy.maxSamples, maxRequests: Math.max(1, schedule.rows.length), maxRawResults: policy.maxRawResults, maxTraceRows: Math.max(1, schedule.rows.length),
       maxPendingEvents: envelope.pendingEvents, maxLiveCalls: envelope.liveCalls, maxRetainedSamples: envelope.retainedSamples,
       maxSampleBytes: envelope.sampleBytes, maxRawBytes: envelope.rawBytes, maxGroups: envelope.operations * 4, maxTraceBytes: envelope.rawBytes } };
+  if (cache) {
+    const node = nodes.find(n => n.id === cache.node && n.owner === "keyed-cache");
+    if (!node || cache.roles.length !== apps.length || new Set(cache.roles.map(r => r.app)).size !== apps.length) refuse("cache.roles", "One explicit policy role per app and one cache owner required.");
+    input.resources.push({ id: node.id, kind: "cache", semantics: cache.semantics, execution: compute(node),
+      capacity: q("cache.capacity", cache.capacityBytes, "bytes"), entryOverhead: q("cache.overhead", cache.entryOverheadBytes, "bytes"),
+      ttl: q("cache.ttl", cache.ttlUs, "us"), commandCpu: q("cache.cpu", cache.commandCpuUs, "cpu-us"), policy: cache.policy,
+      initial: cache.initial.map(r => ({ ...r, bytes: q(`cache.initial.${r.key}.bytes`, r.bytes, "bytes") })) });
+    for (const role of cache.roles) {
+      const app = apps.find(n => n.id === role.app);
+      if (!app || role.policy !== `${app.id}/cache-policy` || input.resources.some(r => r.id === role.policy) || role.internal.source !== app.id || role.internal.target !== role.policy) refuse("cache.roles", "Use the owned app/cache-policy identity and explicit compute-to-policy path.");
+      input.resources.push({ id: role.policy, kind: "cache-aside", execution: { ...compute(app), id: role.policy },
+        recordedKeysOnly: true, cache: node.id, database: db.id, keys: [...sidecar.database.keys], access: "cycle",
+        coalesce: cache.coalesce, onCacheFailure: cache.onFailure, invalidateWrites: cache.invalidateWrites,
+        operations: Object.fromEntries(operations.map(op => [op.id, ["update", "hot-update"].includes(op.kind) ? "write" : "read"])) });
+      input.endpoints[role.policy] = { alive: app.alive, ready: app.ready };
+      const edge = sidecar.paths.find(p => p.source === app.id && p.target === node.id);
+      if (!edge || role.database.source !== role.policy || role.database.target !== db.id) refuse("cache.paths", "Explicit policy cache/DB paths required.");
+      const mapped = input.paths.find(p => p.id === edge.id)!; mapped.source = role.policy;
+      for (const link of input.links.filter(l => [edge.requestLink, edge.responseLink].includes(l.id))) {
+        if (link.from === app.id) link.from = role.policy;
+        if (link.to === app.id) link.to = role.policy;
+      }
+      input.paths.push(path(role.internal), path(role.database));
+    }
+  }
   input.resources.sort((a, b) => lexical(a.id, b.id)); ledger.sort((a, b) => lexical(a.id, b.id));
   try { validateData(input); } catch (e) { refuse("stage1", `Stage 1 refused this composition: ${e instanceof Error ? e.message : String(e)}. Review the named demand, transport or budget field.`); }
-  return { revision: COMPOSITION_REVISION, input, composition };
+  return { revision, input, composition };
 }
 
 export type FirstStackExecutionPolicy = Parameters<typeof compileFirstStack>[2];

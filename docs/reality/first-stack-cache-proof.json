@@ -1,0 +1,2174 @@
+{
+  "schema": "first-stack-cache-proof/1",
+  "compiler": "first-stack-compiler/3",
+  "activeEngine": "1",
+  "timing": "assumption-only",
+  "fullMemory": "Unknown",
+  "fullCost": "Unknown",
+  "cases": [
+    {
+      "apps": 1,
+      "warm": false,
+      "coalesce": false,
+      "compiled": "9f5a0c6b03fab8507b65fea2ab78cb75f1e1e6aa3cc523978b1bfd356466dcbb",
+      "evidence": "1e852447de2c1e2f0df6f95ca83225dd16a80e13294932f0196c5fdf34707dd0",
+      "counts": {
+        "offered": 3,
+        "admitted": 3,
+        "completed": 3,
+        "rejected": 0,
+        "deadlineExceeded": 0,
+        "abandoned": 0,
+        "remoteOutcomesAfterCallerStop": 0,
+        "cancellationRequested": 0,
+        "cancellationConfirmedAtEntry": 0,
+        "inFlight": 0
+      },
+      "caches": [
+        {
+          "id": "cache",
+          "lookups": 3,
+          "executedLookups": 3,
+          "lookupFailures": 0,
+          "lookupCancelled": 0,
+          "liveLookups": 0,
+          "hits": 0,
+          "misses": 3,
+          "fills": 3,
+          "evictions": 0,
+          "expirations": 0,
+          "invalidations": 0,
+          "staleFillRefused": 0,
+          "allocationRefused": 0,
+          "epoch": 0,
+          "allocatedEntryBytes": 3,
+          "capacityBytes": 1024,
+          "entries": [
+            {
+              "key": "hot",
+              "version": 1,
+              "bytes": 2,
+              "expires": 106821,
+              "sequence": 2,
+              "expired": false
+            }
+          ],
+          "logicallyLiveEntries": 1,
+          "cpu": {
+            "capacity": 1,
+            "runnable": 0,
+            "receivingShare": 0,
+            "contended": false,
+            "paused": false,
+            "throttled": false,
+            "appCoreUs": 6,
+            "competitorCoreUs": 0,
+            "availableCoreUs": 90000,
+            "throttledWallUs": 0,
+            "unsatisfiedParallelismUs": 0,
+            "quotaRemainingCoreUs": null,
+            "allocations": [],
+            "boundaries": 6
+          },
+          "residentProcessBytes": "Unknown; entry budget excludes unmodeled runtime/allocator/native state"
+        }
+      ],
+      "policies": [
+        {
+          "id": "app-0/cache-policy",
+          "received": 3,
+          "completed": 3,
+          "failed": 0,
+          "live": 0,
+          "databaseFetches": 3,
+          "cacheFailures": 0,
+          "coalescedWaiters": 0,
+          "fillsInProgress": 0,
+          "invalidations": 0,
+          "results": [
+            {
+              "root": "[\"root\",\"recorded\",\"r0\"]",
+              "key": "hot",
+              "at": 6810,
+              "version": 1,
+              "source": "database-fetch",
+              "ok": true
+            },
+            {
+              "root": "[\"root\",\"recorded\",\"r1\"]",
+              "key": "hot",
+              "at": 6822,
+              "version": 1,
+              "source": "database-fetch",
+              "ok": true
+            },
+            {
+              "root": "[\"root\",\"recorded\",\"r2\"]",
+              "key": "hot",
+              "at": 6823,
+              "version": 1,
+              "source": "database-fetch",
+              "ok": true
+            }
+          ],
+          "omitted": 0,
+          "recordedKeys": {
+            "hits": 0,
+            "misses": 3,
+            "fillAttempts": 3,
+            "fillAcknowledged": 3,
+            "fillRejected": 0,
+            "savedDatabaseReads": 0,
+            "policyCpu": "Charged only through explicit app demand; this role owns no second CPU"
+          }
+        }
+      ]
+    },
+    {
+      "apps": 1,
+      "warm": false,
+      "coalesce": true,
+      "compiled": "b9e7cf1d39146371b5d6909a8fe8c7b6fa4eeee276fb4701569b47e70008f4d7",
+      "evidence": "28c9d4f2dfa915d8a87a760a8270b05f8caaf516dbbc16c5d60e652576fefe55",
+      "counts": {
+        "offered": 3,
+        "admitted": 3,
+        "completed": 3,
+        "rejected": 0,
+        "deadlineExceeded": 0,
+        "abandoned": 0,
+        "remoteOutcomesAfterCallerStop": 0,
+        "cancellationRequested": 0,
+        "cancellationConfirmedAtEntry": 0,
+        "inFlight": 0
+      },
+      "caches": [
+        {
+          "id": "cache",
+          "lookups": 3,
+          "executedLookups": 3,
+          "lookupFailures": 0,
+          "lookupCancelled": 0,
+          "liveLookups": 0,
+          "hits": 0,
+          "misses": 3,
+          "fills": 1,
+          "evictions": 0,
+          "expirations": 0,
+          "invalidations": 0,
+          "staleFillRefused": 0,
+          "allocationRefused": 0,
+          "epoch": 0,
+          "allocatedEntryBytes": 3,
+          "capacityBytes": 1024,
+          "entries": [
+            {
+              "key": "hot",
+              "version": 1,
+              "bytes": 2,
+              "expires": 106420,
+              "sequence": 0,
+              "expired": false
+            }
+          ],
+          "logicallyLiveEntries": 1,
+          "cpu": {
+            "capacity": 1,
+            "runnable": 0,
+            "receivingShare": 0,
+            "contended": false,
+            "paused": false,
+            "throttled": false,
+            "appCoreUs": 4,
+            "competitorCoreUs": 0,
+            "availableCoreUs": 90000,
+            "throttledWallUs": 0,
+            "unsatisfiedParallelismUs": 0,
+            "quotaRemainingCoreUs": null,
+            "allocations": [],
+            "boundaries": 4
+          },
+          "residentProcessBytes": "Unknown; entry budget excludes unmodeled runtime/allocator/native state"
+        }
+      ],
+      "policies": [
+        {
+          "id": "app-0/cache-policy",
+          "received": 3,
+          "completed": 3,
+          "failed": 0,
+          "live": 0,
+          "databaseFetches": 1,
+          "cacheFailures": 0,
+          "coalescedWaiters": 2,
+          "fillsInProgress": 0,
+          "invalidations": 0,
+          "results": [
+            {
+              "root": "[\"root\",\"recorded\",\"r0\"]",
+              "key": "hot",
+              "at": 6422,
+              "version": 1,
+              "source": "database-fetch",
+              "ok": true
+            },
+            {
+              "root": "[\"root\",\"recorded\",\"r1\"]",
+              "key": "hot",
+              "at": 6422,
+              "version": 1,
+              "source": "database-fetch",
+              "ok": true
+            },
+            {
+              "root": "[\"root\",\"recorded\",\"r2\"]",
+              "key": "hot",
+              "at": 6422,
+              "version": 1,
+              "source": "database-fetch",
+              "ok": true
+            }
+          ],
+          "omitted": 0,
+          "recordedKeys": {
+            "hits": 0,
+            "misses": 3,
+            "fillAttempts": 1,
+            "fillAcknowledged": 1,
+            "fillRejected": 0,
+            "savedDatabaseReads": 2,
+            "policyCpu": "Charged only through explicit app demand; this role owns no second CPU"
+          }
+        }
+      ]
+    },
+    {
+      "apps": 1,
+      "warm": true,
+      "coalesce": false,
+      "compiled": "3d80d02b911d5c1a6d615b7b453822a6a4a895d0689db186c4294b7b6d83d58f",
+      "evidence": "2b6adc3ddadd8468e04c8db2d7a4d3c38fda914389ea42b3cc418a42d091caba",
+      "counts": {
+        "offered": 3,
+        "admitted": 3,
+        "completed": 3,
+        "rejected": 0,
+        "deadlineExceeded": 0,
+        "abandoned": 0,
+        "remoteOutcomesAfterCallerStop": 0,
+        "cancellationRequested": 0,
+        "cancellationConfirmedAtEntry": 0,
+        "inFlight": 0
+      },
+      "caches": [
+        {
+          "id": "cache",
+          "lookups": 3,
+          "executedLookups": 3,
+          "lookupFailures": 0,
+          "lookupCancelled": 0,
+          "liveLookups": 0,
+          "hits": 3,
+          "misses": 0,
+          "fills": 0,
+          "evictions": 0,
+          "expirations": 0,
+          "invalidations": 0,
+          "staleFillRefused": 0,
+          "allocationRefused": 0,
+          "epoch": 0,
+          "allocatedEntryBytes": 3,
+          "capacityBytes": 1024,
+          "entries": [
+            {
+              "key": "hot",
+              "version": 1,
+              "bytes": 2,
+              "expires": 100000,
+              "sequence": 3,
+              "expired": false
+            }
+          ],
+          "logicallyLiveEntries": 1,
+          "cpu": {
+            "capacity": 1,
+            "runnable": 0,
+            "receivingShare": 0,
+            "contended": false,
+            "paused": false,
+            "throttled": false,
+            "appCoreUs": 3,
+            "competitorCoreUs": 0,
+            "availableCoreUs": 90000,
+            "throttledWallUs": 0,
+            "unsatisfiedParallelismUs": 0,
+            "quotaRemainingCoreUs": null,
+            "allocations": [],
+            "boundaries": 3
+          },
+          "residentProcessBytes": "Unknown; entry budget excludes unmodeled runtime/allocator/native state"
+        }
+      ],
+      "policies": [
+        {
+          "id": "app-0/cache-policy",
+          "received": 3,
+          "completed": 3,
+          "failed": 0,
+          "live": 0,
+          "databaseFetches": 0,
+          "cacheFailures": 0,
+          "coalescedWaiters": 0,
+          "fillsInProgress": 0,
+          "invalidations": 0,
+          "results": [
+            {
+              "root": "[\"root\",\"recorded\",\"r0\"]",
+              "key": "hot",
+              "at": 6211,
+              "version": 1,
+              "source": "cache-hit",
+              "ok": true
+            },
+            {
+              "root": "[\"root\",\"recorded\",\"r1\"]",
+              "key": "hot",
+              "at": 6217,
+              "version": 1,
+              "source": "cache-hit",
+              "ok": true
+            },
+            {
+              "root": "[\"root\",\"recorded\",\"r2\"]",
+              "key": "hot",
+              "at": 6218,
+              "version": 1,
+              "source": "cache-hit",
+              "ok": true
+            }
+          ],
+          "omitted": 0,
+          "recordedKeys": {
+            "hits": 3,
+            "misses": 0,
+            "fillAttempts": 0,
+            "fillAcknowledged": 0,
+            "fillRejected": 0,
+            "savedDatabaseReads": 3,
+            "policyCpu": "Charged only through explicit app demand; this role owns no second CPU"
+          }
+        }
+      ]
+    },
+    {
+      "apps": 1,
+      "warm": true,
+      "coalesce": true,
+      "compiled": "73ca52bef16d0979b4ba4e825b02483984c5cb8dd1678b826653b34965130c41",
+      "evidence": "72c16f85cd022dedaf9b84804934affb320fe23e81680e43ad4cd33b27341df7",
+      "counts": {
+        "offered": 3,
+        "admitted": 3,
+        "completed": 3,
+        "rejected": 0,
+        "deadlineExceeded": 0,
+        "abandoned": 0,
+        "remoteOutcomesAfterCallerStop": 0,
+        "cancellationRequested": 0,
+        "cancellationConfirmedAtEntry": 0,
+        "inFlight": 0
+      },
+      "caches": [
+        {
+          "id": "cache",
+          "lookups": 3,
+          "executedLookups": 3,
+          "lookupFailures": 0,
+          "lookupCancelled": 0,
+          "liveLookups": 0,
+          "hits": 3,
+          "misses": 0,
+          "fills": 0,
+          "evictions": 0,
+          "expirations": 0,
+          "invalidations": 0,
+          "staleFillRefused": 0,
+          "allocationRefused": 0,
+          "epoch": 0,
+          "allocatedEntryBytes": 3,
+          "capacityBytes": 1024,
+          "entries": [
+            {
+              "key": "hot",
+              "version": 1,
+              "bytes": 2,
+              "expires": 100000,
+              "sequence": 3,
+              "expired": false
+            }
+          ],
+          "logicallyLiveEntries": 1,
+          "cpu": {
+            "capacity": 1,
+            "runnable": 0,
+            "receivingShare": 0,
+            "contended": false,
+            "paused": false,
+            "throttled": false,
+            "appCoreUs": 3,
+            "competitorCoreUs": 0,
+            "availableCoreUs": 90000,
+            "throttledWallUs": 0,
+            "unsatisfiedParallelismUs": 0,
+            "quotaRemainingCoreUs": null,
+            "allocations": [],
+            "boundaries": 3
+          },
+          "residentProcessBytes": "Unknown; entry budget excludes unmodeled runtime/allocator/native state"
+        }
+      ],
+      "policies": [
+        {
+          "id": "app-0/cache-policy",
+          "received": 3,
+          "completed": 3,
+          "failed": 0,
+          "live": 0,
+          "databaseFetches": 0,
+          "cacheFailures": 0,
+          "coalescedWaiters": 0,
+          "fillsInProgress": 0,
+          "invalidations": 0,
+          "results": [
+            {
+              "root": "[\"root\",\"recorded\",\"r0\"]",
+              "key": "hot",
+              "at": 6211,
+              "version": 1,
+              "source": "cache-hit",
+              "ok": true
+            },
+            {
+              "root": "[\"root\",\"recorded\",\"r1\"]",
+              "key": "hot",
+              "at": 6217,
+              "version": 1,
+              "source": "cache-hit",
+              "ok": true
+            },
+            {
+              "root": "[\"root\",\"recorded\",\"r2\"]",
+              "key": "hot",
+              "at": 6218,
+              "version": 1,
+              "source": "cache-hit",
+              "ok": true
+            }
+          ],
+          "omitted": 0,
+          "recordedKeys": {
+            "hits": 3,
+            "misses": 0,
+            "fillAttempts": 0,
+            "fillAcknowledged": 0,
+            "fillRejected": 0,
+            "savedDatabaseReads": 3,
+            "policyCpu": "Charged only through explicit app demand; this role owns no second CPU"
+          }
+        }
+      ]
+    },
+    {
+      "apps": 2,
+      "warm": false,
+      "coalesce": false,
+      "compiled": "688c0cc5f90d120891b402784db5564f2d2f40560315e2064f3c9460e88119e6",
+      "evidence": "0c3674bd6cb3ef45f35b972c05080f294d8fc4fe4a05e2d9ae2e010bdbf95fc7",
+      "counts": {
+        "offered": 3,
+        "admitted": 3,
+        "completed": 3,
+        "rejected": 0,
+        "deadlineExceeded": 0,
+        "abandoned": 0,
+        "remoteOutcomesAfterCallerStop": 0,
+        "cancellationRequested": 0,
+        "cancellationConfirmedAtEntry": 0,
+        "inFlight": 0
+      },
+      "caches": [
+        {
+          "id": "cache",
+          "lookups": 3,
+          "executedLookups": 3,
+          "lookupFailures": 0,
+          "lookupCancelled": 0,
+          "liveLookups": 0,
+          "hits": 2,
+          "misses": 1,
+          "fills": 1,
+          "evictions": 0,
+          "expirations": 0,
+          "invalidations": 0,
+          "staleFillRefused": 0,
+          "allocationRefused": 0,
+          "epoch": 0,
+          "allocatedEntryBytes": 3,
+          "capacityBytes": 1024,
+          "entries": [
+            {
+              "key": "hot",
+              "version": 1,
+              "bytes": 2,
+              "expires": 105627,
+              "sequence": 2,
+              "expired": false
+            }
+          ],
+          "logicallyLiveEntries": 1,
+          "cpu": {
+            "capacity": 1,
+            "runnable": 0,
+            "receivingShare": 0,
+            "contended": false,
+            "paused": false,
+            "throttled": false,
+            "appCoreUs": 4,
+            "competitorCoreUs": 0,
+            "availableCoreUs": 90000,
+            "throttledWallUs": 0,
+            "unsatisfiedParallelismUs": 0,
+            "quotaRemainingCoreUs": null,
+            "allocations": [],
+            "boundaries": 4
+          },
+          "residentProcessBytes": "Unknown; entry budget excludes unmodeled runtime/allocator/native state"
+        }
+      ],
+      "policies": [
+        {
+          "id": "app-0/cache-policy",
+          "received": 2,
+          "completed": 2,
+          "failed": 0,
+          "live": 0,
+          "databaseFetches": 0,
+          "cacheFailures": 0,
+          "coalescedWaiters": 0,
+          "fillsInProgress": 0,
+          "invalidations": 0,
+          "results": [
+            {
+              "root": "[\"root\",\"recorded\",\"r0\"]",
+              "key": "hot",
+              "at": 5813,
+              "version": 1,
+              "source": "cache-hit",
+              "ok": true
+            },
+            {
+              "root": "[\"root\",\"recorded\",\"r2\"]",
+              "key": "hot",
+              "at": 5817,
+              "version": 1,
+              "source": "cache-hit",
+              "ok": true
+            }
+          ],
+          "omitted": 0,
+          "recordedKeys": {
+            "hits": 2,
+            "misses": 0,
+            "fillAttempts": 0,
+            "fillAcknowledged": 0,
+            "fillRejected": 0,
+            "savedDatabaseReads": 2,
+            "policyCpu": "Charged only through explicit app demand; this role owns no second CPU"
+          }
+        },
+        {
+          "id": "app-1/cache-policy",
+          "received": 1,
+          "completed": 1,
+          "failed": 0,
+          "live": 0,
+          "databaseFetches": 1,
+          "cacheFailures": 0,
+          "coalescedWaiters": 0,
+          "fillsInProgress": 0,
+          "invalidations": 0,
+          "results": [
+            {
+              "root": "[\"root\",\"recorded\",\"r1\"]",
+              "key": "hot",
+              "at": 5629,
+              "version": 1,
+              "source": "database-fetch",
+              "ok": true
+            }
+          ],
+          "omitted": 0,
+          "recordedKeys": {
+            "hits": 0,
+            "misses": 1,
+            "fillAttempts": 1,
+            "fillAcknowledged": 1,
+            "fillRejected": 0,
+            "savedDatabaseReads": 0,
+            "policyCpu": "Charged only through explicit app demand; this role owns no second CPU"
+          }
+        }
+      ]
+    },
+    {
+      "apps": 2,
+      "warm": false,
+      "coalesce": true,
+      "compiled": "88d337d7ff96be698177f9fc15f7fba1a2fc560de38fbf276beb62fe54e87c0c",
+      "evidence": "964d0eca33e4ba00a15f24c7135463129aad2fac7176372d53cacc0c5c83e1a2",
+      "counts": {
+        "offered": 3,
+        "admitted": 3,
+        "completed": 3,
+        "rejected": 0,
+        "deadlineExceeded": 0,
+        "abandoned": 0,
+        "remoteOutcomesAfterCallerStop": 0,
+        "cancellationRequested": 0,
+        "cancellationConfirmedAtEntry": 0,
+        "inFlight": 0
+      },
+      "caches": [
+        {
+          "id": "cache",
+          "lookups": 3,
+          "executedLookups": 3,
+          "lookupFailures": 0,
+          "lookupCancelled": 0,
+          "liveLookups": 0,
+          "hits": 2,
+          "misses": 1,
+          "fills": 1,
+          "evictions": 0,
+          "expirations": 0,
+          "invalidations": 0,
+          "staleFillRefused": 0,
+          "allocationRefused": 0,
+          "epoch": 0,
+          "allocatedEntryBytes": 3,
+          "capacityBytes": 1024,
+          "entries": [
+            {
+              "key": "hot",
+              "version": 1,
+              "bytes": 2,
+              "expires": 105627,
+              "sequence": 2,
+              "expired": false
+            }
+          ],
+          "logicallyLiveEntries": 1,
+          "cpu": {
+            "capacity": 1,
+            "runnable": 0,
+            "receivingShare": 0,
+            "contended": false,
+            "paused": false,
+            "throttled": false,
+            "appCoreUs": 4,
+            "competitorCoreUs": 0,
+            "availableCoreUs": 90000,
+            "throttledWallUs": 0,
+            "unsatisfiedParallelismUs": 0,
+            "quotaRemainingCoreUs": null,
+            "allocations": [],
+            "boundaries": 4
+          },
+          "residentProcessBytes": "Unknown; entry budget excludes unmodeled runtime/allocator/native state"
+        }
+      ],
+      "policies": [
+        {
+          "id": "app-0/cache-policy",
+          "received": 2,
+          "completed": 2,
+          "failed": 0,
+          "live": 0,
+          "databaseFetches": 0,
+          "cacheFailures": 0,
+          "coalescedWaiters": 0,
+          "fillsInProgress": 0,
+          "invalidations": 0,
+          "results": [
+            {
+              "root": "[\"root\",\"recorded\",\"r0\"]",
+              "key": "hot",
+              "at": 5813,
+              "version": 1,
+              "source": "cache-hit",
+              "ok": true
+            },
+            {
+              "root": "[\"root\",\"recorded\",\"r2\"]",
+              "key": "hot",
+              "at": 5817,
+              "version": 1,
+              "source": "cache-hit",
+              "ok": true
+            }
+          ],
+          "omitted": 0,
+          "recordedKeys": {
+            "hits": 2,
+            "misses": 0,
+            "fillAttempts": 0,
+            "fillAcknowledged": 0,
+            "fillRejected": 0,
+            "savedDatabaseReads": 2,
+            "policyCpu": "Charged only through explicit app demand; this role owns no second CPU"
+          }
+        },
+        {
+          "id": "app-1/cache-policy",
+          "received": 1,
+          "completed": 1,
+          "failed": 0,
+          "live": 0,
+          "databaseFetches": 1,
+          "cacheFailures": 0,
+          "coalescedWaiters": 0,
+          "fillsInProgress": 0,
+          "invalidations": 0,
+          "results": [
+            {
+              "root": "[\"root\",\"recorded\",\"r1\"]",
+              "key": "hot",
+              "at": 5629,
+              "version": 1,
+              "source": "database-fetch",
+              "ok": true
+            }
+          ],
+          "omitted": 0,
+          "recordedKeys": {
+            "hits": 0,
+            "misses": 1,
+            "fillAttempts": 1,
+            "fillAcknowledged": 1,
+            "fillRejected": 0,
+            "savedDatabaseReads": 0,
+            "policyCpu": "Charged only through explicit app demand; this role owns no second CPU"
+          }
+        }
+      ]
+    },
+    {
+      "apps": 2,
+      "warm": true,
+      "coalesce": false,
+      "compiled": "52a65e735d601f771f9ba571201f2ba1d6a08f33cb7510bae824739cb815b28c",
+      "evidence": "379cf0759bdb878f526626e111b6bbeb6441dbc7b5d0f08b3cc33513faffc4a1",
+      "counts": {
+        "offered": 3,
+        "admitted": 3,
+        "completed": 3,
+        "rejected": 0,
+        "deadlineExceeded": 0,
+        "abandoned": 0,
+        "remoteOutcomesAfterCallerStop": 0,
+        "cancellationRequested": 0,
+        "cancellationConfirmedAtEntry": 0,
+        "inFlight": 0
+      },
+      "caches": [
+        {
+          "id": "cache",
+          "lookups": 3,
+          "executedLookups": 3,
+          "lookupFailures": 0,
+          "lookupCancelled": 0,
+          "liveLookups": 0,
+          "hits": 3,
+          "misses": 0,
+          "fills": 0,
+          "evictions": 0,
+          "expirations": 0,
+          "invalidations": 0,
+          "staleFillRefused": 0,
+          "allocationRefused": 0,
+          "epoch": 0,
+          "allocatedEntryBytes": 3,
+          "capacityBytes": 1024,
+          "entries": [
+            {
+              "key": "hot",
+              "version": 1,
+              "bytes": 2,
+              "expires": 100000,
+              "sequence": 3,
+              "expired": false
+            }
+          ],
+          "logicallyLiveEntries": 1,
+          "cpu": {
+            "capacity": 1,
+            "runnable": 0,
+            "receivingShare": 0,
+            "contended": false,
+            "paused": false,
+            "throttled": false,
+            "appCoreUs": 3,
+            "competitorCoreUs": 0,
+            "availableCoreUs": 90000,
+            "throttledWallUs": 0,
+            "unsatisfiedParallelismUs": 0,
+            "quotaRemainingCoreUs": null,
+            "allocations": [],
+            "boundaries": 3
+          },
+          "residentProcessBytes": "Unknown; entry budget excludes unmodeled runtime/allocator/native state"
+        }
+      ],
+      "policies": [
+        {
+          "id": "app-0/cache-policy",
+          "received": 2,
+          "completed": 2,
+          "failed": 0,
+          "live": 0,
+          "databaseFetches": 0,
+          "cacheFailures": 0,
+          "coalescedWaiters": 0,
+          "fillsInProgress": 0,
+          "invalidations": 0,
+          "results": [
+            {
+              "root": "[\"root\",\"recorded\",\"r0\"]",
+              "key": "hot",
+              "at": 5813,
+              "version": 1,
+              "source": "cache-hit",
+              "ok": true
+            },
+            {
+              "root": "[\"root\",\"recorded\",\"r2\"]",
+              "key": "hot",
+              "at": 5817,
+              "version": 1,
+              "source": "cache-hit",
+              "ok": true
+            }
+          ],
+          "omitted": 0,
+          "recordedKeys": {
+            "hits": 2,
+            "misses": 0,
+            "fillAttempts": 0,
+            "fillAcknowledged": 0,
+            "fillRejected": 0,
+            "savedDatabaseReads": 2,
+            "policyCpu": "Charged only through explicit app demand; this role owns no second CPU"
+          }
+        },
+        {
+          "id": "app-1/cache-policy",
+          "received": 1,
+          "completed": 1,
+          "failed": 0,
+          "live": 0,
+          "databaseFetches": 0,
+          "cacheFailures": 0,
+          "coalescedWaiters": 0,
+          "fillsInProgress": 0,
+          "invalidations": 0,
+          "results": [
+            {
+              "root": "[\"root\",\"recorded\",\"r1\"]",
+              "key": "hot",
+              "at": 5418,
+              "version": 1,
+              "source": "cache-hit",
+              "ok": true
+            }
+          ],
+          "omitted": 0,
+          "recordedKeys": {
+            "hits": 1,
+            "misses": 0,
+            "fillAttempts": 0,
+            "fillAcknowledged": 0,
+            "fillRejected": 0,
+            "savedDatabaseReads": 1,
+            "policyCpu": "Charged only through explicit app demand; this role owns no second CPU"
+          }
+        }
+      ]
+    },
+    {
+      "apps": 2,
+      "warm": true,
+      "coalesce": true,
+      "compiled": "2583d225a370b41300be23def021c527505a97bff4567e13beb9ed9689cf61b5",
+      "evidence": "cf8815c7a5ae2ff0019e8d13392a0743ebc0127de582efd3ac9b33e487314232",
+      "counts": {
+        "offered": 3,
+        "admitted": 3,
+        "completed": 3,
+        "rejected": 0,
+        "deadlineExceeded": 0,
+        "abandoned": 0,
+        "remoteOutcomesAfterCallerStop": 0,
+        "cancellationRequested": 0,
+        "cancellationConfirmedAtEntry": 0,
+        "inFlight": 0
+      },
+      "caches": [
+        {
+          "id": "cache",
+          "lookups": 3,
+          "executedLookups": 3,
+          "lookupFailures": 0,
+          "lookupCancelled": 0,
+          "liveLookups": 0,
+          "hits": 3,
+          "misses": 0,
+          "fills": 0,
+          "evictions": 0,
+          "expirations": 0,
+          "invalidations": 0,
+          "staleFillRefused": 0,
+          "allocationRefused": 0,
+          "epoch": 0,
+          "allocatedEntryBytes": 3,
+          "capacityBytes": 1024,
+          "entries": [
+            {
+              "key": "hot",
+              "version": 1,
+              "bytes": 2,
+              "expires": 100000,
+              "sequence": 3,
+              "expired": false
+            }
+          ],
+          "logicallyLiveEntries": 1,
+          "cpu": {
+            "capacity": 1,
+            "runnable": 0,
+            "receivingShare": 0,
+            "contended": false,
+            "paused": false,
+            "throttled": false,
+            "appCoreUs": 3,
+            "competitorCoreUs": 0,
+            "availableCoreUs": 90000,
+            "throttledWallUs": 0,
+            "unsatisfiedParallelismUs": 0,
+            "quotaRemainingCoreUs": null,
+            "allocations": [],
+            "boundaries": 3
+          },
+          "residentProcessBytes": "Unknown; entry budget excludes unmodeled runtime/allocator/native state"
+        }
+      ],
+      "policies": [
+        {
+          "id": "app-0/cache-policy",
+          "received": 2,
+          "completed": 2,
+          "failed": 0,
+          "live": 0,
+          "databaseFetches": 0,
+          "cacheFailures": 0,
+          "coalescedWaiters": 0,
+          "fillsInProgress": 0,
+          "invalidations": 0,
+          "results": [
+            {
+              "root": "[\"root\",\"recorded\",\"r0\"]",
+              "key": "hot",
+              "at": 5813,
+              "version": 1,
+              "source": "cache-hit",
+              "ok": true
+            },
+            {
+              "root": "[\"root\",\"recorded\",\"r2\"]",
+              "key": "hot",
+              "at": 5817,
+              "version": 1,
+              "source": "cache-hit",
+              "ok": true
+            }
+          ],
+          "omitted": 0,
+          "recordedKeys": {
+            "hits": 2,
+            "misses": 0,
+            "fillAttempts": 0,
+            "fillAcknowledged": 0,
+            "fillRejected": 0,
+            "savedDatabaseReads": 2,
+            "policyCpu": "Charged only through explicit app demand; this role owns no second CPU"
+          }
+        },
+        {
+          "id": "app-1/cache-policy",
+          "received": 1,
+          "completed": 1,
+          "failed": 0,
+          "live": 0,
+          "databaseFetches": 0,
+          "cacheFailures": 0,
+          "coalescedWaiters": 0,
+          "fillsInProgress": 0,
+          "invalidations": 0,
+          "results": [
+            {
+              "root": "[\"root\",\"recorded\",\"r1\"]",
+              "key": "hot",
+              "at": 5418,
+              "version": 1,
+              "source": "cache-hit",
+              "ok": true
+            }
+          ],
+          "omitted": 0,
+          "recordedKeys": {
+            "hits": 1,
+            "misses": 0,
+            "fillAttempts": 0,
+            "fillAcknowledged": 0,
+            "fillRejected": 0,
+            "savedDatabaseReads": 1,
+            "policyCpu": "Charged only through explicit app demand; this role owns no second CPU"
+          }
+        }
+      ]
+    },
+    {
+      "apps": 8,
+      "warm": false,
+      "coalesce": false,
+      "compiled": "230dffdc3d1821c2eecc2230666fa68b3b379db08a90b0dd19af042973b2c731",
+      "evidence": "8d8d1c4c4a78a390694005580a76a39c209801180b4159dcb08eef48283158e9",
+      "counts": {
+        "offered": 3,
+        "admitted": 3,
+        "completed": 3,
+        "rejected": 0,
+        "deadlineExceeded": 0,
+        "abandoned": 0,
+        "remoteOutcomesAfterCallerStop": 0,
+        "cancellationRequested": 0,
+        "cancellationConfirmedAtEntry": 0,
+        "inFlight": 0
+      },
+      "caches": [
+        {
+          "id": "cache",
+          "lookups": 3,
+          "executedLookups": 3,
+          "lookupFailures": 0,
+          "lookupCancelled": 0,
+          "liveLookups": 0,
+          "hits": 0,
+          "misses": 3,
+          "fills": 3,
+          "evictions": 0,
+          "expirations": 0,
+          "invalidations": 0,
+          "staleFillRefused": 0,
+          "allocationRefused": 0,
+          "epoch": 0,
+          "allocatedEntryBytes": 3,
+          "capacityBytes": 1024,
+          "entries": [
+            {
+              "key": "hot",
+              "version": 1,
+              "bytes": 2,
+              "expires": 106027,
+              "sequence": 2,
+              "expired": false
+            }
+          ],
+          "logicallyLiveEntries": 1,
+          "cpu": {
+            "capacity": 1,
+            "runnable": 0,
+            "receivingShare": 0,
+            "contended": false,
+            "paused": false,
+            "throttled": false,
+            "appCoreUs": 6,
+            "competitorCoreUs": 0,
+            "availableCoreUs": 90000,
+            "throttledWallUs": 0,
+            "unsatisfiedParallelismUs": 0,
+            "quotaRemainingCoreUs": null,
+            "allocations": [],
+            "boundaries": 6
+          },
+          "residentProcessBytes": "Unknown; entry budget excludes unmodeled runtime/allocator/native state"
+        }
+      ],
+      "policies": [
+        {
+          "id": "app-0/cache-policy",
+          "received": 1,
+          "completed": 1,
+          "failed": 0,
+          "live": 0,
+          "databaseFetches": 1,
+          "cacheFailures": 0,
+          "coalescedWaiters": 0,
+          "fillsInProgress": 0,
+          "invalidations": 0,
+          "results": [
+            {
+              "root": "[\"root\",\"recorded\",\"r0\"]",
+              "key": "hot",
+              "at": 6026,
+              "version": 1,
+              "source": "database-fetch",
+              "ok": true
+            }
+          ],
+          "omitted": 0,
+          "recordedKeys": {
+            "hits": 0,
+            "misses": 1,
+            "fillAttempts": 1,
+            "fillAcknowledged": 1,
+            "fillRejected": 0,
+            "savedDatabaseReads": 0,
+            "policyCpu": "Charged only through explicit app demand; this role owns no second CPU"
+          }
+        },
+        {
+          "id": "app-1/cache-policy",
+          "received": 1,
+          "completed": 1,
+          "failed": 0,
+          "live": 0,
+          "databaseFetches": 1,
+          "cacheFailures": 0,
+          "coalescedWaiters": 0,
+          "fillsInProgress": 0,
+          "invalidations": 0,
+          "results": [
+            {
+              "root": "[\"root\",\"recorded\",\"r1\"]",
+              "key": "hot",
+              "at": 6028,
+              "version": 1,
+              "source": "database-fetch",
+              "ok": true
+            }
+          ],
+          "omitted": 0,
+          "recordedKeys": {
+            "hits": 0,
+            "misses": 1,
+            "fillAttempts": 1,
+            "fillAcknowledged": 1,
+            "fillRejected": 0,
+            "savedDatabaseReads": 0,
+            "policyCpu": "Charged only through explicit app demand; this role owns no second CPU"
+          }
+        },
+        {
+          "id": "app-2/cache-policy",
+          "received": 1,
+          "completed": 1,
+          "failed": 0,
+          "live": 0,
+          "databaseFetches": 1,
+          "cacheFailures": 0,
+          "coalescedWaiters": 0,
+          "fillsInProgress": 0,
+          "invalidations": 0,
+          "results": [
+            {
+              "root": "[\"root\",\"recorded\",\"r2\"]",
+              "key": "hot",
+              "at": 6029,
+              "version": 1,
+              "source": "database-fetch",
+              "ok": true
+            }
+          ],
+          "omitted": 0,
+          "recordedKeys": {
+            "hits": 0,
+            "misses": 1,
+            "fillAttempts": 1,
+            "fillAcknowledged": 1,
+            "fillRejected": 0,
+            "savedDatabaseReads": 0,
+            "policyCpu": "Charged only through explicit app demand; this role owns no second CPU"
+          }
+        },
+        {
+          "id": "app-3/cache-policy",
+          "received": 0,
+          "completed": 0,
+          "failed": 0,
+          "live": 0,
+          "databaseFetches": 0,
+          "cacheFailures": 0,
+          "coalescedWaiters": 0,
+          "fillsInProgress": 0,
+          "invalidations": 0,
+          "results": [],
+          "omitted": 0,
+          "recordedKeys": {
+            "hits": 0,
+            "misses": 0,
+            "fillAttempts": 0,
+            "fillAcknowledged": 0,
+            "fillRejected": 0,
+            "savedDatabaseReads": 0,
+            "policyCpu": "Charged only through explicit app demand; this role owns no second CPU"
+          }
+        },
+        {
+          "id": "app-4/cache-policy",
+          "received": 0,
+          "completed": 0,
+          "failed": 0,
+          "live": 0,
+          "databaseFetches": 0,
+          "cacheFailures": 0,
+          "coalescedWaiters": 0,
+          "fillsInProgress": 0,
+          "invalidations": 0,
+          "results": [],
+          "omitted": 0,
+          "recordedKeys": {
+            "hits": 0,
+            "misses": 0,
+            "fillAttempts": 0,
+            "fillAcknowledged": 0,
+            "fillRejected": 0,
+            "savedDatabaseReads": 0,
+            "policyCpu": "Charged only through explicit app demand; this role owns no second CPU"
+          }
+        },
+        {
+          "id": "app-5/cache-policy",
+          "received": 0,
+          "completed": 0,
+          "failed": 0,
+          "live": 0,
+          "databaseFetches": 0,
+          "cacheFailures": 0,
+          "coalescedWaiters": 0,
+          "fillsInProgress": 0,
+          "invalidations": 0,
+          "results": [],
+          "omitted": 0,
+          "recordedKeys": {
+            "hits": 0,
+            "misses": 0,
+            "fillAttempts": 0,
+            "fillAcknowledged": 0,
+            "fillRejected": 0,
+            "savedDatabaseReads": 0,
+            "policyCpu": "Charged only through explicit app demand; this role owns no second CPU"
+          }
+        },
+        {
+          "id": "app-6/cache-policy",
+          "received": 0,
+          "completed": 0,
+          "failed": 0,
+          "live": 0,
+          "databaseFetches": 0,
+          "cacheFailures": 0,
+          "coalescedWaiters": 0,
+          "fillsInProgress": 0,
+          "invalidations": 0,
+          "results": [],
+          "omitted": 0,
+          "recordedKeys": {
+            "hits": 0,
+            "misses": 0,
+            "fillAttempts": 0,
+            "fillAcknowledged": 0,
+            "fillRejected": 0,
+            "savedDatabaseReads": 0,
+            "policyCpu": "Charged only through explicit app demand; this role owns no second CPU"
+          }
+        },
+        {
+          "id": "app-7/cache-policy",
+          "received": 0,
+          "completed": 0,
+          "failed": 0,
+          "live": 0,
+          "databaseFetches": 0,
+          "cacheFailures": 0,
+          "coalescedWaiters": 0,
+          "fillsInProgress": 0,
+          "invalidations": 0,
+          "results": [],
+          "omitted": 0,
+          "recordedKeys": {
+            "hits": 0,
+            "misses": 0,
+            "fillAttempts": 0,
+            "fillAcknowledged": 0,
+            "fillRejected": 0,
+            "savedDatabaseReads": 0,
+            "policyCpu": "Charged only through explicit app demand; this role owns no second CPU"
+          }
+        }
+      ]
+    },
+    {
+      "apps": 8,
+      "warm": false,
+      "coalesce": true,
+      "compiled": "73f1e04822a99eaa0279135201ca8093b7ac1d87ba961d9b3d74e20748aa6e53",
+      "evidence": "42a331834a0ef83c020682b685fe68da797348521174b04ea9ef4ab55f67376f",
+      "counts": {
+        "offered": 3,
+        "admitted": 3,
+        "completed": 3,
+        "rejected": 0,
+        "deadlineExceeded": 0,
+        "abandoned": 0,
+        "remoteOutcomesAfterCallerStop": 0,
+        "cancellationRequested": 0,
+        "cancellationConfirmedAtEntry": 0,
+        "inFlight": 0
+      },
+      "caches": [
+        {
+          "id": "cache",
+          "lookups": 3,
+          "executedLookups": 3,
+          "lookupFailures": 0,
+          "lookupCancelled": 0,
+          "liveLookups": 0,
+          "hits": 0,
+          "misses": 3,
+          "fills": 3,
+          "evictions": 0,
+          "expirations": 0,
+          "invalidations": 0,
+          "staleFillRefused": 0,
+          "allocationRefused": 0,
+          "epoch": 0,
+          "allocatedEntryBytes": 3,
+          "capacityBytes": 1024,
+          "entries": [
+            {
+              "key": "hot",
+              "version": 1,
+              "bytes": 2,
+              "expires": 106027,
+              "sequence": 2,
+              "expired": false
+            }
+          ],
+          "logicallyLiveEntries": 1,
+          "cpu": {
+            "capacity": 1,
+            "runnable": 0,
+            "receivingShare": 0,
+            "contended": false,
+            "paused": false,
+            "throttled": false,
+            "appCoreUs": 6,
+            "competitorCoreUs": 0,
+            "availableCoreUs": 90000,
+            "throttledWallUs": 0,
+            "unsatisfiedParallelismUs": 0,
+            "quotaRemainingCoreUs": null,
+            "allocations": [],
+            "boundaries": 6
+          },
+          "residentProcessBytes": "Unknown; entry budget excludes unmodeled runtime/allocator/native state"
+        }
+      ],
+      "policies": [
+        {
+          "id": "app-0/cache-policy",
+          "received": 1,
+          "completed": 1,
+          "failed": 0,
+          "live": 0,
+          "databaseFetches": 1,
+          "cacheFailures": 0,
+          "coalescedWaiters": 0,
+          "fillsInProgress": 0,
+          "invalidations": 0,
+          "results": [
+            {
+              "root": "[\"root\",\"recorded\",\"r0\"]",
+              "key": "hot",
+              "at": 6026,
+              "version": 1,
+              "source": "database-fetch",
+              "ok": true
+            }
+          ],
+          "omitted": 0,
+          "recordedKeys": {
+            "hits": 0,
+            "misses": 1,
+            "fillAttempts": 1,
+            "fillAcknowledged": 1,
+            "fillRejected": 0,
+            "savedDatabaseReads": 0,
+            "policyCpu": "Charged only through explicit app demand; this role owns no second CPU"
+          }
+        },
+        {
+          "id": "app-1/cache-policy",
+          "received": 1,
+          "completed": 1,
+          "failed": 0,
+          "live": 0,
+          "databaseFetches": 1,
+          "cacheFailures": 0,
+          "coalescedWaiters": 0,
+          "fillsInProgress": 0,
+          "invalidations": 0,
+          "results": [
+            {
+              "root": "[\"root\",\"recorded\",\"r1\"]",
+              "key": "hot",
+              "at": 6028,
+              "version": 1,
+              "source": "database-fetch",
+              "ok": true
+            }
+          ],
+          "omitted": 0,
+          "recordedKeys": {
+            "hits": 0,
+            "misses": 1,
+            "fillAttempts": 1,
+            "fillAcknowledged": 1,
+            "fillRejected": 0,
+            "savedDatabaseReads": 0,
+            "policyCpu": "Charged only through explicit app demand; this role owns no second CPU"
+          }
+        },
+        {
+          "id": "app-2/cache-policy",
+          "received": 1,
+          "completed": 1,
+          "failed": 0,
+          "live": 0,
+          "databaseFetches": 1,
+          "cacheFailures": 0,
+          "coalescedWaiters": 0,
+          "fillsInProgress": 0,
+          "invalidations": 0,
+          "results": [
+            {
+              "root": "[\"root\",\"recorded\",\"r2\"]",
+              "key": "hot",
+              "at": 6029,
+              "version": 1,
+              "source": "database-fetch",
+              "ok": true
+            }
+          ],
+          "omitted": 0,
+          "recordedKeys": {
+            "hits": 0,
+            "misses": 1,
+            "fillAttempts": 1,
+            "fillAcknowledged": 1,
+            "fillRejected": 0,
+            "savedDatabaseReads": 0,
+            "policyCpu": "Charged only through explicit app demand; this role owns no second CPU"
+          }
+        },
+        {
+          "id": "app-3/cache-policy",
+          "received": 0,
+          "completed": 0,
+          "failed": 0,
+          "live": 0,
+          "databaseFetches": 0,
+          "cacheFailures": 0,
+          "coalescedWaiters": 0,
+          "fillsInProgress": 0,
+          "invalidations": 0,
+          "results": [],
+          "omitted": 0,
+          "recordedKeys": {
+            "hits": 0,
+            "misses": 0,
+            "fillAttempts": 0,
+            "fillAcknowledged": 0,
+            "fillRejected": 0,
+            "savedDatabaseReads": 0,
+            "policyCpu": "Charged only through explicit app demand; this role owns no second CPU"
+          }
+        },
+        {
+          "id": "app-4/cache-policy",
+          "received": 0,
+          "completed": 0,
+          "failed": 0,
+          "live": 0,
+          "databaseFetches": 0,
+          "cacheFailures": 0,
+          "coalescedWaiters": 0,
+          "fillsInProgress": 0,
+          "invalidations": 0,
+          "results": [],
+          "omitted": 0,
+          "recordedKeys": {
+            "hits": 0,
+            "misses": 0,
+            "fillAttempts": 0,
+            "fillAcknowledged": 0,
+            "fillRejected": 0,
+            "savedDatabaseReads": 0,
+            "policyCpu": "Charged only through explicit app demand; this role owns no second CPU"
+          }
+        },
+        {
+          "id": "app-5/cache-policy",
+          "received": 0,
+          "completed": 0,
+          "failed": 0,
+          "live": 0,
+          "databaseFetches": 0,
+          "cacheFailures": 0,
+          "coalescedWaiters": 0,
+          "fillsInProgress": 0,
+          "invalidations": 0,
+          "results": [],
+          "omitted": 0,
+          "recordedKeys": {
+            "hits": 0,
+            "misses": 0,
+            "fillAttempts": 0,
+            "fillAcknowledged": 0,
+            "fillRejected": 0,
+            "savedDatabaseReads": 0,
+            "policyCpu": "Charged only through explicit app demand; this role owns no second CPU"
+          }
+        },
+        {
+          "id": "app-6/cache-policy",
+          "received": 0,
+          "completed": 0,
+          "failed": 0,
+          "live": 0,
+          "databaseFetches": 0,
+          "cacheFailures": 0,
+          "coalescedWaiters": 0,
+          "fillsInProgress": 0,
+          "invalidations": 0,
+          "results": [],
+          "omitted": 0,
+          "recordedKeys": {
+            "hits": 0,
+            "misses": 0,
+            "fillAttempts": 0,
+            "fillAcknowledged": 0,
+            "fillRejected": 0,
+            "savedDatabaseReads": 0,
+            "policyCpu": "Charged only through explicit app demand; this role owns no second CPU"
+          }
+        },
+        {
+          "id": "app-7/cache-policy",
+          "received": 0,
+          "completed": 0,
+          "failed": 0,
+          "live": 0,
+          "databaseFetches": 0,
+          "cacheFailures": 0,
+          "coalescedWaiters": 0,
+          "fillsInProgress": 0,
+          "invalidations": 0,
+          "results": [],
+          "omitted": 0,
+          "recordedKeys": {
+            "hits": 0,
+            "misses": 0,
+            "fillAttempts": 0,
+            "fillAcknowledged": 0,
+            "fillRejected": 0,
+            "savedDatabaseReads": 0,
+            "policyCpu": "Charged only through explicit app demand; this role owns no second CPU"
+          }
+        }
+      ]
+    },
+    {
+      "apps": 8,
+      "warm": true,
+      "coalesce": false,
+      "compiled": "59b5d847fccfef18956287b58167dbd5b9f6053bb02be11441b33fb09b044657",
+      "evidence": "1384091f3ca0a8eee223f322c26bfe48ff7ebf597acbf53678379003c8327c0d",
+      "counts": {
+        "offered": 3,
+        "admitted": 3,
+        "completed": 3,
+        "rejected": 0,
+        "deadlineExceeded": 0,
+        "abandoned": 0,
+        "remoteOutcomesAfterCallerStop": 0,
+        "cancellationRequested": 0,
+        "cancellationConfirmedAtEntry": 0,
+        "inFlight": 0
+      },
+      "caches": [
+        {
+          "id": "cache",
+          "lookups": 3,
+          "executedLookups": 3,
+          "lookupFailures": 0,
+          "lookupCancelled": 0,
+          "liveLookups": 0,
+          "hits": 3,
+          "misses": 0,
+          "fills": 0,
+          "evictions": 0,
+          "expirations": 0,
+          "invalidations": 0,
+          "staleFillRefused": 0,
+          "allocationRefused": 0,
+          "epoch": 0,
+          "allocatedEntryBytes": 3,
+          "capacityBytes": 1024,
+          "entries": [
+            {
+              "key": "hot",
+              "version": 1,
+              "bytes": 2,
+              "expires": 100000,
+              "sequence": 3,
+              "expired": false
+            }
+          ],
+          "logicallyLiveEntries": 1,
+          "cpu": {
+            "capacity": 1,
+            "runnable": 0,
+            "receivingShare": 0,
+            "contended": false,
+            "paused": false,
+            "throttled": false,
+            "appCoreUs": 3,
+            "competitorCoreUs": 0,
+            "availableCoreUs": 90000,
+            "throttledWallUs": 0,
+            "unsatisfiedParallelismUs": 0,
+            "quotaRemainingCoreUs": null,
+            "allocations": [],
+            "boundaries": 3
+          },
+          "residentProcessBytes": "Unknown; entry budget excludes unmodeled runtime/allocator/native state"
+        }
+      ],
+      "policies": [
+        {
+          "id": "app-0/cache-policy",
+          "received": 1,
+          "completed": 1,
+          "failed": 0,
+          "live": 0,
+          "databaseFetches": 0,
+          "cacheFailures": 0,
+          "coalescedWaiters": 0,
+          "fillsInProgress": 0,
+          "invalidations": 0,
+          "results": [
+            {
+              "root": "[\"root\",\"recorded\",\"r0\"]",
+              "key": "hot",
+              "at": 5417,
+              "version": 1,
+              "source": "cache-hit",
+              "ok": true
+            }
+          ],
+          "omitted": 0,
+          "recordedKeys": {
+            "hits": 1,
+            "misses": 0,
+            "fillAttempts": 0,
+            "fillAcknowledged": 0,
+            "fillRejected": 0,
+            "savedDatabaseReads": 1,
+            "policyCpu": "Charged only through explicit app demand; this role owns no second CPU"
+          }
+        },
+        {
+          "id": "app-1/cache-policy",
+          "received": 1,
+          "completed": 1,
+          "failed": 0,
+          "live": 0,
+          "databaseFetches": 0,
+          "cacheFailures": 0,
+          "coalescedWaiters": 0,
+          "fillsInProgress": 0,
+          "invalidations": 0,
+          "results": [
+            {
+              "root": "[\"root\",\"recorded\",\"r1\"]",
+              "key": "hot",
+              "at": 5418,
+              "version": 1,
+              "source": "cache-hit",
+              "ok": true
+            }
+          ],
+          "omitted": 0,
+          "recordedKeys": {
+            "hits": 1,
+            "misses": 0,
+            "fillAttempts": 0,
+            "fillAcknowledged": 0,
+            "fillRejected": 0,
+            "savedDatabaseReads": 1,
+            "policyCpu": "Charged only through explicit app demand; this role owns no second CPU"
+          }
+        },
+        {
+          "id": "app-2/cache-policy",
+          "received": 1,
+          "completed": 1,
+          "failed": 0,
+          "live": 0,
+          "databaseFetches": 0,
+          "cacheFailures": 0,
+          "coalescedWaiters": 0,
+          "fillsInProgress": 0,
+          "invalidations": 0,
+          "results": [
+            {
+              "root": "[\"root\",\"recorded\",\"r2\"]",
+              "key": "hot",
+              "at": 5419,
+              "version": 1,
+              "source": "cache-hit",
+              "ok": true
+            }
+          ],
+          "omitted": 0,
+          "recordedKeys": {
+            "hits": 1,
+            "misses": 0,
+            "fillAttempts": 0,
+            "fillAcknowledged": 0,
+            "fillRejected": 0,
+            "savedDatabaseReads": 1,
+            "policyCpu": "Charged only through explicit app demand; this role owns no second CPU"
+          }
+        },
+        {
+          "id": "app-3/cache-policy",
+          "received": 0,
+          "completed": 0,
+          "failed": 0,
+          "live": 0,
+          "databaseFetches": 0,
+          "cacheFailures": 0,
+          "coalescedWaiters": 0,
+          "fillsInProgress": 0,
+          "invalidations": 0,
+          "results": [],
+          "omitted": 0,
+          "recordedKeys": {
+            "hits": 0,
+            "misses": 0,
+            "fillAttempts": 0,
+            "fillAcknowledged": 0,
+            "fillRejected": 0,
+            "savedDatabaseReads": 0,
+            "policyCpu": "Charged only through explicit app demand; this role owns no second CPU"
+          }
+        },
+        {
+          "id": "app-4/cache-policy",
+          "received": 0,
+          "completed": 0,
+          "failed": 0,
+          "live": 0,
+          "databaseFetches": 0,
+          "cacheFailures": 0,
+          "coalescedWaiters": 0,
+          "fillsInProgress": 0,
+          "invalidations": 0,
+          "results": [],
+          "omitted": 0,
+          "recordedKeys": {
+            "hits": 0,
+            "misses": 0,
+            "fillAttempts": 0,
+            "fillAcknowledged": 0,
+            "fillRejected": 0,
+            "savedDatabaseReads": 0,
+            "policyCpu": "Charged only through explicit app demand; this role owns no second CPU"
+          }
+        },
+        {
+          "id": "app-5/cache-policy",
+          "received": 0,
+          "completed": 0,
+          "failed": 0,
+          "live": 0,
+          "databaseFetches": 0,
+          "cacheFailures": 0,
+          "coalescedWaiters": 0,
+          "fillsInProgress": 0,
+          "invalidations": 0,
+          "results": [],
+          "omitted": 0,
+          "recordedKeys": {
+            "hits": 0,
+            "misses": 0,
+            "fillAttempts": 0,
+            "fillAcknowledged": 0,
+            "fillRejected": 0,
+            "savedDatabaseReads": 0,
+            "policyCpu": "Charged only through explicit app demand; this role owns no second CPU"
+          }
+        },
+        {
+          "id": "app-6/cache-policy",
+          "received": 0,
+          "completed": 0,
+          "failed": 0,
+          "live": 0,
+          "databaseFetches": 0,
+          "cacheFailures": 0,
+          "coalescedWaiters": 0,
+          "fillsInProgress": 0,
+          "invalidations": 0,
+          "results": [],
+          "omitted": 0,
+          "recordedKeys": {
+            "hits": 0,
+            "misses": 0,
+            "fillAttempts": 0,
+            "fillAcknowledged": 0,
+            "fillRejected": 0,
+            "savedDatabaseReads": 0,
+            "policyCpu": "Charged only through explicit app demand; this role owns no second CPU"
+          }
+        },
+        {
+          "id": "app-7/cache-policy",
+          "received": 0,
+          "completed": 0,
+          "failed": 0,
+          "live": 0,
+          "databaseFetches": 0,
+          "cacheFailures": 0,
+          "coalescedWaiters": 0,
+          "fillsInProgress": 0,
+          "invalidations": 0,
+          "results": [],
+          "omitted": 0,
+          "recordedKeys": {
+            "hits": 0,
+            "misses": 0,
+            "fillAttempts": 0,
+            "fillAcknowledged": 0,
+            "fillRejected": 0,
+            "savedDatabaseReads": 0,
+            "policyCpu": "Charged only through explicit app demand; this role owns no second CPU"
+          }
+        }
+      ]
+    },
+    {
+      "apps": 8,
+      "warm": true,
+      "coalesce": true,
+      "compiled": "5d3c0c2daf1d373b788501443fd95503bbe25348e66ff3cc0489d13c220330cf",
+      "evidence": "8d769221114f52f08f83fe07bd120d9c3b824001d7817fa8b70b703fbf1ccda2",
+      "counts": {
+        "offered": 3,
+        "admitted": 3,
+        "completed": 3,
+        "rejected": 0,
+        "deadlineExceeded": 0,
+        "abandoned": 0,
+        "remoteOutcomesAfterCallerStop": 0,
+        "cancellationRequested": 0,
+        "cancellationConfirmedAtEntry": 0,
+        "inFlight": 0
+      },
+      "caches": [
+        {
+          "id": "cache",
+          "lookups": 3,
+          "executedLookups": 3,
+          "lookupFailures": 0,
+          "lookupCancelled": 0,
+          "liveLookups": 0,
+          "hits": 3,
+          "misses": 0,
+          "fills": 0,
+          "evictions": 0,
+          "expirations": 0,
+          "invalidations": 0,
+          "staleFillRefused": 0,
+          "allocationRefused": 0,
+          "epoch": 0,
+          "allocatedEntryBytes": 3,
+          "capacityBytes": 1024,
+          "entries": [
+            {
+              "key": "hot",
+              "version": 1,
+              "bytes": 2,
+              "expires": 100000,
+              "sequence": 3,
+              "expired": false
+            }
+          ],
+          "logicallyLiveEntries": 1,
+          "cpu": {
+            "capacity": 1,
+            "runnable": 0,
+            "receivingShare": 0,
+            "contended": false,
+            "paused": false,
+            "throttled": false,
+            "appCoreUs": 3,
+            "competitorCoreUs": 0,
+            "availableCoreUs": 90000,
+            "throttledWallUs": 0,
+            "unsatisfiedParallelismUs": 0,
+            "quotaRemainingCoreUs": null,
+            "allocations": [],
+            "boundaries": 3
+          },
+          "residentProcessBytes": "Unknown; entry budget excludes unmodeled runtime/allocator/native state"
+        }
+      ],
+      "policies": [
+        {
+          "id": "app-0/cache-policy",
+          "received": 1,
+          "completed": 1,
+          "failed": 0,
+          "live": 0,
+          "databaseFetches": 0,
+          "cacheFailures": 0,
+          "coalescedWaiters": 0,
+          "fillsInProgress": 0,
+          "invalidations": 0,
+          "results": [
+            {
+              "root": "[\"root\",\"recorded\",\"r0\"]",
+              "key": "hot",
+              "at": 5417,
+              "version": 1,
+              "source": "cache-hit",
+              "ok": true
+            }
+          ],
+          "omitted": 0,
+          "recordedKeys": {
+            "hits": 1,
+            "misses": 0,
+            "fillAttempts": 0,
+            "fillAcknowledged": 0,
+            "fillRejected": 0,
+            "savedDatabaseReads": 1,
+            "policyCpu": "Charged only through explicit app demand; this role owns no second CPU"
+          }
+        },
+        {
+          "id": "app-1/cache-policy",
+          "received": 1,
+          "completed": 1,
+          "failed": 0,
+          "live": 0,
+          "databaseFetches": 0,
+          "cacheFailures": 0,
+          "coalescedWaiters": 0,
+          "fillsInProgress": 0,
+          "invalidations": 0,
+          "results": [
+            {
+              "root": "[\"root\",\"recorded\",\"r1\"]",
+              "key": "hot",
+              "at": 5418,
+              "version": 1,
+              "source": "cache-hit",
+              "ok": true
+            }
+          ],
+          "omitted": 0,
+          "recordedKeys": {
+            "hits": 1,
+            "misses": 0,
+            "fillAttempts": 0,
+            "fillAcknowledged": 0,
+            "fillRejected": 0,
+            "savedDatabaseReads": 1,
+            "policyCpu": "Charged only through explicit app demand; this role owns no second CPU"
+          }
+        },
+        {
+          "id": "app-2/cache-policy",
+          "received": 1,
+          "completed": 1,
+          "failed": 0,
+          "live": 0,
+          "databaseFetches": 0,
+          "cacheFailures": 0,
+          "coalescedWaiters": 0,
+          "fillsInProgress": 0,
+          "invalidations": 0,
+          "results": [
+            {
+              "root": "[\"root\",\"recorded\",\"r2\"]",
+              "key": "hot",
+              "at": 5419,
+              "version": 1,
+              "source": "cache-hit",
+              "ok": true
+            }
+          ],
+          "omitted": 0,
+          "recordedKeys": {
+            "hits": 1,
+            "misses": 0,
+            "fillAttempts": 0,
+            "fillAcknowledged": 0,
+            "fillRejected": 0,
+            "savedDatabaseReads": 1,
+            "policyCpu": "Charged only through explicit app demand; this role owns no second CPU"
+          }
+        },
+        {
+          "id": "app-3/cache-policy",
+          "received": 0,
+          "completed": 0,
+          "failed": 0,
+          "live": 0,
+          "databaseFetches": 0,
+          "cacheFailures": 0,
+          "coalescedWaiters": 0,
+          "fillsInProgress": 0,
+          "invalidations": 0,
+          "results": [],
+          "omitted": 0,
+          "recordedKeys": {
+            "hits": 0,
+            "misses": 0,
+            "fillAttempts": 0,
+            "fillAcknowledged": 0,
+            "fillRejected": 0,
+            "savedDatabaseReads": 0,
+            "policyCpu": "Charged only through explicit app demand; this role owns no second CPU"
+          }
+        },
+        {
+          "id": "app-4/cache-policy",
+          "received": 0,
+          "completed": 0,
+          "failed": 0,
+          "live": 0,
+          "databaseFetches": 0,
+          "cacheFailures": 0,
+          "coalescedWaiters": 0,
+          "fillsInProgress": 0,
+          "invalidations": 0,
+          "results": [],
+          "omitted": 0,
+          "recordedKeys": {
+            "hits": 0,
+            "misses": 0,
+            "fillAttempts": 0,
+            "fillAcknowledged": 0,
+            "fillRejected": 0,
+            "savedDatabaseReads": 0,
+            "policyCpu": "Charged only through explicit app demand; this role owns no second CPU"
+          }
+        },
+        {
+          "id": "app-5/cache-policy",
+          "received": 0,
+          "completed": 0,
+          "failed": 0,
+          "live": 0,
+          "databaseFetches": 0,
+          "cacheFailures": 0,
+          "coalescedWaiters": 0,
+          "fillsInProgress": 0,
+          "invalidations": 0,
+          "results": [],
+          "omitted": 0,
+          "recordedKeys": {
+            "hits": 0,
+            "misses": 0,
+            "fillAttempts": 0,
+            "fillAcknowledged": 0,
+            "fillRejected": 0,
+            "savedDatabaseReads": 0,
+            "policyCpu": "Charged only through explicit app demand; this role owns no second CPU"
+          }
+        },
+        {
+          "id": "app-6/cache-policy",
+          "received": 0,
+          "completed": 0,
+          "failed": 0,
+          "live": 0,
+          "databaseFetches": 0,
+          "cacheFailures": 0,
+          "coalescedWaiters": 0,
+          "fillsInProgress": 0,
+          "invalidations": 0,
+          "results": [],
+          "omitted": 0,
+          "recordedKeys": {
+            "hits": 0,
+            "misses": 0,
+            "fillAttempts": 0,
+            "fillAcknowledged": 0,
+            "fillRejected": 0,
+            "savedDatabaseReads": 0,
+            "policyCpu": "Charged only through explicit app demand; this role owns no second CPU"
+          }
+        },
+        {
+          "id": "app-7/cache-policy",
+          "received": 0,
+          "completed": 0,
+          "failed": 0,
+          "live": 0,
+          "databaseFetches": 0,
+          "cacheFailures": 0,
+          "coalescedWaiters": 0,
+          "fillsInProgress": 0,
+          "invalidations": 0,
+          "results": [],
+          "omitted": 0,
+          "recordedKeys": {
+            "hits": 0,
+            "misses": 0,
+            "fillAttempts": 0,
+            "fillAcknowledged": 0,
+            "fillRejected": 0,
+            "savedDatabaseReads": 0,
+            "policyCpu": "Charged only through explicit app demand; this role owns no second CPU"
+          }
+        }
+      ]
+    }
+  ]
+}

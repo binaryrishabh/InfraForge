@@ -71,7 +71,20 @@ export interface FirstStackSidecarV2 extends Omit<FirstStackSidecar, "schema" | 
   balancer: FirstStackSidecar["balancer"] & { initial: "eligible" | "ineligible"; healthTimeoutUs: number; healthKeys: string[] };
   workload: { scheduleHash: string; parametersHash: string; resolvedIdentity: string; executedScheduleHash: string } | null;
 }
-export type FirstStackSemantic = FirstStackSidecar | FirstStackSidecarV2;
+// Reviewed optional-cache copy. V2 remains the frozen cache-free composition.
+export interface FirstStackSidecarV3 extends Omit<FirstStackSidecarV2, "schema" | "compiler"> {
+  schema: "infraforge-first-stack-sidecar/3"; compiler: "first-stack-compiler/3";
+  cache: { node: string; semantics: "keyed-cache/1"; capacityBytes: number; entryOverheadBytes: number;
+    ttlUs: number; commandCpuUs: number; policy: "lru" | "no-eviction";
+    initial: Array<{ key: string; version: number; bytes: number }>;
+    coalesce: boolean; onFailure: "fail" | "database"; invalidateWrites: true;
+    // Null retains Unknown overhead; an explicit value adds to app CPU once.
+    policyCpuUs: number | null;
+    roles: Array<{ app: string; policy: string; internal: FirstStackSidecarV2["paths"][number]; database: FirstStackSidecarV2["paths"][number] }>;
+  };
+}
+export type FirstStackExecutable = FirstStackSidecarV2 | FirstStackSidecarV3;
+export type FirstStackSemantic = FirstStackSidecar | FirstStackExecutable;
 export interface RecordedScheduleHeader {
   schema: "infraforge-first-stack-schedule/1"; unit: "us"; durationUs: number;
   origin: "observed-recording" | "authored-schedule"; provenance: string;

@@ -14,6 +14,8 @@ export interface ComputeProfile extends Omit<DemandProfile, "schema" | "io" | "s
 }
 export interface ComputeResource extends Omit<WorkStation, "kind" | "concurrency"> {
   kind: "compute";
+  // Explicit operation routing; omitted retains the historical single dependency.
+  downstreamByOperation?: Record<string, string>;
   workers: Quantity<"count">;
   scheduler: "capped-equal-fluid/1";
   quota?: { budget: Quantity<"cpu-us">; period: Quantity<"us"> };

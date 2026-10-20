@@ -34,6 +34,7 @@ export function validateNetwork(input: NetworkInput) {
     if (r.kind !== "compute" && r.kind !== "database" && r.kind !== "load-balancer") throw new Error("Unsupported network resource");
     if ((!endpoint.alive || input.networkInterventions.some((i) => i.kind === "service-state" && i.target === r.id && i.alive !== endpoint.alive)) && input.faults.some((f) => f.target === r.id)) throw new Error("Endpoint suspension cannot overlap an independent service pause policy");
     for (const target of r.kind === "load-balancer" ? r.backends : r.downstream ? [r.downstream] : []) if (!pairs.has(JSON.stringify([r.id, target]))) throw new Error("Missing dependency transport path");
+    if (r.kind === "compute") for (const target of Object.values(r.downstreamByOperation ?? {})) if (!pairs.has(JSON.stringify([r.id, target]))) throw Error("Missing operation dependency transport path");
   }
   for (const op of input.operations) if (!pairs.has(JSON.stringify(["$caller", op.entry]))) throw new Error("Missing caller transport path");
   for (const p of input.paths) {

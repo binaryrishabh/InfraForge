@@ -1,4 +1,4 @@
-import type { FirstStackSidecarV2, ResolvedSchedule } from "@infraforge/contracts/first-stack";
+import type { FirstStackExecutable, ResolvedSchedule } from "@infraforge/contracts/first-stack";
 import { createStackComposition } from "../model2/composition/run";
 import { manifest } from "../model2/composition/registry";
 import type { CausalObserver } from "../model2/workload/causal";
@@ -10,8 +10,9 @@ import type { FiniteIoProfile } from "../model2/data/io-contract";
 
 // Internal in-process qualification path only. No product dispatcher or HTTP
 // executor uses this runner; public isolation/admission are separate stages.
-export function createFirstStackRuntime(sidecar: FirstStackSidecarV2, schedule: ResolvedSchedule, policy: FirstStackExecutionPolicy, causal?: CausalObserver, storage?: FiniteIoProfile) {
-  const compiled = storage ? compileFirstStackIo(sidecar, schedule, policy, storage) : compileFirstStack(sidecar, schedule, policy);
+export function createFirstStackRuntime(sidecar: FirstStackExecutable, schedule: ResolvedSchedule, policy: FirstStackExecutionPolicy, causal?: CausalObserver, storage?: FiniteIoProfile) {
+  const compiled = storage ? sidecar.schema === "infraforge-first-stack-sidecar/2" ? compileFirstStackIo(sidecar, schedule, policy, storage)
+    : refuse("storage", "Cache plus finite IO requires a separately reviewed composition revision.") : compileFirstStack(sidecar, schedule, policy);
   const journal = diagnosticJournal();
   const observer: CausalObserver = event => { journal.record(event); causal?.(event); };
   const rows = new Map(schedule.rows.map(r => [r.id, r]));
@@ -47,6 +48,7 @@ export function createFirstStackRuntime(sidecar: FirstStackSidecarV2, schedule: 
     return { ...runtime.evidence(), firstStack: { envelope: FIRST_STACK_ENVELOPE.revision, compiler: storage ? "first-stack-io-compiler/1" : sidecar.compiler, composition: compiled.revision,
       workload: schedule.identity, executedSchedule: schedule.executedScheduleHash, profile: schedule.profileHash,
       recordingOrigin: schedule.header.origin, demand: schedule.application,
+      ...(sidecar.schema === "infraforge-first-stack-sidecar/3" ? { cache: { revision: "recorded-cache-policy/1", policyCpuUs: sidecar.cache.policyCpuUs ?? "Unknown", eviction: "exact-LRU is not sampled Valkey LRU", health: "direct DB read bypasses cache" } } : {}),
       timing: "assumption-only", counting: "supported-logical", fullMemory: "Unknown", fullCost: "Unknown", activeEngine: "1" } };
   } };
 }

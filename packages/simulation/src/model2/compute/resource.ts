@@ -30,11 +30,12 @@ export function computeResource(config: ComputeResource, profiles: Map<string, C
     call.waitSince = kernel.now;
     call.cancelWait = kernel.schedule(kernel.now + call.waitRemaining, 2, identity("blocking-wait", config.id, call.work.callId), () => {
       call.waitRemaining = 0;
-      if (config.downstream) {
+      const downstream = config.downstreamByOperation?.[call.work.operation] ?? config.downstream;
+      if (downstream) {
         call.phase = "dependency";
-        const child = { ...call.work, parentCallId: call.work.callId, callId: identity(...JSON.parse(call.work.callId), "dependency", config.downstream) };
-        causal?.({ atUs: kernel.now, kind: "app-dependency", resource: config.id, work: child, detail: { target: config.downstream } });
-        call.child = send(config.downstream, child, (outcome) => finish(call, outcome));
+        const child = { ...call.work, parentCallId: call.work.callId, callId: identity(...JSON.parse(call.work.callId), "dependency", downstream) };
+        causal?.({ atUs: kernel.now, kind: "app-dependency", resource: config.id, work: child, detail: { target: downstream } });
+        call.child = send(downstream, child, (outcome) => finish(call, outcome));
       } else finish(call, "completed");
     });
   };

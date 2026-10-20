@@ -31,7 +31,7 @@ export function prepareFirstStackExecution(owner: string, layout: unknown, candi
   catch { refuse("input", "Reduce the complete semantic input below 16 MiB of finite JSON data."); }
   const review = reviewSidecar(layout, candidate);
   if (!review.ok) throw new FirstStackCompileRefusal(review.diagnostics);
-  if (review.sidecar.schema !== "infraforge-first-stack-sidecar/2") refuse("schema", "V1 is review-only; create a reviewed V2 copy with explicit directed links, pool policy and readiness.");
+  if (review.sidecar.schema === "infraforge-first-stack-sidecar/1") refuse("schema", "V1 is review-only; create a reviewed V2 copy with explicit directed links, pool policy and readiness.");
   const parsed = resolvedSchema.safeParse(recording), parsedPolicy = policySchema.safeParse(policy);
   for (const result of [parsed, parsedPolicy]) if (!result.success) throw new FirstStackCompileRefusal(result.error.issues.map(e => ({ code: "FIRST_STACK_EXECUTION", path: e.path.join("."), message: e.message })));
   if (!parsed.success || !parsedPolicy.success) return refuse("input", "Supply a valid resolved schedule and execution policy.");
@@ -39,7 +39,7 @@ export function prepareFirstStackExecution(owner: string, layout: unknown, candi
   const { identity, ...body } = schedule;
   if (hash(body) !== identity || hash({ header: schedule.header, rows: schedule.rows }) !== schedule.executedScheduleHash) refuse("workload.identity", "Resolved workload content changed; resolve and review it again.");
   const profile = hash({ profile: sidecar.profile, compiler: sidecar.compiler, application: sidecar.application,
-    operations: [...sidecar.operations].sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0), database: sidecar.database });
+    operations: [...sidecar.operations].sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0), database: sidecar.database, ...(sidecar.schema === "infraforge-first-stack-sidecar/3" ? { cache: sidecar.cache } : {}) });
   if (profile !== schedule.profileHash || canonical(schedule.application) !== canonical(sidecar.application)) refuse("workload.profileHash", "Demand profile changed; resolve the recording against this exact reviewed revision.");
   if (!sidecar.workload || sidecar.workload.scheduleHash !== schedule.scheduleHash || sidecar.workload.parametersHash !== schedule.parametersHash) refuse("workload", "Pin both resolved schedule and parameter hashes in the reviewed V2 sidecar before compilation.");
   if (sidecar.workload.resolvedIdentity !== schedule.identity || sidecar.workload.executedScheduleHash !== schedule.executedScheduleHash) refuse("workload.resolvedIdentity", "Executed content does not match the immutable reviewed workload; resolve and review an explicit sidecar copy.");

@@ -1,5 +1,5 @@
 import { utf8Bytes } from "../model2/time";
-import type { FirstStackDiagnostic, FirstStackSidecarV2, ResolvedSchedule } from "@infraforge/contracts/first-stack";
+import type { FirstStackDiagnostic, FirstStackExecutable, ResolvedSchedule } from "@infraforge/contracts/first-stack";
 // Refusals live below admission so the compiler has no reverse dependency.
 
 const MiB = 1024 * 1024;
@@ -57,15 +57,16 @@ export function boundedJson(value: unknown, limit: number): string {
 }
 export const jsonBytes = (value: unknown, limit: number) => utf8Bytes(boundedJson(value, limit));
 
-export function firstStackPreflight(sidecar: FirstStackSidecarV2, schedule: ResolvedSchedule, policy: { horizonUs: number; maxEvents: number }) {
+export function firstStackPreflight(sidecar: FirstStackExecutable, schedule: ResolvedSchedule, policy: { horizonUs: number; maxEvents: number }) {
   const e = FIRST_STACK_ENVELOPE;
   jsonBytes({ sidecar, schedule, policy }, e.semanticBytes);
   if (sidecar.operations.length > e.operations || sidecar.database.keys.length > e.keys || schedule.rows.length > e.roots) refuse("envelope", "Operation, key or offered-root envelope exceeded.");
-  const dictionary = [...sidecar.database.keys, ...sidecar.nodes.map(n => n.id), ...sidecar.paths.map(p => p.id), ...sidecar.operations.map(o => o.id), ...schedule.rows.map(r => r.id)];
+  const internal = sidecar.schema === "infraforge-first-stack-sidecar/3" ? sidecar.cache.roles.flatMap(r => [r.internal, r.database]) : [];
+  const dictionary = [...sidecar.database.keys, ...sidecar.nodes.map(n => n.id), ...sidecar.paths.map(p => p.id), ...sidecar.operations.map(o => o.id), ...schedule.rows.map(r => r.id), ...internal.flatMap(p => [p.id, p.source, p.target])];
   const dictionaryBytes = dictionary.reduce((sum, key) => sum + utf8Bytes(key), 0);
   if (dictionaryBytes > e.dictionaryBytes) refuse("envelope.dictionary", "Cumulative dictionary byte envelope exceeded.");
   const counts = [...sidecar.nodes.flatMap(n => [n.workers, n.queue]), sidecar.database.maxSessions, sidecar.database.activeTransactions, sidecar.database.pendingQueries,
-    sidecar.balancer.outstanding, sidecar.balancer.pending, sidecar.caller.connections, sidecar.caller.pending, ...sidecar.paths.flatMap(p => [p.connections, p.pending])];
+    sidecar.balancer.outstanding, sidecar.balancer.pending, sidecar.caller.connections, sidecar.caller.pending, ...[...sidecar.paths, ...internal].flatMap(p => [p.connections, p.pending])];
   if (counts.some(n => !Number.isSafeInteger(n) || n < 0 || n > e.queueEntries)) refuse("envelope.queues", "Each queue, worker/session or pool count must fit the finite live-state envelope.");
   const apps = sidecar.nodes.filter(n => n.owner === "compute").length;
   const probes = apps * (Math.floor(policy.horizonUs / sidecar.balancer.intervalUs) + 1);

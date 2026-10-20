@@ -20,6 +20,7 @@ export interface CacheConfig {
   ttl: Quantity<"us">; initial: Row[]; commandCpu: Quantity<"cpu-us">;
 }
 export interface AsideConfig {
+  recordedKeysOnly?: true;
   id: string; kind: "cache-aside"; execution: ComputeResource; cache: string; database: string;
   keys: string[]; access: "cycle" | "keyed-uniform"; coalesce: boolean; onCacheFailure: "fail" | "database";
   invalidateWrites: boolean; operations: Record<string, "read" | "write">;

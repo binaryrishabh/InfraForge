@@ -123,7 +123,7 @@ export async function resolveWorkload(chunks: AsyncIterable<Uint8Array>, options
     normalizedContentHash: normalizedContent.digest("hex"),
     executedScheduleHash: hash({ header: { ...header, durationUs: scale(header.durationUs) }, rows: resolved }),
     profileHash: hash({ profile: options.sidecar.profile, compiler: options.sidecar.compiler, application: options.sidecar.application,
-      operations: [...options.sidecar.operations].sort((a, b) => lexical(a.id, b.id)), database: options.sidecar.database }),
+      operations: [...options.sidecar.operations].sort((a, b) => lexical(a.id, b.id)), database: options.sidecar.database, ...(options.sidecar.schema === "infraforge-first-stack-sidecar/3" ? { cache: options.sidecar.cache } : {}) }),
     unknown: ["Physical timing calibration", ...(rows.some(r => r.sentAtUs === undefined) ? ["Missing observed send times"] : []),
       ...(rows.some(r => r.generatorLost === undefined) ? ["Missing generator loss observations"] : [])] };
   capability(options.owner, { capability: "load.recorded.accept", bytes, rows: rows.length, durationSeconds: body.header.durationUs / 1_000_000,
