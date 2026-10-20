@@ -1,9 +1,9 @@
+import { writeTransitionStore } from "./transition-store";
 import { boundsHostPaths, boundsPostgresPaths, verifyBoundsPostgresReview } from "./stage2-bounds-host";
 import { gitTree } from "./execution-identity";
 import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { gzipSync, gunzipSync } from "node:zlib";
 import { diskTree, executionDescriptor, repositoryRoot } from "../apps/backend/executionIdentity/descriptor";
 import { digest, lf, sha256 } from "../apps/backend/executionIdentity/hash";
 import { loadTransitions } from "../apps/backend/executionIdentity/transitions";
@@ -27,7 +27,7 @@ let gitOriginal: Map<string, string> | undefined;
 const original = (path: string) => {
   // The reviewed baseline is retained after the first transition, so this also
   // works in a final-HEAD-only Linux checkout without the old Git objects.
-  const archive = retainedOriginal ??= JSON.parse(gunzipSync(readFileSync(resolve(root, "scripts/fixtures/execution-identity-history.json.gz"))).toString());
+  const archive = retainedOriginal ??= loadTransitions(root).history();
   const pin = archive.trees[baseline.commit]?.[path];
   if (pin) return archive.blobs[pin]!;
   if (!gitOriginal) {
@@ -95,10 +95,8 @@ export function buildStage2Transitions() {
   if (digest(compositionProofs()) !== digest(baseline.compositions)) throw Error("Historical composition evidence changed");
   const current = executionDescriptor(), target = digest(current), allowed = new Set([...added, ...changed, ...generated]);
   for (const [path, hash] of current.files) if (new Map(baseline.descriptor.files).get(path) !== hash && !allowed.has(path!)) throw Error(`Unreviewed execution addition: ${path}`);
-  const { table, pin } = loadTransitions(root);
-  const archivePath = resolve(root, "scripts/fixtures/execution-identity-history.json.gz"), archive = readFileSync(archivePath);
-  if (sha256(archive.toString("base64")) !== pin.history) throw Error("History archive changed");
-  const history = JSON.parse(gunzipSync(archive).toString()) as { blobs: Record<string, string>; trees: Record<string, Record<string, string>> };
+  const store = loadTransitions(root), { table } = store;
+  const history = store.history();
   if (!history.trees[baseline.commit]) {
     const paths = [...new Set<string>([...baseline.descriptor.files.map(([p]: [string, string]) => p), "package.json", "bun.lock", "bunfig.toml", ...["apps/backend", "apps/web", "packages/domain", "packages/catalog", "packages/contracts", "packages/simulation"].map(p => p + "/package.json")])];
     history.trees[baseline.commit] = Object.fromEntries(paths.map(path => {
@@ -177,8 +175,6 @@ export function buildStage2Transitions() {
   table.descriptors[target] = current;
   for (const row of table.entries) row.target = target;
   for (const key of Object.keys(table.descriptors)) if (key !== target && !table.entries.some(row => row.descriptor === key)) delete table.descriptors[key];
-  const text = JSON.stringify(table, null, 2) + "\n", output = gzipSync(JSON.stringify(history), { level: 9 }); output[9] = 255;
-  writeFileSync(resolve(root, folder + "executionTransitions.json"), text); writeFileSync(archivePath, output);
-  writeFileSync(resolve(root, folder + "transitionPin.json"), JSON.stringify({ digest: digest(table), bytes: sha256(text), history: sha256(output.toString("base64")) }, null, 2) + "\n");
+  writeTransitionStore(root, table, history);
   console.info(JSON.stringify({ entries: table.entries.length, current: target, preservedCompositions: 8 }));
 }

@@ -1,6 +1,7 @@
+import { writeTransitionStore } from "./transition-store";
+import { loadTransitions } from "../apps/backend/executionIdentity/transitions";
 import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { gzipSync, gunzipSync } from "node:zlib";
 import { execFileSync } from "node:child_process";
 import { diskTree, executionDescriptor, repositoryRoot } from "../apps/backend/executionIdentity/descriptor";
 import { digest, sourceHash } from "../apps/backend/executionIdentity/hash";
@@ -86,9 +87,8 @@ export function refreshHardeningTransitions() {
   const { before, current: tree } = scope();
   const base = JSON.parse(before.read(folder + "executionTransitions.json")) as TransitionTable;
   const source = base.entries[0]!.target, stored = base.descriptors[source]!;
-  const table = JSON.parse(readFileSync(resolve(repositoryRoot, folder + "executionTransitions.json"), "utf8")) as TransitionTable;
-  const archivePath = resolve(repositoryRoot, "scripts/fixtures/execution-identity-history.json.gz");
-  const history = JSON.parse(gunzipSync(readFileSync(archivePath)).toString()) as { blobs: Record<string, string>; trees: Record<string, Record<string, string>> };
+  const store = loadTransitions(repositoryRoot), { table } = store;
+  const history = store.history();
   const files = stored.files as Array<[string, string]>;
   const paths = [...new Set([...before.paths, ...files.map(([path]) => path)])];
   const read = (path: string) => before.paths.includes(path) ? before.read(path) : tree.read(path);
@@ -108,10 +108,6 @@ export function refreshHardeningTransitions() {
   table.descriptors[target] = current;
   for (const row of table.entries) row.target = target;
   for (const key of Object.keys(table.descriptors)) if (key !== target && !table.entries.some(row => row.descriptor === key)) delete table.descriptors[key];
-  const text = JSON.stringify(table, null, 2) + "\n", archive = gzipSync(JSON.stringify(history), { level: 9 });
-  archive[9] = 255;
-  writeFileSync(resolve(repositoryRoot, folder + "executionTransitions.json"), text);
-  writeFileSync(archivePath, archive);
-  writeFileSync(resolve(repositoryRoot, folder + "transitionPin.json"), JSON.stringify({ digest: digest(table), bytes: sourceHash(text), history: sourceHash(archive.toString("base64")) }, null, 2) + "\n");
+  writeTransitionStore(repositoryRoot, table, history);
   console.info(JSON.stringify({ entries: table.entries.length, previous: source, current: target }));
 }

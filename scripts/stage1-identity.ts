@@ -1,7 +1,8 @@
+import { writeTransitionStore } from "./transition-store";
 import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { gzipSync, gunzipSync } from "node:zlib";
+import { gunzipSync } from "node:zlib";
 import { diskTree, executionDescriptor, repositoryRoot } from "../apps/backend/executionIdentity/descriptor";
 import type { SourceTree } from "../apps/backend/executionIdentity/descriptor";
 import { digest, lf, sha256 } from "../apps/backend/executionIdentity/hash";
@@ -67,11 +68,12 @@ export function buildCompositionTransitions() {
     // archive. Regeneration must also work in clones lacking old Git objects.
     const useFrozen = commit === composition && loadTransitions(repositoryRoot).table.descriptors[acceptedComposition] !== undefined;
     const sourceTable: TransitionTable = useFrozen ? loadTransitions(repositoryRoot).table : json(commit, folder + "executionTransitions.json");
-    const pin = useFrozen ? loadTransitions(repositoryRoot).pin : json(commit, folder + "transitionPin.json");
-    const archive = useFrozen ? readFileSync(resolve(repositoryRoot, archivePath)) : gitBytes(commit, archivePath);
-    const text = useFrozen ? lf(readFileSync(resolve(repositoryRoot, folder + "executionTransitions.json"), "utf8")) : lf(gitBytes(commit, folder + "executionTransitions.json").toString());
-    if (digest(sourceTable) !== pin.digest || sha256(text) !== pin.bytes || sha256(archive.toString("base64")) !== pin.history) throw Error(`Invalid accepted transition pins: ${commit}`);
-    const frozen: History = JSON.parse(gunzipSync(archive).toString());
+    const frozen: History = useFrozen ? loadTransitions(repositoryRoot).history() : (() => {
+      const pin = json(commit, folder + "transitionPin.json"), archive = gitBytes(commit, archivePath);
+      const text = lf(gitBytes(commit, folder + "executionTransitions.json").toString());
+      if (digest(sourceTable) !== pin.digest || sha256(text) !== pin.bytes || sha256(archive.toString("base64")) !== pin.history) throw Error(`Invalid accepted transition pins: ${commit}`);
+      return JSON.parse(gunzipSync(archive).toString());
+    })();
     for (const [hash, text] of Object.entries(frozen.blobs)) {
       if (sha256(text) !== hash || history.blobs[hash] !== undefined && history.blobs[hash] !== text) throw Error("Historical blob conflict");
       history.blobs[hash] = text;
@@ -95,12 +97,6 @@ export function buildCompositionTransitions() {
   table.descriptors[target] = current;
   for (const row of table.entries) row.target = target;
   for (const key of Object.keys(table.descriptors)) if (key !== target && !table.entries.some(row => row.descriptor === key)) delete table.descriptors[key];
-  const text = JSON.stringify(table, null, 2) + "\n", archive = gzipSync(JSON.stringify(history), { level: 9 });
-  // RFC 1952 OS=255 (unknown): identical history must have identical pins on
-  // Windows and Linux. The compressor otherwise emits platform-specific bytes.
-  archive[9] = 255;
-  writeFileSync(resolve(repositoryRoot, folder + "executionTransitions.json"), text);
-  writeFileSync(resolve(repositoryRoot, archivePath), archive);
-  writeFileSync(resolve(repositoryRoot, folder + "transitionPin.json"), JSON.stringify({ digest: digest(table), bytes: sha256(text), history: sha256(archive.toString("base64")) }, null, 2) + "\n");
+  writeTransitionStore(repositoryRoot, table, history);
   console.info(JSON.stringify({ entries: table.entries.length, current: target, pinnedCompositions: expected.length }));
 }

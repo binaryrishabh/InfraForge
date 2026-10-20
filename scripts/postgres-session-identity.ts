@@ -1,7 +1,7 @@
+import { writeTransitionStore } from "./transition-store";
 import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { gzipSync, gunzipSync } from "node:zlib";
 import { diskTree, executionDescriptor, repositoryRoot } from "../apps/backend/executionIdentity/descriptor";
 import { digest, lf, sha256 } from "../apps/backend/executionIdentity/hash";
 import { loadTransitions, type TransitionTable } from "../apps/backend/executionIdentity/transitions";
@@ -57,10 +57,8 @@ export function refreshPostgresTransitions() {
   const { tree, source, prior } = scope(), current = executionDescriptor(), target = digest(current);
   const allowed = new Set([...pgSources, ...generated]), previous = new Map(prior.files as [string, string][]);
   for (const [path, hash] of current.files as [string, string][]) if (previous.get(path) !== hash && !allowed.has(path)) throw Error(`Unreviewed PG execution addition: ${path}`);
-  const { table, pin } = loadTransitions(repositoryRoot), archivePath = "scripts/fixtures/execution-identity-history.json.gz";
-  const bytes = readFileSync(resolve(repositoryRoot, archivePath));
-  if (sha256(bytes.toString("base64")) !== pin.history) throw Error("PG history pin drift");
-  const history = JSON.parse(gunzipSync(bytes).toString()) as { blobs: Record<string, string>; trees: Record<string, Record<string, string>> };
+  const store = loadTransitions(repositoryRoot), { table } = store;
+  const history = store.history();
   if (!history.trees[baseline]) {
     const old = gitTree(baseline), paths = [...new Set([...(prior.files as [string, string][]).map(([p]) => p), "package.json", "bun.lock", "bunfig.toml", ...["apps/backend", "apps/web", "packages/catalog", "packages/contracts", "packages/domain", "packages/simulation"].map(p => p + "/package.json")])];
     const texts = new Map(paths.map(path => [path, old.paths.includes(path) ? old.read(path) : tree.read(path)]));
@@ -72,8 +70,6 @@ export function refreshPostgresTransitions() {
   if (!table.entries.some(row => row.source === source)) table.entries.push({ commit: baseline, source, descriptor: source, target, kind: "descriptor", algorithm: "analysis-boundary/1", review: "Stage 2 PostgreSQL sessions: preserve generic m2e/1 and eight historical replays; separately revisioned PG connection/deadline/commit profile and local G5; no Model 2 activation" });
   table.descriptors[target] = current; for (const row of table.entries) row.target = target;
   for (const key of Object.keys(table.descriptors)) if (key !== target && !table.entries.some(row => row.descriptor === key)) delete table.descriptors[key];
-  const text = JSON.stringify(table, null, 2) + "\n", archive = gzipSync(JSON.stringify(history), { level: 9 }); archive[9] = 255;
-  writeFileSync(resolve(repositoryRoot, folder + "executionTransitions.json"), text); writeFileSync(resolve(repositoryRoot, archivePath), archive);
-  put(folder + "transitionPin.json", { digest: digest(table), bytes: sha256(text), history: sha256(archive.toString("base64")) });
+  writeTransitionStore(repositoryRoot, table, history);
   console.log(JSON.stringify({ entries: table.entries.length, current: target, historicalCompositions: 8 }));
 }

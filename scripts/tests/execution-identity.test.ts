@@ -4,7 +4,7 @@ import ignore from "ignore";
 import { diskTree, executionDescriptor, repositoryRoot } from "../../apps/backend/executionIdentity/descriptor";
 import { digest } from "../../apps/backend/executionIdentity/hash";
 import { parseLock } from "../../apps/backend/executionIdentity/dependencies";
-import { validateTransitions } from "../../apps/backend/executionIdentity/transitions";
+import { loadTransitions, validateTransitions } from "../../apps/backend/executionIdentity/transitions";
 import { compatibleReviewedSource } from "../../apps/backend/internalModel2/legacyCompatibility";
 import { executionSource } from "../../apps/backend/internalModel2/identity";
 import { checkTransitions } from "../execution-identity";
@@ -73,9 +73,8 @@ test("history reconstructs without Git and only reviewed digests resolve", () =>
   });
   expect(isolated.exitCode).toBe(0);
   expect(JSON.parse(isolated.stdout.toString()).current).toBe(executionSource);
-  const table = JSON.parse(readFileSync("apps/backend/executionIdentity/executionTransitions.json", "utf8"));
-  const pin = JSON.parse(readFileSync("apps/backend/executionIdentity/transitionPin.json", "utf8"));
-  expect(table.entries.length).toBe(42);
+  const { table, pin } = loadTransitions(repositoryRoot);
+  expect(table.entries.length).toBe(43);
   for (const commit of ["6501ad38e0b42a20a67e3122ea64ce4c886f7d63", "aa1e61271dd12c1d7bb8d18fee572e8ac1a9c500"]) expect(table.entries.some((row: { commit: string }) => row.commit === commit)).toBe(true);
   expect(table.entries.some((row: { commit: string }) => row.commit === "8141673ffcb48d0ac6d9855ea9fe46a563095cc4")).toBe(true);
   expect(table.entries.find((row: { source: string }) => row.source === "02c54db8f4bb73b5e340ae79dbfd6ece39c52360ab776ac285988e33e92e8240"))
@@ -93,12 +92,12 @@ test("history reconstructs without Git and only reviewed digests resolve", () =>
   for (const row of table.entries) expect(compatibleReviewedSource(row.source, executionSource)).toBe(true);
   expect(compatibleReviewedSource("dcf73dace76edc0afead6158b34785f511ba6b21fd34ce5490d11fe78e20f4ad", executionSource)).toBe(true);
   expect(compatibleReviewedSource("f".repeat(64), executionSource)).toBe(false);
-  expect(compatibleReviewedSource(table.entries[0].source, "0".repeat(64))).toBe(false);
+  expect(compatibleReviewedSource(table.entries[0]!.source, "0".repeat(64))).toBe(false);
   for (const mutate of [
-    (copy: typeof table) => { copy.entries[0].source = "0".repeat(64); },
-    (copy: typeof table) => { copy.entries[0].target = "0".repeat(64); },
+    (copy: typeof table) => { copy.entries[0]!.source = "0".repeat(64); },
+    (copy: typeof table) => { copy.entries[0]!.target = "0".repeat(64); },
     (copy: typeof table) => { copy.entries.pop(); },
-    (copy: typeof table) => { copy.descriptors[copy.entries[0].descriptor].runtime = "bun-unknown"; },
+    (copy: typeof table) => { copy.descriptors[copy.entries[0]!.descriptor]!.runtime = "bun-unknown"; },
   ]) {
     const copy = structuredClone(table); mutate(copy);
     expect(() => validateTransitions(copy, pin.digest)).toThrow();

@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { expect, test } from "bun:test";
 import { diskTree, executionDescriptor, repositoryRoot } from "../../apps/backend/executionIdentity/descriptor";
 import { digest } from "../../apps/backend/executionIdentity/hash";
@@ -118,7 +119,7 @@ test("installation hooks are refused for the root and every installed workspace"
 test("runtime and tooling share LF-normalized transition byte validation", () => {
   const table = tree.read("apps/backend/executionIdentity/executionTransitions.json");
   const pin = tree.read("apps/backend/executionIdentity/transitionPin.json");
-  const read = (text: string) => (path: string) => path.endsWith("transitionPin.json") ? pin : text;
+  const read = (text: string) => (path: string) => path.endsWith("transitionPin.json") ? pin : path.endsWith("executionNodes.json.gz") ? readFileSync("apps/backend/executionIdentity/executionNodes.json.gz") : text;
   expect(loadTransitions("fixture", read(table.replaceAll("\n", "\r\n"))).mappings.size).toBeGreaterThan(0);
   for (const mutated of [table + "\n", table.trim(), JSON.stringify(JSON.parse(table))]) {
     expect(() => loadTransitions("fixture", read(mutated))).toThrow("Execution transition bytes changed");

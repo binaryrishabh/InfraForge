@@ -1,5 +1,9 @@
 # Model 2 execution identity
 
+For subsequent engine changes, use the single command in
+[Refresh after an engine change](execution-refresh.md). It replaces the historical
+manual refresh recipes below; their original scope descriptions remain for audit.
+
 New processes use the SHA-256 digest of canonical JSON with domain
 `execution-source/2`. The envelope still stores a 64-character hexadecimal source.
 Model 1 and persisted inputs, evidence, producer identities and accepted proofs are

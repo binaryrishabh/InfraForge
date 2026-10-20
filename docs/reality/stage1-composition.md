@@ -64,31 +64,8 @@ write unless all eight pinned replays match. Refresh connected lineage with
 current pins. Historical foundation/provider/metering proofs reconstruct through
 that retained source and their existing frozen projections.
 
-Execution identity refresh order, using `bun --no-env-file` for every script:
-
-1. Generate Prisma with the backend's `db:generate` script.
-2. Refresh the exact module reviews with `scripts/stage1-lineage.ts --review-modules`.
-3. Run `scripts/execution-identity.ts --build-analysis`.
-4. Run `scripts/stage1-lineage.ts --review-analysis-pin`, followed by
-   `scripts/execution-capabilities.ts --review-imports`.
-5. Run `scripts/execution-resolution.ts --build-contract`. If selected source
-   bytes changed, repeat steps 3–4 to bind the new selection contract. This is
-   needed because both the module reviews and selection contract bind the analysis.
-6. Refresh `scripts/connected-lineage.ts`, then
-   `scripts/lesson-endpoint-lineage.ts --refresh-current` and
-   `scripts/m2m-lineage.ts --refresh-current`.
-7. Run `scripts/execution-identity.ts --build-composition-transitions`.
-8. Regenerate `scripts/reality/launch-contract.ts --write`,
-   `scripts/reality/run-record-schema.ts --write`,
-   `scripts/reality/shipping-inventory.ts --write`, and
-   `scripts/reality/inventory.ts --write`.
-9. Run `scripts/execution-identity.ts --check` and `scripts/execution-resolution.ts`.
-
-The transition builder is pinned to accepted main `31c4a92` and composition
-`c0df52c`. It preserves both histories and their compressed source snapshots,
-checks the permitted source scope, all eight replay hashes and all 88 host/peer
-source hashes, and records an explicit reviewed target. The frozen archive also
-supports regeneration in clones without the old composition Git objects. A new
-execution change requires its own scope review and transition; this command is
-not a general approval for subsequent changes. Different execution descriptors
-remain distinct, and historical results are not silently relabelled.
+For subsequent engine changes use the single command in
+[Refresh after an engine change](execution-refresh.md). The original composition
+transition remains scoped to accepted main `31c4a92` and composition `c0df52c`;
+it is not a general transition approval. Both histories now live in the shared
+Merkle store, with their original descriptor digests and source snapshots.

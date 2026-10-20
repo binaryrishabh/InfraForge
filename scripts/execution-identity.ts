@@ -7,12 +7,12 @@ import { historicalAnalysisDescriptor } from "./historical-analysis-descriptor";
 import { execFileSync, spawnSync } from "node:child_process";
 import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { gzipSync, gunzipSync } from "node:zlib";
 import { diskTree, executionDescriptor, repositoryRoot } from "../apps/backend/executionIdentity/descriptor";
 import type { SourceTree } from "../apps/backend/executionIdentity/descriptor";
 import { digest, lf, sha256 } from "../apps/backend/executionIdentity/hash";
 import { wholeLockIdentity } from "../apps/backend/executionIdentity/legacy";
 import { loadTransitions } from "../apps/backend/executionIdentity/transitions";
+import { writeTransitionStore } from "./transition-store";
 import { historicalLaunchDescriptor } from "./historical-launch-descriptor";
 import { historicalImportDescriptor } from "./historical-import-descriptor";
 import { historicalHostDescriptor } from "./historical-host-descriptor";
@@ -27,11 +27,10 @@ export const firstCommit = "72bb3a2";
 export const lastCommit = "1d4b3211f6169d1dda2b9fcab33c7b02b6705c9b";
 export const priorV2Commit = "2e581a4";
 const folder = resolve(repositoryRoot, "apps/backend/executionIdentity");
-const fixture = resolve(repositoryRoot, "scripts/fixtures/execution-identity-history.json.gz");
 type History = { blobs: Record<string, string>; trees: Record<string, Record<string, string>> };
 let frozenHistory: History | undefined;
 export function frozenHistoryText(commit: string, path: string) {
-  const history = frozenHistory ??= JSON.parse(gunzipSync(readFileSync(fixture)).toString()) as History;
+  const history = frozenHistory ??= loadTransitions(repositoryRoot).history();
   const text = history.blobs[history.trees[commit]?.[path] ?? ""];
   if (text === undefined) throw Error(`Missing frozen source: ${commit}:${path}`);
   return text;
@@ -71,7 +70,7 @@ export function gitTree(commit: string): SourceTree {
 
 // Explicit boundary review. Preserve every recorded descriptor and snapshot.
 function buildTransitions() {
-  const { table, pin } = loadTransitions(repositoryRoot);
+  const { table, history: readHistory } = loadTransitions(repositoryRoot);
   const commit = git(["rev-parse", "2da5b74"]).trim(), baseline = gitTree(commit);
   const prior = verifiedHistoricalDescriptor(baseline, "bun-1.3.14"), source = digest(prior);
   const current = executionDescriptor(), target = digest(current);
@@ -98,9 +97,7 @@ function buildTransitions() {
     }
     if (!baseline.paths.includes(path) || sha256(baseline.read(path)) !== hash) throw Error(`Not a boundary-only transition: ${path}`);
   }
-  const archive = readFileSync(fixture);
-  if (sha256(archive.toString("base64")) !== pin.history) throw Error("Historical snapshots changed");
-  const history = JSON.parse(gunzipSync(archive).toString()) as History;
+  const history = readHistory();
   const paths = [...new Set([...prior.files.map(([path]) => path!), "package.json", "bun.lock", "bunfig.toml", ...["apps/backend", "apps/web", "packages/catalog", "packages/contracts", "packages/domain", "packages/simulation"].map(path => `${path}/package.json`)])];
   history.trees[commit] = Object.fromEntries(paths.map(path => { const text = baseline.read(path), hash = sha256(text); history.blobs[hash] = text; return [path, hash]; }));
   const committedTable = JSON.parse(git(["show", "HEAD:apps/backend/executionIdentity/executionTransitions.json"])) as TransitionTable;
@@ -139,17 +136,13 @@ function buildTransitions() {
   }
   if (!existing) table.entries.push({ commit, source, descriptor: source, target, kind: "descriptor", review: "Preserved verified v2 descriptor; boundary-only changes reviewed against committed host/schema/lock; dotenv file discovery removed, supplied environment retained" });
   for (const key of Object.keys(table.descriptors)) if (key !== target && !table.entries.some(row => row.descriptor === key)) delete table.descriptors[key];
-  const text = JSON.stringify(table, null, 2) + "\n", updatedArchive = gzipSync(JSON.stringify(history), { level: 9 });
-  writeFileSync(resolve(folder, "executionTransitions.json"), text);
-  writeFileSync(fixture, updatedArchive);
-  writeFileSync(resolve(folder, "transitionPin.json"), JSON.stringify({ digest: digest(table), bytes: sha256(text), history: sha256(updatedArchive.toString("base64")) }, null, 2) + "\n");
+  writeTransitionStore(repositoryRoot, table, history);
   console.info(JSON.stringify({ entries: table.entries.length, previous: source, current: target }));
 }
 
-export function checkTransitions(root = repositoryRoot, read?: (path: string) => string) {
-  const { table, pin, mappings: mapping } = loadTransitions(root, read), archive = readFileSync(resolve(root, "scripts/fixtures/execution-identity-history.json.gz"));
-  if (sha256(archive.toString("base64")) !== pin.history) throw Error("Historical execution snapshots changed");
-  const history = JSON.parse(gunzipSync(archive).toString()) as History;
+export function checkTransitions(root = repositoryRoot, read?: (path: string) => string | Buffer) {
+  const { table, mappings: mapping, history: readHistory } = loadTransitions(root, read);
+  const history = readHistory();
   if (digest(Object.keys(history.trees).sort()) !== digest(table.entries.map(row => row.commit).sort())) throw Error("Historical transition coverage changed");
   for (const [hash, text] of Object.entries(history.blobs)) if (sha256(text) !== hash) throw Error("Historical execution text changed");
   for (const row of table.entries) {

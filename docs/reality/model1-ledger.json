@@ -327,7 +327,7 @@
     },
     {
       "file": "apps/backend/executionIdentity/launch.ts",
-      "sha256": "fc45ba776364ba64b5edcb5ee3e5a87a7dff35894d662af29002455e07c828bf",
+      "sha256": "e45321ed112686f52f1e4dbde3444399bcf521940ec5e956c06e6a8446dc1ca3",
       "numericSites": 3
     },
     {
@@ -346,6 +346,11 @@
       "numericSites": 14
     },
     {
+      "file": "apps/backend/executionIdentity/merkle.ts",
+      "sha256": "ea656685aaf04c4a9b1df67fd6f74acc8f48a356b7c23d7713f2a830106bd615",
+      "numericSites": 57
+    },
+    {
       "file": "apps/backend/executionIdentity/resolution.ts",
       "sha256": "b1d87373c2d9a2420d376462ac056e2359dcad065803c6c1480769712270be7c",
       "numericSites": 0
@@ -362,8 +367,8 @@
     },
     {
       "file": "apps/backend/executionIdentity/transitions.ts",
-      "sha256": "4e923c61939a89a6fd2af65805a5186ff564cffc589e12c6bdda606661c6633e",
-      "numericSites": 0
+      "sha256": "a5ced2f8cc2e994beda40f99ddbfc7aa60d85acb6c814ed61b9a8f7c9488bae0",
+      "numericSites": 4
     },
     {
       "file": "apps/backend/firstStack/authoring.ts",
@@ -23820,6 +23825,2058 @@
       }
     },
     {
+      "id": "m1.apps.backend.executionIdentity.merkle.1",
+      "concept": "merkle.ts · literal 1",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.executionIdentity.merkle.1"
+        ]
+      },
+      "formula": "return (this.value(value) as [\"ref\", string])[1];",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/merkle.ts#L26",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/executionIdentity/merkle.ts",
+        "line": 26,
+        "column": 73
+      }
+    },
+    {
+      "id": "m1.apps.backend.executionIdentity.merkle.2",
+      "concept": "start · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.executionIdentity.merkle.2"
+        ]
+      },
+      "formula": "let start = 0, rolling = 0;",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/merkle.ts#L29",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/executionIdentity/merkle.ts",
+        "line": 29,
+        "column": 17
+      }
+    },
+    {
+      "id": "m1.apps.backend.executionIdentity.merkle.3",
+      "concept": "rolling · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.executionIdentity.merkle.3"
+        ]
+      },
+      "formula": "let start = 0, rolling = 0;",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/merkle.ts#L29",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/executionIdentity/merkle.ts",
+        "line": 29,
+        "column": 30
+      }
+    },
+    {
+      "id": "m1.apps.backend.executionIdentity.merkle.4",
+      "concept": "i · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.executionIdentity.merkle.4"
+        ]
+      },
+      "formula": "for (let i = 0; i < text.length; i++) { rolling = ((rolling << 1) + text.charCodeAt(i)) >>> 0; const length = i + 1 - start; if (length >= 1024 && ((rolling & 4095) === 0 || length >= 16384)) { chunks.push(this.add([\"chunk\", text.slice(start, i + 1)])); start = i + 1; } }",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/merkle.ts#L30",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/executionIdentity/merkle.ts",
+        "line": 30,
+        "column": 18
+      }
+    },
+    {
+      "id": "m1.apps.backend.executionIdentity.merkle.5",
+      "concept": "merkle.ts · literal 1",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.executionIdentity.merkle.5"
+        ]
+      },
+      "formula": "rolling = ((rolling << 1) + text.charCodeAt(i)) >>> 0;",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/merkle.ts#L31",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/executionIdentity/merkle.ts",
+        "line": 31,
+        "column": 30
+      }
+    },
+    {
+      "id": "m1.apps.backend.executionIdentity.merkle.6",
+      "concept": "merkle.ts · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.executionIdentity.merkle.6"
+        ]
+      },
+      "formula": "rolling = ((rolling << 1) + text.charCodeAt(i)) >>> 0;",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/merkle.ts#L31",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/executionIdentity/merkle.ts",
+        "line": 31,
+        "column": 59
+      }
+    },
+    {
+      "id": "m1.apps.backend.executionIdentity.merkle.7",
+      "concept": "length · literal 1",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.executionIdentity.merkle.7"
+        ]
+      },
+      "formula": "const length = i + 1 - start;",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/merkle.ts#L32",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/executionIdentity/merkle.ts",
+        "line": 32,
+        "column": 26
+      }
+    },
+    {
+      "id": "m1.apps.backend.executionIdentity.merkle.8",
+      "concept": "merkle.ts · literal 1024",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1024,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.executionIdentity.merkle.8"
+        ]
+      },
+      "formula": "if (length >= 1024 && ((rolling & 4095) === 0 || length >= 16384)) { chunks.push(this.add([\"chunk\", text.slice(start, i + 1)])); start = i + 1; }",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/merkle.ts#L33",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/executionIdentity/merkle.ts",
+        "line": 33,
+        "column": 21
+      }
+    },
+    {
+      "id": "m1.apps.backend.executionIdentity.merkle.9",
+      "concept": "merkle.ts · literal 4095",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 4095,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.executionIdentity.merkle.9"
+        ]
+      },
+      "formula": "if (length >= 1024 && ((rolling & 4095) === 0 || length >= 16384)) { chunks.push(this.add([\"chunk\", text.slice(start, i + 1)])); start = i + 1; }",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/merkle.ts#L33",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/executionIdentity/merkle.ts",
+        "line": 33,
+        "column": 41
+      }
+    },
+    {
+      "id": "m1.apps.backend.executionIdentity.merkle.10",
+      "concept": "merkle.ts · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.executionIdentity.merkle.10"
+        ]
+      },
+      "formula": "if (length >= 1024 && ((rolling & 4095) === 0 || length >= 16384)) { chunks.push(this.add([\"chunk\", text.slice(start, i + 1)])); start = i + 1; }",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/merkle.ts#L33",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/executionIdentity/merkle.ts",
+        "line": 33,
+        "column": 51
+      }
+    },
+    {
+      "id": "m1.apps.backend.executionIdentity.merkle.11",
+      "concept": "merkle.ts · literal 16384",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 16384,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.executionIdentity.merkle.11"
+        ]
+      },
+      "formula": "if (length >= 1024 && ((rolling & 4095) === 0 || length >= 16384)) { chunks.push(this.add([\"chunk\", text.slice(start, i + 1)])); start = i + 1; }",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/merkle.ts#L33",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/executionIdentity/merkle.ts",
+        "line": 33,
+        "column": 66
+      }
+    },
+    {
+      "id": "m1.apps.backend.executionIdentity.merkle.12",
+      "concept": "merkle.ts · literal 1",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.executionIdentity.merkle.12"
+        ]
+      },
+      "formula": "chunks.push(this.add([\"chunk\", text.slice(start, i + 1)]));",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/merkle.ts#L34",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/executionIdentity/merkle.ts",
+        "line": 34,
+        "column": 62
+      }
+    },
+    {
+      "id": "m1.apps.backend.executionIdentity.merkle.13",
+      "concept": "merkle.ts · literal 1",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.executionIdentity.merkle.13"
+        ]
+      },
+      "formula": "start = i + 1;",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/merkle.ts#L34",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/executionIdentity/merkle.ts",
+        "line": 34,
+        "column": 81
+      }
+    },
+    {
+      "id": "m1.apps.backend.executionIdentity.merkle.14",
+      "concept": "merkle.ts · literal -1",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": -1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.executionIdentity.merkle.14"
+        ]
+      },
+      "formula": "return [...this.nodes].sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/merkle.ts#L40",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/executionIdentity/merkle.ts",
+        "line": 40,
+        "column": 73
+      }
+    },
+    {
+      "id": "m1.apps.backend.executionIdentity.merkle.15",
+      "concept": "merkle.ts · literal 1",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.executionIdentity.merkle.15"
+        ]
+      },
+      "formula": "return [...this.nodes].sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/merkle.ts#L40",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/executionIdentity/merkle.ts",
+        "line": 40,
+        "column": 85
+      }
+    },
+    {
+      "id": "m1.apps.backend.executionIdentity.merkle.16",
+      "concept": "merkle.ts · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.executionIdentity.merkle.16"
+        ]
+      },
+      "formula": "return [...this.nodes].sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/merkle.ts#L40",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/executionIdentity/merkle.ts",
+        "line": 40,
+        "column": 89
+      }
+    },
+    {
+      "id": "m1.apps.backend.executionIdentity.merkle.17",
+      "concept": "readMerklePack · literal 2",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 2,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.executionIdentity.merkle.17"
+        ]
+      },
+      "formula": "if (!Array.isArray(row) || row.length !== 2 || typeof row[0] !== \"string\" || !hashPattern.test(row[0]) || row[0] <= previous) throw Error(\"Duplicate or unordered Merkle index\");",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/merkle.ts#L48",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/executionIdentity/merkle.ts",
+        "line": 48,
+        "column": 47
+      }
+    },
+    {
+      "id": "m1.apps.backend.executionIdentity.merkle.18",
+      "concept": "readMerklePack · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.executionIdentity.merkle.18"
+        ]
+      },
+      "formula": "if (!Array.isArray(row) || row.length !== 2 || typeof row[0] !== \"string\" || !hashPattern.test(row[0]) || row[0] <= previous) throw Error(\"Duplicate or unordered Merkle index\");",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/merkle.ts#L48",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/executionIdentity/merkle.ts",
+        "line": 48,
+        "column": 63
+      }
+    },
+    {
+      "id": "m1.apps.backend.executionIdentity.merkle.19",
+      "concept": "readMerklePack · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.executionIdentity.merkle.19"
+        ]
+      },
+      "formula": "if (!Array.isArray(row) || row.length !== 2 || typeof row[0] !== \"string\" || !hashPattern.test(row[0]) || row[0] <= previous) throw Error(\"Duplicate or unordered Merkle index\");",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/merkle.ts#L48",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/executionIdentity/merkle.ts",
+        "line": 48,
+        "column": 104
+      }
+    },
+    {
+      "id": "m1.apps.backend.executionIdentity.merkle.20",
+      "concept": "readMerklePack · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.executionIdentity.merkle.20"
+        ]
+      },
+      "formula": "if (!Array.isArray(row) || row.length !== 2 || typeof row[0] !== \"string\" || !hashPattern.test(row[0]) || row[0] <= previous) throw Error(\"Duplicate or unordered Merkle index\");",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/merkle.ts#L48",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/executionIdentity/merkle.ts",
+        "line": 48,
+        "column": 115
+      }
+    },
+    {
+      "id": "m1.apps.backend.executionIdentity.merkle.21",
+      "concept": "readMerklePack · literal 2",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 2,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.executionIdentity.merkle.21"
+        ]
+      },
+      "formula": "if (!Array.isArray(node) || node.length !== 2) throw Error(\"Invalid Merkle node\");",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/merkle.ts#L51",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/executionIdentity/merkle.ts",
+        "line": 51,
+        "column": 49
+      }
+    },
+    {
+      "id": "m1.apps.backend.executionIdentity.merkle.22",
+      "concept": "value · literal 2",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 2,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.executionIdentity.merkle.22"
+        ]
+      },
+      "formula": "if (!Array.isArray(item) || item.length !== 2 || item[0] !== \"ref\") throw Error(\"Unknown Merkle value tag\");",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/merkle.ts#L56",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/executionIdentity/merkle.ts",
+        "line": 56,
+        "column": 51
+      }
+    },
+    {
+      "id": "m1.apps.backend.executionIdentity.merkle.23",
+      "concept": "value · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.executionIdentity.merkle.23"
+        ]
+      },
+      "formula": "if (!Array.isArray(item) || item.length !== 2 || item[0] !== \"ref\") throw Error(\"Unknown Merkle value tag\");",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/merkle.ts#L56",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/executionIdentity/merkle.ts",
+        "line": 56,
+        "column": 61
+      }
+    },
+    {
+      "id": "m1.apps.backend.executionIdentity.merkle.24",
+      "concept": "value · literal 1",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.executionIdentity.merkle.24"
+        ]
+      },
+      "formula": "reference(item[1]);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/merkle.ts#L57",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/executionIdentity/merkle.ts",
+        "line": 57,
+        "column": 22
+      }
+    },
+    {
+      "id": "m1.apps.backend.executionIdentity.merkle.25",
+      "concept": "readMerklePack · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.executionIdentity.merkle.25"
+        ]
+      },
+      "formula": "if (node[0] === \"object\") { if (!Array.isArray(node[1])) throw Error(\"Invalid Merkle object\"); let key: string | undefined; for (const entry of node[1]) { if (!Array.isArray(entry) || entry.length !== 2 || typeof entry[0] !== \"string\" || key !== undefined && entry[0] <= key) throw Error(\"Duplicate or unordered Merkle object key\"); key = entry[0]; value(entry[1]); } } else if (node[0] === \"array\") { if (!Array.isArray(node[1])) throw Error(\"Invalid Merkle array\"); node[1].forEach(value); } else i",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/merkle.ts#L59",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/executionIdentity/merkle.ts",
+        "line": 59,
+        "column": 14
+      }
+    },
+    {
+      "id": "m1.apps.backend.executionIdentity.merkle.26",
+      "concept": "readMerklePack · literal 1",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.executionIdentity.merkle.26"
+        ]
+      },
+      "formula": "if (!Array.isArray(node[1])) throw Error(\"Invalid Merkle object\");",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/merkle.ts#L60",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/executionIdentity/merkle.ts",
+        "line": 60,
+        "column": 31
+      }
+    },
+    {
+      "id": "m1.apps.backend.executionIdentity.merkle.27",
+      "concept": "readMerklePack · literal 1",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.executionIdentity.merkle.27"
+        ]
+      },
+      "formula": "for (const entry of node[1]) { if (!Array.isArray(entry) || entry.length !== 2 || typeof entry[0] !== \"string\" || key !== undefined && entry[0] <= key) throw Error(\"Duplicate or unordered Merkle object key\"); key = entry[0]; value(entry[1]); }",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/merkle.ts#L62",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/executionIdentity/merkle.ts",
+        "line": 62,
+        "column": 32
+      }
+    },
+    {
+      "id": "m1.apps.backend.executionIdentity.merkle.28",
+      "concept": "readMerklePack · literal 2",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 2,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.executionIdentity.merkle.28"
+        ]
+      },
+      "formula": "if (!Array.isArray(entry) || entry.length !== 2 || typeof entry[0] !== \"string\" || key !== undefined && entry[0] <= key) throw Error(\"Duplicate or unordered Merkle object key\");",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/merkle.ts#L63",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/executionIdentity/merkle.ts",
+        "line": 63,
+        "column": 55
+      }
+    },
+    {
+      "id": "m1.apps.backend.executionIdentity.merkle.29",
+      "concept": "readMerklePack · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.executionIdentity.merkle.29"
+        ]
+      },
+      "formula": "if (!Array.isArray(entry) || entry.length !== 2 || typeof entry[0] !== \"string\" || key !== undefined && entry[0] <= key) throw Error(\"Duplicate or unordered Merkle object key\");",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/merkle.ts#L63",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/executionIdentity/merkle.ts",
+        "line": 63,
+        "column": 73
+      }
+    },
+    {
+      "id": "m1.apps.backend.executionIdentity.merkle.30",
+      "concept": "readMerklePack · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.executionIdentity.merkle.30"
+        ]
+      },
+      "formula": "if (!Array.isArray(entry) || entry.length !== 2 || typeof entry[0] !== \"string\" || key !== undefined && entry[0] <= key) throw Error(\"Duplicate or unordered Merkle object key\");",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/merkle.ts#L63",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/executionIdentity/merkle.ts",
+        "line": 63,
+        "column": 119
+      }
+    },
+    {
+      "id": "m1.apps.backend.executionIdentity.merkle.31",
+      "concept": "readMerklePack · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.executionIdentity.merkle.31"
+        ]
+      },
+      "formula": "key = entry[0];",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/merkle.ts#L64",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/executionIdentity/merkle.ts",
+        "line": 64,
+        "column": 21
+      }
+    },
+    {
+      "id": "m1.apps.backend.executionIdentity.merkle.32",
+      "concept": "readMerklePack · literal 1",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.executionIdentity.merkle.32"
+        ]
+      },
+      "formula": "value(entry[1]);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/merkle.ts#L64",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/executionIdentity/merkle.ts",
+        "line": 64,
+        "column": 37
+      }
+    },
+    {
+      "id": "m1.apps.backend.executionIdentity.merkle.33",
+      "concept": "readMerklePack · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.executionIdentity.merkle.33"
+        ]
+      },
+      "formula": "if (node[0] === \"array\") { if (!Array.isArray(node[1])) throw Error(\"Invalid Merkle array\"); node[1].forEach(value); } else if (node[0] === \"text\") { if (!Array.isArray(node[1])) throw Error(\"Invalid Merkle text\"); node[1].forEach(reference); } else if (node[0] === \"chunk\") { if (typeof node[1] !== \"string\" || node[1] !== lf(node[1])) throw Error(\"Non-LF Merkle text\"); } else throw Error(\"Unknown Merkle node tag\");",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/merkle.ts#L66",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/executionIdentity/merkle.ts",
+        "line": 66,
+        "column": 21
+      }
+    },
+    {
+      "id": "m1.apps.backend.executionIdentity.merkle.34",
+      "concept": "readMerklePack · literal 1",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.executionIdentity.merkle.34"
+        ]
+      },
+      "formula": "if (!Array.isArray(node[1])) throw Error(\"Invalid Merkle array\");",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/merkle.ts#L67",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/executionIdentity/merkle.ts",
+        "line": 67,
+        "column": 31
+      }
+    },
+    {
+      "id": "m1.apps.backend.executionIdentity.merkle.35",
+      "concept": "readMerklePack · literal 1",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.executionIdentity.merkle.35"
+        ]
+      },
+      "formula": "node[1].forEach(value);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/merkle.ts#L68",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/executionIdentity/merkle.ts",
+        "line": 68,
+        "column": 12
+      }
+    },
+    {
+      "id": "m1.apps.backend.executionIdentity.merkle.36",
+      "concept": "readMerklePack · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.executionIdentity.merkle.36"
+        ]
+      },
+      "formula": "if (node[0] === \"text\") { if (!Array.isArray(node[1])) throw Error(\"Invalid Merkle text\"); node[1].forEach(reference); } else if (node[0] === \"chunk\") { if (typeof node[1] !== \"string\" || node[1] !== lf(node[1])) throw Error(\"Non-LF Merkle text\"); } else throw Error(\"Unknown Merkle node tag\");",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/merkle.ts#L69",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/executionIdentity/merkle.ts",
+        "line": 69,
+        "column": 21
+      }
+    },
+    {
+      "id": "m1.apps.backend.executionIdentity.merkle.37",
+      "concept": "readMerklePack · literal 1",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.executionIdentity.merkle.37"
+        ]
+      },
+      "formula": "if (!Array.isArray(node[1])) throw Error(\"Invalid Merkle text\");",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/merkle.ts#L70",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/executionIdentity/merkle.ts",
+        "line": 70,
+        "column": 31
+      }
+    },
+    {
+      "id": "m1.apps.backend.executionIdentity.merkle.38",
+      "concept": "readMerklePack · literal 1",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.executionIdentity.merkle.38"
+        ]
+      },
+      "formula": "node[1].forEach(reference);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/merkle.ts#L71",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/executionIdentity/merkle.ts",
+        "line": 71,
+        "column": 12
+      }
+    },
+    {
+      "id": "m1.apps.backend.executionIdentity.merkle.39",
+      "concept": "readMerklePack · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.executionIdentity.merkle.39"
+        ]
+      },
+      "formula": "if (node[0] === \"chunk\") { if (typeof node[1] !== \"string\" || node[1] !== lf(node[1])) throw Error(\"Non-LF Merkle text\"); } else throw Error(\"Unknown Merkle node tag\");",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/merkle.ts#L72",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/executionIdentity/merkle.ts",
+        "line": 72,
+        "column": 21
+      }
+    },
+    {
+      "id": "m1.apps.backend.executionIdentity.merkle.40",
+      "concept": "readMerklePack · literal 1",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.executionIdentity.merkle.40"
+        ]
+      },
+      "formula": "if (typeof node[1] !== \"string\" || node[1] !== lf(node[1])) throw Error(\"Non-LF Merkle text\");",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/merkle.ts#L73",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/executionIdentity/merkle.ts",
+        "line": 73,
+        "column": 23
+      }
+    },
+    {
+      "id": "m1.apps.backend.executionIdentity.merkle.41",
+      "concept": "readMerklePack · literal 1",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.executionIdentity.merkle.41"
+        ]
+      },
+      "formula": "if (typeof node[1] !== \"string\" || node[1] !== lf(node[1])) throw Error(\"Non-LF Merkle text\");",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/merkle.ts#L73",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/executionIdentity/merkle.ts",
+        "line": 73,
+        "column": 47
+      }
+    },
+    {
+      "id": "m1.apps.backend.executionIdentity.merkle.42",
+      "concept": "readMerklePack · literal 1",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.executionIdentity.merkle.42"
+        ]
+      },
+      "formula": "if (typeof node[1] !== \"string\" || node[1] !== lf(node[1])) throw Error(\"Non-LF Merkle text\");",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/merkle.ts#L73",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/executionIdentity/merkle.ts",
+        "line": 73,
+        "column": 62
+      }
+    },
+    {
+      "id": "m1.apps.backend.executionIdentity.merkle.43",
+      "concept": "visit · literal 512",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 512,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.executionIdentity.merkle.43"
+        ]
+      },
+      "formula": "if (depth > 512) throw Error(\"Merkle depth limit\");",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/merkle.ts#L82",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/executionIdentity/merkle.ts",
+        "line": 82,
+        "column": 17
+      }
+    },
+    {
+      "id": "m1.apps.backend.executionIdentity.merkle.44",
+      "concept": "visit · literal 1",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.executionIdentity.merkle.44"
+        ]
+      },
+      "formula": "visit(ref, depth + 1);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/merkle.ts#L84",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/executionIdentity/merkle.ts",
+        "line": 84,
+        "column": 65
+      }
+    },
+    {
+      "id": "m1.apps.backend.executionIdentity.merkle.45",
+      "concept": "readMerklePack · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.executionIdentity.merkle.45"
+        ]
+      },
+      "formula": "roots.forEach(root => visit(root, 0));",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/merkle.ts#L87",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/executionIdentity/merkle.ts",
+        "line": 87,
+        "column": 37
+      }
+    },
+    {
+      "id": "m1.apps.backend.executionIdentity.merkle.46",
+      "concept": "readMerklePack · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.executionIdentity.merkle.46"
+        ]
+      },
+      "formula": "if (node[0] === \"text\" && node[1].some(ref => nodes.get(ref)?.[0] !== \"chunk\")) throw Error(\"Invalid Merkle text reference\");",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/merkle.ts#L91",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/executionIdentity/merkle.ts",
+        "line": 91,
+        "column": 14
+      }
+    },
+    {
+      "id": "m1.apps.backend.executionIdentity.merkle.47",
+      "concept": "readMerklePack · literal 1",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.executionIdentity.merkle.47"
+        ]
+      },
+      "formula": "if (node[0] === \"text\" && node[1].some(ref => nodes.get(ref)?.[0] !== \"chunk\")) throw Error(\"Invalid Merkle text reference\");",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/merkle.ts#L91",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/executionIdentity/merkle.ts",
+        "line": 91,
+        "column": 36
+      }
+    },
+    {
+      "id": "m1.apps.backend.executionIdentity.merkle.48",
+      "concept": "readMerklePack · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.executionIdentity.merkle.48"
+        ]
+      },
+      "formula": "if (node[0] === \"text\" && node[1].some(ref => nodes.get(ref)?.[0] !== \"chunk\")) throw Error(\"Invalid Merkle text reference\");",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/merkle.ts#L91",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/executionIdentity/merkle.ts",
+        "line": 91,
+        "column": 68
+      }
+    },
+    {
+      "id": "m1.apps.backend.executionIdentity.merkle.49",
+      "concept": "value · literal 1",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.executionIdentity.merkle.49"
+        ]
+      },
+      "formula": "const value = (item: Value): unknown => Array.isArray(item) ? expand(item[1]) : item;",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/merkle.ts#L94",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/executionIdentity/merkle.ts",
+        "line": 94,
+        "column": 77
+      }
+    },
+    {
+      "id": "m1.apps.backend.executionIdentity.merkle.50",
+      "concept": "result · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.executionIdentity.merkle.50"
+        ]
+      },
+      "formula": "const result = node[0] === \"object\" ? Object.fromEntries(node[1].map(([key, item]) => [key, value(item)])) : node[0] === \"array\" ? node[1].map(value) : node[0] === \"text\" ? node[1].map(ref => expand(ref)).join(\"\") : node[1];",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/merkle.ts#L99",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/executionIdentity/merkle.ts",
+        "line": 99,
+        "column": 25
+      }
+    },
+    {
+      "id": "m1.apps.backend.executionIdentity.merkle.51",
+      "concept": "result · literal 1",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.executionIdentity.merkle.51"
+        ]
+      },
+      "formula": "const result = node[0] === \"object\" ? Object.fromEntries(node[1].map(([key, item]) => [key, value(item)])) : node[0] === \"array\" ? node[1].map(value) : node[0] === \"text\" ? node[1].map(ref => expand(ref)).join(\"\") : node[1];",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/merkle.ts#L99",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/executionIdentity/merkle.ts",
+        "line": 99,
+        "column": 67
+      }
+    },
+    {
+      "id": "m1.apps.backend.executionIdentity.merkle.52",
+      "concept": "result · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.executionIdentity.merkle.52"
+        ]
+      },
+      "formula": "const result = node[0] === \"object\" ? Object.fromEntries(node[1].map(([key, item]) => [key, value(item)])) : node[0] === \"array\" ? node[1].map(value) : node[0] === \"text\" ? node[1].map(ref => expand(ref)).join(\"\") : node[1];",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/merkle.ts#L100",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/executionIdentity/merkle.ts",
+        "line": 100,
+        "column": 12
+      }
+    },
+    {
+      "id": "m1.apps.backend.executionIdentity.merkle.53",
+      "concept": "result · literal 1",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.executionIdentity.merkle.53"
+        ]
+      },
+      "formula": "const result = node[0] === \"object\" ? Object.fromEntries(node[1].map(([key, item]) => [key, value(item)])) : node[0] === \"array\" ? node[1].map(value) : node[0] === \"text\" ? node[1].map(ref => expand(ref)).join(\"\") : node[1];",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/merkle.ts#L100",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/executionIdentity/merkle.ts",
+        "line": 100,
+        "column": 34
+      }
+    },
+    {
+      "id": "m1.apps.backend.executionIdentity.merkle.54",
+      "concept": "result · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.executionIdentity.merkle.54"
+        ]
+      },
+      "formula": "const result = node[0] === \"object\" ? Object.fromEntries(node[1].map(([key, item]) => [key, value(item)])) : node[0] === \"array\" ? node[1].map(value) : node[0] === \"text\" ? node[1].map(ref => expand(ref)).join(\"\") : node[1];",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/merkle.ts#L100",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/executionIdentity/merkle.ts",
+        "line": 100,
+        "column": 55
+      }
+    },
+    {
+      "id": "m1.apps.backend.executionIdentity.merkle.55",
+      "concept": "result · literal 1",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.executionIdentity.merkle.55"
+        ]
+      },
+      "formula": "const result = node[0] === \"object\" ? Object.fromEntries(node[1].map(([key, item]) => [key, value(item)])) : node[0] === \"array\" ? node[1].map(value) : node[0] === \"text\" ? node[1].map(ref => expand(ref)).join(\"\") : node[1];",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/merkle.ts#L100",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/executionIdentity/merkle.ts",
+        "line": 100,
+        "column": 76
+      }
+    },
+    {
+      "id": "m1.apps.backend.executionIdentity.merkle.56",
+      "concept": "result · literal 1",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.executionIdentity.merkle.56"
+        ]
+      },
+      "formula": "const result = node[0] === \"object\" ? Object.fromEntries(node[1].map(([key, item]) => [key, value(item)])) : node[0] === \"array\" ? node[1].map(value) : node[0] === \"text\" ? node[1].map(ref => expand(ref)).join(\"\") : node[1];",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/merkle.ts#L100",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/executionIdentity/merkle.ts",
+        "line": 100,
+        "column": 119
+      }
+    },
+    {
+      "id": "m1.apps.backend.executionIdentity.merkle.57",
+      "concept": "expand · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.executionIdentity.merkle.57"
+        ]
+      },
+      "formula": "if (node[0] === \"text\" && typeof result === \"string\" && result !== lf(result)) throw Error(\"Non-LF reconstructed text\");",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/merkle.ts#L101",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/executionIdentity/merkle.ts",
+        "line": 101,
+        "column": 14
+      }
+    },
+    {
       "id": "m1.apps.backend.executionIdentity.resources.1",
       "concept": "expected · literal 1",
       "modelVersion": "1",
@@ -23853,6 +25910,150 @@
         "file": "apps/backend/executionIdentity/resources.ts",
         "line": 10,
         "column": 82
+      }
+    },
+    {
+      "id": "m1.apps.backend.executionIdentity.transitions.1",
+      "concept": "loadTransitions · literal 2",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 2,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.executionIdentity.transitions.1"
+        ]
+      },
+      "formula": "if (digest(Object.keys(manifest).sort()) !== digest([\"schema\", \"first\", \"last\", \"entries\", \"descriptors\", \"snapshots\"].sort()) || JSON.stringify(ordered(manifest), null, 2) + \"\\n\" !== text) throw Error(\"Noncanonical execution transition manifest\");",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/transitions.ts#L49",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/executionIdentity/transitions.ts",
+        "line": 49,
+        "column": 173
+      }
+    },
+    {
+      "id": "m1.apps.backend.executionIdentity.transitions.2",
+      "concept": "pack.maxOutputLength · literal 128",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 128,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.executionIdentity.transitions.2"
+        ]
+      },
+      "formula": "maxOutputLength: 128 * 1024 * 1024",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/transitions.ts#L53",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/executionIdentity/transitions.ts",
+        "line": 53,
+        "column": 79
+      }
+    },
+    {
+      "id": "m1.apps.backend.executionIdentity.transitions.3",
+      "concept": "pack.maxOutputLength · literal 1024",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1024,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.executionIdentity.transitions.3"
+        ]
+      },
+      "formula": "maxOutputLength: 128 * 1024 * 1024",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/transitions.ts#L53",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/executionIdentity/transitions.ts",
+        "line": 53,
+        "column": 85
+      }
+    },
+    {
+      "id": "m1.apps.backend.executionIdentity.transitions.4",
+      "concept": "pack.maxOutputLength · literal 1024",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1024,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.executionIdentity.transitions.4"
+        ]
+      },
+      "formula": "maxOutputLength: 128 * 1024 * 1024",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/transitions.ts#L53",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/executionIdentity/transitions.ts",
+        "line": 53,
+        "column": 92
       }
     },
     {

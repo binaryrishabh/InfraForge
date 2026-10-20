@@ -1,6 +1,7 @@
+import { writeTransitionStore } from "./transition-store";
+import { loadTransitions } from "../apps/backend/executionIdentity/transitions";
 import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { gzipSync, gunzipSync } from "node:zlib";
 import { diskTree, executionDescriptor, repositoryRoot } from "../apps/backend/executionIdentity/descriptor";
 import { digest, lf, sha256, sourceHash } from "../apps/backend/executionIdentity/hash";
 import { gitTree } from "./execution-identity";
@@ -49,10 +50,9 @@ export function refreshStage0Transitions() {
   assertScope();
   const currentTree = diskTree();
   const baseTable = JSON.parse(gitTree(baseline).read(folder + "executionTransitions.json")) as TransitionTable;
-  const table = JSON.parse(readFileSync(resolve(root, folder + "executionTransitions.json"), "utf8")) as TransitionTable;
+  const store = loadTransitions(root), { table } = store;
   const previous = baseTable.entries[0]!.target;
-  const archivePath = "scripts/fixtures/execution-identity-history.json.gz";
-  const history = JSON.parse(gunzipSync(readFileSync(resolve(root, archivePath))).toString()) as { blobs: Record<string, string>; trees: Record<string, Record<string, string>> };
+  const history = store.history();
   const retain = (commit: string, source: string, stored: TransitionTable["descriptors"][string], review: string) => {
     const frozen = history.trees[commit];
     const tree = frozen ? { paths: Object.keys(frozen), read: (path: string) => {
@@ -85,9 +85,6 @@ export function refreshStage0Transitions() {
   table.descriptors[target] = current;
   for (const row of table.entries) row.target = target;
   for (const key of Object.keys(table.descriptors)) if (key !== target && !table.entries.some(row => row.descriptor === key)) delete table.descriptors[key];
-  const text = JSON.stringify(table, null, 2) + "\n", archive = gzipSync(JSON.stringify(history), { level: 9 });
-  writeFileSync(resolve(root, folder + "executionTransitions.json"), text);
-  writeFileSync(resolve(root, archivePath), archive);
-  put(folder + "transitionPin.json", { digest: digest(table), bytes: sha256(text), history: sha256(archive.toString("base64")) });
+  writeTransitionStore(root, table, history);
   console.info(JSON.stringify({ historicalEntries: table.entries.length, previous, current: target }));
 }

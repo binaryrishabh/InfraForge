@@ -2212,7 +2212,7 @@
     },
     {
       "path": "scripts/tests/execution-identity-adversarial.test.ts",
-      "hash": "205c84a1cc0859b4a5fde54a75a7138b9441e5432ff9ca199daf930083ebe9b7"
+      "hash": "adf781abed1f3c52be6f038edeff14e59d58756b7cc770903d4bdf43b341e849"
     },
     {
       "path": "scripts/tests/execution-identity-boundary.test.ts",
@@ -2220,7 +2220,7 @@
     },
     {
       "path": "scripts/tests/execution-identity.test.ts",
-      "hash": "d061d98f4dc647d022b9fde8e24b7afb68ed0d6067feae1756ddd1eaf68c99fc"
+      "hash": "a6fbf98a1ff73df9a5bc7267bafdd804ba79dcc5a97ca227f31585d8c678f955"
     },
     {
       "path": "scripts/tests/first-stack-bounds.test.ts",
@@ -2309,6 +2309,10 @@
     {
       "path": "scripts/tests/traceInput.test.ts",
       "hash": "def0f458ffda10f442503e5d7648de625198a97b7f661aea919021d7e606d281"
+    },
+    {
+      "path": "scripts/tests/transition-store.test.ts",
+      "hash": "ee7561c0a4494b6892a8604b60e8cc3bce56a6d4d7d8c480138451357b7e4d8f"
     },
     {
       "path": "scripts/tests/workloadCalibration.test.ts",

@@ -112,6 +112,7 @@ apps/backend/internalModel2/**
 apps/backend/executionIdentity/**
 !apps/backend/executionIdentity/*.ts
 !apps/backend/executionIdentity/*.json
+!apps/backend/executionIdentity/executionNodes.json.gz
 !apps/backend/comparison/
 apps/backend/comparison/**
 !apps/backend/comparison/*.ts
