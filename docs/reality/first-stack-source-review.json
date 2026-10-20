@@ -108,6 +108,10 @@
     {
       "path": "scripts/reality/first-stack-compile-proof.ts",
       "hash": "279c44a0aaf086256a685e37e49a6c285780f8f33e1db984f127e4a7aa83f899"
+    },
+    {
+      "path": "scripts/tests/execution-identity.test.ts",
+      "hash": "0818ef84f473eedd220e3ef46beb0329c613349530b7cba852a9bc94f9bb8950"
     }
   ]
 }

@@ -79,7 +79,7 @@ export function writeStage2ReviewLock() {
   writeFileSync(resolve(root, lockPath), JSON.stringify({ schema: "infraforge-first-stack-source-review/1", baseline: baseline.source,
     scope: "Internal V1 review and V2 compiler/composition qualification only; pinned Stage 1 registry/host and historical runtime bytes preserved; no product dispatch, HTTP executor or activation",
     files: [...added, ...changed].sort().map(path => ({ path, hash: sha256(tree.read(path)) })),
-    acceptance: ["apps/backend/tests/firstStackAuthoring.test.ts", "apps/backend/tests/firstStackWorkload.test.ts", "apps/backend/tests/firstStackRoutes.test.ts", "apps/backend/tests/firstStackFixture.ts", "scripts/tests/first-stack-child.test.ts", "scripts/tests/first-stack-compile.test.ts", "scripts/fixtures/first-stack-compile.ts", "scripts/reality/first-stack-compile-proof.ts"].map(path => ({ path, hash: sha256(readFileSync(resolve(root, path), "utf8").replaceAll("\r\n", "\n")) })),
+    acceptance: ["apps/backend/tests/firstStackAuthoring.test.ts", "apps/backend/tests/firstStackWorkload.test.ts", "apps/backend/tests/firstStackRoutes.test.ts", "apps/backend/tests/firstStackFixture.ts", "scripts/tests/first-stack-child.test.ts", "scripts/tests/first-stack-compile.test.ts", "scripts/fixtures/first-stack-compile.ts", "scripts/reality/first-stack-compile-proof.ts", "scripts/tests/execution-identity.test.ts"].map(path => ({ path, hash: sha256(readFileSync(resolve(root, path), "utf8").replaceAll("\r\n", "\n")) })),
   }, null, 2) + "\n");
 }
 export function buildStage2Transitions() {

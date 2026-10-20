@@ -29,7 +29,7 @@ test("first stack source review binds new behavior and its acceptance tests inde
   expect(lock.schema).toBe("infraforge-first-stack-source-review/1");
   expect(lock.baseline).toBe(baseline.source);
   expect(lock.files).toHaveLength(18);
-  expect(lock.acceptance).toHaveLength(8);
+  expect(lock.acceptance).toHaveLength(9);
   for (const { path, hash } of [...lock.files, ...lock.acceptance]) expect(sourceHash(readFileSync(path, "utf8"))).toBe(hash);
 });
 

@@ -2137,7 +2137,7 @@
     },
     {
       "path": "scripts/tests/execution-identity.test.ts",
-      "hash": "dc7d460a8e19364040f7e1e6a32c9351a781f870dea2f3f8209e1a572acb2e72"
+      "hash": "0818ef84f473eedd220e3ef46beb0329c613349530b7cba852a9bc94f9bb8950"
     },
     {
       "path": "scripts/tests/first-stack-child.test.ts",
@@ -2149,7 +2149,7 @@
     },
     {
       "path": "scripts/tests/first-stack-profile.test.ts",
-      "hash": "dfcafbe7af9d76ebad3e7141781ad269684dff3662b4812aab5533b31dddbfb2"
+      "hash": "f77982e3ef2cb986b59058e61f6536926a88a6b4b7ca92b4b4ca3fda950625f6"
     },
     {
       "path": "scripts/tests/fixtures/execution-launch-probe.ts",
