@@ -1,3 +1,4 @@
+import type { RedisOptions } from "ioredis";
 import { commandRedis as redis } from "./redis";
 import { operationalWarning } from "../utils/connectionPolicy";
 import type { OutboxPayload } from "../types/OutboxPayload.interface";
@@ -101,23 +102,55 @@ export const publishSimulationSnapshot = async(snapshot: SimulationSnapshot) => 
 /* ------------------------Subscriber code--------------------- */
 // this is to where all websocket servers are listening to and listens when there deploymentId matches or the client that's wanting the deploymentId matches
 export const subscribeToDeployment = async(deploymentId: string, callback: (event: unknown) => void, signal?: AbortSignal) => {
-    const subscriber = redis.duplicate(); // we are creating a new redis connection. Here redis connection by subscriber can only subscribe they won't be allowed to do any thing else that's why making new redis connection for each subscriptions. This is scaling so that subscribers don't block the publishing queing and chaching.
+    // Fail-fast producers disable offline queues, so a duplicate must not issue
+    // SUBSCRIBE while it is still connecting. Bound the whole initial handshake.
+    let active = false;
+    let stopped = false;
+    const subscriber = redis.duplicate<RedisOptions>({ lazyConnect: true,
+        retryStrategy: (attempts: number) => !active || stopped ? null : redis.options.retryStrategy?.(attempts) ?? null,
+    });
     subscriber.on("error", operationalWarning("Deployment subscription connection unavailable; reconnecting."));
-    const abort = () => subscriber.disconnect();
-    if (signal?.aborted) {
-        abort();
-        throw new Error("Subscription closed");
-    }
-    signal?.addEventListener("abort", abort, { once: true });
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    let rejectPending: (error: Error) => void = () => {};
+    const cleanup = () => {
+        clearTimeout(timer);
+        signal?.removeEventListener("abort", abort);
+    };
+    const abort = () => {
+        stopped = true;
+        subscriber.disconnect();
+        rejectPending(new Error("Subscription closed"));
+    };
+    subscriber.once("end", cleanup);
     try {
-        await subscriber.subscribe(`deployment:${deploymentId}:updates`);
+        if (signal?.aborted) throw new Error("Subscription closed");
+        const interrupted = new Promise<never>((_resolve, reject) => {
+            rejectPending = reject;
+            timer = setTimeout(() => {
+                stopped = true;
+                subscriber.disconnect();
+                reject(new Error("Subscription readiness deadline exceeded"));
+            }, 5000);
+            signal?.addEventListener("abort", abort, { once: true });
+        });
+        await Promise.race([(async () => {
+            await subscriber.connect();
+            if (signal?.aborted) throw new Error("Subscription closed");
+            await subscriber.subscribe(`deployment:${deploymentId}:updates`);
+        })(), interrupted]);
+        clearTimeout(timer);
+        if (signal?.aborted) throw new Error("Subscription closed");
         subscriber.on("message", (_channel, message) => {
             try { callback(JSON.parse(message)); }
             catch { console.error("Invalid deployment event"); }
         });
+        // Keep the abort listener until the returned connection closes.
+        active = true;
         return subscriber;
     } catch (error) {
+        stopped = true;
+        cleanup();
         subscriber.disconnect();
         throw error;
-    } finally { signal?.removeEventListener("abort", abort); }
+    }
 }
