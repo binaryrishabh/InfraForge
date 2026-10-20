@@ -1,6 +1,6 @@
 {
   "schema": "execution-loading-analysis/1",
-  "policy": "f5bfee74a31daa3a4043621cf3d39281e215498904e43eb0eba4c0287a40702e",
+  "policy": "88dfbd7c399227536b489575c51fb0456665046bca210e6630ec741e093fb6f7",
   "modules": {
     "apps/backend/actions/contract.ts": {
       "hash": "cb4d5860ab0805ccf009c47e453ed89c12e52e564c95e470a1cfbb23e18fb24d",
@@ -1173,7 +1173,7 @@
       ]
     },
     "apps/backend/index.ts": {
-      "hash": "0d328705febc655d901920b2c2dc99860c8eac649e49d96ce906d617091bb711",
+      "hash": "e486698e8b7f84bb1eb5cbb013ff00cab5a8af90ce20f2b2220ceba7de25ee23",
       "requests": [
         {
           "path": "express",
@@ -1234,11 +1234,23 @@
         {
           "path": "./internalModel2/routes",
           "kind": "import-statement"
+        },
+        {
+          "path": "./lib/prisma",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./infra/redis",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./utils/lifecycle",
+          "kind": "import-statement"
         }
       ]
     },
     "apps/backend/infra/deploymentSubscriptions.ts": {
-      "hash": "3bdc947e5d4c9f8fce6a739c9412dcabc6b70ecabc34b17457aba8f8ed1b215f",
+      "hash": "34f1bb70440486abcbaeb9391246f358ea222b80d38eb0f2c624630930e81ec2",
       "requests": [
         {
           "path": "ws",
@@ -1255,10 +1267,14 @@
       ]
     },
     "apps/backend/infra/pubsub.ts": {
-      "hash": "1aa4aa4c6911ef5dd184fe20d5588dac4892a4a7db2536143552529e52819a47",
+      "hash": "aee4421c1f9dc5b9b4721bf65319bc1415a8b4f479b087888ca8995c781639fe",
       "requests": [
         {
           "path": "./redis",
+          "kind": "import-statement"
+        },
+        {
+          "path": "../utils/connectionPolicy",
           "kind": "import-statement"
         },
         {
@@ -1268,7 +1284,7 @@
       ]
     },
     "apps/backend/infra/queue.ts": {
-      "hash": "e1c60e4016666b199e68881d8c816ce0ca17319e40925a6bc1e13f173146cabd",
+      "hash": "cc5655cc701ecf30e7e1ef56884365fd3c1f1811987389601927b022fefc839b",
       "requests": [
         {
           "path": "bullmq",
@@ -1277,14 +1293,22 @@
         {
           "path": "./redis",
           "kind": "import-statement"
+        },
+        {
+          "path": "../utils/connectionPolicy",
+          "kind": "import-statement"
         }
       ]
     },
     "apps/backend/infra/redis.ts": {
-      "hash": "5a1bdf586a8feffde62b20e051d6fbee6eaf0f8e4c6a4289582a8ee32dd3a776",
+      "hash": "2e0ce69a45a30a20fbae4068eaa679d606de5b63eaff9c754966108db329fcde",
       "requests": [
         {
           "path": "ioredis",
+          "kind": "import-statement"
+        },
+        {
+          "path": "../utils/connectionPolicy",
           "kind": "import-statement"
         }
       ]
@@ -2259,7 +2283,7 @@
       ]
     },
     "apps/backend/lib/prisma.ts": {
-      "hash": "7cd112aa2c812dd2f1c15a4b15d581e43b0b2c5651bfd4537c739361893e8b35",
+      "hash": "0173bbd565eb61669b74cc06adfbba0f0b6db5020b565f8e5b16b25d0a584954",
       "requests": [
         {
           "path": "./generated/prisma/client",
@@ -2275,6 +2299,10 @@
         },
         {
           "path": "../utils/config",
+          "kind": "import-statement"
+        },
+        {
+          "path": "../utils/connectionPolicy",
           "kind": "import-statement"
         }
       ]
@@ -2956,7 +2984,11 @@
       "requests": []
     },
     "apps/backend/utils/config.ts": {
-      "hash": "4273035814aab98b5c1fc8a9305d81da3d552575623d19349dcb7e6a9a2c6173",
+      "hash": "166cf2718294cc536a0755b14dd3302e54be7dd1c7f2feb05b9d00b3c1131c98",
+      "requests": []
+    },
+    "apps/backend/utils/connectionPolicy.ts": {
+      "hash": "3a85252ad9619729bb1738e671aff4d153dca3cfabd4ca4d4ab2c45ff861cbc1",
       "requests": []
     },
     "apps/backend/utils/deploymentJobPolicy.ts": {
@@ -2976,8 +3008,12 @@
       "hash": "83529c4ee794d26eb381bb31473a1d3839b7e016ae59b26dd4618c2905194f2a",
       "requests": []
     },
+    "apps/backend/utils/lifecycle.ts": {
+      "hash": "aa370a29e08d6b0dd068886b29f76f16e711abb6e1efd950296fb03417bcac5d",
+      "requests": []
+    },
     "apps/backend/utils/middleware.ts": {
-      "hash": "4af566c28158df541d36ac0f7d0352d9937984f72e0b1334194b1c1a8dd9050e",
+      "hash": "97c91f5dbc03a23a54a034ff5245fc35e496c6f87886e6feb952ae252d04a253",
       "requests": [
         {
           "path": "../lib/generated/prisma/client",
@@ -2986,15 +3022,23 @@
         {
           "path": "./errors",
           "kind": "import-statement"
+        },
+        {
+          "path": "./connectionPolicy",
+          "kind": "import-statement"
         }
       ]
     },
     "apps/backend/utils/rateLimiter.ts": {
-      "hash": "aa6f0feea500b4930ed8bd62235f3dbdf29cd962374b7c746391179fac7fd590",
+      "hash": "77acf8d15de12e1575b1fa1073d4aaf5d259501ced76e95ee5847b648ce66915",
+      "requests": []
+    },
+    "apps/backend/utils/socketLifecycle.ts": {
+      "hash": "bfb7a1665462ad18180e3f0904ad99847c5c4829cfde6ff4ff0242e93e3956fc",
       "requests": []
     },
     "apps/backend/worker.ts": {
-      "hash": "3897f1a4eb78fb97abd758b708e4b1721d5e9e545ac107253191d09451e851a0",
+      "hash": "8db81b68397869c70726c3453b3411d1bf51797706a0dda3977c69d6e34860b7",
       "requests": [
         {
           "path": "./executionIdentity/launch",
@@ -3030,6 +3074,10 @@
         },
         {
           "path": "./utils/config",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./utils/connectionPolicy",
           "kind": "import-statement"
         },
         {
@@ -3103,7 +3151,7 @@
       ]
     },
     "apps/backend/ws-server.ts": {
-      "hash": "51df743d6b56f471eb0f49405982f3e13cd94bb3c7aa293b88952a681a853537",
+      "hash": "59886916220418feed088cc286dbc82c66e64ec41d357473a8b8d975b0eeb2e8",
       "requests": [
         {
           "path": "ws",
@@ -3143,6 +3191,18 @@
         },
         {
           "path": "./utils/config",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./infra/redis",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./utils/lifecycle",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./utils/socketLifecycle",
           "kind": "import-statement"
         }
       ]

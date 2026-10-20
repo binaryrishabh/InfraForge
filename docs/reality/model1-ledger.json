@@ -342,7 +342,7 @@
     },
     {
       "file": "apps/backend/executionIdentity/loading.ts",
-      "sha256": "cce8a1d11a946ba3a92d7a3d5a17a21aa9a7507086e71d2077a575cc43038214",
+      "sha256": "27adcafb73aa22f93ae9995e6f3ec86629785f4c80fc7a7cf72b63cf90f3bcfe",
       "numericSites": 14
     },
     {
@@ -422,28 +422,28 @@
     },
     {
       "file": "apps/backend/index.ts",
-      "sha256": "0d328705febc655d901920b2c2dc99860c8eac649e49d96ce906d617091bb711",
-      "numericSites": 5
+      "sha256": "e486698e8b7f84bb1eb5cbb013ff00cab5a8af90ce20f2b2220ceba7de25ee23",
+      "numericSites": 6
     },
     {
       "file": "apps/backend/infra/deploymentSubscriptions.ts",
-      "sha256": "3bdc947e5d4c9f8fce6a739c9412dcabc6b70ecabc34b17457aba8f8ed1b215f",
-      "numericSites": 4
+      "sha256": "34f1bb70440486abcbaeb9391246f358ea222b80d38eb0f2c624630930e81ec2",
+      "numericSites": 7
     },
     {
       "file": "apps/backend/infra/pubsub.ts",
-      "sha256": "1aa4aa4c6911ef5dd184fe20d5588dac4892a4a7db2536143552529e52819a47",
-      "numericSites": 0
+      "sha256": "aee4421c1f9dc5b9b4721bf65319bc1415a8b4f479b087888ca8995c781639fe",
+      "numericSites": 1
     },
     {
       "file": "apps/backend/infra/queue.ts",
-      "sha256": "e1c60e4016666b199e68881d8c816ce0ca17319e40925a6bc1e13f173146cabd",
-      "numericSites": 2
+      "sha256": "cc5655cc701ecf30e7e1ef56884365fd3c1f1811987389601927b022fefc839b",
+      "numericSites": 7
     },
     {
       "file": "apps/backend/infra/redis.ts",
-      "sha256": "5a1bdf586a8feffde62b20e051d6fbee6eaf0f8e4c6a4289582a8ee32dd3a776",
-      "numericSites": 1
+      "sha256": "2e0ce69a45a30a20fbae4068eaa679d606de5b63eaff9c754966108db329fcde",
+      "numericSites": 2
     },
     {
       "file": "apps/backend/infra/workerConnection.ts",
@@ -632,7 +632,7 @@
     },
     {
       "file": "apps/backend/lib/prisma.ts",
-      "sha256": "7cd112aa2c812dd2f1c15a4b15d581e43b0b2c5651bfd4537c739361893e8b35",
+      "sha256": "0173bbd565eb61669b74cc06adfbba0f0b6db5020b565f8e5b16b25d0a584954",
       "numericSites": 0
     },
     {
@@ -832,8 +832,13 @@
     },
     {
       "file": "apps/backend/utils/config.ts",
-      "sha256": "4273035814aab98b5c1fc8a9305d81da3d552575623d19349dcb7e6a9a2c6173",
+      "sha256": "166cf2718294cc536a0755b14dd3302e54be7dd1c7f2feb05b9d00b3c1131c98",
       "numericSites": 1
+    },
+    {
+      "file": "apps/backend/utils/connectionPolicy.ts",
+      "sha256": "3a85252ad9619729bb1738e671aff4d153dca3cfabd4ca4d4ab2c45ff861cbc1",
+      "numericSites": 23
     },
     {
       "file": "apps/backend/utils/deploymentJobPolicy.ts",
@@ -851,24 +856,34 @@
       "numericSites": 0
     },
     {
+      "file": "apps/backend/utils/lifecycle.ts",
+      "sha256": "aa370a29e08d6b0dd068886b29f76f16e711abb6e1efd950296fb03417bcac5d",
+      "numericSites": 8
+    },
+    {
       "file": "apps/backend/utils/middleware.ts",
-      "sha256": "4af566c28158df541d36ac0f7d0352d9937984f72e0b1334194b1c1a8dd9050e",
+      "sha256": "97c91f5dbc03a23a54a034ff5245fc35e496c6f87886e6feb952ae252d04a253",
       "numericSites": 6
     },
     {
       "file": "apps/backend/utils/rateLimiter.ts",
-      "sha256": "aa6f0feea500b4930ed8bd62235f3dbdf29cd962374b7c746391179fac7fd590",
-      "numericSites": 12
+      "sha256": "77acf8d15de12e1575b1fa1073d4aaf5d259501ced76e95ee5847b648ce66915",
+      "numericSites": 13
+    },
+    {
+      "file": "apps/backend/utils/socketLifecycle.ts",
+      "sha256": "bfb7a1665462ad18180e3f0904ad99847c5c4829cfde6ff4ff0242e93e3956fc",
+      "numericSites": 2
     },
     {
       "file": "apps/backend/worker.ts",
-      "sha256": "3897f1a4eb78fb97abd758b708e4b1721d5e9e545ac107253191d09451e851a0",
-      "numericSites": 23
+      "sha256": "8db81b68397869c70726c3453b3411d1bf51797706a0dda3977c69d6e34860b7",
+      "numericSites": 26
     },
     {
       "file": "apps/backend/ws-server.ts",
-      "sha256": "51df743d6b56f471eb0f49405982f3e13cd94bb3c7aa293b88952a681a853537",
-      "numericSites": 14
+      "sha256": "59886916220418feed088cc286dbc82c66e64ec41d357473a8b8d975b0eeb2e8",
+      "numericSites": 19
     },
     {
       "file": "apps/backend/zod_schemas/deployment.schema.ts",
@@ -28322,7 +28337,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/index.ts#L21",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/index.ts#L24",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -28336,54 +28351,54 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/index.ts",
-        "line": 21,
+        "line": 24,
         "column": 59
       }
     },
     {
       "id": "m1.apps.backend.index.2",
-      "concept": "index.ts · literal 200",
-      "modelVersion": "1",
-      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
-      "quantity": {
-        "kind": "known",
-        "value": 200,
-        "unit": "code-number",
-        "provenance": [
-          "m1.apps.backend.index.2"
-        ]
-      },
-      "formula": "res.status(result.success ? 200 : 503).json(result);",
-      "classification": "implementation-policy",
-      "confidence": "high",
-      "provenance": [
-        {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/index.ts#L25",
-          "supports": "implementation",
-          "detail": "Exact historical literal and source expression; not external validation."
-        }
-      ],
-      "assumptions": [
-        "This literal is not evidence of real infrastructure capacity or performance.",
-        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
-      ],
-      "researchedOn": "2026-10-15",
-      "freeMode": "conditional",
-      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
-      "location": {
-        "file": "apps/backend/index.ts",
-        "line": 25,
-        "column": 31
-      }
-    },
-    {
-      "id": "m1.apps.backend.index.3",
       "concept": "index.ts · literal 503",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
       "quantity": {
         "kind": "known",
         "value": 503,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.index.2"
+        ]
+      },
+      "formula": "res.status(503).json({ success: false });",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/index.ts#L26",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/index.ts",
+        "line": 26,
+        "column": 82
+      }
+    },
+    {
+      "id": "m1.apps.backend.index.3",
+      "concept": "index.ts · literal 200",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 200,
         "unit": "code-number",
         "provenance": [
           "m1.apps.backend.index.3"
@@ -28394,7 +28409,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/index.ts#L25",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/index.ts#L32",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -28408,12 +28423,48 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/index.ts",
-        "line": 25,
-        "column": 37
+        "line": 32,
+        "column": 31
       }
     },
     {
       "id": "m1.apps.backend.index.4",
+      "concept": "index.ts · literal 503",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 503,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.index.4"
+        ]
+      },
+      "formula": "res.status(result.success ? 200 : 503).json(result);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/index.ts#L32",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/index.ts",
+        "line": 32,
+        "column": 37
+      }
+    },
+    {
+      "id": "m1.apps.backend.index.5",
       "concept": "index.ts · literal 415",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
@@ -28422,7 +28473,7 @@
         "value": 415,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.index.4"
+          "m1.apps.backend.index.5"
         ]
       },
       "formula": "res.status(415).json({ success: false, message: \"Use JSON or form data\" });",
@@ -28430,7 +28481,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/index.ts#L37",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/index.ts#L44",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -28444,12 +28495,12 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/index.ts",
-        "line": 37,
+        "line": 44,
         "column": 18
       }
     },
     {
-      "id": "m1.apps.backend.index.5",
+      "id": "m1.apps.backend.index.6",
       "concept": "index.ts · literal 404",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
@@ -28458,7 +28509,7 @@
         "value": 404,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.index.5"
+          "m1.apps.backend.index.6"
         ]
       },
       "formula": "app.use((_req, res) => res.status(404).json({ success: false, message: \"Resource not found\" }));",
@@ -28466,7 +28517,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/index.ts#L54",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/index.ts#L61",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -28480,7 +28531,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/index.ts",
-        "line": 54,
+        "line": 61,
         "column": 35
       }
     },
@@ -28502,7 +28553,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/infra/deploymentSubscriptions.ts#L11",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/infra/deploymentSubscriptions.ts#L12",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -28516,12 +28567,120 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/infra/deploymentSubscriptions.ts",
-        "line": 11,
+        "line": 12,
         "column": 39
       }
     },
     {
       "id": "m1.apps.backend.infra.deploymentSubscriptions.2",
+      "concept": "SUBSCRIPTION_MAX_BUFFER · literal 1024",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1024,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.infra.deploymentSubscriptions.2"
+        ]
+      },
+      "formula": "export const SUBSCRIPTION_MAX_BUFFER = 1024 * 1024;",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/infra/deploymentSubscriptions.ts#L13",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/infra/deploymentSubscriptions.ts",
+        "line": 13,
+        "column": 40
+      }
+    },
+    {
+      "id": "m1.apps.backend.infra.deploymentSubscriptions.3",
+      "concept": "SUBSCRIPTION_MAX_BUFFER · literal 1024",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1024,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.infra.deploymentSubscriptions.3"
+        ]
+      },
+      "formula": "export const SUBSCRIPTION_MAX_BUFFER = 1024 * 1024;",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/infra/deploymentSubscriptions.ts#L13",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/infra/deploymentSubscriptions.ts",
+        "line": 13,
+        "column": 47
+      }
+    },
+    {
+      "id": "m1.apps.backend.infra.deploymentSubscriptions.4",
+      "concept": "connection · literal 1013",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1013,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.infra.deploymentSubscriptions.4"
+        ]
+      },
+      "formula": "socket.close(1013, \"Client is receiving updates too slowly\");",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/infra/deploymentSubscriptions.ts#L48",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/infra/deploymentSubscriptions.ts",
+        "line": 48,
+        "column": 28
+      }
+    },
+    {
+      "id": "m1.apps.backend.infra.deploymentSubscriptions.5",
       "concept": "synchronize · literal 1011",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
@@ -28530,7 +28689,7 @@
         "value": 1011,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.infra.deploymentSubscriptions.2"
+          "m1.apps.backend.infra.deploymentSubscriptions.5"
         ]
       },
       "formula": "socket.close(1011, \"Deployment subscription failed\");",
@@ -28538,7 +28697,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/infra/deploymentSubscriptions.ts#L57",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/infra/deploymentSubscriptions.ts#L65",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -28552,12 +28711,12 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/infra/deploymentSubscriptions.ts",
-        "line": 57,
+        "line": 65,
         "column": 22
       }
     },
     {
-      "id": "m1.apps.backend.infra.deploymentSubscriptions.3",
+      "id": "m1.apps.backend.infra.deploymentSubscriptions.6",
       "concept": "bytes · literal 0",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
@@ -28566,7 +28725,7 @@
         "value": 0,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.infra.deploymentSubscriptions.3"
+          "m1.apps.backend.infra.deploymentSubscriptions.6"
         ]
       },
       "formula": "const bytes = Array.isArray(data) ? data.reduce((total, chunk) => total + chunk.byteLength, 0) : data.byteLength;",
@@ -28574,7 +28733,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/infra/deploymentSubscriptions.ts#L66",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/infra/deploymentSubscriptions.ts#L74",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -28588,12 +28747,12 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/infra/deploymentSubscriptions.ts",
-        "line": 66,
+        "line": 74,
         "column": 65
       }
     },
     {
-      "id": "m1.apps.backend.infra.deploymentSubscriptions.4",
+      "id": "m1.apps.backend.infra.deploymentSubscriptions.7",
       "concept": "attachDeploymentSubscription · literal 1009",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
@@ -28602,7 +28761,7 @@
         "value": 1009,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.infra.deploymentSubscriptions.4"
+          "m1.apps.backend.infra.deploymentSubscriptions.7"
         ]
       },
       "formula": "socket.close(1009, \"Subscription message is too large\");",
@@ -28610,7 +28769,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/infra/deploymentSubscriptions.ts#L69",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/infra/deploymentSubscriptions.ts#L77",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -28624,8 +28783,44 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/infra/deploymentSubscriptions.ts",
-        "line": 69,
+        "line": 77,
         "column": 20
+      }
+    },
+    {
+      "id": "m1.apps.backend.infra.pubsub.1",
+      "concept": "interrupted · literal 5000",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 5000,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.infra.pubsub.1"
+        ]
+      },
+      "formula": "timer = setTimeout(() => { stopped = true; subscriber.disconnect(); reject(new Error(\"Subscription readiness deadline exceeded\")); }, 5000);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/infra/pubsub.ts#L133",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/infra/pubsub.ts",
+        "line": 133,
+        "column": 16
       }
     },
     {
@@ -28646,7 +28841,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/infra/queue.ts#L7",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/infra/queue.ts#L8",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -28660,7 +28855,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/infra/queue.ts",
-        "line": 7,
+        "line": 8,
         "column": 15
       }
     },
@@ -28682,7 +28877,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/infra/queue.ts#L10",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/infra/queue.ts#L11",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -28696,8 +28891,188 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/infra/queue.ts",
-        "line": 10,
+        "line": 11,
         "column": 14
+      }
+    },
+    {
+      "id": "m1.apps.backend.infra.queue.3",
+      "concept": "deploymentQueue.defaultJobOptions.backoff.jitter · literal 0.2",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0.2,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.infra.queue.3"
+        ]
+      },
+      "formula": "jitter: 0.2",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/infra/queue.ts#L12",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/infra/queue.ts",
+        "line": 12,
+        "column": 15
+      }
+    },
+    {
+      "id": "m1.apps.backend.infra.queue.4",
+      "concept": "deploymentQueue.defaultJobOptions.removeOnComplete.age · literal 86400",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 86400,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.infra.queue.4"
+        ]
+      },
+      "formula": "age: 86400",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/infra/queue.ts#L14",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/infra/queue.ts",
+        "line": 14,
+        "column": 30
+      }
+    },
+    {
+      "id": "m1.apps.backend.infra.queue.5",
+      "concept": "deploymentQueue.defaultJobOptions.removeOnComplete.count · literal 1000",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1000,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.infra.queue.5"
+        ]
+      },
+      "formula": "count: 1000",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/infra/queue.ts#L14",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/infra/queue.ts",
+        "line": 14,
+        "column": 44
+      }
+    },
+    {
+      "id": "m1.apps.backend.infra.queue.6",
+      "concept": "deploymentQueue.defaultJobOptions.removeOnFail.age · literal 604800",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 604800,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.infra.queue.6"
+        ]
+      },
+      "formula": "age: 604800",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/infra/queue.ts#L15",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/infra/queue.ts",
+        "line": 15,
+        "column": 26
+      }
+    },
+    {
+      "id": "m1.apps.backend.infra.queue.7",
+      "concept": "deploymentQueue.defaultJobOptions.removeOnFail.count · literal 5000",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 5000,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.infra.queue.7"
+        ]
+      },
+      "formula": "count: 5000",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/infra/queue.ts#L15",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/infra/queue.ts",
+        "line": 15,
+        "column": 41
       }
     },
     {
@@ -28718,7 +29093,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/infra/redis.ts#L6",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/infra/redis.ts#L9",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -28732,7 +29107,43 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/infra/redis.ts",
-        "line": 6,
+        "line": 9,
+        "column": 52
+      }
+    },
+    {
+      "id": "m1.apps.backend.infra.redis.2",
+      "concept": "commandRedis.port · literal 10",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 10,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.infra.redis.2"
+        ]
+      },
+      "formula": "port: parseInt(process.env.REDIS_PORT || \"6379\", 10)",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/infra/redis.ts#L14",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/infra/redis.ts",
+        "line": 14,
         "column": 52
       }
     },
@@ -47960,6 +48371,834 @@
       }
     },
     {
+      "id": "m1.apps.backend.utils.connectionPolicy.1",
+      "concept": "databasePoolPolicy.max · literal 10",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 10,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.utils.connectionPolicy.1"
+        ]
+      },
+      "formula": "max: 10",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/utils/connectionPolicy.ts#L7",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/utils/connectionPolicy.ts",
+        "line": 7,
+        "column": 8
+      }
+    },
+    {
+      "id": "m1.apps.backend.utils.connectionPolicy.2",
+      "concept": "databasePoolPolicy.connectionTimeoutMillis · literal 5000",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 5000,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.utils.connectionPolicy.2"
+        ]
+      },
+      "formula": "connectionTimeoutMillis: 5000",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/utils/connectionPolicy.ts#L8",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/utils/connectionPolicy.ts",
+        "line": 8,
+        "column": 28
+      }
+    },
+    {
+      "id": "m1.apps.backend.utils.connectionPolicy.3",
+      "concept": "databasePoolPolicy.idleTimeoutMillis · literal 30000",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 30000,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.utils.connectionPolicy.3"
+        ]
+      },
+      "formula": "idleTimeoutMillis: 30000",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/utils/connectionPolicy.ts#L9",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/utils/connectionPolicy.ts",
+        "line": 9,
+        "column": 22
+      }
+    },
+    {
+      "id": "m1.apps.backend.utils.connectionPolicy.4",
+      "concept": "databasePoolPolicy.query_timeout · literal 20000",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 20000,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.utils.connectionPolicy.4"
+        ]
+      },
+      "formula": "query_timeout: 20000",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/utils/connectionPolicy.ts#L10",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/utils/connectionPolicy.ts",
+        "line": 10,
+        "column": 18
+      }
+    },
+    {
+      "id": "m1.apps.backend.utils.connectionPolicy.5",
+      "concept": "databasePoolOptions.statement_timeout · literal 15000",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 15000,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.utils.connectionPolicy.5"
+        ]
+      },
+      "formula": "statement_timeout: 15000",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/utils/connectionPolicy.ts#L17",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/utils/connectionPolicy.ts",
+        "line": 17,
+        "column": 26
+      }
+    },
+    {
+      "id": "m1.apps.backend.utils.connectionPolicy.6",
+      "concept": "databasePoolOptions.idle_in_transaction_session_timeout · literal 30000",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 30000,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.utils.connectionPolicy.6"
+        ]
+      },
+      "formula": "idle_in_transaction_session_timeout: 30000",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/utils/connectionPolicy.ts#L18",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/utils/connectionPolicy.ts",
+        "line": 18,
+        "column": 44
+      }
+    },
+    {
+      "id": "m1.apps.backend.utils.connectionPolicy.7",
+      "concept": "redisPolicy.connectTimeout · literal 2000",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 2000,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.utils.connectionPolicy.7"
+        ]
+      },
+      "formula": "connectTimeout: 2000",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/utils/connectionPolicy.ts#L26",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/utils/connectionPolicy.ts",
+        "line": 26,
+        "column": 21
+      }
+    },
+    {
+      "id": "m1.apps.backend.utils.connectionPolicy.8",
+      "concept": "redisPolicy.maxRetriesPerRequest · literal 1",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.utils.connectionPolicy.8"
+        ]
+      },
+      "formula": "maxRetriesPerRequest: consumer ? null : 1",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/utils/connectionPolicy.ts#L27",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/utils/connectionPolicy.ts",
+        "line": 27,
+        "column": 45
+      }
+    },
+    {
+      "id": "m1.apps.backend.utils.connectionPolicy.9",
+      "concept": "redisPolicy.commandTimeout · literal 2000",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 2000,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.utils.connectionPolicy.9"
+        ]
+      },
+      "formula": "commandTimeout: 2000",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/utils/connectionPolicy.ts#L30",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/utils/connectionPolicy.ts",
+        "line": 30,
+        "column": 43
+      }
+    },
+    {
+      "id": "m1.apps.backend.utils.connectionPolicy.10",
+      "concept": "redisPolicy.retryStrategy · literal 100",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 100,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.utils.connectionPolicy.10"
+        ]
+      },
+      "formula": "retryStrategy: (attempt) => Math.min(100 * 2 ** Math.min(attempt, 5), 3000) + Math.floor(Math.random() * 250)",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/utils/connectionPolicy.ts#L31",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/utils/connectionPolicy.ts",
+        "line": 31,
+        "column": 42
+      }
+    },
+    {
+      "id": "m1.apps.backend.utils.connectionPolicy.11",
+      "concept": "redisPolicy.retryStrategy · literal 2",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 2,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.utils.connectionPolicy.11"
+        ]
+      },
+      "formula": "retryStrategy: (attempt) => Math.min(100 * 2 ** Math.min(attempt, 5), 3000) + Math.floor(Math.random() * 250)",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/utils/connectionPolicy.ts#L31",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/utils/connectionPolicy.ts",
+        "line": 31,
+        "column": 48
+      }
+    },
+    {
+      "id": "m1.apps.backend.utils.connectionPolicy.12",
+      "concept": "redisPolicy.retryStrategy · literal 5",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 5,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.utils.connectionPolicy.12"
+        ]
+      },
+      "formula": "retryStrategy: (attempt) => Math.min(100 * 2 ** Math.min(attempt, 5), 3000) + Math.floor(Math.random() * 250)",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/utils/connectionPolicy.ts#L31",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/utils/connectionPolicy.ts",
+        "line": 31,
+        "column": 71
+      }
+    },
+    {
+      "id": "m1.apps.backend.utils.connectionPolicy.13",
+      "concept": "redisPolicy.retryStrategy · literal 3000",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 3000,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.utils.connectionPolicy.13"
+        ]
+      },
+      "formula": "retryStrategy: (attempt) => Math.min(100 * 2 ** Math.min(attempt, 5), 3000) + Math.floor(Math.random() * 250)",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/utils/connectionPolicy.ts#L31",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/utils/connectionPolicy.ts",
+        "line": 31,
+        "column": 75
+      }
+    },
+    {
+      "id": "m1.apps.backend.utils.connectionPolicy.14",
+      "concept": "redisPolicy.retryStrategy · literal 250",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 250,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.utils.connectionPolicy.14"
+        ]
+      },
+      "formula": "retryStrategy: (attempt) => Math.min(100 * 2 ** Math.min(attempt, 5), 3000) + Math.floor(Math.random() * 250)",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/utils/connectionPolicy.ts#L31",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/utils/connectionPolicy.ts",
+        "line": 31,
+        "column": 110
+      }
+    },
+    {
+      "id": "m1.apps.backend.utils.connectionPolicy.15",
+      "concept": "ceiling · literal 5000",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 5000,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.utils.connectionPolicy.15"
+        ]
+      },
+      "formula": "const ceiling = Math.min(5000 * 2 ** Math.min(Math.max(0, failures - 1), 3), 30000);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/utils/connectionPolicy.ts#L36",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/utils/connectionPolicy.ts",
+        "line": 36,
+        "column": 28
+      }
+    },
+    {
+      "id": "m1.apps.backend.utils.connectionPolicy.16",
+      "concept": "ceiling · literal 2",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 2,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.utils.connectionPolicy.16"
+        ]
+      },
+      "formula": "const ceiling = Math.min(5000 * 2 ** Math.min(Math.max(0, failures - 1), 3), 30000);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/utils/connectionPolicy.ts#L36",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/utils/connectionPolicy.ts",
+        "line": 36,
+        "column": 35
+      }
+    },
+    {
+      "id": "m1.apps.backend.utils.connectionPolicy.17",
+      "concept": "ceiling · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.utils.connectionPolicy.17"
+        ]
+      },
+      "formula": "const ceiling = Math.min(5000 * 2 ** Math.min(Math.max(0, failures - 1), 3), 30000);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/utils/connectionPolicy.ts#L36",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/utils/connectionPolicy.ts",
+        "line": 36,
+        "column": 58
+      }
+    },
+    {
+      "id": "m1.apps.backend.utils.connectionPolicy.18",
+      "concept": "ceiling · literal 1",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.utils.connectionPolicy.18"
+        ]
+      },
+      "formula": "const ceiling = Math.min(5000 * 2 ** Math.min(Math.max(0, failures - 1), 3), 30000);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/utils/connectionPolicy.ts#L36",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/utils/connectionPolicy.ts",
+        "line": 36,
+        "column": 72
+      }
+    },
+    {
+      "id": "m1.apps.backend.utils.connectionPolicy.19",
+      "concept": "ceiling · literal 3",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 3,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.utils.connectionPolicy.19"
+        ]
+      },
+      "formula": "const ceiling = Math.min(5000 * 2 ** Math.min(Math.max(0, failures - 1), 3), 30000);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/utils/connectionPolicy.ts#L36",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/utils/connectionPolicy.ts",
+        "line": 36,
+        "column": 76
+      }
+    },
+    {
+      "id": "m1.apps.backend.utils.connectionPolicy.20",
+      "concept": "ceiling · literal 30000",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 30000,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.utils.connectionPolicy.20"
+        ]
+      },
+      "formula": "const ceiling = Math.min(5000 * 2 ** Math.min(Math.max(0, failures - 1), 3), 30000);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/utils/connectionPolicy.ts#L36",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/utils/connectionPolicy.ts",
+        "line": 36,
+        "column": 80
+      }
+    },
+    {
+      "id": "m1.apps.backend.utils.connectionPolicy.21",
+      "concept": "outboxRetryDelay · literal 0.8",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0.8,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.utils.connectionPolicy.21"
+        ]
+      },
+      "formula": "return Math.floor(ceiling * (0.8 + random() * 0.2));",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/utils/connectionPolicy.ts#L37",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/utils/connectionPolicy.ts",
+        "line": 37,
+        "column": 32
+      }
+    },
+    {
+      "id": "m1.apps.backend.utils.connectionPolicy.22",
+      "concept": "outboxRetryDelay · literal 0.2",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0.2,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.utils.connectionPolicy.22"
+        ]
+      },
+      "formula": "return Math.floor(ceiling * (0.8 + random() * 0.2));",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/utils/connectionPolicy.ts#L37",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/utils/connectionPolicy.ts",
+        "line": 37,
+        "column": 49
+      }
+    },
+    {
+      "id": "m1.apps.backend.utils.connectionPolicy.23",
+      "concept": "operationalWarning · literal 30000",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 30000,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.utils.connectionPolicy.23"
+        ]
+      },
+      "formula": "if (last !== undefined && Date.now() - last < 30000) return;",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/utils/connectionPolicy.ts#L44",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/utils/connectionPolicy.ts",
+        "line": 44,
+        "column": 51
+      }
+    },
+    {
       "id": "m1.apps.backend.utils.deploymentJobPolicy.1",
       "concept": "deploymentFailureStatus · literal 1",
       "modelVersion": "1",
@@ -48140,6 +49379,294 @@
       }
     },
     {
+      "id": "m1.apps.backend.utils.lifecycle.1",
+      "concept": "configureHttpServer · literal 10000",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 10000,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.utils.lifecycle.1"
+        ]
+      },
+      "formula": "server.headersTimeout = 10000;",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/utils/lifecycle.ts#L4",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/utils/lifecycle.ts",
+        "line": 4,
+        "column": 27
+      }
+    },
+    {
+      "id": "m1.apps.backend.utils.lifecycle.2",
+      "concept": "configureHttpServer · literal 30000",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 30000,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.utils.lifecycle.2"
+        ]
+      },
+      "formula": "server.requestTimeout = 30000;",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/utils/lifecycle.ts#L5",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/utils/lifecycle.ts",
+        "line": 5,
+        "column": 27
+      }
+    },
+    {
+      "id": "m1.apps.backend.utils.lifecycle.3",
+      "concept": "configureHttpServer · literal 5000",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 5000,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.utils.lifecycle.3"
+        ]
+      },
+      "formula": "server.keepAliveTimeout = 5000;",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/utils/lifecycle.ts#L6",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/utils/lifecycle.ts",
+        "line": 6,
+        "column": 29
+      }
+    },
+    {
+      "id": "m1.apps.backend.utils.lifecycle.4",
+      "concept": "configureHttpServer · literal 30000",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 30000,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.utils.lifecycle.4"
+        ]
+      },
+      "formula": "server.setTimeout(30000, socket => socket.destroy());",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/utils/lifecycle.ts#L7",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/utils/lifecycle.ts",
+        "line": 7,
+        "column": 21
+      }
+    },
+    {
+      "id": "m1.apps.backend.utils.lifecycle.5",
+      "concept": "deadline · literal 1",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.utils.lifecycle.5"
+        ]
+      },
+      "formula": "exit(1);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/utils/lifecycle.ts#L24",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/utils/lifecycle.ts",
+        "line": 24,
+        "column": 14
+      }
+    },
+    {
+      "id": "m1.apps.backend.utils.lifecycle.6",
+      "concept": "deadline · literal 25000",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 25000,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.utils.lifecycle.6"
+        ]
+      },
+      "formula": "const deadline = setTimeout(() => { expired = true; server.closeAllConnections(); exit(1); }, options.deadlineMs ?? 25000);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/utils/lifecycle.ts#L25",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/utils/lifecycle.ts",
+        "line": 25,
+        "column": 32
+      }
+    },
+    {
+      "id": "m1.apps.backend.utils.lifecycle.7",
+      "concept": "shutdown · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.utils.lifecycle.7"
+        ]
+      },
+      "formula": "exit(0);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/utils/lifecycle.ts#L33",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/utils/lifecycle.ts",
+        "line": 33,
+        "column": 28
+      }
+    },
+    {
+      "id": "m1.apps.backend.utils.lifecycle.8",
+      "concept": "shutdown · literal 1",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.utils.lifecycle.8"
+        ]
+      },
+      "formula": "exit(1);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/utils/lifecycle.ts#L36",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/utils/lifecycle.ts",
+        "line": 36,
+        "column": 28
+      }
+    },
+    {
       "id": "m1.apps.backend.utils.middleware.1",
       "concept": "errorHandler · literal 400",
       "modelVersion": "1",
@@ -48157,7 +49684,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/utils/middleware.ts#L7",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/utils/middleware.ts#L10",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -48171,7 +49698,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/utils/middleware.ts",
-        "line": 7,
+        "line": 10,
         "column": 20
       }
     },
@@ -48193,7 +49720,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/utils/middleware.ts#L11",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/utils/middleware.ts#L14",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -48207,7 +49734,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/utils/middleware.ts",
-        "line": 11,
+        "line": 14,
         "column": 20
       }
     },
@@ -48229,7 +49756,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/utils/middleware.ts#L14",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/utils/middleware.ts#L17",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -48243,7 +49770,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/utils/middleware.ts",
-        "line": 14,
+        "line": 17,
         "column": 79
       }
     },
@@ -48265,7 +49792,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/utils/middleware.ts#L14",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/utils/middleware.ts#L17",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -48279,7 +49806,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/utils/middleware.ts",
-        "line": 14,
+        "line": 17,
         "column": 99
       }
     },
@@ -48301,7 +49828,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/utils/middleware.ts#L27",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/utils/middleware.ts#L30",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -48315,7 +49842,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/utils/middleware.ts",
-        "line": 27,
+        "line": 30,
         "column": 20
       }
     },
@@ -48337,7 +49864,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/utils/middleware.ts#L36",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/utils/middleware.ts#L39",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -48351,13 +49878,13 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/utils/middleware.ts",
-        "line": 36,
+        "line": 39,
         "column": 23
       }
     },
     {
       "id": "m1.apps.backend.utils.rateLimiter.1",
-      "concept": "MAX_REQUESTS · literal 1000",
+      "concept": "createRateLimiter · literal 1000",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
       "quantity": {
@@ -48368,12 +49895,12 @@
           "m1.apps.backend.utils.rateLimiter.1"
         ]
       },
-      "formula": "const MAX_REQUESTS = 1000;",
+      "formula": "export function createRateLimiter({ maxRequests = 1000, maxClients = 2048, windowMs = 15 * 60 * 1000, now = Date.now, sweepIntervalMs = 60000 } = {}) { const clients = new Map<string, number[]>(); const sweep = () => { const cutoff = now() - windowMs; for (const [ip, timestamps] of clients) if (timestamps.at(-1)! <= cutoff) clients.delete(ip); }; const timer = setInterval(sweep, sweepIntervalMs); timer.unref(); const middleware: RequestHandler = (req, res, next) => { const ip = req.ip || req.soc",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/utils/rateLimiter.ts#L23",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/utils/rateLimiter.ts#L4",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -48387,13 +49914,49 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/utils/rateLimiter.ts",
-        "line": 23,
-        "column": 22
+        "line": 4,
+        "column": 51
       }
     },
     {
       "id": "m1.apps.backend.utils.rateLimiter.2",
-      "concept": "TIME_WINDOW_MAX_SIZE · literal 15",
+      "concept": "createRateLimiter · literal 2048",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 2048,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.utils.rateLimiter.2"
+        ]
+      },
+      "formula": "export function createRateLimiter({ maxRequests = 1000, maxClients = 2048, windowMs = 15 * 60 * 1000, now = Date.now, sweepIntervalMs = 60000 } = {}) { const clients = new Map<string, number[]>(); const sweep = () => { const cutoff = now() - windowMs; for (const [ip, timestamps] of clients) if (timestamps.at(-1)! <= cutoff) clients.delete(ip); }; const timer = setInterval(sweep, sweepIntervalMs); timer.unref(); const middleware: RequestHandler = (req, res, next) => { const ip = req.ip || req.soc",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/utils/rateLimiter.ts#L4",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/utils/rateLimiter.ts",
+        "line": 4,
+        "column": 70
+      }
+    },
+    {
+      "id": "m1.apps.backend.utils.rateLimiter.3",
+      "concept": "createRateLimiter · literal 15",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
       "quantity": {
@@ -48401,15 +49964,15 @@
         "value": 15,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.utils.rateLimiter.2"
+          "m1.apps.backend.utils.rateLimiter.3"
         ]
       },
-      "formula": "const TIME_WINDOW_MAX_SIZE = 15 * 60 * 1000;",
+      "formula": "export function createRateLimiter({ maxRequests = 1000, maxClients = 2048, windowMs = 15 * 60 * 1000, now = Date.now, sweepIntervalMs = 60000 } = {}) { const clients = new Map<string, number[]>(); const sweep = () => { const cutoff = now() - windowMs; for (const [ip, timestamps] of clients) if (timestamps.at(-1)! <= cutoff) clients.delete(ip); }; const timer = setInterval(sweep, sweepIntervalMs); timer.unref(); const middleware: RequestHandler = (req, res, next) => { const ip = req.ip || req.soc",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/utils/rateLimiter.ts#L24",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/utils/rateLimiter.ts#L5",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -48423,13 +49986,13 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/utils/rateLimiter.ts",
-        "line": 24,
-        "column": 30
+        "line": 5,
+        "column": 14
       }
     },
     {
-      "id": "m1.apps.backend.utils.rateLimiter.3",
-      "concept": "TIME_WINDOW_MAX_SIZE · literal 60",
+      "id": "m1.apps.backend.utils.rateLimiter.4",
+      "concept": "createRateLimiter · literal 60",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
       "quantity": {
@@ -48437,15 +50000,15 @@
         "value": 60,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.utils.rateLimiter.3"
+          "m1.apps.backend.utils.rateLimiter.4"
         ]
       },
-      "formula": "const TIME_WINDOW_MAX_SIZE = 15 * 60 * 1000;",
+      "formula": "export function createRateLimiter({ maxRequests = 1000, maxClients = 2048, windowMs = 15 * 60 * 1000, now = Date.now, sweepIntervalMs = 60000 } = {}) { const clients = new Map<string, number[]>(); const sweep = () => { const cutoff = now() - windowMs; for (const [ip, timestamps] of clients) if (timestamps.at(-1)! <= cutoff) clients.delete(ip); }; const timer = setInterval(sweep, sweepIntervalMs); timer.unref(); const middleware: RequestHandler = (req, res, next) => { const ip = req.ip || req.soc",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/utils/rateLimiter.ts#L24",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/utils/rateLimiter.ts#L5",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -48459,65 +50022,29 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/utils/rateLimiter.ts",
-        "line": 24,
-        "column": 35
+        "line": 5,
+        "column": 19
       }
     },
     {
-      "id": "m1.apps.backend.utils.rateLimiter.4",
-      "concept": "TIME_WINDOW_MAX_SIZE · literal 1000",
+      "id": "m1.apps.backend.utils.rateLimiter.5",
+      "concept": "createRateLimiter · literal 1000",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
       "quantity": {
         "kind": "known",
         "value": 1000,
-        "unit": "code-number",
-        "provenance": [
-          "m1.apps.backend.utils.rateLimiter.4"
-        ]
-      },
-      "formula": "const TIME_WINDOW_MAX_SIZE = 15 * 60 * 1000;",
-      "classification": "implementation-policy",
-      "confidence": "high",
-      "provenance": [
-        {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/utils/rateLimiter.ts#L24",
-          "supports": "implementation",
-          "detail": "Exact historical literal and source expression; not external validation."
-        }
-      ],
-      "assumptions": [
-        "This literal is not evidence of real infrastructure capacity or performance.",
-        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
-      ],
-      "researchedOn": "2026-10-15",
-      "freeMode": "conditional",
-      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
-      "location": {
-        "file": "apps/backend/utils/rateLimiter.ts",
-        "line": 24,
-        "column": 40
-      }
-    },
-    {
-      "id": "m1.apps.backend.utils.rateLimiter.5",
-      "concept": "rateLimiter.ts · literal 0",
-      "modelVersion": "1",
-      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
-      "quantity": {
-        "kind": "known",
-        "value": 0,
         "unit": "code-number",
         "provenance": [
           "m1.apps.backend.utils.rateLimiter.5"
         ]
       },
-      "formula": "if ( value.length === 0 || Date.now() - value[value.length - 1]! > TIME_WINDOW_MAX_SIZE ) { ipMap.delete(key); }",
+      "formula": "export function createRateLimiter({ maxRequests = 1000, maxClients = 2048, windowMs = 15 * 60 * 1000, now = Date.now, sweepIntervalMs = 60000 } = {}) { const clients = new Map<string, number[]>(); const sweep = () => { const cutoff = now() - windowMs; for (const [ip, timestamps] of clients) if (timestamps.at(-1)! <= cutoff) clients.delete(ip); }; const timer = setInterval(sweep, sweepIntervalMs); timer.unref(); const middleware: RequestHandler = (req, res, next) => { const ip = req.ip || req.soc",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/utils/rateLimiter.ts#L34",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/utils/rateLimiter.ts#L5",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -48531,29 +50058,29 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/utils/rateLimiter.ts",
-        "line": 34,
+        "line": 5,
         "column": 24
       }
     },
     {
       "id": "m1.apps.backend.utils.rateLimiter.6",
-      "concept": "rateLimiter.ts · literal 1",
+      "concept": "createRateLimiter · literal 60000",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
       "quantity": {
         "kind": "known",
-        "value": 1,
+        "value": 60000,
         "unit": "code-number",
         "provenance": [
           "m1.apps.backend.utils.rateLimiter.6"
         ]
       },
-      "formula": "if ( value.length === 0 || Date.now() - value[value.length - 1]! > TIME_WINDOW_MAX_SIZE ) { ipMap.delete(key); }",
+      "formula": "export function createRateLimiter({ maxRequests = 1000, maxClients = 2048, windowMs = 15 * 60 * 1000, now = Date.now, sweepIntervalMs = 60000 } = {}) { const clients = new Map<string, number[]>(); const sweep = () => { const cutoff = now() - windowMs; for (const [ip, timestamps] of clients) if (timestamps.at(-1)! <= cutoff) clients.delete(ip); }; const timer = setInterval(sweep, sweepIntervalMs); timer.unref(); const middleware: RequestHandler = (req, res, next) => { const ip = req.ip || req.soc",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/utils/rateLimiter.ts#L35",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/utils/rateLimiter.ts#L5",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -48567,29 +50094,29 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/utils/rateLimiter.ts",
-        "line": 35,
-        "column": 41
+        "line": 5,
+        "column": 64
       }
     },
     {
       "id": "m1.apps.backend.utils.rateLimiter.7",
-      "concept": "rateLimiter · literal 0",
+      "concept": "sweep · literal -1",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
       "quantity": {
         "kind": "known",
-        "value": 0,
+        "value": -1,
         "unit": "code-number",
         "provenance": [
           "m1.apps.backend.utils.rateLimiter.7"
         ]
       },
-      "formula": "res.setHeader(\"X-RateLimit-Reset\", timeStamp[0]! + TIME_WINDOW_MAX_SIZE);",
+      "formula": "if (timestamps.at(-1)! <= cutoff) clients.delete(ip);",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/utils/rateLimiter.ts#L61",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/utils/rateLimiter.ts#L9",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -48603,29 +50130,29 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/utils/rateLimiter.ts",
-        "line": 61,
-        "column": 50
+        "line": 9,
+        "column": 64
       }
     },
     {
       "id": "m1.apps.backend.utils.rateLimiter.8",
-      "concept": "rateLimiter · literal 0",
+      "concept": "middleware · literal 60",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
       "quantity": {
         "kind": "known",
-        "value": 0,
+        "value": 60,
         "unit": "code-number",
         "provenance": [
           "m1.apps.backend.utils.rateLimiter.8"
         ]
       },
-      "formula": "res.setHeader( \"Retry-After\", Math.ceil((timeStamp[0]! + TIME_WINDOW_MAX_SIZE - now) / 1000), );",
+      "formula": "res.setHeader(\"Retry-After\", 60);",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/utils/rateLimiter.ts#L67",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/utils/rateLimiter.ts#L18",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -48639,29 +50166,29 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/utils/rateLimiter.ts",
-        "line": 67,
-        "column": 28
+        "line": 18,
+        "column": 36
       }
     },
     {
       "id": "m1.apps.backend.utils.rateLimiter.9",
-      "concept": "rateLimiter · literal 1000",
+      "concept": "middleware · literal 503",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
       "quantity": {
         "kind": "known",
-        "value": 1000,
+        "value": 503,
         "unit": "code-number",
         "provenance": [
           "m1.apps.backend.utils.rateLimiter.9"
         ]
       },
-      "formula": "res.setHeader( \"Retry-After\", Math.ceil((timeStamp[0]! + TIME_WINDOW_MAX_SIZE - now) / 1000), );",
+      "formula": "res.status(503).json({ success: false, message: \"Request capacity reached; try again later\" });",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/utils/rateLimiter.ts#L67",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/utils/rateLimiter.ts#L19",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -48675,13 +50202,13 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/utils/rateLimiter.ts",
-        "line": 67,
-        "column": 64
+        "line": 19,
+        "column": 18
       }
     },
     {
       "id": "m1.apps.backend.utils.rateLimiter.10",
-      "concept": "rateLimiter · literal 0",
+      "concept": "middleware · literal 0",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
       "quantity": {
@@ -48692,12 +50219,12 @@
           "m1.apps.backend.utils.rateLimiter.10"
         ]
       },
-      "formula": "res.setHeader(\"X-RateLimit-Remaining\", 0);",
+      "formula": "res.setHeader(\"X-RateLimit-Reset\", timestamps[0]! + windowMs);",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/utils/rateLimiter.ts#L70",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/utils/rateLimiter.ts#L27",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -48711,13 +50238,13 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/utils/rateLimiter.ts",
-        "line": 70,
-        "column": 44
+        "line": 27,
+        "column": 51
       }
     },
     {
       "id": "m1.apps.backend.utils.rateLimiter.11",
-      "concept": "rateLimiter · literal 0",
+      "concept": "middleware · literal 0",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
       "quantity": {
@@ -48728,12 +50255,12 @@
           "m1.apps.backend.utils.rateLimiter.11"
         ]
       },
-      "formula": "res.setHeader(\"X-RateLimit-Reset\", timeStamp[0]! + TIME_WINDOW_MAX_SIZE);",
+      "formula": "res.setHeader(\"Retry-After\", Math.ceil((timestamps[0]! + windowMs - time) / 1000));",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/utils/rateLimiter.ts#L71",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/utils/rateLimiter.ts#L29",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -48747,13 +50274,49 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/utils/rateLimiter.ts",
-        "line": 71,
-        "column": 50
+        "line": 29,
+        "column": 56
       }
     },
     {
       "id": "m1.apps.backend.utils.rateLimiter.12",
-      "concept": "rateLimiter · literal 429",
+      "concept": "middleware · literal 1000",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1000,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.utils.rateLimiter.12"
+        ]
+      },
+      "formula": "res.setHeader(\"Retry-After\", Math.ceil((timestamps[0]! + windowMs - time) / 1000));",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/utils/rateLimiter.ts#L29",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/utils/rateLimiter.ts",
+        "line": 29,
+        "column": 81
+      }
+    },
+    {
+      "id": "m1.apps.backend.utils.rateLimiter.13",
+      "concept": "middleware · literal 429",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
       "quantity": {
@@ -48761,15 +50324,15 @@
         "value": 429,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.utils.rateLimiter.12"
+          "m1.apps.backend.utils.rateLimiter.13"
         ]
       },
-      "formula": "res.status(429).json({ success: false, message: \"Too many requests\", });",
+      "formula": "res.status(429).json({ success: false, message: \"Too many requests\" });",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/utils/rateLimiter.ts#L72",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/utils/rateLimiter.ts#L30",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -48783,8 +50346,80 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/utils/rateLimiter.ts",
-        "line": 72,
+        "line": 30,
         "column": 16
+      }
+    },
+    {
+      "id": "m1.apps.backend.utils.socketLifecycle.1",
+      "concept": "MAX_SOCKET_CLIENTS · literal 128",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 128,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.utils.socketLifecycle.1"
+        ]
+      },
+      "formula": "export const MAX_SOCKET_CLIENTS = 128;",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/utils/socketLifecycle.ts#L3",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/utils/socketLifecycle.ts",
+        "line": 3,
+        "column": 35
+      }
+    },
+    {
+      "id": "m1.apps.backend.utils.socketLifecycle.2",
+      "concept": "startSocketHeartbeat · literal 30000",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 30000,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.utils.socketLifecycle.2"
+        ]
+      },
+      "formula": "export function startSocketHeartbeat(server: WebSocketServer, intervalMs = 30000) { const alive = new WeakMap<object, boolean>(); server.on(\"connection\", socket => { alive.set(socket, true); socket.on(\"pong\", () => alive.set(socket, true)); }); const timer = setInterval(() => { for (const socket of server.clients) { if (!alive.get(socket)) { socket.terminate(); continue; } alive.set(socket, false); try { socket.ping(); } catch { socket.terminate(); } } }, intervalMs); timer.unref(); return () =>",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/utils/socketLifecycle.ts#L5",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/utils/socketLifecycle.ts",
+        "line": 5,
+        "column": 76
       }
     },
     {
@@ -48805,7 +50440,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L50",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L51",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -48819,7 +50454,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/worker.ts",
-        "line": 50,
+        "line": 51,
         "column": 16
       }
     },
@@ -48841,7 +50476,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L65",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L72",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -48855,12 +50490,48 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/worker.ts",
-        "line": 65,
+        "line": 72,
         "column": 25
       }
     },
     {
       "id": "m1.apps.backend.worker.3",
+      "concept": "outboxFailures · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.worker.3"
+        ]
+      },
+      "formula": "let outboxFailures = 0;",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L73",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/worker.ts",
+        "line": 73,
+        "column": 22
+      }
+    },
+    {
+      "id": "m1.apps.backend.worker.4",
       "concept": "unprocessed.take · literal 10",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
@@ -48869,7 +50540,7 @@
         "value": 10,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.worker.3"
+          "m1.apps.backend.worker.4"
         ]
       },
       "formula": "take: 10",
@@ -48877,7 +50548,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L95",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L105",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -48891,12 +50562,12 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/worker.ts",
-        "line": 95,
+        "line": 105,
         "column": 13
       }
     },
     {
-      "id": "m1.apps.backend.worker.4",
+      "id": "m1.apps.backend.worker.5",
       "concept": "newRetries · literal 1",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
@@ -48905,7 +50576,7 @@
         "value": 1,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.worker.4"
+          "m1.apps.backend.worker.5"
         ]
       },
       "formula": "const newRetries = entry.retries + 1;",
@@ -48913,7 +50584,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L130",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L141",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -48927,44 +50598,8 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/worker.ts",
-        "line": 130,
+        "line": 141,
         "column": 44
-      }
-    },
-    {
-      "id": "m1.apps.backend.worker.5",
-      "concept": "pollOutbox · literal 0",
-      "modelVersion": "1",
-      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
-      "quantity": {
-        "kind": "known",
-        "value": 0,
-        "unit": "code-number",
-        "provenance": [
-          "m1.apps.backend.worker.5"
-        ]
-      },
-      "formula": "if (failure.count > 0) { await publishOutboxFailed( (entry.payload as unknown as OutboxPayload).deploymentId, \"Outbox delivery exhausted all retries.\", ); }",
-      "classification": "implementation-policy",
-      "confidence": "high",
-      "provenance": [
-        {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L160",
-          "supports": "implementation",
-          "detail": "Exact historical literal and source expression; not external validation."
-        }
-      ],
-      "assumptions": [
-        "This literal is not evidence of real infrastructure capacity or performance.",
-        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
-      ],
-      "researchedOn": "2026-10-15",
-      "freeMode": "conditional",
-      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
-      "location": {
-        "file": "apps/backend/worker.ts",
-        "line": 160,
-        "column": 35
       }
     },
     {
@@ -48980,12 +50615,12 @@
           "m1.apps.backend.worker.6"
         ]
       },
-      "formula": "busy = unprocessed.length > 0;",
+      "formula": "if (failure.count > 0) { await publishOutboxFailed( (entry.payload as unknown as OutboxPayload).deploymentId, \"Outbox delivery exhausted all retries.\", ); }",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L182",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L171",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -48999,13 +50634,121 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/worker.ts",
-        "line": 182,
-        "column": 33
+        "line": 171,
+        "column": 35
       }
     },
     {
       "id": "m1.apps.backend.worker.7",
-      "concept": "pollOutbox · literal 1000",
+      "concept": "pollOutbox · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.worker.7"
+        ]
+      },
+      "formula": "busy = unprocessed.length > 0;",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L189",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/worker.ts",
+        "line": 189,
+        "column": 33
+      }
+    },
+    {
+      "id": "m1.apps.backend.worker.8",
+      "concept": "pollOutbox · literal 1",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.worker.8"
+        ]
+      },
+      "formula": "outboxFailures = deliveryFailed ? outboxFailures + 1 : 0;",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L200",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/worker.ts",
+        "line": 200,
+        "column": 56
+      }
+    },
+    {
+      "id": "m1.apps.backend.worker.9",
+      "concept": "pollOutbox · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.worker.9"
+        ]
+      },
+      "formula": "outboxFailures = deliveryFailed ? outboxFailures + 1 : 0;",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L200",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/worker.ts",
+        "line": 200,
+        "column": 60
+      }
+    },
+    {
+      "id": "m1.apps.backend.worker.10",
+      "concept": "delay · literal 1000",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
       "quantity": {
@@ -49013,15 +50756,15 @@
         "value": 1000,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.worker.7"
+          "m1.apps.backend.worker.10"
         ]
       },
-      "formula": "outboxTimer = setTimeout(() => { outboxPoll = pollOutbox(); }, busy ? 1000 : 5000);",
+      "formula": "const delay = deliveryFailed ? outboxRetryDelay(outboxFailures) : busy ? 1000 : 5000;",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L192",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L201",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -49035,13 +50778,13 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/worker.ts",
-        "line": 192,
-        "column": 90
+        "line": 201,
+        "column": 78
       }
     },
     {
-      "id": "m1.apps.backend.worker.8",
-      "concept": "pollOutbox · literal 5000",
+      "id": "m1.apps.backend.worker.11",
+      "concept": "delay · literal 5000",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
       "quantity": {
@@ -49049,15 +50792,15 @@
         "value": 5000,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.worker.8"
+          "m1.apps.backend.worker.11"
         ]
       },
-      "formula": "outboxTimer = setTimeout(() => { outboxPoll = pollOutbox(); }, busy ? 1000 : 5000);",
+      "formula": "const delay = deliveryFailed ? outboxRetryDelay(outboxFailures) : busy ? 1000 : 5000;",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L192",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L201",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -49071,12 +50814,12 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/worker.ts",
-        "line": 192,
-        "column": 97
+        "line": 201,
+        "column": 85
       }
     },
     {
-      "id": "m1.apps.backend.worker.9",
+      "id": "m1.apps.backend.worker.12",
       "concept": "worker · literal 1",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
@@ -49085,7 +50828,7 @@
         "value": 1,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.worker.9"
+          "m1.apps.backend.worker.12"
         ]
       },
       "formula": "if (claimed.count !== 1) return;",
@@ -49093,7 +50836,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L262",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L272",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -49107,12 +50850,12 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/worker.ts",
-        "line": 262,
+        "line": 272,
         "column": 31
       }
     },
     {
-      "id": "m1.apps.backend.worker.10",
+      "id": "m1.apps.backend.worker.13",
       "concept": "runGate · literal 1",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
@@ -49121,7 +50864,7 @@
         "value": 1,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.worker.10"
+          "m1.apps.backend.worker.13"
         ]
       },
       "formula": "if (recorded.count !== 1) return false;",
@@ -49129,7 +50872,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L335",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L345",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -49143,12 +50886,12 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/worker.ts",
-        "line": 335,
+        "line": 345,
         "column": 32
       }
     },
     {
-      "id": "m1.apps.backend.worker.11",
+      "id": "m1.apps.backend.worker.14",
       "concept": "worker · literal 1",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
@@ -49157,7 +50900,7 @@
         "value": 1,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.worker.11"
+          "m1.apps.backend.worker.14"
         ]
       },
       "formula": "if (failed.count !== 1) return;",
@@ -49165,7 +50908,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L368",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L378",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -49179,12 +50922,12 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/worker.ts",
-        "line": 368,
+        "line": 378,
         "column": 30
       }
     },
     {
-      "id": "m1.apps.backend.worker.12",
+      "id": "m1.apps.backend.worker.15",
       "concept": "worker · literal 0",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
@@ -49193,15 +50936,15 @@
         "value": 0,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.worker.12"
+          "m1.apps.backend.worker.15"
         ]
       },
-      "formula": "if (failure.count > 0 && status === DeploymentStatus.FAILED) { await publishDeploymentFailed( deploymentId, `Deployment failed at some stage due to: ${err.message}`, ); }",
+      "formula": "if (failure.count > 0 && status === DeploymentStatus.FAILED) { await publishDeploymentFailed( deploymentId, \"Deployment failed after exhausting processing retries.\", ); }",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L414",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L424",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -49215,12 +50958,12 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/worker.ts",
-        "line": 414,
+        "line": 424,
         "column": 27
       }
     },
     {
-      "id": "m1.apps.backend.worker.13",
+      "id": "m1.apps.backend.worker.16",
       "concept": "worker.stalledInterval · literal 30000",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
@@ -49229,7 +50972,7 @@
         "value": 30000,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.worker.13"
+          "m1.apps.backend.worker.16"
         ]
       },
       "formula": "stalledInterval: 30000",
@@ -49237,7 +50980,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L425",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L435",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -49251,12 +50994,12 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/worker.ts",
-        "line": 425,
+        "line": 435,
         "column": 22
       }
     },
     {
-      "id": "m1.apps.backend.worker.14",
+      "id": "m1.apps.backend.worker.17",
       "concept": "worker.maxStalledCount · literal 10",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
@@ -49265,46 +51008,10 @@
         "value": 10,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.worker.14"
+          "m1.apps.backend.worker.17"
         ]
       },
       "formula": "maxStalledCount: 10",
-      "classification": "implementation-policy",
-      "confidence": "high",
-      "provenance": [
-        {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L426",
-          "supports": "implementation",
-          "detail": "Exact historical literal and source expression; not external validation."
-        }
-      ],
-      "assumptions": [
-        "This literal is not evidence of real infrastructure capacity or performance.",
-        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
-      ],
-      "researchedOn": "2026-10-15",
-      "freeMode": "conditional",
-      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
-      "location": {
-        "file": "apps/backend/worker.ts",
-        "line": 426,
-        "column": 22
-      }
-    },
-    {
-      "id": "m1.apps.backend.worker.15",
-      "concept": "readiness · literal 15000",
-      "modelVersion": "1",
-      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
-      "quantity": {
-        "kind": "known",
-        "value": 15000,
-        "unit": "code-number",
-        "provenance": [
-          "m1.apps.backend.worker.15"
-        ]
-      },
-      "formula": "if (stopping || queueConnection.status !== \"ready\" || blockingConnection?.status !== \"ready\" || !worker.isRunning() || Date.now() - lastOutboxSuccess > 15000) { throw new Error(\"Worker is not processing jobs/outbox\"); }",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
@@ -49324,11 +51031,47 @@
       "location": {
         "file": "apps/backend/worker.ts",
         "line": 436,
+        "column": 22
+      }
+    },
+    {
+      "id": "m1.apps.backend.worker.18",
+      "concept": "readiness · literal 15000",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 15000,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.worker.18"
+        ]
+      },
+      "formula": "if (stopping || queueConnection.status !== \"ready\" || blockingConnection?.status !== \"ready\" || !worker.isRunning() || Date.now() - lastOutboxSuccess > 15000) { throw new Error(\"Worker is not processing jobs/outbox\"); }",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L446",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/worker.ts",
+        "line": 446,
         "column": 61
       }
     },
     {
-      "id": "m1.apps.backend.worker.16",
+      "id": "m1.apps.backend.worker.19",
       "concept": "server · literal 404",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
@@ -49337,7 +51080,7 @@
         "value": 404,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.worker.16"
+          "m1.apps.backend.worker.19"
         ]
       },
       "formula": "res.writeHead(404);",
@@ -49345,7 +51088,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L445",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L455",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -49359,12 +51102,12 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/worker.ts",
-        "line": 445,
+        "line": 455,
         "column": 52
       }
     },
     {
-      "id": "m1.apps.backend.worker.17",
+      "id": "m1.apps.backend.worker.20",
       "concept": "server · literal 200",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
@@ -49373,7 +51116,7 @@
         "value": 200,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.worker.17"
+          "m1.apps.backend.worker.20"
         ]
       },
       "formula": "res.writeHead(result.success ? 200 : 503, { \"Content-Type\": \"application/json\" });",
@@ -49381,7 +51124,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L447",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L457",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -49395,12 +51138,12 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/worker.ts",
-        "line": 447,
+        "line": 457,
         "column": 34
       }
     },
     {
-      "id": "m1.apps.backend.worker.18",
+      "id": "m1.apps.backend.worker.21",
       "concept": "server · literal 503",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
@@ -49409,7 +51152,7 @@
         "value": 503,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.worker.18"
+          "m1.apps.backend.worker.21"
         ]
       },
       "formula": "res.writeHead(result.success ? 200 : 503, { \"Content-Type\": \"application/json\" });",
@@ -49417,7 +51160,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L447",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L457",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -49431,12 +51174,12 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/worker.ts",
-        "line": 447,
+        "line": 457,
         "column": 40
       }
     },
     {
-      "id": "m1.apps.backend.worker.19",
+      "id": "m1.apps.backend.worker.22",
       "concept": "worker.ts · literal 3002",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
@@ -49445,7 +51188,7 @@
         "value": 3002,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.worker.19"
+          "m1.apps.backend.worker.22"
         ]
       },
       "formula": "server.listen(Number(process.env.WORKER_HEALTH_PORT || 3002), config.LISTEN_HOST);",
@@ -49453,7 +51196,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L450",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L460",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -49467,12 +51210,12 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/worker.ts",
-        "line": 450,
+        "line": 460,
         "column": 56
       }
     },
     {
-      "id": "m1.apps.backend.worker.20",
+      "id": "m1.apps.backend.worker.23",
       "concept": "deadline · literal 1",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
@@ -49481,82 +51224,10 @@
         "value": 1,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.worker.20"
+          "m1.apps.backend.worker.23"
         ]
       },
       "formula": "const deadline = setTimeout(() => process.exit(1), 25000);",
-      "classification": "implementation-policy",
-      "confidence": "high",
-      "provenance": [
-        {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L458",
-          "supports": "implementation",
-          "detail": "Exact historical literal and source expression; not external validation."
-        }
-      ],
-      "assumptions": [
-        "This literal is not evidence of real infrastructure capacity or performance.",
-        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
-      ],
-      "researchedOn": "2026-10-15",
-      "freeMode": "conditional",
-      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
-      "location": {
-        "file": "apps/backend/worker.ts",
-        "line": 458,
-        "column": 50
-      }
-    },
-    {
-      "id": "m1.apps.backend.worker.21",
-      "concept": "deadline · literal 25000",
-      "modelVersion": "1",
-      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
-      "quantity": {
-        "kind": "known",
-        "value": 25000,
-        "unit": "code-number",
-        "provenance": [
-          "m1.apps.backend.worker.21"
-        ]
-      },
-      "formula": "const deadline = setTimeout(() => process.exit(1), 25000);",
-      "classification": "implementation-policy",
-      "confidence": "high",
-      "provenance": [
-        {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L458",
-          "supports": "implementation",
-          "detail": "Exact historical literal and source expression; not external validation."
-        }
-      ],
-      "assumptions": [
-        "This literal is not evidence of real infrastructure capacity or performance.",
-        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
-      ],
-      "researchedOn": "2026-10-15",
-      "freeMode": "conditional",
-      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
-      "location": {
-        "file": "apps/backend/worker.ts",
-        "line": 458,
-        "column": 54
-      }
-    },
-    {
-      "id": "m1.apps.backend.worker.22",
-      "concept": "shutdown · literal 0",
-      "modelVersion": "1",
-      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
-      "quantity": {
-        "kind": "known",
-        "value": 0,
-        "unit": "code-number",
-        "provenance": [
-          "m1.apps.backend.worker.22"
-        ]
-      },
-      "formula": "process.exit(0);",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
@@ -49576,28 +51247,28 @@
       "location": {
         "file": "apps/backend/worker.ts",
         "line": 468,
-        "column": 18
+        "column": 50
       }
     },
     {
-      "id": "m1.apps.backend.worker.23",
-      "concept": "shutdown · literal 1",
+      "id": "m1.apps.backend.worker.24",
+      "concept": "deadline · literal 25000",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
       "quantity": {
         "kind": "known",
-        "value": 1,
+        "value": 25000,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.worker.23"
+          "m1.apps.backend.worker.24"
         ]
       },
-      "formula": "process.exit(1);",
+      "formula": "const deadline = setTimeout(() => process.exit(1), 25000);",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L469",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L468",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -49611,96 +51282,96 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/worker.ts",
-        "line": 469,
+        "line": 468,
+        "column": 54
+      }
+    },
+    {
+      "id": "m1.apps.backend.worker.25",
+      "concept": "shutdown · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.worker.25"
+        ]
+      },
+      "formula": "process.exit(0);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L480",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/worker.ts",
+        "line": 480,
+        "column": 18
+      }
+    },
+    {
+      "id": "m1.apps.backend.worker.26",
+      "concept": "shutdown · literal 1",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.worker.26"
+        ]
+      },
+      "formula": "process.exit(1);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/worker.ts#L481",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/worker.ts",
+        "line": 481,
         "column": 26
       }
     },
     {
       "id": "m1.apps.backend.ws-server.1",
-      "concept": "server · literal 200",
+      "concept": "server · literal 503",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
       "quantity": {
         "kind": "known",
-        "value": 200,
+        "value": 503,
         "unit": "code-number",
         "provenance": [
           "m1.apps.backend.ws-server.1"
         ]
       },
-      "formula": "res.writeHead(200);",
-      "classification": "implementation-policy",
-      "confidence": "high",
-      "provenance": [
-        {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/ws-server.ts#L15",
-          "supports": "implementation",
-          "detail": "Exact historical literal and source expression; not external validation."
-        }
-      ],
-      "assumptions": [
-        "This literal is not evidence of real infrastructure capacity or performance.",
-        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
-      ],
-      "researchedOn": "2026-10-15",
-      "freeMode": "conditional",
-      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
-      "location": {
-        "file": "apps/backend/ws-server.ts",
-        "line": 15,
-        "column": 51
-      }
-    },
-    {
-      "id": "m1.apps.backend.ws-server.2",
-      "concept": "server · literal 404",
-      "modelVersion": "1",
-      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
-      "quantity": {
-        "kind": "known",
-        "value": 404,
-        "unit": "code-number",
-        "provenance": [
-          "m1.apps.backend.ws-server.2"
-        ]
-      },
-      "formula": "res.writeHead(404);",
-      "classification": "implementation-policy",
-      "confidence": "high",
-      "provenance": [
-        {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/ws-server.ts#L16",
-          "supports": "implementation",
-          "detail": "Exact historical literal and source expression; not external validation."
-        }
-      ],
-      "assumptions": [
-        "This literal is not evidence of real infrastructure capacity or performance.",
-        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
-      ],
-      "researchedOn": "2026-10-15",
-      "freeMode": "conditional",
-      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
-      "location": {
-        "file": "apps/backend/ws-server.ts",
-        "line": 16,
-        "column": 83
-      }
-    },
-    {
-      "id": "m1.apps.backend.ws-server.3",
-      "concept": "server · literal 200",
-      "modelVersion": "1",
-      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
-      "quantity": {
-        "kind": "known",
-        "value": 200,
-        "unit": "code-number",
-        "provenance": [
-          "m1.apps.backend.ws-server.3"
-        ]
-      },
-      "formula": "res.writeHead(result.success ? 200 : 503, { \"Content-Type\": \"application/json\" });",
+      "formula": "res.writeHead(503);",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
@@ -49720,17 +51391,89 @@
       "location": {
         "file": "apps/backend/ws-server.ts",
         "line": 18,
-        "column": 34
+        "column": 47
       }
     },
     {
-      "id": "m1.apps.backend.ws-server.4",
-      "concept": "server · literal 503",
+      "id": "m1.apps.backend.ws-server.2",
+      "concept": "server · literal 200",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
       "quantity": {
         "kind": "known",
-        "value": 503,
+        "value": 200,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.ws-server.2"
+        ]
+      },
+      "formula": "res.writeHead(200);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/ws-server.ts#L19",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/ws-server.ts",
+        "line": 19,
+        "column": 51
+      }
+    },
+    {
+      "id": "m1.apps.backend.ws-server.3",
+      "concept": "server · literal 404",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 404,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.ws-server.3"
+        ]
+      },
+      "formula": "res.writeHead(404);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/ws-server.ts#L20",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/ws-server.ts",
+        "line": 20,
+        "column": 83
+      }
+    },
+    {
+      "id": "m1.apps.backend.ws-server.4",
+      "concept": "server · literal 200",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 200,
         "unit": "code-number",
         "provenance": [
           "m1.apps.backend.ws-server.4"
@@ -49741,7 +51484,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/ws-server.ts#L18",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/ws-server.ts#L22",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -49755,29 +51498,29 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/ws-server.ts",
-        "line": 18,
-        "column": 40
+        "line": 22,
+        "column": 34
       }
     },
     {
       "id": "m1.apps.backend.ws-server.5",
-      "concept": "wss.verifyClient · literal 403",
+      "concept": "server · literal 503",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
       "quantity": {
         "kind": "known",
-        "value": 403,
+        "value": 503,
         "unit": "code-number",
         "provenance": [
           "m1.apps.backend.ws-server.5"
         ]
       },
-      "formula": "done(false, 403);",
+      "formula": "res.writeHead(result.success ? 200 : 503, { \"Content-Type\": \"application/json\" });",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/ws-server.ts#L27",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/ws-server.ts#L22",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -49791,29 +51534,29 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/ws-server.ts",
-        "line": 27,
-        "column": 19
+        "line": 22,
+        "column": 40
       }
     },
     {
       "id": "m1.apps.backend.ws-server.6",
-      "concept": "wss.verifyClient · literal 401",
+      "concept": "pendingAuthentications · literal 0",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
       "quantity": {
         "kind": "known",
-        "value": 401,
+        "value": 0,
         "unit": "code-number",
         "provenance": [
           "m1.apps.backend.ws-server.6"
         ]
       },
-      "formula": "done(false, 401);",
+      "formula": "let pendingAuthentications = 0;",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/ws-server.ts#L32",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/ws-server.ts#L26",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -49827,8 +51570,8 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/ws-server.ts",
-        "line": 32,
-        "column": 35
+        "line": 26,
+        "column": 30
       }
     },
     {
@@ -49849,6 +51592,42 @@
       "confidence": "high",
       "provenance": [
         {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/ws-server.ts#L32",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/ws-server.ts",
+        "line": 32,
+        "column": 19
+      }
+    },
+    {
+      "id": "m1.apps.backend.ws-server.8",
+      "concept": "wss.verifyClient · literal 403",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 403,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.ws-server.8"
+        ]
+      },
+      "formula": "done(false, 403);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
           "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/ws-server.ts#L35",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
@@ -49864,23 +51643,23 @@
       "location": {
         "file": "apps/backend/ws-server.ts",
         "line": 35,
-        "column": 27
+        "column": 19
       }
     },
     {
-      "id": "m1.apps.backend.ws-server.8",
-      "concept": "ws-server.ts · literal 1008",
+      "id": "m1.apps.backend.ws-server.9",
+      "concept": "wss.verifyClient · literal 401",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
       "quantity": {
         "kind": "known",
-        "value": 1008,
+        "value": 401,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.ws-server.8"
+          "m1.apps.backend.ws-server.9"
         ]
       },
-      "formula": "socket.close(1008);",
+      "formula": "done(false, 401);",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
@@ -49900,23 +51679,23 @@
       "location": {
         "file": "apps/backend/ws-server.ts",
         "line": 41,
-        "column": 33
+        "column": 35
       }
     },
     {
-      "id": "m1.apps.backend.ws-server.9",
-      "concept": "denied · literal 1008",
+      "id": "m1.apps.backend.ws-server.10",
+      "concept": "wss.verifyClient · literal 503",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
       "quantity": {
         "kind": "known",
-        "value": 1008,
+        "value": 503,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.ws-server.9"
+          "m1.apps.backend.ws-server.10"
         ]
       },
-      "formula": "socket.close(1008, \"Session or deployment access ended\");",
+      "formula": "done(false, 503);",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
@@ -49936,11 +51715,83 @@
       "location": {
         "file": "apps/backend/ws-server.ts",
         "line": 44,
+        "column": 27
+      }
+    },
+    {
+      "id": "m1.apps.backend.ws-server.11",
+      "concept": "ws-server.ts · literal 1008",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1008,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.ws-server.11"
+        ]
+      },
+      "formula": "socket.close(1008);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/ws-server.ts#L51",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/ws-server.ts",
+        "line": 51,
+        "column": 33
+      }
+    },
+    {
+      "id": "m1.apps.backend.ws-server.12",
+      "concept": "denied · literal 1008",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1008,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.ws-server.12"
+        ]
+      },
+      "formula": "socket.close(1008, \"Session or deployment access ended\");",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/ws-server.ts#L54",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/ws-server.ts",
+        "line": 54,
         "column": 18
       }
     },
     {
-      "id": "m1.apps.backend.ws-server.10",
+      "id": "m1.apps.backend.ws-server.13",
       "concept": "timeout · literal 1000",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
@@ -49949,7 +51800,7 @@
         "value": 1000,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.ws-server.10"
+          "m1.apps.backend.ws-server.13"
         ]
       },
       "formula": "const timeout = setTimeout(() => socket.terminate(), 1000);",
@@ -49957,7 +51808,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/ws-server.ts#L45",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/ws-server.ts#L55",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -49971,12 +51822,12 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/ws-server.ts",
-        "line": 45,
+        "line": 55,
         "column": 58
       }
     },
     {
-      "id": "m1.apps.backend.ws-server.11",
+      "id": "m1.apps.backend.ws-server.14",
       "concept": "expiryTimer · literal 1000",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
@@ -49985,7 +51836,7 @@
         "value": 1000,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.ws-server.11"
+          "m1.apps.backend.ws-server.14"
         ]
       },
       "formula": "const expiryTimer = setInterval(async () => { if (checking) return; checking = true; try { await authorize(); } catch { denied(); } finally { checking = false; } }, 1000);",
@@ -49993,7 +51844,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/ws-server.ts#L61",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/ws-server.ts#L71",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -50007,12 +51858,12 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/ws-server.ts",
-        "line": 61,
+        "line": 71,
         "column": 6
       }
     },
     {
-      "id": "m1.apps.backend.ws-server.12",
+      "id": "m1.apps.backend.ws-server.15",
       "concept": "pending · literal 0",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
@@ -50021,7 +51872,7 @@
         "value": 0,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.ws-server.12"
+          "m1.apps.backend.ws-server.15"
         ]
       },
       "formula": "let pending = 0;",
@@ -50029,7 +51880,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/ws-server.ts#L67",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/ws-server.ts#L77",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -50043,12 +51894,12 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/ws-server.ts",
-        "line": 67,
+        "line": 77,
         "column": 19
       }
     },
     {
-      "id": "m1.apps.backend.ws-server.13",
+      "id": "m1.apps.backend.ws-server.16",
       "concept": "ws-server.ts · literal 32",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
@@ -50057,46 +51908,10 @@
         "value": 32,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.ws-server.13"
+          "m1.apps.backend.ws-server.16"
         ]
       },
       "formula": "if (++pending > 32) { denied(); return; }",
-      "classification": "implementation-policy",
-      "confidence": "high",
-      "provenance": [
-        {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/ws-server.ts#L69",
-          "supports": "implementation",
-          "detail": "Exact historical literal and source expression; not external validation."
-        }
-      ],
-      "assumptions": [
-        "This literal is not evidence of real infrastructure capacity or performance.",
-        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
-      ],
-      "researchedOn": "2026-10-15",
-      "freeMode": "conditional",
-      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
-      "location": {
-        "file": "apps/backend/ws-server.ts",
-        "line": 69,
-        "column": 23
-      }
-    },
-    {
-      "id": "m1.apps.backend.ws-server.14",
-      "concept": "ws-server.ts · literal 3001",
-      "modelVersion": "1",
-      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
-      "quantity": {
-        "kind": "known",
-        "value": 3001,
-        "unit": "code-number",
-        "provenance": [
-          "m1.apps.backend.ws-server.14"
-        ]
-      },
-      "formula": "server.listen(3001, config.LISTEN_HOST);",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
@@ -50116,6 +51931,114 @@
       "location": {
         "file": "apps/backend/ws-server.ts",
         "line": 79,
+        "column": 23
+      }
+    },
+    {
+      "id": "m1.apps.backend.ws-server.17",
+      "concept": "lifecycle.stopIngress · literal 1001",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1001,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.ws-server.17"
+        ]
+      },
+      "formula": "socket.close(1001, \"Server restarting\");",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/ws-server.ts#L97",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/ws-server.ts",
+        "line": 97,
+        "column": 50
+      }
+    },
+    {
+      "id": "m1.apps.backend.ws-server.18",
+      "concept": "force · literal 1000",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1000,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.ws-server.18"
+        ]
+      },
+      "formula": "const force = setTimeout(() => { for (const socket of wss.clients) socket.terminate(); }, 1000);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/ws-server.ts#L98",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/ws-server.ts",
+        "line": 98,
+        "column": 93
+      }
+    },
+    {
+      "id": "m1.apps.backend.ws-server.19",
+      "concept": "ws-server.ts · literal 3001",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 3001,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.ws-server.19"
+        ]
+      },
+      "formula": "server.listen(3001, config.LISTEN_HOST);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/ws-server.ts#L102",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/ws-server.ts",
+        "line": 102,
         "column": 15
       }
     },

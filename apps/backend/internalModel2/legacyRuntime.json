@@ -2003,6 +2003,22 @@
       "hash": "acfba6fd0fa6e0531822e45c95d0e6217d280f1a4c3eb5f160d5483d28529610"
     },
     {
+      "path": "scripts/reality/first-stack-pilots/g4-findings.ts",
+      "hash": "90b773194d8547339aa5febdda4ba71359d3444d303bccaa5eafbe8a6de70344"
+    },
+    {
+      "path": "scripts/reality/first-stack-pilots/g4-probe.ts",
+      "hash": "1773a1678b1a6a717f4bb0ed4a36ebc2ff5f8c5c556d6135e56b99aa63dc3097"
+    },
+    {
+      "path": "scripts/reality/first-stack-pilots/g4-run.ts",
+      "hash": "e1a1c672c659beef7e55194755457e2532a3bcb6e25a102eb1bbef461e881134"
+    },
+    {
+      "path": "scripts/reality/first-stack-pilots/g4-summary.ts",
+      "hash": "a435ff2acfe4d204ee3f774d2762b8ef23c801565f955a932a5b20f697d766df"
+    },
+    {
       "path": "scripts/reality/first-stack-pilots/g5-probe.ts",
       "hash": "e4cf5242cbb56cc0459332c4e850cff2b13000b7b1fc46b371b1f9ea25b53c6e"
     },
@@ -2204,7 +2220,7 @@
     },
     {
       "path": "scripts/tests/execution-identity.test.ts",
-      "hash": "380793b07f18a67e9e86cdb75f34ae7537f6881fcbb92bfe48531389866b0046"
+      "hash": "d061d98f4dc647d022b9fde8e24b7afb68ed0d6067feae1756ddd1eaf68c99fc"
     },
     {
       "path": "scripts/tests/first-stack-bounds.test.ts",
@@ -2235,8 +2251,16 @@
       "hash": "8b5893720f4b693e3ce32ec4b99700cb45d9bd393128459110c88f3ad66bab06"
     },
     {
+      "path": "scripts/tests/g4Pilot.test.ts",
+      "hash": "2ba1995f283a69e1a8ee4a85303f2d6b57ea66e4cd92f8a0bf7fec5190e916e0"
+    },
+    {
       "path": "scripts/tests/g5Pilot.test.ts",
       "hash": "644635e1a4b8a7fd460b97e77a3da429505635f76661aa5f924f9c9e5c59947e"
+    },
+    {
+      "path": "scripts/tests/hardening-operations.test.ts",
+      "hash": "bf2ea5bed675fa8568130b546ed36a55e4b9c5f27025c29bf64f929731974b6e"
     },
     {
       "path": "scripts/tests/landingSample.test.ts",

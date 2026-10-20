@@ -10,7 +10,7 @@ import { gitTree } from "./execution-identity";
 
 // Exact operational review, independent of the engine/first-stack authoring
 // transitions. No engine, internalModel2 source, schema or dependency edits permitted.
-export const hardeningBaseline = "8141673ffcb48d0ac6d9855ea9fe46a563095cc4";
+export const hardeningBaseline = "e5cd0cc5f74c88e2b9cadd703195c6463d3e360a";
 const folder = "apps/backend/executionIdentity/";
 const reviewed = new Set([
   "apps/backend/index.ts", "apps/backend/worker.ts", "apps/backend/ws-server.ts",
@@ -67,7 +67,7 @@ export function refreshHardeningAcceptance() {
     cwd: repositoryRoot, encoding: "utf8", maxBuffer: 4 * 1024 * 1024,
   }).replaceAll("\r\n", "\n");
   const currentTest = readFileSync(resolve(repositoryRoot, test), "utf8").replaceAll("\r\n", "\n");
-  if (currentTest !== original(test).replace("expect(table.entries.length).toBe(38);", "expect(table.entries.length).toBe(39);")) {
+  if (currentTest !== original(test).replace("expect(table.entries.length).toBe(41);", "expect(table.entries.length).toBe(42);")) {
     throw Error("Hardening acceptance review permits only the added historical entry count");
   }
   const baseline = JSON.parse(original(path)), expected = structuredClone(baseline);

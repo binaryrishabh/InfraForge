@@ -164,7 +164,7 @@
     }
   },
   "apps/backend/executionIdentity/loading.ts": {
-    "hash": "cce8a1d11a946ba3a92d7a3d5a17a21aa9a7507086e71d2077a575cc43038214",
+    "hash": "27adcafb73aa22f93ae9995e6f3ec86629785f4c80fc7a7cf72b63cf90f3bcfe",
     "capabilities": [
       "computed-data",
       "verifier",
@@ -172,7 +172,7 @@
     ],
     "review": "Fixed data indexing; resource adapters require the separate documented review",
     "globals": {
-      "hash": "cce8a1d11a946ba3a92d7a3d5a17a21aa9a7507086e71d2077a575cc43038214",
+      "hash": "27adcafb73aa22f93ae9995e6f3ec86629785f4c80fc7a7cf72b63cf90f3bcfe",
       "names": [
         "Bun"
       ]
@@ -439,7 +439,7 @@
     "review": "Fixed data indexing; resource adapters require the separate documented review"
   },
   "apps/backend/utils/rateLimiter.ts": {
-    "hash": "aa6f0feea500b4930ed8bd62235f3dbdf29cd962374b7c746391179fac7fd590",
+    "hash": "77acf8d15de12e1575b1fa1073d4aaf5d259501ced76e95ee5847b648ce66915",
     "capabilities": [
       "computed-data"
     ],
@@ -886,11 +886,11 @@
     }
   },
   "apps/backend/infra/redis.ts": {
-    "hash": "5a1bdf586a8feffde62b20e051d6fbee6eaf0f8e4c6a4289582a8ee32dd3a776",
+    "hash": "2e0ce69a45a30a20fbae4068eaa679d606de5b63eaff9c754966108db329fcde",
     "capabilities": [],
     "review": "Existing host configuration/lifecycle access only; exact source bytes, no global-alias permission for new code",
     "globals": {
-      "hash": "5a1bdf586a8feffde62b20e051d6fbee6eaf0f8e4c6a4289582a8ee32dd3a776",
+      "hash": "2e0ce69a45a30a20fbae4068eaa679d606de5b63eaff9c754966108db329fcde",
       "names": [
         "process"
       ]
@@ -930,22 +930,22 @@
     }
   },
   "apps/backend/utils/config.ts": {
-    "hash": "4273035814aab98b5c1fc8a9305d81da3d552575623d19349dcb7e6a9a2c6173",
+    "hash": "166cf2718294cc536a0755b14dd3302e54be7dd1c7f2feb05b9d00b3c1131c98",
     "capabilities": [],
     "review": "Existing host configuration/lifecycle access only; exact source bytes, no global-alias permission for new code",
     "globals": {
-      "hash": "4273035814aab98b5c1fc8a9305d81da3d552575623d19349dcb7e6a9a2c6173",
+      "hash": "166cf2718294cc536a0755b14dd3302e54be7dd1c7f2feb05b9d00b3c1131c98",
       "names": [
         "process"
       ]
     }
   },
   "apps/backend/worker.ts": {
-    "hash": "3897f1a4eb78fb97abd758b708e4b1721d5e9e545ac107253191d09451e851a0",
+    "hash": "8db81b68397869c70726c3453b3411d1bf51797706a0dda3977c69d6e34860b7",
     "capabilities": [],
     "review": "Existing host configuration/lifecycle access only; exact source bytes, no global-alias permission for new code",
     "globals": {
-      "hash": "3897f1a4eb78fb97abd758b708e4b1721d5e9e545ac107253191d09451e851a0",
+      "hash": "8db81b68397869c70726c3453b3411d1bf51797706a0dda3977c69d6e34860b7",
       "names": [
         "process"
       ]
@@ -1168,5 +1168,16 @@
       "computed-data"
     ],
     "review": "Internal first-stack V2 review/compiler/qualification: fixed JSON indexing and statically imported Stage 1 registry/host composition; bounded recorded keys and DB health; opt-in host bounds, finite reducers and cooperative qualification only; no evaluator, dynamic loader, product dispatch, HTTP executor or activation"
+  },
+  "apps/backend/utils/lifecycle.ts": {
+    "hash": "aa370a29e08d6b0dd068886b29f76f16e711abb6e1efd950296fb03417bcac5d",
+    "capabilities": [],
+    "review": "Bounded HTTP drain and signal/exit handling only; fixed process global; no dynamic code or resource loading",
+    "globals": {
+      "hash": "aa370a29e08d6b0dd068886b29f76f16e711abb6e1efd950296fb03417bcac5d",
+      "names": [
+        "process"
+      ]
+    }
   }
 }
