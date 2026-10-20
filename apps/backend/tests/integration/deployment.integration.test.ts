@@ -322,7 +322,7 @@ integration("local deployment lifecycle", () => {
       const validJob = await queue.getJob(id);
       expect(validJob?.id).toBe(id);
       expect(validJob?.opts.attempts).toBe(10);
-      expect(validJob?.opts.backoff).toEqual({ type: "exponential", delay: 10000 });
+      expect(validJob?.opts.backoff).toEqual({ type: "exponential", delay: 10000, jitter: 0.2 });
       await until(async () => (await validJob?.getState()) === "completed" || undefined, "valid BullMQ completion");
       const retriedJob = await queue.getJob(id);
       expect(retriedJob?.attemptsMade).toBe(2);
