@@ -25,19 +25,28 @@ SCRIPT
 cat > "$work/bin/bun" <<'SCRIPT'
 #!/usr/bin/env bash
 printf 'check\n' >> "$PROOF_EVENTS"
-[[ $PROOF_FAILURE != identity ]]
+[[ $PROOF_FAILURE != identity ]] || exit 1
+# propagation: the first public check after promotion still sees the previous release
+if [[ $PROOF_FAILURE == propagation ]] && grep -q promote "$PROOF_EVENTS" && [[ $(grep -c check "$PROOF_EVENTS") -eq 2 ]]; then exit 1; fi
+SCRIPT
+cat > "$work/bin/sleep" <<'SCRIPT'
+#!/usr/bin/env bash
+exit 0
 SCRIPT
 chmod 0755 "$work/bin/"*
 export PATH="$work/bin:$PATH"
-for failure in none protected-read identity promotion; do
+for failure in none protected-read identity promotion propagation; do
   export PROOF_FAILURE=$failure
   : > "$PROOF_EVENTS"
   if bash "$root/scripts/deploy/frontend.sh"; then
-    [[ $failure == none ]] || exit 1
-    [[ $(paste -sd, "$PROOF_EVENTS") == deploy,curl,check,promote,check ]] || exit 1
+    case $failure in
+      none) [[ $(paste -sd, "$PROOF_EVENTS") == deploy,curl,check,promote,check ]] || exit 1 ;;
+      propagation) [[ $(paste -sd, "$PROOF_EVENTS") == deploy,curl,check,promote,check,check ]] || exit 1 ;;
+      *) exit 1 ;;
+    esac
   else
     [[ $failure != none ]] || exit 1
     if [[ $failure != promotion ]] && grep -q promote "$PROOF_EVENTS"; then exit 1; fi
   fi
 done
-echo 'Frontend command sequencing PASS: production staging, protected read, identity, promotion, final check; refusal before promotion on failed prerequisites.'
+echo 'Frontend command sequencing PASS: production staging, protected read, identity, promotion, final check with bounded CDN-propagation retry; refusal before promotion on failed prerequisites.'

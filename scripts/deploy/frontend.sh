@@ -13,6 +13,11 @@ vercel curl "$url/release.json" -- \
   --fail --silent --show-error --max-time 20 --output /tmp/infraforge-staged-release.json
 bun --no-env-file scripts/release/frontend-check.ts "$RELEASE_SHA" "$url" "$BACKEND_ORIGIN" /tmp/infraforge-staged-release.json
 vercel promote "$url" --yes --token "$VERCEL_TOKEN" --timeout 5m
-bun --no-env-file scripts/release/frontend-check.ts "$RELEASE_SHA" "$FRONTEND_ORIGIN" "$BACKEND_ORIGIN"
+# The production alias propagates through the CDN after promotion; retry the public check for up to ~90s.
+for attempt in $(seq 1 18); do
+  if bun --no-env-file scripts/release/frontend-check.ts "$RELEASE_SHA" "$FRONTEND_ORIGIN" "$BACKEND_ORIGIN"; then break; fi
+  [[ $attempt -lt 18 ]] || { echo 'Public frontend did not serve the promoted release within 90s' >&2; exit 1; }
+  sleep 5
+done
 printf '{"sha":"%s","stagedURL":"%s","backendOrigin":"%s","frontendOrigin":"%s","publicVerified":true}\n' \
   "$RELEASE_SHA" "$url" "$BACKEND_ORIGIN" "$FRONTEND_ORIGIN" > /tmp/infraforge-production-release.json
