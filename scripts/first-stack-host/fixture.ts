@@ -16,8 +16,8 @@ if(input.probe==='controls'){
  const files=[];let fdDenied=false,readonly=false;
  try{writeFileSync('/app/forbidden','x')}catch(e){readonly=e.code==='EROFS'}
  try{for(let i=0;i<160;i++)files.push(openSync('/tmp/fd-'+i,'w'))}catch(e){fdDenied=e.code==='EMFILE'}
- value={fdDenied,files:files.length,readonly,interfaces:readdirSync('/sys/class/net').sort()};
  files.forEach(closeSync);
+ value={fdDenied,files:files.length,readonly,interfaces:readdirSync('/sys/class/net').sort()};
 }
 if(input.probe==='pids'){
  const children=[];let denied=false;

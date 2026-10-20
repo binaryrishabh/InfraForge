@@ -76,7 +76,9 @@ presented as Docker Desktop or EC2 capacity evidence.
 
 The worker-death probe kills its own helper process after the initial cut has
 been written, verifies replacement refusal, waits for the independent container
-deadline, verifies the cut is unchanged, then removes the owned container.
+deadline or earlier disconnect exit, verifies the cut is unchanged, then removes
+the owned container. An orphan may exit zero after stdin disconnects; without
+the complete terminal protocol this never marks a run completed.
 Stress fixture source and image identities are retained separately from the
 release execution identity. A timeout, missing observation or failed cleanup
 keeps the corresponding gate false.

@@ -1,5 +1,4 @@
 import { mkdir, writeFile, chmod } from "node:fs/promises";
-import { randomUUID } from "node:crypto";
 import { resolve, join } from "node:path";
 import { freemem, totalmem, cpus, platform, release } from "node:os";
 import { Pool } from "pg";
@@ -147,10 +146,12 @@ try {
   const heldRun = probeFirstStackContainer(control, configuration, { mode: "execute", input }, {
     assertHeld: async () => {}, commit: async () => { occupied(); await new Promise<void>(() => {}); },
   }, cancel.signal);
-  await barrier;
-  const duplicate = await probeFirstStackContainer(control, configuration, { mode: "replay", input, expected: one.durablePrefix! }, actor);
-  cancel.abort(); const heldResult = await heldRun;
-  check("exclusive", duplicate.status === "interrupted" && duplicate.receipt.container === null && duplicate.receipt.cleanup === "unconfirmed" && heldResult.receipt.cleanup === "removed", { duplicate, held: heldResult });
+  try {
+    await Promise.race([barrier, heldRun.then(() => { throw Error("Occupied executor ended before its durable cut"); })]);
+    const duplicate = await probeFirstStackContainer(control, configuration, { mode: "replay", input, expected: one.durablePrefix! }, actor);
+    cancel.abort(); const heldResult = await heldRun;
+    check("exclusive", duplicate.status === "interrupted" && duplicate.receipt.container === null && duplicate.receipt.cleanup === "unconfirmed" && heldResult.receipt.cleanup === "removed", { duplicate, held: heldResult });
+  } finally { cancel.abort(); await heldRun; }
   const orphan = await observe("workerDeath", () => orphanProof(control, configuration, input, output));
   check("workerDeath", orphan.passed, orphan);
   const allSamples = Object.entries(report.observations).filter(([k]) => k.endsWith("Samples")).flatMap(([, v]) => v as any[]);

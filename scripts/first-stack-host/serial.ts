@@ -51,7 +51,7 @@ export async function serialProof(control: IsolationConnection, configuration: {
     await record("exclusive", orphan.replacement.created === null && orphan.replacement.status === "interrupted", orphan);
   }
   report.observations.unmeasured = {
-    concurrencyTwo: "Not run: owner requires one container at a time",
+    capacity: "One verifier at a time, as required by the owner; no second-verifier qualification",
     apiResponsive: "Unknown: API/worker/DB/Redis topology was not started",
     databaseLoss: "Unknown: actual PostgreSQL session termination not exercised",
     headroom: "Unknown: only serial executor observations; no intended deployment capacity claim",

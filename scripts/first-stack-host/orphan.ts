@@ -43,8 +43,12 @@ export async function orphanProof(control: IsolationConnection, configuration: {
       await Bun.sleep(500);
     }
     const unchanged = await readFile(cutFile, "utf8") === original;
-    return { passed: !state.State.Running && state.State.ExitCode !== 0 && unchanged,
+    // Losing stdin can stop the process before its independent deadline, with
+    // even a zero exit. No parent received a terminal protocol; that is never
+    // a completed run. The durable prefix and occupied name are authoritative.
+    return { passed: !state.State.Running && Date.now() - start < limits.supervisorMs && unchanged,
       elapsedMs: Date.now() - start, exit: state.State.ExitCode, prefixSequence: JSON.parse(original).cut.sequence, unchanged,
+      terminalProtocol: "Unavailable after worker death; process exit alone cannot complete a run",
       replacement: { status: duplicate.status, created: duplicate.receipt.container } };
   } finally {
     child.kill("SIGKILL"); await child.exited;
