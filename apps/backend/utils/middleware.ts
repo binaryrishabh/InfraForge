@@ -1,8 +1,11 @@
 import { type Request, type Response, type NextFunction } from "express";
 import { Prisma } from "../lib/generated/prisma/client";
 import { AppError } from "./errors"
+import { operationalWarning } from "./connectionPolicy";
+const warn = operationalWarning("Request failed unexpectedly; response contains no internal details.");
 
 export const errorHandler = (err: any, req: Request, res: Response, next: NextFunction) => {
+    if (res.headersSent) { next(err); return; }
     if (err?.type === "entity.parse.failed") {
         res.status(400).json({ success: false, message: "Invalid JSON body" });
         return;
@@ -31,7 +34,7 @@ export const errorHandler = (err: any, req: Request, res: Response, next: NextFu
         return;
     }
 
-    console.error(err);
+    warn();
 
     return res.status(500).json({
         success: false,

@@ -1,13 +1,18 @@
 import { Queue } from "bullmq";
-import { redis } from "./redis";
+import { commandRedis } from "./redis";
+import { operationalWarning } from "../utils/connectionPolicy";
 
 export const deploymentQueue = new Queue("deployments", {
-  connection: redis,
+  connection: commandRedis,
   defaultJobOptions: {
     attempts: 10,
     backoff: {
       type: "exponential",
-      delay: 10000
-    }
+      delay: 10000,
+      jitter: 0.2,
+    },
+    removeOnComplete: { age: 86400, count: 1000 },
+    removeOnFail: { age: 604800, count: 5000 },
   }
 });
+deploymentQueue.on("error", operationalWarning("Deployment queue unavailable; delivery will retry."));

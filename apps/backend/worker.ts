@@ -1,6 +1,6 @@
 import { assertExecutionHost } from "./executionIdentity/launch";
-import { Worker } from "bullmq";
-import { redis } from "./infra/redis";
+import { Queue, Worker } from "bullmq";
+import { redis, commandRedis } from "./infra/redis";
 import { prisma } from "./lib/prisma";
 import { deploymentQueue } from "./infra/queue";
 import {
@@ -18,6 +18,7 @@ import {
 } from "./simulator/simulator";
 import { WorkerOwnership } from "./infra/workerOwnership";
 import { config } from "./utils/config";
+import { operationalWarning, outboxRetryDelay } from "./utils/connectionPolicy";
 import http from "node:http";
 import { workerDatabaseUrl, verifyWorkerSession } from "./infra/workerConnection";
 import { assertRuntimeSchema } from "./release/runtime";
@@ -59,10 +60,18 @@ await reapLessonContainers().catch(() => {
 await startRuntime(ownership);
 const model2Worker = internalWorker(ownership);
 await model2Worker.waitUntilReady();
+// Keep the engine-owned queue definition untouched, but deliver via a bounded
+// producer connection rather than its consumer's unlimited retry connection.
+const internalDeliveryQueue = new Queue(internalModel2Queue.name, {
+  connection: commandRedis, defaultJobOptions: internalModel2Queue.opts.defaultJobOptions,
+});
+internalDeliveryQueue.on("error", operationalWarning("Internal delivery queue unavailable; outbox will retry."));
 let stopping = false;
 let outboxTimer: ReturnType<typeof setTimeout> | undefined;
 let outboxPoll: Promise<void> | undefined;
 let lastOutboxSuccess = 0;
+let outboxFailures = 0;
+const outboxWarning = operationalWarning("Outbox delivery unavailable; retrying with backoff.");
 
 /*
 What setInterval is doing:- OUTBOX PROCESSOR
@@ -81,6 +90,7 @@ Later Production upgrade path: Replace polling with CDC (Debezium + Kafka).
 async function pollOutbox() {
   if (stopping) return;
   let busy = false;
+  let deliveryFailed = false;
   try {
     await ownership.assertHeld();
     // 1. FETCH — Get up to 10 unprocessed entries, ordered by fewest retries first
@@ -108,7 +118,7 @@ async function pollOutbox() {
         } else if (entry.eventType === "model2-internal-created") {
           const id = (entry.payload as { internalModel2RunId?: string }).internalModel2RunId;
           if (!id) throw new Error("Missing internal Model-2 run identity");
-          await internalModel2Queue.add(entry.eventType, { internalModel2RunId: id }, { jobId: id });
+          await internalDeliveryQueue.add(entry.eventType, { internalModel2RunId: id }, { jobId: id });
         } else {
           // Add Deployment to BullMQ queue for worker to process it.
           // jobId = deploymentId ensures idempotency, duplicates are ignored by BullMQ automatically, ensures processing only once at max.
@@ -126,6 +136,7 @@ async function pollOutbox() {
           },
         });
       } catch (err: any) {
+        deliveryFailed = true;
         // c. Adding to queue or publishing to publisher failed, retry or abandon it
         const newRetries = entry.retries + 1;
         const isFailed = newRetries >= entry.maxRetries;
@@ -138,7 +149,7 @@ async function pollOutbox() {
               ? OutboxBullMQStatus.FAILED
               : OutboxBullMQStatus.PENDING,
             retries: newRetries,
-            error: err.message,
+            error: "Outbox delivery failed",
           },
         });
 
@@ -164,32 +175,31 @@ async function pollOutbox() {
                 );
               }
             }
-          } catch (sideEffectErr: any) {
-            console.error(
-              `Failure handling failed for outbox ${entry.id}: ${sideEffectErr.message}`,
-            );
+          } catch {
+            outboxWarning();
           }
           console.error(
-            `Outbox ${entry.id} | deployment ${(entry.payload as unknown as OutboxPayload).deploymentId} | PERMANENTLY FAILED | ${err.message}`,
+            `Outbox ${entry.id} permanently failed after exhausting delivery retries.`,
           );
         } else {
-          console.error(
-            `Outbox ${entry.id} | deployment ${(entry.payload as unknown as OutboxPayload).deploymentId} | Retry ${newRetries}/${entry.maxRetries} already done | ${err.message}`,
-          );
+          outboxWarning();
         }
       }
     }
     busy = unprocessed.length > 0;
     lastOutboxSuccess = Date.now();
-  } catch (err: any) {
+  } catch {
+    deliveryFailed = true;
     // Outer catch — errors here don't crash the poller. Next interval retries.
-    console.error(`Outbox poller error: ${err.message}`);
+    outboxWarning();
   } finally {
     // Adaptive scheduling — Neon relief (Challenge C3): busy = fast re-poll
     // (1s) so queued work moves quickly; idle = back off (5s) so the
     // serverless DB can auto-suspend. The error path keeps the idle
     // interval so a transient failure never becomes a hot polling loop.
-    if (!stopping) outboxTimer = setTimeout(() => { outboxPoll = pollOutbox(); }, busy ? 1000 : 5000);
+    outboxFailures = deliveryFailed ? outboxFailures + 1 : 0;
+    const delay = deliveryFailed ? outboxRetryDelay(outboxFailures) : busy ? 1000 : 5000;
+    if (!stopping) outboxTimer = setTimeout(() => { outboxPoll = pollOutbox(); }, delay);
   }
 }
 
@@ -414,10 +424,10 @@ const worker = new Worker(
       if (failure.count > 0 && status === DeploymentStatus.FAILED) {
         await publishDeploymentFailed(
           deploymentId,
-          `Deployment failed at some stage due to: ${err.message}`,
+          "Deployment failed after exhausting processing retries.",
         );
       }
-      throw err; // This tells BullMQ that the deploymentJob failed due to worker crash or something it will retry on the basis of retries set in the queue.ts file...
+      throw new Error("Deployment processing failed; retry according to the queue policy.");
     }
   },
   {
@@ -427,7 +437,7 @@ const worker = new Worker(
   },
 );
 
-worker.on("error", () => console.error("Queue worker error; readiness will check its connection and processing loop."));
+worker.on("error", operationalWarning("Queue worker error; readiness will check its connection and processing loop."));
 await worker.waitUntilReady();
 const readiness = createReadiness(async () => {
   const backend = worker.getBackend();
@@ -460,6 +470,8 @@ async function shutdown() {
     await worker.close();
     await model2Worker.close();
     await internalModel2Queue.close();
+    await internalDeliveryQueue.close();
+    await deploymentQueue.close();
     await Promise.all([runtimeStopped, outboxPoll]);
     await readiness.close();
     await prisma.$disconnect();

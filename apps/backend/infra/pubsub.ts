@@ -1,4 +1,5 @@
-import { redis } from "./redis";
+import { commandRedis as redis } from "./redis";
+import { operationalWarning } from "../utils/connectionPolicy";
 import type { OutboxPayload } from "../types/OutboxPayload.interface";
 import type { SimulationSnapshot } from "@infraforge/contracts/telemetry";
 import { Publish } from "@infraforge/contracts/events";
@@ -101,6 +102,7 @@ export const publishSimulationSnapshot = async(snapshot: SimulationSnapshot) => 
 // this is to where all websocket servers are listening to and listens when there deploymentId matches or the client that's wanting the deploymentId matches
 export const subscribeToDeployment = async(deploymentId: string, callback: (event: unknown) => void, signal?: AbortSignal) => {
     const subscriber = redis.duplicate(); // we are creating a new redis connection. Here redis connection by subscriber can only subscribe they won't be allowed to do any thing else that's why making new redis connection for each subscriptions. This is scaling so that subscribers don't block the publishing queing and chaching.
+    subscriber.on("error", operationalWarning("Deployment subscription connection unavailable; reconnecting."));
     const abort = () => subscriber.disconnect();
     if (signal?.aborted) {
         abort();
@@ -111,7 +113,7 @@ export const subscribeToDeployment = async(deploymentId: string, callback: (even
         await subscriber.subscribe(`deployment:${deploymentId}:updates`);
         subscriber.on("message", (_channel, message) => {
             try { callback(JSON.parse(message)); }
-            catch (error) { console.error("Invalid deployment event", error); }
+            catch { console.error("Invalid deployment event"); }
         });
         return subscriber;
     } catch (error) {
