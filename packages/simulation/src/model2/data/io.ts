@@ -112,7 +112,7 @@ export function finiteIoRuntime(authored: FiniteIoProfile, clock: EventClock) {
       if (scheduledBackground || waiters || [...buffers.values()].some(b => b.flights.size) || [...devices.values()].some(d => d.measure().queued.operations + d.measure().servicing.operations > 0)) throw Error("IO generation still owns live work");
       for (const d of devices.values()) d.retire(); retired = true;
     },
-    evidence: () => ({ revision: p.schema, profile: p, timing: "assumption-only", physicalHitRate: null, physicalHitRateReason: "Explicit logical pages do not identify physical PG/OS-cache hits",
+    evidence: () => ({ revision: p.schema, profile: JSON.parse(JSON.stringify(p)) as FiniteIoProfile, timing: "assumption-only", physicalHitRate: null, physicalHitRateReason: "Explicit logical pages do not identify physical PG/OS-cache hits",
       recovery: null, totalDemand: null, totalDemandReason: "Full process/device/background demand is not identified", background: p.background.policy, scheduledBackground, retired,
       devices: [...devices.values()].map(d => d.measure()), buffers: [...buffers.values()].map(b => ({ owner: b.config.owner, pages: [...b.pages.keys()], hits: b.hits, misses: b.misses, coalesced: b.coalesced, evictions: b.evictions, inFlight: b.flights.size })), waiters }),
   };

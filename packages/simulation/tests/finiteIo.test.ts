@@ -103,6 +103,8 @@ test("composition reserves the buffer once and pins immutable evidence with obse
   f.profile.devices[0]!.iops = iq(1, "operations/s"); a.advanceTo(a.horizon); b.advanceTo(b.horizon);
   expect(a.evidence()).toEqual(b.evidence()); expect(observed.length).toBeGreaterThan(0);
   expect(a.evidence().composition.memory[0]!.reservedBytes).toBe(832); expect(a.evidence().composition.storage!.devices[0]!.iops).toBe(10000);
+  const exposed = a.evidence().composition.storage!; exposed.profile.bindings[0]!.statementPages[0]!.push("forged-page");
+  expect(a.evidence().composition.storage!.profile.bindings[0]!.statementPages[0]).not.toContain("forged-page");
 });
 
 test("two relational roles share one device and conserve distinct page and WAL receipts", () => {
@@ -141,4 +143,26 @@ test("same-time statement deadline rolls back before page completion; lock relea
   clock.advanceTo(1000);
   expect(db.evidence().reasons["statement-timeout"]).toBe(1); expect(db.evidence().transactions.committed).toBe(1);
   expect(db.evidence().rows[0]!.version).toBe(2); expect(io.evidence().waiters).toBe(0);
+});
+
+test("same-time queued cancellation precedes service start and receipt accounting remains exact", () => {
+  const clock = new EventKernel(100), owner = device(clock), done: string[] = [];
+  owner.submit(work("a"), () => done.push("a")); const b = owner.submit(work("b"), () => done.push("b"));
+  clock.schedule(100, 1, "cancel-b", () => b.cancel()); clock.advanceTo(200);
+  expect(done).toEqual(["a"]); expect(owner.measure().receipts[1]).toMatchObject({ state: "cancelled", startedAtUs: null, completedAtUs: 100, queueUs: 100, serviceUs: 0 });
+});
+
+test("storage memory lives through relational retirement and releases once after all work settles", () => {
+  const f = finiteIoFixture(), runtime = createStackComposition(f.input, { ...f.composition, storage: f.profile });
+  expect(() => runtime.retireStorage()).toThrow("relational"); runtime.advanceTo(runtime.horizon);
+  runtime.drain("db"); runtime.retire("db"); expect(runtime.evidence().composition.memory[0]!.reservedBytes).toBe(576);
+  runtime.retireStorage(); runtime.retireStorage(); expect(runtime.evidence().composition.memory[0]!.reservedBytes).toBe(512);
+  expect(runtime.evidence().composition.storage!.retired).toBe(true);
+});
+
+test("generation retirement refuses a future background schedule even with no current service", () => {
+  const { profile } = finiteIoFixture(); profile.background = { policy: "explicit-bounded-schedule", schedule: [{ id: "later", device: "disk", atUs: iq(100, "us"), bytes: iq(1, "bytes"), evidence: ioEvidence }] };
+  const clock = new EventKernel(100), io = finiteIoRuntime(profile, clock);
+  expect(() => io.retire()).toThrow("live work"); clock.advanceTo(200); io.retire();
+  expect(() => io.forRole("db").statement(ioInvocation("stale"), 0, () => {})).toThrow("Retired");
 });

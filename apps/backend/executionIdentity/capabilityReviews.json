@@ -1185,5 +1185,33 @@
       "computed-data"
     ],
     "review": "Transition storage only: canonical tagged Merkle data, fixed manifest/pack reads and bounded gzip decoding; no source execution, dynamic import or new external resource path"
+  },
+  "packages/simulation/src/model2/composition/io-budget.ts": {
+    "hash": "3c1cec82eed2fc837cc62abf5e34110196dc41312b4983fdbc7d906058944b90",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Bounded finite IO arrays/maps and typed same-clock receipts; no loader, evaluator, host IO, network or activation"
+  },
+  "packages/simulation/src/model2/data/io-contract.ts": {
+    "hash": "6ebf93bd698cd7d5bbd63b6af3c54d4c4f23996df7778f65b85e61f673b98c21",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Bounded finite IO arrays/maps and typed same-clock receipts; no loader, evaluator, host IO, network or activation"
+  },
+  "packages/simulation/src/model2/data/io.ts": {
+    "hash": "2af1defe18c439780f2f1da1c753b8bce427b2be0da4d88595817fb62bf81f08",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Bounded finite IO arrays/maps and typed same-clock receipts; no loader, evaluator, host IO, network or activation"
+  },
+  "packages/simulation/src/firstStack/io.ts": {
+    "hash": "3ad94334caaad5dc1f38b9cce13bdb1effe7550b07788b72daf43ec4afdb1119",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Bounded finite IO arrays/maps and typed same-clock receipts; no loader, evaluator, host IO, network or activation"
   }
 }

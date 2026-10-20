@@ -2,6 +2,7 @@ import { reviewHardeningSyntax, refreshHardeningTransitions, refreshHardeningAcc
 import { buildCompositionTransitions } from "./stage1-identity";
 import { reviewPostgresSessions, reviewPostgresSyntax, refreshPostgresTransitions } from "./postgres-session-identity";
 import { reviewStage2Modules, writeStage2ReviewLock, buildStage2Transitions } from "./stage2-authoring";
+import { writeFiniteIoReview, reviewFiniteIoSyntax, reviewFiniteIoImports, refreshFiniteIoTransitions } from "./finite-io-identity";
 import { reviewStage0Syntax, refreshStage0Transitions } from "./stage0-identity";
 import { historicalAnalysisDescriptor } from "./historical-analysis-descriptor";
 import { execFileSync, spawnSync } from "node:child_process";
@@ -165,7 +166,11 @@ export function checkTransitions(root = repositoryRoot, read?: (path: string) =>
   return { schema: descriptor.schema, current, historicalEntries: table.entries.length, packages: descriptor.dependencies.packages.length };
 }
 if (import.meta.main) {
-  if (process.argv.includes("--review-hardening-syntax")) reviewHardeningSyntax();
+  if (process.argv.includes("--write-io-review")) { writeFiniteIoReview(); console.info("Finite IO source review written"); }
+  else if (process.argv.includes("--review-io-syntax")) reviewFiniteIoSyntax();
+  else if (process.argv.includes("--review-io-imports")) reviewFiniteIoImports();
+  else if (process.argv.includes("--refresh-io-transitions")) refreshFiniteIoTransitions();
+  else if (process.argv.includes("--review-hardening-syntax")) reviewHardeningSyntax();
   else if (process.argv.includes("--review-hardening-acceptance")) refreshHardeningAcceptance();
   else if (process.argv.includes("--review-hardening-transitions")) refreshHardeningTransitions();
   else if (process.argv.includes("--write-pg-review")) reviewPostgresSessions();

@@ -1,6 +1,5 @@
-import { requireKnown } from "../../reality/quantity";
+import { requireKnown, type Quantity } from "../../reality/quantity";
 import type { DataInput, RelationalConfig } from "./contracts";
-import type { StackComposition } from "../composition/run";
 import type { IoDevice } from "../composition/io-budget";
 
 export interface IoEvidence { kind: "observed" | "authored"; source: string; revision: string; domain: string; label: "supported-logical" | "assumption-only" }
@@ -34,7 +33,10 @@ function evidence(e: IoEvidence) {
 function list<T>(xs: T[], max: number, min = 0) { if (!Array.isArray(xs) || xs.length < min || xs.length > max) throw Error("Finite IO collection budget"); }
 function unique(xs: string[]) { xs.forEach(id); if (new Set(xs).size !== xs.length) throw Error("Duplicate IO identity"); }
 
-export function validateFiniteIo(p: FiniteIoProfile, input: DataInput, composition: Pick<StackComposition, "hosts" | "bindings">) {
+export function validateFiniteIo(p: FiniteIoProfile, input: DataInput, composition: {
+  hosts: Array<{ id: string; memory: Quantity<"bytes"> }>;
+  bindings: Array<{ resource: string; host: string; reservedMemory: Quantity<"bytes"> }>;
+}) {
   fields(p, ["schema", "identity", "devices", "buffers", "bindings", "background", "limits"]);
   if (p.schema !== "postgresql-keyed-io/1" || input.workloadVersion !== "m2e-pg/1") throw Error("Finite IO requires explicit PG revision");
   fields(p.identity, ["profile", "revision", "workload", "evidence"]); [p.identity.profile, p.identity.revision, p.identity.workload].forEach(id); evidence(p.identity.evidence);
