@@ -522,7 +522,7 @@ integration("local deployment lifecycle", () => {
         return rows.rows[0]?.status === "failed" ? rows.rows[0] : undefined;
       }, "outbox retry exhaustion");
       expect(retry.retries).toBe(2);
-      expect(retry.error).toBe("JobId cannot be '0' or start with '0:'");
+      expect(retry.error).toBe("Outbox delivery failed");
       expect((await harness.sql.query('SELECT status FROM "Deployment" WHERE id = \'0\'')).rows[0].status).toBe("failed");
       evidence.retry = { status: retry.status, retries: retry.retries, error: retry.error };
 
