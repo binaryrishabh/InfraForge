@@ -1,5 +1,9 @@
 # Free local pilots
 
+The separate [G4 adapter](G4.md) records disk-backed keyed PostgreSQL IO/lock/WAL
+observations and defines a proposal for slice 07b. The [G5 adapter](G5.md) records
+session/deadline semantics. Both preserve this G1 campaign and its image pins.
+
 This opt-in Windows Docker Desktop orchestrator runs Linux app/generator containers
 and a disposable disk-backed PostgreSQL 18 container. It never calls a cloud API.
 The current adapter is G1; the manifest, root/attempt joins, counters, populations,
