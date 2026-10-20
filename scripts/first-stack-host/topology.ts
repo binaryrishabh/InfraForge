@@ -11,7 +11,7 @@ export async function topology(control: IsolationConnection, image: string, post
   const create = async (role: string, source: string, memory: number, cpu: string, args: string[], command: string[]) => {
     const id = await control.run(["create", "--pull=never", "--name", `${name}-${role}`, "--label", `infraforge.first-stack-proof=${name}`,
       "--network", name, "--network-alias", role, `--memory=${memory * 1024 * 1024}`, `--memory-swap=${memory * 1024 * 1024}`,
-      `--cpus=${cpu}`, "--pids-limit=256", "--log-driver=local", "--log-opt=max-size=1m", "--log-opt=max-file=1",
+      `--cpus=${cpu}`, "--pids-limit=256", "--log-driver=local", "--log-opt=max-size=1m", "--log-opt=max-file=1", "--log-opt=compress=false",
       ...args, source, ...command]);
     if (!/^[a-f0-9]{64}$/.test(id)) throw Error("Invalid proof container");
     owned.push(id); await control.run(["start", id]); return id;
@@ -35,7 +35,7 @@ export async function topology(control: IsolationConnection, image: string, post
     const pg = await create("db", postgres, 512, "0.25", ["--env=POSTGRES_HOST_AUTH_METHOD=trust",
       "--env=POSTGRES_DB=infraforge_isolation", "--publish=127.0.0.1::5432"], []);
     const cache = await create("redis", redis, 256, "0.15", [], ["redis-server", "--appendonly", "yes", "--maxmemory", "96mb", "--maxmemory-policy", "noeviction"]);
-    await until(async () => { try { await control.run(["exec", pg, "pg_isready", "-U", "postgres"]); return true; } catch { return false; } }, "database");
+    await until(async () => { try { await control.run(["exec", pg, "pg_isready", "-h", "127.0.0.1", "-U", "postgres"]); return true; } catch { return false; } }, "database");
     const environment = ["--env=NODE_ENV=test", "--env=DATABASE_URL=postgresql://postgres@db:5432/infraforge_isolation",
       "--env=REDIS_HOST=redis", "--env=REDIS_PORT=6379", "--workdir=/app/apps/backend"];
     const migration = await create("migrate", image, 384, "0.5", environment, ["bun", "--no-env-file", "--no-install", "run", "db:migrate"]);

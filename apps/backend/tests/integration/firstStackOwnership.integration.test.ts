@@ -4,6 +4,13 @@ import { withFirstStackOwnership } from "../../firstStack/isolationOwnership";
 import type { IsolatedCut } from "../../firstStack/isolationProtocol";
 
 const url = process.env.FIRST_STACK_TEST_DATABASE;
+async function rejected(work: Promise<unknown>, message?: string) {
+  // Await actual socket work before entering a synchronous test matcher.
+  let error: unknown;
+  try { await work; } catch (value) { error = value; }
+  expect(error).toBeInstanceOf(Error);
+  if (message) expect((error as Error).message).toContain(message);
+}
 const local = () => {
   const parsed = new URL(url!);
   if (process.env.INTEGRATION_DISPOSABLE !== "local-only" || !["localhost", "127.0.0.1"].includes(parsed.hostname) ||
@@ -20,16 +27,16 @@ const local = () => {
     const store = { check: async () => { if (!allowed) throw Error("revoked"); },
       commit: async (db: any, value: IsolatedCut) => { await db.query("INSERT INTO first_stack_ownership_probe VALUES (1,$1) ON CONFLICT(id) DO UPDATE SET sequence=$1", [value.cut.sequence]); } };
     await withFirstStackOwnership(connection, store, async (authority, signal) => {
-      await expect(withFirstStackOwnership(connection, store, async () => {})).rejects.toThrow("capacity busy");
+      await rejected(withFirstStackOwnership(connection, store, async () => {}), "capacity busy");
       await authority.commit(cut, signal);
       expect((await pool.query("SELECT sequence FROM first_stack_ownership_probe")).rows[0].sequence).toBe(1);
       pid = (await pool.query("SELECT pid FROM pg_locks WHERE locktype='advisory' AND classid=186542854 AND objid=10 AND granted")).rows[0].pid;
       await pool.query("SELECT pg_terminate_backend($1)", [pid]);
-      await expect(authority.assertHeld(signal)).rejects.toThrow();
+      await rejected(authority.assertHeld(signal));
     });
     expect((await pool.query("SELECT sequence FROM first_stack_ownership_probe")).rows[0].sequence).toBe(1);
     await withFirstStackOwnership(connection, { ...store, commit: async (db, value) => { await store.commit(db, value); allowed = false; } }, async (authority, signal) => {
-      await expect(authority.commit({ ...cut, cut: { ...cut.cut, sequence: 2 } }, signal)).rejects.toThrow("revoked");
+      await rejected(authority.commit({ ...cut, cut: { ...cut.cut, sequence: 2 } }, signal), "revoked");
     });
     expect((await pool.query("SELECT sequence FROM first_stack_ownership_probe")).rows[0].sequence).toBe(1);
     allowed = true;
