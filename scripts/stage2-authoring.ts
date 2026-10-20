@@ -45,7 +45,7 @@ function scope() {
   same(changed[0]!, tree.read(changed[0]!).replace('import { createFirstStackRouter } from "../firstStack/routes";\n', "").replace('import { firstStackRepository } from "../firstStack/persistence";\n', "").replace('internalModel2Router.use("/first-stack", createFirstStackRouter(firstStackRepository));\n', ""));
   same(changed[1]!, tree.read(changed[1]!).replace('  // Internal semantic review data is additive; stale drafts remain readable.\n  firstStack: z.json().optional(),\n', ""));
   same(changed[2]!, tree.read(changed[2]!).replace('COPY apps/backend/firstStack ./apps/backend/firstStack/\n', ""));
-  same(changed[3]!, tree.read(changed[3]!).replace('!apps/backend/firstStack/\napps/backend/firstStack/**\n!apps/backend/firstStack/*.ts\n', ""));
+  same(changed[3]!, tree.read(changed[3]!).replace('!apps/backend/firstStack/\napps/backend/firstStack/**\n!apps/backend/firstStack/*.ts\n', "").replace('!packages/simulation/src/firstStack/\npackages/simulation/src/firstStack/**\n!packages/simulation/src/firstStack/*.ts\n', ""));
   const manifest = JSON.parse(tree.read(changed[4]!));
   if (manifest.exports["./first-stack"] !== "./src/first-stack/index.ts") throw Error("Unexpected first-stack export");
   delete manifest.exports["./first-stack"];

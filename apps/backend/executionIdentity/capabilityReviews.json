@@ -164,7 +164,7 @@
     }
   },
   "apps/backend/executionIdentity/loading.ts": {
-    "hash": "cd62c5adf0e519c61970f5402c72171baf754289263bcc7a55e4cd3315adb75c",
+    "hash": "719ab1c74fca01bcf1b4d96b49d99907740c39e92fdd6a13967cac32ada03f50",
     "capabilities": [
       "computed-data",
       "verifier",
@@ -172,7 +172,7 @@
     ],
     "review": "Fixed data indexing; resource adapters require the separate documented review",
     "globals": {
-      "hash": "cd62c5adf0e519c61970f5402c72171baf754289263bcc7a55e4cd3315adb75c",
+      "hash": "719ab1c74fca01bcf1b4d96b49d99907740c39e92fdd6a13967cac32ada03f50",
       "names": [
         "Bun"
       ]
@@ -1128,7 +1128,7 @@
     "review": "Internal first-stack V2 review/compiler/qualification: fixed JSON indexing and statically imported Stage 1 registry/host composition; bounded recorded keys and DB health; no evaluator, dynamic loader, product dispatch, HTTP executor or activation"
   },
   "packages/simulation/src/firstStack/compiler.ts": {
-    "hash": "f034b7fea6b68c5c3bf347d20e4178e7252b228b9280e1ae6985517ed1448080",
+    "hash": "38ac905e4682e02f3e86b6e54f0180481fcda97901a8ecfc16c62033f078cb56",
     "capabilities": [
       "computed-data"
     ],

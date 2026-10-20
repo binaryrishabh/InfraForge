@@ -9,6 +9,16 @@ import express from "express";
 import { createServer } from "node:http";
 import { createFirstStackRouter } from "../../apps/backend/firstStack/routes";
 import type { FirstStackDesign, FirstStackRepository } from "../../apps/backend/firstStack/service";
+import { readFileSync } from "node:fs";
+import ignore from "ignore";
+
+function bindChangedProfile(f: Awaited<ReturnType<typeof firstStackCompileFixture>>) {
+  f.schedule.profileHash = hash({ profile: f.sidecar.profile, compiler: f.sidecar.compiler, application: f.sidecar.application,
+    operations: [...f.sidecar.operations].sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0), database: f.sidecar.database });
+  const { identity: _identity, ...body } = f.schedule;
+  f.schedule.identity = hash(body);
+  f.sidecar.workload!.resolvedIdentity = f.schedule.identity;
+}
 
 test("V1 stays readable and review-only; V2 refuses missing pool/readiness and reversed links", async () => {
   const v1 = firstStackFixture(); expect(reviewSidecar(v1.layout, v1.sidecar).ok).toBe(true);
@@ -147,4 +157,25 @@ test("internal compile HTTP checks ownership/revision and emits a lock without r
     expect((await post("compile", { ...body, workload: { ...f.schedule, identity: "0".repeat(64) } })).status).toBe(422);
     expect(writes).toBe(0);
   } finally { server.closeAllConnections(); await new Promise<void>(resolve => server.close(() => resolve())); }
+});
+
+test("runtime build context includes the separate compiler modules and excludes undeclared content", () => {
+  const context = ignore().add(readFileSync(".dockerignore", "utf8"));
+  for (const path of ["packages/simulation/src/internalFirstStack.ts", "packages/simulation/src/firstStack/compiler.ts", "packages/simulation/src/firstStack/run.ts", "apps/backend/firstStack/execution.ts"]) expect(context.ignores(path)).toBe(false);
+  expect(context.ignores("packages/simulation/src/firstStack/future.json")).toBe(true);
+  expect(context.ignores("packages/simulation/src/firstStack/private/key.ts")).toBe(true);
+});
+
+test("only the selected background health operation uses health keys; reserved dataset keys refuse", async () => {
+  const f = await firstStackCompileFixture();
+  f.sidecar.operations.find(op => op.id === "read")!.kind = "health-read";
+  bindChangedProfile(f);
+  const events: CausalEvent[] = [];
+  const result = runFirstStackQualification(f.prepare(), e => events.push(e));
+  expect(result.evidence.counts.completed).toBe(24);
+  const queries = events.filter(e => e.kind === "db-terminal" && e.work?.operation === "read");
+  expect(queries).toHaveLength(24);
+  expect(queries.every(e => (e.work?.message?.response as { rows: Array<{ key: string }> }).rows.every(row => row.key === "hot"))).toBe(true);
+  f.sidecar.database.keys.push("$key"); bindChangedProfile(f);
+  expect(() => f.prepare()).toThrow("reserved by Stage 1 parameter substitution");
 });

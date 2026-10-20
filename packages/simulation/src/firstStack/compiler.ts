@@ -25,6 +25,7 @@ export function compileFirstStack(sidecar: FirstStackSidecarV2, schedule: Resolv
   const nodes = [...sidecar.nodes].sort((a, b) => lexical(a.id, b.id)), apps = nodes.filter(n => n.owner === "compute");
   const lb = nodes.find(n => n.owner === "load-balancer"), db = nodes.find(n => n.owner === "relational");
   if (!lb || !db || apps.length < 1 || apps.length > 8 || nodes.length !== apps.length + 2) refuse("nodes", "Require exactly one LB, 1..8 compute apps and one relational DB, without cache.");
+  if (sidecar.database.keys.includes("$key")) refuse("database.keys", "The literal key $key is reserved by Stage 1 parameter substitution; choose a different explicit dataset key.", "RESERVED_KEY");
   if (lb.reservationBytes !== 0) refuse(`nodes.${lb.id}.reservationBytes`, "The logical LB has no CPU/memory demand owner in Stage 1; explicitly author zero reservation for that role. Full LB process memory remains Unknown.");
   for (const n of nodes) if (n.memoryBytes !== null) refuse(`nodes.${n.id}.memoryBytes`, "Full process memory coverage is unavailable; keep this Unknown and supply the separate explicit host reservation.");
   if (schedule.header.durationUs > policy.horizonUs) refuse("horizonUs", "The execution horizon must cover the recorded offer duration.");
@@ -74,7 +75,7 @@ export function compileFirstStack(sidecar: FirstStackSidecarV2, schedule: Resolv
     if (!plan) refuse(`operations.${op.id}.plan`, "Supply a finite database plan.");
     let keys: string[];
     if (plan.keys !== "recorded") keys = plan.keys;
-    else if (op.kind === "health-read") keys = sidecar.balancer.healthKeys;
+    else if (op.id === health.id) keys = sidecar.balancer.healthKeys;
     else if (op.kind === "range-read") {
       const rows = schedule.rows.filter(r => r.operation === op.id);
       if (!rows.length || rows.some(r => JSON.stringify(r.keys) !== JSON.stringify(rows[0]!.keys))) refuse(`operations.${op.id}.plan`, "Stage 1 range statements need one explicit key list; split differing ranges into reviewed plans.", "VARIABLE_RANGE_UNSUPPORTED");

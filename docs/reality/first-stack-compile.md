@@ -44,7 +44,8 @@ This revision refuses CPU-only and cache operations, varying bytes within one
 operation and varying recorded range lists within one range operation. Diagnostics
 ask for explicit byte classes or fixed reviewed range plans. It never encodes keys
 as application operation names, chooses fallback keys, infers SQL or drops
-security/controller settings. Each path's authored bytes are envelope bytes;
+security/controller settings. The Stage 1 placeholder `$key` is refused as a
+literal dataset key. Each path's authored bytes are envelope bytes;
 recorded operation request/response bytes are body bytes, added exactly once per
 hop. All numeric inputs carry ledger provenance. The logical LB explicitly reserves
 zero memory because it has no physical demand owner. Process memory remains

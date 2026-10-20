@@ -2145,7 +2145,7 @@
     },
     {
       "path": "scripts/tests/first-stack-compile.test.ts",
-      "hash": "083b47bc845a200e8bd76ece8a00829c9cfc0a19d4fb9cde99d90510c92cb0ca"
+      "hash": "96eee87d01368e9b0a5d4ff2e45c8a55d1ca895cb9d0063a06087301b3e03e30"
     },
     {
       "path": "scripts/tests/first-stack-profile.test.ts",

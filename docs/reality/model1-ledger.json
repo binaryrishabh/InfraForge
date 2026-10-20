@@ -342,7 +342,7 @@
     },
     {
       "file": "apps/backend/executionIdentity/loading.ts",
-      "sha256": "cd62c5adf0e519c61970f5402c72171baf754289263bcc7a55e4cd3315adb75c",
+      "sha256": "719ab1c74fca01bcf1b4d96b49d99907740c39e92fdd6a13967cac32ada03f50",
       "numericSites": 14
     },
     {
@@ -2437,7 +2437,7 @@
     },
     {
       "file": "packages/simulation/src/firstStack/compiler.ts",
-      "sha256": "f034b7fea6b68c5c3bf347d20e4178e7252b228b9280e1ae6985517ed1448080",
+      "sha256": "38ac905e4682e02f3e86b6e54f0180481fcda97901a8ecfc16c62033f078cb56",
       "numericSites": 14
     },
     {
@@ -114268,7 +114268,7 @@
       "confidence": "low",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L28",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L29",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -114281,7 +114281,7 @@
       "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
       "location": {
         "file": "packages/simulation/src/firstStack/compiler.ts",
-        "line": 28,
+        "line": 29,
         "column": 31
       }
     },
@@ -114303,7 +114303,7 @@
       "confidence": "low",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L31",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L32",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -114316,7 +114316,7 @@
       "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
       "location": {
         "file": "packages/simulation/src/firstStack/compiler.ts",
-        "line": 31,
+        "line": 32,
         "column": 26
       }
     },
@@ -114338,7 +114338,7 @@
       "confidence": "low",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L31",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L32",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -114351,7 +114351,7 @@
       "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
       "location": {
         "file": "packages/simulation/src/firstStack/compiler.ts",
-        "line": 31,
+        "line": 32,
         "column": 64
       }
     },
@@ -114373,7 +114373,7 @@
       "confidence": "low",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L31",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L32",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -114386,7 +114386,7 @@
       "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
       "location": {
         "file": "packages/simulation/src/firstStack/compiler.ts",
-        "line": 31,
+        "line": 32,
         "column": 93
       }
     },
@@ -114408,7 +114408,7 @@
       "confidence": "low",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L37",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L38",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -114421,7 +114421,7 @@
       "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
       "location": {
         "file": "packages/simulation/src/firstStack/compiler.ts",
-        "line": 37,
+        "line": 38,
         "column": 37
       }
     },
@@ -114443,7 +114443,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L80",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L81",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -114457,7 +114457,7 @@
       "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
       "location": {
         "file": "packages/simulation/src/firstStack/compiler.ts",
-        "line": 80,
+        "line": 81,
         "column": 89
       }
     },
@@ -114479,7 +114479,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L81",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L82",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -114493,7 +114493,7 @@
       "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
       "location": {
         "file": "packages/simulation/src/firstStack/compiler.ts",
-        "line": 81,
+        "line": 82,
         "column": 19
       }
     },
@@ -114515,7 +114515,7 @@
       "confidence": "low",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L90",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L91",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -114528,7 +114528,7 @@
       "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
       "location": {
         "file": "packages/simulation/src/firstStack/compiler.ts",
-        "line": 90,
+        "line": 91,
         "column": 65
       }
     },
@@ -114550,7 +114550,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L123",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L124",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -114564,7 +114564,7 @@
       "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
       "location": {
         "file": "packages/simulation/src/firstStack/compiler.ts",
-        "line": 123,
+        "line": 124,
         "column": 97
       }
     },
@@ -114586,7 +114586,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L123",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L124",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -114600,7 +114600,7 @@
       "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
       "location": {
         "file": "packages/simulation/src/firstStack/compiler.ts",
-        "line": 123,
+        "line": 124,
         "column": 183
       }
     },
@@ -114622,7 +114622,7 @@
       "confidence": "low",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L129",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L130",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -114635,7 +114635,7 @@
       "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
       "location": {
         "file": "packages/simulation/src/firstStack/compiler.ts",
-        "line": 129,
+        "line": 130,
         "column": 78
       }
     },
