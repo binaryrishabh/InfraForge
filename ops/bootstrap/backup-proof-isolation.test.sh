@@ -14,7 +14,7 @@ chmod 700 "$work/bin/intercept"
 for command in createdb dropdb psql pg_restore pg_dump mktemp docker; do
   ln -s intercept "$work/bin/$command"
 done
-for variable in PGHOST PGHOSTADDR PGPORT PGDATABASE PGUSER PGSERVICE PGSERVICEFILE PGSYSCONFDIR PGPASSWORD PGPASSFILE PGOPTIONS PGSSLMODE; do
+for variable in PGHOST PGHOSTADDR PGPORT PGDATABASE PGUSER PGSERVICE PGSERVICEFILE PGSYSCONFDIR PGPASSWORD PGPASSFILE PGOPTIONS PGSSLMODE PGTARGETSESSIONATTRS; do
   for helper in postgres-backup-proof.sh prove-backup.sh; do
     # Synthetic contamination only. No inherited credential values are copied.
     status=0
