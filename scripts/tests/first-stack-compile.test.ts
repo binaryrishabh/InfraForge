@@ -47,10 +47,14 @@ test("1/2/4/8 apps receive exact recorded work and DB health on Stage 1; repeats
     expect(db.logicalReads).toBe(24 + apps);
     const foreground = events.filter(e => e.kind === "db-admitted" && e.work?.operation === "read");
     expect(foreground).toHaveLength(24);
-    expect(foreground.every(e => (e.work?.message?.request as { key: string }).key === "hot")).toBe(true);
+    expect(foreground.every(e => e.work?.parentCallId && JSON.parse(e.work.rootId)[1] === "recorded")).toBe(true);
     const health = events.filter(e => e.kind === "db-admitted" && e.work?.operation === "health");
     expect(health).toHaveLength(apps);
-    expect(health.every(e => (e.work?.message?.request as { key: string }).key === "cold")).toBe(true);
+    expect(health.every(e => JSON.parse(e.work!.rootId)[0] === "health")).toBe(true);
+    const configuration = prepared.compiled.input.resources.find(r => r.kind === "relational");
+    if (configuration?.kind !== "relational") throw Error("Missing compiled DB owner");
+    expect(configuration.plans.read!.statements[0]!.keys).toEqual(["$key"]);
+    expect(configuration.plans.health!.statements[0]!.keys).toEqual(["cold"]);
     expect(off.evidence.firstStack).toMatchObject({ timing: "assumption-only", fullMemory: "Unknown", fullCost: "Unknown", activeEngine: "1" });
     completion.push(Math.max(...off.evidence.results.map(r => r.responseUs)));
     dbPressure.push(db.cpu.unsatisfiedParallelismUs);
@@ -118,6 +122,8 @@ test("hot-key writes share one DB lock owner across all apps", async () => {
   expect(result.evidence.data.databases[0]!.logicalWrites).toBe(24);
   expect(result.evidence.data.databases[0]!.generatedLogBytes).toBe(24 * 8);
   expect(result.evidence.data.databases[0]!.locks.waits).toBeGreaterThan(0);
+  expect(result.evidence.data.databases[0]!.rows.find(row => row.key === "hot")!.version).toBe(25);
+  expect(result.evidence.data.databases[0]!.rows.find(row => row.key === "cold")!.version).toBe(1);
 });
 
 test("explicit range keys execute once per statement and DB readiness gates initial eligibility", async () => {
@@ -171,11 +177,13 @@ test("only the selected background health operation uses health keys; reserved d
   f.sidecar.operations.find(op => op.id === "read")!.kind = "health-read";
   bindChangedProfile(f);
   const events: CausalEvent[] = [];
-  const result = runFirstStackQualification(f.prepare(), e => events.push(e));
+  const prepared = f.prepare(), result = runFirstStackQualification(prepared, e => events.push(e));
   expect(result.evidence.counts.completed).toBe(24);
   const queries = events.filter(e => e.kind === "db-terminal" && e.work?.operation === "read");
   expect(queries).toHaveLength(24);
-  expect(queries.every(e => (e.work?.message?.response as { rows: Array<{ key: string }> }).rows.every(row => row.key === "hot"))).toBe(true);
+  const configuration = prepared.compiled.input.resources.find(r => r.kind === "relational");
+  if (configuration?.kind !== "relational") throw Error("Missing compiled DB owner");
+  expect(configuration.plans.read!.statements[0]!.keys).toEqual(["$key"]);
   f.sidecar.database.keys.push("$key"); bindChangedProfile(f);
   expect(() => f.prepare()).toThrow("reserved by Stage 1 parameter substitution");
 });

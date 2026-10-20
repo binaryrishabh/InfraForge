@@ -112,7 +112,12 @@ export function buildStage2Transitions() {
   if (!table.entries.some(row => row.source === authoringSource)) {
     const descriptor = table.descriptors[authoringSource];
     if (!descriptor) throw Error("Missing accepted Stage 2 authoring descriptor");
-    const paths = [...new Set<string>([...descriptor.files.map(([p]: [string, string]) => p), "package.json", "bun.lock", "bunfig.toml", ...["apps/backend", "apps/web", "packages/domain", "packages/catalog", "packages/contracts", "packages/simulation"].map(p => p + "/package.json")])];
+    if (!Array.isArray(descriptor.files)) throw Error("Missing authoring descriptor files");
+    const descriptorFiles = descriptor.files.map((entry: unknown): [string, string] => {
+      if (!Array.isArray(entry) || entry.length !== 2 || typeof entry[0] !== "string" || typeof entry[1] !== "string") throw Error("Invalid authoring descriptor file");
+      return [entry[0], entry[1]];
+    });
+    const paths = [...new Set<string>([...descriptorFiles.map(([p]) => p), "package.json", "bun.lock", "bunfig.toml", ...["apps/backend", "apps/web", "packages/domain", "packages/catalog", "packages/contracts", "packages/simulation"].map(p => p + "/package.json")])];
     const committed = paths.filter(p => !p.includes("/generated/"));
     const bytes = execFileSync("git", ["cat-file", "--batch"], { cwd: root, input: committed.map(p => `${authoringCommit}:${p}\n`).join(""), maxBuffer: 64 * 1024 * 1024 });
     const texts = new Map<string, string>(); let offset = 0;
@@ -122,7 +127,7 @@ export function buildStage2Transitions() {
       texts.set(p, lf(bytes.subarray(end + 1, end + 1 + size).toString())); offset = end + 1 + size + 1;
     }
     history.trees[authoringCommit] = Object.fromEntries(paths.map(path => {
-      const text = texts.get(path) ?? tree.read(path), hash = sha256(text), expected = new Map(descriptor.files).get(path);
+      const text = texts.get(path) ?? tree.read(path), hash = sha256(text), expected = new Map(descriptorFiles).get(path);
       if (expected && expected !== hash) throw Error(`Authoring source does not match accepted descriptor: ${path}`);
       history.blobs[hash] = text; return [path, hash];
     }));
