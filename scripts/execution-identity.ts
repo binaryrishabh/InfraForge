@@ -1,3 +1,4 @@
+import { reviewHardeningSyntax, refreshHardeningTransitions } from "./hardening-identity";
 import { buildCompositionTransitions } from "./stage1-identity";
 import { reviewPostgresSessions, reviewPostgresSyntax, refreshPostgresTransitions } from "./postgres-session-identity";
 import { reviewStage2Modules, writeStage2ReviewLock, buildStage2Transitions } from "./stage2-authoring";
@@ -171,7 +172,9 @@ export function checkTransitions(root = repositoryRoot, read?: (path: string) =>
   return { schema: descriptor.schema, current, historicalEntries: table.entries.length, packages: descriptor.dependencies.packages.length };
 }
 if (import.meta.main) {
-  if (process.argv.includes("--write-pg-review")) reviewPostgresSessions();
+  if (process.argv.includes("--review-hardening-syntax")) reviewHardeningSyntax();
+  else if (process.argv.includes("--review-hardening-transitions")) refreshHardeningTransitions();
+  else if (process.argv.includes("--write-pg-review")) reviewPostgresSessions();
   else if (process.argv.includes("--review-pg-syntax")) reviewPostgresSyntax();
   else if (process.argv.includes("--refresh-pg-transitions")) refreshPostgresTransitions();
   else if (process.argv.includes("--review-stage2-modules")) reviewStage2Modules();
