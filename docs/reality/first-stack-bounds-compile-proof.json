@@ -1,0 +1,237 @@
+{
+  "schema": "infraforge-first-stack-compile-proof/3",
+  "compiler": "first-stack-compiler/2",
+  "composition": "first-stack-composition/2",
+  "scope": "Internal conditional logical software proof; no physical calibration, public admission or Model 2 activation",
+  "reconstructedOriginalHostFiles": 88,
+  "preservedCompositionHashes": [
+    {
+      "composition": "m2b/1",
+      "evidenceSha256": "faa27f1b07ed64b901f0fac8d845f275b65c7dc1d5a7ea7881ce4cb16d602ecf"
+    },
+    {
+      "composition": "m2c/1",
+      "evidenceSha256": "627045428312d4a7880dfd4af6cfb102df7c3d4c86905e16778e846c0495cac7"
+    },
+    {
+      "composition": "m2d/1",
+      "evidenceSha256": "bafae30ed58bd38153ff8f4722eb1cfcf78e6a2aba2a4a08f719a299ff15aa23"
+    },
+    {
+      "composition": "m2d/1-lb",
+      "evidenceSha256": "7baba18c8858d5f0d3a62a48b476dd3dd39c54731616f854e1a5fc035779d3f7"
+    },
+    {
+      "composition": "m2e/1",
+      "evidenceSha256": "e9810727efcacc6459994fd5b5285966fa3d9e007264b2bd7776a91370566899"
+    },
+    {
+      "composition": "m2f/1",
+      "evidenceSha256": "c079f58644563b737f4cffa3960eb65043b96ee18a38e562c49ded14ca2bd84a"
+    },
+    {
+      "composition": "m2g/1",
+      "evidenceSha256": "fba08e69fc5a333af6d00ff80a012fcd513499e90f132e656ae81a2b3dc51b88"
+    },
+    {
+      "composition": "m2h/1",
+      "evidenceSha256": "4e95fe38c9dd02cc60f700c301476ecc53ad495f83ad98469c6f0811b65ae224"
+    }
+  ],
+  "sources": [
+    {
+      "path": "packages/contracts/src/first-stack/index.ts",
+      "hash": "dd70829058a94856e14c189b44cd1d427ee73126dcf242fbaa6f2d79c7d0ed08"
+    },
+    {
+      "path": "apps/backend/firstStack/authoring.ts",
+      "hash": "ff9791e8aa8a8812a956341ac4590ff9fb660a5fe9703a1b06eeb8c872ce8c9c"
+    },
+    {
+      "path": "apps/backend/firstStack/workload.ts",
+      "hash": "5369d0c12fd99e8d2af105b4922cd8a45ce27f5cde6538c91c4562f5a4941755"
+    },
+    {
+      "path": "apps/backend/firstStack/execution.ts",
+      "hash": "6a5c7c96016f9528265e76f6291de7fdc1b6e6d0b84184cad9ffac62eb7679d3"
+    },
+    {
+      "path": "packages/simulation/src/internalFirstStack.ts",
+      "hash": "5863a6d0b2dc895305ed4769dc847c7194fa20d528b6801ec71bd1f1b4df9590"
+    },
+    {
+      "path": "packages/simulation/src/firstStack/compiler.ts",
+      "hash": "aa225df0b4f7f0f91e5a35c482a8f4f2dd4ee5323ca166fa67e2441a5072d4a2"
+    },
+    {
+      "path": "packages/simulation/src/firstStack/run.ts",
+      "hash": "6366672e8f3114649662ebe3890561e68f6c245117916a5170aabd0e5bb8729a"
+    },
+    {
+      "path": "scripts/fixtures/first-stack-compile.ts",
+      "hash": "baf1cc0bf4872cac6ec342018c8692425ae5931de43d5425490950334cd062dd"
+    },
+    {
+      "path": "scripts/tests/first-stack-compile.test.ts",
+      "hash": "59c23c540b907add8f9162ac8239bc1dcc7e1df0e0072ab514b0ca9bb274589a"
+    }
+  ],
+  "runs": [
+    {
+      "apps": 1,
+      "compiledHash": "ffb68f5ae17e605759d13ac7ed4358bcad6559593003e9b576ab67b94e3f6d4f",
+      "evidenceHash": "4990fa10e1f68ebf3cda3d0822a89acc71efd1f50bc5cff9a221c0f5dc54c111",
+      "workload": "043fdcb2951e8d7204bfcc2a8d42d4028f5d6677dc6d54897101932c9d84d92e",
+      "offered": 24,
+      "completed": 24,
+      "selectedPerApp": [
+        {
+          "id": "app-0",
+          "selected": 24
+        }
+      ],
+      "healthCommits": 1,
+      "foregroundCommits": 24,
+      "maximumResponseUs": 14310,
+      "appUnsatisfiedParallelismUs": 220176,
+      "dbUnsatisfiedParallelismUs": 105485,
+      "observerEqual": true,
+      "repeatedBytesEqual": true
+    },
+    {
+      "apps": 2,
+      "compiledHash": "acf85f9504ef39f3ed63642d5affebd556ab083ed2f6fbd29598387b38768616",
+      "evidenceHash": "c9275fb71c32f9fd3ff9278b89e7b9a233dd9bbd025af955b093d8eeee79f3b0",
+      "workload": "043fdcb2951e8d7204bfcc2a8d42d4028f5d6677dc6d54897101932c9d84d92e",
+      "offered": 24,
+      "completed": 24,
+      "selectedPerApp": [
+        {
+          "id": "app-0",
+          "selected": 12
+        },
+        {
+          "id": "app-1",
+          "selected": 12
+        }
+      ],
+      "healthCommits": 2,
+      "foregroundCommits": 24,
+      "maximumResponseUs": 9551,
+      "appUnsatisfiedParallelismUs": 105002,
+      "dbUnsatisfiedParallelismUs": 107820,
+      "observerEqual": true,
+      "repeatedBytesEqual": true
+    },
+    {
+      "apps": 4,
+      "compiledHash": "ec413622dd071ce4e10e4d1d9c521615e4a5c953e4f45aca275b774858f7988f",
+      "evidenceHash": "082bf0cf1da8cb4d393b98f45ce818fb96ed97ea6d49b35481370017f724f19b",
+      "workload": "043fdcb2951e8d7204bfcc2a8d42d4028f5d6677dc6d54897101932c9d84d92e",
+      "offered": 24,
+      "completed": 24,
+      "selectedPerApp": [
+        {
+          "id": "app-0",
+          "selected": 6
+        },
+        {
+          "id": "app-1",
+          "selected": 6
+        },
+        {
+          "id": "app-2",
+          "selected": 6
+        },
+        {
+          "id": "app-3",
+          "selected": 6
+        }
+      ],
+      "healthCommits": 4,
+      "foregroundCommits": 24,
+      "maximumResponseUs": 7179,
+      "appUnsatisfiedParallelismUs": 47456,
+      "dbUnsatisfiedParallelismUs": 111079,
+      "observerEqual": true,
+      "repeatedBytesEqual": true
+    },
+    {
+      "apps": 8,
+      "compiledHash": "127fd222beef12cdb33feaaf54deb7799db90e9ee306dd69c6ac1b5fac7013ca",
+      "evidenceHash": "84f58a54b4b2263dd96b33b13911b9924f43853c106ec712399b4c7b00016d61",
+      "workload": "043fdcb2951e8d7204bfcc2a8d42d4028f5d6677dc6d54897101932c9d84d92e",
+      "offered": 24,
+      "completed": 24,
+      "selectedPerApp": [
+        {
+          "id": "app-0",
+          "selected": 3
+        },
+        {
+          "id": "app-1",
+          "selected": 3
+        },
+        {
+          "id": "app-2",
+          "selected": 3
+        },
+        {
+          "id": "app-3",
+          "selected": 3
+        },
+        {
+          "id": "app-4",
+          "selected": 3
+        },
+        {
+          "id": "app-5",
+          "selected": 3
+        },
+        {
+          "id": "app-6",
+          "selected": 3
+        },
+        {
+          "id": "app-7",
+          "selected": 3
+        }
+      ],
+      "healthCommits": 8,
+      "foregroundCommits": 24,
+      "maximumResponseUs": 6000,
+      "appUnsatisfiedParallelismUs": 18752,
+      "dbUnsatisfiedParallelismUs": 120685,
+      "observerEqual": true,
+      "repeatedBytesEqual": true
+    }
+  ],
+  "sharedHost": {
+    "evidenceHash": "040810c4f4fe0524c47112c5d781b91bdc8d563ccebc53391010631aee6673d7",
+    "cpu": {
+      "id": "shared-apps",
+      "capacity": 1,
+      "runnable": 0,
+      "receivingShare": 0,
+      "contended": false,
+      "paused": false,
+      "throttled": false,
+      "appCoreUs": 9639.999999999998,
+      "competitorCoreUs": 0,
+      "availableCoreUs": 90000,
+      "throttledWallUs": 0,
+      "unsatisfiedParallelismUs": 220308,
+      "quotaRemainingCoreUs": null,
+      "allocations": [],
+      "boundaries": 19,
+      "members": 4
+    },
+    "memory": {
+      "id": "shared-apps",
+      "capacityBytes": 400,
+      "reservedBytes": 400,
+      "availableBytes": 0,
+      "leases": 4
+    }
+  }
+}

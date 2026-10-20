@@ -4,7 +4,7 @@ Model 1 remains active. This is an internal software qualification path over the
 slice 04 cache-free compiler, not public execution or intended-host readiness.
 PostgreSQL session/transaction mechanisms are unchanged. The only data adapter
 change forwards the host slice API. (`packages/simulation/src/firstStack/run.ts:11`,
-`packages/simulation/src/model2/data/run.ts:47`)
+`packages/simulation/src/model2/data/run.ts:63`)
 
 The captured `first-stack-envelope/1` sets 2,000,000 total events, 50,000 pending
 events, 10,000 live transport calls/callers, 32 operations, 10,000 keys and a
@@ -30,7 +30,8 @@ serializer, a hung persistence callback or an OS kill. Slice 10b must enforce th
 All transport exchanges, including LB health/attempt exchanges, share the call
 budget. Bounded histograms retain every terminal observation independent of raw
 row/journal omission. Raw result/transport rows each retain at most 1 MiB;
-samples retain a prefix of at most 128 and 2 MiB. Omitted samples cannot support
+samples retain a prefix of at most 128 and 2 MiB. The first omission closes
+retention; later ticks count omissions without constructing another sample. Omitted samples cannot support
 complete interval reconstruction; current cumulative counts/histograms remain
 available. Distributions name terminal callers by operation/outcome, with
 unfinished callers right-censored. (`packages/simulation/src/model2/network/run.ts:75`,
@@ -85,6 +86,7 @@ Refresh reviewed artifacts using their owning scripts, in dependency order:
 
 ```
 bun --no-env-file scripts/stage2-bounds-host.ts --write
+bun --no-env-file scripts/execution-identity.ts --write-pg-review
 bun --no-env-file scripts/stage1-lineage.ts --write
 bun --no-env-file scripts/reality/first-stack-bounds-proof.ts --write
 bun --no-env-file scripts/reality/first-stack-compile-proof.ts --write
@@ -100,3 +102,10 @@ After selection changes, repeat analysis/pin/import review, then refresh connect
 M2M and lesson endpoint lineage. Write the Stage 2 review lock before building its
 transitions. Refresh launch/run-record/shipping/inventory with their scripts and
 verify identity/resolution. Hashes always normalize CRLF to LF.
+
+The combined review retains exact main `6501ad3` PostgreSQL source, apart from
+slice forwarding and the optional call guard; its session/deadline behavior and
+workload revision remain unchanged. The source history additionally retains main
+and pre-rebase bounds `aa1e612`. The earlier timing JSON remains a historical
+observation; clean-host main-versus-combined timing (A3) is pending with the lead.
+No timing or host-capacity promotion follows from the rebase.

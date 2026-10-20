@@ -342,7 +342,7 @@
     },
     {
       "file": "apps/backend/executionIdentity/loading.ts",
-      "sha256": "77293b43e5368b02c7197259df04ab3569786a980a75f8db7248ece21641b831",
+      "sha256": "cce8a1d11a946ba3a92d7a3d5a17a21aa9a7507086e71d2077a575cc43038214",
       "numericSites": 14
     },
     {
@@ -371,13 +371,18 @@
       "numericSites": 35
     },
     {
+      "file": "apps/backend/firstStack/boundedExecution.ts",
+      "sha256": "b1989ea584f447e90c43fa54d50c3597f8efdbf3a7be8928e937b585ffcbd7cb",
+      "numericSites": 6
+    },
+    {
       "file": "apps/backend/firstStack/canonical.ts",
       "sha256": "49f240e1016d0540eb13f3908543c2016986a87eb0b0dce5669dfeab376fa2f4",
       "numericSites": 3
     },
     {
       "file": "apps/backend/firstStack/execution.ts",
-      "sha256": "57cbb565cf8d4004bddfa0c4b28c21e6ee13565927f7752db7020c3e0adec3b4",
+      "sha256": "6a5c7c96016f9528265e76f6291de7fdc1b6e6d0b84184cad9ffac62eb7679d3",
       "numericSites": 14
     },
     {
@@ -2436,18 +2441,28 @@
       "numericSites": 106
     },
     {
+      "file": "packages/simulation/src/firstStack/bounds.ts",
+      "sha256": "df0c64b5b24fe82534630af6ae6798516a132eb9bc3357f840d2c0c3ba7f3763",
+      "numericSites": 44
+    },
+    {
       "file": "packages/simulation/src/firstStack/compiler.ts",
-      "sha256": "38ac905e4682e02f3e86b6e54f0180481fcda97901a8ecfc16c62033f078cb56",
-      "numericSites": 14
+      "sha256": "aa225df0b4f7f0f91e5a35c482a8f4f2dd4ee5323ca166fa67e2441a5072d4a2",
+      "numericSites": 15
+    },
+    {
+      "file": "packages/simulation/src/firstStack/journal.ts",
+      "sha256": "786bc65fab84faf4dc0ce2de5001261aa977c004f311139e5b93635e8149b7bf",
+      "numericSites": 6
     },
     {
       "file": "packages/simulation/src/firstStack/run.ts",
-      "sha256": "dc0c09ebecb47df900cbc2574ca910ad8df894ac3ae84494b8dbea9ec4b7ec6f",
+      "sha256": "6366672e8f3114649662ebe3890561e68f6c245117916a5170aabd0e5bb8729a",
       "numericSites": 8
     },
     {
       "file": "packages/simulation/src/internalFirstStack.ts",
-      "sha256": "40ed5822095096fbaa3d5f351e9118ca55223ee637b86dc23dc80f4a944943e3",
+      "sha256": "5863a6d0b2dc895305ed4769dc847c7194fa20d528b6801ec71bd1f1b4df9590",
       "numericSites": 0
     },
     {
@@ -25086,6 +25101,222 @@
       }
     },
     {
+      "id": "m1.apps.backend.firstStack.boundedExecution.1",
+      "concept": "lower · literal 0",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.boundedExecution.1"
+        ]
+      },
+      "formula": "if (!Number.isSafeInteger(value) || value <= 0 || value > ceiling) throw Error(\"Execution budgets may only lower the qualification ceiling\");",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/boundedExecution.ts#L29",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/boundedExecution.ts",
+        "line": 29,
+        "column": 48
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.boundedExecution.2",
+      "concept": "storedBytes · literal 0",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.boundedExecution.2"
+        ]
+      },
+      "formula": "let durable: ExecutionCut | null = null, latest: ExecutionCut | null = null, storedBytes = 0, sequence = 0;",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/boundedExecution.ts#L41",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/boundedExecution.ts",
+        "line": 41,
+        "column": 94
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.boundedExecution.3",
+      "concept": "sequence · literal 0",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.boundedExecution.3"
+        ]
+      },
+      "formula": "let durable: ExecutionCut | null = null, latest: ExecutionCut | null = null, storedBytes = 0, sequence = 0;",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/boundedExecution.ts#L41",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/boundedExecution.ts",
+        "line": 41,
+        "column": 108
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.boundedExecution.4",
+      "concept": "value.sequence · literal 1",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.boundedExecution.4"
+        ]
+      },
+      "formula": "sequence: sequence + 1",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/boundedExecution.ts#L64",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/boundedExecution.ts",
+        "line": 64,
+        "column": 85
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.boundedExecution.5",
+      "concept": "value.completeness.allRootsTerminal · literal 0",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.boundedExecution.5"
+        ]
+      },
+      "formula": "allRootsTerminal: e.counts.offered === prepared.schedule.rows.length && e.counts.inFlight === 0",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/boundedExecution.ts#L67",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/boundedExecution.ts",
+        "line": 67,
+        "column": 159
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.boundedExecution.6",
+      "concept": "value.omissions.samples · literal 0",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.boundedExecution.6"
+        ]
+      },
+      "formula": "samples: e.sampleRetention?.omitted ?? 0",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/boundedExecution.ts#L69",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/boundedExecution.ts",
+        "line": 69,
+        "column": 123
+      }
+    },
+    {
       "id": "m1.apps.backend.firstStack.canonical.1",
       "concept": "canonical · literal -1",
       "modelVersion": "1",
@@ -25535,7 +25766,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/firstStack/execution.ts#L41",
+          "source": "workspace:apps/backend/firstStack/execution.ts#L42",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -25549,7 +25780,7 @@
       "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
       "location": {
         "file": "apps/backend/firstStack/execution.ts",
-        "line": 41,
+        "line": 42,
         "column": 71
       }
     },
@@ -25571,7 +25802,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/firstStack/execution.ts#L41",
+          "source": "workspace:apps/backend/firstStack/execution.ts#L42",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -25585,7 +25816,7 @@
       "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
       "location": {
         "file": "apps/backend/firstStack/execution.ts",
-        "line": 41,
+        "line": 42,
         "column": 89
       }
     },
@@ -25607,7 +25838,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/firstStack/execution.ts#L41",
+          "source": "workspace:apps/backend/firstStack/execution.ts#L42",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -25621,7 +25852,7 @@
       "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
       "location": {
         "file": "apps/backend/firstStack/execution.ts",
-        "line": 41,
+        "line": 42,
         "column": 93
       }
     },
@@ -25643,7 +25874,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/firstStack/execution.ts#L53",
+          "source": "workspace:apps/backend/firstStack/execution.ts#L54",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -25657,7 +25888,7 @@
       "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
       "location": {
         "file": "apps/backend/firstStack/execution.ts",
-        "line": 53,
+        "line": 54,
         "column": 74
       }
     },
@@ -25679,7 +25910,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/firstStack/execution.ts#L55",
+          "source": "workspace:apps/backend/firstStack/execution.ts#L56",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -25693,7 +25924,7 @@
       "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
       "location": {
         "file": "apps/backend/firstStack/execution.ts",
-        "line": 55,
+        "line": 56,
         "column": 180
       }
     },
@@ -114145,6 +114376,1551 @@
       }
     },
     {
+      "id": "m1.packages.simulation.src.firstStack.bounds.1",
+      "concept": "MiB · literal 1024",
+      "modelVersion": "1",
+      "scope": "Published Model-1 engine behavior",
+      "quantity": {
+        "kind": "known",
+        "value": 1024,
+        "unit": "code-number",
+        "provenance": [
+          "m1.packages.simulation.src.firstStack.bounds.1"
+        ]
+      },
+      "formula": "const MiB = 1024 * 1024;",
+      "classification": "educational-assumption",
+      "confidence": "low",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/bounds.ts#L5",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "Fixed educational coefficients; no application benchmark or provider measurement establishes a universal value."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
+      "location": {
+        "file": "packages/simulation/src/firstStack/bounds.ts",
+        "line": 5,
+        "column": 13
+      }
+    },
+    {
+      "id": "m1.packages.simulation.src.firstStack.bounds.2",
+      "concept": "MiB · literal 1024",
+      "modelVersion": "1",
+      "scope": "Published Model-1 engine behavior",
+      "quantity": {
+        "kind": "known",
+        "value": 1024,
+        "unit": "code-number",
+        "provenance": [
+          "m1.packages.simulation.src.firstStack.bounds.2"
+        ]
+      },
+      "formula": "const MiB = 1024 * 1024;",
+      "classification": "educational-assumption",
+      "confidence": "low",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/bounds.ts#L5",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "Fixed educational coefficients; no application benchmark or provider measurement establishes a universal value."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
+      "location": {
+        "file": "packages/simulation/src/firstStack/bounds.ts",
+        "line": 5,
+        "column": 20
+      }
+    },
+    {
+      "id": "m1.packages.simulation.src.firstStack.bounds.3",
+      "concept": "FIRST_STACK_ENVELOPE.horizonUs · literal 300_000_000",
+      "modelVersion": "1",
+      "scope": "Published Model-1 engine behavior",
+      "quantity": {
+        "kind": "known",
+        "value": 300000000,
+        "unit": "code-number",
+        "provenance": [
+          "m1.packages.simulation.src.firstStack.bounds.3"
+        ]
+      },
+      "formula": "horizonUs: 300_000_000",
+      "classification": "educational-assumption",
+      "confidence": "low",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/bounds.ts#L8",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "Fixed educational coefficients; no application benchmark or provider measurement establishes a universal value."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
+      "location": {
+        "file": "packages/simulation/src/firstStack/bounds.ts",
+        "line": 8,
+        "column": 14
+      }
+    },
+    {
+      "id": "m1.packages.simulation.src.firstStack.bounds.4",
+      "concept": "FIRST_STACK_ENVELOPE.roots · literal 20_000",
+      "modelVersion": "1",
+      "scope": "Published Model-1 engine behavior",
+      "quantity": {
+        "kind": "known",
+        "value": 20000,
+        "unit": "code-number",
+        "provenance": [
+          "m1.packages.simulation.src.firstStack.bounds.4"
+        ]
+      },
+      "formula": "roots: 20_000",
+      "classification": "educational-assumption",
+      "confidence": "low",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/bounds.ts#L8",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "Fixed educational coefficients; no application benchmark or provider measurement establishes a universal value."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
+      "location": {
+        "file": "packages/simulation/src/firstStack/bounds.ts",
+        "line": 8,
+        "column": 34
+      }
+    },
+    {
+      "id": "m1.packages.simulation.src.firstStack.bounds.5",
+      "concept": "FIRST_STACK_ENVELOPE.events · literal 2_000_000",
+      "modelVersion": "1",
+      "scope": "Published Model-1 engine behavior",
+      "quantity": {
+        "kind": "known",
+        "value": 2000000,
+        "unit": "code-number",
+        "provenance": [
+          "m1.packages.simulation.src.firstStack.bounds.5"
+        ]
+      },
+      "formula": "events: 2_000_000",
+      "classification": "educational-assumption",
+      "confidence": "low",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/bounds.ts#L8",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "Fixed educational coefficients; no application benchmark or provider measurement establishes a universal value."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
+      "location": {
+        "file": "packages/simulation/src/firstStack/bounds.ts",
+        "line": 8,
+        "column": 50
+      }
+    },
+    {
+      "id": "m1.packages.simulation.src.firstStack.bounds.6",
+      "concept": "FIRST_STACK_ENVELOPE.pendingEvents · literal 50_000",
+      "modelVersion": "1",
+      "scope": "Published Model-1 engine behavior",
+      "quantity": {
+        "kind": "known",
+        "value": 50000,
+        "unit": "code-number",
+        "provenance": [
+          "m1.packages.simulation.src.firstStack.bounds.6"
+        ]
+      },
+      "formula": "pendingEvents: 50_000",
+      "classification": "educational-assumption",
+      "confidence": "low",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/bounds.ts#L8",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "Fixed educational coefficients; no application benchmark or provider measurement establishes a universal value."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
+      "location": {
+        "file": "packages/simulation/src/firstStack/bounds.ts",
+        "line": 8,
+        "column": 76
+      }
+    },
+    {
+      "id": "m1.packages.simulation.src.firstStack.bounds.7",
+      "concept": "FIRST_STACK_ENVELOPE.liveCalls · literal 10_000",
+      "modelVersion": "1",
+      "scope": "Published Model-1 engine behavior",
+      "quantity": {
+        "kind": "known",
+        "value": 10000,
+        "unit": "code-number",
+        "provenance": [
+          "m1.packages.simulation.src.firstStack.bounds.7"
+        ]
+      },
+      "formula": "liveCalls: 10_000",
+      "classification": "educational-assumption",
+      "confidence": "low",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/bounds.ts#L8",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "Fixed educational coefficients; no application benchmark or provider measurement establishes a universal value."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
+      "location": {
+        "file": "packages/simulation/src/firstStack/bounds.ts",
+        "line": 8,
+        "column": 95
+      }
+    },
+    {
+      "id": "m1.packages.simulation.src.firstStack.bounds.8",
+      "concept": "FIRST_STACK_ENVELOPE.operations · literal 32",
+      "modelVersion": "1",
+      "scope": "Published Model-1 engine behavior",
+      "quantity": {
+        "kind": "known",
+        "value": 32,
+        "unit": "code-number",
+        "provenance": [
+          "m1.packages.simulation.src.firstStack.bounds.8"
+        ]
+      },
+      "formula": "operations: 32",
+      "classification": "educational-assumption",
+      "confidence": "low",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/bounds.ts#L9",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "Fixed educational coefficients; no application benchmark or provider measurement establishes a universal value."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
+      "location": {
+        "file": "packages/simulation/src/firstStack/bounds.ts",
+        "line": 9,
+        "column": 15
+      }
+    },
+    {
+      "id": "m1.packages.simulation.src.firstStack.bounds.9",
+      "concept": "FIRST_STACK_ENVELOPE.keys · literal 10_000",
+      "modelVersion": "1",
+      "scope": "Published Model-1 engine behavior",
+      "quantity": {
+        "kind": "known",
+        "value": 10000,
+        "unit": "code-number",
+        "provenance": [
+          "m1.packages.simulation.src.firstStack.bounds.9"
+        ]
+      },
+      "formula": "keys: 10_000",
+      "classification": "educational-assumption",
+      "confidence": "low",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/bounds.ts#L9",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "Fixed educational coefficients; no application benchmark or provider measurement establishes a universal value."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
+      "location": {
+        "file": "packages/simulation/src/firstStack/bounds.ts",
+        "line": 9,
+        "column": 25
+      }
+    },
+    {
+      "id": "m1.packages.simulation.src.firstStack.bounds.10",
+      "concept": "FIRST_STACK_ENVELOPE.semanticBytes · literal 16",
+      "modelVersion": "1",
+      "scope": "Published Model-1 engine behavior",
+      "quantity": {
+        "kind": "known",
+        "value": 16,
+        "unit": "code-number",
+        "provenance": [
+          "m1.packages.simulation.src.firstStack.bounds.10"
+        ]
+      },
+      "formula": "semanticBytes: 16 * MiB",
+      "classification": "educational-assumption",
+      "confidence": "low",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/bounds.ts#L9",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "Fixed educational coefficients; no application benchmark or provider measurement establishes a universal value."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
+      "location": {
+        "file": "packages/simulation/src/firstStack/bounds.ts",
+        "line": 9,
+        "column": 70
+      }
+    },
+    {
+      "id": "m1.packages.simulation.src.firstStack.bounds.11",
+      "concept": "FIRST_STACK_ENVELOPE.queueEntries · literal 10_000",
+      "modelVersion": "1",
+      "scope": "Published Model-1 engine behavior",
+      "quantity": {
+        "kind": "known",
+        "value": 10000,
+        "unit": "code-number",
+        "provenance": [
+          "m1.packages.simulation.src.firstStack.bounds.11"
+        ]
+      },
+      "formula": "queueEntries: 10_000",
+      "classification": "educational-assumption",
+      "confidence": "low",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/bounds.ts#L10",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "Fixed educational coefficients; no application benchmark or provider measurement establishes a universal value."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
+      "location": {
+        "file": "packages/simulation/src/firstStack/bounds.ts",
+        "line": 10,
+        "column": 17
+      }
+    },
+    {
+      "id": "m1.packages.simulation.src.firstStack.bounds.12",
+      "concept": "FIRST_STACK_ENVELOPE.retainedSamples · literal 128",
+      "modelVersion": "1",
+      "scope": "Published Model-1 engine behavior",
+      "quantity": {
+        "kind": "known",
+        "value": 128,
+        "unit": "code-number",
+        "provenance": [
+          "m1.packages.simulation.src.firstStack.bounds.12"
+        ]
+      },
+      "formula": "retainedSamples: 128",
+      "classification": "educational-assumption",
+      "confidence": "low",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/bounds.ts#L10",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "Fixed educational coefficients; no application benchmark or provider measurement establishes a universal value."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
+      "location": {
+        "file": "packages/simulation/src/firstStack/bounds.ts",
+        "line": 10,
+        "column": 42
+      }
+    },
+    {
+      "id": "m1.packages.simulation.src.firstStack.bounds.13",
+      "concept": "FIRST_STACK_ENVELOPE.sampleBytes · literal 2",
+      "modelVersion": "1",
+      "scope": "Published Model-1 engine behavior",
+      "quantity": {
+        "kind": "known",
+        "value": 2,
+        "unit": "code-number",
+        "provenance": [
+          "m1.packages.simulation.src.firstStack.bounds.13"
+        ]
+      },
+      "formula": "sampleBytes: 2 * MiB",
+      "classification": "educational-assumption",
+      "confidence": "low",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/bounds.ts#L10",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "Fixed educational coefficients; no application benchmark or provider measurement establishes a universal value."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
+      "location": {
+        "file": "packages/simulation/src/firstStack/bounds.ts",
+        "line": 10,
+        "column": 60
+      }
+    },
+    {
+      "id": "m1.packages.simulation.src.firstStack.bounds.14",
+      "concept": "FIRST_STACK_ENVELOPE.journalBytes · literal 16",
+      "modelVersion": "1",
+      "scope": "Published Model-1 engine behavior",
+      "quantity": {
+        "kind": "known",
+        "value": 16,
+        "unit": "code-number",
+        "provenance": [
+          "m1.packages.simulation.src.firstStack.bounds.14"
+        ]
+      },
+      "formula": "journalBytes: 16 * MiB",
+      "classification": "educational-assumption",
+      "confidence": "low",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/bounds.ts#L11",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "Fixed educational coefficients; no application benchmark or provider measurement establishes a universal value."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
+      "location": {
+        "file": "packages/simulation/src/firstStack/bounds.ts",
+        "line": 11,
+        "column": 17
+      }
+    },
+    {
+      "id": "m1.packages.simulation.src.firstStack.bounds.15",
+      "concept": "FIRST_STACK_ENVELOPE.summaryBytes · literal 10",
+      "modelVersion": "1",
+      "scope": "Published Model-1 engine behavior",
+      "quantity": {
+        "kind": "known",
+        "value": 10,
+        "unit": "code-number",
+        "provenance": [
+          "m1.packages.simulation.src.firstStack.bounds.15"
+        ]
+      },
+      "formula": "summaryBytes: 10 * MiB",
+      "classification": "educational-assumption",
+      "confidence": "low",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/bounds.ts#L11",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "Fixed educational coefficients; no application benchmark or provider measurement establishes a universal value."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
+      "location": {
+        "file": "packages/simulation/src/firstStack/bounds.ts",
+        "line": 11,
+        "column": 41
+      }
+    },
+    {
+      "id": "m1.packages.simulation.src.firstStack.bounds.16",
+      "concept": "FIRST_STACK_ENVELOPE.captureBytes · literal 32",
+      "modelVersion": "1",
+      "scope": "Published Model-1 engine behavior",
+      "quantity": {
+        "kind": "known",
+        "value": 32,
+        "unit": "code-number",
+        "provenance": [
+          "m1.packages.simulation.src.firstStack.bounds.16"
+        ]
+      },
+      "formula": "captureBytes: 32 * MiB",
+      "classification": "educational-assumption",
+      "confidence": "low",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/bounds.ts#L11",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "Fixed educational coefficients; no application benchmark or provider measurement establishes a universal value."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
+      "location": {
+        "file": "packages/simulation/src/firstStack/bounds.ts",
+        "line": 11,
+        "column": 65
+      }
+    },
+    {
+      "id": "m1.packages.simulation.src.firstStack.bounds.17",
+      "concept": "FIRST_STACK_ENVELOPE.sliceEvents · literal 128",
+      "modelVersion": "1",
+      "scope": "Published Model-1 engine behavior",
+      "quantity": {
+        "kind": "known",
+        "value": 128,
+        "unit": "code-number",
+        "provenance": [
+          "m1.packages.simulation.src.firstStack.bounds.17"
+        ]
+      },
+      "formula": "sliceEvents: 128",
+      "classification": "educational-assumption",
+      "confidence": "low",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/bounds.ts#L12",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "Fixed educational coefficients; no application benchmark or provider measurement establishes a universal value."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
+      "location": {
+        "file": "packages/simulation/src/firstStack/bounds.ts",
+        "line": 12,
+        "column": 16
+      }
+    },
+    {
+      "id": "m1.packages.simulation.src.firstStack.bounds.18",
+      "concept": "FIRST_STACK_ENVELOPE.sliceWallMs · literal 25",
+      "modelVersion": "1",
+      "scope": "Published Model-1 engine behavior",
+      "quantity": {
+        "kind": "known",
+        "value": 25,
+        "unit": "code-number",
+        "provenance": [
+          "m1.packages.simulation.src.firstStack.bounds.18"
+        ]
+      },
+      "formula": "sliceWallMs: 25",
+      "classification": "educational-assumption",
+      "confidence": "low",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/bounds.ts#L12",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "Fixed educational coefficients; no application benchmark or provider measurement establishes a universal value."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
+      "location": {
+        "file": "packages/simulation/src/firstStack/bounds.ts",
+        "line": 12,
+        "column": 34
+      }
+    },
+    {
+      "id": "m1.packages.simulation.src.firstStack.bounds.19",
+      "concept": "FIRST_STACK_ENVELOPE.cpuUs · literal 30_000_000",
+      "modelVersion": "1",
+      "scope": "Published Model-1 engine behavior",
+      "quantity": {
+        "kind": "known",
+        "value": 30000000,
+        "unit": "code-number",
+        "provenance": [
+          "m1.packages.simulation.src.firstStack.bounds.19"
+        ]
+      },
+      "formula": "cpuUs: 30_000_000",
+      "classification": "educational-assumption",
+      "confidence": "low",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/bounds.ts#L12",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "Fixed educational coefficients; no application benchmark or provider measurement establishes a universal value."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
+      "location": {
+        "file": "packages/simulation/src/firstStack/bounds.ts",
+        "line": 12,
+        "column": 45
+      }
+    },
+    {
+      "id": "m1.packages.simulation.src.firstStack.bounds.20",
+      "concept": "FIRST_STACK_ENVELOPE.wallMs · literal 60_000",
+      "modelVersion": "1",
+      "scope": "Published Model-1 engine behavior",
+      "quantity": {
+        "kind": "known",
+        "value": 60000,
+        "unit": "code-number",
+        "provenance": [
+          "m1.packages.simulation.src.firstStack.bounds.20"
+        ]
+      },
+      "formula": "wallMs: 60_000",
+      "classification": "educational-assumption",
+      "confidence": "low",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/bounds.ts#L12",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "Fixed educational coefficients; no application benchmark or provider measurement establishes a universal value."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
+      "location": {
+        "file": "packages/simulation/src/firstStack/bounds.ts",
+        "line": 12,
+        "column": 65
+      }
+    },
+    {
+      "id": "m1.packages.simulation.src.firstStack.bounds.21",
+      "concept": "FIRST_STACK_ENVELOPE.rssTargetBytes · literal 512",
+      "modelVersion": "1",
+      "scope": "Published Model-1 engine behavior",
+      "quantity": {
+        "kind": "known",
+        "value": 512,
+        "unit": "code-number",
+        "provenance": [
+          "m1.packages.simulation.src.firstStack.bounds.21"
+        ]
+      },
+      "formula": "rssTargetBytes: 512 * MiB",
+      "classification": "educational-assumption",
+      "confidence": "low",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/bounds.ts#L13",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "Fixed educational coefficients; no application benchmark or provider measurement establishes a universal value."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
+      "location": {
+        "file": "packages/simulation/src/firstStack/bounds.ts",
+        "line": 13,
+        "column": 19
+      }
+    },
+    {
+      "id": "m1.packages.simulation.src.firstStack.bounds.22",
+      "concept": "FIRST_STACK_ENVELOPE.rssHardBytes · literal 768",
+      "modelVersion": "1",
+      "scope": "Published Model-1 engine behavior",
+      "quantity": {
+        "kind": "known",
+        "value": 768,
+        "unit": "code-number",
+        "provenance": [
+          "m1.packages.simulation.src.firstStack.bounds.22"
+        ]
+      },
+      "formula": "rssHardBytes: 768 * MiB",
+      "classification": "educational-assumption",
+      "confidence": "low",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/bounds.ts#L13",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "Fixed educational coefficients; no application benchmark or provider measurement establishes a universal value."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
+      "location": {
+        "file": "packages/simulation/src/firstStack/bounds.ts",
+        "line": 13,
+        "column": 44
+      }
+    },
+    {
+      "id": "m1.packages.simulation.src.firstStack.bounds.23",
+      "concept": "boundedJson · literal 0",
+      "modelVersion": "1",
+      "scope": "Published Model-1 engine behavior",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.packages.simulation.src.firstStack.bounds.23"
+        ]
+      },
+      "formula": "if (!Number.isSafeInteger(limit) || limit < 0) throw Error(\"Invalid serialization budget\");",
+      "classification": "educational-assumption",
+      "confidence": "low",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/bounds.ts#L19",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "Fixed educational coefficients; no application benchmark or provider measurement establishes a universal value."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
+      "location": {
+        "file": "packages/simulation/src/firstStack/bounds.ts",
+        "line": 19,
+        "column": 47
+      }
+    },
+    {
+      "id": "m1.packages.simulation.src.firstStack.bounds.24",
+      "concept": "bytes · literal 0",
+      "modelVersion": "1",
+      "scope": "Published Model-1 engine behavior",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.packages.simulation.src.firstStack.bounds.24"
+        ]
+      },
+      "formula": "let bytes = 0, buffer = \"\";",
+      "classification": "educational-assumption",
+      "confidence": "low",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/bounds.ts#L20",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "Fixed educational coefficients; no application benchmark or provider measurement establishes a universal value."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
+      "location": {
+        "file": "packages/simulation/src/firstStack/bounds.ts",
+        "line": 20,
+        "column": 73
+      }
+    },
+    {
+      "id": "m1.packages.simulation.src.firstStack.bounds.25",
+      "concept": "append · literal 8192",
+      "modelVersion": "1",
+      "scope": "Published Model-1 engine behavior",
+      "quantity": {
+        "kind": "known",
+        "value": 8192,
+        "unit": "code-number",
+        "provenance": [
+          "m1.packages.simulation.src.firstStack.bounds.25"
+        ]
+      },
+      "formula": "if (buffer.length >= 8192) { chunks.push(buffer); buffer = \"\"; }",
+      "classification": "educational-assumption",
+      "confidence": "low",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/bounds.ts#L25",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "Fixed educational coefficients; no application benchmark or provider measurement establishes a universal value."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
+      "location": {
+        "file": "packages/simulation/src/firstStack/bounds.ts",
+        "line": 25,
+        "column": 26
+      }
+    },
+    {
+      "id": "m1.packages.simulation.src.firstStack.bounds.26",
+      "concept": "i · literal 0",
+      "modelVersion": "1",
+      "scope": "Initialization, indexing, count arithmetic or discrete tick lifecycle",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.packages.simulation.src.firstStack.bounds.26"
+        ]
+      },
+      "formula": "for (let i = 0; i < text.length;) { let end = Math.min(text.length, i + 1024); if (end < text.length && text.charCodeAt(end - 1) >= 0xd800 && text.charCodeAt(end - 1) <= 0xdbff) end--; append(JSON.stringify(text.slice(i, end)).slice(1, -1)); i = end; }",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/bounds.ts#L29",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "Fixed educational coefficients; no application benchmark or provider measurement establishes a universal value.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
+      "location": {
+        "file": "packages/simulation/src/firstStack/bounds.ts",
+        "line": 29,
+        "column": 18
+      }
+    },
+    {
+      "id": "m1.packages.simulation.src.firstStack.bounds.27",
+      "concept": "end · literal 1024",
+      "modelVersion": "1",
+      "scope": "Published Model-1 engine behavior",
+      "quantity": {
+        "kind": "known",
+        "value": 1024,
+        "unit": "code-number",
+        "provenance": [
+          "m1.packages.simulation.src.firstStack.bounds.27"
+        ]
+      },
+      "formula": "let end = Math.min(text.length, i + 1024);",
+      "classification": "educational-assumption",
+      "confidence": "low",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/bounds.ts#L30",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "Fixed educational coefficients; no application benchmark or provider measurement establishes a universal value."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
+      "location": {
+        "file": "packages/simulation/src/firstStack/bounds.ts",
+        "line": 30,
+        "column": 43
+      }
+    },
+    {
+      "id": "m1.packages.simulation.src.firstStack.bounds.28",
+      "concept": "string · literal 1",
+      "modelVersion": "1",
+      "scope": "Initialization, indexing, count arithmetic or discrete tick lifecycle",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.packages.simulation.src.firstStack.bounds.28"
+        ]
+      },
+      "formula": "if (end < text.length && text.charCodeAt(end - 1) >= 0xd800 && text.charCodeAt(end - 1) <= 0xdbff) end--;",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/bounds.ts#L31",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "Fixed educational coefficients; no application benchmark or provider measurement establishes a universal value.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
+      "location": {
+        "file": "packages/simulation/src/firstStack/bounds.ts",
+        "line": 31,
+        "column": 54
+      }
+    },
+    {
+      "id": "m1.packages.simulation.src.firstStack.bounds.29",
+      "concept": "string · literal 0xd800",
+      "modelVersion": "1",
+      "scope": "Published Model-1 engine behavior",
+      "quantity": {
+        "kind": "known",
+        "value": 55296,
+        "unit": "code-number",
+        "provenance": [
+          "m1.packages.simulation.src.firstStack.bounds.29"
+        ]
+      },
+      "formula": "if (end < text.length && text.charCodeAt(end - 1) >= 0xd800 && text.charCodeAt(end - 1) <= 0xdbff) end--;",
+      "classification": "educational-assumption",
+      "confidence": "low",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/bounds.ts#L31",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "Fixed educational coefficients; no application benchmark or provider measurement establishes a universal value."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
+      "location": {
+        "file": "packages/simulation/src/firstStack/bounds.ts",
+        "line": 31,
+        "column": 60
+      }
+    },
+    {
+      "id": "m1.packages.simulation.src.firstStack.bounds.30",
+      "concept": "string · literal 1",
+      "modelVersion": "1",
+      "scope": "Initialization, indexing, count arithmetic or discrete tick lifecycle",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.packages.simulation.src.firstStack.bounds.30"
+        ]
+      },
+      "formula": "if (end < text.length && text.charCodeAt(end - 1) >= 0xd800 && text.charCodeAt(end - 1) <= 0xdbff) end--;",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/bounds.ts#L31",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "Fixed educational coefficients; no application benchmark or provider measurement establishes a universal value.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
+      "location": {
+        "file": "packages/simulation/src/firstStack/bounds.ts",
+        "line": 31,
+        "column": 92
+      }
+    },
+    {
+      "id": "m1.packages.simulation.src.firstStack.bounds.31",
+      "concept": "string · literal 0xdbff",
+      "modelVersion": "1",
+      "scope": "Published Model-1 engine behavior",
+      "quantity": {
+        "kind": "known",
+        "value": 56319,
+        "unit": "code-number",
+        "provenance": [
+          "m1.packages.simulation.src.firstStack.bounds.31"
+        ]
+      },
+      "formula": "if (end < text.length && text.charCodeAt(end - 1) >= 0xd800 && text.charCodeAt(end - 1) <= 0xdbff) end--;",
+      "classification": "educational-assumption",
+      "confidence": "low",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/bounds.ts#L31",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "Fixed educational coefficients; no application benchmark or provider measurement establishes a universal value."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
+      "location": {
+        "file": "packages/simulation/src/firstStack/bounds.ts",
+        "line": 31,
+        "column": 98
+      }
+    },
+    {
+      "id": "m1.packages.simulation.src.firstStack.bounds.32",
+      "concept": "string · literal 1",
+      "modelVersion": "1",
+      "scope": "Published Model-1 engine behavior",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.packages.simulation.src.firstStack.bounds.32"
+        ]
+      },
+      "formula": "append(JSON.stringify(text.slice(i, end)).slice(1, -1));",
+      "classification": "educational-assumption",
+      "confidence": "low",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/bounds.ts#L32",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "Fixed educational coefficients; no application benchmark or provider measurement establishes a universal value."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
+      "location": {
+        "file": "packages/simulation/src/firstStack/bounds.ts",
+        "line": 32,
+        "column": 55
+      }
+    },
+    {
+      "id": "m1.packages.simulation.src.firstStack.bounds.33",
+      "concept": "string · literal -1",
+      "modelVersion": "1",
+      "scope": "Published Model-1 engine behavior",
+      "quantity": {
+        "kind": "known",
+        "value": -1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.packages.simulation.src.firstStack.bounds.33"
+        ]
+      },
+      "formula": "append(JSON.stringify(text.slice(i, end)).slice(1, -1));",
+      "classification": "educational-assumption",
+      "confidence": "low",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/bounds.ts#L32",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "Fixed educational coefficients; no application benchmark or provider measurement establishes a universal value."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
+      "location": {
+        "file": "packages/simulation/src/firstStack/bounds.ts",
+        "line": 32,
+        "column": 59
+      }
+    },
+    {
+      "id": "m1.packages.simulation.src.firstStack.bounds.34",
+      "concept": "visit · literal 64",
+      "modelVersion": "1",
+      "scope": "Published Model-1 engine behavior",
+      "quantity": {
+        "kind": "known",
+        "value": 64,
+        "unit": "code-number",
+        "provenance": [
+          "m1.packages.simulation.src.firstStack.bounds.34"
+        ]
+      },
+      "formula": "if (depth > 64) throw Error(\"Executor serialization depth budget exhausted\");",
+      "classification": "educational-assumption",
+      "confidence": "low",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/bounds.ts#L37",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "Fixed educational coefficients; no application benchmark or provider measurement establishes a universal value."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
+      "location": {
+        "file": "packages/simulation/src/firstStack/bounds.ts",
+        "line": 37,
+        "column": 17
+      }
+    },
+    {
+      "id": "m1.packages.simulation.src.firstStack.bounds.35",
+      "concept": "i · literal 0",
+      "modelVersion": "1",
+      "scope": "Initialization, indexing, count arithmetic or discrete tick lifecycle",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.packages.simulation.src.firstStack.bounds.35"
+        ]
+      },
+      "formula": "for (let i = 0; i < item.length; i++) { if (i) append(\",\"); visit(item[i], depth + 1); }",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/bounds.ts#L45",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "Fixed educational coefficients; no application benchmark or provider measurement establishes a universal value.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
+      "location": {
+        "file": "packages/simulation/src/firstStack/bounds.ts",
+        "line": 45,
+        "column": 33
+      }
+    },
+    {
+      "id": "m1.packages.simulation.src.firstStack.bounds.36",
+      "concept": "visit · literal 1",
+      "modelVersion": "1",
+      "scope": "Published Model-1 engine behavior",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.packages.simulation.src.firstStack.bounds.36"
+        ]
+      },
+      "formula": "visit(item[i], depth + 1);",
+      "classification": "educational-assumption",
+      "confidence": "low",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/bounds.ts#L45",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "Fixed educational coefficients; no application benchmark or provider measurement establishes a universal value."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
+      "location": {
+        "file": "packages/simulation/src/firstStack/bounds.ts",
+        "line": 45,
+        "column": 103
+      }
+    },
+    {
+      "id": "m1.packages.simulation.src.firstStack.bounds.37",
+      "concept": "count · literal 0",
+      "modelVersion": "1",
+      "scope": "Published Model-1 engine behavior",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.packages.simulation.src.firstStack.bounds.37"
+        ]
+      },
+      "formula": "let count = 0;",
+      "classification": "educational-assumption",
+      "confidence": "low",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/bounds.ts#L47",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "Fixed educational coefficients; no application benchmark or provider measurement establishes a universal value."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
+      "location": {
+        "file": "packages/simulation/src/firstStack/bounds.ts",
+        "line": 47,
+        "column": 32
+      }
+    },
+    {
+      "id": "m1.packages.simulation.src.firstStack.bounds.38",
+      "concept": "visit · literal 1",
+      "modelVersion": "1",
+      "scope": "Published Model-1 engine behavior",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.packages.simulation.src.firstStack.bounds.38"
+        ]
+      },
+      "formula": "visit(child, depth + 1);",
+      "classification": "educational-assumption",
+      "confidence": "low",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/bounds.ts#L50",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "Fixed educational coefficients; no application benchmark or provider measurement establishes a universal value."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
+      "location": {
+        "file": "packages/simulation/src/firstStack/bounds.ts",
+        "line": 50,
+        "column": 82
+      }
+    },
+    {
+      "id": "m1.packages.simulation.src.firstStack.bounds.39",
+      "concept": "boundedJson · literal 0",
+      "modelVersion": "1",
+      "scope": "Published Model-1 engine behavior",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.packages.simulation.src.firstStack.bounds.39"
+        ]
+      },
+      "formula": "visit(value, 0);",
+      "classification": "educational-assumption",
+      "confidence": "low",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/bounds.ts#L56",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "Fixed educational coefficients; no application benchmark or provider measurement establishes a universal value."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
+      "location": {
+        "file": "packages/simulation/src/firstStack/bounds.ts",
+        "line": 56,
+        "column": 16
+      }
+    },
+    {
+      "id": "m1.packages.simulation.src.firstStack.bounds.40",
+      "concept": "dictionaryBytes · literal 0",
+      "modelVersion": "1",
+      "scope": "Published Model-1 engine behavior",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.packages.simulation.src.firstStack.bounds.40"
+        ]
+      },
+      "formula": "const dictionaryBytes = dictionary.reduce((sum, key) => sum + utf8Bytes(key), 0);",
+      "classification": "educational-assumption",
+      "confidence": "low",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/bounds.ts#L65",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "Fixed educational coefficients; no application benchmark or provider measurement establishes a universal value."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
+      "location": {
+        "file": "packages/simulation/src/firstStack/bounds.ts",
+        "line": 65,
+        "column": 81
+      }
+    },
+    {
+      "id": "m1.packages.simulation.src.firstStack.bounds.41",
+      "concept": "firstStackPreflight · literal 0",
+      "modelVersion": "1",
+      "scope": "Published Model-1 engine behavior",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.packages.simulation.src.firstStack.bounds.41"
+        ]
+      },
+      "formula": "if (counts.some(n => !Number.isSafeInteger(n) || n < 0 || n > e.queueEntries)) refuse(\"envelope.queues\", \"Each queue, worker/session or pool count must fit the finite live-state envelope.\");",
+      "classification": "educational-assumption",
+      "confidence": "low",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/bounds.ts#L69",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "Fixed educational coefficients; no application benchmark or provider measurement establishes a universal value."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
+      "location": {
+        "file": "packages/simulation/src/firstStack/bounds.ts",
+        "line": 69,
+        "column": 56
+      }
+    },
+    {
+      "id": "m1.packages.simulation.src.firstStack.bounds.42",
+      "concept": "probes · literal 1",
+      "modelVersion": "1",
+      "scope": "Published Model-1 engine behavior",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.packages.simulation.src.firstStack.bounds.42"
+        ]
+      },
+      "formula": "const probes = apps * (Math.floor(policy.horizonUs / sidecar.balancer.intervalUs) + 1);",
+      "classification": "educational-assumption",
+      "confidence": "low",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/bounds.ts#L71",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "Fixed educational coefficients; no application benchmark or provider measurement establishes a universal value."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
+      "location": {
+        "file": "packages/simulation/src/firstStack/bounds.ts",
+        "line": 71,
+        "column": 87
+      }
+    },
+    {
+      "id": "m1.packages.simulation.src.firstStack.bounds.43",
+      "concept": "firstStackPreflight.paths · literal 1",
+      "modelVersion": "1",
+      "scope": "Initialization, indexing, count arithmetic or discrete tick lifecycle",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.packages.simulation.src.firstStack.bounds.43"
+        ]
+      },
+      "formula": "paths: sidecar.paths.length + 1",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/bounds.ts#L78",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "Fixed educational coefficients; no application benchmark or provider measurement establishes a universal value.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
+      "location": {
+        "file": "packages/simulation/src/firstStack/bounds.ts",
+        "line": 78,
+        "column": 35
+      }
+    },
+    {
+      "id": "m1.packages.simulation.src.firstStack.bounds.44",
+      "concept": "firstStackPreflight.attemptsPerRoot · literal 1",
+      "modelVersion": "1",
+      "scope": "Published Model-1 engine behavior",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.packages.simulation.src.firstStack.bounds.44"
+        ]
+      },
+      "formula": "attemptsPerRoot: 1",
+      "classification": "educational-assumption",
+      "confidence": "low",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/bounds.ts#L78",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "Fixed educational coefficients; no application benchmark or provider measurement establishes a universal value."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
+      "location": {
+        "file": "packages/simulation/src/firstStack/bounds.ts",
+        "line": 78,
+        "column": 55
+      }
+    },
+    {
       "id": "m1.packages.simulation.src.firstStack.compiler.1",
       "concept": "compileFirstStack · literal 1",
       "modelVersion": "1",
@@ -114162,7 +115938,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L27",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L23",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -114176,7 +115952,7 @@
       "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
       "location": {
         "file": "packages/simulation/src/firstStack/compiler.ts",
-        "line": 27,
+        "line": 23,
         "column": 35
       }
     },
@@ -114198,7 +115974,7 @@
       "confidence": "low",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L27",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L23",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -114211,7 +115987,7 @@
       "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
       "location": {
         "file": "packages/simulation/src/firstStack/compiler.ts",
-        "line": 27,
+        "line": 23,
         "column": 54
       }
     },
@@ -114233,7 +116009,7 @@
       "confidence": "low",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L27",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L23",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -114246,7 +116022,7 @@
       "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
       "location": {
         "file": "packages/simulation/src/firstStack/compiler.ts",
-        "line": 27,
+        "line": 23,
         "column": 90
       }
     },
@@ -114268,7 +116044,7 @@
       "confidence": "low",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L29",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L25",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -114281,7 +116057,7 @@
       "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
       "location": {
         "file": "packages/simulation/src/firstStack/compiler.ts",
-        "line": 29,
+        "line": 25,
         "column": 31
       }
     },
@@ -114303,7 +116079,7 @@
       "confidence": "low",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L32",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L28",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -114316,7 +116092,7 @@
       "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
       "location": {
         "file": "packages/simulation/src/firstStack/compiler.ts",
-        "line": 32,
+        "line": 28,
         "column": 26
       }
     },
@@ -114338,7 +116114,7 @@
       "confidence": "low",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L32",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L28",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -114351,7 +116127,7 @@
       "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
       "location": {
         "file": "packages/simulation/src/firstStack/compiler.ts",
-        "line": 32,
+        "line": 28,
         "column": 64
       }
     },
@@ -114373,7 +116149,7 @@
       "confidence": "low",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L32",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L28",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -114386,7 +116162,7 @@
       "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
       "location": {
         "file": "packages/simulation/src/firstStack/compiler.ts",
-        "line": 32,
+        "line": 28,
         "column": 93
       }
     },
@@ -114408,7 +116184,7 @@
       "confidence": "low",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L38",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L35",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -114421,7 +116197,7 @@
       "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
       "location": {
         "file": "packages/simulation/src/firstStack/compiler.ts",
-        "line": 38,
+        "line": 35,
         "column": 37
       }
     },
@@ -114443,7 +116219,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L81",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L78",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -114457,7 +116233,7 @@
       "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
       "location": {
         "file": "packages/simulation/src/firstStack/compiler.ts",
-        "line": 81,
+        "line": 78,
         "column": 89
       }
     },
@@ -114479,7 +116255,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L82",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L79",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -114493,7 +116269,7 @@
       "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
       "location": {
         "file": "packages/simulation/src/firstStack/compiler.ts",
-        "line": 82,
+        "line": 79,
         "column": 19
       }
     },
@@ -114515,7 +116291,7 @@
       "confidence": "low",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L91",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L88",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -114528,7 +116304,7 @@
       "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
       "location": {
         "file": "packages/simulation/src/firstStack/compiler.ts",
-        "line": 91,
+        "line": 88,
         "column": 65
       }
     },
@@ -114550,7 +116326,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L124",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L121",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -114564,7 +116340,7 @@
       "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
       "location": {
         "file": "packages/simulation/src/firstStack/compiler.ts",
-        "line": 124,
+        "line": 121,
         "column": 97
       }
     },
@@ -114586,7 +116362,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L124",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L121",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -114600,29 +116376,29 @@
       "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
       "location": {
         "file": "packages/simulation/src/firstStack/compiler.ts",
-        "line": 124,
+        "line": 121,
         "column": 183
       }
     },
     {
       "id": "m1.packages.simulation.src.firstStack.compiler.14",
-      "concept": "compiler.ts · literal 2",
+      "concept": "input.limits.maxGroups · literal 4",
       "modelVersion": "1",
       "scope": "Published Model-1 engine behavior",
       "quantity": {
         "kind": "known",
-        "value": 2,
+        "value": 4,
         "unit": "code-number",
         "provenance": [
           "m1.packages.simulation.src.firstStack.compiler.14"
         ]
       },
-      "formula": "export type FirstStackExecutionPolicy = Parameters<typeof compileFirstStack>[2];",
+      "formula": "maxGroups: envelope.operations * 4",
       "classification": "educational-assumption",
       "confidence": "low",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L130",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L123",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -114635,8 +116411,253 @@
       "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
       "location": {
         "file": "packages/simulation/src/firstStack/compiler.ts",
-        "line": 130,
+        "line": 123,
+        "column": 110
+      }
+    },
+    {
+      "id": "m1.packages.simulation.src.firstStack.compiler.15",
+      "concept": "compiler.ts · literal 2",
+      "modelVersion": "1",
+      "scope": "Published Model-1 engine behavior",
+      "quantity": {
+        "kind": "known",
+        "value": 2,
+        "unit": "code-number",
+        "provenance": [
+          "m1.packages.simulation.src.firstStack.compiler.15"
+        ]
+      },
+      "formula": "export type FirstStackExecutionPolicy = Parameters<typeof compileFirstStack>[2];",
+      "classification": "educational-assumption",
+      "confidence": "low",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/compiler.ts#L129",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "Fixed educational coefficients; no application benchmark or provider measurement establishes a universal value."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
+      "location": {
+        "file": "packages/simulation/src/firstStack/compiler.ts",
+        "line": 129,
         "column": 78
+      }
+    },
+    {
+      "id": "m1.packages.simulation.src.firstStack.journal.1",
+      "concept": "diagnosticJournal · literal 0",
+      "modelVersion": "1",
+      "scope": "Published Model-1 engine behavior",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.packages.simulation.src.firstStack.journal.1"
+        ]
+      },
+      "formula": "if (!Number.isSafeInteger(limit) || limit < 0 || limit > FIRST_STACK_ENVELOPE.journalBytes) throw Error(\"Invalid diagnostic journal budget\");",
+      "classification": "educational-assumption",
+      "confidence": "low",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/journal.ts#L6",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "Fixed educational coefficients; no application benchmark or provider measurement establishes a universal value."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
+      "location": {
+        "file": "packages/simulation/src/firstStack/journal.ts",
+        "line": 6,
+        "column": 47
+      }
+    },
+    {
+      "id": "m1.packages.simulation.src.firstStack.journal.2",
+      "concept": "bytes · literal 0",
+      "modelVersion": "1",
+      "scope": "Published Model-1 engine behavior",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.packages.simulation.src.firstStack.journal.2"
+        ]
+      },
+      "formula": "let bytes = 0, observed = 0, omitted = 0;",
+      "classification": "educational-assumption",
+      "confidence": "low",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/journal.ts#L7",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "Fixed educational coefficients; no application benchmark or provider measurement establishes a universal value."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
+      "location": {
+        "file": "packages/simulation/src/firstStack/journal.ts",
+        "line": 7,
+        "column": 42
+      }
+    },
+    {
+      "id": "m1.packages.simulation.src.firstStack.journal.3",
+      "concept": "observed · literal 0",
+      "modelVersion": "1",
+      "scope": "Published Model-1 engine behavior",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.packages.simulation.src.firstStack.journal.3"
+        ]
+      },
+      "formula": "let bytes = 0, observed = 0, omitted = 0;",
+      "classification": "educational-assumption",
+      "confidence": "low",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/journal.ts#L7",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "Fixed educational coefficients; no application benchmark or provider measurement establishes a universal value."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
+      "location": {
+        "file": "packages/simulation/src/firstStack/journal.ts",
+        "line": 7,
+        "column": 56
+      }
+    },
+    {
+      "id": "m1.packages.simulation.src.firstStack.journal.4",
+      "concept": "omitted · literal 0",
+      "modelVersion": "1",
+      "scope": "Published Model-1 engine behavior",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.packages.simulation.src.firstStack.journal.4"
+        ]
+      },
+      "formula": "let bytes = 0, observed = 0, omitted = 0;",
+      "classification": "educational-assumption",
+      "confidence": "low",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/journal.ts#L7",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "Fixed educational coefficients; no application benchmark or provider measurement establishes a universal value."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
+      "location": {
+        "file": "packages/simulation/src/firstStack/journal.ts",
+        "line": 7,
+        "column": 69
+      }
+    },
+    {
+      "id": "m1.packages.simulation.src.firstStack.journal.5",
+      "concept": "size · literal 1",
+      "modelVersion": "1",
+      "scope": "Published Model-1 engine behavior",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.packages.simulation.src.firstStack.journal.5"
+        ]
+      },
+      "formula": "const size = utf8Bytes(row) + 1;",
+      "classification": "educational-assumption",
+      "confidence": "low",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/journal.ts#L13",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "Fixed educational coefficients; no application benchmark or provider measurement establishes a universal value."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
+      "location": {
+        "file": "packages/simulation/src/firstStack/journal.ts",
+        "line": 13,
+        "column": 39
+      }
+    },
+    {
+      "id": "m1.packages.simulation.src.firstStack.journal.6",
+      "concept": "diagnosticJournal.measure.complete · literal 0",
+      "modelVersion": "1",
+      "scope": "Published Model-1 engine behavior",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.packages.simulation.src.firstStack.journal.6"
+        ]
+      },
+      "formula": "complete: omitted === 0",
+      "classification": "educational-assumption",
+      "confidence": "low",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/journal.ts#L18",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "Fixed educational coefficients; no application benchmark or provider measurement establishes a universal value."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
+      "location": {
+        "file": "packages/simulation/src/firstStack/journal.ts",
+        "line": 18,
+        "column": 94
       }
     },
     {
@@ -114657,7 +116678,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/run.ts#L23",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/run.ts#L27",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -114671,7 +116692,7 @@
       "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
       "location": {
         "file": "packages/simulation/src/firstStack/run.ts",
-        "line": 23,
+        "line": 27,
         "column": 26
       }
     },
@@ -114693,7 +116714,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/run.ts#L23",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/run.ts#L27",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -114707,7 +116728,7 @@
       "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
       "location": {
         "file": "packages/simulation/src/firstStack/run.ts",
-        "line": 23,
+        "line": 27,
         "column": 52
       }
     },
@@ -114729,7 +116750,7 @@
       "confidence": "low",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/run.ts#L24",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/run.ts#L28",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -114742,7 +116763,7 @@
       "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
       "location": {
         "file": "packages/simulation/src/firstStack/run.ts",
-        "line": 24,
+        "line": 28,
         "column": 45
       }
     },
@@ -114764,7 +116785,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/run.ts#L26",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/run.ts#L30",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -114778,7 +116799,7 @@
       "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
       "location": {
         "file": "packages/simulation/src/firstStack/run.ts",
-        "line": 26,
+        "line": 30,
         "column": 152
       }
     },
@@ -114800,7 +116821,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/run.ts#L26",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/run.ts#L30",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -114814,7 +116835,7 @@
       "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
       "location": {
         "file": "packages/simulation/src/firstStack/run.ts",
-        "line": 26,
+        "line": 30,
         "column": 172
       }
     },
@@ -114836,7 +116857,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/run.ts#L28",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/run.ts#L32",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -114850,7 +116871,7 @@
       "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
       "location": {
         "file": "packages/simulation/src/firstStack/run.ts",
-        "line": 28,
+        "line": 32,
         "column": 33
       }
     },
@@ -114872,7 +116893,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/run.ts#L30",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/run.ts#L34",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -114886,7 +116907,7 @@
       "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
       "location": {
         "file": "packages/simulation/src/firstStack/run.ts",
-        "line": 30,
+        "line": 34,
         "column": 60
       }
     },
@@ -114908,7 +116929,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/run.ts#L30",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/run.ts#L34",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -114922,7 +116943,7 @@
       "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
       "location": {
         "file": "packages/simulation/src/firstStack/run.ts",
-        "line": 30,
+        "line": 34,
         "column": 99
       }
     },

@@ -1,4 +1,4 @@
-import { boundsHostPaths } from "./stage2-bounds-host";
+import { boundsHostPaths, boundsPostgresPaths, verifyBoundsPostgresReview } from "./stage2-bounds-host";
 import { gitTree } from "./execution-identity";
 import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync } from "node:fs";
@@ -19,7 +19,7 @@ added.push("packages/contracts/src/first-stack/index.ts");
 added.push("packages/simulation/src/internalFirstStack.ts", "packages/simulation/src/firstStack/compiler.ts", "packages/simulation/src/firstStack/run.ts");
 added.push("apps/backend/firstStack/boundedExecution.ts", "packages/simulation/src/firstStack/bounds.ts", "packages/simulation/src/firstStack/journal.ts");
 const changed = ["apps/backend/internalModel2/routes.ts", "apps/backend/zod_schemas/layout.schema.ts", "apps/backend/Dockerfile", ".dockerignore", "packages/contracts/package.json", "packages/simulation/package.json"];
-changed.push(...boundsHostPaths);
+changed.push(...new Set([...boundsHostPaths, ...boundsPostgresPaths]));
 const generated = ["loading.ts", "capabilityReviews.json", "capabilityImportReviews.json", "analysisContract.json", "resolutionContract.json"].map(p => folder + p);
 generated.push("apps/backend/internalModel2/legacyRuntime.json");
 let retainedOriginal: { blobs: Record<string, string>; trees: Record<string, Record<string, string>> } | undefined;
@@ -45,6 +45,7 @@ const original = (path: string) => {
   return text;
 };
 function scope() {
+  verifyBoundsPostgresReview();
   const tree = diskTree(), same = (path: string, text: string) => { if (text !== original(path)) throw Error(`Outside Stage 2 authoring integration scope: ${path}`); };
   same(changed[0]!, tree.read(changed[0]!).replace('import { createFirstStackRouter } from "../firstStack/routes";\n', "").replace('import { firstStackRepository } from "../firstStack/persistence";\n', "").replace('internalModel2Router.use("/first-stack", createFirstStackRouter(firstStackRepository));\n', ""));
   same(changed[1]!, tree.read(changed[1]!).replace('  // Internal semantic review data is additive; stale drafts remain readable.\n  firstStack: z.json().optional(),\n', ""));
@@ -156,6 +157,22 @@ export function buildStage2Transitions() {
     const frozen = history.trees[compilerCommit]!;
     if (digest(historicalAnalysisDescriptor({ paths: Object.keys(frozen), read: p => history.blobs[frozen[p]!]! }, "bun-1.3.14")) !== compilerSource) throw Error("Compiler descriptor does not reconstruct");
     table.entries.push({ commit: compilerCommit, source: compilerSource, descriptor: compilerSource, target, kind: "descriptor", algorithm: "analysis-boundary/1", review: "Slice 10a: optional execution bounds preserve old fixture outcomes; original compiler source retained; first-stack bounded behavior has separate new proof; no activation" });
+  }
+  // Keep both the merged main PG release and the reviewed pre-rebase bounds source.
+  for (const commit of ["6501ad38e0b42a20a67e3122ea64ce4c886f7d63", "aa1e61271dd12c1d7bb8d18fee572e8ac1a9c500"]) {
+    if (history.trees[commit]) continue;
+    const priorTree = gitTree(commit), previous = JSON.parse(priorTree.read(folder + "executionTransitions.json"));
+    const source = previous.entries[0].target, descriptor = previous.descriptors[source], pins = new Map(descriptor.files as [string, string][]);
+    const paths = [...new Set([...pins.keys(), "package.json", "bun.lock", "bunfig.toml", ...["apps/backend", "apps/web", "packages/domain", "packages/catalog", "packages/contracts", "packages/simulation"].map(p => p + "/package.json")])];
+    history.trees[commit] = Object.fromEntries(paths.map(path => {
+      const text = priorTree.paths.includes(path) ? priorTree.read(path) : tree.read(path), hash = sha256(text);
+      if (pins.has(path) && pins.get(path) !== hash) throw Error(`Retained integration snapshot drift: ${path}`);
+      history.blobs[hash] = text; return [path, hash];
+    }));
+    const frozen = history.trees[commit]!;
+    if (digest(historicalAnalysisDescriptor({ paths, read: path => history.blobs[frozen[path]!]! }, "bun-1.3.14")) !== source) throw Error("Integration source cannot be reconstructed");
+    table.descriptors[source] = descriptor;
+    table.entries.push({ commit, source, descriptor: source, target, kind: "descriptor", algorithm: "analysis-boundary/1", review: "Retain main PostgreSQL session/deadline release and pre-rebase bounded execution source; combined source separately reviewed; no activation" });
   }
   table.descriptors[target] = current;
   for (const row of table.entries) row.target = target;

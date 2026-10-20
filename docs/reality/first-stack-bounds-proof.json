@@ -1,0 +1,221 @@
+{
+  "schema": "first-stack-bounds-proof/1",
+  "scope": "Internal software qualification only; no host containment, measured cloud calibration or Model 2 activation",
+  "envelope": {
+    "revision": "first-stack-envelope/1",
+    "horizonUs": 300000000,
+    "roots": 20000,
+    "events": 2000000,
+    "pendingEvents": 50000,
+    "liveCalls": 10000,
+    "operations": 32,
+    "keys": 10000,
+    "dictionaryBytes": 1048576,
+    "semanticBytes": 16777216,
+    "queueEntries": 10000,
+    "retainedSamples": 128,
+    "sampleBytes": 2097152,
+    "rawBytes": 1048576,
+    "journalBytes": 16777216,
+    "summaryBytes": 10485760,
+    "captureBytes": 33554432,
+    "frameBytes": 1048576,
+    "sliceEvents": 128,
+    "sliceWallMs": 25,
+    "cpuUs": 30000000,
+    "wallMs": 60000,
+    "rssTargetBytes": 536870912,
+    "rssHardBytes": 805306368
+  },
+  "sources": [
+    {
+      "path": "packages/simulation/src/firstStack/bounds.ts",
+      "hash": "df0c64b5b24fe82534630af6ae6798516a132eb9bc3357f840d2c0c3ba7f3763"
+    },
+    {
+      "path": "packages/simulation/src/firstStack/journal.ts",
+      "hash": "786bc65fab84faf4dc0ce2de5001261aa977c004f311139e5b93635e8149b7bf"
+    },
+    {
+      "path": "packages/simulation/src/firstStack/run.ts",
+      "hash": "6366672e8f3114649662ebe3890561e68f6c245117916a5170aabd0e5bb8729a"
+    },
+    {
+      "path": "apps/backend/firstStack/boundedExecution.ts",
+      "hash": "b1989ea584f447e90c43fa54d50c3597f8efdbf3a7be8928e937b585ffcbd7cb"
+    },
+    {
+      "path": "scripts/tests/first-stack-bounds.test.ts",
+      "hash": "0ed3e057eb89939bed21ce5cf3bcf412fe4a1f4e7380aa301147b27380d468e3"
+    },
+    {
+      "path": "scripts/fixtures/first-stack-bounded-execution.test.ts",
+      "hash": "65da6c5a4e8cfc213ab3f9d224183b24931543062899384a7851d9562c4c843d"
+    }
+  ],
+  "retainedSlice04Proof": "69e4f83c6cb1005d1a53f77fba11899c1a1999ac4efc63403d41c6d696cc9af4",
+  "historicalCompositions": [
+    {
+      "composition": "m2b/1",
+      "evidenceSha256": "faa27f1b07ed64b901f0fac8d845f275b65c7dc1d5a7ea7881ce4cb16d602ecf"
+    },
+    {
+      "composition": "m2c/1",
+      "evidenceSha256": "627045428312d4a7880dfd4af6cfb102df7c3d4c86905e16778e846c0495cac7"
+    },
+    {
+      "composition": "m2d/1",
+      "evidenceSha256": "bafae30ed58bd38153ff8f4722eb1cfcf78e6a2aba2a4a08f719a299ff15aa23"
+    },
+    {
+      "composition": "m2d/1-lb",
+      "evidenceSha256": "7baba18c8858d5f0d3a62a48b476dd3dd39c54731616f854e1a5fc035779d3f7"
+    },
+    {
+      "composition": "m2e/1",
+      "evidenceSha256": "e9810727efcacc6459994fd5b5285966fa3d9e007264b2bd7776a91370566899"
+    },
+    {
+      "composition": "m2f/1",
+      "evidenceSha256": "c079f58644563b737f4cffa3960eb65043b96ee18a38e562c49ded14ca2bd84a"
+    },
+    {
+      "composition": "m2g/1",
+      "evidenceSha256": "fba08e69fc5a333af6d00ff80a012fcd513499e90f132e656ae81a2b3dc51b88"
+    },
+    {
+      "composition": "m2h/1",
+      "evidenceSha256": "4e95fe38c9dd02cc60f700c301476ecc53ad495f83ad98469c6f0811b65ae224"
+    }
+  ],
+  "cases": [
+    {
+      "apps": 1,
+      "roots": 24,
+      "slices": 5,
+      "execution": {
+        "processed": 597,
+        "cancelled": 365,
+        "pending": 0,
+        "peakPending": 147
+      },
+      "counts": {
+        "offered": 24,
+        "admitted": 24,
+        "completed": 24,
+        "rejected": 0,
+        "deadlineExceeded": 0,
+        "abandoned": 0,
+        "remoteOutcomesAfterCallerStop": 0,
+        "cancellationRequested": 0,
+        "cancellationConfirmedAtEntry": 0,
+        "inFlight": 0
+      },
+      "evidence": "4990fa10e1f68ebf3cda3d0822a89acc71efd1f50bc5cff9a221c0f5dc54c111",
+      "journal": {
+        "observed": 445,
+        "retained": 445,
+        "omitted": 0,
+        "bytes": 172749,
+        "complete": true
+      },
+      "summaryBytes": 344265
+    },
+    {
+      "apps": 2,
+      "roots": 24,
+      "slices": 5,
+      "execution": {
+        "processed": 613,
+        "cancelled": 372,
+        "pending": 0,
+        "peakPending": 147
+      },
+      "counts": {
+        "offered": 24,
+        "admitted": 24,
+        "completed": 24,
+        "rejected": 0,
+        "deadlineExceeded": 0,
+        "abandoned": 0,
+        "remoteOutcomesAfterCallerStop": 0,
+        "cancellationRequested": 0,
+        "cancellationConfirmedAtEntry": 0,
+        "inFlight": 0
+      },
+      "evidence": "c9275fb71c32f9fd3ff9278b89e7b9a233dd9bbd025af955b093d8eeee79f3b0",
+      "journal": {
+        "observed": 458,
+        "retained": 458,
+        "omitted": 0,
+        "bytes": 176366,
+        "complete": true
+      },
+      "summaryBytes": 472573
+    },
+    {
+      "apps": 4,
+      "roots": 24,
+      "slices": 6,
+      "execution": {
+        "processed": 641,
+        "cancelled": 386,
+        "pending": 0,
+        "peakPending": 147
+      },
+      "counts": {
+        "offered": 24,
+        "admitted": 24,
+        "completed": 24,
+        "rejected": 0,
+        "deadlineExceeded": 0,
+        "abandoned": 0,
+        "remoteOutcomesAfterCallerStop": 0,
+        "cancellationRequested": 0,
+        "cancellationConfirmedAtEntry": 0,
+        "inFlight": 0
+      },
+      "evidence": "082bf0cf1da8cb4d393b98f45ce818fb96ed97ea6d49b35481370017f724f19b",
+      "journal": {
+        "observed": 484,
+        "retained": 484,
+        "omitted": 0,
+        "bytes": 183952,
+        "complete": true
+      },
+      "summaryBytes": 763625
+    },
+    {
+      "apps": 8,
+      "roots": 24,
+      "slices": 6,
+      "execution": {
+        "processed": 692,
+        "cancelled": 414,
+        "pending": 0,
+        "peakPending": 147
+      },
+      "counts": {
+        "offered": 24,
+        "admitted": 24,
+        "completed": 24,
+        "rejected": 0,
+        "deadlineExceeded": 0,
+        "abandoned": 0,
+        "remoteOutcomesAfterCallerStop": 0,
+        "cancellationRequested": 0,
+        "cancellationConfirmedAtEntry": 0,
+        "inFlight": 0
+      },
+      "evidence": "84f58a54b4b2263dd96b33b13911b9924f43853c106ec712399b4c7b00016d61",
+      "journal": {
+        "observed": 536,
+        "retained": 536,
+        "omitted": 0,
+        "bytes": 199252,
+        "complete": true
+      },
+      "summaryBytes": 1360209
+    }
+  ]
+}

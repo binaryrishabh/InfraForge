@@ -164,7 +164,7 @@
     }
   },
   "apps/backend/executionIdentity/loading.ts": {
-    "hash": "77293b43e5368b02c7197259df04ab3569786a980a75f8db7248ece21641b831",
+    "hash": "cce8a1d11a946ba3a92d7a3d5a17a21aa9a7507086e71d2077a575cc43038214",
     "capabilities": [
       "computed-data",
       "verifier",
@@ -172,7 +172,7 @@
     ],
     "review": "Fixed data indexing; resource adapters require the separate documented review",
     "globals": {
-      "hash": "77293b43e5368b02c7197259df04ab3569786a980a75f8db7248ece21641b831",
+      "hash": "cce8a1d11a946ba3a92d7a3d5a17a21aa9a7507086e71d2077a575cc43038214",
       "names": [
         "Bun"
       ]
@@ -523,11 +523,11 @@
     "review": "Fixed data indexing; resource adapters require the separate documented review"
   },
   "packages/simulation/src/model2/compute/run.ts": {
-    "hash": "7a4c73f7eacea18a68cbbcf92e09ee96bfe410a161800be8a605c3e2f8a5909b",
+    "hash": "97be752e268ab4d441ecfda3368eb0200417b8b40b3239d2fe481034f9469e68",
     "capabilities": [
       "computed-data"
     ],
-    "review": "Composition module: reviewed fixed configuration/identity/measurement indexing; no dynamic loading or host access"
+    "review": "Internal first-stack V2 review/compiler/qualification: fixed JSON indexing and statically imported Stage 1 registry/host composition; bounded recorded keys and DB health; opt-in host bounds, finite reducers and cooperative qualification only; no evaluator, dynamic loader, product dispatch, HTTP executor or activation"
   },
   "packages/simulation/src/model2/compute/sharing.ts": {
     "hash": "685b4dc2810e6c7a9eec3dcf744e66969c6069d90b9c616ec5ad12a0f54d89b6",
@@ -572,25 +572,25 @@
     "review": "Composition module: reviewed fixed configuration/identity/measurement indexing; no dynamic loading or host access"
   },
   "packages/simulation/src/model2/network/run.ts": {
-    "hash": "dbe08ad71c7f9495e6617baa383e176899949c251db59beec5ce31261fa4c54c",
+    "hash": "6ea7acfd0a369416b9306a5d0761cefd80c547faa744bc7d41182808d9a848b6",
     "capabilities": [
       "computed-data"
     ],
-    "review": "Composition module: reviewed fixed configuration/identity/measurement indexing; no dynamic loading or host access"
+    "review": "Internal first-stack V2 review/compiler/qualification: fixed JSON indexing and statically imported Stage 1 registry/host composition; bounded recorded keys and DB health; opt-in host bounds, finite reducers and cooperative qualification only; no evaluator, dynamic loader, product dispatch, HTTP executor or activation"
   },
   "packages/simulation/src/model2/network/trace.ts": {
-    "hash": "4e9f6e93d2672a9d8d4829dbaff5ac27f2c0cc0ddc5dc413ef753c74ca5e4080",
+    "hash": "39450faa91d34f0073fa480eb75200312d2cd3b041420f6131cb609e15792553",
     "capabilities": [
       "computed-data"
     ],
-    "review": "Fixed data indexing; resource adapters require the separate documented review"
+    "review": "Internal first-stack V2 review/compiler/qualification: fixed JSON indexing and statically imported Stage 1 registry/host composition; bounded recorded keys and DB health; opt-in host bounds, finite reducers and cooperative qualification only; no evaluator, dynamic loader, product dispatch, HTTP executor or activation"
   },
   "packages/simulation/src/model2/network/transport.ts": {
-    "hash": "997f92945e84a7a8dbc23b4830bce0b92374af68604e1bf9cddec4a775db08e1",
+    "hash": "38776458c72dfe86b5beefa5d3d509e24b4f886a0e6d225d107aea0cf6d2193d",
     "capabilities": [
       "computed-data"
     ],
-    "review": "Fixed data indexing; resource adapters require the separate documented review"
+    "review": "Internal first-stack V2 review/compiler/qualification: fixed JSON indexing and statically imported Stage 1 registry/host composition; bounded recorded keys and DB health; opt-in host bounds, finite reducers and cooperative qualification only; no evaluator, dynamic loader, product dispatch, HTTP executor or activation"
   },
   "packages/simulation/src/model2/network/validate.ts": {
     "hash": "2155439db5b88fd6d18ab2d54bbddff1b2c9ec50a02422a8a0f30d07427fc3df",
@@ -698,11 +698,11 @@
     "review": "Fixed data indexing; resource adapters require the separate documented review"
   },
   "packages/simulation/src/model2/time.ts": {
-    "hash": "f35e34b5b779891fbb136cf7a1873c81d4340d68b59fe8d3758f5910344e5ef2",
+    "hash": "7ae38c0b3c106370b678c38092de298e35211e0a2003713265a706d4a904b290",
     "capabilities": [
       "computed-data"
     ],
-    "review": "Composition module: reviewed fixed configuration/identity/measurement indexing; no dynamic loading or host access"
+    "review": "Internal first-stack V2 review/compiler/qualification: fixed JSON indexing and statically imported Stage 1 registry/host composition; bounded recorded keys and DB health; opt-in host bounds, finite reducers and cooperative qualification only; no evaluator, dynamic loader, product dispatch, HTTP executor or activation"
   },
   "packages/simulation/src/model2/validate.ts": {
     "hash": "689df22f8d7d7c623fbf49a13d611c46463fb367aac3034e7011812ad64be8cd",
@@ -712,11 +712,11 @@
     "review": "Fixed data indexing; resource adapters require the separate documented review"
   },
   "packages/simulation/src/model2/workload/evidence.ts": {
-    "hash": "6075532792978d0be63820b5c39a63c991d12620bbc293452fe98755718edc56",
+    "hash": "26798ae882a6808524a90a65ef4fbbbec0f791a6c911554c0c6eea846ba5f899",
     "capabilities": [
       "computed-data"
     ],
-    "review": "Fixed data indexing; resource adapters require the separate documented review"
+    "review": "Internal first-stack V2 review/compiler/qualification: fixed JSON indexing and statically imported Stage 1 registry/host composition; bounded recorded keys and DB health; opt-in host bounds, finite reducers and cooperative qualification only; no evaluator, dynamic loader, product dispatch, HTTP executor or activation"
   },
   "packages/simulation/src/model2/workload/profiles.ts": {
     "hash": "954ce75d076077fd866633cf573f0709f937941a1961329324f263c448fae001",
@@ -726,11 +726,11 @@
     "review": "Fixed data indexing; resource adapters require the separate documented review"
   },
   "packages/simulation/src/model2/workload/run.ts": {
-    "hash": "64f172cd1c7b0c4d1b164a0f9060a8eeca2932ee643be3e1c9c77d47736b02d1",
+    "hash": "148d2c0ab514c88476636fc611b5cc7759b48027431c2139ce9f5d408da99e3c",
     "capabilities": [
       "computed-data"
     ],
-    "review": "Composition module: reviewed fixed configuration/identity/measurement indexing; no dynamic loading or host access"
+    "review": "Internal first-stack V2 review/compiler/qualification: fixed JSON indexing and statically imported Stage 1 registry/host composition; bounded recorded keys and DB health; opt-in host bounds, finite reducers and cooperative qualification only; no evaluator, dynamic loader, product dispatch, HTTP executor or activation"
   },
   "packages/simulation/src/model2/workload/validate.ts": {
     "hash": "aad06be0f0a043ca2dccf8032c55bd88f3a40605695ce7eb61c2d625b2d0abb5",
@@ -980,11 +980,11 @@
     "review": "Composition module: reviewed fixed configuration/identity/measurement indexing; no dynamic loading or host access"
   },
   "packages/simulation/src/model2/composition/run.ts": {
-    "hash": "c33b191c6b0fd13003dc7c317cdcaf4a8ddcdd8ffaa7875c847143d465dd983b",
+    "hash": "4861bf6e7cc0046c665e01316327c582781f5e08205a77080a037a40e0685e12",
     "capabilities": [
       "computed-data"
     ],
-    "review": "Composition module: reviewed fixed configuration/identity/measurement indexing; no dynamic loading or host access"
+    "review": "Internal first-stack V2 review/compiler/qualification: fixed JSON indexing and statically imported Stage 1 registry/host composition; bounded recorded keys and DB health; opt-in host bounds, finite reducers and cooperative qualification only; no evaluator, dynamic loader, product dispatch, HTTP executor or activation"
   },
   "packages/simulation/src/model2/composition/token-bucket.ts": {
     "hash": "7249dd2c41c95973e4b70fb64756497491a23f2ddcbbbae3c8ebb6f062b418e2",
@@ -1029,11 +1029,11 @@
     "review": "Composition module: reviewed fixed configuration/identity/measurement indexing; no dynamic loading or host access"
   },
   "packages/simulation/src/model2/data/run.ts": {
-    "hash": "44cffa676dba668b72635efeb72ee5c4e5c8bc45926798cca68081baadb75ed8",
+    "hash": "5df2709c8b04aa8fdac1dfada2a26837731a1e3b5bdcad74251448d4cc7da782",
     "capabilities": [
       "computed-data"
     ],
-    "review": "Composition module: reviewed fixed configuration/identity/measurement indexing; no dynamic loading or host access"
+    "review": "Internal first-stack V2 review/compiler/qualification: fixed JSON indexing and statically imported Stage 1 registry/host composition; bounded recorded keys and DB health; opt-in host bounds, finite reducers and cooperative qualification only; no evaluator, dynamic loader, product dispatch, HTTP executor or activation"
   },
   "packages/simulation/src/model2/network/module.ts": {
     "hash": "74c92532aaf08e9bf6e5f32c95c396cd7383aca979ed0aa3ac6bbfdd88d0ddb2",
@@ -1047,14 +1047,14 @@
     "capabilities": [
       "computed-data"
     ],
-    "review": "Internal first-stack V2 review/compiler/qualification: fixed JSON indexing and statically imported Stage 1 registry/host composition; bounded recorded keys and DB health; no evaluator, dynamic loader, product dispatch, HTTP executor or activation"
+    "review": "Internal first-stack V2 review/compiler/qualification: fixed JSON indexing and statically imported Stage 1 registry/host composition; bounded recorded keys and DB health; opt-in host bounds, finite reducers and cooperative qualification only; no evaluator, dynamic loader, product dispatch, HTTP executor or activation"
   },
   "apps/backend/firstStack/canonical.ts": {
     "hash": "49f240e1016d0540eb13f3908543c2016986a87eb0b0dce5669dfeab376fa2f4",
     "capabilities": [
       "computed-data"
     ],
-    "review": "Internal first-stack V2 review/compiler/qualification: fixed JSON indexing and statically imported Stage 1 registry/host composition; bounded recorded keys and DB health; no evaluator, dynamic loader, product dispatch, HTTP executor or activation"
+    "review": "Internal first-stack V2 review/compiler/qualification: fixed JSON indexing and statically imported Stage 1 registry/host composition; bounded recorded keys and DB health; opt-in host bounds, finite reducers and cooperative qualification only; no evaluator, dynamic loader, product dispatch, HTTP executor or activation"
   },
   "apps/backend/firstStack/importStream.ts": {
     "hash": "0d2f232bd112e59bb0fe67270444ffe81d9ebc3084bcd324866e0c06f00d2c7e",
@@ -1068,28 +1068,28 @@
         "TextDecoder"
       ]
     },
-    "review": "Internal first-stack V2 review/compiler/qualification: fixed JSON indexing and statically imported Stage 1 registry/host composition; bounded recorded keys and DB health; no evaluator, dynamic loader, product dispatch, HTTP executor or activation"
+    "review": "Internal first-stack V2 review/compiler/qualification: fixed JSON indexing and statically imported Stage 1 registry/host composition; bounded recorded keys and DB health; opt-in host bounds, finite reducers and cooperative qualification only; no evaluator, dynamic loader, product dispatch, HTTP executor or activation"
   },
   "apps/backend/firstStack/persistence.ts": {
     "hash": "eb20a534aca49aefc93cb0afcc6bf85a1d478a4e58244d9d67d4959a6417c582",
     "capabilities": [
       "computed-data"
     ],
-    "review": "Internal first-stack V2 review/compiler/qualification: fixed JSON indexing and statically imported Stage 1 registry/host composition; bounded recorded keys and DB health; no evaluator, dynamic loader, product dispatch, HTTP executor or activation"
+    "review": "Internal first-stack V2 review/compiler/qualification: fixed JSON indexing and statically imported Stage 1 registry/host composition; bounded recorded keys and DB health; opt-in host bounds, finite reducers and cooperative qualification only; no evaluator, dynamic loader, product dispatch, HTTP executor or activation"
   },
   "apps/backend/firstStack/routes.ts": {
     "hash": "af90a383dc2cf8fa90872ff72d7ba8b95ddac2eafc910f3b0d0b65772cdb32f0",
     "capabilities": [
       "computed-data"
     ],
-    "review": "Internal first-stack V2 review/compiler/qualification: fixed JSON indexing and statically imported Stage 1 registry/host composition; bounded recorded keys and DB health; no evaluator, dynamic loader, product dispatch, HTTP executor or activation"
+    "review": "Internal first-stack V2 review/compiler/qualification: fixed JSON indexing and statically imported Stage 1 registry/host composition; bounded recorded keys and DB health; opt-in host bounds, finite reducers and cooperative qualification only; no evaluator, dynamic loader, product dispatch, HTTP executor or activation"
   },
   "apps/backend/firstStack/service.ts": {
     "hash": "db05f16c91fadffae162d86901ed7a57c7b8373e70ccbbeca0ff8fbb210ea771",
     "capabilities": [
       "computed-data"
     ],
-    "review": "Internal first-stack V2 review/compiler/qualification: fixed JSON indexing and statically imported Stage 1 registry/host composition; bounded recorded keys and DB health; no evaluator, dynamic loader, product dispatch, HTTP executor or activation"
+    "review": "Internal first-stack V2 review/compiler/qualification: fixed JSON indexing and statically imported Stage 1 registry/host composition; bounded recorded keys and DB health; opt-in host bounds, finite reducers and cooperative qualification only; no evaluator, dynamic loader, product dispatch, HTTP executor or activation"
   },
   "apps/backend/firstStack/workload.ts": {
     "hash": "5369d0c12fd99e8d2af105b4922cd8a45ce27f5cde6538c91c4562f5a4941755",
@@ -1104,41 +1104,69 @@
         "setImmediate"
       ]
     },
-    "review": "Internal first-stack V2 review/compiler/qualification: fixed JSON indexing and statically imported Stage 1 registry/host composition; bounded recorded keys and DB health; no evaluator, dynamic loader, product dispatch, HTTP executor or activation"
+    "review": "Internal first-stack V2 review/compiler/qualification: fixed JSON indexing and statically imported Stage 1 registry/host composition; bounded recorded keys and DB health; opt-in host bounds, finite reducers and cooperative qualification only; no evaluator, dynamic loader, product dispatch, HTTP executor or activation"
   },
   "packages/contracts/src/first-stack/index.ts": {
     "hash": "dd70829058a94856e14c189b44cd1d427ee73126dcf242fbaa6f2d79c7d0ed08",
     "capabilities": [
       "computed-data"
     ],
-    "review": "Internal first-stack V2 review/compiler/qualification: fixed JSON indexing and statically imported Stage 1 registry/host composition; bounded recorded keys and DB health; no evaluator, dynamic loader, product dispatch, HTTP executor or activation"
+    "review": "Internal first-stack V2 review/compiler/qualification: fixed JSON indexing and statically imported Stage 1 registry/host composition; bounded recorded keys and DB health; opt-in host bounds, finite reducers and cooperative qualification only; no evaluator, dynamic loader, product dispatch, HTTP executor or activation"
   },
   "apps/backend/firstStack/execution.ts": {
-    "hash": "57cbb565cf8d4004bddfa0c4b28c21e6ee13565927f7752db7020c3e0adec3b4",
+    "hash": "6a5c7c96016f9528265e76f6291de7fdc1b6e6d0b84184cad9ffac62eb7679d3",
     "capabilities": [
       "computed-data"
     ],
-    "review": "Internal first-stack V2 review/compiler/qualification: fixed JSON indexing and statically imported Stage 1 registry/host composition; bounded recorded keys and DB health; no evaluator, dynamic loader, product dispatch, HTTP executor or activation"
+    "review": "Internal first-stack V2 review/compiler/qualification: fixed JSON indexing and statically imported Stage 1 registry/host composition; bounded recorded keys and DB health; opt-in host bounds, finite reducers and cooperative qualification only; no evaluator, dynamic loader, product dispatch, HTTP executor or activation"
   },
   "packages/simulation/src/internalFirstStack.ts": {
-    "hash": "40ed5822095096fbaa3d5f351e9118ca55223ee637b86dc23dc80f4a944943e3",
+    "hash": "5863a6d0b2dc895305ed4769dc847c7194fa20d528b6801ec71bd1f1b4df9590",
     "capabilities": [
       "computed-data"
     ],
-    "review": "Internal first-stack V2 review/compiler/qualification: fixed JSON indexing and statically imported Stage 1 registry/host composition; bounded recorded keys and DB health; no evaluator, dynamic loader, product dispatch, HTTP executor or activation"
+    "review": "Internal first-stack V2 review/compiler/qualification: fixed JSON indexing and statically imported Stage 1 registry/host composition; bounded recorded keys and DB health; opt-in host bounds, finite reducers and cooperative qualification only; no evaluator, dynamic loader, product dispatch, HTTP executor or activation"
   },
   "packages/simulation/src/firstStack/compiler.ts": {
-    "hash": "38ac905e4682e02f3e86b6e54f0180481fcda97901a8ecfc16c62033f078cb56",
+    "hash": "aa225df0b4f7f0f91e5a35c482a8f4f2dd4ee5323ca166fa67e2441a5072d4a2",
     "capabilities": [
       "computed-data"
     ],
-    "review": "Internal first-stack V2 review/compiler/qualification: fixed JSON indexing and statically imported Stage 1 registry/host composition; bounded recorded keys and DB health; no evaluator, dynamic loader, product dispatch, HTTP executor or activation"
+    "review": "Internal first-stack V2 review/compiler/qualification: fixed JSON indexing and statically imported Stage 1 registry/host composition; bounded recorded keys and DB health; opt-in host bounds, finite reducers and cooperative qualification only; no evaluator, dynamic loader, product dispatch, HTTP executor or activation"
   },
   "packages/simulation/src/firstStack/run.ts": {
-    "hash": "dc0c09ebecb47df900cbc2574ca910ad8df894ac3ae84494b8dbea9ec4b7ec6f",
+    "hash": "6366672e8f3114649662ebe3890561e68f6c245117916a5170aabd0e5bb8729a",
     "capabilities": [
       "computed-data"
     ],
-    "review": "Internal first-stack V2 review/compiler/qualification: fixed JSON indexing and statically imported Stage 1 registry/host composition; bounded recorded keys and DB health; no evaluator, dynamic loader, product dispatch, HTTP executor or activation"
+    "review": "Internal first-stack V2 review/compiler/qualification: fixed JSON indexing and statically imported Stage 1 registry/host composition; bounded recorded keys and DB health; opt-in host bounds, finite reducers and cooperative qualification only; no evaluator, dynamic loader, product dispatch, HTTP executor or activation"
+  },
+  "apps/backend/firstStack/boundedExecution.ts": {
+    "hash": "b1989ea584f447e90c43fa54d50c3597f8efdbf3a7be8928e937b585ffcbd7cb",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Internal first-stack V2 review/compiler/qualification: fixed JSON indexing and statically imported Stage 1 registry/host composition; bounded recorded keys and DB health; opt-in host bounds, finite reducers and cooperative qualification only; no evaluator, dynamic loader, product dispatch, HTTP executor or activation"
+  },
+  "packages/simulation/src/firstStack/bounds.ts": {
+    "hash": "df0c64b5b24fe82534630af6ae6798516a132eb9bc3357f840d2c0c3ba7f3763",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Internal first-stack V2 review/compiler/qualification: fixed JSON indexing and statically imported Stage 1 registry/host composition; bounded recorded keys and DB health; opt-in host bounds, finite reducers and cooperative qualification only; no evaluator, dynamic loader, product dispatch, HTTP executor or activation"
+  },
+  "packages/simulation/src/firstStack/journal.ts": {
+    "hash": "786bc65fab84faf4dc0ce2de5001261aa977c004f311139e5b93635e8149b7bf",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Internal first-stack V2 review/compiler/qualification: fixed JSON indexing and statically imported Stage 1 registry/host composition; bounded recorded keys and DB health; opt-in host bounds, finite reducers and cooperative qualification only; no evaluator, dynamic loader, product dispatch, HTTP executor or activation"
+  },
+  "packages/simulation/src/model2/workload/contracts.ts": {
+    "hash": "979006970bb8f341505adcc383c75899d52b2426c3ee0755b280cebe9c404c1a",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Internal first-stack V2 review/compiler/qualification: fixed JSON indexing and statically imported Stage 1 registry/host composition; bounded recorded keys and DB health; opt-in host bounds, finite reducers and cooperative qualification only; no evaluator, dynamic loader, product dispatch, HTTP executor or activation"
   }
 }

@@ -1,7 +1,7 @@
 {
   "schema": "infraforge-first-stack-source-review/1",
   "baseline": "45396dc813a395a9dcadfc89a5cbe9e27efa2447374e177bf0db3cad503d2858",
-  "scope": "Internal V1 review and V2 compiler/composition qualification only; pinned Stage 1 registry/host and historical runtime bytes preserved; no product dispatch, HTTP executor or activation",
+  "scope": "Internal V1 review and V2 compiler/composition qualification only; optional bounded host separately reviewed; original Stage 1 host reconstructed and eight historical replay hashes preserved; no product dispatch, HTTP executor or activation",
   "files": [
     {
       "path": ".dockerignore",
@@ -16,12 +16,16 @@
       "hash": "ff9791e8aa8a8812a956341ac4590ff9fb660a5fe9703a1b06eeb8c872ce8c9c"
     },
     {
+      "path": "apps/backend/firstStack/boundedExecution.ts",
+      "hash": "b1989ea584f447e90c43fa54d50c3597f8efdbf3a7be8928e937b585ffcbd7cb"
+    },
+    {
       "path": "apps/backend/firstStack/canonical.ts",
       "hash": "49f240e1016d0540eb13f3908543c2016986a87eb0b0dce5669dfeab376fa2f4"
     },
     {
       "path": "apps/backend/firstStack/execution.ts",
-      "hash": "57cbb565cf8d4004bddfa0c4b28c21e6ee13565927f7752db7020c3e0adec3b4"
+      "hash": "6a5c7c96016f9528265e76f6291de7fdc1b6e6d0b84184cad9ffac62eb7679d3"
     },
     {
       "path": "apps/backend/firstStack/importStream.ts",
@@ -64,16 +68,84 @@
       "hash": "b852f11ad4a7f8b02c5695f3d32b424d307a207d450907482c7d2772f13611dd"
     },
     {
+      "path": "packages/simulation/src/firstStack/bounds.ts",
+      "hash": "df0c64b5b24fe82534630af6ae6798516a132eb9bc3357f840d2c0c3ba7f3763"
+    },
+    {
       "path": "packages/simulation/src/firstStack/compiler.ts",
-      "hash": "38ac905e4682e02f3e86b6e54f0180481fcda97901a8ecfc16c62033f078cb56"
+      "hash": "aa225df0b4f7f0f91e5a35c482a8f4f2dd4ee5323ca166fa67e2441a5072d4a2"
+    },
+    {
+      "path": "packages/simulation/src/firstStack/journal.ts",
+      "hash": "786bc65fab84faf4dc0ce2de5001261aa977c004f311139e5b93635e8149b7bf"
     },
     {
       "path": "packages/simulation/src/firstStack/run.ts",
-      "hash": "dc0c09ebecb47df900cbc2574ca910ad8df894ac3ae84494b8dbea9ec4b7ec6f"
+      "hash": "6366672e8f3114649662ebe3890561e68f6c245117916a5170aabd0e5bb8729a"
     },
     {
       "path": "packages/simulation/src/internalFirstStack.ts",
-      "hash": "40ed5822095096fbaa3d5f351e9118ca55223ee637b86dc23dc80f4a944943e3"
+      "hash": "5863a6d0b2dc895305ed4769dc847c7194fa20d528b6801ec71bd1f1b4df9590"
+    },
+    {
+      "path": "packages/simulation/src/model2/composition/run.ts",
+      "hash": "4861bf6e7cc0046c665e01316327c582781f5e08205a77080a037a40e0685e12"
+    },
+    {
+      "path": "packages/simulation/src/model2/compute/run.ts",
+      "hash": "97be752e268ab4d441ecfda3368eb0200417b8b40b3239d2fe481034f9469e68"
+    },
+    {
+      "path": "packages/simulation/src/model2/data/contracts.ts",
+      "hash": "bcf44a048f028d99554a82a344a5535ab182a803645bd143e146a6f42d727f26"
+    },
+    {
+      "path": "packages/simulation/src/model2/data/database.ts",
+      "hash": "818065a584a3bec6f3e837bf8bfa6a199e49178fc720bc58565d09667e1b5daf"
+    },
+    {
+      "path": "packages/simulation/src/model2/data/modules.ts",
+      "hash": "d3d197b1907e1476d3db95b2ec5d7f705043e0916143fb9d8bd803428b73c142"
+    },
+    {
+      "path": "packages/simulation/src/model2/data/run.ts",
+      "hash": "5df2709c8b04aa8fdac1dfada2a26837731a1e3b5bdcad74251448d4cc7da782"
+    },
+    {
+      "path": "packages/simulation/src/model2/data/validate.ts",
+      "hash": "0dff55eb16a9abad7fd12db65b0a1298df89cfddfffa543e7b640e6e8188ac44"
+    },
+    {
+      "path": "packages/simulation/src/model2/network/contracts.ts",
+      "hash": "a55f006f05a61fd5214a2be8d5174f197c398f7c3eb78efdb520ecb9796a32a5"
+    },
+    {
+      "path": "packages/simulation/src/model2/network/run.ts",
+      "hash": "6ea7acfd0a369416b9306a5d0761cefd80c547faa744bc7d41182808d9a848b6"
+    },
+    {
+      "path": "packages/simulation/src/model2/network/trace.ts",
+      "hash": "39450faa91d34f0073fa480eb75200312d2cd3b041420f6131cb609e15792553"
+    },
+    {
+      "path": "packages/simulation/src/model2/network/transport.ts",
+      "hash": "38776458c72dfe86b5beefa5d3d509e24b4f886a0e6d225d107aea0cf6d2193d"
+    },
+    {
+      "path": "packages/simulation/src/model2/time.ts",
+      "hash": "7ae38c0b3c106370b678c38092de298e35211e0a2003713265a706d4a904b290"
+    },
+    {
+      "path": "packages/simulation/src/model2/workload/contracts.ts",
+      "hash": "979006970bb8f341505adcc383c75899d52b2426c3ee0755b280cebe9c404c1a"
+    },
+    {
+      "path": "packages/simulation/src/model2/workload/evidence.ts",
+      "hash": "26798ae882a6808524a90a65ef4fbbbec0f791a6c911554c0c6eea846ba5f899"
+    },
+    {
+      "path": "packages/simulation/src/model2/workload/run.ts",
+      "hash": "148d2c0ab514c88476636fc611b5cc7759b48027431c2139ce9f5d408da99e3c"
     }
   ],
   "acceptance": [
@@ -107,11 +179,27 @@
     },
     {
       "path": "scripts/reality/first-stack-compile-proof.ts",
-      "hash": "279c44a0aaf086256a685e37e49a6c285780f8f33e1db984f127e4a7aa83f899"
+      "hash": "d623a844dd3f1702aef67bc9464a7283cda55f825eafdbb77b1bf8b19e36d251"
     },
     {
       "path": "scripts/tests/execution-identity.test.ts",
-      "hash": "dab71bffbe3a8e317d46540abeecdade6c83a98f941c282a0e630ce3c203aca3"
+      "hash": "380793b07f18a67e9e86cdb75f34ae7537f6881fcbb92bfe48531389866b0046"
+    },
+    {
+      "path": "scripts/tests/first-stack-bounds.test.ts",
+      "hash": "0ed3e057eb89939bed21ce5cf3bcf412fe4a1f4e7380aa301147b27380d468e3"
+    },
+    {
+      "path": "scripts/reality/first-stack-bounds-proof.ts",
+      "hash": "57b9156beb213122109461a5ab518f15cef0ca7f1bfad1ef01ea114aaad4d27a"
+    },
+    {
+      "path": "scripts/stage2-bounds-host.ts",
+      "hash": "78347d46f2ce74e6b58011c067f088c45850e3690aa2ab19b715550dde05be48"
+    },
+    {
+      "path": "scripts/fixtures/first-stack-bounded-execution.test.ts",
+      "hash": "65da6c5a4e8cfc213ab3f9d224183b24931543062899384a7851d9562c4c843d"
     }
   ]
 }

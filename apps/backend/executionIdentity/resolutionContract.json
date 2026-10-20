@@ -1004,21 +1004,33 @@
     },
     {
       "owner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "file": "src/firstStack/bounds.ts",
+      "key": "@infraforge/simulation/src/firstStack/bounds.ts",
+      "hash": "df0c64b5b24fe82534630af6ae6798516a132eb9bc3357f840d2c0c3ba7f3763"
+    },
+    {
+      "owner": "@infraforge/simulation@workspace:packages/simulation:158",
       "file": "src/firstStack/compiler.ts",
       "key": "@infraforge/simulation/src/firstStack/compiler.ts",
-      "hash": "38ac905e4682e02f3e86b6e54f0180481fcda97901a8ecfc16c62033f078cb56"
+      "hash": "aa225df0b4f7f0f91e5a35c482a8f4f2dd4ee5323ca166fa67e2441a5072d4a2"
+    },
+    {
+      "owner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "file": "src/firstStack/journal.ts",
+      "key": "@infraforge/simulation/src/firstStack/journal.ts",
+      "hash": "786bc65fab84faf4dc0ce2de5001261aa977c004f311139e5b93635e8149b7bf"
     },
     {
       "owner": "@infraforge/simulation@workspace:packages/simulation:158",
       "file": "src/firstStack/run.ts",
       "key": "@infraforge/simulation/src/firstStack/run.ts",
-      "hash": "dc0c09ebecb47df900cbc2574ca910ad8df894ac3ae84494b8dbea9ec4b7ec6f"
+      "hash": "6366672e8f3114649662ebe3890561e68f6c245117916a5170aabd0e5bb8729a"
     },
     {
       "owner": "@infraforge/simulation@workspace:packages/simulation:158",
       "file": "src/internalFirstStack.ts",
       "key": "@infraforge/simulation/src/internalFirstStack.ts",
-      "hash": "40ed5822095096fbaa3d5f351e9118ca55223ee637b86dc23dc80f4a944943e3"
+      "hash": "5863a6d0b2dc895305ed4769dc847c7194fa20d528b6801ec71bd1f1b4df9590"
     },
     {
       "owner": "@infraforge/simulation@workspace:packages/simulation:158",
@@ -1102,7 +1114,7 @@
       "owner": "@infraforge/simulation@workspace:packages/simulation:158",
       "file": "src/model2/composition/run.ts",
       "key": "@infraforge/simulation/src/model2/composition/run.ts",
-      "hash": "c33b191c6b0fd13003dc7c317cdcaf4a8ddcdd8ffaa7875c847143d465dd983b"
+      "hash": "4861bf6e7cc0046c665e01316327c582781f5e08205a77080a037a40e0685e12"
     },
     {
       "owner": "@infraforge/simulation@workspace:packages/simulation:158",
@@ -1132,7 +1144,7 @@
       "owner": "@infraforge/simulation@workspace:packages/simulation:158",
       "file": "src/model2/compute/run.ts",
       "key": "@infraforge/simulation/src/model2/compute/run.ts",
-      "hash": "7a4c73f7eacea18a68cbbcf92e09ee96bfe410a161800be8a605c3e2f8a5909b"
+      "hash": "97be752e268ab4d441ecfda3368eb0200417b8b40b3239d2fe481034f9469e68"
     },
     {
       "owner": "@infraforge/simulation@workspace:packages/simulation:158",
@@ -1198,7 +1210,7 @@
       "owner": "@infraforge/simulation@workspace:packages/simulation:158",
       "file": "src/model2/data/run.ts",
       "key": "@infraforge/simulation/src/model2/data/run.ts",
-      "hash": "44cffa676dba668b72635efeb72ee5c4e5c8bc45926798cca68081baadb75ed8"
+      "hash": "5df2709c8b04aa8fdac1dfada2a26837731a1e3b5bdcad74251448d4cc7da782"
     },
     {
       "owner": "@infraforge/simulation@workspace:packages/simulation:158",
@@ -1246,19 +1258,19 @@
       "owner": "@infraforge/simulation@workspace:packages/simulation:158",
       "file": "src/model2/network/run.ts",
       "key": "@infraforge/simulation/src/model2/network/run.ts",
-      "hash": "dbe08ad71c7f9495e6617baa383e176899949c251db59beec5ce31261fa4c54c"
+      "hash": "6ea7acfd0a369416b9306a5d0761cefd80c547faa744bc7d41182808d9a848b6"
     },
     {
       "owner": "@infraforge/simulation@workspace:packages/simulation:158",
       "file": "src/model2/network/trace.ts",
       "key": "@infraforge/simulation/src/model2/network/trace.ts",
-      "hash": "4e9f6e93d2672a9d8d4829dbaff5ac27f2c0cc0ddc5dc413ef753c74ca5e4080"
+      "hash": "39450faa91d34f0073fa480eb75200312d2cd3b041420f6131cb609e15792553"
     },
     {
       "owner": "@infraforge/simulation@workspace:packages/simulation:158",
       "file": "src/model2/network/transport.ts",
       "key": "@infraforge/simulation/src/model2/network/transport.ts",
-      "hash": "997f92945e84a7a8dbc23b4830bce0b92374af68604e1bf9cddec4a775db08e1"
+      "hash": "38776458c72dfe86b5beefa5d3d509e24b4f886a0e6d225d107aea0cf6d2193d"
     },
     {
       "owner": "@infraforge/simulation@workspace:packages/simulation:158",
@@ -1426,7 +1438,7 @@
       "owner": "@infraforge/simulation@workspace:packages/simulation:158",
       "file": "src/model2/time.ts",
       "key": "@infraforge/simulation/src/model2/time.ts",
-      "hash": "f35e34b5b779891fbb136cf7a1873c81d4340d68b59fe8d3758f5910344e5ef2"
+      "hash": "7ae38c0b3c106370b678c38092de298e35211e0a2003713265a706d4a904b290"
     },
     {
       "owner": "@infraforge/simulation@workspace:packages/simulation:158",
@@ -1438,7 +1450,7 @@
       "owner": "@infraforge/simulation@workspace:packages/simulation:158",
       "file": "src/model2/workload/evidence.ts",
       "key": "@infraforge/simulation/src/model2/workload/evidence.ts",
-      "hash": "6075532792978d0be63820b5c39a63c991d12620bbc293452fe98755718edc56"
+      "hash": "26798ae882a6808524a90a65ef4fbbbec0f791a6c911554c0c6eea846ba5f899"
     },
     {
       "owner": "@infraforge/simulation@workspace:packages/simulation:158",
@@ -1456,7 +1468,7 @@
       "owner": "@infraforge/simulation@workspace:packages/simulation:158",
       "file": "src/model2/workload/run.ts",
       "key": "@infraforge/simulation/src/model2/workload/run.ts",
-      "hash": "64f172cd1c7b0c4d1b164a0f9060a8eeca2932ee643be3e1c9c77d47736b02d1"
+      "hash": "148d2c0ab514c88476636fc611b5cc7759b48027431c2139ce9f5d408da99e3c"
     },
     {
       "owner": "@infraforge/simulation@workspace:packages/simulation:158",
@@ -12744,6 +12756,14 @@
     },
     {
       "owner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "file": "src/firstStack/bounds.ts",
+      "specifier": "../model2/time",
+      "kind": "import-statement",
+      "targetOwner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "targetFile": "src/model2/time.ts"
+    },
+    {
+      "owner": "@infraforge/simulation@workspace:packages/simulation:158",
       "file": "src/firstStack/compiler.ts",
       "specifier": "../model2/data/validate",
       "kind": "import-statement",
@@ -12757,6 +12777,30 @@
       "kind": "import-statement",
       "targetOwner": "@infraforge/simulation@workspace:packages/simulation:158",
       "targetFile": "src/model2/time.ts"
+    },
+    {
+      "owner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "file": "src/firstStack/compiler.ts",
+      "specifier": "./bounds",
+      "kind": "import-statement",
+      "targetOwner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "targetFile": "src/firstStack/bounds.ts"
+    },
+    {
+      "owner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "file": "src/firstStack/journal.ts",
+      "specifier": "../model2/time",
+      "kind": "import-statement",
+      "targetOwner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "targetFile": "src/model2/time.ts"
+    },
+    {
+      "owner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "file": "src/firstStack/journal.ts",
+      "specifier": "./bounds",
+      "kind": "import-statement",
+      "targetOwner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "targetFile": "src/firstStack/bounds.ts"
     },
     {
       "owner": "@infraforge/simulation@workspace:packages/simulation:158",
@@ -12777,10 +12821,34 @@
     {
       "owner": "@infraforge/simulation@workspace:packages/simulation:158",
       "file": "src/firstStack/run.ts",
+      "specifier": "./bounds",
+      "kind": "import-statement",
+      "targetOwner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "targetFile": "src/firstStack/bounds.ts"
+    },
+    {
+      "owner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "file": "src/firstStack/run.ts",
       "specifier": "./compiler",
       "kind": "import-statement",
       "targetOwner": "@infraforge/simulation@workspace:packages/simulation:158",
       "targetFile": "src/firstStack/compiler.ts"
+    },
+    {
+      "owner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "file": "src/firstStack/run.ts",
+      "specifier": "./journal",
+      "kind": "import-statement",
+      "targetOwner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "targetFile": "src/firstStack/journal.ts"
+    },
+    {
+      "owner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "file": "src/internalFirstStack.ts",
+      "specifier": "./firstStack/bounds",
+      "kind": "import-statement",
+      "targetOwner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "targetFile": "src/firstStack/bounds.ts"
     },
     {
       "owner": "@infraforge/simulation@workspace:packages/simulation:158",
@@ -13680,6 +13748,14 @@
     },
     {
       "owner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "file": "src/model2/network/trace.ts",
+      "specifier": "../time",
+      "kind": "import-statement",
+      "targetOwner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "targetFile": "src/model2/time.ts"
+    },
+    {
+      "owner": "@infraforge/simulation@workspace:packages/simulation:158",
       "file": "src/model2/network/transport.ts",
       "specifier": "../../reality/quantity",
       "kind": "import-statement",
@@ -14309,6 +14385,14 @@
       "kind": "import-statement",
       "targetOwner": "@infraforge/simulation@workspace:packages/simulation:158",
       "targetFile": "src/model2/workload/policy.ts"
+    },
+    {
+      "owner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "file": "src/model2/workload/evidence.ts",
+      "specifier": "../time",
+      "kind": "import-statement",
+      "targetOwner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "targetFile": "src/model2/time.ts"
     },
     {
       "owner": "@infraforge/simulation@workspace:packages/simulation:158",

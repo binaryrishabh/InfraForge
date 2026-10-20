@@ -566,11 +566,13 @@
     },
     {
       "path": "packages/simulation/src/model2/workload/contracts.ts",
-      "hash": "ad0754401303b8656f0bcf18995482c1b1b13bff6bd09c56033b17bfbfcd8bc3"
+      "hash": "ad0754401303b8656f0bcf18995482c1b1b13bff6bd09c56033b17bfbfcd8bc3",
+      "text": "import type { Quantity } from \"../../reality/quantity\";\nimport type { RealityEntry } from \"../../reality/ledger\";\nimport type { FaultPlan } from \"../contracts\";\nimport type { DemandProfile, ProfileContext } from \"./profiles\";\n\nexport interface OperationClass {\n  id: string;\n  entry: string;\n  callerTimeout: Quantity<\"us\">;\n  abandonAfter?: Quantity<\"us\">;\n  onCallerStop: \"detach\" | \"request-cancellation\";\n  idempotency: \"read-only\" | \"idempotent\" | \"non-idempotent\" | \"unknown\";\n}\ninterface Source { id: string; operation: string; start: Quantity<\"us\"> }\nexport type ArrivalSource =\n  | (Source & { kind: \"periodic\"; count: Quantity<\"count\">; interval: Quantity<\"us\"> })\n  | (Source & { kind: \"poisson\"; count: Quantity<\"count\">; meanInterval: Quantity<\"us\"> })\n  | (Source & { kind: \"closed\"; users: Quantity<\"count\">; perUser: Quantity<\"count\">; think: Quantity<\"us\"> })\n  | { id: string; kind: \"trace\"; trace: ArrivalTrace };\nexport interface TraceRow { id: string; atUs: number; operation: string; payloadBytes?: number }\nexport interface ArrivalTrace {\n  schema: \"infraforge-arrivals/1\";\n  unit: \"us\";\n  durationUs: number;\n  provenance: string;\n  rows: TraceRow[];\n}\nexport interface WorkIdentity {\n  rootId: string;\n  attempt: number;\n  callId: string;\n  parentCallId?: string;\n  operation: string;\n}\nexport interface Invocation extends WorkIdentity {\n  offeredAt: number; payloadBytes?: number;\n  // Internal application messages are copied by transport; replies become visible on return.\n  message?: { request: unknown; response?: unknown; bodyBytes?: { request?: number; response?: number } };\n  sessionId?: string;\n}\nexport type RemoteOutcome = \"completed\" | \"rejected\" | \"cancelled\";\nexport type CallerOutcome = \"completed\" | \"rejected\" | \"deadline-exceeded\" | \"abandoned\";\nexport interface Receipt {\n  admitted: boolean;\n  cancel(): \"cancelled\" | \"unsupported\" | \"already-finished\";\n  state(): \"queued\" | \"serving\" | \"waiting\" | \"finished\";\n}\nexport interface WorkStation {\n  id: string;\n  kind: \"compute\" | \"database\";\n  cores: Quantity<\"cores\">;\n  concurrency: Quantity<\"count\">;\n  queueCapacity: Quantity<\"count\">;\n  profiles: Record<string, string>;\n  context: ProfileContext;\n  cancellation: \"cooperative\" | \"unsupported\";\n  downstream?: string;\n}\nexport interface WorkRouter { id: string; kind: \"router\"; backends: string[] }\nexport interface WorkloadInput {\n  modelVersion: \"2\";\n  workloadVersion: \"m2b/1\";\n  seed: string;\n  ledger: RealityEntry[];\n  profiles: DemandProfile[];\n  resources: Array<WorkStation | WorkRouter>;\n  operations: OperationClass[];\n  arrivals: ArrivalSource[];\n  faults: FaultPlan[];\n  horizon: Quantity<\"us\">;\n  sampleInterval: Quantity<\"us\">;\n  limits: { maxEvents: number; maxSamples: number; maxRequests: number; maxRawResults: number; maxTraceRows: number };\n}\nexport interface StationState {\n  id: string;\n  paused: boolean;\n  received: number;\n  admitted: number;\n  rejected: number;\n  completed: number;\n  failed: number;\n  cancelled: number;\n  queued: number;\n  serving: number;\n  waiting: number;\n  consumedCoreUs: number;\n  busySlotUs: number;\n}\nexport interface CallerResult extends WorkIdentity {\n  offeredAt: number;\n  at: number;\n  outcome: CallerOutcome;\n  responseUs: number;\n}\n"
     },
     {
       "path": "packages/simulation/src/model2/workload/evidence.ts",
-      "hash": "6075532792978d0be63820b5c39a63c991d12620bbc293452fe98755718edc56"
+      "hash": "6075532792978d0be63820b5c39a63c991d12620bbc293452fe98755718edc56",
+      "text": "import type { CallerOutcome, CallerResult } from \"./contracts\";\nimport { HISTOGRAM_BUCKETS, EMPIRICAL_QUANTILES } from \"./policy\";\n\nconst outcomes: CallerOutcome[] = [\"completed\", \"rejected\", \"deadline-exceeded\", \"abandoned\"];\n// Log2 integer buckets cover safe integer microseconds. No observations are discarded.\nexport class ResultBook {\n  readonly raw: CallerResult[] = [];\n  private groups = new Map<string, { operation: string; outcome: CallerOutcome; count: number; sum: number; min: number; max: number; bins: number[] }>();\n  constructor(readonly rawLimit: number) {}\n  record(result: CallerResult) {\n    if (!Number.isSafeInteger(result.responseUs) || result.responseUs < 0) throw new Error(\"Latency must be safe integer microseconds\");\n    const key = JSON.stringify([result.operation, result.outcome]);\n    let group = this.groups.get(key);\n    if (!group) {\n      group = { operation: result.operation, outcome: result.outcome, count: 0, sum: 0, min: Infinity, max: 0, bins: Array(HISTOGRAM_BUCKETS).fill(0) };\n      this.groups.set(key, group);\n    }\n    group.count++; group.sum += result.responseUs; group.min = Math.min(group.min, result.responseUs); group.max = Math.max(group.max, result.responseUs);\n    // log2(MAX_SAFE_INTEGER) can round to 53 in IEEE-754; clamp its last bucket.\n    group.bins[result.responseUs === 0 ? 0 : Math.min(HISTOGRAM_BUCKETS - 1, 1 + Math.floor(Math.log2(result.responseUs)))]!++;\n    if (this.raw.length < this.rawLimit) this.raw.push(result);\n  }\n  summary() {\n    return [...this.groups.values()].sort((a, b) => a.operation < b.operation ? -1 : a.operation > b.operation ? 1 : outcomes.indexOf(a.outcome) - outcomes.indexOf(b.outcome)).map((g) => {\n      const exact = this.raw.filter((r) => r.operation === g.operation && r.outcome === g.outcome).map((r) => r.responseUs).sort((a, b) => a - b);\n      const percentiles = EMPIRICAL_QUANTILES.map((p) => {\n        // At least one expected observation beyond the requested empirical quantile.\n        if (g.count < Math.round(1 / (1 - p))) return { p, kind: \"unknown\" as const, reason: \"Insufficient terminal samples for this tail rank\" };\n        const rank = Math.ceil(p * g.count);\n        if (exact.length === g.count) return { p, kind: \"exact\" as const, valueUs: exact[rank - 1]!, method: \"empirical-nearest-rank\" };\n        let seen = 0, bucket = 0;\n        for (; bucket < g.bins.length; bucket++) { seen += g.bins[bucket]!; if (seen >= rank) break; }\n        return { p, kind: \"bounded\" as const, minUs: bucket === 0 ? 0 : 2 ** (bucket - 1), maxUs: bucket === 0 ? 0 : 2 ** bucket - 1, method: \"log2-histogram-rank\" };\n      });\n      return { operation: g.operation, outcome: g.outcome, count: g.count, minUs: g.min, maxUs: g.max,\n        meanUs: g.sum / g.count, percentiles, histogram: { unit: \"us\", counts: [...g.bins], layout: \"0 then [2^(i-1),2^i-1]\" } };\n    });\n  }\n}\n"
     },
     {
       "path": "packages/simulation/src/model2/workload/policy.ts",
@@ -1382,7 +1384,7 @@
     },
     {
       "path": "packages/simulation/src/model2/composition/run.ts",
-      "hash": "c33b191c6b0fd13003dc7c317cdcaf4a8ddcdd8ffaa7875c847143d465dd983b"
+      "hash": "4861bf6e7cc0046c665e01316327c582781f5e08205a77080a037a40e0685e12"
     },
     {
       "path": "packages/simulation/src/model2/composition/token-bucket.ts",
@@ -1410,7 +1412,7 @@
     },
     {
       "path": "packages/simulation/src/model2/compute/run.ts",
-      "hash": "7a4c73f7eacea18a68cbbcf92e09ee96bfe410a161800be8a605c3e2f8a5909b"
+      "hash": "97be752e268ab4d441ecfda3368eb0200417b8b40b3239d2fe481034f9469e68"
     },
     {
       "path": "packages/simulation/src/model2/compute/scheduler.ts",
@@ -1462,7 +1464,7 @@
     },
     {
       "path": "packages/simulation/src/model2/data/run.ts",
-      "hash": "44cffa676dba668b72635efeb72ee5c4e5c8bc45926798cca68081baadb75ed8"
+      "hash": "5df2709c8b04aa8fdac1dfada2a26837731a1e3b5bdcad74251448d4cc7da782"
     },
     {
       "path": "packages/simulation/src/model2/data/validate.ts",
@@ -1494,15 +1496,15 @@
     },
     {
       "path": "packages/simulation/src/model2/network/run.ts",
-      "hash": "dbe08ad71c7f9495e6617baa383e176899949c251db59beec5ce31261fa4c54c"
+      "hash": "6ea7acfd0a369416b9306a5d0761cefd80c547faa744bc7d41182808d9a848b6"
     },
     {
       "path": "packages/simulation/src/model2/network/trace.ts",
-      "hash": "4e9f6e93d2672a9d8d4829dbaff5ac27f2c0cc0ddc5dc413ef753c74ca5e4080"
+      "hash": "39450faa91d34f0073fa480eb75200312d2cd3b041420f6131cb609e15792553"
     },
     {
       "path": "packages/simulation/src/model2/network/transport.ts",
-      "hash": "997f92945e84a7a8dbc23b4830bce0b92374af68604e1bf9cddec4a775db08e1"
+      "hash": "38776458c72dfe86b5beefa5d3d509e24b4f886a0e6d225d107aea0cf6d2193d"
     },
     {
       "path": "packages/simulation/src/model2/network/validate.ts",
@@ -1634,7 +1636,7 @@
     },
     {
       "path": "packages/simulation/src/model2/time.ts",
-      "hash": "f35e34b5b779891fbb136cf7a1873c81d4340d68b59fe8d3758f5910344e5ef2"
+      "hash": "7ae38c0b3c106370b678c38092de298e35211e0a2003713265a706d4a904b290"
     },
     {
       "path": "packages/simulation/src/model2/validate.ts",
@@ -1654,11 +1656,11 @@
     },
     {
       "path": "packages/simulation/src/model2/workload/contracts.ts",
-      "hash": "ad0754401303b8656f0bcf18995482c1b1b13bff6bd09c56033b17bfbfcd8bc3"
+      "hash": "979006970bb8f341505adcc383c75899d52b2426c3ee0755b280cebe9c404c1a"
     },
     {
       "path": "packages/simulation/src/model2/workload/evidence.ts",
-      "hash": "6075532792978d0be63820b5c39a63c991d12620bbc293452fe98755718edc56"
+      "hash": "26798ae882a6808524a90a65ef4fbbbec0f791a6c911554c0c6eea846ba5f899"
     },
     {
       "path": "packages/simulation/src/model2/workload/policy.ts",
@@ -1670,7 +1672,7 @@
     },
     {
       "path": "packages/simulation/src/model2/workload/run.ts",
-      "hash": "64f172cd1c7b0c4d1b164a0f9060a8eeca2932ee643be3e1c9c77d47736b02d1"
+      "hash": "148d2c0ab514c88476636fc611b5cc7759b48027431c2139ce9f5d408da99e3c"
     },
     {
       "path": "packages/simulation/src/model2/workload/station.ts",
@@ -1942,7 +1944,7 @@
     },
     {
       "path": "scripts/reality/composition-host-proof.ts",
-      "hash": "e2abd811ec82fc01a763f682d209985725f23fb4173afafb81566016a163520c"
+      "hash": "3b5271f59559944c8ee82fe06705f99b65aac7908a83f000a87181552e134182"
     },
     {
       "path": "scripts/reality/composition-proofs.ts",
@@ -1977,8 +1979,12 @@
       "hash": "c2d917f046db32db64acb48aa908ec1b7c7b94c8b2bd708c8b593f829880eabb"
     },
     {
+      "path": "scripts/reality/first-stack-bounds-proof.ts",
+      "hash": "57b9156beb213122109461a5ab518f15cef0ca7f1bfad1ef01ea114aaad4d27a"
+    },
+    {
       "path": "scripts/reality/first-stack-compile-proof.ts",
-      "hash": "279c44a0aaf086256a685e37e49a6c285780f8f33e1db984f127e4a7aa83f899"
+      "hash": "d623a844dd3f1702aef67bc9464a7283cda55f825eafdbb77b1bf8b19e36d251"
     },
     {
       "path": "scripts/reality/first-stack-pilots/app.ts",
@@ -2174,7 +2180,7 @@
     },
     {
       "path": "scripts/tests/compositionReplay.test.ts",
-      "hash": "b6b68de921a15d15cd63d52bd3803eb19ef73274e1d7324a35c658c7270733d3"
+      "hash": "2aba92b33e4c994421bef2f435ec238790c94e4131dca3c754ab5941afd3cbbb"
     },
     {
       "path": "scripts/tests/computeCalibration.test.ts",
@@ -2198,7 +2204,11 @@
     },
     {
       "path": "scripts/tests/execution-identity.test.ts",
-      "hash": "dab71bffbe3a8e317d46540abeecdade6c83a98f941c282a0e630ce3c203aca3"
+      "hash": "380793b07f18a67e9e86cdb75f34ae7537f6881fcbb92bfe48531389866b0046"
+    },
+    {
+      "path": "scripts/tests/first-stack-bounds.test.ts",
+      "hash": "0ed3e057eb89939bed21ce5cf3bcf412fe4a1f4e7380aa301147b27380d468e3"
     },
     {
       "path": "scripts/tests/first-stack-child.test.ts",
@@ -2210,7 +2220,7 @@
     },
     {
       "path": "scripts/tests/first-stack-profile.test.ts",
-      "hash": "f77982e3ef2cb986b59058e61f6536926a88a6b4b7ca92b4b4ca3fda950625f6"
+      "hash": "3643f25cfcab920b479d49fdf3a995a127b20befc4ae5d22131904f86f27337b"
     },
     {
       "path": "scripts/tests/firstStackPilots.test.ts",

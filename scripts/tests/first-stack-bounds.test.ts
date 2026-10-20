@@ -1,6 +1,8 @@
 import { afterAll, expect, test } from "bun:test";
 import { createWorkloadRuntime } from "../../packages/simulation/src/model2/workload/run";
 import { workloadStation } from "../../packages/simulation/src/model2/workload/station";
+import { createDataModel2 } from "../../packages/simulation/src/model2/data/run";
+import { dataFixture } from "../../packages/simulation/tests/dataFixture";
 import { workloadFixture } from "../../packages/simulation/tests/workloadFixture";
 import { verticalFixture } from "../../packages/simulation/tests/networkFixture";
 import { createNetworkModel2 } from "../../packages/simulation/src/model2/network/run";
@@ -113,7 +115,7 @@ test("variable-size samples close retention at the first omission and keep exact
     return { evidence: runtime.evidence(), measuredBeforeEvidence };
   };
   const full = run(), bounded = run(1024), first = full.evidence.samples[0]!, later = full.evidence.samples[2]!;
-  expect(full.evidence.samples.map(sample => sample.at)).toEqual([0, 10, 20, 30]);
+  expect(full.evidence.samples.map(sample => sample.at)).toEqual([0, 10, 20, 30].map(micros));
   expect(Buffer.byteLength(JSON.stringify(full.evidence.samples[1]))).toBeGreaterThan(1024);
   expect(Buffer.byteLength(JSON.stringify(first)) + Buffer.byteLength(JSON.stringify(later))).toBeLessThanOrEqual(1024);
   expect(bounded.evidence.samples).toEqual(full.evidence.samples.slice(0, 1));
@@ -121,6 +123,24 @@ test("variable-size samples close retention at the first omission and keep exact
   expect(bounded.measuredBeforeEvidence).toBe(2); expect(full.measuredBeforeEvidence).toBe(4);
   expect(bounded.evidence.counts).toEqual(full.evidence.counts);
   expect(bounded.evidence.distributions).toEqual(full.evidence.distributions);
+});
+
+test("PG session profile keeps its version and outcomes through slicing and the shared call budget", () => {
+  const input = dataFixture({ count: 4, horizon: 30000 });
+  input.workloadVersion = "m2e-pg/1";
+  for (const resource of input.resources) if (resource.kind === "relational") resource.semantics = "postgresql-keyed/1";
+  const original = createDataModel2(input); original.advanceTo(original.horizon);
+  input.limits.maxLiveCalls = 100; input.limits.maxPendingEvents = 10000;
+  const sliced = createDataModel2(input);
+  while (!sliced.advanceSlice(sliced.horizon, 7)) { /* equal-time order is preserved */ }
+  const full = createDataModel2(input); full.advanceTo(full.horizon);
+  const evidence = sliced.evidence();
+  expect(evidence).toEqual(full.evidence());
+  expect(evidence.workloadVersion).toBe("m2e-pg/1");
+  expect(evidence.counts).toEqual(original.evidence().counts);
+  expect(evidence.data).toEqual(original.evidence().data);
+  expect(evidence.data.databases[0]!.sessionEvents!.established).toBeGreaterThan(0);
+  expect(evidence.data.databases[0]!.transactions.committed).toBeGreaterThan(0);
 });
 
 test("fresh bounds proof retains the original eight composition replays", async () => {
