@@ -48,6 +48,14 @@ and 4 weekly copies, backup-age/failure alerts, and monthly restore drills. The
 cadence, retention, storage budget, RPO/RTO and provider-managed PITR remain open
 decisions. No schedule or remote storage has been configured.
 
-The disposable regression is `BACKUP_PROOF_DISPOSABLE=owned-container bash
-ops/bootstrap/postgres-backup-proof.sh` inside a fresh `postgres:18`
-container. It creates fixture-only databases; never run it on an existing server.
+The only supported proof entrypoint is `bash ops/bootstrap/prove-backup.sh`.
+It creates and verifies an owned `--network none` PostgreSQL 18 container and
+removes it afterwards. The internal helper is not an operator command: it needs
+an ownership marker/token provisioned by that wrapper and a matching local image
+cluster. Both entrypoints refuse ambient libpq variables before allocating files
+or invoking database/Docker mutations. Run from a shell without PG connection
+settings. The helper runs every database command and nested script in a clean
+environment with PGHOST and PGHOSTADDR both fixed to 127.0.0.1, port 5432,
+fixture role, no password file/prompt and bounded connect/command waits. The
+wrapper also runs intercepted-command contamination regressions before the real
+fixture dump/restore. Never invoke the internal helper against an existing server.
