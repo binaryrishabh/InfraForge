@@ -99,7 +99,7 @@
     "electron-to-chromium": "1.5.399",
     "enhanced-resolve": "5.24.5",
     "fast-uri": "3.1.8",
-    "follow-redirects": "1.16.0",
+    "follow-redirects": "1.16.1",
     "lru.min": "1.1.4",
     "nanoid": "3.3.18",
     "mysql2": "3.23.1",
