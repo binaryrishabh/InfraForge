@@ -1,3 +1,4 @@
+import { buildReleaseImage, cleanupReleaseBuilder } from "./release/build";
 import { mkdir, readFile, rename, open, unlink } from "node:fs/promises";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -31,6 +32,7 @@ const interrupt = async () => {
   if (interrupted) return;
   interrupted = true;
   await cancelCommands();
+  await cleanupReleaseBuilder(command, root);
   if (mutationStarted && operationsInProgress) {
     await operationsInProgress.compose(["stop", "--timeout", "30", "api", "worker", "ws-server"]).catch(() => {});
     await operationsInProgress.stopMigration().catch(() => {});
@@ -48,7 +50,7 @@ try {
     throw new Error("This SHA already has a retained accepted image; do not rebuild or retag it. Use the documented rollback for a previous release.");
   }
   const image = `infraforge-backend:${sha}`;
-  if (action === "apply") await command(["docker", "build", "--build-arg", `RELEASE_SHA=${sha}`, "-f", "apps/backend/Dockerfile", "-t", image, "."], root);
+  if (action === "apply") await buildReleaseImage(sha, image, root);
   const [built] = JSON.parse(await command(["docker", "image", "inspect", image], root));
   if (built.Config.Labels?.["org.infraforge.rehearsal"]) throw new Error("Test-only images cannot be accepted for production release");
   const metadata = JSON.parse(await command(["docker", "run", "--rm", "--network", "none", image, "cat", "/app/apps/backend/release.json"], root));

@@ -1,3 +1,4 @@
+# Budget for the owner-confirmed 2 vCPU / 4 GiB host: see ops/BACKEND_CAPACITY.md.
 x-app: &app
   image: ${RELEASE_IMAGE:?Use a commit-tagged release image}
   working_dir: /app/apps/backend
@@ -40,6 +41,8 @@ services:
   migration:
     <<: *app
     profiles: [release]
+    mem_limit: 256m
+    cpus: 0.25
     restart: "no"
     environment:
       <<: *environment
@@ -52,8 +55,8 @@ services:
     image: redis:7-alpine
     volumes: [redis_data:/data]
     restart: unless-stopped
-    mem_limit: 512m
-    cpus: 0.5
+    mem_limit: 256m
+    cpus: 0.15
     pids_limit: 128
     logging:
       driver: local
@@ -62,7 +65,7 @@ services:
         max-file: "3"
     # Queue keys must never be evicted silently. Capacity errors fail delivery
     # explicitly; leave headroom above maxmemory for AOF buffers and rewrites.
-    command: [redis-server, --appendonly, "yes", --maxmemory, "256mb", --maxmemory-policy, noeviction]
+    command: [redis-server, --appendonly, "yes", --maxmemory, "96mb", --maxmemory-policy, noeviction]
     networks: [application]
     healthcheck:
       test: [CMD, redis-cli, ping]
@@ -72,8 +75,8 @@ services:
 
   api:
     <<: *app
-    mem_limit: 512m
-    cpus: 0.5
+    mem_limit: 384m
+    cpus: 0.35
     ports: ["127.0.0.1:${API_PORT:-3000}:3000"]
     environment:
       <<: *auth
@@ -89,8 +92,8 @@ services:
 
   worker:
     <<: *app
-    mem_limit: 1536m
-    cpus: 1.0
+    mem_limit: 768m
+    cpus: 0.5
     environment:
       <<: *environment
       DATABASE_URL: ${WORKER_DATABASE_URL:?Set a session-preserving PostgreSQL worker URL}
@@ -102,8 +105,8 @@ services:
 
   ws-server:
     <<: *app
-    mem_limit: 384m
-    cpus: 0.5
+    mem_limit: 256m
+    cpus: 0.25
     ports: ["127.0.0.1:${WS_PORT:-3001}:3001"]
     environment: *auth
     command: [bun, --no-env-file, --no-install, executionIdentity/launcher.ts, ws]
