@@ -1,7 +1,9 @@
 # First stack authoring contract
 
 `first-stack/1` is a separate, internal authoring/review profile. Model 1 stays
-active; no first-stack execution or public availability is enabled. Timing is
+active; no product first-stack execution or public availability is enabled. The
+separate V2 internal compiler/qualification path is documented in
+`first-stack-compile.md`; saved V1 sidecars remain review-only. Timing is
 assumption-only; logical counts are supported-logical. Full cost and complete
 resident memory remain Unknown. Demand provenance never calibrates output timing
 (`packages/contracts/src/first-stack/index.ts:2`).

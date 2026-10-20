@@ -164,7 +164,7 @@
     }
   },
   "apps/backend/executionIdentity/loading.ts": {
-    "hash": "cf907e0de5d95daa398e20cd9567a902a0738d847983ef9639009d83ff3330ad",
+    "hash": "cd62c5adf0e519c61970f5402c72171baf754289263bcc7a55e4cd3315adb75c",
     "capabilities": [
       "computed-data",
       "verifier",
@@ -172,7 +172,7 @@
     ],
     "review": "Fixed data indexing; resource adapters require the separate documented review",
     "globals": {
-      "hash": "cf907e0de5d95daa398e20cd9567a902a0738d847983ef9639009d83ff3330ad",
+      "hash": "cd62c5adf0e519c61970f5402c72171baf754289263bcc7a55e4cd3315adb75c",
       "names": [
         "Bun"
       ]
@@ -1043,18 +1043,18 @@
     "review": "Composition module: reviewed fixed configuration/identity/measurement indexing; no dynamic loading or host access"
   },
   "apps/backend/firstStack/authoring.ts": {
-    "hash": "b313c8dec9cc93dc3e677e31b8099f2ab516f14832c484b81409f7b0c73c82e5",
+    "hash": "ff9791e8aa8a8812a956341ac4590ff9fb660a5fe9703a1b06eeb8c872ce8c9c",
     "capabilities": [
       "computed-data"
     ],
-    "review": "Internal authoring/stream parser only: bounded fixed JSON data indexing, exact named UTF-8/byte primitives; no evaluator, dynamic loader, engine dispatch or activation"
+    "review": "Internal first-stack V2 review/compiler/qualification: fixed JSON indexing and statically imported Stage 1 registry/host composition; bounded recorded keys and DB health; no evaluator, dynamic loader, product dispatch, HTTP executor or activation"
   },
   "apps/backend/firstStack/canonical.ts": {
     "hash": "49f240e1016d0540eb13f3908543c2016986a87eb0b0dce5669dfeab376fa2f4",
     "capabilities": [
       "computed-data"
     ],
-    "review": "Internal authoring/stream parser only: bounded fixed JSON data indexing, exact named UTF-8/byte primitives; no evaluator, dynamic loader, engine dispatch or activation"
+    "review": "Internal first-stack V2 review/compiler/qualification: fixed JSON indexing and statically imported Stage 1 registry/host composition; bounded recorded keys and DB health; no evaluator, dynamic loader, product dispatch, HTTP executor or activation"
   },
   "apps/backend/firstStack/importStream.ts": {
     "hash": "0d2f232bd112e59bb0fe67270444ffe81d9ebc3084bcd324866e0c06f00d2c7e",
@@ -1068,49 +1068,77 @@
         "TextDecoder"
       ]
     },
-    "review": "Internal authoring/stream parser only: bounded fixed JSON data indexing, exact named UTF-8/byte primitives; no evaluator, dynamic loader, engine dispatch or activation"
+    "review": "Internal first-stack V2 review/compiler/qualification: fixed JSON indexing and statically imported Stage 1 registry/host composition; bounded recorded keys and DB health; no evaluator, dynamic loader, product dispatch, HTTP executor or activation"
   },
   "apps/backend/firstStack/persistence.ts": {
     "hash": "eb20a534aca49aefc93cb0afcc6bf85a1d478a4e58244d9d67d4959a6417c582",
     "capabilities": [
       "computed-data"
     ],
-    "review": "Internal authoring/stream parser only: bounded fixed JSON data indexing, exact named UTF-8/byte primitives; no evaluator, dynamic loader, engine dispatch or activation"
+    "review": "Internal first-stack V2 review/compiler/qualification: fixed JSON indexing and statically imported Stage 1 registry/host composition; bounded recorded keys and DB health; no evaluator, dynamic loader, product dispatch, HTTP executor or activation"
   },
   "apps/backend/firstStack/routes.ts": {
-    "hash": "c4c564e79be83c1109970036de39bc1974ade955e44615497a43bc7768f8dcb9",
+    "hash": "af90a383dc2cf8fa90872ff72d7ba8b95ddac2eafc910f3b0d0b65772cdb32f0",
     "capabilities": [
       "computed-data"
     ],
-    "review": "Internal authoring/stream parser only: bounded fixed JSON data indexing, exact named UTF-8/byte primitives; no evaluator, dynamic loader, engine dispatch or activation"
+    "review": "Internal first-stack V2 review/compiler/qualification: fixed JSON indexing and statically imported Stage 1 registry/host composition; bounded recorded keys and DB health; no evaluator, dynamic loader, product dispatch, HTTP executor or activation"
   },
   "apps/backend/firstStack/service.ts": {
-    "hash": "2c73f9473a46f1e0f27bc99835062e90d86b64b1e0f519747b926cb7efa1048e",
+    "hash": "db05f16c91fadffae162d86901ed7a57c7b8373e70ccbbeca0ff8fbb210ea771",
     "capabilities": [
       "computed-data"
     ],
-    "review": "Internal authoring/stream parser only: bounded fixed JSON data indexing, exact named UTF-8/byte primitives; no evaluator, dynamic loader, engine dispatch or activation"
+    "review": "Internal first-stack V2 review/compiler/qualification: fixed JSON indexing and statically imported Stage 1 registry/host composition; bounded recorded keys and DB health; no evaluator, dynamic loader, product dispatch, HTTP executor or activation"
   },
   "apps/backend/firstStack/workload.ts": {
-    "hash": "2d32b90d5017367e2f849c36a344dc0842a7b8841d64411af91f8286c8ce8649",
+    "hash": "5369d0c12fd99e8d2af105b4922cd8a45ce27f5cde6538c91c4562f5a4941755",
     "capabilities": [
       "computed-data"
     ],
     "globals": {
-      "hash": "2d32b90d5017367e2f849c36a344dc0842a7b8841d64411af91f8286c8ce8649",
+      "hash": "5369d0c12fd99e8d2af105b4922cd8a45ce27f5cde6538c91c4562f5a4941755",
       "names": [
         "Uint8Array",
         "TextDecoder",
         "setImmediate"
       ]
     },
-    "review": "Internal authoring/stream parser only: bounded fixed JSON data indexing, exact named UTF-8/byte primitives; no evaluator, dynamic loader, engine dispatch or activation"
+    "review": "Internal first-stack V2 review/compiler/qualification: fixed JSON indexing and statically imported Stage 1 registry/host composition; bounded recorded keys and DB health; no evaluator, dynamic loader, product dispatch, HTTP executor or activation"
   },
   "packages/contracts/src/first-stack/index.ts": {
-    "hash": "1ca85e7811b3077bacb57363d48988dbd51c01c83d705a94050e0cdb93ff4c2a",
+    "hash": "dd70829058a94856e14c189b44cd1d427ee73126dcf242fbaa6f2d79c7d0ed08",
     "capabilities": [
       "computed-data"
     ],
-    "review": "Internal authoring/stream parser only: bounded fixed JSON data indexing, exact named UTF-8/byte primitives; no evaluator, dynamic loader, engine dispatch or activation"
+    "review": "Internal first-stack V2 review/compiler/qualification: fixed JSON indexing and statically imported Stage 1 registry/host composition; bounded recorded keys and DB health; no evaluator, dynamic loader, product dispatch, HTTP executor or activation"
+  },
+  "apps/backend/firstStack/execution.ts": {
+    "hash": "57cbb565cf8d4004bddfa0c4b28c21e6ee13565927f7752db7020c3e0adec3b4",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Internal first-stack V2 review/compiler/qualification: fixed JSON indexing and statically imported Stage 1 registry/host composition; bounded recorded keys and DB health; no evaluator, dynamic loader, product dispatch, HTTP executor or activation"
+  },
+  "packages/simulation/src/internalFirstStack.ts": {
+    "hash": "40ed5822095096fbaa3d5f351e9118ca55223ee637b86dc23dc80f4a944943e3",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Internal first-stack V2 review/compiler/qualification: fixed JSON indexing and statically imported Stage 1 registry/host composition; bounded recorded keys and DB health; no evaluator, dynamic loader, product dispatch, HTTP executor or activation"
+  },
+  "packages/simulation/src/firstStack/compiler.ts": {
+    "hash": "f034b7fea6b68c5c3bf347d20e4178e7252b228b9280e1ae6985517ed1448080",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Internal first-stack V2 review/compiler/qualification: fixed JSON indexing and statically imported Stage 1 registry/host composition; bounded recorded keys and DB health; no evaluator, dynamic loader, product dispatch, HTTP executor or activation"
+  },
+  "packages/simulation/src/firstStack/run.ts": {
+    "hash": "dc0c09ebecb47df900cbc2574ca910ad8df894ac3ae84494b8dbea9ec4b7ec6f",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Internal first-stack V2 review/compiler/qualification: fixed JSON indexing and statically imported Stage 1 registry/host composition; bounded recorded keys and DB health; no evaluator, dynamic loader, product dispatch, HTTP executor or activation"
   }
 }

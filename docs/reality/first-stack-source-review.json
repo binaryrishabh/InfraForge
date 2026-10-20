@@ -1,7 +1,7 @@
 {
   "schema": "infraforge-first-stack-source-review/1",
   "baseline": "45396dc813a395a9dcadfc89a5cbe9e27efa2447374e177bf0db3cad503d2858",
-  "scope": "Internal sidecar save/review and recorded schedule resolution only; no execution or activation",
+  "scope": "Internal V1 review and V2 compiler/composition qualification only; pinned Stage 1 registry/host and historical runtime bytes preserved; no product dispatch, HTTP executor or activation",
   "files": [
     {
       "path": ".dockerignore",
@@ -13,11 +13,15 @@
     },
     {
       "path": "apps/backend/firstStack/authoring.ts",
-      "hash": "b313c8dec9cc93dc3e677e31b8099f2ab516f14832c484b81409f7b0c73c82e5"
+      "hash": "ff9791e8aa8a8812a956341ac4590ff9fb660a5fe9703a1b06eeb8c872ce8c9c"
     },
     {
       "path": "apps/backend/firstStack/canonical.ts",
       "hash": "49f240e1016d0540eb13f3908543c2016986a87eb0b0dce5669dfeab376fa2f4"
+    },
+    {
+      "path": "apps/backend/firstStack/execution.ts",
+      "hash": "57cbb565cf8d4004bddfa0c4b28c21e6ee13565927f7752db7020c3e0adec3b4"
     },
     {
       "path": "apps/backend/firstStack/importStream.ts",
@@ -29,15 +33,15 @@
     },
     {
       "path": "apps/backend/firstStack/routes.ts",
-      "hash": "c4c564e79be83c1109970036de39bc1974ade955e44615497a43bc7768f8dcb9"
+      "hash": "af90a383dc2cf8fa90872ff72d7ba8b95ddac2eafc910f3b0d0b65772cdb32f0"
     },
     {
       "path": "apps/backend/firstStack/service.ts",
-      "hash": "2c73f9473a46f1e0f27bc99835062e90d86b64b1e0f519747b926cb7efa1048e"
+      "hash": "db05f16c91fadffae162d86901ed7a57c7b8373e70ccbbeca0ff8fbb210ea771"
     },
     {
       "path": "apps/backend/firstStack/workload.ts",
-      "hash": "2d32b90d5017367e2f849c36a344dc0842a7b8841d64411af91f8286c8ce8649"
+      "hash": "5369d0c12fd99e8d2af105b4922cd8a45ce27f5cde6538c91c4562f5a4941755"
     },
     {
       "path": "apps/backend/internalModel2/routes.ts",
@@ -53,7 +57,23 @@
     },
     {
       "path": "packages/contracts/src/first-stack/index.ts",
-      "hash": "1ca85e7811b3077bacb57363d48988dbd51c01c83d705a94050e0cdb93ff4c2a"
+      "hash": "dd70829058a94856e14c189b44cd1d427ee73126dcf242fbaa6f2d79c7d0ed08"
+    },
+    {
+      "path": "packages/simulation/package.json",
+      "hash": "b852f11ad4a7f8b02c5695f3d32b424d307a207d450907482c7d2772f13611dd"
+    },
+    {
+      "path": "packages/simulation/src/firstStack/compiler.ts",
+      "hash": "f034b7fea6b68c5c3bf347d20e4178e7252b228b9280e1ae6985517ed1448080"
+    },
+    {
+      "path": "packages/simulation/src/firstStack/run.ts",
+      "hash": "dc0c09ebecb47df900cbc2574ca910ad8df894ac3ae84494b8dbea9ec4b7ec6f"
+    },
+    {
+      "path": "packages/simulation/src/internalFirstStack.ts",
+      "hash": "40ed5822095096fbaa3d5f351e9118ca55223ee637b86dc23dc80f4a944943e3"
     }
   ],
   "acceptance": [
@@ -76,6 +96,18 @@
     {
       "path": "scripts/tests/first-stack-child.test.ts",
       "hash": "ab66542a22e211ee5086173170ab9efe9797499ea86983772a650bb4f4550069"
+    },
+    {
+      "path": "scripts/tests/first-stack-compile.test.ts",
+      "hash": "083b47bc845a200e8bd76ece8a00829c9cfc0a19d4fb9cde99d90510c92cb0ca"
+    },
+    {
+      "path": "scripts/fixtures/first-stack-compile.ts",
+      "hash": "baf1cc0bf4872cac6ec342018c8692425ae5931de43d5425490950334cd062dd"
+    },
+    {
+      "path": "scripts/reality/first-stack-compile-proof.ts",
+      "hash": "279c44a0aaf086256a685e37e49a6c285780f8f33e1db984f127e4a7aa83f899"
     }
   ]
 }

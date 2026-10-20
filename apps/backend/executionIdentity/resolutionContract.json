@@ -832,7 +832,7 @@
       "owner": "@infraforge/contracts@workspace:packages/contracts:156",
       "file": "src/first-stack/index.ts",
       "key": "@infraforge/contracts/src/first-stack/index.ts",
-      "hash": "1ca85e7811b3077bacb57363d48988dbd51c01c83d705a94050e0cdb93ff4c2a"
+      "hash": "dd70829058a94856e14c189b44cd1d427ee73126dcf242fbaa6f2d79c7d0ed08"
     },
     {
       "owner": "@infraforge/contracts@workspace:packages/contracts:156",
@@ -1004,6 +1004,24 @@
     },
     {
       "owner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "file": "src/firstStack/compiler.ts",
+      "key": "@infraforge/simulation/src/firstStack/compiler.ts",
+      "hash": "f034b7fea6b68c5c3bf347d20e4178e7252b228b9280e1ae6985517ed1448080"
+    },
+    {
+      "owner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "file": "src/firstStack/run.ts",
+      "key": "@infraforge/simulation/src/firstStack/run.ts",
+      "hash": "dc0c09ebecb47df900cbc2574ca910ad8df894ac3ae84494b8dbea9ec4b7ec6f"
+    },
+    {
+      "owner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "file": "src/internalFirstStack.ts",
+      "key": "@infraforge/simulation/src/internalFirstStack.ts",
+      "hash": "40ed5822095096fbaa3d5f351e9118ca55223ee637b86dc23dc80f4a944943e3"
+    },
+    {
+      "owner": "@infraforge/simulation@workspace:packages/simulation:158",
       "file": "src/internalProduct.ts",
       "key": "@infraforge/simulation/src/internalProduct.ts",
       "hash": "6bc8af031681a43689fe984c3947a6f5484f2a4d3d2e8a436235da0896f6afa3"
@@ -1064,9 +1082,27 @@
     },
     {
       "owner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "file": "src/model2/composition/budgets.ts",
+      "key": "@infraforge/simulation/src/model2/composition/budgets.ts",
+      "hash": "65f93e3c87ec3693dc4e402acdcc3478115fdc93da31696d9355e1a9686992c2"
+    },
+    {
+      "owner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "file": "src/model2/composition/lifecycle.ts",
+      "key": "@infraforge/simulation/src/model2/composition/lifecycle.ts",
+      "hash": "33554d10000b6ffcd1bf17c3235bfe99cd0a995968978bd1cd8a1a426531fbd9"
+    },
+    {
+      "owner": "@infraforge/simulation@workspace:packages/simulation:158",
       "file": "src/model2/composition/registry.ts",
       "key": "@infraforge/simulation/src/model2/composition/registry.ts",
       "hash": "d43fb175574f9e146a92ae6acd0b1c2e6ee6de66d90cd0962b7794ff52f7f08f"
+    },
+    {
+      "owner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "file": "src/model2/composition/run.ts",
+      "key": "@infraforge/simulation/src/model2/composition/run.ts",
+      "hash": "60ff6580adae20b7ffbf3c7344a62ab49ca6f0d72bde3af1b3bb24a72350af3e"
     },
     {
       "owner": "@infraforge/simulation@workspace:packages/simulation:158",
@@ -12708,6 +12744,62 @@
     },
     {
       "owner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "file": "src/firstStack/compiler.ts",
+      "specifier": "../model2/data/validate",
+      "kind": "import-statement",
+      "targetOwner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "targetFile": "src/model2/data/validate.ts"
+    },
+    {
+      "owner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "file": "src/firstStack/compiler.ts",
+      "specifier": "../model2/time",
+      "kind": "import-statement",
+      "targetOwner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "targetFile": "src/model2/time.ts"
+    },
+    {
+      "owner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "file": "src/firstStack/run.ts",
+      "specifier": "../model2/composition/registry",
+      "kind": "import-statement",
+      "targetOwner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "targetFile": "src/model2/composition/registry.ts"
+    },
+    {
+      "owner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "file": "src/firstStack/run.ts",
+      "specifier": "../model2/composition/run",
+      "kind": "import-statement",
+      "targetOwner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "targetFile": "src/model2/composition/run.ts"
+    },
+    {
+      "owner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "file": "src/firstStack/run.ts",
+      "specifier": "./compiler",
+      "kind": "import-statement",
+      "targetOwner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "targetFile": "src/firstStack/compiler.ts"
+    },
+    {
+      "owner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "file": "src/internalFirstStack.ts",
+      "specifier": "./firstStack/compiler",
+      "kind": "import-statement",
+      "targetOwner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "targetFile": "src/firstStack/compiler.ts"
+    },
+    {
+      "owner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "file": "src/internalFirstStack.ts",
+      "specifier": "./firstStack/run",
+      "kind": "import-statement",
+      "targetOwner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "targetFile": "src/firstStack/run.ts"
+    },
+    {
+      "owner": "@infraforge/simulation@workspace:packages/simulation:158",
       "file": "src/internalProduct.ts",
       "specifier": "./model2/product/bounds",
       "kind": "import-statement",
@@ -12993,6 +13085,70 @@
       "kind": "import-statement",
       "targetOwner": "@infraforge/simulation@workspace:packages/simulation:158",
       "targetFile": "src/model2/async/policy.ts"
+    },
+    {
+      "owner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "file": "src/model2/composition/budgets.ts",
+      "specifier": "../../reality/quantity",
+      "kind": "import-statement",
+      "targetOwner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "targetFile": "src/reality/quantity.ts"
+    },
+    {
+      "owner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "file": "src/model2/composition/budgets.ts",
+      "specifier": "../compute/scheduler",
+      "kind": "import-statement",
+      "targetOwner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "targetFile": "src/model2/compute/scheduler.ts"
+    },
+    {
+      "owner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "file": "src/model2/composition/run.ts",
+      "specifier": "../../reality/quantity",
+      "kind": "import-statement",
+      "targetOwner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "targetFile": "src/reality/quantity.ts"
+    },
+    {
+      "owner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "file": "src/model2/composition/run.ts",
+      "specifier": "../data/run",
+      "kind": "import-statement",
+      "targetOwner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "targetFile": "src/model2/data/run.ts"
+    },
+    {
+      "owner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "file": "src/model2/composition/run.ts",
+      "specifier": "../data/validate",
+      "kind": "import-statement",
+      "targetOwner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "targetFile": "src/model2/data/validate.ts"
+    },
+    {
+      "owner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "file": "src/model2/composition/run.ts",
+      "specifier": "./budgets",
+      "kind": "import-statement",
+      "targetOwner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "targetFile": "src/model2/composition/budgets.ts"
+    },
+    {
+      "owner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "file": "src/model2/composition/run.ts",
+      "specifier": "./lifecycle",
+      "kind": "import-statement",
+      "targetOwner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "targetFile": "src/model2/composition/lifecycle.ts"
+    },
+    {
+      "owner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "file": "src/model2/composition/run.ts",
+      "specifier": "./registry",
+      "kind": "import-statement",
+      "targetOwner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "targetFile": "src/model2/composition/registry.ts"
     },
     {
       "owner": "@infraforge/simulation@workspace:packages/simulation:158",
@@ -43868,6 +44024,30 @@
     },
     {
       "owner": null,
+      "file": "apps/backend/firstStack/execution.ts",
+      "specifier": "@infraforge/contracts/first-stack",
+      "kind": "import-statement",
+      "targetOwner": "@infraforge/contracts@workspace:packages/contracts:156",
+      "targetFile": "src/first-stack/index.ts"
+    },
+    {
+      "owner": null,
+      "file": "apps/backend/firstStack/execution.ts",
+      "specifier": "@infraforge/simulation/internal-first-stack",
+      "kind": "import-statement",
+      "targetOwner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "targetFile": "src/internalFirstStack.ts"
+    },
+    {
+      "owner": null,
+      "file": "apps/backend/firstStack/execution.ts",
+      "specifier": "zod",
+      "kind": "import-statement",
+      "targetOwner": "zod@4.4.3:12",
+      "targetFile": "index.js"
+    },
+    {
+      "owner": null,
       "file": "apps/backend/firstStack/importStream.ts",
       "specifier": "@infraforge/contracts/first-stack",
       "kind": "import-statement",
@@ -43889,6 +44069,14 @@
       "kind": "import-statement",
       "targetOwner": "@infraforge/contracts@workspace:packages/contracts:156",
       "targetFile": "src/first-stack/index.ts"
+    },
+    {
+      "owner": null,
+      "file": "apps/backend/firstStack/routes.ts",
+      "specifier": "@infraforge/simulation/internal-first-stack",
+      "kind": "import-statement",
+      "targetOwner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "targetFile": "src/internalFirstStack.ts"
     },
     {
       "owner": null,

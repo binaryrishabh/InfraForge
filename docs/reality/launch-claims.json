@@ -2144,6 +2144,61 @@
           "anchor": "export const FIRST_STACK_PROFILE"
         }
       ]
+    },
+    {
+      "id": "FirstStackCompileStructureV2",
+      "fields": [
+        "FirstStackPoolPolicy.remoteCancellation",
+        "FirstStackPoolPolicy.reuse",
+        "FirstStackSidecarV2.balancer",
+        "FirstStackSidecarV2.balancer.healthKeys",
+        "FirstStackSidecarV2.balancer.initial",
+        "FirstStackSidecarV2.caller",
+        "FirstStackSidecarV2.caller.pool",
+        "FirstStackSidecarV2.compiler",
+        "FirstStackSidecarV2.links",
+        "FirstStackSidecarV2.links.from",
+        "FirstStackSidecarV2.links.to",
+        "FirstStackSidecarV2.nodes",
+        "FirstStackSidecarV2.nodes.alive",
+        "FirstStackSidecarV2.nodes.ready",
+        "FirstStackSidecarV2.paths",
+        "FirstStackSidecarV2.paths.pool",
+        "FirstStackSidecarV2.schema",
+        "FirstStackSidecarV2.workload",
+        "FirstStackSidecarV2.workload.executedScheduleHash",
+        "FirstStackSidecarV2.workload.parametersHash",
+        "FirstStackSidecarV2.workload.resolvedIdentity",
+        "FirstStackSidecarV2.workload.scheduleHash"
+      ],
+      "mechanism": "Separately versioned internal cache-free compiler and Stage 1 composition; explicit directed paths, serial pool policy, readiness and immutable recorded content bindings.",
+      "model1": "unsupported",
+      "model2": "supported-logical",
+      "scope": "Conditional logical qualification only: one LB, 1..8 apps, one keyed read-committed relational DB, no cache. Exact recorded keys and DB-backed health; public admission and activation remain unavailable. Logical LB has no physical CPU/memory owner; full memory and cost remain Unknown. V1 is never reinterpreted.",
+      "sources": [
+        { "file": "packages/simulation/src/firstStack/compiler.ts", "anchor": "export const COMPOSITION_REVISION" },
+        { "file": "packages/simulation/src/firstStack/run.ts", "anchor": "export function createFirstStackRuntime" },
+        { "file": "scripts/tests/first-stack-compile.test.ts", "anchor": "1/2/4/8 apps receive exact recorded work" }
+      ]
+    },
+    {
+      "id": "FirstStackCompileTimingV2",
+      "fields": [
+        "FirstStackPoolPolicy.acquireTimeoutUs",
+        "FirstStackPoolPolicy.connectTimeoutUs",
+        "FirstStackPoolPolicy.establishUs",
+        "FirstStackPoolPolicy.idleTimeoutUs",
+        "FirstStackPoolPolicy.responseTimeoutUs",
+        "FirstStackSidecarV2.balancer.healthTimeoutUs"
+      ],
+      "mechanism": "Explicit authored connection and health timing supplied to the unchanged Stage 1 transport and LB mechanisms.",
+      "model1": "unsupported",
+      "model2": "assumption-only",
+      "scope": "Authored conditional timings, never inferred defaults or a calibrated cloud predictor. Measured component input provenance does not calibrate the composed timing output.",
+      "sources": [
+        { "file": "packages/simulation/src/firstStack/compiler.ts", "anchor": "connectTimeout: q(" },
+        { "file": "packages/simulation/src/firstStack/run.ts", "anchor": "timing: \"assumption-only\"" }
+      ]
     }
   ]
 }

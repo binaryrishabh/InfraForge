@@ -1,6 +1,6 @@
 {
   "schema": "execution-loading-analysis/1",
-  "policy": "335f8a726f41f0feadb1ef19f6305146927f1d73d9bd8d0932aa2ad4e17dc819",
+  "policy": "88fb612f1046dbabe8721c8a9ad94b2ade64ad438664a9075369de10b952a982",
   "modules": {
     "apps/backend/actions/contract.ts": {
       "hash": "cb4d5860ab0805ccf009c47e453ed89c12e52e564c95e470a1cfbb23e18fb24d",
@@ -964,7 +964,7 @@
       ]
     },
     "apps/backend/firstStack/authoring.ts": {
-      "hash": "b313c8dec9cc93dc3e677e31b8099f2ab516f14832c484b81409f7b0c73c82e5",
+      "hash": "ff9791e8aa8a8812a956341ac4590ff9fb660a5fe9703a1b06eeb8c872ce8c9c",
       "requests": [
         {
           "path": "zod",
@@ -989,6 +989,39 @@
       "requests": [
         {
           "path": "node:crypto",
+          "kind": "import-statement"
+        }
+      ]
+    },
+    "apps/backend/firstStack/execution.ts": {
+      "hash": "57cbb565cf8d4004bddfa0c4b28c21e6ee13565927f7752db7020c3e0adec3b4",
+      "requests": [
+        {
+          "path": "zod",
+          "kind": "import-statement"
+        },
+        {
+          "path": "@infraforge/contracts/first-stack",
+          "kind": "import-statement"
+        },
+        {
+          "path": "@infraforge/simulation/internal-first-stack",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./authoring",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./canonical",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./workload",
+          "kind": "import-statement"
+        },
+        {
+          "path": "../capabilities/policy",
           "kind": "import-statement"
         }
       ]
@@ -1020,7 +1053,7 @@
       ]
     },
     "apps/backend/firstStack/routes.ts": {
-      "hash": "c4c564e79be83c1109970036de39bc1974ade955e44615497a43bc7768f8dcb9",
+      "hash": "af90a383dc2cf8fa90872ff72d7ba8b95ddac2eafc910f3b0d0b65772cdb32f0",
       "requests": [
         {
           "path": "express",
@@ -1053,11 +1086,15 @@
         {
           "path": "@infraforge/contracts/first-stack",
           "kind": "import-statement"
+        },
+        {
+          "path": "@infraforge/simulation/internal-first-stack",
+          "kind": "import-statement"
         }
       ]
     },
     "apps/backend/firstStack/service.ts": {
-      "hash": "2c73f9473a46f1e0f27bc99835062e90d86b64b1e0f519747b926cb7efa1048e",
+      "hash": "db05f16c91fadffae162d86901ed7a57c7b8373e70ccbbeca0ff8fbb210ea771",
       "requests": [
         {
           "path": "node:crypto",
@@ -1082,11 +1119,15 @@
         {
           "path": "@infraforge/contracts/first-stack",
           "kind": "import-statement"
+        },
+        {
+          "path": "./execution",
+          "kind": "import-statement"
         }
       ]
     },
     "apps/backend/firstStack/workload.ts": {
-      "hash": "2d32b90d5017367e2f849c36a344dc0842a7b8841d64411af91f8286c8ce8649",
+      "hash": "5369d0c12fd99e8d2af105b4922cd8a45ce27f5cde6538c91c4562f5a4941755",
       "requests": [
         {
           "path": "zod",
@@ -3287,7 +3328,7 @@
       ]
     },
     "packages/contracts/src/first-stack/index.ts": {
-      "hash": "1ca85e7811b3077bacb57363d48988dbd51c01c83d705a94050e0cdb93ff4c2a",
+      "hash": "dd70829058a94856e14c189b44cd1d427ee73126dcf242fbaa6f2d79c7d0ed08",
       "requests": []
     },
     "packages/contracts/src/infrastructure/Infrastructure.interface.ts": {
@@ -3715,6 +3756,49 @@
         },
         {
           "path": "@infraforge/domain/workload",
+          "kind": "import-statement"
+        }
+      ]
+    },
+    "packages/simulation/src/firstStack/compiler.ts": {
+      "hash": "f034b7fea6b68c5c3bf347d20e4178e7252b228b9280e1ae6985517ed1448080",
+      "requests": [
+        {
+          "path": "../model2/data/validate",
+          "kind": "import-statement"
+        },
+        {
+          "path": "../model2/time",
+          "kind": "import-statement"
+        }
+      ]
+    },
+    "packages/simulation/src/firstStack/run.ts": {
+      "hash": "dc0c09ebecb47df900cbc2574ca910ad8df894ac3ae84494b8dbea9ec4b7ec6f",
+      "requests": [
+        {
+          "path": "../model2/composition/run",
+          "kind": "import-statement"
+        },
+        {
+          "path": "../model2/composition/registry",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./compiler",
+          "kind": "import-statement"
+        }
+      ]
+    },
+    "packages/simulation/src/internalFirstStack.ts": {
+      "hash": "40ed5822095096fbaa3d5f351e9118ca55223ee637b86dc23dc80f4a944943e3",
+      "requests": [
+        {
+          "path": "./firstStack/compiler",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./firstStack/run",
           "kind": "import-statement"
         }
       ]

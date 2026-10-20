@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { digest, sourceHash } from "../../apps/backend/executionIdentity/hash";
 import { firstStackClaims, firstStackScopeExamples, firstStackFieldDisposition } from "../../packages/contracts/src/first-stack";
 import { exposedFields, readManifest } from "../reality/launch-contract";
+import { verifyFirstStackCompileProof } from "../reality/first-stack-compile-proof";
 
 test("first stack freezes the merged Stage 1 descriptor and eight historical fixtures", () => {
   const baseline = JSON.parse(readFileSync("docs/reality/first-stack-baseline.json", "utf8"));
@@ -27,7 +28,11 @@ test("first stack source review binds new behavior and its acceptance tests inde
   const baseline = JSON.parse(readFileSync("docs/reality/first-stack-baseline.json", "utf8"));
   expect(lock.schema).toBe("infraforge-first-stack-source-review/1");
   expect(lock.baseline).toBe(baseline.source);
-  expect(lock.files).toHaveLength(13);
-  expect(lock.acceptance).toHaveLength(5);
+  expect(lock.files).toHaveLength(18);
+  expect(lock.acceptance).toHaveLength(8);
   for (const { path, hash } of [...lock.files, ...lock.acceptance]) expect(sourceHash(readFileSync(path, "utf8"))).toBe(hash);
+});
+
+test("first stack V2 retained proof reproduces independently of its observers", async () => {
+  expect(await verifyFirstStackCompileProof()).toEqual({ cases: 4, unchangedHostAndPeerFiles: 88, observerEqual: true, repeatBytesEqual: true });
 });

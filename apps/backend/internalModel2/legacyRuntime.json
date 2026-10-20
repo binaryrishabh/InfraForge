@@ -1968,6 +1968,10 @@
       "hash": "c2d917f046db32db64acb48aa908ec1b7c7b94c8b2bd708c8b593f829880eabb"
     },
     {
+      "path": "scripts/reality/first-stack-compile-proof.ts",
+      "hash": "279c44a0aaf086256a685e37e49a6c285780f8f33e1db984f127e4a7aa83f899"
+    },
+    {
       "path": "scripts/reality/inventory.ts",
       "hash": "7008caaf8e3475f5bf77105978e1f8aa6fc4b0d0320a3b18611f436c1370d414"
     },
@@ -2140,8 +2144,12 @@
       "hash": "ab66542a22e211ee5086173170ab9efe9797499ea86983772a650bb4f4550069"
     },
     {
+      "path": "scripts/tests/first-stack-compile.test.ts",
+      "hash": "083b47bc845a200e8bd76ece8a00829c9cfc0a19d4fb9cde99d90510c92cb0ca"
+    },
+    {
       "path": "scripts/tests/first-stack-profile.test.ts",
-      "hash": "23fd8e2fffa4f7ad59f590be0c950bfa022f499b0eab6c1a99ef2c5ac42d7ece"
+      "hash": "dfcafbe7af9d76ebad3e7141781ad269684dff3662b4812aab5533b31dddbfb2"
     },
     {
       "path": "scripts/tests/fixtures/execution-launch-probe.ts",
