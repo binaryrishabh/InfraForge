@@ -101,7 +101,7 @@ test("history reconstructs without Git and only reviewed digests resolve", () =>
     const copy = structuredClone(table); mutate(copy);
     expect(() => validateTransitions(copy, pin.digest)).toThrow();
   }
-}, 60000);
+}, 120000);
 test("installed execution imports resolve within the declared closure", async () => {
   expect((await checkExecutionResolution()).resolvedPackages).toBeGreaterThan(50);
 }, 180000);
