@@ -15,7 +15,7 @@ const reviewed = new Set([
   "apps/backend/index.ts", "apps/backend/worker.ts", "apps/backend/ws-server.ts",
   "apps/backend/docker-compose.yml", "apps/backend/lib/prisma.ts",
   ...["redis", "queue", "pubsub", "deploymentSubscriptions"].map(name => `apps/backend/infra/${name}.ts`),
-  ...["connectionPolicy", "lifecycle", "socketLifecycle", "rateLimiter", "middleware"].map(name => `apps/backend/utils/${name}.ts`),
+  ...["connectionPolicy", "config", "lifecycle", "socketLifecycle", "rateLimiter", "middleware"].map(name => `apps/backend/utils/${name}.ts`),
 ]);
 const generated = new Set(["loading.ts", "capabilityReviews.json", "capabilityImportReviews.json", "analysisContract.json", "resolutionContract.json", "executionTransitions.json", "transitionPin.json"].map(name => folder + name));
 function scope() {

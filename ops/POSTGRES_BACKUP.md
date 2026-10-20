@@ -6,7 +6,9 @@ not install a schedule, contact a production host or provision storage.
 1. An operator chooses an encrypted backup filesystem and creates a directory
    owned by the backup account with mode 0700. Supply libpq connection settings
    through the operator's existing service/pgpass configuration, using a backup
-   role with read access to every application schema. Keep pgpass mode 0600;
+   role with read access to every application schema. Use a direct PostgreSQL
+   endpoint for the backup service; the pooled API endpoint is unsuitable.
+   Keep pgpass mode 0600;
    use certificate-verified TLS for a remote source. Do not put URLs/passwords in
    command arguments or log them. The scripts do not load environment files.
 2. Run `bash ops/bootstrap/postgres-backup.sh /absolute/private/backup-directory`.

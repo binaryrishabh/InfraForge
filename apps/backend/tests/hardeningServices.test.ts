@@ -3,7 +3,7 @@ import { Pool } from "pg";
 import Redis from "ioredis";
 import { Queue, Worker } from "bullmq";
 import { randomUUID } from "node:crypto";
-import { databasePoolPolicy, redisPolicy } from "../utils/connectionPolicy";
+import { databasePoolOptions, redisPolicy } from "../utils/connectionPolicy";
 import { WorkerOwnership } from "../infra/workerOwnership";
 import { isRetiredDeployment } from "../utils/deploymentJobPolicy";
 
@@ -11,7 +11,7 @@ import { isRetiredDeployment } from "../utils/deploymentJobPolicy";
 // URL or port is accepted from the caller.
 const fixture = test.skipIf(process.env.HARDENING_SERVICES !== "owned-local");
 const databaseUrl = "postgresql://postgres@hardening-postgres:5432/infraforge_hardening";
-const pool = () => new Pool({ ...databasePoolPolicy, connectionString: databaseUrl });
+const pool = () => new Pool({ ...databasePoolOptions("direct"), connectionString: databaseUrl });
 async function until(check: () => Promise<boolean>) {
   const deadline = Date.now() + 5000;
   while (Date.now() < deadline) { if (await check()) return; await Bun.sleep(25); }

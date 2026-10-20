@@ -2,10 +2,10 @@ import { PrismaClient } from "./generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { Pool } from "pg";
 import { config } from "../utils/config"
-import { databaseAdapterPolicy, databasePoolPolicy, operationalWarning } from "../utils/connectionPolicy";
+import { databaseAdapterPolicy, databasePoolOptions, operationalWarning } from "../utils/connectionPolicy";
 
 const pool = new Pool({
-    ...databasePoolPolicy,
+    ...databasePoolOptions(config.WORKER_DATABASE_MODE),
     connectionString: config.DATABASE_URL
 })
 pool.on("error", operationalWarning("Database idle connection failed; pool will replace it."));

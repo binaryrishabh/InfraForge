@@ -1,9 +1,9 @@
 import { expect, test } from "bun:test";
 import net from "node:net";
 import Redis from "ioredis";
-import { Pool } from "pg";
+import { Client, Pool } from "pg";
 import { PrismaPg } from "@prisma/adapter-pg";
-import { databaseAdapterPolicy, databasePoolPolicy, outboxRetryDelay, redisPolicy } from "../utils/connectionPolicy";
+import { databaseAdapterPolicy, databasePoolOptions, databasePoolPolicy, outboxRetryDelay, redisPolicy } from "../utils/connectionPolicy";
 
 async function blackhole() {
   const sockets = new Set<net.Socket>();
@@ -29,6 +29,37 @@ test("PostgreSQL handshake stalls expire and the pool releases waiting requests"
     expect(result.every(item => item.status === "rejected")).toBe(true);
     expect(pool.waitingCount).toBe(0);
   } finally { await pool.end(); await endpoint.close(); }
+});
+
+test("API connections remain compatible with a pooler that rejects server timeout startup parameters", async () => {
+  const server = net.createServer(socket => {
+    socket.on("error", () => {});
+    socket.once("data", packet => {
+      if (packet.includes(Buffer.from("statement_timeout"))) {
+        const body = Buffer.from("SFATAL\0C08P01\0Munsupported startup parameter\0\0");
+        const header = Buffer.alloc(5); header[0] = 69; header.writeInt32BE(body.length + 4, 1);
+        socket.end(Buffer.concat([header, body]));
+      } else {
+        // AuthenticationOk + ReadyForQuery: the fixture accepts no SQL.
+        socket.write(Buffer.from([82, 0, 0, 0, 8, 0, 0, 0, 0, 90, 0, 0, 0, 5, 73]));
+      }
+      socket.on("data", () => socket.end());
+    });
+  });
+  await new Promise<void>(resolve => server.listen(0, "127.0.0.1", resolve));
+  const connection = { host: "127.0.0.1", port: (server.address() as net.AddressInfo).port,
+    user: "fixture", database: "fixture", password: "fixture", ssl: false, connectionTimeoutMillis: 1000 };
+  const api = new Client({ ...databasePoolOptions(), ...connection });
+  const worker = new Client({ ...databasePoolOptions("direct"), ...connection });
+  try {
+    let accepted = false;
+    await api.connect().then(() => { accepted = true; });
+    expect(accepted).toBe(true);
+    await expect(worker.connect()).rejects.toThrow("unsupported startup parameter");
+  } finally {
+    await Promise.allSettled([api.end(), worker.end()]);
+    await new Promise<void>(resolve => server.close(() => resolve()));
+  }
 });
 
 // Bun 1.3.14 on Windows crashes in native socket teardown for this fault.

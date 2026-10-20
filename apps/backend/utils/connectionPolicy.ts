@@ -1,17 +1,24 @@
 import type { PoolConfig } from "pg";
 import type { RedisOptions } from "ioredis";
 
-// Server cancellation precedes the client deadline so a timed-out statement
-// cannot keep running after the request has failed.
+// API/WS may use transaction pooling, which rejects arbitrary startup GUCs.
+// Always bound the client pool; only verified worker sessions send server GUCs.
 export const databasePoolPolicy: PoolConfig = {
   max: 10,
   connectionTimeoutMillis: 5000,
   idleTimeoutMillis: 30000,
-  statement_timeout: 15000,
   query_timeout: 20000,
-  idle_in_transaction_session_timeout: 30000,
   keepAlive: true,
 };
+export function databasePoolOptions(workerMode?: string): PoolConfig {
+  return {
+    ...databasePoolPolicy,
+    ...(workerMode === "direct" || workerMode === "session" ? {
+      statement_timeout: 15000,
+      idle_in_transaction_session_timeout: 30000,
+    } : {}),
+  };
+}
 export const databaseAdapterPolicy = { disposeExternalPool: true };
 
 export function redisPolicy(consumer = false): RedisOptions {
