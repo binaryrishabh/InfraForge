@@ -1200,7 +1200,7 @@
     },
     {
       "path": "bun.lock",
-      "hash": "71c05de0302998913bf22461502c80812d90d317dc51f908f17623e873013855"
+      "hash": "59ae36f2e3aa129cd80e0f3da1642ac2bd368393e93115cefa05ab06ecbbc7ee"
     },
     {
       "path": "docs/reality/m2i-ec2-source.json",
@@ -2183,6 +2183,10 @@
       "hash": "c48b3fb7ca4638910ca90d38e0665731dfcbfef304e86f80d324017644b4910b"
     },
     {
+      "path": "scripts/tests/backup-alerts.test.ts",
+      "hash": "953691c5828b6eec298af3a28c9aae07827816f8dfc5853fb64e1b5e183a3d26"
+    },
+    {
       "path": "scripts/tests/boundaries.test.ts",
       "hash": "0471096a0c3b199a240c5dae8c2b2989d9811c9c65d579e166169d5ca64d52a6"
     },
@@ -2220,7 +2224,7 @@
     },
     {
       "path": "scripts/tests/execution-identity.test.ts",
-      "hash": "a6fbf98a1ff73df9a5bc7267bafdd804ba79dcc5a97ca227f31585d8c678f955"
+      "hash": "2724e0e11cb0e66570af24c8be55698d8bd1cb6a50c2db2d3d3118e8b65d771a"
     },
     {
       "path": "scripts/tests/first-stack-bounds.test.ts",
