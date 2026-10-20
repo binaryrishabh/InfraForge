@@ -213,6 +213,20 @@ jobs:
           docker compose --env-file /dev/null -f apps/backend/docker-compose.yml config --format json > /tmp/compose.json
           bun --no-env-file scripts/release/entrypoints.ts /tmp/compose.json infraforge-packaging
       - run: bun --no-env-file --no-install scripts/release/rehearse.ts infraforge-packaging
+      - run: bun --no-env-file run db:generate
+        working-directory: apps/backend
+      - run: bun --no-env-file node_modules/typescript/bin/tsc --noEmit -p scripts/first-stack-host/tsconfig.json
+      # Serial kernel/packaging proof only. A CI pass cannot qualify an owner's host.
+      - run: |
+          image=$(docker image inspect infraforge-packaging --format '{{.Id}}')
+          bun --no-env-file --no-install scripts/first-stack-host/qualify.ts --endpoint=unix:///var/run/docker.sock --image="$image" --target=ci-linux --output=/tmp/infraforge-first-stack-host --containment-only
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: first-stack-containment
+          path: /tmp/infraforge-first-stack-host/
+          if-no-files-found: error
+          retention-days: 90
       - uses: actions/upload-artifact@v4
         if: always()
         with:

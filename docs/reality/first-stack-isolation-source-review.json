@@ -1,0 +1,59 @@
+{
+  "schema": "first-stack-isolation-source-review/1",
+  "baseline": "f2dff02faaf46f65fa441e722fc5391ea8ae3d77",
+  "scope": "New isolated execute/replay service boundary; Model 1 active, Model 2 inactive; unchanged IO/fault mechanisms",
+  "files": [
+    {
+      "path": "apps/backend/firstStack/boundedExecution.ts",
+      "hash": "9699fc959bca20eb76c802668980b659325b59118e270295d0a4a8b2b8baf2a9"
+    },
+    {
+      "path": "apps/backend/firstStack/executionCut.ts",
+      "hash": "6325b8351608de84bad72a7719ab907b5b13819ee5e758579a488b62a171d3bf"
+    },
+    {
+      "path": "apps/backend/firstStack/isolationPolicy.ts",
+      "hash": "a669a671371efe3dfc46ad935edb86bbba90b5a48ace195cd7d23bfff791e800"
+    },
+    {
+      "path": "apps/backend/firstStack/isolationProtocol.ts",
+      "hash": "565fcf3c9c9b500ba4f9395f4deb2f947f07d1e4e4bf2c344462beb90ef6fad5"
+    },
+    {
+      "path": "apps/backend/firstStack/isolationConnection.ts",
+      "hash": "13c2a168cc178a4ad53080716564545add86f9e95e081884f414d3b51d6b774c"
+    },
+    {
+      "path": "apps/backend/firstStack/isolationContainer.ts",
+      "hash": "a2e8b55da78a5d3de761b91daacf20273a98400044bdd21ca1aa4d576bd88113"
+    },
+    {
+      "path": "apps/backend/firstStack/isolationRunner.ts",
+      "hash": "07556b53e3f1b2d8e69f6df64d24c0792ba54c8d41e212c18587496f94c0cc7f"
+    },
+    {
+      "path": "apps/backend/firstStack/isolationChild.ts",
+      "hash": "2d096d039f394a76b3989a72d8a5211c23495a46f6551a301258b5407c78d752"
+    },
+    {
+      "path": "apps/backend/firstStack/isolationReplay.ts",
+      "hash": "138b3d8c1a3333d60d42a2f50dfb6c2054b83e6318433fc2824edc90dd2a63d7"
+    },
+    {
+      "path": "apps/backend/firstStack/isolatedExecution.ts",
+      "hash": "23cb85be6b480e4e00fec4604a1ccb155e1f43908207c5913f86c405b1f93512"
+    },
+    {
+      "path": "apps/backend/firstStack/isolationOwnership.ts",
+      "hash": "032fae30c68140dbe44ae7fcdf78ca4218a50281e1d292375395c215d0a28b4f"
+    },
+    {
+      "path": "apps/backend/executionIdentity/descriptor.ts",
+      "hash": "7cb2d8d505cd905abefb712038a9bb4e6242dfe5b35a50a06268b0e4f475f5a9"
+    },
+    {
+      "path": "apps/backend/executionIdentity/launch.ts",
+      "hash": "231e750310e895f391314042abe50b37170f1b4b2d800d1a32b1a697defa8537"
+    }
+  ]
+}

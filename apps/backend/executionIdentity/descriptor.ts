@@ -136,5 +136,6 @@ export function executionDescriptor(tree = diskTree(), runtime = `bun-${Bun.vers
   return { schema: "execution-source/2", runtime, resources, files: [...files].sort().map(path => [path, sourceHash(tree.read(path))]),
     workspaces, dependencies, settings: { install, packageManager: root.packageManager, launch: launchContract }, imports: imports.sort((a, b) => `${a.file}:${a.specifier}`.localeCompare(`${b.file}:${b.specifier}`)) };
 }
-export const executionHosts = ["apps/backend/worker.ts", "apps/backend/index.ts", "apps/backend/ws-server.ts", "apps/backend/internalModel2/sandboxChild.ts"];
+export const executionHosts = ["apps/backend/worker.ts", "apps/backend/index.ts", "apps/backend/ws-server.ts", "apps/backend/internalModel2/sandboxChild.ts",
+  "apps/backend/firstStack/isolationChild.ts", "apps/backend/firstStack/isolatedExecution.ts", "apps/backend/firstStack/isolationConnection.ts", "apps/backend/firstStack/isolationOwnership.ts"];
 export type ExecutionDescriptor = ReturnType<typeof executionDescriptor>;
