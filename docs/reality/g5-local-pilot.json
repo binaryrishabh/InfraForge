@@ -1,0 +1,2147 @@
+{
+  "schema": "infraforge-g5-summary/1",
+  "scope": "local-semantic-pilot-only",
+  "timingPromotion": false,
+  "timing": "assumption-only",
+  "model2Active": false,
+  "poolerSupported": false,
+  "campaign": {
+    "schema": "infraforge-g5-campaign/1",
+    "manifest": {
+      "schema": "infraforge-g5-campaign/1",
+      "scope": "free-local-semantic-pilot-only",
+      "timingPromotion": false,
+      "profile": "postgresql-keyed/1",
+      "limits": {
+        "postgres": {
+          "cpus": 1.5,
+          "memoryMiB": 2048
+        },
+        "probe": {
+          "cpus": 0.5,
+          "memoryMiB": 768
+        }
+      },
+      "maxConnections": 8,
+      "superuserReservedConnections": 2,
+      "reservedConnections": 1,
+      "appRoleCeiling": 5,
+      "repeats": 3,
+      "pooler": {
+        "mode": "transaction",
+        "poolSize": 1,
+        "supported": false
+      },
+      "hardStopSeconds": 180,
+      "unknown": [
+        "managed-role entitlement",
+        "per-query CPU",
+        "physical durability",
+        "physical disk latency",
+        "cloud timing",
+        "full resident memory"
+      ]
+    },
+    "startedAt": "2026-10-20T05:24:59.016Z",
+    "failures": [],
+    "phases": [
+      {
+        "mode": "baseline",
+        "startedAt": "2026-10-20T05:25:06.629Z",
+        "limits": {
+          "cpu": "500000000",
+          "memory": "805306368"
+        },
+        "exit": 0,
+        "endedAt": "2026-10-20T05:25:09.837Z"
+      },
+      {
+        "mode": "pooler",
+        "startedAt": "2026-10-20T05:25:11.521Z",
+        "limits": {
+          "cpu": "500000000",
+          "memory": "805306368"
+        },
+        "exit": 0,
+        "endedAt": "2026-10-20T05:25:12.686Z"
+      },
+      {
+        "mode": "smart",
+        "startedAt": "2026-10-20T05:25:13.207Z",
+        "limits": {
+          "cpu": "500000000",
+          "memory": "805306368"
+        },
+        "signalAt": "2026-10-20T05:25:14.564Z",
+        "signal": "server shutting down",
+        "runningAfterSignal": "true",
+        "exit": 0,
+        "endedAt": "2026-10-20T05:25:19.330Z"
+      },
+      {
+        "mode": "fast",
+        "startedAt": "2026-10-20T05:25:20.782Z",
+        "limits": {
+          "cpu": "500000000",
+          "memory": "805306368"
+        },
+        "signalAt": "2026-10-20T05:25:22.043Z",
+        "signal": "server shutting down",
+        "exit": 0,
+        "endedAt": "2026-10-20T05:25:22.508Z"
+      }
+    ],
+    "sourceHashes": {
+      "g5-run.ts": "4707ae6798d72ae3dfb467486c6c83ce27a92d289580f4fa87c03b2ec9f8cb70",
+      "g5-probe.ts": "e4cf5242cbb56cc0459332c4e850cff2b13000b7b1fc46b371b1f9ea25b53c6e",
+      "g5-manifest.json": "41267e17175f24c9677939075a9b742cdcc473d1ddd3375603b410ab28870d30",
+      "telemetry.ts": "64fe885f44abc08fc4dc4119a8f82d34bf4f50a298ede0ce55ea4225a80f3b6c",
+      "manifest.json": "11a9cccc0c489eff66b71701e0d879d44d69dc3eb83df84d7abcb0f2d30f09c5"
+    },
+    "images": {
+      "runtime": "sha256:e10577f0db68676a7024391c6e5cb4b879ebd17188ab750cf10024a6d700e5c4",
+      "postgres": "sha256:77f585114c32fbca283dc835b0596f4e52b51b4c6662d7810b2f4084f60a1873"
+    },
+    "poolerPackage": "(1/2) Installing libevent (2.1.13-r0)\n(2/2) Installing pgbouncer (1.25.2-r0)\n  Executing pgbouncer-1.25.2-r0.pre-install\nExecuting busybox-1.37.0-r31.trigger\nOK: 230.4 MiB in 55 packages",
+    "poolerVersion": "PgBouncer 1.25.2\nlibevent 2.1.13-stable\nadns: c-ares 1.34.6\ntls: OpenSSL 3.5.8 25 Aug 2026",
+    "postgresVersion": "postgres (PostgreSQL) 18.6",
+    "postgresLimits": {
+      "cpu": "1500000000",
+      "memory": "2147483648"
+    },
+    "storage": "Filesystem           Type       1K-blocks      Used Available Use% Mounted on\n/dev/sdd             ext4       1055762868  24342304 977717092   2% /etc/hostname\n150000 100000\n2147483648",
+    "setup": "CREATE ROLE\nCREATE TABLE\nINSERT 0 1\nCREATE TABLE\nGRANT\nGRANT",
+    "afterSmart": "id | value \n----+-------\n  1 |     4\n(1 row)",
+    "afterFast": "id | value \n----+-------\n  1 |     4\n(1 row)",
+    "endedAt": "2026-10-20T05:25:25.922Z"
+  },
+  "artifacts": [
+    {
+      "name": "archive.json",
+      "bytes": 1337,
+      "sha256": "131b5286eb11c29645dbc013b31f004ba9f7cc2a2ffa7b9b13e7ea45774f30cf"
+    },
+    {
+      "name": "baseline-container.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "baseline.jsonl.gz",
+      "bytes": 5718,
+      "sha256": "95cd453550780f2a53828278c2eeb9350ad81d84f3d1466c7906c654f2cd5398"
+    },
+    {
+      "name": "campaign.json",
+      "bytes": 3631,
+      "sha256": "03f9b62e47686fd248d8e65ff640693c2fcd510e52166428c951c71747483425"
+    },
+    {
+      "name": "fast-container.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "fast.jsonl.gz",
+      "bytes": 3381,
+      "sha256": "161c97e0b54cd412d1b318e3df51ebda85613042684764c8e5ce539dbfab8ef6"
+    },
+    {
+      "name": "fast.ready",
+      "bytes": 6,
+      "sha256": "ed1a545bb85e55816bbf9566b028b2a0bc456b88f49f6f266c0401048824194b"
+    },
+    {
+      "name": "pg-container.log",
+      "bytes": 11602,
+      "sha256": "0add2d54574e424376eb7436a608d94895cacc97f0dec96e69e7820902576a4d"
+    },
+    {
+      "name": "pooler-container.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "pooler.jsonl.gz",
+      "bytes": 3520,
+      "sha256": "b650d1a07e5a027a169ab3e2cc7941ad628c5c8a3b80580080341fb53f0c50b0"
+    },
+    {
+      "name": "smart-container.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "smart.jsonl.gz",
+      "bytes": 3364,
+      "sha256": "b1b089d25cc212052691fe8148ff6acada84471359175f96f3f448a057add0c9"
+    },
+    {
+      "name": "smart.ready",
+      "bytes": 6,
+      "sha256": "ed1a545bb85e55816bbf9566b028b2a0bc456b88f49f6f266c0401048824194b"
+    }
+  ],
+  "observations": {
+    "baseline": {
+      "environment": {
+        "bun": "1.3.14",
+        "kernel": "6.18.54.1-microsoft-standard-WSL2",
+        "cpu": "AMD Ryzen 7 5700U with Radeon Graphics",
+        "cpuMax": "50000 100000\n",
+        "memoryMax": "805306368\n",
+        "clock": "performance.now monotonic microseconds; process-local origins; never subtract across processes"
+      },
+      "events": [
+        {
+          "atUs": 224094.194,
+          "id": "settings",
+          "text": "SELECT name,setting,unit FROM pg_settings WHERE name IN ('server_version','max_connections','reserved_connections','superuser_reserved_connections','statement_timeout','lock_timeout','transaction_timeout','fsync','synchronous_commit') ORDER BY name",
+          "startUs": 203906.987,
+          "outcome": "completed",
+          "rows": [
+            {
+              "name": "fsync",
+              "setting": "on",
+              "unit": null
+            },
+            {
+              "name": "lock_timeout",
+              "setting": "0",
+              "unit": "ms"
+            },
+            {
+              "name": "max_connections",
+              "setting": "8",
+              "unit": null
+            },
+            {
+              "name": "reserved_connections",
+              "setting": "1",
+              "unit": null
+            },
+            {
+              "name": "server_version",
+              "setting": "18.6",
+              "unit": null
+            },
+            {
+              "name": "statement_timeout",
+              "setting": "0",
+              "unit": "ms"
+            },
+            {
+              "name": "superuser_reserved_connections",
+              "setting": "2",
+              "unit": null
+            },
+            {
+              "name": "synchronous_commit",
+              "setting": "on",
+              "unit": null
+            },
+            {
+              "name": "transaction_timeout",
+              "setting": "0",
+              "unit": "ms"
+            }
+          ]
+        },
+        {
+          "atUs": 236466.48500000002,
+          "id": "idle-0",
+          "text": "SELECT pg_backend_pid() AS pid",
+          "startUs": 225769.328,
+          "outcome": "completed",
+          "rows": [
+            {
+              "pid": 155
+            }
+          ]
+        },
+        {
+          "atUs": 245291.955,
+          "id": "idle-1",
+          "text": "SELECT pg_backend_pid() AS pid",
+          "startUs": 236721.255,
+          "outcome": "completed",
+          "rows": [
+            {
+              "pid": 156
+            }
+          ]
+        },
+        {
+          "atUs": 254629.83,
+          "id": "idle-2",
+          "text": "SELECT pg_backend_pid() AS pid",
+          "startUs": 245624.921,
+          "outcome": "completed",
+          "rows": [
+            {
+              "pid": 157
+            }
+          ]
+        },
+        {
+          "atUs": 263520.49,
+          "id": "idle-3",
+          "text": "SELECT pg_backend_pid() AS pid",
+          "startUs": 254971.734,
+          "outcome": "completed",
+          "rows": [
+            {
+              "pid": 158
+            }
+          ]
+        },
+        {
+          "atUs": 271963.053,
+          "id": "idle-4",
+          "text": "SELECT pg_backend_pid() AS pid",
+          "startUs": 263756.372,
+          "outcome": "completed",
+          "rows": [
+            {
+              "pid": 159
+            }
+          ]
+        },
+        {
+          "atUs": 278863.39800000004,
+          "id": "idle-5",
+          "text": "SELECT pg_backend_pid() AS pid",
+          "startUs": 272257.072,
+          "outcome": "error",
+          "code": "53300",
+          "message": "remaining connection slots are reserved for roles with privileges of the \"pg_use_reserved_connections\" role"
+        },
+        {
+          "atUs": 284598.315,
+          "id": "idle-6",
+          "text": "SELECT pg_backend_pid() AS pid",
+          "startUs": 279111.054,
+          "outcome": "error",
+          "code": "53300",
+          "message": "remaining connection slots are reserved for roles with privileges of the \"pg_use_reserved_connections\" role"
+        },
+        {
+          "atUs": 308098.641,
+          "id": "reserved-monitor",
+          "text": "SELECT usename,state,count(*)::int FROM pg_stat_activity WHERE datname='pilot' GROUP BY usename,state ORDER BY usename,state",
+          "startUs": 284850.52,
+          "outcome": "completed",
+          "rows": [
+            {
+              "usename": "pilot_app",
+              "state": "idle",
+              "count": 5
+            },
+            {
+              "usename": "postgres",
+              "state": "active",
+              "count": 1
+            }
+          ]
+        },
+        {
+          "atUs": 315784.67100000003,
+          "id": "slot-replacement",
+          "text": "SELECT 1 AS value",
+          "startUs": 308789.545,
+          "outcome": "completed",
+          "rows": [
+            {
+              "value": 1
+            }
+          ]
+        },
+        {
+          "atUs": 325234.62899999996,
+          "id": "statement-set-0",
+          "text": "SET statement_timeout='80ms'",
+          "startUs": 317270.275,
+          "outcome": "completed",
+          "rows": []
+        },
+        {
+          "atUs": 406857.87299999996,
+          "id": "statement-timeout-0",
+          "text": "SELECT pg_sleep(0.3)",
+          "startUs": 325323.247,
+          "outcome": "error",
+          "code": "57014",
+          "message": "canceling statement due to statement timeout"
+        },
+        {
+          "atUs": 408616.79,
+          "id": "post-statement-session-0",
+          "text": "SELECT 1 AS value",
+          "startUs": 406956,
+          "outcome": "completed",
+          "rows": [
+            {
+              "value": 1
+            }
+          ]
+        },
+        {
+          "atUs": 416936.918,
+          "id": "transaction-set-0",
+          "text": "SET transaction_timeout='80ms'",
+          "startUs": 409008.314,
+          "outcome": "completed",
+          "rows": []
+        },
+        {
+          "atUs": 498600.38800000004,
+          "id": "transaction-timeout-0",
+          "text": "SELECT pg_sleep(0.3)",
+          "startUs": 417047.149,
+          "outcome": "error",
+          "code": "25P04",
+          "message": "terminating connection due to transaction timeout"
+        },
+        {
+          "atUs": 506555.835,
+          "id": "begin-0",
+          "text": "BEGIN",
+          "startUs": 499229.207,
+          "outcome": "completed",
+          "rows": []
+        },
+        {
+          "atUs": 510921.536,
+          "id": "lock-holder-0",
+          "text": "UPDATE pilot_keys SET value=value+1 WHERE id=1",
+          "startUs": 506669.533,
+          "outcome": "completed",
+          "rows": []
+        },
+        {
+          "atUs": 518711.913,
+          "id": "lock-set-0",
+          "text": "SET lock_timeout='80ms'",
+          "startUs": 511031.406,
+          "outcome": "completed",
+          "rows": []
+        },
+        {
+          "atUs": 603412.314,
+          "id": "lock-timeout-0",
+          "text": "UPDATE pilot_keys SET value=value+1 WHERE id=1",
+          "startUs": 518880.36,
+          "outcome": "error",
+          "code": "55P03",
+          "message": "canceling statement due to lock timeout"
+        },
+        {
+          "atUs": 607947.554,
+          "id": "lock-released-0",
+          "text": "UPDATE pilot_keys SET value=value+1 WHERE id=1 RETURNING value",
+          "startUs": 603961.323,
+          "outcome": "completed",
+          "rows": [
+            {
+              "value": 1
+            }
+          ]
+        },
+        {
+          "atUs": 685639.552,
+          "id": "cancel-ack-0",
+          "text": "SELECT pg_cancel_backend(168) AS acknowledged",
+          "startUs": 677401.8200000001,
+          "outcome": "completed",
+          "rows": [
+            {
+              "acknowledged": true
+            }
+          ]
+        },
+        {
+          "atUs": 685986.718,
+          "id": "cancel-query-0",
+          "text": "SELECT pg_sleep(0.3)",
+          "startUs": 615879.3339999999,
+          "outcome": "error",
+          "code": "57014",
+          "message": "canceling statement due to user request"
+        },
+        {
+          "atUs": 686918.543,
+          "id": "post-cancel-session-0",
+          "text": "SELECT 1 AS value",
+          "startUs": 686199.093,
+          "outcome": "completed",
+          "rows": [
+            {
+              "value": 1
+            }
+          ]
+        },
+        {
+          "atUs": 718487.468,
+          "id": "caller-deadline-0",
+          "outcome": "deadline-exceeded",
+          "remoteCancellation": "detach",
+          "transactionId": 0
+        },
+        {
+          "atUs": 849433.4380000001,
+          "id": "remote-write-0",
+          "text": "INSERT INTO pilot_commits SELECT 0, 1 FROM pg_sleep(0.15) RETURNING id",
+          "startUs": 687402.823,
+          "outcome": "completed",
+          "rows": [
+            {
+              "id": 0
+            }
+          ]
+        },
+        {
+          "atUs": 853003.265,
+          "id": "reconcile-0",
+          "text": "SELECT id,value FROM pilot_commits WHERE id=0",
+          "startUs": 849572.406,
+          "outcome": "completed",
+          "rows": [
+            {
+              "id": 0,
+              "value": 1
+            }
+          ]
+        },
+        {
+          "atUs": 860136.4160000001,
+          "id": "statement-set-1",
+          "text": "SET statement_timeout='80ms'",
+          "startUs": 853609.4990000001,
+          "outcome": "completed",
+          "rows": []
+        },
+        {
+          "atUs": 941458.6440000001,
+          "id": "statement-timeout-1",
+          "text": "SELECT pg_sleep(0.3)",
+          "startUs": 860224.603,
+          "outcome": "error",
+          "code": "57014",
+          "message": "canceling statement due to statement timeout"
+        },
+        {
+          "atUs": 942837.424,
+          "id": "post-statement-session-1",
+          "text": "SELECT 1 AS value",
+          "startUs": 941586.47,
+          "outcome": "completed",
+          "rows": [
+            {
+              "value": 1
+            }
+          ]
+        },
+        {
+          "atUs": 949497.959,
+          "id": "transaction-set-1",
+          "text": "SET transaction_timeout='80ms'",
+          "startUs": 943296.3119999999,
+          "outcome": "completed",
+          "rows": []
+        },
+        {
+          "atUs": 1030685.0589999999,
+          "id": "transaction-timeout-1",
+          "text": "SELECT pg_sleep(0.3)",
+          "startUs": 949603.019,
+          "outcome": "error",
+          "code": "25P04",
+          "message": "terminating connection due to transaction timeout"
+        },
+        {
+          "atUs": 1038053.3190000001,
+          "id": "begin-1",
+          "text": "BEGIN",
+          "startUs": 1031305.511,
+          "outcome": "completed",
+          "rows": []
+        },
+        {
+          "atUs": 1041507.1640000001,
+          "id": "lock-holder-1",
+          "text": "UPDATE pilot_keys SET value=value+1 WHERE id=1",
+          "startUs": 1038142.7590000001,
+          "outcome": "completed",
+          "rows": []
+        },
+        {
+          "atUs": 1050080.2289999998,
+          "id": "lock-set-1",
+          "text": "SET lock_timeout='80ms'",
+          "startUs": 1041633.908,
+          "outcome": "completed",
+          "rows": []
+        },
+        {
+          "atUs": 1134414.716,
+          "id": "lock-timeout-1",
+          "text": "UPDATE pilot_keys SET value=value+1 WHERE id=1",
+          "startUs": 1050270.239,
+          "outcome": "error",
+          "code": "55P03",
+          "message": "canceling statement due to lock timeout"
+        },
+        {
+          "atUs": 1138519.534,
+          "id": "lock-released-1",
+          "text": "UPDATE pilot_keys SET value=value+1 WHERE id=1 RETURNING value",
+          "startUs": 1134896.621,
+          "outcome": "completed",
+          "rows": [
+            {
+              "value": 2
+            }
+          ]
+        },
+        {
+          "atUs": 1209379.484,
+          "id": "cancel-ack-1",
+          "text": "SELECT pg_cancel_backend(175) AS acknowledged",
+          "startUs": 1208077.797,
+          "outcome": "completed",
+          "rows": [
+            {
+              "acknowledged": true
+            }
+          ]
+        },
+        {
+          "atUs": 1209689.6549999998,
+          "id": "cancel-query-1",
+          "text": "SELECT pg_sleep(0.3)",
+          "startUs": 1147364.703,
+          "outcome": "error",
+          "code": "57014",
+          "message": "canceling statement due to user request"
+        },
+        {
+          "atUs": 1210606.921,
+          "id": "post-cancel-session-1",
+          "text": "SELECT 1 AS value",
+          "startUs": 1209738.623,
+          "outcome": "completed",
+          "rows": [
+            {
+              "value": 1
+            }
+          ]
+        },
+        {
+          "atUs": 1242357.7789999999,
+          "id": "caller-deadline-1",
+          "outcome": "deadline-exceeded",
+          "remoteCancellation": "detach",
+          "transactionId": 1
+        },
+        {
+          "atUs": 1374302.338,
+          "id": "remote-write-1",
+          "text": "INSERT INTO pilot_commits SELECT 1, 1 FROM pg_sleep(0.15) RETURNING id",
+          "startUs": 1211037.183,
+          "outcome": "completed",
+          "rows": [
+            {
+              "id": 1
+            }
+          ]
+        },
+        {
+          "atUs": 1375300.802,
+          "id": "reconcile-1",
+          "text": "SELECT id,value FROM pilot_commits WHERE id=1",
+          "startUs": 1374399.0320000001,
+          "outcome": "completed",
+          "rows": [
+            {
+              "id": 1,
+              "value": 1
+            }
+          ]
+        },
+        {
+          "atUs": 1383804.382,
+          "id": "statement-set-2",
+          "text": "SET statement_timeout='80ms'",
+          "startUs": 1375990.904,
+          "outcome": "completed",
+          "rows": []
+        },
+        {
+          "atUs": 1465187.631,
+          "id": "statement-timeout-2",
+          "text": "SELECT pg_sleep(0.3)",
+          "startUs": 1383909.322,
+          "outcome": "error",
+          "code": "57014",
+          "message": "canceling statement due to statement timeout"
+        },
+        {
+          "atUs": 1466448.741,
+          "id": "post-statement-session-2",
+          "text": "SELECT 1 AS value",
+          "startUs": 1465304.676,
+          "outcome": "completed",
+          "rows": [
+            {
+              "value": 1
+            }
+          ]
+        },
+        {
+          "atUs": 1474247.261,
+          "id": "transaction-set-2",
+          "text": "SET transaction_timeout='80ms'",
+          "startUs": 1466951.117,
+          "outcome": "completed",
+          "rows": []
+        },
+        {
+          "atUs": 1555586.646,
+          "id": "transaction-timeout-2",
+          "text": "SELECT pg_sleep(0.3)",
+          "startUs": 1474356.43,
+          "outcome": "error",
+          "code": "25P04",
+          "message": "terminating connection due to transaction timeout"
+        },
+        {
+          "atUs": 1563702.4710000001,
+          "id": "begin-2",
+          "text": "BEGIN",
+          "startUs": 1556292.209,
+          "outcome": "completed",
+          "rows": []
+        },
+        {
+          "atUs": 1566934.812,
+          "id": "lock-holder-2",
+          "text": "UPDATE pilot_keys SET value=value+1 WHERE id=1",
+          "startUs": 1563807.1600000001,
+          "outcome": "completed",
+          "rows": []
+        },
+        {
+          "atUs": 1575121.132,
+          "id": "lock-set-2",
+          "text": "SET lock_timeout='80ms'",
+          "startUs": 1567023.85,
+          "outcome": "completed",
+          "rows": []
+        },
+        {
+          "atUs": 1658941.851,
+          "id": "lock-timeout-2",
+          "text": "UPDATE pilot_keys SET value=value+1 WHERE id=1",
+          "startUs": 1575208.818,
+          "outcome": "error",
+          "code": "55P03",
+          "message": "canceling statement due to lock timeout"
+        },
+        {
+          "atUs": 1670743.539,
+          "id": "lock-released-2",
+          "text": "UPDATE pilot_keys SET value=value+1 WHERE id=1 RETURNING value",
+          "startUs": 1659616.923,
+          "outcome": "completed",
+          "rows": [
+            {
+              "value": 3
+            }
+          ]
+        },
+        {
+          "atUs": 1740902.6260000002,
+          "id": "cancel-ack-2",
+          "text": "SELECT pg_cancel_backend(181) AS acknowledged",
+          "startUs": 1739868.676,
+          "outcome": "completed",
+          "rows": [
+            {
+              "acknowledged": true
+            }
+          ]
+        },
+        {
+          "atUs": 1741291.434,
+          "id": "cancel-query-2",
+          "text": "SELECT pg_sleep(0.3)",
+          "startUs": 1679304.429,
+          "outcome": "error",
+          "code": "57014",
+          "message": "canceling statement due to user request"
+        },
+        {
+          "atUs": 1741912.9989999998,
+          "id": "post-cancel-session-2",
+          "text": "SELECT 1 AS value",
+          "startUs": 1741334.831,
+          "outcome": "completed",
+          "rows": [
+            {
+              "value": 1
+            }
+          ]
+        },
+        {
+          "atUs": 1773779.87,
+          "id": "caller-deadline-2",
+          "outcome": "deadline-exceeded",
+          "remoteCancellation": "detach",
+          "transactionId": 2
+        },
+        {
+          "atUs": 1911963.25,
+          "id": "remote-write-2",
+          "text": "INSERT INTO pilot_commits SELECT 2, 1 FROM pg_sleep(0.15) RETURNING id",
+          "startUs": 1742347.118,
+          "outcome": "completed",
+          "rows": [
+            {
+              "id": 2
+            }
+          ]
+        },
+        {
+          "atUs": 1913201.669,
+          "id": "reconcile-2",
+          "text": "SELECT id,value FROM pilot_commits WHERE id=2",
+          "startUs": 1912081.867,
+          "outcome": "completed",
+          "rows": [
+            {
+              "id": 2,
+              "value": 1
+            }
+          ]
+        },
+        {
+          "atUs": 1924297.885,
+          "id": "sync-standby-set",
+          "text": "ALTER SYSTEM SET synchronous_standby_names='*'",
+          "startUs": 1913636.5,
+          "outcome": "completed",
+          "rows": []
+        },
+        {
+          "atUs": 1925372.406,
+          "id": "sync-standby-reload",
+          "text": "SELECT pg_reload_conf()",
+          "startUs": 1924381.953,
+          "outcome": "completed",
+          "rows": [
+            {
+              "pg_reload_conf": true
+            }
+          ]
+        },
+        {
+          "atUs": 2034361.556,
+          "id": "sync-commit-set",
+          "text": "SET synchronous_commit=on",
+          "startUs": 2026439.044,
+          "outcome": "completed",
+          "rows": []
+        },
+        {
+          "atUs": 2044414.864,
+          "id": "commit-wait-observed",
+          "waiting": true
+        },
+        {
+          "atUs": 2045192.25,
+          "id": "commit-cancel-ack",
+          "text": "SELECT pg_cancel_backend(183) AS acknowledged",
+          "startUs": 2044499.413,
+          "outcome": "completed",
+          "rows": [
+            {
+              "acknowledged": true
+            }
+          ]
+        },
+        {
+          "atUs": 2045546.73,
+          "id": "commit-cancel-write",
+          "text": "INSERT INTO pilot_commits VALUES(99,1) RETURNING id",
+          "startUs": 2035828.262,
+          "outcome": "completed",
+          "rows": [
+            {
+              "id": 99
+            }
+          ]
+        },
+        {
+          "atUs": 2046755.9510000001,
+          "id": "commit-cancel-reconcile",
+          "text": "SELECT id,value FROM pilot_commits WHERE id=99",
+          "startUs": 2045893.153,
+          "outcome": "completed",
+          "rows": [
+            {
+              "id": 99,
+              "value": 1
+            }
+          ]
+        }
+      ],
+      "complete": true
+    },
+    "pooler": {
+      "environment": {
+        "bun": "1.3.14",
+        "kernel": "6.18.54.1-microsoft-standard-WSL2",
+        "cpu": "AMD Ryzen 7 5700U with Radeon Graphics",
+        "cpuMax": "50000 100000\n",
+        "memoryMax": "805306368\n",
+        "clock": "performance.now monotonic microseconds; process-local origins; never subtract across processes"
+      },
+      "events": [
+        {
+          "atUs": 107689.292,
+          "id": "pool-begin",
+          "text": "BEGIN",
+          "startUs": 89949.019,
+          "outcome": "completed",
+          "rows": []
+        },
+        {
+          "atUs": 109842.399,
+          "id": "pool-owner",
+          "text": "SELECT pg_backend_pid() AS pid",
+          "startUs": 107926.216,
+          "outcome": "completed",
+          "rows": [
+            {
+              "pid": 216
+            }
+          ]
+        },
+        {
+          "atUs": 249152.30500000002,
+          "id": "pool-activity",
+          "text": "SELECT usename,state,count(*)::int FROM pg_stat_activity WHERE datname='pilot' GROUP BY usename,state ORDER BY usename,state",
+          "startUs": 230546.312,
+          "outcome": "completed",
+          "rows": [
+            {
+              "usename": "pilot_app",
+              "state": "idle in transaction",
+              "count": 1
+            },
+            {
+              "usename": "postgres",
+              "state": "active",
+              "count": 1
+            }
+          ]
+        },
+        {
+          "atUs": 250201.81600000002,
+          "id": "pool-commit",
+          "text": "COMMIT",
+          "startUs": 249281.604,
+          "outcome": "completed",
+          "rows": []
+        },
+        {
+          "atUs": 250767.248,
+          "id": "pool-waiter",
+          "text": "SELECT pg_backend_pid() AS pid",
+          "startUs": 109933.011,
+          "outcome": "completed",
+          "rows": [
+            {
+              "pid": 216
+            }
+          ]
+        },
+        {
+          "atUs": 250817.20799999998,
+          "id": "pool-reused-backend",
+          "sameBackend": true,
+          "supported": false
+        }
+      ],
+      "complete": true
+    },
+    "smart": {
+      "environment": {
+        "bun": "1.3.14",
+        "kernel": "6.18.54.1-microsoft-standard-WSL2",
+        "cpu": "AMD Ryzen 7 5700U with Radeon Graphics",
+        "cpuMax": "50000 100000\n",
+        "memoryMax": "805306368\n",
+        "clock": "performance.now monotonic microseconds; process-local origins; never subtract across processes"
+      },
+      "events": [
+        {
+          "atUs": 138835.535,
+          "id": "shutdown-begin",
+          "text": "BEGIN",
+          "startUs": 125597.622,
+          "outcome": "completed",
+          "rows": []
+        },
+        {
+          "atUs": 142660.04200000002,
+          "id": "shutdown-write",
+          "text": "UPDATE pilot_keys SET value=value+1 WHERE id=1",
+          "startUs": 138937.62,
+          "outcome": "completed",
+          "rows": []
+        },
+        {
+          "atUs": 5150088.394,
+          "id": "shutdown-query",
+          "text": "SELECT pg_sleep(5)",
+          "startUs": 142761.205,
+          "outcome": "completed",
+          "rows": [
+            {
+              "pg_sleep": ""
+            }
+          ]
+        },
+        {
+          "atUs": 5160172.818,
+          "id": "shutdown-commit",
+          "text": "COMMIT",
+          "startUs": 5150317.744,
+          "outcome": "completed",
+          "rows": []
+        }
+      ],
+      "complete": true
+    },
+    "fast": {
+      "environment": {
+        "bun": "1.3.14",
+        "kernel": "6.18.54.1-microsoft-standard-WSL2",
+        "cpu": "AMD Ryzen 7 5700U with Radeon Graphics",
+        "cpuMax": "50000 100000\n",
+        "memoryMax": "805306368\n",
+        "clock": "performance.now monotonic microseconds; process-local origins; never subtract across processes"
+      },
+      "events": [
+        {
+          "atUs": 138891.71,
+          "id": "shutdown-begin",
+          "text": "BEGIN",
+          "startUs": 80244.473,
+          "outcome": "completed",
+          "rows": []
+        },
+        {
+          "atUs": 144847.571,
+          "id": "shutdown-write",
+          "text": "UPDATE pilot_keys SET value=value+1 WHERE id=1",
+          "startUs": 139052.06100000002,
+          "outcome": "completed",
+          "rows": []
+        },
+        {
+          "atUs": 792457.6960000001,
+          "id": "shutdown-query",
+          "text": "SELECT pg_sleep(5)",
+          "startUs": 145071.77899999998,
+          "outcome": "error",
+          "code": "57P01",
+          "message": "terminating connection due to administrator command"
+        }
+      ],
+      "complete": true
+    }
+  },
+  "priorAttempts": [
+    {
+      "campaign": {
+        "schema": "infraforge-g5-campaign/1",
+        "manifest": {
+          "schema": "infraforge-g5-campaign/1",
+          "scope": "free-local-semantic-pilot-only",
+          "timingPromotion": false,
+          "profile": "postgresql-keyed/1",
+          "limits": {
+            "postgres": {
+              "cpus": 1.5,
+              "memoryMiB": 2048
+            },
+            "probe": {
+              "cpus": 0.5,
+              "memoryMiB": 768
+            }
+          },
+          "maxConnections": 8,
+          "superuserReservedConnections": 2,
+          "reservedConnections": 1,
+          "appRoleCeiling": 5,
+          "repeats": 3,
+          "pooler": {
+            "mode": "transaction",
+            "poolSize": 1,
+            "supported": false
+          },
+          "hardStopSeconds": 180,
+          "unknown": [
+            "managed-role entitlement",
+            "per-query CPU",
+            "physical durability",
+            "physical disk latency",
+            "cloud timing",
+            "full resident memory"
+          ]
+        },
+        "startedAt": "2026-10-20T02:25:22.120Z",
+        "failures": [],
+        "phases": [
+          {
+            "mode": "baseline",
+            "startedAt": "2026-10-20T02:25:29.905Z",
+            "limits": {
+              "cpu": "500000000",
+              "memory": "805306368"
+            },
+            "exit": 0,
+            "endedAt": "2026-10-20T02:25:33.233Z"
+          },
+          {
+            "mode": "pooler",
+            "startedAt": "2026-10-20T02:25:34.905Z",
+            "limits": {
+              "cpu": "500000000",
+              "memory": "805306368"
+            },
+            "exit": 0,
+            "endedAt": "2026-10-20T02:25:36.112Z"
+          },
+          {
+            "mode": "smart",
+            "startedAt": "2026-10-20T02:25:36.680Z",
+            "limits": {
+              "cpu": "500000000",
+              "memory": "805306368"
+            },
+            "signalAt": "2026-10-20T02:25:37.882Z",
+            "signal": "server shutting down",
+            "runningAfterSignal": "true",
+            "exit": 0,
+            "endedAt": "2026-10-20T02:25:38.477Z"
+          },
+          {
+            "mode": "fast",
+            "startedAt": "2026-10-20T02:25:39.871Z",
+            "limits": {
+              "cpu": "500000000",
+              "memory": "805306368"
+            },
+            "signalAt": "2026-10-20T02:25:41.146Z",
+            "signal": "server shutting down",
+            "exit": 0,
+            "endedAt": "2026-10-20T02:25:41.604Z"
+          }
+        ],
+        "sourceHashes": {
+          "g5-run.ts": "15f144fcf5146d14bc52cc888d27aa2a0c5369112b2334f735178b9db040a630",
+          "g5-probe.ts": "17ed4a1378a871b2ae453022211a9eee745fd34c73b80aa716cf5226b1b8a5ea",
+          "g5-manifest.json": "41267e17175f24c9677939075a9b742cdcc473d1ddd3375603b410ab28870d30",
+          "telemetry.ts": "64fe885f44abc08fc4dc4119a8f82d34bf4f50a298ede0ce55ea4225a80f3b6c",
+          "manifest.json": "11a9cccc0c489eff66b71701e0d879d44d69dc3eb83df84d7abcb0f2d30f09c5"
+        },
+        "images": {
+          "runtime": "sha256:e10577f0db68676a7024391c6e5cb4b879ebd17188ab750cf10024a6d700e5c4",
+          "postgres": "sha256:77f585114c32fbca283dc835b0596f4e52b51b4c6662d7810b2f4084f60a1873"
+        },
+        "poolerPackage": "(1/2) Installing libevent (2.1.13-r0)\n(2/2) Installing pgbouncer (1.25.2-r0)\n  Executing pgbouncer-1.25.2-r0.pre-install\nExecuting busybox-1.37.0-r31.trigger\nOK: 230.4 MiB in 55 packages",
+        "poolerVersion": "PgBouncer 1.25.2\nlibevent 2.1.13-stable\nadns: c-ares 1.34.6\ntls: OpenSSL 3.5.8 25 Aug 2026",
+        "postgresVersion": "postgres (PostgreSQL) 18.6",
+        "postgresLimits": {
+          "cpu": "1500000000",
+          "memory": "2147483648"
+        },
+        "storage": "Filesystem           Type       1K-blocks      Used Available Use% Mounted on\n/dev/sdd             ext4       1055762868  24342304 977717092   2% /etc/hostname\n150000 100000\n2147483648",
+        "setup": "CREATE ROLE\nCREATE TABLE\nINSERT 0 1\nCREATE TABLE\nGRANT\nGRANT",
+        "afterSmart": "id | value \n----+-------\n  1 |     4\n(1 row)",
+        "afterFast": "id | value \n----+-------\n  1 |     4\n(1 row)",
+        "endedAt": "2026-10-20T02:25:44.915Z"
+      },
+      "artifacts": [
+        {
+          "name": "archive.json",
+          "bytes": 1337,
+          "sha256": "dcc4e8dc94cfb31eccf0f33b85fec70850a1fb239d3b3416e03d6fe5d8e8b2b7"
+        },
+        {
+          "name": "baseline-container.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "name": "baseline.jsonl.gz",
+          "bytes": 5739,
+          "sha256": "a290f1b7f5200cb9b407cd2326c290c8fa976657d543396342c8cd36ee01a028"
+        },
+        {
+          "name": "campaign.json",
+          "bytes": 3631,
+          "sha256": "56895fef9ff72839bc3e05a5b9698e5c54c03e66b56f6420336117c9af2c52a7"
+        },
+        {
+          "name": "fast-container.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "name": "fast.jsonl.gz",
+          "bytes": 3327,
+          "sha256": "11fc8ea562bd8e71045709272543b35b768ef5f829ffb655cebc704ff151e3d1"
+        },
+        {
+          "name": "fast.ready",
+          "bytes": 6,
+          "sha256": "ed1a545bb85e55816bbf9566b028b2a0bc456b88f49f6f266c0401048824194b"
+        },
+        {
+          "name": "pg-container.log",
+          "bytes": 11392,
+          "sha256": "e5e296e27b43d8c303e1249c7c613397c41ba678703d30ee060f92634491ba95"
+        },
+        {
+          "name": "pooler-container.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "name": "pooler.jsonl.gz",
+          "bytes": 3508,
+          "sha256": "b5a5647252a45a58a052e6a00e72cf78e1d68b2bbaf38414d09520136da3dea0"
+        },
+        {
+          "name": "smart-container.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "name": "smart.jsonl.gz",
+          "bytes": 3362,
+          "sha256": "66406e89bb4e8505bb45a47bcccb9bac6def905b8e0d7a5677c36e5e0964b54c"
+        },
+        {
+          "name": "smart.ready",
+          "bytes": 6,
+          "sha256": "ed1a545bb85e55816bbf9566b028b2a0bc456b88f49f6f266c0401048824194b"
+        }
+      ],
+      "observations": {
+        "baseline": {
+          "environment": {
+            "bun": "1.3.14",
+            "kernel": "6.18.54.1-microsoft-standard-WSL2",
+            "cpu": "AMD Ryzen 7 5700U with Radeon Graphics",
+            "cpuMax": "50000 100000\n",
+            "memoryMax": "805306368\n",
+            "clock": "performance.now monotonic microseconds; process-local origins; never subtract across processes"
+          },
+          "events": [
+            {
+              "atUs": 231251.745,
+              "id": "settings",
+              "text": "SELECT name,setting,unit FROM pg_settings WHERE name IN ('server_version','max_connections','reserved_connections','superuser_reserved_connections','statement_timeout','lock_timeout','transaction_timeout','fsync','synchronous_commit') ORDER BY name",
+              "startUs": 210140.57299999997,
+              "outcome": "completed",
+              "rows": [
+                {
+                  "name": "fsync",
+                  "setting": "on",
+                  "unit": null
+                },
+                {
+                  "name": "lock_timeout",
+                  "setting": "0",
+                  "unit": "ms"
+                },
+                {
+                  "name": "max_connections",
+                  "setting": "8",
+                  "unit": null
+                },
+                {
+                  "name": "reserved_connections",
+                  "setting": "1",
+                  "unit": null
+                },
+                {
+                  "name": "server_version",
+                  "setting": "18.6",
+                  "unit": null
+                },
+                {
+                  "name": "statement_timeout",
+                  "setting": "0",
+                  "unit": "ms"
+                },
+                {
+                  "name": "superuser_reserved_connections",
+                  "setting": "2",
+                  "unit": null
+                },
+                {
+                  "name": "synchronous_commit",
+                  "setting": "on",
+                  "unit": null
+                },
+                {
+                  "name": "transaction_timeout",
+                  "setting": "0",
+                  "unit": "ms"
+                }
+              ]
+            },
+            {
+              "atUs": 240099.038,
+              "id": "idle-0",
+              "text": "SELECT pg_backend_pid() AS pid",
+              "startUs": 231531.384,
+              "outcome": "completed",
+              "rows": [
+                {
+                  "pid": 147
+                }
+              ]
+            },
+            {
+              "atUs": 251168.552,
+              "id": "idle-1",
+              "text": "SELECT pg_backend_pid() AS pid",
+              "startUs": 240343.928,
+              "outcome": "completed",
+              "rows": [
+                {
+                  "pid": 148
+                }
+              ]
+            },
+            {
+              "atUs": 259140.631,
+              "id": "idle-2",
+              "text": "SELECT pg_backend_pid() AS pid",
+              "startUs": 251491.24699999997,
+              "outcome": "completed",
+              "rows": [
+                {
+                  "pid": 149
+                }
+              ]
+            },
+            {
+              "atUs": 267707.596,
+              "id": "idle-3",
+              "text": "SELECT pg_backend_pid() AS pid",
+              "startUs": 259358.37600000002,
+              "outcome": "completed",
+              "rows": [
+                {
+                  "pid": 150
+                }
+              ]
+            },
+            {
+              "atUs": 273894.709,
+              "id": "idle-4",
+              "text": "SELECT pg_backend_pid() AS pid",
+              "startUs": 267932.576,
+              "outcome": "error",
+              "code": "53300",
+              "message": "remaining connection slots are reserved for roles with privileges of the \"pg_use_reserved_connections\" role"
+            },
+            {
+              "atUs": 280277.47699999996,
+              "id": "idle-5",
+              "text": "SELECT pg_backend_pid() AS pid",
+              "startUs": 274263.76800000004,
+              "outcome": "error",
+              "code": "53300",
+              "message": "remaining connection slots are reserved for roles with privileges of the \"pg_use_reserved_connections\" role"
+            },
+            {
+              "atUs": 285656.68299999996,
+              "id": "idle-6",
+              "text": "SELECT pg_backend_pid() AS pid",
+              "startUs": 280485.032,
+              "outcome": "error",
+              "code": "53300",
+              "message": "remaining connection slots are reserved for roles with privileges of the \"pg_use_reserved_connections\" role"
+            },
+            {
+              "atUs": 297120.831,
+              "id": "reserved-monitor",
+              "text": "SELECT usename,state,count(*)::int FROM pg_stat_activity WHERE datname='pilot' GROUP BY usename,state ORDER BY usename,state",
+              "startUs": 285755.02,
+              "outcome": "completed",
+              "rows": [
+                {
+                  "usename": "pilot_app",
+                  "state": "idle",
+                  "count": 4
+                },
+                {
+                  "usename": "postgres",
+                  "state": "active",
+                  "count": 1
+                }
+              ]
+            },
+            {
+              "atUs": 309360.551,
+              "id": "slot-replacement",
+              "text": "SELECT 1 AS value",
+              "startUs": 298910,
+              "outcome": "completed",
+              "rows": [
+                {
+                  "value": 1
+                }
+              ]
+            },
+            {
+              "atUs": 320027.274,
+              "id": "statement-set-0",
+              "text": "SET statement_timeout='80ms'",
+              "startUs": 310877.53500000003,
+              "outcome": "completed",
+              "rows": []
+            },
+            {
+              "atUs": 401644.249,
+              "id": "statement-timeout-0",
+              "text": "SELECT pg_sleep(0.3)",
+              "startUs": 320256.402,
+              "outcome": "error",
+              "code": "57014",
+              "message": "canceling statement due to statement timeout"
+            },
+            {
+              "atUs": 402936.548,
+              "id": "post-statement-session-0",
+              "text": "SELECT 1 AS value",
+              "startUs": 401758.42699999997,
+              "outcome": "completed",
+              "rows": [
+                {
+                  "value": 1
+                }
+              ]
+            },
+            {
+              "atUs": 414067.405,
+              "id": "transaction-set-0",
+              "text": "SET transaction_timeout='80ms'",
+              "startUs": 403363.783,
+              "outcome": "completed",
+              "rows": []
+            },
+            {
+              "atUs": 495499.956,
+              "id": "transaction-timeout-0",
+              "text": "SELECT pg_sleep(0.3)",
+              "startUs": 414189.188,
+              "outcome": "error",
+              "code": "25P04",
+              "message": "terminating connection due to transaction timeout"
+            },
+            {
+              "atUs": 502825.471,
+              "id": "begin-0",
+              "text": "BEGIN",
+              "startUs": 496064.805,
+              "outcome": "completed",
+              "rows": []
+            },
+            {
+              "atUs": 506679.82,
+              "id": "lock-holder-0",
+              "text": "UPDATE pilot_keys SET value=value+1 WHERE id=1",
+              "startUs": 502914.53,
+              "outcome": "completed",
+              "rows": []
+            },
+            {
+              "atUs": 514757.024,
+              "id": "lock-set-0",
+              "text": "SET lock_timeout='80ms'",
+              "startUs": 506781.51300000004,
+              "outcome": "completed",
+              "rows": []
+            },
+            {
+              "atUs": 599075.9920000001,
+              "id": "lock-timeout-0",
+              "text": "UPDATE pilot_keys SET value=value+1 WHERE id=1",
+              "startUs": 514855.26100000006,
+              "outcome": "error",
+              "code": "55P03",
+              "message": "canceling statement due to lock timeout"
+            },
+            {
+              "atUs": 603158.177,
+              "id": "lock-released-0",
+              "text": "UPDATE pilot_keys SET value=value+1 WHERE id=1 RETURNING value",
+              "startUs": 599541.754,
+              "outcome": "completed",
+              "rows": [
+                {
+                  "value": 1
+                }
+              ]
+            },
+            {
+              "atUs": 674892.296,
+              "id": "cancel-ack-0",
+              "text": "SELECT pg_cancel_backend(159) AS acknowledged",
+              "startUs": 673404.35,
+              "outcome": "completed",
+              "rows": [
+                {
+                  "acknowledged": true
+                }
+              ]
+            },
+            {
+              "atUs": 675337.486,
+              "id": "cancel-query-0",
+              "text": "SELECT pg_sleep(0.3)",
+              "startUs": 611906.334,
+              "outcome": "error",
+              "code": "57014",
+              "message": "canceling statement due to user request"
+            },
+            {
+              "atUs": 676354.2390000001,
+              "id": "post-cancel-session-0",
+              "text": "SELECT 1 AS value",
+              "startUs": 675410.1510000001,
+              "outcome": "completed",
+              "rows": [
+                {
+                  "value": 1
+                }
+              ]
+            },
+            {
+              "atUs": 708343.798,
+              "id": "caller-deadline-0",
+              "outcome": "deadline-exceeded",
+              "remoteCancellation": "detach",
+              "transactionId": 0
+            },
+            {
+              "atUs": 846748.659,
+              "id": "remote-write-0",
+              "text": "INSERT INTO pilot_commits SELECT 0, 1 FROM pg_sleep(0.15) RETURNING id",
+              "startUs": 676859.54,
+              "outcome": "completed",
+              "rows": [
+                {
+                  "id": 0
+                }
+              ]
+            },
+            {
+              "atUs": 849150.6429999999,
+              "id": "reconcile-0",
+              "text": "SELECT id,value FROM pilot_commits WHERE id=0",
+              "startUs": 846879.17,
+              "outcome": "completed",
+              "rows": [
+                {
+                  "id": 0,
+                  "value": 1
+                }
+              ]
+            },
+            {
+              "atUs": 856459.901,
+              "id": "statement-set-1",
+              "text": "SET statement_timeout='80ms'",
+              "startUs": 849636.154,
+              "outcome": "completed",
+              "rows": []
+            },
+            {
+              "atUs": 937866.344,
+              "id": "statement-timeout-1",
+              "text": "SELECT pg_sleep(0.3)",
+              "startUs": 856575.552,
+              "outcome": "error",
+              "code": "57014",
+              "message": "canceling statement due to statement timeout"
+            },
+            {
+              "atUs": 939106.895,
+              "id": "post-statement-session-1",
+              "text": "SELECT 1 AS value",
+              "startUs": 937975.052,
+              "outcome": "completed",
+              "rows": [
+                {
+                  "value": 1
+                }
+              ]
+            },
+            {
+              "atUs": 947419.9210000001,
+              "id": "transaction-set-1",
+              "text": "SET transaction_timeout='80ms'",
+              "startUs": 939617.0059999999,
+              "outcome": "completed",
+              "rows": []
+            },
+            {
+              "atUs": 1028609.24,
+              "id": "transaction-timeout-1",
+              "text": "SELECT pg_sleep(0.3)",
+              "startUs": 947512.286,
+              "outcome": "error",
+              "code": "25P04",
+              "message": "terminating connection due to transaction timeout"
+            },
+            {
+              "atUs": 1036194.892,
+              "id": "begin-1",
+              "text": "BEGIN",
+              "startUs": 1029341.4849999999,
+              "outcome": "completed",
+              "rows": []
+            },
+            {
+              "atUs": 1040323.8799999999,
+              "id": "lock-holder-1",
+              "text": "UPDATE pilot_keys SET value=value+1 WHERE id=1",
+              "startUs": 1036294.872,
+              "outcome": "completed",
+              "rows": []
+            },
+            {
+              "atUs": 1048162.086,
+              "id": "lock-set-1",
+              "text": "SET lock_timeout='80ms'",
+              "startUs": 1040413.9299999999,
+              "outcome": "completed",
+              "rows": []
+            },
+            {
+              "atUs": 1132163.86,
+              "id": "lock-timeout-1",
+              "text": "UPDATE pilot_keys SET value=value+1 WHERE id=1",
+              "startUs": 1048317.1560000001,
+              "outcome": "error",
+              "code": "55P03",
+              "message": "canceling statement due to lock timeout"
+            },
+            {
+              "atUs": 1142524.882,
+              "id": "lock-released-1",
+              "text": "UPDATE pilot_keys SET value=value+1 WHERE id=1 RETURNING value",
+              "startUs": 1132639.912,
+              "outcome": "completed",
+              "rows": [
+                {
+                  "value": 2
+                }
+              ]
+            },
+            {
+              "atUs": 1213683.62,
+              "id": "cancel-ack-1",
+              "text": "SELECT pg_cancel_backend(165) AS acknowledged",
+              "startUs": 1212559.241,
+              "outcome": "completed",
+              "rows": [
+                {
+                  "acknowledged": true
+                }
+              ]
+            },
+            {
+              "atUs": 1213963.2389999998,
+              "id": "cancel-query-1",
+              "text": "SELECT pg_sleep(0.3)",
+              "startUs": 1151978.96,
+              "outcome": "error",
+              "code": "57014",
+              "message": "canceling statement due to user request"
+            },
+            {
+              "atUs": 1214965.794,
+              "id": "post-cancel-session-1",
+              "text": "SELECT 1 AS value",
+              "startUs": 1214012.909,
+              "outcome": "completed",
+              "rows": [
+                {
+                  "value": 1
+                }
+              ]
+            },
+            {
+              "atUs": 1245945.373,
+              "id": "caller-deadline-1",
+              "outcome": "deadline-exceeded",
+              "remoteCancellation": "detach",
+              "transactionId": 1
+            },
+            {
+              "atUs": 1384596.266,
+              "id": "remote-write-1",
+              "text": "INSERT INTO pilot_commits SELECT 1, 1 FROM pg_sleep(0.15) RETURNING id",
+              "startUs": 1215391.235,
+              "outcome": "completed",
+              "rows": [
+                {
+                  "id": 1
+                }
+              ]
+            },
+            {
+              "atUs": 1386173.5,
+              "id": "reconcile-1",
+              "text": "SELECT id,value FROM pilot_commits WHERE id=1",
+              "startUs": 1384766.336,
+              "outcome": "completed",
+              "rows": [
+                {
+                  "id": 1,
+                  "value": 1
+                }
+              ]
+            },
+            {
+              "atUs": 1395234.372,
+              "id": "statement-set-2",
+              "text": "SET statement_timeout='80ms'",
+              "startUs": 1386799.3120000002,
+              "outcome": "completed",
+              "rows": []
+            },
+            {
+              "atUs": 1476565.6039999998,
+              "id": "statement-timeout-2",
+              "text": "SELECT pg_sleep(0.3)",
+              "startUs": 1395341.496,
+              "outcome": "error",
+              "code": "57014",
+              "message": "canceling statement due to statement timeout"
+            },
+            {
+              "atUs": 1477974.7729999998,
+              "id": "post-statement-session-2",
+              "text": "SELECT 1 AS value",
+              "startUs": 1476689.1909999999,
+              "outcome": "completed",
+              "rows": [
+                {
+                  "value": 1
+                }
+              ]
+            },
+            {
+              "atUs": 1487411.6979999999,
+              "id": "transaction-set-2",
+              "text": "SET transaction_timeout='80ms'",
+              "startUs": 1478837.8290000001,
+              "outcome": "completed",
+              "rows": []
+            },
+            {
+              "atUs": 1568696.6979999999,
+              "id": "transaction-timeout-2",
+              "text": "SELECT pg_sleep(0.3)",
+              "startUs": 1487517.49,
+              "outcome": "error",
+              "code": "25P04",
+              "message": "terminating connection due to transaction timeout"
+            },
+            {
+              "atUs": 1576096.148,
+              "id": "begin-2",
+              "text": "BEGIN",
+              "startUs": 1569401.09,
+              "outcome": "completed",
+              "rows": []
+            },
+            {
+              "atUs": 1581340.129,
+              "id": "lock-holder-2",
+              "text": "UPDATE pilot_keys SET value=value+1 WHERE id=1",
+              "startUs": 1576186.048,
+              "outcome": "completed",
+              "rows": []
+            },
+            {
+              "atUs": 1588527.534,
+              "id": "lock-set-2",
+              "text": "SET lock_timeout='80ms'",
+              "startUs": 1581444.017,
+              "outcome": "completed",
+              "rows": []
+            },
+            {
+              "atUs": 1672653.225,
+              "id": "lock-timeout-2",
+              "text": "UPDATE pilot_keys SET value=value+1 WHERE id=1",
+              "startUs": 1588631.322,
+              "outcome": "error",
+              "code": "55P03",
+              "message": "canceling statement due to lock timeout"
+            },
+            {
+              "atUs": 1679936.062,
+              "id": "lock-released-2",
+              "text": "UPDATE pilot_keys SET value=value+1 WHERE id=1 RETURNING value",
+              "startUs": 1673163.769,
+              "outcome": "completed",
+              "rows": [
+                {
+                  "value": 3
+                }
+              ]
+            },
+            {
+              "atUs": 1749939.304,
+              "id": "cancel-ack-2",
+              "text": "SELECT pg_cancel_backend(171) AS acknowledged",
+              "startUs": 1748816.302,
+              "outcome": "completed",
+              "rows": [
+                {
+                  "acknowledged": true
+                }
+              ]
+            },
+            {
+              "atUs": 1750266.15,
+              "id": "cancel-query-2",
+              "text": "SELECT pg_sleep(0.3)",
+              "startUs": 1688176.838,
+              "outcome": "error",
+              "code": "57014",
+              "message": "canceling statement due to user request"
+            },
+            {
+              "atUs": 1751114.7920000001,
+              "id": "post-cancel-session-2",
+              "text": "SELECT 1 AS value",
+              "startUs": 1750308.4949999999,
+              "outcome": "completed",
+              "rows": [
+                {
+                  "value": 1
+                }
+              ]
+            },
+            {
+              "atUs": 1782910.7,
+              "id": "caller-deadline-2",
+              "outcome": "deadline-exceeded",
+              "remoteCancellation": "detach",
+              "transactionId": 2
+            },
+            {
+              "atUs": 1913716.284,
+              "id": "remote-write-2",
+              "text": "INSERT INTO pilot_commits SELECT 2, 1 FROM pg_sleep(0.15) RETURNING id",
+              "startUs": 1751564.744,
+              "outcome": "completed",
+              "rows": [
+                {
+                  "id": 2
+                }
+              ]
+            },
+            {
+              "atUs": 1914826.671,
+              "id": "reconcile-2",
+              "text": "SELECT id,value FROM pilot_commits WHERE id=2",
+              "startUs": 1913842.447,
+              "outcome": "completed",
+              "rows": [
+                {
+                  "id": 2,
+                  "value": 1
+                }
+              ]
+            },
+            {
+              "atUs": 1924800.824,
+              "id": "sync-standby-set",
+              "text": "ALTER SYSTEM SET synchronous_standby_names='*'",
+              "startUs": 1915124.8390000002,
+              "outcome": "completed",
+              "rows": []
+            },
+            {
+              "atUs": 1925865.0990000002,
+              "id": "sync-standby-reload",
+              "text": "SELECT pg_reload_conf()",
+              "startUs": 1924902.578,
+              "outcome": "completed",
+              "rows": [
+                {
+                  "pg_reload_conf": true
+                }
+              ]
+            },
+            {
+              "atUs": 2034287.693,
+              "id": "sync-commit-set",
+              "text": "SET synchronous_commit=on",
+              "startUs": 2027069.9179999998,
+              "outcome": "completed",
+              "rows": []
+            },
+            {
+              "atUs": 2040504.4510000001,
+              "id": "commit-wait-observed",
+              "waiting": true
+            },
+            {
+              "atUs": 2041226.6600000001,
+              "id": "commit-cancel-ack",
+              "text": "SELECT pg_cancel_backend(173) AS acknowledged",
+              "startUs": 2040587.1469999999,
+              "outcome": "completed",
+              "rows": [
+                {
+                  "acknowledged": true
+                }
+              ]
+            },
+            {
+              "atUs": 2041362.001,
+              "id": "commit-cancel-write",
+              "text": "INSERT INTO pilot_commits VALUES(99,1) RETURNING id",
+              "startUs": 2035674.8050000002,
+              "outcome": "completed",
+              "rows": [
+                {
+                  "id": 99
+                }
+              ]
+            },
+            {
+              "atUs": 2042447.498,
+              "id": "commit-cancel-reconcile",
+              "text": "SELECT id,value FROM pilot_commits WHERE id=99",
+              "startUs": 2041657.403,
+              "outcome": "completed",
+              "rows": [
+                {
+                  "id": 99,
+                  "value": 1
+                }
+              ]
+            }
+          ],
+          "complete": true
+        },
+        "pooler": {
+          "environment": {
+            "bun": "1.3.14",
+            "kernel": "6.18.54.1-microsoft-standard-WSL2",
+            "cpu": "AMD Ryzen 7 5700U with Radeon Graphics",
+            "cpuMax": "50000 100000\n",
+            "memoryMax": "805306368\n",
+            "clock": "performance.now monotonic microseconds; process-local origins; never subtract across processes"
+          },
+          "events": [
+            {
+              "atUs": 148316.702,
+              "id": "pool-begin",
+              "text": "BEGIN",
+              "startUs": 130938.77,
+              "outcome": "completed",
+              "rows": []
+            },
+            {
+              "atUs": 150485.933,
+              "id": "pool-owner",
+              "text": "SELECT pg_backend_pid() AS pid",
+              "startUs": 148425.47,
+              "outcome": "completed",
+              "rows": [
+                {
+                  "pid": 206
+                }
+              ]
+            },
+            {
+              "atUs": 294619.94700000004,
+              "id": "pool-activity",
+              "text": "SELECT usename,state,count(*)::int FROM pg_stat_activity WHERE datname='pilot' GROUP BY usename,state ORDER BY usename,state",
+              "startUs": 271066.44999999995,
+              "outcome": "completed",
+              "rows": [
+                {
+                  "usename": "pilot_app",
+                  "state": "idle in transaction",
+                  "count": 1
+                },
+                {
+                  "usename": "postgres",
+                  "state": "active",
+                  "count": 1
+                }
+              ]
+            },
+            {
+              "atUs": 296087.17000000004,
+              "id": "pool-commit",
+              "text": "COMMIT",
+              "startUs": 294950.68,
+              "outcome": "completed",
+              "rows": []
+            },
+            {
+              "atUs": 296796.001,
+              "id": "pool-waiter",
+              "text": "SELECT pg_backend_pid() AS pid",
+              "startUs": 150621.004,
+              "outcome": "completed",
+              "rows": [
+                {
+                  "pid": 206
+                }
+              ]
+            },
+            {
+              "atUs": 296862.104,
+              "id": "pool-reused-backend",
+              "sameBackend": true,
+              "supported": false
+            }
+          ],
+          "complete": true
+        },
+        "smart": {
+          "environment": {
+            "bun": "1.3.14",
+            "kernel": "6.18.54.1-microsoft-standard-WSL2",
+            "cpu": "AMD Ryzen 7 5700U with Radeon Graphics",
+            "cpuMax": "50000 100000\n",
+            "memoryMax": "805306368\n",
+            "clock": "performance.now monotonic microseconds; process-local origins; never subtract across processes"
+          },
+          "events": [
+            {
+              "atUs": 172636.807,
+              "id": "shutdown-begin",
+              "text": "BEGIN",
+              "startUs": 105140.562,
+              "outcome": "completed",
+              "rows": []
+            },
+            {
+              "atUs": 177154.598,
+              "id": "shutdown-write",
+              "text": "UPDATE pilot_keys SET value=value+1 WHERE id=1",
+              "startUs": 172811.227,
+              "outcome": "completed",
+              "rows": []
+            },
+            {
+              "atUs": 879805.362,
+              "id": "shutdown-query",
+              "text": "SELECT pg_sleep(0.7)",
+              "startUs": 177243.366,
+              "outcome": "completed",
+              "rows": [
+                {
+                  "pg_sleep": ""
+                }
+              ]
+            },
+            {
+              "atUs": 882485.7170000001,
+              "id": "shutdown-commit",
+              "text": "COMMIT",
+              "startUs": 879966.094,
+              "outcome": "completed",
+              "rows": []
+            }
+          ],
+          "complete": true
+        },
+        "fast": {
+          "environment": {
+            "bun": "1.3.14",
+            "kernel": "6.18.54.1-microsoft-standard-WSL2",
+            "cpu": "AMD Ryzen 7 5700U with Radeon Graphics",
+            "cpuMax": "50000 100000\n",
+            "memoryMax": "805306368\n",
+            "clock": "performance.now monotonic microseconds; process-local origins; never subtract across processes"
+          },
+          "events": [
+            {
+              "atUs": 123153.048,
+              "id": "shutdown-begin",
+              "text": "BEGIN",
+              "startUs": 110151.196,
+              "outcome": "completed",
+              "rows": []
+            },
+            {
+              "atUs": 127389.82400000001,
+              "id": "shutdown-write",
+              "text": "UPDATE pilot_keys SET value=value+1 WHERE id=1",
+              "startUs": 123256.48599999999,
+              "outcome": "completed",
+              "rows": []
+            },
+            {
+              "atUs": 830984.1209999999,
+              "id": "shutdown-query",
+              "text": "SELECT pg_sleep(0.7)",
+              "startUs": 127493.602,
+              "outcome": "completed",
+              "rows": [
+                {
+                  "pg_sleep": ""
+                }
+              ]
+            }
+          ],
+          "complete": true
+        }
+      },
+      "use": "retained preliminary capture; shutdown query ended before fast signal; excluded from final parity"
+    }
+  ],
+  "producerHashes": {
+    "g5-summary.ts": "f94ae408a45d5111c5974eb4aae84316d6122556fb37db61d75d8f8d97ce1981"
+  },
+  "unknown": [
+    "managed-role entitlement",
+    "per-query CPU",
+    "physical durability",
+    "physical disk latency",
+    "cloud timing",
+    "full resident memory"
+  ],
+  "caveats": [
+    "No Model 2 timing comparison or calibration",
+    "Finite logical plan only; no SQL protocol, arbitrary SQL or explicit interactive transaction support",
+    "SyncRep intervention observes irreversible commit cancellation, not disk service",
+    "Pooler experiment is separate and unsupported",
+    "No managed entitlement or shutdown-duration forecast"
+  ]
+}
