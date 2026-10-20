@@ -49,6 +49,8 @@ export function createFirstStackRuntime(sidecar: FirstStackExecutable, schedule:
       workload: schedule.identity, executedSchedule: schedule.executedScheduleHash, profile: schedule.profileHash,
       recordingOrigin: schedule.header.origin, demand: schedule.application,
       ...(sidecar.schema === "infraforge-first-stack-sidecar/3" ? { cache: { revision: "recorded-cache-policy/1", policyCpuUs: sidecar.cache.policyCpuUs ?? "Unknown", eviction: "exact-LRU is not sampled Valkey LRU", health: "direct DB read bypasses cache" } } : {}),
+      ...(sidecar.faults.length || sidecar.retry ? { scenario: { schema: "first-stack-scenario/1", commands: [...sidecar.faults].sort((a, b) => a.atUs - b.atUs || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)), retry: sidecar.retry ?? null,
+        ordering: "time, priority, lexical key; fault=0, deadline=1, commit/completion=2, health/retry=3" } } : {}),
       timing: "assumption-only", counting: "supported-logical", fullMemory: "Unknown", fullCost: "Unknown", activeEngine: "1" } };
   } };
 }

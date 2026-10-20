@@ -1,4 +1,5 @@
 import { writeTransitionStore } from "./transition-store";
+import { faultHostPaths } from "./stage2-fault-host";
 import { boundsHostPaths, boundsPostgresPaths, verifyBoundsPostgresReview } from "./stage2-bounds-host";
 import { gitTree } from "./execution-identity";
 import { execFileSync } from "node:child_process";
@@ -18,8 +19,9 @@ const added = ["authoring", "canonical", "execution", "importStream", "persisten
 added.push("packages/contracts/src/first-stack/index.ts");
 added.push("packages/simulation/src/internalFirstStack.ts", "packages/simulation/src/firstStack/compiler.ts", "packages/simulation/src/firstStack/run.ts");
 added.push("apps/backend/firstStack/boundedExecution.ts", "packages/simulation/src/firstStack/bounds.ts", "packages/simulation/src/firstStack/journal.ts");
+added.push("packages/simulation/src/firstStack/faults.ts");
 const changed = ["apps/backend/internalModel2/routes.ts", "apps/backend/zod_schemas/layout.schema.ts", "apps/backend/Dockerfile", ".dockerignore", "packages/contracts/package.json", "packages/simulation/package.json"];
-changed.push(...new Set([...boundsHostPaths, ...boundsPostgresPaths]));
+changed.push(...new Set([...boundsHostPaths, ...boundsPostgresPaths, ...faultHostPaths]));
 const generated = ["loading.ts", "capabilityReviews.json", "capabilityImportReviews.json", "analysisContract.json", "resolutionContract.json"].map(p => folder + p);
 generated.push("apps/backend/internalModel2/legacyRuntime.json");
 let retainedOriginal: { blobs: Record<string, string>; trees: Record<string, Record<string, string>> } | undefined;
@@ -71,7 +73,7 @@ function scope() {
 }
 export function reviewStage2Modules() {
   const tree = scope(), file = resolve(root, folder + "capabilityReviews.json"), reviews = JSON.parse(readFileSync(file, "utf8"));
-  for (const path of [...added, ...boundsHostPaths]) {
+  for (const path of [...added, ...boundsHostPaths, ...faultHostPaths]) {
     const globals = path.endsWith("workload.ts") ? ["Uint8Array", "TextDecoder", "setImmediate"] : path.endsWith("importStream.ts") ? ["Uint8Array", "TextDecoder"] : [];
     const hash = sha256(tree.read(path));
     reviews[path] = { hash, capabilities: ["computed-data"], ...(globals.length ? { globals: { hash, names: globals } } : {}),
@@ -84,7 +86,7 @@ export function writeStage2ReviewLock() {
   writeFileSync(resolve(root, lockPath), JSON.stringify({ schema: "infraforge-first-stack-source-review/1", baseline: baseline.source,
     scope: "Internal V1 review and V2 compiler/composition qualification only; optional bounded host separately reviewed; original Stage 1 host reconstructed and eight historical replay hashes preserved; no product dispatch, HTTP executor or activation",
     files: [...added, ...changed].sort().map(path => ({ path, hash: sha256(tree.read(path)) })),
-    acceptance: ["apps/backend/tests/firstStackAuthoring.test.ts", "apps/backend/tests/firstStackWorkload.test.ts", "apps/backend/tests/firstStackRoutes.test.ts", "apps/backend/tests/firstStackFixture.ts", "scripts/tests/first-stack-child.test.ts", "scripts/tests/first-stack-compile.test.ts", "scripts/fixtures/first-stack-compile.ts", "scripts/reality/first-stack-compile-proof.ts", "scripts/tests/execution-identity.test.ts", "scripts/tests/first-stack-bounds.test.ts", "scripts/reality/first-stack-bounds-proof.ts", "scripts/stage2-bounds-host.ts", "scripts/fixtures/first-stack-bounded-execution.test.ts"].map(path => ({ path, hash: sha256(readFileSync(resolve(root, path), "utf8").replaceAll("\r\n", "\n")) })),
+    acceptance: ["apps/backend/tests/firstStackAuthoring.test.ts", "apps/backend/tests/firstStackWorkload.test.ts", "apps/backend/tests/firstStackRoutes.test.ts", "apps/backend/tests/firstStackFixture.ts", "scripts/tests/first-stack-child.test.ts", "scripts/tests/first-stack-compile.test.ts", "scripts/fixtures/first-stack-compile.ts", "scripts/reality/first-stack-compile-proof.ts", "scripts/tests/execution-identity.test.ts", "scripts/tests/first-stack-bounds.test.ts", "scripts/reality/first-stack-bounds-proof.ts", "scripts/stage2-bounds-host.ts", "scripts/fixtures/first-stack-bounded-execution.test.ts", "scripts/tests/first-stack-faults.test.ts", "scripts/fixtures/first-stack-faults.ts", "scripts/reality/first-stack-fault-proof.ts", "scripts/stage2-fault-host.ts"].map(path => ({ path, hash: sha256(readFileSync(resolve(root, path), "utf8").replaceAll("\r\n", "\n")) })),
   }, null, 2) + "\n");
 }
 export function buildStage2Transitions() {

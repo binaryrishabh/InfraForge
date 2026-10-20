@@ -1,3 +1,4 @@
+import { beforeFaultHost } from "../stage2-fault-host";
 import { cacheBaselineSource } from "../stage2-cache-identity";
 import { verifyBoundsPostgresReview } from "../stage2-bounds-host";
 import { beforeFiniteIo, finiteIoAdded } from "../finite-io-source-review";
@@ -19,13 +20,13 @@ export function compositionHostProof() {
   const hash = (text: string) => createHash("sha256").update(text.replaceAll("\r\n", "\n")).digest("hex");
   const originals = new Map<string, string>();
   for (const file of [...bounds.files, ...pg.files.map((f: { path: string; sha256: string; originalHash: string; original: string }) => ({ path: f.path, currentHash: f.sha256, originalHash: f.originalHash, originalText: f.original }))]) {
-    if (hash(beforeFiniteIo(file.path, cacheBaselineSource(file.path, readFileSync(resolve(root, file.path), "utf8").replaceAll("\r\n", "\n")))) !== file.currentHash || hash(file.originalText) !== file.originalHash) throw Error(`Unreviewed combined host drift: ${file.path}`);
+    if (hash(beforeFiniteIo(file.path, cacheBaselineSource(file.path, beforeFaultHost(file.path, readFileSync(resolve(root, file.path), "utf8").replaceAll("\r\n", "\n"))))) !== file.currentHash || hash(file.originalText) !== file.originalHash) throw Error(`Unreviewed combined host drift: ${file.path}`);
     const prior = originals.get(file.path);
     if (prior !== undefined && hash(prior) !== file.originalHash) throw Error("Inconsistent original host reviews");
     originals.set(file.path, file.originalText);
   }
   return files("packages/simulation/src/model2").filter(path => path !== extension && !finiteIoAdded.includes(path)).sort().map(path => ({ path,
-    sha256: hash(originals.get(path) ?? cacheBaselineSource(path, readFileSync(resolve(root, path), "utf8"))) }));
+    sha256: hash(originals.get(path) ?? beforeFiniteIo(path, cacheBaselineSource(path, beforeFaultHost(path, readFileSync(resolve(root, path), "utf8"))))) }));
 }
 export function verifyCompositionHost() {
   const restored = compositionHostProof(), expected = JSON.parse(readFileSync(artifact, "utf8"));

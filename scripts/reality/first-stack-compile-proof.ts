@@ -5,7 +5,7 @@ import { hash } from "../../apps/backend/firstStack/canonical";
 import { sourceHash } from "../../apps/backend/executionIdentity/hash";
 import { verifyCompositionHost } from "./composition-host-proof";
 
-const artifact = "docs/reality/first-stack-bounds-compile-proof.json";
+const artifact = "docs/reality/first-stack-faults-compile-proof.json";
 export async function firstStackCompileProof() {
   const runs = [];
   for (const apps of [1, 2, 4, 8]) {

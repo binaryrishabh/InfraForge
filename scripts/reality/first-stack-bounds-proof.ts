@@ -9,7 +9,7 @@ import { boundedJson, FIRST_STACK_ENVELOPE as envelope } from "../../packages/si
 import { sourceHash, digest } from "../../apps/backend/executionIdentity/hash";
 import { compositionProofs } from "./composition-proofs";
 
-const path = "docs/reality/first-stack-bounds-proof.json";
+const path = "docs/reality/first-stack-faults-bounds-proof.json";
 export async function boundsProof() {
   const cases = [];
   for (const apps of [1, 2, 4, 8]) {
