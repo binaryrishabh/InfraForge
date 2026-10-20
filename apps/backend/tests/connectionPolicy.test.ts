@@ -35,7 +35,7 @@ test("API connections remain compatible with a pooler that rejects server timeou
   const server = net.createServer(socket => {
     socket.on("error", () => {});
     socket.once("data", packet => {
-      if (packet.includes(Buffer.from("statement_timeout"))) {
+      if (packet.toString().includes("statement_timeout")) {
         const body = Buffer.from("SFATAL\0C08P01\0Munsupported startup parameter\0\0");
         const header = Buffer.alloc(5); header[0] = 69; header.writeInt32BE(body.length + 4, 1);
         socket.end(Buffer.concat([header, body]));

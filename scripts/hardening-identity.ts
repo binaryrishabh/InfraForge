@@ -1,6 +1,7 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { gzipSync, gunzipSync } from "node:zlib";
+import { execFileSync } from "node:child_process";
 import { diskTree, executionDescriptor, repositoryRoot } from "../apps/backend/executionIdentity/descriptor";
 import { digest, sourceHash } from "../apps/backend/executionIdentity/hash";
 import { historicalAnalysisDescriptor } from "./historical-analysis-descriptor";
@@ -46,6 +47,28 @@ export function reviewHardeningSyntax() {
   reviews[file] = { hash, capabilities: [], review: "Bounded HTTP drain and signal/exit handling only; fixed process global; no dynamic code or resource loading", globals: { hash, names: ["process"] } };
   writeFileSync(path, JSON.stringify(reviews, null, 2) + "\n");
   console.info("Hardening source syntax reviewed; engine, schemas and dependencies unchanged");
+}
+export function refreshHardeningAcceptance() {
+  scope();
+  const path = "docs/reality/first-stack-source-review.json", test = "scripts/tests/execution-identity.test.ts";
+  const original = (file: string) => execFileSync("git", ["show", `${hardeningBaseline}:${file}`], {
+    cwd: repositoryRoot, encoding: "utf8", maxBuffer: 4 * 1024 * 1024,
+  }).replaceAll("\r\n", "\n");
+  const currentTest = readFileSync(resolve(repositoryRoot, test), "utf8").replaceAll("\r\n", "\n");
+  if (currentTest !== original(test).replace("expect(table.entries.length).toBe(38);", "expect(table.entries.length).toBe(39);")) {
+    throw Error("Hardening acceptance review permits only the added historical entry count");
+  }
+  const baseline = JSON.parse(original(path)), expected = structuredClone(baseline);
+  const rows = [...expected.files, ...expected.acceptance] as Array<{ path: string; hash: string }>;
+  for (const row of rows) {
+    const hash = sourceHash(readFileSync(resolve(repositoryRoot, row.path), "utf8"));
+    if (row.path === test) row.hash = hash;
+    else if (row.hash !== hash) throw Error(`Hardening cannot refresh first-stack behavior/acceptance: ${row.path}`);
+  }
+  const current = JSON.parse(readFileSync(resolve(repositoryRoot, path), "utf8"));
+  if (![baseline, expected].some(value => JSON.stringify(value) === JSON.stringify(current))) throw Error("Unreviewed first-stack source review change");
+  writeFileSync(resolve(repositoryRoot, path), JSON.stringify(expected, null, 2) + "\n");
+  console.info("First-stack behavior pins preserved; only the historical identity entry-count acceptance hash refreshed");
 }
 export function refreshHardeningTransitions() {
   const { before, current: tree } = scope();
