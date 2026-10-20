@@ -43,10 +43,12 @@ keep the matching immutable release image/source. A custom dump omits cluster
 roles and provider settings. Provision restore roles separately; never recover by
 overwriting the only source database. This procedure does not supply WAL/PITR.
 
-Recommended pending owner approval: daily encrypted off-host backups, 7 daily
-and 4 weekly copies, backup-age/failure alerts, and monthly restore drills. The
-cadence, retention, storage budget, RPO/RTO and provider-managed PITR remain open
-decisions. No schedule or remote storage has been configured.
+The owner-approved daily encrypted S3 backup, 7 daily/4 weekly retention,
+one-day RPO, monthly local drill and email alerts are defined in
+[the backup and alerting runbook](../docs/operations/backup-alerts.md).
+Neon's built-in restore history remains the first recovery line. RTO and actual
+database/storage costs still require measurement. Committing this configuration
+does not install schedules or create AWS resources.
 
 The only supported proof entrypoint is `bash ops/bootstrap/prove-backup.sh`.
 It creates and verifies an owned `--network none` PostgreSQL 18 container and

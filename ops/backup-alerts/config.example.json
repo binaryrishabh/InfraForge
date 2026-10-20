@@ -1,0 +1,9 @@
+{
+  "region": "REPLACE_WITH_EC2_REGION",
+  "bucket": "REPLACE_WITH_STACK_BUCKET_OUTPUT",
+  "instance_id": "REPLACE_WITH_EC2_INSTANCE_ID",
+  "site_url": "https://REPLACE_WITH_SITE_HOST/",
+  "api_url": "https://REPLACE_WITH_API_HOST/health/ready",
+  "worker_container": "REPLACE_WITH_CURRENT_WORKER_CONTAINER_NAME",
+  "drill_image": "REPLACE_WITH_APPROVED_POSTGRES_18_IMAGE_AT_SHA256_DIGEST"
+}

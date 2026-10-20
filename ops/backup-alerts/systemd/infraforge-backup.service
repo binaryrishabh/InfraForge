@@ -1,0 +1,33 @@
+[Unit]
+Description=InfraForge encrypted off-host database backup
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=root
+UMask=0077
+StateDirectory=infraforge-ops
+StateDirectoryMode=0700
+LoadCredential=neon-url:/etc/infraforge/ops/neon-url
+ExecStart=/bin/bash /opt/infraforge-ops/backup-alerts/run.sh backup
+TimeoutStartSec=46min
+TimeoutStopSec=30s
+KillMode=control-group
+Nice=15
+IOSchedulingClass=idle
+CPUQuota=25%
+MemoryMax=384M
+TasksMax=64
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/var/lib/infraforge-ops
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=infraforge-backup

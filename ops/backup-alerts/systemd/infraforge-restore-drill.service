@@ -1,0 +1,31 @@
+[Unit]
+Description=InfraForge monthly disposable local restore drill
+Wants=network-online.target
+After=network-online.target docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+User=root
+UMask=0077
+StateDirectory=infraforge-ops
+StateDirectoryMode=0700
+ExecStartPre=/usr/bin/python3 /opt/infraforge-ops/backup-alerts/runner.py begin-drill
+ExecStart=/bin/bash /opt/infraforge-ops/backup-alerts/run.sh drill
+ExecStopPost=/bin/bash /opt/infraforge-ops/backup-alerts/run.sh cleanup-drill
+TimeoutStartSec=46min
+TimeoutStopSec=60s
+KillMode=control-group
+Nice=15
+IOSchedulingClass=idle
+CPUQuota=25%
+MemoryMax=384M
+TasksMax=64
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/var/lib/infraforge-ops
+ProtectHome=true
+PrivateTmp=true
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=infraforge-restore-drill
