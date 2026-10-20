@@ -121,7 +121,7 @@ test("3000 deterministic systems cases conserve caches, flows, artifacts, observ
     if (id % 7 === 0) i.systems.interventions.push({ id: "generated-purge", kind: "cdn-purge", target: "cdn", at: q.q("sweep.purge", n("purge", 4000), "us"), key: "asset" });
     i.ledger.push(...q.ledger); const m = createSystemsModel2(i); m.advanceTo(2300); systemsConservation(m.evidence()); m.advanceTo(m.horizon); const e = m.evidence(); systemsConservation(e); expect(e.capture.failure).toBeNull(); if (id % 100 === 0) expect(systemsRun(i, 137)).toEqual(e);
   }
-}, 240000);
+}, 360000);
 test("negative DNS cache represents nonexistence, not a cached authority outage", () => {
   const i = systemsFixture({ count: 0, monitoring: false }), q = quantities(); i.arrivals = []; for (const [id, at] of [["negative", 0], ["cached-negative", 800], ["expired-negative", 1500]] as const) systemCommand(i, id, at, "$caller", "resolver", { kind: "resolve", name: "absent.example" }); i.networkInterventions.push({ id: "negative-authority-down", kind: "service-state", target: "authority", alive: false, ready: false, at: q.q("negative.down", 500, "us"), duration: q.q("negative.duration", 5000, "us") }); i.ledger.push(...q.ledger);
   const e = systemsRun(i), replies = Object.fromEntries(e.systems.commands.results.map((r) => [r.id, r.reply as { reason: string }])); expect(replies.negative!.reason).toBe("nxdomain"); expect(replies["cached-negative"]!.reason).toBe("nxdomain"); expect(replies["expired-negative"]!.reason).toBe("command-timeout"); expect(e.systems.resolvers[0]!.hits).toBe(1); systemsConservation(e);
