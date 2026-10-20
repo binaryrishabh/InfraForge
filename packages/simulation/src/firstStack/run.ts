@@ -5,11 +5,13 @@ import type { CausalObserver } from "../model2/workload/causal";
 import { diagnosticJournal } from "./journal";
 import { FIRST_STACK_ENVELOPE } from "./bounds";
 import { compileFirstStack, refuse, type FirstStackExecutionPolicy } from "./compiler";
+import { compileFirstStackIo } from "./io";
+import type { FiniteIoProfile } from "../model2/data/io-contract";
 
 // Internal in-process qualification path only. No product dispatcher or HTTP
 // executor uses this runner; public isolation/admission are separate stages.
-export function createFirstStackRuntime(sidecar: FirstStackSidecarV2, schedule: ResolvedSchedule, policy: FirstStackExecutionPolicy, causal?: CausalObserver) {
-  const compiled = compileFirstStack(sidecar, schedule, policy);
+export function createFirstStackRuntime(sidecar: FirstStackSidecarV2, schedule: ResolvedSchedule, policy: FirstStackExecutionPolicy, causal?: CausalObserver, storage?: FiniteIoProfile) {
+  const compiled = storage ? compileFirstStackIo(sidecar, schedule, policy, storage) : compileFirstStack(sidecar, schedule, policy);
   const journal = diagnosticJournal();
   const observer: CausalObserver = event => { journal.record(event); causal?.(event); };
   const rows = new Map(schedule.rows.map(r => [r.id, r]));
@@ -42,7 +44,7 @@ export function createFirstStackRuntime(sidecar: FirstStackSidecarV2, schedule: 
     },
   }] });
   return { horizon: runtime.horizon, advanceTo: runtime.advanceTo, advanceSlice: runtime.advanceSlice, journal, evidence() {
-    return { ...runtime.evidence(), firstStack: { envelope: FIRST_STACK_ENVELOPE.revision, compiler: sidecar.compiler, composition: compiled.revision,
+    return { ...runtime.evidence(), firstStack: { envelope: FIRST_STACK_ENVELOPE.revision, compiler: storage ? "first-stack-io-compiler/1" : sidecar.compiler, composition: compiled.revision,
       workload: schedule.identity, executedSchedule: schedule.executedScheduleHash, profile: schedule.profileHash,
       recordingOrigin: schedule.header.origin, demand: schedule.application,
       timing: "assumption-only", counting: "supported-logical", fullMemory: "Unknown", fullCost: "Unknown", activeEngine: "1" } };

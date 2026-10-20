@@ -8,11 +8,13 @@ import { cacheAside } from "./aside";
 import { dataModules } from "./modules";
 import { DATA_POLICY_LEDGER } from "./policy";
 import type { NetworkExtension } from "../network/run";
+import type { DatabaseIo } from "./io";
+import type { EventKernel } from "../time";
 const copy = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
 export function createDataModel2(authored: DataInput) {
   return createDataRuntime(authored);
 }
-export function createDataRuntime(authored: DataInput, extension?: NetworkExtension) {
+export function createDataRuntime(authored: DataInput, extension?: NetworkExtension & { databaseIoFor?(id: string, clock: EventKernel): DatabaseIo | undefined }) {
   validateData(authored);
   const input = copy(authored);
   input.resources.sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
@@ -23,7 +25,7 @@ export function createDataRuntime(authored: DataInput, extension?: NetworkExtens
     resource(id, kernel, send) {
       const external = extension?.resource(id, kernel, send); if (external) return external;
       const config = input.resources.find((r) => r.id === id)!;
-      if (modules.has(config.kind)) return modules.create(config, { clock: extension?.clockFor?.(id, kernel) ?? kernel, send, causal: extension?.causal, cpu: extension?.cpuFor?.(id, kernel) });
+      if (modules.has(config.kind)) return modules.create(config, { clock: extension?.clockFor?.(id, kernel) ?? kernel, send, causal: extension?.causal, cpu: extension?.cpuFor?.(id, kernel), databaseIo: config.kind === "relational" ? extension?.databaseIoFor?.(id, kernel) : undefined });
     },
     disconnected(target, session) { databases.get(target)?.closeSession(session); extension?.disconnected?.(target, session); },
     connection(path, kernel, send, context) {

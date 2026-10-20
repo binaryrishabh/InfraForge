@@ -1,0 +1,3233 @@
+{
+  "schema": "finite-io-proof/1",
+  "timing": "assumption-only",
+  "activeEngine": "1",
+  "scope": "Authored finite logical IO; no physical calibration or activation",
+  "historical": [
+    {
+      "composition": "m2b/1",
+      "evidenceSha256": "faa27f1b07ed64b901f0fac8d845f275b65c7dc1d5a7ea7881ce4cb16d602ecf"
+    },
+    {
+      "composition": "m2c/1",
+      "evidenceSha256": "627045428312d4a7880dfd4af6cfb102df7c3d4c86905e16778e846c0495cac7"
+    },
+    {
+      "composition": "m2d/1",
+      "evidenceSha256": "bafae30ed58bd38153ff8f4722eb1cfcf78e6a2aba2a4a08f719a299ff15aa23"
+    },
+    {
+      "composition": "m2d/1-lb",
+      "evidenceSha256": "7baba18c8858d5f0d3a62a48b476dd3dd39c54731616f854e1a5fc035779d3f7"
+    },
+    {
+      "composition": "m2e/1",
+      "evidenceSha256": "e9810727efcacc6459994fd5b5285966fa3d9e007264b2bd7776a91370566899"
+    },
+    {
+      "composition": "m2f/1",
+      "evidenceSha256": "c079f58644563b737f4cffa3960eb65043b96ee18a38e562c49ded14ca2bd84a"
+    },
+    {
+      "composition": "m2g/1",
+      "evidenceSha256": "fba08e69fc5a333af6d00ff80a012fcd513499e90f132e656ae81a2b3dc51b88"
+    },
+    {
+      "composition": "m2h/1",
+      "evidenceSha256": "4e95fe38c9dd02cc60f700c301476ecc53ad495f83ad98469c6f0811b65ae224"
+    }
+  ],
+  "sources": [
+    {
+      "path": "packages/simulation/src/model2/composition/io-budget.ts",
+      "sha256": "3c1cec82eed2fc837cc62abf5e34110196dc41312b4983fdbc7d906058944b90"
+    },
+    {
+      "path": "packages/simulation/src/model2/data/io-contract.ts",
+      "sha256": "db0c796fd0e46075b7883f556f1d67c4fb30e3a25c427fa4cacd08a6610b2783"
+    },
+    {
+      "path": "packages/simulation/src/model2/data/io.ts",
+      "sha256": "c98fe967d89ff6576b5af06ff437cad178d8c853aa5822454175cca38db9606c"
+    },
+    {
+      "path": "packages/simulation/src/model2/data/database.ts",
+      "sha256": "501fb48fefee8b9dc16d319a12d8824e3e6406de16a82620416a15dd1731f437"
+    },
+    {
+      "path": "packages/simulation/src/model2/data/run.ts",
+      "sha256": "c1f5ae495c0ded7dd08d7b70836c58f9779400fbdf06bed23f144d43e5448505"
+    },
+    {
+      "path": "packages/simulation/src/model2/data/modules.ts",
+      "sha256": "a2fd36349090c129111897525fa37f774e0f398b8920aa2472c60d09eddc9313"
+    },
+    {
+      "path": "packages/simulation/src/model2/composition/run.ts",
+      "sha256": "597fec1e7bdafdabe5f42948860a4ef4d9503c5d03a78184cb527f24286eaac7"
+    },
+    {
+      "path": "packages/simulation/src/firstStack/io.ts",
+      "sha256": "3ad94334caaad5dc1f38b9cce13bdb1effe7550b07788b72daf43ec4afdb1119"
+    },
+    {
+      "path": "packages/simulation/src/firstStack/run.ts",
+      "sha256": "eff958dcb35ac6e0b9addf1fa9fdc8727d282e1f26349a094a85bae453be73f2"
+    },
+    {
+      "path": "packages/simulation/src/internalFirstStack.ts",
+      "sha256": "8990e17b1c4d86930b8135f446df552ef96bdfb1893734424c7a4e74872986d3"
+    },
+    {
+      "path": "packages/simulation/tests/finiteIo.test.ts",
+      "sha256": "8a0777618518a0ccc82f8c40c5f5860f0cd9a5b2ea4a440842b3b23e11e2eacf"
+    },
+    {
+      "path": "packages/simulation/tests/finiteIoFixture.ts",
+      "sha256": "b2e3bdccca7ebeac23c25f2c3f07bb0e3357ded29f3abf684ff4b55c716eecc5"
+    },
+    {
+      "path": "scripts/tests/finite-io.test.ts",
+      "sha256": "2b72dc378942eb8cb4cfc675c56be7c5f399dffe4c98eca7f627b35f158554a3"
+    },
+    {
+      "path": "scripts/fixtures/first-stack-io.ts",
+      "sha256": "5aca74235bd76c87b073c0b620a97cac47b3160f1e6e204d207d7afd988fe7d5"
+    },
+    {
+      "path": "scripts/reality/finite-io-proof.ts",
+      "sha256": "38419e6d2f629d44d40b86d3309c9c57842a6bc4522e8577230e82437a5fccc4"
+    }
+  ],
+  "cases": [
+    {
+      "warm": false,
+      "compiledHash": "2d35de8e082cc93f4b0df5545b8aa8e8c4c34d5417eb03e1c7043ee53f70791f",
+      "evidenceHash": "27c2568e7592a3e273caa9bcc5bec750e2b2c9c69519c5c73279872488a256f5",
+      "counts": {
+        "offered": 24,
+        "admitted": 24,
+        "completed": 24,
+        "rejected": 0,
+        "deadlineExceeded": 0,
+        "abandoned": 0,
+        "remoteOutcomesAfterCallerStop": 0,
+        "cancellationRequested": 0,
+        "cancellationConfirmedAtEntry": 0,
+        "inFlight": 0
+      },
+      "storage": {
+        "revision": "postgresql-keyed-io/1",
+        "profile": {
+          "background": {
+            "policy": "excluded-unknown",
+            "schedule": []
+          },
+          "bindings": [
+            {
+              "buffer": "buffer",
+              "commitAck": "read-only",
+              "keys": [
+                "hot"
+              ],
+              "operation": "read",
+              "role": "db",
+              "statementPages": [
+                [
+                  "page-hot"
+                ]
+              ],
+              "walBytes": {
+                "evidence": {
+                  "domain": "finite logical keyed work only",
+                  "kind": "authored",
+                  "label": "assumption-only",
+                  "revision": "1",
+                  "source": "finite-io-conservation-fixture"
+                },
+                "unit": "bytes",
+                "value": 0
+              },
+              "walOperations": {
+                "evidence": {
+                  "domain": "finite logical keyed work only",
+                  "kind": "authored",
+                  "label": "assumption-only",
+                  "revision": "1",
+                  "source": "finite-io-conservation-fixture"
+                },
+                "unit": "count",
+                "value": 0
+              }
+            },
+            {
+              "buffer": "buffer",
+              "commitAck": "read-only",
+              "keys": [
+                "cold"
+              ],
+              "operation": "read",
+              "role": "db",
+              "statementPages": [
+                [
+                  "page-cold"
+                ]
+              ],
+              "walBytes": {
+                "evidence": {
+                  "domain": "finite logical keyed work only",
+                  "kind": "authored",
+                  "label": "assumption-only",
+                  "revision": "1",
+                  "source": "finite-io-conservation-fixture"
+                },
+                "unit": "bytes",
+                "value": 0
+              },
+              "walOperations": {
+                "evidence": {
+                  "domain": "finite logical keyed work only",
+                  "kind": "authored",
+                  "label": "assumption-only",
+                  "revision": "1",
+                  "source": "finite-io-conservation-fixture"
+                },
+                "unit": "count",
+                "value": 0
+              }
+            },
+            {
+              "buffer": "buffer",
+              "commitAck": "read-only",
+              "keys": [
+                "cold"
+              ],
+              "operation": "health",
+              "role": "db",
+              "statementPages": [
+                [
+                  "page-cold"
+                ]
+              ],
+              "walBytes": {
+                "evidence": {
+                  "domain": "finite logical keyed work only",
+                  "kind": "authored",
+                  "label": "assumption-only",
+                  "revision": "1",
+                  "source": "finite-io-conservation-fixture"
+                },
+                "unit": "bytes",
+                "value": 0
+              },
+              "walOperations": {
+                "evidence": {
+                  "domain": "finite logical keyed work only",
+                  "kind": "authored",
+                  "label": "assumption-only",
+                  "revision": "1",
+                  "source": "finite-io-conservation-fixture"
+                },
+                "unit": "count",
+                "value": 0
+              }
+            }
+          ],
+          "buffers": [
+            {
+              "capacityBytes": {
+                "evidence": {
+                  "domain": "finite logical keyed work only",
+                  "kind": "authored",
+                  "label": "assumption-only",
+                  "revision": "1",
+                  "source": "finite-io-conservation-fixture"
+                },
+                "unit": "bytes",
+                "value": 128
+              },
+              "device": "disk",
+              "host": "host-db",
+              "initialPages": [],
+              "owner": "buffer",
+              "pageBytes": {
+                "evidence": {
+                  "domain": "finite logical keyed work only",
+                  "kind": "authored",
+                  "label": "assumption-only",
+                  "revision": "1",
+                  "source": "finite-io-conservation-fixture"
+                },
+                "unit": "bytes",
+                "value": 64
+              },
+              "policy": "declared-clean-page-lru/1",
+              "singleFlight": "coalesced/1"
+            }
+          ],
+          "devices": [
+            {
+              "bytesPerSecond": {
+                "evidence": {
+                  "domain": "finite logical keyed work only",
+                  "kind": "authored",
+                  "label": "assumption-only",
+                  "revision": "1",
+                  "source": "finite-io-conservation-fixture"
+                },
+                "unit": "bytes/s",
+                "value": 640000
+              },
+              "flushServiceUs": {
+                "evidence": {
+                  "domain": "finite logical keyed work only",
+                  "kind": "authored",
+                  "label": "assumption-only",
+                  "revision": "1",
+                  "source": "finite-io-conservation-fixture"
+                },
+                "unit": "us",
+                "value": 10
+              },
+              "generation": 1,
+              "id": "disk",
+              "iops": {
+                "evidence": {
+                  "domain": "finite logical keyed work only",
+                  "kind": "authored",
+                  "label": "assumption-only",
+                  "revision": "1",
+                  "source": "finite-io-conservation-fixture"
+                },
+                "unit": "operations/s",
+                "value": 10000
+              },
+              "policy": "fifo-max-operation-byte-service/1",
+              "queueBytes": {
+                "evidence": {
+                  "domain": "finite logical keyed work only",
+                  "kind": "authored",
+                  "label": "assumption-only",
+                  "revision": "1",
+                  "source": "finite-io-conservation-fixture"
+                },
+                "unit": "bytes",
+                "value": 512
+              },
+              "queueOperations": {
+                "evidence": {
+                  "domain": "finite logical keyed work only",
+                  "kind": "authored",
+                  "label": "assumption-only",
+                  "revision": "1",
+                  "source": "finite-io-conservation-fixture"
+                },
+                "unit": "count",
+                "value": 8
+              },
+              "serviceConcurrency": {
+                "evidence": {
+                  "domain": "finite logical keyed work only",
+                  "kind": "authored",
+                  "label": "assumption-only",
+                  "revision": "1",
+                  "source": "finite-io-conservation-fixture"
+                },
+                "unit": "count",
+                "value": 1
+              }
+            }
+          ],
+          "identity": {
+            "evidence": {
+              "domain": "finite logical keyed work only",
+              "kind": "authored",
+              "label": "assumption-only",
+              "revision": "1",
+              "source": "finite-io-conservation-fixture"
+            },
+            "profile": "finite-io-proof",
+            "revision": "1",
+            "workload": "8f29ec7ff5cade2c7297d755ae09ecc8422fe809e31e67eeca8065e31dbdebbd"
+          },
+          "limits": {
+            "maxPages": 100,
+            "maxReceipts": 1000,
+            "maxScheduledBackgroundBytes": 1024,
+            "maxScheduledBackgroundOperations": 10
+          },
+          "schema": "postgresql-keyed-io/1"
+        },
+        "timing": "assumption-only",
+        "physicalHitRate": null,
+        "physicalHitRateReason": "Explicit logical pages do not identify physical PG/OS-cache hits",
+        "recovery": null,
+        "totalDemand": null,
+        "totalDemandReason": "Full process/device/background demand is not identified",
+        "background": "excluded-unknown",
+        "scheduledBackground": 0,
+        "retired": false,
+        "devices": [
+          {
+            "id": "disk",
+            "generation": 1,
+            "policy": "fifo-max-operation-byte-service/1",
+            "queueOperations": 8,
+            "queueBytes": 512,
+            "serviceConcurrency": 1,
+            "iops": 10000,
+            "bytesPerSecond": 640000,
+            "flushServiceUs": 10,
+            "retired": false,
+            "rejected": 0,
+            "accepted": {
+              "operations": 2,
+              "bytes": 128
+            },
+            "queued": {
+              "operations": 0,
+              "bytes": 0
+            },
+            "servicing": {
+              "operations": 0,
+              "bytes": 0
+            },
+            "completed": {
+              "operations": 2,
+              "bytes": 128
+            },
+            "cancelled": {
+              "operations": 0,
+              "bytes": 0
+            },
+            "receipts": [
+              {
+                "role": "db",
+                "request": "[\"health\",\"lb\",\"app-0\",0,\"dependency\",\"db\"]",
+                "transaction": "[\"health\",\"lb\",\"app-0\",0,\"dependency\",\"db\"]",
+                "operation": "[\"page\",0,1,\"page-cold\"]",
+                "kind": "page-read",
+                "bytes": 64,
+                "device": "disk",
+                "generation": 1,
+                "state": "completed",
+                "queuedAtUs": 418,
+                "startedAtUs": 418,
+                "completedAtUs": 518,
+                "detached": false,
+                "queueUs": 0,
+                "serviceUs": 100
+              },
+              {
+                "role": "db",
+                "request": "[\"[\\\"root\\\",\\\"recorded\\\",\\\"r00\\\"]\",\"attempt\",0,\"entry\",\"lb\",\"lb\",\"try\",1,\"app-0\",\"dependency\",\"db\"]",
+                "transaction": "[\"[\\\"root\\\",\\\"recorded\\\",\\\"r00\\\"]\",\"attempt\",0,\"entry\",\"lb\",\"lb\",\"try\",1,\"app-0\",\"dependency\",\"db\"]",
+                "operation": "[\"page\",0,1,\"page-hot\"]",
+                "kind": "page-read",
+                "bytes": 64,
+                "device": "disk",
+                "generation": 1,
+                "state": "completed",
+                "queuedAtUs": 13930,
+                "startedAtUs": 13930,
+                "completedAtUs": 14030,
+                "detached": false,
+                "queueUs": 0,
+                "serviceUs": 100
+              }
+            ]
+          }
+        ],
+        "buffers": [
+          {
+            "owner": "buffer",
+            "pages": [
+              "page-cold",
+              "page-hot"
+            ],
+            "hits": 22,
+            "misses": 4,
+            "coalesced": 2,
+            "evictions": 0,
+            "inFlight": 0
+          }
+        ],
+        "waiters": 0
+      },
+      "memory": [
+        {
+          "id": "host-app-0",
+          "capacityBytes": 1024,
+          "reservedBytes": 100,
+          "availableBytes": 924,
+          "leases": 1
+        },
+        {
+          "id": "host-app-1",
+          "capacityBytes": 1024,
+          "reservedBytes": 100,
+          "availableBytes": 924,
+          "leases": 1
+        },
+        {
+          "id": "host-db",
+          "capacityBytes": 1024,
+          "reservedBytes": 228,
+          "availableBytes": 796,
+          "leases": 2
+        },
+        {
+          "id": "host-lb",
+          "capacityBytes": 1024,
+          "reservedBytes": 0,
+          "availableBytes": 1024,
+          "leases": 0
+        }
+      ],
+      "maxResponseUs": 9551,
+      "observerEqual": true,
+      "repeatedEqual": true
+    },
+    {
+      "warm": true,
+      "compiledHash": "2f6543bc27dc141758d3f1f10bf72f13fc02d238b31222d02ee015217853d841",
+      "evidenceHash": "5ecfd49aa72ab74dc008f9639f7dbd30b8a47a1fbbeed6bb16c8caa92da069fa",
+      "counts": {
+        "offered": 24,
+        "admitted": 24,
+        "completed": 24,
+        "rejected": 0,
+        "deadlineExceeded": 0,
+        "abandoned": 0,
+        "remoteOutcomesAfterCallerStop": 0,
+        "cancellationRequested": 0,
+        "cancellationConfirmedAtEntry": 0,
+        "inFlight": 0
+      },
+      "storage": {
+        "revision": "postgresql-keyed-io/1",
+        "profile": {
+          "background": {
+            "policy": "excluded-unknown",
+            "schedule": []
+          },
+          "bindings": [
+            {
+              "buffer": "buffer",
+              "commitAck": "read-only",
+              "keys": [
+                "hot"
+              ],
+              "operation": "read",
+              "role": "db",
+              "statementPages": [
+                [
+                  "page-hot"
+                ]
+              ],
+              "walBytes": {
+                "evidence": {
+                  "domain": "finite logical keyed work only",
+                  "kind": "authored",
+                  "label": "assumption-only",
+                  "revision": "1",
+                  "source": "finite-io-conservation-fixture"
+                },
+                "unit": "bytes",
+                "value": 0
+              },
+              "walOperations": {
+                "evidence": {
+                  "domain": "finite logical keyed work only",
+                  "kind": "authored",
+                  "label": "assumption-only",
+                  "revision": "1",
+                  "source": "finite-io-conservation-fixture"
+                },
+                "unit": "count",
+                "value": 0
+              }
+            },
+            {
+              "buffer": "buffer",
+              "commitAck": "read-only",
+              "keys": [
+                "cold"
+              ],
+              "operation": "read",
+              "role": "db",
+              "statementPages": [
+                [
+                  "page-cold"
+                ]
+              ],
+              "walBytes": {
+                "evidence": {
+                  "domain": "finite logical keyed work only",
+                  "kind": "authored",
+                  "label": "assumption-only",
+                  "revision": "1",
+                  "source": "finite-io-conservation-fixture"
+                },
+                "unit": "bytes",
+                "value": 0
+              },
+              "walOperations": {
+                "evidence": {
+                  "domain": "finite logical keyed work only",
+                  "kind": "authored",
+                  "label": "assumption-only",
+                  "revision": "1",
+                  "source": "finite-io-conservation-fixture"
+                },
+                "unit": "count",
+                "value": 0
+              }
+            },
+            {
+              "buffer": "buffer",
+              "commitAck": "read-only",
+              "keys": [
+                "cold"
+              ],
+              "operation": "health",
+              "role": "db",
+              "statementPages": [
+                [
+                  "page-cold"
+                ]
+              ],
+              "walBytes": {
+                "evidence": {
+                  "domain": "finite logical keyed work only",
+                  "kind": "authored",
+                  "label": "assumption-only",
+                  "revision": "1",
+                  "source": "finite-io-conservation-fixture"
+                },
+                "unit": "bytes",
+                "value": 0
+              },
+              "walOperations": {
+                "evidence": {
+                  "domain": "finite logical keyed work only",
+                  "kind": "authored",
+                  "label": "assumption-only",
+                  "revision": "1",
+                  "source": "finite-io-conservation-fixture"
+                },
+                "unit": "count",
+                "value": 0
+              }
+            }
+          ],
+          "buffers": [
+            {
+              "capacityBytes": {
+                "evidence": {
+                  "domain": "finite logical keyed work only",
+                  "kind": "authored",
+                  "label": "assumption-only",
+                  "revision": "1",
+                  "source": "finite-io-conservation-fixture"
+                },
+                "unit": "bytes",
+                "value": 128
+              },
+              "device": "disk",
+              "host": "host-db",
+              "initialPages": [
+                "page-hot",
+                "page-cold"
+              ],
+              "owner": "buffer",
+              "pageBytes": {
+                "evidence": {
+                  "domain": "finite logical keyed work only",
+                  "kind": "authored",
+                  "label": "assumption-only",
+                  "revision": "1",
+                  "source": "finite-io-conservation-fixture"
+                },
+                "unit": "bytes",
+                "value": 64
+              },
+              "policy": "declared-clean-page-lru/1",
+              "singleFlight": "coalesced/1"
+            }
+          ],
+          "devices": [
+            {
+              "bytesPerSecond": {
+                "evidence": {
+                  "domain": "finite logical keyed work only",
+                  "kind": "authored",
+                  "label": "assumption-only",
+                  "revision": "1",
+                  "source": "finite-io-conservation-fixture"
+                },
+                "unit": "bytes/s",
+                "value": 640000
+              },
+              "flushServiceUs": {
+                "evidence": {
+                  "domain": "finite logical keyed work only",
+                  "kind": "authored",
+                  "label": "assumption-only",
+                  "revision": "1",
+                  "source": "finite-io-conservation-fixture"
+                },
+                "unit": "us",
+                "value": 10
+              },
+              "generation": 1,
+              "id": "disk",
+              "iops": {
+                "evidence": {
+                  "domain": "finite logical keyed work only",
+                  "kind": "authored",
+                  "label": "assumption-only",
+                  "revision": "1",
+                  "source": "finite-io-conservation-fixture"
+                },
+                "unit": "operations/s",
+                "value": 10000
+              },
+              "policy": "fifo-max-operation-byte-service/1",
+              "queueBytes": {
+                "evidence": {
+                  "domain": "finite logical keyed work only",
+                  "kind": "authored",
+                  "label": "assumption-only",
+                  "revision": "1",
+                  "source": "finite-io-conservation-fixture"
+                },
+                "unit": "bytes",
+                "value": 512
+              },
+              "queueOperations": {
+                "evidence": {
+                  "domain": "finite logical keyed work only",
+                  "kind": "authored",
+                  "label": "assumption-only",
+                  "revision": "1",
+                  "source": "finite-io-conservation-fixture"
+                },
+                "unit": "count",
+                "value": 8
+              },
+              "serviceConcurrency": {
+                "evidence": {
+                  "domain": "finite logical keyed work only",
+                  "kind": "authored",
+                  "label": "assumption-only",
+                  "revision": "1",
+                  "source": "finite-io-conservation-fixture"
+                },
+                "unit": "count",
+                "value": 1
+              }
+            }
+          ],
+          "identity": {
+            "evidence": {
+              "domain": "finite logical keyed work only",
+              "kind": "authored",
+              "label": "assumption-only",
+              "revision": "1",
+              "source": "finite-io-conservation-fixture"
+            },
+            "profile": "finite-io-proof",
+            "revision": "1",
+            "workload": "8f29ec7ff5cade2c7297d755ae09ecc8422fe809e31e67eeca8065e31dbdebbd"
+          },
+          "limits": {
+            "maxPages": 100,
+            "maxReceipts": 1000,
+            "maxScheduledBackgroundBytes": 1024,
+            "maxScheduledBackgroundOperations": 10
+          },
+          "schema": "postgresql-keyed-io/1"
+        },
+        "timing": "assumption-only",
+        "physicalHitRate": null,
+        "physicalHitRateReason": "Explicit logical pages do not identify physical PG/OS-cache hits",
+        "recovery": null,
+        "totalDemand": null,
+        "totalDemandReason": "Full process/device/background demand is not identified",
+        "background": "excluded-unknown",
+        "scheduledBackground": 0,
+        "retired": false,
+        "devices": [
+          {
+            "id": "disk",
+            "generation": 1,
+            "policy": "fifo-max-operation-byte-service/1",
+            "queueOperations": 8,
+            "queueBytes": 512,
+            "serviceConcurrency": 1,
+            "iops": 10000,
+            "bytesPerSecond": 640000,
+            "flushServiceUs": 10,
+            "retired": false,
+            "rejected": 0,
+            "accepted": {
+              "operations": 0,
+              "bytes": 0
+            },
+            "queued": {
+              "operations": 0,
+              "bytes": 0
+            },
+            "servicing": {
+              "operations": 0,
+              "bytes": 0
+            },
+            "completed": {
+              "operations": 0,
+              "bytes": 0
+            },
+            "cancelled": {
+              "operations": 0,
+              "bytes": 0
+            },
+            "receipts": []
+          }
+        ],
+        "buffers": [
+          {
+            "owner": "buffer",
+            "pages": [
+              "page-cold",
+              "page-hot"
+            ],
+            "hits": 26,
+            "misses": 0,
+            "coalesced": 0,
+            "evictions": 0,
+            "inFlight": 0
+          }
+        ],
+        "waiters": 0
+      },
+      "memory": [
+        {
+          "id": "host-app-0",
+          "capacityBytes": 1024,
+          "reservedBytes": 100,
+          "availableBytes": 924,
+          "leases": 1
+        },
+        {
+          "id": "host-app-1",
+          "capacityBytes": 1024,
+          "reservedBytes": 100,
+          "availableBytes": 924,
+          "leases": 1
+        },
+        {
+          "id": "host-db",
+          "capacityBytes": 1024,
+          "reservedBytes": 228,
+          "availableBytes": 796,
+          "leases": 2
+        },
+        {
+          "id": "host-lb",
+          "capacityBytes": 1024,
+          "reservedBytes": 0,
+          "availableBytes": 1024,
+          "leases": 0
+        }
+      ],
+      "maxResponseUs": 9551,
+      "observerEqual": true,
+      "repeatedEqual": true
+    }
+  ],
+  "databases": [
+    {
+      "name": "wal-commit-detach",
+      "cancellation": "unsupported",
+      "database": {
+        "id": "db",
+        "ioProfile": "postgresql-keyed-io/1",
+        "ioPhases": {
+          "elapsedUs": {
+            "queued": 0,
+            "lock": 0,
+            "cpu": 1,
+            "io": 100,
+            "wait": 0,
+            "commit": 210
+          },
+          "entries": {
+            "queued": 1,
+            "lock": 1,
+            "cpu": 1,
+            "io": 1,
+            "wait": 1,
+            "commit": 1
+          },
+          "note": "Transaction phase durations/populations; CPU phase includes scheduler contention, IO phase includes coalesced waiting. Device queue/service receipts remain separate; pool wait belongs to transport."
+        },
+        "profile": "postgresql-keyed/1",
+        "sessionEvents": {
+          "established": 1,
+          "refused": 0,
+          "closed": 1,
+          "transactionTerminated": 0,
+          "protectedCommitCancels": 1
+        },
+        "timing": "assumption-only",
+        "queryAdmission": "authored gate; not a PostgreSQL server setting",
+        "sessions": {
+          "total": 0,
+          "active": 0,
+          "idle": 0,
+          "limit": 8
+        },
+        "transactions": {
+          "admitted": 1,
+          "committed": 1,
+          "aborted": 0,
+          "cancelled": 0,
+          "live": 0
+        },
+        "statements": 1,
+        "logicalReads": 0,
+        "logicalWrites": 1,
+        "generatedLogBytes": 64,
+        "durableAcknowledgedCommits": 1,
+        "rows": [
+          {
+            "key": "k0",
+            "version": 2,
+            "bytes": 64
+          },
+          {
+            "key": "k1",
+            "version": 1,
+            "bytes": 64
+          },
+          {
+            "key": "k2",
+            "version": 1,
+            "bytes": 64
+          },
+          {
+            "key": "k3",
+            "version": 1,
+            "bytes": 64
+          }
+        ],
+        "locks": {
+          "grants": 1,
+          "waits": 0,
+          "deadlocks": 0,
+          "held": []
+        },
+        "waiters": [],
+        "cpu": {
+          "capacity": 1,
+          "runnable": 0,
+          "receivingShare": 0,
+          "contended": false,
+          "paused": false,
+          "throttled": false,
+          "appCoreUs": 1,
+          "competitorCoreUs": 0,
+          "availableCoreUs": 1000,
+          "throttledWallUs": 0,
+          "unsatisfiedParallelismUs": 0,
+          "quotaRemainingCoreUs": null,
+          "allocations": [],
+          "boundaries": 1
+        },
+        "reasons": {},
+        "queryClasses": {
+          "heavy": {
+            "admitted": 1,
+            "committed": 1,
+            "aborted": 0,
+            "cancelled": 0
+          }
+        },
+        "queries": {
+          "executingCpu": 0,
+          "lockWaiting": 0,
+          "blockingWait": 0,
+          "committing": 0
+        },
+        "active": [],
+        "queued": 0,
+        "physicalBufferHits": "Unknown",
+        "storageDeviceLatency": "Unknown"
+      },
+      "peer": null,
+      "storage": {
+        "revision": "postgresql-keyed-io/1",
+        "profile": {
+          "schema": "postgresql-keyed-io/1",
+          "identity": {
+            "profile": "finite-io-proof",
+            "revision": "1",
+            "workload": "authored-keys/1",
+            "evidence": {
+              "kind": "authored",
+              "source": "finite-io-conservation-fixture",
+              "revision": "1",
+              "domain": "finite logical keyed work only",
+              "label": "assumption-only"
+            }
+          },
+          "devices": [
+            {
+              "id": "disk",
+              "generation": 1,
+              "policy": "fifo-max-operation-byte-service/1",
+              "queueOperations": {
+                "value": 8,
+                "unit": "count",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "queueBytes": {
+                "value": 512,
+                "unit": "bytes",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "serviceConcurrency": {
+                "value": 1,
+                "unit": "count",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "iops": {
+                "value": 10000,
+                "unit": "operations/s",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "bytesPerSecond": {
+                "value": 640000,
+                "unit": "bytes/s",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "flushServiceUs": {
+                "value": 10,
+                "unit": "us",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              }
+            }
+          ],
+          "buffers": [
+            {
+              "owner": "buffer",
+              "host": "host",
+              "device": "disk",
+              "pageBytes": {
+                "value": 64,
+                "unit": "bytes",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "capacityBytes": {
+                "value": 64,
+                "unit": "bytes",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "initialPages": [],
+              "policy": "declared-clean-page-lru/1",
+              "singleFlight": "coalesced/1"
+            }
+          ],
+          "bindings": [
+            {
+              "role": "db",
+              "operation": "light",
+              "keys": [
+                "k0"
+              ],
+              "buffer": "buffer",
+              "statementPages": [
+                [
+                  "page-k0"
+                ]
+              ],
+              "walBytes": {
+                "value": 0,
+                "unit": "bytes",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "walOperations": {
+                "value": 0,
+                "unit": "count",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "commitAck": "read-only"
+            },
+            {
+              "role": "db",
+              "operation": "light",
+              "keys": [
+                "k1"
+              ],
+              "buffer": "buffer",
+              "statementPages": [
+                [
+                  "page-k1"
+                ]
+              ],
+              "walBytes": {
+                "value": 0,
+                "unit": "bytes",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "walOperations": {
+                "value": 0,
+                "unit": "count",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "commitAck": "read-only"
+            },
+            {
+              "role": "db",
+              "operation": "light",
+              "keys": [
+                "k2"
+              ],
+              "buffer": "buffer",
+              "statementPages": [
+                [
+                  "page-k2"
+                ]
+              ],
+              "walBytes": {
+                "value": 0,
+                "unit": "bytes",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "walOperations": {
+                "value": 0,
+                "unit": "count",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "commitAck": "read-only"
+            },
+            {
+              "role": "db",
+              "operation": "light",
+              "keys": [
+                "k3"
+              ],
+              "buffer": "buffer",
+              "statementPages": [
+                [
+                  "page-k3"
+                ]
+              ],
+              "walBytes": {
+                "value": 0,
+                "unit": "bytes",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "walOperations": {
+                "value": 0,
+                "unit": "count",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "commitAck": "read-only"
+            },
+            {
+              "role": "db",
+              "operation": "heavy",
+              "keys": [
+                "k0"
+              ],
+              "buffer": "buffer",
+              "statementPages": [
+                [
+                  "page-k0"
+                ]
+              ],
+              "walBytes": {
+                "value": 64,
+                "unit": "bytes",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "walOperations": {
+                "value": 1,
+                "unit": "count",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "commitAck": "declared-local-wal-flush"
+            },
+            {
+              "role": "db",
+              "operation": "heavy",
+              "keys": [
+                "k1"
+              ],
+              "buffer": "buffer",
+              "statementPages": [
+                [
+                  "page-k1"
+                ]
+              ],
+              "walBytes": {
+                "value": 64,
+                "unit": "bytes",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "walOperations": {
+                "value": 1,
+                "unit": "count",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "commitAck": "declared-local-wal-flush"
+            },
+            {
+              "role": "db",
+              "operation": "heavy",
+              "keys": [
+                "k2"
+              ],
+              "buffer": "buffer",
+              "statementPages": [
+                [
+                  "page-k2"
+                ]
+              ],
+              "walBytes": {
+                "value": 64,
+                "unit": "bytes",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "walOperations": {
+                "value": 1,
+                "unit": "count",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "commitAck": "declared-local-wal-flush"
+            },
+            {
+              "role": "db",
+              "operation": "heavy",
+              "keys": [
+                "k3"
+              ],
+              "buffer": "buffer",
+              "statementPages": [
+                [
+                  "page-k3"
+                ]
+              ],
+              "walBytes": {
+                "value": 64,
+                "unit": "bytes",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "walOperations": {
+                "value": 1,
+                "unit": "count",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "commitAck": "declared-local-wal-flush"
+            }
+          ],
+          "background": {
+            "policy": "excluded-unknown",
+            "schedule": []
+          },
+          "limits": {
+            "maxPages": 100,
+            "maxReceipts": 100,
+            "maxScheduledBackgroundOperations": 10,
+            "maxScheduledBackgroundBytes": 1024
+          }
+        },
+        "timing": "assumption-only",
+        "physicalHitRate": null,
+        "physicalHitRateReason": "Explicit logical pages do not identify physical PG/OS-cache hits",
+        "recovery": null,
+        "totalDemand": null,
+        "totalDemandReason": "Full process/device/background demand is not identified",
+        "background": "excluded-unknown",
+        "scheduledBackground": 0,
+        "retired": false,
+        "devices": [
+          {
+            "id": "disk",
+            "generation": 1,
+            "policy": "fifo-max-operation-byte-service/1",
+            "queueOperations": 8,
+            "queueBytes": 512,
+            "serviceConcurrency": 1,
+            "iops": 10000,
+            "bytesPerSecond": 640000,
+            "flushServiceUs": 10,
+            "retired": false,
+            "rejected": 0,
+            "accepted": {
+              "operations": 3,
+              "bytes": 128
+            },
+            "queued": {
+              "operations": 0,
+              "bytes": 0
+            },
+            "servicing": {
+              "operations": 0,
+              "bytes": 0
+            },
+            "completed": {
+              "operations": 3,
+              "bytes": 128
+            },
+            "cancelled": {
+              "operations": 0,
+              "bytes": 0
+            },
+            "receipts": [
+              {
+                "role": "db",
+                "request": "a",
+                "transaction": "a",
+                "operation": "[\"page\",0,1,\"page-k0\"]",
+                "kind": "page-read",
+                "bytes": 64,
+                "device": "disk",
+                "generation": 1,
+                "state": "completed",
+                "queuedAtUs": 1,
+                "startedAtUs": 1,
+                "completedAtUs": 101,
+                "detached": false,
+                "queueUs": 0,
+                "serviceUs": 100
+              },
+              {
+                "role": "db",
+                "request": "a",
+                "transaction": "a",
+                "operation": "wal-0",
+                "kind": "wal-write",
+                "bytes": 64,
+                "device": "disk",
+                "generation": 1,
+                "state": "completed",
+                "queuedAtUs": 101,
+                "startedAtUs": 101,
+                "completedAtUs": 201,
+                "detached": false,
+                "queueUs": 0,
+                "serviceUs": 100
+              },
+              {
+                "role": "db",
+                "request": "a",
+                "transaction": "a",
+                "operation": "flush",
+                "kind": "flush",
+                "bytes": 0,
+                "device": "disk",
+                "generation": 1,
+                "state": "completed",
+                "queuedAtUs": 201,
+                "startedAtUs": 201,
+                "completedAtUs": 311,
+                "detached": false,
+                "queueUs": 0,
+                "serviceUs": 110
+              }
+            ]
+          }
+        ],
+        "buffers": [
+          {
+            "owner": "buffer",
+            "pages": [
+              "page-k0"
+            ],
+            "hits": 0,
+            "misses": 1,
+            "coalesced": 0,
+            "evictions": 0,
+            "inFlight": 0
+          }
+        ],
+        "waiters": 0
+      }
+    },
+    {
+      "name": "two-roles-shared-io",
+      "cancellation": "unsupported",
+      "database": {
+        "id": "db",
+        "ioProfile": "postgresql-keyed-io/1",
+        "ioPhases": {
+          "elapsedUs": {
+            "queued": 0,
+            "lock": 0,
+            "cpu": 1,
+            "io": 100,
+            "wait": 0,
+            "commit": 410
+          },
+          "entries": {
+            "queued": 1,
+            "lock": 1,
+            "cpu": 1,
+            "io": 1,
+            "wait": 1,
+            "commit": 1
+          },
+          "note": "Transaction phase durations/populations; CPU phase includes scheduler contention, IO phase includes coalesced waiting. Device queue/service receipts remain separate; pool wait belongs to transport."
+        },
+        "profile": "postgresql-keyed/1",
+        "sessionEvents": {
+          "established": 1,
+          "refused": 0,
+          "closed": 1,
+          "transactionTerminated": 0,
+          "protectedCommitCancels": 1
+        },
+        "timing": "assumption-only",
+        "queryAdmission": "authored gate; not a PostgreSQL server setting",
+        "sessions": {
+          "total": 0,
+          "active": 0,
+          "idle": 0,
+          "limit": 8
+        },
+        "transactions": {
+          "admitted": 1,
+          "committed": 1,
+          "aborted": 0,
+          "cancelled": 0,
+          "live": 0
+        },
+        "statements": 1,
+        "logicalReads": 0,
+        "logicalWrites": 1,
+        "generatedLogBytes": 64,
+        "durableAcknowledgedCommits": 1,
+        "rows": [
+          {
+            "key": "k0",
+            "version": 2,
+            "bytes": 64
+          },
+          {
+            "key": "k1",
+            "version": 1,
+            "bytes": 64
+          },
+          {
+            "key": "k2",
+            "version": 1,
+            "bytes": 64
+          },
+          {
+            "key": "k3",
+            "version": 1,
+            "bytes": 64
+          }
+        ],
+        "locks": {
+          "grants": 1,
+          "waits": 0,
+          "deadlocks": 0,
+          "held": []
+        },
+        "waiters": [],
+        "cpu": {
+          "capacity": 1,
+          "runnable": 0,
+          "receivingShare": 0,
+          "contended": false,
+          "paused": false,
+          "throttled": false,
+          "appCoreUs": 1,
+          "competitorCoreUs": 0,
+          "availableCoreUs": 1000,
+          "throttledWallUs": 0,
+          "unsatisfiedParallelismUs": 0,
+          "quotaRemainingCoreUs": null,
+          "allocations": [],
+          "boundaries": 1
+        },
+        "reasons": {},
+        "queryClasses": {
+          "heavy": {
+            "admitted": 1,
+            "committed": 1,
+            "aborted": 0,
+            "cancelled": 0
+          }
+        },
+        "queries": {
+          "executingCpu": 0,
+          "lockWaiting": 0,
+          "blockingWait": 0,
+          "committing": 0
+        },
+        "active": [],
+        "queued": 0,
+        "physicalBufferHits": "Unknown",
+        "storageDeviceLatency": "Unknown"
+      },
+      "peer": {
+        "id": "db2",
+        "ioProfile": "postgresql-keyed-io/1",
+        "ioPhases": {
+          "elapsedUs": {
+            "queued": 0,
+            "lock": 0,
+            "cpu": 1,
+            "io": 200,
+            "wait": 0,
+            "commit": 420
+          },
+          "entries": {
+            "queued": 1,
+            "lock": 1,
+            "cpu": 1,
+            "io": 1,
+            "wait": 1,
+            "commit": 1
+          },
+          "note": "Transaction phase durations/populations; CPU phase includes scheduler contention, IO phase includes coalesced waiting. Device queue/service receipts remain separate; pool wait belongs to transport."
+        },
+        "profile": "postgresql-keyed/1",
+        "sessionEvents": {
+          "established": 1,
+          "refused": 0,
+          "closed": 0,
+          "transactionTerminated": 0,
+          "protectedCommitCancels": 0
+        },
+        "timing": "assumption-only",
+        "queryAdmission": "authored gate; not a PostgreSQL server setting",
+        "sessions": {
+          "total": 1,
+          "active": 0,
+          "idle": 1,
+          "limit": 8
+        },
+        "transactions": {
+          "admitted": 1,
+          "committed": 1,
+          "aborted": 0,
+          "cancelled": 0,
+          "live": 0
+        },
+        "statements": 1,
+        "logicalReads": 0,
+        "logicalWrites": 1,
+        "generatedLogBytes": 64,
+        "durableAcknowledgedCommits": 1,
+        "rows": [
+          {
+            "key": "k0",
+            "version": 1,
+            "bytes": 64
+          },
+          {
+            "key": "k1",
+            "version": 2,
+            "bytes": 64
+          },
+          {
+            "key": "k2",
+            "version": 1,
+            "bytes": 64
+          },
+          {
+            "key": "k3",
+            "version": 1,
+            "bytes": 64
+          }
+        ],
+        "locks": {
+          "grants": 1,
+          "waits": 0,
+          "deadlocks": 0,
+          "held": []
+        },
+        "waiters": [],
+        "cpu": {
+          "capacity": 1,
+          "runnable": 0,
+          "receivingShare": 0,
+          "contended": false,
+          "paused": false,
+          "throttled": false,
+          "appCoreUs": 1,
+          "competitorCoreUs": 0,
+          "availableCoreUs": 1000,
+          "throttledWallUs": 0,
+          "unsatisfiedParallelismUs": 0,
+          "quotaRemainingCoreUs": null,
+          "allocations": [],
+          "boundaries": 1
+        },
+        "reasons": {},
+        "queryClasses": {
+          "heavy": {
+            "admitted": 1,
+            "committed": 1,
+            "aborted": 0,
+            "cancelled": 0
+          }
+        },
+        "queries": {
+          "executingCpu": 0,
+          "lockWaiting": 0,
+          "blockingWait": 0,
+          "committing": 0
+        },
+        "active": [],
+        "queued": 0,
+        "physicalBufferHits": "Unknown",
+        "storageDeviceLatency": "Unknown"
+      },
+      "storage": {
+        "revision": "postgresql-keyed-io/1",
+        "profile": {
+          "schema": "postgresql-keyed-io/1",
+          "identity": {
+            "profile": "finite-io-proof",
+            "revision": "1",
+            "workload": "authored-keys/1",
+            "evidence": {
+              "kind": "authored",
+              "source": "finite-io-conservation-fixture",
+              "revision": "1",
+              "domain": "finite logical keyed work only",
+              "label": "assumption-only"
+            }
+          },
+          "devices": [
+            {
+              "id": "disk",
+              "generation": 1,
+              "policy": "fifo-max-operation-byte-service/1",
+              "queueOperations": {
+                "value": 8,
+                "unit": "count",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "queueBytes": {
+                "value": 512,
+                "unit": "bytes",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "serviceConcurrency": {
+                "value": 1,
+                "unit": "count",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "iops": {
+                "value": 10000,
+                "unit": "operations/s",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "bytesPerSecond": {
+                "value": 640000,
+                "unit": "bytes/s",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "flushServiceUs": {
+                "value": 10,
+                "unit": "us",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              }
+            }
+          ],
+          "buffers": [
+            {
+              "owner": "buffer",
+              "host": "host",
+              "device": "disk",
+              "pageBytes": {
+                "value": 64,
+                "unit": "bytes",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "capacityBytes": {
+                "value": 64,
+                "unit": "bytes",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "initialPages": [],
+              "policy": "declared-clean-page-lru/1",
+              "singleFlight": "coalesced/1"
+            }
+          ],
+          "bindings": [
+            {
+              "role": "db",
+              "operation": "light",
+              "keys": [
+                "k0"
+              ],
+              "buffer": "buffer",
+              "statementPages": [
+                [
+                  "page-k0"
+                ]
+              ],
+              "walBytes": {
+                "value": 0,
+                "unit": "bytes",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "walOperations": {
+                "value": 0,
+                "unit": "count",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "commitAck": "read-only"
+            },
+            {
+              "role": "db",
+              "operation": "light",
+              "keys": [
+                "k1"
+              ],
+              "buffer": "buffer",
+              "statementPages": [
+                [
+                  "page-k1"
+                ]
+              ],
+              "walBytes": {
+                "value": 0,
+                "unit": "bytes",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "walOperations": {
+                "value": 0,
+                "unit": "count",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "commitAck": "read-only"
+            },
+            {
+              "role": "db",
+              "operation": "light",
+              "keys": [
+                "k2"
+              ],
+              "buffer": "buffer",
+              "statementPages": [
+                [
+                  "page-k2"
+                ]
+              ],
+              "walBytes": {
+                "value": 0,
+                "unit": "bytes",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "walOperations": {
+                "value": 0,
+                "unit": "count",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "commitAck": "read-only"
+            },
+            {
+              "role": "db",
+              "operation": "light",
+              "keys": [
+                "k3"
+              ],
+              "buffer": "buffer",
+              "statementPages": [
+                [
+                  "page-k3"
+                ]
+              ],
+              "walBytes": {
+                "value": 0,
+                "unit": "bytes",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "walOperations": {
+                "value": 0,
+                "unit": "count",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "commitAck": "read-only"
+            },
+            {
+              "role": "db",
+              "operation": "heavy",
+              "keys": [
+                "k0"
+              ],
+              "buffer": "buffer",
+              "statementPages": [
+                [
+                  "page-k0"
+                ]
+              ],
+              "walBytes": {
+                "value": 64,
+                "unit": "bytes",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "walOperations": {
+                "value": 1,
+                "unit": "count",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "commitAck": "declared-local-wal-flush"
+            },
+            {
+              "role": "db",
+              "operation": "heavy",
+              "keys": [
+                "k1"
+              ],
+              "buffer": "buffer",
+              "statementPages": [
+                [
+                  "page-k1"
+                ]
+              ],
+              "walBytes": {
+                "value": 64,
+                "unit": "bytes",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "walOperations": {
+                "value": 1,
+                "unit": "count",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "commitAck": "declared-local-wal-flush"
+            },
+            {
+              "role": "db",
+              "operation": "heavy",
+              "keys": [
+                "k2"
+              ],
+              "buffer": "buffer",
+              "statementPages": [
+                [
+                  "page-k2"
+                ]
+              ],
+              "walBytes": {
+                "value": 64,
+                "unit": "bytes",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "walOperations": {
+                "value": 1,
+                "unit": "count",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "commitAck": "declared-local-wal-flush"
+            },
+            {
+              "role": "db",
+              "operation": "heavy",
+              "keys": [
+                "k3"
+              ],
+              "buffer": "buffer",
+              "statementPages": [
+                [
+                  "page-k3"
+                ]
+              ],
+              "walBytes": {
+                "value": 64,
+                "unit": "bytes",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "walOperations": {
+                "value": 1,
+                "unit": "count",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "commitAck": "declared-local-wal-flush"
+            },
+            {
+              "role": "db2",
+              "operation": "light",
+              "keys": [
+                "k0"
+              ],
+              "buffer": "buffer",
+              "statementPages": [
+                [
+                  "page-k0"
+                ]
+              ],
+              "walBytes": {
+                "value": 0,
+                "unit": "bytes",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "walOperations": {
+                "value": 0,
+                "unit": "count",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "commitAck": "read-only"
+            },
+            {
+              "role": "db2",
+              "operation": "light",
+              "keys": [
+                "k1"
+              ],
+              "buffer": "buffer",
+              "statementPages": [
+                [
+                  "page-k1"
+                ]
+              ],
+              "walBytes": {
+                "value": 0,
+                "unit": "bytes",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "walOperations": {
+                "value": 0,
+                "unit": "count",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "commitAck": "read-only"
+            },
+            {
+              "role": "db2",
+              "operation": "light",
+              "keys": [
+                "k2"
+              ],
+              "buffer": "buffer",
+              "statementPages": [
+                [
+                  "page-k2"
+                ]
+              ],
+              "walBytes": {
+                "value": 0,
+                "unit": "bytes",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "walOperations": {
+                "value": 0,
+                "unit": "count",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "commitAck": "read-only"
+            },
+            {
+              "role": "db2",
+              "operation": "light",
+              "keys": [
+                "k3"
+              ],
+              "buffer": "buffer",
+              "statementPages": [
+                [
+                  "page-k3"
+                ]
+              ],
+              "walBytes": {
+                "value": 0,
+                "unit": "bytes",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "walOperations": {
+                "value": 0,
+                "unit": "count",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "commitAck": "read-only"
+            },
+            {
+              "role": "db2",
+              "operation": "heavy",
+              "keys": [
+                "k0"
+              ],
+              "buffer": "buffer",
+              "statementPages": [
+                [
+                  "page-k0"
+                ]
+              ],
+              "walBytes": {
+                "value": 64,
+                "unit": "bytes",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "walOperations": {
+                "value": 1,
+                "unit": "count",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "commitAck": "declared-local-wal-flush"
+            },
+            {
+              "role": "db2",
+              "operation": "heavy",
+              "keys": [
+                "k1"
+              ],
+              "buffer": "buffer",
+              "statementPages": [
+                [
+                  "page-k1"
+                ]
+              ],
+              "walBytes": {
+                "value": 64,
+                "unit": "bytes",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "walOperations": {
+                "value": 1,
+                "unit": "count",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "commitAck": "declared-local-wal-flush"
+            },
+            {
+              "role": "db2",
+              "operation": "heavy",
+              "keys": [
+                "k2"
+              ],
+              "buffer": "buffer",
+              "statementPages": [
+                [
+                  "page-k2"
+                ]
+              ],
+              "walBytes": {
+                "value": 64,
+                "unit": "bytes",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "walOperations": {
+                "value": 1,
+                "unit": "count",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "commitAck": "declared-local-wal-flush"
+            },
+            {
+              "role": "db2",
+              "operation": "heavy",
+              "keys": [
+                "k3"
+              ],
+              "buffer": "buffer",
+              "statementPages": [
+                [
+                  "page-k3"
+                ]
+              ],
+              "walBytes": {
+                "value": 64,
+                "unit": "bytes",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "walOperations": {
+                "value": 1,
+                "unit": "count",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "commitAck": "declared-local-wal-flush"
+            }
+          ],
+          "background": {
+            "policy": "excluded-unknown",
+            "schedule": []
+          },
+          "limits": {
+            "maxPages": 100,
+            "maxReceipts": 100,
+            "maxScheduledBackgroundOperations": 10,
+            "maxScheduledBackgroundBytes": 1024
+          }
+        },
+        "timing": "assumption-only",
+        "physicalHitRate": null,
+        "physicalHitRateReason": "Explicit logical pages do not identify physical PG/OS-cache hits",
+        "recovery": null,
+        "totalDemand": null,
+        "totalDemandReason": "Full process/device/background demand is not identified",
+        "background": "excluded-unknown",
+        "scheduledBackground": 0,
+        "retired": false,
+        "devices": [
+          {
+            "id": "disk",
+            "generation": 1,
+            "policy": "fifo-max-operation-byte-service/1",
+            "queueOperations": 8,
+            "queueBytes": 512,
+            "serviceConcurrency": 1,
+            "iops": 10000,
+            "bytesPerSecond": 640000,
+            "flushServiceUs": 10,
+            "retired": false,
+            "rejected": 0,
+            "accepted": {
+              "operations": 6,
+              "bytes": 256
+            },
+            "queued": {
+              "operations": 0,
+              "bytes": 0
+            },
+            "servicing": {
+              "operations": 0,
+              "bytes": 0
+            },
+            "completed": {
+              "operations": 6,
+              "bytes": 256
+            },
+            "cancelled": {
+              "operations": 0,
+              "bytes": 0
+            },
+            "receipts": [
+              {
+                "role": "db",
+                "request": "a",
+                "transaction": "a",
+                "operation": "[\"page\",0,1,\"page-k0\"]",
+                "kind": "page-read",
+                "bytes": 64,
+                "device": "disk",
+                "generation": 1,
+                "state": "completed",
+                "queuedAtUs": 1,
+                "startedAtUs": 1,
+                "completedAtUs": 101,
+                "detached": false,
+                "queueUs": 0,
+                "serviceUs": 100
+              },
+              {
+                "role": "db2",
+                "request": "b",
+                "transaction": "b",
+                "operation": "[\"page\",0,1,\"page-k1\"]",
+                "kind": "page-read",
+                "bytes": 64,
+                "device": "disk",
+                "generation": 1,
+                "state": "completed",
+                "queuedAtUs": 1,
+                "startedAtUs": 101,
+                "completedAtUs": 201,
+                "detached": false,
+                "queueUs": 100,
+                "serviceUs": 100
+              },
+              {
+                "role": "db",
+                "request": "a",
+                "transaction": "a",
+                "operation": "wal-0",
+                "kind": "wal-write",
+                "bytes": 64,
+                "device": "disk",
+                "generation": 1,
+                "state": "completed",
+                "queuedAtUs": 101,
+                "startedAtUs": 201,
+                "completedAtUs": 301,
+                "detached": false,
+                "queueUs": 100,
+                "serviceUs": 100
+              },
+              {
+                "role": "db2",
+                "request": "b",
+                "transaction": "b",
+                "operation": "wal-0",
+                "kind": "wal-write",
+                "bytes": 64,
+                "device": "disk",
+                "generation": 1,
+                "state": "completed",
+                "queuedAtUs": 201,
+                "startedAtUs": 301,
+                "completedAtUs": 401,
+                "detached": false,
+                "queueUs": 100,
+                "serviceUs": 100
+              },
+              {
+                "role": "db",
+                "request": "a",
+                "transaction": "a",
+                "operation": "flush",
+                "kind": "flush",
+                "bytes": 0,
+                "device": "disk",
+                "generation": 1,
+                "state": "completed",
+                "queuedAtUs": 301,
+                "startedAtUs": 401,
+                "completedAtUs": 511,
+                "detached": false,
+                "queueUs": 100,
+                "serviceUs": 110
+              },
+              {
+                "role": "db2",
+                "request": "b",
+                "transaction": "b",
+                "operation": "flush",
+                "kind": "flush",
+                "bytes": 0,
+                "device": "disk",
+                "generation": 1,
+                "state": "completed",
+                "queuedAtUs": 401,
+                "startedAtUs": 511,
+                "completedAtUs": 621,
+                "detached": false,
+                "queueUs": 110,
+                "serviceUs": 110
+              }
+            ]
+          }
+        ],
+        "buffers": [
+          {
+            "owner": "buffer",
+            "pages": [
+              "page-k1"
+            ],
+            "hits": 0,
+            "misses": 2,
+            "coalesced": 0,
+            "evictions": 1,
+            "inFlight": 0
+          }
+        ],
+        "waiters": 0
+      }
+    },
+    {
+      "name": "cancelled-page-read",
+      "cancellation": "cancelled",
+      "database": {
+        "id": "db",
+        "ioProfile": "postgresql-keyed-io/1",
+        "ioPhases": {
+          "elapsedUs": {
+            "queued": 0,
+            "lock": 0,
+            "cpu": 1,
+            "io": 0,
+            "wait": 0,
+            "commit": 0
+          },
+          "entries": {
+            "queued": 1,
+            "lock": 1,
+            "cpu": 1,
+            "io": 1,
+            "wait": 0,
+            "commit": 0
+          },
+          "note": "Transaction phase durations/populations; CPU phase includes scheduler contention, IO phase includes coalesced waiting. Device queue/service receipts remain separate; pool wait belongs to transport."
+        },
+        "profile": "postgresql-keyed/1",
+        "sessionEvents": {
+          "established": 1,
+          "refused": 0,
+          "closed": 1,
+          "transactionTerminated": 0,
+          "protectedCommitCancels": 0
+        },
+        "timing": "assumption-only",
+        "queryAdmission": "authored gate; not a PostgreSQL server setting",
+        "sessions": {
+          "total": 0,
+          "active": 0,
+          "idle": 0,
+          "limit": 8
+        },
+        "transactions": {
+          "admitted": 1,
+          "committed": 0,
+          "aborted": 0,
+          "cancelled": 1,
+          "live": 0
+        },
+        "statements": 0,
+        "logicalReads": 0,
+        "logicalWrites": 0,
+        "generatedLogBytes": 0,
+        "durableAcknowledgedCommits": 0,
+        "rows": [
+          {
+            "key": "k0",
+            "version": 1,
+            "bytes": 64
+          },
+          {
+            "key": "k1",
+            "version": 1,
+            "bytes": 64
+          },
+          {
+            "key": "k2",
+            "version": 1,
+            "bytes": 64
+          },
+          {
+            "key": "k3",
+            "version": 1,
+            "bytes": 64
+          }
+        ],
+        "locks": {
+          "grants": 1,
+          "waits": 0,
+          "deadlocks": 0,
+          "held": []
+        },
+        "waiters": [],
+        "cpu": {
+          "capacity": 1,
+          "runnable": 0,
+          "receivingShare": 0,
+          "contended": false,
+          "paused": false,
+          "throttled": false,
+          "appCoreUs": 1,
+          "competitorCoreUs": 0,
+          "availableCoreUs": 1000,
+          "throttledWallUs": 0,
+          "unsatisfiedParallelismUs": 0,
+          "quotaRemainingCoreUs": null,
+          "allocations": [],
+          "boundaries": 1
+        },
+        "reasons": {
+          "cancelled": 1
+        },
+        "queryClasses": {
+          "heavy": {
+            "admitted": 1,
+            "committed": 0,
+            "aborted": 0,
+            "cancelled": 1
+          }
+        },
+        "queries": {
+          "executingCpu": 0,
+          "lockWaiting": 0,
+          "blockingWait": 0,
+          "committing": 0
+        },
+        "active": [],
+        "queued": 0,
+        "physicalBufferHits": "Unknown",
+        "storageDeviceLatency": "Unknown"
+      },
+      "peer": null,
+      "storage": {
+        "revision": "postgresql-keyed-io/1",
+        "profile": {
+          "schema": "postgresql-keyed-io/1",
+          "identity": {
+            "profile": "finite-io-proof",
+            "revision": "1",
+            "workload": "authored-keys/1",
+            "evidence": {
+              "kind": "authored",
+              "source": "finite-io-conservation-fixture",
+              "revision": "1",
+              "domain": "finite logical keyed work only",
+              "label": "assumption-only"
+            }
+          },
+          "devices": [
+            {
+              "id": "disk",
+              "generation": 1,
+              "policy": "fifo-max-operation-byte-service/1",
+              "queueOperations": {
+                "value": 8,
+                "unit": "count",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "queueBytes": {
+                "value": 512,
+                "unit": "bytes",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "serviceConcurrency": {
+                "value": 1,
+                "unit": "count",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "iops": {
+                "value": 10000,
+                "unit": "operations/s",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "bytesPerSecond": {
+                "value": 640000,
+                "unit": "bytes/s",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "flushServiceUs": {
+                "value": 10,
+                "unit": "us",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              }
+            }
+          ],
+          "buffers": [
+            {
+              "owner": "buffer",
+              "host": "host",
+              "device": "disk",
+              "pageBytes": {
+                "value": 64,
+                "unit": "bytes",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "capacityBytes": {
+                "value": 64,
+                "unit": "bytes",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "initialPages": [],
+              "policy": "declared-clean-page-lru/1",
+              "singleFlight": "coalesced/1"
+            }
+          ],
+          "bindings": [
+            {
+              "role": "db",
+              "operation": "light",
+              "keys": [
+                "k0"
+              ],
+              "buffer": "buffer",
+              "statementPages": [
+                [
+                  "page-k0"
+                ]
+              ],
+              "walBytes": {
+                "value": 0,
+                "unit": "bytes",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "walOperations": {
+                "value": 0,
+                "unit": "count",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "commitAck": "read-only"
+            },
+            {
+              "role": "db",
+              "operation": "light",
+              "keys": [
+                "k1"
+              ],
+              "buffer": "buffer",
+              "statementPages": [
+                [
+                  "page-k1"
+                ]
+              ],
+              "walBytes": {
+                "value": 0,
+                "unit": "bytes",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "walOperations": {
+                "value": 0,
+                "unit": "count",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "commitAck": "read-only"
+            },
+            {
+              "role": "db",
+              "operation": "light",
+              "keys": [
+                "k2"
+              ],
+              "buffer": "buffer",
+              "statementPages": [
+                [
+                  "page-k2"
+                ]
+              ],
+              "walBytes": {
+                "value": 0,
+                "unit": "bytes",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "walOperations": {
+                "value": 0,
+                "unit": "count",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "commitAck": "read-only"
+            },
+            {
+              "role": "db",
+              "operation": "light",
+              "keys": [
+                "k3"
+              ],
+              "buffer": "buffer",
+              "statementPages": [
+                [
+                  "page-k3"
+                ]
+              ],
+              "walBytes": {
+                "value": 0,
+                "unit": "bytes",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "walOperations": {
+                "value": 0,
+                "unit": "count",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "commitAck": "read-only"
+            },
+            {
+              "role": "db",
+              "operation": "heavy",
+              "keys": [
+                "k0"
+              ],
+              "buffer": "buffer",
+              "statementPages": [
+                [
+                  "page-k0"
+                ]
+              ],
+              "walBytes": {
+                "value": 64,
+                "unit": "bytes",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "walOperations": {
+                "value": 1,
+                "unit": "count",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "commitAck": "declared-local-wal-flush"
+            },
+            {
+              "role": "db",
+              "operation": "heavy",
+              "keys": [
+                "k1"
+              ],
+              "buffer": "buffer",
+              "statementPages": [
+                [
+                  "page-k1"
+                ]
+              ],
+              "walBytes": {
+                "value": 64,
+                "unit": "bytes",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "walOperations": {
+                "value": 1,
+                "unit": "count",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "commitAck": "declared-local-wal-flush"
+            },
+            {
+              "role": "db",
+              "operation": "heavy",
+              "keys": [
+                "k2"
+              ],
+              "buffer": "buffer",
+              "statementPages": [
+                [
+                  "page-k2"
+                ]
+              ],
+              "walBytes": {
+                "value": 64,
+                "unit": "bytes",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "walOperations": {
+                "value": 1,
+                "unit": "count",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "commitAck": "declared-local-wal-flush"
+            },
+            {
+              "role": "db",
+              "operation": "heavy",
+              "keys": [
+                "k3"
+              ],
+              "buffer": "buffer",
+              "statementPages": [
+                [
+                  "page-k3"
+                ]
+              ],
+              "walBytes": {
+                "value": 64,
+                "unit": "bytes",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "walOperations": {
+                "value": 1,
+                "unit": "count",
+                "evidence": {
+                  "kind": "authored",
+                  "source": "finite-io-conservation-fixture",
+                  "revision": "1",
+                  "domain": "finite logical keyed work only",
+                  "label": "assumption-only"
+                }
+              },
+              "commitAck": "declared-local-wal-flush"
+            }
+          ],
+          "background": {
+            "policy": "excluded-unknown",
+            "schedule": []
+          },
+          "limits": {
+            "maxPages": 100,
+            "maxReceipts": 100,
+            "maxScheduledBackgroundOperations": 10,
+            "maxScheduledBackgroundBytes": 1024
+          }
+        },
+        "timing": "assumption-only",
+        "physicalHitRate": null,
+        "physicalHitRateReason": "Explicit logical pages do not identify physical PG/OS-cache hits",
+        "recovery": null,
+        "totalDemand": null,
+        "totalDemandReason": "Full process/device/background demand is not identified",
+        "background": "excluded-unknown",
+        "scheduledBackground": 0,
+        "retired": false,
+        "devices": [
+          {
+            "id": "disk",
+            "generation": 1,
+            "policy": "fifo-max-operation-byte-service/1",
+            "queueOperations": 8,
+            "queueBytes": 512,
+            "serviceConcurrency": 1,
+            "iops": 10000,
+            "bytesPerSecond": 640000,
+            "flushServiceUs": 10,
+            "retired": false,
+            "rejected": 0,
+            "accepted": {
+              "operations": 1,
+              "bytes": 64
+            },
+            "queued": {
+              "operations": 0,
+              "bytes": 0
+            },
+            "servicing": {
+              "operations": 0,
+              "bytes": 0
+            },
+            "completed": {
+              "operations": 1,
+              "bytes": 64
+            },
+            "cancelled": {
+              "operations": 0,
+              "bytes": 0
+            },
+            "receipts": [
+              {
+                "role": "db",
+                "request": "a",
+                "transaction": "a",
+                "operation": "[\"page\",0,1,\"page-k0\"]",
+                "kind": "page-read",
+                "bytes": 64,
+                "device": "disk",
+                "generation": 1,
+                "state": "completed",
+                "queuedAtUs": 1,
+                "startedAtUs": 1,
+                "completedAtUs": 101,
+                "detached": true,
+                "queueUs": 0,
+                "serviceUs": 100
+              }
+            ]
+          }
+        ],
+        "buffers": [
+          {
+            "owner": "buffer",
+            "pages": [
+              "page-k0"
+            ],
+            "hits": 0,
+            "misses": 1,
+            "coalesced": 0,
+            "evictions": 0,
+            "inFlight": 0
+          }
+        ],
+        "waiters": 0
+      }
+    }
+  ]
+}
