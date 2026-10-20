@@ -5,7 +5,7 @@
   "files": [
     {
       "path": ".dockerignore",
-      "hash": "ab700f42fc0182b87151814130d0f162603a1db931cfcbd45ce51b7ad00aa079"
+      "hash": "9bf5240d74cffd68040dcca9d8a707f72eac15c322e20c30130b071925abd483"
     },
     {
       "path": "apps/backend/Dockerfile",

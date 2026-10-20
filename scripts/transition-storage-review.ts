@@ -42,8 +42,10 @@ export function reviewTransitionStorage() {
     .replaceAll("entries[0].", "entries[0]!.").replace("copy.descriptors[copy.entries[0]!.descriptor].runtime", "copy.descriptors[copy.entries[0]!.descriptor]!.runtime");
   if (lf(readFileSync(resolve(repositoryRoot, test), "utf8")) !== expected) throw Error("Storage acceptance review only permits the shared loader and one new historical row");
   for (const row of before.acceptance) if (row.path === test) row.hash = sourceHash(expected);
+  for (const row of before.files) if (row.path === ".dockerignore") row.hash = sourceHash(tree.read(".dockerignore"));
   // Refuse any unrelated acceptance or behavior pin refresh.
   const restored = structuredClone(lock);
+  for (const row of restored.files) if (row.path === ".dockerignore") row.hash = before.files.find((entry: { path: string }) => entry.path === ".dockerignore").hash;
   for (const row of restored.acceptance) if (row.path === test) row.hash = before.acceptance.find((entry: { path: string }) => entry.path === test).hash;
   if (digest(restored) !== digest(before)) throw Error("Unrelated first-stack source review changed");
   writeFileSync(resolve(repositoryRoot, lockPath), JSON.stringify(before, null, 2) + "\n");
