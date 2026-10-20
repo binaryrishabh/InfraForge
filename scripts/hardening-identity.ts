@@ -9,7 +9,7 @@ import type { TransitionTable } from "../apps/backend/executionIdentity/transiti
 import { gitTree } from "./execution-identity";
 
 // Exact operational review, independent of the engine/first-stack authoring
-// transitions. No engine, internalModel2, schema or dependency edits permitted.
+// transitions. No engine, internalModel2 source, schema or dependency edits permitted.
 export const hardeningBaseline = "8141673ffcb48d0ac6d9855ea9fe46a563095cc4";
 const folder = "apps/backend/executionIdentity/";
 const reviewed = new Set([
@@ -24,8 +24,20 @@ function scope() {
   const loading = folder + "loading.ts";
   const withoutPin = (source: string) => source.replace(/const analysisPin = "[a-f0-9]{64}";/, 'const analysisPin = "generated";');
   if (withoutPin(before.read(loading)) !== withoutPin(current.read(loading))) throw Error("Hardening cannot change the execution loading policy");
+  // Owner-authorized connected-lineage refresh: current pins only; scientific
+  // lineage and frozen execution records must remain byte-for-byte equivalent.
+  const lineage = "apps/backend/internalModel2/legacyRuntime.json";
+  const oldLine = JSON.parse(before.read(lineage)), newLine = JSON.parse(current.read(lineage));
+  const { current: _oldPins, ...oldFrozen } = oldLine;
+  const { current: pins, ...newFrozen } = newLine;
+  if (JSON.stringify(oldFrozen) !== JSON.stringify(newFrozen)) throw Error("Hardening cannot change frozen connected lineage");
+  const paths = pins.map((pin: { path: string; hash: string }) => {
+    if (sourceHash(readFileSync(resolve(repositoryRoot, pin.path), "utf8")) !== pin.hash) throw Error(`Stale connected pin: ${pin.path}`);
+    return pin.path;
+  });
+  if (JSON.stringify(paths) !== JSON.stringify([...new Set(paths)].sort())) throw Error("Invalid connected pin inventory");
   for (const path of current.paths) {
-    if (path.includes("/generated/") || generated.has(path) || path.startsWith("apps/web/")) continue;
+    if (path.includes("/generated/") || generated.has(path) || path === lineage || path.startsWith("apps/web/")) continue;
     if ((!before.paths.includes(path) || sourceHash(before.read(path)) !== sourceHash(current.read(path))) && !reviewed.has(path)) {
       throw Error(`Outside hardening identity review: ${path}`);
     }
@@ -86,9 +98,12 @@ export function refreshHardeningTransitions() {
   }));
   const current = executionDescriptor(), target = digest(current);
   table.descriptors[source] = stored;
-  if (!table.entries.some(row => row.source === source)) table.entries.push({
+  const review = "Operational hardening only: bounded DB/producer calls, retry backoff, resource retention and ingress drain; engine/compiler/internalModel2 source, schema, stored inputs and dependency bytes unchanged; generated current-source connected pins refreshed; historical reports remain readable; no activation or relabelling";
+  const existing = table.entries.find(row => row.source === source);
+  if (existing) existing.review = review;
+  else table.entries.push({
     commit: hardeningBaseline, source, descriptor: source, target, kind: "descriptor", algorithm: "analysis-boundary/1",
-    review: "Operational hardening only: bounded DB/producer calls, retry backoff, resource retention and ingress drain; engine/compiler/internalModel2, schema, stored inputs and dependency bytes unchanged; historical reports remain readable; no activation or relabelling",
+    review,
   });
   table.descriptors[target] = current;
   for (const row of table.entries) row.target = target;

@@ -280,7 +280,7 @@
     },
     {
       "file": "apps/backend/worker.ts",
-      "hash": "3c6d53b41143cfb21bc01986eef62678c6b594f01b932075e828060308280b42"
+      "hash": "cf8e7524384ac0ac39d89c68d3760c2c97d276cd14a190ceed2b0749af5908cc"
     },
     {
       "file": "apps/web/src/api/internalLesson.api.ts",
