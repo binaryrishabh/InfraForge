@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { EventEmitter } from "node:events";
 import WebSocket from "ws";
-import { attachDeploymentSubscription } from "../infra/deploymentSubscriptions";
+import { attachDeploymentSubscription, SUBSCRIPTION_MAX_BUFFER } from "../infra/deploymentSubscriptions";
 
 const firstId = "00000000-0000-4000-8000-000000000001";
 const secondId = "00000000-0000-4000-8000-000000000002";
@@ -10,7 +10,7 @@ const settle = () => Bun.sleep(0);
 
 function fixture() {
   const messages: string[] = [];
-  const socket = Object.assign(new EventEmitter(), { readyState: WebSocket.OPEN, send: (message: string) => messages.push(message),
+  const socket = Object.assign(new EventEmitter(), { readyState: WebSocket.OPEN, bufferedAmount: 0, send: (message: string) => messages.push(message),
     close: (code?: number) => socket.emit("close", code) });
   return { socket, messages, transport: socket as unknown as WebSocket };
 }
@@ -34,6 +34,26 @@ test("deduplicates repeated subscriptions while the connection is pending", asyn
   socket.emit("close");
   await settle();
   expect(quits).toBe(1);
+});
+
+test("slow consumers close and release the Redis connection even if QUIT fails", async () => {
+  const { socket, messages, transport } = fixture();
+  let receive!: (event: unknown) => void;
+  let disconnected = false;
+  let code = 0;
+  socket.once("close", value => { code = value; });
+  attachDeploymentSubscription(transport, async (_id, callback) => {
+    receive = callback;
+    return { quit: async () => { throw new Error("unavailable"); }, disconnect: () => { disconnected = true; } };
+  });
+  send(socket, firstId);
+  await settle();
+  socket.bufferedAmount = SUBSCRIPTION_MAX_BUFFER;
+  receive({ telemetry: true });
+  await settle();
+  expect(code).toBe(1013);
+  expect(messages).toHaveLength(0);
+  expect(disconnected).toBe(true);
 });
 
 test("closes a subscription that resolves after the socket disconnects", async () => {

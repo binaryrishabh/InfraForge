@@ -8,10 +8,14 @@ import { attachDeploymentSubscription, SUBSCRIPTION_MAX_BYTES } from "./infra/de
 import { assertRuntimeSchema } from "./release/runtime";
 import { createReadiness } from "./health/readiness";
 import { config } from "./utils/config";
+import { redis, commandRedis } from "./infra/redis";
+import { configureHttpServer, createShutdown, shutdownOnSignals } from "./utils/lifecycle";
+import { MAX_SOCKET_CLIENTS, startSocketHeartbeat } from "./utils/socketLifecycle";
 
 await assertRuntimeSchema();
 const readiness = createReadiness();
 const server = http.createServer(async (req, res) => {
+  if (lifecycle.isStopping()) { res.writeHead(503); res.end(); return; }
   if (req.url === "/health/live") { res.writeHead(200); res.end("ok"); return; }
   if (!["/", "/health", "/health/ready"].includes(req.url ?? "")) { res.writeHead(404); res.end(); return; }
   const result = await readiness.check();
@@ -19,13 +23,18 @@ const server = http.createServer(async (req, res) => {
   res.end(JSON.stringify(result));
 });
 const authenticated = new WeakMap<http.IncomingMessage, { headers: Headers; userId: string }>();
+let pendingAuthentications = 0;
 // Bun 1.3.14 exposes a synthetic upgrade socket. Its ws verifier sends HTTP
 // rejection responses correctly; writing to that socket cannot do so reliably.
 const wss = new WebSocketServer({ server, maxPayload: SUBSCRIPTION_MAX_BYTES,
   verifyClient: async ({ req }, done) => {
+    if (lifecycle.isStopping() || wss.clients.size + pendingAuthentications >= MAX_SOCKET_CLIENTS) {
+      done(false, 503); return;
+    }
     if (!["/", "/ws"].includes(req.url ?? "") || !req.headers.origin || !authSettings.origins.includes(req.headers.origin)) {
       done(false, 403); return;
     }
+    pendingAuthentications++;
     try {
       const headers = fromNodeHeaders(req.headers);
       const session = await auth.api.getSession({ headers, query: { disableCookieCache: true } });
@@ -33,6 +42,7 @@ const wss = new WebSocketServer({ server, maxPayload: SUBSCRIPTION_MAX_BYTES,
       authenticated.set(req, { headers, userId: session.user.id });
       done(true);
     } catch { done(false, 503); }
+    finally { pendingAuthentications--; }
   },
 });
 
@@ -76,4 +86,17 @@ wss.on("connection", (socket, req) => {
   });
 });
 
+configureHttpServer(server);
+const stopHeartbeat = startSocketHeartbeat(wss);
+const lifecycle = createShutdown(server, async () => {
+  await new Promise<void>(resolve => wss.close(() => resolve()));
+  redis.disconnect(); commandRedis.disconnect();
+  await Promise.all([readiness.close(), prisma.$disconnect()]);
+}, { stopIngress: () => {
+  stopHeartbeat();
+  for (const socket of wss.clients) socket.close(1001, "Server restarting");
+  const force = setTimeout(() => { for (const socket of wss.clients) socket.terminate(); }, 1000);
+  force.unref();
+} });
+shutdownOnSignals(lifecycle);
 server.listen(3001, config.LISTEN_HOST);

@@ -13,12 +13,19 @@ import { challengeRouter } from "./challenges/routes";
 import { assertRuntimeSchema } from "./release/runtime";
 import { createReadiness } from "./health/readiness";
 import { internalModel2Router } from "./internalModel2/routes";
+import { prisma } from "./lib/prisma";
+import { redis, commandRedis } from "./infra/redis";
+import { configureHttpServer, createShutdown, shutdownOnSignals } from "./utils/lifecycle";
 
 await assertRuntimeSchema();
 const readiness = createReadiness();
 const app = express();
 // Ports are bound to loopback by Compose. The local TLS proxy replaces forwarded headers.
 app.set("trust proxy", config.NODE_ENV === "production" ? 1 : "loopback");
+app.use((_req, res, next) => {
+  if (lifecycle.isStopping()) { res.setHeader("Connection", "close"); res.status(503).json({ success: false }); return; }
+  next();
+});
 app.get("/health/live", (_req, res) => res.json({ success: true }));
 app.get(["/health", "/health/ready"], async (_req, res) => {
   const result = await readiness.check();
@@ -54,4 +61,10 @@ app.use("/api/challenges", challengeRouter);
 app.use((_req, res) => res.status(404).json({ success: false, message: "Resource not found" }));
 
 app.use(errorHandler);
-app.listen(Number(config.PORT), config.LISTEN_HOST);
+const server = app.listen(Number(config.PORT), config.LISTEN_HOST);
+configureHttpServer(server);
+const lifecycle = createShutdown(server, async () => {
+  redis.disconnect(); commandRedis.disconnect();
+  await Promise.all([readiness.close(), prisma.$disconnect()]);
+});
+shutdownOnSignals(lifecycle);

@@ -6,6 +6,12 @@ x-app: &app
   init: true
   cap_drop: [ALL]
   security_opt: [no-new-privileges:true]
+  pids_limit: 256
+  logging:
+    driver: local
+    options:
+      max-size: "10m"
+      max-file: "3"
   depends_on:
     redis:
       condition: service_healthy
@@ -46,7 +52,17 @@ services:
     image: redis:7-alpine
     volumes: [redis_data:/data]
     restart: unless-stopped
-    command: [redis-server, --appendonly, "yes"]
+    mem_limit: 512m
+    cpus: 0.5
+    pids_limit: 128
+    logging:
+      driver: local
+      options:
+        max-size: "10m"
+        max-file: "3"
+    # Queue keys must never be evicted silently. Capacity errors fail delivery
+    # explicitly; leave headroom above maxmemory for AOF buffers and rewrites.
+    command: [redis-server, --appendonly, "yes", --maxmemory, "256mb", --maxmemory-policy, noeviction]
     networks: [application]
     healthcheck:
       test: [CMD, redis-cli, ping]
@@ -56,6 +72,8 @@ services:
 
   api:
     <<: *app
+    mem_limit: 512m
+    cpus: 0.5
     ports: ["127.0.0.1:${API_PORT:-3000}:3000"]
     environment:
       <<: *auth
@@ -71,6 +89,8 @@ services:
 
   worker:
     <<: *app
+    mem_limit: 1536m
+    cpus: 1.0
     environment:
       <<: *environment
       DATABASE_URL: ${WORKER_DATABASE_URL:?Set a session-preserving PostgreSQL worker URL}
@@ -82,6 +102,8 @@ services:
 
   ws-server:
     <<: *app
+    mem_limit: 384m
+    cpus: 0.5
     ports: ["127.0.0.1:${WS_PORT:-3001}:3001"]
     environment: *auth
     command: [bun, --no-env-file, --no-install, executionIdentity/launcher.ts, ws]

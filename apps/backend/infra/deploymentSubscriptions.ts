@@ -4,11 +4,13 @@ import { WebSocketMessage } from "@infraforge/contracts/events";
 
 interface Subscriber {
   quit: () => Promise<unknown>;
+  disconnect?: () => void;
 }
 
 type Subscribe = (id: string, receive: (event: unknown) => void, signal: AbortSignal) => Promise<Subscriber>;
 
 export const SUBSCRIPTION_MAX_BYTES = 1024;
+export const SUBSCRIPTION_MAX_BUFFER = 1024 * 1024;
 
 const SubscriptionSchema = z.object({
   type: z.literal(WebSocketMessage.Subscribe),
@@ -24,7 +26,8 @@ export function attachDeploymentSubscription(socket: WebSocket, subscribe: Subsc
 
   const quit = async (connection: Subscriber) => {
     try { await connection.quit(); }
-    catch (error) { console.error("Deployment subscription cleanup failed", error); }
+    catch { console.error("Deployment subscription cleanup failed"); }
+    finally { connection.disconnect?.(); }
   };
 
   const synchronize = async () => {
@@ -40,7 +43,12 @@ export function attachDeploymentSubscription(socket: WebSocket, subscribe: Subsc
         if (lifetime.signal.aborted) break;
         const connection = await subscribe(requestedId, (event) => {
           if (!lifetime.signal.aborted && desiredId === requestedId && socket.readyState === WebSocket.OPEN) {
-            socket.send(JSON.stringify(event));
+            const message = JSON.stringify(event);
+            if (socket.bufferedAmount + Buffer.byteLength(message) > SUBSCRIPTION_MAX_BUFFER) {
+              socket.close(1013, "Client is receiving updates too slowly");
+              return;
+            }
+            socket.send(message);
           }
         }, lifetime.signal);
         if (lifetime.signal.aborted || desiredId !== requestedId) {
@@ -53,7 +61,7 @@ export function attachDeploymentSubscription(socket: WebSocket, subscribe: Subsc
     } catch (error) {
       desiredId = currentId;
       if (!lifetime.signal.aborted) {
-        console.error("Deployment subscription failed", error);
+        console.error("Deployment subscription failed");
         socket.close(1011, "Deployment subscription failed");
       }
     } finally { subscribing = false; }

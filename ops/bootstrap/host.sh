@@ -21,7 +21,7 @@ if ! command -v docker >/dev/null; then
     fi
   done
   install -d -m 0755 /etc/apt/keyrings
-  curl --fail --silent --show-error --proto '=https' --tlsv1.2 https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+  curl --fail --silent --show-error --connect-timeout 10 --max-time 120 --retry 2 --retry-delay 2 --retry-max-time 180 --proto '=https' --tlsv1.2 https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
   chmod 0644 /etc/apt/keyrings/docker.asc
   [[ ! -e /etc/apt/sources.list.d/docker.sources ]] || { echo 'Review existing Docker apt source' >&2; exit 1; }
   printf 'Types: deb\nURIs: https://download.docker.com/linux/ubuntu\nSuites: noble\nComponents: stable\nArchitectures: %s\nSigned-By: /etc/apt/keyrings/docker.asc\n' "$(dpkg --print-architecture)" > /etc/apt/sources.list.d/docker.sources
@@ -51,7 +51,7 @@ else
   esac
   work=$(mktemp -d)
   trap 'rm -rf -- "$work"' EXIT
-  curl --fail --silent --show-error --location --proto '=https' --tlsv1.2 "https://github.com/oven-sh/bun/releases/download/bun-v1.3.14/$archive.zip" -o "$work/bun.zip"
+  curl --fail --silent --show-error --location --connect-timeout 10 --max-time 120 --retry 2 --retry-delay 2 --retry-max-time 180 --proto '=https' --tlsv1.2 "https://github.com/oven-sh/bun/releases/download/bun-v1.3.14/$archive.zip" -o "$work/bun.zip"
   printf '%s  %s\n' "$checksum" "$work/bun.zip" | sha256sum --check --status
   unzip -q "$work/bun.zip" -d "$work"
   install -m 0755 "$work/$archive/bun" /usr/local/bin/bun
