@@ -14,7 +14,9 @@ The engine runs only in a disposable module worker. One active worker per page,
 bound execution. Cancellation and the page watchdog terminate the worker, even
 when compilation cannot yield. The worker yields between bounded event slices.
 It returns an isolated-cut/1 envelope using slice 11's compile lock, immutable
-input hash and fingerprint fields; it does not export unbounded raw results.
+input hash and fingerprint fields, including slice 12's bounded report capture;
+it does not export unbounded raw results. Capture saturation, selected journal
+events, omission counts and the 256 KiB Unknown fallback match the current server.
 
 128 MiB is an **observed heap** cutoff only when `performance.memory` exists.
 CPU time, RSS and unavailable heap measurements are `Unknown`. Browsers provide
@@ -42,6 +44,8 @@ Use Bun 1.3.14 and the frozen application lockfile. Install test-only Playwright
 ```powershell
 npm install --prefix .cache/browser-tooling --no-save --package-lock=false playwright@1.64.1
 node .cache/browser-tooling/node_modules/playwright/cli.js install chromium firefox webkit
+bun --no-env-file scripts/browser-first-stack/pin.ts --write
+bun --no-env-file scripts/browser-first-stack/oracle.ts --write
 bun --no-env-file scripts/browser-first-stack/determinism.ts
 node scripts/browser-first-stack/build.mjs
 bun --no-env-file scripts/browser-first-stack/determinism.ts --worker --vite
@@ -50,10 +54,15 @@ bun --no-env-file --no-install test scripts/tests/browserRunner.test.ts scripts/
 
 Linux browser installs require Playwright's `--with-deps`. CI reuses its external
 Playwright installation through `MODEL2_BROWSER_MODULE`. The initial gate compares
-18 full canonical results/journals/locks and server fingerprints in Bun and real
+18 full canonical results/journals/locks, canonical cuts and server fingerprints in Bun and real
 Chromium/Firefox/WebKit. The worker check compares the emitted Vite worker's cuts
 against the same server oracle, calls the server cut reader, checks page heartbeat,
-cancellation, watchdog and wrong-engine handling in each browser.
+cancellation, watchdog and wrong-engine handling in each browser. The server-only
+`oracle.ts` generator writes `scripts/fixtures/browser-server-results.json` from
+the current server runtime, `captureExecutionCut` and `cutFingerprint`; browser
+output never supplies expected hashes. The harness checks these fixtures before
+comparison. Complete cut bytes must match except for host-specific
+`effectiveLimits` metadata, which the server excludes from its fingerprint.
 
 ## Future UI needs
 

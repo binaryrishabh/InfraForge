@@ -2067,7 +2067,7 @@
     },
     {
       "file": "apps/web/src/firstStack/protocol.ts",
-      "sha256": "9936d9d90adec0113370e0d900410ef4937eb185a57fb77956a762bf3651db3f",
+      "sha256": "6b686e4882209081ff10b98fb685a6d317c3d15c7eb38ae45dd0c09eaa68c828",
       "numericSites": 21
     },
     {
@@ -2087,8 +2087,13 @@
     },
     {
       "file": "apps/web/src/firstStack/worker/execute.ts",
-      "sha256": "6a8204b5983c807f166f7506e33136d3c20ad7aa3bf165bf8c1344931ca0123a",
+      "sha256": "1071001f2f6ac7b56f8c7d1f0d4dfc8aa81b1599f4b6679204b2a5dbb8939fda",
       "numericSites": 15
+    },
+    {
+      "file": "apps/web/src/firstStack/worker/reportCapture.ts",
+      "sha256": "172922409bbe7eca404f13d1fb406ed4f11a79696ce7d8b56b82ea345886137d",
+      "numericSites": 2
     },
     {
       "file": "apps/web/src/lib/format.ts",
@@ -104719,7 +104724,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/protocol.ts#L3",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/protocol.ts#L4",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -104733,7 +104738,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/firstStack/protocol.ts",
-        "line": 3,
+        "line": 4,
         "column": 13
       }
     },
@@ -104755,7 +104760,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/protocol.ts#L3",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/protocol.ts#L4",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -104769,7 +104774,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/firstStack/protocol.ts",
-        "line": 3,
+        "line": 4,
         "column": 20
       }
     },
@@ -104791,7 +104796,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/protocol.ts#L4",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/protocol.ts#L5",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -104805,7 +104810,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/firstStack/protocol.ts",
-        "line": 4,
+        "line": 5,
         "column": 93
       }
     },
@@ -104827,7 +104832,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/protocol.ts#L5",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/protocol.ts#L6",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -104841,7 +104846,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/firstStack/protocol.ts",
-        "line": 5,
+        "line": 6,
         "column": 14
       }
     },
@@ -104863,7 +104868,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/protocol.ts#L5",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/protocol.ts#L6",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -104877,7 +104882,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/firstStack/protocol.ts",
-        "line": 5,
+        "line": 6,
         "column": 33
       }
     },
@@ -104899,7 +104904,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/protocol.ts#L5",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/protocol.ts#L6",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -104913,7 +104918,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/firstStack/protocol.ts",
-        "line": 5,
+        "line": 6,
         "column": 47
       }
     },
@@ -104935,7 +104940,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/protocol.ts#L5",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/protocol.ts#L6",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -104949,7 +104954,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/firstStack/protocol.ts",
-        "line": 5,
+        "line": 6,
         "column": 64
       }
     },
@@ -104971,7 +104976,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/protocol.ts#L5",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/protocol.ts#L6",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -104985,7 +104990,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/firstStack/protocol.ts",
-        "line": 5,
+        "line": 6,
         "column": 83
       }
     },
@@ -105007,7 +105012,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/protocol.ts#L6",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/protocol.ts#L7",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -105021,7 +105026,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/firstStack/protocol.ts",
-        "line": 6,
+        "line": 7,
         "column": 33
       }
     },
@@ -105043,7 +105048,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/protocol.ts#L6",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/protocol.ts#L7",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -105057,7 +105062,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/firstStack/protocol.ts",
-        "line": 6,
+        "line": 7,
         "column": 51
       }
     },
@@ -105079,7 +105084,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/protocol.ts#L38",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/protocol.ts#L40",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -105093,7 +105098,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/firstStack/protocol.ts",
-        "line": 38,
+        "line": 40,
         "column": 79
       }
     },
@@ -105115,7 +105120,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/protocol.ts#L44",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/protocol.ts#L46",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -105129,7 +105134,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/firstStack/protocol.ts",
-        "line": 44,
+        "line": 46,
         "column": 17
       }
     },
@@ -105151,7 +105156,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/protocol.ts#L54",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/protocol.ts#L56",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -105165,7 +105170,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/firstStack/protocol.ts",
-        "line": 54,
+        "line": 56,
         "column": 25
       }
     },
@@ -105187,7 +105192,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/protocol.ts#L56",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/protocol.ts#L58",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -105201,7 +105206,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/firstStack/protocol.ts",
-        "line": 56,
+        "line": 58,
         "column": 20
       }
     },
@@ -105223,7 +105228,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/protocol.ts#L56",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/protocol.ts#L58",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -105237,7 +105242,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/firstStack/protocol.ts",
-        "line": 56,
+        "line": 58,
         "column": 104
       }
     },
@@ -105259,7 +105264,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/protocol.ts#L62",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/protocol.ts#L64",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -105273,7 +105278,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/firstStack/protocol.ts",
-        "line": 62,
+        "line": 64,
         "column": 25
       }
     },
@@ -105295,7 +105300,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/protocol.ts#L63",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/protocol.ts#L65",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -105309,7 +105314,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/firstStack/protocol.ts",
-        "line": 63,
+        "line": 65,
         "column": 174
       }
     },
@@ -105331,7 +105336,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/protocol.ts#L67",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/protocol.ts#L69",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -105345,7 +105350,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/firstStack/protocol.ts",
-        "line": 67,
+        "line": 69,
         "column": 23
       }
     },
@@ -105367,7 +105372,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/protocol.ts#L71",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/protocol.ts#L73",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -105381,7 +105386,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/firstStack/protocol.ts",
-        "line": 71,
+        "line": 73,
         "column": 58
       }
     },
@@ -105403,7 +105408,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/protocol.ts#L71",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/protocol.ts#L73",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -105417,7 +105422,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/firstStack/protocol.ts",
-        "line": 71,
+        "line": 73,
         "column": 71
       }
     },
@@ -105439,7 +105444,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/protocol.ts#L80",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/protocol.ts#L83",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -105453,7 +105458,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/firstStack/protocol.ts",
-        "line": 80,
+        "line": 83,
         "column": 48
       }
     },
@@ -105691,7 +105696,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/worker/execute.ts#L9",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/worker/execute.ts#L10",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -105705,7 +105710,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/firstStack/worker/execute.ts",
-        "line": 9,
+        "line": 10,
         "column": 115
       }
     },
@@ -105727,7 +105732,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/worker/execute.ts#L20",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/worker/execute.ts#L21",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -105741,7 +105746,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/firstStack/worker/execute.ts",
-        "line": 20,
+        "line": 21,
         "column": 44
       }
     },
@@ -105763,7 +105768,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/worker/execute.ts#L20",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/worker/execute.ts#L21",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -105777,7 +105782,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/firstStack/worker/execute.ts",
-        "line": 20,
+        "line": 21,
         "column": 88
       }
     },
@@ -105799,7 +105804,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/worker/execute.ts#L22",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/worker/execute.ts#L23",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -105813,7 +105818,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/firstStack/worker/execute.ts",
-        "line": 22,
+        "line": 23,
         "column": 53
       }
     },
@@ -105835,7 +105840,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/worker/execute.ts#L22",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/worker/execute.ts#L23",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -105849,7 +105854,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/firstStack/worker/execute.ts",
-        "line": 22,
+        "line": 23,
         "column": 101
       }
     },
@@ -105864,114 +105869,6 @@
         "unit": "code-number",
         "provenance": [
           "m1.apps.web.src.firstStack.worker.execute.6"
-        ]
-      },
-      "formula": "for (const [name, value, ceiling, min] of [ [\"horizon\", policy.horizonUs, limits.horizonUs, 1], [\"events\", policy.maxEvents, limits.events, 1], [\"samples\", policy.maxSamples, 10000, 1], [\"raw results\", policy.maxRawResults, limits.roots, 0], [\"sample interval\", policy.sampleIntervalUs, limits.horizonUs, 1], ] as const) if (!Number.isSafeInteger(value) || value < min || value > ceiling) throw Error(`Browser ${name} budget exceeded`);",
-      "classification": "implementation-policy",
-      "confidence": "high",
-      "provenance": [
-        {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/worker/execute.ts#L23",
-          "supports": "implementation",
-          "detail": "Exact historical literal and source expression; not external validation."
-        }
-      ],
-      "assumptions": [
-        "This literal is not evidence of real infrastructure capacity or performance.",
-        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
-      ],
-      "researchedOn": "2026-10-15",
-      "freeMode": "conditional",
-      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
-      "location": {
-        "file": "apps/web/src/firstStack/worker/execute.ts",
-        "line": 23,
-        "column": 36
-      }
-    },
-    {
-      "id": "m1.apps.web.src.firstStack.worker.execute.7",
-      "concept": "executeBrowser · literal 1",
-      "modelVersion": "1",
-      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
-      "quantity": {
-        "kind": "known",
-        "value": 1,
-        "unit": "code-number",
-        "provenance": [
-          "m1.apps.web.src.firstStack.worker.execute.7"
-        ]
-      },
-      "formula": "for (const [name, value, ceiling, min] of [ [\"horizon\", policy.horizonUs, limits.horizonUs, 1], [\"events\", policy.maxEvents, limits.events, 1], [\"samples\", policy.maxSamples, 10000, 1], [\"raw results\", policy.maxRawResults, limits.roots, 0], [\"sample interval\", policy.sampleIntervalUs, limits.horizonUs, 1], ] as const) if (!Number.isSafeInteger(value) || value < min || value > ceiling) throw Error(`Browser ${name} budget exceeded`);",
-      "classification": "implementation-policy",
-      "confidence": "high",
-      "provenance": [
-        {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/worker/execute.ts#L23",
-          "supports": "implementation",
-          "detail": "Exact historical literal and source expression; not external validation."
-        }
-      ],
-      "assumptions": [
-        "This literal is not evidence of real infrastructure capacity or performance.",
-        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
-      ],
-      "researchedOn": "2026-10-15",
-      "freeMode": "conditional",
-      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
-      "location": {
-        "file": "apps/web/src/firstStack/worker/execute.ts",
-        "line": 23,
-        "column": 43
-      }
-    },
-    {
-      "id": "m1.apps.web.src.firstStack.worker.execute.8",
-      "concept": "executeBrowser · literal 0",
-      "modelVersion": "1",
-      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
-      "quantity": {
-        "kind": "known",
-        "value": 0,
-        "unit": "code-number",
-        "provenance": [
-          "m1.apps.web.src.firstStack.worker.execute.8"
-        ]
-      },
-      "formula": "for (const [name, value, ceiling, min] of [ [\"horizon\", policy.horizonUs, limits.horizonUs, 1], [\"events\", policy.maxEvents, limits.events, 1], [\"samples\", policy.maxSamples, 10000, 1], [\"raw results\", policy.maxRawResults, limits.roots, 0], [\"sample interval\", policy.sampleIntervalUs, limits.horizonUs, 1], ] as const) if (!Number.isSafeInteger(value) || value < min || value > ceiling) throw Error(`Browser ${name} budget exceeded`);",
-      "classification": "implementation-policy",
-      "confidence": "high",
-      "provenance": [
-        {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/worker/execute.ts#L23",
-          "supports": "implementation",
-          "detail": "Exact historical literal and source expression; not external validation."
-        }
-      ],
-      "assumptions": [
-        "This literal is not evidence of real infrastructure capacity or performance.",
-        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
-      ],
-      "researchedOn": "2026-10-15",
-      "freeMode": "conditional",
-      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
-      "location": {
-        "file": "apps/web/src/firstStack/worker/execute.ts",
-        "line": 23,
-        "column": 99
-      }
-    },
-    {
-      "id": "m1.apps.web.src.firstStack.worker.execute.9",
-      "concept": "executeBrowser · literal 1",
-      "modelVersion": "1",
-      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
-      "quantity": {
-        "kind": "known",
-        "value": 1,
-        "unit": "code-number",
-        "provenance": [
-          "m1.apps.web.src.firstStack.worker.execute.9"
         ]
       },
       "formula": "for (const [name, value, ceiling, min] of [ [\"horizon\", policy.horizonUs, limits.horizonUs, 1], [\"events\", policy.maxEvents, limits.events, 1], [\"samples\", policy.maxSamples, 10000, 1], [\"raw results\", policy.maxRawResults, limits.roots, 0], [\"sample interval\", policy.sampleIntervalUs, limits.horizonUs, 1], ] as const) if (!Number.isSafeInteger(value) || value < min || value > ceiling) throw Error(`Browser ${name} budget exceeded`);",
@@ -105994,6 +105891,114 @@
       "location": {
         "file": "apps/web/src/firstStack/worker/execute.ts",
         "line": 24,
+        "column": 36
+      }
+    },
+    {
+      "id": "m1.apps.web.src.firstStack.worker.execute.7",
+      "concept": "executeBrowser · literal 1",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.firstStack.worker.execute.7"
+        ]
+      },
+      "formula": "for (const [name, value, ceiling, min] of [ [\"horizon\", policy.horizonUs, limits.horizonUs, 1], [\"events\", policy.maxEvents, limits.events, 1], [\"samples\", policy.maxSamples, 10000, 1], [\"raw results\", policy.maxRawResults, limits.roots, 0], [\"sample interval\", policy.sampleIntervalUs, limits.horizonUs, 1], ] as const) if (!Number.isSafeInteger(value) || value < min || value > ceiling) throw Error(`Browser ${name} budget exceeded`);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/worker/execute.ts#L24",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/firstStack/worker/execute.ts",
+        "line": 24,
+        "column": 43
+      }
+    },
+    {
+      "id": "m1.apps.web.src.firstStack.worker.execute.8",
+      "concept": "executeBrowser · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.firstStack.worker.execute.8"
+        ]
+      },
+      "formula": "for (const [name, value, ceiling, min] of [ [\"horizon\", policy.horizonUs, limits.horizonUs, 1], [\"events\", policy.maxEvents, limits.events, 1], [\"samples\", policy.maxSamples, 10000, 1], [\"raw results\", policy.maxRawResults, limits.roots, 0], [\"sample interval\", policy.sampleIntervalUs, limits.horizonUs, 1], ] as const) if (!Number.isSafeInteger(value) || value < min || value > ceiling) throw Error(`Browser ${name} budget exceeded`);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/worker/execute.ts#L24",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/firstStack/worker/execute.ts",
+        "line": 24,
+        "column": 99
+      }
+    },
+    {
+      "id": "m1.apps.web.src.firstStack.worker.execute.9",
+      "concept": "executeBrowser · literal 1",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.firstStack.worker.execute.9"
+        ]
+      },
+      "formula": "for (const [name, value, ceiling, min] of [ [\"horizon\", policy.horizonUs, limits.horizonUs, 1], [\"events\", policy.maxEvents, limits.events, 1], [\"samples\", policy.maxSamples, 10000, 1], [\"raw results\", policy.maxRawResults, limits.roots, 0], [\"sample interval\", policy.sampleIntervalUs, limits.horizonUs, 1], ] as const) if (!Number.isSafeInteger(value) || value < min || value > ceiling) throw Error(`Browser ${name} budget exceeded`);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/worker/execute.ts#L25",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/firstStack/worker/execute.ts",
+        "line": 25,
         "column": 68
       }
     },
@@ -106015,7 +106020,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/worker/execute.ts#L31",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/worker/execute.ts#L32",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -106029,7 +106034,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/firstStack/worker/execute.ts",
-        "line": 31,
+        "line": 32,
         "column": 71
       }
     },
@@ -106051,7 +106056,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/worker/execute.ts#L31",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/worker/execute.ts#L32",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -106065,7 +106070,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/firstStack/worker/execute.ts",
-        "line": 31,
+        "line": 32,
         "column": 89
       }
     },
@@ -106087,7 +106092,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/worker/execute.ts#L31",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/worker/execute.ts#L32",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -106101,7 +106106,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/firstStack/worker/execute.ts",
-        "line": 31,
+        "line": 32,
         "column": 93
       }
     },
@@ -106123,7 +106128,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/worker/execute.ts#L65",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/worker/execute.ts#L66",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -106137,7 +106142,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/firstStack/worker/execute.ts",
-        "line": 65,
+        "line": 66,
         "column": 68
       }
     },
@@ -106159,7 +106164,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/worker/execute.ts#L70",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/worker/execute.ts#L71",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -106173,7 +106178,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/firstStack/worker/execute.ts",
-        "line": 70,
+        "line": 71,
         "column": 148
       }
     },
@@ -106195,7 +106200,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/worker/execute.ts#L72",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/worker/execute.ts#L73",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -106209,8 +106214,80 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/firstStack/worker/execute.ts",
-        "line": 72,
+        "line": 73,
         "column": 121
+      }
+    },
+    {
+      "id": "m1.apps.web.src.firstStack.worker.reportCapture.1",
+      "concept": "captureBrowserReport · literal 256",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 256,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.firstStack.worker.reportCapture.1"
+        ]
+      },
+      "formula": "boundedJson(value, 256 * 1024);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/worker/reportCapture.ts#L21",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/firstStack/worker/reportCapture.ts",
+        "line": 21,
+        "column": 28
+      }
+    },
+    {
+      "id": "m1.apps.web.src.firstStack.worker.reportCapture.2",
+      "concept": "captureBrowserReport · literal 1024",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1024,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.firstStack.worker.reportCapture.2"
+        ]
+      },
+      "formula": "boundedJson(value, 256 * 1024);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/worker/reportCapture.ts#L21",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/firstStack/worker/reportCapture.ts",
+        "line": 21,
+        "column": 34
       }
     },
     {
