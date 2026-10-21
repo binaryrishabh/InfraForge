@@ -1,6 +1,6 @@
 {
   "schema": "execution-loading-analysis/1",
-  "policy": "2f811d4d6a683aa14875ceda31bee498ef6f9636bed19a10c0613a08dc944cef",
+  "policy": "8ea802afbddb2897a4aa59ab6db4d0f9b729fdd798dc0c7ae09d7f7d995b25ab",
   "modules": {
     "apps/backend/actions/contract.ts": {
       "hash": "cb4d5860ab0805ccf009c47e453ed89c12e52e564c95e470a1cfbb23e18fb24d",
@@ -964,7 +964,7 @@
       ]
     },
     "apps/backend/firstStack/admission.ts": {
-      "hash": "bdcbc9554a68b2665e62bf1bd66b83f357203ed225248186b16f5180c6638bd7",
+      "hash": "efd408323aab1b072c6775ceee869d8e200e8c485721633e012c98f5b5b8d1b9",
       "requests": [
         {
           "path": "node:crypto",
@@ -1000,6 +1000,14 @@
         },
         {
           "path": "../runRecords/firstStack",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./scoredChallenges/definition",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./scoredChallenges/projection",
           "kind": "import-statement"
         }
       ]
@@ -1375,6 +1383,90 @@
         }
       ]
     },
+    "apps/backend/firstStack/scoredChallenges/definition.ts": {
+      "hash": "b5665d315b1e2b461b90f1e1a3cb1ef31d6abed877ebb1f8d426c7c86ded3d67",
+      "requests": [
+        {
+          "path": "zod",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./lose-an-app-server.v1.json",
+          "kind": "import-statement"
+        },
+        {
+          "path": "../canonical",
+          "kind": "import-statement"
+        },
+        {
+          "path": "../execution",
+          "kind": "import-statement"
+        },
+        {
+          "path": "../workload",
+          "kind": "import-statement"
+        },
+        {
+          "path": "../../utils/errors",
+          "kind": "import-statement"
+        },
+        {
+          "path": "../authoring",
+          "kind": "import-statement"
+        }
+      ]
+    },
+    "apps/backend/firstStack/scoredChallenges/execution.ts": {
+      "hash": "d7b980a0b20b6d08ed72fd5e49aed1f55a7746f141105104152f374ef0c1955b",
+      "requests": [
+        {
+          "path": "../canonical",
+          "kind": "import-statement"
+        },
+        {
+          "path": "../isolationProtocol",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./definition",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./scoring",
+          "kind": "import-statement"
+        }
+      ]
+    },
+    "apps/backend/firstStack/scoredChallenges/projection.ts": {
+      "hash": "4674534a02c7b55ce51a2042670a78392f19b3ae1201b959025695a84a821015",
+      "requests": [
+        {
+          "path": "zod",
+          "kind": "import-statement"
+        },
+        {
+          "path": "../canonical",
+          "kind": "import-statement"
+        }
+      ]
+    },
+    "apps/backend/firstStack/scoredChallenges/scoring.ts": {
+      "hash": "abb265e33309ce07789635fb70ee679fb3e734a265cc1c01ae86344e46e36281",
+      "requests": [
+        {
+          "path": "zod",
+          "kind": "import-statement"
+        },
+        {
+          "path": "../canonical",
+          "kind": "import-statement"
+        },
+        {
+          "path": "../isolationProtocol",
+          "kind": "import-statement"
+        }
+      ]
+    },
     "apps/backend/firstStack/service.ts": {
       "hash": "db05f16c91fadffae162d86901ed7a57c7b8373e70ccbbeca0ff8fbb210ea771",
       "requests": [
@@ -1426,7 +1518,7 @@
       ]
     },
     "apps/backend/firstStack/submissionRoutes.ts": {
-      "hash": "d68fe0b6421e1d9ccd4342c68f2e0c5e77521d37afdac6e10c39b6481057e859",
+      "hash": "77fecb0e0c729a28ab60f7615eb00b51c9feba78b221a102258194af2d41c693",
       "requests": [
         {
           "path": "express",
@@ -1447,11 +1539,15 @@
         {
           "path": "./admission",
           "kind": "import-statement"
+        },
+        {
+          "path": "./scoredChallenges/definition",
+          "kind": "import-statement"
         }
       ]
     },
     "apps/backend/firstStack/submissionWorker.ts": {
-      "hash": "b3daa84fee9509029b99c8cebb8b72e60481c0ae3c07f5624257e8848c1ccd28",
+      "hash": "0b4f7b0b3c97fcffcd485d4349320b0dc5989e5ee89fdbc1241595adfc95c0c5",
       "requests": [
         {
           "path": "node:crypto",
@@ -1475,6 +1571,10 @@
         },
         {
           "path": "./isolationProtocol",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./scoredChallenges/execution",
           "kind": "import-statement"
         }
       ]

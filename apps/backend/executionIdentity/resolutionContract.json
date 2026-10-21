@@ -44370,6 +44370,30 @@
     },
     {
       "owner": null,
+      "file": "apps/backend/firstStack/scoredChallenges/definition.ts",
+      "specifier": "zod",
+      "kind": "import-statement",
+      "targetOwner": "zod@4.4.3:12",
+      "targetFile": "index.js"
+    },
+    {
+      "owner": null,
+      "file": "apps/backend/firstStack/scoredChallenges/projection.ts",
+      "specifier": "zod",
+      "kind": "import-statement",
+      "targetOwner": "zod@4.4.3:12",
+      "targetFile": "index.js"
+    },
+    {
+      "owner": null,
+      "file": "apps/backend/firstStack/scoredChallenges/scoring.ts",
+      "specifier": "zod",
+      "kind": "import-statement",
+      "targetOwner": "zod@4.4.3:12",
+      "targetFile": "index.js"
+    },
+    {
+      "owner": null,
       "file": "apps/backend/firstStack/service.ts",
       "specifier": "@infraforge/contracts/first-stack",
       "kind": "import-statement",

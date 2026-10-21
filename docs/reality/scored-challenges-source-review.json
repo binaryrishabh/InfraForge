@@ -1,0 +1,65 @@
+{
+  "schema": "scored-challenges-source-review/1",
+  "baseline": "abf2d142a64a6b5e5f3515efeb98e7d6ae036ca8",
+  "scope": "Server-only versioned hidden workload grading; existing isolated serial executor and immutable result guards; Model 2 inactive; timing assumption-only; cost Unknown",
+  "files": [
+    {
+      "path": "apps/backend/firstStack/admission.ts",
+      "hash": "efd408323aab1b072c6775ceee869d8e200e8c485721633e012c98f5b5b8d1b9"
+    },
+    {
+      "path": "apps/backend/firstStack/submissionRoutes.ts",
+      "hash": "77fecb0e0c729a28ab60f7615eb00b51c9feba78b221a102258194af2d41c693"
+    },
+    {
+      "path": "apps/backend/firstStack/submissionWorker.ts",
+      "hash": "0b4f7b0b3c97fcffcd485d4349320b0dc5989e5ee89fdbc1241595adfc95c0c5"
+    },
+    {
+      "path": "apps/backend/firstStack/scoredChallenges/definition.ts",
+      "hash": "b5665d315b1e2b461b90f1e1a3cb1ef31d6abed877ebb1f8d426c7c86ded3d67"
+    },
+    {
+      "path": "apps/backend/firstStack/scoredChallenges/execution.ts",
+      "hash": "d7b980a0b20b6d08ed72fd5e49aed1f55a7746f141105104152f374ef0c1955b"
+    },
+    {
+      "path": "apps/backend/firstStack/scoredChallenges/projection.ts",
+      "hash": "4674534a02c7b55ce51a2042670a78392f19b3ae1201b959025695a84a821015"
+    },
+    {
+      "path": "apps/backend/firstStack/scoredChallenges/scoring.ts",
+      "hash": "abb265e33309ce07789635fb70ee679fb3e734a265cc1c01ae86344e46e36281"
+    },
+    {
+      "path": "apps/backend/firstStack/scoredChallenges/lose-an-app-server.v1.json",
+      "hash": "06595c99c059c3e3de69f21a8875032fcc1ac57f4d3609453efe3404b0a6f36f"
+    },
+    {
+      "path": "scripts/boundaries.ts",
+      "hash": "f226f0adca626add8a09d32aa0c74bafe826623d977c203a65142ec17f46e7f4"
+    },
+    {
+      "path": ".dockerignore",
+      "hash": "e2da22c328c1fc185f7303189f26a98329ff6b2074cad386b6d2ed90c7a1bed5"
+    }
+  ],
+  "acceptance": [
+    {
+      "path": "apps/backend/tests/scoredChallenges.test.ts",
+      "hash": "860257695d5649a18ae0cc00b0d64035e4384ae919cf9a16a9f180195de8fa7b"
+    },
+    {
+      "path": "apps/backend/tests/integration/firstStackSubmission.integration.test.ts",
+      "hash": "2f19277bf8d2683b1988be9cf985a8d527e352595a932ef978d9b3ff2c4dcdb9"
+    },
+    {
+      "path": "scripts/tests/boundaries.test.ts",
+      "hash": "781af58fd5252ff2c4823f6a1b9d98dc1081a0e614f5262db6ab48f999606e9c"
+    },
+    {
+      "path": "scripts/tests/execution-identity.test.ts",
+      "hash": "85ea087e35fe56d8d47348793b5cab11680fa74f30459c654415d8370ae7f3c5"
+    }
+  ]
+}

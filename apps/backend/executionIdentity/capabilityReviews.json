@@ -164,7 +164,7 @@
     }
   },
   "apps/backend/executionIdentity/loading.ts": {
-    "hash": "7574e722b6ef30ac431e3df3b986972d83f74d7c25dbe4c8fe12dc7b7bdac9cf",
+    "hash": "871b3690b0f2f9e6b0670a8d779d2abc69b4e2cf103c25cc61f071992c9fdd74",
     "capabilities": [
       "computed-data",
       "verifier",
@@ -172,7 +172,7 @@
     ],
     "review": "Fixed data indexing; resource adapters require the separate documented review",
     "globals": {
-      "hash": "7574e722b6ef30ac431e3df3b986972d83f74d7c25dbe4c8fe12dc7b7bdac9cf",
+      "hash": "871b3690b0f2f9e6b0670a8d779d2abc69b4e2cf103c25cc61f071992c9fdd74",
       "names": [
         "Bun"
       ]
@@ -1333,25 +1333,25 @@
     "review": "Internal first-stack V2 review/compiler/qualification: fixed JSON indexing and statically imported Stage 1 registry/host composition; bounded recorded keys and DB health; opt-in host bounds, finite reducers and cooperative qualification only; no evaluator, dynamic loader, product dispatch, HTTP executor or activation"
   },
   "apps/backend/firstStack/admission.ts": {
-    "hash": "bdcbc9554a68b2665e62bf1bd66b83f357203ed225248186b16f5180c6638bd7",
+    "hash": "efd408323aab1b072c6775ceee869d8e200e8c485721633e012c98f5b5b8d1b9",
     "capabilities": [
       "computed-data"
     ],
-    "review": "Bounded first-stack report data capture/projection: fixed schemas, finite JSON, selected journal identities, immutable input/capture verification; no evaluators, new process permissions, physics changes or activation"
+    "review": "Exact scored challenge review: strict server-owned JSON and capacity constraints; fixed bounded data projection and grading; same serial isolated executor/session fence; append-only score result; no evaluator, host activation, new process adapter, engine physics or Model 1 rubric constants"
   },
   "apps/backend/firstStack/submissionRoutes.ts": {
-    "hash": "d68fe0b6421e1d9ccd4342c68f2e0c5e77521d37afdac6e10c39b6481057e859",
+    "hash": "77fecb0e0c729a28ab60f7615eb00b51c9feba78b221a102258194af2d41c693",
     "capabilities": [
       "computed-data"
     ],
-    "review": "Exact inactive first-stack admission/store/serial queue and release schema review: bounded data, fixed SQL, owned immutable input and cut fence; trusted operator injection only; no evaluators, request-provided code, host activation or new process adapter"
+    "review": "Exact scored challenge review: strict server-owned JSON and capacity constraints; fixed bounded data projection and grading; same serial isolated executor/session fence; append-only score result; no evaluator, host activation, new process adapter, engine physics or Model 1 rubric constants"
   },
   "apps/backend/firstStack/submissionWorker.ts": {
-    "hash": "b3daa84fee9509029b99c8cebb8b72e60481c0ae3c07f5624257e8848c1ccd28",
+    "hash": "0b4f7b0b3c97fcffcd485d4349320b0dc5989e5ee89fdbc1241595adfc95c0c5",
     "capabilities": [
       "computed-data"
     ],
-    "review": "Exact inactive first-stack admission/store/serial queue and release schema review: bounded data, fixed SQL, owned immutable input and cut fence; trusted operator injection only; no evaluators, request-provided code, host activation or new process adapter"
+    "review": "Exact scored challenge review: strict server-owned JSON and capacity constraints; fixed bounded data projection and grading; same serial isolated executor/session fence; append-only score result; no evaluator, host activation, new process adapter, engine physics or Model 1 rubric constants"
   },
   "apps/backend/firstStack/submissionQueue.ts": {
     "hash": "d5ade04c5020231ad0de4f5994d168bbb5f0ecb3ce9ea3d4795d2dd57171d505",
@@ -1542,5 +1542,39 @@
       "computed-data"
     ],
     "review": "Bounded first-stack report data capture/projection: fixed schemas, finite JSON, selected journal identities, immutable input/capture verification; no evaluators, new process permissions, physics changes or activation"
+  },
+  "apps/backend/firstStack/scoredChallenges/definition.ts": {
+    "hash": "b5665d315b1e2b461b90f1e1a3cb1ef31d6abed877ebb1f8d426c7c86ded3d67",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Exact scored challenge review: strict server-owned JSON and capacity constraints; fixed bounded data projection and grading; same serial isolated executor/session fence; append-only score result; no evaluator, host activation, new process adapter, engine physics or Model 1 rubric constants",
+    "globals": {
+      "hash": "b5665d315b1e2b461b90f1e1a3cb1ef31d6abed877ebb1f8d426c7c86ded3d67",
+      "names": [
+        "TextEncoder"
+      ]
+    }
+  },
+  "apps/backend/firstStack/scoredChallenges/execution.ts": {
+    "hash": "d7b980a0b20b6d08ed72fd5e49aed1f55a7746f141105104152f374ef0c1955b",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Exact scored challenge review: strict server-owned JSON and capacity constraints; fixed bounded data projection and grading; same serial isolated executor/session fence; append-only score result; no evaluator, host activation, new process adapter, engine physics or Model 1 rubric constants"
+  },
+  "apps/backend/firstStack/scoredChallenges/projection.ts": {
+    "hash": "4674534a02c7b55ce51a2042670a78392f19b3ae1201b959025695a84a821015",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Exact scored challenge review: strict server-owned JSON and capacity constraints; fixed bounded data projection and grading; same serial isolated executor/session fence; append-only score result; no evaluator, host activation, new process adapter, engine physics or Model 1 rubric constants"
+  },
+  "apps/backend/firstStack/scoredChallenges/scoring.ts": {
+    "hash": "abb265e33309ce07789635fb70ee679fb3e734a265cc1c01ae86344e46e36281",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Exact scored challenge review: strict server-owned JSON and capacity constraints; fixed bounded data projection and grading; same serial isolated executor/session fence; append-only score result; no evaluator, host activation, new process adapter, engine physics or Model 1 rubric constants"
   }
 }
