@@ -1,6 +1,6 @@
 {
   "schema": "execution-loading-analysis/1",
-  "policy": "82c9baba0dcc8e5546618f8a3e7a31cecdb0c70cffb1b641accd6c64d0dae51d",
+  "policy": "2f811d4d6a683aa14875ceda31bee498ef6f9636bed19a10c0613a08dc944cef",
   "modules": {
     "apps/backend/actions/contract.ts": {
       "hash": "cb4d5860ab0805ccf009c47e453ed89c12e52e564c95e470a1cfbb23e18fb24d",
@@ -964,7 +964,7 @@
       ]
     },
     "apps/backend/firstStack/admission.ts": {
-      "hash": "cc01ed10e6004e84b00225b533f4bc35b063005621fe2645d96644291a1e260f",
+      "hash": "bdcbc9554a68b2665e62bf1bd66b83f357203ed225248186b16f5180c6638bd7",
       "requests": [
         {
           "path": "node:crypto",
@@ -996,6 +996,10 @@
         },
         {
           "path": "./isolationPolicy",
+          "kind": "import-statement"
+        },
+        {
+          "path": "../runRecords/firstStack",
           "kind": "import-statement"
         }
       ]
@@ -1093,10 +1097,14 @@
       ]
     },
     "apps/backend/firstStack/executionCut.ts": {
-      "hash": "6325b8351608de84bad72a7719ab907b5b13819ee5e758579a488b62a171d3bf",
+      "hash": "b5ff9fbacf544264d8ef15abb182127f27d2d540f3f810265bd93f20e755f534",
       "requests": [
         {
           "path": "@infraforge/simulation/internal-first-stack",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./reportCapture",
           "kind": "import-statement"
         }
       ]
@@ -1225,7 +1233,7 @@
       ]
     },
     "apps/backend/firstStack/isolationProtocol.ts": {
-      "hash": "565fcf3c9c9b500ba4f9395f4deb2f947f07d1e4e4bf2c344462beb90ef6fad5",
+      "hash": "421873330f77be9c0ae6d22144df05dcbaf6817cbc71225083957ad18d9d47f4",
       "requests": [
         {
           "path": "./canonical",
@@ -1296,6 +1304,32 @@
       "requests": [
         {
           "path": "../lib/prisma",
+          "kind": "import-statement"
+        }
+      ]
+    },
+    "apps/backend/firstStack/report.ts": {
+      "hash": "7746cb97b358f4b275f5725449c1201a3ca624c5b6725060663c9c5263fe2946",
+      "requests": [
+        {
+          "path": "zod",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./canonical",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./isolationProtocol",
+          "kind": "import-statement"
+        }
+      ]
+    },
+    "apps/backend/firstStack/reportCapture.ts": {
+      "hash": "ebc6bbc50f6bd3ed4d996b2b29a92161f791a211ea78e8d0bd042f9526ed3357",
+      "requests": [
+        {
+          "path": "@infraforge/simulation/internal-first-stack",
           "kind": "import-statement"
         }
       ]
@@ -2977,7 +3011,7 @@
       ]
     },
     "apps/backend/runRecords/adapters.ts": {
-      "hash": "bd481b939d21f1a2047a4242b5d1ebf0b9d13236f57a108e69f5ff31056be23a",
+      "hash": "23859f8fd5b4703ff5b5c0cf981723abba7bf9eb8b4c530ec8473dc0324bee8f",
       "requests": [
         {
           "path": "../reports/report",
@@ -2997,6 +3031,23 @@
         },
         {
           "path": "@infraforge/simulation/internal-product",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./schema",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./firstStack",
+          "kind": "import-statement"
+        }
+      ]
+    },
+    "apps/backend/runRecords/firstStack.ts": {
+      "hash": "2a29a995af52bd2b3241f4dfa3d69a99fedfa6c8d3d3af997cc35bbee59774b0",
+      "requests": [
+        {
+          "path": "../firstStack/report",
           "kind": "import-statement"
         },
         {
@@ -3764,8 +3815,12 @@
       "hash": "8e4871610601749918e585e9028126ce70e3a2ef275910d6ea03025ecfff76f9",
       "requests": []
     },
+    "packages/contracts/src/reports/firstStack.ts": {
+      "hash": "c0cd1df0511e30586fa8ad6002ddd7533c0a0edd45fceb11b3e14abeca5015d7",
+      "requests": []
+    },
     "packages/contracts/src/reports/index.ts": {
-      "hash": "fdd57bd8f4cf443cd764aabed5f99937da5042e3c0c9d336b2c796f91ff6b61c",
+      "hash": "ee6331ae8e33493f5fc29d51e4fe3fb1d8498a263bb659f469c9aaa579b32237",
       "requests": [
         {
           "path": "./experimentTrace",
@@ -4217,7 +4272,7 @@
       ]
     },
     "packages/simulation/src/firstStack/journal.ts": {
-      "hash": "786bc65fab84faf4dc0ce2de5001261aa977c004f311139e5b93635e8149b7bf",
+      "hash": "2cd7e30fb805ee197590f7988d3e6db5a22445a1dbec36446c0a60a755917f27",
       "requests": [
         {
           "path": "../model2/time",

@@ -2107,7 +2107,7 @@
     },
     {
       "path": "scripts/reality/launch-contract.ts",
-      "hash": "e879b2d360fed6e815bf9f205230a65314856ce2b428553a8e19c436f582d376"
+      "hash": "05f2fd3fd513949efc4eb482be48c465e5975b7bb190192662a21b58ef19fcbc"
     },
     {
       "path": "scripts/reality/measure-compute.ts",
@@ -2271,7 +2271,7 @@
     },
     {
       "path": "scripts/tests/execution-identity.test.ts",
-      "hash": "ddc747016f7daf03188306c8788a42f6ec36d1713381c411864b44384c2d60a3"
+      "hash": "092149adbec938b8044dfea4239f093b14e8f341cb3f664bdd357ba9b932ee73"
     },
     {
       "path": "scripts/tests/finite-io.test.ts",
@@ -2304,6 +2304,14 @@
     {
       "path": "scripts/tests/first-stack-profile.test.ts",
       "hash": "7af05c1d23ade801ac63edb24648343855cacc228a3ce347d3d1e4087bdc7226"
+    },
+    {
+      "path": "scripts/tests/first-stack-report-data.test.ts",
+      "hash": "d540de1e220343c1796f40be5d897fcdf390b16fa5a24ed1e2518461c0bea21d"
+    },
+    {
+      "path": "scripts/tests/first-stack-report.test.ts",
+      "hash": "87df5b7752076f420f19de775f88dff026a3862aa63bb014acf481a916770c0a"
     },
     {
       "path": "scripts/tests/firstStackPilots.test.ts",

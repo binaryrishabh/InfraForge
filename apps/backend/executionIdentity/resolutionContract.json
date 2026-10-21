@@ -868,7 +868,7 @@
       "owner": "@infraforge/contracts@workspace:packages/contracts:156",
       "file": "src/reports/index.ts",
       "key": "@infraforge/contracts/src/reports/index.ts",
-      "hash": "fdd57bd8f4cf443cd764aabed5f99937da5042e3c0c9d336b2c796f91ff6b61c"
+      "hash": "ee6331ae8e33493f5fc29d51e4fe3fb1d8498a263bb659f469c9aaa579b32237"
     },
     {
       "owner": "@infraforge/domain@workspace:packages/domain:157",
@@ -1030,7 +1030,7 @@
       "owner": "@infraforge/simulation@workspace:packages/simulation:158",
       "file": "src/firstStack/journal.ts",
       "key": "@infraforge/simulation/src/firstStack/journal.ts",
-      "hash": "786bc65fab84faf4dc0ce2de5001261aa977c004f311139e5b93635e8149b7bf"
+      "hash": "2cd7e30fb805ee197590f7988d3e6db5a22445a1dbec36446c0a60a755917f27"
     },
     {
       "owner": "@infraforge/simulation@workspace:packages/simulation:158",
@@ -44319,6 +44319,22 @@
       "kind": "import-statement",
       "targetOwner": "pg@8.22.0:170",
       "targetFile": "esm/index.mjs"
+    },
+    {
+      "owner": null,
+      "file": "apps/backend/firstStack/report.ts",
+      "specifier": "zod",
+      "kind": "import-statement",
+      "targetOwner": "zod@4.4.3:12",
+      "targetFile": "index.js"
+    },
+    {
+      "owner": null,
+      "file": "apps/backend/firstStack/reportCapture.ts",
+      "specifier": "@infraforge/simulation/internal-first-stack",
+      "kind": "import-statement",
+      "targetOwner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "targetFile": "src/internalFirstStack.ts"
     },
     {
       "owner": null,

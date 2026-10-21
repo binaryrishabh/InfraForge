@@ -101,7 +101,7 @@ type Requests = ReturnType<Bun.Transpiler["scan"]>["imports"];
 export interface AnalysisContract { schema: string; policy: string; modules: Record<string, { hash: string; requests: Requests }> }
 // This pin is an explicit review of the generated analysis, never a writable
 // runtime cache. Core verifier files are always analysed and cannot pin themselves.
-const analysisPin = "4f181c601b9cf06f4fcd29149f67c2527e3fd3f3827009d3454db49f9d497c83";
+const analysisPin = "ff77de37c93e8d623a28f332febb4aae37ba97b7a6671c1dfb9adf20fdac0fe5";
 let fullAnalysis = false, approvedAnalysis: AnalysisContract | undefined;
 export function withFullLoadingAnalysis<T>(run: () => T): T {
   const previous = fullAnalysis; fullAnalysis = true;
