@@ -1,5 +1,8 @@
 const { chromium, firefox, webkit } = await import(process.argv[2]);
 const url = process.argv[3], cases = await (await fetch(new URL("cases", url))).json(), results = [];
+const canonical = value => Array.isArray(value) ? `[${value.map(canonical).join(",")}]`
+  : value !== null && typeof value === "object" ? `{${Object.keys(value).sort().map(key => `${JSON.stringify(key)}:${canonical(value[key])}`).join(",")}}`
+  : JSON.stringify(value);
 for (const [name, launcher] of [["chromium", chromium], ["firefox", firefox], ["webkit", webkit]]) {
   const browser = await launcher.launch({ headless: true, timeout: 30000 });
   try {
@@ -13,6 +16,7 @@ for (const [name, launcher] of [["chromium", chromium], ["firefox", firefox], ["
       }, c.request);
       const evidence = actual.result.evidence;
       if (actual.result.status !== "completed" || !evidence || evidence.fingerprint !== c.expected.fingerprint || evidence.inputHash !== c.inputHash) throw Error(`${name} worker mismatch ${c.name}/${c.seed}: ${JSON.stringify(actual)}`);
+      if (canonical({ ...evidence.cut, effectiveLimits: null }) !== c.expected.canonicalCut) throw Error(`${name} canonical worker cut differs from server (including report capture): ${c.name}/${c.seed}`);
       if (!actual.ticks) throw Error(`${name} page heartbeat did not progress`);
       const checked = await fetch(new URL("verify", url), { method: "POST", body: JSON.stringify(evidence) });
       if (!checked.ok) throw Error(`${name} worker cut rejected by server reader`);

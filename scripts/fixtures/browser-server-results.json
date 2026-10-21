@@ -1,0 +1,131 @@
+{
+  "schema": "first-stack-browser-server-fixtures/1",
+  "cases": [
+    {
+      "name": "shared-contention",
+      "seed": "browser-0",
+      "canonicalHash": "4084863a41aeb72d9a9e41b749185080bcf66809cb854fdd21008234777e86e6",
+      "canonicalCutHash": "000c37af711f3716bb7ffee6fa4ac21a3a35c9618ea37caa9392f60d16f2ae30",
+      "fingerprint": "de02ede51ac5380ae7e6109e0624cc2b830c7eddd3e278ea8a11fe1761d74771"
+    },
+    {
+      "name": "shared-contention",
+      "seed": "browser-1",
+      "canonicalHash": "0dbc469b24350f74ac859cbc3d25b45bc8f069365aa8f0393b2c9449c440fa78",
+      "canonicalCutHash": "4ace8289bdf89e4d9a57e5d7b92a47042d589aace97eafbe948273ff43ef959f",
+      "fingerprint": "ce950d10847a711d8047e7f72a714b4b457224e70dc62938c70618e468eca3b7"
+    },
+    {
+      "name": "shared-contention",
+      "seed": "种子-🧪",
+      "canonicalHash": "b4238280277752a14d4c4768bb0d1d76d88523ecf1cfdcf1cd9d9921b08fbf66",
+      "canonicalCutHash": "e43c5e6175688a49f64593d064c2d83208fa0f304ef4e75e97d9369a923e7841",
+      "fingerprint": "aea609ec9eb809e31076277b827a7d5795b4dd7ee8dbdc741b04e5be2cbf77ba"
+    },
+    {
+      "name": "hot-writes",
+      "seed": "browser-0",
+      "canonicalHash": "f939f86eae241e361e1548b502b86ab733556d9b45175f1d1ce87742ce478402",
+      "canonicalCutHash": "60dc82de7a52313bd6839cdd2f804e2e810c1d4b3697f9abd78730978e4b1f97",
+      "fingerprint": "7fa7a9301e75fbfadcf49a8144a05ede85381e9a51e1b957d006f1bf5ad93283"
+    },
+    {
+      "name": "hot-writes",
+      "seed": "browser-1",
+      "canonicalHash": "bbdd678cf184d85983a4104d1f00173f16f28011e63f5ea095c7eff08293410d",
+      "canonicalCutHash": "73ec2d37b2273b498e3afeb2c468bf083b6e764a39632a035bcfe2832310e8c9",
+      "fingerprint": "f337ee33213fdf3bf98836797cc194fada488b4c0969d23189b9e4d79ae80fb9"
+    },
+    {
+      "name": "hot-writes",
+      "seed": "种子-🧪",
+      "canonicalHash": "69ff1148cc34d0c476e689421da9c69f48d40b81ca85312c38759fe9b36dcace",
+      "canonicalCutHash": "d6675c8bffbda974d5158adc19405ecbd9717223a539cefee014fb66322ccd0c",
+      "fingerprint": "877cf30b8ea14fdf07b075b79d4c5da10e247f1518f417284adc81544257365a"
+    },
+    {
+      "name": "range-read",
+      "seed": "browser-0",
+      "canonicalHash": "9f7d93fa25e087ff570ea05e9cbea9711589641318b267f47e71524f9f550209",
+      "canonicalCutHash": "7c62ba90e1b6a20404d5785019b7e05f4a112c84e25cdb4ded57a76132135baa",
+      "fingerprint": "273458172c62635fa1322102d9fd10c97691bf6f8ee7d59f38f289c3616c1509"
+    },
+    {
+      "name": "range-read",
+      "seed": "browser-1",
+      "canonicalHash": "9009b326936f195900c736fb8b76f61070cb4f638c6e856764105ef95c8077d8",
+      "canonicalCutHash": "699a145c0daa2d34d04c889b9c3ce85c98a993cdade4cb588259cfd494bd007b",
+      "fingerprint": "e4e0e7035f4b411c89546f4d38d6e2cfe61dd705f6a3b1f033bd8595c2691c6a"
+    },
+    {
+      "name": "range-read",
+      "seed": "种子-🧪",
+      "canonicalHash": "45437fe6111f4cba5fb5ce070ff62c1575a779ced7a2c53011278280d5acdf80",
+      "canonicalCutHash": "6d74587c4bfd1127581cc0a4ec5331b57aa130d04b42717bd27b88714ba8712d",
+      "fingerprint": "416ff0f477a63dfee8c0fa0e6106dec566702aa2d03f7ed91ffb2f199ed3f8a1"
+    },
+    {
+      "name": "fault-retry",
+      "seed": "browser-0",
+      "canonicalHash": "6ecd5ba0cecd3b68ad1a82c81b5277079f47d1387a5f07cb81a161a28c6f77f1",
+      "canonicalCutHash": "be2c3b3ca0445ac8120f30c08ab1259538ee5ba7a4de9e482a4b6c327c77bfbe",
+      "fingerprint": "4498949abad3522fbe7061ebb0b51bd1a11e4638410f736ea8b208b2f9064bb1"
+    },
+    {
+      "name": "fault-retry",
+      "seed": "browser-1",
+      "canonicalHash": "ca0cdc1e801a794e9e668e8a84da2a788a2b0f70b14ac99ed0e7cfdaaf9fa3b4",
+      "canonicalCutHash": "70ced93ea4a54975e906c6a7b14bf07965dfa7542476c6c84d808b246e064d34",
+      "fingerprint": "914da4840021f99bb7931e85e1b96853b15dd45918ee48926e7220cbe5fe299f"
+    },
+    {
+      "name": "fault-retry",
+      "seed": "种子-🧪",
+      "canonicalHash": "55bd47e0d8e88b861cb96da34d8a4e8562360dc992607b7dd60a1098d36c4d7e",
+      "canonicalCutHash": "24145045525a6fc7753f18a3dde1818d11fea207e12c44b2c892abf425372c85",
+      "fingerprint": "c30deabc90efbcb79da3d8d9405603f17173769ddca2355f1e21445442b0c93c"
+    },
+    {
+      "name": "cache-miss-coalescing",
+      "seed": "browser-0",
+      "canonicalHash": "438acda4c2fe0dfefdac16380fbc975b61e8dc6c41c1a0e1800a724dea0b7363",
+      "canonicalCutHash": "ca0793a6f3c0a265949f390e71569ad36a4ee891ef457fa13ee5713164f2f497",
+      "fingerprint": "0a1e51aa5d5c6d30e50e2467d5144c61adb5effa06a2f93a82c66883cfb88ca7"
+    },
+    {
+      "name": "cache-miss-coalescing",
+      "seed": "browser-1",
+      "canonicalHash": "528f3864db88e3da827f5a499c809a1c24bed0b056fb6d4b04ae531beb05c83f",
+      "canonicalCutHash": "e98d5b346bd6070a1a1becb491d132c55551c10f88328e0f5efc0e8f44f60193",
+      "fingerprint": "84b42fa237cedcbb4d68992fed5e25f977f23f3aba43cbb3e61da2f8ebe858fb"
+    },
+    {
+      "name": "cache-miss-coalescing",
+      "seed": "种子-🧪",
+      "canonicalHash": "2f9e760c253c09ce34e472bea5b2b0afba6f5c76fb7d1fb0a7334c29674d28fc",
+      "canonicalCutHash": "4c76d571fe8d41a107f73be50f4d3c403b2e93a5e1ddee595907cbbfa739ffb0",
+      "fingerprint": "60e11cb02f62c06e22f9c9ebaad43bdd5e438be32d5a96f34bc5d1d932f515b7"
+    },
+    {
+      "name": "cache-ttl-eviction",
+      "seed": "browser-0",
+      "canonicalHash": "4626982fd7388ff8123ace786b81b5f336c4f44845b014e046870ecc9b4271b8",
+      "canonicalCutHash": "449a91493bab08bf1c066181d1b930418324e0b848661fc5f9441650854542fa",
+      "fingerprint": "a9efa19a657932d4cf195c43c60f1a7a578fbcf67484e194ae0dbbeed1c2faca"
+    },
+    {
+      "name": "cache-ttl-eviction",
+      "seed": "browser-1",
+      "canonicalHash": "331e04ec15ef15c97adbcd5bb2ec6f4ece42fae51c3b5edd3eca76959f0813a0",
+      "canonicalCutHash": "1b3afb74e56531f15c64fda72d691cb7b125db07d366decff0b9f00749c6450a",
+      "fingerprint": "38119756dc1a6152ff23799f775040392dbb9c4260b5cc9edc8b13043bdb8700"
+    },
+    {
+      "name": "cache-ttl-eviction",
+      "seed": "种子-🧪",
+      "canonicalHash": "3ba9b5a73f1edee7cf217f03039b90f1aef52fce2f00509d72bc3f6c2e05f9c2",
+      "canonicalCutHash": "a18e267247b7f02b74220a905cf5686786ffc07a57b2f7e4b3aed9a4611136a5",
+      "fingerprint": "adb0399a7958663661a4808ffd57d0aef51739de433823f01c1e705451377f9c"
+    }
+  ]
+}

@@ -11,6 +11,11 @@ import { instantiatePreparedFirstStack } from "../../apps/backend/firstStack/exe
 import { inputDigest, cutFingerprint, readIsolatedCut, type IsolatedCut } from "../../apps/backend/firstStack/isolationProtocol";
 import type { WorkerReply } from "../../apps/web/src/firstStack/protocol";
 import { browserFixture } from "../fixtures/browser-runner";
+import { captureBrowserReport } from "../../apps/web/src/firstStack/worker/reportCapture";
+import { captureReport } from "../../apps/backend/firstStack/reportCapture";
+import { replayFirstStackPrefix } from "../../apps/backend/firstStack/isolationReplay";
+import { serverCases, fixtureRows } from "../browser-first-stack/oracle";
+import serverResults from "../fixtures/browser-server-results.json";
 test("browser canonical JSON and Unicode hashing match the server without normalizing data", async () => {
   const value = { z: "é\r\n🧪", a: [1, -0, null, { "__proto__": null }] };
   expect(canonical(value)).toBe(serverCanonical(value)); expect(await hash(value)).toBe(serverHash(value));
@@ -19,7 +24,7 @@ test("browser canonical JSON and Unicode hashing match the server without normal
   expect(() => canonical({ n: NaN })).toThrow("finite");
   const cycle: unknown[] = []; cycle.push(cycle); expect(() => canonical(cycle)).toThrow("acyclic");
 });
-for (const cache of [false, true]) test(`browser ${cache ? "cache" : "relational"} cut is the exact slice 11 fingerprint and immutable input`, async () => {
+for (const cache of [false, true]) test(`browser ${cache ? "cache" : "relational"} cut matches the current server cut including slice 12 report capture`, async () => {
   const request = await browserFixture(cache), f = cache ? await firstStackCacheFixture() : await firstStackCompileFixture(2, { shared: true });
   const prepared = f.prepare(), runtime = instantiatePreparedFirstStack(prepared); runtime.advanceTo(runtime.horizon);
   const oracle = captureExecutionCut(prepared, runtime, 1, { wallMs: 15000, cpuUs: 30000000, rssBytes: 536870912, frameBytes: 1048576, summaryBytes: 10485760, captureBytes: 33554432 }, null).value;
@@ -27,9 +32,25 @@ for (const cache of [false, true]) test(`browser ${cache ? "cache" : "relational
   expect(result.status).toBe("completed"); const evidence = result.evidence!;
   expect(evidence.fingerprint).toBe(cutFingerprint(oracle));
   expect(evidence.cut.lock).toEqual(prepared.lock);
+  expect(evidence.cut.reportCapture).toEqual(oracle.reportCapture!);
+  expect(serverCanonical({ ...evidence.cut, effectiveLimits: null })).toBe(serverCanonical({ ...oracle, effectiveLimits: null }));
   expect(evidence.inputHash).toBe(inputDigest(serverCanonical(request.input)));
   expect(readIsolatedCut(evidence as unknown as IsolatedCut, pin.source, evidence.inputHash) === evidence as unknown).toBe(true);
   expect(evidence.cut.effectiveLimits.cpuUs).toBe("Unknown"); expect(result.memory.observedHeapBytes).toBe("Unknown");
+  const changed = structuredClone(evidence); changed.cut.reportCapture.selection.omitted++;
+  expect(() => readIsolatedCut(changed as unknown as IsolatedCut, pin.source, evidence.inputHash)).toThrow("fingerprint");
+});
+test("retained browser fixtures are fingerprints computed by the current server capture path", async () => {
+  expect(fixtureRows(await serverCases())).toEqual(serverResults.cases);
+});
+test("report overflow matches the server's bounded Unknown fallback", async () => {
+  const f = await firstStackCompileFixture(), prepared = f.prepare(), runtime = instantiatePreparedFirstStack(prepared);
+  runtime.advanceTo(runtime.horizon);
+  const e = runtime.evidence(), oversized = { ...e, resources: { large: "x".repeat(256 * 1024) } as unknown as typeof e.resources };
+  const oracle = captureReport(runtime, oversized), browser = captureBrowserReport(runtime, oversized);
+  expect(browser).toEqual(oracle); expect(browser.saturation.cpu).toBeNull();
+  expect(browser.events).toEqual([]); expect(browser.selection.omitted).toBe(runtime.journal.measure().retained);
+  expect(browser.unknown).toEqual(["Diagnostic capture exceeded its byte budget; saturation and selected causes are Unknown"]);
 });
 test("browser refuses mutated workload, wrong bundle identity and excessive budgets before runtime", async () => {
   const request = await browserFixture(); request.input.recording.rows[0]!.keys = ["cold"];
@@ -53,10 +74,21 @@ test("observed heap, wall time and cancellation stop before setup; event exhaust
   const prefix = await executeBrowser(request);
   expect(prefix.status).toBe("interrupted"); expect(prefix.evidence?.cut.completeness.horizonReached).toBe(false);
   expect(prefix.evidence?.cut.interruption).not.toBeNull();
+  if (!prefix.evidence) throw Error("Missing event-budget prefix");
+  const f = await firstStackCompileFixture(2, { shared: true }); f.policy.maxEvents = 100;
+  const prepared = f.prepare(), runtime = instantiatePreparedFirstStack(prepared);
+  expect(() => runtime.advanceTo(runtime.horizon)).toThrow("Event budget exhausted");
+  const oracle = captureExecutionCut(prepared, runtime, 1, { wallMs: 15000, cpuUs: 30000000, rssBytes: 536870912,
+    frameBytes: 1048576, summaryBytes: 10485760, captureBytes: 33554432 }, prefix.evidence.cut.interruption).value;
+  expect(prefix.evidence.fingerprint).toBe(cutFingerprint(oracle));
   let cancelled = false;
   request.input.policy.maxEvents = 100000;
   const cooperative = await executeBrowser(request, { yield: async () => { cancelled = true; }, cancelled: () => cancelled });
   expect(cooperative.status).toBe("interrupted"); expect(cooperative.reason).toContain("cancelled");
+  if (!cooperative.evidence) throw Error("Missing cancelled prefix");
+  f.policy.maxEvents = 100000;
+  const replay = await replayFirstStackPrefix(f.prepare(), cooperative.evidence as unknown as IsolatedCut, pin.source, cooperative.evidence.inputHash);
+  expect(replay.kind).toBe("MatchesRecordedPrefix");
 });
 function workerPort() {
   return { onmessage: null as ((event: MessageEvent<WorkerReply>) => void) | null,

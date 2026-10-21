@@ -1,4 +1,5 @@
 import type { FirstStackExecutable, ResolvedSchedule } from "@infraforge/contracts/first-stack";
+import type { FirstStackReportCapture } from "@infraforge/contracts/reports";
 
 const MiB = 1024 * 1024;
 export const browserLimits = Object.freeze({ revision: "first-stack-browser/1", inputBytes: 4 * MiB,
@@ -22,6 +23,7 @@ export interface BrowserCut {
   counts: Record<string, number>; execution: { processed: number; pending: number; cancelled: number; peakPending: number };
   completeness: { horizonReached: boolean; allRootsTerminal: boolean; aggregates: "observed-prefix"; usage: "prefix-only"; journalComplete: boolean };
   distributions: unknown; omissions: { raw: number; samples: number; journal: number };
+  reportCapture: FirstStackReportCapture;
   interruption: { classification: "executor-interrupted"; kind: string; reason: string } | null;
 }
 export interface BrowserEvidence { schema: "first-stack-isolated-cut/1"; source: string; inputHash: string; cut: BrowserCut; fingerprint: string }
@@ -74,7 +76,8 @@ export const hash = (value: unknown) => sha256(canonical(value));
 export function fingerprintFields(cut: BrowserCut) {
   return { lock: cut.lock, throughUs: cut.throughUs, timestampComplete: cut.timestampComplete,
     unfinished: cut.unfinished, counts: cut.counts, execution: cut.execution, completeness: cut.completeness,
-    distributions: cut.distributions, omissions: cut.omissions };
+    distributions: cut.distributions, omissions: cut.omissions,
+    ...(cut.reportCapture === undefined ? {} : { reportCapture: cut.reportCapture }) };
 }
 export function wallBudget(value: number = browserLimits.wallMs) {
   if (!Number.isSafeInteger(value) || value <= 0 || value > browserLimits.wallMs) throw Error("Browser wall budget may only lower the ceiling");

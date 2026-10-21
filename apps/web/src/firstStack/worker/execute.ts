@@ -2,6 +2,7 @@ import { compileFirstStack, createFirstStackRuntime, boundedJson } from "@infraf
 import pin from "../enginePin.json";
 import { browserLimits as limits, canonical, hash, sha256, fingerprintFields, wallBudget, digestPattern } from "../protocol";
 import type { BrowserRequest, BrowserResult, BrowserCut } from "../protocol";
+import { captureBrowserReport } from "./reportCapture";
 
 interface Host {
   now(): number; yield(): Promise<void>; cancelled(): boolean; heap(): number | "Unknown";
@@ -70,6 +71,7 @@ export async function executeBrowser(request: BrowserRequest, overrides: Partial
     completeness: { horizonReached: e.capture.reachedHorizon, allRootsTerminal: e.counts.offered === schedule.rows.length && e.counts.inFlight === 0,
       aggregates: "observed-prefix", usage: "prefix-only", journalComplete: journal.complete },
     distributions: e.distributions, omissions: { raw: e.resultRetention.omitted, samples: e.sampleRetention?.omitted ?? 0, journal: journal.omitted },
+    reportCapture: captureBrowserReport(runtime, e),
     interruption: reason ? { classification: "executor-interrupted", kind, reason } : null };
   const evidence = { schema: "first-stack-isolated-cut/1" as const, source: request.engine.source, inputHash, cut, fingerprint: await hash(fingerprintFields(cut)) };
   boundedJson(evidence, limits.frameBytes);

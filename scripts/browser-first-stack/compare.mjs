@@ -6,9 +6,11 @@ for (const [name, launcher] of [["chromium", chromium], ["firefox", firefox], ["
     const page = await browser.newPage(); await page.goto(url); await page.addScriptTag({ url: new URL("probe.js", url).href });
     for (const c of cases) {
       const actual = await page.evaluate(input => globalThis.firstStackProbe(input), c.input);
-      if (actual.canonical !== c.expected.canonical || actual.fingerprint !== c.expected.fingerprint) {
-        let at = 0; while (actual.canonical[at] === c.expected.canonical[at] && at < c.expected.canonical.length) at++;
-        throw Error(`STOP: ${name} ${c.name}/${c.seed} differs at canonical UTF-16 offset ${at}; Bun=${c.expected.canonical.slice(Math.max(0, at - 100), at + 150)}; browser=${actual.canonical.slice(Math.max(0, at - 100), at + 150)}; fingerprints ${c.expected.fingerprint}/${actual.fingerprint}`);
+      if (actual.canonical !== c.expected.canonical || actual.canonicalCut !== c.expected.canonicalCut || actual.fingerprint !== c.expected.fingerprint) {
+        const field = ["canonical", "canonicalCut", "fingerprint"].find(key => actual[key] !== c.expected[key]);
+        const expected = c.expected[field], received = actual[field];
+        let at = 0; while (received[at] === expected[at] && at < expected.length) at++;
+        throw Error(`STOP: ${name} ${c.name}/${c.seed} ${field} differs at UTF-16 offset ${at}; Bun=${expected.slice(Math.max(0, at - 100), at + 150)}; browser=${received.slice(Math.max(0, at - 100), at + 150)}`);
       }
     }
     results.push({ engine: name, version: browser.version(), cases: cases.length, result: "PASS" });

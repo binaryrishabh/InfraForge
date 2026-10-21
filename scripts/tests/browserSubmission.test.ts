@@ -41,6 +41,8 @@ test("client rejects owner changes, mutated evidence, unfinished runs and oversi
   const o = await options(); owner = "another-owner";
   await expect(client.submit(o)).rejects.toThrow("owner"); owner = "qualification";
   o.result.evidence!.fingerprint = "a".repeat(64); await expect(client.submit(o)).rejects.toThrow("changed");
+  const editedCapture = await options(); editedCapture.result.evidence!.cut.reportCapture.selection.omitted++;
+  await expect(client.submit(editedCapture)).rejects.toThrow("changed");
   const unfinished = await options(); unfinished.result.status = "interrupted"; await expect(client.submit(unfinished)).rejects.toThrow("finished");
   const oversized = await options(); oversized.result.evidence!.cut.distributions = "x".repeat(1024 * 1024);
   await expect(client.submit(oversized)).rejects.toThrow("byte budget");

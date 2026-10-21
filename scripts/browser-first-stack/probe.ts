@@ -1,5 +1,6 @@
 // Browser-only determinism probe. No server code or runtime shims enter this bundle.
 import { compileFirstStack, createFirstStackRuntime } from "../../packages/simulation/src/internalFirstStack";
+import { captureBrowserReport } from "../../apps/web/src/firstStack/worker/reportCapture";
 
 export function canonical(value: unknown): string {
   if (Array.isArray(value)) return `[${value.map(canonical).join(",")}]`;
@@ -24,7 +25,10 @@ export async function probe(input: { sidecar: Parameters<typeof compileFirstStac
     counts: e.counts, execution: e.execution,
     completeness: { horizonReached: e.capture.reachedHorizon, allRootsTerminal: e.counts.offered === schedule.rows.length && e.counts.inFlight === 0,
       aggregates: "observed-prefix", usage: "prefix-only", journalComplete: journal.complete },
-    distributions: e.distributions, omissions: { raw: e.resultRetention.omitted, samples: e.sampleRetention?.omitted ?? 0, journal: journal.omitted } };
-  return { canonical: canonical({ lock, evidence: e, journal: runtime.journal.content() }), fingerprint: await hash(fingerprintFields) };
+    distributions: e.distributions, omissions: { raw: e.resultRetention.omitted, samples: e.sampleRetention?.omitted ?? 0, journal: journal.omitted },
+    reportCapture: captureBrowserReport(runtime, e) };
+  const cut = { ...fingerprintFields, schema: "first-stack-cut/1", sequence: 1,
+    envelope: "first-stack-envelope/1", effectiveLimits: null, interruption: null };
+  return { canonical: canonical({ lock, evidence: e, journal: runtime.journal.content() }), canonicalCut: canonical(cut), fingerprint: await hash(fingerprintFields) };
 }
 Object.assign(globalThis, { firstStackProbe: probe });
