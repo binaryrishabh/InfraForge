@@ -2066,6 +2066,31 @@
       "numericSites": 17
     },
     {
+      "file": "apps/web/src/firstStack/protocol.ts",
+      "sha256": "9936d9d90adec0113370e0d900410ef4937eb185a57fb77956a762bf3651db3f",
+      "numericSites": 21
+    },
+    {
+      "file": "apps/web/src/firstStack/runner.ts",
+      "sha256": "bf944063f519ce749bfa437835afe341d508aa91fd40cd252ddcb84cab95c48f",
+      "numericSites": 0
+    },
+    {
+      "file": "apps/web/src/firstStack/submissions.ts",
+      "sha256": "5a745ada8c7686d002fcd6b8e44a4f4fd0728371b77dd6a9b73e359e7b731a5e",
+      "numericSites": 1
+    },
+    {
+      "file": "apps/web/src/firstStack/worker/entry.ts",
+      "sha256": "5b02db94c7ca532ee72484041ead419b93e882a13b78345003794f7db5c334d5",
+      "numericSites": 5
+    },
+    {
+      "file": "apps/web/src/firstStack/worker/execute.ts",
+      "sha256": "6a8204b5983c807f166f7506e33136d3c20ad7aa3bf165bf8c1344931ca0123a",
+      "numericSites": 15
+    },
+    {
       "file": "apps/web/src/lib/format.ts",
       "sha256": "c131e7e085b69c95ec0490780b98c9a25ff38b0494eb389b91cd2fee1d2d3b5f",
       "numericSites": 20
@@ -104674,6 +104699,1518 @@
         "file": "apps/web/src/features/timetable/tiers.ts",
         "line": 52,
         "column": 72
+      }
+    },
+    {
+      "id": "m1.apps.web.src.firstStack.protocol.1",
+      "concept": "MiB · literal 1024",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1024,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.firstStack.protocol.1"
+        ]
+      },
+      "formula": "const MiB = 1024 * 1024;",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/protocol.ts#L3",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/firstStack/protocol.ts",
+        "line": 3,
+        "column": 13
+      }
+    },
+    {
+      "id": "m1.apps.web.src.firstStack.protocol.2",
+      "concept": "MiB · literal 1024",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1024,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.firstStack.protocol.2"
+        ]
+      },
+      "formula": "const MiB = 1024 * 1024;",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/protocol.ts#L3",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/firstStack/protocol.ts",
+        "line": 3,
+        "column": 20
+      }
+    },
+    {
+      "id": "m1.apps.web.src.firstStack.protocol.3",
+      "concept": "browserLimits.inputBytes · literal 4",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 4,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.firstStack.protocol.3"
+        ]
+      },
+      "formula": "inputBytes: 4 * MiB",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/protocol.ts#L4",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/firstStack/protocol.ts",
+        "line": 4,
+        "column": 93
+      }
+    },
+    {
+      "id": "m1.apps.web.src.firstStack.protocol.4",
+      "concept": "browserLimits.horizonUs · literal 60_000_000",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 60000000,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.firstStack.protocol.4"
+        ]
+      },
+      "formula": "horizonUs: 60_000_000",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/protocol.ts#L5",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/firstStack/protocol.ts",
+        "line": 5,
+        "column": 14
+      }
+    },
+    {
+      "id": "m1.apps.web.src.firstStack.protocol.5",
+      "concept": "browserLimits.roots · literal 5000",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 5000,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.firstStack.protocol.5"
+        ]
+      },
+      "formula": "roots: 5000",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/protocol.ts#L5",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/firstStack/protocol.ts",
+        "line": 5,
+        "column": 33
+      }
+    },
+    {
+      "id": "m1.apps.web.src.firstStack.protocol.6",
+      "concept": "browserLimits.events · literal 250_000",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 250000,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.firstStack.protocol.6"
+        ]
+      },
+      "formula": "events: 250_000",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/protocol.ts#L5",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/firstStack/protocol.ts",
+        "line": 5,
+        "column": 47
+      }
+    },
+    {
+      "id": "m1.apps.web.src.firstStack.protocol.7",
+      "concept": "browserLimits.wallMs · literal 15_000",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 15000,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.firstStack.protocol.7"
+        ]
+      },
+      "formula": "wallMs: 15_000",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/protocol.ts#L5",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/firstStack/protocol.ts",
+        "line": 5,
+        "column": 64
+      }
+    },
+    {
+      "id": "m1.apps.web.src.firstStack.protocol.8",
+      "concept": "browserLimits.heapBytes · literal 128",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 128,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.firstStack.protocol.8"
+        ]
+      },
+      "formula": "heapBytes: 128 * MiB",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/protocol.ts#L5",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/firstStack/protocol.ts",
+        "line": 5,
+        "column": 83
+      }
+    },
+    {
+      "id": "m1.apps.web.src.firstStack.protocol.9",
+      "concept": "browserLimits.sliceEvents · literal 128",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 128,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.firstStack.protocol.9"
+        ]
+      },
+      "formula": "sliceEvents: 128",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/protocol.ts#L6",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/firstStack/protocol.ts",
+        "line": 6,
+        "column": 33
+      }
+    },
+    {
+      "id": "m1.apps.web.src.firstStack.protocol.10",
+      "concept": "browserLimits.sliceWallMs · literal 8",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 8,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.firstStack.protocol.10"
+        ]
+      },
+      "formula": "sliceWallMs: 8",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/protocol.ts#L6",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/firstStack/protocol.ts",
+        "line": 6,
+        "column": 51
+      }
+    },
+    {
+      "id": "m1.apps.web.src.firstStack.protocol.11",
+      "concept": "bytes · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.firstStack.protocol.11"
+        ]
+      },
+      "formula": "let bytes = 0;",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/protocol.ts#L38",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/firstStack/protocol.ts",
+        "line": 38,
+        "column": 79
+      }
+    },
+    {
+      "id": "m1.apps.web.src.firstStack.protocol.12",
+      "concept": "visit · literal 64",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 64,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.firstStack.protocol.12"
+        ]
+      },
+      "formula": "if (depth > 64) throw Error(\"Browser JSON depth budget exceeded\");",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/protocol.ts#L44",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/firstStack/protocol.ts",
+        "line": 44,
+        "column": 17
+      }
+    },
+    {
+      "id": "m1.apps.web.src.firstStack.protocol.13",
+      "concept": "visit · literal 100_000",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 100000,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.firstStack.protocol.13"
+        ]
+      },
+      "formula": "if (item.length > 100_000) throw Error(\"Browser JSON collection budget exceeded\");",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/protocol.ts#L54",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/firstStack/protocol.ts",
+        "line": 54,
+        "column": 25
+      }
+    },
+    {
+      "id": "m1.apps.web.src.firstStack.protocol.14",
+      "concept": "i · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.firstStack.protocol.14"
+        ]
+      },
+      "formula": "for (let i = 0; i < item.length; i++) parts.push((i ? charge(\",\") : \"\") + visit(item[i], depth + 1));",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/protocol.ts#L56",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/firstStack/protocol.ts",
+        "line": 56,
+        "column": 20
+      }
+    },
+    {
+      "id": "m1.apps.web.src.firstStack.protocol.15",
+      "concept": "visit · literal 1",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.firstStack.protocol.15"
+        ]
+      },
+      "formula": "parts.push((i ? charge(\",\") : \"\") + visit(item[i], depth + 1));",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/protocol.ts#L56",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/firstStack/protocol.ts",
+        "line": 56,
+        "column": 104
+      }
+    },
+    {
+      "id": "m1.apps.web.src.firstStack.protocol.16",
+      "concept": "visit · literal 100_000",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 100000,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.firstStack.protocol.16"
+        ]
+      },
+      "formula": "if (keys.length > 100_000) throw Error(\"Browser JSON collection budget exceeded\");",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/protocol.ts#L62",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/firstStack/protocol.ts",
+        "line": 62,
+        "column": 25
+      }
+    },
+    {
+      "id": "m1.apps.web.src.firstStack.protocol.17",
+      "concept": "visit · literal 1",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.firstStack.protocol.17"
+        ]
+      },
+      "formula": "result = charge(\"{\") + keys.map((key, i) => (i ? charge(\",\") : \"\") + charge(JSON.stringify(key)) + charge(\":\") + visit((item as Record<string, unknown>)[key], depth + 1)).join(\"\") + charge(\"}\");",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/protocol.ts#L63",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/firstStack/protocol.ts",
+        "line": 63,
+        "column": 174
+      }
+    },
+    {
+      "id": "m1.apps.web.src.firstStack.protocol.18",
+      "concept": "canonical · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.firstStack.protocol.18"
+        ]
+      },
+      "formula": "return visit(value, 0);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/protocol.ts#L67",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/firstStack/protocol.ts",
+        "line": 67,
+        "column": 23
+      }
+    },
+    {
+      "id": "m1.apps.web.src.firstStack.protocol.19",
+      "concept": "sha256 · literal 16",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 16,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.firstStack.protocol.19"
+        ]
+      },
+      "formula": "return [...new Uint8Array(digest)].map(b => b.toString(16).padStart(2, \"0\")).join(\"\");",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/protocol.ts#L71",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/firstStack/protocol.ts",
+        "line": 71,
+        "column": 58
+      }
+    },
+    {
+      "id": "m1.apps.web.src.firstStack.protocol.20",
+      "concept": "sha256 · literal 2",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 2,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.firstStack.protocol.20"
+        ]
+      },
+      "formula": "return [...new Uint8Array(digest)].map(b => b.toString(16).padStart(2, \"0\")).join(\"\");",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/protocol.ts#L71",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/firstStack/protocol.ts",
+        "line": 71,
+        "column": 71
+      }
+    },
+    {
+      "id": "m1.apps.web.src.firstStack.protocol.21",
+      "concept": "wallBudget · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.firstStack.protocol.21"
+        ]
+      },
+      "formula": "if (!Number.isSafeInteger(value) || value <= 0 || value > browserLimits.wallMs) throw Error(\"Browser wall budget may only lower the ceiling\");",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/protocol.ts#L80",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/firstStack/protocol.ts",
+        "line": 80,
+        "column": 48
+      }
+    },
+    {
+      "id": "m1.apps.web.src.firstStack.submissions.1",
+      "concept": "createFirstStackSubmissionClient · literal 80",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 80,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.firstStack.submissions.1"
+        ]
+      },
+      "formula": "if (!snapshot.idempotencyKey || snapshot.idempotencyKey.length > 80 || ![\"private\", \"shared\", \"scored\"].includes(snapshot.purpose)) throw Error(\"Supply submission purpose and idempotency key\");",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/submissions.ts#L49",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/firstStack/submissions.ts",
+        "line": 49,
+        "column": 72
+      }
+    },
+    {
+      "id": "m1.apps.web.src.firstStack.worker.entry.1",
+      "concept": "entry.ts · literal 4",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 4,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.firstStack.worker.entry.1"
+        ]
+      },
+      "formula": "if (typeof event.data !== \"string\" || event.data.length > 4 * 1024 * 1024) throw Error(\"Browser input byte budget exceeded\");",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/worker/entry.ts#L12",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/firstStack/worker/entry.ts",
+        "line": 12,
+        "column": 65
+      }
+    },
+    {
+      "id": "m1.apps.web.src.firstStack.worker.entry.2",
+      "concept": "entry.ts · literal 1024",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1024,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.firstStack.worker.entry.2"
+        ]
+      },
+      "formula": "if (typeof event.data !== \"string\" || event.data.length > 4 * 1024 * 1024) throw Error(\"Browser input byte budget exceeded\");",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/worker/entry.ts#L12",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/firstStack/worker/entry.ts",
+        "line": 12,
+        "column": 69
+      }
+    },
+    {
+      "id": "m1.apps.web.src.firstStack.worker.entry.3",
+      "concept": "entry.ts · literal 1024",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1024,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.firstStack.worker.entry.3"
+        ]
+      },
+      "formula": "if (typeof event.data !== \"string\" || event.data.length > 4 * 1024 * 1024) throw Error(\"Browser input byte budget exceeded\");",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/worker/entry.ts#L12",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/firstStack/worker/entry.ts",
+        "line": 12,
+        "column": 76
+      }
+    },
+    {
+      "id": "m1.apps.web.src.firstStack.worker.entry.4",
+      "concept": "message · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.firstStack.worker.entry.4"
+        ]
+      },
+      "formula": "message: error instanceof Error ? error.message.slice(0, 1000) : \"Browser execution failed\"",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/worker/entry.ts#L15",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/firstStack/worker/entry.ts",
+        "line": 15,
+        "column": 112
+      }
+    },
+    {
+      "id": "m1.apps.web.src.firstStack.worker.entry.5",
+      "concept": "message · literal 1000",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1000,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.firstStack.worker.entry.5"
+        ]
+      },
+      "formula": "message: error instanceof Error ? error.message.slice(0, 1000) : \"Browser execution failed\"",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/worker/entry.ts#L15",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/firstStack/worker/entry.ts",
+        "line": 15,
+        "column": 115
+      }
+    },
+    {
+      "id": "m1.apps.web.src.firstStack.worker.execute.1",
+      "concept": "browserHost.yield · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.firstStack.worker.execute.1"
+        ]
+      },
+      "formula": "yield: () => new Promise(resolve => setTimeout(resolve, 0))",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/worker/execute.ts#L9",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/firstStack/worker/execute.ts",
+        "line": 9,
+        "column": 115
+      }
+    },
+    {
+      "id": "m1.apps.web.src.firstStack.worker.execute.2",
+      "concept": "executeBrowser · literal 256",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 256,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.firstStack.worker.execute.2"
+        ]
+      },
+      "formula": "if (!input.owner || input.owner.length > 256 || !policy.seed || policy.seed.length > 256) throw Error(\"Supply owner and explicit seed\");",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/worker/execute.ts#L20",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/firstStack/worker/execute.ts",
+        "line": 20,
+        "column": 44
+      }
+    },
+    {
+      "id": "m1.apps.web.src.firstStack.worker.execute.3",
+      "concept": "executeBrowser · literal 256",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 256,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.firstStack.worker.execute.3"
+        ]
+      },
+      "formula": "if (!input.owner || input.owner.length > 256 || !policy.seed || policy.seed.length > 256) throw Error(\"Supply owner and explicit seed\");",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/worker/execute.ts#L20",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/firstStack/worker/execute.ts",
+        "line": 20,
+        "column": 88
+      }
+    },
+    {
+      "id": "m1.apps.web.src.firstStack.worker.execute.4",
+      "concept": "executeBrowser · literal 1",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.firstStack.worker.execute.4"
+        ]
+      },
+      "formula": "for (const [name, value, ceiling, min] of [ [\"horizon\", policy.horizonUs, limits.horizonUs, 1], [\"events\", policy.maxEvents, limits.events, 1], [\"samples\", policy.maxSamples, 10000, 1], [\"raw results\", policy.maxRawResults, limits.roots, 0], [\"sample interval\", policy.sampleIntervalUs, limits.horizonUs, 1], ] as const) if (!Number.isSafeInteger(value) || value < min || value > ceiling) throw Error(`Browser ${name} budget exceeded`);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/worker/execute.ts#L22",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/firstStack/worker/execute.ts",
+        "line": 22,
+        "column": 53
+      }
+    },
+    {
+      "id": "m1.apps.web.src.firstStack.worker.execute.5",
+      "concept": "executeBrowser · literal 1",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.firstStack.worker.execute.5"
+        ]
+      },
+      "formula": "for (const [name, value, ceiling, min] of [ [\"horizon\", policy.horizonUs, limits.horizonUs, 1], [\"events\", policy.maxEvents, limits.events, 1], [\"samples\", policy.maxSamples, 10000, 1], [\"raw results\", policy.maxRawResults, limits.roots, 0], [\"sample interval\", policy.sampleIntervalUs, limits.horizonUs, 1], ] as const) if (!Number.isSafeInteger(value) || value < min || value > ceiling) throw Error(`Browser ${name} budget exceeded`);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/worker/execute.ts#L22",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/firstStack/worker/execute.ts",
+        "line": 22,
+        "column": 101
+      }
+    },
+    {
+      "id": "m1.apps.web.src.firstStack.worker.execute.6",
+      "concept": "executeBrowser · literal 10000",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 10000,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.firstStack.worker.execute.6"
+        ]
+      },
+      "formula": "for (const [name, value, ceiling, min] of [ [\"horizon\", policy.horizonUs, limits.horizonUs, 1], [\"events\", policy.maxEvents, limits.events, 1], [\"samples\", policy.maxSamples, 10000, 1], [\"raw results\", policy.maxRawResults, limits.roots, 0], [\"sample interval\", policy.sampleIntervalUs, limits.horizonUs, 1], ] as const) if (!Number.isSafeInteger(value) || value < min || value > ceiling) throw Error(`Browser ${name} budget exceeded`);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/worker/execute.ts#L23",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/firstStack/worker/execute.ts",
+        "line": 23,
+        "column": 36
+      }
+    },
+    {
+      "id": "m1.apps.web.src.firstStack.worker.execute.7",
+      "concept": "executeBrowser · literal 1",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.firstStack.worker.execute.7"
+        ]
+      },
+      "formula": "for (const [name, value, ceiling, min] of [ [\"horizon\", policy.horizonUs, limits.horizonUs, 1], [\"events\", policy.maxEvents, limits.events, 1], [\"samples\", policy.maxSamples, 10000, 1], [\"raw results\", policy.maxRawResults, limits.roots, 0], [\"sample interval\", policy.sampleIntervalUs, limits.horizonUs, 1], ] as const) if (!Number.isSafeInteger(value) || value < min || value > ceiling) throw Error(`Browser ${name} budget exceeded`);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/worker/execute.ts#L23",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/firstStack/worker/execute.ts",
+        "line": 23,
+        "column": 43
+      }
+    },
+    {
+      "id": "m1.apps.web.src.firstStack.worker.execute.8",
+      "concept": "executeBrowser · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.firstStack.worker.execute.8"
+        ]
+      },
+      "formula": "for (const [name, value, ceiling, min] of [ [\"horizon\", policy.horizonUs, limits.horizonUs, 1], [\"events\", policy.maxEvents, limits.events, 1], [\"samples\", policy.maxSamples, 10000, 1], [\"raw results\", policy.maxRawResults, limits.roots, 0], [\"sample interval\", policy.sampleIntervalUs, limits.horizonUs, 1], ] as const) if (!Number.isSafeInteger(value) || value < min || value > ceiling) throw Error(`Browser ${name} budget exceeded`);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/worker/execute.ts#L23",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/firstStack/worker/execute.ts",
+        "line": 23,
+        "column": 99
+      }
+    },
+    {
+      "id": "m1.apps.web.src.firstStack.worker.execute.9",
+      "concept": "executeBrowser · literal 1",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.firstStack.worker.execute.9"
+        ]
+      },
+      "formula": "for (const [name, value, ceiling, min] of [ [\"horizon\", policy.horizonUs, limits.horizonUs, 1], [\"events\", policy.maxEvents, limits.events, 1], [\"samples\", policy.maxSamples, 10000, 1], [\"raw results\", policy.maxRawResults, limits.roots, 0], [\"sample interval\", policy.sampleIntervalUs, limits.horizonUs, 1], ] as const) if (!Number.isSafeInteger(value) || value < min || value > ceiling) throw Error(`Browser ${name} budget exceeded`);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/worker/execute.ts#L24",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/firstStack/worker/execute.ts",
+        "line": 24,
+        "column": 68
+      }
+    },
+    {
+      "id": "m1.apps.web.src.firstStack.worker.execute.10",
+      "concept": "profile.operations · literal -1",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": -1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.firstStack.worker.execute.10"
+        ]
+      },
+      "formula": "operations: [...sidecar.operations].sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0)",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/worker/execute.ts#L31",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/firstStack/worker/execute.ts",
+        "line": 31,
+        "column": 71
+      }
+    },
+    {
+      "id": "m1.apps.web.src.firstStack.worker.execute.11",
+      "concept": "profile.operations · literal 1",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.firstStack.worker.execute.11"
+        ]
+      },
+      "formula": "operations: [...sidecar.operations].sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0)",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/worker/execute.ts#L31",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/firstStack/worker/execute.ts",
+        "line": 31,
+        "column": 89
+      }
+    },
+    {
+      "id": "m1.apps.web.src.firstStack.worker.execute.12",
+      "concept": "profile.operations · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.firstStack.worker.execute.12"
+        ]
+      },
+      "formula": "operations: [...sidecar.operations].sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0)",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/worker/execute.ts#L31",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/firstStack/worker/execute.ts",
+        "line": 31,
+        "column": 93
+      }
+    },
+    {
+      "id": "m1.apps.web.src.firstStack.worker.execute.13",
+      "concept": "cut.sequence · literal 1",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.firstStack.worker.execute.13"
+        ]
+      },
+      "formula": "sequence: 1",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/worker/execute.ts#L65",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/firstStack/worker/execute.ts",
+        "line": 65,
+        "column": 68
+      }
+    },
+    {
+      "id": "m1.apps.web.src.firstStack.worker.execute.14",
+      "concept": "cut.completeness.allRootsTerminal · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.firstStack.worker.execute.14"
+        ]
+      },
+      "formula": "allRootsTerminal: e.counts.offered === schedule.rows.length && e.counts.inFlight === 0",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/worker/execute.ts#L70",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/firstStack/worker/execute.ts",
+        "line": 70,
+        "column": 148
+      }
+    },
+    {
+      "id": "m1.apps.web.src.firstStack.worker.execute.15",
+      "concept": "cut.omissions.samples · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.firstStack.worker.execute.15"
+        ]
+      },
+      "formula": "samples: e.sampleRetention?.omitted ?? 0",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/worker/execute.ts#L72",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/firstStack/worker/execute.ts",
+        "line": 72,
+        "column": 121
       }
     },
     {
