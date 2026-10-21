@@ -64,7 +64,7 @@
     },
     {
       "path": "scripts/tests/execution-identity.test.ts",
-      "sha256": "71b62fefb148dd42aa360ed545efdcb9bd2973525d7cbf2c11dc62cb37f953bb"
+      "sha256": "e6ebf04f2cba2288d6e5f9076b257ed6a553d833e4cbbb7b8575608ccd149916"
     }
   ]
 }

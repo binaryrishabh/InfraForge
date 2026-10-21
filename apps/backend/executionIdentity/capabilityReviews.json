@@ -164,7 +164,7 @@
     }
   },
   "apps/backend/executionIdentity/loading.ts": {
-    "hash": "9e36207fd00d31bee105e1c6ec6c9464af4b5ffc6011cf4ed35d942d531aa5cb",
+    "hash": "eed20f4ea60346b38f85453cb359faad5f869f85cd2cb9e002d62a9105066eae",
     "capabilities": [
       "computed-data",
       "verifier",
@@ -172,7 +172,7 @@
     ],
     "review": "Fixed data indexing; resource adapters require the separate documented review",
     "globals": {
-      "hash": "9e36207fd00d31bee105e1c6ec6c9464af4b5ffc6011cf4ed35d942d531aa5cb",
+      "hash": "eed20f4ea60346b38f85453cb359faad5f869f85cd2cb9e002d62a9105066eae",
       "names": [
         "Bun"
       ]
@@ -194,12 +194,12 @@
     }
   },
   "apps/backend/executionIdentity/transitions.ts": {
-    "hash": "a5ced2f8cc2e994beda40f99ddbfc7aa60d85acb6c814ed61b9a8f7c9488bae0",
+    "hash": "f6569c23ff455577832a3bbd273e6c94c19f5fb4000bdcb2aa2f4907efc62531",
     "capabilities": [
       "computed-data",
       "resources"
     ],
-    "review": "Transition storage only: canonical tagged Merkle data, fixed manifest/pack reads and bounded gzip decoding; no source execution, dynamic import or new external resource path"
+    "review": "Canonical Merkle transition data and fixed bounded resource reads; additive isolation-boundary/1 tag reconstructs the independently pinned eight-entrypoint baseline with exact digest equality. Earlier tags, unknown-tag refusal, snapshot and descriptor integrity checks remain intact; no execution or new resource paths."
   },
   "apps/backend/internalModel2/authoring.ts": {
     "hash": "fbf3e20b5c82cb9460e087aca74b39f10c1efa5e210b3ae3593beab922067e00",

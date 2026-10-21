@@ -1,3 +1,4 @@
+import { historicalIsolationDescriptor } from "./historical-isolation-descriptor";
 import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
@@ -50,12 +51,18 @@ export function refreshTransitions(baseline: string, review: string) {
       if (text === undefined || files.has(path) && sourceHash(text) !== files.get(path)) throw Error(`Cannot retain baseline source: ${path}`);
       return [path, text];
     }));
-    if (digest(historicalAnalysisDescriptor({ paths, read: path => { const text = texts.get(path); if (text === undefined) throw Error(`Missing baseline source: ${path}`); return text; } }, stored.runtime)) !== source) throw Error("Baseline descriptor does not reconstruct");
+    const retained = { paths, read: (path: string) => { const text = texts.get(path); if (text === undefined) throw Error(`Missing baseline source: ${path}`); return text; } };
+    const algorithm = [
+      { id: "analysis-boundary/1" as const, reconstruct: historicalAnalysisDescriptor },
+      { id: "isolation-boundary/1" as const, reconstruct: historicalIsolationDescriptor },
+    ].find(row => digest(row.reconstruct(retained, stored.runtime)) === source)?.id;
+    if (!algorithm) throw Error("Baseline descriptor does not reconstruct");
+    if (pending && pending.algorithm !== algorithm) throw Error("Conflicting baseline reconstruction algorithm");
     const snapshot = Object.fromEntries([...texts].map(([path, text]) => { const hash = sourceHash(text); history.blobs[hash] = text; return [path, hash]; }));
     if (history.trees[baseline] && digest(history.trees[baseline]) !== digest(snapshot)) throw Error("Conflicting baseline snapshot");
     history.trees[baseline] = snapshot;
     if (pending) pending.review = review;
-    else table.entries.push({ commit: baseline, source, descriptor: source, target, kind: "descriptor", algorithm: "analysis-boundary/1", review });
+    else table.entries.push({ commit: baseline, source, descriptor: source, target, kind: "descriptor", algorithm, review });
     table.descriptors[target] = descriptor;
     for (const row of table.entries) row.target = target;
     for (const key of Object.keys(table.descriptors)) if (key !== target && !table.entries.some(row => row.descriptor === key)) delete table.descriptors[key];

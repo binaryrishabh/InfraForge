@@ -73,3 +73,14 @@ compile/bounds and historical host proofs with their own producers. Run
 last after source/test/doc changes and exact-source capability review. This
 preserves the accepted historical sources and adds one reviewed main transition;
 it does not replace the original 88-file baseline or eight replay hashes.
+
+
+The next transition after the isolated main release uses
+`isolation-boundary/1`. Its frozen eight-entrypoint reconstruction and full
+syntax policy reproduce main's retained descriptor exactly. The earlier
+`analysis-boundary/1` algorithm remains unchanged and continues to reconstruct
+older snapshots. The refresh producer accepts a reconstruction algorithm only
+when its complete descriptor digest equals the already pinned baseline source;
+missing sources, changed host bytes, unknown algorithms and inconsistent
+snapshots remain refused. The dedicated historical-isolation test reconstructs
+without Git and rejects missing or altered isolated hosts.

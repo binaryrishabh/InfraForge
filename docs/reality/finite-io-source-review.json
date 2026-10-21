@@ -88,7 +88,7 @@
     },
     {
       "path": "scripts/tests/execution-identity.test.ts",
-      "hash": "71b62fefb148dd42aa360ed545efdcb9bd2973525d7cbf2c11dc62cb37f953bb"
+      "hash": "e6ebf04f2cba2288d6e5f9076b257ed6a553d833e4cbbb7b8575608ccd149916"
     },
     {
       "path": "scripts/finite-io-identity.ts",
@@ -100,7 +100,7 @@
     },
     {
       "path": "scripts/execution-identity.ts",
-      "hash": "cb8d913ebd3c3f41c1e802204e6970857606151da56aca6c64bb18a0b7d23c76"
+      "hash": "a70ae4bda929ee8668dd3b7a55cb06717836f014e473331d2f6f72cec000d038"
     },
     {
       "path": "scripts/stage2-bounds-host.ts",
