@@ -1,0 +1,101 @@
+{
+  "schema": "first-stack-submission-source-review/1",
+  "baseline": "7fdc72ef9c77bb0ad44bda3134f1899e31e6e9f1",
+  "scope": "Owned immutable browser submissions and serial isolated server verification; Model 1 active; no public route or worker started",
+  "files": [
+    {
+      "path": "apps/backend/firstStack/admission.ts",
+      "hash": "cc01ed10e6004e84b00225b533f4bc35b063005621fe2645d96644291a1e260f"
+    },
+    {
+      "path": "apps/backend/firstStack/submissionRoutes.ts",
+      "hash": "d68fe0b6421e1d9ccd4342c68f2e0c5e77521d37afdac6e10c39b6481057e859"
+    },
+    {
+      "path": "apps/backend/firstStack/submissionWorker.ts",
+      "hash": "b3daa84fee9509029b99c8cebb8b72e60481c0ae3c07f5624257e8848c1ccd28"
+    },
+    {
+      "path": "apps/backend/firstStack/submissionQueue.ts",
+      "hash": "d5ade04c5020231ad0de4f5994d168bbb5f0ecb3ce9ea3d4795d2dd57171d505"
+    },
+    {
+      "path": "apps/backend/firstStack/isolationRunner.ts",
+      "hash": "a70a9575cc51e4269e104831277730a6386a0fd1dfb9c72ac0ae6f588ad0706d"
+    },
+    {
+      "path": "apps/backend/firstStack/isolationOwnership.ts",
+      "hash": "e537a97faf66fc948936781d423b9f5a1539185adfd965643da14c94ecafe567"
+    },
+    {
+      "path": "apps/backend/release/firstStackSchema.ts",
+      "hash": "76594ea78daadc652634c0f7ca084c4a0ce8bde6fffcee5a88d4080067acef36"
+    },
+    {
+      "path": "apps/backend/release/migrations.ts",
+      "hash": "f3b13843a6c766377a88e022d353020b5db94a65a52d48bae27d263f85f6456e"
+    },
+    {
+      "path": "apps/backend/executionIdentity/descriptor.ts",
+      "hash": "804a3b397bf64d13bf455beda6782ffa6bc6e3b5ec85c068ff7273ba62ba1a94"
+    },
+    {
+      "path": "apps/backend/prisma/schema.prisma",
+      "hash": "097981d3920d8bb9217342dbc0e8de890c7990e4b702a1eac3fdbcc70a681899"
+    },
+    {
+      "path": "apps/backend/prisma/migrations/20261021000000_first_stack_submissions/migration.sql",
+      "hash": "0e3a8da3103ceb3978f7183bdfac136285b4073b11bbcd9ffb90b4aed25ba9ed"
+    },
+    {
+      "path": "apps/backend/executionIdentity/transitions.ts",
+      "hash": "f684caaa47e196421ae478e32be2f29cd2713e6d8d1ee7a4c44ba39dead5ff4c"
+    },
+    {
+      "path": "scripts/historical-declared-host-descriptor.ts",
+      "hash": "2fd364fb0da129750ef54e3b53d2d7887c7819dfe443d2013411c61d5f48f034"
+    },
+    {
+      "path": "scripts/frozen-baseline.ts",
+      "hash": "f65d118f4a6d15bef8c7a3d3ae7fca7f8e07b1c870167399d2b3fcb805f73ff2"
+    },
+    {
+      "path": "scripts/refresh-execution.ts",
+      "hash": "2a263a03d23f3469c7dd57e0e46fdc38fe2be44361cc955d1e070c2b57e98c06"
+    },
+    {
+      "path": "scripts/execution-identity.ts",
+      "hash": "d907f67f97094b6b78ff7520c2aa52b7817e6bb939fabd6c6d9edf475509b605"
+    }
+  ],
+  "acceptance": [
+    {
+      "path": "apps/backend/tests/firstStackSubmission.test.ts",
+      "hash": "a0d38b8f27dc770c1f08f17b891cc3f94d6cb2b432f7aeb54ca908113812a35c"
+    },
+    {
+      "path": "apps/backend/tests/firstStackIsolation.test.ts",
+      "hash": "03ad64ec4bb46586ddf5769863ea9df8f5116bcc76561b15057f19098ff9535d"
+    },
+    {
+      "path": "apps/backend/tests/submissionFixture.ts",
+      "hash": "75728e5e4c0f82847bd9dec5040895eb77ce82d434c50a17c44316876bf5b172"
+    },
+    {
+      "path": "apps/backend/tests/integration/firstStackSubmission.integration.test.ts",
+      "hash": "7e25eb55d49c77cfc6b9f87ec21263fbe31a24433374800530f93e3ebb4c3e3e"
+    },
+    {
+      "path": "scripts/tests/submissionLineage.test.ts",
+      "hash": "38bd09ae6b7502dc91ed3e234f24455c66ed47dc6d6721a99bd6e941614a5f09"
+    },
+    {
+      "path": "scripts/tests/historical-isolation.test.ts",
+      "hash": "0da6c9fbe2ae10cbc073c8d1242600e02c681e7a07355057b0aa2819148566d3"
+    },
+    {
+      "path": "scripts/tests/futureBaseline.test.ts",
+      "hash": "222e8fae66c54bba2429d0f40b2c3442f20d045b7696b46d09b843513b82c38d"
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 {
   "schema": "execution-loading-analysis/1",
-  "policy": "3c6681451bcec984401148f83ef6eb97699c9efe5e16b2b5dea318b8d2ad31ce",
+  "policy": "82c9baba0dcc8e5546618f8a3e7a31cecdb0c70cffb1b641accd6c64d0dae51d",
   "modules": {
     "apps/backend/actions/contract.ts": {
       "hash": "cb4d5860ab0805ccf009c47e453ed89c12e52e564c95e470a1cfbb23e18fb24d",
@@ -963,6 +963,43 @@
         }
       ]
     },
+    "apps/backend/firstStack/admission.ts": {
+      "hash": "cc01ed10e6004e84b00225b533f4bc35b063005621fe2645d96644291a1e260f",
+      "requests": [
+        {
+          "path": "node:crypto",
+          "kind": "import-statement"
+        },
+        {
+          "path": "zod",
+          "kind": "import-statement"
+        },
+        {
+          "path": "../capabilities/policy",
+          "kind": "import-statement"
+        },
+        {
+          "path": "../utils/errors",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./canonical",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./execution",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./isolationProtocol",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./isolationPolicy",
+          "kind": "import-statement"
+        }
+      ]
+    },
     "apps/backend/firstStack/authoring.ts": {
       "hash": "633fa5fb7dc6f67fa65537e7e0516b110684611c75e405d7f87c217e40500445",
       "requests": [
@@ -1170,7 +1207,7 @@
       ]
     },
     "apps/backend/firstStack/isolationOwnership.ts": {
-      "hash": "032fae30c68140dbe44ae7fcdf78ca4218a50281e1d292375395c215d0a28b4f",
+      "hash": "e537a97faf66fc948936781d423b9f5a1539185adfd965643da14c94ecafe567",
       "requests": [
         {
           "path": "pg",
@@ -1226,7 +1263,7 @@
       ]
     },
     "apps/backend/firstStack/isolationRunner.ts": {
-      "hash": "668d342bece7becb192333287dd72a87cf718fab85c42c2a8f4a053388cbee64",
+      "hash": "a70a9575cc51e4269e104831277730a6386a0fd1dfb9c72ac0ae6f588ad0706d",
       "requests": [
         {
           "path": "node:crypto",
@@ -1333,6 +1370,77 @@
         },
         {
           "path": "./execution",
+          "kind": "import-statement"
+        }
+      ]
+    },
+    "apps/backend/firstStack/submissionQueue.ts": {
+      "hash": "d5ade04c5020231ad0de4f5994d168bbb5f0ecb3ce9ea3d4795d2dd57171d505",
+      "requests": [
+        {
+          "path": "bullmq",
+          "kind": "import-statement"
+        },
+        {
+          "path": "zod",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./submissionWorker",
+          "kind": "import-statement"
+        }
+      ]
+    },
+    "apps/backend/firstStack/submissionRoutes.ts": {
+      "hash": "d68fe0b6421e1d9ccd4342c68f2e0c5e77521d37afdac6e10c39b6481057e859",
+      "requests": [
+        {
+          "path": "express",
+          "kind": "import-statement"
+        },
+        {
+          "path": "zod",
+          "kind": "import-statement"
+        },
+        {
+          "path": "@infraforge/simulation/internal-first-stack",
+          "kind": "import-statement"
+        },
+        {
+          "path": "../utils/errors",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./admission",
+          "kind": "import-statement"
+        }
+      ]
+    },
+    "apps/backend/firstStack/submissionWorker.ts": {
+      "hash": "b3daa84fee9509029b99c8cebb8b72e60481c0ae3c07f5624257e8848c1ccd28",
+      "requests": [
+        {
+          "path": "node:crypto",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./canonical",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./admission",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./isolatedExecution",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./isolationOwnership",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./isolationProtocol",
           "kind": "import-statement"
         }
       ]
@@ -2419,7 +2527,7 @@
       ]
     },
     "apps/backend/lib/generated/prisma/client.ts": {
-      "hash": "9b0239b3cc7aef90877f18ed7bf9caa90ce4574bfc57463cc23513dd7a607048",
+      "hash": "9e1e3c700803f7fb5c9cd4bc3b52433152696bc17a4a7e598355588986362df9",
       "requests": [
         {
           "kind": "import-statement",
@@ -2464,7 +2572,7 @@
       "requests": []
     },
     "apps/backend/lib/generated/prisma/internal/class.ts": {
-      "hash": "d2847d470b96bada1f89ff8db6bba3c98cd4a426128ee2fa046f7cc85a5bb8e5",
+      "hash": "c45cb3267e2355438068dbfba7116d214838dba0c5d948166300acf50bb295ca",
       "requests": [
         {
           "kind": "import-statement",
@@ -2485,7 +2593,7 @@
       ]
     },
     "apps/backend/lib/generated/prisma/internal/prismaNamespace.ts": {
-      "hash": "5649f051e1eceda4fad06265fc4820d387151fef7981326f9695e1e6b6d2eb43",
+      "hash": "dfb24edb7f0c9a5d6962bc69f6ff1d72a6d353a60b0852fa3e03d173638a838a",
       "requests": [
         {
           "kind": "import-statement",
@@ -2531,6 +2639,15 @@
       "hash": "6ba47f47089be38386b53ed90e8c8f8635753d0f83cd1503a3d8ed6ebe8a1589",
       "requests": []
     },
+    "apps/backend/release/firstStackSchema.ts": {
+      "hash": "76594ea78daadc652634c0f7ca084c4a0ce8bde6fffcee5a88d4080067acef36",
+      "requests": [
+        {
+          "path": "node:fs/promises",
+          "kind": "import-statement"
+        }
+      ]
+    },
     "apps/backend/release/lessonSchema.ts": {
       "hash": "7182d7d383f0f5bc1ffde2354dfabd5e20e4c572e702125ac09f9828a5b7c4c5",
       "requests": [
@@ -2541,7 +2658,7 @@
       ]
     },
     "apps/backend/release/migrations.ts": {
-      "hash": "19a7eb34c9971df6f014c8b4be40a640837e5f20fdb23fef2ba856d7ed7e2e0c",
+      "hash": "f3b13843a6c766377a88e022d353020b5db94a65a52d48bae27d263f85f6456e",
       "requests": [
         {
           "path": "node:crypto",
@@ -2561,6 +2678,10 @@
         },
         {
           "path": "./lessonSchema",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./firstStackSchema",
           "kind": "import-statement"
         }
       ]

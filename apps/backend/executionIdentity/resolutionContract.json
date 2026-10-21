@@ -44226,6 +44226,14 @@
     },
     {
       "owner": null,
+      "file": "apps/backend/firstStack/admission.ts",
+      "specifier": "zod",
+      "kind": "import-statement",
+      "targetOwner": "zod@4.4.3:12",
+      "targetFile": "index.js"
+    },
+    {
+      "owner": null,
       "file": "apps/backend/firstStack/authoring.ts",
       "specifier": "@infraforge/contracts/first-stack",
       "kind": "import-statement",
@@ -44351,6 +44359,46 @@
       "kind": "import-statement",
       "targetOwner": "@infraforge/contracts@workspace:packages/contracts:156",
       "targetFile": "src/first-stack/index.ts"
+    },
+    {
+      "owner": null,
+      "file": "apps/backend/firstStack/submissionQueue.ts",
+      "specifier": "bullmq",
+      "kind": "import-statement",
+      "targetOwner": "bullmq@6.0.8:186",
+      "targetFile": "dist/cjs/index.js"
+    },
+    {
+      "owner": null,
+      "file": "apps/backend/firstStack/submissionQueue.ts",
+      "specifier": "zod",
+      "kind": "import-statement",
+      "targetOwner": "zod@4.4.3:12",
+      "targetFile": "index.js"
+    },
+    {
+      "owner": null,
+      "file": "apps/backend/firstStack/submissionRoutes.ts",
+      "specifier": "@infraforge/simulation/internal-first-stack",
+      "kind": "import-statement",
+      "targetOwner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "targetFile": "src/internalFirstStack.ts"
+    },
+    {
+      "owner": null,
+      "file": "apps/backend/firstStack/submissionRoutes.ts",
+      "specifier": "express",
+      "kind": "import-statement",
+      "targetOwner": "express@5.2.1:219",
+      "targetFile": "index.js"
+    },
+    {
+      "owner": null,
+      "file": "apps/backend/firstStack/submissionRoutes.ts",
+      "specifier": "zod",
+      "kind": "import-statement",
+      "targetOwner": "zod@4.4.3:12",
+      "targetFile": "index.js"
     },
     {
       "owner": null,

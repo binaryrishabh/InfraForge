@@ -192,7 +192,7 @@
     },
     {
       "file": "apps/backend/internalModel2/legacyRuntime.json",
-      "hash": "2183192e35e3cacf0778bdd3296af2b0351e1154f3c050c126e4410c806335e0"
+      "hash": "297cac8d7428533cdadbf400f6af974e7c43bafcc825cfacbe88046575a902f4"
     },
     {
       "file": "apps/backend/internalModel2/lessonAuthoring.ts",
@@ -268,7 +268,7 @@
     },
     {
       "file": "apps/backend/prisma/schema.prisma",
-      "hash": "1f4a92312df9673263f477561641dd8f0c2fcaf4dbc8f56c0de939bbc9fc492e"
+      "hash": "c7a681d5ddc604d874347bf02d8826693867157a3bbea8d96c7550b85d6b3e37"
     },
     {
       "file": "apps/backend/release/lessonSchema.ts",
@@ -276,7 +276,7 @@
     },
     {
       "file": "apps/backend/release/migrations.ts",
-      "hash": "c3b531b0f860fc042cdb5efcfadc38a4789f3d5783d2e9a37b1e4f106c87433d"
+      "hash": "716843681b064a75c89c5ec3f05c82a466e78058ef2ec76edb1cc9aa70218cdb"
     },
     {
       "file": "apps/backend/worker.ts",

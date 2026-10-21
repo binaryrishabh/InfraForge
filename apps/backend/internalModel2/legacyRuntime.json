@@ -2271,7 +2271,7 @@
     },
     {
       "path": "scripts/tests/execution-identity.test.ts",
-      "hash": "ac86628383074225626004bfa31c84c88f6d7f40df7c84cb742ea34bfa3ab239"
+      "hash": "7b40eab1ba515573dffe3c7ff26b1d7527576ebff78d88ff31f2bbb0994dd0ad"
     },
     {
       "path": "scripts/tests/finite-io.test.ts",
@@ -2316,6 +2316,10 @@
     {
       "path": "scripts/tests/fixtures/unreviewed-host.ts",
       "hash": "8b5893720f4b693e3ce32ec4b99700cb45d9bd393128459110c88f3ad66bab06"
+    },
+    {
+      "path": "scripts/tests/futureBaseline.test.ts",
+      "hash": "222e8fae66c54bba2429d0f40b2c3442f20d045b7696b46d09b843513b82c38d"
     },
     {
       "path": "scripts/tests/g4Pilot.test.ts",
@@ -2376,6 +2380,10 @@
     {
       "path": "scripts/tests/shippingReality.test.ts",
       "hash": "5d2ca4914467dee9c5e5d18d60517bceca67b161cfb8054b48168bfbc3b7a11d"
+    },
+    {
+      "path": "scripts/tests/submissionLineage.test.ts",
+      "hash": "38bd09ae6b7502dc91ed3e234f24455c66ed47dc6d6721a99bd6e941614a5f09"
     },
     {
       "path": "scripts/tests/systemsCalibration.test.ts",

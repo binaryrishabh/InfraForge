@@ -119,7 +119,7 @@
     }
   },
   "apps/backend/executionIdentity/descriptor.ts": {
-    "hash": "7cb2d8d505cd905abefb712038a9bb4e6242dfe5b35a50a06268b0e4f475f5a9",
+    "hash": "804a3b397bf64d13bf455beda6782ffa6bc6e3b5ec85c068ff7273ba62ba1a94",
     "capabilities": [
       "computed-data",
       "verifier",
@@ -127,7 +127,7 @@
     ],
     "review": "Fixed data indexing; resource adapters require the separate documented review",
     "globals": {
-      "hash": "7cb2d8d505cd905abefb712038a9bb4e6242dfe5b35a50a06268b0e4f475f5a9",
+      "hash": "804a3b397bf64d13bf455beda6782ffa6bc6e3b5ec85c068ff7273ba62ba1a94",
       "names": [
         "Bun"
       ]
@@ -164,7 +164,7 @@
     }
   },
   "apps/backend/executionIdentity/loading.ts": {
-    "hash": "582eeb3f22ff420aa9ced940983343bcb9316c2745ef514ec44b8c7985340c63",
+    "hash": "f690848c20053c3f08befbb85117d0f9a95ed3ff152d1fb9ae5d4c2b96f7834f",
     "capabilities": [
       "computed-data",
       "verifier",
@@ -172,7 +172,7 @@
     ],
     "review": "Fixed data indexing; resource adapters require the separate documented review",
     "globals": {
-      "hash": "582eeb3f22ff420aa9ced940983343bcb9316c2745ef514ec44b8c7985340c63",
+      "hash": "f690848c20053c3f08befbb85117d0f9a95ed3ff152d1fb9ae5d4c2b96f7834f",
       "names": [
         "Bun"
       ]
@@ -194,7 +194,7 @@
     }
   },
   "apps/backend/executionIdentity/transitions.ts": {
-    "hash": "f6569c23ff455577832a3bbd273e6c94c19f5fb4000bdcb2aa2f4907efc62531",
+    "hash": "f684caaa47e196421ae478e32be2f29cd2713e6d8d1ee7a4c44ba39dead5ff4c",
     "capabilities": [
       "computed-data",
       "resources"
@@ -337,32 +337,32 @@
     "review": "Fixed data indexing; resource adapters require the separate documented review"
   },
   "apps/backend/lib/generated/prisma/client.ts": {
-    "hash": "9b0239b3cc7aef90877f18ed7bf9caa90ce4574bfc57463cc23513dd7a607048",
+    "hash": "9e1e3c700803f7fb5c9cd4bc3b52433152696bc17a4a7e598355588986362df9",
     "capabilities": [
       "generated-client"
     ],
-    "review": "Generated Prisma runtime: fixed imports and embedded compiler; schema and generator are inventoried"
+    "review": "Prisma 7.9.1 generated client for the additive immutable submission schema; fixed literal imports, pinned generator/schema and no authored runtime injected"
   },
   "apps/backend/lib/generated/prisma/enums.ts": {
     "hash": "ebbdce75bbdd503c5172913fdc7b0523216ce8a6e6ed3ee4611ab10bea9c1e20",
     "capabilities": [
       "generated-client"
     ],
-    "review": "Generated Prisma runtime: fixed imports and embedded compiler; schema and generator are inventoried"
+    "review": "Prisma 7.9.1 generated client for the additive immutable submission schema; fixed literal imports, pinned generator/schema and no authored runtime injected"
   },
   "apps/backend/lib/generated/prisma/internal/class.ts": {
-    "hash": "d2847d470b96bada1f89ff8db6bba3c98cd4a426128ee2fa046f7cc85a5bb8e5",
+    "hash": "c45cb3267e2355438068dbfba7116d214838dba0c5d948166300acf50bb295ca",
     "capabilities": [
       "generated-client"
     ],
-    "review": "Generated Prisma runtime: fixed imports and embedded compiler; schema and generator are inventoried"
+    "review": "Prisma 7.9.1 generated client for the additive immutable submission schema; fixed literal imports, pinned generator/schema and no authored runtime injected"
   },
   "apps/backend/lib/generated/prisma/internal/prismaNamespace.ts": {
-    "hash": "5649f051e1eceda4fad06265fc4820d387151fef7981326f9695e1e6b6d2eb43",
+    "hash": "dfb24edb7f0c9a5d6962bc69f6ff1d72a6d353a60b0852fa3e03d173638a838a",
     "capabilities": [
       "generated-client"
     ],
-    "review": "Generated Prisma runtime: fixed imports and embedded compiler; schema and generator are inventoried"
+    "review": "Prisma 7.9.1 generated client for the additive immutable submission schema; fixed literal imports, pinned generator/schema and no authored runtime injected"
   },
   "apps/backend/release/credentialSchema.ts": {
     "hash": "6ba47f47089be38386b53ed90e8c8f8635753d0f83cd1503a3d8ed6ebe8a1589",
@@ -380,12 +380,12 @@
     "review": "Fixed data indexing; resource adapters require the separate documented review"
   },
   "apps/backend/release/migrations.ts": {
-    "hash": "19a7eb34c9971df6f014c8b4be40a640837e5f20fdb23fef2ba856d7ed7e2e0c",
+    "hash": "f3b13843a6c766377a88e022d353020b5db94a65a52d48bae27d263f85f6456e",
     "capabilities": [
       "computed-data",
       "resources"
     ],
-    "review": "Fixed data indexing; resource adapters require the separate documented review"
+    "review": "Exact inactive first-stack admission/store/serial queue and release schema review: bounded data, fixed SQL, owned immutable input and cut fence; trusted operator injection only; no evaluators, request-provided code, host activation or new process adapter"
   },
   "apps/backend/release/model2Schema.ts": {
     "hash": "938f32e0a1b5371155aced66767440a78dd80e2e4a34bdac50c86374b9ca0a39",
@@ -1263,11 +1263,11 @@
     "review": "Isolated first-stack data protocol, fixed local Docker CLI, cgroup/rlimit inspection, finite stream framing and durable event-prefix replay; no arbitrary evaluator or code supplied by a run; no public dispatch or Model 2 activation"
   },
   "apps/backend/firstStack/isolationRunner.ts": {
-    "hash": "668d342bece7becb192333287dd72a87cf718fab85c42c2a8f4a053388cbee64",
+    "hash": "a70a9575cc51e4269e104831277730a6386a0fd1dfb9c72ac0ae6f588ad0706d",
     "capabilities": [
       "computed-data"
     ],
-    "review": "Isolated first-stack data protocol, fixed local Docker CLI, cgroup/rlimit inspection, finite stream framing and durable event-prefix replay; no arbitrary evaluator or code supplied by a run; no public dispatch or Model 2 activation"
+    "review": "Captured server work token is persisted before create and propagated unchanged to the Docker label; immutable daemon/token fencing supports orphan recovery; existing process, filesystem and execution permissions unchanged"
   },
   "apps/backend/firstStack/isolationChild.ts": {
     "hash": "2d096d039f394a76b3989a72d8a5211c23495a46f6551a301258b5407c78d752",
@@ -1298,11 +1298,11 @@
     "review": "Isolated first-stack data protocol, fixed local Docker CLI, cgroup/rlimit inspection, finite stream framing and durable event-prefix replay; no arbitrary evaluator or code supplied by a run; no public dispatch or Model 2 activation"
   },
   "apps/backend/firstStack/isolationOwnership.ts": {
-    "hash": "032fae30c68140dbe44ae7fcdf78ca4218a50281e1d292375395c215d0a28b4f",
+    "hash": "e537a97faf66fc948936781d423b9f5a1539185adfd965643da14c94ecafe567",
     "capabilities": [
       "computed-data"
     ],
-    "review": "Isolated first-stack data protocol, fixed local Docker CLI, cgroup/rlimit inspection, finite stream framing and durable event-prefix replay; no arbitrary evaluator or code supplied by a run; no public dispatch or Model 2 activation"
+    "review": "Captured server work token is persisted before create and propagated unchanged to the Docker label; immutable daemon/token fencing supports orphan recovery; existing process, filesystem and execution permissions unchanged"
   },
   "packages/simulation/src/model2/compute/contracts.ts": {
     "hash": "8b1974c924a168f921d9e4a309d3aba3f8eddebe8c2d7b097325b967c4d08072",
@@ -1331,5 +1331,188 @@
       "computed-data"
     ],
     "review": "Internal first-stack V2 review/compiler/qualification: fixed JSON indexing and statically imported Stage 1 registry/host composition; bounded recorded keys and DB health; opt-in host bounds, finite reducers and cooperative qualification only; no evaluator, dynamic loader, product dispatch, HTTP executor or activation"
+  },
+  "apps/backend/firstStack/admission.ts": {
+    "hash": "cc01ed10e6004e84b00225b533f4bc35b063005621fe2645d96644291a1e260f",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Exact inactive first-stack admission/store/serial queue and release schema review: bounded data, fixed SQL, owned immutable input and cut fence; trusted operator injection only; no evaluators, request-provided code, host activation or new process adapter"
+  },
+  "apps/backend/firstStack/submissionRoutes.ts": {
+    "hash": "d68fe0b6421e1d9ccd4342c68f2e0c5e77521d37afdac6e10c39b6481057e859",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Exact inactive first-stack admission/store/serial queue and release schema review: bounded data, fixed SQL, owned immutable input and cut fence; trusted operator injection only; no evaluators, request-provided code, host activation or new process adapter"
+  },
+  "apps/backend/firstStack/submissionWorker.ts": {
+    "hash": "b3daa84fee9509029b99c8cebb8b72e60481c0ae3c07f5624257e8848c1ccd28",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Exact inactive first-stack admission/store/serial queue and release schema review: bounded data, fixed SQL, owned immutable input and cut fence; trusted operator injection only; no evaluators, request-provided code, host activation or new process adapter"
+  },
+  "apps/backend/firstStack/submissionQueue.ts": {
+    "hash": "d5ade04c5020231ad0de4f5994d168bbb5f0ecb3ce9ea3d4795d2dd57171d505",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Exact inactive first-stack admission/store/serial queue and release schema review: bounded data, fixed SQL, owned immutable input and cut fence; trusted operator injection only; no evaluators, request-provided code, host activation or new process adapter"
+  },
+  "apps/backend/release/firstStackSchema.ts": {
+    "hash": "76594ea78daadc652634c0f7ca084c4a0ce8bde6fffcee5a88d4080067acef36",
+    "capabilities": [
+      "computed-data",
+      "resources"
+    ],
+    "review": "Exact inactive first-stack admission/store/serial queue and release schema review: bounded data, fixed SQL, owned immutable input and cut fence; trusted operator injection only; no evaluators, request-provided code, host activation or new process adapter"
+  },
+  "apps/backend/lib/generated/prisma/browser.ts": {
+    "hash": "81293d9323acdaab2ae31ec83c9e2ea5635ccf3b404808c58b103a24c727164f",
+    "capabilities": [
+      "generated-client"
+    ],
+    "review": "Prisma 7.9.1 generated client for the additive immutable submission schema; fixed literal imports, pinned generator/schema and no authored runtime injected"
+  },
+  "apps/backend/lib/generated/prisma/commonInputTypes.ts": {
+    "hash": "53c08a013cf0c406797b9559217ae476ab41f29c8f01095438c5cd7cc99415d7",
+    "capabilities": [
+      "generated-client"
+    ],
+    "review": "Prisma 7.9.1 generated client for the additive immutable submission schema; fixed literal imports, pinned generator/schema and no authored runtime injected"
+  },
+  "apps/backend/lib/generated/prisma/internal/prismaNamespaceBrowser.ts": {
+    "hash": "d8b51fb5371c2cd137d0c915bc66c75262c4fcbbadf09def18219fdea1b5b21a",
+    "capabilities": [
+      "generated-client"
+    ],
+    "review": "Prisma 7.9.1 generated client for the additive immutable submission schema; fixed literal imports, pinned generator/schema and no authored runtime injected"
+  },
+  "apps/backend/lib/generated/prisma/models/Account.ts": {
+    "hash": "c2c4ddfae8f1c226cb18ad186086a0e7e0985f0bb914c07647aea4b4af31b9f6",
+    "capabilities": [
+      "generated-client"
+    ],
+    "review": "Prisma 7.9.1 generated client for the additive immutable submission schema; fixed literal imports, pinned generator/schema and no authored runtime injected"
+  },
+  "apps/backend/lib/generated/prisma/models/Deployment.ts": {
+    "hash": "ebf19acfe634b77cf7fb2be77d95380ad70589ce21b90a8815d8b51043afabb4",
+    "capabilities": [
+      "generated-client"
+    ],
+    "review": "Prisma 7.9.1 generated client for the additive immutable submission schema; fixed literal imports, pinned generator/schema and no authored runtime injected"
+  },
+  "apps/backend/lib/generated/prisma/models/FirstStackCut.ts": {
+    "hash": "232c82a6be18d9f5da67e67f65c7aaf85aa0d090c8305e0da77e4154776213ab",
+    "capabilities": [
+      "generated-client"
+    ],
+    "review": "Prisma 7.9.1 generated client for the additive immutable submission schema; fixed literal imports, pinned generator/schema and no authored runtime injected"
+  },
+  "apps/backend/lib/generated/prisma/models/FirstStackOutbox.ts": {
+    "hash": "20d6a2abb6e257252457b13b323848b851434216c39c3df2f9bc26fc4f927a85",
+    "capabilities": [
+      "generated-client"
+    ],
+    "review": "Prisma 7.9.1 generated client for the additive immutable submission schema; fixed literal imports, pinned generator/schema and no authored runtime injected"
+  },
+  "apps/backend/lib/generated/prisma/models/FirstStackResult.ts": {
+    "hash": "fa7942ccd6d2267285e9a6351907c1cce4f835c7766c3493fa8f29d0874f2972",
+    "capabilities": [
+      "generated-client"
+    ],
+    "review": "Prisma 7.9.1 generated client for the additive immutable submission schema; fixed literal imports, pinned generator/schema and no authored runtime injected"
+  },
+  "apps/backend/lib/generated/prisma/models/FirstStackRun.ts": {
+    "hash": "cc2096865ce8ed36158632f7a1aaa41ea472e6d3064c8f5aae6c8251b0e71240",
+    "capabilities": [
+      "generated-client"
+    ],
+    "review": "Prisma 7.9.1 generated client for the additive immutable submission schema; fixed literal imports, pinned generator/schema and no authored runtime injected"
+  },
+  "apps/backend/lib/generated/prisma/models/FirstStackWork.ts": {
+    "hash": "57ae745e91ddd37c51fbae6ac0c2050446c56e7613f89de4a8d6ac8fd72d2d98",
+    "capabilities": [
+      "generated-client"
+    ],
+    "review": "Prisma 7.9.1 generated client for the additive immutable submission schema; fixed literal imports, pinned generator/schema and no authored runtime injected"
+  },
+  "apps/backend/lib/generated/prisma/models/Infrastructure.ts": {
+    "hash": "131d80c5c7e86e7d286b30428425c26ef0b1883b631d84e9a7c6359f71410b5a",
+    "capabilities": [
+      "generated-client"
+    ],
+    "review": "Prisma 7.9.1 generated client for the additive immutable submission schema; fixed literal imports, pinned generator/schema and no authored runtime injected"
+  },
+  "apps/backend/lib/generated/prisma/models/InternalModel2Grant.ts": {
+    "hash": "2a0092fdc7ac896af2d99f2cfa2d45b70ff60efcd3db29b7f8a0182fdbae8faf",
+    "capabilities": [
+      "generated-client"
+    ],
+    "review": "Prisma 7.9.1 generated client for the additive immutable submission schema; fixed literal imports, pinned generator/schema and no authored runtime injected"
+  },
+  "apps/backend/lib/generated/prisma/models/InternalModel2LessonRun.ts": {
+    "hash": "5cd160c72936f7e7ca9f806c234471ed3669363f3ec3fcad73e691bca62abad6",
+    "capabilities": [
+      "generated-client"
+    ],
+    "review": "Prisma 7.9.1 generated client for the additive immutable submission schema; fixed literal imports, pinned generator/schema and no authored runtime injected"
+  },
+  "apps/backend/lib/generated/prisma/models/InternalModel2Run.ts": {
+    "hash": "c898cdea28a3556a75ddc0c0ddfb02bcadd231d8e221a27dd23cb3c69bf4cae4",
+    "capabilities": [
+      "generated-client"
+    ],
+    "review": "Prisma 7.9.1 generated client for the additive immutable submission schema; fixed literal imports, pinned generator/schema and no authored runtime injected"
+  },
+  "apps/backend/lib/generated/prisma/models/Outbox.ts": {
+    "hash": "915ee67964729392a0a21e46478cca959dd0ca59db604475cd7d3b6258fb9c56",
+    "capabilities": [
+      "generated-client"
+    ],
+    "review": "Prisma 7.9.1 generated client for the additive immutable submission schema; fixed literal imports, pinned generator/schema and no authored runtime injected"
+  },
+  "apps/backend/lib/generated/prisma/models/RunAction.ts": {
+    "hash": "eddf8150fa1b2770b27832eeee1069bcee83c4be60617806592865c9b17d97c9",
+    "capabilities": [
+      "generated-client"
+    ],
+    "review": "Prisma 7.9.1 generated client for the additive immutable submission schema; fixed literal imports, pinned generator/schema and no authored runtime injected"
+  },
+  "apps/backend/lib/generated/prisma/models/RunEvidenceSample.ts": {
+    "hash": "228d66968ef341f67d5e78912439a304f5729cf075b5018092de3cc58ef06cd5",
+    "capabilities": [
+      "generated-client"
+    ],
+    "review": "Prisma 7.9.1 generated client for the additive immutable submission schema; fixed literal imports, pinned generator/schema and no authored runtime injected"
+  },
+  "apps/backend/lib/generated/prisma/models/Session.ts": {
+    "hash": "56784350026710c9078458f8cb81aa2711f537a8ecf51eddd930c640f9c826f4",
+    "capabilities": [
+      "generated-client"
+    ],
+    "review": "Prisma 7.9.1 generated client for the additive immutable submission schema; fixed literal imports, pinned generator/schema and no authored runtime injected"
+  },
+  "apps/backend/lib/generated/prisma/models/User.ts": {
+    "hash": "a9b8f3df141d71b1f14ac9955a0f4912d29221201710eea7fc32b740148d15f4",
+    "capabilities": [
+      "generated-client"
+    ],
+    "review": "Prisma 7.9.1 generated client for the additive immutable submission schema; fixed literal imports, pinned generator/schema and no authored runtime injected"
+  },
+  "apps/backend/lib/generated/prisma/models/Verification.ts": {
+    "hash": "eb3c02154aade44e63eeb1c342e668dda81448fd92b05d11df88a4dd9a8df6cf",
+    "capabilities": [
+      "generated-client"
+    ],
+    "review": "Prisma 7.9.1 generated client for the additive immutable submission schema; fixed literal imports, pinned generator/schema and no authored runtime injected"
+  },
+  "apps/backend/lib/generated/prisma/models.ts": {
+    "hash": "dbd328b6cad3a60f74135b81ed287ab411ad59e3a313c2b2c13e7048f90d6ef0",
+    "capabilities": [
+      "generated-client"
+    ],
+    "review": "Prisma 7.9.1 generated client for the additive immutable submission schema; fixed literal imports, pinned generator/schema and no authored runtime injected"
   }
 }
