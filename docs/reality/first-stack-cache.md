@@ -37,7 +37,10 @@ is distinct from sampled Valkey LRU. Entry accounting is not full process memory
 Saved logical DB reads are hits plus coalesced waiters, not a fixed hit-rate
 constant or a physical DB time/cost estimate. Per-app coalescing is not a
 distributed lock. Policy cancellation remains unsupported; detached work can
-complete after caller termination. Generic fault/retry extensions are separate.
+complete after caller termination. Generic fault/retry extensions are separate. Cache plus the newly merged finite
+IO profile requires a separately reviewed composition revision and is explicitly
+refused; the existing cache-free finite IO path is preserved. The merged
+isolation boundary remains authoritative for isolated execution and replay.
 
 Semantic proof and targeted verification:
 

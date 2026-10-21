@@ -5,6 +5,12 @@ import { reviewSidecar } from "../../apps/backend/firstStack/authoring";
 import type { CausalEvent } from "../../packages/simulation/src/model2/workload/causal";
 import { cacheProof } from "../reality/first-stack-cache-proof";
 import { readFileSync } from "node:fs";
+import { cacheBaselineSource, cacheMechanismPaths, verifyCacheReview } from "../stage2-cache-identity";
+
+test("cache host reconstruction refuses every unreviewed mechanism edit", () => {
+  expect(() => verifyCacheReview()).not.toThrow();
+  for (const path of cacheMechanismPaths) expect(() => cacheBaselineSource(path, readFileSync(path, "utf8") + "\n")).toThrow("Unreviewed cache mechanism drift");
+});
 
 test("fresh cache graphs retain their recorded-key proof", async () => {
   expect(await cacheProof()).toEqual(JSON.parse(readFileSync("docs/reality/first-stack-cache-proof.json", "utf8")));
@@ -91,4 +97,12 @@ test("stale fills after a write cannot resurrect old cache state or capture late
   expect(e.data.caches[0]).toMatchObject({ staleFillRefused: 1, invalidations: 1 });
   expect(e.data.applications[0]).toMatchObject({ databaseFetches: 3, coalescedWaiters: 0, recordedKeys: { fillRejected: 1 } });
   expect(e.data.applications[0]!.results.find(r => JSON.parse(r.root)[2] === "r3")!.version).toBe(2);
+});
+
+
+test("cache and finite IO require an explicit combined composition review", async () => {
+  const { firstStackIoFixture } = await import("../fixtures/first-stack-io");
+  const { createFirstStackRuntime } = await import("../../packages/simulation/src/firstStack/run");
+  const cache = await firstStackCacheFixture(), io = await firstStackIoFixture();
+  expect(() => createFirstStackRuntime(cache.sidecar, cache.schedule, cache.policy, undefined, io.profile)).toThrow("Cache plus finite IO requires a separately reviewed composition revision");
 });
