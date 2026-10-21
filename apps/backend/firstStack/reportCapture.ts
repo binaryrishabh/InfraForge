@@ -4,7 +4,7 @@ import type { instantiatePreparedFirstStack } from "./execution";
 
 type Runtime = ReturnType<typeof instantiatePreparedFirstStack>;
 // Aggregate reducers remain authoritative when this bounded selection is incomplete.
-export function captureReport(runtime: Runtime, e: ReturnType<Runtime["evidence"]>): FirstStackReportCapture {
+export function captureReport(runtime: Runtime, e: ReturnType<Runtime["evidence"]>, computeCost?: ReportJson): FirstStackReportCapture {
   const journal = runtime.journal.measure();
   const { events, ...selection } = runtime.journal.selection();
   // Keep cumulative metrics without copying keyed state or raw per-call rows
@@ -19,8 +19,12 @@ export function captureReport(runtime: Runtime, e: ReturnType<Runtime["evidence"
       sampledAtUs: e.at, network: { ...network, trace: { totals: trace.totals, omitted: trace.omitted } } as unknown as ReportJson, data: data as unknown as ReportJson,
       storage: (e.composition.storage ?? null) as unknown as ReportJson },
     events, selection: { ...selection, policy: "first-3-roots-and-global/1" }, unknown: [],
+    ...(computeCost === undefined ? {} : { computeCost }),
   };
   try { boundedJson(value, 256 * 1024); return value; }
-  catch { return { ...value, saturation: { cpu: null, resources: null, sampledAtUs: null, network: null, data: null, storage: null }, events: [],
-    selection: { ...value.selection, omitted: journal.retained }, unknown: ["Diagnostic capture exceeded its byte budget; saturation and selected causes are Unknown"] }; }
+  catch {
+    const { computeCost: _cost, ...fallback } = value;
+    return { ...fallback, saturation: { cpu: null, resources: null, sampledAtUs: null, network: null, data: null, storage: null }, events: [],
+      selection: { ...value.selection, omitted: journal.retained }, unknown: ["Diagnostic capture exceeded its byte budget; saturation, selected causes and compute cost are Unknown"] };
+  }
 }

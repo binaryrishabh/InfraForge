@@ -1,0 +1,36 @@
+{
+  "schema": "first-stack-cost-source-review/1",
+  "scope": "Data/logic only; explicit offline selection and allocation boundary evidence; no automatic usage or provider inference; Model 2 inactive",
+  "files": [
+    {
+      "path": "apps/backend/firstStack/providerCost.ts",
+      "hash": "3126931d2f063ad11feb7a9328818731ba83873ce10b162f264f6971bf057203"
+    },
+    {
+      "path": "apps/backend/firstStack/report.ts",
+      "hash": "7623fc6af03164cd365b1588a22621f53f787acd763ba0845099863705573b5e"
+    },
+    {
+      "path": "apps/backend/firstStack/reportCapture.ts",
+      "hash": "bc8cd3ee397a4dc27fb1e6d6d233bb83d05fe1eee040afb64d90596bcaf5ad1a"
+    },
+    {
+      "path": "apps/backend/firstStack/executionCut.ts",
+      "hash": "5284c81c78cd0aa1fa22f38c7fcd71d78bf35b0c30b77fef8956e20d1c50019e"
+    },
+    {
+      "path": "packages/simulation/src/internalFirstStack.ts",
+      "hash": "39541f7884ee1067b442610e54d6751a510d399ab9805b3186445fc4ec2d45da"
+    },
+    {
+      "path": "packages/contracts/src/reports/firstStack.ts",
+      "hash": "0a753d9d1b190b74d2a9f437f4acfc926817999fc584e2ec440c0555f150640e"
+    }
+  ],
+  "acceptance": [
+    {
+      "path": "scripts/tests/first-stack-cost.test.ts",
+      "hash": "5d663b894d57f08f283bdf04c205869e153163107678e95ca40240d64ee17338"
+    }
+  ]
+}

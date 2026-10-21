@@ -11,6 +11,28 @@ export interface FirstStackReportCapture {
   events: FirstStackEvidenceEvent[];
   selection: { roots: string[]; omitted: number; journalOmitted: number; policy: "first-3-roots-and-global/1" };
   unknown: string[];
+  /** Frozen offline selection and allocation boundaries; absent in older cuts. */
+  computeCost?: ReportJson;
+}
+export interface FirstStackComputeCost {
+  label: "supported compute subtotal";
+  support: "supported-logical";
+  conditional: "Frozen tariff × explicitly selected modeled allocation time; not a provider bill";
+  subtotal: { kind: "Estimated"; currency: string; amount: { numerator: string; denominator: string }; rule: string; usage: string[]; provenance: string[] } |
+    { kind: "Unknown"; reason: string; provenance: string[] };
+  window: { from: string; to: string; complete: boolean } | null;
+  covered: Array<{ allocation: string; host: string; roles: string[]; meter: "instance-us"; usage: string; fromUs: number; toUs: number;
+    quantity: { numerator: string; denominator: string }; scope: { provider: string; service: string; product: string; region: string; operatingSystem: string; tenancy: string; purchase: string };
+    tariff: { id: string; version: string; source: string; policySources: string[]; currency: string; validFrom: string; validTo: string;
+      per: string; increment: string; minimum: string; aggregation: string; tiers: Array<{ from: string; to: string | null; price: string }> } }>;
+  exclusions: string[];
+  fullCost: { kind: "Unknown"; reason: string };
+}
+export interface FirstStackCostComparison {
+  label: "supported compute subtotal";
+  interpretation: "Conditional selected allocation scenarios; full costs remain Unknown";
+  left: FirstStackComputeCost;
+  right: FirstStackComputeCost;
 }
 export type FirstStackTail = { p: number } & (
   { kind: "exact"; valueUs: number; method: string } |
@@ -26,6 +48,7 @@ export interface FirstStackReport {
   populations: { counts: Record<string, number>; unfinished: ReportJson; denominatorUs: number; goodputPerSecond: number | null; offeredPerSecond: number | null } | null;
   latency: Array<{ operation: string; outcome: string; count: number; unit: "us"; observation: "Observed"; support: "assumption-only"; percentiles: FirstStackTail[] }>;
   saturation: FirstStackReportCapture["saturation"] | null;
+  cost: FirstStackComputeCost;
   causality: { observation: "Observed"; support: "supported-logical"; complete: boolean; events: FirstStackEvidenceEvent[];
     links: Array<{ rootId: string; from: string; to: string; reason: string; interval: { fromUs: number; toUs: number } | null; evidence: string[] }>;
     selectedRoots: string[]; omitted: number | null };

@@ -2,6 +2,7 @@ import { z } from "zod";
 import type { FirstStackReport, FirstStackReportCapture, ReportJson } from "@infraforge/contracts/reports";
 import { hash } from "./canonical";
 import { inputDigest, readIsolatedCut, type IsolatedCut } from "./isolationProtocol";
+import { firstStackComputeCost, unknownComputeCost } from "./providerCost";
 
 const count = z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER), text = z.string().min(1);
 const tail = z.discriminatedUnion("kind", [
@@ -18,6 +19,7 @@ export const ReportCaptureSchema = z.object({ schema: z.literal("first-stack-rep
   saturation: z.object({ cpu: z.json(), resources: z.json(), sampledAtUs: count.nullable(), network: z.json(), data: z.json(), storage: z.json() }),
   events: z.array(event).max(128), selection: z.object({ roots: z.array(text).max(3), omitted: count, journalOmitted: count, policy: z.literal("first-3-roots-and-global/1") }),
   unknown: z.array(text),
+  computeCost: z.json().optional(),
 });
 const inputSchema = z.object({ policy: z.object({ seed: text, horizonUs: count.positive() }),
   candidate: z.object({ nodes: z.json(), paths: z.json(), placement: z.json() }).passthrough(), recording: z.json() });
@@ -44,7 +46,7 @@ export function firstStackReport(row: FirstStackStoredReportRow): FirstStackRepo
     interval: { requestedThroughUs: null, retainedThroughUs: null, fromUs: 0, boundary: "offers-at-or-before-cut; terminal-at-or-before-cut", scope: "retained-prefix-completed-only" },
     completeness: null, populations: null, latency: [], saturation: null,
     causality: { observation: "Observed", support: "supported-logical", complete: false, events: [], links: [], selectedRoots: [], omitted: null },
-    failureTimeline: [], unknown,
+    failureTimeline: [], cost: unknownComputeCost("No eligible frozen tariff and complete selected allocation usage were recorded"), unknown,
   };
   try {
     if (inputDigest(row.input) !== row.inputHash) throw Error("Recorded input hash mismatch");
@@ -98,10 +100,13 @@ export function firstStackReport(row: FirstStackStoredReportRow): FirstStackRepo
     if (cut.interruption) unknown.push(`Executor interrupted (${cut.interruption.kind}): ${cut.interruption.reason}`);
     if (!cut.reportCapture) unknown.push("Historical cut has no report capture; saturation and exact causal chains are Unknown.");
     else attachCapture(report, cut.reportCapture, cut.throughUs);
+    report.cost = firstStackComputeCost(cut.reportCapture?.computeCost, input.candidate, cut.throughUs, cut.timestampComplete);
+    if (report.cost.subtotal.kind === "Unknown") unknown.push(`Supported compute subtotal is Unknown: ${report.cost.subtotal.reason}`);
     for (const d of report.latency) for (const t of d.percentiles) if (t.kind === "unknown") unknown.push(`${d.operation}/${d.outcome}/p${t.p * 100}: ${t.reason}`);
   } catch (error) {
     report.origin = "unavailable"; report.verification = { status: "unknown", reason: "Recorded input, result or capture is unavailable/corrupt" };
     report.populations = null; report.latency = []; report.saturation = null;
+    report.cost = unknownComputeCost("Recorded input, result or capture is unavailable/corrupt");
     report.completeness = null; report.interval.retainedThroughUs = null;
     report.causality = { ...report.causality, complete: false, events: [], links: [], selectedRoots: [], omitted: null }; report.failureTimeline = [];
     unknown.push(error instanceof Error ? error.message : "Recorded evidence unavailable");
