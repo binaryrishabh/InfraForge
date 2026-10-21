@@ -1161,7 +1161,7 @@
     "review": "Reviewed cache/fault rebase: existing computed-data indexing only; finite non-cache scenario compilation, bounded read retries and scenario evidence; cache V3 keeps empty faults and forbids retries in schema, type and trusted compiler. No dynamic loader, evaluator, host access or activation."
   },
   "packages/simulation/src/firstStack/journal.ts": {
-    "hash": "0fea278ec50dfc93ad828887f7bbf2c9de285e1b3bf4a1ef231898e95fdd4191",
+    "hash": "2cd7e30fb805ee197590f7988d3e6db5a22445a1dbec36446c0a60a755917f27",
     "capabilities": [
       "computed-data"
     ],

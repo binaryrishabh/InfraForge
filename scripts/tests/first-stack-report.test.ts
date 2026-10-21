@@ -13,9 +13,13 @@ test("first-stack report source review binds its data boundary and acceptance", 
 test("diagnostic selection remains bounded and every selected ID addresses original journal bytes", () => {
   const journal = diagnosticJournal();
   for (let i = 0; i < 200; i++) journal.record({ atUs: i, kind: "test", resource: "fixture", detail: { index: i } });
+  for (let root = 0; root < 3; root++) for (let i = 0; i < 40; i++) journal.record({ atUs: 200 + root * 40 + i, kind: "caller-offered", resource: "$caller",
+    work: { rootId: JSON.stringify(["root", "recorded", root]), callId: `call-${root}`, attempt: 0, operation: "test", offeredAt: 200 }, detail: {} });
   const selected = journal.selection(), lines = journal.content().trim().split("\n");
-  expect(selected.events.length).toBe(128); expect(selected.omitted).toBe(72);
-  expect(journal.measure()).toMatchObject({ observed: 200, retained: 200, omitted: 0, complete: true });
+  expect(selected.events.length).toBe(128); expect(selected.omitted).toBe(192);
+  expect(selected.roots).toHaveLength(3);
+  for (const root of selected.roots) expect(selected.events.filter(e => e.work?.rootId === root)).toHaveLength(32);
+  expect(journal.measure()).toMatchObject({ observed: 320, retained: 320, omitted: 0, complete: true });
   for (const { id, ...event } of selected.events) expect(event).toEqual(JSON.parse(lines[Number(id.split(":")[1])]!));
   selected.events[0]!.detail.index = -1;
   expect(journal.selection().events[0]!.detail.index).toBe(0);

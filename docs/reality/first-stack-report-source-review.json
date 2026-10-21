@@ -32,7 +32,7 @@
     },
     {
       "path": "packages/simulation/src/firstStack/journal.ts",
-      "hash": "0fea278ec50dfc93ad828887f7bbf2c9de285e1b3bf4a1ef231898e95fdd4191"
+      "hash": "2cd7e30fb805ee197590f7988d3e6db5a22445a1dbec36446c0a60a755917f27"
     },
     {
       "path": "packages/contracts/src/reports/firstStack.ts",
@@ -58,7 +58,7 @@
     },
     {
       "path": "scripts/tests/first-stack-report.test.ts",
-      "hash": "181d209ee78518a21df418ac3e6a0e05f3d58a076c15a3be22878e2556023b46"
+      "hash": "7d9320d5ea6226f55783a5fa2e4e3159dd75c30035bf335e116dfc19b8148dd7"
     },
     {
       "path": "scripts/tests/first-stack-report-data.test.ts",

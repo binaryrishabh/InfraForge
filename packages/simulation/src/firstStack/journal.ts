@@ -7,6 +7,7 @@ export function diagnosticJournal(limit: number = FIRST_STACK_ENVELOPE.journalBy
   if (!Number.isSafeInteger(limit) || limit < 0 || limit > FIRST_STACK_ENVELOPE.journalBytes) throw Error("Invalid diagnostic journal budget");
   const rows: string[] = []; let bytes = 0, observed = 0, omitted = 0;
   const selected: FirstStackEvidenceEvent[] = [], roots = new Set<string>(); let selectionOmitted = 0;
+  const rootEvents = new Map<string, number>(); let globalEvents = 0;
   return {
     record(event: CausalEvent) {
       observed++;
@@ -17,8 +18,12 @@ export function diagnosticJournal(limit: number = FIRST_STACK_ENVELOPE.journalBy
         rows.push(row); bytes += size;
         const root = event.work?.rootId ?? (typeof event.detail.root === "string" ? event.detail.root : undefined);
         if (root && !roots.has(root) && roots.size < 3 && root.startsWith('["root",')) roots.add(root);
-        if (selected.length < 128 && (!root || roots.has(root))) selected.push({ ...JSON.parse(row), id: `journal:${rows.length - 1}` });
-        else selectionOmitted++;
+        // Reserve 32 events for each selected foreground root and 32 global
+        // transitions, so a long health-probe prefix cannot starve exemplars.
+        if (root && roots.has(root) && (rootEvents.get(root) ?? 0) < 32 || !root && globalEvents < 32) {
+          selected.push({ ...JSON.parse(row), id: `journal:${rows.length - 1}` });
+          if (root) rootEvents.set(root, (rootEvents.get(root) ?? 0) + 1); else globalEvents++;
+        } else selectionOmitted++;
       } catch { omitted++; }
     },
     measure: () => ({ observed, retained: rows.length, omitted, bytes, complete: omitted === 0 }),
