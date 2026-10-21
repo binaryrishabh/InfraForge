@@ -7,6 +7,7 @@ import type { IsolationControl } from "./isolationConnection";
 import { withFirstStackOwnership } from "./isolationOwnership";
 import { inputDigest, readIsolatedCut, type IsolatedCut } from "./isolationProtocol";
 import type { IsolationConfiguration } from "./isolationRunner";
+import { challengeFence, executeScoredChallenge } from "./scoredChallenges/execution";
 
 export interface SubmissionVerifier {
   admission: SubmissionAdmission; isolation: IsolationConfiguration; control: IsolationControl;
@@ -59,9 +60,12 @@ export async function verifySubmission(pool: Pool, databaseUrl: string, id: stri
   // A lost COMMIT response is never automatically retried. Durable cuts are
   // read from PostgreSQL on recovery; no continuation is inferred from Redis.
   try {
-    const execution = await withFirstStackOwnership(databaseUrl, createSubmissionFence(run, token, allowed), async (authority, signal) => {
+    const fence = challengeFence(createSubmissionFence(run, token, allowed), run.engine.source);
+    const execution = await withFirstStackOwnership(databaseUrl, { token, check: fence.check, commit: fence.commit }, async (authority, signal) => {
       const result = await executeFirstStackIsolated(configuration.control, configuration.isolation, run.input, authority, signal);
-      return { result, held: !signal.aborted };
+      const score = await executeScoredChallenge(run, result, authority, signal, fence.select,
+        (input, owner, abort) => executeFirstStackIsolated(configuration.control, configuration.isolation, input, owner, abort));
+      return { result, score, held: !signal.aborted };
     });
     // The container AND the session ownership have cleared before releasing a
     // reservation. Recheck the captured work token/authorization in this commit.
@@ -73,7 +77,7 @@ export async function verifySubmission(pool: Pool, databaseUrl: string, id: stri
           await db.query('UPDATE "FirstStackWork" SET status=\'recovery\' WHERE "runId"=$1', [id]);
           return; // Unconfirmed cleanup retains its reservation and blocks replacements.
         }
-        await appendSubmissionResult(db, id, outcome.body);
+        await appendSubmissionResult(db, id, { ...outcome.body, ...(outcome.body.verification === "verified" && execution.score ? { score: execution.score } : {}) });
         await db.query('UPDATE "FirstStackWork" SET status=\'terminal\' WHERE "runId"=$1', [id]);
     });
   } catch (error) {

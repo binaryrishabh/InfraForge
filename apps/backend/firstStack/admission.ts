@@ -8,6 +8,8 @@ import { prepareFirstStackExecution } from "./execution";
 import { inputDigest, readIsolatedCut } from "./isolationProtocol";
 import { digestPattern, imagePattern } from "./isolationPolicy";
 import { firstStackRunRecord } from "../runRecords/firstStack";
+import { admitScoredChallenge } from "./scoredChallenges/definition";
+import { publicScore } from "./scoredChallenges/projection";
 
 export const submissionEnvelope = Object.freeze({ revision: "first-stack-submission/1", queued: 16,
   queuedBytes: 256 * 1024 * 1024, retainedBytes: 2 * 1024 * 1024 * 1024,
@@ -28,7 +30,8 @@ export const closedSubmissionAdmission: SubmissionAdmission = Object.freeze({ en
 const requestSchema = z.object({ infrastructureId: z.uuid(), expectedDesignUpdatedAt: z.iso.datetime(),
   expectedDesignRevision: z.string().regex(digestPattern), idempotencyKey: z.string().min(1).max(80),
   purpose: z.enum(["private", "shared", "scored"]), engine: z.object({ source: z.string().regex(digestPattern), image: z.string().regex(imagePattern) }).strict(),
-  workload: z.json(), policy: z.json(), browserCut: z.json() }).strict();
+  workload: z.json(), policy: z.json(), browserCut: z.json(),
+  challenge: z.object({ id: z.string().min(1).max(80), version: z.string().min(1).max(32) }).strict().optional() }).strict();
 
 export async function submissionTransaction<T>(pool: Pool, task: (db: PoolClient) => Promise<T>) {
   const db = await pool.connect();
@@ -52,6 +55,7 @@ export function createSubmissionService(pool: Pool, configuration: SubmissionAdm
       const parsed = requestSchema.safeParse(value);
       if (!parsed.success) throw new ValidationError("Supply the strict first-stack submission fields and approved engine identity");
       const request = parsed.data, requestHash = hash(request);
+      if ((request.purpose === "scored") !== Boolean(request.challenge)) throw new ValidationError("Scored submissions require one exact server-owned challenge version");
       if (canonical(request.engine) !== canonical(configuration.engine)) throw new ConflictError("Approved engine unavailable; retain the original browser run");
       return submissionTransaction(pool, async db => {
         const previous = await db.query('SELECT id,"requestHash" FROM "FirstStackRun" WHERE "ownerId"=$1 AND "idempotencyKey"=$2', [owner, request.idempotencyKey]);
@@ -65,7 +69,8 @@ export function createSubmissionService(pool: Pool, configuration: SubmissionAdm
         if (!design) throw new NotFoundError("Saved design unavailable");
         if (design.challengeId) throw new ValidationError("Fixed challenge submissions require a server-owned challenge adapter");
         if (design.updatedAt.toISOString() !== request.expectedDesignUpdatedAt || designRevision(design.layout) !== request.expectedDesignRevision) throw new ConflictError("Saved design changed; review its exact revision");
-        const prepared = prepareFirstStackExecution(owner, design.layout, design.layout.firstStack, request.workload, request.policy);
+        const scored = request.challenge ? await admitScoredChallenge(owner, design.layout, request.challenge, request.workload, request.policy) : null;
+        const prepared = scored?.prepared ?? prepareFirstStackExecution(owner, design.layout, design.layout.firstStack, request.workload, request.policy);
         const input = canonical({ owner, layout: design.layout, candidate: design.layout.firstStack, recording: prepared.schedule, policy: prepared.policy });
         const inputHash = inputDigest(input), browserCut = request.browserCut as unknown as Parameters<typeof readIsolatedCut>[0];
         if (Buffer.byteLength(canonical(browserCut)) > 1024 * 1024) throw new ValidationError("Browser evidence exceeds frame limit");
@@ -84,7 +89,8 @@ export function createSubmissionService(pool: Pool, configuration: SubmissionAdm
         if (Number(usage.retained) + reservedBytes > submissionEnvelope.retainedBytes ||
           verifying && (usage.queued >= submissionEnvelope.queued || usage.owned >= submissionEnvelope.perOwner || Number(usage.bytes) + inputBytes > submissionEnvelope.queuedBytes)) throw new AppError("Submission storage or verification capacity busy", 503);
         const id = randomUUID(), lineage: SubmissionLineage = { kind: "design", infrastructureId: design.id, updatedAt: request.expectedDesignUpdatedAt, designRevision: request.expectedDesignRevision };
-        const workload: SubmittedWorkloadReference = { identity: prepared.schedule.identity, executedScheduleHash: prepared.schedule.executedScheduleHash, origin: "submitted-recording" };
+        const workload = { identity: prepared.schedule.identity, executedScheduleHash: prepared.schedule.executedScheduleHash,
+          origin: scored ? "server-challenge" : "submitted-recording", ...(scored ? { challenge: scored.reference } : {}) };
         await db.query(`INSERT INTO "FirstStackRun" (id,"ownerId","idempotencyKey","requestHash",purpose,engine,input,"inputHash",lock,seed,workload,envelope,lineage,"browserCut","inputBytes","reservedBytes")
           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)`,
         [id, owner, request.idempotencyKey, requestHash, request.purpose, request.engine, input, inputHash, prepared.lock, prepared.policy.seed,
@@ -101,7 +107,8 @@ export function createSubmissionService(pool: Pool, configuration: SubmissionAdm
         (SELECT body FROM "FirstStackCut" WHERE "runId"=r.id ORDER BY sequence DESC LIMIT 1) AS "durablePrefix"
         FROM "FirstStackRun" r JOIN "FirstStackWork" w ON w."runId"=r.id LEFT JOIN "FirstStackResult" s ON s."runId"=r.id WHERE r.id=$1 AND r."ownerId"=$2`, [id, owner])).rows[0];
       if (!row) throw new NotFoundError();
-      return firstStackRunRecord(row);
+      const record = firstStackRunRecord(row);
+      return row.purpose === "scored" ? { ...record, score: publicScore(row.result, row.resultHash) } : record;
     },
     async cancel(owner: string, id: string) {
       requireCapability(owner, { capability: "run.control", runId: id, control: "cancel-verification" });

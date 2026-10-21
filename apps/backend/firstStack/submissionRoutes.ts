@@ -5,6 +5,7 @@ import type { ErrorRequestHandler } from "express";
 import { FirstStackCompileRefusal } from "@infraforge/simulation/internal-first-stack";
 import { NotFoundError } from "../utils/errors";
 import { closedSubmissionAdmission, createSubmissionService, type SubmissionAdmission } from "./admission";
+import { publicChallenge } from "./scoredChallenges/definition";
 
 // Mount behind requireSession and checkOrigin, before the ordinary JSON parser.
 // Deliberately not mounted by index.ts: Model 2/public admission remains inactive.
@@ -12,6 +13,10 @@ export function createSubmissionRouter(pool: Pool, configuration: SubmissionAdmi
   const router = Router(), service = createSubmissionService(pool, configuration);
   router.use((_req, _res, next) => { if (!configuration.enabled) throw new NotFoundError(); next(); });
   router.use(json({ limit: "18mb", strict: true }));
+  router.get("/challenges/:challengeId/versions/:version/sample", async (req, res) => {
+    res.setHeader("Cache-Control", "private, no-store");
+    res.json(await publicChallenge(res.locals.userId, z.string().min(1).max(80).parse(req.params.challengeId), z.string().min(1).max(32).parse(req.params.version)));
+  });
   router.post("/", async (req, res) => {
     const result = await service.submit(res.locals.userId, req.body);
     res.setHeader("Cache-Control", "no-store");

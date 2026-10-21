@@ -131,6 +131,10 @@ apps/backend/runRecords/**
 !apps/backend/firstStack/
 apps/backend/firstStack/**
 !apps/backend/firstStack/*.ts
+!apps/backend/firstStack/scoredChallenges/
+apps/backend/firstStack/scoredChallenges/**
+!apps/backend/firstStack/scoredChallenges/*.ts
+!apps/backend/firstStack/scoredChallenges/lose-an-app-server.v1.json
 !apps/backend/challenges/
 apps/backend/challenges/**
 !apps/backend/challenges/*.ts

@@ -173,6 +173,9 @@ export function checkBoundaries(root: string): { errors: string[]; edges: Import
     const source = pending.pop()!;
     if (reachable.has(source)) continue;
     reachable.add(source);
+    if (source.startsWith("apps/backend/firstStack/scoredChallenges/")) {
+      errors.push(`${source}: browser closure reaches server-only challenge data or rubric`);
+    }
     if (/^packages\/simulation\/src\/(?:engine[^/]*|cost|topology|types|models|model2)(?:\.|\/)/.test(source)) {
       errors.push(`${source}: browser closure reaches forbidden simulation runtime`);
     }

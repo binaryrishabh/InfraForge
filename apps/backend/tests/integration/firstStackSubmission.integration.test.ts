@@ -40,7 +40,7 @@ async function rejected(promise: Promise<unknown>, text?: string) {
     expect(first.id).toBe(duplicate.id); expect([first.reused, duplicate.reused].sort()).toEqual([false, true]);
     expect((await pool.query('SELECT count(*)::int AS count FROM "FirstStackRun"')).rows[0].count).toBe(1);
     expect((await pool.query('SELECT count(*)::int AS count FROM "FirstStackOutbox"')).rows[0].count).toBe(1);
-    await rejected(service.submit(f.owner, { ...f.request, purpose: "scored" }), "Idempotency");
+    await rejected(service.submit(f.owner, { ...f.request, purpose: "private" }), "Idempotency");
     await rejected(service.read("someone-else", first.id), "Resource");
     await rejected(service.cancel("someone-else", first.id), "Resource");
     await rejected(service.submit("someone-else", f.request), "Saved design");
