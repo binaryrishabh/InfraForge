@@ -134,6 +134,7 @@ model User {
   deployments   Deployment[]
   internalModel2Grant InternalModel2Grant?
   internalModel2Runs InternalModel2Run[]
+  firstStackRuns FirstStackRun[]
 }
 
 model Session {
@@ -215,4 +216,66 @@ model InternalModel2LessonRun {
   run InternalModel2Run @relation(fields: [runId], references: [id], onDelete: Cascade)
   policy Json
   receipt Json?
+}
+
+// Immutable browser submission; verification state lives in a separate work row.
+model FirstStackRun {
+  id String @id
+  ownerId String
+  owner User @relation(fields: [ownerId], references: [id], onDelete: Restrict)
+  idempotencyKey String @db.VarChar(80)
+  requestHash String @db.VarChar(64)
+  purpose String
+  engine Json
+  input String
+  inputHash String @db.VarChar(64)
+  lock Json
+  seed String @db.VarChar(256)
+  workload Json
+  envelope Json
+  lineage Json
+  browserCut Json
+  inputBytes Int
+  reservedBytes Int
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  work FirstStackWork?
+  result FirstStackResult?
+  cuts FirstStackCut[]
+  outbox FirstStackOutbox?
+  @@unique([ownerId, idempotencyKey])
+  @@index([ownerId, createdAt])
+}
+
+model FirstStackWork {
+  runId String @id
+  run FirstStackRun @relation(fields: [runId], references: [id], onDelete: Restrict)
+  status String @default("queued")
+  token String?
+  cancelRequested Boolean @default(false)
+  authorized Boolean @default(true)
+  captureBytes Int @default(0)
+  @@index([status])
+}
+
+model FirstStackCut {
+  runId String
+  run FirstStackRun @relation(fields: [runId], references: [id], onDelete: Restrict)
+  sequence Int
+  body Json
+  @@id([runId, sequence])
+}
+
+model FirstStackResult {
+  runId String @id
+  run FirstStackRun @relation(fields: [runId], references: [id], onDelete: Restrict)
+  body Json
+  hash String @db.VarChar(64)
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+}
+
+model FirstStackOutbox {
+  runId String @id
+  run FirstStackRun @relation(fields: [runId], references: [id], onDelete: Restrict)
+  delivered Boolean @default(false)
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
 }

@@ -4,6 +4,7 @@ import type { Client, Pool } from "pg";
 import { checkCredentialSchema } from "./credentialSchema";
 import { checkInternalModel2Schema } from "./model2Schema";
 import { checkLessonSchema } from "./lessonSchema";
+import { checkFirstStackSchema } from "./firstStackSchema";
 
 type Database = Pick<Client | Pool, "query">;
 export type Migration = { name: string; checksum: string; checksums: string[] };
@@ -12,7 +13,7 @@ const hash = (value: string) => createHash("sha256").update(value).digest("hex")
 const ADDITIVE_MIGRATIONS = new Set(["20261009000000_capture_run_inputs", "20261009010000_add_authentication",
   "20261013000000_reliable_run_evidence", "20261013010000_honest_reruns", "20261014000000_challenge_attempts",
   "20261015000000_challenge_versions_experiments", "20261016000000_experiment_evidence",
-  "20261017000000_credential_usernames", "20261018000000_challenge_learning", "20261019000000_internal_model2", "20261020000000_model2_lesson"]);
+  "20261017000000_credential_usernames", "20261018000000_challenge_learning", "20261019000000_internal_model2", "20261020000000_model2_lesson", "20261021000000_first_stack_submissions"]);
 
 export async function migrationManifest(): Promise<Migration[]> {
   const directory = new URL("../prisma/migrations/", import.meta.url);
@@ -107,9 +108,12 @@ export async function checkSchemaGuards(db: Database) {
   await checkModel1SchemaGuards(db);
   await checkInternalModel2Schema(db);
   await checkLessonSchema(db);
+  await checkFirstStackSchema(db);
 }
 
 export async function assertReleaseIdle(db: Database) {
+  const submissions = await db.query("SELECT to_regclass('public.\"FirstStackWork\"') IS NOT NULL AS present");
+  if (submissions.rows[0].present && (await db.query('SELECT 1 FROM "FirstStackWork" WHERE status<>\'terminal\' LIMIT 1')).rowCount) throw Error("First-stack reservations must finish or undergo operator recovery before release");
   const internal = await db.query("SELECT to_regclass('public.\"InternalModel2Run\"') IS NOT NULL AS present");
   if (internal.rows[0].present && (await db.query('SELECT 1 FROM "InternalModel2Run" WHERE status IN (\'queued\',\'running\') LIMIT 1')).rowCount) throw Error("Active internal Model-2 runs must finish or be cancelled before release");
   const tables = await db.query("SELECT to_regclass('public.\"Deployment\"') IS NOT NULL AS present");
@@ -124,7 +128,7 @@ export async function assertReleaseIdle(db: Database) {
 export async function assertNoWorker(db: Database) {
   const locked = await db.query(`SELECT EXISTS (SELECT 1 FROM pg_locks WHERE locktype = 'advisory'
     AND database = (SELECT oid FROM pg_database WHERE datname = current_database())
-    AND classid = 186542854::oid AND objid = 1::oid AND objsubid = 2 AND granted) AS held`);
+    AND classid = 186542854::oid AND objid IN (1::oid,10::oid) AND objsubid = 2 AND granted) AS held`);
   if (locked.rows[0].held) throw new Error("A simulation worker still owns this database; release must stop it first");
 }
 
