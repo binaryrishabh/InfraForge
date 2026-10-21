@@ -1,8 +1,8 @@
 {
   "schema": "execution-transition-pin/2",
-  "digest": "d1b63d1d5e32cc5435ba70388fec655f241b97ab63dbb8924085496ee32e2ab5",
-  "bytes": "2527632c17e6dc607874eede2cee671887dd64a38eb511c33c7d8360f37af6cd",
-  "root": "effcfb93b0c6d50ade2d8eddddfc1ee22f1cf4055b5559ac292404add7d7d544",
-  "pack": "3d13a892c80f3607afd55a176f614b4461f21e8cdb87bf25c3d33133e47fb42d",
-  "index": "57600a51faeea3e523bed600afb6b3e4e0a0423df19f89a3972da06e1763bbe3"
+  "digest": "93c2bd5b5c92ac8376ed95ef76723d9ff1b6bcef461fcedacebb776fb26bcc6f",
+  "bytes": "bf5d03bd0bb8a904eaf5aca2a97b598ef013509a21636d4d91e67a2bf93866f6",
+  "root": "d3544e1476d2d6f8b7972df05e1a46d8edc352a8b60238e56deedb0ad5d07fcd",
+  "pack": "5912f2d65ca6f387011226a8d865287c69eb8a2b0523d9547c7d6605632612db",
+  "index": "347ed885990d6909dd3cca1865b5e636141df0b03077060b5aa2bd5a8c97ff56"
 }

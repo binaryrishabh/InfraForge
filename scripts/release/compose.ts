@@ -37,7 +37,23 @@ export class ComposeRelease implements ReleaseOperations {
     }
     await command(["docker", "stop", "--timeout", "10", ...ids], this.root, this.environment);
   }
-  async preflight() { await this.compose(["run", "--rm", "--no-deps", "migration", "bun", "release/cli.ts", "preflight"], this.next); }
+  private dependencyImagesReady = false;
+  // Services start with --pull never. A fresh host has no cached third-party images, so fetch only the
+  // missing ones before anything stops; an existing host keeps exactly the image it already runs.
+  private async ensureDependencyImages() {
+    if (this.dependencyImagesReady) return;
+    const services = (await this.config()).services as Record<string, { image?: string }>;
+    for (const [name, service] of Object.entries(services)) {
+      if (!service.image || service.image === this.next.image) continue;
+      try { await command(["docker", "image", "inspect", service.image], this.root, this.environment); }
+      catch { await this.compose(["pull", "--quiet", name], this.next); }
+    }
+    this.dependencyImagesReady = true;
+  }
+  async preflight() {
+    await this.ensureDependencyImages();
+    await this.compose(["run", "--rm", "--no-deps", "migration", "bun", "release/cli.ts", "preflight"], this.next);
+  }
   async stop() {
     // Stop new requests first, then recheck runs before stopping their owner.
     await this.compose(["stop", "--timeout", "30", "api", "ws-server"]);

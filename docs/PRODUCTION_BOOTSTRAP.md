@@ -226,6 +226,15 @@ bun --no-env-file scripts/release.ts apply FULL_SHA /etc/infraforge/release.env 
 ```
 
 Do not run it routinely by SSH. The workflow invokes it through the retry-aware wrapper.
+
+**New host:** a new state directory starts in maintenance, so the workflow refuses it with
+"Interrupted/maintenance release requires operator recovery". Run the command above once over
+SSH from the clean exact checkout. Preflight fetches only missing third-party images such as
+Redis before anything stops; an existing host keeps the image it already runs. After that
+first acceptance, re-run the workflow for the same SHA to stage and promote the frontend.
+Set `EC2_HOST_FINGERPRINT` to the host's **ECDSA** key fingerprint
+(`ssh-keygen -lf /etc/ssh/ssh_host_ecdsa_key.pub`): the release SSH client negotiates ECDSA
+before Ed25519, so an Ed25519 fingerprint fails with "host key fingerprint mismatch".
 The wrapper can reuse a recorded accepted SHA only after image/settings/container
 readiness checks, and public verification repeats outside EC2. It refuses maintenance
 or an interrupted release lock. It never rebuilds a retained accepted image.

@@ -2238,6 +2238,22 @@
       "hash": "0471096a0c3b199a240c5dae8c2b2989d9811c9c65d579e166169d5ca64d52a6"
     },
     {
+      "path": "scripts/tests/browserBoundary.test.ts",
+      "hash": "1b374355d89a25b292c3b754fb7af3fc0dc86d1c6d2374526b58124481204124"
+    },
+    {
+      "path": "scripts/tests/browserPin.test.ts",
+      "hash": "3c4d78960a56984dd0df6c431ff84bfbf163cb7c5852a3c189ee0f88cd4dc92c"
+    },
+    {
+      "path": "scripts/tests/browserRunner.test.ts",
+      "hash": "676704a5c3d8ed92e9ff245abfc16b423cf79ace2747829afebb6802eb991402"
+    },
+    {
+      "path": "scripts/tests/browserSubmission.test.ts",
+      "hash": "cddc3c2592d31f48519a6fb3ceea4307762d972b279f76fe090f0e4963e5c153"
+    },
+    {
       "path": "scripts/tests/ci-repair.test.ts",
       "hash": "22d098886ab53c575fae0506e55565e936ed41c091122828d7c350ee4e7811c2"
     },
@@ -2271,7 +2287,7 @@
     },
     {
       "path": "scripts/tests/execution-identity.test.ts",
-      "hash": "092149adbec938b8044dfea4239f093b14e8f341cb3f664bdd357ba9b932ee73"
+      "hash": "809fa5e6f812f14b1ff8e157ee25e181d10d07afa2396111df00eaa9edec4133"
     },
     {
       "path": "scripts/tests/finite-io.test.ts",
