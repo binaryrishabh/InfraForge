@@ -2176,9 +2176,18 @@
       "model2": "supported-logical",
       "scope": "Conditional logical qualification only: one LB, 1..8 apps, one keyed read-committed relational DB, no cache. Exact recorded keys and DB-backed health; public admission and activation remain unavailable. Logical LB has no physical CPU/memory owner; full memory and cost remain Unknown. V1 is never reinterpreted.",
       "sources": [
-        { "file": "packages/simulation/src/firstStack/compiler.ts", "anchor": "export const COMPOSITION_REVISION" },
-        { "file": "packages/simulation/src/firstStack/run.ts", "anchor": "export function createFirstStackRuntime" },
-        { "file": "scripts/tests/first-stack-compile.test.ts", "anchor": "1/2/4/8 apps receive exact recorded work" }
+        {
+          "file": "packages/simulation/src/firstStack/compiler.ts",
+          "anchor": "export const COMPOSITION_REVISION"
+        },
+        {
+          "file": "packages/simulation/src/firstStack/run.ts",
+          "anchor": "export function createFirstStackRuntime"
+        },
+        {
+          "file": "scripts/tests/first-stack-compile.test.ts",
+          "anchor": "1/2/4/8 apps receive exact recorded work"
+        }
       ]
     },
     {
@@ -2197,9 +2206,18 @@
       "model2": "supported-logical",
       "scope": "Internal qualification only. Aggregate terminal observations survive diagnostic omission; executor exhaustion preserves acknowledged prefixes without declaring modeled infrastructure failure. CPU/RSS/time observations are cooperative, not OS containment or laptop/server readiness. Public execute/replay and Model 2 activation remain unavailable.",
       "sources": [
-        { "file": "packages/simulation/src/firstStack/bounds.ts", "anchor": "export const FIRST_STACK_ENVELOPE" },
-        { "file": "apps/backend/firstStack/boundedExecution.ts", "anchor": "export async function executeFirstStackBounded" },
-        { "file": "scripts/fixtures/first-stack-bounded-execution.test.ts", "anchor": "successful bounded execution has explicit completeness" }
+        {
+          "file": "packages/simulation/src/firstStack/bounds.ts",
+          "anchor": "export const FIRST_STACK_ENVELOPE"
+        },
+        {
+          "file": "apps/backend/firstStack/boundedExecution.ts",
+          "anchor": "export async function executeFirstStackBounded"
+        },
+        {
+          "file": "scripts/fixtures/first-stack-bounded-execution.test.ts",
+          "anchor": "successful bounded execution has explicit completeness"
+        }
       ]
     },
     {
@@ -2217,8 +2235,81 @@
       "model2": "assumption-only",
       "scope": "Authored conditional timings, never inferred defaults or a calibrated cloud predictor. Measured component input provenance does not calibrate the composed timing output.",
       "sources": [
-        { "file": "packages/simulation/src/firstStack/compiler.ts", "anchor": "connectTimeout: q(" },
-        { "file": "packages/simulation/src/firstStack/run.ts", "anchor": "timing: \"assumption-only\"" }
+        {
+          "file": "packages/simulation/src/firstStack/compiler.ts",
+          "anchor": "connectTimeout: q("
+        },
+        {
+          "file": "packages/simulation/src/firstStack/run.ts",
+          "anchor": "timing: \"assumption-only\""
+        }
+      ]
+    },
+    {
+      "id": "FirstStackRecordedCacheV3",
+      "fields": [
+        "AsideConfig.recordedKeysOnly",
+        "ComputeResource.downstreamByOperation",
+        "FirstStackSidecarV3.cache",
+        "FirstStackSidecarV3.cache.capacityBytes",
+        "FirstStackSidecarV3.cache.coalesce",
+        "FirstStackSidecarV3.cache.entryOverheadBytes",
+        "FirstStackSidecarV3.cache.initial",
+        "FirstStackSidecarV3.cache.initial.bytes",
+        "FirstStackSidecarV3.cache.initial.key",
+        "FirstStackSidecarV3.cache.initial.version",
+        "FirstStackSidecarV3.cache.invalidateWrites",
+        "FirstStackSidecarV3.cache.node",
+        "FirstStackSidecarV3.cache.onFailure",
+        "FirstStackSidecarV3.cache.policy",
+        "FirstStackSidecarV3.cache.roles",
+        "FirstStackSidecarV3.cache.roles.app",
+        "FirstStackSidecarV3.cache.roles.database",
+        "FirstStackSidecarV3.cache.roles.internal",
+        "FirstStackSidecarV3.cache.roles.policy",
+        "FirstStackSidecarV3.cache.semantics",
+        "FirstStackSidecarV3.compiler",
+        "FirstStackSidecarV3.schema"
+      ],
+      "mechanism": "Explicit compute operation dependencies and app-owned strict recorded-key cache policy; GET, backing query, guarded SET and write invalidation traverse finite declared pools/links.",
+      "model1": "unsupported",
+      "model2": "supported-logical",
+      "scope": "Internal V3 conditional logical qualification only; V2 remains cache-free. Exact keys derive hits/misses/fills and logical backing reads saved. Exact LRU differs from sampled Valkey eviction. Single-app coalescing and read-committed stale-fill guard, not distributed coherence. Full memory/cost Unknown, Model 2 inactive; no timing promotion.",
+      "sources": [
+        {
+          "file": "packages/simulation/src/firstStack/compiler.ts",
+          "anchor": "recordedKeysOnly: true"
+        },
+        {
+          "file": "packages/simulation/src/model2/data/aside.ts",
+          "anchor": "if (config.recordedKeysOnly) fills.delete(key)"
+        },
+        {
+          "file": "scripts/tests/first-stack-cache.test.ts",
+          "anchor": "stale fills after a write"
+        }
+      ]
+    },
+    {
+      "id": "FirstStackCacheTimingV3",
+      "fields": [
+        "FirstStackSidecarV3.cache.commandCpuUs",
+        "FirstStackSidecarV3.cache.policyCpuUs",
+        "FirstStackSidecarV3.cache.ttlUs"
+      ],
+      "mechanism": "Explicit authored cache command/TTL input and optional policy CPU added to application demand once.",
+      "model1": "unsupported",
+      "model2": "assumption-only",
+      "scope": "No fixed hit-rate or universal CPU/bytes-per-key coefficient. Null policy CPU remains Unknown and creates no implicit overhead charge. Local G7 observations do not calibrate composed timing.",
+      "sources": [
+        {
+          "file": "packages/simulation/src/firstStack/compiler.ts",
+          "anchor": "cache.policyCpuUs ?? 0"
+        },
+        {
+          "file": "scripts/reality/first-stack-pilots/G7.md",
+          "anchor": "No universal bytes/key"
+        }
       ]
     }
   ]

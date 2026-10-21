@@ -59,3 +59,14 @@ keys and workload identity; hits/misses/fill acknowledgement/refusal; coalesced
 waiters and actual logical backing reads; TTL/entry bytes/eviction policy;
 caller result alongside late work and invalidation status; Unknown policy CPU,
 full memory/cost and assumption-only timing. No UI design is included.
+
+
+Regenerate the exact cache source receipt with
+`bun --no-env-file scripts/stage2-cache-identity.ts --write` after reviewing the
+six mechanism deltas. Re-pin changed source/acceptance files in the first-stack
+review and preserve matching slice capability reviews. Regenerate cache,
+compile/bounds and historical host proofs with their own producers. Run
+`scripts/refresh-execution.ts --baseline=<full main commit> --review="<scope>"`
+last after source/test/doc changes and exact-source capability review. This
+preserves the accepted historical sources and adds one reviewed main transition;
+it does not replace the original 88-file baseline or eight replay hashes.

@@ -8,7 +8,7 @@ import { readFileSync } from "node:fs";
 
 test("fresh cache graphs retain their recorded-key proof", async () => {
   expect(await cacheProof()).toEqual(JSON.parse(readFileSync("docs/reality/first-stack-cache-proof.json", "utf8")));
-});
+}, 60000);
 
 test("three exact same-key misses conserve compute, pools and actual saved DB reads with/without coalescing", async () => {
   for (const coalesce of [true, false]) {

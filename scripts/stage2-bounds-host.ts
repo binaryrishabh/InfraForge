@@ -1,3 +1,4 @@
+import { cacheBaselineSource } from "./stage2-cache-identity";
 import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync } from "node:fs";
 import { sourceHash } from "../apps/backend/executionIdentity/hash";
@@ -24,7 +25,7 @@ export function verifyBoundsPostgresReview() {
   const review = JSON.parse(readFileSync("docs/reality/first-stack-bounds-host.json", "utf8"));
   if (review.postgresBaseline !== postgresBaseline || JSON.stringify(review.postgres.map((f: { path: string }) => f.path)) !== JSON.stringify(boundsPostgresPaths)) throw Error("Invalid combined PostgreSQL review scope");
   for (const file of review.postgres) {
-    const text = beforeFiniteIo(file.path, readFileSync(file.path, "utf8").replaceAll("\r\n", "\n"));
+    const text = beforeFiniteIo(file.path, cacheBaselineSource(file.path, readFileSync(file.path, "utf8").replaceAll("\r\n", "\n")));
     if (sourceHash(file.originalText) !== mainPostgresHashes[file.path] || sourceHash(text) !== file.currentHash || withoutBounds(file.path, text) !== file.originalText) throw Error(`Main PostgreSQL behavior changed: ${file.path}`);
   }
 }
@@ -41,7 +42,7 @@ export function writeBoundsHostReview() {
   });
   const postgres = boundsPostgresPaths.map(path => {
     const originalText = execFileSync("git", ["show", `${postgresBaseline}:${path}`], { encoding: "utf8" }).replaceAll("\r\n", "\n");
-    const current = readFileSync(path, "utf8").replaceAll("\r\n", "\n");
+    const current = beforeFiniteIo(path, cacheBaselineSource(path, readFileSync(path, "utf8").replaceAll("\r\n", "\n")));
     if (sourceHash(originalText) !== mainPostgresHashes[path] || withoutBounds(path, current) !== originalText) throw Error(`Outside slice/call-budget PG integration: ${path}`);
     return { path, originalText, currentHash: sourceHash(current) };
   });
