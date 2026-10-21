@@ -37,7 +37,7 @@ async function rejected(promise: Promise<unknown>, text?: string) {
     await rejected(service.submit(f.owner, { ...f.request, idempotencyKey: "stale", expectedDesignRevision: "f".repeat(64) }), "Saved design changed");
     await rejected(service.submit(f.owner, { ...f.request, idempotencyKey: "forged", browserCut: { ...f.request.browserCut, fingerprint: "f".repeat(64) } }), "fingerprint");
     await rejected(service.submit(f.owner, { ...f.request, idempotencyKey: "capacity" }), "capacity busy");
-    const stored = await service.read(f.owner, first.id);
+    const stored = { ...await service.read(f.owner, first.id), daemon: "c".repeat(64) };
     for (const sql of ['UPDATE "FirstStackRun" SET seed=\'changed\' WHERE id=$1', 'DELETE FROM "FirstStackRun" WHERE id=$1']) await rejected(pool.query(sql, [first.id]), "append-only");
     for (const edit of [
       { engine: {} }, { lock: {} }, { input: "{}", inputBytes: 2, reservedBytes: 33554434 }, { inputBytes: 0 },
@@ -47,9 +47,10 @@ async function rejected(promise: Promise<unknown>, text?: string) {
     const challengeId = "00000000-0000-4000-8000-000000000025";
     await pool.query('INSERT INTO "Infrastructure" (id,"userId","ownerId",name,layout,"updatedAt","challengeId","challengeVersion") VALUES ($1,$2,$2,\'fixed fixture\',$3,$4,\'fixed\',1)', [challengeId, f.owner, f.layout, f.request.expectedDesignUpdatedAt]);
     await rejected(service.submit(f.owner, { ...f.request, infrastructureId: challengeId, idempotencyKey: "challenge" }), "Fixed challenge");
-    await pool.query('UPDATE "FirstStackWork" SET status=\'running\',token=\'test-token\' WHERE "runId"=$1', [first.id]);
+    await pool.query('UPDATE "FirstStackWork" SET status=\'running\',token=\'test-token\',daemon=$2 WHERE "runId"=$1', [first.id, stored.daemon]);
     const fence = createSubmissionFence(stored, "test-token");
     await withFirstStackOwnership(url!, fence, async (authority, signal) => {
+      expect(authority.token).toBe("test-token");
       await authority.commit(f.request.browserCut, signal);
       await rejected(withFirstStackOwnership(url!, fence, async () => {}), "capacity busy");
       await rejected(createSubmissionFence(stored, "wrong-token").check(db), "lost");

@@ -250,7 +250,8 @@ model FirstStackWork {
   runId String @id
   run FirstStackRun @relation(fields: [runId], references: [id], onDelete: Restrict)
   status String @default("queued")
-  token String?
+  token String? @unique
+  daemon String? @db.VarChar(64)
   cancelRequested Boolean @default(false)
   authorized Boolean @default(true)
   captureBytes Int @default(0)

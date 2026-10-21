@@ -30,9 +30,14 @@ export async function checkFirstStackSchema(db: Pick<Client | Pool, "query">) {
     WHERE conrelid IN ('public."FirstStackRun"'::regclass,'public."FirstStackWork"'::regclass,'public."FirstStackCut"'::regclass,'public."FirstStackResult"'::regclass)
       AND contype='c' AND convalidated`);
   const limits: Record<string, string[]> = { first_stack_input: ["16777216", "37748736", "300000000", "infraforge-first-stack-compile-lock/2", "IS TRUE"],
-    first_stack_work: ["33554432", "recovery", "terminal"], first_stack_cut: ["4096", "2097152", "300000000", "IS TRUE"],
+    first_stack_work: ["33554432", "recovery", "terminal", "daemon"], first_stack_cut: ["4096", "2097152", "300000000", "IS TRUE"],
     first_stack_result: ["33554432", "unverified", "verified", "IS TRUE"] };
   if (constraints.rowCount !== 4 || constraints.rows.some(r => !limits[r.conname]?.every(fragment => r.definition.includes(fragment)))) throw Error("First-stack persistence limits differ from release");
-  await db.query(`SELECT r.input,r.lock,r.engine,r.seed,r.workload,r.envelope,r.lineage,r."browserCut",r."reservedBytes",w.token,w.authorized,w."cancelRequested",w."captureBytes",s.hash,o.delivered
+  const tokenIndex = await db.query(`SELECT 1 FROM pg_index i JOIN pg_class c ON c.oid=i.indexrelid
+    WHERE i.indrelid='public."FirstStackWork"'::regclass AND c.relname='FirstStackWork_token_key'
+      AND i.indisunique AND i.indisvalid AND i.indisready AND i.indnatts=1 AND i.indexprs IS NULL AND i.indpred IS NULL
+      AND pg_get_indexdef(i.indexrelid,1,true)='token'`);
+  if (tokenIndex.rowCount !== 1) throw Error("First-stack container token uniqueness guard missing");
+  await db.query(`SELECT r.input,r.lock,r.engine,r.seed,r.workload,r.envelope,r.lineage,r."browserCut",r."reservedBytes",w.token,w.daemon,w.authorized,w."cancelRequested",w."captureBytes",s.hash,o.delivered
     FROM "FirstStackRun" r CROSS JOIN "FirstStackWork" w CROSS JOIN "FirstStackResult" s CROSS JOIN "FirstStackOutbox" o LIMIT 0`);
 }

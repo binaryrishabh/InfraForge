@@ -65,6 +65,17 @@ test("atomic create conflict never removes or attaches the other executor", asyn
   expect(second.status).toBe("interrupted"); expect(second.receipt.cleanup).toBe("unconfirmed"); expect(f.removed).toBe(0);
   stop.abort(); expect((await first).receipt.cleanup).toBe("removed");
 });
+
+test("a captured server work token owns the Docker label before attach", async () => {
+  const f = fixture(), stop = new AbortController(), token = "00000000-0000-4000-8000-000000000024";
+  const work = runFirstStackContainer(f.control, f.config, { mode: "execute", input: "{}" }, { ...f.authority, token }, stop.signal);
+  await f.ready;
+  expect(f.value.Config.Labels["infraforge.first-stack"]).toBe(token);
+  stop.abort();
+  expect((await work).receipt.cleanup).toBe("removed");
+  await expect(runFirstStackContainer(f.control, f.config, { mode: "execute", input: "{}" }, { ...f.authority, token: "request-data" })).rejects.toThrow("captured executor token");
+  expect(f.creates).toBe(1);
+});
 test("cancellation breaks a silent pipe without close and database loss breaks hung authority", async () => {
   const f = fixture(), stop = new AbortController();
   const run = runFirstStackContainer(f.control, f.config, { mode: "execute", input: "{}" }, f.authority, stop.signal);

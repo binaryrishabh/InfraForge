@@ -25,12 +25,13 @@ CREATE UNIQUE INDEX "FirstStackRun_ownerId_idempotencyKey_key" ON "FirstStackRun
 CREATE INDEX "FirstStackRun_ownerId_createdAt_idx" ON "FirstStackRun"("ownerId","createdAt");
 CREATE TABLE "FirstStackWork" (
   "runId" TEXT PRIMARY KEY REFERENCES "FirstStackRun"(id) ON DELETE RESTRICT ON UPDATE CASCADE,
-  status TEXT NOT NULL DEFAULT 'queued', token TEXT, "cancelRequested" BOOLEAN NOT NULL DEFAULT false,
+  status TEXT NOT NULL DEFAULT 'queued', token TEXT, daemon VARCHAR(64), "cancelRequested" BOOLEAN NOT NULL DEFAULT false,
   authorized BOOLEAN NOT NULL DEFAULT true, "captureBytes" INTEGER NOT NULL DEFAULT 0,
   CONSTRAINT first_stack_work CHECK (status IN ('queued','running','recovery','terminal') AND "captureBytes" BETWEEN 0 AND 33554432
-    AND (status NOT IN ('running','recovery') OR token IS NOT NULL))
+    AND (status NOT IN ('running','recovery') OR (token IS NOT NULL AND daemon IS NOT NULL AND daemon ~ '^[a-f0-9]{64}$')))
 );
 CREATE INDEX "FirstStackWork_status_idx" ON "FirstStackWork"(status);
+CREATE UNIQUE INDEX "FirstStackWork_token_key" ON "FirstStackWork"(token);
 CREATE TABLE "FirstStackCut" (
   "runId" TEXT NOT NULL REFERENCES "FirstStackRun"(id) ON DELETE RESTRICT ON UPDATE CASCADE,
   sequence INTEGER NOT NULL, body JSONB NOT NULL, PRIMARY KEY ("runId",sequence),
@@ -62,6 +63,7 @@ BEGIN
   IF TG_OP='DELETE' THEN RAISE EXCEPTION 'First-stack reservation cannot be deleted'; END IF;
   IF OLD.status='terminal' OR NEW."runId"<>OLD."runId" OR NEW."captureBytes"<OLD."captureBytes"
     OR (OLD.token IS NOT NULL AND NEW.token IS DISTINCT FROM OLD.token)
+    OR (OLD.daemon IS NOT NULL AND NEW.daemon IS DISTINCT FROM OLD.daemon)
     OR (OLD."cancelRequested" AND NOT NEW."cancelRequested") OR (NOT OLD.authorized AND NEW.authorized)
     OR (OLD.status='queued' AND NEW.status NOT IN ('queued','running','terminal'))
     OR (OLD.status='running' AND NEW.status NOT IN ('running','recovery','terminal'))
@@ -93,6 +95,8 @@ BEGIN
   ELSE
     IF NEW.body->>'verification'='verified' AND (w.status<>'running' OR w."cancelRequested" OR NOT w.authorized
       OR NEW.body->'receipt'->>'cleanup' IS DISTINCT FROM 'removed'
+      OR NEW.body->'receipt'->>'daemon' IS DISTINCT FROM w.daemon
+      OR NEW.body->'receipt'->>'image' IS DISTINCT FROM r.engine->>'image'
       OR NEW.body->>'actual' IS DISTINCT FROM r."browserCut"->>'fingerprint'
       OR NEW.body->>'actual' IS DISTINCT FROM (SELECT body->>'fingerprint' FROM "FirstStackCut" WHERE "runId"=NEW."runId" ORDER BY sequence DESC LIMIT 1)) THEN
       RAISE EXCEPTION 'Verification requires a matching server execution and acknowledged cleanup';

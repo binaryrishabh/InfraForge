@@ -47,6 +47,9 @@ BullMQ has global and local concurrency one, one attempt and no stalled retry.
 Execute/replay also share 10b's PostgreSQL session lock and fixed Docker name.
 Every persisted cut checks the captured owner, immutable input, token,
 authorization and cancellation inside the same transaction as the insert.
+The unique work token and daemon identity commit before Docker create. The
+executor uses that same token in its container label, so recovery can join an
+orphan to its exact stored run even if the parent dies before the first cut.
 Cancellation/revocation are monotone. Durable cuts and terminal results are
 append-only, with SQL byte/schema/horizon guards and release postchecks. Finished
 input rows are immutable from admission. Terminal work rows cannot change.

@@ -6,7 +6,7 @@ import type { IsolationAuthority } from "./isolationRunner";
 // daemon container name separately fences an orphan after its DB session dies.
 const lock = [186542854, 10];
 export async function withFirstStackOwnership<T>(databaseUrl: string,
-  store: { check(db: Client): Promise<void>; commit(db: Client, cut: IsolatedCut): Promise<void> },
+  store: { token?: string; check(db: Client): Promise<void>; commit(db: Client, cut: IsolatedCut): Promise<void> },
   task: (authority: IsolationAuthority, signal: AbortSignal) => Promise<T>) {
   const db = new Client({ connectionString: databaseUrl, connectionTimeoutMillis: 5000, query_timeout: 5000, statement_timeout: 5000, lock_timeout: 1000 });
   const lost = new AbortController();
@@ -30,6 +30,7 @@ export async function withFirstStackOwnership<T>(databaseUrl: string,
     held = (await db.query("SELECT pg_try_advisory_lock($1,$2) AS held", lock)).rows[0]?.held === true;
     if (!held) throw Error("First-stack execute/replay capacity busy");
     return await task({
+      token: store.token,
       assertHeld: signal => serial(() => check(signal)),
       commit: (cut, signal) => serial(async () => {
         await check(signal);

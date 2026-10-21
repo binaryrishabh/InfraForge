@@ -10,6 +10,9 @@ export interface IsolationRequest {
   mode: "execute" | "replay"; input: string; expected?: IsolatedCut;
 }
 export interface IsolationAuthority {
+  // Owned submission stores persist this before create so recovery can match
+  // an orphan's Docker label to its durable work row. Offline probes omit it.
+  token?: string;
   // Must recheck the captured owner, authorization, cancellation and DB fencing.
   // Unknown/unavailable is rejection. Called before launch, on a timer and at
   // every ACK; a replay uses the same authority and capacity as execution.
@@ -45,7 +48,8 @@ async function contained(control: IsolationControl, configuration: Omit<Isolatio
     if (!request.expected) throw Error("Replay requires the original durable prefix");
     readIsolatedCut(request.expected, configuration.source, inputHash);
   } else if (!["execute", "probe"].includes(request.mode) || request.expected) throw Error("Invalid isolated request");
-  const start = Date.now(), token = randomUUID(), abort = new AbortController();
+  const start = Date.now(), token = authority.token ?? randomUUID(), abort = new AbortController();
+  if (!/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/.test(token)) throw Error("Invalid captured executor token");
   const receipt: IsolationReceipt = { schema: "first-stack-isolation-receipt/1", daemon: control.identity,
     image: configuration.image, container: null, enforcement: null, elapsedMs: 0, exit: null, outputBytes: 0, cleanup: "not-created" };
   let child: Awaited<ReturnType<IsolationControl["attach"]>> | undefined, timer: ReturnType<typeof setInterval> | undefined;
