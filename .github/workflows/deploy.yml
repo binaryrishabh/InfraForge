@@ -106,7 +106,12 @@ jobs:
         run: bash scripts/deploy/frontend.sh
       - name: Final public production verification
         run: |
-          bun --no-env-file scripts/release/frontend-check.ts "$RELEASE_SHA" "$FRONTEND_ORIGIN" "$BACKEND_ORIGIN"
+          # The production alias propagates through the CDN; retry the public check for up to ~90s.
+          for attempt in $(seq 1 18); do
+            if bun --no-env-file scripts/release/frontend-check.ts "$RELEASE_SHA" "$FRONTEND_ORIGIN" "$BACKEND_ORIGIN"; then break; fi
+            [[ $attempt -lt 18 ]] || { echo 'Public frontend did not serve the release within 90s' >&2; exit 1; }
+            sleep 5
+          done
           printf 'Accepted backend and frontend %s.\n' "$RELEASE_SHA" >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v4
         if: always()
