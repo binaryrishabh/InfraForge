@@ -3,3 +3,4 @@ export type * from "./compare";
 export type * from "./rerun";
 export * from "./experimentTrace";
 export type * from "./runRecord";
+export type * from "./firstStack";

@@ -13,7 +13,8 @@ export interface IsolatedCut {
 export function cutFingerprint(cut: ExecutionCut) {
   return hash({ lock: cut.lock, throughUs: cut.throughUs, timestampComplete: cut.timestampComplete,
     unfinished: cut.unfinished, counts: cut.counts, execution: cut.execution,
-    completeness: cut.completeness, distributions: cut.distributions, omissions: cut.omissions });
+    completeness: cut.completeness, distributions: cut.distributions, omissions: cut.omissions,
+    ...(cut.reportCapture === undefined ? {} : { reportCapture: cut.reportCapture }) });
 }
 export function isolatedCut(cut: ExecutionCut, source: string, inputHash: string): IsolatedCut {
   return { schema: "first-stack-isolated-cut/1", source, inputHash, cut, fingerprint: cutFingerprint(cut) };
