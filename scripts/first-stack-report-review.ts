@@ -1,16 +1,25 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { sourceHash } from "../apps/backend/executionIdentity/hash";
 import { exposedFields } from "./reality/launch-contract";
+import { execFileSync } from "node:child_process";
 
 // Exact-source review for bounded data reduction only. This command grants no
 // execution host, process adapter, activation or historical compatibility.
 if (!process.argv.includes("--write")) throw Error("Use --write after reviewing the report data boundary");
 const read = (path: string) => readFileSync(path, "utf8").replaceAll("\r\n", "\n");
+const baseline = execFileSync("git", ["rev-parse", "main"], { encoding: "utf8" }).trim();
+execFileSync("git", ["merge-base", "--is-ancestor", baseline, "HEAD"]);
+const transitionTest = "scripts/tests/execution-identity.test.ts";
+const originalTest = execFileSync("git", ["show", `${baseline}:${transitionTest}`], { encoding: "utf8" }).replaceAll("\r\n", "\n");
+const oldCount = originalTest.match(/expect\(table.entries.length\).toBe\((\d+)\);/);
+if (!oldCount) throw Error("Missing retained transition acceptance count");
+const expectedTest = originalTest.replace(oldCount[0], `expect(table.entries.length).toBe(${Number(oldCount[1]) + 1});\n  expect(table.entries.some((row: { commit: string }) => row.commit === "${baseline}")).toBe(true);`);
+if (read(transitionTest) !== expectedTest) throw Error("Report transition acceptance permits only the new merged-main count and baseline assertion");
 const files = ["apps/backend/firstStack/report.ts", "apps/backend/firstStack/reportCapture.ts", "apps/backend/firstStack/admission.ts",
   "apps/backend/firstStack/executionCut.ts", "apps/backend/firstStack/isolationProtocol.ts", "apps/backend/runRecords/firstStack.ts",
   "apps/backend/runRecords/adapters.ts", "packages/simulation/src/firstStack/journal.ts", "packages/contracts/src/reports/firstStack.ts",
   "packages/contracts/src/reports/index.ts", "scripts/reality/launch-contract.ts"];
-const acceptance = ["apps/backend/tests/firstStackReport.test.ts", "apps/backend/tests/integration/firstStackSubmission.integration.test.ts", "scripts/tests/first-stack-report.test.ts", "scripts/tests/first-stack-report-data.test.ts"];
+const acceptance = ["apps/backend/tests/firstStackReport.test.ts", "apps/backend/tests/integration/firstStackSubmission.integration.test.ts", "scripts/tests/first-stack-report.test.ts", "scripts/tests/first-stack-report-data.test.ts", transitionTest];
 const path = "apps/backend/executionIdentity/capabilityReviews.json", reviews = JSON.parse(read(path));
 for (const path of files.filter(p => !p.startsWith("scripts/") && !p.startsWith("packages/contracts/"))) {
   const old = reviews[path];
@@ -21,7 +30,7 @@ writeFileSync(path, JSON.stringify(reviews, null, 2) + "\n");
 // Retain each historical review's scope and exact unchanged pins. Only report
 // source and the affected integration acceptance receive current source pins.
 const changed = new Set([...files, ...acceptance]);
-for (const path of ["docs/reality/first-stack-source-review.json", "docs/reality/first-stack-isolation-source-review.json", "docs/reality/first-stack-submission-source-review.json"]) {
+for (const path of ["docs/reality/first-stack-source-review.json", "docs/reality/first-stack-isolation-source-review.json", "docs/reality/first-stack-submission-source-review.json", "docs/reality/finite-io-source-review.json", "docs/reality/postgres-session-source-review.json"]) {
   const review = JSON.parse(read(path));
   for (const row of [...review.files, ...(review.acceptance ?? [])]) if (changed.has(row.path)) row["sha256" in row ? "sha256" : "hash"] = sourceHash(read(row.path));
   writeFileSync(path, JSON.stringify(review, null, 2) + "\n");

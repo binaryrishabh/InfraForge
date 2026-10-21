@@ -6,7 +6,7 @@ import { diagnosticJournal } from "../../packages/simulation/src/firstStack/jour
 test("first-stack report source review binds its data boundary and acceptance", () => {
   const review = JSON.parse(readFileSync("docs/reality/first-stack-report-source-review.json", "utf8"));
   expect(review.schema).toBe("first-stack-report-source-review/1");
-  expect(review.files.length).toBe(11); expect(review.acceptance.length).toBe(4);
+  expect(review.files.length).toBe(11); expect(review.acceptance.length).toBe(5);
   for (const row of [...review.files, ...review.acceptance]) expect(sourceHash(readFileSync(row.path, "utf8"))).toBe(row.hash);
 });
 
