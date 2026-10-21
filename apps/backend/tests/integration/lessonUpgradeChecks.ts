@@ -11,7 +11,7 @@ export async function checkLessonUpgrade(h: LocalHarness) {
   try {
     await h.sql.query(`CREATE DATABASE "${name}" TEMPLATE template0`); created = true;
     const directory = new URL("../../prisma/migrations/", import.meta.url), folders = (await readdir(directory, { withFileTypes: true })).filter((e) => e.isDirectory()).map((e) => e.name).sort();
-    expect(folders).toHaveLength(19);
+    expect(folders).toHaveLength(20);
     for (const folder of folders.slice(0, 18)) await db.query(await Bun.file(new URL(`${folder}/migration.sql`, directory)).text());
     const owner = crypto.randomUUID(), design = crypto.randomUUID(), run = crypto.randomUUID(), hash = "0".repeat(64);
     await db.query('INSERT INTO "User" (id,name,email,"updatedAt") VALUES ($1,\'Legacy M2M fixture\',$2,now())', [owner, `${owner}@infraforge.test`]);
@@ -24,6 +24,8 @@ export async function checkLessonUpgrade(h: LocalHarness) {
     const after = (await db.query('SELECT * FROM "InternalModel2Run"')).rows;
     expect(after).toEqual(before); expect((await db.query('SELECT * FROM "Infrastructure"')).rows).toEqual(saved);
     expect((await db.query('SELECT scope FROM "InternalModel2Grant"')).rows[0].scope).toBe("operator");
+    // Later additive migrations must also be present before the full release guard set is checked.
+    for (const folder of folders.slice(19)) await db.query(await Bun.file(new URL(`${folder}/migration.sql`, directory)).text());
     await checkSchemaGuards(db);
     await rejects(db.query('UPDATE "InternalModel2Grant" SET scope=\'public\''));
     await db.query('UPDATE "InternalModel2Grant" SET scope=\'lesson\'');

@@ -83,7 +83,7 @@
     },
     {
       "path": "apps/backend/tests/integration/firstStackSubmission.integration.test.ts",
-      "hash": "7e25eb55d49c77cfc6b9f87ec21263fbe31a24433374800530f93e3ebb4c3e3e"
+      "hash": "b7f8f0ae602a874d6f4e41fd747f836f1de3730d231e9417544a8585c28caea3"
     },
     {
       "path": "scripts/tests/submissionLineage.test.ts",

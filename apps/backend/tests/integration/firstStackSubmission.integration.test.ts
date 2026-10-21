@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test";
 import { Pool, Client } from "pg";
 import { randomUUID } from "node:crypto";
+import { fileURLToPath } from "node:url";
 import { closeSubmissionRecovery, createSubmissionService } from "../../firstStack/admission";
 import { createSubmissionFence, markSubmissionRecovery } from "../../firstStack/submissionWorker";
 import { withFirstStackOwnership } from "../../firstStack/isolationOwnership";
@@ -18,10 +19,19 @@ async function rejected(promise: Promise<unknown>, text?: string) {
   const parsed = new URL(url!);
   if (process.env.INTEGRATION_DISPOSABLE !== "local-only" || !["localhost", "127.0.0.1"].includes(parsed.hostname) ||
     !(parsed.pathname === "/infraforge_isolation" || /^\/infraforge_it_[a-f0-9]+$/.test(parsed.pathname)) || parsed.search) throw Error("Explicit disposable local isolation database required");
-  const pool = new Pool({ connectionString: url, max: 4, query_timeout: 5000 }), f = await submissionFixture();
+  // One fresh disposable database per invocation, migrated here, so the result
+  // never depends on which other integration test touched the shared server first.
+  const admin = new Client({ connectionString: url }); await admin.connect();
+  const name = `infraforge_it_${randomUUID().replaceAll("-", "")}`, target = new URL(url!); target.pathname = `/${name}`;
+  await admin.query(`CREATE DATABASE "${name}" TEMPLATE template0`);
+  const migrate = Bun.spawn([process.execPath, "--no-env-file", "--no-install", "run", "db:migrate"], {
+    cwd: fileURLToPath(new URL("../..", import.meta.url)), stdout: "pipe", stderr: "pipe",
+    env: { PATH: process.env.PATH ?? "", ...(process.env.SystemRoot ? { SystemRoot: process.env.SystemRoot } : {}), DATABASE_URL: target.href } });
+  const diagnostic = await new Response(migrate.stderr).text();
+  if (await migrate.exited !== 0) { await admin.query(`DROP DATABASE "${name}"`); await admin.end(); throw Error(`Disposable migration failed: ${diagnostic.slice(-2000)}`); }
+  const pool = new Pool({ connectionString: target.href, max: 4, query_timeout: 5000 }), f = await submissionFixture();
   const service = createSubmissionService(pool, { enabled: true, engine: f.engine });
-  const db = new Client({ connectionString: url }); await db.connect();
-  // One fresh disposable database per invocation. No history is deleted here.
+  const db = new Client({ connectionString: target.href }); await db.connect();
   try {
     await checkFirstStackSchema(pool);
     await pool.query('INSERT INTO "User" (id,name,email,"updatedAt") VALUES ($1,$1,$2,CURRENT_TIMESTAMP)', [f.owner, `${f.owner}@example.invalid`]);
@@ -49,10 +59,10 @@ async function rejected(promise: Promise<unknown>, text?: string) {
     await rejected(service.submit(f.owner, { ...f.request, infrastructureId: challengeId, idempotencyKey: "challenge" }), "Fixed challenge");
     await pool.query('UPDATE "FirstStackWork" SET status=\'running\',token=\'test-token\',daemon=$2 WHERE "runId"=$1', [first.id, stored.daemon]);
     const fence = createSubmissionFence(stored, "test-token");
-    await withFirstStackOwnership(url!, fence, async (authority, signal) => {
+    await withFirstStackOwnership(target.href, fence, async (authority, signal) => {
       expect(authority.token).toBe("test-token");
       await authority.commit(f.request.browserCut, signal);
-      await rejected(withFirstStackOwnership(url!, fence, async () => {}), "capacity busy");
+      await rejected(withFirstStackOwnership(target.href, fence, async () => {}), "capacity busy");
       await rejected(createSubmissionFence(stored, "wrong-token").check(db), "lost");
       await service.cancel(f.owner, first.id);
       await rejected(authority.assertHeld(signal), "cancelled");
@@ -89,5 +99,8 @@ async function rejected(promise: Promise<unknown>, text?: string) {
     expect((await service.read(f.owner, first.id)).result.verification).toBe("interrupted");
     expect((await service.read(f.owner, first.id)).durablePrefix.fingerprint).toBe(f.request.browserCut.fingerprint);
     expect((await pool.query('SELECT count(*)::int AS count FROM "FirstStackWork" WHERE status<>\'terminal\'')).rows[0].count).toBe(15);
-  } finally { await db.end(); await pool.end(); }
-}, 60000);
+  } finally {
+    await db.end(); await pool.end();
+    await admin.query(`DROP DATABASE "${name}" WITH (FORCE)`); await admin.end();
+  }
+}, 120000);
