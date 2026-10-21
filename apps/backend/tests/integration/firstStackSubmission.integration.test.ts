@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { Pool, Client } from "pg";
 import { randomUUID } from "node:crypto";
-import { createSubmissionService } from "../../firstStack/admission";
+import { closeSubmissionRecovery, createSubmissionService } from "../../firstStack/admission";
 import { createSubmissionFence, markSubmissionRecovery } from "../../firstStack/submissionWorker";
 import { withFirstStackOwnership } from "../../firstStack/isolationOwnership";
 import { checkFirstStackSchema } from "../../release/firstStackSchema";
@@ -83,5 +83,11 @@ async function rejected(promise: Promise<unknown>, text?: string) {
       else await rejected(submission, "capacity busy");
     }
     expect((await pool.query('SELECT count(*)::int AS count FROM "FirstStackWork" WHERE status<>\'terminal\'')).rows[0].count).toBe(16);
+    const cleanup = { token: "test-token", daemon: stored.daemon, image: f.engine.image, cleanup: "not-created", reviewer: "fixture-operator", proof: "Software fixture: no Docker container was created" };
+    await rejected(closeSubmissionRecovery(pool, first.id, { ...cleanup, token: "wrong-token" }), "Recovery identity");
+    await closeSubmissionRecovery(pool, first.id, cleanup);
+    expect((await service.read(f.owner, first.id)).result.verification).toBe("interrupted");
+    expect((await service.read(f.owner, first.id)).durablePrefix.fingerprint).toBe(f.request.browserCut.fingerprint);
+    expect((await pool.query('SELECT count(*)::int AS count FROM "FirstStackWork" WHERE status<>\'terminal\'')).rows[0].count).toBe(15);
   } finally { await db.end(); await pool.end(); }
 }, 60000);

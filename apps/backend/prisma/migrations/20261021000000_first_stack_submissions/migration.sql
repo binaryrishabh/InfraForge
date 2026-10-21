@@ -83,8 +83,18 @@ DECLARE w "FirstStackWork"; r "FirstStackRun"; used INTEGER; previous INTEGER;
 BEGIN
   SELECT * INTO w FROM "FirstStackWork" WHERE "runId"=NEW."runId" FOR UPDATE;
   SELECT * INTO r FROM "FirstStackRun" WHERE id=NEW."runId";
-  IF w."runId" IS NULL OR (w.status NOT IN ('queued','running') AND NOT (TG_TABLE_NAME='FirstStackResult' AND w.status='terminal' AND r.purpose='private')) THEN
+  IF w."runId" IS NULL OR (w.status NOT IN ('queued','running') AND NOT (TG_TABLE_NAME='FirstStackResult' AND (w.status='recovery' OR (w.status='terminal' AND r.purpose='private')))) THEN
     RAISE EXCEPTION 'First-stack evidence ownership unavailable';
+  END IF;
+  IF w.status='recovery' AND NOT COALESCE(
+    TG_TABLE_NAME='FirstStackResult' AND NEW.body->>'verification' IN ('interrupted','cancelled','unavailable')
+    AND NEW.body->'recovery'->>'kind'='operator-reviewed'
+    AND NEW.body->'recovery'->>'token'=w.token AND NEW.body->'recovery'->>'daemon'=w.daemon
+    AND NEW.body->'recovery'->>'image'=r.engine->>'image'
+    AND NEW.body->'recovery'->>'cleanup' IN ('removed','not-created')
+    AND length(NEW.body->'recovery'->>'reviewer') BETWEEN 1 AND 256
+    AND length(NEW.body->'recovery'->>'proof') BETWEEN 1 AND 500, false) THEN
+    RAISE EXCEPTION 'Recovery requires explicit matching operator cleanup evidence';
   END IF;
   used := octet_length(NEW.body::text);
   IF TG_TABLE_NAME='FirstStackCut' THEN

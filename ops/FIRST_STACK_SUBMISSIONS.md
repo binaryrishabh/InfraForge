@@ -65,8 +65,11 @@ or unconfirmed Docker cleanup retain reservations in `recovery`. Read the stored
 cut prefix after any uncertain commit; never retry the write or execution.
 Offline operator recovery must disable admission, stop the owner, inspect the
 exact daemon/image/container token and persisted prefix, and clear only the
-verified stopped container under the 10b runbook. No automatic lease expiry,
-recovery release or rerun endpoint is provided. Deploy preflight blocks all
+verified stopped container under the 10b runbook. The offline
+`closeSubmissionRecovery` helper then records the matching token/daemon/image,
+reviewer and cleanup proof, appends an interrupted result, and releases the
+reservation. It has no public route and cannot mark a recovered run verified.
+No automatic lease expiry or rerun endpoint is provided. Deploy preflight blocks all
 nonterminal reservations, including recovery, and both executor ownership locks.
 
 UI needs for later slices: browser engine availability and exact seed/workload
