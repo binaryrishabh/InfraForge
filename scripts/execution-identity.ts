@@ -1,4 +1,5 @@
 import { historicalIsolationDescriptor } from "./historical-isolation-descriptor";
+import { historicalDeclaredHostDescriptor } from "./historical-declared-host-descriptor";
 import { reviewHardeningSyntax, refreshHardeningTransitions, refreshHardeningAcceptance } from "./hardening-identity";
 import { buildCompositionTransitions } from "./stage1-identity";
 import { refreshPostgresAcceptance, reviewPostgresSessions, reviewPostgresSyntax, refreshPostgresTransitions } from "./postgres-session-identity";
@@ -152,7 +153,7 @@ export function checkTransitions(root = repositoryRoot, read?: (path: string) =>
     const tree: SourceTree = { paths: Object.keys(files), read: path => {
       const text = history.blobs[files[path]!]; if (text === undefined) throw Error(`Missing snapshot source: ${path}`); return text;
     } };
-    if (digest((row.algorithm === "isolation-boundary/1" ? historicalIsolationDescriptor : row.algorithm === "analysis-boundary/1" ? historicalAnalysisDescriptor : row.algorithm === "launch-boundary/1" ? historicalLaunchDescriptor : row.algorithm === "import-boundary/1" ? historicalImportDescriptor : row.algorithm === "host-boundary/1" ? historicalHostDescriptor : row.commit.startsWith("2da5b74") ? verifiedHistoricalDescriptor : historicalDescriptor)(tree, table.descriptors[row.descriptor]!.runtime)) !== row.descriptor) throw Error("Historical closure does not reconstruct");
+    if (digest((row.algorithm === "declared-host-boundary/1" ? historicalDeclaredHostDescriptor : row.algorithm === "isolation-boundary/1" ? historicalIsolationDescriptor : row.algorithm === "analysis-boundary/1" ? historicalAnalysisDescriptor : row.algorithm === "launch-boundary/1" ? historicalLaunchDescriptor : row.algorithm === "import-boundary/1" ? historicalImportDescriptor : row.algorithm === "host-boundary/1" ? historicalHostDescriptor : row.commit.startsWith("2da5b74") ? verifiedHistoricalDescriptor : historicalDescriptor)(tree, table.descriptors[row.descriptor]!.runtime)) !== row.descriptor) throw Error("Historical closure does not reconstruct");
     let source: string;
     if (row.kind === "descriptor") source = row.descriptor;
     else if (row.source.startsWith("bac35c99")) {

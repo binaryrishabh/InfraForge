@@ -1,11 +1,10 @@
-import { historicalIsolationDescriptor } from "./historical-isolation-descriptor";
+import { selectFrozenBaseline } from "./frozen-baseline";
 import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { diskTree, executionDescriptor, repositoryRoot } from "../apps/backend/executionIdentity/descriptor";
 import { digest, lf, sourceHash } from "../apps/backend/executionIdentity/hash";
 import { loadTransitions } from "../apps/backend/executionIdentity/transitions";
-import { historicalAnalysisDescriptor } from "./historical-analysis-descriptor";
 import { gitTree } from "./execution-identity";
 import { writeTransitionStore } from "./transition-store";
 
@@ -47,16 +46,15 @@ export function refreshTransitions(baseline: string, review: string) {
       ...["apps/backend", "apps/web", "packages/catalog", "packages/contracts", "packages/domain", "packages/simulation"].map(path => path + "/package.json")])].sort();
     const files = new Map(stored.files as [string, string][]);
     const texts = new Map(paths.map(path => {
-      const text = before.paths.includes(path) ? before.read(path) : path.includes("/generated/") ? current.read(path) : undefined;
+      // Regeneration after an additive schema change cannot supply the old
+      // ignored Prisma client. Reuse its authenticated archive bytes, with the
+      // same per-file and complete descriptor checks below.
+      const text = before.paths.includes(path) ? before.read(path) : path.includes("/generated/") ? history.blobs[files.get(path)!] ?? current.read(path) : undefined;
       if (text === undefined || files.has(path) && sourceHash(text) !== files.get(path)) throw Error(`Cannot retain baseline source: ${path}`);
       return [path, text];
     }));
     const retained = { paths, read: (path: string) => { const text = texts.get(path); if (text === undefined) throw Error(`Missing baseline source: ${path}`); return text; } };
-    const algorithm = [
-      { id: "analysis-boundary/1" as const, reconstruct: historicalAnalysisDescriptor },
-      { id: "isolation-boundary/1" as const, reconstruct: historicalIsolationDescriptor },
-    ].find(row => digest(row.reconstruct(retained, stored.runtime)) === source)?.id;
-    if (!algorithm) throw Error("Baseline descriptor does not reconstruct");
+    const algorithm = selectFrozenBaseline(retained, stored.runtime, source);
     if (pending && pending.algorithm !== algorithm) throw Error("Conflicting baseline reconstruction algorithm");
     const snapshot = Object.fromEntries([...texts].map(([path, text]) => { const hash = sourceHash(text); history.blobs[hash] = text; return [path, hash]; }));
     if (history.trees[baseline] && digest(history.trees[baseline]) !== digest(snapshot)) throw Error("Conflicting baseline snapshot");
