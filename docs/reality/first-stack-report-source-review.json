@@ -4,11 +4,11 @@
   "files": [
     {
       "path": "apps/backend/firstStack/report.ts",
-      "hash": "7623fc6af03164cd365b1588a22621f53f787acd763ba0845099863705573b5e"
+      "hash": "d32f6bfefc4933d5e643dc6770b197cf3b4dce02f1b1473646ade76b1d2b759e"
     },
     {
       "path": "apps/backend/firstStack/reportCapture.ts",
-      "hash": "bc8cd3ee397a4dc27fb1e6d6d233bb83d05fe1eee040afb64d90596bcaf5ad1a"
+      "hash": "4d6d7fc81d23645722fdf27d03f4ed58e11a1c0f96b05682c2537664b7425639"
     },
     {
       "path": "apps/backend/firstStack/admission.ts",
@@ -16,7 +16,7 @@
     },
     {
       "path": "apps/backend/firstStack/executionCut.ts",
-      "hash": "5284c81c78cd0aa1fa22f38c7fcd71d78bf35b0c30b77fef8956e20d1c50019e"
+      "hash": "b5ff9fbacf544264d8ef15abb182127f27d2d540f3f810265bd93f20e755f534"
     },
     {
       "path": "apps/backend/firstStack/isolationProtocol.ts",
@@ -24,7 +24,7 @@
     },
     {
       "path": "apps/backend/runRecords/firstStack.ts",
-      "hash": "2a29a995af52bd2b3241f4dfa3d69a99fedfa6c8d3d3af997cc35bbee59774b0"
+      "hash": "69637e2762b70bb3c7bf21b4b33c0ff5c168146c7474a64cf68ef523ae985dce"
     },
     {
       "path": "apps/backend/runRecords/adapters.ts",
@@ -36,7 +36,7 @@
     },
     {
       "path": "packages/contracts/src/reports/firstStack.ts",
-      "hash": "0a753d9d1b190b74d2a9f437f4acfc926817999fc584e2ec440c0555f150640e"
+      "hash": "bbdf16608ed1f6a8c97596ceb28c2d1be7394d5e3c9f6d177cb23b53fbd3391a"
     },
     {
       "path": "packages/contracts/src/reports/index.ts",

@@ -17,6 +17,13 @@ It returns an isolated-cut/1 envelope using slice 11's compile lock, immutable
 input hash and fingerprint fields, including slice 12's bounded report capture;
 it does not export unbounded raw results. Capture saturation, selected journal
 events, omission counts and the 256 KiB Unknown fallback match the current server.
+Both paths export the same `captureReport` implementation from
+`packages/simulation/src/firstStack/reportCapture.ts`. It also records fixed modeled
+host occupancy through the cut, once per host regardless of shared roles or process
+faults. The horizon is an observation boundary, not allocation termination.
+Tariffs and compute subtotals are absent from execution cuts. Server report assembly
+can apply a separate frozen tariff selection only to matching verified server usage;
+missing usage, verification or an eligible selection leaves the subtotal Unknown.
 
 128 MiB is an **observed heap** cutoff only when `performance.memory` exists.
 CPU time, RSS and unavailable heap measurements are `Unknown`. Browsers provide

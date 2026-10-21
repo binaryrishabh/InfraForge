@@ -2496,7 +2496,19 @@
         "FirstStackReportCapture.selection.omitted",
         "FirstStackReportCapture.selection.policy",
         "FirstStackReportCapture.selection.roots",
-        "FirstStackReportCapture.unknown"
+        "FirstStackReportCapture.unknown",
+        "FirstStackAllocationUsage.allocations",
+        "FirstStackAllocationUsage.allocations.fromUs",
+        "FirstStackAllocationUsage.allocations.host",
+        "FirstStackAllocationUsage.allocations.id",
+        "FirstStackAllocationUsage.allocations.instanceUs",
+        "FirstStackAllocationUsage.allocations.toUs",
+        "FirstStackAllocationUsage.basis",
+        "FirstStackAllocationUsage.fromUs",
+        "FirstStackAllocationUsage.schema",
+        "FirstStackAllocationUsage.throughUs",
+        "FirstStackAllocationUsage.timestampComplete",
+        "FirstStackReportCapture.allocationUsage"
       ],
       "mechanism": "Immutable RunRecord projection with explicit populations, prefix completeness, bounded diagnostic selection and evidence-addressed lifecycle links",
       "model1": "unsupported",
@@ -2572,10 +2584,9 @@
         "FirstStackCostComparison.label",
         "FirstStackCostComparison.left",
         "FirstStackCostComparison.right",
-        "FirstStackReport.cost",
-        "FirstStackReportCapture.computeCost"
+        "FirstStackReport.cost"
       ],
-      "mechanism": "Frozen exact scoped EC2 tariff multiplied by complete explicit modeled host allocation sessions; shared roles charged once; labelled supported compute subtotal",
+      "mechanism": "Server-selected frozen exact scoped EC2 tariff multiplied by verified fixed-host occupancy; shared roles charged once; labelled supported compute subtotal",
       "model1": "unsupported",
       "model2": "supported-logical",
       "scope": "Conditional covered-meter arithmetic only. Missing/unsupported/expired quotes, missing/duplicate allocation usage and mixed currency are Unknown. Full cost remains Unknown with explicit exclusions. No monthly extrapolation, cloud calibration or Model 2 activation.",

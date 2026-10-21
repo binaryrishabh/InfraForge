@@ -44,6 +44,7 @@ test("retained browser fixtures are fingerprints computed by the current server 
   expect(serverCanonical(fixtureRows(await serverCases()))).toBe(serverCanonical(serverResults.cases));
 });
 test("report overflow matches the server's bounded Unknown fallback", async () => {
+  expect(captureBrowserReport).toBe(captureReport);
   const f = await firstStackCompileFixture(), prepared = f.prepare(), runtime = instantiatePreparedFirstStack(prepared);
   runtime.advanceTo(runtime.horizon);
   const e = runtime.evidence(), oversized = { ...e, resources: { large: "x".repeat(256 * 1024) } as unknown as typeof e.resources };
@@ -51,6 +52,20 @@ test("report overflow matches the server's bounded Unknown fallback", async () =
   expect(browser).toEqual(oracle); expect(browser.saturation.cpu).toBeNull();
   expect(browser.events).toEqual([]); expect(browser.selection.omitted).toBe(runtime.journal.measure().retained);
   expect(browser.unknown).toEqual(["Diagnostic capture exceeded its byte budget; saturation and selected causes are Unknown"]);
+  expect(browser.allocationUsage).toEqual(oracle.allocationUsage);
+});
+
+test("fixed host usage is unique across shared roles and survives process faults without provider data", async () => {
+  const { firstStackFaultFixture } = await import("../fixtures/first-stack-faults");
+  for (const fixture of [await firstStackCompileFixture(2, { shared: true }), await firstStackFaultFixture()]) {
+    const runtime = instantiatePreparedFirstStack(fixture.prepare()); runtime.advanceTo(runtime.horizon);
+    const capture = captureReport(runtime, runtime.evidence()), usage = capture.allocationUsage!;
+    expect(usage.allocations.length).toBe(fixture.sidecar.placement.length);
+    expect(new Set(usage.allocations.map(a => a.host)).size).toBe(usage.allocations.length);
+    for (const a of usage.allocations) expect(a).toMatchObject({ fromUs: 0, toUs: runtime.horizon, instanceUs: runtime.horizon });
+    expect(JSON.stringify(capture)).not.toContain("computeCost");
+    expect(JSON.stringify(capture)).not.toContain("OnDemand");
+  }
 });
 test("browser refuses mutated workload, wrong bundle identity and excessive budgets before runtime", async () => {
   const request = await browserFixture(); request.input.recording.rows[0]!.keys = ["cold"];

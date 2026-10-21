@@ -19,7 +19,7 @@ export const ReportCaptureSchema = z.object({ schema: z.literal("first-stack-rep
   saturation: z.object({ cpu: z.json(), resources: z.json(), sampledAtUs: count.nullable(), network: z.json(), data: z.json(), storage: z.json() }),
   events: z.array(event).max(128), selection: z.object({ roots: z.array(text).max(3), omitted: count, journalOmitted: count, policy: z.literal("first-3-roots-and-global/1") }),
   unknown: z.array(text),
-  computeCost: z.json().optional(),
+  allocationUsage: z.json().optional(),
 });
 const inputSchema = z.object({ policy: z.object({ seed: text, horizonUs: count.positive() }),
   candidate: z.object({ nodes: z.json(), paths: z.json(), placement: z.json() }).passthrough(), recording: z.json() });
@@ -38,7 +38,7 @@ export interface FirstStackStoredReportRow {
   lineage: { infrastructureId: string }; createdAt: Date; updatedAt?: Date;
 }
 // Read recorded schemas only. This reader never compiles, executes or resolves latest.
-export function firstStackReport(row: FirstStackStoredReportRow): FirstStackReport {
+export function firstStackReport(row: FirstStackStoredReportRow, serverTariffs?: unknown): FirstStackReport {
   const unknown = ["Cloud timing is assumption-only; physical throughput, full resident memory, physical DB buffer hits and full cost are Unknown."];
   const report: FirstStackReport = {
     schema: "infraforge-first-stack-report/1", origin: "unavailable", verification: { status: "pending", reason: null },
@@ -100,7 +100,11 @@ export function firstStackReport(row: FirstStackStoredReportRow): FirstStackRepo
     if (cut.interruption) unknown.push(`Executor interrupted (${cut.interruption.kind}): ${cut.interruption.reason}`);
     if (!cut.reportCapture) unknown.push("Historical cut has no report capture; saturation and exact causal chains are Unknown.");
     else attachCapture(report, cut.reportCapture, cut.throughUs);
-    report.cost = firstStackComputeCost(cut.reportCapture?.computeCost, input.candidate, cut.throughUs, cut.timestampComplete);
+    // Tariffs are server data and never enter cut bytes, replay or browser input.
+    // Only a matching completed server verification can qualify modeled usage.
+    report.cost = server && report.verification.status === "verified"
+      ? firstStackComputeCost(serverTariffs, cut.reportCapture?.allocationUsage, input.candidate, cut.throughUs, cut.timestampComplete)
+      : unknownComputeCost("Compute usage has no matching completed server verification");
     if (report.cost.subtotal.kind === "Unknown") unknown.push(`Supported compute subtotal is Unknown: ${report.cost.subtotal.reason}`);
     for (const d of report.latency) for (const t of d.percentiles) if (t.kind === "unknown") unknown.push(`${d.operation}/${d.outcome}/p${t.p * 100}: ${t.reason}`);
   } catch (error) {
@@ -114,7 +118,7 @@ export function firstStackReport(row: FirstStackStoredReportRow): FirstStackRepo
   return report;
 }
 
-function attachCapture(report: FirstStackReport, capture: FirstStackReportCapture, throughUs: number) {
+function attachCapture(report: FirstStackReport, capture: Omit<FirstStackReportCapture, "allocationUsage">, throughUs: number) {
   const ids = new Set<string>();
   for (const e of capture.events) {
     if (ids.has(e.id) || e.atUs > throughUs) throw Error("Invalid retained causal event identity or interval");

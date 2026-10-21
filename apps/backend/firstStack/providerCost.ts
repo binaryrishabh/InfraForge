@@ -11,12 +11,14 @@ const tariff = z.object({ id, version: id, source: text, policySources: z.array(
   aggregation: z.enum(["session", "window"]), per: id, increment: id, minimum: id,
   tiers: z.array(z.object({ from: id, to: id.nullable(), price: id }).strict()).min(1).max(64),
   provenance: z.enum(["provider-fact", "authored"]), exclusions: z.array(text).min(1).max(32) }).strict();
-export const computeCostEvidenceSchema = z.object({ schema: z.literal("first-stack-compute-cost/1"),
+export const computeTariffSelectionSchema = z.object({ schema: z.literal("first-stack-compute-tariffs/1"),
   window: z.object({ from: text, to: text, complete: z.boolean() }).strict(),
   allocations: z.array(z.object({ id, host: id, scope, tariff: tariff.nullable(), provenance: z.array(text).min(1).max(16) }).strict()).min(1).max(32),
-  events: z.array(z.object({ id, allocation: id, kind: z.enum(["allocated", "terminated"]), atUs: count }).strict()).max(64),
 }).strict();
-export type ComputeCostEvidence = z.infer<typeof computeCostEvidenceSchema>;
+export type ComputeTariffSelection = z.infer<typeof computeTariffSelectionSchema>;
+const allocationUsageSchema = z.object({ schema: z.literal("first-stack-allocation-usage/1"), basis: z.literal("modeled-fixed-host-window/1"),
+  fromUs: z.literal(0), throughUs: count.positive(), timestampComplete: z.boolean(),
+  allocations: z.array(z.object({ id, host: id, fromUs: count, toUs: count, instanceUs: count }).strict()).min(1).max(32) }).strict();
 const topologySchema = z.object({ nodes: z.array(z.object({ id, host: id, owner: id })).max(32), placement: z.array(z.object({ id })).max(32) });
 const exclusions = ["Unselected compute allocations", "Load balancer", "Relational database (no RDS inference)", "Cache",
   "Storage", "Backups", "Addresses", "Transfer", "Account-pool reconciliation, taxes and discounts"];
@@ -28,39 +30,41 @@ export function unknownComputeCost(reason: string): FirstStackComputeCost {
     fullCost: { kind: "Unknown", reason: "Missing LB/DB/cache/storage/backups/address/transfer/account-pool reconciliation; excluded components have no zero default" } };
 }
 
-// Read only frozen capture bytes. No clock, catalogue lookup, icon/SKU inference,
-// monthly extrapolation, or reinterpretation of process faults as allocation loss.
-export function firstStackComputeCost(value: unknown, topology: unknown, throughUs: number, timestampComplete: boolean): FirstStackComputeCost {
+// SERVER projection: tariffs are supplied separately from verified simulated
+// usage. No clock/catalog lookup, monthly extrapolation or cloud-state inference.
+export function firstStackComputeCost(value: unknown, usage: unknown, topology: unknown, throughUs: number, timestampComplete: boolean): FirstStackComputeCost {
   const result = unknownComputeCost("No eligible frozen tariff and complete selected allocation usage were recorded");
   if (value === undefined) return result;
   try {
     boundedJson(value, 64 * 1024);
-    const evidence = computeCostEvidenceSchema.parse(value), graph = topologySchema.parse(topology);
+    boundedJson(usage, 16 * 1024);
+    const evidence = computeTariffSelectionSchema.parse(value), observed = allocationUsageSchema.parse(usage), graph = topologySchema.parse(topology);
     result.window = evidence.window;
     const fail = (reason: string): never => { throw Error(reason); };
-    if (!timestampComplete || !evidence.window.complete) fail("Allocation aggregation window is incomplete");
+    if (!timestampComplete || !observed.timestampComplete || !evidence.window.complete || observed.throughUs !== throughUs) fail("Allocation aggregation window is incomplete or mismatched");
+    if (Date.parse(evidence.window.to) - Date.parse(evidence.window.from) !== Math.ceil(throughUs / 1000)) fail("Frozen tariff window does not match the verified usage interval");
     if (new Set(graph.nodes.map(n => n.id)).size !== graph.nodes.length || new Set(graph.placement.map(h => h.id)).size !== graph.placement.length) fail("Duplicate topology identity");
     const allocations = new Set(evidence.allocations.map(a => a.id));
-    if (allocations.size !== evidence.allocations.length || new Set(evidence.events.map(e => e.id)).size !== evidence.events.length) fail("Duplicate allocation or usage event identity");
-    if (evidence.events.some(e => !allocations.has(e.allocation) || e.atUs > throughUs)) fail("Usage event outside selected allocations or retained interval");
+    if (allocations.size !== evidence.allocations.length || new Set(observed.allocations.map(a => a.id)).size !== observed.allocations.length ||
+      new Set(observed.allocations.map(a => a.host)).size !== observed.allocations.length) fail("Duplicate allocation or host usage identity");
+    if (observed.allocations.some(a => a.fromUs !== 0 || a.toUs !== throughUs || a.instanceUs !== throughUs || !graph.placement.some(h => h.id === a.host))) fail("Fixed-host instance-time does not conserve the verified interval");
     const rows: Usage[] = [], prices: PriceRule[] = [];
     for (const a of evidence.allocations) {
       const roles = graph.nodes.filter(n => n.host === a.host);
       if (!graph.placement.some(h => h.id === a.host) || !roles.some(n => n.owner === "compute")) fail("Select an explicit compute host; relational/cache/LB icons and generic cores are not EC2 bindings");
-      const events = evidence.events.filter(e => e.allocation === a.id), starts = events.filter(e => e.kind === "allocated"), stops = events.filter(e => e.kind === "terminated");
-      if (starts.length !== 1 || stops.length !== 1 || events.length !== 2) fail("Missing or duplicate allocation start/termination usage; a prefix is not termination");
-      const fromUs = starts[0]!.atUs, toUs = stops[0]!.atUs;
-      if (toUs < fromUs) fail("Reversed allocation lifecycle interval");
+      const allocation = observed.allocations.find(u => u.id === a.id && u.host === a.host);
+      if (!allocation) throw Error("Selected allocation has no matching verified host usage");
+      const { fromUs, toUs } = allocation;
       if (!a.tariff || a.tariff.provenance !== "provider-fact" || !sameScope(a.scope, a.tariff.scope)) throw Error("Missing or unsupported exact provider/product/location/OS/tenancy/purchase tariff");
       const usage: Usage = { id: `${a.id}@${fromUs}`, resource: a.host, meter: "instance-us", fromUs, toUs,
         quantity: { numerator: String(toUs - fromUs), denominator: "1" }, scope: a.scope, basis: "derived",
-        provenance: [...a.provenance, ...events.map(e => `${e.id}:${e.kind}@${e.atUs}`), "Explicit modeled allocation boundaries; process crash/retry does not terminate allocation"] };
+        provenance: [...a.provenance, `${observed.basis}:${a.id}@${fromUs}..${toUs}`, "Verified fixed-host occupancy window; process crash/retry does not terminate allocation; horizon is not termination"] };
       // Validate every quote and row before exposing any covered charge.
       const priced = estimate(a.tariff, [usage], evidence.window);
       if (priced.kind === "Unknown") fail(priced.reason);
       rows.push(usage); prices.push(a.tariff);
     }
-    // The same physical host cannot be charged twice through shared roles or
+    // The same modeled host cannot be charged twice through shared roles or
     // overlapping allocation IDs, even if the selected tariff IDs differ.
     for (let i = 0; i < rows.length; i++) for (let j = 0; j < i; j++) {
       const a = rows[i]!, b = rows[j]!;

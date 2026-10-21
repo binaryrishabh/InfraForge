@@ -11,8 +11,14 @@ export interface FirstStackReportCapture {
   events: FirstStackEvidenceEvent[];
   selection: { roots: string[]; omitted: number; journalOmitted: number; policy: "first-3-roots-and-global/1" };
   unknown: string[];
-  /** Frozen offline selection and allocation boundaries; absent in older cuts. */
-  computeCost?: ReportJson;
+  /** Modeled fixed host occupancy only; no provider scope, prices or termination inference. */
+  allocationUsage?: FirstStackAllocationUsage;
+}
+export interface FirstStackAllocationUsage {
+  schema: "first-stack-allocation-usage/1";
+  basis: "modeled-fixed-host-window/1";
+  fromUs: 0; throughUs: number; timestampComplete: boolean;
+  allocations: Array<{ id: string; host: string; fromUs: number; toUs: number; instanceUs: number }>;
 }
 export interface FirstStackComputeCost {
   label: "supported compute subtotal";

@@ -1,36 +1,52 @@
 {
   "schema": "first-stack-cost-source-review/1",
-  "scope": "Data/logic only; explicit offline selection and allocation boundary evidence; no automatic usage or provider inference; Model 2 inactive",
+  "scope": "Server-only verified-usage cost assembly; shared pure modeled host occupancy capture; no tariffs in execution bytes, cloud-state inference or activation",
   "files": [
     {
       "path": "apps/backend/firstStack/providerCost.ts",
-      "hash": "3126931d2f063ad11feb7a9328818731ba83873ce10b162f264f6971bf057203"
+      "hash": "0a410eb1489eed820367af7a775438b3541db4176ca695cc25c948881151ab37"
     },
     {
       "path": "apps/backend/firstStack/report.ts",
-      "hash": "7623fc6af03164cd365b1588a22621f53f787acd763ba0845099863705573b5e"
+      "hash": "d32f6bfefc4933d5e643dc6770b197cf3b4dce02f1b1473646ade76b1d2b759e"
     },
     {
       "path": "apps/backend/firstStack/reportCapture.ts",
-      "hash": "bc8cd3ee397a4dc27fb1e6d6d233bb83d05fe1eee040afb64d90596bcaf5ad1a"
+      "hash": "4d6d7fc81d23645722fdf27d03f4ed58e11a1c0f96b05682c2537664b7425639"
     },
     {
       "path": "apps/backend/firstStack/executionCut.ts",
-      "hash": "5284c81c78cd0aa1fa22f38c7fcd71d78bf35b0c30b77fef8956e20d1c50019e"
+      "hash": "b5ff9fbacf544264d8ef15abb182127f27d2d540f3f810265bd93f20e755f534"
     },
     {
       "path": "packages/simulation/src/internalFirstStack.ts",
-      "hash": "39541f7884ee1067b442610e54d6751a510d399ab9805b3186445fc4ec2d45da"
+      "hash": "8ed5344e86a078308fed253c1c7c28b5812b47ac1ed558a91a6287db2edeb036"
     },
     {
       "path": "packages/contracts/src/reports/firstStack.ts",
-      "hash": "0a753d9d1b190b74d2a9f437f4acfc926817999fc584e2ec440c0555f150640e"
+      "hash": "bbdf16608ed1f6a8c97596ceb28c2d1be7394d5e3c9f6d177cb23b53fbd3391a"
+    },
+    {
+      "path": "packages/simulation/src/firstStack/reportCapture.ts",
+      "hash": "58273d39c01920589f6212fb25f1f130fa0a3de21397ef86b8ee762695d78d82"
+    },
+    {
+      "path": "apps/web/src/firstStack/worker/reportCapture.ts",
+      "hash": "c952ec8ebc590ebf85f184b6aee826dbc39b681729dd79e6561b144ce9f26693"
+    },
+    {
+      "path": "apps/backend/runRecords/firstStack.ts",
+      "hash": "69637e2762b70bb3c7bf21b4b33c0ff5c168146c7474a64cf68ef523ae985dce"
     }
   ],
   "acceptance": [
     {
       "path": "scripts/tests/first-stack-cost.test.ts",
-      "hash": "5d663b894d57f08f283bdf04c205869e153163107678e95ca40240d64ee17338"
+      "hash": "5b79f2afaae4aa7116a17c012d2507190363afbcab097195f92d2537077c193e"
+    },
+    {
+      "path": "scripts/tests/browserRunner.test.ts",
+      "hash": "7631b577dc269245a31205f9f4a325737b978ecf97834fcfc647173c36b6622d"
     }
   ]
 }
