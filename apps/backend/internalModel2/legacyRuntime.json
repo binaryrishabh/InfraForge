@@ -1375,6 +1375,10 @@
       "hash": "362ed8b4509ff784cba57017b4581914c8af56e576c3be27de61c74c1ad29b94"
     },
     {
+      "path": "packages/simulation/src/model2/composition/io-budget.ts",
+      "hash": "3c1cec82eed2fc837cc62abf5e34110196dc41312b4983fdbc7d906058944b90"
+    },
+    {
       "path": "packages/simulation/src/model2/composition/lifecycle.ts",
       "hash": "33554d10000b6ffcd1bf17c3235bfe99cd0a995968978bd1cd8a1a426531fbd9"
     },
@@ -1384,7 +1388,7 @@
     },
     {
       "path": "packages/simulation/src/model2/composition/run.ts",
-      "hash": "4861bf6e7cc0046c665e01316327c582781f5e08205a77080a037a40e0685e12"
+      "hash": "597fec1e7bdafdabe5f42948860a4ef4d9503c5d03a78184cb527f24286eaac7"
     },
     {
       "path": "packages/simulation/src/model2/composition/token-bucket.ts",
@@ -1448,7 +1452,15 @@
     },
     {
       "path": "packages/simulation/src/model2/data/database.ts",
-      "hash": "818065a584a3bec6f3e837bf8bfa6a199e49178fc720bc58565d09667e1b5daf"
+      "hash": "501fb48fefee8b9dc16d319a12d8824e3e6406de16a82620416a15dd1731f437"
+    },
+    {
+      "path": "packages/simulation/src/model2/data/io-contract.ts",
+      "hash": "6ebf93bd698cd7d5bbd63b6af3c54d4c4f23996df7778f65b85e61f673b98c21"
+    },
+    {
+      "path": "packages/simulation/src/model2/data/io.ts",
+      "hash": "2af1defe18c439780f2f1da1c753b8bce427b2be0da4d88595817fb62bf81f08"
     },
     {
       "path": "packages/simulation/src/model2/data/locks.ts",
@@ -1456,7 +1468,7 @@
     },
     {
       "path": "packages/simulation/src/model2/data/modules.ts",
-      "hash": "d3d197b1907e1476d3db95b2ec5d7f705043e0916143fb9d8bd803428b73c142"
+      "hash": "a2fd36349090c129111897525fa37f774e0f398b8920aa2472c60d09eddc9313"
     },
     {
       "path": "packages/simulation/src/model2/data/policy.ts",
@@ -1464,7 +1476,7 @@
     },
     {
       "path": "packages/simulation/src/model2/data/run.ts",
-      "hash": "5df2709c8b04aa8fdac1dfada2a26837731a1e3b5bdcad74251448d4cc7da782"
+      "hash": "c1f5ae495c0ded7dd08d7b70836c58f9779400fbdf06bed23f144d43e5448505"
     },
     {
       "path": "packages/simulation/src/model2/data/validate.ts",
@@ -1815,6 +1827,14 @@
       "hash": "95e565b4ec2c1e49874c1518f8c036e2d5f3388aa9abbdd50ae349086c6e6a97"
     },
     {
+      "path": "packages/simulation/tests/finiteIo.test.ts",
+      "hash": "2a07afc05774e36f61a7304c3df50fd5e6ec2dc30ff3ca7751b8b7c0a34e720d"
+    },
+    {
+      "path": "packages/simulation/tests/finiteIoFixture.ts",
+      "hash": "b2e3bdccca7ebeac23c25f2c3f07bb0e3357ded29f3abf684ff4b55c716eecc5"
+    },
+    {
       "path": "packages/simulation/tests/jitterAlignment.test.ts",
       "hash": "520550a5feb2ea77a9755b6861f655adc0e32cef2eed867f26d63fcca6648816"
     },
@@ -1944,7 +1964,7 @@
     },
     {
       "path": "scripts/reality/composition-host-proof.ts",
-      "hash": "3b5271f59559944c8ee82fe06705f99b65aac7908a83f000a87181552e134182"
+      "hash": "886a0d1ccfaaed300be720ade6c15d1eb89adf9eac73fc7eca6b438fba8569d2"
     },
     {
       "path": "scripts/reality/composition-proofs.ts",
@@ -1973,6 +1993,10 @@
     {
       "path": "scripts/reality/data-proofs.ts",
       "hash": "12f62f9e1618454cb867e8f806b4af4f2bb8be34b0dbeaefb8b1e545874c3d3c"
+    },
+    {
+      "path": "scripts/reality/finite-io-proof.ts",
+      "hash": "38419e6d2f629d44d40b86d3309c9c57842a6bc4522e8577230e82437a5fccc4"
     },
     {
       "path": "scripts/reality/first-stack-baseline.ts",
@@ -2224,7 +2248,11 @@
     },
     {
       "path": "scripts/tests/execution-identity.test.ts",
-      "hash": "2724e0e11cb0e66570af24c8be55698d8bd1cb6a50c2db2d3d3118e8b65d771a"
+      "hash": "7f40c9c938d1c45d2a9c48268657d5cdad9e0e6d268bbdd4f1566dcdd447f39a"
+    },
+    {
+      "path": "scripts/tests/finite-io.test.ts",
+      "hash": "2b72dc378942eb8cb4cfc675c56be7c5f399dffe4c98eca7f627b35f158554a3"
     },
     {
       "path": "scripts/tests/first-stack-bounds.test.ts",

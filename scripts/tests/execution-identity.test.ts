@@ -74,8 +74,9 @@ test("history reconstructs without Git and only reviewed digests resolve", () =>
   expect(isolated.exitCode).toBe(0);
   expect(JSON.parse(isolated.stdout.toString()).current).toBe(executionSource);
   const { table, pin } = loadTransitions(repositoryRoot);
-  expect(table.entries.length).toBe(44);
+  expect(table.entries.length).toBe(45);
   expect(table.entries.some((row: { commit: string }) => row.commit === "8a33e644691199a3282dec9e0125cf08b813a786")).toBe(true);
+  expect(table.entries.some((row: { commit: string }) => row.commit === "15c5448af26bfda816321dfbcd91b46ed822d6b8")).toBe(true);
   for (const commit of ["6501ad38e0b42a20a67e3122ea64ce4c886f7d63", "aa1e61271dd12c1d7bb8d18fee572e8ac1a9c500"]) expect(table.entries.some((row: { commit: string }) => row.commit === commit)).toBe(true);
   expect(table.entries.some((row: { commit: string }) => row.commit === "8141673ffcb48d0ac6d9855ea9fe46a563095cc4")).toBe(true);
   expect(table.entries.find((row: { source: string }) => row.source === "02c54db8f4bb73b5e340ae79dbfd6ece39c52360ab776ac285988e33e92e8240"))
