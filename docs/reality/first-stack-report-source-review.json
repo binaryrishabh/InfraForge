@@ -50,7 +50,7 @@
   "acceptance": [
     {
       "path": "apps/backend/tests/firstStackReport.test.ts",
-      "hash": "ed8cdea464507af16a5b8c59fa7abda5edb5a35579617cea8c1359a384553e54"
+      "hash": "84287ad7e611f50b52417008cdef45aaba635fd5b4d2e60af65a05764cb24bf5"
     },
     {
       "path": "apps/backend/tests/integration/firstStackSubmission.integration.test.ts",
@@ -58,7 +58,11 @@
     },
     {
       "path": "scripts/tests/first-stack-report.test.ts",
-      "hash": "75012bc4cd033da5ed09249b5df11ceb341113b57e30a5836e12a103666658d4"
+      "hash": "181d209ee78518a21df418ac3e6a0e05f3d58a076c15a3be22878e2556023b46"
+    },
+    {
+      "path": "scripts/tests/first-stack-report-data.test.ts",
+      "hash": "d540de1e220343c1796f40be5d897fcdf390b16fa5a24ed1e2518461c0bea21d"
     }
   ]
 }

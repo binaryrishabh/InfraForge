@@ -10,7 +10,7 @@ const files = ["apps/backend/firstStack/report.ts", "apps/backend/firstStack/rep
   "apps/backend/firstStack/executionCut.ts", "apps/backend/firstStack/isolationProtocol.ts", "apps/backend/runRecords/firstStack.ts",
   "apps/backend/runRecords/adapters.ts", "packages/simulation/src/firstStack/journal.ts", "packages/contracts/src/reports/firstStack.ts",
   "packages/contracts/src/reports/index.ts", "scripts/reality/launch-contract.ts"];
-const acceptance = ["apps/backend/tests/firstStackReport.test.ts", "apps/backend/tests/integration/firstStackSubmission.integration.test.ts", "scripts/tests/first-stack-report.test.ts"];
+const acceptance = ["apps/backend/tests/firstStackReport.test.ts", "apps/backend/tests/integration/firstStackSubmission.integration.test.ts", "scripts/tests/first-stack-report.test.ts", "scripts/tests/first-stack-report-data.test.ts"];
 const path = "apps/backend/executionIdentity/capabilityReviews.json", reviews = JSON.parse(read(path));
 for (const path of files.filter(p => !p.startsWith("scripts/") && !p.startsWith("packages/contracts/"))) {
   const old = reviews[path];
