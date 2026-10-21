@@ -91,7 +91,13 @@ jobs:
       - run: bun install --frozen-lockfile
       # Browser tooling is test-only; keep the application lockfile/runtime unchanged.
       - run: npm install --prefix /tmp/infraforge-browser --no-save --package-lock=false playwright@1.64.1
-      - run: node /tmp/infraforge-browser/node_modules/playwright/cli.js install --with-deps chromium
+      - run: node /tmp/infraforge-browser/node_modules/playwright/cli.js install --with-deps chromium firefox webkit
+      - run: bun --no-env-file run db:generate
+        working-directory: apps/backend
+      - run: bun --no-env-file scripts/browser-first-stack/pin.ts
+      - run: bun --no-env-file scripts/browser-first-stack/determinism.ts
+      - run: node scripts/browser-first-stack/build.mjs
+      - run: bun --no-env-file scripts/browser-first-stack/determinism.ts --worker --vite
       - run: bun run test:integration
       - run: bun --no-env-file scripts/verify-internal-model2-proof.ts /tmp/infraforge-model2-*.json
       - run: bun --no-env-file scripts/verify-internal-model2-proof.ts docs/reality/m2k-product-proof.json
