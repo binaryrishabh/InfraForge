@@ -10,7 +10,7 @@ export async function submissionFixture(owner = "submission-test") {
   const fixture = firstStackFixture(1), old = fixture.sidecar;
   const pool = { reuse: true, establishUs: 2, acquireTimeoutUs: 1000, connectTimeoutUs: 1000,
     responseTimeoutUs: 1000, idleTimeoutUs: null, remoteCancellation: "detach" as const };
-  const sidecar: FirstStackSidecarV2 = { ...old, schema: "infraforge-first-stack-sidecar/2", compiler: "first-stack-compiler/2",
+  const sidecar: FirstStackSidecarV2 = { ...old, schema: "infraforge-first-stack-sidecar/2", compiler: "first-stack-compiler/2", workload: null,
     nodes: old.nodes.map(n => ({ ...n, alive: true, ready: true, reservationBytes: n.owner === "load-balancer" ? 0 : 100 })),
     placement: old.placement.map(h => ({ ...h, memoryBytes: 1024 })),
     caller: { ...old.caller, pool }, paths: old.paths.map(p => ({ ...p, pool })), links: [],
