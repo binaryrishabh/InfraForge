@@ -1,6 +1,6 @@
 {
   "schema": "execution-loading-analysis/1",
-  "policy": "e5370a57266b4b2fe0c53955f9000e77f32242f7eccbc27c3e8fc80a04ae97c7",
+  "policy": "c4e2de0935e5283f5c1d8fbccd103660eaeb48428966f33435c499aece3afa0a",
   "modules": {
     "apps/backend/actions/contract.ts": {
       "hash": "cb4d5860ab0805ccf009c47e453ed89c12e52e564c95e470a1cfbb23e18fb24d",
@@ -984,6 +984,35 @@
         }
       ]
     },
+    "apps/backend/firstStack/boundedExecution.ts": {
+      "hash": "9699fc959bca20eb76c802668980b659325b59118e270295d0a4a8b2b8baf2a9",
+      "requests": [
+        {
+          "path": "node:os",
+          "kind": "import-statement"
+        },
+        {
+          "path": "node:perf_hooks",
+          "kind": "import-statement"
+        },
+        {
+          "path": "node:timers/promises",
+          "kind": "import-statement"
+        },
+        {
+          "path": "@infraforge/simulation/internal-first-stack",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./execution",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./executionCut",
+          "kind": "import-statement"
+        }
+      ]
+    },
     "apps/backend/firstStack/canonical.ts": {
       "hash": "49f240e1016d0540eb13f3908543c2016986a87eb0b0dce5669dfeab376fa2f4",
       "requests": [
@@ -1026,6 +1055,15 @@
         }
       ]
     },
+    "apps/backend/firstStack/executionCut.ts": {
+      "hash": "6325b8351608de84bad72a7719ab907b5b13819ee5e758579a488b62a171d3bf",
+      "requests": [
+        {
+          "path": "@infraforge/simulation/internal-first-stack",
+          "kind": "import-statement"
+        }
+      ]
+    },
     "apps/backend/firstStack/importStream.ts": {
       "hash": "0d2f232bd112e59bb0fe67270444ffe81d9ebc3084bcd324866e0c06f00d2c7e",
       "requests": [
@@ -1039,6 +1077,179 @@
         },
         {
           "path": "./workload",
+          "kind": "import-statement"
+        }
+      ]
+    },
+    "apps/backend/firstStack/isolatedExecution.ts": {
+      "hash": "23cb85be6b480e4e00fec4604a1ccb155e1f43908207c5913f86c405b1f93512",
+      "requests": [
+        {
+          "path": "./isolationRunner",
+          "kind": "import-statement"
+        }
+      ]
+    },
+    "apps/backend/firstStack/isolationChild.ts": {
+      "hash": "2d096d039f394a76b3989a72d8a5211c23495a46f6551a301258b5407c78d752",
+      "requests": [
+        {
+          "path": "node:fs",
+          "kind": "import-statement"
+        },
+        {
+          "path": "node:events",
+          "kind": "import-statement"
+        },
+        {
+          "path": "../internalModel2/identity",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./execution",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./boundedExecution",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./isolationReplay",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./isolationProtocol",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./isolationPolicy",
+          "kind": "import-statement"
+        },
+        {
+          "path": "@infraforge/simulation/internal-first-stack",
+          "kind": "import-statement"
+        }
+      ]
+    },
+    "apps/backend/firstStack/isolationConnection.ts": {
+      "hash": "13c2a168cc178a4ad53080716564545add86f9e95e081884f414d3b51d6b774c",
+      "requests": [
+        {
+          "path": "node:child_process",
+          "kind": "import-statement"
+        },
+        {
+          "path": "node:fs/promises",
+          "kind": "import-statement"
+        },
+        {
+          "path": "node:os",
+          "kind": "import-statement"
+        },
+        {
+          "path": "node:path",
+          "kind": "import-statement"
+        },
+        {
+          "path": "../internalModel2/dockerConnection",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./isolationPolicy",
+          "kind": "import-statement"
+        }
+      ]
+    },
+    "apps/backend/firstStack/isolationContainer.ts": {
+      "hash": "fe8576dc73782838f8d67d1477ffb30823747c98a0945312f56540701ca0615f",
+      "requests": [
+        {
+          "path": "./isolationPolicy",
+          "kind": "import-statement"
+        }
+      ]
+    },
+    "apps/backend/firstStack/isolationOwnership.ts": {
+      "hash": "032fae30c68140dbe44ae7fcdf78ca4218a50281e1d292375395c215d0a28b4f",
+      "requests": [
+        {
+          "path": "pg",
+          "kind": "import-statement"
+        }
+      ]
+    },
+    "apps/backend/firstStack/isolationPolicy.ts": {
+      "hash": "66d2d1a4cb4ffd62a7379f013a027a0e157928458d364134718cb253199e87c0",
+      "requests": [
+        {
+          "path": "node:crypto",
+          "kind": "import-statement"
+        }
+      ]
+    },
+    "apps/backend/firstStack/isolationProtocol.ts": {
+      "hash": "565fcf3c9c9b500ba4f9395f4deb2f947f07d1e4e4bf2c344462beb90ef6fad5",
+      "requests": [
+        {
+          "path": "./canonical",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./isolationPolicy",
+          "kind": "import-statement"
+        }
+      ]
+    },
+    "apps/backend/firstStack/isolationReplay.ts": {
+      "hash": "138b3d8c1a3333d60d42a2f50dfb6c2054b83e6318433fc2824edc90dd2a63d7",
+      "requests": [
+        {
+          "path": "node:timers/promises",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./execution",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./executionCut",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./isolationProtocol",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./canonical",
+          "kind": "import-statement"
+        }
+      ]
+    },
+    "apps/backend/firstStack/isolationRunner.ts": {
+      "hash": "668d342bece7becb192333287dd72a87cf718fab85c42c2a8f4a053388cbee64",
+      "requests": [
+        {
+          "path": "node:crypto",
+          "kind": "import-statement"
+        },
+        {
+          "path": "../internalModel2/dockerConnection",
+          "kind": "import-statement"
+        },
+        {
+          "path": "../executionIdentity/launch",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./isolationContainer",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./isolationPolicy",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./isolationProtocol",
           "kind": "import-statement"
         }
       ]

@@ -2248,7 +2248,7 @@
     },
     {
       "path": "scripts/tests/execution-identity.test.ts",
-      "hash": "7f40c9c938d1c45d2a9c48268657d5cdad9e0e6d268bbdd4f1566dcdd447f39a"
+      "hash": "1ed0d8838d703f34d5b94741cecc8d265df308c1454449703ff8f7d2e40984ec"
     },
     {
       "path": "scripts/tests/finite-io.test.ts",
@@ -2265,6 +2265,10 @@
     {
       "path": "scripts/tests/first-stack-compile.test.ts",
       "hash": "59c23c540b907add8f9162ac8239bc1dcc7e1df0e0072ab514b0ca9bb274589a"
+    },
+    {
+      "path": "scripts/tests/first-stack-isolation.test.ts",
+      "hash": "085f35d80a5c6af5fea42e3cdf131902ed292ebdc508a7b9a1e4b4dd01f311c4"
     },
     {
       "path": "scripts/tests/first-stack-profile.test.ts",

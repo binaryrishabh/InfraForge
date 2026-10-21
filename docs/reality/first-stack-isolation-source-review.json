@@ -1,6 +1,6 @@
 {
   "schema": "first-stack-isolation-source-review/1",
-  "baseline": "f2dff02faaf46f65fa441e722fc5391ea8ae3d77",
+  "baseline": "5278b1444e113040677b081a56ead1bcbb4b84d3",
   "scope": "New isolated execute/replay service boundary; Model 1 active, Model 2 inactive; unchanged IO/fault mechanisms",
   "files": [
     {

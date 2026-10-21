@@ -44212,6 +44212,14 @@
     },
     {
       "owner": null,
+      "file": "apps/backend/firstStack/boundedExecution.ts",
+      "specifier": "@infraforge/simulation/internal-first-stack",
+      "kind": "import-statement",
+      "targetOwner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "targetFile": "src/internalFirstStack.ts"
+    },
+    {
+      "owner": null,
       "file": "apps/backend/firstStack/execution.ts",
       "specifier": "@infraforge/contracts/first-stack",
       "kind": "import-statement",
@@ -44236,6 +44244,14 @@
     },
     {
       "owner": null,
+      "file": "apps/backend/firstStack/executionCut.ts",
+      "specifier": "@infraforge/simulation/internal-first-stack",
+      "kind": "import-statement",
+      "targetOwner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "targetFile": "src/internalFirstStack.ts"
+    },
+    {
+      "owner": null,
       "file": "apps/backend/firstStack/importStream.ts",
       "specifier": "@infraforge/contracts/first-stack",
       "kind": "import-statement",
@@ -44249,6 +44265,22 @@
       "kind": "import-statement",
       "targetOwner": "zod@4.4.3:12",
       "targetFile": "index.js"
+    },
+    {
+      "owner": null,
+      "file": "apps/backend/firstStack/isolationChild.ts",
+      "specifier": "@infraforge/simulation/internal-first-stack",
+      "kind": "import-statement",
+      "targetOwner": "@infraforge/simulation@workspace:packages/simulation:158",
+      "targetFile": "src/internalFirstStack.ts"
+    },
+    {
+      "owner": null,
+      "file": "apps/backend/firstStack/isolationOwnership.ts",
+      "specifier": "pg",
+      "kind": "import-statement",
+      "targetOwner": "pg@8.22.0:170",
+      "targetFile": "esm/index.mjs"
     },
     {
       "owner": null,

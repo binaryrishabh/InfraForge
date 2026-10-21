@@ -101,7 +101,7 @@ type Requests = ReturnType<Bun.Transpiler["scan"]>["imports"];
 export interface AnalysisContract { schema: string; policy: string; modules: Record<string, { hash: string; requests: Requests }> }
 // This pin is an explicit review of the generated analysis, never a writable
 // runtime cache. Core verifier files are always analysed and cannot pin themselves.
-const analysisPin = "99cfa2bdfb133126a63d292e9db8323dd1286518ff03b73f539551dd441bc218";
+const analysisPin = "fd955c7e2c135f5c5638e9078027e8e5f970734eb56f49b6b9cf00119c73e14a";
 let fullAnalysis = false, approvedAnalysis: AnalysisContract | undefined;
 export function withFullLoadingAnalysis<T>(run: () => T): T {
   const previous = fullAnalysis; fullAnalysis = true;
@@ -172,7 +172,8 @@ export function verifyModuleLoading(text: string, path: string) {
   const ast = parse(code, { ecmaVersion: "latest", sourceType: "module", allowReturnOutsideFunction: true, allowAwaitOutsideFunction: true });
   const global = globalReferences(ast as unknown as Syntax);
   // Authored exceptions are frozen adapters, not path-wide permissions.
-  const processAdapter = normalized.endsWith("apps/backend/internalModel2/dockerConnection.ts") && sourceHash(text) === "614e7e40f425cfd19edc0c8d789e9b0cf622e291d9f110d4026c3ca0911cff02";
+  const processAdapter = normalized.endsWith("apps/backend/internalModel2/dockerConnection.ts") && sourceHash(text) === "614e7e40f425cfd19edc0c8d789e9b0cf622e291d9f110d4026c3ca0911cff02" ||
+    normalized.endsWith("apps/backend/firstStack/isolationConnection.ts") && sourceHash(text) === "13c2a168cc178a4ad53080716564545add86f9e95e081884f414d3b51d6b774c";
   const errorAdapter = normalized.endsWith("apps/backend/utils/errors.ts") && sourceHash(text) === "bb936198f6a1a31a0c5b70cfd945e7922f69438e0888af6ec0c2fa54350b89fa";
   const permissions = exact?.capabilities ?? [];
   const reviewedGlobals = review?.globals?.hash === sourceHash(text) ? review.globals.names : [];

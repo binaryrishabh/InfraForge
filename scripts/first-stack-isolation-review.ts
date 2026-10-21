@@ -1,4 +1,5 @@
 import { readFileSync, writeFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
 import { sourceHash } from "../apps/backend/executionIdentity/hash";
 
 // Explicit review of this slice's new entrypoints; retain historical runtime
@@ -8,6 +9,21 @@ const folder = "apps/backend/firstStack/";
 const modules = ["boundedExecution", "executionCut", "isolationPolicy", "isolationProtocol", "isolationConnection",
   "isolationContainer", "isolationRunner", "isolationChild", "isolationReplay", "isolatedExecution", "isolationOwnership"].map(p => folder + p + ".ts");
 const read = (path: string) => readFileSync(path, "utf8").replaceAll("\r\n", "\n");
+const baseline = "5278b1444e113040677b081a56ead1bcbb4b84d3";
+const original = (path: string) => execFileSync("git", ["show", `${baseline}:${path}`], { encoding: "utf8", maxBuffer: 4 * 1024 * 1024 }).replaceAll("\r\n", "\n");
+const acceptancePath = "scripts/tests/execution-identity.test.ts";
+const expectedAcceptance = original(acceptancePath).replace("  expect(table.entries.length).toBe(45);",
+  '  expect(table.entries.length).toBe(46);\n  expect(table.entries.some((row: { commit: string }) => row.commit === "5278b1444e113040677b081a56ead1bcbb4b84d3")).toBe(true);');
+if (read(acceptancePath) !== expectedAcceptance) throw Error("Isolation acceptance permits only the new main transition count and retained baseline assertion");
+const lockPath = "docs/reality/first-stack-source-review.json", before = JSON.parse(original(lockPath)), expected = structuredClone(before);
+for (const row of [...expected.files, ...expected.acceptance]) {
+  const hash = sourceHash(read(row.path));
+  if ([folder + "boundedExecution.ts", acceptancePath].includes(row.path)) row.hash = hash;
+  else if (row.hash !== hash) throw Error(`Outside isolation source/acceptance review: ${row.path}`);
+}
+const current = JSON.parse(read(lockPath));
+if (![before, expected].some(value => JSON.stringify(value) === JSON.stringify(current))) throw Error("Unrelated first-stack source review changed");
+writeFileSync(lockPath, JSON.stringify(expected, null, 2) + "\n");
 const loadingPath = "apps/backend/executionIdentity/loading.ts";
 const adapter = `normalized.endsWith("apps/backend/firstStack/isolationConnection.ts") && sourceHash(text) === "${sourceHash(read(folder + "isolationConnection.ts"))}"`;
 let loading = read(loadingPath);
@@ -29,7 +45,7 @@ for (const path of ["apps/backend/executionIdentity/loading.ts", "apps/backend/e
 }
 writeFileSync(reviewPath, JSON.stringify(reviews, null, 2) + "\n");
 writeFileSync("docs/reality/first-stack-isolation-source-review.json", JSON.stringify({
-  schema: "first-stack-isolation-source-review/1", baseline: "f2dff02faaf46f65fa441e722fc5391ea8ae3d77",
+  schema: "first-stack-isolation-source-review/1", baseline,
   scope: "New isolated execute/replay service boundary; Model 1 active, Model 2 inactive; unchanged IO/fault mechanisms",
   files: [...modules, "apps/backend/executionIdentity/descriptor.ts", "apps/backend/executionIdentity/launch.ts"].map(path => ({ path, hash: sourceHash(read(path)) })),
 }, null, 2) + "\n");

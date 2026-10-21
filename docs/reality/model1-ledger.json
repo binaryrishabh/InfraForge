@@ -312,7 +312,7 @@
     },
     {
       "file": "apps/backend/executionIdentity/descriptor.ts",
-      "sha256": "a58c63e35282a73225ad2c7d5c9b9e483ac28f79999621ae91eec484a3aa2378",
+      "sha256": "7cb2d8d505cd905abefb712038a9bb4e6242dfe5b35a50a06268b0e4f475f5a9",
       "numericSites": 4
     },
     {
@@ -327,7 +327,7 @@
     },
     {
       "file": "apps/backend/executionIdentity/launch.ts",
-      "sha256": "e45321ed112686f52f1e4dbde3444399bcf521940ec5e956c06e6a8446dc1ca3",
+      "sha256": "231e750310e895f391314042abe50b37170f1b4b2d800d1a32b1a697defa8537",
       "numericSites": 3
     },
     {
@@ -342,7 +342,7 @@
     },
     {
       "file": "apps/backend/executionIdentity/loading.ts",
-      "sha256": "9cbae211368e5382181d20a4fc36b1272070ff014c1221cefb57cadecbf2d9b6",
+      "sha256": "9e36207fd00d31bee105e1c6ec6c9464af4b5ffc6011cf4ed35d942d531aa5cb",
       "numericSites": 14
     },
     {
@@ -377,8 +377,8 @@
     },
     {
       "file": "apps/backend/firstStack/boundedExecution.ts",
-      "sha256": "b1989ea584f447e90c43fa54d50c3597f8efdbf3a7be8928e937b585ffcbd7cb",
-      "numericSites": 6
+      "sha256": "9699fc959bca20eb76c802668980b659325b59118e270295d0a4a8b2b8baf2a9",
+      "numericSites": 4
     },
     {
       "file": "apps/backend/firstStack/canonical.ts",
@@ -391,9 +391,59 @@
       "numericSites": 14
     },
     {
+      "file": "apps/backend/firstStack/executionCut.ts",
+      "sha256": "6325b8351608de84bad72a7719ab907b5b13819ee5e758579a488b62a171d3bf",
+      "numericSites": 2
+    },
+    {
       "file": "apps/backend/firstStack/importStream.ts",
       "sha256": "0d2f232bd112e59bb0fe67270444ffe81d9ebc3084bcd324866e0c06f00d2c7e",
       "numericSites": 8
+    },
+    {
+      "file": "apps/backend/firstStack/isolatedExecution.ts",
+      "sha256": "23cb85be6b480e4e00fec4604a1ccb155e1f43908207c5913f86c405b1f93512",
+      "numericSites": 0
+    },
+    {
+      "file": "apps/backend/firstStack/isolationChild.ts",
+      "sha256": "2d096d039f394a76b3989a72d8a5211c23495a46f6551a301258b5407c78d752",
+      "numericSites": 12
+    },
+    {
+      "file": "apps/backend/firstStack/isolationConnection.ts",
+      "sha256": "13c2a168cc178a4ad53080716564545add86f9e95e081884f414d3b51d6b774c",
+      "numericSites": 7
+    },
+    {
+      "file": "apps/backend/firstStack/isolationContainer.ts",
+      "sha256": "fe8576dc73782838f8d67d1477ffb30823747c98a0945312f56540701ca0615f",
+      "numericSites": 9
+    },
+    {
+      "file": "apps/backend/firstStack/isolationOwnership.ts",
+      "sha256": "032fae30c68140dbe44ae7fcdf78ca4218a50281e1d292375395c215d0a28b4f",
+      "numericSites": 8
+    },
+    {
+      "file": "apps/backend/firstStack/isolationPolicy.ts",
+      "sha256": "66d2d1a4cb4ffd62a7379f013a027a0e157928458d364134718cb253199e87c0",
+      "numericSites": 31
+    },
+    {
+      "file": "apps/backend/firstStack/isolationProtocol.ts",
+      "sha256": "565fcf3c9c9b500ba4f9395f4deb2f947f07d1e4e4bf2c344462beb90ef6fad5",
+      "numericSites": 14
+    },
+    {
+      "file": "apps/backend/firstStack/isolationReplay.ts",
+      "sha256": "138b3d8c1a3333d60d42a2f50dfb6c2054b83e6318433fc2824edc90dd2a63d7",
+      "numericSites": 2
+    },
+    {
+      "file": "apps/backend/firstStack/isolationRunner.ts",
+      "sha256": "668d342bece7becb192333287dd72a87cf718fab85c42c2a8f4a053388cbee64",
+      "numericSites": 13
     },
     {
       "file": "apps/backend/firstStack/persistence.ts",
@@ -23451,7 +23501,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/loading.ts#L230",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/loading.ts#L231",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -23465,7 +23515,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/executionIdentity/loading.ts",
-        "line": 230,
+        "line": 231,
         "column": 127
       }
     },
@@ -23487,7 +23537,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/loading.ts#L230",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/loading.ts#L231",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -23501,7 +23551,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/executionIdentity/loading.ts",
-        "line": 230,
+        "line": 231,
         "column": 171
       }
     },
@@ -23523,7 +23573,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/loading.ts#L231",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/loading.ts#L232",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -23537,7 +23587,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/executionIdentity/loading.ts",
-        "line": 231,
+        "line": 232,
         "column": 272
       }
     },
@@ -23559,7 +23609,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/loading.ts#L231",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/loading.ts#L232",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -23573,7 +23623,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/executionIdentity/loading.ts",
-        "line": 231,
+        "line": 232,
         "column": 321
       }
     },
@@ -23595,7 +23645,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/loading.ts#L234",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/loading.ts#L235",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -23609,7 +23659,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/executionIdentity/loading.ts",
-        "line": 234,
+        "line": 235,
         "column": 112
       }
     },
@@ -23631,7 +23681,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/loading.ts#L235",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/loading.ts#L236",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -23645,7 +23695,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/executionIdentity/loading.ts",
-        "line": 235,
+        "line": 236,
         "column": 131
       }
     },
@@ -23667,7 +23717,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/loading.ts#L235",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/loading.ts#L236",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -23681,7 +23731,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/executionIdentity/loading.ts",
-        "line": 235,
+        "line": 236,
         "column": 201
       }
     },
@@ -23703,7 +23753,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/loading.ts#L236",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/loading.ts#L237",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -23717,7 +23767,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/executionIdentity/loading.ts",
-        "line": 236,
+        "line": 237,
         "column": 87
       }
     },
@@ -23739,7 +23789,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/loading.ts#L237",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/loading.ts#L238",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -23753,7 +23803,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/executionIdentity/loading.ts",
-        "line": 237,
+        "line": 238,
         "column": 81
       }
     },
@@ -23775,7 +23825,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/loading.ts#L243",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/loading.ts#L244",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -23789,7 +23839,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/executionIdentity/loading.ts",
-        "line": 243,
+        "line": 244,
         "column": 51
       }
     },
@@ -23811,7 +23861,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/loading.ts#L243",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/executionIdentity/loading.ts#L244",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -23825,7 +23875,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/executionIdentity/loading.ts",
-        "line": 243,
+        "line": 244,
         "column": 94
       }
     },
@@ -27339,7 +27389,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/firstStack/boundedExecution.ts#L29",
+          "source": "workspace:apps/backend/firstStack/boundedExecution.ts#L20",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -27353,7 +27403,7 @@
       "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
       "location": {
         "file": "apps/backend/firstStack/boundedExecution.ts",
-        "line": 29,
+        "line": 20,
         "column": 48
       }
     },
@@ -27375,7 +27425,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/firstStack/boundedExecution.ts#L41",
+          "source": "workspace:apps/backend/firstStack/boundedExecution.ts#L32",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -27389,7 +27439,7 @@
       "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
       "location": {
         "file": "apps/backend/firstStack/boundedExecution.ts",
-        "line": 41,
+        "line": 32,
         "column": 94
       }
     },
@@ -27411,7 +27461,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/firstStack/boundedExecution.ts#L41",
+          "source": "workspace:apps/backend/firstStack/boundedExecution.ts#L32",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -27425,13 +27475,13 @@
       "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
       "location": {
         "file": "apps/backend/firstStack/boundedExecution.ts",
-        "line": 41,
+        "line": 32,
         "column": 108
       }
     },
     {
       "id": "m1.apps.backend.firstStack.boundedExecution.4",
-      "concept": "value.sequence · literal 1",
+      "concept": "{ value, evidence: e } · literal 1",
       "modelVersion": "1",
       "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
       "quantity": {
@@ -27442,12 +27492,12 @@
           "m1.apps.backend.firstStack.boundedExecution.4"
         ]
       },
-      "formula": "sequence: sequence + 1",
+      "formula": "const { value, evidence: e } = captureExecutionCut(prepared, runtime, sequence + 1, effectiveLimits, interruption);",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/firstStack/boundedExecution.ts#L64",
+          "source": "workspace:apps/backend/firstStack/boundedExecution.ts#L54",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -27461,80 +27511,8 @@
       "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
       "location": {
         "file": "apps/backend/firstStack/boundedExecution.ts",
-        "line": 64,
-        "column": 85
-      }
-    },
-    {
-      "id": "m1.apps.backend.firstStack.boundedExecution.5",
-      "concept": "value.completeness.allRootsTerminal · literal 0",
-      "modelVersion": "1",
-      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
-      "quantity": {
-        "kind": "known",
-        "value": 0,
-        "unit": "code-number",
-        "provenance": [
-          "m1.apps.backend.firstStack.boundedExecution.5"
-        ]
-      },
-      "formula": "allRootsTerminal: e.counts.offered === prepared.schedule.rows.length && e.counts.inFlight === 0",
-      "classification": "implementation-policy",
-      "confidence": "high",
-      "provenance": [
-        {
-          "source": "workspace:apps/backend/firstStack/boundedExecution.ts#L67",
-          "supports": "implementation",
-          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
-        }
-      ],
-      "assumptions": [
-        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
-        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
-      ],
-      "researchedOn": "2026-10-15",
-      "freeMode": "conditional",
-      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
-      "location": {
-        "file": "apps/backend/firstStack/boundedExecution.ts",
-        "line": 67,
-        "column": 159
-      }
-    },
-    {
-      "id": "m1.apps.backend.firstStack.boundedExecution.6",
-      "concept": "value.omissions.samples · literal 0",
-      "modelVersion": "1",
-      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
-      "quantity": {
-        "kind": "known",
-        "value": 0,
-        "unit": "code-number",
-        "provenance": [
-          "m1.apps.backend.firstStack.boundedExecution.6"
-        ]
-      },
-      "formula": "samples: e.sampleRetention?.omitted ?? 0",
-      "classification": "implementation-policy",
-      "confidence": "high",
-      "provenance": [
-        {
-          "source": "workspace:apps/backend/firstStack/boundedExecution.ts#L69",
-          "supports": "implementation",
-          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
-        }
-      ],
-      "assumptions": [
-        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
-        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
-      ],
-      "researchedOn": "2026-10-15",
-      "freeMode": "conditional",
-      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
-      "location": {
-        "file": "apps/backend/firstStack/boundedExecution.ts",
-        "line": 69,
-        "column": 123
+        "line": 54,
+        "column": 86
       }
     },
     {
@@ -28150,6 +28128,78 @@
       }
     },
     {
+      "id": "m1.apps.backend.firstStack.executionCut.1",
+      "concept": "value.completeness.allRootsTerminal · literal 0",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.executionCut.1"
+        ]
+      },
+      "formula": "allRootsTerminal: e.counts.offered === prepared.schedule.rows.length && e.counts.inFlight === 0",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/executionCut.ts#L21",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/executionCut.ts",
+        "line": 21,
+        "column": 157
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.executionCut.2",
+      "concept": "value.omissions.samples · literal 0",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.executionCut.2"
+        ]
+      },
+      "formula": "samples: e.sampleRetention?.omitted ?? 0",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/executionCut.ts#L23",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/executionCut.ts",
+        "line": 23,
+        "column": 121
+      }
+    },
+    {
       "id": "m1.apps.backend.firstStack.importStream.1",
       "concept": "prefix · literal 1024",
       "modelVersion": "1",
@@ -28435,6 +28485,3462 @@
         "file": "apps/backend/firstStack/importStream.ts",
         "line": 25,
         "column": 43
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationChild.1",
+      "concept": "input · literal 2",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 2,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationChild.1"
+        ]
+      },
+      "formula": "const input = boundedLines(process.stdin, limits.inputBytes, limits.inputBytes + 2 * 1024 * 1024)[Symbol.asyncIterator]();",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationChild.ts#L13",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationChild.ts",
+        "line": 13,
+        "column": 82
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationChild.2",
+      "concept": "input · literal 1024",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1024,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationChild.2"
+        ]
+      },
+      "formula": "const input = boundedLines(process.stdin, limits.inputBytes, limits.inputBytes + 2 * 1024 * 1024)[Symbol.asyncIterator]();",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationChild.ts#L13",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationChild.ts",
+        "line": 13,
+        "column": 86
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationChild.3",
+      "concept": "input · literal 1024",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1024,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationChild.3"
+        ]
+      },
+      "formula": "const input = boundedLines(process.stdin, limits.inputBytes, limits.inputBytes + 2 * 1024 * 1024)[Symbol.asyncIterator]();",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationChild.ts#L13",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationChild.ts",
+        "line": 13,
+        "column": 93
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationChild.4",
+      "concept": "output · literal 0",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationChild.4"
+        ]
+      },
+      "formula": "let output = 0;",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationChild.ts#L15",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationChild.ts",
+        "line": 15,
+        "column": 14
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationChild.5",
+      "concept": "result.maxCpuUs · literal 1_000_000",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1000000,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationChild.5"
+        ]
+      },
+      "formula": "maxCpuUs: limits.cpuSeconds * 1_000_000",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationChild.ts#L37",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationChild.ts",
+        "line": 37,
+        "column": 91
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationChild.6",
+      "concept": "at · literal 0",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationChild.6"
+        ]
+      },
+      "formula": "for (let at = 0, index = 0; at < text.length; at += 64 * 1024, index++) { await send({ kind: \"artifact\", artifact, index, text: text.slice(at, at + 64 * 1024) }); }",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationChild.ts#L47",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationChild.ts",
+        "line": 47,
+        "column": 38
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationChild.7",
+      "concept": "index · literal 0",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationChild.7"
+        ]
+      },
+      "formula": "for (let at = 0, index = 0; at < text.length; at += 64 * 1024, index++) { await send({ kind: \"artifact\", artifact, index, text: text.slice(at, at + 64 * 1024) }); }",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationChild.ts#L47",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationChild.ts",
+        "line": 47,
+        "column": 49
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationChild.8",
+      "concept": "isolationChild.ts · literal 64",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 64,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationChild.8"
+        ]
+      },
+      "formula": "for (let at = 0, index = 0; at < text.length; at += 64 * 1024, index++) { await send({ kind: \"artifact\", artifact, index, text: text.slice(at, at + 64 * 1024) }); }",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationChild.ts#L47",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationChild.ts",
+        "line": 47,
+        "column": 76
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationChild.9",
+      "concept": "isolationChild.ts · literal 1024",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1024,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationChild.9"
+        ]
+      },
+      "formula": "for (let at = 0, index = 0; at < text.length; at += 64 * 1024, index++) { await send({ kind: \"artifact\", artifact, index, text: text.slice(at, at + 64 * 1024) }); }",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationChild.ts#L47",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationChild.ts",
+        "line": 47,
+        "column": 81
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationChild.10",
+      "concept": "text · literal 64",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 64,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationChild.10"
+        ]
+      },
+      "formula": "text: text.slice(at, at + 64 * 1024)",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationChild.ts#L48",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationChild.ts",
+        "line": 48,
+        "column": 81
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationChild.11",
+      "concept": "text · literal 1024",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1024,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationChild.11"
+        ]
+      },
+      "formula": "text: text.slice(at, at + 64 * 1024)",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationChild.ts#L48",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationChild.ts",
+        "line": 48,
+        "column": 86
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationChild.12",
+      "concept": "isolationChild.ts · literal 0",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationChild.12"
+        ]
+      },
+      "formula": "process.exit(0);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationChild.ts#L54",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationChild.ts",
+        "line": 54,
+        "column": 14
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationConnection.1",
+      "concept": "mode · literal 0o600",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 384,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationConnection.1"
+        ]
+      },
+      "formula": "mode: 0o600",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationConnection.ts#L23",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationConnection.ts",
+        "line": 23,
+        "column": 79
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationConnection.2",
+      "concept": "path · literal 7",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 7,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationConnection.2"
+        ]
+      },
+      "formula": "const path = this.endpoint.slice(7), value = await lstat(path, { bigint: true });",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationConnection.ts#L34",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationConnection.ts",
+        "line": 34,
+        "column": 38
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationConnection.3",
+      "concept": "isolationConnection.ts · literal 0",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationConnection.3"
+        ]
+      },
+      "formula": "if (!args.length || args[0]!.startsWith(\"-\") || args.some(v => /^(-H|--host(?:=|$)|--context(?:=|$)|--config(?:=|$)|--tls)/.test(v))) throw Error(\"Docker endpoint override refused\");",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationConnection.ts#L43",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationConnection.ts",
+        "line": 43,
+        "column": 30
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationConnection.4",
+      "concept": "isolationConnection.ts · literal 1024",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1024,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationConnection.4"
+        ]
+      },
+      "formula": "export class IsolationConnection { private constructor(readonly endpoint: string, private readonly config: string) {} private daemon = \"\"; private socket = \"\"; private closed = false; private readonly env = Object.freeze({ PATH: process.env.PATH ?? process.env.Path ?? \"\", ...(process.platform === \"win32\" ? { SystemRoot: process.env.SystemRoot ?? \"C:\\\\Windows\" } : {}) }); static async open(endpoint: string) { const allowed = process.platform === \"win32\" ? endpoint === \"npipe:////./pipe/dockerDesk",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationConnection.ts#L46",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationConnection.ts",
+        "line": 46,
+        "column": 47
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationConnection.5",
+      "concept": "isolationConnection.ts · literal 1024",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1024,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationConnection.5"
+        ]
+      },
+      "formula": "export class IsolationConnection { private constructor(readonly endpoint: string, private readonly config: string) {} private daemon = \"\"; private socket = \"\"; private closed = false; private readonly env = Object.freeze({ PATH: process.env.PATH ?? process.env.Path ?? \"\", ...(process.platform === \"win32\" ? { SystemRoot: process.env.SystemRoot ?? \"C:\\\\Windows\" } : {}) }); static async open(endpoint: string) { const allowed = process.platform === \"win32\" ? endpoint === \"npipe:////./pipe/dockerDesk",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationConnection.ts#L46",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationConnection.ts",
+        "line": 46,
+        "column": 54
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationConnection.6",
+      "concept": "size · literal 0",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationConnection.6"
+        ]
+      },
+      "formula": "let size = 0, output = \"\";",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationConnection.ts#L50",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationConnection.ts",
+        "line": 50,
+        "column": 18
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationConnection.7",
+      "concept": "isolationConnection.ts · literal 0",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationConnection.7"
+        ]
+      },
+      "formula": "if (await exited !== 0) throw Error(\"Docker control failed; no retry on another endpoint\");",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationConnection.ts#L58",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationConnection.ts",
+        "line": 58,
+        "column": 28
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationContainer.1",
+      "concept": "command · literal -7",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": -7,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationContainer.1"
+        ]
+      },
+      "formula": "const command = firstStackContainerArguments(image, token, name).slice(-7);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationContainer.ts#L20",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationContainer.ts",
+        "line": 20,
+        "column": 75
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationContainer.2",
+      "concept": "verifyFirstStackContainer · literal 0",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationContainer.2"
+        ]
+      },
+      "formula": "if (value?.Image !== image || value?.Name !== `/${name}` || config?.Labels?.[\"infraforge.first-stack\"] !== token || config?.User !== \"1000:1000\" || JSON.stringify(config.Entrypoint) !== '[\"timeout\"]' || JSON.stringify(config.Cmd) !== JSON.stringify(command) || config.WorkingDir !== \"/app/apps/backend\" || config.Env?.some((v: string) => !/^(PATH|HOME|NODE_ENV|BUN_INSTALL|BUN_INSTALL_BIN|LANG|LC_ALL)=/.test(v) && v !== \"BUN_RUNTIME_TRANSPILER_CACHE_PATH=0\") || host?.Memory !== limits.memoryBytes |",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationContainer.ts#L32",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationContainer.ts",
+        "line": 32,
+        "column": 85
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationContainer.3",
+      "concept": "verifyFirstStackReady · literal 1000",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1000,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationContainer.3"
+        ]
+      },
+      "formula": "if (frame?.kind !== \"ready\" || frame.source !== source || e?.memory !== String(limits.memoryBytes) || e.swap !== \"0\" || e.pids !== String(limits.pids) || e.uid !== 1000 || e.gid !== 1000 || cpu.length !== 2 || cpu[0] !== 50_000 || cpu[1] !== 100_000 || !/Max cpu time\\s+20\\s+20\\s+seconds/.test(e.limits) || !/Max open files\\s+128\\s+128/.test(e.limits) || !/NoNewPrivs:\\s+1/.test(e.status) || !/CapEff:\\s+0+\\s/.test(e.status)) throw Error(\"First-stack kernel containment handshake failed\");",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationContainer.ts#L38",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationContainer.ts",
+        "line": 38,
+        "column": 67
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationContainer.4",
+      "concept": "verifyFirstStackReady · literal 1000",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1000,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationContainer.4"
+        ]
+      },
+      "formula": "if (frame?.kind !== \"ready\" || frame.source !== source || e?.memory !== String(limits.memoryBytes) || e.swap !== \"0\" || e.pids !== String(limits.pids) || e.uid !== 1000 || e.gid !== 1000 || cpu.length !== 2 || cpu[0] !== 50_000 || cpu[1] !== 100_000 || !/Max cpu time\\s+20\\s+20\\s+seconds/.test(e.limits) || !/Max open files\\s+128\\s+128/.test(e.limits) || !/NoNewPrivs:\\s+1/.test(e.status) || !/CapEff:\\s+0+\\s/.test(e.status)) throw Error(\"First-stack kernel containment handshake failed\");",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationContainer.ts#L38",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationContainer.ts",
+        "line": 38,
+        "column": 85
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationContainer.5",
+      "concept": "verifyFirstStackReady · literal 2",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 2,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationContainer.5"
+        ]
+      },
+      "formula": "if (frame?.kind !== \"ready\" || frame.source !== source || e?.memory !== String(limits.memoryBytes) || e.swap !== \"0\" || e.pids !== String(limits.pids) || e.uid !== 1000 || e.gid !== 1000 || cpu.length !== 2 || cpu[0] !== 50_000 || cpu[1] !== 100_000 || !/Max cpu time\\s+20\\s+20\\s+seconds/.test(e.limits) || !/Max open files\\s+128\\s+128/.test(e.limits) || !/NoNewPrivs:\\s+1/.test(e.status) || !/CapEff:\\s+0+\\s/.test(e.status)) throw Error(\"First-stack kernel containment handshake failed\");",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationContainer.ts#L39",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationContainer.ts",
+        "line": 39,
+        "column": 20
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationContainer.6",
+      "concept": "verifyFirstStackReady · literal 0",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationContainer.6"
+        ]
+      },
+      "formula": "if (frame?.kind !== \"ready\" || frame.source !== source || e?.memory !== String(limits.memoryBytes) || e.swap !== \"0\" || e.pids !== String(limits.pids) || e.uid !== 1000 || e.gid !== 1000 || cpu.length !== 2 || cpu[0] !== 50_000 || cpu[1] !== 100_000 || !/Max cpu time\\s+20\\s+20\\s+seconds/.test(e.limits) || !/Max open files\\s+128\\s+128/.test(e.limits) || !/NoNewPrivs:\\s+1/.test(e.status) || !/CapEff:\\s+0+\\s/.test(e.status)) throw Error(\"First-stack kernel containment handshake failed\");",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationContainer.ts#L39",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationContainer.ts",
+        "line": 39,
+        "column": 29
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationContainer.7",
+      "concept": "verifyFirstStackReady · literal 50_000",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 50000,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationContainer.7"
+        ]
+      },
+      "formula": "if (frame?.kind !== \"ready\" || frame.source !== source || e?.memory !== String(limits.memoryBytes) || e.swap !== \"0\" || e.pids !== String(limits.pids) || e.uid !== 1000 || e.gid !== 1000 || cpu.length !== 2 || cpu[0] !== 50_000 || cpu[1] !== 100_000 || !/Max cpu time\\s+20\\s+20\\s+seconds/.test(e.limits) || !/Max open files\\s+128\\s+128/.test(e.limits) || !/NoNewPrivs:\\s+1/.test(e.status) || !/CapEff:\\s+0+\\s/.test(e.status)) throw Error(\"First-stack kernel containment handshake failed\");",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationContainer.ts#L39",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationContainer.ts",
+        "line": 39,
+        "column": 36
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationContainer.8",
+      "concept": "verifyFirstStackReady · literal 1",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationContainer.8"
+        ]
+      },
+      "formula": "if (frame?.kind !== \"ready\" || frame.source !== source || e?.memory !== String(limits.memoryBytes) || e.swap !== \"0\" || e.pids !== String(limits.pids) || e.uid !== 1000 || e.gid !== 1000 || cpu.length !== 2 || cpu[0] !== 50_000 || cpu[1] !== 100_000 || !/Max cpu time\\s+20\\s+20\\s+seconds/.test(e.limits) || !/Max open files\\s+128\\s+128/.test(e.limits) || !/NoNewPrivs:\\s+1/.test(e.status) || !/CapEff:\\s+0+\\s/.test(e.status)) throw Error(\"First-stack kernel containment handshake failed\");",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationContainer.ts#L39",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationContainer.ts",
+        "line": 39,
+        "column": 50
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationContainer.9",
+      "concept": "verifyFirstStackReady · literal 100_000",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 100000,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationContainer.9"
+        ]
+      },
+      "formula": "if (frame?.kind !== \"ready\" || frame.source !== source || e?.memory !== String(limits.memoryBytes) || e.swap !== \"0\" || e.pids !== String(limits.pids) || e.uid !== 1000 || e.gid !== 1000 || cpu.length !== 2 || cpu[0] !== 50_000 || cpu[1] !== 100_000 || !/Max cpu time\\s+20\\s+20\\s+seconds/.test(e.limits) || !/Max open files\\s+128\\s+128/.test(e.limits) || !/NoNewPrivs:\\s+1/.test(e.status) || !/CapEff:\\s+0+\\s/.test(e.status)) throw Error(\"First-stack kernel containment handshake failed\");",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationContainer.ts#L39",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationContainer.ts",
+        "line": 39,
+        "column": 57
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationOwnership.1",
+      "concept": "lock · literal 186542854",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 186542854,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationOwnership.1"
+        ]
+      },
+      "formula": "const lock = [186542854, 10];",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationOwnership.ts#L7",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationOwnership.ts",
+        "line": 7,
+        "column": 15
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationOwnership.2",
+      "concept": "lock · literal 10",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 10,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationOwnership.2"
+        ]
+      },
+      "formula": "const lock = [186542854, 10];",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationOwnership.ts#L7",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationOwnership.ts",
+        "line": 7,
+        "column": 26
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationOwnership.3",
+      "concept": "db.connectionTimeoutMillis · literal 5000",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 5000,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationOwnership.3"
+        ]
+      },
+      "formula": "connectionTimeoutMillis: 5000",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationOwnership.ts#L11",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationOwnership.ts",
+        "line": 11,
+        "column": 83
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationOwnership.4",
+      "concept": "db.query_timeout · literal 5000",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 5000,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationOwnership.4"
+        ]
+      },
+      "formula": "query_timeout: 5000",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationOwnership.ts#L11",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationOwnership.ts",
+        "line": 11,
+        "column": 104
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationOwnership.5",
+      "concept": "db.statement_timeout · literal 5000",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 5000,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationOwnership.5"
+        ]
+      },
+      "formula": "statement_timeout: 5000",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationOwnership.ts#L11",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationOwnership.ts",
+        "line": 11,
+        "column": 129
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationOwnership.6",
+      "concept": "db.lock_timeout · literal 1000",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1000,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationOwnership.6"
+        ]
+      },
+      "formula": "lock_timeout: 1000",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationOwnership.ts#L11",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationOwnership.ts",
+        "line": 11,
+        "column": 149
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationOwnership.7",
+      "concept": "check · literal 0",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationOwnership.7"
+        ]
+      },
+      "formula": "if (r.rows[0]?.held !== true) { lose(); throw Error(\"First-stack executor fence lost\"); }",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationOwnership.ts#L25",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationOwnership.ts",
+        "line": 25,
+        "column": 16
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationOwnership.8",
+      "concept": "withFirstStackOwnership · literal 0",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationOwnership.8"
+        ]
+      },
+      "formula": "held = (await db.query(\"SELECT pg_try_advisory_lock($1,$2) AS held\", lock)).rows[0]?.held === true;",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationOwnership.ts#L30",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationOwnership.ts",
+        "line": 30,
+        "column": 86
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationPolicy.1",
+      "concept": "FIRST_STACK_ISOLATION.memoryBytes · literal 768",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 768,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationPolicy.1"
+        ]
+      },
+      "formula": "memoryBytes: 768 * 1024 * 1024",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationPolicy.ts#L6",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationPolicy.ts",
+        "line": 6,
+        "column": 51
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationPolicy.2",
+      "concept": "FIRST_STACK_ISOLATION.memoryBytes · literal 1024",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1024,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationPolicy.2"
+        ]
+      },
+      "formula": "memoryBytes: 768 * 1024 * 1024",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationPolicy.ts#L6",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationPolicy.ts",
+        "line": 6,
+        "column": 57
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationPolicy.3",
+      "concept": "FIRST_STACK_ISOLATION.memoryBytes · literal 1024",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1024,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationPolicy.3"
+        ]
+      },
+      "formula": "memoryBytes: 768 * 1024 * 1024",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationPolicy.ts#L6",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationPolicy.ts",
+        "line": 6,
+        "column": 64
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationPolicy.4",
+      "concept": "FIRST_STACK_ISOLATION.nanoCpus · literal 500_000_000",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 500000000,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationPolicy.4"
+        ]
+      },
+      "formula": "nanoCpus: 500_000_000",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationPolicy.ts#L7",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationPolicy.ts",
+        "line": 7,
+        "column": 13
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationPolicy.5",
+      "concept": "FIRST_STACK_ISOLATION.pids · literal 64",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 64,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationPolicy.5"
+        ]
+      },
+      "formula": "pids: 64",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationPolicy.ts#L7",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationPolicy.ts",
+        "line": 7,
+        "column": 32
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationPolicy.6",
+      "concept": "FIRST_STACK_ISOLATION.nofile · literal 128",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 128,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationPolicy.6"
+        ]
+      },
+      "formula": "nofile: 128",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationPolicy.ts#L7",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationPolicy.ts",
+        "line": 7,
+        "column": 44
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationPolicy.7",
+      "concept": "FIRST_STACK_ISOLATION.cpuSeconds · literal 20",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 20,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationPolicy.7"
+        ]
+      },
+      "formula": "cpuSeconds: 20",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationPolicy.ts#L7",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationPolicy.ts",
+        "line": 7,
+        "column": 61
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationPolicy.8",
+      "concept": "FIRST_STACK_ISOLATION.wallSeconds · literal 60",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 60,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationPolicy.8"
+        ]
+      },
+      "formula": "wallSeconds: 60",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationPolicy.ts#L8",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationPolicy.ts",
+        "line": 8,
+        "column": 16
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationPolicy.9",
+      "concept": "FIRST_STACK_ISOLATION.supervisorMs · literal 75_000",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 75000,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationPolicy.9"
+        ]
+      },
+      "formula": "supervisorMs: 75_000",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationPolicy.ts#L8",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationPolicy.ts",
+        "line": 8,
+        "column": 34
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationPolicy.10",
+      "concept": "FIRST_STACK_ISOLATION.controlMs · literal 5_000",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 5000,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationPolicy.10"
+        ]
+      },
+      "formula": "controlMs: 5_000",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationPolicy.ts#L8",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationPolicy.ts",
+        "line": 8,
+        "column": 53
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationPolicy.11",
+      "concept": "FIRST_STACK_ISOLATION.inputBytes · literal 16",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 16,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationPolicy.11"
+        ]
+      },
+      "formula": "inputBytes: 16 * 1024 * 1024",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationPolicy.ts#L9",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationPolicy.ts",
+        "line": 9,
+        "column": 15
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationPolicy.12",
+      "concept": "FIRST_STACK_ISOLATION.inputBytes · literal 1024",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1024,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationPolicy.12"
+        ]
+      },
+      "formula": "inputBytes: 16 * 1024 * 1024",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationPolicy.ts#L9",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationPolicy.ts",
+        "line": 9,
+        "column": 20
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationPolicy.13",
+      "concept": "FIRST_STACK_ISOLATION.inputBytes · literal 1024",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1024,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationPolicy.13"
+        ]
+      },
+      "formula": "inputBytes: 16 * 1024 * 1024",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationPolicy.ts#L9",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationPolicy.ts",
+        "line": 9,
+        "column": 27
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationPolicy.14",
+      "concept": "FIRST_STACK_ISOLATION.lineBytes · literal 1024",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1024,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationPolicy.14"
+        ]
+      },
+      "formula": "lineBytes: 1024 * 1024 + 4096",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationPolicy.ts#L9",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationPolicy.ts",
+        "line": 9,
+        "column": 44
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationPolicy.15",
+      "concept": "FIRST_STACK_ISOLATION.lineBytes · literal 1024",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1024,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationPolicy.15"
+        ]
+      },
+      "formula": "lineBytes: 1024 * 1024 + 4096",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationPolicy.ts#L9",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationPolicy.ts",
+        "line": 9,
+        "column": 51
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationPolicy.16",
+      "concept": "FIRST_STACK_ISOLATION.lineBytes · literal 4096",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 4096,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationPolicy.16"
+        ]
+      },
+      "formula": "lineBytes: 1024 * 1024 + 4096",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationPolicy.ts#L9",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationPolicy.ts",
+        "line": 9,
+        "column": 58
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationPolicy.17",
+      "concept": "FIRST_STACK_ISOLATION.outputBytes · literal 32",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 32,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationPolicy.17"
+        ]
+      },
+      "formula": "outputBytes: 32 * 1024 * 1024",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationPolicy.ts#L10",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationPolicy.ts",
+        "line": 10,
+        "column": 16
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationPolicy.18",
+      "concept": "FIRST_STACK_ISOLATION.outputBytes · literal 1024",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1024,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationPolicy.18"
+        ]
+      },
+      "formula": "outputBytes: 32 * 1024 * 1024",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationPolicy.ts#L10",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationPolicy.ts",
+        "line": 10,
+        "column": 21
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationPolicy.19",
+      "concept": "FIRST_STACK_ISOLATION.outputBytes · literal 1024",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1024,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationPolicy.19"
+        ]
+      },
+      "formula": "outputBytes: 32 * 1024 * 1024",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationPolicy.ts#L10",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationPolicy.ts",
+        "line": 10,
+        "column": 28
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationPolicy.20",
+      "concept": "FIRST_STACK_ISOLATION.errorBytes · literal 16384",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 16384,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationPolicy.20"
+        ]
+      },
+      "formula": "errorBytes: 16384",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationPolicy.ts#L10",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationPolicy.ts",
+        "line": 10,
+        "column": 46
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationPolicy.21",
+      "concept": "FIRST_STACK_ISOLATION.frames · literal 4096",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 4096,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationPolicy.21"
+        ]
+      },
+      "formula": "frames: 4096",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationPolicy.ts#L10",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationPolicy.ts",
+        "line": 10,
+        "column": 61
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationPolicy.22",
+      "concept": "FIRST_STACK_ISOLATION.tmpBytes · literal 16",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 16,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationPolicy.22"
+        ]
+      },
+      "formula": "tmpBytes: 16 * 1024 * 1024",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationPolicy.ts#L11",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationPolicy.ts",
+        "line": 11,
+        "column": 13
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationPolicy.23",
+      "concept": "FIRST_STACK_ISOLATION.tmpBytes · literal 1024",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1024,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationPolicy.23"
+        ]
+      },
+      "formula": "tmpBytes: 16 * 1024 * 1024",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationPolicy.ts#L11",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationPolicy.ts",
+        "line": 11,
+        "column": 18
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationPolicy.24",
+      "concept": "FIRST_STACK_ISOLATION.tmpBytes · literal 1024",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1024,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationPolicy.24"
+        ]
+      },
+      "formula": "tmpBytes: 16 * 1024 * 1024",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationPolicy.ts#L11",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationPolicy.ts",
+        "line": 11,
+        "column": 25
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationPolicy.25",
+      "concept": "FIRST_STACK_ISOLATION.capacity · literal 1",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationPolicy.25"
+        ]
+      },
+      "formula": "capacity: 1",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationPolicy.ts#L11",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationPolicy.ts",
+        "line": 11,
+        "column": 41
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationPolicy.26",
+      "concept": "isolationPolicy.ts · literal 1",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationPolicy.26"
+        ]
+      },
+      "formula": "export interface HostQualification { schema: \"first-stack-host/1\"; target: \"laptop-desktop\" | \"ec2-c7i-flex.large\" | \"ci-linux\"; image: string; source: string; daemon: string; policy: string; checkedAt: string; expiresAt: string; capacity: 1; qualified: boolean; checks: Record<typeof qualificationChecks[number], boolean>; }",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationPolicy.ts#L26",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationPolicy.ts",
+        "line": 26,
+        "column": 51
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationPolicy.27",
+      "concept": "assertQualified · literal 1",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationPolicy.27"
+        ]
+      },
+      "formula": "if (!value || value.schema !== \"first-stack-host/1\" || value.qualified !== true || ![\"laptop-desktop\", \"ec2-c7i-flex.large\"].includes(value.target) || value.capacity !== 1 || value.policy !== isolationPolicyHash || value.image !== identity.image || value.source !== identity.source || value.daemon !== identity.daemon || !imagePattern.test(value.image) || !digestPattern.test(value.source) || !digestPattern.test(value.daemon) || !Number.isFinite(Date.parse(value.checkedAt)) || Date.parse(value.chec",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationPolicy.ts#L32",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationPolicy.ts",
+        "line": 32,
+        "column": 24
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationPolicy.28",
+      "concept": "assertQualified · literal 24",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 24,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationPolicy.28"
+        ]
+      },
+      "formula": "if (!value || value.schema !== \"first-stack-host/1\" || value.qualified !== true || ![\"laptop-desktop\", \"ec2-c7i-flex.large\"].includes(value.target) || value.capacity !== 1 || value.policy !== isolationPolicyHash || value.image !== identity.image || value.source !== identity.source || value.daemon !== identity.daemon || !imagePattern.test(value.image) || !digestPattern.test(value.source) || !digestPattern.test(value.daemon) || !Number.isFinite(Date.parse(value.checkedAt)) || Date.parse(value.chec",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationPolicy.ts#L37",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationPolicy.ts",
+        "line": 37,
+        "column": 65
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationPolicy.29",
+      "concept": "assertQualified · literal 60",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 60,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationPolicy.29"
+        ]
+      },
+      "formula": "if (!value || value.schema !== \"first-stack-host/1\" || value.qualified !== true || ![\"laptop-desktop\", \"ec2-c7i-flex.large\"].includes(value.target) || value.capacity !== 1 || value.policy !== isolationPolicyHash || value.image !== identity.image || value.source !== identity.source || value.daemon !== identity.daemon || !imagePattern.test(value.image) || !digestPattern.test(value.source) || !digestPattern.test(value.daemon) || !Number.isFinite(Date.parse(value.checkedAt)) || Date.parse(value.chec",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationPolicy.ts#L37",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationPolicy.ts",
+        "line": 37,
+        "column": 70
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationPolicy.30",
+      "concept": "assertQualified · literal 60",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 60,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationPolicy.30"
+        ]
+      },
+      "formula": "if (!value || value.schema !== \"first-stack-host/1\" || value.qualified !== true || ![\"laptop-desktop\", \"ec2-c7i-flex.large\"].includes(value.target) || value.capacity !== 1 || value.policy !== isolationPolicyHash || value.image !== identity.image || value.source !== identity.source || value.daemon !== identity.daemon || !imagePattern.test(value.image) || !digestPattern.test(value.source) || !digestPattern.test(value.daemon) || !Number.isFinite(Date.parse(value.checkedAt)) || Date.parse(value.chec",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationPolicy.ts#L37",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationPolicy.ts",
+        "line": 37,
+        "column": 75
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationPolicy.31",
+      "concept": "assertQualified · literal 1000",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1000,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationPolicy.31"
+        ]
+      },
+      "formula": "if (!value || value.schema !== \"first-stack-host/1\" || value.qualified !== true || ![\"laptop-desktop\", \"ec2-c7i-flex.large\"].includes(value.target) || value.capacity !== 1 || value.policy !== isolationPolicyHash || value.image !== identity.image || value.source !== identity.source || value.daemon !== identity.daemon || !imagePattern.test(value.image) || !digestPattern.test(value.source) || !digestPattern.test(value.daemon) || !Number.isFinite(Date.parse(value.checkedAt)) || Date.parse(value.chec",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationPolicy.ts#L37",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationPolicy.ts",
+        "line": 37,
+        "column": 80
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationProtocol.1",
+      "concept": "readIsolatedCut · literal 1",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationProtocol.1"
+        ]
+      },
+      "formula": "if (!value || value.schema !== \"first-stack-isolated-cut/1\" || value.source !== source || value.inputHash !== inputHash || !digestPattern.test(value.fingerprint) || !value.cut || value.cut.schema !== \"first-stack-cut/1\" || !Number.isSafeInteger(value.cut.sequence) || value.cut.sequence < 1 || !Number.isSafeInteger(value.cut.execution?.processed) || value.cut.execution.processed < 0 || value.cut.execution.processed > 2_000_000 || !Number.isSafeInteger(value.cut.throughUs) || value.cut.throughUs <",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationProtocol.ts#L24",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationProtocol.ts",
+        "line": 24,
+        "column": 71
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationProtocol.2",
+      "concept": "readIsolatedCut · literal 0",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationProtocol.2"
+        ]
+      },
+      "formula": "if (!value || value.schema !== \"first-stack-isolated-cut/1\" || value.source !== source || value.inputHash !== inputHash || !digestPattern.test(value.fingerprint) || !value.cut || value.cut.schema !== \"first-stack-cut/1\" || !Number.isSafeInteger(value.cut.sequence) || value.cut.sequence < 1 || !Number.isSafeInteger(value.cut.execution?.processed) || value.cut.execution.processed < 0 || value.cut.execution.processed > 2_000_000 || !Number.isSafeInteger(value.cut.throughUs) || value.cut.throughUs <",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationProtocol.ts#L25",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationProtocol.ts",
+        "line": 25,
+        "column": 94
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationProtocol.3",
+      "concept": "readIsolatedCut · literal 2_000_000",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 2000000,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationProtocol.3"
+        ]
+      },
+      "formula": "if (!value || value.schema !== \"first-stack-isolated-cut/1\" || value.source !== source || value.inputHash !== inputHash || !digestPattern.test(value.fingerprint) || !value.cut || value.cut.schema !== \"first-stack-cut/1\" || !Number.isSafeInteger(value.cut.sequence) || value.cut.sequence < 1 || !Number.isSafeInteger(value.cut.execution?.processed) || value.cut.execution.processed < 0 || value.cut.execution.processed > 2_000_000 || !Number.isSafeInteger(value.cut.throughUs) || value.cut.throughUs <",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationProtocol.ts#L25",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationProtocol.ts",
+        "line": 25,
+        "column": 131
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationProtocol.4",
+      "concept": "readIsolatedCut · literal 0",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationProtocol.4"
+        ]
+      },
+      "formula": "if (!value || value.schema !== \"first-stack-isolated-cut/1\" || value.source !== source || value.inputHash !== inputHash || !digestPattern.test(value.fingerprint) || !value.cut || value.cut.schema !== \"first-stack-cut/1\" || !Number.isSafeInteger(value.cut.sequence) || value.cut.sequence < 1 || !Number.isSafeInteger(value.cut.execution?.processed) || value.cut.execution.processed < 0 || value.cut.execution.processed > 2_000_000 || !Number.isSafeInteger(value.cut.throughUs) || value.cut.throughUs <",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationProtocol.ts#L26",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationProtocol.ts",
+        "line": 26,
+        "column": 73
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationProtocol.5",
+      "concept": "readIsolatedCut · literal 300_000_000",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 300000000,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationProtocol.5"
+        ]
+      },
+      "formula": "if (!value || value.schema !== \"first-stack-isolated-cut/1\" || value.source !== source || value.inputHash !== inputHash || !digestPattern.test(value.fingerprint) || !value.cut || value.cut.schema !== \"first-stack-cut/1\" || !Number.isSafeInteger(value.cut.sequence) || value.cut.sequence < 1 || !Number.isSafeInteger(value.cut.execution?.processed) || value.cut.execution.processed < 0 || value.cut.execution.processed > 2_000_000 || !Number.isSafeInteger(value.cut.throughUs) || value.cut.throughUs <",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationProtocol.ts#L26",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationProtocol.ts",
+        "line": 26,
+        "column": 100
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationProtocol.6",
+      "concept": "readIsolatedCut · literal 1",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationProtocol.6"
+        ]
+      },
+      "formula": "if (!value || value.schema !== \"first-stack-isolated-cut/1\" || value.source !== source || value.inputHash !== inputHash || !digestPattern.test(value.fingerprint) || !value.cut || value.cut.schema !== \"first-stack-cut/1\" || !Number.isSafeInteger(value.cut.sequence) || value.cut.sequence < 1 || !Number.isSafeInteger(value.cut.execution?.processed) || value.cut.execution.processed < 0 || value.cut.execution.processed > 2_000_000 || !Number.isSafeInteger(value.cut.throughUs) || value.cut.throughUs <",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationProtocol.ts#L28",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationProtocol.ts",
+        "line": 28,
+        "column": 65
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationProtocol.7",
+      "concept": "pending · literal 0",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationProtocol.7"
+        ]
+      },
+      "formula": "let pending = Buffer.alloc(0), total = 0, count = 0;",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationProtocol.ts#L42",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationProtocol.ts",
+        "line": 42,
+        "column": 30
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationProtocol.8",
+      "concept": "total · literal 0",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationProtocol.8"
+        ]
+      },
+      "formula": "let pending = Buffer.alloc(0), total = 0, count = 0;",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationProtocol.ts#L42",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationProtocol.ts",
+        "line": 42,
+        "column": 42
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationProtocol.9",
+      "concept": "count · literal 0",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationProtocol.9"
+        ]
+      },
+      "formula": "let pending = Buffer.alloc(0), total = 0, count = 0;",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationProtocol.ts#L42",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationProtocol.ts",
+        "line": 42,
+        "column": 53
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationProtocol.10",
+      "concept": "start · literal 0",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationProtocol.10"
+        ]
+      },
+      "formula": "let start = 0, end: number;",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationProtocol.ts#L47",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationProtocol.ts",
+        "line": 47,
+        "column": 17
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationProtocol.11",
+      "concept": "boundedLines · literal 10",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 10,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationProtocol.11"
+        ]
+      },
+      "formula": "while ((end = chunk.indexOf(10, start)) !== -1) { if (pending.length + end - start > lineBytes || ++count > frames) throw Error(\"Isolated line/frame budget exceeded\"); yield Buffer.concat([pending, chunk.subarray(start, end)]).toString(\"utf8\"); pending = Buffer.alloc(0); start = end + 1; }",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationProtocol.ts#L48",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationProtocol.ts",
+        "line": 48,
+        "column": 33
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationProtocol.12",
+      "concept": "boundedLines · literal -1",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": -1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationProtocol.12"
+        ]
+      },
+      "formula": "while ((end = chunk.indexOf(10, start)) !== -1) { if (pending.length + end - start > lineBytes || ++count > frames) throw Error(\"Isolated line/frame budget exceeded\"); yield Buffer.concat([pending, chunk.subarray(start, end)]).toString(\"utf8\"); pending = Buffer.alloc(0); start = end + 1; }",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationProtocol.ts#L48",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationProtocol.ts",
+        "line": 48,
+        "column": 50
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationProtocol.13",
+      "concept": "boundedLines · literal 0",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationProtocol.13"
+        ]
+      },
+      "formula": "pending = Buffer.alloc(0);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationProtocol.ts#L51",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationProtocol.ts",
+        "line": 51,
+        "column": 30
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationProtocol.14",
+      "concept": "boundedLines · literal 1",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationProtocol.14"
+        ]
+      },
+      "formula": "start = end + 1;",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationProtocol.ts#L51",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationProtocol.ts",
+        "line": 51,
+        "column": 48
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationReplay.1",
+      "concept": "processed · literal 0",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationReplay.1"
+        ]
+      },
+      "formula": "let processed = 0;",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationReplay.ts#L13",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationReplay.ts",
+        "line": 13,
+        "column": 19
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationReplay.2",
+      "concept": "replayFirstStackPrefix · literal 128",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 128,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationReplay.2"
+        ]
+      },
+      "formula": "runtime.advanceSlice(runtime.horizon, Math.min(128, target - processed));",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationReplay.ts#L15",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationReplay.ts",
+        "line": 15,
+        "column": 52
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationRunner.1",
+      "concept": "receipt.elapsedMs · literal 0",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationRunner.1"
+        ]
+      },
+      "formula": "elapsedMs: 0",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationRunner.ts#L50",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationRunner.ts",
+        "line": 50,
+        "column": 80
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationRunner.2",
+      "concept": "receipt.outputBytes · literal 0",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationRunner.2"
+        ]
+      },
+      "formula": "outputBytes: 0",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationRunner.ts#L50",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationRunner.ts",
+        "line": 50,
+        "column": 108
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationRunner.3",
+      "concept": "inspect · literal 0",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationRunner.3"
+        ]
+      },
+      "formula": "const inspect = async () => JSON.parse(await control.run([\"inspect\", receipt.container!]))[0];",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationRunner.ts#L64",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationRunner.ts",
+        "line": 64,
+        "column": 94
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationRunner.4",
+      "concept": "contained · literal 0",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationRunner.4"
+        ]
+      },
+      "formula": "if (!state.Running && state.ExitCode !== 0) { receipt.exit = { code: state.ExitCode, oom: state.OOMKilled }; throw Error(\"Executor terminated before a complete protocol\"); }",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationRunner.ts#L92",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationRunner.ts",
+        "line": 92,
+        "column": 52
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationRunner.5",
+      "concept": "contained · literal 500",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 500,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationRunner.5"
+        ]
+      },
+      "formula": "timer = setInterval(() => { if (checking || abort.signal.aborted) return; checking = true; void bounded((async () => { await authority.assertHeld(abort.signal); const state = (await inspect()).State; if (typeof state?.Running !== \"boolean\" || typeof state.OOMKilled !== \"boolean\" || !Number.isInteger(state.ExitCode)) throw Error(\"Executor state Unknown\"); if (!state.Running && state.ExitCode !== 0) { receipt.exit = { code: state.ExitCode, oom: state.OOMKilled }; throw Error(\"Executor terminated b",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationRunner.ts#L97",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationRunner.ts",
+        "line": 97,
+        "column": 10
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationRunner.6",
+      "concept": "errors · literal 0",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationRunner.6"
+        ]
+      },
+      "formula": "let errors = 0;",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationRunner.ts#L98",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationRunner.ts",
+        "line": 98,
+        "column": 20
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationRunner.7",
+      "concept": "sequence · literal 0",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationRunner.7"
+        ]
+      },
+      "formula": "let ready = false, done = false, sequence = 0;",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationRunner.ts#L102",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationRunner.ts",
+        "line": 102,
+        "column": 51
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationRunner.8",
+      "concept": "contained · literal 1",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationRunner.8"
+        ]
+      },
+      "formula": "receipt.outputBytes += Buffer.byteLength(text) + 1;",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationRunner.ts#L105",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationRunner.ts",
+        "line": 105,
+        "column": 58
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationRunner.9",
+      "concept": "contained · literal 0",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationRunner.9"
+        ]
+      },
+      "formula": "if (!ready || !done || exit !== 0 || state.Running || state.ExitCode !== 0 || state.OOMKilled) throw Error(\"Incomplete executor protocol or failed exit\");",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationRunner.ts#L145",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationRunner.ts",
+        "line": 145,
+        "column": 39
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationRunner.10",
+      "concept": "contained · literal 0",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationRunner.10"
+        ]
+      },
+      "formula": "if (!ready || !done || exit !== 0 || state.Running || state.ExitCode !== 0 || state.OOMKilled) throw Error(\"Incomplete executor protocol or failed exit\");",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationRunner.ts#L145",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationRunner.ts",
+        "line": 145,
+        "column": 80
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationRunner.11",
+      "concept": "contained · literal 1",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationRunner.11"
+        ]
+      },
+      "formula": "await boundProcess(running, async () => { const exited = new Promise<number | null>((yes, no) => { running.once(\"error\", no); running.once(\"close\", yes); }); void exited.catch(() => {}); let checking = false; timer = setInterval(() => { if (checking || abort.signal.aborted) return; checking = true; void bounded((async () => { await authority.assertHeld(abort.signal); const state = (await inspect()).State; if (typeof state?.Running !== \"boolean\" || typeof state.OOMKilled !== \"boolean\" || !Number.",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationRunner.ts#L152",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationRunner.ts",
+        "line": 152,
+        "column": 17
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationRunner.12",
+      "concept": "contained · literal 0",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationRunner.12"
+        ]
+      },
+      "formula": "failure = (error instanceof Error ? error.message : \"Executor interrupted\").slice(0, 400);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationRunner.ts#L154",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationRunner.ts",
+        "line": 154,
+        "column": 87
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.isolationRunner.13",
+      "concept": "contained · literal 400",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 400,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.isolationRunner.13"
+        ]
+      },
+      "formula": "failure = (error instanceof Error ? error.message : \"Executor interrupted\").slice(0, 400);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/isolationRunner.ts#L154",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/isolationRunner.ts",
+        "line": 154,
+        "column": 90
       }
     },
     {
