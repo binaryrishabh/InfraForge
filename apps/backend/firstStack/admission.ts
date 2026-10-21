@@ -10,8 +10,14 @@ import { digestPattern, imagePattern } from "./isolationPolicy";
 
 export const submissionEnvelope = Object.freeze({ revision: "first-stack-submission/1", queued: 16,
   queuedBytes: 256 * 1024 * 1024, retainedBytes: 2 * 1024 * 1024 * 1024,
-  captureBytes: 32 * 1024 * 1024, perOwner: 1, submissionsPerHour: 10 });
+  captureBytes: 32 * 1024 * 1024, metadataBytes: 4 * 1024 * 1024, perOwner: 1, submissionsPerHour: 10 });
 export interface ApprovedSubmissionEngine { source: string; image: string }
+export interface SubmissionLineage {
+  kind: "design"; infrastructureId: string; updatedAt: string; designRevision: string;
+}
+export interface SubmittedWorkloadReference {
+  origin: "submitted-recording"; identity: string; executedScheduleHash: string;
+}
 export interface SubmissionAdmission {
   // Trusted application configuration only. A grant, request or browser hash
   // cannot activate this boundary. No caller in the shipped API enables it.
@@ -66,7 +72,7 @@ export function createSubmissionService(pool: Pool, configuration: SubmissionAdm
         const commercial = requireCapability(owner, { capability: "run.start", purpose: "engineer", engine: "2", profile: "first-stack/1", durationSeconds: prepared.policy.horizonUs / 1_000_000 });
         const rate = await db.query('SELECT count(*)::int AS count FROM "FirstStackRun" WHERE "ownerId"=$1 AND "createdAt">CURRENT_TIMESTAMP-INTERVAL \'1 hour\'', [owner]);
         if (rate.rows[0].count >= submissionEnvelope.submissionsPerHour) throw new AppError("Submission rate exceeded; try again later", 429);
-        const verifying = request.purpose !== "private", inputBytes = Buffer.byteLength(input), reservedBytes = inputBytes + submissionEnvelope.captureBytes;
+        const verifying = request.purpose !== "private", inputBytes = Buffer.byteLength(input), reservedBytes = inputBytes + submissionEnvelope.captureBytes + submissionEnvelope.metadataBytes;
         const usage = (await db.query(`SELECT count(*) FILTER (WHERE w.status<>'terminal')::int AS queued,
           count(*) FILTER (WHERE w.status<>'terminal' AND r."ownerId"=$1)::int AS owned,
           COALESCE(sum(r."inputBytes") FILTER (WHERE w.status<>'terminal'),0)::bigint AS bytes,
@@ -74,11 +80,12 @@ export function createSubmissionService(pool: Pool, configuration: SubmissionAdm
           FROM "FirstStackRun" r JOIN "FirstStackWork" w ON w."runId"=r.id`, [owner])).rows[0];
         if (Number(usage.retained) + reservedBytes > submissionEnvelope.retainedBytes ||
           verifying && (usage.queued >= submissionEnvelope.queued || usage.owned >= submissionEnvelope.perOwner || Number(usage.bytes) + inputBytes > submissionEnvelope.queuedBytes)) throw new AppError("Submission storage or verification capacity busy", 503);
-        const id = randomUUID(), lineage = { kind: "design", infrastructureId: design.id, updatedAt: request.expectedDesignUpdatedAt, designRevision: request.expectedDesignRevision };
+        const id = randomUUID(), lineage: SubmissionLineage = { kind: "design", infrastructureId: design.id, updatedAt: request.expectedDesignUpdatedAt, designRevision: request.expectedDesignRevision };
+        const workload: SubmittedWorkloadReference = { identity: prepared.schedule.identity, executedScheduleHash: prepared.schedule.executedScheduleHash, origin: "submitted-recording" };
         await db.query(`INSERT INTO "FirstStackRun" (id,"ownerId","idempotencyKey","requestHash",purpose,engine,input,"inputHash",lock,seed,workload,envelope,lineage,"browserCut","inputBytes","reservedBytes")
           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)`,
         [id, owner, request.idempotencyKey, requestHash, request.purpose, request.engine, input, inputHash, prepared.lock, prepared.policy.seed,
-          { identity: prepared.schedule.identity, executedScheduleHash: prepared.schedule.executedScheduleHash, origin: "submitted-recording" },
+          workload,
           { ...submissionEnvelope, commercial: commercial.revision }, lineage, browserCut, inputBytes, reservedBytes]);
         await db.query('INSERT INTO "FirstStackWork" ("runId",status) VALUES ($1,$2)', [id, verifying ? "queued" : "terminal"]);
         if (verifying) await db.query('INSERT INTO "FirstStackOutbox" ("runId") VALUES ($1)', [id]);

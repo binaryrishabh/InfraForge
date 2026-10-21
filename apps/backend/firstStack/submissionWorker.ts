@@ -11,12 +11,12 @@ import type { IsolationConfiguration } from "./isolationRunner";
 export interface SubmissionVerifier {
   admission: SubmissionAdmission; isolation: IsolationConfiguration; control: IsolationControl;
 }
-export function createSubmissionFence(run: any, token: string) {
+export function createSubmissionFence(run: any, token: string, allowed: () => boolean = () => true) {
   return {
     async check(db: Client) {
       const row = (await db.query(`SELECT w.* FROM "FirstStackWork" w JOIN "FirstStackRun" r ON r.id=w."runId"
         WHERE r.id=$1 AND r."ownerId"=$2 AND r."inputHash"=$3 FOR UPDATE OF w`, [run.id, run.ownerId, run.inputHash])).rows[0];
-      if (!row || row.status !== "running" || row.token !== token || row.cancelRequested || !row.authorized) throw Error("Submission ownership cancelled, revoked or lost");
+      if (!allowed() || !row || row.status !== "running" || row.token !== token || row.cancelRequested || !row.authorized) throw Error("Submission ownership cancelled, revoked or lost");
     },
     async commit(db: Client, cut: IsolatedCut) {
       const previous = (await db.query('SELECT body FROM "FirstStackCut" WHERE "runId"=$1 ORDER BY sequence DESC LIMIT 1', [run.id])).rows[0]?.body;
@@ -52,23 +52,28 @@ export async function verifySubmission(pool: Pool, databaseUrl: string, id: stri
     return row;
   });
   if (!run) return;
+  const allowed = () => configuration.admission.enabled && configuration.admission.engine !== null &&
+    canonical(configuration.admission.engine) === canonical(run.engine) && configuration.isolation.source === run.engine.source && configuration.isolation.image === run.engine.image;
   // The session lock is shared with execute AND replay, across all workers.
   // A lost COMMIT response is never automatically retried. Durable cuts are
   // read from PostgreSQL on recovery; no continuation is inferred from Redis.
   try {
-    await withFirstStackOwnership(databaseUrl, createSubmissionFence(run, token), async (authority, signal) => {
+    const execution = await withFirstStackOwnership(databaseUrl, createSubmissionFence(run, token, allowed), async (authority, signal) => {
       const result = await executeFirstStackIsolated(configuration.control, configuration.isolation, run.input, authority, signal);
-      await submissionTransaction(pool, async db => {
+      return { result, held: !signal.aborted };
+    });
+    // The container AND the session ownership have cleared before releasing a
+    // reservation. Recheck the captured work token/authorization in this commit.
+    await submissionTransaction(pool, async db => {
         const state = (await db.query('SELECT * FROM "FirstStackWork" WHERE "runId"=$1 FOR UPDATE', [id])).rows[0];
         if (!state || state.status !== "running" || state.token !== token) throw Error("Submission completion fence lost");
-        const outcome = verificationOutcome(run, result, state.authorized && !state.cancelRequested && !signal.aborted);
+        const outcome = verificationOutcome(run, execution.result, state.authorized && !state.cancelRequested && execution.held && allowed());
         if (!outcome.clean) {
           await db.query('UPDATE "FirstStackWork" SET status=\'recovery\' WHERE "runId"=$1', [id]);
           return; // Unconfirmed cleanup retains its reservation and blocks replacements.
         }
         await appendSubmissionResult(db, id, outcome.body);
         await db.query('UPDATE "FirstStackWork" SET status=\'terminal\' WHERE "runId"=$1', [id]);
-      });
     });
   } catch (error) {
     // Conservative even if launch failed before create: operator reviews the

@@ -29,7 +29,7 @@ export async function checkFirstStackSchema(db: Pick<Client | Pool, "query">) {
   const constraints = await db.query(`SELECT conname,pg_get_constraintdef(oid) AS definition FROM pg_constraint
     WHERE conrelid IN ('public."FirstStackRun"'::regclass,'public."FirstStackWork"'::regclass,'public."FirstStackCut"'::regclass,'public."FirstStackResult"'::regclass)
       AND contype='c' AND convalidated`);
-  const limits: Record<string, string[]> = { first_stack_input: ["16777216", "33554432", "300000000", "infraforge-first-stack-compile-lock/2", "IS TRUE"],
+  const limits: Record<string, string[]> = { first_stack_input: ["16777216", "37748736", "300000000", "infraforge-first-stack-compile-lock/2", "IS TRUE"],
     first_stack_work: ["33554432", "recovery", "terminal"], first_stack_cut: ["4096", "2097152", "300000000", "IS TRUE"],
     first_stack_result: ["33554432", "unverified", "verified", "IS TRUE"] };
   if (constraints.rowCount !== 4 || constraints.rows.some(r => !limits[r.conname]?.every(fragment => r.definition.includes(fragment)))) throw Error("First-stack persistence limits differ from release");

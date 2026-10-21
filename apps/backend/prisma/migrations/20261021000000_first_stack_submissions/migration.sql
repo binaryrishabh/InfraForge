@@ -10,7 +10,7 @@ CREATE TABLE "FirstStackRun" (
     purpose IN ('private','scored','shared') AND "requestHash" ~ '^[a-f0-9]{64}$' AND "inputHash" ~ '^[a-f0-9]{64}$'
     AND engine->>'source' ~ '^[a-f0-9]{64}$' AND engine->>'image' ~ '^sha256:[a-f0-9]{64}$'
     AND octet_length(input) BETWEEN 1 AND 16777216 AND "inputBytes"=octet_length(input)
-    AND "reservedBytes"="inputBytes"+33554432 AND octet_length("browserCut"::text)<=2097152
+    AND "reservedBytes"="inputBytes"+37748736 AND octet_length("browserCut"::text)<=2097152
     AND input::jsonb->'policy'->>'seed'=seed AND input::jsonb->'owner'=to_jsonb("ownerId")
     AND (input::jsonb->'policy'->>'horizonUs')::bigint BETWEEN 1 AND 300000000
     AND lock->>'schema'='infraforge-first-stack-compile-lock/2'

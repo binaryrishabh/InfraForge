@@ -35,7 +35,8 @@ Admission uses one transaction advisory lock for owner/global reservations and
 rate limits. Defaults: ten successful submissions per rolling database hour per
 owner, one outstanding verification per owner, sixteen outstanding globally,
 256 MiB outstanding input bytes and 2 GiB retained reservations. Each submission
-reserves input bytes plus 32 MiB evidence, including private submissions. These
+reserves input bytes plus 32 MiB server evidence and 4 MiB for browser evidence
+and identity metadata, including private submissions. These
 are conservative software limits, not qualified host capacity measurements.
 Lost-response retries return the original ID without charging another rate or
 storage reservation, even after design edits or reaching the rate limit. A

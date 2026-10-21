@@ -8,7 +8,7 @@ import { checkFirstStackSchema } from "../../release/firstStackSchema";
 import { hash } from "../../firstStack/canonical";
 import { submissionFixture } from "../submissionFixture";
 
-const url = process.env.FIRST_STACK_TEST_DATABASE;
+const url = process.env.FIRST_STACK_TEST_DATABASE ?? (process.env.INTEGRATION_RUN === "1" ? process.env.INTEGRATION_DATABASE_URL : undefined);
 async function rejected(promise: Promise<unknown>, text?: string) {
   let error: unknown; try { await promise; } catch (e) { error = e; }
   expect(error).toBeInstanceOf(Error);
@@ -16,7 +16,8 @@ async function rejected(promise: Promise<unknown>, text?: string) {
 }
 (url ? test : test.skip)("owned admission is atomic, bounded, immutable and fenced through cancellation/restart", async () => {
   const parsed = new URL(url!);
-  if (process.env.INTEGRATION_DISPOSABLE !== "local-only" || !["localhost", "127.0.0.1"].includes(parsed.hostname) || parsed.pathname !== "/infraforge_isolation" || parsed.search) throw Error("Explicit disposable local isolation database required");
+  if (process.env.INTEGRATION_DISPOSABLE !== "local-only" || !["localhost", "127.0.0.1"].includes(parsed.hostname) ||
+    !(parsed.pathname === "/infraforge_isolation" || /^\/infraforge_it_[a-f0-9]+$/.test(parsed.pathname)) || parsed.search) throw Error("Explicit disposable local isolation database required");
   const pool = new Pool({ connectionString: url, max: 4, query_timeout: 5000 }), f = await submissionFixture();
   const service = createSubmissionService(pool, { enabled: true, engine: f.engine });
   const db = new Client({ connectionString: url }); await db.connect();
