@@ -45,7 +45,7 @@ node .cache/browser-tooling/node_modules/playwright/cli.js install chromium fire
 bun --no-env-file scripts/browser-first-stack/determinism.ts
 node scripts/browser-first-stack/build.mjs
 bun --no-env-file scripts/browser-first-stack/determinism.ts --worker --vite
-bun --no-env-file --no-install test scripts/tests/browserRunner.test.ts scripts/tests/browserSubmission.test.ts scripts/tests/browserPin.test.ts scripts/tests/boundaries.test.ts
+bun --no-env-file --no-install test scripts/tests/browserRunner.test.ts scripts/tests/browserSubmission.test.ts scripts/tests/browserPin.test.ts scripts/tests/browserBoundary.test.ts scripts/tests/boundaries.test.ts
 ```
 
 Linux browser installs require Playwright's `--with-deps`. CI reuses its external
