@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import { releaseSequence, rollbackSequence, type Release, type ReleaseOperations } from "../release/sequence";
 import { webRelease } from "../../apps/web/releaseConfig";
 import { cancelCommands, command } from "../release/process";
-import { applicationStopBlockers } from "../release/compose";
+import { applicationStopBlockers, releaseDependencyClosure } from "../release/compose";
 
 const release = (sha: string): Release => ({ sha, image: `image:${sha}`, imageId: sha, authContract: 1, migrationFingerprint: "same-schema", settingsFingerprint: "same-settings" });
 test("shutdown inspects actual owned states and rejects paused, restarting and unknown containers", () => {
@@ -82,4 +82,13 @@ test("interruption cancels only command children owned by this release process",
     .then(() => undefined, (error: Error) => error);
   await cancelCommands();
   expect((await running)?.message).toContain("failed");
+});
+
+test("release image preparation covers started services and their dependencies only", () => {
+  const declared = { api: { depends_on: { redis: {} } }, worker: { depends_on: { redis: {} } }, "ws-server": { depends_on: { redis: {} } },
+    redis: {}, migration: { depends_on: { redis: {} } }, "pool-session": {}, edge: { depends_on: { cache: {} } }, cache: {} };
+  expect([...releaseDependencyClosure(declared, ["api", "worker", "ws-server"])].sort()).toEqual(["api", "redis", "worker", "ws-server"]);
+  // Transitive dependencies are followed; fixtures and unknown names are never selected.
+  expect([...releaseDependencyClosure(declared, ["edge", "missing"])].sort()).toEqual(["cache", "edge"]);
+  expect([...releaseDependencyClosure({ a: { depends_on: { b: {} } }, b: { depends_on: { a: {} } } }, ["a"])].sort()).toEqual(["a", "b"]);
 });

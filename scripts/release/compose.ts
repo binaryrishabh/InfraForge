@@ -14,6 +14,16 @@ export function applicationStopBlockers(records: ContainerState[], project: stri
       ? [] : [`${record.Name}: ${record.State.Status}`];
   });
 }
+// Services a release starts plus everything they transitively depend on (for example Redis).
+export function releaseDependencyClosure(declared: Record<string, { depends_on?: Record<string, unknown> }>, roots: readonly string[]) {
+  const needed = new Set<string>(), pending = [...roots];
+  for (let name = pending.pop(); name !== undefined; name = pending.pop()) {
+    if (needed.has(name) || !declared[name]) continue;
+    needed.add(name);
+    pending.push(...Object.keys(declared[name]!.depends_on ?? {}));
+  }
+  return needed;
+}
 export class ComposeRelease implements ReleaseOperations {
   private active: Release;
   constructor(readonly root: string, readonly envFile: string, readonly project: string, readonly next: Release,
@@ -39,13 +49,15 @@ export class ComposeRelease implements ReleaseOperations {
   }
   private dependencyImagesReady = false;
   // Services start with --pull never. A fresh host has no cached third-party images, so fetch only the
-  // missing ones before anything stops; an existing host keeps exactly the image it already runs.
+  // missing ones the released services depend on before anything stops; an existing host keeps
+  // exactly the image it already runs, and unrelated (for example fixture) services are not touched.
   private async ensureDependencyImages() {
     if (this.dependencyImagesReady) return;
-    const services = (await this.config()).services as Record<string, { image?: string }>;
-    for (const [name, service] of Object.entries(services)) {
-      if (!service.image || service.image === this.next.image) continue;
-      try { await command(["docker", "image", "inspect", service.image], this.root, this.environment); }
+    const declared = (await this.config()).services as Record<string, { image?: string; depends_on?: Record<string, unknown> }>;
+    for (const name of releaseDependencyClosure(declared, services)) {
+      const image = declared[name]!.image;
+      if (!image || image === this.next.image) continue;
+      try { await command(["docker", "image", "inspect", image], this.root, this.environment); }
       catch { await this.compose(["pull", "--quiet", name], this.next); }
     }
     this.dependencyImagesReady = true;
