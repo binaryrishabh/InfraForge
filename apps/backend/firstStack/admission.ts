@@ -58,7 +58,9 @@ export function createSubmissionService(pool: Pool, configuration: SubmissionAdm
           if (previous.rows[0].requestHash !== requestHash) throw new ConflictError("Idempotency key already used for different content");
           return { id: previous.rows[0].id as string, reused: true };
         }
-        const design = (await db.query('SELECT * FROM "Infrastructure" WHERE id=$1 AND "ownerId"=$2 FOR UPDATE', [request.infrastructureId, owner])).rows[0];
+        // Prisma DateTime stores UTC in a timestamp-without-time-zone column.
+        // Decode it explicitly so raw pg and Prisma revisions agree in every TZ.
+        const design = (await db.query('SELECT id,layout,"challengeId","updatedAt" AT TIME ZONE \'UTC\' AS "updatedAt" FROM "Infrastructure" WHERE id=$1 AND "ownerId"=$2 FOR UPDATE', [request.infrastructureId, owner])).rows[0];
         if (!design) throw new NotFoundError("Saved design unavailable");
         if (design.challengeId) throw new ValidationError("Fixed challenge submissions require a server-owned challenge adapter");
         if (design.updatedAt.toISOString() !== request.expectedDesignUpdatedAt || designRevision(design.layout) !== request.expectedDesignRevision) throw new ConflictError("Saved design changed; review its exact revision");
@@ -94,7 +96,8 @@ export function createSubmissionService(pool: Pool, configuration: SubmissionAdm
       });
     },
     async read(owner: string, id: string) {
-      const row = (await pool.query(`SELECT r.*,w.status,w."cancelRequested",s.body AS result,s.hash AS "resultHash"
+      const row = (await pool.query(`SELECT r.*,w.status,w."cancelRequested",s.body AS result,s.hash AS "resultHash",
+        (SELECT body FROM "FirstStackCut" WHERE "runId"=r.id ORDER BY sequence DESC LIMIT 1) AS "durablePrefix"
         FROM "FirstStackRun" r JOIN "FirstStackWork" w ON w."runId"=r.id LEFT JOIN "FirstStackResult" s ON s."runId"=r.id WHERE r.id=$1 AND r."ownerId"=$2`, [id, owner])).rows[0];
       if (!row) throw new NotFoundError();
       return row;

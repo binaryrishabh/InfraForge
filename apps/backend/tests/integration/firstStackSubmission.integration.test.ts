@@ -61,6 +61,7 @@ async function rejected(promise: Promise<unknown>, text?: string) {
     await rejected(pool.query('DELETE FROM "FirstStackCut" WHERE "runId"=$1', [first.id]), "append-only");
     await markSubmissionRecovery(pool);
     expect((await service.read(f.owner, first.id)).status).toBe("recovery");
+    expect((await service.read(f.owner, first.id)).durablePrefix.fingerprint).toBe(f.request.browserCut.fingerprint);
     await rejected(pool.query('UPDATE "FirstStackWork" SET status=\'queued\' WHERE "runId"=$1', [first.id]), "state transition");
     await rejected(service.submit(f.owner, { ...f.request, idempotencyKey: "still-reserved" }), "capacity busy");
     const privateRun = await service.submit(f.owner, { ...f.request, idempotencyKey: "private", purpose: "private" });
