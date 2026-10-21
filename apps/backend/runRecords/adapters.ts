@@ -6,6 +6,7 @@ import { readEnvelope } from "../internalModel2/envelope";
 import type { InternalRunRow } from "../internalModel2/store";
 import { requireKnown } from "@infraforge/simulation/internal-product";
 import { readRunRecord } from "./schema";
+export { firstStackRunRecord } from "./firstStack";
 
 export function model1RunRecord(row: StoredRun): RunRecord {
   const report = buildRunReport(row);

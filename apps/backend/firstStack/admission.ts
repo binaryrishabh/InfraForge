@@ -7,6 +7,7 @@ import { canonical, designRevision, hash } from "./canonical";
 import { prepareFirstStackExecution } from "./execution";
 import { inputDigest, readIsolatedCut } from "./isolationProtocol";
 import { digestPattern, imagePattern } from "./isolationPolicy";
+import { firstStackRunRecord } from "../runRecords/firstStack";
 
 export const submissionEnvelope = Object.freeze({ revision: "first-stack-submission/1", queued: 16,
   queuedBytes: 256 * 1024 * 1024, retainedBytes: 2 * 1024 * 1024 * 1024,
@@ -100,7 +101,7 @@ export function createSubmissionService(pool: Pool, configuration: SubmissionAdm
         (SELECT body FROM "FirstStackCut" WHERE "runId"=r.id ORDER BY sequence DESC LIMIT 1) AS "durablePrefix"
         FROM "FirstStackRun" r JOIN "FirstStackWork" w ON w."runId"=r.id LEFT JOIN "FirstStackResult" s ON s."runId"=r.id WHERE r.id=$1 AND r."ownerId"=$2`, [id, owner])).rows[0];
       if (!row) throw new NotFoundError();
-      return row;
+      return firstStackRunRecord(row);
     },
     async cancel(owner: string, id: string) {
       requireCapability(owner, { capability: "run.control", runId: id, control: "cancel-verification" });

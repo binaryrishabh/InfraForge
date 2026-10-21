@@ -6,7 +6,7 @@ import { closeSubmissionRecovery, createSubmissionService } from "../../firstSta
 import { createSubmissionFence, markSubmissionRecovery } from "../../firstStack/submissionWorker";
 import { withFirstStackOwnership } from "../../firstStack/isolationOwnership";
 import { checkFirstStackSchema } from "../../release/firstStackSchema";
-import { hash } from "../../firstStack/canonical";
+import type { FirstStackReport } from "@infraforge/contracts/reports";
 import { submissionFixture } from "../submissionFixture";
 
 const url = process.env.FIRST_STACK_TEST_DATABASE ?? (process.env.INTEGRATION_RUN === "1" ? process.env.INTEGRATION_DATABASE_URL : undefined);
@@ -47,7 +47,7 @@ async function rejected(promise: Promise<unknown>, text?: string) {
     await rejected(service.submit(f.owner, { ...f.request, idempotencyKey: "stale", expectedDesignRevision: "f".repeat(64) }), "Saved design changed");
     await rejected(service.submit(f.owner, { ...f.request, idempotencyKey: "forged", browserCut: { ...f.request.browserCut, fingerprint: "f".repeat(64) } }), "fingerprint");
     await rejected(service.submit(f.owner, { ...f.request, idempotencyKey: "capacity" }), "capacity busy");
-    const stored = { ...await service.read(f.owner, first.id), daemon: "c".repeat(64) };
+    const stored = { ...(await pool.query('SELECT * FROM "FirstStackRun" WHERE id=$1', [first.id])).rows[0], daemon: "c".repeat(64) };
     for (const sql of ['UPDATE "FirstStackRun" SET seed=\'changed\' WHERE id=$1', 'DELETE FROM "FirstStackRun" WHERE id=$1']) await rejected(pool.query(sql, [first.id]), "append-only");
     for (const edit of [
       { engine: {} }, { lock: {} }, { input: "{}", inputBytes: 2, reservedBytes: 33554434 }, { inputBytes: 0 },
@@ -72,12 +72,13 @@ async function rejected(promise: Promise<unknown>, text?: string) {
     await rejected(pool.query('DELETE FROM "FirstStackCut" WHERE "runId"=$1', [first.id]), "append-only");
     await markSubmissionRecovery(pool);
     expect((await service.read(f.owner, first.id)).status).toBe("recovery");
-    expect((await service.read(f.owner, first.id)).durablePrefix.fingerprint).toBe(f.request.browserCut.fingerprint);
+    expect(((await service.read(f.owner, first.id)).evidence.report as FirstStackReport).origin).toBe("server");
     await rejected(pool.query('UPDATE "FirstStackWork" SET status=\'queued\' WHERE "runId"=$1', [first.id]), "state transition");
     await rejected(service.submit(f.owner, { ...f.request, idempotencyKey: "still-reserved" }), "capacity busy");
     const privateRun = await service.submit(f.owner, { ...f.request, idempotencyKey: "private", purpose: "private" });
     const privateRead = await service.read(f.owner, privateRun.id);
-    expect(privateRead.result.verification).toBe("unverified"); expect(privateRead.resultHash).toBe(hash(privateRead.result));
+    expect((privateRead.evidence.report as FirstStackReport).verification.status).toBe("unverified");
+    expect(privateRead.schema).toBe("infraforge-run-record/1");
     await rejected(pool.query('UPDATE "FirstStackResult" SET body=\'{}\' WHERE "runId"=$1', [privateRun.id]), "append-only");
     // Ten successful submissions per owner/hour, including private runs. Lost
     // responses still reuse an existing run after the limit is reached.
@@ -96,8 +97,8 @@ async function rejected(promise: Promise<unknown>, text?: string) {
     const cleanup = { token: "test-token", daemon: stored.daemon, image: f.engine.image, cleanup: "not-created", reviewer: "fixture-operator", proof: "Software fixture: no Docker container was created" };
     await rejected(closeSubmissionRecovery(pool, first.id, { ...cleanup, token: "wrong-token" }), "Recovery identity");
     await closeSubmissionRecovery(pool, first.id, cleanup);
-    expect((await service.read(f.owner, first.id)).result.verification).toBe("interrupted");
-    expect((await service.read(f.owner, first.id)).durablePrefix.fingerprint).toBe(f.request.browserCut.fingerprint);
+    expect(((await service.read(f.owner, first.id)).evidence.report as FirstStackReport).verification.status).toBe("interrupted");
+    expect(((await service.read(f.owner, first.id)).evidence.report as FirstStackReport).origin).toBe("server");
     expect((await pool.query('SELECT count(*)::int AS count FROM "FirstStackWork" WHERE status<>\'terminal\'')).rows[0].count).toBe(15);
   } finally {
     await db.end(); await pool.end();
