@@ -127,4 +127,20 @@ describe("source import boundaries", () => {
       expect(checkBoundaries(root).errors.join("\n")).toContain("model2/run.ts: browser closure reaches forbidden simulation runtime");
     });
   });
+  test("first-stack runtime is isolated to a pure worker closure", () => {
+    withWorkspaceFixture((root, put) => {
+      put("packages/simulation/package.json", JSON.stringify({ name: "@infraforge/simulation", exports: { "./internal-first-stack": "./src/internalFirstStack.ts" } }));
+      put("packages/simulation/src/internalFirstStack.ts", "export { run } from './model2/run';");
+      put("packages/simulation/src/model2/run.ts", "export const run = 1;");
+      put("apps/web/package.json", JSON.stringify({ name: "@infraforge/web", dependencies: { "@infraforge/simulation": "workspace:*", "@infraforge/domain": "workspace:*" } }));
+      put("apps/web/src/firstStack/worker/entry.ts", "import { run } from '@infraforge/simulation/internal-first-stack';");
+      expect(checkBoundaries(root).errors).toEqual([]);
+      put("apps/web/src/app.ts", "import './firstStack/worker/entry';");
+      expect(checkBoundaries(root).errors.join("\n")).toContain("page imports isolated first-stack worker module");
+      expect(checkBoundaries(root).errors.join("\n")).toContain("browser closure reaches forbidden simulation runtime");
+      put("apps/web/src/app.ts", "export const page = 1;");
+      put("packages/simulation/src/model2/run.ts", "import 'node:fs'; export const run = 1;");
+      expect(checkBoundaries(root).errors.join("\n")).toContain("browser worker imports runtime-only module node:fs");
+    });
+  });
 });

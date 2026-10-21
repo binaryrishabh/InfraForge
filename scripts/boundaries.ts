@@ -163,9 +163,12 @@ export function checkBoundaries(root: string): { errors: string[]; edges: Import
     }
   }
   for (const cycle of cycles(graph)) errors.push(`File import cycle: ${cycle.join(" -> ")}`);
-  // Type imports also form part of the browser contract. Only tuning/capacity are browser-safe simulation exports.
+  // Ordinary page imports retain the simulation-runtime ban, including types.
+  // The disposable first-stack worker has its own pure closure below. Importing
+  // its modules from a page is forbidden; only a module Worker URL crosses it.
+  const workerFolder = "apps/web/src/firstStack/worker/";
   const reachable = new Set<string>();
-  const pending = files.map((file) => normalized(relative(root, file))).filter((file) => file.startsWith("apps/web/src/"));
+  const pending = files.map((file) => normalized(relative(root, file))).filter((file) => file.startsWith("apps/web/src/") && !file.startsWith(workerFolder));
   while (pending.length) {
     const source = pending.pop()!;
     if (reachable.has(source)) continue;
@@ -174,10 +177,24 @@ export function checkBoundaries(root: string): { errors: string[]; edges: Import
       errors.push(`${source}: browser closure reaches forbidden simulation runtime`);
     }
     for (const edge of edges.filter((item) => item.source === source)) {
+      if (edge.target?.startsWith(workerFolder)) errors.push(`${source}:${edge.line}: page imports isolated first-stack worker module`);
       if (edge.specifier.startsWith("node:") || builtins.has(edge.specifier) || edge.specifier === "bun" || edge.specifier === "bun:test") {
         errors.push(`${source}:${edge.line}: browser closure imports runtime-only module ${edge.specifier}`);
       }
       if (edge.target) pending.push(edge.target);
+    }
+  }
+  const workerPending = files.map(file => normalized(relative(root, file))).filter(file => file.startsWith(workerFolder));
+  const workerSeen = new Set<string>();
+  while (workerPending.length) {
+    const source = workerPending.pop()!;
+    if (workerSeen.has(source)) continue;
+    workerSeen.add(source);
+    if (source.startsWith("apps/backend/") || /^packages\/simulation\/src\/(?:engine[^/]*|cost|topology|types|models)(?:\.|\/)/.test(source)) errors.push(`${source}: forbidden first-stack worker dependency`);
+    for (const edge of edges.filter(item => item.source === source)) {
+      if (edge.specifier.startsWith("node:") || builtins.has(edge.specifier) || ["bun", "bun:test"].includes(edge.specifier)) errors.push(`${source}:${edge.line}: browser worker imports runtime-only module ${edge.specifier}`);
+      if (source.startsWith(workerFolder) && edge.specifier.startsWith("@infraforge/simulation/") && edge.specifier !== "@infraforge/simulation/internal-first-stack") errors.push(`${source}:${edge.line}: worker must use the first-stack compiler surface`);
+      if (edge.target) workerPending.push(edge.target);
     }
   }
   const packageGraph = new Map<string, string[]>();
