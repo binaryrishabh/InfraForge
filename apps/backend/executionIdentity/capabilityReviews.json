@@ -1161,11 +1161,11 @@
     "review": "Reviewed cache/fault rebase: existing computed-data indexing only; finite non-cache scenario compilation, bounded read retries and scenario evidence; cache V3 keeps empty faults and forbids retries in schema, type and trusted compiler. No dynamic loader, evaluator, host access or activation."
   },
   "packages/simulation/src/firstStack/journal.ts": {
-    "hash": "786bc65fab84faf4dc0ce2de5001261aa977c004f311139e5b93635e8149b7bf",
+    "hash": "0fea278ec50dfc93ad828887f7bbf2c9de285e1b3bf4a1ef231898e95fdd4191",
     "capabilities": [
       "computed-data"
     ],
-    "review": "Internal first-stack V2 review/compiler/qualification: fixed JSON indexing and statically imported Stage 1 registry/host composition; bounded recorded keys and DB health; opt-in host bounds, finite reducers and cooperative qualification only; no evaluator, dynamic loader, product dispatch, HTTP executor or activation"
+    "review": "Bounded first-stack report data capture/projection: fixed schemas, finite JSON, selected journal identities, immutable input/capture verification; no evaluators, new process permissions, physics changes or activation"
   },
   "packages/simulation/src/model2/workload/contracts.ts": {
     "hash": "979006970bb8f341505adcc383c75899d52b2426c3ee0755b280cebe9c404c1a",
@@ -1221,11 +1221,11 @@
     "review": "Bounded finite IO arrays/maps and typed same-clock receipts; no loader, evaluator, host IO, network or activation"
   },
   "apps/backend/firstStack/executionCut.ts": {
-    "hash": "6325b8351608de84bad72a7719ab907b5b13819ee5e758579a488b62a171d3bf",
+    "hash": "b5ff9fbacf544264d8ef15abb182127f27d2d540f3f810265bd93f20e755f534",
     "capabilities": [
       "computed-data"
     ],
-    "review": "Isolated first-stack data protocol, fixed local Docker CLI, cgroup/rlimit inspection, finite stream framing and durable event-prefix replay; no arbitrary evaluator or code supplied by a run; no public dispatch or Model 2 activation"
+    "review": "Bounded first-stack report data capture/projection: fixed schemas, finite JSON, selected journal identities, immutable input/capture verification; no evaluators, new process permissions, physics changes or activation"
   },
   "apps/backend/firstStack/isolationPolicy.ts": {
     "hash": "66d2d1a4cb4ffd62a7379f013a027a0e157928458d364134718cb253199e87c0",
@@ -1235,11 +1235,11 @@
     "review": "Isolated first-stack data protocol, fixed local Docker CLI, cgroup/rlimit inspection, finite stream framing and durable event-prefix replay; no arbitrary evaluator or code supplied by a run; no public dispatch or Model 2 activation"
   },
   "apps/backend/firstStack/isolationProtocol.ts": {
-    "hash": "565fcf3c9c9b500ba4f9395f4deb2f947f07d1e4e4bf2c344462beb90ef6fad5",
+    "hash": "421873330f77be9c0ae6d22144df05dcbaf6817cbc71225083957ad18d9d47f4",
     "capabilities": [
       "computed-data"
     ],
-    "review": "Isolated first-stack data protocol, fixed local Docker CLI, cgroup/rlimit inspection, finite stream framing and durable event-prefix replay; no arbitrary evaluator or code supplied by a run; no public dispatch or Model 2 activation"
+    "review": "Bounded first-stack report data capture/projection: fixed schemas, finite JSON, selected journal identities, immutable input/capture verification; no evaluators, new process permissions, physics changes or activation"
   },
   "apps/backend/firstStack/isolationConnection.ts": {
     "hash": "13c2a168cc178a4ad53080716564545add86f9e95e081884f414d3b51d6b774c",
@@ -1333,11 +1333,11 @@
     "review": "Internal first-stack V2 review/compiler/qualification: fixed JSON indexing and statically imported Stage 1 registry/host composition; bounded recorded keys and DB health; opt-in host bounds, finite reducers and cooperative qualification only; no evaluator, dynamic loader, product dispatch, HTTP executor or activation"
   },
   "apps/backend/firstStack/admission.ts": {
-    "hash": "cc01ed10e6004e84b00225b533f4bc35b063005621fe2645d96644291a1e260f",
+    "hash": "bdcbc9554a68b2665e62bf1bd66b83f357203ed225248186b16f5180c6638bd7",
     "capabilities": [
       "computed-data"
     ],
-    "review": "Exact inactive first-stack admission/store/serial queue and release schema review: bounded data, fixed SQL, owned immutable input and cut fence; trusted operator injection only; no evaluators, request-provided code, host activation or new process adapter"
+    "review": "Bounded first-stack report data capture/projection: fixed schemas, finite JSON, selected journal identities, immutable input/capture verification; no evaluators, new process permissions, physics changes or activation"
   },
   "apps/backend/firstStack/submissionRoutes.ts": {
     "hash": "d68fe0b6421e1d9ccd4342c68f2e0c5e77521d37afdac6e10c39b6481057e859",
@@ -1514,5 +1514,33 @@
       "generated-client"
     ],
     "review": "Prisma 7.9.1 generated client for the additive immutable submission schema; fixed literal imports, pinned generator/schema and no authored runtime injected"
+  },
+  "apps/backend/firstStack/report.ts": {
+    "hash": "7746cb97b358f4b275f5725449c1201a3ca624c5b6725060663c9c5263fe2946",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Bounded first-stack report data capture/projection: fixed schemas, finite JSON, selected journal identities, immutable input/capture verification; no evaluators, new process permissions, physics changes or activation"
+  },
+  "apps/backend/firstStack/reportCapture.ts": {
+    "hash": "ebc6bbc50f6bd3ed4d996b2b29a92161f791a211ea78e8d0bd042f9526ed3357",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Bounded first-stack report data capture/projection: fixed schemas, finite JSON, selected journal identities, immutable input/capture verification; no evaluators, new process permissions, physics changes or activation"
+  },
+  "apps/backend/runRecords/firstStack.ts": {
+    "hash": "2a29a995af52bd2b3241f4dfa3d69a99fedfa6c8d3d3af997cc35bbee59774b0",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Bounded first-stack report data capture/projection: fixed schemas, finite JSON, selected journal identities, immutable input/capture verification; no evaluators, new process permissions, physics changes or activation"
+  },
+  "apps/backend/runRecords/adapters.ts": {
+    "hash": "23859f8fd5b4703ff5b5c0cf981723abba7bf9eb8b4c530ec8473dc0324bee8f",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Bounded first-stack report data capture/projection: fixed schemas, finite JSON, selected journal identities, immutable input/capture verification; no evaluators, new process permissions, physics changes or activation"
   }
 }

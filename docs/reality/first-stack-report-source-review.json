@@ -1,0 +1,64 @@
+{
+  "schema": "first-stack-report-source-review/1",
+  "scope": "Data/contract layer only; bounded additive report capture, read-only history and selected causal facts; Model 2 inactive",
+  "files": [
+    {
+      "path": "apps/backend/firstStack/report.ts",
+      "hash": "7746cb97b358f4b275f5725449c1201a3ca624c5b6725060663c9c5263fe2946"
+    },
+    {
+      "path": "apps/backend/firstStack/reportCapture.ts",
+      "hash": "ebc6bbc50f6bd3ed4d996b2b29a92161f791a211ea78e8d0bd042f9526ed3357"
+    },
+    {
+      "path": "apps/backend/firstStack/admission.ts",
+      "hash": "bdcbc9554a68b2665e62bf1bd66b83f357203ed225248186b16f5180c6638bd7"
+    },
+    {
+      "path": "apps/backend/firstStack/executionCut.ts",
+      "hash": "b5ff9fbacf544264d8ef15abb182127f27d2d540f3f810265bd93f20e755f534"
+    },
+    {
+      "path": "apps/backend/firstStack/isolationProtocol.ts",
+      "hash": "421873330f77be9c0ae6d22144df05dcbaf6817cbc71225083957ad18d9d47f4"
+    },
+    {
+      "path": "apps/backend/runRecords/firstStack.ts",
+      "hash": "2a29a995af52bd2b3241f4dfa3d69a99fedfa6c8d3d3af997cc35bbee59774b0"
+    },
+    {
+      "path": "apps/backend/runRecords/adapters.ts",
+      "hash": "23859f8fd5b4703ff5b5c0cf981723abba7bf9eb8b4c530ec8473dc0324bee8f"
+    },
+    {
+      "path": "packages/simulation/src/firstStack/journal.ts",
+      "hash": "0fea278ec50dfc93ad828887f7bbf2c9de285e1b3bf4a1ef231898e95fdd4191"
+    },
+    {
+      "path": "packages/contracts/src/reports/firstStack.ts",
+      "hash": "c0cd1df0511e30586fa8ad6002ddd7533c0a0edd45fceb11b3e14abeca5015d7"
+    },
+    {
+      "path": "packages/contracts/src/reports/index.ts",
+      "hash": "ee6331ae8e33493f5fc29d51e4fe3fb1d8498a263bb659f469c9aaa579b32237"
+    },
+    {
+      "path": "scripts/reality/launch-contract.ts",
+      "hash": "05f2fd3fd513949efc4eb482be48c465e5975b7bb190192662a21b58ef19fcbc"
+    }
+  ],
+  "acceptance": [
+    {
+      "path": "apps/backend/tests/firstStackReport.test.ts",
+      "hash": "ed8cdea464507af16a5b8c59fa7abda5edb5a35579617cea8c1359a384553e54"
+    },
+    {
+      "path": "apps/backend/tests/integration/firstStackSubmission.integration.test.ts",
+      "hash": "2ed138edcf6dce99afcd3e5df5ec6a270fe1810a9daf4cdfa5164c09e6317d25"
+    },
+    {
+      "path": "scripts/tests/first-stack-report.test.ts",
+      "hash": "75012bc4cd033da5ed09249b5df11ceb341113b57e30a5836e12a103666658d4"
+    }
+  ]
+}
