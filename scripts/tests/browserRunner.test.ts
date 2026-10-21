@@ -41,7 +41,7 @@ for (const cache of [false, true]) test(`browser ${cache ? "cache" : "relational
   expect(() => readIsolatedCut(changed as unknown as IsolatedCut, pin.source, evidence.inputHash)).toThrow("fingerprint");
 });
 test("retained browser fixtures are fingerprints computed by the current server capture path", async () => {
-  expect(fixtureRows(await serverCases())).toEqual(serverResults.cases);
+  expect(serverCanonical(fixtureRows(await serverCases()))).toBe(serverCanonical(serverResults.cases));
 });
 test("report overflow matches the server's bounded Unknown fallback", async () => {
   const f = await firstStackCompileFixture(), prepared = f.prepare(), runtime = instantiatePreparedFirstStack(prepared);
