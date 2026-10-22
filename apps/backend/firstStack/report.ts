@@ -21,7 +21,7 @@ export const ReportCaptureSchema = z.object({ schema: z.literal("first-stack-rep
   unknown: z.array(text),
   allocationUsage: z.json().optional(),
 });
-const inputSchema = z.object({ policy: z.object({ seed: text, horizonUs: count.positive() }),
+const inputSchema = z.object({ schema: z.literal("infraforge-first-stack-submission/1").optional(), policy: z.object({ seed: text, horizonUs: count.positive() }),
   candidate: z.object({ nodes: z.json(), paths: z.json(), placement: z.json() }).passthrough(), recording: z.json() });
 const cutSchema = z.object({ throughUs: count, timestampComplete: z.boolean(),
   counts: z.record(z.string(), count), unfinished: z.object({ notYetOffered: count, callers: count, pendingEvents: count }),
@@ -35,7 +35,7 @@ const resultSchema = z.object({ verification: z.enum(["unverified", "verified", 
 export interface FirstStackStoredReportRow {
   id: string; input: string; inputHash: string; engine: { source: string }; lock: ReportJson;
   status: string; browserCut: unknown; durablePrefix: unknown; result: unknown; resultHash: string | null;
-  lineage: { infrastructureId: string }; createdAt: Date; updatedAt?: Date;
+  lineage: { infrastructureId: string; migratedFrom?: import("@infraforge/contracts/reports").RunReference }; createdAt: Date; updatedAt?: Date;
 }
 // Read recorded schemas only. This reader never compiles, executes or resolves latest.
 export function firstStackReport(row: FirstStackStoredReportRow, serverTariffs?: unknown): FirstStackReport {
@@ -62,6 +62,7 @@ export function firstStackReport(row: FirstStackStoredReportRow, serverTariffs?:
     }
     const server = row.durablePrefix !== null && row.durablePrefix !== undefined;
     const retained = readIsolatedCut((server ? row.durablePrefix : row.browserCut) as IsolatedCut, row.engine.source, row.inputHash);
+    if (retained.cut.lock.schema !== "infraforge-first-stack-compile-lock/2") throw Error("Unsupported historical compile lock schema");
     if (hash(retained.cut.lock) !== hash(row.lock)) throw Error("Recorded capture compile lock mismatch");
     const cut = cutSchema.parse(retained.cut);
     if (cut.throughUs > input.policy.horizonUs) throw Error("Capture extends beyond recorded horizon");

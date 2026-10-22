@@ -47,6 +47,7 @@ export function replayStored(row: InternalRunRow) {
   if (!actual) throw Error("No durable prefix is available");
   return { kind: actual.fingerprint === expected.fingerprint ? "MatchesRecordedPrefix" : "Mismatch", input: envelope.fingerprint,
     expected: expected.fingerprint, actual: actual.fingerprint, throughUs: actual.throughUs,
+    diagnostics: actual.fingerprint === expected.fingerprint ? [] : ["Stored capture fingerprint differs at the recorded sequence and throughUs; no later input or checkpoint was substituted"],
     complete: row.status === "completed" && actual.model.capture.reachedHorizon && actual.usage.snapshot.complete,
     mutation: "None; replay writes no product state" };
 }

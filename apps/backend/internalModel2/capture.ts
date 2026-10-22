@@ -19,5 +19,9 @@ export function capture(runtime: ReturnType<typeof instantiate>, envelope: Execu
   return v1.capture(runtime, envelope, sequence, history as v1.CaptureCheckpoint[]);
 }
 export function readCapture(value: unknown, input: string): StoredCapture {
-  return (value as { schema?: string })?.schema === "infraforge-internal-evidence/2" ? v2.readCaptureV2(value, input) : v1.readCapture(value, input);
+  switch ((value as { schema?: string })?.schema) {
+    case "infraforge-internal-evidence/1": return v1.readCapture(value, input);
+    case "infraforge-internal-evidence/2": return v2.readCaptureV2(value, input);
+    default: throw Error("Unsupported historical evidence version; no reinterpretation");
+  }
 }

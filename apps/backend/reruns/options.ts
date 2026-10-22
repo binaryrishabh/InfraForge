@@ -6,25 +6,27 @@ import { summarizeRun, type StoredRun } from "../reports/report";
 import { readRecords } from "../reports/records";
 import { compareInputs } from "../comparison/inputs";
 import { canonical } from "../comparison/design";
+import { historicalExecutionPolicy, type HistoricalExecutionPolicy } from "../runRecords/availability";
 
 export const MAX_MATCHED_STOP_SECONDS = 604800;
 export function rerunInputHash(input: RunInputs) { return createHash("sha256").update(canonical(input)).digest("hex"); }
 export function currentDesignInput(source: RunInputs, layout: unknown) {
   return { ...captureRunInputs(layout, source.workloadProfile), seed: source.seed };
 }
-export function buildRerunOptions(source: StoredRun & { runtimeActive?: boolean }, layout: unknown | null): RerunOptions {
+export function buildRerunOptions(source: StoredRun & { runtimeActive?: boolean }, layout: unknown | null, policy: HistoricalExecutionPolicy = historicalExecutionPolicy): RerunOptions {
   let input: RunInputs | null = null;
   try { input = readRunInputs(source.runInputs); } catch { /* Never reconstruct a missing input. */ }
   const inactive = ["completed", "failed", "torn-down"].includes(source.status) && !source.runtimeActive;
-  let exactReason: string | null = !inactive ? "Wait for this run to finish or stop it first." : input?.version !== 2 ? "Exact rerun requires readable captured V2 input; legacy provenance cannot be invented." : null;
+  const retiredReason = policy.model1Retired ? "Execution retired: historical Model 1 execution is unavailable. Migrate a reviewed design into a new Model 2 run." : null;
+  let exactReason: string | null = retiredReason ?? (!inactive ? "Wait for this run to finish or stop it first." : input?.version !== 2 ? "Exact rerun requires readable captured V2 input; legacy provenance cannot be invented." : null);
   if (!exactReason && canonical(input) !== canonical(source.runInputs)) exactReason = "Captured input contains unsupported fields. Exact rerun cannot silently discard them.";
   if (!exactReason && input) try { assertSimulationContext(input); } catch { exactReason = "Captured model/catalog differs from the current runtime. Exact rerun is unavailable."; }
-  let currentReason: string | null = !inactive ? "Wait for this run to finish or stop it first." : !input ? "Readable captured workload and seed are required." : layout === null ? "The original saved design was deleted or is unavailable." : null;
+  let currentReason: string | null = retiredReason ?? (!inactive ? "Wait for this run to finish or stop it first." : !input ? "Readable captured workload and seed are required." : layout === null ? "The original saved design was deleted or is unavailable." : null);
   let current: ReturnType<typeof currentDesignInput> | null = null;
   if (!currentReason && input) try { current = currentDesignInput(input, layout); } catch { currentReason = "The saved design is invalid. Update it before rerunning."; }
   const final = readRecords(source, []).terminal;
   const seconds = final?.simulatedSeconds;
-  const target = inactive && seconds !== undefined && Number.isSafeInteger(seconds) && seconds > 0 && seconds <= MAX_MATCHED_STOP_SECONDS ? seconds : null;
+  const target = !policy.model1Retired && inactive && seconds !== undefined && Number.isSafeInteger(seconds) && seconds > 0 && seconds <= MAX_MATCHED_STOP_SECONDS ? seconds : null;
   const preview = current ? compareInputs(input, current) : null;
   return { source: summarizeRun(source), workload: input?.workloadProfile ?? null, seed: input?.seed ?? null,
     exact: { available: exactReason === null, reason: exactReason },

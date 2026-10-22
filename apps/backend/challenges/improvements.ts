@@ -4,11 +4,13 @@ import { ConflictError } from "../utils/errors";
 import { findChallenge, challengeSeed } from "./registry";
 import { recordedExperiment } from "./experiment";
 import { readPrediction } from "./prediction";
+import { historicalExecutionPolicy, type HistoricalExecutionPolicy } from "../runRecords/availability";
 
 // Never substitute the latest version, current saved design, seed or rules.
 export function improvementSource(row: { challengeId?: string | null; challengeVersion?: number | null; challengeSpecHash?: string | null;
   status: string; runtimeActive?: boolean; runInputs: unknown; challengePrediction?: unknown;
-  evaluationStopAtSimulatedSeconds?: number | null; challengeExperiment?: unknown }, challengeId: string) {
+  evaluationStopAtSimulatedSeconds?: number | null; challengeExperiment?: unknown }, challengeId: string, policy: HistoricalExecutionPolicy = historicalExecutionPolicy) {
+  if (policy.model1Retired) throw new ConflictError("Execution retired: historical Model 1 improvements are unavailable; migrate a reviewed design into a new Model 2 run.");
   const entry = row.challengeId === challengeId && row.challengeVersion ? findChallenge(challengeId, row.challengeVersion) : null;
   if (!entry || entry.hash !== row.challengeSpecHash || row.runtimeActive || !["completed", "failed", "torn-down"].includes(row.status)) {
     throw new ConflictError("The source must be a finished attempt with its exact challenge version available.");

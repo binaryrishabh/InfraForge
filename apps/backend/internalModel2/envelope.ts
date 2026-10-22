@@ -13,6 +13,10 @@ export function compileEnvelope(run: string, owner: string, layout: unknown, upd
   return v1.compileEnvelope(run, owner, layout, updated, request);
 }
 export function readEnvelope(value: unknown, expected: string, compatible = true): ExecutionEnvelope {
-  return (value as { schema?: string })?.schema === "infraforge-internal-execution/2" ? v2.readEnvelopeV2(value, expected, compatible) : v1.readEnvelope(value, expected, compatible);
+  switch ((value as { schema?: string })?.schema) {
+    case "infraforge-internal-execution/1": return v1.readEnvelope(value, expected, compatible);
+    case "infraforge-internal-execution/2": return v2.readEnvelopeV2(value, expected, compatible);
+    default: throw Error("Unsupported historical input version; no reinterpretation");
+  }
 }
 export const captureCuts = v1.captureCuts;
