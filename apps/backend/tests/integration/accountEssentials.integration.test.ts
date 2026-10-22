@@ -97,9 +97,9 @@ import { createSubmissionService } from "../../firstStack/admission";
     expect((await sql.query('SELECT * FROM "FirstStackResult" WHERE "runId"=$1', [privateRun.id])).rows).toEqual(resultBefore);
     expect((await db.infrastructure.findUniqueOrThrow({ where: { id: a.request.infrastructureId } })).layout).toEqual({});
     expect((await db.user.findUniqueOrThrow({ where: { id: bob.id } })).email).toBe("bobby@example.test");
-    await expect(db.session.create({ data: { id: randomUUID(), token: randomUUID(), userId: alice.id, expiresAt: new Date(Date.now() + 60000) } })).rejects.toThrow();
-    await expect(db.account.create({ data: { id: randomUUID(), accountId: alice.id, userId: alice.id, providerId: "credential" } })).rejects.toThrow();
-    await expect(db.user.update({ where: { id: alice.id }, data: { deletedAt: null } })).rejects.toThrow();
+    await expect(Promise.resolve(db.session.create({ data: { id: randomUUID(), token: randomUUID(), userId: alice.id, expiresAt: new Date(Date.now() + 60000) } }))).rejects.toThrow();
+    await expect(Promise.resolve(db.account.create({ data: { id: randomUUID(), accountId: alice.id, userId: alice.id, providerId: "credential" } }))).rejects.toThrow();
+    await expect(Promise.resolve(db.user.update({ where: { id: alice.id }, data: { deletedAt: null } }))).rejects.toThrow();
     await expect(deleteAccount(db, alice.id)).rejects.toMatchObject({ statusCode: 401 });
   } finally {
     server.closeAllConnections(); if (server.listening) await new Promise<void>(resolve => server.close(() => resolve()));
