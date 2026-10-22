@@ -45,9 +45,11 @@ export function replayStored(row: InternalRunRow) {
     actual = capture(runtime, envelope, (actual?.sequence ?? 0) + 1, actual?.checkpoints ?? []);
   }
   if (!actual) throw Error("No durable prefix is available");
+  // Successful replay responses are retained proof data. Preserve their exact
+  // historical shape; mismatch diagnostics are an additive failure detail.
   return { kind: actual.fingerprint === expected.fingerprint ? "MatchesRecordedPrefix" : "Mismatch", input: envelope.fingerprint,
     expected: expected.fingerprint, actual: actual.fingerprint, throughUs: actual.throughUs,
-    diagnostics: actual.fingerprint === expected.fingerprint ? [] : ["Stored capture fingerprint differs at the recorded sequence and throughUs; no later input or checkpoint was substituted"],
+    ...(actual.fingerprint === expected.fingerprint ? {} : { diagnostics: ["Stored capture fingerprint differs at the recorded sequence and throughUs; no later input or checkpoint was substituted"] }),
     complete: row.status === "completed" && actual.model.capture.reachedHorizon && actual.usage.snapshot.complete,
     mutation: "None; replay writes no product state" };
 }
