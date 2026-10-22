@@ -164,7 +164,7 @@
     }
   },
   "apps/backend/executionIdentity/loading.ts": {
-    "hash": "871b3690b0f2f9e6b0670a8d779d2abc69b4e2cf103c25cc61f071992c9fdd74",
+    "hash": "e1c2ebab5d371fb1fda56662fdb4d2ca2f48a568993f726f24380e3e7bd9bd56",
     "capabilities": [
       "computed-data",
       "verifier",
@@ -172,7 +172,7 @@
     ],
     "review": "Fixed data indexing; resource adapters require the separate documented review",
     "globals": {
-      "hash": "871b3690b0f2f9e6b0670a8d779d2abc69b4e2cf103c25cc61f071992c9fdd74",
+      "hash": "e1c2ebab5d371fb1fda56662fdb4d2ca2f48a568993f726f24380e3e7bd9bd56",
       "names": [
         "Bun"
       ]
@@ -1120,11 +1120,11 @@
     "review": "Internal first-stack V2 review/compiler/qualification: fixed JSON indexing and statically imported Stage 1 registry/host composition; bounded recorded keys and DB health; opt-in host bounds, finite reducers and cooperative qualification only; no evaluator, dynamic loader, product dispatch, HTTP executor or activation"
   },
   "packages/simulation/src/internalFirstStack.ts": {
-    "hash": "8990e17b1c4d86930b8135f446df552ef96bdfb1893734424c7a4e74872986d3",
+    "hash": "8ed5344e86a078308fed253c1c7c28b5812b47ac1ed558a91a6287db2edeb036",
     "capabilities": [
       "computed-data"
     ],
-    "review": "Internal first-stack V2 review/compiler/qualification: fixed JSON indexing and statically imported Stage 1 registry/host composition; bounded recorded keys and DB health; opt-in host bounds, finite reducers and cooperative qualification only; no evaluator, dynamic loader, product dispatch, HTTP executor or activation"
+    "review": "Server-only frozen tariff projection from matching verified usage; shared pure simulation capture has no tariff inputs; exact EC2 arithmetic, no process/clock/network access, provider inference or activation"
   },
   "packages/simulation/src/firstStack/compiler.ts": {
     "hash": "a25f3771b3e437694e57a959cd3cf16612a965e9736d392107b3c6f232923485",
@@ -1225,7 +1225,7 @@
     "capabilities": [
       "computed-data"
     ],
-    "review": "Bounded first-stack report data capture/projection: fixed schemas, finite JSON, selected journal identities, immutable input/capture verification; no evaluators, new process permissions, physics changes or activation"
+    "review": "Server-only frozen tariff projection from matching verified usage; shared pure simulation capture has no tariff inputs; exact EC2 arithmetic, no process/clock/network access, provider inference or activation"
   },
   "apps/backend/firstStack/isolationPolicy.ts": {
     "hash": "66d2d1a4cb4ffd62a7379f013a027a0e157928458d364134718cb253199e87c0",
@@ -1516,25 +1516,25 @@
     "review": "Prisma 7.9.1 generated client for the additive immutable submission schema; fixed literal imports, pinned generator/schema and no authored runtime injected"
   },
   "apps/backend/firstStack/report.ts": {
-    "hash": "7746cb97b358f4b275f5725449c1201a3ca624c5b6725060663c9c5263fe2946",
+    "hash": "d32f6bfefc4933d5e643dc6770b197cf3b4dce02f1b1473646ade76b1d2b759e",
     "capabilities": [
       "computed-data"
     ],
-    "review": "Bounded first-stack report data capture/projection: fixed schemas, finite JSON, selected journal identities, immutable input/capture verification; no evaluators, new process permissions, physics changes or activation"
+    "review": "Server-only frozen tariff projection from matching verified usage; shared pure simulation capture has no tariff inputs; exact EC2 arithmetic, no process/clock/network access, provider inference or activation"
   },
   "apps/backend/firstStack/reportCapture.ts": {
-    "hash": "ebc6bbc50f6bd3ed4d996b2b29a92161f791a211ea78e8d0bd042f9526ed3357",
+    "hash": "4d6d7fc81d23645722fdf27d03f4ed58e11a1c0f96b05682c2537664b7425639",
     "capabilities": [
       "computed-data"
     ],
-    "review": "Bounded first-stack report data capture/projection: fixed schemas, finite JSON, selected journal identities, immutable input/capture verification; no evaluators, new process permissions, physics changes or activation"
+    "review": "Server-only frozen tariff projection from matching verified usage; shared pure simulation capture has no tariff inputs; exact EC2 arithmetic, no process/clock/network access, provider inference or activation"
   },
   "apps/backend/runRecords/firstStack.ts": {
-    "hash": "2a29a995af52bd2b3241f4dfa3d69a99fedfa6c8d3d3af997cc35bbee59774b0",
+    "hash": "69637e2762b70bb3c7bf21b4b33c0ff5c168146c7474a64cf68ef523ae985dce",
     "capabilities": [
       "computed-data"
     ],
-    "review": "Bounded first-stack report data capture/projection: fixed schemas, finite JSON, selected journal identities, immutable input/capture verification; no evaluators, new process permissions, physics changes or activation"
+    "review": "Server-only frozen tariff projection from matching verified usage; shared pure simulation capture has no tariff inputs; exact EC2 arithmetic, no process/clock/network access, provider inference or activation"
   },
   "apps/backend/runRecords/adapters.ts": {
     "hash": "23859f8fd5b4703ff5b5c0cf981723abba7bf9eb8b4c530ec8473dc0324bee8f",
@@ -1576,5 +1576,19 @@
       "computed-data"
     ],
     "review": "Exact scored challenge review: strict server-owned JSON and capacity constraints; fixed bounded data projection and grading; same serial isolated executor/session fence; append-only score result; no evaluator, host activation, new process adapter, engine physics or Model 1 rubric constants"
+  },
+  "apps/backend/firstStack/providerCost.ts": {
+    "hash": "0a410eb1489eed820367af7a775438b3541db4176ca695cc25c948881151ab37",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Server-only frozen tariff projection from matching verified usage; shared pure simulation capture has no tariff inputs; exact EC2 arithmetic, no process/clock/network access, provider inference or activation"
+  },
+  "packages/simulation/src/firstStack/reportCapture.ts": {
+    "hash": "58273d39c01920589f6212fb25f1f130fa0a3de21397ef86b8ee762695d78d82",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Server-only frozen tariff projection from matching verified usage; shared pure simulation capture has no tariff inputs; exact EC2 arithmetic, no process/clock/network access, provider inference or activation"
   }
 }

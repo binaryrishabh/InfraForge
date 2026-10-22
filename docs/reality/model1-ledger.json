@@ -342,7 +342,7 @@
     },
     {
       "file": "apps/backend/executionIdentity/loading.ts",
-      "sha256": "871b3690b0f2f9e6b0670a8d779d2abc69b4e2cf103c25cc61f071992c9fdd74",
+      "sha256": "e1c2ebab5d371fb1fda56662fdb4d2ca2f48a568993f726f24380e3e7bd9bd56",
       "numericSites": 14
     },
     {
@@ -456,14 +456,19 @@
       "numericSites": 0
     },
     {
+      "file": "apps/backend/firstStack/providerCost.ts",
+      "sha256": "0a410eb1489eed820367af7a775438b3541db4176ca695cc25c948881151ab37",
+      "numericSites": 26
+    },
+    {
       "file": "apps/backend/firstStack/report.ts",
-      "sha256": "7746cb97b358f4b275f5725449c1201a3ca624c5b6725060663c9c5263fe2946",
+      "sha256": "d32f6bfefc4933d5e643dc6770b197cf3b4dce02f1b1473646ade76b1d2b759e",
       "numericSites": 20
     },
     {
       "file": "apps/backend/firstStack/reportCapture.ts",
-      "sha256": "ebc6bbc50f6bd3ed4d996b2b29a92161f791a211ea78e8d0bd042f9526ed3357",
-      "numericSites": 2
+      "sha256": "4d6d7fc81d23645722fdf27d03f4ed58e11a1c0f96b05682c2537664b7425639",
+      "numericSites": 0
     },
     {
       "file": "apps/backend/firstStack/routes.ts",
@@ -837,7 +842,7 @@
     },
     {
       "file": "apps/backend/runRecords/firstStack.ts",
-      "sha256": "2a29a995af52bd2b3241f4dfa3d69a99fedfa6c8d3d3af997cc35bbee59774b0",
+      "sha256": "69637e2762b70bb3c7bf21b4b33c0ff5c168146c7474a64cf68ef523ae985dce",
       "numericSites": 1
     },
     {
@@ -2112,8 +2117,8 @@
     },
     {
       "file": "apps/web/src/firstStack/worker/reportCapture.ts",
-      "sha256": "172922409bbe7eca404f13d1fb406ed4f11a79696ce7d8b56b82ea345886137d",
-      "numericSites": 2
+      "sha256": "c952ec8ebc590ebf85f184b6aee826dbc39b681729dd79e6561b144ce9f26693",
+      "numericSites": 0
     },
     {
       "file": "apps/web/src/lib/format.ts",
@@ -2387,8 +2392,8 @@
     },
     {
       "file": "packages/contracts/src/reports/firstStack.ts",
-      "sha256": "c0cd1df0511e30586fa8ad6002ddd7533c0a0edd45fceb11b3e14abeca5015d7",
-      "numericSites": 1
+      "sha256": "bbdf16608ed1f6a8c97596ceb28c2d1be7394d5e3c9f6d177cb23b53fbd3391a",
+      "numericSites": 2
     },
     {
       "file": "packages/contracts/src/reports/index.ts",
@@ -2631,13 +2636,18 @@
       "numericSites": 15
     },
     {
+      "file": "packages/simulation/src/firstStack/reportCapture.ts",
+      "sha256": "58273d39c01920589f6212fb25f1f130fa0a3de21397ef86b8ee762695d78d82",
+      "numericSites": 4
+    },
+    {
       "file": "packages/simulation/src/firstStack/run.ts",
       "sha256": "5876dea937caa081a6f5b7f2328fcf11bbbf7e620b3bda9e777cdf6f20eca894",
       "numericSites": 11
     },
     {
       "file": "packages/simulation/src/internalFirstStack.ts",
-      "sha256": "8990e17b1c4d86930b8135f446df552ef96bdfb1893734424c7a4e74872986d3",
+      "sha256": "8ed5344e86a078308fed253c1c7c28b5812b47ac1ed558a91a6287db2edeb036",
       "numericSites": 0
     },
     {
@@ -34024,6 +34034,942 @@
       }
     },
     {
+      "id": "m1.apps.backend.firstStack.providerCost.1",
+      "concept": "text · literal 1",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.providerCost.1"
+        ]
+      },
+      "formula": "const text = z.string().min(1).max(512), id = text.max(160);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/providerCost.ts#L6",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/providerCost.ts",
+        "line": 6,
+        "column": 29
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.providerCost.2",
+      "concept": "text · literal 512",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 512,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.providerCost.2"
+        ]
+      },
+      "formula": "const text = z.string().min(1).max(512), id = text.max(160);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/providerCost.ts#L6",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/providerCost.ts",
+        "line": 6,
+        "column": 36
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.providerCost.3",
+      "concept": "id · literal 160",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 160,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.providerCost.3"
+        ]
+      },
+      "formula": "const text = z.string().min(1).max(512), id = text.max(160);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/providerCost.ts#L6",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/providerCost.ts",
+        "line": 6,
+        "column": 56
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.providerCost.4",
+      "concept": "tariff.policySources · literal 1",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.providerCost.4"
+        ]
+      },
+      "formula": "policySources: z.array(text).min(1).max(16)",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/providerCost.ts#L9",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/providerCost.ts",
+        "line": 9,
+        "column": 91
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.providerCost.5",
+      "concept": "tariff.policySources · literal 16",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 16,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.providerCost.5"
+        ]
+      },
+      "formula": "policySources: z.array(text).min(1).max(16)",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/providerCost.ts#L9",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/providerCost.ts",
+        "line": 9,
+        "column": 98
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.providerCost.6",
+      "concept": "tariff.tiers · literal 1",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.providerCost.6"
+        ]
+      },
+      "formula": "tiers: z.array(z.object({ from: id, to: id.nullable(), price: id }).strict()).min(1).max(64)",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/providerCost.ts#L12",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/providerCost.ts",
+        "line": 12,
+        "column": 85
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.providerCost.7",
+      "concept": "tariff.tiers · literal 64",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 64,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.providerCost.7"
+        ]
+      },
+      "formula": "tiers: z.array(z.object({ from: id, to: id.nullable(), price: id }).strict()).min(1).max(64)",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/providerCost.ts#L12",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/providerCost.ts",
+        "line": 12,
+        "column": 92
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.providerCost.8",
+      "concept": "tariff.exclusions · literal 1",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.providerCost.8"
+        ]
+      },
+      "formula": "exclusions: z.array(text).min(1).max(32)",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/providerCost.ts#L13",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/providerCost.ts",
+        "line": 13,
+        "column": 84
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.providerCost.9",
+      "concept": "tariff.exclusions · literal 32",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 32,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.providerCost.9"
+        ]
+      },
+      "formula": "exclusions: z.array(text).min(1).max(32)",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/providerCost.ts#L13",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/providerCost.ts",
+        "line": 13,
+        "column": 91
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.providerCost.10",
+      "concept": "computeTariffSelectionSchema.allocations.provenance · literal 1",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.providerCost.10"
+        ]
+      },
+      "formula": "provenance: z.array(text).min(1).max(16)",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/providerCost.ts#L16",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/providerCost.ts",
+        "line": 16,
+        "column": 113
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.providerCost.11",
+      "concept": "computeTariffSelectionSchema.allocations.provenance · literal 16",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 16,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.providerCost.11"
+        ]
+      },
+      "formula": "provenance: z.array(text).min(1).max(16)",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/providerCost.ts#L16",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/providerCost.ts",
+        "line": 16,
+        "column": 120
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.providerCost.12",
+      "concept": "computeTariffSelectionSchema.allocations · literal 1",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.providerCost.12"
+        ]
+      },
+      "formula": "allocations: z.array(z.object({ id, host: id, scope, tariff: tariff.nullable(), provenance: z.array(text).min(1).max(16) }).strict()).min(1).max(32)",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/providerCost.ts#L16",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/providerCost.ts",
+        "line": 16,
+        "column": 141
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.providerCost.13",
+      "concept": "computeTariffSelectionSchema.allocations · literal 32",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 32,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.providerCost.13"
+        ]
+      },
+      "formula": "allocations: z.array(z.object({ id, host: id, scope, tariff: tariff.nullable(), provenance: z.array(text).min(1).max(16) }).strict()).min(1).max(32)",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/providerCost.ts#L16",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/providerCost.ts",
+        "line": 16,
+        "column": 148
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.providerCost.14",
+      "concept": "allocationUsageSchema.fromUs · literal 0",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.providerCost.14"
+        ]
+      },
+      "formula": "fromUs: z.literal(0)",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/providerCost.ts#L20",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/providerCost.ts",
+        "line": 20,
+        "column": 21
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.providerCost.15",
+      "concept": "allocationUsageSchema.allocations · literal 1",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.providerCost.15"
+        ]
+      },
+      "formula": "allocations: z.array(z.object({ id, host: id, fromUs: count, toUs: count, instanceUs: count }).strict()).min(1).max(32)",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/providerCost.ts#L21",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/providerCost.ts",
+        "line": 21,
+        "column": 112
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.providerCost.16",
+      "concept": "allocationUsageSchema.allocations · literal 32",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 32,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.providerCost.16"
+        ]
+      },
+      "formula": "allocations: z.array(z.object({ id, host: id, fromUs: count, toUs: count, instanceUs: count }).strict()).min(1).max(32)",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/providerCost.ts#L21",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/providerCost.ts",
+        "line": 21,
+        "column": 119
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.providerCost.17",
+      "concept": "topologySchema.nodes · literal 32",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 32,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.providerCost.17"
+        ]
+      },
+      "formula": "nodes: z.array(z.object({ id, host: id, owner: id })).max(32)",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/providerCost.ts#L22",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/providerCost.ts",
+        "line": 22,
+        "column": 93
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.providerCost.18",
+      "concept": "topologySchema.placement · literal 32",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 32,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.providerCost.18"
+        ]
+      },
+      "formula": "placement: z.array(z.object({ id })).max(32)",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/providerCost.ts#L22",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/providerCost.ts",
+        "line": 22,
+        "column": 139
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.providerCost.19",
+      "concept": "firstStackComputeCost · literal 64",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 64,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.providerCost.19"
+        ]
+      },
+      "formula": "boundedJson(value, 64 * 1024);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/providerCost.ts#L39",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/providerCost.ts",
+        "line": 39,
+        "column": 24
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.providerCost.20",
+      "concept": "firstStackComputeCost · literal 1024",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1024,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.providerCost.20"
+        ]
+      },
+      "formula": "boundedJson(value, 64 * 1024);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/providerCost.ts#L39",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/providerCost.ts",
+        "line": 39,
+        "column": 29
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.providerCost.21",
+      "concept": "firstStackComputeCost · literal 16",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 16,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.providerCost.21"
+        ]
+      },
+      "formula": "boundedJson(usage, 16 * 1024);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/providerCost.ts#L40",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/providerCost.ts",
+        "line": 40,
+        "column": 24
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.providerCost.22",
+      "concept": "firstStackComputeCost · literal 1024",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1024,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.providerCost.22"
+        ]
+      },
+      "formula": "boundedJson(usage, 16 * 1024);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/providerCost.ts#L40",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/providerCost.ts",
+        "line": 40,
+        "column": 29
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.providerCost.23",
+      "concept": "firstStackComputeCost · literal 1000",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1000,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.providerCost.23"
+        ]
+      },
+      "formula": "if (Date.parse(evidence.window.to) - Date.parse(evidence.window.from) !== Math.ceil(throughUs / 1000)) fail(\"Frozen tariff window does not match the verified usage interval\");",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/providerCost.ts#L45",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/providerCost.ts",
+        "line": 45,
+        "column": 101
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.providerCost.24",
+      "concept": "firstStackComputeCost · literal 0",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.providerCost.24"
+        ]
+      },
+      "formula": "if (observed.allocations.some(a => a.fromUs !== 0 || a.toUs !== throughUs || a.instanceUs !== throughUs || !graph.placement.some(h => h.id === a.host))) fail(\"Fixed-host instance-time does not conserve the verified interval\");",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/providerCost.ts#L50",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/providerCost.ts",
+        "line": 50,
+        "column": 53
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.providerCost.25",
+      "concept": "i · literal 0",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.providerCost.25"
+        ]
+      },
+      "formula": "for (let i = 0; i < rows.length; i++) for (let j = 0; j < i; j++) { const a = rows[i]!, b = rows[j]!; if (a.resource === b.resource && (a.fromUs === b.fromUs || (a.fromUs < b.toUs && b.fromUs < a.toUs))) fail(\"Duplicate/overlapping host allocation usage\"); }",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/providerCost.ts#L69",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/providerCost.ts",
+        "line": 69,
+        "column": 18
+      }
+    },
+    {
+      "id": "m1.apps.backend.firstStack.providerCost.26",
+      "concept": "j · literal 0",
+      "modelVersion": "1",
+      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.firstStack.providerCost.26"
+        ]
+      },
+      "formula": "for (let j = 0; j < i; j++) { const a = rows[i]!, b = rows[j]!; if (a.resource === b.resource && (a.fromUs === b.fromUs || (a.fromUs < b.toUs && b.fromUs < a.toUs))) fail(\"Duplicate/overlapping host allocation usage\"); }",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/backend/firstStack/providerCost.ts#L69",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
+      "location": {
+        "file": "apps/backend/firstStack/providerCost.ts",
+        "line": 69,
+        "column": 56
+      }
+    },
+    {
       "id": "m1.apps.backend.firstStack.report.1",
       "concept": "text · literal 1",
       "modelVersion": "1",
@@ -34041,7 +34987,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/firstStack/report.ts#L6",
+          "source": "workspace:apps/backend/firstStack/report.ts#L7",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -34055,7 +35001,7 @@
       "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
       "location": {
         "file": "apps/backend/firstStack/report.ts",
-        "line": 6,
+        "line": 7,
         "column": 98
       }
     },
@@ -34077,7 +35023,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/firstStack/report.ts#L13",
+          "source": "workspace:apps/backend/firstStack/report.ts#L14",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -34091,7 +35037,7 @@
       "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
       "location": {
         "file": "apps/backend/firstStack/report.ts",
-        "line": 13,
+        "line": 14,
         "column": 34
       }
     },
@@ -34113,7 +35059,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/firstStack/report.ts#L13",
+          "source": "workspace:apps/backend/firstStack/report.ts#L14",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -34127,7 +35073,7 @@
       "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
       "location": {
         "file": "apps/backend/firstStack/report.ts",
-        "line": 13,
+        "line": 14,
         "column": 41
       }
     },
@@ -34149,7 +35095,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/firstStack/report.ts#L13",
+          "source": "workspace:apps/backend/firstStack/report.ts#L14",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -34163,7 +35109,7 @@
       "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
       "location": {
         "file": "apps/backend/firstStack/report.ts",
-        "line": 13,
+        "line": 14,
         "column": 120
       }
     },
@@ -34185,7 +35131,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/firstStack/report.ts#L19",
+          "source": "workspace:apps/backend/firstStack/report.ts#L20",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -34199,7 +35145,7 @@
       "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
       "location": {
         "file": "apps/backend/firstStack/report.ts",
-        "line": 19,
+        "line": 20,
         "column": 30
       }
     },
@@ -34221,7 +35167,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/firstStack/report.ts#L19",
+          "source": "workspace:apps/backend/firstStack/report.ts#L20",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -34235,7 +35181,7 @@
       "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
       "location": {
         "file": "apps/backend/firstStack/report.ts",
-        "line": 19,
+        "line": 20,
         "column": 83
       }
     },
@@ -34257,7 +35203,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/firstStack/report.ts#L44",
+          "source": "workspace:apps/backend/firstStack/report.ts#L46",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -34271,7 +35217,7 @@
       "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
       "location": {
         "file": "apps/backend/firstStack/report.ts",
-        "line": 44,
+        "line": 46,
         "column": 76
       }
     },
@@ -34293,7 +35239,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/firstStack/report.ts#L72",
+          "source": "workspace:apps/backend/firstStack/report.ts#L74",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -34307,7 +35253,7 @@
       "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
       "location": {
         "file": "apps/backend/firstStack/report.ts",
-        "line": 72,
+        "line": 74,
         "column": 81
       }
     },
@@ -34329,7 +35275,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/firstStack/report.ts#L76",
+          "source": "workspace:apps/backend/firstStack/report.ts#L78",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -34343,7 +35289,7 @@
       "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
       "location": {
         "file": "apps/backend/firstStack/report.ts",
-        "line": 76,
+        "line": 78,
         "column": 122
       }
     },
@@ -34365,7 +35311,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/firstStack/report.ts#L81",
+          "source": "workspace:apps/backend/firstStack/report.ts#L83",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -34379,7 +35325,7 @@
       "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
       "location": {
         "file": "apps/backend/firstStack/report.ts",
-        "line": 81,
+        "line": 83,
         "column": 73
       }
     },
@@ -34401,7 +35347,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/firstStack/report.ts#L84",
+          "source": "workspace:apps/backend/firstStack/report.ts#L86",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -34415,7 +35361,7 @@
       "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
       "location": {
         "file": "apps/backend/firstStack/report.ts",
-        "line": 84,
+        "line": 86,
         "column": 23
       }
     },
@@ -34437,7 +35383,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/firstStack/report.ts#L84",
+          "source": "workspace:apps/backend/firstStack/report.ts#L86",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -34451,7 +35397,7 @@
       "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
       "location": {
         "file": "apps/backend/firstStack/report.ts",
-        "line": 84,
+        "line": 86,
         "column": 28
       }
     },
@@ -34473,7 +35419,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/firstStack/report.ts#L84",
+          "source": "workspace:apps/backend/firstStack/report.ts#L86",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -34487,7 +35433,7 @@
       "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
       "location": {
         "file": "apps/backend/firstStack/report.ts",
-        "line": 84,
+        "line": 86,
         "column": 34
       }
     },
@@ -34509,7 +35455,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/firstStack/report.ts#L86",
+          "source": "workspace:apps/backend/firstStack/report.ts#L88",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -34523,7 +35469,7 @@
       "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
       "location": {
         "file": "apps/backend/firstStack/report.ts",
-        "line": 86,
+        "line": 88,
         "column": 69
       }
     },
@@ -34545,7 +35491,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/firstStack/report.ts#L87",
+          "source": "workspace:apps/backend/firstStack/report.ts#L89",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -34559,7 +35505,7 @@
       "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
       "location": {
         "file": "apps/backend/firstStack/report.ts",
-        "line": 87,
+        "line": 89,
         "column": 26
       }
     },
@@ -34581,7 +35527,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/firstStack/report.ts#L87",
+          "source": "workspace:apps/backend/firstStack/report.ts#L89",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -34595,7 +35541,7 @@
       "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
       "location": {
         "file": "apps/backend/firstStack/report.ts",
-        "line": 87,
+        "line": 89,
         "column": 29
       }
     },
@@ -34617,7 +35563,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/firstStack/report.ts#L87",
+          "source": "workspace:apps/backend/firstStack/report.ts#L89",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -34631,7 +35577,7 @@
       "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
       "location": {
         "file": "apps/backend/firstStack/report.ts",
-        "line": 87,
+        "line": 89,
         "column": 33
       }
     },
@@ -34653,7 +35599,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/firstStack/report.ts#L92",
+          "source": "workspace:apps/backend/firstStack/report.ts#L94",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -34667,7 +35613,7 @@
       "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
       "location": {
         "file": "apps/backend/firstStack/report.ts",
-        "line": 92,
+        "line": 94,
         "column": 64
       }
     },
@@ -34689,7 +35635,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/firstStack/report.ts#L93",
+          "source": "workspace:apps/backend/firstStack/report.ts#L95",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -34703,7 +35649,7 @@
       "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
       "location": {
         "file": "apps/backend/firstStack/report.ts",
-        "line": 93,
+        "line": 95,
         "column": 62
       }
     },
@@ -34725,7 +35671,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/firstStack/report.ts#L101",
+          "source": "workspace:apps/backend/firstStack/report.ts#L109",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -34739,80 +35685,8 @@
       "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
       "location": {
         "file": "apps/backend/firstStack/report.ts",
-        "line": 101,
+        "line": 109,
         "column": 145
-      }
-    },
-    {
-      "id": "m1.apps.backend.firstStack.reportCapture.1",
-      "concept": "captureReport · literal 256",
-      "modelVersion": "1",
-      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
-      "quantity": {
-        "kind": "known",
-        "value": 256,
-        "unit": "code-number",
-        "provenance": [
-          "m1.apps.backend.firstStack.reportCapture.1"
-        ]
-      },
-      "formula": "boundedJson(value, 256 * 1024);",
-      "classification": "implementation-policy",
-      "confidence": "high",
-      "provenance": [
-        {
-          "source": "workspace:apps/backend/firstStack/reportCapture.ts#L23",
-          "supports": "implementation",
-          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
-        }
-      ],
-      "assumptions": [
-        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
-        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
-      ],
-      "researchedOn": "2026-10-15",
-      "freeMode": "conditional",
-      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
-      "location": {
-        "file": "apps/backend/firstStack/reportCapture.ts",
-        "line": 23,
-        "column": 28
-      }
-    },
-    {
-      "id": "m1.apps.backend.firstStack.reportCapture.2",
-      "concept": "captureReport · literal 1024",
-      "modelVersion": "1",
-      "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
-      "quantity": {
-        "kind": "known",
-        "value": 1024,
-        "unit": "code-number",
-        "provenance": [
-          "m1.apps.backend.firstStack.reportCapture.2"
-        ]
-      },
-      "formula": "boundedJson(value, 256 * 1024);",
-      "classification": "implementation-policy",
-      "confidence": "high",
-      "provenance": [
-        {
-          "source": "workspace:apps/backend/firstStack/reportCapture.ts#L23",
-          "supports": "implementation",
-          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
-        }
-      ],
-      "assumptions": [
-        "Bounds, indexing and unit-safe arithmetic are software policy, not measured host readiness, capacity or timing.",
-        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
-      ],
-      "researchedOn": "2026-10-15",
-      "freeMode": "conditional",
-      "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
-      "location": {
-        "file": "apps/backend/firstStack/reportCapture.ts",
-        "line": 23,
-        "column": 34
       }
     },
     {
@@ -107643,78 +108517,6 @@
       }
     },
     {
-      "id": "m1.apps.web.src.firstStack.worker.reportCapture.1",
-      "concept": "captureBrowserReport · literal 256",
-      "modelVersion": "1",
-      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
-      "quantity": {
-        "kind": "known",
-        "value": 256,
-        "unit": "code-number",
-        "provenance": [
-          "m1.apps.web.src.firstStack.worker.reportCapture.1"
-        ]
-      },
-      "formula": "boundedJson(value, 256 * 1024);",
-      "classification": "implementation-policy",
-      "confidence": "high",
-      "provenance": [
-        {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/worker/reportCapture.ts#L21",
-          "supports": "implementation",
-          "detail": "Exact historical literal and source expression; not external validation."
-        }
-      ],
-      "assumptions": [
-        "This literal is not evidence of real infrastructure capacity or performance.",
-        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
-      ],
-      "researchedOn": "2026-10-15",
-      "freeMode": "conditional",
-      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
-      "location": {
-        "file": "apps/web/src/firstStack/worker/reportCapture.ts",
-        "line": 21,
-        "column": 28
-      }
-    },
-    {
-      "id": "m1.apps.web.src.firstStack.worker.reportCapture.2",
-      "concept": "captureBrowserReport · literal 1024",
-      "modelVersion": "1",
-      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
-      "quantity": {
-        "kind": "known",
-        "value": 1024,
-        "unit": "code-number",
-        "provenance": [
-          "m1.apps.web.src.firstStack.worker.reportCapture.2"
-        ]
-      },
-      "formula": "boundedJson(value, 256 * 1024);",
-      "classification": "implementation-policy",
-      "confidence": "high",
-      "provenance": [
-        {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/worker/reportCapture.ts#L21",
-          "supports": "implementation",
-          "detail": "Exact historical literal and source expression; not external validation."
-        }
-      ],
-      "assumptions": [
-        "This literal is not evidence of real infrastructure capacity or performance.",
-        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
-      ],
-      "researchedOn": "2026-10-15",
-      "freeMode": "conditional",
-      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
-      "location": {
-        "file": "apps/web/src/firstStack/worker/reportCapture.ts",
-        "line": 21,
-        "column": 34
-      }
-    },
-    {
       "id": "m1.apps.web.src.lib.format.1",
       "concept": "plural · literal 1",
       "modelVersion": "1",
@@ -120300,12 +121102,12 @@
           "m1.packages.contracts.src.reports.firstStack.1"
         ]
       },
-      "formula": "export interface FirstStackReport { schema: \"infraforge-first-stack-report/1\"; origin: \"server\" | \"browser-untrusted\" | \"unavailable\"; verification: { status: \"pending\" | \"unverified\" | \"verified\" | \"mismatch\" | \"interrupted\" | \"cancelled\" | \"unavailable\" | \"unknown\"; reason: string | null }; identity: { source: string; inputHash: string; lock: ReportJson; seed: string | null; topology: ReportJson; workload: ReportJson }; interval: { requestedThroughUs: number | null; retainedThroughUs: number |",
+      "formula": "export interface FirstStackAllocationUsage { schema: \"first-stack-allocation-usage/1\"; basis: \"modeled-fixed-host-window/1\"; fromUs: 0; throughUs: number; timestampComplete: boolean; allocations: Array<{ id: string; host: string; fromUs: number; toUs: number; instanceUs: number }>; }",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/contracts/src/reports/firstStack.ts#L24",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/contracts/src/reports/firstStack.ts#L20",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -120319,7 +121121,43 @@
       "replacement": "Keep existing historical report semantics; design separate versioned M2 evidence with units/provenance.",
       "location": {
         "file": "packages/contracts/src/reports/firstStack.ts",
-        "line": 24,
+        "line": 20,
+        "column": 11
+      }
+    },
+    {
+      "id": "m1.packages.contracts.src.reports.firstStack.2",
+      "concept": "firstStack.ts · literal 0",
+      "modelVersion": "1",
+      "scope": "Evidence retention, authoring, comparison or report presentation guard",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.packages.contracts.src.reports.firstStack.2"
+        ]
+      },
+      "formula": "export interface FirstStackReport { schema: \"infraforge-first-stack-report/1\"; origin: \"server\" | \"browser-untrusted\" | \"unavailable\"; verification: { status: \"pending\" | \"unverified\" | \"verified\" | \"mismatch\" | \"interrupted\" | \"cancelled\" | \"unavailable\" | \"unknown\"; reason: string | null }; identity: { source: string; inputHash: string; lock: ReportJson; seed: string | null; topology: ReportJson; workload: ReportJson }; interval: { requestedThroughUs: number | null; retainedThroughUs: number |",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/contracts/src/reports/firstStack.ts#L52",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "Bounds govern what can be claimed, not infrastructure capacity. Missing evidence remains unknown.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep existing historical report semantics; design separate versioned M2 evidence with units/provenance.",
+      "location": {
+        "file": "packages/contracts/src/reports/firstStack.ts",
+        "line": 52,
         "column": 92
       }
     },
@@ -132397,6 +133235,146 @@
         "file": "packages/simulation/src/firstStack/journal.ts",
         "line": 29,
         "column": 94
+      }
+    },
+    {
+      "id": "m1.packages.simulation.src.firstStack.reportCapture.1",
+      "concept": "value.allocationUsage.fromUs · literal 0",
+      "modelVersion": "1",
+      "scope": "Published Model-1 engine behavior",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.packages.simulation.src.firstStack.reportCapture.1"
+        ]
+      },
+      "formula": "fromUs: 0",
+      "classification": "educational-assumption",
+      "confidence": "low",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/reportCapture.ts#L25",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "Fixed educational coefficients; no application benchmark or provider measurement establishes a universal value."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
+      "location": {
+        "file": "packages/simulation/src/firstStack/reportCapture.ts",
+        "line": 25,
+        "column": 112
+      }
+    },
+    {
+      "id": "m1.packages.simulation.src.firstStack.reportCapture.2",
+      "concept": "value.allocationUsage.allocations.fromUs · literal 0",
+      "modelVersion": "1",
+      "scope": "Published Model-1 engine behavior",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.packages.simulation.src.firstStack.reportCapture.2"
+        ]
+      },
+      "formula": "fromUs: 0",
+      "classification": "educational-assumption",
+      "confidence": "low",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/reportCapture.ts#L27",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "Fixed educational coefficients; no application benchmark or provider measurement establishes a universal value."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
+      "location": {
+        "file": "packages/simulation/src/firstStack/reportCapture.ts",
+        "line": 27,
+        "column": 109
+      }
+    },
+    {
+      "id": "m1.packages.simulation.src.firstStack.reportCapture.3",
+      "concept": "captureReport · literal 256",
+      "modelVersion": "1",
+      "scope": "Published Model-1 engine behavior",
+      "quantity": {
+        "kind": "known",
+        "value": 256,
+        "unit": "code-number",
+        "provenance": [
+          "m1.packages.simulation.src.firstStack.reportCapture.3"
+        ]
+      },
+      "formula": "boundedJson(value, 256 * 1024);",
+      "classification": "educational-assumption",
+      "confidence": "low",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/reportCapture.ts#L29",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "Fixed educational coefficients; no application benchmark or provider measurement establishes a universal value."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
+      "location": {
+        "file": "packages/simulation/src/firstStack/reportCapture.ts",
+        "line": 29,
+        "column": 28
+      }
+    },
+    {
+      "id": "m1.packages.simulation.src.firstStack.reportCapture.4",
+      "concept": "captureReport · literal 1024",
+      "modelVersion": "1",
+      "scope": "Published Model-1 engine behavior",
+      "quantity": {
+        "kind": "known",
+        "value": 1024,
+        "unit": "code-number",
+        "provenance": [
+          "m1.packages.simulation.src.firstStack.reportCapture.4"
+        ]
+      },
+      "formula": "boundedJson(value, 256 * 1024);",
+      "classification": "educational-assumption",
+      "confidence": "low",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/packages/simulation/src/firstStack/reportCapture.ts#L29",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "Fixed educational coefficients; no application benchmark or provider measurement establishes a universal value."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "forbidden",
+      "replacement": "M2: explicit service demand, capacity, queues and resource-specific state; require provenance or Unknown.",
+      "location": {
+        "file": "packages/simulation/src/firstStack/reportCapture.ts",
+        "line": 29,
+        "column": 34
       }
     },
     {

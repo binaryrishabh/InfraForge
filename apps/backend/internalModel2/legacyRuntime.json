@@ -2249,7 +2249,7 @@
     },
     {
       "path": "scripts/tests/browserRunner.test.ts",
-      "hash": "676704a5c3d8ed92e9ff245abfc16b423cf79ace2747829afebb6802eb991402"
+      "hash": "7631b577dc269245a31205f9f4a325737b978ecf97834fcfc647173c36b6622d"
     },
     {
       "path": "scripts/tests/browserSubmission.test.ts",
@@ -2289,7 +2289,7 @@
     },
     {
       "path": "scripts/tests/execution-identity.test.ts",
-      "hash": "85ea087e35fe56d8d47348793b5cab11680fa74f30459c654415d8370ae7f3c5"
+      "hash": "065c6c01f31962009cb4af21704a845d8bc969a95bdb5108266ffd2f69900c0d"
     },
     {
       "path": "scripts/tests/finite-io.test.ts",
@@ -2310,6 +2310,10 @@
     {
       "path": "scripts/tests/first-stack-compile.test.ts",
       "hash": "59c23c540b907add8f9162ac8239bc1dcc7e1df0e0072ab514b0ca9bb274589a"
+    },
+    {
+      "path": "scripts/tests/first-stack-cost.test.ts",
+      "hash": "5b79f2afaae4aa7116a17c012d2507190363afbcab097195f92d2537077c193e"
     },
     {
       "path": "scripts/tests/first-stack-faults.test.ts",
