@@ -6,6 +6,7 @@ import { historicalReplayTarget, ownedReplayRow, replayHistoricalSubmission } fr
 import { submissionTransaction, submissionEnvelope } from "./admission";
 import { AppError, NotFoundError } from "../utils/errors";
 import { randomUUID } from "node:crypto";
+import { requireCapability } from "../capabilities/policy";
 
 const name = "first-stack-verification";
 // Explicit lifecycle factory, never started by import or by the Model-1 worker.
@@ -60,6 +61,7 @@ export async function startSubmissionQueue(pool: Pool, databaseUrl: string, prod
     },
     async request(owner: string, runId: string) {
       if (!replayPolicy.enabled || stopped) throw new NotFoundError();
+      requireCapability(owner, { capability: "run.control", runId, control: "verify-recorded-prefix" });
       const row = await ownedReplayRow(pool, owner, runId), cut = historicalReplayTarget(row, configuration);
       return submissionTransaction(pool, async db => {
         if ((await db.query('SELECT count(*)::int AS count FROM "FirstStackReplay"')).rows[0].count >= 1000) throw new AppError("Replay diagnostic storage busy", 503);
@@ -79,6 +81,7 @@ export async function startSubmissionQueue(pool: Pool, databaseUrl: string, prod
       return { id, status: row.status, result: row.result ?? (row.status === "recovery" ? { kind: "Unavailable", reason: "Replay worker interrupted; operator cleanup required, no continuation or automatic retry" } : null) };
     },
     async cancel(owner: string, runId: string, id: string) {
+      requireCapability(owner, { capability: "run.control", runId, control: "cancel-replay" });
       await submissionTransaction(pool, async db => {
         const row = (await db.query('SELECT * FROM "FirstStackReplay" WHERE id=$1 AND "runId"=$2 AND "ownerId"=$3 FOR UPDATE', [id, runId, owner])).rows[0];
         if (!row) throw new NotFoundError();

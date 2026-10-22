@@ -25,6 +25,11 @@ export function readRunRecord(value: unknown): RunRecord {
   const inputs = record.engine.lineage === "1" ? ["infraforge-run-inputs/1", "infraforge-run-inputs/2"] :
     ["infraforge-internal-execution/1", "infraforge-internal-execution/2", "infraforge-first-stack-submission/1"];
   if (!reports.includes(record.evidence.reportSchema) || record.experiment.inputSchema !== null && !inputs.includes(record.experiment.inputSchema)) throw Error("Unsupported historical input/report schema; no reinterpretation");
+  const report = record.evidence.report as { schema?: unknown; version?: unknown } | null;
+  if (!report || (record.engine.lineage === "1" ? report.version !== 1 : report.schema !== record.evidence.reportSchema)) throw Error("Historical report payload schema disagrees with its recorded tag");
+  const expectedInput = record.evidence.reportSchema === "infraforge-internal-report/1" ? "infraforge-internal-execution/1" :
+    record.evidence.reportSchema === "infraforge-internal-report/2" ? "infraforge-internal-execution/2" : "infraforge-first-stack-submission/1";
+  if (record.engine.lineage === "2" && record.experiment.inputSchema !== null && record.experiment.inputSchema !== expectedInput) throw Error("Historical input/report versions disagree");
   if (record.reference && (record.reference.id !== record.id || record.reference.engine !== record.engine.lineage)) throw Error("Historical run reference disagrees with recorded identity");
   return record;
 }

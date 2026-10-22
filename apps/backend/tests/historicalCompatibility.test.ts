@@ -20,7 +20,7 @@ import { prepareFirstStackExecution, instantiatePreparedFirstStack } from "../fi
 import { captureExecutionCut } from "../firstStack/executionCut";
 import { replayFirstStackPrefix } from "../firstStack/isolationReplay";
 import { hash } from "../firstStack/canonical";
-import { isolatedCut } from "../firstStack/isolationProtocol";
+import { isolatedCut, inputDigest } from "../firstStack/isolationProtocol";
 import { migrationSource } from "../firstStack/migration";
 import express from "express";
 import { createSubmissionRouter } from "../firstStack/submissionRoutes";
@@ -85,12 +85,20 @@ test("first-stack history preserves verification, slice-12 report capture and ty
   expect(record.experiment.input).toEqual(JSON.parse(row.input)); expect(JSON.stringify(record.experiment.input)).not.toContain("migratedFrom");
   expect(() => readRunRecord({ ...record, reference: { engine: "1", store: "FirstStackRun", id: "bad" } })).toThrow();
   expect(() => readRunRecord({ ...record, evidence: { ...record.evidence, reportSchema: "infraforge-first-stack-report/99" } })).toThrow("Unsupported historical");
+  expect(() => readRunRecord({ ...record, evidence: { ...record.evidence, report: { schema: "unknown/99" } } })).toThrow("payload schema");
   const { reportCapture: _capture, ...old } = cut.cut;
   const legacy = historicalRunRecord({ store: "FirstStackRun", row: { ...row, durablePrefix: isolatedCut(old, cut.source, cut.inputHash) } });
   expect((legacy.evidence.report as any).populations).not.toBeNull(); expect(legacy.evidence.unknown.join(" ")).toContain("Historical cut");
   for (const edit of [{ input: "{}" }, { durablePrefix: { ...cut, schema: "unknown/99" } }, { result: { verification: "new/99" }, resultHash: "bad" }]) {
     const corrupt = historicalRunRecord({ store: "FirstStackRun", row: { ...row, ...edit } });
     expect(corrupt.availability?.report).toBe("unavailable"); expect(corrupt.availability?.replay).toBe("unavailable");
+  }
+  for (const candidate of [{ ...JSON.parse(row.input).candidate, schema: "infraforge-first-stack-sidecar/99" },
+    { ...JSON.parse(row.input).candidate, nodes: [] }]) {
+    const input = JSON.stringify({ ...JSON.parse(row.input), candidate }), inputHash = inputDigest(input);
+    const corrupt = historicalRunRecord({ store: "FirstStackRun", row: { ...row, input, inputHash,
+      durablePrefix: isolatedCut(cut.cut, cut.source, inputHash) } });
+    expect(corrupt.availability?.report).toBe("unavailable");
   }
 });
 test("historical report HTTP reads remain available with new admission disabled and never request replay", async () => {

@@ -9,6 +9,7 @@ import { withFirstStackOwnership } from "./isolationOwnership";
 import type { SubmissionVerifier } from "./submissionWorker";
 import { submissionTransaction } from "./admission";
 import { z } from "zod";
+import { requireCapability } from "../capabilities/policy";
 
 export interface HistoricalReplayRow extends FirstStackStoredReportRow {
   ownerId: string; authorized: boolean; engine: { source: string; image: string };
@@ -53,6 +54,7 @@ export async function replayHistoricalSubmission(pool: Pool, databaseUrl: string
     if (!replay || replay.status !== "queued") return null;
     try {
       if (!enabled() || replay.cancelled) throw Error("Historical replay cancelled or disabled");
+      requireCapability(replay.ownerId, { capability: "run.control", runId: replay.runId, control: "verify-recorded-prefix" });
       const row = await ownedReplayRow(db, replay.ownerId, replay.runId);
       if (historicalReplayTarget(row, configuration).fingerprint !== replay.fingerprint) throw Error("Requested historical prefix changed");
     } catch (error) {
@@ -73,6 +75,7 @@ export async function replayHistoricalSubmission(pool: Pool, databaseUrl: string
       token: replayId,
       async check(db) {
         if (!enabled() || await cancelled()) throw Error("Historical replay cancelled or disabled");
+        requireCapability(owner, { capability: "run.control", runId: id, control: "verify-recorded-prefix" });
         const state = (await db.query('SELECT * FROM "FirstStackReplay" WHERE id=$1', [replayId])).rows[0];
         if (!state || state.status !== "running" || state.cancelled || state.daemon !== configuration.control.identity) throw Error("Historical replay ownership lost");
         const current = await ownedReplayRow(db, owner, id);

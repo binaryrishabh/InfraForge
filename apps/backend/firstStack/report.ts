@@ -22,7 +22,11 @@ export const ReportCaptureSchema = z.object({ schema: z.literal("first-stack-rep
   allocationUsage: z.json().optional(),
 });
 const inputSchema = z.object({ schema: z.literal("infraforge-first-stack-submission/1").optional(), policy: z.object({ seed: text, horizonUs: count.positive() }),
-  candidate: z.object({ nodes: z.json(), paths: z.json(), placement: z.json() }).passthrough(), recording: z.json() });
+  candidate: z.object({ schema: z.enum(["infraforge-first-stack-sidecar/2", "infraforge-first-stack-sidecar/3"]), nodes: z.json(), paths: z.json(), placement: z.json() }).passthrough(), recording: z.json() });
+const recordedLock = z.object({ schema: z.literal("infraforge-first-stack-compile-lock/2"), sidecarHash: text,
+  workloadIdentity: text, executedScheduleHash: text, profileHash: text });
+const recordedSchedule = z.object({ schema: z.literal("infraforge-first-stack-resolved/1"), identity: text,
+  executedScheduleHash: text, profileHash: text }).passthrough();
 const cutSchema = z.object({ throughUs: count, timestampComplete: z.boolean(),
   counts: z.record(z.string(), count), unfinished: z.object({ notYetOffered: count, callers: count, pendingEvents: count }),
   completeness: z.object({ horizonReached: z.boolean(), allRootsTerminal: z.boolean(), aggregates: z.literal("observed-prefix"), usage: z.literal("prefix-only"), journalComplete: z.boolean() }),
@@ -51,6 +55,10 @@ export function firstStackReport(row: FirstStackStoredReportRow, serverTariffs?:
   try {
     if (inputDigest(row.input) !== row.inputHash) throw Error("Recorded input hash mismatch");
     const input = inputSchema.parse(JSON.parse(row.input));
+    const lock = recordedLock.parse(row.lock), schedule = recordedSchedule.parse(input.recording);
+    const { identity, ...scheduleBody } = schedule;
+    if (hash(input.candidate) !== lock.sidecarHash || hash(scheduleBody) !== identity || identity !== lock.workloadIdentity ||
+      schedule.executedScheduleHash !== lock.executedScheduleHash || schedule.profileHash !== lock.profileHash) throw Error("Recorded input disagrees with its immutable compile lock");
     report.identity.seed = input.policy.seed;
     report.identity.topology = { nodes: input.candidate.nodes, paths: input.candidate.paths, placement: input.candidate.placement };
     report.identity.workload = input.recording;
