@@ -210,3 +210,4 @@ apps/backend/resources/**
 !apps/backend/firstStack/scoredChallenges/reviews-api.v1.json
 !apps/backend/firstStack/scoredChallenges/small-paste-api.v1.json
 !apps/backend/firstStack/scoredChallenges/preloaded-news-api.v1.json
+!apps/backend/firstStack/scoredChallenges/price-history-api.v1.json

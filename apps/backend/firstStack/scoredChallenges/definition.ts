@@ -6,6 +6,7 @@ import catalogue from "./catalogue-api.v1.json";
 import reviews from "./reviews-api.v1.json";
 import paste from "./small-paste-api.v1.json";
 import news from "./preloaded-news-api.v1.json";
+import history from "./price-history-api.v1.json";
 import { canonical, designRevision, hash } from "../canonical";
 import { prepareFirstStackExecution } from "../execution";
 import { resolveWorkload } from "../workload";
@@ -50,7 +51,7 @@ export interface ChallengeReference { id: string; version: string; definitionHas
 
 // The registry and all rubric/workload data remain in this server-only closure.
 // Returning a copy prevents one request from changing another request's version.
-const definitions = [source, redirect, catalogue, reviews, paste, news];
+const definitions = [source, redirect, catalogue, reviews, paste, news, history];
 export function challengeDefinition(id: string, version: string): ChallengeDefinition {
   const selected = definitions.find(d => d.id === id && d.version === version);
   if (!selected) throw new ValidationError("Scored challenge version unavailable");
