@@ -205,3 +205,4 @@ apps/backend/resources/**
 !apps/backend/resources/*.json
 !apps/backend/resources/*.wasm
 !apps/backend/resources/README.md
+!apps/backend/firstStack/scoredChallenges/url-redirect.v1.json

@@ -1,6 +1,7 @@
 import type { FirstStackSidecarV2, RecordedScheduleHeader, RecordedScheduleRow } from "@infraforge/contracts/first-stack";
 import { z } from "zod";
 import source from "./lose-an-app-server.v1.json";
+import redirect from "./url-redirect.v1.json";
 import { canonical, designRevision, hash } from "../canonical";
 import { prepareFirstStackExecution } from "../execution";
 import { resolveWorkload } from "../workload";
@@ -45,9 +46,11 @@ export interface ChallengeReference { id: string; version: string; definitionHas
 
 // The registry and all rubric/workload data remain in this server-only closure.
 // Returning a copy prevents one request from changing another request's version.
+const definitions = [source, redirect];
 export function challengeDefinition(id: string, version: string): ChallengeDefinition {
-  if (id !== source.id || version !== source.version) throw new ValidationError("Scored challenge version unavailable");
-  return challengeDefinitionSchema.parse(source) as unknown as ChallengeDefinition;
+  const selected = definitions.find(d => d.id === id && d.version === version);
+  if (!selected) throw new ValidationError("Scored challenge version unavailable");
+  return challengeDefinitionSchema.parse(selected) as unknown as ChallengeDefinition;
 }
 export function pinnedChallenge(reference: ChallengeReference) {
   const definition = challengeDefinition(reference.id, reference.version);
