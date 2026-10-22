@@ -36,9 +36,10 @@ New emails are trimmed/lowercased; the library validates them and the server
 bounds them to 254 characters. No provider-specific dot/plus aliases are invented.
 The existing unique email key remains, with an additional unique `lower(email)`
 index protecting historical case collisions. Credential sign-up leaves
-`emailVerified=false`. Email verification is not required for this local milestone,
-and no delivery service, reset button, fake verification or automatic linking is
-added. Registering an existing OAuth email does not add a credential account or
+`emailVerified=false`. Verification and account-management APIs default to disabled.
+Configuring a mail provider alone does not enable them. With
+`ACCOUNT_ESSENTIALS_ENABLED=true`, credential signup requires verification and
+issues no session; the user verifies, then signs in. Registering an existing OAuth email does not add a credential account or
 merge identities: use the original sign-in method.
 
 Passwords use Better Auth's salted scrypt implementation and verification, with
@@ -60,9 +61,10 @@ errors and omit routine login/signup messages; passwords are never logged, retur
 in browser storage. Forms use password-manager autocomplete and keep passwords
 only in transient input state. Sign-in failures use a common message; rate limits
 have a separate retry message. The username-availability endpoint is disabled.
-Native registration still returns a failure for duplicate email/username, as
-permitted for this milestone; automatic sign-in cannot provide the library's
-sessionless synthetic duplicate response. Do not claim zero registration enumeration.
+With essentials disabled, native registration still returns a failure for duplicate
+email/username; automatic sign-in cannot provide a sessionless synthetic duplicate
+response. When enabled, Better Auth's verification-required signup masks duplicate
+emails. Usernames can still be enumerated. Do not claim zero registration enumeration.
 
 Migration 16 adds nullable `User.username`, its format/unique guards and the email
 case-fold index. Migrations 1–15 are unchanged. Existing users/accounts/ownership
@@ -78,7 +80,124 @@ use a reviewed forward fix or the established authorized backup/restore procedur
 Future methods, **not implemented**: email OTP/magic link and phone-number auth.
 They must reuse the same user ID/ownership model, require real delivery and
 verified linking decisions, and cannot adopt an existing account merely from an
-unverified email/phone claim. Password reset also waits for real email delivery.
+unverified email/phone claim.
+
+## Optional account essentials (backend APIs)
+
+Set up real delivery and the owner checklist in [deployment](DEPLOYMENT.md) before
+enabling `ACCOUNT_ESSENTIALS_ENABLED=true`. Invalid/partial configured providers
+fail startup. No fake can be selected through environment variables. The existing
+UI is unchanged and does not yet expose these flows. Turning on verification or
+Turnstile before implementing the UI needs below will interrupt existing signup UX.
+
+| API | Request / behavior |
+| --- | --- |
+| `GET /api/auth/account-features` | `{enabled, turnstileSiteKey}`; site key is public; no secrets |
+| `POST /api/auth/sign-up/email` | Existing credential fields plus optional `turnstileToken`, action `signup` |
+| `POST /api/auth/send-verification-email` | `{email, callbackURL}`; uniform response regardless of existence/verification/session |
+| `GET /api/auth/verify-email?token=...` | Native verification; expired, invalid or redeemed links fail |
+| `POST /api/auth/request-password-reset` | `{email, redirectTo, turnstileToken?}`; action `password_reset`; uniform response |
+| `POST /api/auth/reset-password` | `{token, newPassword}`; native password policy; revokes all sessions |
+| `POST /api/account/delete` | Session plus `{password, confirmation:"DELETE"}`; current password required on every attempt |
+| `GET /api/account/export?section=...&after=...` | Session; paginated JSON, opaque `next` cursor or null |
+
+The feature-discovery endpoint stays available; email flows and `/api/account/*`
+return 404 while essentials are disabled. The
+native hard-delete endpoints stay disabled even when enabled: foreign keys and
+append-only records require the explicit semantics below. Account mutation uses
+the same exact-Origin check as other APIs; no missing-Origin exemption is added.
+Better Auth additionally validates redirect/callback origins and its own CSRF checks.
+Body limits are 8 KiB on the new POST routes. Responses use `Cache-Control: no-store`
+and `Referrer-Policy: no-referrer`. Do not add request/response tracing on these routes.
+
+[Pinned Better Auth's native flows](https://better-auth.com/docs/authentication/email-password)
+issue 30-minute reset tokens and verification JWTs. Reset consumes the database
+verification value atomically before changing credentials. InfraForge adds a
+hash-only `AccountEmailToken` redemption ledger to the library-issued verification
+JWT, consumed atomically before native verification. Neither hashing nor token
+generation/signature verification is reimplemented. Reissuing a same-second JWT
+does not reactivate a consumed link. Failed redemption burns that issued link;
+request another email. Successful verification does not automatically sign in.
+OAuth-only users can establish a current password through the native mailbox reset
+flow before deletion; there is no fresh-session-only deletion bypass. This explicit
+mailbox recovery can create a credential on that same user ID; ordinary duplicate
+signup still cannot add a credential or merge accounts.
+
+Public email requests normalize email, strip cookies before the native handler,
+return the same success body, and apply a 750 ms minimum response duration. Email
+delivery runs outside the request timing path, with at most 32 pending sends and
+a five-second provider timeout. The timing floor covers ordinary DB/JWT work; it
+cannot guarantee identical wall-clock latency under infrastructure overload.
+Delivery failure/queue saturation logs only a fixed operational message and does
+not change the response. There is no durable mail queue: restart or saturation can
+drop delivery; users can resend. Monitor fixed failure counts before activation.
+
+Redis quotas use HMAC keys, never addresses/tokens in keys. All email-request
+identities, including nonexistent ones, share the same accounting: 3 per normalized
+email and 20 per IP per 15 minutes across reset/verification. Signup has separate
+3/email and 20/IP quotas when essentials or Turnstile are enabled. Redemption has
+5/token and 30/IP quotas. Deletion has 10/user and 30/IP; export has 600/user and
+600/IP. These fixed windows are shared across API processes; Redis failure closes
+the routes. Better Auth's existing limits and the outer HTTP limiter also apply.
+Trusted-proxy configuration replaces the internal IP header; callers cannot choose
+the quota IP through that header.
+
+Turnstile is independent of the essentials flag: configuring all three Turnstile
+settings protects credential signup immediately. Reset is protected when its API
+is enabled. An unconfigured challenge is skipped; a configured challenge rejects
+missing/oversized tokens, provider errors/timeouts, replay rejection, wrong hostname
+or wrong action. No positive validation cache or bypass is used. Cloudflare enforces
+token expiry and single use through [Siteverify](https://developers.cloudflare.com/turnstile/get-started/server-side-validation/).
+OAuth callbacks retain their existing provider protections; Turnstile applies to
+the credential signup endpoint, not OAuth redirects.
+
+### Deletion and retained history
+
+Deletion is a serializable transaction locking the user row. It returns 409 while
+any Model-1 deployment is pending/running/live/runtime-active, an internal Model-2
+run is queued/running, or a first-stack reservation is not terminal (including
+recovery). Finish/cancel/resolve these runs through existing controls first.
+
+The transaction deletes sessions, credentials/OAuth tokens, user-valued reset
+verification records, verification redemption records and internal grants. It
+replaces email with a random unreachable `@deleted.invalid` mailbox, clears name,
+username, image and verification status, and marks `deletedAt`. Owned design names,
+layouts and legacy `userId` fields are scrubbed; opaque design IDs/owners remain.
+Database guards prevent restoring the profile or adding sessions, accounts or new
+owned data after deletion, and serialize those admissions against deletion.
+Existing WS connections close on their next authoritative session check.
+
+Run IDs, owner IDs, captured run names, immutable inputs, lineage, actions, samples,
+cuts and results remain unchanged. This is profile erasure and pseudonymisation,
+**not complete erasure of arbitrary personal text submitted inside historical run
+payloads**. Backups retain their own retention policy. Historical rows cannot be
+adopted by a new registration with the freed email/username. The retained user row
+is a disabled foreign-key anchor, not a login-capable account. Migration 21 only
+adds columns, a table, constraints and guards; existing immutable triggers remain
+unchanged. Export data before deletion; subsequent access is revoked.
+
+### Export and UI follow-up
+
+Sections are `designs`, `runs`, `actions`, `samples`, `internalRuns`, `lessons`,
+`firstStackRuns`, `cuts`, `results`. Each JSON page has schema
+`infraforge-account-export/1`, `section`, `records` (at most one), and `next`.
+Follow `next` within each section until null (an empty final page); concatenate records into arrays in
+the downloadable archive. All queries independently filter the current user's
+ownership, including child results/cuts/samples. Cursors never grant access.
+Model-1 terminal results are in `runs`; internal evidence in `internalRuns`;
+first-stack results in `results`. Auth tables, reset tokens, worker fencing tokens,
+delivery state and other users' records are excluded. Pages are live reads rather
+than a point-in-time snapshot; export after stopping runs for a stable archive.
+
+Typed client functions live in `apps/web/src/features/auth/accountClient.ts`,
+including an async page iterator. UI work still needed: pending-verification signup
+state; resend/verification completion; forgot/reset password pages and safe token
+handling; Turnstile widgets with matching actions; download progress/cancellation;
+deletion dialog with current-password input, `DELETE`, active-run conflict guidance,
+and the retained-history explanation. OAuth users need mailbox password recovery
+guidance. After successful deletion, clear per-user local drafts and auth/app state.
+Keep passwords/tokens transient, scrub reset tokens from browser history immediately,
+and exclude auth callbacks and export contents from analytics/error capture.
 
 ## Configuration
 

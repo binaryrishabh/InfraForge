@@ -3,6 +3,75 @@
 `main` is the sole working/release branch. Start new-host or account recovery with
 [PRODUCTION_BOOTSTRAP.md](PRODUCTION_BOOTSTRAP.md), not the historical cutover notes.
 
+## Owner checklist: optional account essentials
+
+The release defaults to `ACCOUNT_ESSENTIALS_ENABLED=false`, with no mail provider
+or Turnstile configuration. Applying additive migration 21 does not activate the
+feature. API configuration is forwarded by Compose from the private operator
+`release.env`; field names are in `ops/bootstrap/release.env.example`. Never print
+resolved Compose configuration or copy secrets into frontend settings.
+
+1. Complete the UI follow-up listed in [authentication](AUTHENTICATION.md#export-and-ui-follow-up)
+   before activation: verified signup, mailbox recovery, deletion and export are
+   backend APIs and typed client functions only. Existing credential signup is
+   unchanged while disabled. Enabling verification requires existing unverified
+   credential users to verify before their next sign-in; existing sessions are not
+   retroactively revoked. Review the documented retained-history semantics and
+   backup retention before offering deletion.
+2. Choose **one** provider. For SES, create and verify the sending domain in the
+   chosen commercial AWS region, publish its DKIM records and confirm verified
+   status. Follow [SES identity setup](https://docs.aws.amazon.com/ses/latest/dg/creating-identities.html).
+   Request [production access outside the sandbox](https://docs.aws.amazon.com/ses/latest/dg/request-production-access.html)
+   in that region before sending to ordinary recipients. Configure bounce/complaint
+   handling and appropriate domain authentication. Set
+   `TRANSACTIONAL_EMAIL_PROVIDER=ses`, `TRANSACTIONAL_EMAIL_FROM` (plain mailbox),
+   `SES_REGION`, `SES_ACCESS_KEY_ID`, `SES_SECRET_ACCESS_KEY`, and optionally
+   `SES_SESSION_TOKEN` for temporary API credentials. SMTP credentials do not work.
+   Scope IAM `ses:SendEmail` to the verified sending identity; rotate credentials.
+   This adapter targets SES v2's regional HTTPS API, not China/GovCloud partitions.
+3. Alternatively, [verify a sending domain with Resend](https://resend.com/docs/dashboard/domains/introduction),
+   publish its required DNS records and wait for verified status. Create a sending
+   API key scoped to that domain. Set `TRANSACTIONAL_EMAIL_PROVIDER=resend`,
+   `TRANSACTIONAL_EMAIL_FROM` and `RESEND_API_KEY`; leave SES fields empty.
+   Provider tests must confirm actual receipt, not just API acceptance. Keep click
+   tracking/link rewriting off for auth links. Neither provider has been tested
+   with owner credentials as part of this implementation.
+4. Optionally create a [Cloudflare Turnstile widget](https://developers.cloudflare.com/turnstile/get-started/)
+   restricted to exact frontend hostnames. Set all of `TURNSTILE_SITE_KEY`,
+   `TURNSTILE_SECRET_KEY`, `TURNSTILE_HOSTNAMES` (comma-separated exact hosts, no
+   schemes/wildcards). The public site key is exposed by `/api/auth/account-features`;
+   the secret stays on the backend. Frontend widget actions must be `signup` and
+   `password_reset`; submit each fresh token as `turnstileToken`. Configuring these
+   settings immediately protects credential signup, independently of the account
+   flag. Test failure, replay, wrong-host/action and provider-outage behavior in
+   staging. Test adapters are injected in CI; no runtime fake switch exists.
+5. Install the updated managed Nginx template, which suppresses inherited request
+   and error logs for this backend virtual host because native email links contain
+   bearer tokens in URLs. Keep aggregate health/fixed operational-error monitoring.
+   Also exclude auth URLs, query strings, referrers, credentials and export bodies
+   from upstream proxy/CDN/APM and frontend hosting/analytics logs. Configure reset
+   callback pages to remove tokens from browser history immediately. Restrict
+   callback URLs to the already configured trusted frontend origins.
+6. In staging, apply migrations through the controlled release and set
+   `ACCOUNT_ESSENTIALS_ENABLED=true` with the chosen provider. The API fails startup
+   on partial/invalid configuration; unconfigured Turnstile is skipped, configured
+   Turnstile fails closed. Redis quotas are mandatory when enabled. Check actual
+   delivered verification and reset links, expiry/replay rejection, response parity
+   for absent/existing addresses, session revocation, cross-user export isolation,
+   active-run deletion refusal and profile erasure with immutable history retained.
+   Alert on the fixed `Transactional email delivery failed` message; sends are
+   bounded and asynchronous, not durable, and a user may need to resend.
+7. Keep the existing stable Better Auth secret, exact Origin/HTTPS/proxy settings,
+   release approval and backup procedure. Promote configuration only after those
+   staging checks and UI readiness. Setting the account flag back to false disables
+   these APIs without deleting data or weakening database/history guards. Removing
+   all three Turnstile settings disables that independent challenge integration.
+   Do not roll back across migration fingerprints; use a reviewed forward fix.
+
+Expired `AccountEmailToken` ledger rows can be purged by an authorized maintenance
+job after their expiry; preserve unexpired used rows to avoid reactivating a
+same-second JWT. No task here schedules production maintenance or changes backups.
+
 ## Verified production checkpoint
 
 On 2026-10-17 independent public checks returned HTTP 200 for backend readiness,

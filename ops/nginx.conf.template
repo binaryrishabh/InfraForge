@@ -2,12 +2,17 @@
 # Only the TLS proxy is public. Compose API/WS ports must remain loopback-bound.
 server {
     listen 80;
+    # Auth links carry bearer tokens in paths/queries. Do not inherit request logs.
+    access_log off;
+    error_log /dev/null;
     server_name DOMAIN;
     location ^~ /.well-known/acme-challenge/ { root /var/lib/infraforge/acme; }
     location / { return 308 https://DOMAIN$request_uri; }
 }
 server {
     listen 443 ssl;
+    access_log off;
+    error_log /dev/null;
     server_name DOMAIN;
     ssl_certificate /etc/infraforge/tls/fullchain.pem;
     ssl_certificate_key /etc/infraforge/tls/privkey.pem;
