@@ -58,3 +58,24 @@ is Unknown. There is no total-score renormalization, certificate or readiness cl
 Public admission and Model 2 activation remain closed. Qualification tests use
 the real routed first-stack runtime with explicitly synthetic executor receipts;
 they are not host containment, database integration or Linux proof evidence.
+
+The cache-free R1 library follows the tutorial in this order. Each `/1` definition
+contains a 24-request visible sample and two authored hidden recordings (32-request
+tight burst and 28-request separated waves), with different app-loss targets and
+timings. Capacity edits remain 1..4 cores, 1..32 workers and 0..64 queued requests
+per app, with matching host cores. These are finite teaching assumptions.
+
+| ID | One lesson | Executed API slice |
+| --- | --- | --- |
+| `url-redirect` | Keep spare app capacity when a popular link meets app loss. | Preassigned keyed redirect lookup. |
+| `catalogue-api` | App workers share a finite database dependency. | One fixed three-record product page. |
+| `reviews-api` | Waiting database work occupies workers even when CPU is available. | One fixed four-review page with authored blocking time. |
+| `small-paste-api` | Response bytes use finite directed transport capacity. | Prepared 4 KiB text lookup. |
+| `preloaded-news-api` | Concentrated waves matter more than the average arrival rate. | One fixed two-record article page. |
+| `price-history-api` | Historical reads retain a finite shared database demand. | One fixed eight-record history page. |
+
+The compiler accepts one fixed range key list per operation; these versions do
+not imply variable ranges or arbitrary SQL. Read-only datasets are preloaded.
+The briefs name further exclusions, goals and observation windows. Every mandatory
+goal must pass on both hidden workloads; tests replay two passing capacity choices
+and reject a one-core, one-worker, zero-queue design for every scenario.

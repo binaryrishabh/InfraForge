@@ -42,6 +42,30 @@
     {
       "path": ".dockerignore",
       "hash": "e2da22c328c1fc185f7303189f26a98329ff6b2074cad386b6d2ed90c7a1bed5"
+    },
+    {
+      "path": "apps/backend/firstStack/scoredChallenges/url-redirect.v1.json",
+      "hash": "1490ceceda8f543f7eacdaee55ac76adc2b926b1e5a1016b4ea5057318c1203c"
+    },
+    {
+      "path": "apps/backend/firstStack/scoredChallenges/catalogue-api.v1.json",
+      "hash": "5632448de95e5acff371aee8697fe4a0b3ed8b923e5a5f8c375bb606e88af91e"
+    },
+    {
+      "path": "apps/backend/firstStack/scoredChallenges/reviews-api.v1.json",
+      "hash": "74f5000062919461ec90c4d89360d787329b080fd69340ce8c04c107eb091cae"
+    },
+    {
+      "path": "apps/backend/firstStack/scoredChallenges/small-paste-api.v1.json",
+      "hash": "09ad7ef8d7fcfd5ecc50d3a32c51a57f08809a688bcd03e18ec525c491432c2d"
+    },
+    {
+      "path": "apps/backend/firstStack/scoredChallenges/preloaded-news-api.v1.json",
+      "hash": "df9f6aafa65d843e447dc4e8714709969765f73732e0d2645e6b6176228236f8"
+    },
+    {
+      "path": "apps/backend/firstStack/scoredChallenges/price-history-api.v1.json",
+      "hash": "982a26a90c7f88aaeb8318f56eca499a72f496e8032f150d99c687d2ce67b599"
     }
   ],
   "acceptance": [
@@ -60,6 +84,10 @@
     {
       "path": "scripts/tests/execution-identity.test.ts",
       "hash": "80bf59a39c6e5a1b6f1df985ac58bb50aeafa2d2415e122eae5554eea9ae36f9"
+    },
+    {
+      "path": "apps/backend/tests/r1Scenarios.test.ts",
+      "hash": "e268f3a654e4767fc0104f757fbda37aac06e2877050164c2a2cba23b95f037e"
     }
   ]
 }
