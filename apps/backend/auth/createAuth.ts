@@ -29,8 +29,10 @@ export function createAuth(prisma: PrismaClient, settings: ReturnType<typeof rea
     ...(deliver ? { emailVerification: { sendOnSignUp: true, sendOnSignIn: false, expiresIn: EMAIL_TOKEN_SECONDS,
       autoSignInAfterVerification: false,
       sendVerificationEmail: async ({ user, url, token }: { user: { id: string; email: string }; url: string; token: string }) => {
-        await registerVerification(prisma, token, user.id);
-        deliver({ to: user.email, subject: "Verify your InfraForge email", text: `Verify your email within 30 minutes: ${url}` });
+        // Native signup invokes this inside its user-creation transaction. The
+        // independent ledger FK must wait in background so signup can commit.
+        deliver({ to: user.email, subject: "Verify your InfraForge email", text: `Verify your email within 30 minutes: ${url}` },
+          () => registerVerification(prisma, token, user.id));
       } } } : {}),
     plugins: [username({ displayUsername: false, immutableUsername: true,
       minUsernameLength: USERNAME_MIN, maxUsernameLength: USERNAME_MAX,

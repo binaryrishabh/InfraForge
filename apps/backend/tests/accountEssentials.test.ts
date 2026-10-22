@@ -24,12 +24,15 @@ class Quota implements AccountQuota {
 function fixture(enabled = true) {
   const mail = new FakeEmail(), challenge = new FakeChallenge(), quota = new Quota();
   const ledger = new Map<string, { expiresAt: Date; usedAt: Date | null }>();
-  const prisma = { accountEmailToken: {
+  const tokenStore = {
     upsert: async (q: any) => { if (!ledger.has(q.where.hash)) ledger.set(q.where.hash, { ...q.create, usedAt: null }); },
     updateMany: async (q: any) => { const row = ledger.get(q.where.hash);
       if (!row || row.usedAt || row.expiresAt <= q.where.expiresAt.gt) return { count: 0 };
       row.usedAt = q.data.usedAt; return { count: 1 }; },
-  } } as unknown as PrismaClient;
+  };
+  const prisma = { accountEmailToken: tokenStore,
+    $transaction: async (work: any) => work({ accountEmailToken: tokenStore, $queryRaw: async () => [{ deletedAt: null }] }),
+  } as unknown as PrismaClient;
   const settings = { ...readAuthSettings(config), accountEssentials: { enabled, email: mail, challenge: enabled ? challenge : undefined, siteKey: undefined } };
   const options = createAuth(prisma, settings, quota).options;
   const database: { user: any[]; session: any[]; account: any[]; verification: any[] } = { user: [], session: [], account: [], verification: [] };
@@ -166,6 +169,17 @@ test("email dispatcher bounds in-flight work without returning provider details"
   for (let n = 0; n < 40; n++) dispatch({ to: "fixture@example.test", subject: "fixture", text: "fixture" });
   await delivered(); expect(sends).toBe(32); expect(errors).toBe(8);
   release(); await delivered();
+});
+
+test("verification delivery does not hold native signup open while ledger registration waits", async () => {
+  const f = fixture();
+  let release!: () => void;
+  const waiting = new Promise<void>(resolve => { release = resolve; });
+  const transaction = f.prisma.$transaction;
+  f.prisma.$transaction = (async (work: any) => { await waiting; return transaction(work); }) as any;
+  const signup = await f.signup();
+  expect(signup.status).toBe(200); expect(f.mail.messages).toHaveLength(0);
+  release(); await delivered(); expect(f.mail.messages).toHaveLength(1);
 });
 
 test("shared Redis quotas store only keyed hashes with expiry", async () => {

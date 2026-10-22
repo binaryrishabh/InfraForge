@@ -6,7 +6,7 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import express from "express";
 import { createServer } from "node:http";
 import { PrismaClient } from "../../lib/generated/prisma/client";
-import { readLocalSettings } from "./localHarness";
+import { readLocalSettings, until } from "./localHarness";
 import { createAuth } from "../../auth/createAuth";
 import { readAuthSettings } from "../../auth/settings";
 import { FakeEmail } from "../../auth/email";
@@ -42,9 +42,10 @@ import { createSubmissionService } from "../../firstStack/admission";
     const auth = createAuth(db, { ...readAuthSettings({ BETTER_AUTH_URL: "http://localhost:3100", APP_ORIGINS: origin,
       BETTER_AUTH_SECRET: randomUUID() + randomUUID() }), accountEssentials: { enabled: true, email: mail, challenge: new FakeChallenge(), siteKey: "fixture" } }, quota);
     const create = async (username: string) => {
+      const messageCount = mail.messages.length;
       const response = await auth.api.signUpEmail({ body: { username, name: username, email: `${username}@example.test`, password, turnstileToken: "fixture" } as any });
       // Verification is the native endpoint; token comes from the injected email fake.
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await until(async () => mail.messages.length > messageCount || undefined, "account verification delivery");
       const url = new URL(mail.messages.at(-1)!.text.split(" ").at(-1)!);
       await auth.api.verifyEmail({ query: { token: url.searchParams.get("token")! } });
       const login = await auth.api.signInEmail({ body: { email: `${username}@example.test`, password }, asResponse: true });

@@ -74,9 +74,9 @@ export function readEmail(env: Record<string, string | undefined>): Transactiona
 // request/token/address/body logging. Restarts may drop mail; users can resend.
 export function emailDispatcher(email: TransactionalEmail, failed = () => console.error("Transactional email delivery failed")) {
   let pending = 0;
-  return (message: TransactionalMessage) => {
+  return (message: TransactionalMessage, beforeSend?: () => Promise<void>) => {
     if (pending >= 32) { failed(); return; }
     pending++;
-    void Promise.resolve().then(() => email.send(message)).catch(() => failed()).finally(() => pending--);
+    void Promise.resolve().then(() => beforeSend?.()).then(() => email.send(message)).catch(() => failed()).finally(() => pending--);
   };
 }
