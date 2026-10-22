@@ -13,7 +13,7 @@ const hash = (value: string) => createHash("sha256").update(value).digest("hex")
 const ADDITIVE_MIGRATIONS = new Set(["20261009000000_capture_run_inputs", "20261009010000_add_authentication",
   "20261013000000_reliable_run_evidence", "20261013010000_honest_reruns", "20261014000000_challenge_attempts",
   "20261015000000_challenge_versions_experiments", "20261016000000_experiment_evidence",
-  "20261017000000_credential_usernames", "20261018000000_challenge_learning", "20261019000000_internal_model2", "20261020000000_model2_lesson", "20261021000000_first_stack_submissions"]);
+  "20261017000000_credential_usernames", "20261018000000_challenge_learning", "20261019000000_internal_model2", "20261020000000_model2_lesson", "20261021000000_first_stack_submissions", "20261022000000_historical_replay"]);
 
 export async function migrationManifest(): Promise<Migration[]> {
   const directory = new URL("../prisma/migrations/", import.meta.url);
@@ -112,6 +112,8 @@ export async function checkSchemaGuards(db: Database) {
 }
 
 export async function assertReleaseIdle(db: Database) {
+  const replays = await db.query("SELECT to_regclass('public.\"FirstStackReplay\"') IS NOT NULL AS present");
+  if (replays.rows[0].present && (await db.query('SELECT 1 FROM "FirstStackReplay" WHERE status<>\'terminal\' LIMIT 1')).rowCount) throw Error("Historical replays must finish or undergo operator recovery before release");
   const submissions = await db.query("SELECT to_regclass('public.\"FirstStackWork\"') IS NOT NULL AS present");
   if (submissions.rows[0].present && (await db.query('SELECT 1 FROM "FirstStackWork" WHERE status<>\'terminal\' LIMIT 1')).rowCount) throw Error("First-stack reservations must finish or undergo operator recovery before release");
   const internal = await db.query("SELECT to_regclass('public.\"InternalModel2Run\"') IS NOT NULL AS present");

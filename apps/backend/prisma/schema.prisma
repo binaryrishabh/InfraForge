@@ -135,6 +135,7 @@ model User {
   internalModel2Grant InternalModel2Grant?
   internalModel2Runs InternalModel2Run[]
   firstStackRuns FirstStackRun[]
+  firstStackReplays FirstStackReplay[]
 }
 
 model Session {
@@ -242,6 +243,7 @@ model FirstStackRun {
   result FirstStackResult?
   cuts FirstStackCut[]
   outbox FirstStackOutbox?
+  replays FirstStackReplay[]
   @@unique([ownerId, idempotencyKey])
   @@index([ownerId, createdAt])
 }
@@ -279,4 +281,20 @@ model FirstStackOutbox {
   run FirstStackRun @relation(fields: [runId], references: [id], onDelete: Restrict)
   delivered Boolean @default(false)
   createdAt DateTime @default(now()) @db.Timestamptz(3)
+}
+
+model FirstStackReplay {
+  id String @id
+  runId String
+  run FirstStackRun @relation(fields: [runId], references: [id], onDelete: Restrict)
+  ownerId String
+  owner User @relation(fields: [ownerId], references: [id], onDelete: Restrict)
+  fingerprint String @db.VarChar(64)
+  status String @default("queued")
+  delivered Boolean @default(false)
+  cancelled Boolean @default(false)
+  daemon String? @db.VarChar(64)
+  result Json?
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  @@index([status])
 }

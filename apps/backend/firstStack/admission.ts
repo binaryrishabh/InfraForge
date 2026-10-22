@@ -10,6 +10,8 @@ import { digestPattern, imagePattern } from "./isolationPolicy";
 import { firstStackRunRecord } from "../runRecords/firstStack";
 import { admitScoredChallenge } from "./scoredChallenges/definition";
 import { publicScore } from "./scoredChallenges/projection";
+import { migrationSource, migrationSourceSchema } from "./migration";
+import type { RunReference } from "@infraforge/contracts/reports";
 
 export const submissionEnvelope = Object.freeze({ revision: "first-stack-submission/1", queued: 16,
   queuedBytes: 256 * 1024 * 1024, retainedBytes: 2 * 1024 * 1024 * 1024,
@@ -17,6 +19,7 @@ export const submissionEnvelope = Object.freeze({ revision: "first-stack-submiss
 export interface ApprovedSubmissionEngine { source: string; image: string }
 export interface SubmissionLineage {
   kind: "design"; infrastructureId: string; updatedAt: string; designRevision: string;
+  migratedFrom?: RunReference;
 }
 export interface SubmittedWorkloadReference {
   origin: "submitted-recording"; identity: string; executedScheduleHash: string;
@@ -30,7 +33,7 @@ export const closedSubmissionAdmission: SubmissionAdmission = Object.freeze({ en
 const requestSchema = z.object({ infrastructureId: z.uuid(), expectedDesignUpdatedAt: z.iso.datetime(),
   expectedDesignRevision: z.string().regex(digestPattern), idempotencyKey: z.string().min(1).max(80),
   purpose: z.enum(["private", "shared", "scored"]), engine: z.object({ source: z.string().regex(digestPattern), image: z.string().regex(imagePattern) }).strict(),
-  workload: z.json(), policy: z.json(), browserCut: z.json(),
+  workload: z.json(), policy: z.json(), browserCut: z.json(), migratedFrom: migrationSourceSchema.optional(),
   challenge: z.object({ id: z.string().min(1).max(80), version: z.string().min(1).max(32) }).strict().optional() }).strict();
 
 export async function submissionTransaction<T>(pool: Pool, task: (db: PoolClient) => Promise<T>) {
@@ -69,6 +72,7 @@ export function createSubmissionService(pool: Pool, configuration: SubmissionAdm
         if (!design) throw new NotFoundError("Saved design unavailable");
         if (design.challengeId) throw new ValidationError("Fixed challenge submissions require a server-owned challenge adapter");
         if (design.updatedAt.toISOString() !== request.expectedDesignUpdatedAt || designRevision(design.layout) !== request.expectedDesignRevision) throw new ConflictError("Saved design changed; review its exact revision");
+        const migratedFrom = await migrationSource(db, owner, request.migratedFrom, design.layout);
         const scored = request.challenge ? await admitScoredChallenge(owner, design.layout, request.challenge, request.workload, request.policy) : null;
         const prepared = scored?.prepared ?? prepareFirstStackExecution(owner, design.layout, design.layout.firstStack, request.workload, request.policy);
         const input = canonical({ owner, layout: design.layout, candidate: design.layout.firstStack, recording: prepared.schedule, policy: prepared.policy });
@@ -86,9 +90,11 @@ export function createSubmissionService(pool: Pool, configuration: SubmissionAdm
           COALESCE(sum(r."inputBytes") FILTER (WHERE w.status<>'terminal'),0)::bigint AS bytes,
           COALESCE(sum(r."reservedBytes"),0)::bigint AS retained
           FROM "FirstStackRun" r JOIN "FirstStackWork" w ON w."runId"=r.id`, [owner])).rows[0];
+        const replays = (await db.query('SELECT count(*)::int AS queued,count(*) FILTER (WHERE "ownerId"=$1)::int AS owned FROM "FirstStackReplay" WHERE status<>\'terminal\'', [owner])).rows[0];
         if (Number(usage.retained) + reservedBytes > submissionEnvelope.retainedBytes ||
-          verifying && (usage.queued >= submissionEnvelope.queued || usage.owned >= submissionEnvelope.perOwner || Number(usage.bytes) + inputBytes > submissionEnvelope.queuedBytes)) throw new AppError("Submission storage or verification capacity busy", 503);
-        const id = randomUUID(), lineage: SubmissionLineage = { kind: "design", infrastructureId: design.id, updatedAt: request.expectedDesignUpdatedAt, designRevision: request.expectedDesignRevision };
+          verifying && (usage.queued + replays.queued >= submissionEnvelope.queued || usage.owned + replays.owned >= submissionEnvelope.perOwner || Number(usage.bytes) + inputBytes > submissionEnvelope.queuedBytes)) throw new AppError("Submission storage or verification capacity busy", 503);
+        const id = randomUUID(), lineage: SubmissionLineage = { kind: "design", infrastructureId: design.id, updatedAt: request.expectedDesignUpdatedAt, designRevision: request.expectedDesignRevision,
+          ...(migratedFrom ? { migratedFrom } : {}) };
         const workload = { identity: prepared.schedule.identity, executedScheduleHash: prepared.schedule.executedScheduleHash,
           origin: scored ? "server-challenge" : "submitted-recording", ...(scored ? { challenge: scored.reference } : {}) };
         await db.query(`INSERT INTO "FirstStackRun" (id,"ownerId","idempotencyKey","requestHash",purpose,engine,input,"inputHash",lock,seed,workload,envelope,lineage,"browserCut","inputBytes","reservedBytes")

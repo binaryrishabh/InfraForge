@@ -8,6 +8,12 @@ import { withFirstStackOwnership } from "../../firstStack/isolationOwnership";
 import { checkFirstStackSchema } from "../../release/firstStackSchema";
 import type { FirstStackReport } from "@infraforge/contracts/reports";
 import { submissionFixture } from "../submissionFixture";
+import { closeHistoricalReplayRecovery } from "../../firstStack/historicalReplay";
+import { captureRunInputs } from "../../deployments/runInputs";
+import { canonical, designRevision } from "../../firstStack/canonical";
+import { prepareFirstStackExecution, instantiatePreparedFirstStack } from "../../firstStack/execution";
+import { captureExecutionCut } from "../../firstStack/executionCut";
+import { inputDigest, isolatedCut } from "../../firstStack/isolationProtocol";
 
 const url = process.env.FIRST_STACK_TEST_DATABASE ?? (process.env.INTEGRATION_RUN === "1" ? process.env.INTEGRATION_DATABASE_URL : undefined);
 async function rejected(promise: Promise<unknown>, text?: string) {
@@ -100,6 +106,50 @@ async function rejected(promise: Promise<unknown>, text?: string) {
     expect(((await service.read(f.owner, first.id)).evidence.report as FirstStackReport).verification.status).toBe("interrupted");
     expect(((await service.read(f.owner, first.id)).evidence.report as FirstStackReport).origin).toBe("server");
     expect((await pool.query('SELECT count(*)::int AS count FROM "FirstStackWork" WHERE status<>\'terminal\'')).rows[0].count).toBe(15);
+    const history = async () => JSON.stringify((await pool.query(`SELECT to_jsonb(r) AS run,
+      (SELECT jsonb_agg(to_jsonb(c) ORDER BY sequence) FROM "FirstStackCut" c WHERE c."runId"=r.id) AS cuts,
+      (SELECT to_jsonb(s) FROM "FirstStackResult" s WHERE s."runId"=r.id) AS result FROM "FirstStackRun" r ORDER BY r.id`)).rows);
+    const original = await history(), replayId = randomUUID();
+    await rejected(pool.query('INSERT INTO "FirstStackReplay" (id,"runId","ownerId",fingerprint) VALUES ($1,$2,$3,$4)',
+      [randomUUID(), first.id, "other-0", f.request.browserCut.fingerprint]), "owned authorized");
+    await rejected(pool.query('INSERT INTO "FirstStackReplay" (id,"runId","ownerId",fingerprint) VALUES ($1,$2,$3,$4)',
+      [randomUUID(), first.id, f.owner, "f".repeat(64)]), "durable prefix");
+    await pool.query('INSERT INTO "FirstStackReplay" (id,"runId","ownerId",fingerprint) VALUES ($1,$2,$3,$4)',
+      [replayId, first.id, f.owner, f.request.browserCut.fingerprint]);
+    const overflow = await submissionFixture("replay-capacity"), overflowId = randomUUID();
+    await pool.query('INSERT INTO "User" (id,name,email,"updatedAt") VALUES ($1,$1,$2,CURRENT_TIMESTAMP)', [overflow.owner, `${overflow.owner}@example.invalid`]);
+    await pool.query('INSERT INTO "Infrastructure" (id,"userId","ownerId",name,layout,"updatedAt") VALUES ($1,$2,$2,\'replay capacity\',$3,$4)', [overflowId, overflow.owner, overflow.layout, overflow.request.expectedDesignUpdatedAt]);
+    await rejected(service.submit(overflow.owner, { ...overflow.request, infrastructureId: overflowId }), "capacity busy");
+    await pool.query('UPDATE "FirstStackReplay" SET status=\'running\',daemon=$2 WHERE id=$1', [replayId, stored.daemon]);
+    await markSubmissionRecovery(pool);
+    await rejected(pool.query('UPDATE "FirstStackReplay" SET status=\'queued\' WHERE id=$1', [replayId]), "transition");
+    const replayCleanup = { token: replayId, daemon: stored.daemon, cleanup: "not-created", reviewer: "fixture-operator", proof: "No replay container created in SQL fixture" };
+    await rejected(closeHistoricalReplayRecovery(pool, replayId, { ...replayCleanup, daemon: "d".repeat(64) }), "identity differs");
+    await closeHistoricalReplayRecovery(pool, replayId, replayCleanup);
+    await rejected(pool.query('DELETE FROM "FirstStackReplay" WHERE id=$1', [replayId]), "retained");
+    await rejected(pool.query('UPDATE "FirstStackReplay" SET result=\'{}\' WHERE id=$1', [replayId]), "transition");
+    expect(await history()).toBe(original);
+    const migration = await submissionFixture("migration-owner"), sourceDesign = randomUUID(), copyDesign = randomUUID(), sourceRun = randomUUID();
+    await pool.query('INSERT INTO "User" (id,name,email,"updatedAt") VALUES ($1,$1,$2,CURRENT_TIMESTAMP)', [migration.owner, `${migration.owner}@example.invalid`]);
+    await pool.query('INSERT INTO "Infrastructure" (id,"userId","ownerId",name,layout,"updatedAt") VALUES ($1,$2,$2,\'source design\',$3,$4)', [sourceDesign, migration.owner, migration.layout, migration.request.expectedDesignUpdatedAt]);
+    const m1 = captureRunInputs(migration.layout);
+    await pool.query('INSERT INTO "Deployment" (id,"infrastructureId","ownerId",status,"runInputs",seed,"workloadProfile","updatedAt") VALUES ($1,$2,$3,\'completed\',$4,$5,$6,now())', [sourceRun, sourceDesign, migration.owner, m1, m1.seed, m1.workloadProfile]);
+    const sidecar = { ...migration.layout.firstStack, migration: { kind: "reviewed-copy", fromInfrastructureId: sourceDesign,
+      fromRevision: designRevision(migration.layout), reviewedBy: migration.owner } };
+    const copy = { ...migration.layout, firstStack: sidecar };
+    await pool.query('INSERT INTO "Infrastructure" (id,"userId","ownerId",name,layout,"updatedAt") VALUES ($1,$2,$2,\'reviewed copy\',$3,$4)', [copyDesign, migration.owner, copy, migration.request.expectedDesignUpdatedAt]);
+    const prepared = prepareFirstStackExecution(migration.owner, copy, sidecar, migration.request.workload, migration.request.policy), runtime = instantiatePreparedFirstStack(prepared);
+    runtime.advanceTo(runtime.horizon);
+    const input = canonical({ owner: migration.owner, layout: copy, candidate: sidecar, recording: prepared.schedule, policy: prepared.policy });
+    const cut = isolatedCut(captureExecutionCut(prepared, runtime, 1, migration.request.browserCut.cut.effectiveLimits, null).value, migration.engine.source, inputDigest(input));
+    const migratedFrom = { engine: "1", store: "Deployment", id: sourceRun } as const;
+    const request = { ...migration.request, infrastructureId: copyDesign, purpose: "private", expectedDesignRevision: designRevision(copy), browserCut: cut, migratedFrom };
+    await rejected(service.submit(migration.owner, { ...request, migratedFrom: { ...migratedFrom, id: randomUUID() } }), "Migration source");
+    const migrated = await service.submit(migration.owner, request), record = await service.read(migration.owner, migrated.id);
+    expect(migrated.id).not.toBe(sourceRun); expect(record.lineage).toEqual({ kind: "migrated-from", source: migratedFrom });
+    expect(record.reference).toEqual({ engine: "2", store: "FirstStackRun", id: migrated.id });
+    expect((await pool.query('SELECT "sourceRunId","rerunMode","improvementSourceId" FROM "Deployment" WHERE id=$1', [sourceRun])).rows[0])
+      .toEqual({ sourceRunId: null, rerunMode: null, improvementSourceId: null });
   } finally {
     await db.end(); await pool.end();
     await admin.query(`DROP DATABASE "${name}" WITH (FORCE)`); await admin.end();

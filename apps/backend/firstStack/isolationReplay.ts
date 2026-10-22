@@ -12,7 +12,12 @@ export async function replayFirstStackPrefix(prepared: ReturnType<typeof prepare
   const runtime = instantiatePreparedFirstStack(prepared), target = expected.cut.execution.processed;
   let processed = 0;
   while (processed < target) {
-    runtime.advanceSlice(runtime.horizon, Math.min(128, target - processed));
+    try { runtime.advanceSlice(runtime.horizon, Math.min(128, target - processed)); }
+    catch (error) {
+      // A deterministic executor failure may itself be the recorded last event.
+      // It is replayable only at that exact processed count, never past it.
+      if (runtime.evidence().execution.processed !== target) throw error;
+    }
     const next = runtime.evidence().execution.processed;
     if (next <= processed) throw Error("Recorded event prefix is unavailable");
     processed = next;
@@ -20,7 +25,9 @@ export async function replayFirstStackPrefix(prepared: ReturnType<typeof prepare
   }
   const { value } = captureExecutionCut(prepared, runtime, expected.cut.sequence, expected.cut.effectiveLimits, expected.cut.interruption);
   const actual = cutFingerprint(value);
+  const fields = ["throughUs", "timestampComplete", "unfinished", "counts", "execution", "completeness", "distributions", "omissions", "reportCapture"] as const;
+  const diagnostics = actual === expected.fingerprint ? [] : fields.filter(field => hash(value[field] ?? null) !== hash(expected.cut[field] ?? null));
   return { kind: actual === expected.fingerprint ? "MatchesRecordedPrefix" as const : "Mismatch" as const,
     inputHash, expected: expected.fingerprint, actual, throughUs: value.throughUs, processed,
-    complete: value.completeness.horizonReached, mutation: "None" as const };
+    diagnostics, complete: value.completeness.horizonReached, mutation: "None" as const };
 }

@@ -2,7 +2,8 @@ import { readFile } from "node:fs/promises";
 import type { Client, Pool } from "pg";
 
 export async function checkFirstStackSchema(db: Pick<Client | Pool, "query">) {
-  const source = await readFile(new URL("../prisma/migrations/20261021000000_first_stack_submissions/migration.sql", import.meta.url), "utf8");
+  const source = (await Promise.all(["20261021000000_first_stack_submissions", "20261022000000_historical_replay"].map(name =>
+    readFile(new URL(`../prisma/migrations/${name}/migration.sql`, import.meta.url), "utf8")))).join("\n");
   const bodies = new Map([...source.matchAll(/CREATE FUNCTION (\w+)\(\) RETURNS trigger LANGUAGE plpgsql AS \$\$([\s\S]*?)\$\$/g)]
     .map(m => [m[1], m[2]!.replaceAll("\r\n", "\n").trim()]));
   const expected = [
@@ -13,6 +14,8 @@ export async function checkFirstStackSchema(db: Pick<Client | Pool, "query">) {
     ["first_stack_cut_capture", "FirstStackCut", "capture_first_stack_evidence", 7],
     ["first_stack_result_capture", "FirstStackResult", "capture_first_stack_evidence", 7],
     ["first_stack_admission", "FirstStackRun", "require_first_stack_reservation", 5],
+    ["first_stack_replay_guard", "FirstStackReplay", "protect_first_stack_replay", 31],
+    ["first_stack_migration_guard", "FirstStackRun", "verify_first_stack_migration", 7],
   ] as const;
   const triggers = await db.query(`SELECT t.tgname,t.tgtype,t.tgdeferrable,t.tginitdeferred,c.relname,p.proname,p.prosrc
     FROM pg_trigger t JOIN pg_proc p ON p.oid=t.tgfoid JOIN pg_class c ON c.oid=t.tgrelid
@@ -27,12 +30,13 @@ export async function checkFirstStackSchema(db: Pick<Client | Pool, "query">) {
       row.tgdeferrable !== deferred || row.tginitdeferred !== deferred || row.prosrc.replaceAll("\r\n", "\n").trim() !== bodies.get(row.proname)) throw Error("First-stack persistence guard differs from release");
   }
   const constraints = await db.query(`SELECT conname,pg_get_constraintdef(oid) AS definition FROM pg_constraint
-    WHERE conrelid IN ('public."FirstStackRun"'::regclass,'public."FirstStackWork"'::regclass,'public."FirstStackCut"'::regclass,'public."FirstStackResult"'::regclass)
+    WHERE conrelid IN ('public."FirstStackRun"'::regclass,'public."FirstStackWork"'::regclass,'public."FirstStackCut"'::regclass,'public."FirstStackResult"'::regclass,'public."FirstStackReplay"'::regclass)
       AND contype='c' AND convalidated`);
   const limits: Record<string, string[]> = { first_stack_input: ["16777216", "37748736", "300000000", "infraforge-first-stack-compile-lock/2", "IS TRUE"],
     first_stack_work: ["33554432", "recovery", "terminal", "daemon"], first_stack_cut: ["4096", "2097152", "300000000", "IS TRUE"],
-    first_stack_result: ["33554432", "unverified", "verified", "IS TRUE"] };
-  if (constraints.rowCount !== 4 || constraints.rows.some(r => !limits[r.conname]?.every(fragment => r.definition.includes(fragment)))) throw Error("First-stack persistence limits differ from release");
+    first_stack_result: ["33554432", "unverified", "verified", "IS TRUE"],
+    first_stack_replay: ["16384", "MatchesRecordedPrefix", "Mismatch", "Unavailable", "IS TRUE"] };
+  if (constraints.rowCount !== 5 || constraints.rows.some(r => !limits[r.conname]?.every(fragment => r.definition.includes(fragment)))) throw Error("First-stack persistence limits differ from release");
   const tokenIndex = await db.query(`SELECT 1 FROM pg_index i JOIN pg_class c ON c.oid=i.indexrelid
     WHERE i.indrelid='public."FirstStackWork"'::regclass AND c.relname='FirstStackWork_token_key'
       AND i.indisunique AND i.indisvalid AND i.indisready AND i.indnatts=1 AND i.indexprs IS NULL AND i.indpred IS NULL
@@ -40,4 +44,5 @@ export async function checkFirstStackSchema(db: Pick<Client | Pool, "query">) {
   if (tokenIndex.rowCount !== 1) throw Error("First-stack container token uniqueness guard missing");
   await db.query(`SELECT r.input,r.lock,r.engine,r.seed,r.workload,r.envelope,r.lineage,r."browserCut",r."reservedBytes",w.token,w.daemon,w.authorized,w."cancelRequested",w."captureBytes",s.hash,o.delivered
     FROM "FirstStackRun" r CROSS JOIN "FirstStackWork" w CROSS JOIN "FirstStackResult" s CROSS JOIN "FirstStackOutbox" o LIMIT 0`);
+  await db.query('SELECT id,"runId","ownerId",fingerprint,status,delivered,cancelled,daemon,result,"createdAt" FROM "FirstStackReplay" LIMIT 0');
 }

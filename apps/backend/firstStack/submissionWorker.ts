@@ -95,5 +95,6 @@ export async function verifySubmission(pool: Pool, databaseUrl: string, id: stri
 export async function markSubmissionRecovery(pool: Pool) {
   await submissionTransaction(pool, async db => {
     await db.query('UPDATE "FirstStackWork" SET status=\'recovery\' WHERE status=\'running\'');
+    await db.query('UPDATE "FirstStackReplay" SET status=\'recovery\' WHERE status=\'running\'');
   });
 }
