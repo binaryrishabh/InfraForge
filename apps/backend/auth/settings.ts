@@ -1,3 +1,6 @@
+import { readEmail } from "./email";
+import { readChallenge } from "./turnstile";
+
 export function readAuthSettings(env: Record<string, string | undefined>) {
   const production = env.NODE_ENV === "production";
   const origin = (value: string) => {
@@ -23,6 +26,11 @@ export function readAuthSettings(env: Record<string, string | undefined>) {
   };
   const google = provider("GOOGLE");
   const github = provider("GITHUB");
+  if (env.ACCOUNT_ESSENTIALS_ENABLED && !["true", "false"].includes(env.ACCOUNT_ESSENTIALS_ENABLED)) throw Error("ACCOUNT_ESSENTIALS_ENABLED must be true or false");
+  const enabled = env.ACCOUNT_ESSENTIALS_ENABLED === "true";
+  const email = readEmail(env), challenge = readChallenge(env);
+  if (enabled && !email) throw Error("Account essentials require a configured transactional email provider");
   return { baseURL, origins, secret: env.BETTER_AUTH_SECRET, secure: new URL(baseURL).protocol === "https:",
+    accountEssentials: { enabled, email, challenge, siteKey: env.TURNSTILE_SITE_KEY },
     socialProviders: { ...(google ? { google } : {}), ...(github ? { github } : {}) } };
 }

@@ -126,6 +126,8 @@ model User {
   email         String @unique
   emailVerified Boolean @default(false)
   image         String?
+  deletedAt     DateTime?
+  emailTokens   AccountEmailToken[]
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   sessions      Session[]
@@ -136,6 +138,17 @@ model User {
   internalModel2Runs InternalModel2Run[]
   firstStackRuns FirstStackRun[]
   firstStackReplays FirstStackReplay[]
+}
+
+// Redemption ledger for Better Auth verification JWTs; never stores raw tokens.
+model AccountEmailToken {
+  hash String @id @db.VarChar(64)
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  usedAt DateTime?
+  @@index([userId])
+  @@index([expiresAt])
 }
 
 model Session {
