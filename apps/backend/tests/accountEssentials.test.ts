@@ -68,6 +68,7 @@ test("native credential flow stays sessionful when essentials are disabled", asy
   for (const path of ["request-password-reset", "send-verification-email", "reset-password", "delete-user"]) {
     expect((await f.call(path, { email: "learner@example.test" })).status).toBe(404);
   }
+  expect((await f.call("reset-password/unissued-fixture?callbackURL=http%3A%2F%2Flocalhost%3A5173")).status).toBe(404);
 });
 
 test("native signup challenge fails closed before user creation", async () => {

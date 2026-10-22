@@ -45,6 +45,10 @@ export function accountAuthHandler(handler: (request: Request) => Promise<Respon
   now = Date.now, sleep = (ms: number) => new Promise<void>(resolve => setTimeout(resolve, ms))) {
   return async (request: Request) => {
     const path = new URL(request.url).pathname.replace(/\/$/, "").toLowerCase();
+    // Better Auth's disabledPaths compares literal URLs, not route patterns.
+    if (!enabled && path.startsWith("/api/auth/reset-password/")) {
+      return new Response("Not Found", { status: 404, headers: { "Cache-Control": "no-store", "Referrer-Policy": "no-referrer" } });
+    }
     const uniform = enabled && request.method === "POST" && ["/api/auth/send-verification-email", "/api/auth/request-password-reset"].includes(path);
     const start = now();
     if (uniform) {
