@@ -207,3 +207,4 @@ apps/backend/resources/**
 !apps/backend/resources/README.md
 !apps/backend/firstStack/scoredChallenges/url-redirect.v1.json
 !apps/backend/firstStack/scoredChallenges/catalogue-api.v1.json
+!apps/backend/firstStack/scoredChallenges/reviews-api.v1.json

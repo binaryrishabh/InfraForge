@@ -6,7 +6,7 @@ import { inputDigest, isolatedCut } from "../firstStack/isolationProtocol";
 import { instantiatePreparedFirstStack, prepareFirstStackExecution } from "../firstStack/execution";
 import { captureExecutionCut } from "../firstStack/executionCut";
 
-const scenarios = ["url-redirect", "catalogue-api"];
+const scenarios = ["url-redirect", "catalogue-api", "reviews-api"];
 const owner = "r1-qualification", engine = { source: "a".repeat(64), image: `sha256:${"b".repeat(64)}` };
 const limits = { wallMs: 60000, cpuUs: 20000000, rssBytes: 536870912, frameBytes: 1048576, summaryBytes: 10485760, captureBytes: 33554432 };
 // Real first-stack simulation; synthetic receipts qualify software only.
