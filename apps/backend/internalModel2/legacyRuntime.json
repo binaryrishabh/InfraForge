@@ -1065,7 +1065,7 @@
     },
     {
       "path": "apps/backend/internalModel2/capture.ts",
-      "hash": "14bcdf12ec9582182aa22765d71837e6a83a55a399300889969011c4fdfbdbad"
+      "hash": "5aa4eee28564eba8a6108a6d980cb492b00c32706480f62999eeb3d080b4e503"
     },
     {
       "path": "apps/backend/internalModel2/captureV1.ts",
@@ -1105,7 +1105,7 @@
     },
     {
       "path": "apps/backend/internalModel2/envelope.ts",
-      "hash": "93bff249d6cbe38ffecc26f91711d3a861e2db5fa8f034f022b7a736ad19fccf"
+      "hash": "88b17509e50a9c540952f7b5473335b7f2571a1896310c3157429a3047cbf824"
     },
     {
       "path": "apps/backend/internalModel2/envelopeV1.ts",
@@ -1161,7 +1161,7 @@
     },
     {
       "path": "apps/backend/internalModel2/report.ts",
-      "hash": "95a679cb8f6cc1dcf7197466efaff2d0b68fea6f1c9e5bcf18ba303e21bb6c02"
+      "hash": "78a0e1821d286105d23912c6ba6d2f5a2a95ab74fb1059e3c0623217eb2e5a00"
     },
     {
       "path": "apps/backend/internalModel2/routes.ts",
@@ -2370,6 +2370,10 @@
     {
       "path": "scripts/tests/historical-isolation.test.ts",
       "hash": "0da6c9fbe2ae10cbc073c8d1242600e02c681e7a07355057b0aa2819148566d3"
+    },
+    {
+      "path": "scripts/tests/historicalCompatibility.test.ts",
+      "hash": "f7beb120f80a7134cef1bb539203963a257c1835765b056aa2ec911990b895cc"
     },
     {
       "path": "scripts/tests/landingSample.test.ts",

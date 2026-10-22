@@ -125,6 +125,171 @@
       ],
       "additionalProperties": false
     },
+    "reference": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "engine": {
+              "type": "string",
+              "const": "1"
+            },
+            "store": {
+              "type": "string",
+              "const": "Deployment"
+            },
+            "id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            }
+          },
+          "required": [
+            "engine",
+            "store",
+            "id"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "engine": {
+              "type": "string",
+              "const": "2"
+            },
+            "store": {
+              "type": "string",
+              "enum": [
+                "InternalModel2Run",
+                "FirstStackRun"
+              ]
+            },
+            "id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            }
+          },
+          "required": [
+            "engine",
+            "store",
+            "id"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "availability": {
+      "type": "object",
+      "properties": {
+        "report": {
+          "type": "string",
+          "enum": [
+            "readable",
+            "partial",
+            "unavailable"
+          ]
+        },
+        "execution": {
+          "type": "string",
+          "enum": [
+            "available",
+            "execution-retired",
+            "unavailable"
+          ]
+        },
+        "replay": {
+          "type": "string",
+          "enum": [
+            "available",
+            "unavailable"
+          ]
+        },
+        "reasons": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "report",
+        "execution",
+        "replay",
+        "reasons"
+      ],
+      "additionalProperties": false
+    },
+    "lineage": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "const": "migrated-from"
+        },
+        "source": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "engine": {
+                  "type": "string",
+                  "const": "1"
+                },
+                "store": {
+                  "type": "string",
+                  "const": "Deployment"
+                },
+                "id": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 256
+                }
+              },
+              "required": [
+                "engine",
+                "store",
+                "id"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "engine": {
+                  "type": "string",
+                  "const": "2"
+                },
+                "store": {
+                  "type": "string",
+                  "enum": [
+                    "InternalModel2Run",
+                    "FirstStackRun"
+                  ]
+                },
+                "id": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 256
+                }
+              },
+              "required": [
+                "engine",
+                "store",
+                "id"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        }
+      },
+      "required": [
+        "kind",
+        "source"
+      ],
+      "additionalProperties": false
+    },
     "learning": {
       "type": "object",
       "properties": {

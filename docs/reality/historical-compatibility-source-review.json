@@ -1,0 +1,129 @@
+{
+  "schema": "historical-compatibility-source-review/1",
+  "baseline": "3c5c530af8a47196b3d1641a77aeaaf6f63a314f",
+  "scope": "Versioned read compatibility; explicit M1 retirement availability; owned immutable M2 prefix replay; additive reservations; Model 2 inactive",
+  "files": [
+    {
+      "path": "apps/backend/firstStack/admission.ts",
+      "hash": "887ac5407cd846578a2c316a12b11ca92d7560be64ede97ad683b5d4be48d0a0"
+    },
+    {
+      "path": "apps/backend/firstStack/report.ts",
+      "hash": "e29eab94ad948e3044fcf1cb014c0c34843cd2455390b37a56f61e400897dbf1"
+    },
+    {
+      "path": "apps/backend/firstStack/isolationReplay.ts",
+      "hash": "7d6d1d6c7d5bfa1a84c8d8a5f58070a6638c8fa50e8cc8078d45c4bac1073fba"
+    },
+    {
+      "path": "apps/backend/firstStack/submissionQueue.ts",
+      "hash": "fae38d456fde401ecc4b4b560dc4f7a8b6980eb925da7d1d66574613beb32e64"
+    },
+    {
+      "path": "apps/backend/firstStack/submissionRoutes.ts",
+      "hash": "6840ed301decafc64ab1d036cd2dfdce946bb7d80e79c73d1ca4ca76fc86b24a"
+    },
+    {
+      "path": "apps/backend/firstStack/submissionWorker.ts",
+      "hash": "7af7801e3a1f584b2b70376625243286ad2668af1b08b39e2c2458366dd677c5"
+    },
+    {
+      "path": "apps/backend/firstStack/historicalReplay.ts",
+      "hash": "4f6e39a106dc44a34edab35a60ffa721468b9e34ad20c624cb01a7b3466501d1"
+    },
+    {
+      "path": "apps/backend/firstStack/migration.ts",
+      "hash": "58131449ce1db30cf8c3e9631039e17971e8d05f705debe0e839595666b27ab2"
+    },
+    {
+      "path": "apps/backend/runRecords/adapters.ts",
+      "hash": "e119b6cbbadfe8ef40f3ffefd6f92f126c004e559bed7d88e855cb8bc7115d0f"
+    },
+    {
+      "path": "apps/backend/runRecords/firstStack.ts",
+      "hash": "531bb7d25695f9be686d1eafeda67466863586a8e9cbedc0113a778331fef016"
+    },
+    {
+      "path": "apps/backend/runRecords/schema.ts",
+      "hash": "ecca97e520c094ca309770e25dd27581b12c7c6d3a5ac0a61dc6458deae585fc"
+    },
+    {
+      "path": "apps/backend/runRecords/availability.ts",
+      "hash": "df2fa8659b94f53d34fd6f1652b5b79c93bcba871a9c13d2944607f4a00d60f2"
+    },
+    {
+      "path": "apps/backend/runRecords/historical.ts",
+      "hash": "1851c442eec90307d8ba01e49173a79ff6137cef382b857fc9f4b02023eac63f"
+    },
+    {
+      "path": "apps/backend/internalModel2/envelope.ts",
+      "hash": "88b17509e50a9c540952f7b5473335b7f2571a1896310c3157429a3047cbf824"
+    },
+    {
+      "path": "apps/backend/internalModel2/capture.ts",
+      "hash": "5aa4eee28564eba8a6108a6d980cb492b00c32706480f62999eeb3d080b4e503"
+    },
+    {
+      "path": "apps/backend/internalModel2/report.ts",
+      "hash": "78a0e1821d286105d23912c6ba6d2f5a2a95ab74fb1059e3c0623217eb2e5a00"
+    },
+    {
+      "path": "apps/backend/reruns/options.ts",
+      "hash": "12256c5af71ab9b06288d8d13d3904f1a3b71c18170b4a5e686251232fdf7605"
+    },
+    {
+      "path": "apps/backend/challenges/improvements.ts",
+      "hash": "e575582f9e2cde40c32891bf407c8d5877e489e0b862803eabb5d1200760655c"
+    },
+    {
+      "path": "apps/backend/release/firstStackSchema.ts",
+      "hash": "d77d57c2f808aed47689b396d3e18baf20f68b43bec48277082374f0fd2364a2"
+    },
+    {
+      "path": "apps/backend/release/migrations.ts",
+      "hash": "83848c45e39180adb0a32fa9edc166d31235f6faa78b249e73a4c813454076c7"
+    },
+    {
+      "path": "apps/backend/prisma/schema.prisma",
+      "hash": "2fd50b0cc174f087b82b0f3bd99bcf87d12aa7f80fe5a0159f4bf40fdc7af548"
+    },
+    {
+      "path": "apps/backend/prisma/migrations/20261022000000_historical_replay/migration.sql",
+      "hash": "0135eee834e0eccb3dc7f61439ebc4215fcb6816d3a12f05811a2fa17a62010b"
+    },
+    {
+      "path": "packages/contracts/src/reports/runRecord.ts",
+      "hash": "cc02581996ae8804e3a55cb7929ab6b5ba8bc8bf7e95eb0f097d74fa8df4c2c2"
+    },
+    {
+      "path": "docs/reality/launch-claims.json",
+      "hash": "71d1d9515d5de6f051d2166b50686a90acea4fa53f132fbf6a63bc8ebaee6ef9"
+    }
+  ],
+  "acceptance": [
+    {
+      "path": "scripts/tests/execution-identity.test.ts",
+      "hash": "065c6c01f31962009cb4af21704a845d8bc969a95bdb5108266ffd2f69900c0d"
+    },
+    {
+      "path": "apps/backend/tests/historicalCompatibility.test.ts",
+      "hash": "7c76bbb7abfda5a6b44969c61ab924c6f7c955e949dc1aa21e02a866ba962806"
+    },
+    {
+      "path": "apps/backend/tests/release.test.ts",
+      "hash": "39dfdf4086d8345232631d8291fc5f45fc3658a1260966417f7d65b26f6e7a8d"
+    },
+    {
+      "path": "scripts/tests/ci-repair.test.ts",
+      "hash": "22d098886ab53c575fae0506e55565e936ed41c091122828d7c350ee4e7811c2"
+    },
+    {
+      "path": "scripts/tests/historicalCompatibility.test.ts",
+      "hash": "f7beb120f80a7134cef1bb539203963a257c1835765b056aa2ec911990b895cc"
+    },
+    {
+      "path": "apps/backend/tests/integration/firstStackSubmission.integration.test.ts",
+      "hash": "b70197cf83ba3202e869fe1b7adac1cea208e7d23fb2d48bcded3f8db0aefe18"
+    }
+  ]
+}
