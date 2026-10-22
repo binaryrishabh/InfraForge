@@ -766,7 +766,7 @@
       "owner": "@infraforge/contracts@workspace:packages/contracts:156",
       "file": "src/auth/index.ts",
       "key": "@infraforge/contracts/src/auth/index.ts",
-      "hash": "896752ba36ac06124cd4712035e01069c67d904826cfd3f45c34a8cfcf2efe61"
+      "hash": "c639dc9380ea36c0c7ae4c6df9be16f76968c901a225544ea24324a8f9010093"
     },
     {
       "owner": "@infraforge/contracts@workspace:packages/contracts:156",
@@ -43880,6 +43880,46 @@
     },
     {
       "owner": null,
+      "file": "apps/backend/auth/accountData.ts",
+      "specifier": "@infraforge/contracts/auth",
+      "kind": "import-statement",
+      "targetOwner": "@infraforge/contracts@workspace:packages/contracts:156",
+      "targetFile": "src/auth/index.ts"
+    },
+    {
+      "owner": null,
+      "file": "apps/backend/auth/accountPolicy.ts",
+      "specifier": "better-auth/api",
+      "kind": "import-statement",
+      "targetOwner": "better-auth@1.7.7:178",
+      "targetFile": "dist/api/index.mjs"
+    },
+    {
+      "owner": null,
+      "file": "apps/backend/auth/accountRoutes.ts",
+      "specifier": "better-auth/node",
+      "kind": "import-statement",
+      "targetOwner": "better-auth@1.7.7:178",
+      "targetFile": "dist/integrations/node.mjs"
+    },
+    {
+      "owner": null,
+      "file": "apps/backend/auth/accountRoutes.ts",
+      "specifier": "express",
+      "kind": "import-statement",
+      "targetOwner": "express@5.2.1:219",
+      "targetFile": "index.js"
+    },
+    {
+      "owner": null,
+      "file": "apps/backend/auth/accountRoutes.ts",
+      "specifier": "zod",
+      "kind": "import-statement",
+      "targetOwner": "zod@4.4.3:12",
+      "targetFile": "index.js"
+    },
+    {
+      "owner": null,
       "file": "apps/backend/auth/createAuth.ts",
       "specifier": "@better-auth/prisma-adapter",
       "kind": "import-statement",
@@ -43901,6 +43941,14 @@
       "kind": "import-statement",
       "targetOwner": "better-auth@1.7.7:178",
       "targetFile": "dist/index.mjs"
+    },
+    {
+      "owner": null,
+      "file": "apps/backend/auth/createAuth.ts",
+      "specifier": "better-auth/api",
+      "kind": "import-statement",
+      "targetOwner": "better-auth@1.7.7:178",
+      "targetFile": "dist/api/index.mjs"
     },
     {
       "owner": null,

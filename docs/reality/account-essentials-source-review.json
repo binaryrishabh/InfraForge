@@ -1,0 +1,193 @@
+{
+  "schema": "account-essentials-source-review/1",
+  "baseline": "3c5c530af8a47196b3d1641a77aeaaf6f63a314f",
+  "scope": "Disabled-by-default account recovery/export/profile deletion; independent optional signup challenge; no engine behavior change or Model 2 activation",
+  "files": [
+    {
+      "path": "apps/backend/auth/accountData.ts",
+      "hash": "38c97f06fd660e78d6cc1ca938471d1458487fe60c5bd06fcb6b78bd69ec8996"
+    },
+    {
+      "path": "apps/backend/auth/accountPolicy.ts",
+      "hash": "d3f8d8135f1aba4b3443268f958ba958d768bef92442820956bd28ced38096ce"
+    },
+    {
+      "path": "apps/backend/auth/accountRoutes.ts",
+      "hash": "45c48187d436be1ca82993ab2d9caa86c9e27269cf1cadc03d04cfc56f8024e2"
+    },
+    {
+      "path": "apps/backend/auth/auth.ts",
+      "hash": "a229f113d01b03de854b10415a618539e17511bbc736564cc8527cbe858283b6"
+    },
+    {
+      "path": "apps/backend/auth/createAuth.ts",
+      "hash": "e5482d31ed8eb82bcf8d15bbf4c0b9b2d5e036566bc710ad973f00b3c6f9e023"
+    },
+    {
+      "path": "apps/backend/auth/credentials.ts",
+      "hash": "365e57212636e921aa61deeff21793ad181ab873731a425b71e276f3191ab362"
+    },
+    {
+      "path": "apps/backend/auth/email.ts",
+      "hash": "3c5ae34f4ae389645590f7fe07afdb2a46a8378bcd8c212b36ef4113f29d3c19"
+    },
+    {
+      "path": "apps/backend/auth/httpSecurity.ts",
+      "hash": "b61d0741b9da0726bf8aac194c727603bd483b55ff269593728daf289912b18b"
+    },
+    {
+      "path": "apps/backend/auth/origin.ts",
+      "hash": "b41d243139ac3fb4303963547a205ac9405472457d5ab880ab93908e4f3a828c"
+    },
+    {
+      "path": "apps/backend/auth/settings.ts",
+      "hash": "0bfd3d52ce76538f5acba51c23715bfdd8d8812585648a2ffa3a21e252d0b1fc"
+    },
+    {
+      "path": "apps/backend/auth/turnstile.ts",
+      "hash": "83adf4c5ec6ef2f6eb40caa53bc03f6ebcc932f015f36a42b548f609ded5f3a9"
+    },
+    {
+      "path": "apps/backend/auth/verification.ts",
+      "hash": "76bc9f65a78635032b533f65645ccc8e69fe1ea95b4c2c674236293ec261f056"
+    },
+    {
+      "path": "apps/backend/index.ts",
+      "hash": "bed1446c8c8425e0b12979da645bf64210683bccc2e3616e083b18401117d75a"
+    },
+    {
+      "path": "apps/backend/release/accountSchema.ts",
+      "hash": "5d2c55ad927aa44140909f6e00421bf3078b6e8da51e6706200244162ea26712"
+    },
+    {
+      "path": "apps/backend/release/migrations.ts",
+      "hash": "f0d4de0960be6032d72bd0fc1fb264c185749a2a1fbca04ff20737b61dd122b4"
+    },
+    {
+      "path": "apps/backend/prisma/schema.prisma",
+      "hash": "a58d821c8bf86f234779dc9548a71df76b00c6ff009e679747dfee904f7a6268"
+    },
+    {
+      "path": "apps/backend/prisma/migrations/20261022000000_account_essentials/migration.sql",
+      "hash": "50401eb9d159e1bd8d41130cfba58a382d72a46a0e505cc4caea7433b6d10fc2"
+    },
+    {
+      "path": "apps/backend/lib/generated/prisma/browser.ts",
+      "hash": "c7c15471b7c628a2aea0a8ad6c0db1ed053dba1a13349e235d0fe0c01cdc38b3"
+    },
+    {
+      "path": "apps/backend/lib/generated/prisma/client.ts",
+      "hash": "86414caa103a0e873aa241b21d11cd8d72c8b3250c826cce712c85d37c7fb6b6"
+    },
+    {
+      "path": "apps/backend/lib/generated/prisma/commonInputTypes.ts",
+      "hash": "53c08a013cf0c406797b9559217ae476ab41f29c8f01095438c5cd7cc99415d7"
+    },
+    {
+      "path": "apps/backend/lib/generated/prisma/enums.ts",
+      "hash": "ebbdce75bbdd503c5172913fdc7b0523216ce8a6e6ed3ee4611ab10bea9c1e20"
+    },
+    {
+      "path": "apps/backend/lib/generated/prisma/internal/class.ts",
+      "hash": "063a6cdeb73e9c19f120e145fe589cdd9ccbe394087856f182722158d5629e13"
+    },
+    {
+      "path": "apps/backend/lib/generated/prisma/internal/prismaNamespace.ts",
+      "hash": "975e280c8cfd825571705bcaa02fb186edfc8cc36b4a3bf6c23070bf8e61bc5f"
+    },
+    {
+      "path": "apps/backend/lib/generated/prisma/internal/prismaNamespaceBrowser.ts",
+      "hash": "3c9231bea116b6ba9af0f920602434ce62fe9f490bc0cd4000231666e7881770"
+    },
+    {
+      "path": "apps/backend/lib/generated/prisma/models/Account.ts",
+      "hash": "c2c4ddfae8f1c226cb18ad186086a0e7e0985f0bb914c07647aea4b4af31b9f6"
+    },
+    {
+      "path": "apps/backend/lib/generated/prisma/models/AccountEmailToken.ts",
+      "hash": "f176bad87b70d59521a15df938a9800469acb9d68426b742b92107ad39a9c4d9"
+    },
+    {
+      "path": "apps/backend/lib/generated/prisma/models/Deployment.ts",
+      "hash": "ebf19acfe634b77cf7fb2be77d95380ad70589ce21b90a8815d8b51043afabb4"
+    },
+    {
+      "path": "apps/backend/lib/generated/prisma/models/FirstStackCut.ts",
+      "hash": "232c82a6be18d9f5da67e67f65c7aaf85aa0d090c8305e0da77e4154776213ab"
+    },
+    {
+      "path": "apps/backend/lib/generated/prisma/models/FirstStackOutbox.ts",
+      "hash": "20d6a2abb6e257252457b13b323848b851434216c39c3df2f9bc26fc4f927a85"
+    },
+    {
+      "path": "apps/backend/lib/generated/prisma/models/FirstStackResult.ts",
+      "hash": "fa7942ccd6d2267285e9a6351907c1cce4f835c7766c3493fa8f29d0874f2972"
+    },
+    {
+      "path": "apps/backend/lib/generated/prisma/models/FirstStackRun.ts",
+      "hash": "cc2096865ce8ed36158632f7a1aaa41ea472e6d3064c8f5aae6c8251b0e71240"
+    },
+    {
+      "path": "apps/backend/lib/generated/prisma/models/FirstStackWork.ts",
+      "hash": "57ae745e91ddd37c51fbae6ac0c2050446c56e7613f89de4a8d6ac8fd72d2d98"
+    },
+    {
+      "path": "apps/backend/lib/generated/prisma/models/Infrastructure.ts",
+      "hash": "131d80c5c7e86e7d286b30428425c26ef0b1883b631d84e9a7c6359f71410b5a"
+    },
+    {
+      "path": "apps/backend/lib/generated/prisma/models/InternalModel2Grant.ts",
+      "hash": "2a0092fdc7ac896af2d99f2cfa2d45b70ff60efcd3db29b7f8a0182fdbae8faf"
+    },
+    {
+      "path": "apps/backend/lib/generated/prisma/models/InternalModel2LessonRun.ts",
+      "hash": "5cd160c72936f7e7ca9f806c234471ed3669363f3ec3fcad73e691bca62abad6"
+    },
+    {
+      "path": "apps/backend/lib/generated/prisma/models/InternalModel2Run.ts",
+      "hash": "c898cdea28a3556a75ddc0c0ddfb02bcadd231d8e221a27dd23cb3c69bf4cae4"
+    },
+    {
+      "path": "apps/backend/lib/generated/prisma/models/Outbox.ts",
+      "hash": "915ee67964729392a0a21e46478cca959dd0ca59db604475cd7d3b6258fb9c56"
+    },
+    {
+      "path": "apps/backend/lib/generated/prisma/models/RunAction.ts",
+      "hash": "eddf8150fa1b2770b27832eeee1069bcee83c4be60617806592865c9b17d97c9"
+    },
+    {
+      "path": "apps/backend/lib/generated/prisma/models/RunEvidenceSample.ts",
+      "hash": "228d66968ef341f67d5e78912439a304f5729cf075b5018092de3cc58ef06cd5"
+    },
+    {
+      "path": "apps/backend/lib/generated/prisma/models/Session.ts",
+      "hash": "56784350026710c9078458f8cb81aa2711f537a8ecf51eddd930c640f9c826f4"
+    },
+    {
+      "path": "apps/backend/lib/generated/prisma/models/User.ts",
+      "hash": "181326e4afc4cfef03616a132770b4c1f0bad221b7d3fe5c73b50b04338837a6"
+    },
+    {
+      "path": "apps/backend/lib/generated/prisma/models/Verification.ts",
+      "hash": "eb3c02154aade44e63eeb1c342e668dda81448fd92b05d11df88a4dd9a8df6cf"
+    },
+    {
+      "path": "apps/backend/lib/generated/prisma/models.ts",
+      "hash": "9d68095a96e837c4dc6bec537fbdd66ca2f257813c1c5c5823f7752da5a29452"
+    }
+  ],
+  "acceptance": [
+    {
+      "path": "scripts/tests/execution-identity.test.ts",
+      "hash": "664a788c35d4a46df37278e54ac0c79ef5aa920202c5ce5dd9a7d983d3076452"
+    },
+    {
+      "path": "apps/backend/tests/accountEssentials.test.ts",
+      "hash": "50ae7237327c6cff2eab1c577353c0a73e1c0ee15a58ca1f3ea4ade5c5310994"
+    },
+    {
+      "path": "apps/backend/tests/integration/accountEssentials.integration.test.ts",
+      "hash": "63c72b80b65dc139b1816c4e032c66f53913465e8f37d7297b719d15b1dff9b9"
+    }
+  ]
+}
