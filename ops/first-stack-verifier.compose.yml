@@ -1,5 +1,8 @@
 # Explicit operator overlay for the dedicated host verifier. Not part of default Compose.
 services:
+  worker:
+    ports:
+      - "127.0.0.1:3002:3002"
   redis:
     # Internal-only bridges do not provide a usable published host listener.
     networks: [application, egress]

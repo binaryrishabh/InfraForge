@@ -23,11 +23,15 @@ the database acknowledges them. Do not use a transaction pooler or automatically
 retry uncertain commits. After connection loss, read the stored prefix.
 Slice 11 must implement its immutable run/outbox store against these interfaces.
 
-The parent checks the host qualification before creating a container. A missing,
-failed, expired, wrong-image, wrong-source, changed-daemon or capacity-two record
-refuses both operations. Qualification files are trusted operator configuration,
-never request data. They expire after at most 24 hours and must be protected from
-application/user writes. A successful qualification does not activate Model 2.
+The parent checks a short live qualification lease before creating a container.
+A missing, failed, expired, wrong-image, wrong-source, changed-daemon or
+capacity-two lease refuses both operations. The host service derives leases only
+from a protected full rehearsal baseline, unchanged host fingerprint and successful
+live canary. The baseline has no calendar expiry; live leases last at most 20
+minutes and are renewed automatically. See FIRST_STACK_VERIFIER.md for this
+production path. Legacy v1 diagnostic records retain their 24-hour ceiling and
+cannot be installed as a production baseline. A successful qualification does
+not activate Model 2.
 
 Each executor has a 768 MiB memory limit with swap disabled, 0.5 CPU quota,
 20-second process CPU rlimit, 64 PIDs, 128 FDs, 60-second independent wall timer,
@@ -86,9 +90,12 @@ keeps the corresponding gate false.
 ## EC2: owner-run qualification, not performed by this task
 
 The nominated host is c7i-flex.large, 2 vCPU / 4 GiB. No AWS or production access
-is needed by the producer. Run only on an idle owned host during a separately
+is needed by the producer. Full rehearsal runs only on an idle owned host during a separately
 arranged maintenance/rehearsal window, with the existing deployment already
-absent. The script refuses a nonempty daemon and never stops existing containers.
+absent. The script refuses a daemon containing running or stopped containers and
+never stops existing containers. This is an initial/change-triggered rehearsal,
+not routine renewal. The production fingerprint requires the dedicated rootless
+daemon and host installation described in FIRST_STACK_VERIFIER.md.
 It creates a fresh disposable PostgreSQL/Redis/API/worker topology from installed
 immutable images and removes only its labelled objects. It does not read `.env`,
 connect to production PostgreSQL, or change the installed Compose deployment.
@@ -100,7 +107,7 @@ Redis image IDs, then run:
 
 ```sh
 bun --no-env-file --no-install scripts/first-stack-host/qualify.ts \
-  --endpoint=unix:///var/run/docker.sock \
+  --endpoint=unix:///run/user/REPLACE_WITH_UID/docker.sock \
   --image=sha256:REPLACE_WITH_RELEASE_IMAGE_ID \
   --postgres=sha256:REPLACE_WITH_POSTGRES_IMAGE_ID \
   --redis=sha256:REPLACE_WITH_REDIS_IMAGE_ID \
@@ -131,7 +138,7 @@ external DB latency, host daemon/OS overhead, and the existing
 `BACKEND_CAPACITY.md` budget before activation. No second verifier is authorized. Builds, backup jobs
 and migrations must not overlap execution on the 4-GiB host.
 
-Retain `evidence.json`, `qualification.json`, fixture hashes, immutable image
+Retain `evidence.json`, `qualification.json`, `canary.json`, fixture hashes, immutable image
 IDs and source revision. Review every gate, failed observation and cleanup.
 Do not edit a failed record to pass. Rerun into a new directory after changes.
 No paid measurement, cloud throughput calibration or production rollout is

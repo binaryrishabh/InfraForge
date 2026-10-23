@@ -23,7 +23,8 @@ are arithmetic ceilings, not measured headroom. The rootless daemon lives outsid
 the supervisor cgroup so its child retains the independent executor budget.
 Measure both daemons and the supervisor during intended-host qualification.
 Disable verification and stop the service before builds, migrations, backups or
-qualification. The previous concurrent-build budget does not apply.
+full qualification. Routine live renewal uses the existing executor slot while
+ordinary production continues. The previous concurrent-build budget does not apply.
 
 Connection ceilings: one producer Redis connection with a 2-second command
 deadline/no offline queue, one consumer plus its one blocking connection, two
@@ -49,6 +50,15 @@ explicit operator coordination with releases. No automatic fallback is supported
    controllers according to the host's rootless Docker installation procedure.
    Record the actual UID/socket. Refuse rollout if the existing host qualification
    cannot prove every control on that daemon; never switch to rootful silently.
+   The fingerprint implementation supports Debian/Ubuntu hosts with the dpkg
+   package database, `runc`, overlay2/overlayfs and the systemd cgroup driver.
+   Install the runtime executables root-owned and not group/world writable.
+   Root installs `/etc/infraforge/verifier/daemon.json` (0644); the dedicated
+   daemon must start with the literal argument
+   `--config-file=/etc/infraforge/verifier/daemon.json`. Use an explicit protected
+   configuration even when it is `{}`. The delegated daemon cgroup and every
+   ancestor below the cgroup root must expose memory, swap, CPU, PID and cpuset
+   controls. Missing/unreadable facts refuse qualification.
 3. Install an immutable copy of the exact release workspace at
    `/opt/infraforge/verifier-release`, including frozen dependencies and the
    generated Prisma client. Use the repository's install/generation and execution
@@ -75,10 +85,14 @@ explicit operator coordination with releases. No automatic fallback is supported
 
    The image example is deliberately invalid until replaced. Every settings and
    qualification ancestor must be root-owned, non-symlink and not group/world
-   writable. Files are bounded to 16 KiB and opened without following symlinks.
+   writable. Settings and baseline files are bounded to 16 KiB and opened without
+   following symlinks. The separate protected canary has a 2 MiB file ceiling.
 6. If the dedicated host verifier is later approved, apply the explicit
    `ops/first-stack-verifier.compose.yml` override alongside the backend Compose
-   file to publish Redis only on 127.0.0.1:6380. The override also attaches Redis
+   file to publish Redis only on 127.0.0.1:6380 and worker health on
+   127.0.0.1:3002. Use the existing API loopback port 3000 for this supported host.
+   The live monitor requires API live/ready and worker ready responses below
+   three seconds, without redirects. The override also attaches Redis
    to the existing egress bridge: the internal-only bridge cannot serve this
    host listener. Keep Redis firewalled from remote access. API/worker/WS continue
    using their internal Redis origin. Verify the loopback listener on the host
@@ -133,10 +147,11 @@ Both scored jobs must finish, no child may receive the initial SIGTERM, and the
 service must exit zero. Keep the separate full qualification and real-container
 acceptance gates; do not substitute this regression for them.
 
-## Qualification and renewal (maximum 24 hours)
+## Full qualification after identity changes
 
-The existing full producer in FIRST_STACK_ISOLATION.md is authoritative.
-Containment-only/CI output never qualifies this service. Use a new evidence
+The full producer in FIRST_STACK_ISOLATION.md remains authoritative for all
+sixteen behavioral gates. Containment-only/CI output and legacy v1 records never
+qualify this service. Use a new evidence
 directory for every run, the dedicated daemon endpoint, exact release image,
 installed PostgreSQL/Redis images, `--target=ec2-c7i-flex.large --topology=full
 --allow-disposable-topology`. The producer requires an empty selected daemon and
@@ -160,29 +175,88 @@ bun --no-env-file --no-install scripts/first-stack-host/qualify.ts \
 ```
 
 The owner reviews every boolean check, source/image/daemon/policy identity,
-checkedAt/expiresAt and actual service/host measurements. Also measure the extra
+checkedAt, fingerprint observation, canary receipt and actual service/host measurements. Also measure the extra
 supervisor/daemon budget and the real production topology, which differs from
 the disposable topology. A valid producer record is necessary; it does not
 prove unmeasured production headroom or grant product activation.
 
-Schedule renewal before 20 hours from checkedAt, leaving at least four hours
-for an offline qualification window. Disable new API admission, wait for queued
-and active reservations to finish, and stop the verifier. Retain the previous
-evidence; never extend its expiry or edit failed checks. Rerun full qualification
-into a new directory and install the reviewed `qualification.json` atomically:
+The producer emits a `first-stack-baseline/2` record with no calendar expiry and
+a hash-bound `canary.json` containing the exact input and completed reference
+cut. Neither file alone grants execution authority. Retain the previous evidence;
+never edit failed checks. With the verifier stopped, install both reviewed files:
 
 ```sh
 sudo install -o root -g root -m 0644 REVIEWED_RECORD /etc/infraforge/verifier/qualification.next
+sudo install -o root -g root -m 0644 REVIEWED_CANARY /etc/infraforge/verifier/canary.next
+sudo mv /etc/infraforge/verifier/canary.next /etc/infraforge/verifier/canary.json
 sudo mv /etc/infraforge/verifier/qualification.next /etc/infraforge/verifier/qualification.json
 ```
 
 After owner-approved activation, install the enabled settings atomically, then
 `systemctl start first-stack-verifier`. Probe
-`curl --fail http://127.0.0.1:3003/health/ready`. Renewal is also reloaded by the
-bounded background probe; missing, invalid, expired, wrong-image/source/daemon
-or CI records close availability. Expiry is checked again on every execution
-fence, so active visible/hidden work loses authority on expiry. Never advertise
-continuous service if the daily offline renewal window has not been arranged.
+`curl --fail http://127.0.0.1:3003/health/ready`. Startup holds lifecycle ownership
+while it runs the live canary, then hands ownership to the queue. Any competing
+startup must acquire that same lock; it cannot steal a slot between active jobs.
+
+The fingerprint binds boot ID, kernel build, DMI instance type, CPU models and
+memory; Docker server/component versions, storage/security/runtime settings;
+content and filesystem identity of Bun, Docker CLI, dockerd, containerd, runc,
+rootlesskit and the dpkg package database; the protected daemon config and
+installed supervisor unit; and the daemon PID/start time, loaded executable,
+command and all delegated ancestor cgroup limits/controllers/cpusets. Exact
+source, release image, daemon identity and isolation policy are bound separately.
+Regular-file hashes are cached only while inode, size, ownership, mode, mtime and
+ctime stay unchanged. Kernel/cgroup values are reread. The selected endpoint's
+existing socket/daemon checks remain in force.
+
+Reboot, daemon restart, package/runtime/kernel update, host change, delegated
+limit change, release source/image change or baseline replacement closes the
+service. Plan full requalification with that change. The implementation is
+deliberately conservative about unrelated package updates. A maintenance window
+on a spare/replacement host can keep the live product available during host
+replacement; seamless transfer of this host's local queue/database is not supplied
+by this change. Never copy a baseline to another host or rewrite its fingerprint.
+
+## Automatic live renewal while production runs
+
+Every five minutes after a successful canary, the lifecycle closes new admission,
+pauses the Redis queue and waits for its active-job count to reach zero. A scored
+job includes its visible and hidden executions. The worker loop, blocking Redis
+connection, DB ownership and one-second background checks remain running. The
+canary then takes the ordinary executor session lock and fixed Docker name.
+There is never a second verifier container. Success resumes the queue; failure
+leaves it paused, revokes authority and requires operator review/restart.
+
+The exact release image replays the completed reference cut and must return
+`MatchesRecordedPrefix`, a complete protocol, clean exit and confirmed cleanup.
+Inside that same bounded container, finite probes require read-only root denial,
+FD exhaustion below 128, loopback-only networking and increasing cgroup CPU
+throttling counters. The normal inspect/handshake still checks memory/swap, CPU,
+PIDs, rlimits, UID/GID, capabilities, Docker security options,
+no-new-privileges, mounts, environment, network and image on every container.
+OOM, PID exhaustion, CPU-time kill, wall kill, output flooding, orphan tests and
+DB-session termination remain full-rehearsal gates; they do not run against live
+production. Continuous probes do not claim to remeasure those destructive gates.
+
+Only a successful canary with matching fingerprints before and after grants a
+20-minute in-memory lease. Ordinary background refresh never extends it. The
+existing execution fences check expiry again for visible and hidden work. Each
+background observation revalidates the protected baseline, host fingerprint,
+local Linux image, at least 512 MiB host free memory, production health and the
+existing DB/Redis/queue checks. Missing facts, drift, stale lease or a failed
+canary latch qualification closed; restoring an old file cannot silently reopen
+it. No live record is written back over the full evidence.
+
+The five-minute interval, twenty-minute lease, four-second CPU-throttle exercise,
+75-second executor supervisor and 720-second whole-renewal deadline are policy
+ceilings, not performance measurements. Actual drain/canary time, probe overhead
+and full-rehearsal duration are **Unknown** here. Ordinary production does not
+stop for renewal; verifier admission pauses while its single slot drains and
+checks. There is no daily offline window. Full stress rehearsal still requires
+exclusive intended-host time because its disposable service topology, memory
+pressure, process deaths and health/headroom attribution would otherwise overlap
+the live stack. Its total duration cannot honestly be promised to fit a particular
+short window without intended-host measurements.
 
 ## Readiness, shutdown and release
 
@@ -191,7 +265,7 @@ recovery and keeps it through drain. Another lifecycle refuses before recovery.
 The per-executor lock (186542854,10) and fixed container name remain separate.
 Startup only moves running rows to recovery; it never retries uncertain execution.
 
-Background checks cover qualification, exact local image/daemon, DB session,
+Background checks cover baseline/fingerprint, fresh canary lease, exact local image/daemon, DB session,
 producer, blocking consumer, worker loop, successful outbox delivery within five
 seconds, and undelivered outbox age below 15 seconds. Dependency events invalidate
 readiness immediately. The safe Redis availability record lasts at most five
