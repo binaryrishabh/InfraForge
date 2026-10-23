@@ -1,6 +1,6 @@
 {
   "schema": "execution-loading-analysis/1",
-  "policy": "75d2d9ff9a4cb0701a4fb0cfa3f53f01ac6cb759946e905d37bd1373369a372e",
+  "policy": "094f6601fa013aaad77cb813ed4425f45da124808aebeff91bd3a59fd73fd9c8",
   "modules": {
     "apps/backend/actions/contract.ts": {
       "hash": "cb4d5860ab0805ccf009c47e453ed89c12e52e564c95e470a1cfbb23e18fb24d",
@@ -1585,7 +1585,7 @@
       ]
     },
     "apps/backend/firstStack/scoredChallenges/definition.ts": {
-      "hash": "b5665d315b1e2b461b90f1e1a3cb1ef31d6abed877ebb1f8d426c7c86ded3d67",
+      "hash": "224b27abce700b771dd6e9d680e6ea7bb0e21f4dfe622d218aec220f16f7eb70",
       "requests": [
         {
           "path": "zod",
@@ -1593,6 +1593,30 @@
         },
         {
           "path": "./lose-an-app-server.v1.json",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./url-redirect.v1.json",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./catalogue-api.v1.json",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./reviews-api.v1.json",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./small-paste-api.v1.json",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./preloaded-news-api.v1.json",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./price-history-api.v1.json",
           "kind": "import-statement"
         },
         {

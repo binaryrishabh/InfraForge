@@ -377,7 +377,7 @@
     },
     {
       "file": "apps/backend/executionIdentity/loading.ts",
-      "sha256": "3ab809489221e14c9f444df875fac6384ee653bac212de27594252915d5ae26a",
+      "sha256": "ddd9d7c5097e0e38e9b8a553ed379d517aa7e953bb928b4f36afceb76f8b5a4a",
       "numericSites": 14
     },
     {
@@ -522,7 +522,7 @@
     },
     {
       "file": "apps/backend/firstStack/scoredChallenges/definition.ts",
-      "sha256": "b5665d315b1e2b461b90f1e1a3cb1ef31d6abed877ebb1f8d426c7c86ded3d67",
+      "sha256": "224b27abce700b771dd6e9d680e6ea7bb0e21f4dfe622d218aec220f16f7eb70",
       "numericSites": 19
     },
     {
@@ -38616,7 +38616,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/firstStack/scoredChallenges/definition.ts#L16",
+          "source": "workspace:apps/backend/firstStack/scoredChallenges/definition.ts#L22",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -38630,7 +38630,7 @@
       "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
       "location": {
         "file": "apps/backend/firstStack/scoredChallenges/definition.ts",
-        "line": 16,
+        "line": 22,
         "column": 55
       }
     },
@@ -38652,7 +38652,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/firstStack/scoredChallenges/definition.ts#L17",
+          "source": "workspace:apps/backend/firstStack/scoredChallenges/definition.ts#L23",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -38666,7 +38666,7 @@
       "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
       "location": {
         "file": "apps/backend/firstStack/scoredChallenges/definition.ts",
-        "line": 17,
+        "line": 23,
         "column": 141
       }
     },
@@ -38688,7 +38688,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/firstStack/scoredChallenges/definition.ts#L18",
+          "source": "workspace:apps/backend/firstStack/scoredChallenges/definition.ts#L24",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -38702,7 +38702,7 @@
       "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
       "location": {
         "file": "apps/backend/firstStack/scoredChallenges/definition.ts",
-        "line": 18,
+        "line": 24,
         "column": 29
       }
     },
@@ -38724,7 +38724,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/firstStack/scoredChallenges/definition.ts#L18",
+          "source": "workspace:apps/backend/firstStack/scoredChallenges/definition.ts#L24",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -38738,7 +38738,7 @@
       "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
       "location": {
         "file": "apps/backend/firstStack/scoredChallenges/definition.ts",
-        "line": 18,
+        "line": 24,
         "column": 36
       }
     },
@@ -38760,7 +38760,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/firstStack/scoredChallenges/definition.ts#L18",
+          "source": "workspace:apps/backend/firstStack/scoredChallenges/definition.ts#L24",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -38774,7 +38774,7 @@
       "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
       "location": {
         "file": "apps/backend/firstStack/scoredChallenges/definition.ts",
-        "line": 18,
+        "line": 24,
         "column": 102
       }
     },
@@ -38796,7 +38796,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/firstStack/scoredChallenges/definition.ts#L22",
+          "source": "workspace:apps/backend/firstStack/scoredChallenges/definition.ts#L28",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -38810,7 +38810,7 @@
       "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
       "location": {
         "file": "apps/backend/firstStack/scoredChallenges/definition.ts",
-        "line": 22,
+        "line": 28,
         "column": 83
       }
     },
@@ -38832,7 +38832,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/firstStack/scoredChallenges/definition.ts#L22",
+          "source": "workspace:apps/backend/firstStack/scoredChallenges/definition.ts#L28",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -38846,7 +38846,7 @@
       "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
       "location": {
         "file": "apps/backend/firstStack/scoredChallenges/definition.ts",
-        "line": 22,
+        "line": 28,
         "column": 90
       }
     },
@@ -38868,7 +38868,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/firstStack/scoredChallenges/definition.ts#L23",
+          "source": "workspace:apps/backend/firstStack/scoredChallenges/definition.ts#L29",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -38882,7 +38882,7 @@
       "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
       "location": {
         "file": "apps/backend/firstStack/scoredChallenges/definition.ts",
-        "line": 23,
+        "line": 29,
         "column": 155
       }
     },
@@ -38904,7 +38904,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/firstStack/scoredChallenges/definition.ts#L23",
+          "source": "workspace:apps/backend/firstStack/scoredChallenges/definition.ts#L29",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -38918,7 +38918,7 @@
       "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
       "location": {
         "file": "apps/backend/firstStack/scoredChallenges/definition.ts",
-        "line": 23,
+        "line": 29,
         "column": 162
       }
     },
@@ -38940,7 +38940,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/firstStack/scoredChallenges/definition.ts#L23",
+          "source": "workspace:apps/backend/firstStack/scoredChallenges/definition.ts#L29",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -38954,7 +38954,7 @@
       "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
       "location": {
         "file": "apps/backend/firstStack/scoredChallenges/definition.ts",
-        "line": 23,
+        "line": 29,
         "column": 184
       }
     },
@@ -38976,7 +38976,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/firstStack/scoredChallenges/definition.ts#L24",
+          "source": "workspace:apps/backend/firstStack/scoredChallenges/definition.ts#L30",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -38990,7 +38990,7 @@
       "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
       "location": {
         "file": "apps/backend/firstStack/scoredChallenges/definition.ts",
-        "line": 24,
+        "line": 30,
         "column": 223
       }
     },
@@ -39012,7 +39012,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/firstStack/scoredChallenges/definition.ts#L31",
+          "source": "workspace:apps/backend/firstStack/scoredChallenges/definition.ts#L37",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -39026,7 +39026,7 @@
       "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
       "location": {
         "file": "apps/backend/firstStack/scoredChallenges/definition.ts",
-        "line": 31,
+        "line": 37,
         "column": 130
       }
     },
@@ -39048,7 +39048,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/firstStack/scoredChallenges/definition.ts#L31",
+          "source": "workspace:apps/backend/firstStack/scoredChallenges/definition.ts#L37",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -39062,7 +39062,7 @@
       "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
       "location": {
         "file": "apps/backend/firstStack/scoredChallenges/definition.ts",
-        "line": 31,
+        "line": 37,
         "column": 176
       }
     },
@@ -39084,7 +39084,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/firstStack/scoredChallenges/definition.ts#L31",
+          "source": "workspace:apps/backend/firstStack/scoredChallenges/definition.ts#L37",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -39098,7 +39098,7 @@
       "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
       "location": {
         "file": "apps/backend/firstStack/scoredChallenges/definition.ts",
-        "line": 31,
+        "line": 37,
         "column": 211
       }
     },
@@ -39120,7 +39120,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/firstStack/scoredChallenges/definition.ts#L32",
+          "source": "workspace:apps/backend/firstStack/scoredChallenges/definition.ts#L38",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -39134,7 +39134,7 @@
       "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
       "location": {
         "file": "apps/backend/firstStack/scoredChallenges/definition.ts",
-        "line": 32,
+        "line": 38,
         "column": 64
       }
     },
@@ -39156,7 +39156,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/firstStack/scoredChallenges/definition.ts#L32",
+          "source": "workspace:apps/backend/firstStack/scoredChallenges/definition.ts#L38",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -39170,7 +39170,7 @@
       "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
       "location": {
         "file": "apps/backend/firstStack/scoredChallenges/definition.ts",
-        "line": 32,
+        "line": 38,
         "column": 71
       }
     },
@@ -39192,7 +39192,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/firstStack/scoredChallenges/definition.ts#L33",
+          "source": "workspace:apps/backend/firstStack/scoredChallenges/definition.ts#L39",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -39206,7 +39206,7 @@
       "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
       "location": {
         "file": "apps/backend/firstStack/scoredChallenges/definition.ts",
-        "line": 33,
+        "line": 39,
         "column": 76
       }
     },
@@ -39228,7 +39228,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/firstStack/scoredChallenges/definition.ts#L33",
+          "source": "workspace:apps/backend/firstStack/scoredChallenges/definition.ts#L39",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -39242,7 +39242,7 @@
       "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
       "location": {
         "file": "apps/backend/firstStack/scoredChallenges/definition.ts",
-        "line": 33,
+        "line": 39,
         "column": 83
       }
     },
@@ -39264,7 +39264,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/firstStack/scoredChallenges/definition.ts#L34",
+          "source": "workspace:apps/backend/firstStack/scoredChallenges/definition.ts#L40",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -39278,7 +39278,7 @@
       "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
       "location": {
         "file": "apps/backend/firstStack/scoredChallenges/definition.ts",
-        "line": 34,
+        "line": 40,
         "column": 104
       }
     },

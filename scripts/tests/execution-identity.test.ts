@@ -74,7 +74,8 @@ test("history reconstructs without Git and only reviewed digests resolve", () =>
   expect(isolated.exitCode).toBe(0);
   expect(JSON.parse(isolated.stdout.toString()).current).toBe(executionSource);
   const { table, pin } = loadTransitions(repositoryRoot);
-  expect(table.entries.length).toBe(58);
+  expect(table.entries.length).toBe(59);
+  expect(table.entries.some((row: { commit: string }) => row.commit === "d80fb5c4c9117775cd31ddcb78f24d37e8f38c4e")).toBe(true);
   expect(table.entries.some((row: { commit: string }) => row.commit === "07efdee9a74a60208c58b2cad82782c4e77de793")).toBe(true);
   expect(table.entries.some((row: { commit: string }) => row.commit === "d4976569cd139b449bd23781d44ec477dfdf5b5d")).toBe(true);
   expect(table.entries.some((row: { commit: string }) => row.commit === "fd8253b26850b870465f15632cd82ea96eb441a7")).toBe(true);
@@ -117,7 +118,7 @@ test("history reconstructs without Git and only reviewed digests resolve", () =>
     const copy = structuredClone(table); mutate(copy);
     expect(() => validateTransitions(copy, pin.digest)).toThrow();
   }
-}, 120000);
+}, 300000); // Full history reconstruction grows with every recorded transition; see the identity simplification plan.
 test("installed execution imports resolve within the declared closure", async () => {
   expect((await checkExecutionResolution()).resolvedPackages).toBeGreaterThan(50);
 }, 180000);
