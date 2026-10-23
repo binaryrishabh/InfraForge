@@ -128,7 +128,7 @@
     },
     {
       "file": "apps/backend/internalModel2/capture.ts",
-      "hash": "b4bbfbbf0ea034e511cb4764cee816fa2abf0483ab28e542e22a7c86d88d8173"
+      "hash": "b04e434ffba7899cd3564fff7eaa39dd49bc41fdc554a162a747a52ae193938c"
     },
     {
       "file": "apps/backend/internalModel2/captureV1.ts",
@@ -168,7 +168,7 @@
     },
     {
       "file": "apps/backend/internalModel2/envelope.ts",
-      "hash": "76c0d77fadf827745d9b1a547e7ce790f7d6f82294a8976f3b49ee3f55204ab2"
+      "hash": "6e59e4085fc9753c8302a81c08a15b926bec07d9aa691807bc80652843c005ef"
     },
     {
       "file": "apps/backend/internalModel2/envelopeV1.ts",
@@ -192,7 +192,7 @@
     },
     {
       "file": "apps/backend/internalModel2/legacyRuntime.json",
-      "hash": "dbbc06c09b2c96b1400c60f7c693b5c501d6f88b9de77429750e003439676bb6"
+      "hash": "442917b8cd4fd9ecd2dce03844b45065ae1fe4ecb2437097328fa43d1e4b5ca7"
     },
     {
       "file": "apps/backend/internalModel2/lessonAuthoring.ts",
