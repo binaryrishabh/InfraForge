@@ -116,7 +116,7 @@
   "current": [
     {
       "file": "apps/backend/Dockerfile",
-      "hash": "48193675a7d8982bea794b3e4206add75d83590aa89815f1e4b7e465e42d9cae"
+      "hash": "f5d92818dec21938f1f0284e7b5d4da322d066dc838ff258860ee7b324a39a96"
     },
     {
       "file": "apps/backend/internalModel2/authoring.ts",
@@ -192,7 +192,7 @@
     },
     {
       "file": "apps/backend/internalModel2/legacyRuntime.json",
-      "hash": "f9f2e15a254111235905cc3ef399839a3f213b9c85200189cfaa53de866a5d16"
+      "hash": "644635e7e7d499c5d2a63b90cd073e3c3a0ff39b89861dac2ed4d789c1a81b56"
     },
     {
       "file": "apps/backend/internalModel2/lessonAuthoring.ts",

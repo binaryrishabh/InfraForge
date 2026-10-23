@@ -2440,7 +2440,7 @@
     },
     {
       "path": "scripts/tests/release.test.ts",
-      "hash": "af71d018f75c59d916f2e2e53b3d334af6cc6fa683599086b9bc6f39db86dcdf"
+      "hash": "1d6af15468cde07079aedcb20a9c97de0cf8ba3f548bf9ae7f387055dbff267b"
     },
     {
       "path": "scripts/tests/scored-challenges.test.ts",

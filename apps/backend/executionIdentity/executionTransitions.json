@@ -41,6 +41,7 @@
     "d9dfeeafdb821262c5f4742c1da9d5a45d1bc5f0a4bfa64bba72e1dd0faf0273": "d10fadf41af6b745271f9db3e77f8701cabba8c66a42aac1ccbe2767ffbcacde",
     "dcf73dace76edc0afead6158b34785f511ba6b21fd34ce5490d11fe78e20f4ad": "f602f08c6802b6fb3b296d3c30e014e20b92532a44b98856ae5da04984c871cc",
     "ddd72413b5859970f17f0a88e3ab19ccaf65c4ab8e3b78b77fb7a3371bffe29c": "2e17a678715fa3c7e28c7214a7d5cd604655a2fa545e595c1e856dca2a0ab7fd",
+    "e52357035cb2281eb4c36f1e465e42a0401d7b82b5c448a005b63b41c804eaf6": "c751d199239ba66ea106748c9f084d87ae8e8154b658d6b0fb6b5d54216c9500",
     "e5711c5ff54aa59544d5a6c87488b09e69a4eb810504f94b9d642f61e29d243e": "e3198a4840123f60f3cb147d227dcfa561b76c9e98a499282ebf8b828be8cd51",
     "e6130fbc82d6e0a744c2945abb6f9a0301f45dc240cba8b8c5692a392ac14d28": "2649d3994b1cc8b04d08ff92e3269556f4a765a69b3cdd5ebefe75e4937b5c07",
     "eb55b982fb58025a377481e44ddfc77ef0beb75771ea6c9d719d46e0208f51ef": "35bfecde1c1c1b7b9d7efe6cb845190128a9adc9b3dc0fd5502e9a9083f23ca2",
@@ -56,147 +57,147 @@
       "descriptor": "47269e7503f11547e406e075c1ecda5848046eacd81dbad919e6c9d7bc8b7bdd",
       "review": "Connected replay adapter; identity/compatibility, capture validation and sandbox supervision revisions retained; modeled engine unchanged; execution boundary review: unchanged engine/lock, host closure, generated client, selected implementations, strict capabilities and launch contract",
       "source": "9a1e7102a11c0c0ae1cac8c0b7cc0ad46333e61b16c68897f3000509f5568128",
-      "target": "5e324285262eaddd733b50a5be062d224fc4172cadc2734988678e034fde5594"
+      "target": "e52357035cb2281eb4c36f1e465e42a0401d7b82b5c448a005b63b41c804eaf6"
     },
     {
       "commit": "0fb800a58ecc000fecc1f7b6a30015bb7142e26b",
       "descriptor": "eb6581c8f4b4b9db58116ca217f70438f05398bb55c72748839eb572d3b2b9ce",
       "review": "Connected replay adapter; identity/compatibility, capture validation and sandbox supervision revisions retained; modeled engine unchanged; execution boundary review: unchanged engine/lock, host closure, generated client, selected implementations, strict capabilities and launch contract",
       "source": "c978627d82007fc5e55f4bc653ea9132b3f185e381ac0d048afda1645d319ca6",
-      "target": "5e324285262eaddd733b50a5be062d224fc4172cadc2734988678e034fde5594"
+      "target": "e52357035cb2281eb4c36f1e465e42a0401d7b82b5c448a005b63b41c804eaf6"
     },
     {
       "commit": "cb7c8a4b598c90bfe7f56773ace3839975122434",
       "descriptor": "eb6581c8f4b4b9db58116ca217f70438f05398bb55c72748839eb572d3b2b9ce",
       "review": "Connected replay adapter; identity/compatibility, capture validation and sandbox supervision revisions retained; modeled engine unchanged; execution boundary review: unchanged engine/lock, host closure, generated client, selected implementations, strict capabilities and launch contract",
       "source": "c978627d82007fc5e55f4bc653ea9132b3f185e381ac0d048afda1645d319ca6",
-      "target": "5e324285262eaddd733b50a5be062d224fc4172cadc2734988678e034fde5594"
+      "target": "e52357035cb2281eb4c36f1e465e42a0401d7b82b5c448a005b63b41c804eaf6"
     },
     {
       "commit": "febdac6d7b73c0bf4a3d01c5bedd3eab5781a1d7",
       "descriptor": "eb6581c8f4b4b9db58116ca217f70438f05398bb55c72748839eb572d3b2b9ce",
       "review": "Connected replay adapter; identity/compatibility, capture validation and sandbox supervision revisions retained; modeled engine unchanged; execution boundary review: unchanged engine/lock, host closure, generated client, selected implementations, strict capabilities and launch contract",
       "source": "c978627d82007fc5e55f4bc653ea9132b3f185e381ac0d048afda1645d319ca6",
-      "target": "5e324285262eaddd733b50a5be062d224fc4172cadc2734988678e034fde5594"
+      "target": "e52357035cb2281eb4c36f1e465e42a0401d7b82b5c448a005b63b41c804eaf6"
     },
     {
       "commit": "19f2faa44f30c81b3f6cb952b7f15107d2545ac6",
       "descriptor": "eb6581c8f4b4b9db58116ca217f70438f05398bb55c72748839eb572d3b2b9ce",
       "review": "Connected replay adapter; identity/compatibility, capture validation and sandbox supervision revisions retained; modeled engine unchanged; execution boundary review: unchanged engine/lock, host closure, generated client, selected implementations, strict capabilities and launch contract",
       "source": "c978627d82007fc5e55f4bc653ea9132b3f185e381ac0d048afda1645d319ca6",
-      "target": "5e324285262eaddd733b50a5be062d224fc4172cadc2734988678e034fde5594"
+      "target": "e52357035cb2281eb4c36f1e465e42a0401d7b82b5c448a005b63b41c804eaf6"
     },
     {
       "commit": "0bcf74cf57934a2feda1e03f157bbc8ad933d26f",
       "descriptor": "eb6581c8f4b4b9db58116ca217f70438f05398bb55c72748839eb572d3b2b9ce",
       "review": "Connected replay adapter; identity/compatibility, capture validation and sandbox supervision revisions retained; modeled engine unchanged; execution boundary review: unchanged engine/lock, host closure, generated client, selected implementations, strict capabilities and launch contract",
       "source": "c978627d82007fc5e55f4bc653ea9132b3f185e381ac0d048afda1645d319ca6",
-      "target": "5e324285262eaddd733b50a5be062d224fc4172cadc2734988678e034fde5594"
+      "target": "e52357035cb2281eb4c36f1e465e42a0401d7b82b5c448a005b63b41c804eaf6"
     },
     {
       "commit": "30aee34b89a59b17f6848f3799ff5f9890a8b728",
       "descriptor": "eb6581c8f4b4b9db58116ca217f70438f05398bb55c72748839eb572d3b2b9ce",
       "review": "Connected replay adapter; identity/compatibility, capture validation and sandbox supervision revisions retained; modeled engine unchanged; execution boundary review: unchanged engine/lock, host closure, generated client, selected implementations, strict capabilities and launch contract",
       "source": "c978627d82007fc5e55f4bc653ea9132b3f185e381ac0d048afda1645d319ca6",
-      "target": "5e324285262eaddd733b50a5be062d224fc4172cadc2734988678e034fde5594"
+      "target": "e52357035cb2281eb4c36f1e465e42a0401d7b82b5c448a005b63b41c804eaf6"
     },
     {
       "commit": "1ea9599a850662de1a06773dd4b2df7b983a0085",
       "descriptor": "eb6581c8f4b4b9db58116ca217f70438f05398bb55c72748839eb572d3b2b9ce",
       "review": "Connected replay adapter; identity/compatibility, capture validation and sandbox supervision revisions retained; modeled engine unchanged; execution boundary review: unchanged engine/lock, host closure, generated client, selected implementations, strict capabilities and launch contract",
       "source": "c978627d82007fc5e55f4bc653ea9132b3f185e381ac0d048afda1645d319ca6",
-      "target": "5e324285262eaddd733b50a5be062d224fc4172cadc2734988678e034fde5594"
+      "target": "e52357035cb2281eb4c36f1e465e42a0401d7b82b5c448a005b63b41c804eaf6"
     },
     {
       "commit": "70be0f2c1a7f7c3d0fbca636b5c3064ec4829dab",
       "descriptor": "eb6581c8f4b4b9db58116ca217f70438f05398bb55c72748839eb572d3b2b9ce",
       "review": "Connected replay adapter; identity/compatibility, capture validation and sandbox supervision revisions retained; modeled engine unchanged; execution boundary review: unchanged engine/lock, host closure, generated client, selected implementations, strict capabilities and launch contract",
       "source": "c978627d82007fc5e55f4bc653ea9132b3f185e381ac0d048afda1645d319ca6",
-      "target": "5e324285262eaddd733b50a5be062d224fc4172cadc2734988678e034fde5594"
+      "target": "e52357035cb2281eb4c36f1e465e42a0401d7b82b5c448a005b63b41c804eaf6"
     },
     {
       "commit": "d4e742f5ee5d5e6853449245557e840cf31c2fa0",
       "descriptor": "eb6581c8f4b4b9db58116ca217f70438f05398bb55c72748839eb572d3b2b9ce",
       "review": "Connected replay adapter; identity/compatibility, capture validation and sandbox supervision revisions retained; modeled engine unchanged; execution boundary review: unchanged engine/lock, host closure, generated client, selected implementations, strict capabilities and launch contract",
       "source": "c978627d82007fc5e55f4bc653ea9132b3f185e381ac0d048afda1645d319ca6",
-      "target": "5e324285262eaddd733b50a5be062d224fc4172cadc2734988678e034fde5594"
+      "target": "e52357035cb2281eb4c36f1e465e42a0401d7b82b5c448a005b63b41c804eaf6"
     },
     {
       "commit": "0117f82315835be3658a461e4fa18c4e53a7bce4",
       "descriptor": "eb6581c8f4b4b9db58116ca217f70438f05398bb55c72748839eb572d3b2b9ce",
       "review": "Connected replay adapter; identity/compatibility, capture validation and sandbox supervision revisions retained; modeled engine unchanged; execution boundary review: unchanged engine/lock, host closure, generated client, selected implementations, strict capabilities and launch contract",
       "source": "b1f16eedabbf40872b8e18e4db0f38129109d26d84024fd32423ae4f3a2dd774",
-      "target": "5e324285262eaddd733b50a5be062d224fc4172cadc2734988678e034fde5594"
+      "target": "e52357035cb2281eb4c36f1e465e42a0401d7b82b5c448a005b63b41c804eaf6"
     },
     {
       "commit": "0d45ab67d27d3990475868b8669efa5ea4939ee4",
       "descriptor": "eb6581c8f4b4b9db58116ca217f70438f05398bb55c72748839eb572d3b2b9ce",
       "review": "Connected replay adapter; identity/compatibility, capture validation and sandbox supervision revisions retained; modeled engine unchanged; execution boundary review: unchanged engine/lock, host closure, generated client, selected implementations, strict capabilities and launch contract",
       "source": "b1f16eedabbf40872b8e18e4db0f38129109d26d84024fd32423ae4f3a2dd774",
-      "target": "5e324285262eaddd733b50a5be062d224fc4172cadc2734988678e034fde5594"
+      "target": "e52357035cb2281eb4c36f1e465e42a0401d7b82b5c448a005b63b41c804eaf6"
     },
     {
       "commit": "0527319d38f0c2230f0541366f2bde430f8a5ef3",
       "descriptor": "49e9ea0e32bf6f6823845413c88853ef226c8bda98d77a25b9117f0a6e581271",
       "review": "Connected replay adapter; identity/compatibility, capture validation and sandbox supervision revisions retained; modeled engine unchanged; execution boundary review: unchanged engine/lock, host closure, generated client, selected implementations, strict capabilities and launch contract",
       "source": "e733e12acba51be7273e86dc0ad830609b8cea1d7d8f4881c9781e02488de548",
-      "target": "5e324285262eaddd733b50a5be062d224fc4172cadc2734988678e034fde5594"
+      "target": "e52357035cb2281eb4c36f1e465e42a0401d7b82b5c448a005b63b41c804eaf6"
     },
     {
       "commit": "c55ce4a3d2d47f1fb7dd04e6efefd3a71389f2db",
       "descriptor": "89bee21d743c3e1f07742e0db63a9a80df3a506db7b64964c47bd7181e18d774",
       "review": "Connected replay adapter; identity/compatibility, capture validation and sandbox supervision revisions retained; modeled engine unchanged; execution boundary review: unchanged engine/lock, host closure, generated client, selected implementations, strict capabilities and launch contract",
       "source": "6701059995a74d3b4f97758021e137f57c30497c5292f8bc147071f1bc2059dd",
-      "target": "5e324285262eaddd733b50a5be062d224fc4172cadc2734988678e034fde5594"
+      "target": "e52357035cb2281eb4c36f1e465e42a0401d7b82b5c448a005b63b41c804eaf6"
     },
     {
       "commit": "67e208d3857ae284c372720d6bc474c58a163ceb",
       "descriptor": "3aff0f7482445c8f03f5fecc1de172424f26dc3245fef77816b1793b2fdb6bdb",
       "review": "Connected replay adapter; identity/compatibility, capture validation and sandbox supervision revisions retained; modeled engine unchanged; execution boundary review: unchanged engine/lock, host closure, generated client, selected implementations, strict capabilities and launch contract",
       "source": "3b1d3b09053ac517081680553968ba2c94a4bdf47576a4acc2f2bdb7a244434d",
-      "target": "5e324285262eaddd733b50a5be062d224fc4172cadc2734988678e034fde5594"
+      "target": "e52357035cb2281eb4c36f1e465e42a0401d7b82b5c448a005b63b41c804eaf6"
     },
     {
       "commit": "87dfbf556d007f9687dd17a11fe62694684d95a8",
       "descriptor": "3aff0f7482445c8f03f5fecc1de172424f26dc3245fef77816b1793b2fdb6bdb",
       "review": "Connected replay adapter; identity/compatibility, capture validation and sandbox supervision revisions retained; modeled engine unchanged; execution boundary review: unchanged engine/lock, host closure, generated client, selected implementations, strict capabilities and launch contract",
       "source": "3b1d3b09053ac517081680553968ba2c94a4bdf47576a4acc2f2bdb7a244434d",
-      "target": "5e324285262eaddd733b50a5be062d224fc4172cadc2734988678e034fde5594"
+      "target": "e52357035cb2281eb4c36f1e465e42a0401d7b82b5c448a005b63b41c804eaf6"
     },
     {
       "commit": "755dd708d8e3c54c0ceb34dcc740e7d3fde874a8",
       "descriptor": "3aff0f7482445c8f03f5fecc1de172424f26dc3245fef77816b1793b2fdb6bdb",
       "review": "Connected replay adapter; identity/compatibility, capture validation and sandbox supervision revisions retained; modeled engine unchanged; execution boundary review: unchanged engine/lock, host closure, generated client, selected implementations, strict capabilities and launch contract",
       "source": "3b1d3b09053ac517081680553968ba2c94a4bdf47576a4acc2f2bdb7a244434d",
-      "target": "5e324285262eaddd733b50a5be062d224fc4172cadc2734988678e034fde5594"
+      "target": "e52357035cb2281eb4c36f1e465e42a0401d7b82b5c448a005b63b41c804eaf6"
     },
     {
       "commit": "eaf69d6dedf051e19525cbc76ed5d381af414ec1",
       "descriptor": "3aff0f7482445c8f03f5fecc1de172424f26dc3245fef77816b1793b2fdb6bdb",
       "review": "Connected replay adapter; identity/compatibility, capture validation and sandbox supervision revisions retained; modeled engine unchanged; execution boundary review: unchanged engine/lock, host closure, generated client, selected implementations, strict capabilities and launch contract",
       "source": "3b1d3b09053ac517081680553968ba2c94a4bdf47576a4acc2f2bdb7a244434d",
-      "target": "5e324285262eaddd733b50a5be062d224fc4172cadc2734988678e034fde5594"
+      "target": "e52357035cb2281eb4c36f1e465e42a0401d7b82b5c448a005b63b41c804eaf6"
     },
     {
       "commit": "a3115744074125aabd3943b7b7cdb7cb26f3c0bf",
       "descriptor": "3aff0f7482445c8f03f5fecc1de172424f26dc3245fef77816b1793b2fdb6bdb",
       "review": "Connected replay adapter; identity/compatibility, capture validation and sandbox supervision revisions retained; modeled engine unchanged; execution boundary review: unchanged engine/lock, host closure, generated client, selected implementations, strict capabilities and launch contract",
       "source": "3b1d3b09053ac517081680553968ba2c94a4bdf47576a4acc2f2bdb7a244434d",
-      "target": "5e324285262eaddd733b50a5be062d224fc4172cadc2734988678e034fde5594"
+      "target": "e52357035cb2281eb4c36f1e465e42a0401d7b82b5c448a005b63b41c804eaf6"
     },
     {
       "commit": "1d4b3211f6169d1dda2b9fcab33c7b02b6705c9b",
       "descriptor": "3aff0f7482445c8f03f5fecc1de172424f26dc3245fef77816b1793b2fdb6bdb",
       "review": "Connected replay adapter; identity/compatibility, capture validation and sandbox supervision revisions retained; modeled engine unchanged; execution boundary review: unchanged engine/lock, host closure, generated client, selected implementations, strict capabilities and launch contract",
       "source": "3b1d3b09053ac517081680553968ba2c94a4bdf47576a4acc2f2bdb7a244434d",
-      "target": "5e324285262eaddd733b50a5be062d224fc4172cadc2734988678e034fde5594"
+      "target": "e52357035cb2281eb4c36f1e465e42a0401d7b82b5c448a005b63b41c804eaf6"
     },
     {
       "commit": "7e24ac77a868c9cec9e76141d29a156115238e91",
       "descriptor": "4c83441baec73ba70cfe1f8a83a3e0113923071cab044e019180a6ab984561c5",
       "review": "Retained v1 replay adapter and frozen legacyRuntime reconstruction; execution boundary review: unchanged engine/lock, host closure, generated client, selected implementations, strict capabilities and launch contract",
       "source": "bac35c995b5e5d59a9ce901745c014644fdb843183adbcbb761fb99184c11306",
-      "target": "5e324285262eaddd733b50a5be062d224fc4172cadc2734988678e034fde5594"
+      "target": "e52357035cb2281eb4c36f1e465e42a0401d7b82b5c448a005b63b41c804eaf6"
     },
     {
       "commit": "2e581a4c7ff15e0060c3ad36a7d986118b1b0fd5",
@@ -204,7 +205,7 @@
       "kind": "descriptor",
       "review": "Committed v2 engine unchanged; config inventory, import and hook validation, transition loading and parser dependency reviewed; execution boundary review: unchanged engine/lock, host closure, generated client, selected implementations, strict capabilities and launch contract",
       "source": "dcf73dace76edc0afead6158b34785f511ba6b21fd34ce5490d11fe78e20f4ad",
-      "target": "5e324285262eaddd733b50a5be062d224fc4172cadc2734988678e034fde5594"
+      "target": "e52357035cb2281eb4c36f1e465e42a0401d7b82b5c448a005b63b41c804eaf6"
     },
     {
       "commit": "2da5b74d1cccb931e444d643a0b160f766d6ced1",
@@ -212,7 +213,7 @@
       "kind": "descriptor",
       "review": "Preserved verified v2 descriptor; boundary-only changes reviewed against committed host/schema/lock; dotenv file discovery removed, supplied environment retained",
       "source": "13dfdafcf5f1a1fe9c5af5c7c48546983b44bcf6ea83c5ddaa36e95998a7be71",
-      "target": "5e324285262eaddd733b50a5be062d224fc4172cadc2734988678e034fde5594"
+      "target": "e52357035cb2281eb4c36f1e465e42a0401d7b82b5c448a005b63b41c804eaf6"
     },
     {
       "algorithm": "host-boundary/1",
@@ -221,7 +222,7 @@
       "kind": "descriptor",
       "review": "Committed host descriptor retained; exact existing containment fixture review only; production child, engine, schema and dependency bytes unchanged",
       "source": "fe8fd0f18c15de1e762ebbdfd3474f1a35a56d4f46acca85db90221ed8fb21a7",
-      "target": "5e324285262eaddd733b50a5be062d224fc4172cadc2734988678e034fde5594"
+      "target": "e52357035cb2281eb4c36f1e465e42a0401d7b82b5c448a005b63b41c804eaf6"
     },
     {
       "algorithm": "host-boundary/1",
@@ -230,7 +231,7 @@
       "kind": "descriptor",
       "review": "Committed host descriptor retained; reviewed containment/capability boundary hardening; production child, engine, schema and dependency bytes unchanged",
       "source": "26b81b300de225a6a27d512eb696ad448502d11a073817b9ad203bb1c531f90f",
-      "target": "5e324285262eaddd733b50a5be062d224fc4172cadc2734988678e034fde5594"
+      "target": "e52357035cb2281eb4c36f1e465e42a0401d7b82b5c448a005b63b41c804eaf6"
     },
     {
       "algorithm": "import-boundary/1",
@@ -239,7 +240,7 @@
       "kind": "descriptor",
       "review": "Committed host descriptor retained; reviewed containment/capability boundary hardening; production child, engine, schema and dependency bytes unchanged",
       "source": "3886e64e2954e8513647ece8fa126af4dcad33cf2c63ad1eed89b15edca969c1",
-      "target": "5e324285262eaddd733b50a5be062d224fc4172cadc2734988678e034fde5594"
+      "target": "e52357035cb2281eb4c36f1e465e42a0401d7b82b5c448a005b63b41c804eaf6"
     },
     {
       "algorithm": "import-boundary/1",
@@ -248,7 +249,7 @@
       "kind": "descriptor",
       "review": "Committed host descriptor retained; reviewed containment/capability boundary hardening; production child, engine, schema and dependency bytes unchanged",
       "source": "421000e5a4f5be3dd3c1464f4a9fd44ea75f7236bb6222a5410e5f89f0aa381d",
-      "target": "5e324285262eaddd733b50a5be062d224fc4172cadc2734988678e034fde5594"
+      "target": "e52357035cb2281eb4c36f1e465e42a0401d7b82b5c448a005b63b41c804eaf6"
     },
     {
       "algorithm": "launch-boundary/1",
@@ -257,7 +258,7 @@
       "kind": "descriptor",
       "review": "Committed host descriptor retained; reviewed containment/capability boundary hardening; production child, engine, schema and dependency bytes unchanged",
       "source": "f4890c845828de4f5280bff19cb35851a7241a8129bde4e233956f65bdd94219",
-      "target": "5e324285262eaddd733b50a5be062d224fc4172cadc2734988678e034fde5594"
+      "target": "e52357035cb2281eb4c36f1e465e42a0401d7b82b5c448a005b63b41c804eaf6"
     },
     {
       "algorithm": "launch-boundary/1",
@@ -266,7 +267,7 @@
       "kind": "descriptor",
       "review": "Committed host descriptor retained; reviewed containment/capability boundary hardening; production child, engine, schema and dependency bytes unchanged",
       "source": "b04389078881cb89124edd1191c049b9c5abb0d17f18472857cf9310a03262e6",
-      "target": "5e324285262eaddd733b50a5be062d224fc4172cadc2734988678e034fde5594"
+      "target": "e52357035cb2281eb4c36f1e465e42a0401d7b82b5c448a005b63b41c804eaf6"
     },
     {
       "algorithm": "launch-boundary/1",
@@ -275,7 +276,7 @@
       "kind": "descriptor",
       "review": "Committed host descriptor retained; reviewed containment/capability boundary hardening; production child, engine, schema and dependency bytes unchanged",
       "source": "435856da26ac9b492b5a52a7b777ade046326ba7a3533a59450f16e148c410e1",
-      "target": "5e324285262eaddd733b50a5be062d224fc4172cadc2734988678e034fde5594"
+      "target": "e52357035cb2281eb4c36f1e465e42a0401d7b82b5c448a005b63b41c804eaf6"
     },
     {
       "algorithm": "launch-boundary/1",
@@ -284,7 +285,7 @@
       "kind": "descriptor",
       "review": "Committed host descriptor retained; reviewed containment/capability boundary hardening; production child, engine, schema and dependency bytes unchanged",
       "source": "9ccb50238354fe57acf551042b399677c0cd606df2c3f22bf1c1b94f02a87b3d",
-      "target": "5e324285262eaddd733b50a5be062d224fc4172cadc2734988678e034fde5594"
+      "target": "e52357035cb2281eb4c36f1e465e42a0401d7b82b5c448a005b63b41c804eaf6"
     },
     {
       "algorithm": "analysis-boundary/1",
@@ -293,7 +294,7 @@
       "kind": "descriptor",
       "review": "Stage 0: all-free admission and design/export controls, versioned read-only RunRecord adapters; engine, compiler, stored inputs, dependency lock and operational limits unchanged; Stage 1 module registry and opt-in ownership; eight m2b–m2h baseline fixture evidence hashes identical; existing named compositions and product activation unchanged",
       "source": "02c54db8f4bb73b5e340ae79dbfd6ece39c52360ab776ac285988e33e92e8240",
-      "target": "5e324285262eaddd733b50a5be062d224fc4172cadc2734988678e034fde5594"
+      "target": "e52357035cb2281eb4c36f1e465e42a0401d7b82b5c448a005b63b41c804eaf6"
     },
     {
       "algorithm": "analysis-boundary/1",
@@ -302,7 +303,7 @@
       "kind": "descriptor",
       "review": "Stage-0 rebase onto 7b02e3e: unused dependency/web-helper removals reviewed; execution mechanisms, installed runtime closure and operational limits unchanged",
       "source": "eb55b982fb58025a377481e44ddfc77ef0beb75771ea6c9d719d46e0208f51ef",
-      "target": "5e324285262eaddd733b50a5be062d224fc4172cadc2734988678e034fde5594"
+      "target": "e52357035cb2281eb4c36f1e465e42a0401d7b82b5c448a005b63b41c804eaf6"
     },
     {
       "algorithm": "analysis-boundary/1",
@@ -311,7 +312,7 @@
       "kind": "descriptor",
       "review": "Stage 1 integration: accepted launch contract and composition snapshots retained; eight pinned compositions unchanged; product engine activation unchanged",
       "source": "c8b2354692035a916fc98afe1c0aa4dd68c77b0c68c54871d79ce609bf1571ee",
-      "target": "5e324285262eaddd733b50a5be062d224fc4172cadc2734988678e034fde5594"
+      "target": "e52357035cb2281eb4c36f1e465e42a0401d7b82b5c448a005b63b41c804eaf6"
     },
     {
       "algorithm": "analysis-boundary/1",
@@ -320,7 +321,7 @@
       "kind": "descriptor",
       "review": "Stage 1 module registry and opt-in ownership; eight m2b–m2h baseline fixture evidence hashes identical; existing named compositions and product activation unchanged",
       "source": "f2d3b73f5acc0560ffa562870ea36ad02a6cd9936146580c0fc68ac3c79310b1",
-      "target": "5e324285262eaddd733b50a5be062d224fc4172cadc2734988678e034fde5594"
+      "target": "e52357035cb2281eb4c36f1e465e42a0401d7b82b5c448a005b63b41c804eaf6"
     },
     {
       "algorithm": "analysis-boundary/1",
@@ -329,7 +330,7 @@
       "kind": "descriptor",
       "review": "Stage 1 integration: accepted launch contract and composition snapshots retained; eight pinned compositions unchanged; product engine activation unchanged",
       "source": "2d2a4ae6bfc6a9bf99f8fee4f9a0d0afba3e44e55e957e65b9e28482efb9aa6f",
-      "target": "5e324285262eaddd733b50a5be062d224fc4172cadc2734988678e034fde5594"
+      "target": "e52357035cb2281eb4c36f1e465e42a0401d7b82b5c448a005b63b41c804eaf6"
     },
     {
       "algorithm": "analysis-boundary/1",
@@ -338,7 +339,7 @@
       "kind": "descriptor",
       "review": "Stage 2 authoring only: exact scoped internal review/save/import additions; Stage 1 and all legacy runtime bytes/eight replay hashes preserved; no first-stack executor or activation",
       "source": "45396dc813a395a9dcadfc89a5cbe9e27efa2447374e177bf0db3cad503d2858",
-      "target": "5e324285262eaddd733b50a5be062d224fc4172cadc2734988678e034fde5594"
+      "target": "e52357035cb2281eb4c36f1e465e42a0401d7b82b5c448a005b63b41c804eaf6"
     },
     {
       "algorithm": "analysis-boundary/1",
@@ -347,7 +348,7 @@
       "kind": "descriptor",
       "review": "Preserved V1 authoring/import release; V2 directed links/pools/readiness and internal Stage 1 qualification are separately versioned; 88 host/peer files and eight historical replays unchanged; no activation",
       "source": "43cde39b7dc2f76b51487dc5312fd6ca18fda6da8b9cba73922bf8fc96d4bebf",
-      "target": "5e324285262eaddd733b50a5be062d224fc4172cadc2734988678e034fde5594"
+      "target": "e52357035cb2281eb4c36f1e465e42a0401d7b82b5c448a005b63b41c804eaf6"
     },
     {
       "algorithm": "analysis-boundary/1",
@@ -356,7 +357,7 @@
       "kind": "descriptor",
       "review": "Stage 2 PostgreSQL sessions: preserve generic m2e/1 and eight historical replays; separately revisioned PG connection/deadline/commit profile and local G5; no Model 2 activation",
       "source": "34d9ef73cce761afb1e2c62d01ebca6152840c21a912a6657affe2ff4fbf33e3",
-      "target": "5e324285262eaddd733b50a5be062d224fc4172cadc2734988678e034fde5594"
+      "target": "e52357035cb2281eb4c36f1e465e42a0401d7b82b5c448a005b63b41c804eaf6"
     },
     {
       "algorithm": "analysis-boundary/1",
@@ -365,7 +366,7 @@
       "kind": "descriptor",
       "review": "Retain main PostgreSQL session/deadline release and pre-rebase bounded execution source; combined source separately reviewed; no activation",
       "source": "391864c2f0d2881698cf2c47a69ed9e88a465e6872840c58345c11a485c6b111",
-      "target": "5e324285262eaddd733b50a5be062d224fc4172cadc2734988678e034fde5594"
+      "target": "e52357035cb2281eb4c36f1e465e42a0401d7b82b5c448a005b63b41c804eaf6"
     },
     {
       "algorithm": "analysis-boundary/1",
@@ -374,7 +375,7 @@
       "kind": "descriptor",
       "review": "Retain main PostgreSQL session/deadline release and pre-rebase bounded execution source; combined source separately reviewed; no activation",
       "source": "6fafe57f091ec6fd7b38d1ac21c1319b48621083d55467c464da979198c92893",
-      "target": "5e324285262eaddd733b50a5be062d224fc4172cadc2734988678e034fde5594"
+      "target": "e52357035cb2281eb4c36f1e465e42a0401d7b82b5c448a005b63b41c804eaf6"
     },
     {
       "algorithm": "analysis-boundary/1",
@@ -383,7 +384,7 @@
       "kind": "descriptor",
       "review": "Operational hardening only: bounded DB/producer calls, retry backoff, resource retention and ingress drain; engine/compiler/internalModel2 source, schema, stored inputs and dependency bytes unchanged; generated current-source connected pins refreshed; historical reports remain readable; no activation or relabelling",
       "source": "a7ff1e802ac1721e134310746a87f98c6c589afa1fba4ee20500f0cd99a6fbda",
-      "target": "5e324285262eaddd733b50a5be062d224fc4172cadc2734988678e034fde5594"
+      "target": "e52357035cb2281eb4c36f1e465e42a0401d7b82b5c448a005b63b41c804eaf6"
     },
     {
       "algorithm": "analysis-boundary/1",
@@ -392,7 +393,7 @@
       "kind": "descriptor",
       "review": "Compact transition storage only: all 42 original rows, 28 descriptor digests and 42 complete snapshots round trip exactly; tagged Merkle validation and shared source chunks; engine, schema and dependency behavior unchanged; no activation or historical relabelling",
       "source": "535e84dfd165a31ba99fd2fbde1a6ebb3f9213947f35de4cc439080232af3891",
-      "target": "5e324285262eaddd733b50a5be062d224fc4172cadc2734988678e034fde5594"
+      "target": "e52357035cb2281eb4c36f1e465e42a0401d7b82b5c448a005b63b41c804eaf6"
     },
     {
       "algorithm": "analysis-boundary/1",
@@ -401,7 +402,7 @@
       "kind": "descriptor",
       "review": "Dependency-only security patch: vite 8.2.0->8.2.4 (web dev tooling) and follow-redirects 1.16.0->1.16.1 (axios transitive, web client); transition-count test updated for the new row and its first-stack acceptance pin moved. No engine, backend or simulation source change; lockfile pin moves forward.",
       "source": "78841f6e3428ed7504f64ee4f724ad2650a312c9bbfd6115866f0a4ad598ec19",
-      "target": "5e324285262eaddd733b50a5be062d224fc4172cadc2734988678e034fde5594"
+      "target": "e52357035cb2281eb4c36f1e465e42a0401d7b82b5c448a005b63b41c804eaf6"
     },
     {
       "algorithm": "analysis-boundary/1",
@@ -410,7 +411,7 @@
       "kind": "descriptor",
       "review": "Stage 2 slice 07b finite IO: bounded shared IO service owner, page/WAL work composed on shared storage, finite IO acceptance pinned; rebased onto the dependency security patch. Model 2 remains inactive; no timing promotion.",
       "source": "673b1ead0e991300768f9e79236111b330aaa30098be5ab88267192b92c3e6bd",
-      "target": "5e324285262eaddd733b50a5be062d224fc4172cadc2734988678e034fde5594"
+      "target": "e52357035cb2281eb4c36f1e465e42a0401d7b82b5c448a005b63b41c804eaf6"
     },
     {
       "algorithm": "analysis-boundary/1",
@@ -419,7 +420,7 @@
       "kind": "descriptor",
       "review": "Isolated serial server verification for browser scored/shared runs; bounded execute/replay protocol and exact event-prefix replay; preserve main finite IO and dependency security patch; Model 2 inactive",
       "source": "ecaff02e6f6fffa94290b791040675b76eed3e8dec883aaaf845e021356442da",
-      "target": "5e324285262eaddd733b50a5be062d224fc4172cadc2734988678e034fde5594"
+      "target": "e52357035cb2281eb4c36f1e465e42a0401d7b82b5c448a005b63b41c804eaf6"
     },
     {
       "algorithm": "isolation-boundary/1",
@@ -428,7 +429,7 @@
       "kind": "descriptor",
       "review": "Reviewed optional V3 recorded-key cache through compute and policy roles; preserve V2 finite IO, isolation and eight replay hashes; combined cache IO explicitly refused; retained main isolation descriptor reconstructs exactly with its frozen syntax and eight entrypoints; no activation or timing promotion",
       "source": "e5711c5ff54aa59544d5a6c87488b09e69a4eb810504f94b9d642f61e29d243e",
-      "target": "5e324285262eaddd733b50a5be062d224fc4172cadc2734988678e034fde5594"
+      "target": "e52357035cb2281eb4c36f1e465e42a0401d7b82b5c448a005b63b41c804eaf6"
     },
     {
       "algorithm": "isolation-boundary/1",
@@ -437,7 +438,7 @@
       "kind": "descriptor",
       "review": "Finite non-cache app and directed link faults with bounded read retries on merged cache and isolation baseline; 88 historical host files, eight composition hashes and compiler/bounds/cache/finite IO outcomes preserved; cache V3 fault/retry refusal retained; 52 targeted tests passed; no activation or timing promotion",
       "source": "aab124470309d4ba3058d536203bf7d9bc60cb2352c05775bfc54d439391810e",
-      "target": "5e324285262eaddd733b50a5be062d224fc4172cadc2734988678e034fde5594"
+      "target": "e52357035cb2281eb4c36f1e465e42a0401d7b82b5c448a005b63b41c804eaf6"
     },
     {
       "algorithm": "isolation-boundary/1",
@@ -446,7 +447,7 @@
       "kind": "descriptor",
       "review": "Owned immutable browser submissions on the merged cache and fault baseline; exact token/daemon cleanup review; declared-host-boundary/1 frozen reconstruction reads retained host declarations so future host additions stay reconstructable; strictly additive submission storage",
       "source": "98fdebf96f759ae4f3790db9c725e5009e65a6282585471b1ac52f3d2bd14e9a",
-      "target": "5e324285262eaddd733b50a5be062d224fc4172cadc2734988678e034fde5594"
+      "target": "e52357035cb2281eb4c36f1e465e42a0401d7b82b5c448a005b63b41c804eaf6"
     },
     {
       "algorithm": "declared-host-boundary/1",
@@ -455,7 +456,7 @@
       "kind": "descriptor",
       "review": "Integration-test isolation only: the first-stack submission integration test now creates and migrates its own disposable database, and the lesson upgrade check applies later additive migrations before the full release guard set; no engine, backend runtime or migration change",
       "source": "68c1a55a43cdf99a2bf8832c1932efb50a10ed07155e539f02f1bac5a35449ff",
-      "target": "5e324285262eaddd733b50a5be062d224fc4172cadc2734988678e034fde5594"
+      "target": "e52357035cb2281eb4c36f1e465e42a0401d7b82b5c448a005b63b41c804eaf6"
     },
     {
       "algorithm": "declared-host-boundary/1",
@@ -464,7 +465,7 @@
       "kind": "descriptor",
       "review": "Stage 2 slice 12 report data: bounded first-stack report evidence captured with durable cuts, RunRecord projection and verification status, reviewed contracts and evidence labels; rebased onto the integration-test isolation fix. No UI; Model 2 inactive.",
       "source": "b374049805560ea3a63bb030860a72949ddf5461636ae738d550c7fcd6ba0a5f",
-      "target": "5e324285262eaddd733b50a5be062d224fc4172cadc2734988678e034fde5594"
+      "target": "e52357035cb2281eb4c36f1e465e42a0401d7b82b5c448a005b63b41c804eaf6"
     },
     {
       "algorithm": "declared-host-boundary/1",
@@ -473,7 +474,7 @@
       "kind": "descriptor",
       "review": "Release operations only: preflight fetches missing third-party dependency images (for example Redis) before any service stops, so a fresh host can start with --pull never; existing hosts keep their cached images. Runbook notes for new-host first release and the ECDSA host fingerprint. No engine or application runtime change.",
       "source": "ddd72413b5859970f17f0a88e3ab19ccaf65c4ab8e3b78b77fb7a3371bffe29c",
-      "target": "5e324285262eaddd733b50a5be062d224fc4172cadc2734988678e034fde5594"
+      "target": "e52357035cb2281eb4c36f1e465e42a0401d7b82b5c448a005b63b41c804eaf6"
     },
     {
       "algorithm": "declared-host-boundary/1",
@@ -482,7 +483,7 @@
       "kind": "descriptor",
       "review": "Release operations fix: dependency image preparation is limited to the started services and their transitive depends_on closure (for example Redis), so locally built fixture services are never pulled; existing hosts keep cached images. Unit-tested closure. No engine or application runtime change.",
       "source": "81d9ddd6a85ddc5e78607525099135c0939a59cfb11653e6738254af4c1b3977",
-      "target": "5e324285262eaddd733b50a5be062d224fc4172cadc2734988678e034fde5594"
+      "target": "e52357035cb2281eb4c36f1e465e42a0401d7b82b5c448a005b63b41c804eaf6"
     },
     {
       "algorithm": "declared-host-boundary/1",
@@ -491,7 +492,7 @@
       "kind": "descriptor",
       "review": "Server-owned scored challenges: versioned lose-an-app-server/1 definition with server-only hidden workloads and rubric, serial hidden execution after visible-cut verification, immutable score audit, allowlisted client score summary, browser boundary forbids the scoring directory. Model 2 inactive.",
       "source": "117286e07a158255e4a6a4cab38adc169c2a5aa18fcedf910d9af90624b29b27",
-      "target": "5e324285262eaddd733b50a5be062d224fc4172cadc2734988678e034fde5594"
+      "target": "e52357035cb2281eb4c36f1e465e42a0401d7b82b5c448a005b63b41c804eaf6"
     },
     {
       "algorithm": "declared-host-boundary/1",
@@ -500,7 +501,7 @@
       "kind": "descriptor",
       "review": "Stage 2 slice 13: conditional supported compute subtotal computed on the server at report assembly from verified allocation usage and frozen server tariffs (Unknown otherwise, full cost Unknown); one shared simulation captureReport used by server and browser; durable cuts carry measured usage only. Model 2 inactive.",
       "source": "1a60f8c985e0806a328a40bb5681e058f357eba01acc9e43b883e46e874e2d5f",
-      "target": "5e324285262eaddd733b50a5be062d224fc4172cadc2734988678e034fde5594"
+      "target": "e52357035cb2281eb4c36f1e465e42a0401d7b82b5c448a005b63b41c804eaf6"
     },
     {
       "algorithm": "declared-host-boundary/1",
@@ -509,7 +510,7 @@
       "kind": "descriptor",
       "review": "Stage 2 slice 16: version-dispatched historical reads (Model 1 V1/V2, internal Model 2, first-stack incl. reports/verification/scores), bounded owned historical prefix replay under the exact recorded lock, explicit Model 1 retirement availability (still off), typed migrated-from lineage; additive migration; merged with slice 13 server-side cost.",
       "source": "76589cb2e9f962f3f2a2bf3795f359ab95d92f75efac67cf393ee46f4fff6119",
-      "target": "5e324285262eaddd733b50a5be062d224fc4172cadc2734988678e034fde5594"
+      "target": "e52357035cb2281eb4c36f1e465e42a0401d7b82b5c448a005b63b41c804eaf6"
     },
     {
       "algorithm": "declared-host-boundary/1",
@@ -518,7 +519,7 @@
       "kind": "descriptor",
       "review": "Historical reads: a stored record without a version string keeps the original v1 validation and refusal message (restoring the 'missing, corrupt or incompatible' report state); only an explicit unknown version is refused as unsupported. No new imports or capabilities.",
       "source": "4e10f1dd3aaf0c43d3df888d516802eee890216ae7ba3afa5b2aec9b2377d124",
-      "target": "5e324285262eaddd733b50a5be062d224fc4172cadc2734988678e034fde5594"
+      "target": "e52357035cb2281eb4c36f1e465e42a0401d7b82b5c448a005b63b41c804eaf6"
     },
     {
       "algorithm": "declared-host-boundary/1",
@@ -527,7 +528,7 @@
       "kind": "descriptor",
       "review": "Account essentials (default-off) rebased onto slice 16: SES/Resend mail adapter, Better Auth verification and password reset with uniform anti-enumeration responses, verification ledger registered after signup commits (no detached transaction), HMAC-keyed Redis quotas, Turnstile verification, re-authenticated pseudonymising deletion, owner-scoped export; additive migration renamed to 20261023000000_account_essentials after historical replay; release guards merged.",
       "source": "e6130fbc82d6e0a744c2945abb6f9a0301f45dc240cba8b8c5692a392ac14d28",
-      "target": "5e324285262eaddd733b50a5be062d224fc4172cadc2734988678e034fde5594"
+      "target": "e52357035cb2281eb4c36f1e465e42a0401d7b82b5c448a005b63b41c804eaf6"
     },
     {
       "algorithm": "declared-host-boundary/1",
@@ -536,7 +537,7 @@
       "kind": "descriptor",
       "review": "R1 scored scenario library: six server-owned scenario definitions (URL redirect, catalogue, reviews, small paste, preloaded news, price history) with visible samples, hidden workloads and outcome rubrics on the merged engine; review entries added for each definition. Model 2 inactive.",
       "source": "d9dfeeafdb821262c5f4742c1da9d5a45d1bc5f0a4bfa64bba72e1dd0faf0273",
-      "target": "5e324285262eaddd733b50a5be062d224fc4172cadc2734988678e034fde5594"
+      "target": "e52357035cb2281eb4c36f1e465e42a0401d7b82b5c448a005b63b41c804eaf6"
     },
     {
       "algorithm": "declared-host-boundary/1",
@@ -545,7 +546,7 @@
       "kind": "descriptor",
       "review": "Security fix W35-02: account export of scored results omits the server-only score audit (rubric, hidden workload inputs, evidence, receipts) and carries only the verified public score summary; regression test proves no hidden marker can appear in an export.",
       "source": "5ee033d943df15668f963b888f078bcc9086931ec482bc8c1fc31f9ab0f9cb32",
-      "target": "5e324285262eaddd733b50a5be062d224fc4172cadc2734988678e034fde5594"
+      "target": "e52357035cb2281eb4c36f1e465e42a0401d7b82b5c448a005b63b41c804eaf6"
     },
     {
       "algorithm": "declared-host-boundary/1",
@@ -554,7 +555,7 @@
       "kind": "descriptor",
       "review": "Identity simplification (w34): independent append-only history anchor, authenticated gzip archives for frozen proofs, immutable slice attestations and verified historical memoization; no production descriptor, capability, import, loading or verification semantics changed.",
       "source": "29b9e9b028ff3afd65e693bebdea048921f414ece862b2b7ae59e8a407cd6e74",
-      "target": "5e324285262eaddd733b50a5be062d224fc4172cadc2734988678e034fde5594"
+      "target": "e52357035cb2281eb4c36f1e465e42a0401d7b82b5c448a005b63b41c804eaf6"
     },
     {
       "algorithm": "declared-host-boundary/1",
@@ -563,7 +564,7 @@
       "kind": "descriptor",
       "review": "Security fixes W35-01 and W35-04: one shared Model 1 admission with per-owner, global, queued and active reservations held by durable deployment rows; finite freeform and lifetime bounds enforced in the worker; readiness deep checks run at startup and on a bounded background interval and are served as a cached snapshot, with an nginx limit on the public health route.",
       "source": "a2dbe5221070cf67aa7def57d361672123114ab42b35f957b86da2ab76cb7201",
-      "target": "5e324285262eaddd733b50a5be062d224fc4172cadc2734988678e034fde5594"
+      "target": "e52357035cb2281eb4c36f1e465e42a0401d7b82b5c448a005b63b41c804eaf6"
     },
     {
       "algorithm": "declared-host-boundary/1",
@@ -572,7 +573,16 @@
       "kind": "descriptor",
       "review": "Readiness reports dependency loss immediately: Redis connection close and database pool errors invalidate the cached readiness snapshot without starting extra deep probes; a probe that began before the loss cannot restore success. Fixes the packaging rehearsal expectation that health fails at once when Redis stops.",
       "source": "68ff6e676d5e64d73e65a1b36bfd329932b16fddb3d50c5380053d990e215891",
-      "target": "5e324285262eaddd733b50a5be062d224fc4172cadc2734988678e034fde5594"
+      "target": "e52357035cb2281eb4c36f1e465e42a0401d7b82b5c448a005b63b41c804eaf6"
+    },
+    {
+      "algorithm": "declared-host-boundary/1",
+      "commit": "138429b46883c862416868cff6f27ca772ad6677",
+      "descriptor": "5e324285262eaddd733b50a5be062d224fc4172cadc2734988678e034fde5594",
+      "kind": "descriptor",
+      "review": "Supply-chain pins (W35-05): the backend base image oven/bun:1.3.14 and production Redis are pinned to reviewed multi-platform index digests; same tags, no application source change.",
+      "source": "5e324285262eaddd733b50a5be062d224fc4172cadc2734988678e034fde5594",
+      "target": "e52357035cb2281eb4c36f1e465e42a0401d7b82b5c448a005b63b41c804eaf6"
     }
   ],
   "first": "72bb3a25b5fe5485b4eaf351c034a779ca26880d",
@@ -585,6 +595,7 @@
     "0bcf74cf57934a2feda1e03f157bbc8ad933d26f": "87c98067b6fed07b9214d11eabb9a9e9f919197c5df553320e3b31e27b03ae4c",
     "0d45ab67d27d3990475868b8669efa5ea4939ee4": "95823fd58e21494c55a3ef653c1d044c81506f8c104a45ca3624109e18f65143",
     "0fb800a58ecc000fecc1f7b6a30015bb7142e26b": "87c98067b6fed07b9214d11eabb9a9e9f919197c5df553320e3b31e27b03ae4c",
+    "138429b46883c862416868cff6f27ca772ad6677": "c3c658514e487a87455fa2f313a6703ca44b6043412b969f9c59b9549249d3f2",
     "151bc2fc7657b4ce5809b1985e74af5b14c04b83": "0fa5d282a7d02100c072c7683a1aa70ac648e11b52dc35c5c5960dc5d8c6bbd1",
     "15c5448af26bfda816321dfbcd91b46ed822d6b8": "afef7bae7908bc8f49fccfcaae5956678ccdb3432a3c3a154991f79bbf4f2190",
     "19f2faa44f30c81b3f6cb952b7f15107d2545ac6": "87c98067b6fed07b9214d11eabb9a9e9f919197c5df553320e3b31e27b03ae4c",
