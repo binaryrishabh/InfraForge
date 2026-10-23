@@ -1,148 +1,164 @@
-# ⚡ InfraForge
+# InfraForge
 
-A cloud-infrastructure simulation playground. Design an architecture on a
-canvas, declare the load it must survive, deploy it into a living
-simulation — then break it, watch it degrade, and learn why.
+InfraForge is being built to let you design a system, run it under recorded load
+and faults, and see where and why it breaks. Learners get a structured path with
+scored scenarios, like system-design interview problems; engineers get a place
+to explore realistic designs and their limits. Both audiences are intended to use
+the same simulation engine and run record.
 
-Design → Declare → Deploy → Watch → Break → Monitor → Learn → Redesign
+## Status: in development
 
-## What is this?
+The public application currently runs **Model 1**, the older educational engine.
+You can save designs, run simulations, attempt guided challenges and inspect
+retained reports. These results are educational approximations. The current
+interface uses a timetable to show recorded run evidence. See
+[project state](docs/PROJECT_STATE.md), the
+[challenge implementation](apps/backend/challenges/routes.ts) and the
+[report readers](apps/backend/reports/routes.ts).
 
-InfraForge is not a diagramming tool. It is a living model of a cloud:
+**Model 2 is the permanent engine lineage under development.** Its first supported
+stack targets a load balancer, application compute, PostgreSQL-oriented relational
+operations and an optional keyed cache. Internal implementations and qualification
+checks exist, but Model 2 is not publicly activated. The browser runner is not
+connected to the shipped application, and its submission API is unmounted and
+closed by default. Public recorded-load import, browser execution and the new
+scored challenge library are coming work, not available product features. See the
+[first-stack launch contract](docs/reality/stage0-launch-contract.md),
+[browser runner boundary](docs/reality/browser-runner.md),
+[closed submission router](apps/backend/firstStack/submissionRoutes.ts) and
+[server-owned challenge library](apps/backend/firstStack/scoredChallenges/README.md).
 
-- **Designer canvas** — drag & drop 11 resource types (DNS, CDN, load
-  balancer, VMs, cache, database, queues…), connect them, and pick real
-  provider SKUs (AWS + DigitalOcean) from a dated price catalog, with educational capacity estimates.
-- **Three deployment gates** — Validate, SecurityScan and CostEstimate;
-  transactional outbox → queue → worker,
-  streamed live over WebSockets.
-- **Living simulation** — per-resource telemetry at 1 Hz (CPU, memory, RPS,
-  connections, health), autoscaling pools, vertical scaling with restart
-  downtime, and a live cost burn ticker.
-- **Chaos engineering** — crash, CPU spike, memory leak, network delay,
-  disk failure; with cascading failures, retry storms, and cache stampedes.
-- **Cinema** — shake on saturation, smoke on failure, speed control
-  (pause / 1x / 10x / 60x), and scenario presets (Peak Hours, Flash Sale,
-  Bot Attack…).
+Model 1 will retire through an explicit activation decision. Existing reports
+keep their original identities and remain readable; they are not automatically
+relabeled as Model 2 results. Retirement is currently disabled in the
+[historical execution policy](apps/backend/runRecords/availability.ts); the
+[historical compatibility guide](docs/reality/historical-compatibility.md)
+describes the boundary.
 
-The simulation is an educational model, not production sizing advice. Resource
-behavior and capacity are intentional approximations; catalog prices are snapshots,
-not live quotes. See [accepted architecture and release risks](docs/PROJECT_STATE.md).
+## How the new engine works
 
-## Repo layout
+The intended workflow is one deterministic engine from the Model 2 lineage:
 
+1. Save a design and bind it to an explicit workload, fault schedule and seed.
+2. Run that engine in a browser worker for immediate local feedback.
+3. Submit a scored run to the backend. The server independently runs the same
+   immutable input with the same pinned engine and seed, and compares the result.
+4. Only after verification, run hidden test workloads and apply the server's
+   rubric. Hidden workloads and rubrics stay server-side.
+
+These mechanisms exist behind inactive integration boundaries. Browser output is
+untrusted and cannot mark itself verified. See the
+[browser implementation](apps/web/src/firstStack/runner.ts),
+[server verifier](apps/backend/firstStack/submissionWorker.ts) and
+[hidden scoring boundary](apps/backend/firstStack/scoredChallenges/README.md).
+
+Determinism makes an experiment reproducible; it does not establish real-world
+accuracy. The evidence vocabulary is:
+
+| Label | Meaning |
+| --- | --- |
+| `supported-calibrated` | Validated against independent measurements for the stated domain. |
+| `supported-logical` | Supported software behavior within the modeled scope. |
+| `assumption-only` | Depends on authored assumptions or an educational numerical model. |
+| `unsupported` | Unavailable, or without a mechanism supporting the claim. |
+
+No current whole-stack metric earns `supported-calibrated`. **Unknown is never
+shown as zero.** Timing assumptions must stay visible, and a supported compute
+cost subtotal does not make the full bill known. See the
+[claim matrix](docs/reality/launch-claim-matrix.md),
+[quantity rules](packages/simulation/src/reality/quantity.ts) and
+[first-stack cost implementation](apps/backend/firstStack/providerCost.ts).
+
+## Why there is a backend
+
+Local feedback is only part of the product. The backend provides accounts and
+ownership checks, queues execution work, applies abuse limits, and stores durable
+inputs and results. The new scored-run path also needs an independent verifier
+and a private home for hidden workloads and rubrics. Accounts, queueing and run
+history exist today; the new verification path remains inactive. Sources:
+[API and authentication wiring](apps/backend/index.ts),
+[rate limits](apps/backend/utils/rateLimiter.ts),
+[backend architecture](apps/backend/README.md) and
+[submission verification](apps/backend/firstStack/submissionWorker.ts).
+
+## Terms used in commits and docs
+
+| Term | Meaning |
+| --- | --- |
+| Model 1 / Model 2 | The active educational engine / the permanent engine lineage being developed for explicit supported domains. |
+| Execution identity / lineage | The pinned source, runtime and dependency identity used for execution / the recorded origin and reviewed compatibility relationships between versions or runs. |
+| Cut | A bounded evidence snapshot through a stated simulated time, with completeness, omissions and unfinished work recorded. Reaching the time horizon does not mean every request finished. |
+| Run record | A common read format joining original experiment input, engine identity, evidence and optional learning context. It preserves historical formats. |
+| Evidence labels | The four labels above, describing what supports a claim. |
+| Scored challenge | A versioned design problem evaluated against explicit criteria; the new library also uses hidden workloads. |
+| Hidden workload | A server-owned test schedule used to assess a design beyond its visible sample. |
+| Reality checks | Repository inventories, proofs and calibration checks that make supported scope and missing evidence explicit; passing software checks alone does not prove cloud accuracy. |
+
+Details: [execution identity](docs/reality/execution-identity.md),
+[cut contract](apps/backend/firstStack/executionCut.ts),
+[run record contract](packages/contracts/src/reports/runRecord.ts),
+[challenge authoring](apps/backend/challenges/README.md) and
+[reality documentation](docs/reality/README.md).
+
+## Repository layout
+
+```text
+apps/web/             Browser interface and inactive first-stack browser runner
+apps/backend/         API, authentication, workers, persistence and scoring
+packages/domain/      Resource and workload types, graph rules and examples
+packages/catalog/     Provider catalog data and lookups
+packages/contracts/   Shared input, event, evidence and report contracts
+packages/simulation/  Simulation engines, mechanisms and evidence capture
+scripts/              Validation, proofs, calibration and release tooling
+ops/                  Local and release infrastructure configuration
+docs/                 Product state, deployment, reality checks and legal drafts
 ```
-apps/web/            React 19 + Vite + Tailwind 4 + Zustand + dnd-kit
-apps/backend/        Bun + Express + Prisma + PostgreSQL + Redis + BullMQ
-packages/domain/     Resource/workload types, graph rules, readiness and examples
-packages/catalog/    Provider SKU data and lookup/filter functions
-packages/contracts/  Deployment, run-input, telemetry and event contracts
-packages/simulation/ Deterministic engine, runtime types, cost and tuning
-```
 
-## Prerequisites
+## Local development
 
-- [Bun](https://bun.sh) 1.3.14
-- Docker Desktop (local PostgreSQL 18 and Redis 8)
-- PowerShell 7 (`pwsh`) for the local launcher
+Use Bun **1.3.14**, PowerShell 7 (`pwsh`) and Docker Desktop for the local
+PostgreSQL and Redis services. From the repository root:
 
-## Setup
-
-### 1. Install dependencies
-
-```bash
+```sh
 bun install --frozen-lockfile
-```
-
-Install once from the repository root. The apps and `packages/*` are Bun workspaces;
-the root `bun.lock` is the dependency authority. App manifests and root overrides
-pin dependency versions. Each app keeps its own TypeScript version
-(web 6.0.3, backend 5.9.3).
-
-Both apps declare explicit workspace dependencies and import package exports.
-Packages expose TypeScript source directly to Bun and Vite without an emitted build.
-Contracts depend on domain; simulation depends on domain, catalog and contracts.
-The web app imports simulation tuning and capacity, never engine runtime or cost.
-Engine goldens live in `packages/simulation/tests`. Prisma generation runs before
-backend tests and typechecks; generated files stay untracked.
-
-Run `bun run build`, `bun run typecheck`, `bun run lint`, `bun run test`, and
-`bun run check:boundaries` from the root. Checks run without caching during migration.
-The validation workflow runs each check independently, including `bun run audit`
-and `bun run test:tooling`. See [project state](docs/PROJECT_STATE.md) for results and remaining gaps.
-`bun run test:integration:local` creates and disposes of isolated local Docker fixtures,
-keeping evidence outside the containers. `bun run test:integration` uses caller-managed
-services. Requirements and the temporary-resource policy are in
-[the integration test guide](apps/backend/tests/integration/README.md).
-
-### 2. Prepare and start the local stack
-
-```bash
 bun run dev:setup
 bun run dev
 ```
 
-Setup creates clearly labelled development containers, a persistent PostgreSQL 18
-volume and a dedicated Docker network. Data ports bind only to loopback:
-PostgreSQL `127.0.0.1:55432`, Redis `127.0.0.1:56379`. The launcher refuses
-unknown resource/port collisions. It never resets an existing developer database.
+The [local launcher](dev.ps1) owns setup and startup: it creates labeled local
+data services, applies migrations, generates Prisma and starts the API, worker,
+WebSocket server and frontend. Open `http://localhost:5173/signup` to create a
+local account. Ctrl+C stops the application processes; local data services remain.
 
-The ignored root `.env.development.local` contains generated local database and
-session secrets. Keep it with the persistent volume; losing its database password
-requires deliberate local recovery. The launcher ignores app `.env` files and
-hosted database/provider settings, applies the committed migrations, generates
-Prisma, then supervises API, worker, WS and frontend. Application listeners also
-bind to loopback, on ports 3000, 3001, worker readiness 3002 and frontend 5173.
+See the existing [frontend development notes](apps/web/README.md),
+[backend development notes](apps/backend/README.md) and
+[authentication setup](docs/AUTHENTICATION.md) for configuration details.
+The root [package manifest](package.json) defines the workspace commands.
 
-Ctrl+C stops the four application processes. PostgreSQL/Redis remain for the next
-session. To stop these owned data services without deleting developer data:
+## Testing
 
-```bash
-docker compose --env-file .env.development.local -f ops/compose.dev.yml stop
+Run the repository's scripts from the root:
+
+```sh
+bun run typecheck
+bun run lint
+bun run test
+bun run test:tooling
 ```
 
-OAuth is intentionally unconfigured in this isolated workflow. Open
-`http://localhost:5173/signup` and create a username, email and password (15–128
-characters). Sign out from the account menu, then sign in with either your username
-or email and the same password. These are real Better Auth database sessions,
-with no test-login endpoint or browser identity bypass. Disposable integration
-tests register credential users through public routes, separate from developer data.
-Provider configuration is
-described in [authentication setup](docs/AUTHENTICATION.md); hosted settings and
-production cutover are currently parked.
+`bun run test` runs workspace tests; `test:tooling` checks repository tooling.
+For disposable local Docker integration fixtures, use
+`bun run test:integration:local` and follow the
+[integration test guide](apps/backend/tests/integration/README.md).
 
-## Quick tour
+## Further reading
 
-1. Open http://localhost:5173/signup and create an account; later use username/email
-   and password at `/signin`. Google/GitHub appear only when configured.
-2. Open the **Designer** on a window at least 1100px wide. Smaller windows show a
-   deliberate larger-workspace page; other pages remain usable on phones.
-3. **Save**, then **Deploy** — pick a scenario preset (try *Peak Hours*).
-4. Watch the pipeline run, then the canvas go **LIVE** with telemetry cards.
-5. Push the load slider past 100%, inject a **Crash** on the cache, and
-   watch the database stampede.
-6. **Tear down** when done, then open **Reports** to understand retained run evidence.
-   Observations, deterministic interpretations and unknowns stay separate. Reports use
-   recorded gates, immutable inputs and durable control outcomes. Simulator-confirmed
-   teardown retains an exact timestamped terminal snapshot; older checkpoints remain
-   diagnostic evidence. Deleting a saved design preserves its owner's run history.
-
-## Tests
-
-```bash
-bun run test   # domain, catalog, frontend and backend; 30 simulation golden scenarios
-```
-
-## Docker releases
-
-Compose runs Redis, API, one worker and the WebSocket server from an exact
-commit-tagged image. Use the [controlled release procedure](docs/DEPLOYMENT.md)
-for migration preflight, maintenance, readiness and compatible container rollback.
-That guide also provides a disposable local rehearsal. Hosted release work is parked;
-normal product development uses the local setup/launcher above.
-
----
-
-Public release still requires provisioned/tested OAuth, reviewed hosted limits and
-a verified hosted backup, proxy/TLS and release process. Runs interrupted
-by a worker restart fail explicitly; complete checkpoint recovery is not implemented.
+- [Project state and current release status](docs/PROJECT_STATE.md)
+- [Design and interface truth rules](docs/DESIGN.md)
+- [Reality checks and engine development](docs/reality/README.md)
+- [Deployment procedure](docs/DEPLOYMENT.md)
+- [Production bootstrap and recovery](docs/PRODUCTION_BOOTSTRAP.md)
+- [Authentication](docs/AUTHENTICATION.md)
+- [Legal review register](docs/legal/README.md): [terms](docs/legal/terms-of-service.md),
+  [privacy policy](docs/legal/privacy-policy.md) and
+  [cookie notice](docs/legal/cookie-notice.md) are drafts for owner and legal review.
