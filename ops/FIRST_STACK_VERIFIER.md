@@ -83,8 +83,34 @@ explicit operator coordination with releases. No automatic fallback is supported
    host listener. Keep Redis firewalled from remote access. API/worker/WS continue
    using their internal Redis origin. Verify the loopback listener on the host
    before starting the verifier; never change the bind address to 0.0.0.0.
-7. Copy `ops/first-stack-verifier.service` into `/etc/systemd/system/`, run
-   `systemctl daemon-reload`, and leave it stopped. There is intentionally no
+7. Render `REPLACE_WITH_UID` in `ops/first-stack-verifier.service` with the same
+   numeric UID used in settings, install it in `/etc/systemd/system/`, run
+   `systemctl daemon-reload`, and leave it stopped. For example:
+
+   ```sh
+   verifier_uid=$(id -u infraforge-verifier)
+   test "$verifier_uid" -gt 0
+   sed "s/REPLACE_WITH_UID/$verifier_uid/g" ops/first-stack-verifier.service \
+     | sudo tee /etc/systemd/system/first-stack-verifier.service >/dev/null
+   sudo systemctl daemon-reload
+   ```
+
+   `ProtectHome=tmpfs` hides `/home`, `/root` and `/run/user`; the exact socket
+   bind exposes only `/run/user/UID/docker.sock`. Do not bind the whole user
+   directory or use `%U` (the system manager's UID). A read-only socket bind
+   still permits Docker control; this is trusted daemon authority, not a read-only
+   Docker API. The daemon must already be running when the unit starts. Restart
+   the verifier after daemon/socket replacement; never accept a changed identity.
+   Check access within the sandbox on Linux before activation:
+
+   ```sh
+   sudo systemd-run --wait --collect --pipe --property=User=infraforge-verifier \
+     --property=ProtectSystem=strict --property=ProtectHome=tmpfs \
+     --property=BindReadOnlyPaths=/run/user/$verifier_uid/docker.sock \
+     /usr/bin/test -S /run/user/$verifier_uid/docker.sock
+   ```
+
+   There is intentionally no
    `[Install]` section or default enable operation. Run the full qualification
    below before supplying a true enabled setting or starting the service.
 
@@ -157,6 +183,10 @@ detection. A stale/missing record disables admission. Historical reads still wor
 SIGTERM stops dispatch and new claims, then drains the whole active scored job
 (visible plus up to eight hidden executions) under its session lock. The deadline
 is 720 seconds, followed by process exit before systemd's 735-second limit.
+`KillMode=mixed` sends the initial SIGTERM only to the supervisor, keeping its
+attached Docker CLI and health-command children alive during drain. systemd still
+kills remaining cgroup processes when the supervisor exits or the stop deadline
+expires. Do not replace this with `control-group`, `process` or `none`.
 Failure to delete the Redis availability record cannot prevent this drain;
 remote readers then fail closed when the record expires within five seconds.
 Dependencies and qualification continue to be checked during drain. A deadline,

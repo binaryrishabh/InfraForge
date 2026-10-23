@@ -14,7 +14,7 @@ LoadCredential=database-url:/etc/infraforge/verifier/database-url
 Environment=NODE_ENV=production REDIS_HOST=127.0.0.1 REDIS_PORT=6380
 Restart=no
 TimeoutStopSec=735
-KillMode=control-group
+KillMode=mixed
 MemoryMax=512M
 MemorySwapMax=0
 CPUQuota=15%
@@ -22,7 +22,9 @@ TasksMax=128
 LimitNOFILE=512
 NoNewPrivileges=yes
 ProtectSystem=strict
-ProtectHome=yes
+ProtectHome=tmpfs
+# Replace with the dedicated account's numeric UID before installing this unit.
+BindReadOnlyPaths=/run/user/REPLACE_WITH_UID/docker.sock
 PrivateTmp=yes
 PrivateDevices=yes
 RestrictSUIDSGID=yes
