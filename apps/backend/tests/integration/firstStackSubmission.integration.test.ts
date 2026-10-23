@@ -36,7 +36,7 @@ async function rejected(promise: Promise<unknown>, text?: string) {
   const diagnostic = await new Response(migrate.stderr).text();
   if (await migrate.exited !== 0) { await admin.query(`DROP DATABASE "${name}"`); await admin.end(); throw Error(`Disposable migration failed: ${diagnostic.slice(-2000)}`); }
   const pool = new Pool({ connectionString: target.href, max: 4, query_timeout: 5000 }), f = await submissionFixture();
-  const service = createSubmissionService(pool, { enabled: true, engine: f.engine });
+  const service = createSubmissionService(pool, { enabled: true, available: async () => true, engine: f.engine });
   const db = new Client({ connectionString: target.href }); await db.connect();
   try {
     await checkFirstStackSchema(pool);

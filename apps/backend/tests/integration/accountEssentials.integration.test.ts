@@ -100,7 +100,7 @@ import { registerVerification } from "../../auth/verification";
       await db.infrastructure.create({ data: { id: fixture.request.infrastructureId, userId: user.id, ownerId: user.id, name: `${user.id} personal design`, layout: JSON.parse(JSON.stringify(fixture.layout)),
         updatedAt: new Date(fixture.request.expectedDesignUpdatedAt) } });
     }
-    const service = createSubmissionService(sql, { enabled: true, engine: a.engine });
+    const service = createSubmissionService(sql, { enabled: true, available: async () => true, engine: a.engine });
     const privateRun = await service.submit(alice.id, { ...a.request, purpose: "private" });
     await service.submit(bob.id, { ...b.request, purpose: "private" });
     const immutableBefore = (await sql.query('SELECT * FROM "FirstStackRun" WHERE "ownerId"=$1', [alice.id])).rows;

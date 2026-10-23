@@ -28,6 +28,7 @@ export interface SubmissionAdmission {
   // Trusted application configuration only. A grant, request or browser hash
   // cannot activate this boundary. No caller in the shipped API enables it.
   enabled: boolean; engine: ApprovedSubmissionEngine | null;
+  available?: () => Promise<boolean>;
 }
 export const closedSubmissionAdmission: SubmissionAdmission = Object.freeze({ enabled: false, engine: null });
 const requestSchema = z.object({ infrastructureId: z.uuid(), expectedDesignUpdatedAt: z.iso.datetime(),
@@ -53,6 +54,7 @@ export function createSubmissionService(pool: Pool, configuration: SubmissionAdm
   return {
     async submit(owner: string, value: unknown) {
       if (!configuration.enabled || !configuration.engine) throw new NotFoundError();
+      if (!await configuration.available?.()) throw new AppError("Verification unavailable", 503);
       if (!owner) throw new NotFoundError();
       if (Buffer.byteLength(canonical(value)) > 18 * 1024 * 1024) throw new ValidationError("Submission byte budget exceeded");
       const parsed = requestSchema.safeParse(value);
@@ -97,6 +99,10 @@ export function createSubmissionService(pool: Pool, configuration: SubmissionAdm
           ...(migratedFrom ? { migratedFrom } : {}) };
         const workload = { identity: prepared.schedule.identity, executedScheduleHash: prepared.schedule.executedScheduleHash,
           origin: scored ? "server-challenge" : "submitted-recording", ...(scored ? { challenge: scored.reference } : {}) };
+        // Recheck after waiting for locks/compilation, immediately before reserving work.
+        if (!configuration.enabled || !await configuration.available?.()) {
+          throw new AppError("Verification unavailable", 503);
+        }
         await db.query(`INSERT INTO "FirstStackRun" (id,"ownerId","idempotencyKey","requestHash",purpose,engine,input,"inputHash",lock,seed,workload,envelope,lineage,"browserCut","inputBytes","reservedBytes")
           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)`,
         [id, owner, request.idempotencyKey, requestHash, request.purpose, request.engine, input, inputHash, prepared.lock, prepared.policy.seed,

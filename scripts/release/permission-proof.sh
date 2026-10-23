@@ -22,7 +22,7 @@ docker run --rm --network none --workdir /app/apps/backend "$image" sh -ec '
   test ! -w release/cli.ts
   for file in /app/package.json /app/bun.lock /app/bunfig.toml /app/tsconfig.base.json; do test -r "$file"; done
   bun --no-env-file release/cli.ts manifest "$1" > /tmp/manifest.json
-  for entry in index.ts worker.ts ws-server.ts health/probe.ts release/cli.ts cutover/cli.ts scripts/recover-ownership.ts; do
+  for entry in index.ts worker.ts ws-server.ts health/probe.ts release/cli.ts cutover/cli.ts scripts/recover-ownership.ts firstStack/verifierHost.ts; do
     bun build "$entry" --target=bun --outdir=/tmp/entrypoints >/dev/null
   done
   test -r prisma/schema.prisma

@@ -8,9 +8,20 @@ import { withFirstStackOwnership } from "./isolationOwnership";
 import { inputDigest, readIsolatedCut, type IsolatedCut } from "./isolationProtocol";
 import type { IsolationConfiguration } from "./isolationRunner";
 import { challengeFence, executeScoredChallenge } from "./scoredChallenges/execution";
+import { assertQualified } from "./isolationPolicy";
 
 export interface SubmissionVerifier {
   admission: SubmissionAdmission; isolation: IsolationConfiguration; control: IsolationControl;
+  // Lifecycle loss and forced drain invalidate every visible/hidden authority check.
+  healthy?: () => boolean;
+}
+export function verifierExecutionAllowed(configuration: SubmissionVerifier) {
+  try {
+    if (configuration.healthy?.() !== true) return false;
+    assertQualified(configuration.isolation.qualification,
+      { ...configuration.isolation, daemon: configuration.control.identity });
+    return true;
+  } catch { return false; }
 }
 export function createSubmissionFence(run: any, token: string, allowed: () => boolean = () => true) {
   return {
@@ -43,7 +54,8 @@ export async function verifySubmission(pool: Pool, databaseUrl: string, id: stri
   const run = await submissionTransaction(pool, async db => {
     const row = (await db.query('SELECT r.*,w.status,w."cancelRequested",w.authorized FROM "FirstStackRun" r JOIN "FirstStackWork" w ON w."runId"=r.id WHERE r.id=$1 FOR UPDATE OF w', [id])).rows[0];
     if (!row || row.status !== "queued") return null; // Duplicate/stalled delivery never restarts execution.
-    if (!configuration.admission.enabled || !configuration.admission.engine || row.cancelRequested || !row.authorized ||
+    if (!verifierExecutionAllowed(configuration) || !configuration.admission.enabled ||
+      !configuration.admission.engine || row.cancelRequested || !row.authorized ||
       canonical(row.engine) !== canonical(configuration.admission.engine) || row.engine.source !== configuration.isolation.source || row.engine.image !== configuration.isolation.image) {
       await appendSubmissionResult(db, id, { verification: "unavailable", reason: "Pinned approved engine or authorization unavailable" });
       await db.query('UPDATE "FirstStackWork" SET status=\'terminal\' WHERE "runId"=$1', [id]);
@@ -54,7 +66,8 @@ export async function verifySubmission(pool: Pool, databaseUrl: string, id: stri
     return { ...row, daemon: configuration.control.identity };
   });
   if (!run) return;
-  const allowed = () => configuration.admission.enabled && configuration.admission.engine !== null &&
+  const allowed = () => verifierExecutionAllowed(configuration) &&
+    configuration.admission.enabled && configuration.admission.engine !== null &&
     canonical(configuration.admission.engine) === canonical(run.engine) && configuration.isolation.source === run.engine.source && configuration.isolation.image === run.engine.image && configuration.control.identity === run.daemon;
   // The session lock is shared with execute AND replay, across all workers.
   // A lost COMMIT response is never automatically retried. Durable cuts are

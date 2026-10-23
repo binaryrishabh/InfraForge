@@ -7,28 +7,39 @@ import { submissionTransaction, submissionEnvelope } from "./admission";
 import { AppError, NotFoundError } from "../utils/errors";
 import { randomUUID } from "node:crypto";
 import { requireCapability } from "../capabilities/policy";
+import { acquireVerifierOwnership } from "./verifierOwnership";
+import { verifierExecutionAllowed } from "./submissionWorker";
+import { boundedVerifierDrain, drainVerifierWorker } from "./verifierDrain";
 
 const name = "first-stack-verification";
 // Explicit lifecycle factory, never started by import or by the Model-1 worker.
 // Operator activation must supply trusted host config and the direct DB URL.
 export async function startSubmissionQueue(pool: Pool, databaseUrl: string, producer: ConnectionOptions,
-  consumer: ConnectionOptions, configuration: SubmissionVerifier, replayPolicy = { enabled: false }) {
-  const queue = new Queue(name, { connection: producer, defaultJobOptions: { attempts: 1, removeOnComplete: false, removeOnFail: false } });
-  await queue.setGlobalConcurrency(1);
-  await markSubmissionRecovery(pool);
+  consumer: ConnectionOptions, configuration: SubmissionVerifier, replayPolicy = { enabled: false },
+  invalidate: () => void = () => {}, prefix = "bull") {
+  let stopped = false, lost = false, lastDelivery = 0;
+  let timer: ReturnType<typeof setTimeout> | undefined, poll: Promise<void> | undefined;
+  let loop: Promise<void> | undefined;
+  const fail = () => { lastDelivery = 0; invalidate(); };
+  const ownership = await acquireVerifierOwnership(databaseUrl, () => { lost = true; fail(); });
+  const previousHealthy = configuration.healthy;
+  configuration.healthy = () => !lost && ownership.held && previousHealthy?.() === true;
+  const queue = new Queue(name, { prefix, connection: producer,
+    defaultJobOptions: { attempts: 1, removeOnComplete: false, removeOnFail: false } });
   const worker = new Worker(name, async job => {
+    await ownership.assertHeld();
     if (job.data.operation === "replay") {
       const request = z.object({ operation: z.literal("replay"), replayId: z.uuid() }).strict().parse(job.data);
       return replayHistoricalSubmission(pool, databaseUrl, request.replayId, configuration,
-        () => replayPolicy.enabled, async () => stopped);
+        () => replayPolicy.enabled && verifierExecutionAllowed(configuration),
+        async () => !verifierExecutionAllowed(configuration));
     }
     const { runId } = z.object({ runId: z.uuid() }).strict().parse(job.data);
     await verifySubmission(pool, databaseUrl, runId, configuration);
-  }, { connection: consumer, concurrency: 1, maxStalledCount: 0 });
-  worker.on("error", () => console.error("First-stack verification queue unavailable"));
-  queue.on("error", () => console.error("First-stack submission delivery unavailable"));
-  let stopped = false, timer: ReturnType<typeof setTimeout> | undefined, poll: Promise<void> | undefined;
+  }, { prefix, connection: consumer, concurrency: 1, maxStalledCount: 0, autorun: false });
+  worker.on("error", fail); queue.on("error", fail); pool.on("error", fail);
   const deliver = async () => {
+    await ownership.assertHeld();
     const rows = await pool.query('SELECT "runId" FROM "FirstStackOutbox" WHERE NOT delivered ORDER BY "createdAt","runId" LIMIT 16');
     for (const row of rows.rows) {
       if (stopped) break;
@@ -45,22 +56,62 @@ export async function startSubmissionQueue(pool: Pool, databaseUrl: string, prod
     }
   };
   const tick = () => {
-    poll = deliver().catch(() => { console.error("First-stack outbox delivery deferred"); }).finally(() => {
+    poll = deliver().then(() => { lastDelivery = Date.now(); }).catch(fail).finally(() => {
       if (!stopped) timer = setTimeout(tick, 1000);
     });
   };
-  await worker.waitUntilReady(); tick();
+  try {
+    await queue.setGlobalConcurrency(1);
+    await ownership.assertHeld();
+    await markSubmissionRecovery(pool);
+    await worker.waitUntilReady();
+    const backend = worker.getBackend();
+    for (const connection of [await queue.getBackend().client, await backend.client, await backend.blockingClient]) {
+      connection?.on("close", fail); connection?.on("error", fail);
+    }
+    await deliver(); lastDelivery = Date.now();
+    loop = worker.run();
+    void loop.then(() => { if (!stopped) { lost = true; fail(); } })
+      .catch(() => { lost = true; fail(); });
+    tick();
+  } catch (error) {
+    stopped = true;
+    await worker.close(true); await queue.close(); await ownership.close();
+    configuration.healthy = previousHealthy;
+    pool.off("error", fail); throw error;
+  }
+  async function health(draining = false) {
+    await ownership.assertHeld();
+    const backend = worker.getBackend();
+    const connections = [await queue.getBackend().client, await backend.client, await backend.blockingClient];
+    if (lost || !worker.isRunning() || connections.some(c => c?.status !== "ready") ||
+      (!draining && (stopped || worker.isPaused() || Date.now() - lastDelivery > 5000))) {
+      throw Error("Verifier queue or outbox unavailable");
+    }
+    if (!draining) {
+      const lag = await pool.query(`SELECT EXISTS (SELECT 1 FROM "FirstStackOutbox"
+        WHERE NOT delivered AND "createdAt" < CURRENT_TIMESTAMP - INTERVAL '15 seconds')
+        OR EXISTS (SELECT 1 FROM "FirstStackReplay" WHERE NOT delivered AND status='queued'
+        AND "createdAt" < CURRENT_TIMESTAMP - INTERVAL '15 seconds') AS stale`);
+      if (lag.rows[0]?.stale !== false) throw Error("Verifier outbox delivery stale");
+    }
+  }
   const replay = {
     async availability(owner: string, runId: string) {
       const row = await ownedReplayRow(pool, owner, runId);
       try {
-        if (!replayPolicy.enabled || stopped) throw Error("Historical replay disabled; report remains readable");
+        await health();
+        if (!replayPolicy.enabled || !verifierExecutionAllowed(configuration)) {
+          throw Error("Historical replay disabled; report remains readable");
+        }
         historicalReplayTarget(row, configuration);
         return { replay: "available" as const, reasons: ["Qualified pinned executor can verify the retained server prefix; report reading does not execute."] };
       } catch (error) { return { replay: "unavailable" as const, reasons: [error instanceof Error ? error.message : "Historical replay unavailable"] }; }
     },
     async request(owner: string, runId: string) {
       if (!replayPolicy.enabled || stopped) throw new NotFoundError();
+      await health();
+      if (!verifierExecutionAllowed(configuration)) throw new AppError("Verification unavailable", 503);
       requireCapability(owner, { capability: "run.control", runId, control: "verify-recorded-prefix" });
       const row = await ownedReplayRow(pool, owner, runId), cut = historicalReplayTarget(row, configuration);
       return submissionTransaction(pool, async db => {
@@ -91,5 +142,13 @@ export async function startSubmissionQueue(pool: Pool, databaseUrl: string, prod
       });
     },
   };
-  return { queue, worker, replay, async close() { stopped = true; clearTimeout(timer); await poll; await worker.close(); await queue.close(); } };
+  let closing: Promise<void> | undefined;
+  return { queue, worker, replay, health, close: () => closing ??= boundedVerifierDrain((async () => {
+    stopped = true; clearTimeout(timer);
+    // Local pause stops fetching immediately; the current whole scored job keeps ownership.
+    await Promise.all([poll, drainVerifierWorker(worker, loop!)]);
+    await queue.close();
+    await ownership.close(); pool.off("error", fail);
+    configuration.healthy = previousHealthy;
+  })(), () => { lost = true; fail(); }) };
 }

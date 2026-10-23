@@ -18,7 +18,7 @@ test("public submission and router default closed without opening a database", a
 
 test("forged owner fields and wrong engine refuse before a database transaction", async () => {
   const f = await submissionFixture(), pool: any = { connect: () => { throw Error("Unexpected database access"); } };
-  const service = createSubmissionService(pool, { enabled: true, engine: f.engine });
+  const service = createSubmissionService(pool, { enabled: true, available: async () => true, engine: f.engine });
   await expect(service.submit(f.owner, { ...f.request, ownerId: "forged" })).rejects.toThrow("strict");
   await expect(service.submit(f.owner, { ...f.request, engine: { ...f.engine, source: "c".repeat(64) } })).rejects.toThrow("Approved engine");
 });

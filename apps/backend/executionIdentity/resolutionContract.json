@@ -40290,6 +40290,46 @@
     },
     {
       "owner": null,
+      "file": "apps/backend/firstStack/verifierAvailability.ts",
+      "specifier": "zod",
+      "kind": "import-statement",
+      "targetOwner": "zod@4.4.3:11",
+      "targetFile": "index.js"
+    },
+    {
+      "owner": null,
+      "file": "apps/backend/firstStack/verifierHost.ts",
+      "specifier": "zod",
+      "kind": "import-statement",
+      "targetOwner": "zod@4.4.3:11",
+      "targetFile": "index.js"
+    },
+    {
+      "owner": null,
+      "file": "apps/backend/firstStack/verifierLifecycle.ts",
+      "specifier": "ioredis",
+      "kind": "import-statement",
+      "targetOwner": "ioredis@6.0.0:202",
+      "targetFile": "built/index.js"
+    },
+    {
+      "owner": null,
+      "file": "apps/backend/firstStack/verifierLifecycle.ts",
+      "specifier": "pg",
+      "kind": "import-statement",
+      "targetOwner": "pg@8.22.0:170",
+      "targetFile": "esm/index.mjs"
+    },
+    {
+      "owner": null,
+      "file": "apps/backend/firstStack/verifierOwnership.ts",
+      "specifier": "pg",
+      "kind": "import-statement",
+      "targetOwner": "pg@8.22.0:170",
+      "targetFile": "esm/index.mjs"
+    },
+    {
+      "owner": null,
       "file": "apps/backend/firstStack/workload.ts",
       "specifier": "@infraforge/contracts/first-stack",
       "kind": "import-statement",

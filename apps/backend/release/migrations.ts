@@ -132,7 +132,7 @@ export async function assertReleaseIdle(db: Database) {
 export async function assertNoWorker(db: Database) {
   const locked = await db.query(`SELECT EXISTS (SELECT 1 FROM pg_locks WHERE locktype = 'advisory'
     AND database = (SELECT oid FROM pg_database WHERE datname = current_database())
-    AND classid = 186542854::oid AND objid IN (1::oid,10::oid) AND objsubid = 2 AND granted) AS held`);
+    AND classid = 186542854::oid AND objid IN (1::oid,10::oid,12::oid) AND objsubid = 2 AND granted) AS held`);
   if (locked.rows[0].held) throw new Error("A simulation worker still owns this database; release must stop it first");
 }
 
