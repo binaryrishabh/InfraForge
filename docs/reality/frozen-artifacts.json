@@ -1,0 +1,41 @@
+{
+  "schema": "frozen-artifacts/1",
+  "files": {
+    "docs/reality/m2d-proofs.json": {
+      "bytes": 5896033,
+      "sha256": "e1192b22ba0f934e4d1017d88dc70e0507d19514c4e2e51b01b85ecd51ad6034",
+      "gzipBytes": 199692,
+      "gzipSha256": "35afde46a58aefbf4e62737a6f343f8d304ab98dd1145c98348d58fa4c5afc3e"
+    },
+    "docs/reality/m2e-proofs.json": {
+      "bytes": 1626229,
+      "sha256": "75a5f83dc8cefe50013c0282551a2e0220ed1dfb2f1100d7392423cc0c81e909",
+      "gzipBytes": 64467,
+      "gzipSha256": "8189fb58b77451492687738aead60a5915a5226dbf21595a86a422f522737787"
+    },
+    "docs/reality/m2f-proofs.json": {
+      "bytes": 2527918,
+      "sha256": "8ebd1a56dbbfd53b78e77c619834835eb59e2934aab32c02ef84ebd1e8a7f891",
+      "gzipBytes": 82313,
+      "gzipSha256": "3a3f79a2ed83628f842d0b94cd9c138ed9dd3947d8c600e4b81eec6d5691d330"
+    },
+    "docs/reality/m2g-proofs.json": {
+      "bytes": 9449004,
+      "sha256": "ff8ae225f865a929ab515964c5693c8dc95b75308d37dccc5d5cca74f0b9f827",
+      "gzipBytes": 300260,
+      "gzipSha256": "7c698c6098119afeb4ab655e329418c35fa7bc25ecc903df5175fd7318ae83ad"
+    },
+    "docs/reality/m2h-proofs.json": {
+      "bytes": 24089001,
+      "sha256": "a846cd54994b2eceedc8023732a9acac47c7f7d7a512b2ec089adec735634137",
+      "gzipBytes": 692409,
+      "gzipSha256": "9595547768d85140cdf95ac18563c4a947d34f48a6b8eba42bfd6951dfb4555c"
+    },
+    "docs/reality/historical-slice-snapshots.json": {
+      "bytes": 3460345,
+      "sha256": "d40481d7c6a41b6a308ca6eb16f8caaa14a57ff6ee43e6c1aa06aa02379e3210",
+      "gzipBytes": 564634,
+      "gzipSha256": "fc147b45c2eaacbcb010447ed2f3329d83c45789a1e9f167c33aee9ec46a01cb"
+    }
+  }
+}

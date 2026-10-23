@@ -1,3 +1,4 @@
+import { readProofText } from "../reality/frozen-artifacts";
 import { test, expect } from "bun:test";
 import { readFileSync } from "node:fs";
 import { networkCalibration, readNetworkMeasurements } from "../reality/network-calibration";
@@ -17,7 +18,7 @@ test("holdout corruption changes errors but cannot fit away poor network predict
   const changed = networkCalibration(bad); expect(changed.candidates).toEqual(baseline.candidates); expect(changed.summaries[1]!.throughputMARE).toBeGreaterThan(baseline.summaries[1]!.throughputMARE);
 });
 test("network proof artifacts replay reuse, graceful/forced drain and real retry work", () => {
-  const proofs = networkProofs(); expect(proofs).toEqual(JSON.parse(readFileSync(new URL("../../docs/reality/m2d-proofs.json", import.meta.url), "utf8")));
+  const proofs = networkProofs(); expect(proofs).toEqual(JSON.parse(readProofText(new URL("../../docs/reality/m2d-proofs.json", import.meta.url))));
   expect(proofs.reuse!.network.paths[0]!.pool.created).toBe(1); expect(proofs.fresh!.network.paths[0]!.pool.created).toBe(8);
   expect(proofs.graceful!.counts.completed).toBeGreaterThan(proofs.forced!.counts.completed);
   expect(proofs.storm!.network.loadBalancers[0]!.attempts).toBeGreaterThan(proofs.noRetry!.network.loadBalancers[0]!.attempts);

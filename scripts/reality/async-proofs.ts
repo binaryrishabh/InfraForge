@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync } from "node:fs";
+import { readProofText, writeProofText } from "./frozen-artifacts";
 import { asyncFixture } from "../../packages/simulation/tests/asyncFixture";
 import { quantities } from "../../packages/simulation/tests/workloadFixture";
 import { createAsyncModel2 } from "../../packages/simulation/src/model2/async/run";
@@ -22,6 +22,6 @@ export function asyncProofs() {
 }
 if (import.meta.main) {
   const report = asyncProofs(), file = new URL("../../docs/reality/m2f-proofs.json", import.meta.url);
-  if (process.argv.includes("--write")) writeFileSync(file, JSON.stringify(report, null, 2) + "\n"); else if (JSON.stringify(report) !== JSON.stringify(JSON.parse(readFileSync(file, "utf8")))) throw Error("M2F proof drift");
+  if (process.argv.includes("--write")) writeProofText(file, JSON.stringify(report, null, 2) + "\n"); else if (JSON.stringify(report) !== JSON.stringify(JSON.parse(readProofText(file)))) throw Error("M2F proof drift");
   console.log(JSON.stringify(Object.fromEntries(Object.entries(report).map(([id, e]) => [id, { counts: e.counts, broker: (({ accepted, ready, inFlight, acknowledged, redelivered, deadLettered }) => ({ accepted, ready, inFlight, acknowledged, redelivered, deadLettered }))(e.asynchronous.brokers[0]!), workers: e.asynchronous.workers.map((w) => ({ effects: w.effects, failed: w.failed, deduplicated: w.deduplicated })) }]))));
 }

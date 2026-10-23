@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync } from "node:fs";
+import { readProofText, writeProofText } from "./frozen-artifacts";
 import { dataFixture } from "../../packages/simulation/tests/dataFixture";
 import { quantities } from "../../packages/simulation/tests/workloadFixture";
 import { createDataModel2 } from "../../packages/simulation/src/model2/data/run";
@@ -38,6 +38,6 @@ export function dataProofs() {
 }
 if (import.meta.main) {
   const report = dataProofs(), file = new URL("../../docs/reality/m2e-proofs.json", import.meta.url);
-  if (process.argv.includes("--write")) writeFileSync(file, JSON.stringify(report, null, 2) + "\n"); else if (JSON.stringify(report) !== JSON.stringify(JSON.parse(readFileSync(file, "utf8")))) throw Error("M2E proof drift");
+  if (process.argv.includes("--write")) writeProofText(file, JSON.stringify(report, null, 2) + "\n"); else if (JSON.stringify(report) !== JSON.stringify(JSON.parse(readProofText(file)))) throw Error("M2E proof drift");
   console.log(JSON.stringify(Object.fromEntries(Object.entries(report).map(([id, value]) => [id, "counts" in value ? { counts: value.counts, fetches: value.data.applications[0]!.databaseFetches, hits: value.data.caches[0]!.hits, misses: value.data.caches[0]!.misses, evictions: value.data.caches[0]!.evictions, expirations: value.data.caches[0]!.expirations } : { peakWaiting: value.peakWaiting, results: value.results }]))));
 }

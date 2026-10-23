@@ -1,3 +1,4 @@
+import { readProofText } from "../reality/frozen-artifacts";
 import { test, expect } from "bun:test";
 import { readFileSync } from "node:fs";
 import { dataCalibration, readDataMeasurements } from "../reality/data-calibration";
@@ -11,5 +12,5 @@ test("held-out latency corruption cannot change fitted M2E demand; split/source 
   const changed = dataCalibration(bad); expect(changed.candidates).toEqual(original.candidates); expect(changed.summaries).not.toEqual(original.summaries); bad.database[0]!.split = "holdout"; expect(() => dataCalibration(bad)).toThrow("split");
 });
 test("M2E proof artifacts replay cascades, contention, exhaustion and detached remote work", () => {
-  const p = dataProofs(); expect(p).toEqual(JSON.parse(readFileSync(new URL("../../docs/reality/m2e-proofs.json", import.meta.url), "utf8"))); expect(p.conflicting.peakWaiting).toBeGreaterThan(p.independent.peakWaiting); expect(p.cacheFailure.data.applications[0]!.databaseFetches).toBeGreaterThan(p.normal.data.applications[0]!.databaseFetches); expect(p.detached.counts.deadlineExceeded).toBeGreaterThan(0);
+  const p = dataProofs(); expect(p).toEqual(JSON.parse(readProofText(new URL("../../docs/reality/m2e-proofs.json", import.meta.url)))); expect(p.conflicting.peakWaiting).toBeGreaterThan(p.independent.peakWaiting); expect(p.cacheFailure.data.applications[0]!.databaseFetches).toBeGreaterThan(p.normal.data.applications[0]!.databaseFetches); expect(p.detached.counts.deadlineExceeded).toBeGreaterThan(0);
 });

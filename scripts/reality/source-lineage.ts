@@ -1,3 +1,4 @@
+import { readArtifactText } from "./frozen-artifacts";
 import { createHash } from "node:crypto";
 import { readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { relative, resolve } from "node:path";
@@ -53,7 +54,7 @@ export function historicalProviderHash(root = productRoot, lineage = readLineage
 export function verifyHistoricalArtifacts(root = productRoot) {
   const lineage = readLineage(root);
   if (lineage.artifacts.length !== 9 || new Set(lineage.artifacts.map((a) => a.path)).size !== 9) throw Error("Historical artifact inventory drift");
-  for (const a of lineage.artifacts) if (!artifacts.includes(a.path) || sha(readFileSync(resolve(root, a.path), "utf8")) !== a.sha256) throw Error(`Historical artifact changed: ${a.path}`);
+  for (const a of lineage.artifacts) if (!artifacts.includes(a.path) || sha(readArtifactText(root, a.path)) !== a.sha256) throw Error(`Historical artifact changed: ${a.path}`);
 }
 export function refreshCurrentSourcePins(root = productRoot) {
   const lineage = readLineage(root);

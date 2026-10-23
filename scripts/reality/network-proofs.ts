@@ -1,4 +1,4 @@
-import { writeFileSync } from "node:fs";
+import { writeProofText } from "./frozen-artifacts";
 import { createNetworkModel2 } from "../../packages/simulation/src/model2/network/run";
 import { networkFixture, verticalFixture } from "../../packages/simulation/tests/networkFixture";
 import { quantities } from "../../packages/simulation/tests/workloadFixture";
@@ -38,4 +38,4 @@ function capture(input: NetworkInput) {
   return { counts: e.counts, resources: e.resources, network: e.network, results: e.results, retention: e.resultRetention, execution: e.execution, phases };
 }
 export const networkProofs = () => Object.fromEntries(Object.entries(networkProofInputs()).map(([name, input]) => [name, capture(input)]));
-if (import.meta.main) { const proofs = networkProofs(); if (process.argv.includes("--write")) writeFileSync(new URL("../../docs/reality/m2d-proofs.json", import.meta.url), JSON.stringify(proofs, null, 2) + "\n"); console.log(JSON.stringify(Object.fromEntries(Object.entries(proofs).map(([name, p]) => [name, { counts: p.counts, paths: p.network.paths.map((x) => ({ id: x.id, failed: x.failed, created: x.pool.created, reused: x.pool.reused })), loadBalancers: p.network.loadBalancers }])))); }
+if (import.meta.main) { const proofs = networkProofs(); if (process.argv.includes("--write")) writeProofText(new URL("../../docs/reality/m2d-proofs.json", import.meta.url), JSON.stringify(proofs, null, 2) + "\n"); console.log(JSON.stringify(Object.fromEntries(Object.entries(proofs).map(([name, p]) => [name, { counts: p.counts, paths: p.network.paths.map((x) => ({ id: x.id, failed: x.failed, created: x.pool.created, reused: x.pool.reused })), loadBalancers: p.network.loadBalancers }])))); }

@@ -1,3 +1,4 @@
+import { writeProofText } from "./frozen-artifacts";
 import { writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { productFixture } from "../../packages/simulation/tests/productFixture";
@@ -32,5 +33,5 @@ if (import.meta.main) {
     const sourceHash = productSourceHash(), compiler = generatedCompilerCases(); console.log(JSON.stringify({ stage: "compiler", ...compiler }));
     const controllers = generatedControllerCases(); const report = { schema: "infraforge-product-sweeps/1", sourceHash, complete: true, compiler, controllers };
     writeFileSync(resolve(productRoot, "docs/reality/m2h-sweeps.json"), JSON.stringify(report, null, 2) + "\n"); console.log(JSON.stringify({ stage: "controllers", ...controllers }));
-  } else { const report = productProofs(); writeFileSync(resolve(productRoot, "docs/reality/m2h-proofs.json"), JSON.stringify(report, null, 2) + "\n"); console.log(JSON.stringify({ cases: report.cases.length, complete: report.complete, sourceHash: report.sourceHash })); }
+  } else { const report = productProofs(); writeProofText(resolve(productRoot, "docs/reality/m2h-proofs.json"), JSON.stringify(report, null, 2) + "\n"); console.log(JSON.stringify({ cases: report.cases.length, complete: report.complete, sourceHash: report.sourceHash })); }
 }
