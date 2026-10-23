@@ -22,6 +22,9 @@ export function readCapture(value: unknown, input: string): StoredCapture {
   switch ((value as { schema?: string })?.schema) {
     case "infraforge-internal-evidence/1": return v1.readCapture(value, input);
     case "infraforge-internal-evidence/2": return v2.readCaptureV2(value, input);
-    default: throw Error("Unsupported historical evidence version; no reinterpretation");
+    // A record without a version string keeps the original v1 validation and refusal message;
+    // only an explicit unknown version is refused as unsupported.
+    default: if (typeof (value as { schema?: unknown })?.schema !== "string") return v1.readCapture(value, input);
+      throw Error("Unsupported historical evidence version; no reinterpretation");
   }
 }

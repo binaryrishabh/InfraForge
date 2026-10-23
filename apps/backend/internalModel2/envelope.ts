@@ -16,7 +16,10 @@ export function readEnvelope(value: unknown, expected: string, compatible = true
   switch ((value as { schema?: string })?.schema) {
     case "infraforge-internal-execution/1": return v1.readEnvelope(value, expected, compatible);
     case "infraforge-internal-execution/2": return v2.readEnvelopeV2(value, expected, compatible);
-    default: throw Error("Unsupported historical input version; no reinterpretation");
+    // A record without a version string keeps the original v1 validation and refusal message;
+    // only an explicit unknown version is refused as unsupported.
+    default: if (typeof (value as { schema?: unknown })?.schema !== "string") return v1.readEnvelope(value, expected, compatible);
+      throw Error("Unsupported historical input version; no reinterpretation");
   }
 }
 export const captureCuts = v1.captureCuts;
