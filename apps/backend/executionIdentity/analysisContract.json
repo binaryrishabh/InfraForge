@@ -1,6 +1,6 @@
 {
   "schema": "execution-loading-analysis/1",
-  "policy": "6fbd22a20cdbfae926504584b31b9e3554f5ef1fff04cf0df4cda93751849e8a",
+  "policy": "2816fe1dfccbc5f62b79d0e0c9f3d193ac5c017915e9e3bdbad198be7c6a4224",
   "modules": {
     "apps/backend/actions/contract.ts": {
       "hash": "cb4d5860ab0805ccf009c47e453ed89c12e52e564c95e470a1cfbb23e18fb24d",
@@ -562,7 +562,7 @@
       ]
     },
     "apps/backend/challenges/improvements.ts": {
-      "hash": "c8c737e3342c63519f49d6ab24c4579a819904ed24aabb6a6ba1385c7e7ce685",
+      "hash": "e575582f9e2cde40c32891bf407c8d5877e489e0b862803eabb5d1200760655c",
       "requests": [
         {
           "path": "../comparison/design",
@@ -586,6 +586,10 @@
         },
         {
           "path": "./prediction",
+          "kind": "import-statement"
+        },
+        {
+          "path": "../runRecords/availability",
           "kind": "import-statement"
         }
       ]
@@ -964,7 +968,7 @@
       ]
     },
     "apps/backend/firstStack/admission.ts": {
-      "hash": "efd408323aab1b072c6775ceee869d8e200e8c485721633e012c98f5b5b8d1b9",
+      "hash": "887ac5407cd846578a2c316a12b11ca92d7560be64ede97ad683b5d4be48d0a0",
       "requests": [
         {
           "path": "node:crypto",
@@ -1008,6 +1012,10 @@
         },
         {
           "path": "./scoredChallenges/projection",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./migration",
           "kind": "import-statement"
         }
       ]
@@ -1113,6 +1121,51 @@
         },
         {
           "path": "./reportCapture",
+          "kind": "import-statement"
+        }
+      ]
+    },
+    "apps/backend/firstStack/historicalReplay.ts": {
+      "hash": "4f6e39a106dc44a34edab35a60ffa721468b9e34ad20c624cb01a7b3466501d1",
+      "requests": [
+        {
+          "path": "../utils/errors",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./canonical",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./report",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./isolationProtocol",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./isolationPolicy",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./isolatedExecution",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./isolationOwnership",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./admission",
+          "kind": "import-statement"
+        },
+        {
+          "path": "zod",
+          "kind": "import-statement"
+        },
+        {
+          "path": "../capabilities/policy",
           "kind": "import-statement"
         }
       ]
@@ -1254,7 +1307,7 @@
       ]
     },
     "apps/backend/firstStack/isolationReplay.ts": {
-      "hash": "138b3d8c1a3333d60d42a2f50dfb6c2054b83e6318433fc2824edc90dd2a63d7",
+      "hash": "7d6d1d6c7d5bfa1a84c8d8a5f58070a6638c8fa50e8cc8078d45c4bac1073fba",
       "requests": [
         {
           "path": "node:timers/promises",
@@ -1307,6 +1360,19 @@
         }
       ]
     },
+    "apps/backend/firstStack/migration.ts": {
+      "hash": "58131449ce1db30cf8c3e9631039e17971e8d05f705debe0e839595666b27ab2",
+      "requests": [
+        {
+          "path": "zod",
+          "kind": "import-statement"
+        },
+        {
+          "path": "../utils/errors",
+          "kind": "import-statement"
+        }
+      ]
+    },
     "apps/backend/firstStack/persistence.ts": {
       "hash": "eb20a534aca49aefc93cb0afcc6bf85a1d478a4e58244d9d67d4959a6417c582",
       "requests": [
@@ -1330,7 +1396,7 @@
       ]
     },
     "apps/backend/firstStack/report.ts": {
-      "hash": "d32f6bfefc4933d5e643dc6770b197cf3b4dce02f1b1473646ade76b1d2b759e",
+      "hash": "0c672631922df98c3d22edbbad30da89fb87f8cce0714b3c60cffcc91fdbea5b",
       "requests": [
         {
           "path": "zod",
@@ -1518,7 +1584,7 @@
       ]
     },
     "apps/backend/firstStack/submissionQueue.ts": {
-      "hash": "d5ade04c5020231ad0de4f5994d168bbb5f0ecb3ce9ea3d4795d2dd57171d505",
+      "hash": "fae38d456fde401ecc4b4b560dc4f7a8b6980eb925da7d1d66574613beb32e64",
       "requests": [
         {
           "path": "bullmq",
@@ -1531,11 +1597,31 @@
         {
           "path": "./submissionWorker",
           "kind": "import-statement"
+        },
+        {
+          "path": "./historicalReplay",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./admission",
+          "kind": "import-statement"
+        },
+        {
+          "path": "../utils/errors",
+          "kind": "import-statement"
+        },
+        {
+          "path": "node:crypto",
+          "kind": "import-statement"
+        },
+        {
+          "path": "../capabilities/policy",
+          "kind": "import-statement"
         }
       ]
     },
     "apps/backend/firstStack/submissionRoutes.ts": {
-      "hash": "77fecb0e0c729a28ab60f7615eb00b51c9feba78b221a102258194af2d41c693",
+      "hash": "6840ed301decafc64ab1d036cd2dfdce946bb7d80e79c73d1ca4ca76fc86b24a",
       "requests": [
         {
           "path": "express",
@@ -1564,7 +1650,7 @@
       ]
     },
     "apps/backend/firstStack/submissionWorker.ts": {
-      "hash": "0b4f7b0b3c97fcffcd485d4349320b0dc5989e5ee89fdbc1241595adfc95c0c5",
+      "hash": "7af7801e3a1f584b2b70376625243286ad2668af1b08b39e2c2458366dd677c5",
       "requests": [
         {
           "path": "node:crypto",
@@ -1831,7 +1917,7 @@
       "requests": []
     },
     "apps/backend/internalModel2/capture.ts": {
-      "hash": "14bcdf12ec9582182aa22765d71837e6a83a55a399300889969011c4fdfbdbad",
+      "hash": "5aa4eee28564eba8a6108a6d980cb492b00c32706480f62999eeb3d080b4e503",
       "requests": [
         {
           "path": "@infraforge/simulation/internal-product",
@@ -2000,7 +2086,7 @@
       ]
     },
     "apps/backend/internalModel2/envelope.ts": {
-      "hash": "93bff249d6cbe38ffecc26f91711d3a861e2db5fa8f034f022b7a736ad19fccf",
+      "hash": "88b17509e50a9c540952f7b5473335b7f2571a1896310c3157429a3047cbf824",
       "requests": [
         {
           "path": "zod",
@@ -2405,7 +2491,7 @@
       ]
     },
     "apps/backend/internalModel2/report.ts": {
-      "hash": "95a679cb8f6cc1dcf7197466efaff2d0b68fea6f1c9e5bcf18ba303e21bb6c02",
+      "hash": "78a0e1821d286105d23912c6ba6d2f5a2a95ab74fb1059e3c0623217eb2e5a00",
       "requests": [
         {
           "path": "./identity",
@@ -2678,7 +2764,7 @@
       ]
     },
     "apps/backend/lib/generated/prisma/client.ts": {
-      "hash": "9e1e3c700803f7fb5c9cd4bc3b52433152696bc17a4a7e598355588986362df9",
+      "hash": "a496a27cf139973c0acde9c092f13f95461f15d45bf061a1146a539f8c74d7cd",
       "requests": [
         {
           "kind": "import-statement",
@@ -2723,7 +2809,7 @@
       "requests": []
     },
     "apps/backend/lib/generated/prisma/internal/class.ts": {
-      "hash": "c45cb3267e2355438068dbfba7116d214838dba0c5d948166300acf50bb295ca",
+      "hash": "f259ec7cb0073fa4ae5fcbde03c35f5a8b035537519b67c6fad82129f35178d6",
       "requests": [
         {
           "kind": "import-statement",
@@ -2744,7 +2830,7 @@
       ]
     },
     "apps/backend/lib/generated/prisma/internal/prismaNamespace.ts": {
-      "hash": "dfb24edb7f0c9a5d6962bc69f6ff1d72a6d353a60b0852fa3e03d173638a838a",
+      "hash": "b7c9b343ecaf6a4b859c6685adf45b0d5bfe9f646214e6bb2c6e5c63cc59225f",
       "requests": [
         {
           "kind": "import-statement",
@@ -2791,7 +2877,7 @@
       "requests": []
     },
     "apps/backend/release/firstStackSchema.ts": {
-      "hash": "76594ea78daadc652634c0f7ca084c4a0ce8bde6fffcee5a88d4080067acef36",
+      "hash": "d77d57c2f808aed47689b396d3e18baf20f68b43bec48277082374f0fd2364a2",
       "requests": [
         {
           "path": "node:fs/promises",
@@ -2809,7 +2895,7 @@
       ]
     },
     "apps/backend/release/migrations.ts": {
-      "hash": "f3b13843a6c766377a88e022d353020b5db94a65a52d48bae27d263f85f6456e",
+      "hash": "83848c45e39180adb0a32fa9edc166d31235f6faa78b249e73a4c813454076c7",
       "requests": [
         {
           "path": "node:crypto",
@@ -2980,7 +3066,7 @@
       "requests": []
     },
     "apps/backend/reruns/options.ts": {
-      "hash": "635d963d13e3e0932cf091d4b01fc2d6b3dc7c522a80c57d2d4f3c1f254d7570",
+      "hash": "12256c5af71ab9b06288d8d13d3904f1a3b71c18170b4a5e686251232fdf7605",
       "requests": [
         {
           "path": "node:crypto",
@@ -3004,6 +3090,10 @@
         },
         {
           "path": "../comparison/design",
+          "kind": "import-statement"
+        },
+        {
+          "path": "../runRecords/availability",
           "kind": "import-statement"
         }
       ]
@@ -3128,7 +3218,7 @@
       ]
     },
     "apps/backend/runRecords/adapters.ts": {
-      "hash": "23859f8fd5b4703ff5b5c0cf981723abba7bf9eb8b4c530ec8473dc0324bee8f",
+      "hash": "e119b6cbbadfe8ef40f3ffefd6f92f126c004e559bed7d88e855cb8bc7115d0f",
       "requests": [
         {
           "path": "../reports/report",
@@ -3155,13 +3245,21 @@
           "kind": "import-statement"
         },
         {
+          "path": "./availability",
+          "kind": "import-statement"
+        },
+        {
           "path": "./firstStack",
           "kind": "import-statement"
         }
       ]
     },
+    "apps/backend/runRecords/availability.ts": {
+      "hash": "df2fa8659b94f53d34fd6f1652b5b79c93bcba871a9c13d2944607f4a00d60f2",
+      "requests": []
+    },
     "apps/backend/runRecords/firstStack.ts": {
-      "hash": "69637e2762b70bb3c7bf21b4b33c0ff5c168146c7474a64cf68ef523ae985dce",
+      "hash": "9d19e8b91194064ee56c65e01a39105a1d3202ac7b43940ce31cda13806d6b0a",
       "requests": [
         {
           "path": "../firstStack/report",
@@ -3174,7 +3272,7 @@
       ]
     },
     "apps/backend/runRecords/schema.ts": {
-      "hash": "9c7a1734f95031abbbfab5e8a0e13d98cc2234c7a13af91806daba96c743f37b",
+      "hash": "ecca97e520c094ca309770e25dd27581b12c7c6d3a5ac0a61dc6458deae585fc",
       "requests": [
         {
           "path": "zod",
@@ -3954,7 +4052,7 @@
       "requests": []
     },
     "packages/contracts/src/reports/runRecord.ts": {
-      "hash": "57569562574fe58dbbeaa8df5a67a4960b72403cb3549300f967e685aa82dc10",
+      "hash": "cc02581996ae8804e3a55cb7929ab6b5ba8bc8bf7e95eb0f097d74fa8df4c2c2",
       "requests": []
     },
     "packages/contracts/src/run-inputs/RunInputs.interface.ts": {

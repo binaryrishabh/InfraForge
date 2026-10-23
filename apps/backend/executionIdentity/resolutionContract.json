@@ -44320,6 +44320,14 @@
     },
     {
       "owner": null,
+      "file": "apps/backend/firstStack/historicalReplay.ts",
+      "specifier": "zod",
+      "kind": "import-statement",
+      "targetOwner": "zod@4.4.3:12",
+      "targetFile": "index.js"
+    },
+    {
+      "owner": null,
       "file": "apps/backend/firstStack/importStream.ts",
       "specifier": "@infraforge/contracts/first-stack",
       "kind": "import-statement",
@@ -44349,6 +44357,14 @@
       "kind": "import-statement",
       "targetOwner": "pg@8.22.0:170",
       "targetFile": "esm/index.mjs"
+    },
+    {
+      "owner": null,
+      "file": "apps/backend/firstStack/migration.ts",
+      "specifier": "zod",
+      "kind": "import-statement",
+      "targetOwner": "zod@4.4.3:12",
+      "targetFile": "index.js"
     },
     {
       "owner": null,

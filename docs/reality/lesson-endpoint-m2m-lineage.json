@@ -238,7 +238,7 @@
     },
     {
       "file": "apps/backend/internalModel2/capture.ts",
-      "hash": "b8d8d536b1aa03844165cac73a8247689d2b24a1575a45c9575bef8917288e54"
+      "hash": "b4bbfbbf0ea034e511cb4764cee816fa2abf0483ab28e542e22a7c86d88d8173"
     },
     {
       "file": "apps/backend/internalModel2/captureV1.ts",
@@ -278,7 +278,7 @@
     },
     {
       "file": "apps/backend/internalModel2/envelope.ts",
-      "hash": "9f10199729987da6d6f422146db7da76b951cfe7936622eddee330ddc193ba10"
+      "hash": "76c0d77fadf827745d9b1a547e7ce790f7d6f82294a8976f3b49ee3f55204ab2"
     },
     {
       "file": "apps/backend/internalModel2/envelopeV1.ts",
@@ -302,7 +302,7 @@
     },
     {
       "file": "apps/backend/internalModel2/legacyRuntime.json",
-      "hash": "ff859105bb0812ff4edbb5071fa59b53351b4ab0be8033fadaba16a7844d08e6"
+      "hash": "dbbc06c09b2c96b1400c60f7c693b5c501d6f88b9de77429750e003439676bb6"
     },
     {
       "file": "apps/backend/internalModel2/lessonAuthoring.ts",
@@ -338,7 +338,7 @@
     },
     {
       "file": "apps/backend/internalModel2/report.ts",
-      "hash": "ae76f0d880cee26d22b547411d5246d69fd182365800cd22df63c63a9e0119f1"
+      "hash": "5082f496dc2c159dfab2a5b9e1a860e153adee687b8bd94df208b3a10d6693d5"
     },
     {
       "file": "apps/backend/internalModel2/routes.ts",
@@ -378,7 +378,7 @@
     },
     {
       "file": "apps/backend/prisma/schema.prisma",
-      "hash": "c7a681d5ddc604d874347bf02d8826693867157a3bbea8d96c7550b85d6b3e37"
+      "hash": "b14a735a1a064418a3d09f862e9eb2070b55f4ae475a41b39e7cb3a4a11d88c7"
     },
     {
       "file": "apps/backend/release/lessonSchema.ts",
@@ -386,7 +386,7 @@
     },
     {
       "file": "apps/backend/release/migrations.ts",
-      "hash": "716843681b064a75c89c5ec3f05c82a466e78058ef2ec76edb1cc9aa70218cdb"
+      "hash": "20771f3dc6659a026156463dc476734c28a7d5be2d280a959397facd639aa8f6"
     },
     {
       "file": "apps/backend/worker.ts",

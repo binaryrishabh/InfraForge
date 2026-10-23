@@ -2522,6 +2522,30 @@
       ]
     },
     {
+      "id": "HistoricalRunCompatibility",
+      "fields": [
+        "RunRecord.availability",
+        "RunRecord.reference",
+        "RunRecord.lineage",
+        "RunRecord.lineage.kind",
+        "RunRecord.lineage.source"
+      ],
+      "mechanism": "Version-dispatched stored reports, explicit execution/replay availability and typed migrated-from audit references",
+      "model1": "supported-logical",
+      "model2": "supported-logical",
+      "scope": "Software metadata and read compatibility only; replay requires a qualified exact pinned executor and lock. No Model 2 activation or physical performance claim.",
+      "sources": [
+        {
+          "file": "apps/backend/runRecords/schema.ts",
+          "anchor": "export function readRunRecord"
+        },
+        {
+          "file": "apps/backend/firstStack/historicalReplay.ts",
+          "anchor": "export function historicalReplayTarget"
+        }
+      ]
+    },
+    {
       "id": "FirstStackComputeCost",
       "fields": [
         "FirstStackComputeCost.conditional",
