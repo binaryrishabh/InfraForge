@@ -33,7 +33,7 @@
     },
     {
       "path": "apps/backend/release/migrations.ts",
-      "hash": "83848c45e39180adb0a32fa9edc166d31235f6faa78b249e73a4c813454076c7"
+      "hash": "5ad6c8692d0f33a3d14316e76f2f9ad8577f1c1e8f9fc3da4b64b22affcf0349"
     },
     {
       "path": "apps/backend/executionIdentity/descriptor.ts",

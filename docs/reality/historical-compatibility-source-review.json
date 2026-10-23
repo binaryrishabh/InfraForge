@@ -81,11 +81,11 @@
     },
     {
       "path": "apps/backend/release/migrations.ts",
-      "hash": "83848c45e39180adb0a32fa9edc166d31235f6faa78b249e73a4c813454076c7"
+      "hash": "5ad6c8692d0f33a3d14316e76f2f9ad8577f1c1e8f9fc3da4b64b22affcf0349"
     },
     {
       "path": "apps/backend/prisma/schema.prisma",
-      "hash": "2fd50b0cc174f087b82b0f3bd99bcf87d12aa7f80fe5a0159f4bf40fdc7af548"
+      "hash": "30f7fac0357d17ad6bc591b6dd7274222fdef4cec06947e601e5a715078e179e"
     },
     {
       "path": "apps/backend/prisma/migrations/20261022000000_historical_replay/migration.sql",
@@ -103,7 +103,7 @@
   "acceptance": [
     {
       "path": "scripts/tests/execution-identity.test.ts",
-      "hash": "b8802bdb448df6da74f4b17447daf21f8e8cc38f8615216e480c8b72c9ecc00c"
+      "hash": "80bf59a39c6e5a1b6f1df985ac58bb50aeafa2d2415e122eae5554eea9ae36f9"
     },
     {
       "path": "apps/backend/tests/historicalCompatibility.test.ts",
@@ -111,7 +111,7 @@
     },
     {
       "path": "apps/backend/tests/release.test.ts",
-      "hash": "39dfdf4086d8345232631d8291fc5f45fc3658a1260966417f7d65b26f6e7a8d"
+      "hash": "e48895e0bf808ff4d1dbbe5811fb2fe950c4f0a0d01ea912903f923d47add9f4"
     },
     {
       "path": "scripts/tests/ci-repair.test.ts",

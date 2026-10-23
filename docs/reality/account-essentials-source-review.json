@@ -57,7 +57,7 @@
     },
     {
       "path": "apps/backend/release/accountSchema.ts",
-      "hash": "5d2c55ad927aa44140909f6e00421bf3078b6e8da51e6706200244162ea26712"
+      "hash": "57d522916ea5d3932728bbb21769ff9e90ae3ca82b53eb07b6b456258a065ec6"
     },
     {
       "path": "apps/backend/release/migrations.ts",
@@ -76,7 +76,7 @@
       "hash": "a58d821c8bf86f234779dc9548a71df76b00c6ff009e679747dfee904f7a6268"
     },
     {
-      "path": "apps/backend/prisma/migrations/20261022000000_account_essentials/migration.sql",
+      "path": "apps/backend/prisma/migrations/20261023000000_account_essentials/migration.sql",
       "hash": "50401eb9d159e1bd8d41130cfba58a382d72a46a0e505cc4caea7433b6d10fc2"
     },
     {

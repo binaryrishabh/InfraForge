@@ -26,14 +26,29 @@
       "numericSites": 0
     },
     {
+      "file": "apps/backend/auth/accountData.ts",
+      "sha256": "38c97f06fd660e78d6cc1ca938471d1458487fe60c5bd06fcb6b78bd69ec8996",
+      "numericSites": 14
+    },
+    {
+      "file": "apps/backend/auth/accountPolicy.ts",
+      "sha256": "d3f8d8135f1aba4b3443268f958ba958d768bef92442820956bd28ced38096ce",
+      "numericSites": 10
+    },
+    {
+      "file": "apps/backend/auth/accountRoutes.ts",
+      "sha256": "45c48187d436be1ca82993ab2d9caa86c9e27269cf1cadc03d04cfc56f8024e2",
+      "numericSites": 17
+    },
+    {
       "file": "apps/backend/auth/auth.ts",
-      "sha256": "710c686efad2c1844548b40f29ab0404e873d68f6bc0af6479ea7466bbedb0eb",
+      "sha256": "a229f113d01b03de854b10415a618539e17511bbc736564cc8527cbe858283b6",
       "numericSites": 0
     },
     {
       "file": "apps/backend/auth/createAuth.ts",
-      "sha256": "83aa58ccfdb51cc114558669d929bd0a5fee20523a94a8f17d5fb976112c470f",
-      "numericSites": 0
+      "sha256": "a15c706ba99209ca0963a0f414747de99e1aa4695d67db3086ecbf9c9a401543",
+      "numericSites": 1
     },
     {
       "file": "apps/backend/auth/credentials.ts",
@@ -41,9 +56,19 @@
       "numericSites": 3
     },
     {
+      "file": "apps/backend/auth/email.ts",
+      "sha256": "3c5ae34f4ae389645590f7fe07afdb2a46a8378bcd8c212b36ef4113f29d3c19",
+      "numericSites": 6
+    },
+    {
       "file": "apps/backend/auth/httpSecurity.ts",
-      "sha256": "00797c86c1a55ea0be20f8fb6f04dfd546582d8d20d516b8bb189080ad837843",
-      "numericSites": 2
+      "sha256": "b61d0741b9da0726bf8aac194c727603bd483b55ff269593728daf289912b18b",
+      "numericSites": 1
+    },
+    {
+      "file": "apps/backend/auth/origin.ts",
+      "sha256": "b41d243139ac3fb4303963547a205ac9405472457d5ab880ab93908e4f3a828c",
+      "numericSites": 1
     },
     {
       "file": "apps/backend/auth/recoverOwnership.ts",
@@ -52,8 +77,18 @@
     },
     {
       "file": "apps/backend/auth/settings.ts",
-      "sha256": "e28ad7ebc6152f6eb950bc132b17ace681df3e305e8605e20d72aedbadcf69ed",
+      "sha256": "0bfd3d52ce76538f5acba51c23715bfdd8d8812585648a2ffa3a21e252d0b1fc",
       "numericSites": 1
+    },
+    {
+      "file": "apps/backend/auth/turnstile.ts",
+      "sha256": "83adf4c5ec6ef2f6eb40caa53bc03f6ebcc932f015f36a42b548f609ded5f3a9",
+      "numericSites": 2
+    },
+    {
+      "file": "apps/backend/auth/verification.ts",
+      "sha256": "bc0ab8e5c0e241c19ee29035555b5e39060de9493b825ab66d485a360989d732",
+      "numericSites": 5
     },
     {
       "file": "apps/backend/capabilities/policy.ts",
@@ -342,7 +377,7 @@
     },
     {
       "file": "apps/backend/executionIdentity/loading.ts",
-      "sha256": "ae763abb942363819b014e4f1490c170e7e97b5b97d51f6c1e3feaf6fc3b1bb5",
+      "sha256": "3ab809489221e14c9f444df875fac6384ee653bac212de27594252915d5ae26a",
       "numericSites": 14
     },
     {
@@ -542,8 +577,8 @@
     },
     {
       "file": "apps/backend/index.ts",
-      "sha256": "e486698e8b7f84bb1eb5cbb013ff00cab5a8af90ce20f2b2220ceba7de25ee23",
-      "numericSites": 6
+      "sha256": "bed1446c8c8425e0b12979da645bf64210683bccc2e3616e083b18401117d75a",
+      "numericSites": 7
     },
     {
       "file": "apps/backend/infra/deploymentSubscriptions.ts",
@@ -761,6 +796,11 @@
       "numericSites": 0
     },
     {
+      "file": "apps/backend/release/accountSchema.ts",
+      "sha256": "57d522916ea5d3932728bbb21769ff9e90ae3ca82b53eb07b6b456258a065ec6",
+      "numericSites": 18
+    },
+    {
       "file": "apps/backend/release/cli.ts",
       "sha256": "1294bf7d382f7c2dfceb3dc73fbaa53d95745e7c7fba31b97b7496c7cfa2e777",
       "numericSites": 7
@@ -787,7 +827,7 @@
     },
     {
       "file": "apps/backend/release/migrations.ts",
-      "sha256": "83848c45e39180adb0a32fa9edc166d31235f6faa78b249e73a4c813454076c7",
+      "sha256": "5ad6c8692d0f33a3d14316e76f2f9ad8577f1c1e8f9fc3da4b64b22affcf0349",
       "numericSites": 34
     },
     {
@@ -1128,6 +1168,11 @@
     {
       "file": "apps/web/src/components/shell/PublicOnlyRoute.tsx",
       "sha256": "20f8de85e67932fb452adf9f63585cc65da8b0e007aae9b853870fc570646421",
+      "numericSites": 0
+    },
+    {
+      "file": "apps/web/src/features/auth/accountClient.ts",
+      "sha256": "cf073c9723e97c91ef6324c8626c70284a26b950ab9c737f0d656d827c2f78fa",
       "numericSites": 0
     },
     {
@@ -2287,7 +2332,7 @@
     },
     {
       "file": "packages/contracts/src/auth/index.ts",
-      "sha256": "896752ba36ac06124cd4712035e01069c67d904826cfd3f45c34a8cfcf2efe61",
+      "sha256": "c639dc9380ea36c0c7ae4c6df9be16f76968c901a225544ea24324a8f9010093",
       "numericSites": 4
     },
     {
@@ -3546,6 +3591,1518 @@
       }
     },
     {
+      "id": "m1.apps.backend.auth.accountData.1",
+      "concept": "deleteAccount · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.auth.accountData.1"
+        ]
+      },
+      "formula": "if (!users[0] || users[0].deletedAt) throw new AppError(\"Sign in to continue\", 401);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountData.ts#L12",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/auth/accountData.ts",
+        "line": 12,
+        "column": 16
+      }
+    },
+    {
+      "id": "m1.apps.backend.auth.accountData.2",
+      "concept": "deleteAccount · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.auth.accountData.2"
+        ]
+      },
+      "formula": "if (!users[0] || users[0].deletedAt) throw new AppError(\"Sign in to continue\", 401);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountData.ts#L12",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/auth/accountData.ts",
+        "line": 12,
+        "column": 28
+      }
+    },
+    {
+      "id": "m1.apps.backend.auth.accountData.3",
+      "concept": "deleteAccount · literal 401",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 401,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.auth.accountData.3"
+        ]
+      },
+      "formula": "throw new AppError(\"Sign in to continue\", 401);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountData.ts#L12",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/auth/accountData.ts",
+        "line": 12,
+        "column": 84
+      }
+    },
+    {
+      "id": "m1.apps.backend.auth.accountData.4",
+      "concept": "deleteAccount · literal 409",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 409,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.auth.accountData.4"
+        ]
+      },
+      "formula": "throw new AppError(\"Stop or finish all active runs before deleting your account\", 409);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountData.ts#L18",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/auth/accountData.ts",
+        "line": 18,
+        "column": 130
+      }
+    },
+    {
+      "id": "m1.apps.backend.auth.accountData.5",
+      "concept": "deleteAccount.timeout · literal 15000",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 15000,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.auth.accountData.5"
+        ]
+      },
+      "formula": "timeout: 15000",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountData.ts#L28",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/auth/accountData.ts",
+        "line": 28,
+        "column": 49
+      }
+    },
+    {
+      "id": "m1.apps.backend.auth.accountData.6",
+      "concept": "page.take · literal 1",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.auth.accountData.6"
+        ]
+      },
+      "formula": "take: 1",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountData.ts#L37",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/auth/accountData.ts",
+        "line": 37,
+        "column": 24
+      }
+    },
+    {
+      "id": "m1.apps.backend.auth.accountData.7",
+      "concept": "exportAccountPage.take · literal 1",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.auth.accountData.7"
+        ]
+      },
+      "formula": "take: 1",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountData.ts#L46",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/auth/accountData.ts",
+        "line": 46,
+        "column": 64
+      }
+    },
+    {
+      "id": "m1.apps.backend.auth.accountData.8",
+      "concept": "exportAccountPage.take · literal 1",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.auth.accountData.8"
+        ]
+      },
+      "formula": "take: 1",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountData.ts#L48",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/auth/accountData.ts",
+        "line": 48,
+        "column": 72
+      }
+    },
+    {
+      "id": "m1.apps.backend.auth.accountData.9",
+      "concept": "exportAccountPage.where.OR.simulatedSeconds.gt · literal -1",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": -1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.auth.accountData.9"
+        ]
+      },
+      "formula": "gt: after.sequence ?? -1",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountData.ts#L50",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/auth/accountData.ts",
+        "line": 50,
+        "column": 78
+      }
+    },
+    {
+      "id": "m1.apps.backend.auth.accountData.10",
+      "concept": "exportAccountPage.take · literal 1",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.auth.accountData.10"
+        ]
+      },
+      "formula": "take: 1",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountData.ts#L51",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/auth/accountData.ts",
+        "line": 51,
+        "column": 65
+      }
+    },
+    {
+      "id": "m1.apps.backend.auth.accountData.11",
+      "concept": "exportAccountPage.where.OR.sequence.gt · literal -1",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": -1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.auth.accountData.11"
+        ]
+      },
+      "formula": "gt: after.sequence ?? -1",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountData.ts#L52",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/auth/accountData.ts",
+        "line": 52,
+        "column": 136
+      }
+    },
+    {
+      "id": "m1.apps.backend.auth.accountData.12",
+      "concept": "exportAccountPage.take · literal 1",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.auth.accountData.12"
+        ]
+      },
+      "formula": "take: 1",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountData.ts#L53",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/auth/accountData.ts",
+        "line": 53,
+        "column": 71
+      }
+    },
+    {
+      "id": "m1.apps.backend.auth.accountData.13",
+      "concept": "exportAccountPage.take · literal 1",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.auth.accountData.13"
+        ]
+      },
+      "formula": "take: 1",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountData.ts#L55",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/auth/accountData.ts",
+        "line": 55,
+        "column": 78
+      }
+    },
+    {
+      "id": "m1.apps.backend.auth.accountData.14",
+      "concept": "row · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.auth.accountData.14"
+        ]
+      },
+      "formula": "const row = rows[0];",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountData.ts#L58",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/auth/accountData.ts",
+        "line": 58,
+        "column": 20
+      }
+    },
+    {
+      "id": "m1.apps.backend.auth.accountPolicy.1",
+      "concept": "count · literal 1",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.auth.accountPolicy.1"
+        ]
+      },
+      "formula": "const count = await this.redis.eval(\"local n=redis.call('INCR',KEYS[1]); if n==1 then redis.call('EXPIRE',KEYS[1],900) end; return n\", 1, `account-quota:${key}`);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountPolicy.ts#L11",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/auth/accountPolicy.ts",
+        "line": 11,
+        "column": 140
+      }
+    },
+    {
+      "id": "m1.apps.backend.auth.accountPolicy.2",
+      "concept": "email · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.auth.accountPolicy.2"
+        ]
+      },
+      "formula": "const email = typeof body?.email === \"string\" ? body.email.trim().toLowerCase().slice(0, 254) : \"\";",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountPolicy.ts#L24",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/auth/accountPolicy.ts",
+        "line": 24,
+        "column": 91
+      }
+    },
+    {
+      "id": "m1.apps.backend.auth.accountPolicy.3",
+      "concept": "email · literal 254",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 254,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.auth.accountPolicy.3"
+        ]
+      },
+      "formula": "const email = typeof body?.email === \"string\" ? body.email.trim().toLowerCase().slice(0, 254) : \"\";",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountPolicy.ts#L24",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/auth/accountPolicy.ts",
+        "line": 24,
+        "column": 94
+      }
+    },
+    {
+      "id": "m1.apps.backend.auth.accountPolicy.4",
+      "concept": "ipAllowed · literal 30",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 30,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.auth.accountPolicy.4"
+        ]
+      },
+      "formula": "const ipAllowed = await quota.allow(`${scope}:ip`, ip, redeem ? 30 : 20);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountPolicy.ts#L26",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/auth/accountPolicy.ts",
+        "line": 26,
+        "column": 69
+      }
+    },
+    {
+      "id": "m1.apps.backend.auth.accountPolicy.5",
+      "concept": "ipAllowed · literal 20",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 20,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.auth.accountPolicy.5"
+        ]
+      },
+      "formula": "const ipAllowed = await quota.allow(`${scope}:ip`, ip, redeem ? 30 : 20);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountPolicy.ts#L26",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/auth/accountPolicy.ts",
+        "line": 26,
+        "column": 74
+      }
+    },
+    {
+      "id": "m1.apps.backend.auth.accountPolicy.6",
+      "concept": "accountAllowed · literal 3",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 3,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.auth.accountPolicy.6"
+        ]
+      },
+      "formula": "const accountAllowed = await quota.allow(`${scope}:account`, emailRequest || signup ? email : input.token ?? \"\", emailRequest || signup ? 3 : 5);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountPolicy.ts#L27",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/auth/accountPolicy.ts",
+        "line": 27,
+        "column": 143
+      }
+    },
+    {
+      "id": "m1.apps.backend.auth.accountPolicy.7",
+      "concept": "accountAllowed · literal 5",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 5,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.auth.accountPolicy.7"
+        ]
+      },
+      "formula": "const accountAllowed = await quota.allow(`${scope}:account`, emailRequest || signup ? email : input.token ?? \"\", emailRequest || signup ? 3 : 5);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountPolicy.ts#L27",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/auth/accountPolicy.ts",
+        "line": 27,
+        "column": 147
+      }
+    },
+    {
+      "id": "m1.apps.backend.auth.accountPolicy.8",
+      "concept": "accountAuthHandler.status · literal 404",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 404,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.auth.accountPolicy.8"
+        ]
+      },
+      "formula": "status: 404",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountPolicy.ts#L50",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/auth/accountPolicy.ts",
+        "line": 50,
+        "column": 50
+      }
+    },
+    {
+      "id": "m1.apps.backend.auth.accountPolicy.9",
+      "concept": "accountAuthHandler · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.auth.accountPolicy.9"
+        ]
+      },
+      "formula": "await sleep(Math.max(0, 750 - (now() - start)));",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountPolicy.ts#L62",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/auth/accountPolicy.ts",
+        "line": 62,
+        "column": 28
+      }
+    },
+    {
+      "id": "m1.apps.backend.auth.accountPolicy.10",
+      "concept": "accountAuthHandler · literal 750",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 750,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.auth.accountPolicy.10"
+        ]
+      },
+      "formula": "await sleep(Math.max(0, 750 - (now() - start)));",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountPolicy.ts#L62",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/auth/accountPolicy.ts",
+        "line": 62,
+        "column": 31
+      }
+    },
+    {
+      "id": "m1.apps.backend.auth.accountRoutes.1",
+      "concept": "accountRouter · literal 404",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 404,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.auth.accountRoutes.1"
+        ]
+      },
+      "formula": "res.status(404).json({ success: false });",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountRoutes.ts#L13",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/auth/accountRoutes.ts",
+        "line": 13,
+        "column": 32
+      }
+    },
+    {
+      "id": "m1.apps.backend.auth.accountRoutes.2",
+      "concept": "accountRouter · literal 401",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 401,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.auth.accountRoutes.2"
+        ]
+      },
+      "formula": "res.status(401).json({ success: false });",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountRoutes.ts#L15",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/auth/accountRoutes.ts",
+        "line": 15,
+        "column": 32
+      }
+    },
+    {
+      "id": "m1.apps.backend.auth.accountRoutes.3",
+      "concept": "ipAllowed · literal 600",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 600,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.auth.accountRoutes.3"
+        ]
+      },
+      "formula": "const ipAllowed = await quota.allow(`account:${scope}:ip`, req.ip ?? \"unknown\", scope === \"export\" ? 600 : 30);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountRoutes.ts#L19",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/auth/accountRoutes.ts",
+        "line": 19,
+        "column": 108
+      }
+    },
+    {
+      "id": "m1.apps.backend.auth.accountRoutes.4",
+      "concept": "ipAllowed · literal 30",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 30,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.auth.accountRoutes.4"
+        ]
+      },
+      "formula": "const ipAllowed = await quota.allow(`account:${scope}:ip`, req.ip ?? \"unknown\", scope === \"export\" ? 600 : 30);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountRoutes.ts#L19",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/auth/accountRoutes.ts",
+        "line": 19,
+        "column": 114
+      }
+    },
+    {
+      "id": "m1.apps.backend.auth.accountRoutes.5",
+      "concept": "userAllowed · literal 600",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 600,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.auth.accountRoutes.5"
+        ]
+      },
+      "formula": "const userAllowed = await quota.allow(`account:${scope}:user`, session.user.id, scope === \"export\" ? 600 : 10);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountRoutes.ts#L20",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/auth/accountRoutes.ts",
+        "line": 20,
+        "column": 108
+      }
+    },
+    {
+      "id": "m1.apps.backend.auth.accountRoutes.6",
+      "concept": "userAllowed · literal 10",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 10,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.auth.accountRoutes.6"
+        ]
+      },
+      "formula": "const userAllowed = await quota.allow(`account:${scope}:user`, session.user.id, scope === \"export\" ? 600 : 10);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountRoutes.ts#L20",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/auth/accountRoutes.ts",
+        "line": 20,
+        "column": 114
+      }
+    },
+    {
+      "id": "m1.apps.backend.auth.accountRoutes.7",
+      "concept": "accountRouter · literal 429",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 429,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.auth.accountRoutes.7"
+        ]
+      },
+      "formula": "res.status(429).json({ success: false, message: \"Try again later\" });",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountRoutes.ts#L21",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/auth/accountRoutes.ts",
+        "line": 21,
+        "column": 52
+      }
+    },
+    {
+      "id": "m1.apps.backend.auth.accountRoutes.8",
+      "concept": "accountRouter · literal 503",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 503,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.auth.accountRoutes.8"
+        ]
+      },
+      "formula": "res.status(503).json({ success: false, message: \"Account service unavailable\" });",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountRoutes.ts#L22",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/auth/accountRoutes.ts",
+        "line": 22,
+        "column": 26
+      }
+    },
+    {
+      "id": "m1.apps.backend.auth.accountRoutes.9",
+      "concept": "body.password · literal 1",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.auth.accountRoutes.9"
+        ]
+      },
+      "formula": "password: z.string().min(1).max(128)",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountRoutes.ts#L26",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/auth/accountRoutes.ts",
+        "line": 26,
+        "column": 89
+      }
+    },
+    {
+      "id": "m1.apps.backend.auth.accountRoutes.10",
+      "concept": "body.password · literal 128",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 128,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.auth.accountRoutes.10"
+        ]
+      },
+      "formula": "password: z.string().min(1).max(128)",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountRoutes.ts#L26",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/auth/accountRoutes.ts",
+        "line": 26,
+        "column": 96
+      }
+    },
+    {
+      "id": "m1.apps.backend.auth.accountRoutes.11",
+      "concept": "accountRouter · literal 400",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 400,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.auth.accountRoutes.11"
+        ]
+      },
+      "formula": "res.status(400).json({ success: false, message: \"Enter your current password and DELETE\" });",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountRoutes.ts#L27",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/auth/accountRoutes.ts",
+        "line": 27,
+        "column": 37
+      }
+    },
+    {
+      "id": "m1.apps.backend.auth.accountRoutes.12",
+      "concept": "accountRouter · literal 403",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 403,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.auth.accountRoutes.12"
+        ]
+      },
+      "formula": "res.status(403).json({ success: false, message: \"Re-authentication failed\" });",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountRoutes.ts#L29",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/auth/accountRoutes.ts",
+        "line": 29,
+        "column": 24
+      }
+    },
+    {
+      "id": "m1.apps.backend.auth.accountRoutes.13",
+      "concept": "query.after · literal 512",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 512,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.auth.accountRoutes.13"
+        ]
+      },
+      "formula": "after: z.string().max(512).optional()",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountRoutes.ts#L35",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/auth/accountRoutes.ts",
+        "line": 35,
+        "column": 85
+      }
+    },
+    {
+      "id": "m1.apps.backend.auth.accountRoutes.14",
+      "concept": "accountRouter · literal 400",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 400,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.auth.accountRoutes.14"
+        ]
+      },
+      "formula": "res.status(400).json({ success: false, message: \"Choose an export section\" });",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountRoutes.ts#L36",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/auth/accountRoutes.ts",
+        "line": 36,
+        "column": 38
+      }
+    },
+    {
+      "id": "m1.apps.backend.auth.accountRoutes.15",
+      "concept": "accountRouter.id · literal 1",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.auth.accountRoutes.15"
+        ]
+      },
+      "formula": "id: z.string().min(1).max(128)",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountRoutes.ts#L39",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/auth/accountRoutes.ts",
+        "line": 39,
+        "column": 51
+      }
+    },
+    {
+      "id": "m1.apps.backend.auth.accountRoutes.16",
+      "concept": "accountRouter.id · literal 128",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 128,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.auth.accountRoutes.16"
+        ]
+      },
+      "formula": "id: z.string().min(1).max(128)",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountRoutes.ts#L39",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/auth/accountRoutes.ts",
+        "line": 39,
+        "column": 58
+      }
+    },
+    {
+      "id": "m1.apps.backend.auth.accountRoutes.17",
+      "concept": "accountRouter · literal 400",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 400,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.auth.accountRoutes.17"
+        ]
+      },
+      "formula": "res.status(400).json({ success: false, message: \"Invalid export cursor\" });",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountRoutes.ts#L41",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/auth/accountRoutes.ts",
+        "line": 41,
+        "column": 26
+      }
+    },
+    {
+      "id": "m1.apps.backend.auth.createAuth.1",
+      "concept": "createAuth.hooks.before · literal 254",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 254,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.auth.createAuth.1"
+        ]
+      },
+      "formula": "if (typeof ctx.body?.email !== \"string\" || ctx.body.email.length > 254) throw new APIError(\"BAD_REQUEST\", { message: \"Enter a valid email\" });",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/createAuth.ts#L51",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/auth/createAuth.ts",
+        "line": 51,
+        "column": 76
+      }
+    },
+    {
       "id": "m1.apps.backend.auth.credentials.1",
       "concept": "identifierSignIn · literal 254",
       "modelVersion": "1",
@@ -3654,24 +5211,24 @@
       }
     },
     {
-      "id": "m1.apps.backend.auth.httpSecurity.1",
-      "concept": "checkOrigin · literal 403",
+      "id": "m1.apps.backend.auth.email.1",
+      "concept": "response.signal · literal 5000",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
       "quantity": {
         "kind": "known",
-        "value": 403,
+        "value": 5000,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.auth.httpSecurity.1"
+          "m1.apps.backend.auth.email.1"
         ]
       },
-      "formula": "res.status(403).json({ success: false, message: \"Request origin is not permitted\" });",
+      "formula": "signal: AbortSignal.timeout(5000)",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/httpSecurity.ts#L9",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/email.ts#L15",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -3684,13 +5241,193 @@
       "freeMode": "conditional",
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
-        "file": "apps/backend/auth/httpSecurity.ts",
-        "line": 9,
-        "column": 16
+        "file": "apps/backend/auth/email.ts",
+        "line": 15,
+        "column": 37
       }
     },
     {
-      "id": "m1.apps.backend.auth.httpSecurity.2",
+      "id": "m1.apps.backend.auth.email.2",
+      "concept": "day · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.auth.email.2"
+        ]
+      },
+      "formula": "const date = this.now().toISOString().replace(/[:-]|\\.\\d{3}/g, \"\"), day = date.slice(0, 8);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/email.ts#L35",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/auth/email.ts",
+        "line": 35,
+        "column": 92
+      }
+    },
+    {
+      "id": "m1.apps.backend.auth.email.3",
+      "concept": "day · literal 8",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 8,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.auth.email.3"
+        ]
+      },
+      "formula": "const date = this.now().toISOString().replace(/[:-]|\\.\\d{3}/g, \"\"), day = date.slice(0, 8);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/email.ts#L35",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/auth/email.ts",
+        "line": 35,
+        "column": 95
+      }
+    },
+    {
+      "id": "m1.apps.backend.auth.email.4",
+      "concept": "response.signal · literal 5000",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 5000,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.auth.email.4"
+        ]
+      },
+      "formula": "signal: AbortSignal.timeout(5000)",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/email.ts#L44",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/auth/email.ts",
+        "line": 44,
+        "column": 37
+      }
+    },
+    {
+      "id": "m1.apps.backend.auth.email.5",
+      "concept": "pending · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.auth.email.5"
+        ]
+      },
+      "formula": "let pending = 0;",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/email.ts#L76",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/auth/email.ts",
+        "line": 76,
+        "column": 17
+      }
+    },
+    {
+      "id": "m1.apps.backend.auth.email.6",
+      "concept": "emailDispatcher · literal 32",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 32,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.auth.email.6"
+        ]
+      },
+      "formula": "if (pending >= 32) { failed(); return; }",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/email.ts#L78",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/auth/email.ts",
+        "line": 78,
+        "column": 20
+      }
+    },
+    {
+      "id": "m1.apps.backend.auth.httpSecurity.1",
       "concept": "requireSession · literal 401",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
@@ -3699,7 +5436,7 @@
         "value": 401,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.auth.httpSecurity.2"
+          "m1.apps.backend.auth.httpSecurity.1"
         ]
       },
       "formula": "res.status(401).json({ success: false, message: \"Sign in to continue\" });",
@@ -3707,7 +5444,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/httpSecurity.ts#L18",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/httpSecurity.ts#L11",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -3721,8 +5458,44 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/auth/httpSecurity.ts",
-        "line": 18,
+        "line": 11,
         "column": 16
+      }
+    },
+    {
+      "id": "m1.apps.backend.auth.origin.1",
+      "concept": "createOriginCheck · literal 403",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 403,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.auth.origin.1"
+        ]
+      },
+      "formula": "res.status(403).json({ success: false, message: \"Request origin is not permitted\" });",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/origin.ts#L8",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/auth/origin.ts",
+        "line": 8,
+        "column": 18
       }
     },
     {
@@ -3743,7 +5516,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/settings.ts#L11",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/settings.ts#L14",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -3757,8 +5530,260 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/auth/settings.ts",
-        "line": 11,
+        "line": 14,
         "column": 66
+      }
+    },
+    {
+      "id": "m1.apps.backend.auth.turnstile.1",
+      "concept": "turnstile.ts · literal 2048",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 2048,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.auth.turnstile.1"
+        ]
+      },
+      "formula": "if (!token || token.length > 2048) return false;",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/turnstile.ts#L6",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/auth/turnstile.ts",
+        "line": 6,
+        "column": 34
+      }
+    },
+    {
+      "id": "m1.apps.backend.auth.turnstile.2",
+      "concept": "response.signal · literal 5000",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 5000,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.auth.turnstile.2"
+        ]
+      },
+      "formula": "signal: AbortSignal.timeout(5000)",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/turnstile.ts#L10",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/auth/turnstile.ts",
+        "line": 10,
+        "column": 37
+      }
+    },
+    {
+      "id": "m1.apps.backend.auth.verification.1",
+      "concept": "EMAIL_TOKEN_SECONDS · literal 1800",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1800,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.auth.verification.1"
+        ]
+      },
+      "formula": "export const EMAIL_TOKEN_SECONDS = 1800;",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/verification.ts#L5",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/auth/verification.ts",
+        "line": 5,
+        "column": 36
+      }
+    },
+    {
+      "id": "m1.apps.backend.auth.verification.2",
+      "concept": "expiresAt · literal 1000",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1000,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.auth.verification.2"
+        ]
+      },
+      "formula": "const hash = verificationHash(token), expiresAt = new Date(Date.now() + EMAIL_TOKEN_SECONDS * 1000);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/verification.ts#L9",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/auth/verification.ts",
+        "line": 9,
+        "column": 97
+      }
+    },
+    {
+      "id": "m1.apps.backend.auth.verification.3",
+      "concept": "registerVerification · literal 1",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.auth.verification.3"
+        ]
+      },
+      "formula": "if (rows.length !== 1) throw Error(\"Account unavailable\");",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/verification.ts#L21",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/auth/verification.ts",
+        "line": 21,
+        "column": 23
+      }
+    },
+    {
+      "id": "m1.apps.backend.auth.verification.4",
+      "concept": "consumeVerification · literal 4096",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 4096,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.auth.verification.4"
+        ]
+      },
+      "formula": "if (!token || token.length > 4096) return false;",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/verification.ts#L24",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/auth/verification.ts",
+        "line": 24,
+        "column": 32
+      }
+    },
+    {
+      "id": "m1.apps.backend.auth.verification.5",
+      "concept": "consumeVerification · literal 1",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.auth.verification.5"
+        ]
+      },
+      "formula": "return result.count === 1;",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/verification.ts#L28",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/auth/verification.ts",
+        "line": 28,
+        "column": 27
       }
     },
     {
@@ -40335,7 +42360,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/index.ts#L24",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/index.ts#L26",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -40349,7 +42374,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/index.ts",
-        "line": 24,
+        "line": 26,
         "column": 59
       }
     },
@@ -40371,7 +42396,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/index.ts#L26",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/index.ts#L28",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -40385,7 +42410,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/index.ts",
-        "line": 26,
+        "line": 28,
         "column": 82
       }
     },
@@ -40407,7 +42432,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/index.ts#L32",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/index.ts#L34",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -40421,7 +42446,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/index.ts",
-        "line": 32,
+        "line": 34,
         "column": 31
       }
     },
@@ -40443,7 +42468,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/index.ts#L32",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/index.ts#L34",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -40457,24 +42482,24 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/index.ts",
-        "line": 32,
+        "line": 34,
         "column": 37
       }
     },
     {
       "id": "m1.apps.backend.index.5",
-      "concept": "index.ts · literal 415",
+      "concept": "index.ts · literal 400",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
       "quantity": {
         "kind": "known",
-        "value": 415,
+        "value": 400,
         "unit": "code-number",
         "provenance": [
           "m1.apps.backend.index.5"
         ]
       },
-      "formula": "res.status(415).json({ success: false, message: \"Use JSON or form data\" });",
+      "formula": "res.status(400).json({ success: false });",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
@@ -40494,28 +42519,28 @@
       "location": {
         "file": "apps/backend/index.ts",
         "line": 44,
-        "column": 18
+        "column": 71
       }
     },
     {
       "id": "m1.apps.backend.index.6",
-      "concept": "index.ts · literal 404",
+      "concept": "index.ts · literal 415",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
       "quantity": {
         "kind": "known",
-        "value": 404,
+        "value": 415,
         "unit": "code-number",
         "provenance": [
           "m1.apps.backend.index.6"
         ]
       },
-      "formula": "app.use((_req, res) => res.status(404).json({ success: false, message: \"Resource not found\" }));",
+      "formula": "res.status(415).json({ success: false, message: \"Use JSON or form data\" });",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/index.ts#L61",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/index.ts#L57",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -40529,7 +42554,43 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/index.ts",
-        "line": 61,
+        "line": 57,
+        "column": 18
+      }
+    },
+    {
+      "id": "m1.apps.backend.index.7",
+      "concept": "index.ts · literal 404",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 404,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.index.7"
+        ]
+      },
+      "formula": "app.use((_req, res) => res.status(404).json({ success: false, message: \"Resource not found\" }));",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/index.ts#L75",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/index.ts",
+        "line": 75,
         "column": 35
       }
     },
@@ -53278,6 +55339,654 @@
       }
     },
     {
+      "id": "m1.apps.backend.release.accountSchema.1",
+      "concept": "bodies · literal 1",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.release.accountSchema.1"
+        ]
+      },
+      "formula": "const bodies = new Map([...source.matchAll(/CREATE FUNCTION (\\w+)\\(\\) RETURNS trigger LANGUAGE plpgsql AS \\$\\$([\\s\\S]*?)\\$\\$/g)] .map(m => [m[1], m[2]!.replaceAll(\"\\r\\n\", \"\\n\").trim()]));",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/accountSchema.ts#L7",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/release/accountSchema.ts",
+        "line": 7,
+        "column": 18
+      }
+    },
+    {
+      "id": "m1.apps.backend.release.accountSchema.2",
+      "concept": "bodies · literal 2",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 2,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.release.accountSchema.2"
+        ]
+      },
+      "formula": "const bodies = new Map([...source.matchAll(/CREATE FUNCTION (\\w+)\\(\\) RETURNS trigger LANGUAGE plpgsql AS \\$\\$([\\s\\S]*?)\\$\\$/g)] .map(m => [m[1], m[2]!.replaceAll(\"\\r\\n\", \"\\n\").trim()]));",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/accountSchema.ts#L7",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/release/accountSchema.ts",
+        "line": 7,
+        "column": 24
+      }
+    },
+    {
+      "id": "m1.apps.backend.release.accountSchema.3",
+      "concept": "expected · literal 23",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 23,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.release.accountSchema.3"
+        ]
+      },
+      "formula": "const expected = [ [\"session_live_account\", \"Session\", \"require_live_account\", 23], [\"credential_live_account\", \"Account\", \"require_live_account\", 23], [\"design_live_account\", \"Infrastructure\", \"require_live_account\", 23], [\"deployment_live_account\", \"Deployment\", \"require_live_account\", 23], [\"model2_live_account\", \"InternalModel2Run\", \"require_live_account\", 7], [\"first_stack_live_account\", \"FirstStackRun\", \"require_live_account\", 7], [\"deleted_account_guard\", \"User\", \"protect_deleted_account\"",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/accountSchema.ts#L9",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/release/accountSchema.ts",
+        "line": 9,
+        "column": 65
+      }
+    },
+    {
+      "id": "m1.apps.backend.release.accountSchema.4",
+      "concept": "expected · literal 23",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 23,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.release.accountSchema.4"
+        ]
+      },
+      "formula": "const expected = [ [\"session_live_account\", \"Session\", \"require_live_account\", 23], [\"credential_live_account\", \"Account\", \"require_live_account\", 23], [\"design_live_account\", \"Infrastructure\", \"require_live_account\", 23], [\"deployment_live_account\", \"Deployment\", \"require_live_account\", 23], [\"model2_live_account\", \"InternalModel2Run\", \"require_live_account\", 7], [\"first_stack_live_account\", \"FirstStackRun\", \"require_live_account\", 7], [\"deleted_account_guard\", \"User\", \"protect_deleted_account\"",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/accountSchema.ts#L10",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/release/accountSchema.ts",
+        "line": 10,
+        "column": 68
+      }
+    },
+    {
+      "id": "m1.apps.backend.release.accountSchema.5",
+      "concept": "expected · literal 23",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 23,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.release.accountSchema.5"
+        ]
+      },
+      "formula": "const expected = [ [\"session_live_account\", \"Session\", \"require_live_account\", 23], [\"credential_live_account\", \"Account\", \"require_live_account\", 23], [\"design_live_account\", \"Infrastructure\", \"require_live_account\", 23], [\"deployment_live_account\", \"Deployment\", \"require_live_account\", 23], [\"model2_live_account\", \"InternalModel2Run\", \"require_live_account\", 7], [\"first_stack_live_account\", \"FirstStackRun\", \"require_live_account\", 7], [\"deleted_account_guard\", \"User\", \"protect_deleted_account\"",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/accountSchema.ts#L11",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/release/accountSchema.ts",
+        "line": 11,
+        "column": 71
+      }
+    },
+    {
+      "id": "m1.apps.backend.release.accountSchema.6",
+      "concept": "expected · literal 23",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 23,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.release.accountSchema.6"
+        ]
+      },
+      "formula": "const expected = [ [\"session_live_account\", \"Session\", \"require_live_account\", 23], [\"credential_live_account\", \"Account\", \"require_live_account\", 23], [\"design_live_account\", \"Infrastructure\", \"require_live_account\", 23], [\"deployment_live_account\", \"Deployment\", \"require_live_account\", 23], [\"model2_live_account\", \"InternalModel2Run\", \"require_live_account\", 7], [\"first_stack_live_account\", \"FirstStackRun\", \"require_live_account\", 7], [\"deleted_account_guard\", \"User\", \"protect_deleted_account\"",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/accountSchema.ts#L12",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/release/accountSchema.ts",
+        "line": 12,
+        "column": 71
+      }
+    },
+    {
+      "id": "m1.apps.backend.release.accountSchema.7",
+      "concept": "expected · literal 7",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 7,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.release.accountSchema.7"
+        ]
+      },
+      "formula": "const expected = [ [\"session_live_account\", \"Session\", \"require_live_account\", 23], [\"credential_live_account\", \"Account\", \"require_live_account\", 23], [\"design_live_account\", \"Infrastructure\", \"require_live_account\", 23], [\"deployment_live_account\", \"Deployment\", \"require_live_account\", 23], [\"model2_live_account\", \"InternalModel2Run\", \"require_live_account\", 7], [\"first_stack_live_account\", \"FirstStackRun\", \"require_live_account\", 7], [\"deleted_account_guard\", \"User\", \"protect_deleted_account\"",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/accountSchema.ts#L13",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/release/accountSchema.ts",
+        "line": 13,
+        "column": 74
+      }
+    },
+    {
+      "id": "m1.apps.backend.release.accountSchema.8",
+      "concept": "expected · literal 7",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 7,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.release.accountSchema.8"
+        ]
+      },
+      "formula": "const expected = [ [\"session_live_account\", \"Session\", \"require_live_account\", 23], [\"credential_live_account\", \"Account\", \"require_live_account\", 23], [\"design_live_account\", \"Infrastructure\", \"require_live_account\", 23], [\"deployment_live_account\", \"Deployment\", \"require_live_account\", 23], [\"model2_live_account\", \"InternalModel2Run\", \"require_live_account\", 7], [\"first_stack_live_account\", \"FirstStackRun\", \"require_live_account\", 7], [\"deleted_account_guard\", \"User\", \"protect_deleted_account\"",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/accountSchema.ts#L14",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/release/accountSchema.ts",
+        "line": 14,
+        "column": 75
+      }
+    },
+    {
+      "id": "m1.apps.backend.release.accountSchema.9",
+      "concept": "expected · literal 19",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 19,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.release.accountSchema.9"
+        ]
+      },
+      "formula": "const expected = [ [\"session_live_account\", \"Session\", \"require_live_account\", 23], [\"credential_live_account\", \"Account\", \"require_live_account\", 23], [\"design_live_account\", \"Infrastructure\", \"require_live_account\", 23], [\"deployment_live_account\", \"Deployment\", \"require_live_account\", 23], [\"model2_live_account\", \"InternalModel2Run\", \"require_live_account\", 7], [\"first_stack_live_account\", \"FirstStackRun\", \"require_live_account\", 7], [\"deleted_account_guard\", \"User\", \"protect_deleted_account\"",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/accountSchema.ts#L15",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/release/accountSchema.ts",
+        "line": 15,
+        "column": 66
+      }
+    },
+    {
+      "id": "m1.apps.backend.release.accountSchema.10",
+      "concept": "rows · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.release.accountSchema.10"
+        ]
+      },
+      "formula": "const rows = await db.query(`SELECT t.tgname,t.tgtype,c.relname,p.proname,p.prosrc,pg_get_triggerdef(t.oid) AS definition FROM pg_trigger t JOIN pg_proc p ON p.oid=t.tgfoid JOIN pg_class c ON c.oid=t.tgrelid WHERE t.tgname=ANY($1) AND NOT t.tgisinternal AND t.tgenabled='O' AND t.tgqual IS NULL AND c.relnamespace='public'::regnamespace AND p.pronamespace='public'::regnamespace AND NOT p.prosecdef AND p.proconfig IS NULL AND p.prorettype='trigger'::regtype AND p.prolang=(SELECT oid FROM pg_languag",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/accountSchema.ts#L22",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/release/accountSchema.ts",
+        "line": 22,
+        "column": 98
+      }
+    },
+    {
+      "id": "m1.apps.backend.release.accountSchema.11",
+      "concept": "guard · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.release.accountSchema.11"
+        ]
+      },
+      "formula": "const guard = expected.find(r => r[0] === row.tgname);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/accountSchema.ts#L25",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/release/accountSchema.ts",
+        "line": 25,
+        "column": 40
+      }
+    },
+    {
+      "id": "m1.apps.backend.release.accountSchema.12",
+      "concept": "checkAccountSchema · literal 1",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.release.accountSchema.12"
+        ]
+      },
+      "formula": "if (!guard || row.relname !== guard[1] || row.proname !== guard[2] || row.tgtype !== guard[3] || guard[3] === 23 && !row.definition.includes(`BEFORE INSERT OR UPDATE OF \"${column}\" ON`) || row.prosrc.replaceAll(\"\\r\\n\", \"\\n\").trim() !== bodies.get(row.proname)) throw Error(\"Account persistence guard differs from release\");",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/accountSchema.ts#L27",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/release/accountSchema.ts",
+        "line": 27,
+        "column": 41
+      }
+    },
+    {
+      "id": "m1.apps.backend.release.accountSchema.13",
+      "concept": "checkAccountSchema · literal 2",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 2,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.release.accountSchema.13"
+        ]
+      },
+      "formula": "if (!guard || row.relname !== guard[1] || row.proname !== guard[2] || row.tgtype !== guard[3] || guard[3] === 23 && !row.definition.includes(`BEFORE INSERT OR UPDATE OF \"${column}\" ON`) || row.prosrc.replaceAll(\"\\r\\n\", \"\\n\").trim() !== bodies.get(row.proname)) throw Error(\"Account persistence guard differs from release\");",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/accountSchema.ts#L27",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/release/accountSchema.ts",
+        "line": 27,
+        "column": 69
+      }
+    },
+    {
+      "id": "m1.apps.backend.release.accountSchema.14",
+      "concept": "checkAccountSchema · literal 3",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 3,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.release.accountSchema.14"
+        ]
+      },
+      "formula": "if (!guard || row.relname !== guard[1] || row.proname !== guard[2] || row.tgtype !== guard[3] || guard[3] === 23 && !row.definition.includes(`BEFORE INSERT OR UPDATE OF \"${column}\" ON`) || row.prosrc.replaceAll(\"\\r\\n\", \"\\n\").trim() !== bodies.get(row.proname)) throw Error(\"Account persistence guard differs from release\");",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/accountSchema.ts#L27",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/release/accountSchema.ts",
+        "line": 27,
+        "column": 96
+      }
+    },
+    {
+      "id": "m1.apps.backend.release.accountSchema.15",
+      "concept": "checkAccountSchema · literal 3",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 3,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.release.accountSchema.15"
+        ]
+      },
+      "formula": "if (!guard || row.relname !== guard[1] || row.proname !== guard[2] || row.tgtype !== guard[3] || guard[3] === 23 && !row.definition.includes(`BEFORE INSERT OR UPDATE OF \"${column}\" ON`) || row.prosrc.replaceAll(\"\\r\\n\", \"\\n\").trim() !== bodies.get(row.proname)) throw Error(\"Account persistence guard differs from release\");",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/accountSchema.ts#L28",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/release/accountSchema.ts",
+        "line": 28,
+        "column": 13
+      }
+    },
+    {
+      "id": "m1.apps.backend.release.accountSchema.16",
+      "concept": "checkAccountSchema · literal 23",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 23,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.release.accountSchema.16"
+        ]
+      },
+      "formula": "if (!guard || row.relname !== guard[1] || row.proname !== guard[2] || row.tgtype !== guard[3] || guard[3] === 23 && !row.definition.includes(`BEFORE INSERT OR UPDATE OF \"${column}\" ON`) || row.prosrc.replaceAll(\"\\r\\n\", \"\\n\").trim() !== bodies.get(row.proname)) throw Error(\"Account persistence guard differs from release\");",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/accountSchema.ts#L28",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/release/accountSchema.ts",
+        "line": 28,
+        "column": 20
+      }
+    },
+    {
+      "id": "m1.apps.backend.release.accountSchema.17",
+      "concept": "checkAccountSchema · literal 1",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.release.accountSchema.17"
+        ]
+      },
+      "formula": "if (constraint.rowCount !== 1 || ![\"deletedAt\", \"Deleted account\", \"deleted[.]invalid\", \"username IS NULL\", \"image IS NULL\"].every(s => constraint.rows[0].definition.includes(s))) throw Error(\"Deleted profile constraint missing\");",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/accountSchema.ts#L33",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/release/accountSchema.ts",
+        "line": 33,
+        "column": 31
+      }
+    },
+    {
+      "id": "m1.apps.backend.release.accountSchema.18",
+      "concept": "checkAccountSchema · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.release.accountSchema.18"
+        ]
+      },
+      "formula": "if (constraint.rowCount !== 1 || ![\"deletedAt\", \"Deleted account\", \"deleted[.]invalid\", \"username IS NULL\", \"image IS NULL\"].every(s => constraint.rows[0].definition.includes(s))) throw Error(\"Deleted profile constraint missing\");",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/accountSchema.ts#L33",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/release/accountSchema.ts",
+        "line": 33,
+        "column": 155
+      }
+    },
+    {
       "id": "m1.apps.backend.release.cli.1",
       "concept": "command · literal 2",
       "modelVersion": "1",
@@ -54915,7 +57624,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L53",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L54",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -54929,7 +57638,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/release/migrations.ts",
-        "line": 53,
+        "line": 54,
         "column": 28
       }
     },
@@ -54951,7 +57660,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L70",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L71",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -54965,7 +57674,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/release/migrations.ts",
-        "line": 70,
+        "line": 71,
         "column": 30
       }
     },
@@ -54987,7 +57696,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L74",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L75",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -55001,7 +57710,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/release/migrations.ts",
-        "line": 74,
+        "line": 75,
         "column": 28
       }
     },
@@ -55023,7 +57732,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L74",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L75",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -55037,7 +57746,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/release/migrations.ts",
-        "line": 74,
+        "line": 75,
         "column": 38
       }
     },
@@ -55055,42 +57764,6 @@
         ]
       },
       "formula": "deployment_learning_insert: [\"verify_challenge_learning\", 7, 'BEFORE INSERT ON public.\"Deployment\"']",
-      "classification": "implementation-policy",
-      "confidence": "high",
-      "provenance": [
-        {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L76",
-          "supports": "implementation",
-          "detail": "Exact historical literal and source expression; not external validation."
-        }
-      ],
-      "assumptions": [
-        "This literal is not evidence of real infrastructure capacity or performance.",
-        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
-      ],
-      "researchedOn": "2026-10-15",
-      "freeMode": "conditional",
-      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
-      "location": {
-        "file": "apps/backend/release/migrations.ts",
-        "line": 76,
-        "column": 63
-      }
-    },
-    {
-      "id": "m1.apps.backend.release.migrations.6",
-      "concept": "expected.deployment_learning_guard · literal 19",
-      "modelVersion": "1",
-      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
-      "quantity": {
-        "kind": "known",
-        "value": 19,
-        "unit": "code-number",
-        "provenance": [
-          "m1.apps.backend.release.migrations.6"
-        ]
-      },
-      "formula": "deployment_learning_guard: [\"protect_challenge_learning\", 19, 'BEFORE UPDATE OF \"improvementSourceId\", \"learningHypothesis\", \"learningIntent\" ON public.\"Deployment\"']",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
@@ -55114,19 +57787,19 @@
       }
     },
     {
-      "id": "m1.apps.backend.release.migrations.7",
-      "concept": "expected.run_experiment_evidence_guard · literal 23",
+      "id": "m1.apps.backend.release.migrations.6",
+      "concept": "expected.deployment_learning_guard · literal 19",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
       "quantity": {
         "kind": "known",
-        "value": 23,
+        "value": 19,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.release.migrations.7"
+          "m1.apps.backend.release.migrations.6"
         ]
       },
-      "formula": "run_experiment_evidence_guard: [\"protect_experiment_evidence\", 23, 'BEFORE INSERT OR UPDATE ON public.\"RunEvidenceSample\"']",
+      "formula": "deployment_learning_guard: [\"protect_challenge_learning\", 19, 'BEFORE UPDATE OF \"improvementSourceId\", \"learningHypothesis\", \"learningIntent\" ON public.\"Deployment\"']",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
@@ -55146,6 +57819,42 @@
       "location": {
         "file": "apps/backend/release/migrations.ts",
         "line": 78,
+        "column": 63
+      }
+    },
+    {
+      "id": "m1.apps.backend.release.migrations.7",
+      "concept": "expected.run_experiment_evidence_guard · literal 23",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 23,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.release.migrations.7"
+        ]
+      },
+      "formula": "run_experiment_evidence_guard: [\"protect_experiment_evidence\", 23, 'BEFORE INSERT OR UPDATE ON public.\"RunEvidenceSample\"']",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L79",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/release/migrations.ts",
+        "line": 79,
         "column": 68
       }
     },
@@ -55167,7 +57876,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L79",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L80",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -55181,7 +57890,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/release/migrations.ts",
-        "line": 79,
+        "line": 80,
         "column": 64
       }
     },
@@ -55203,7 +57912,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L80",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L81",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -55217,7 +57926,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/release/migrations.ts",
-        "line": 80,
+        "line": 81,
         "column": 67
       }
     },
@@ -55239,7 +57948,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L81",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L82",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -55253,7 +57962,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/release/migrations.ts",
-        "line": 81,
+        "line": 82,
         "column": 50
       }
     },
@@ -55275,7 +57984,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L82",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L83",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -55289,7 +57998,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/release/migrations.ts",
-        "line": 82,
+        "line": 83,
         "column": 59
       }
     },
@@ -55311,7 +58020,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L83",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L84",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -55325,7 +58034,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/release/migrations.ts",
-        "line": 83,
+        "line": 84,
         "column": 57
       }
     },
@@ -55347,7 +58056,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L84",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L85",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -55361,7 +58070,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/release/migrations.ts",
-        "line": 84,
+        "line": 85,
         "column": 60
       }
     },
@@ -55379,42 +58088,6 @@
         ]
       },
       "formula": "run_action_evidence_guard: [\"protect_run_action\", 19, 'BEFORE UPDATE ON public.\"RunAction\"']",
-      "classification": "implementation-policy",
-      "confidence": "high",
-      "provenance": [
-        {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L85",
-          "supports": "implementation",
-          "detail": "Exact historical literal and source expression; not external validation."
-        }
-      ],
-      "assumptions": [
-        "This literal is not evidence of real infrastructure capacity or performance.",
-        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
-      ],
-      "researchedOn": "2026-10-15",
-      "freeMode": "conditional",
-      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
-      "location": {
-        "file": "apps/backend/release/migrations.ts",
-        "line": 85,
-        "column": 55
-      }
-    },
-    {
-      "id": "m1.apps.backend.release.migrations.15",
-      "concept": "expected.deployment_lineage_guard · literal 19",
-      "modelVersion": "1",
-      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
-      "quantity": {
-        "kind": "known",
-        "value": 19,
-        "unit": "code-number",
-        "provenance": [
-          "m1.apps.backend.release.migrations.15"
-        ]
-      },
-      "formula": "deployment_lineage_guard: [\"protect_run_lineage\", 19, 'BEFORE UPDATE OF \"sourceRunId\", \"rerunMode\", \"autoStopAtSimulatedSeconds\" ON public.\"Deployment\"']",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
@@ -55438,19 +58111,19 @@
       }
     },
     {
-      "id": "m1.apps.backend.release.migrations.16",
-      "concept": "expected.deployment_challenge_attempt · literal 7",
+      "id": "m1.apps.backend.release.migrations.15",
+      "concept": "expected.deployment_lineage_guard · literal 19",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
       "quantity": {
         "kind": "known",
-        "value": 7,
+        "value": 19,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.release.migrations.16"
+          "m1.apps.backend.release.migrations.15"
         ]
       },
-      "formula": "deployment_challenge_attempt: [\"verify_challenge_attempt\", 7, 'BEFORE INSERT ON public.\"Deployment\"']",
+      "formula": "deployment_lineage_guard: [\"protect_run_lineage\", 19, 'BEFORE UPDATE OF \"sourceRunId\", \"rerunMode\", \"autoStopAtSimulatedSeconds\" ON public.\"Deployment\"']",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
@@ -55470,6 +58143,42 @@
       "location": {
         "file": "apps/backend/release/migrations.ts",
         "line": 87,
+        "column": 55
+      }
+    },
+    {
+      "id": "m1.apps.backend.release.migrations.16",
+      "concept": "expected.deployment_challenge_attempt · literal 7",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 7,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.release.migrations.16"
+        ]
+      },
+      "formula": "deployment_challenge_attempt: [\"verify_challenge_attempt\", 7, 'BEFORE INSERT ON public.\"Deployment\"']",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L88",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/release/migrations.ts",
+        "line": 88,
         "column": 64
       }
     },
@@ -55491,7 +58200,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L88",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L89",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -55505,7 +58214,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/release/migrations.ts",
-        "line": 88,
+        "line": 89,
         "column": 63
       }
     },
@@ -55527,7 +58236,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L89",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L90",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -55541,7 +58250,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/release/migrations.ts",
-        "line": 89,
+        "line": 90,
         "column": 66
       }
     },
@@ -55563,7 +58272,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L90",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L91",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -55577,7 +58286,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/release/migrations.ts",
-        "line": 90,
+        "line": 91,
         "column": 64
       }
     },
@@ -55599,7 +58308,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L94",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L95",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -55613,7 +58322,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/release/migrations.ts",
-        "line": 94,
+        "line": 95,
         "column": 41
       }
     },
@@ -55635,7 +58344,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L94",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L95",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -55649,7 +58358,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/release/migrations.ts",
-        "line": 94,
+        "line": 95,
         "column": 68
       }
     },
@@ -55671,7 +58380,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L94",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L95",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -55685,7 +58394,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/release/migrations.ts",
-        "line": 94,
+        "line": 95,
         "column": 105
       }
     },
@@ -55707,7 +58416,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L116",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L118",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -55721,7 +58430,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/release/migrations.ts",
-        "line": 116,
+        "line": 118,
         "column": 20
       }
     },
@@ -55743,7 +58452,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L118",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L120",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -55757,7 +58466,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/release/migrations.ts",
-        "line": 118,
+        "line": 120,
         "column": 24
       }
     },
@@ -55779,7 +58488,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L120",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L122",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -55793,7 +58502,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/release/migrations.ts",
-        "line": 120,
+        "line": 122,
         "column": 21
       }
     },
@@ -55815,7 +58524,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L122",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L124",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -55829,7 +58538,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/release/migrations.ts",
-        "line": 122,
+        "line": 124,
         "column": 19
       }
     },
@@ -55851,7 +58560,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L126",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L128",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -55865,7 +58574,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/release/migrations.ts",
-        "line": 126,
+        "line": 128,
         "column": 21
       }
     },
@@ -55887,7 +58596,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L126",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L128",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -55901,7 +58610,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/release/migrations.ts",
-        "line": 126,
+        "line": 128,
         "column": 34
       }
     },
@@ -55923,7 +58632,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L134",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L136",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -55937,7 +58646,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/release/migrations.ts",
-        "line": 134,
+        "line": 136,
         "column": 19
       }
     },
@@ -55959,7 +58668,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L139",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L141",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -55973,7 +58682,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/release/migrations.ts",
-        "line": 139,
+        "line": 141,
         "column": 25
       }
     },
@@ -55995,7 +58704,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L141",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L143",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -56009,7 +58718,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/release/migrations.ts",
-        "line": 141,
+        "line": 143,
         "column": 21
       }
     },
@@ -56031,7 +58740,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L141",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L143",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -56045,7 +58754,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/release/migrations.ts",
-        "line": 141,
+        "line": 143,
         "column": 34
       }
     },
@@ -56067,7 +58776,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L142",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L144",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -56081,7 +58790,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/release/migrations.ts",
-        "line": 142,
+        "line": 144,
         "column": 30
       }
     },
@@ -56103,7 +58812,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L145",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L147",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -56117,7 +58826,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/release/migrations.ts",
-        "line": 145,
+        "line": 147,
         "column": 23
       }
     },
