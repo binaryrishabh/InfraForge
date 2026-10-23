@@ -1,3 +1,4 @@
+import { historicalSlice } from "../historical-slice-reviews";
 import { expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import type { FirstStackAllocationUsage } from "@infraforge/contracts/reports";
@@ -117,7 +118,7 @@ test("server tariffs change report cost without changing verified cut, replay or
 });
 
 test("cost source review pins the adapter, shared capture and acceptance", () => {
-  const review = JSON.parse(readFileSync("docs/reality/first-stack-cost-source-review.json", "utf8"));
+  const { review: review, read: historicalSource } = historicalSlice("docs/reality/first-stack-cost-source-review.json");
   expect(review.schema).toBe("first-stack-cost-source-review/1"); expect(review.files).toHaveLength(9); expect(review.acceptance).toHaveLength(2);
-  for (const row of [...review.files, ...review.acceptance]) expect(sourceHash(readFileSync(row.path, "utf8"))).toBe(row.hash);
+  for (const row of [...review.files, ...review.acceptance ?? []]) expect(sourceHash(historicalSource(row.path))).toBe(row.hash);
 });

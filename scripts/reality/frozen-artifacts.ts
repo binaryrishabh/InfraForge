@@ -9,7 +9,7 @@ export interface FrozenArtifactPin { bytes: number; sha256: string; gzipBytes: n
 export const decodedLimit = 32 * 1024 * 1024;
 export const compressedLimit = 16 * 1024 * 1024;
 const root = resolve(import.meta.dir, "../..");
-const manifestDigest = "d244cfea0503dea410e284cd54ebb8d7ae763230d2aa11cd00af5070ed4f74ea";
+const manifestDigest = "d4d6cb4bec38ab7be2c07b3478292c0e4173124d52158da458c25da29c564a75";
 const hash = (bytes: Buffer) => createHash("sha256").update(bytes).digest("hex");
 
 export function frozenArtifactPins(base = root): Record<string, FrozenArtifactPin> {

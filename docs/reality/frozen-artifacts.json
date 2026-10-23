@@ -32,10 +32,10 @@
       "gzipSha256": "9595547768d85140cdf95ac18563c4a947d34f48a6b8eba42bfd6951dfb4555c"
     },
     "docs/reality/historical-slice-snapshots.json": {
-      "bytes": 3460345,
-      "sha256": "d40481d7c6a41b6a308ca6eb16f8caaa14a57ff6ee43e6c1aa06aa02379e3210",
-      "gzipBytes": 564634,
-      "gzipSha256": "fc147b45c2eaacbcb010447ed2f3329d83c45789a1e9f167c33aee9ec46a01cb"
+      "bytes": 3511345,
+      "sha256": "d432feb3120fa211a33a16c4b653dfebf3422d829f5f45f18d23c096db6b5ebf",
+      "gzipBytes": 574906,
+      "gzipSha256": "1262a97c5c2bda46e9aa247ec643213a66c532ae8e92591f796cf78104d42ae0"
     }
   }
 }

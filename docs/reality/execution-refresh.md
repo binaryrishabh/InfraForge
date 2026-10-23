@@ -1,5 +1,9 @@
 # Refresh after an engine change
 
+See [historical evidence and current checks](identity-maintenance.md) for pin
+ownership. Do not update the fixed history anchor or unrelated historical slice
+receipts. Current capability and import reviews remain exact-hash security gates.
+
 Keep the full pre-change commit (`git rev-parse HEAD`) before editing. After source
 and compatibility review, use this single command from the repository root:
 
@@ -61,6 +65,10 @@ cycles, dangling references, unreachable nodes, index/byte/root drift, conflicti
 or cyclic mappings, duplicate commits, unsupported algorithms and snapshot coverage
 drift. Tooling expands every original descriptor and reruns its frozen source,
 closure and whole-lock reconstruction, then verifies current installed resolution.
+Invocation-local memoization shares verified syntax analysis and identical
+algorithm/runtime/snapshot reconstructions; every blob, snapshot inventory and
+row's descriptor/source remains authenticated. The independent history anchor
+also rejects deletion or reordering even if the storage pins are regenerated.
 The decoded pack has a 128 MiB limit and graph traversal has a depth limit.
 
 `transition-storage-migration.json` records all 42 pre-migration row digests

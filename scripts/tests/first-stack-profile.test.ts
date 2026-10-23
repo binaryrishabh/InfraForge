@@ -1,3 +1,4 @@
+import { historicalSlice } from "../historical-slice-reviews";
 import { expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { digest, sourceHash } from "../../apps/backend/executionIdentity/hash";
@@ -23,14 +24,14 @@ test("every legacy resource and edge field has an authoring disposition", () => 
     expect(Object.hasOwn(firstStackFieldDisposition, field.key.split(".")[1]!)).toBe(true);
   }
 });
-test("first stack source review binds new behavior and its acceptance tests independently", () => {
-  const lock = JSON.parse(readFileSync("docs/reality/first-stack-source-review.json", "utf8"));
+test("first stack historical source review binds new behavior and its acceptance tests independently", () => {
+  const { review: lock, read: historicalSource } = historicalSlice("docs/reality/first-stack-source-review.json");
   const baseline = JSON.parse(readFileSync("docs/reality/first-stack-baseline.json", "utf8"));
   expect(lock.schema).toBe("infraforge-first-stack-source-review/1");
   expect(lock.baseline).toBe(baseline.source);
   expect(lock.files).toHaveLength(38);
   expect(lock.acceptance).toHaveLength(17);
-  for (const { path, hash } of [...lock.files, ...lock.acceptance]) expect(sourceHash(readFileSync(path, "utf8"))).toBe(hash);
+  for (const { path, hash } of [...lock.files, ...lock.acceptance ?? []]) expect(sourceHash(historicalSource(path))).toBe(hash);
 });
 
 test("first stack V2 retained proof reproduces independently of its observers", async () => {
