@@ -1,3 +1,4 @@
+import { admitDeployment } from "../deployments/admission";
 import { requireCapability } from "../capabilities/policy";
 import { Router } from "express";
 import { randomUUID } from "node:crypto";
@@ -187,14 +188,13 @@ challengeRouter.post("/:id/attempts", async (req, res) => {
     const prediction = readPrediction(body.data.prediction, definition, runInputs.resources.map((r) => r.type));
     const experiment = recordedExperiment(definition);
     requireCapability(ownerId, { capability: "run.start", purpose: "learner", engine: "1", profile: runInputs.simulationModelVersion, durationSeconds: definition.evaluationSeconds });
-    const created = await tx.deployment.create({ data: { id: randomUUID(), infrastructureId: design.id, ownerId, runName: design.name,
+    const created = await admitDeployment(tx, { id: randomUUID(), infrastructureId: design.id, ownerId, runName: design.name,
       resourceCount: runInputs.resources.length, workloadProfile: runInputs.workloadProfile, seed: runInputs.seed, runInputs,
       liveTopology: { resources: runInputs.resources, connectionLines: runInputs.connectionLines },
       challengeId: definition.id, challengeVersion: definition.version, challengeSpecHash: hash,
       ...(improvement ? { improvementSourceId: improvement.sourceRunId, learningHypothesis: improvement.hypothesis, learningIntent: improvement.intent } : {}),
       challengePrediction: storedJson(prediction), predictionSubmittedAt: new Date(),
-      evaluationStopAtSimulatedSeconds: definition.evaluationSeconds, ...(experiment ? { challengeExperiment: storedJson(experiment) } : {}) } });
-    await tx.outbox.create({ data: { eventType: "deployment-created", payload: { deploymentId: created.id } } });
+      evaluationStopAtSimulatedSeconds: definition.evaluationSeconds, ...(experiment ? { challengeExperiment: storedJson(experiment) } : {}) });
     return created;
   });
   res.status(201).json({ success: true, createdDeployment: run });

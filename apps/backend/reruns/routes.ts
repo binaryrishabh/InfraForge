@@ -1,3 +1,4 @@
+import { admitDeployment } from "../deployments/admission";
 import { requireCapability } from "../capabilities/policy";
 import { Router } from "express";
 import { z } from "zod";
@@ -58,12 +59,11 @@ rerunRouter.post("/:id/reruns", async (req, res) => {
     const runInputs = mode === "exact" ? input : currentDesignInput(input, design!.layout);
     if (mode === "current-design" && body.data.expectedInputHash !== rerunInputHash(runInputs)) throw new ConflictError("The saved design changed since preview. Refresh the preview before running.");
     requireCapability(res.locals.userId, { capability: "run.start", purpose: "engineer", engine: "1", profile: runInputs.version === 2 ? runInputs.simulationModelVersion : null, durationSeconds: body.data.matchedStop ? options.matchedStop.target : null });
-    const created = await tx.deployment.create({ data: { infrastructureId: source.infrastructureId, ownerId: res.locals.userId,
+    const created = await admitDeployment(tx, { infrastructureId: source.infrastructureId, ownerId: res.locals.userId,
       runName: source.runName, sourceRunId: source.id, rerunMode: mode,
       autoStopAtSimulatedSeconds: body.data.matchedStop ? options.matchedStop.target : null,
       resourceCount: runInputs.resources.length, runInputs: storedJson(runInputs), workloadProfile: storedJson(runInputs.workloadProfile), seed: runInputs.seed,
-      liveTopology: storedJson({ resources: runInputs.resources, connectionLines: runInputs.connectionLines }) } });
-    await tx.outbox.create({ data: { eventType: "deployment-created", payload: { deploymentId: created.id } } });
+      liveTopology: storedJson({ resources: runInputs.resources, connectionLines: runInputs.connectionLines }) });
     return created;
   });
   res.status(201).json({ success: true, createdDeployment: run });

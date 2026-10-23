@@ -1,3 +1,4 @@
+import { operationalLimits, runtimeHorizon, lifetimeExpired } from "../deployments/operationalLimits";
 import { executionAllowance } from "../capabilities/policy";
 import { prisma } from "../lib/prisma";
 import { publishSimulationSnapshot } from "../infra/pubsub";
@@ -20,8 +21,10 @@ const registry = new Map<string, SimulationInstance>();
 const initializing = new Map<string, Promise<boolean>>();
 
 export function startSimulation(deploymentId: string): Promise<boolean> {
+  if (registry.has(deploymentId)) return Promise.resolve(true);
   const pending = initializing.get(deploymentId);
   if (pending) return pending;
+  if (registry.size + initializing.size >= operationalLimits.active) return Promise.reject(new Error("Simulator active capacity exceeded"));
   const initialization = initialize(deploymentId).finally(() => initializing.delete(deploymentId));
   initializing.set(deploymentId, initialization);
   return initialization;
@@ -31,6 +34,7 @@ async function initialize(deploymentId: string) {
   if (registry.has(deploymentId)) return true;
   const deployment = await prisma.deployment.findUnique({ where: { id: deploymentId } });
   if (!deployment || deployment.status !== "running" || !deployment.ownerId) return false;
+  if (registry.size >= operationalLimits.active) throw new Error("Simulator active capacity exceeded");
   const input = readRunInputs(deployment.runInputs);
   assertSimulationContext(input);
   const allowance = executionAllowance(deployment.autoStopAtSimulatedSeconds ?? deployment.evaluationStopAtSimulatedSeconds);
@@ -44,8 +48,9 @@ async function initialize(deploymentId: string) {
     lastCheckpointAt: Date.now(), accumulatedCostUsd: 0,
     topology: { resources: input.resources, connectionLines: input.connectionLines }, topologyRevision: 0,
     actions: new Map(), acknowledge: null, metricsComputedAt: null, metricsTopologyRevision: 0,
-    autoStopAtSimulatedSeconds: allowance.durationSeconds,
-    stopTrigger: deployment.evaluationStopAtSimulatedSeconds != null ? "challenge-evaluation" : "matched-stop", finishMatchedStop: null,
+    autoStopAtSimulatedSeconds: runtimeHorizon(allowance.durationSeconds),
+    stopTrigger: allowance.durationSeconds === null || allowance.durationSeconds > operationalLimits.runtimeSeconds
+      ? "operational-limit" : deployment.evaluationStopAtSimulatedSeconds != null ? "challenge-evaluation" : "matched-stop", finishMatchedStop: null,
     experiment: plan ? { plan, phase: "scheduled" } : null,
     evidence: deployment.challengeId ? createEvidenceBuffer(plan, deployment.evaluationStopAtSimulatedSeconds) : null };
   registry.set(deploymentId, instance);
@@ -91,6 +96,14 @@ async function advanceSimulations() {
       const deployment = await prisma.deployment.findUnique({ where: { id: deploymentId } });
       if (!deployment || deployment.status !== "live" || !deployment.runtimeActive) {
         await stopSimulation(deploymentId);
+        continue;
+      }
+      if (lifetimeExpired(deployment.createdAt)) {
+        // Includes time queued and paused, survives restarts, and ignores user activity.
+        // Finish through the existing evidence transaction before capacity is released.
+        instance.stopTrigger = "operational-limit";
+        await recordActionCompletions(instance);
+        await finishMatchedStop(deploymentId, instance, () => registry.delete(deploymentId));
         continue;
       }
       if (reachedMatchedStop(instance)) {

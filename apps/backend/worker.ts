@@ -1,5 +1,7 @@
+import { claimDeployment } from "./deployments/admission";
+import { operationalLimits } from "./deployments/operationalLimits";
 import { assertExecutionHost } from "./executionIdentity/launch";
-import { Queue, Worker } from "bullmq";
+import { Queue, Worker, DelayedError } from "bullmq";
 import { redis, commandRedis } from "./infra/redis";
 import { prisma } from "./lib/prisma";
 import { deploymentQueue } from "./infra/queue";
@@ -79,8 +81,8 @@ What setInterval is doing:- OUTBOX PROCESSOR
 Polls the outbox table every 5 seconds. Processes pending entries.
 Two delivery paths:
 
-1. "deployment-created"  →  BullMQ queue  →  Worker runs 3 real gates
-2. "chaos-injected"      →  Redis Pub/Sub  →  WebSocket clients directly
+1. "deployment-created"  â†’  BullMQ queue  â†’  Worker runs 3 real gates
+2. "chaos-injected"      â†’  Redis Pub/Sub  â†’  WebSocket clients directly
 
 Why: Chaos events don't need BullMQ processing. They just need real-time
 notification. Skipping BullMQ reduces latency and keeps the queue clean.
@@ -93,7 +95,12 @@ async function pollOutbox() {
   let deliveryFailed = false;
   try {
     await ownership.assertHeld();
-    // 1. FETCH — Get up to 10 unprocessed entries, ordered by fewest retries first
+    // The durable creation deadline also bounds undelivered and gating work.
+    // Live instances finish through the simulator's terminal capture transaction.
+    await prisma.deployment.updateMany({ where: { status: { in: ["pending", "running"] }, runtimeActive: false,
+      createdAt: { lte: new Date(Date.now() - operationalLimits.lifetimeSeconds * 1000) } },
+      data: { status: "failed" } });
+    // 1. FETCH â€” Get up to 10 unprocessed entries, ordered by fewest retries first
     const unprocessed = await prisma.outbox.findMany({
       where: {
         status: OutboxBullMQStatus.PENDING,
@@ -105,7 +112,7 @@ async function pollOutbox() {
       take: 10,
     });
 
-    // 2. PROCESS — Handle each entry
+    // 2. PROCESS â€” Handle each entry
     for (const entry of unprocessed) {
       try {
         // a. Publish based on event type i.e. it's a chaos or deployment?
@@ -190,10 +197,10 @@ async function pollOutbox() {
     lastOutboxSuccess = Date.now();
   } catch {
     deliveryFailed = true;
-    // Outer catch — errors here don't crash the poller. Next interval retries.
+    // Outer catch â€” errors here don't crash the poller. Next interval retries.
     outboxWarning();
   } finally {
-    // Adaptive scheduling — Neon relief (Challenge C3): busy = fast re-poll
+    // Adaptive scheduling â€” Neon relief (Challenge C3): busy = fast re-poll
     // (1s) so queued work moves quickly; idle = back off (5s) so the
     // serverless DB can auto-suspend. The error path keeps the idle
     // interval so a transient failure never becomes a hot polling loop.
@@ -260,23 +267,20 @@ const worker = new Worker(
       const { resources, connectionLines } = inputs;
 
       if (deploymentState.status !== DeploymentStatus.RUNNING) {
-        const claimed = await prisma.deployment.updateMany({
-          where: {
-            id: deploymentId,
-            status: DeploymentStatus.PENDING,
-          },
-          data: {
-            status: DeploymentStatus.RUNNING,
-          },
-        });
-        if (claimed.count !== 1) return;
+        const claimed = await prisma.$transaction(tx => claimDeployment(tx, deploymentId));
+        if (claimed === "busy") {
+          // Capacity waits do not spend processing retries or release the queued reservation.
+          await job.moveToDelayed(Date.now() + 5000, job.token);
+          throw new DelayedError();
+        }
+        if (claimed !== "claimed") return;
       }
 
       // Publish as current deployment has started running
       await publishDeploymentStarted(deploymentId, resources.length);
       console.log(`Deployment started ${deploymentId}`);
 
-      // 2. Three REAL gates — the nine-stage theater is retired (Decision 27/32).
+      // 2. Three REAL gates â€” the nine-stage theater is retired (Decision 27/32).
       // Each gate runs genuine logic, records one stage entry + one timeline
       // entry, and broadcasts its result. Zero sleeps, zero pretending.
       const runGate = async (
@@ -356,9 +360,9 @@ const worker = new Worker(
         return true;
       };
 
-      // a. Validate — real graph traversal + type-presence rules. This gate can
+      // a. Validate â€” real graph traversal + type-presence rules. This gate can
       // bite: a design error fails the deployment fast with a causal message.
-      // No throw — a design error is not a transient fault, so no BullMQ retries.
+      // No throw â€” a design error is not a transient fault, so no BullMQ retries.
       const readiness = validateDeploymentReadiness(resources, connectionLines);
       if (!readiness.valid) {
         const failureReason = readiness.errors.join("; ");
@@ -378,25 +382,25 @@ const worker = new Worker(
         if (failed.count !== 1) return;
         await publishDeploymentFailed(deploymentId, failureReason);
         console.log(
-          `Deployment ${deploymentId} FAILED at Validate — ${failureReason}`,
+          `Deployment ${deploymentId} FAILED at Validate â€” ${failureReason}`,
         );
         return;
       }
 
       const validatePassed = await runGate("Validate", () => ({
         status: "passed",
-        summary: `${resources.length} resources, ${connectionLines.length} connections — structurally ready`,
+        summary: `${resources.length} resources, ${connectionLines.length} connections â€” structurally ready`,
         details: { warnings: readiness.warnings },
       }));
       if (!validatePassed) return;
 
-      // b. SecurityScan — real rule checks (warn, don't block)
+      // b. SecurityScan â€” real rule checks (warn, don't block)
       const securityPassed = await runGate("SecurityScan", () =>
         runSecurityScan(resources),
       );
       if (!securityPassed) return;
 
-      // c. CostEstimate — real SKU-driven pricing math
+      // c. CostEstimate â€” real SKU-driven pricing math
       const costPassed = await runGate("CostEstimate", () =>
         runCostEstimation(resources),
       );
@@ -410,8 +414,11 @@ const worker = new Worker(
       await publishDeploymentLive(deploymentId, resources.length);
       console.log(`Deployment is LIVE ${deploymentId}`);
     } catch (err: any) {
+      if (err instanceof DelayedError) throw err;
       const status = deploymentFailureStatus(job.attemptsMade, job.opts.attempts);
-      const failure = await prisma.deployment.updateMany({
+      // Transient errors retain the previous pending/running reservation. In
+      // particular, an error before claim must never promote a queued job.
+      const failure = status === DeploymentStatus.FAILED ? await prisma.deployment.updateMany({
         where: {
           id: deploymentId,
           status: { in: [DeploymentStatus.PENDING, DeploymentStatus.RUNNING] },
@@ -419,7 +426,7 @@ const worker = new Worker(
         data: {
           status,
         },
-      });
+      }) : { count: 0 };
 
       if (failure.count > 0 && status === DeploymentStatus.FAILED) {
         await publishDeploymentFailed(

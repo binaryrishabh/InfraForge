@@ -19,7 +19,7 @@ export interface SimulationInstance {
   acknowledge: (() => Promise<void>) | null;
   // One stop horizon: a rerun's matched stop or a challenge's evaluation second.
   autoStopAtSimulatedSeconds?: number | null;
-  stopTrigger?: "matched-stop" | "challenge-evaluation";
+  stopTrigger?: "matched-stop" | "challenge-evaluation" | "operational-limit";
   finishMatchedStop?: (() => Promise<void>) | null;
   // A resilience attempt's one scheduled fault. Ticks never pass its second until it
   // is durably requested and applied, or durably recorded as failed.

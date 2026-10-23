@@ -26,6 +26,7 @@ import { checkPostFaultObservation } from "./postFaultChecks";
 import { checkInternalModel2 } from "./model2Checks";
 import { checkModel2Browser } from "./model2BrowserChecks";
 import { checkConnected } from "./connectedChecks";
+import { checkOperationalDeadline } from "./operationalChecks";
 
 type Event = Record<string, any>;
 type Snapshot = SimulationSnapshot & { publishType: string };
@@ -528,7 +529,8 @@ integration("local deployment lifecycle", () => {
 
       // Diagnostic checkpoints are preserved; they are not recovery state.
       phase("checkpoint");
-      await command(id, "speed", { speed: 60 });
+      // Keep the checkpoint below the finite freeform horizon during the real minute wait.
+      await command(id, "speed", { speed: 1 });
       const checkpoint = await until(async () => {
         const current = await deployment(id);
         return current.simulationState?.simulatedSeconds > 103 ? current.simulationState : undefined;
@@ -555,6 +557,9 @@ integration("local deployment lifecycle", () => {
       const staleRestart = await queue.add("deployment-created", { deploymentId: id, resources: [] }, { jobId: randomUUID() });
       await until(async () => (await staleRestart.getState()) === "completed" || undefined, "interrupted duplicate skip");
       evidence.restart = { status: (await deployment(id)).status, originalInputsPreserved: true, checkpointPreserved: true, snapshotsAfterRestart: 0 };
+
+      phase("paused operational deadline and durable capacity release");
+      evidence.operationalDeadline = await checkOperationalDeadline(harness, infrastructureIds, deploymentIds);
 
       const teardownFixture = await workerFixture("Teardown safety");
       const retiredId = teardownFixture.deploymentId;

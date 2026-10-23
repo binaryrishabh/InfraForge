@@ -1,3 +1,4 @@
+import { admitDeployment } from "../deployments/admission";
 import { authorizeCapability, requireCapability } from "../capabilities/policy";
 import { Router } from "express";
 import { randomUUID } from "node:crypto";
@@ -24,12 +25,11 @@ deploymentRouter.post("/", async (req, res) => {
     if (!infrastructure) throw new NotFoundError("Infrastructure not found");
     const runInputs = captureRunInputs(infrastructure.layout, workloadProfile);
     requireCapability(infrastructure.ownerId!, { capability: "run.start", purpose: "engineer", engine: "1", profile: runInputs.simulationModelVersion, durationSeconds: null });
-    const run = await tx.deployment.create({ data: { id: randomUUID(), infrastructureId,
+    const run = await admitDeployment(tx, { id: randomUUID(), infrastructureId,
       ownerId: infrastructure.ownerId, runName: infrastructure.name,
       resourceCount: runInputs.resources.length, workloadProfile: runInputs.workloadProfile,
       seed: runInputs.seed, runInputs,
-      liveTopology: { resources: runInputs.resources, connectionLines: runInputs.connectionLines } } });
-    await tx.outbox.create({ data: { eventType: "deployment-created", payload: { deploymentId: run.id } } });
+      liveTopology: { resources: runInputs.resources, connectionLines: runInputs.connectionLines } });
     return run;
   });
   res.status(201).json({ success: true, message: "Deployment created", createdDeployment });
