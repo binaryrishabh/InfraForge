@@ -2,7 +2,7 @@ DRAFT for owner and legal review. Not legal advice.
 
 # InfraForge Cookie Notice
 
-Effective date: [OWNER: C01 - Set the effective date and validate this inventory on the release domains.]
+Effective date: [OWNER: set at publication]
 
 Cookies are small values a browser sends back to a site. Local storage and session storage keep values in your browser too, but do not automatically send them as cookies. This draft describes the reviewed application and flags deployment-dependent items. The operator and privacy contact are identified in the [Privacy Policy](privacy-policy.md).
 
@@ -10,9 +10,13 @@ Cookies are small values a browser sends back to a site. Local storage and sessi
 
 InfraForge uses Better Auth database sessions. Its session-token cookie is needed for authenticated features. Cookies are host-only, HttpOnly, SameSite=Lax and scoped to `/`; HTTPS enables Secure cookies. The configured session has a fixed seven-day expiry without silent renewal; sign-out revokes the session. Browser cookie expiry and database-row deletion are separate. Cookie session caching is disabled. Sources: [auth configuration](../../apps/backend/auth/createAuth.ts), [settings](../../apps/backend/auth/settings.ts) and [authentication](../AUTHENTICATION.md).
 
-The pinned Better Auth 1.7.7 defaults name the token cookie `better-auth.session_token`, with `__Secure-` on HTTPS. The library also supports a `better-auth.dont_remember` marker for a nonpersistent sign-in; issuance depends on the request. OAuth, when configured, can need temporary state protection cookies. These conditional cookies must not be described as cookies set on every visit. See [pinned cookie implementation](https://github.com/better-auth/better-auth/blob/v1.7.7/packages/better-auth/src/cookies/index.ts) and [OAuth state implementation](https://github.com/better-auth/better-auth/blob/v1.7.7/packages/better-auth/src/state.ts).
+| Cookie (HTTPS name) | Purpose and duration |
+| --- | --- |
+| `__Secure-better-auth.session_token` | Signed session token; normally seven days (604,800 seconds); session-only when nonpersistent sign-in is requested |
+| `__Secure-better-auth.dont_remember` | Conditional nonpersistent-sign-in marker; browser session, no Max-Age |
+| `__Secure-better-auth.state` | Conditional Google/GitHub OAuth state protection using the configured database strategy; five minutes, cleared on callback |
 
-[OWNER: C02 - Capture actual Set-Cookie names, host, purpose, flags and lifetimes for credential sign-in/out and each enabled OAuth flow; confirm conditional dont_remember/state cookies and exclude disabled session-cache cookies. This source inventory is not a live-cookie audit.]
+All use the flags and API-host scope above. Local HTTP uses the same names without `__Secure-` and without Secure. Cookie caching and account-cookie storage are disabled, so `better-auth.session_data` and `better-auth.account_data` are not active storage. The alternative ten-minute `better-auth.oauth_state` cookie belongs to the unselected cookie-state strategy. These are source-derived defaults, not a live-domain audit. Sources: [pinned cookies](https://github.com/better-auth/better-auth/blob/v1.7.7/packages/better-auth/src/cookies/index.ts), [OAuth state](https://github.com/better-auth/better-auth/blob/v1.7.7/packages/better-auth/src/state.ts) and [database-strategy default](https://github.com/better-auth/better-auth/blob/v1.7.7/packages/better-auth/src/context/create-context.ts).
 
 ## Other storage in the application
 
@@ -22,23 +26,30 @@ The pinned Better Auth 1.7.7 defaults name the token cookie `better-auth.session
 | Local storage: `infraforge:preferences` | Theme and density | No automatic expiry. [Preferences](../../apps/web/src/app/preferences.ts) |
 | Local storage: `infraforge:palette-rail` | Palette display preference | No automatic expiry. [Workspace](../../apps/web/src/features/canvas/components/designer/DesignWorkspace.tsx) |
 | Local storage: `infraforge:hints:<challengeId>:v<version>` | Number of hints revealed in this browser | No automatic expiry; key is not account-specific. [Hints](../../apps/web/src/features/challenges/components/HintReveal.tsx) |
+| Local storage: `if-mode` | Marketing page light/dark appearance | No automatic expiry. [Marketing theme](../../apps/web/marketing/sections/site.mjs) |
 | Session storage: `infraforge-model2-authoring/1:<owner>` | Internal authoring draft, review and last-run reference | Browser page-session lifetime; internal-feature access applies. [Authoring draft](../../apps/web/src/features/internalModel2/draft.ts) |
 | Session storage: `infraforge-object-restart/1:<owner>` | Internal lesson draft and review | Browser page-session lifetime; internal-feature access applies. [Lesson draft](../../apps/web/src/features/internalLessons/lessonDraft.ts) |
+
+Legacy local-storage keys `infraforge_auth_registry`, `infraforge_auth_session` and `Infraforge_Infrastucture_Draft` are removed by [migration cleanup](../../apps/web/src/features/auth/drafts.ts); they are not new account storage.
 
 People using the same browser profile can inspect local storage. Avoid saving secrets in a draft. Browser session restoration can preserve session-storage data; clearing site data is the reliable way to remove local copies you no longer want.
 
 ## Analytics, providers and bot checks
 
-The web app mounts Vercel Analytics; its component does not wait for a consent choice. Vercel describes Web Analytics as cookie-free. Collection on a hosted deployment depends on its settings. Source: [app component](../../apps/web/src/app/App.tsx) and [Vercel privacy documentation](https://vercel.com/docs/analytics/privacy-policy). Cookie-free does not mean no disclosure or lawful-basis assessment is needed. The analytics decision is recorded in the Privacy Policy.
+We keep Vercel Web Analytics for cookieless aggregate page analytics. The [app component](../../apps/web/src/app/App.tsx) mounts it without a consent gate; hosted collection depends on Vercel project settings. It helps us understand page usage and improve the service. See [Vercel's privacy disclosure](https://vercel.com/docs/analytics/privacy-policy) and the [Privacy Policy](privacy-policy.md#logs-and-analytics).
 
-No Turnstile integration or SES/Resend email delivery is established by the reviewed application/auth source. If Cloudflare Turnstile is configured later, disclose the verified browser/network data and any storage it uses. Hosting or provider sign-in pages can have their own cookies; their presence and lifetimes require a deployment audit.
-
-[OWNER: C03 - Verify cookies/storage on both sites, hosting protection and enabled provider/bot-check flows; list any additions with purpose and duration, or remove unselected services from publication.]
+Cloudflare Turnstile applies only if enabled with its site key, secret and allowed hostnames. Its backend adapter validates signup tokens, and reset tokens when password reset is enabled, forwarding a client IP when supplied. The current frontend has no widget integration; the code does not establish an active Turnstile browser cookie or storage key. See [challenge configuration](../../apps/backend/auth/turnstile.ts) and [UI status](../AUTHENTICATION.md#export-and-ui-follow-up). SES or Resend, if enabled for email delivery, does not add a browser-storage key in this application. Optional Google/GitHub sign-in redirects to provider pages governed by their own notices; the table above covers InfraForge's state cookie.
 
 ## Your choices
 
 Use your browser's site-data settings to inspect or delete cookies, local storage and session storage for each frontend/API domain. Blocking sign-in cookies prevents authenticated features. Clearing drafts loses local unsaved work; clearing browser storage does not erase saved server records. Sign out before leaving a shared device and clear its site data if needed.
 
-[OWNER: C04 - Decide which storage needs prior consent in the served jurisdictions and provide working optional-storage controls, including rejection and withdrawal; do not claim a consent banner or analytics opt-out already exists.]
+Only essential cookies are otherwise used, so no consent banner is required for those essential cookies. To opt out of analytics, use browser privacy settings or tracking protection to block analytics requests, and enable Do Not Track where honoured. There is no dedicated analytics opt-out control or DNT check in the current app. Browser controls may also disable useful service features.
 
 For access, deletion or privacy complaints, use the contact and process in the [Privacy Policy](privacy-policy.md).
+
+Material changes to this notice will be announced at least 14 days in advance by email and a site banner.
+
+## Version history
+
+- 2026-10-23: Draft inventory checked against current source; launch analytics and storage choices recorded; not yet effective.

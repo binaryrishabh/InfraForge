@@ -2,13 +2,13 @@ DRAFT for owner and legal review. Not legal advice.
 
 # InfraForge Privacy Policy
 
-Effective date: [OWNER: P01 - Set the effective date and confirm this policy matches the release being published.]
+Effective date: [OWNER: set at publication]
 
 ## Who handles your data
 
-InfraForge is operated by an individual founder in India. The responsible data fiduciary/controller is [OWNER: P02 - Insert the same legal operator name and service address as the Terms.]. Privacy requests and grievances: [OWNER: P03 - Give the authorised grievance contact's name, role, monitored email and postal contact; identify a statutory officer only if applicable.].
+InfraForge is operated by an individual founder in India. The responsible operator is [OWNER: P02 - Insert the same legal name and trading name as the Terms.]. The service address and support/legal email are listed in the [Terms](terms-of-service.md#who-provides-the-service). Privacy requests and grievances: [OWNER: P03 - Give the grievance officer's name and contact details.].
 
-This draft covers InfraForge's Learning and Engineering service, subject to the domains and capabilities confirmed in the [Terms](terms-of-service.md). Technical descriptions below are based on this checkout, not inspection of a live database or hosting account.
+This policy covers InfraForge Learning and Engineering. Technical descriptions reflect this checkout; deployment-dependent services are identified below.
 
 ## Information used to provide the service
 
@@ -17,7 +17,7 @@ This draft covers InfraForge's Learning and Engineering service, subject to the 
 | Account profile | User ID, name, optional username, email, verification flag, optional image and creation/update dates | Identify your account and associate your work with it |
 | Sign-in records | Password hash for credential accounts; provider/account identifiers and optional OAuth tokens, token expiry and scope when provider sign-in is configured | Authenticate you and maintain your chosen sign-in method |
 | Sessions | Session token, expiry, timestamps and optional IP address and browser user-agent | Keep you signed in and check access |
-| Verification records | Identifier, value and expiry fields exist in the schema | Support authentication verification records; this table alone does not establish a working email-verification or reset service |
+| Verification records | Reset records and a hash-only verification-token ledger with expiry and redemption status | Verify email and support password recovery when enabled |
 | Designs and runs | Names, layouts, ownership identifiers, workload/input data, seeds, actions, predictions, learning hypotheses, evidence, results and timestamps; some internal runs include access-grant reasons and submission identifiers | Save work, show history, compare results and verify submissions |
 
 Sources: [account and run models](../../apps/backend/prisma/schema.prisma), [authentication](../AUTHENTICATION.md), [auth setup](../../apps/backend/auth/createAuth.ts) and [submission admission](../../apps/backend/firstStack/admission.ts). Optional database fields describe possible storage, not proof every record contains them. Passwords use salted scrypt; configured OAuth tokens are encrypted by Better Auth. Do not put real cloud secrets or another person's personal information into design names, workload recordings or notes.
@@ -32,68 +32,72 @@ Your browser also stores drafts, preferences and hint progress. Some drafts surv
 
 ## Sign-in, verification and reset
 
-Username/email/password sign-in is enabled. Google and GitHub are optional and appear only when configured. Provider information depends on the selected provider and its permissions. Automatic account linking is disabled. Email/password registration currently leaves email unverified; email verification is not required. This checkout does not configure verification-email or password-reset delivery, so this notice does not promise working email links. Sources: [authentication](../AUTHENTICATION.md) and [auth settings](../../apps/backend/auth/settings.ts).
+Username/email/password sign-in is enabled. Google and GitHub are optional and appear only when configured. Automatic account linking is disabled. Account essentials default to disabled; configuring an email provider alone does not enable them. When enabled with real SES or Resend delivery, credential signup requires email verification before sign-in. Verification does not automatically sign you in. Verification and reset links expire after 30 minutes and are single-use. Resetting a password revokes all sessions. Expired or already used links require a new email request. Delivery is bounded and asynchronous, so failed or dropped mail may require resending.
 
-[OWNER: P04 - Reconcile the intended new deletion, pseudonymisation, email-verification and password-reset implementation with the release; document exact data affected, delivery provider, expiry and user steps before promising those features.]
+These APIs and typed clients are implemented; verification, recovery, deletion, export and Turnstile user interfaces remain pending. We do not promise that in-app controls are already available. Sources: [authentication](../AUTHENTICATION.md), [configuration](../../apps/backend/auth/createAuth.ts), [token ledger](../../apps/backend/auth/verification.ts) and [deployment defaults](../DEPLOYMENT.md#owner-checklist-optional-account-essentials).
 
 ## Logs and analytics
 
-Authentication logging is set to operational errors; the application authentication path does not log credential bodies. General unexpected-request handling emits a bounded operational warning. This is not a claim that hosting providers collect no access metadata. See [auth logging](../../apps/backend/auth/createAuth.ts), [credential handling](../AUTHENTICATION.md) and [request errors](../../apps/backend/utils/middleware.ts).
+The app records operational failures and worker lifecycle/status events, including deployment identifiers and validation-failure reasons. Authentication and email-delivery failures use fixed messages; unexpected HTTP failures use a bounded warning without request bodies or internal error details. The managed Nginx template disables access logging and discards error logs for both HTTP and HTTPS backend virtual hosts to avoid recording bearer links. Docker captures container stdout/stderr with its local logging driver, rotating at 10 MB per file and three files per container. These size limits do not implement a time limit. Host service journals and provider request metadata are separate operational records.
 
-Vercel Analytics is mounted in the web application without a consent gate in that component. Whether collection is active on a deployed site depends on deployment settings. Vercel describes Web Analytics as using no cookies. This is not a blanket claim that all infrastructure logs or analytics data are anonymous. Sources: [application mount](../../apps/web/src/app/App.tsx) and [Vercel documentation](https://vercel.com/docs/analytics/privacy-policy).
+Our operational log retention target is 30 days, with access restricted to authorised operators. Time-based cleanup and provider settings must support that target; this documentation change does not install them. Passwords, secrets, auth-link tokens and export bodies must not enter logs. Sources: [auth logger](../../apps/backend/auth/createAuth.ts), [email](../../apps/backend/auth/email.ts), [request errors](../../apps/backend/utils/middleware.ts), [worker](../../apps/backend/worker.ts), [Nginx](../../ops/nginx.conf.template) and [Docker logging](../../apps/backend/docker-compose.yml).
 
-[OWNER: P05 - Choose whether to keep Vercel Analytics, remove it or select another provider; confirm actual fields, purpose, retention, legal basis and any required prior opt-in and withdrawal controls across both sites.]
+We keep Vercel Web Analytics for cookieless aggregate page analytics to understand usage and improve the service. It is mounted in the [web app](../../apps/web/src/app/App.tsx); collection depends on Vercel project settings. Aggregate statistics include page visits, referrers, broad location, browser and device information. Vercel describes a visitor hash discarded after 24 hours; that is not a promise that all aggregate statistics expire after 24 hours. See [Vercel's disclosure](https://vercel.com/docs/analytics/privacy-policy).
 
-[OWNER: P06 - Inventory application, proxy, host and provider logs; specify collected metadata, access controls and retention/deletion periods. Do not apply backup expiry windows to logs.]
+Use browser privacy settings or tracking protection to block analytics requests; enable Do Not Track where honoured. The current app has no dedicated analytics opt-out control and does not implement a DNT check. Only essential cookies are otherwise used, so no consent banner is required for those essential cookies. See the [Cookie Notice](cookie-notice.md).
 
 ## Service providers and locations
 
-The deployment docs describe Neon PostgreSQL, AWS EC2 backend hosting and Vercel frontend hosting. Backups to AWS S3 require the separate installation described below. These providers handle the data needed for their roles; contracts and actual regions require owner verification. See [deployment](../DEPLOYMENT.md), [bootstrap](../PRODUCTION_BOOTSTRAP.md) and [backup operations](../operations/backup-alerts.md).
-
-| Provider | Role and data relevant to that role | Configuration condition |
+| Provider | Role and relevant data | Status or condition |
 | --- | --- | --- |
-| Neon | Database storage of account, session, design and run records | Confirm actual project, region and provider recovery-history settings |
-| AWS EC2 | Backend processing, including authenticated requests and server verification | Confirm host region, logging and operator access |
-| AWS S3 | Database backup copies, which can include personal data | Only if the documented backup installation is enabled |
-| Vercel | Frontend delivery and request metadata; Web Analytics if active | Confirm project settings and the analytics decision above |
-| AWS SES or Resend | Proposed transactional email delivery, including recipient address and message/link data | Neither is established as configured by the reviewed auth code; choose and verify before enabling |
-| Cloudflare Turnstile | Proposed bot check involving browser/network signals and a verification token | No integration found in the reviewed app/auth source; disclose actual handling before configuration |
-| Google or GitHub | Optional sign-in provider and authorised profile/account information | Only when that provider is configured and selected; the provider also has its own privacy terms |
+| Neon (PostgreSQL) | Account, session, design and run database | Database provider; project region and recovery-history window are not established by source |
+| AWS EC2, us-east-1 (United States) | Backend processing, authenticated requests and server execution | Hosting region supplied by the task brief; not a live-account audit |
+| AWS S3, planned in us-east-1 | Encrypted database backup copies containing database personal data | Planned; not yet installed in the new AWS account |
+| Vercel | Frontend delivery/request metadata and cookieless aggregate Web Analytics | Frontend and retained analytics provider; collection depends on project settings |
+| AWS SES | Recipient address and verification/reset message/link data | Only if selected and enabled with account essentials; region follows SES configuration |
+| Resend | Recipient address and verification/reset message/link data | Only if selected and enabled with account essentials |
+| Cloudflare Turnstile | Bot-check browser/network signals; server validation sends the token and, when supplied, client IP | Only if enabled by site key, secret and exact hostname settings; frontend widget is pending |
+| Google or GitHub | Authorised profile/account information for sign-in | Only if configured and selected by you; provider privacy terms also apply |
 
-[OWNER: P07 - Confirm the active provider list, regions, subprocessors, agreements and international data flows; remove unselected options from the published notice.]
+Turnstile protects credential signup when configured, independently of the account-essentials flag, and password reset when that API is enabled. No configured Turnstile provider is inferred from the presence of its adapter.
 
-Data may be processed outside your country according to those choices. [OWNER: P08 - Specify actual destinations and applicable transfer safeguards, including EU transfer mechanisms and how to obtain a copy; check Indian transfer restrictions. Do not assert adequacy, SCCs or India-only storage without evidence.]
+Data is processed in the United States for the specified AWS hosting and may be processed internationally through Neon, Vercel and any enabled providers. We do not claim India-only storage, a particular Neon region, an adequacy decision or signed transfer safeguards without evidence. Contact the privacy/grievance email for information about applicable destinations and safeguards. Sources and configuration limits are recorded in the [review register](README.md).
 
 ## Retention and deletion
 
-Sessions have fixed seven-day expiry and no silent renewal. Expiry ends validity; it is not evidence of automatic removal of every expired database row. See [authentication access rules](../AUTHENTICATION.md).
+| Data | Retention policy and implementation limits |
+| --- | --- |
+| Account profile and sign-in records | Until account deletion; the deletion transaction removes credentials, OAuth tokens and sessions and replaces the profile as described below |
+| Sessions | Fixed seven-day validity with no silent renewal; expiry is separate from database-row cleanup |
+| Reset and email-verification tokens | Expire after 30 minutes; the policy is to purge expired records. No scheduled expiry purge is implemented in the reviewed application; deletion removes user-linked reset/verification records and the verification ledger |
+| Designs, runs and evidence | Kept until account deletion; deletion scrubs saved designs but retains immutable historical run records under a disabled opaque owner ID |
+| Operational logs | 30-day retention target; Docker size rotation alone does not enforce this period |
+| Backups | Planned rolling 28-day backup policy once installed, with the recovery and deletion limits below |
 
-Deleting an inactive design leaves historical runs, which keep their own ownership records. User links on designs and runs include restrictive deletion relationships. The reviewed authentication configuration does not enable account deletion or define a pseudonymised retention workflow. We cannot promise that pressing sign-out, deleting a design or requesting closure automatically erases all records. Sources: [schema](../../apps/backend/prisma/schema.prisma), [auth configuration](../../apps/backend/auth/createAuth.ts) and [authentication access rules](../AUTHENTICATION.md).
+When enabled, deletion requires a signed-in session, your current password and typing `DELETE`. Finish or stop active runs first: pending, running, live or unresolved reserved work blocks deletion. OAuth-only users can first establish a password through mailbox recovery. Export before deletion, which revokes subsequent access.
 
-Ask the privacy contact for access, correction or erasure. [OWNER: P09 - Establish and publish a workable request process, identity checks, response deadlines and account-closure route; use a documented manual review until a verified self-service workflow exists.]
+Deletion removes sessions, credentials/OAuth tokens, user-linked reset/verification records, verification redemption records and internal access grants. It replaces your profile with a disabled account and a random unreachable `@deleted.invalid` address; clears username, image and verification status; and scrubs saved design names, layouts and legacy user identifiers. Opaque design and owner IDs remain for historical references.
 
-[OWNER: P10 - Set purpose-based retention periods for account data, verification records, designs, runs and evidence; define any necessary legal/security retention and the exact pseudonymisation procedure. Pseudonymised data remains personal data when it can still be linked to a person.]
+Run IDs, owner IDs, captured run names, immutable inputs, lineage, actions, samples, cuts and results remain unchanged. This is profile erasure and pseudonymisation, not complete erasure of arbitrary personal text in historical runs. Pseudonymised data may still be personal data. Re-registering with the same email or username cannot recover or adopt that history. Sign-out does not erase browser drafts; clear site data on shared devices. Sources: [deletion semantics](../AUTHENTICATION.md#deletion-and-retained-history), [transaction](../../apps/backend/auth/accountData.ts) and [account routes](../../apps/backend/auth/accountRoutes.ts).
 
-If installed, the backup runbook schedules daily copies and a weekly copy. S3 daily objects expire after 7 days and weekly objects after 28 days; lifecycle deletion is asynchronous. Older object versions expire one day after becoming noncurrent. The latest local successful copy stays until a replacement upload succeeds, so it has no guaranteed 28-day maximum. Neon's recovery history is a separate provider setting. These are documented settings, not proof that backups are installed or that all copies have already been erased. Source: [backup retention](../operations/backup-alerts.md).
+Backups are designed but not yet installed in the new AWS account. The plan is a daily `pg_dump` archive, encrypted at rest on encrypted host storage and in private S3 storage, targeting seven daily copies and four weekly copies. Daily S3 objects expire after seven days and weekly objects after 28 days; noncurrent versions expire after one day. Lifecycle deletion is asynchronous. The latest successful local copy remains until a replacement upload succeeds, so the current design does not guarantee a 28-day limit for that local copy. Neon point-in-time recovery (PITR)/restore history is a separate provider capability; its actual window must be checked in the project, not inferred from this backup plan. These are planned controls, not active independent backups. Deletion cannot instantly erase older backup copies; a restore must reapply account deletions before resumed service. Source: [backup design](../operations/backup-alerts.md).
 
-[OWNER: P11 - Confirm backup installation, Neon recovery retention, local-copy limits and deletion handling after restore; establish how erasure requests and legal holds affect all copies without promising instant backup erasure.]
+## Requests, choices and human review
 
-## Choices, consent and privacy rights
+Send access, correction, export, deletion, consent-withdrawal or grievance requests to the support/grievance email above. We will check identity before disclosing or changing account data, using proportionate checks tied to the account. Our response target is 30 days. In-app deletion and export will be available once enabled and their UI is ready; until then use email. The export API provides paginated records for your designs, runs, actions, samples, internal runs, lessons, cuts and results, excluding authentication secrets and other users' records.
 
-For India, the proposed process should explain each purpose before consent, allow withdrawal as easily as consent, and stop consent-based use when required. Applicable DPDP rights include access information, correction/completion, erasure, grievance redress and nomination. Use the grievance contact first; escalation to the Data Protection Board follows applicable law. These descriptions are subject to commencement and lawful retention exceptions. Sources: [DPDP Act, sections 5-6, 8 and 11-14](https://www.meity.gov.in/static/uploads/2024/06/2bf1f0e9f04e6fb4f8fef35e82c42aa5.pdf) and [Rules](https://www.meity.gov.in/static/uploads/2025/11/53450e6e5dc0bfa85ebd78686cadad39.pdf).
+Where applicable, you may request access, correction, erasure, restriction or portability, object to processing, withdraw consent and complain to the relevant privacy authority. The India request process also covers completion of account information, grievance redress and nomination where those rights apply; contact the grievance officer first. These statements do not claim that every provision of the DPDP framework is already in force. We use account and design data to provide the requested service, operational data to protect it and aggregate analytics to improve it. We handle purpose-specific consent and withdrawal where required; accepting terms is not blanket privacy consent. Withdrawal of processing necessary to provide an account may prevent continued account features. Legal review before publication must confirm jurisdiction-specific duties and any required transfer or representation arrangements.
 
-For EU visitors where GDPR applies, request access, correction, erasure, restriction or qualifying portability; object to legitimate-interest processing and withdraw consent without affecting earlier lawful processing. Complain to your competent supervisory authority. Contract may support account/run services, legitimate interests security, consent optional analytics, and legal obligations required retention, but each basis must be assessed. Sources: [GDPR Articles 6, 12-22 and 77](https://eur-lex.europa.eu/eli/reg/2016/679/).
+Scores are practice feedback about submitted designs, not employment, credit or other consequential decisions about a person. No certificates are offered at launch. Request human review through the support email in the Terms.
 
-[OWNER: P12 - Confirm purposes and lawful bases, consent wording and records, withdrawal route, rights-response procedure and any EU representative requirement. Terms acceptance is not blanket privacy consent.]
+## Age, security and changes
 
-Withdrawing necessary processing may mean account features can no longer be supplied. Optional analytics choices should not be a condition of core service access. The contact/process placeholders must be resolved before users are directed to them.
+InfraForge is for adults aged 18 or over only. We do not offer a child-consent service or claim that age verification is implemented. Contact the grievance email if you believe a child has supplied account data.
 
-Automated simulation scoring evaluates a submitted design. It does not establish an employment, credit or other legally significant decision about you. [OWNER: P13 - Confirm actual score/certificate uses, any consequential automated decisions and an appropriate human review route.]
+Access controls include password hashing, HttpOnly cookies, exact-origin and ownership checks, production HTTPS, SSH key-only release access with a pinned host fingerprint, protected Production approval, and operator-owned secrets in a mode-0600 file. Secrets must not be printed in logs. The release workflow uses key authentication; host-wide password-authentication settings are not established by source. These controls do not guarantee absolute security. Operators handle incidents and required notifications under applicable law. See [authentication](../AUTHENTICATION.md), [release workflow](../../.github/workflows/deploy.yml), [deployment approvals](../DEPLOYMENT.md) and [private configuration](../PRODUCTION_BOOTSTRAP.md).
 
-## Children, security and changes
+We will give at least 14 days' notice of material policy changes by email and a site banner before they take effect. We will obtain fresh consent where a changed purpose requires it.
 
-[OWNER: P14 - Approve the age policy and handling of child data; recommended initial scope is adults only. Do not claim age verification or parental-consent controls exist without testing them.]
+## Version history
 
-The reviewed configuration uses password hashing, HttpOnly session cookies, origin and ownership checks, and HTTPS requirements in production. These measures do not guarantee absolute security. See [authentication](../AUTHENTICATION.md). [OWNER: P15 - Confirm operational access controls and the incident response and legally required breach-notification procedure.]
-
-[OWNER: P16 - Choose policy-change notification and version-history arrangements; obtain fresh consent when a changed purpose legally requires it.]
+- 2026-10-23: Draft revised from current source and acting-owner launch decisions; not yet effective.
