@@ -5,6 +5,7 @@ import type { IsolationControl } from "./isolationConnection";
 import { firstStackContainerArguments, verifyFirstStackContainer, verifyFirstStackReady } from "./isolationContainer";
 import { FIRST_STACK_ISOLATION as limits, assertQualified, executorName, type HostQualification } from "./isolationPolicy";
 import { boundedLines, inputDigest, readIsolatedCut, type IsolatedCut } from "./isolationProtocol";
+import { readQualificationBaseline, readQualificationCanary, type QualificationBaseline } from "./qualificationBaseline";
 
 export interface IsolationRequest {
   mode: "execute" | "replay"; input: string; expected?: IsolatedCut;
@@ -41,10 +42,23 @@ export function probeFirstStackContainer(control: IsolationControl, configuratio
   if (activeEntrypoint() !== "scripts/first-stack-host/qualify.ts") throw Error("Host probes require the explicit offline qualification command");
   return contained(control, configuration, request, authority, signal);
 }
+// No user-supplied workload: only the canary authenticated by the protected full
+// rehearsal record. The caller holds the ordinary executor session lock.
+export async function checkFirstStackCanary(control: IsolationControl, baseline: QualificationBaseline,
+  fingerprint: string, canary: unknown, authority: IsolationAuthority, signal?: AbortSignal) {
+  readQualificationBaseline(baseline, { ...baseline, daemon: control.identity }, fingerprint);
+  const request = readQualificationCanary(canary, baseline);
+  const result = await contained(control, baseline, { mode: "canary", ...request }, authority, signal);
+  if (result.status !== "completed" || result.receipt.cleanup !== "removed" || result.replay?.kind !== "MatchesRecordedPrefix") {
+    throw Error("Live qualification canary failed; verification disabled");
+  }
+  return result.receipt;
+}
 async function contained(control: IsolationControl, configuration: Omit<IsolationConfiguration, "qualification">,
-  request: IsolationRequest | { mode: "probe"; input: string; expected?: never }, authority: IsolationAuthority, signal?: AbortSignal, name = executorName) {
+  request: IsolationRequest | { mode: "canary"; input: string; expected: IsolatedCut } | { mode: "probe"; input: string; expected?: never }, authority: IsolationAuthority, signal?: AbortSignal, name = executorName) {
   const inputHash = inputDigest(request.input);
-  if (request.mode === "replay") {
+  const replaying = request.mode === "replay" || request.mode === "canary";
+  if (replaying) {
     if (!request.expected) throw Error("Replay requires the original durable prefix");
     readIsolatedCut(request.expected, configuration.source, inputHash);
   } else if (!["execute", "probe"].includes(request.mode) || request.expected) throw Error("Invalid isolated request");
@@ -134,7 +148,7 @@ async function contained(control: IsolationControl, configuration: Omit<Isolatio
           rows.push(frame.text);
         } else if (frame.kind === "result" && request.mode === "execute" && !result && ["completed", "interrupted"].includes(frame.status)) {
           result = frame;
-        } else if (frame.kind === "replay" && request.mode === "replay" && replay === null &&
+        } else if (frame.kind === "replay" && replaying && replay === null &&
           ["MatchesRecordedPrefix", "Mismatch"].includes(frame.value?.kind) &&
           frame.value.inputHash === inputHash && frame.value.expected === request.expected?.fingerprint) {
           replay = frame.value;

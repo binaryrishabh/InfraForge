@@ -9,6 +9,7 @@ import { replayFirstStackPrefix } from "./isolationReplay";
 import { boundedLines, inputDigest, isolatedCut, type IsolatedInput } from "./isolationProtocol";
 import { FIRST_STACK_ISOLATION as limits } from "./isolationPolicy";
 import { boundedJson } from "@infraforge/simulation/internal-first-stack";
+import { isolationSelfCheck } from "./isolationSelfCheck";
 
 const input = boundedLines(process.stdin, limits.inputBytes, limits.inputBytes + 2 * 1024 * 1024)[Symbol.asyncIterator]();
 async function read() { const row = await input.next(); if (row.done) throw Error("Parent disconnected"); return row.value; }
@@ -26,12 +27,13 @@ await send({ kind: "ready", source: executionSource, enforcement: {
   status: readFileSync("/proc/self/status", "utf8"),
 } });
 const request = JSON.parse(await read());
-if (!["execute", "replay"].includes(request.mode) || request.source !== executionSource) throw Error("Unsupported child request/source");
+if (!["execute", "replay", "canary"].includes(request.mode) || request.source !== executionSource) throw Error("Unsupported child request/source");
 const serialized = await read(), inputHash = inputDigest(serialized);
 if (inputHash !== request.inputHash) throw Error("Immutable execution input changed");
 const data: IsolatedInput = JSON.parse(serialized);
 const prepared = prepareFirstStackExecution(data.owner, data.layout, data.candidate, data.recording, data.policy);
-if (request.mode === "replay") {
+if (request.mode === "replay" || request.mode === "canary") {
+  if (request.mode === "canary") isolationSelfCheck();
   await send({ kind: "replay", value: await replayFirstStackPrefix(prepared, request.expected, executionSource, inputHash) });
 } else {
   const result = await executeFirstStackBounded(prepared, { maxCpuUs: limits.cpuSeconds * 1_000_000, persist: async text => {

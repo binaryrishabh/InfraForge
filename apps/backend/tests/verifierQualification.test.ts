@@ -1,0 +1,225 @@
+import { expect, test } from "bun:test";
+import { hash } from "../firstStack/canonical";
+import { qualificationChecks, isolationPolicyHash, assertQualified } from "../firstStack/isolationPolicy";
+import { readQualificationBaseline, readQualificationCanary, selfCheckIntervalMs, selfCheckLeaseMs, type QualificationBaseline } from "../firstStack/qualificationBaseline";
+import { createLiveQualification } from "../firstStack/verifierQualification";
+import { createHostFingerprintReader, type FingerprintHost } from "../firstStack/qualificationFingerprint";
+import { renewBetweenJobs } from "../firstStack/verifierRenewal";
+import type { IsolationConfiguration } from "../firstStack/isolationRunner";
+import { submissionFixture } from "./submissionFixture";
+import { assertVerifierProductionResponsive } from "../firstStack/verifierProductionProbe";
+import { assertIsolationSelfCheck } from "../firstStack/isolationSelfCheck";
+import { inputDigest } from "../firstStack/isolationProtocol";
+
+function fixture() {
+  let now = Date.now(), fingerprint = "d".repeat(64), canaryFailed = false, headroom = true;
+  const baseline: QualificationBaseline = { schema: "first-stack-baseline/2", target: "ec2-c7i-flex.large",
+    image: `sha256:${"b".repeat(64)}`, source: "a".repeat(64), daemon: "c".repeat(64),
+    policy: isolationPolicyHash, checkedAt: new Date(now - 30 * 86400000).toISOString(),
+    fingerprint, canary: "e".repeat(64), capacity: 1, qualified: true,
+    checks: Object.fromEntries(qualificationChecks.map(key => [key, true])) as QualificationBaseline["checks"] };
+  const configuration: IsolationConfiguration = { image: baseline.image, source: baseline.source, qualification: null };
+  const control = { identity: baseline.daemon, assertIdentity: async () => {},
+    run: async (_args: string[]) => JSON.stringify([{ Id: baseline.image, Os: "linux" }]), attach: async () => { throw Error("No Docker"); } };
+  const dependencies = { load: async () => baseline as unknown, fingerprint: async () => fingerprint,
+    now: () => now, headroom: () => { if (!headroom) throw Error("headroom"); },
+    canary: async () => { if (canaryFailed) throw Error("canary failed"); } };
+  return { baseline, control, configuration, dependencies,
+    live: createLiveQualification(configuration, control, dependencies),
+    time: (value: number) => { now = value; }, drift: () => { fingerprint = "f".repeat(64); },
+    fail: () => { canaryFailed = true; }, lowMemory: () => { headroom = false; }, now };
+}
+
+test("old full evidence is reusable only through a fresh short live lease", async () => {
+  const f = fixture();
+  expect(readQualificationBaseline(f.baseline, f.baseline, f.baseline.fingerprint)).toEqual(f.baseline);
+  expect(() => assertQualified(f.baseline as any, f.baseline)).toThrow();
+  await f.live.renew();
+  expect(f.configuration.qualification).not.toBeNull();
+  expect(f.live.due()).toBe(false);
+  f.time(f.now + selfCheckIntervalMs); expect(f.live.due()).toBe(true);
+  const expires = f.configuration.qualification!.expiresAt;
+  await f.live.refresh(); expect(f.configuration.qualification!.expiresAt).toBe(expires);
+  f.time(f.now + selfCheckLeaseMs);
+  await expect(f.live.refresh()).rejects.toThrow("expired");
+  expect(f.configuration.qualification).toBeNull();
+});
+
+test("every retained behavior and identity gate remains mandatory", () => {
+  const f = fixture(), read = (value: unknown) => readQualificationBaseline(value, f.baseline, f.baseline.fingerprint);
+  for (const key of qualificationChecks) {
+    expect(() => read({ ...f.baseline, checks: { ...f.baseline.checks, [key]: false } })).toThrow();
+    const checks = { ...f.baseline.checks }; delete (checks as any)[key];
+    expect(() => read({ ...f.baseline, checks })).toThrow();
+  }
+  for (const change of [{ schema: "first-stack-host/1" }, { target: "ci-linux" }, { qualified: false },
+    { capacity: 2 }, { policy: "0".repeat(64) }, { fingerprint: "0".repeat(64) },
+    { image: `sha256:${"0".repeat(64)}` }, { source: "0".repeat(64) }, { daemon: "0".repeat(64) },
+    { checkedAt: new Date(Date.now() + 60000).toISOString() }, { expiresAt: "extended" }]) {
+    expect(() => read({ ...f.baseline, ...change })).toThrow();
+  }
+});
+
+test("startup needs a canary, and failures latch closed even after inputs are restored", async () => {
+  const fresh = fixture(); await expect(fresh.live.refresh()).rejects.toThrow("missing");
+  for (const cause of ["drift", "canary", "memory", "record", "clock"] as const) {
+    const f = fixture(); await f.live.renew();
+    if (cause === "drift") f.drift();
+    if (cause === "canary") f.fail();
+    if (cause === "memory") f.lowMemory();
+    if (cause === "record") f.baseline.canary = "0".repeat(64);
+    if (cause === "clock") f.time(f.now - 1);
+    await expect(cause === "canary" ? f.live.renew() : f.live.refresh()).rejects.toThrow();
+    expect(f.configuration.qualification).toBeNull();
+    f.dependencies.fingerprint = async () => f.baseline.fingerprint;
+    f.dependencies.headroom = () => {}; f.dependencies.canary = async () => {}; f.time(f.now);
+    await expect(f.live.renew()).rejects.toThrow("operator restart");
+  }
+});
+
+test("drift or revocation during a successful canary cannot publish a lease", async () => {
+  for (const changed of [false, true]) {
+    const f = fixture(); f.dependencies.canary = async () => { if (changed) f.drift(); else f.live.revoke(); };
+    await expect(f.live.renew()).rejects.toThrow();
+    expect(f.configuration.qualification).toBeNull();
+  }
+  const f = fixture(); let release!: () => void;
+  f.dependencies.canary = () => new Promise<void>(yes => { release = yes; });
+  const pending = f.live.renew();
+  await Bun.sleep(1);
+  await expect(f.live.renew()).rejects.toThrow("already running");
+  release(); await pending;
+});
+
+test("canary data is pinned to the full rehearsal and a completed exact-source cut", async () => {
+  const f = fixture(), run = await submissionFixture();
+  const canary = { input: run.input, expected: run.request.browserCut };
+  f.baseline.canary = hash(canary);
+  expect(readQualificationCanary(canary, f.baseline).expected).toEqual(canary.expected);
+  for (const changed of [{ ...canary, input: "{}" }, { ...canary, expected: { ...canary.expected, source: "0".repeat(64) } },
+    { input: canary.input + " ", expected: { ...canary.expected, inputHash: inputDigest(canary.input + " ") } },
+    { ...canary, extra: true }]) expect(() => readQualificationCanary(changed, f.baseline)).toThrow();
+  const incomplete = structuredClone(canary); incomplete.expected.cut.completeness.horizonReached = false;
+  // Independently authenticate the changed record to exercise the cut/horizon guard.
+  const { cutFingerprint } = await import("../firstStack/isolationProtocol");
+  incomplete.expected.fingerprint = cutFingerprint(incomplete.expected.cut); f.baseline.canary = hash(incomplete);
+  expect(() => readQualificationCanary(incomplete, f.baseline)).toThrow("horizon");
+});
+
+test("renewal drains the whole job, never resumes on failure, and honors shutdown", async () => {
+  for (const failure of [false, true]) {
+    const events: string[] = []; let finish!: () => void;
+    const drained = new Promise<void>(yes => { finish = yes; });
+    const work = renewBetweenJobs({ pause: async () => { events.push("pause"); }, getActiveCount: async () => { await drained; return 0; },
+      resume: async () => { events.push("resume"); } }, async () => { events.push("canary"); if (failure) throw Error("failed"); }, () => false);
+    await Promise.resolve(); expect(events).toEqual(["pause"]); finish();
+    if (failure) await expect(work).rejects.toThrow("failed"); else await work;
+    expect(events).toEqual(failure ? ["pause", "canary"] : ["pause", "canary", "resume"]);
+  }
+  let stopping = true, probes = 0, resumes = 0;
+  const worker = { pause: async () => {}, getActiveCount: async () => 0, resume: async () => { resumes++; } };
+  await renewBetweenJobs(worker, async () => { probes++; }, () => stopping);
+  expect(probes).toBe(0); expect(resumes).toBe(0);
+  stopping = false;
+  await renewBetweenJobs(worker, async () => { probes++; stopping = true; }, () => stopping);
+  expect(probes).toBe(1); expect(resumes).toBe(0);
+  for (const count of [-1, 2, NaN]) {
+    let deadline = false;
+    const timer = setTimeout(() => { deadline = true; }, 5);
+    try {
+      await expect(renewBetweenJobs({ ...worker, getActiveCount: async () => count }, async () => {}, () => deadline))
+        .rejects.toThrow("capacity Unknown");
+    } finally { clearTimeout(timer); }
+  }
+});
+
+// Invented Linux facts exercise collection only. They are never host evidence.
+function hostFixture() {
+  const f = fixture(), content = new Map<string, string>(), stamps = new Map<string, bigint>();
+  const info: any = { OSType: "linux", CgroupVersion: "2", CgroupDriver: "systemd",
+    SecurityOptions: ["name=rootless"], NCPU: 2, MemTotal: 4 * 1024 ** 3,
+    KernelVersion: "fixture", Architecture: "fixture", DockerRootDir: "/fixture",
+    Runtimes: { runc: { path: "runc" } }, DefaultRuntime: "runc", Driver: "overlay2" };
+  const version = { Version: "fixture", Components: [{ Name: "runc", Version: "fixture" }] };
+  content.set("/sys/devices/virtual/dmi/id/product_name", "c7i-flex.large");
+  content.set("/proc/42/comm", "dockerd"); content.set("/proc/42/cmdline", "dockerd\0--config-file=/etc/infraforge/verifier/daemon.json\0");
+  content.set("/proc/42/stat", "42 (dockerd) " + Array(20).fill("1").join(" "));
+  content.set("/proc/42/cgroup", "0::/user.slice/user-1001.slice/service");
+  const host: FingerprintHost = { platform: "linux", uid: 1001, executable: "/usr/bin/bun",
+    read: async path => Buffer.from(content.get(path) ?? "fixture"), realpath: async path => path,
+    list: async () => ["42"], which: name => `/usr/bin/${name}`, cpuModels: () => ["fixture", "fixture"], memory: () => 4 * 1024 ** 3,
+    stat: async path => ({ isFile: () => true, uid: path === "/proc/42" ? 1001n : 0n,
+      size: 10n, mode: 0o100644n, ctimeNs: stamps.get(path) ?? 1n, mtimeNs: 1n, ino: 1n, dev: 1n }) as any };
+  f.control.run = async args => JSON.stringify(args[0] === "info" ? info : version);
+  return { ...f, host, info, version, content, stamps, read: createHostFingerprintReader(f.control, host) };
+}
+
+test("fingerprint observes reboot, kernel, runtime, binary, packages, daemon config and delegated limits", async () => {
+  for (const path of ["/proc/sys/kernel/random/boot_id", "/proc/version", "/proc/42/stat",
+    "/etc/infraforge/verifier/daemon.json", "/etc/systemd/system/first-stack-verifier.service",
+    "/var/lib/dpkg/status", "/usr/bin/bun", "/usr/bin/docker", "/usr/bin/dockerd", "/usr/bin/containerd", "/usr/bin/runc", "/usr/bin/rootlesskit",
+    "/sys/fs/cgroup/user.slice/cpu.max", "/sys/fs/cgroup/user.slice/user-1001.slice/service/memory.max"]) {
+    const f = hostFixture(), before = await f.read();
+    expect((await f.read()).fingerprint).toBe(before.fingerprint);
+    f.content.set(path, path === "/proc/42/stat" ? "42 (dockerd) " + Array(20).fill("2").join(" ") : "changed"); f.stamps.set(path, 2n);
+    expect((await f.read()).fingerprint).not.toBe(before.fingerprint);
+  }
+  const f = hostFixture(), before = await f.read(); f.version.Components[0]!.Version = "changed";
+  expect((await f.read()).fingerprint).not.toBe(before.fingerprint);
+});
+
+test("unknown or unsupported host and daemon facts fail closed", async () => {
+  for (const change of [{ OSType: "windows" }, { CgroupVersion: "1" }, { CgroupDriver: "cgroupfs" },
+    { SecurityOptions: [] }, { NCPU: 4 }, { MemTotal: 0 }, { MemTotal: 8 * 1024 ** 3 },
+    { Runtimes: null }, { DefaultRuntime: "other" }, { Driver: "other" },
+    { KernelVersion: undefined }, { Architecture: undefined }, { DockerRootDir: undefined }]) {
+    const f = hostFixture(); Object.assign(f.info, change); await expect(f.read()).rejects.toThrow();
+  }
+  for (const change of ["platform", "machine", "daemon", "command", "binary", "permissions", "cgroup", "read"] as const) {
+    const f = hostFixture();
+    if (change === "platform") f.host.platform = "win32";
+    if (change === "machine") f.content.set("/sys/devices/virtual/dmi/id/product_name", "other");
+    if (change === "daemon") f.host.list = async () => [];
+    if (change === "command") f.content.set("/proc/42/cmdline", "dockerd");
+    if (change === "binary") f.host.which = () => null;
+    if (change === "permissions") { const stat = f.host.stat; f.host.stat = async path => ({ ...await stat(path), mode: 0o100666n }) as any; }
+    if (change === "cgroup") f.content.set("/proc/42/cgroup", "0::/../outside");
+    if (change === "read") f.host.read = async () => { throw Error("unreadable"); };
+    await expect(f.read()).rejects.toThrow();
+  }
+  for (const change of [{ uid: 1001n }, { size: 257n * 1024n * 1024n }, { isFile: () => false }]) {
+    const f = hostFixture(), stat = f.host.stat;
+    f.host.stat = async path => ({ ...await stat(path), ...change }) as any;
+    await expect(f.read()).rejects.toThrow("identity file");
+  }
+  const moving = hostFixture(), stat = moving.host.stat; let reads = 0;
+  moving.host.stat = async path => ({ ...await stat(path), ctimeNs: BigInt(++reads) });
+  await expect(moving.read()).rejects.toThrow("during observation");
+  const malformed = hostFixture(); malformed.content.set("/proc/42/stat", "Unknown");
+  await expect(malformed.read()).rejects.toThrow("start identity Unknown");
+  const component = hostFixture(); component.version.Components[0]!.Version = "";
+  await expect(component.read()).rejects.toThrow("Runtime identity Unknown");
+});
+
+test("live production health requires successful responses from all three fixed probes", async () => {
+  const urls: string[] = [];
+  const request = (async (url: string, options: RequestInit) => {
+    urls.push(url); expect(options.redirect).toBe("error"); expect(options.signal).toBeDefined();
+    return new Response("ok");
+  }) as typeof fetch;
+  await assertVerifierProductionResponsive(request); expect(urls).toHaveLength(3);
+  for (const failedUrl of urls) {
+    await expect(assertVerifierProductionResponsive((async (url: string) =>
+      new Response("fixture", { status: url === failedUrl ? 503 : 200 })) as typeof fetch)).rejects.toThrow();
+  }
+  await expect(assertVerifierProductionResponsive((async () => { throw Error("timeout"); }) as unknown as typeof fetch)).rejects.toThrow("timeout");
+});
+
+test("live limit probes need actual denials, isolated network and increasing throttling counters", () => {
+  const value = { readonly: true, fdDenied: true, files: 120, interfaces: ["lo"],
+    before: { nr_throttled: 1, throttled_usec: 10 }, after: { nr_throttled: 2, throttled_usec: 20 } };
+  assertIsolationSelfCheck(value);
+  for (const change of [{ readonly: false }, { fdDenied: false }, { files: 128 }, { interfaces: ["lo", "eth0"] },
+    { after: { nr_throttled: 1, throttled_usec: 20 } }, { after: { nr_throttled: 2, throttled_usec: 10 } },
+    { after: {} as Record<string, number> }]) expect(() => assertIsolationSelfCheck({ ...value, ...change })).toThrow("limit probe");
+});

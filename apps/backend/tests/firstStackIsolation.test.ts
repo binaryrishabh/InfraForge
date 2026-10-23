@@ -1,10 +1,13 @@
 import { expect, test } from "bun:test";
 import { EventEmitter } from "node:events";
 import { PassThrough } from "node:stream";
-import { runFirstStackContainer } from "../firstStack/isolationRunner";
+import { checkFirstStackCanary, runFirstStackContainer } from "../firstStack/isolationRunner";
 import { boundedLines, inputDigest, isolatedCut } from "../firstStack/isolationProtocol";
 import { FIRST_STACK_ISOLATION as limits, assertQualified, isolationPolicyHash, qualificationChecks, type HostQualification } from "../firstStack/isolationPolicy";
 import { firstStackContainerArguments, verifyFirstStackContainer } from "../firstStack/isolationContainer";
+import { submissionFixture } from "./submissionFixture";
+import { hash } from "../firstStack/canonical";
+import type { QualificationBaseline } from "../firstStack/qualificationBaseline";
 
 // Software supervision fixtures. These invented kernel values are deliberately
 // never emitted by the actual-host producer or accepted as measured evidence.
@@ -56,6 +59,35 @@ test("missing, failed, stale, changed-host and capacity-two qualifications refus
     expect(f.creates).toBe(0);
   }
   expect(() => assertQualified(null, { image: "", source: "", daemon: "" })).toThrow("disabled");
+});
+
+test("canary uses the serial contained replay protocol and rejects mismatches, incomplete exit and cleanup failure", async () => {
+  const input = await submissionFixture();
+  for (const failure of ["none", "mismatch", "incomplete", "cleanup"] as const) {
+    const f = fixture(), expected = { ...input.request.browserCut, source: f.config.source };
+    f.child.stdin.resume();
+    const canary = { input: input.input, expected };
+    const { expiresAt: _expiry, ...old } = f.config.qualification;
+    const baseline: QualificationBaseline = { ...old, schema: "first-stack-baseline/2", target: "ec2-c7i-flex.large",
+      qualified: true, checks: old.checks as QualificationBaseline["checks"], fingerprint: "e".repeat(64), canary: hash(canary) };
+    const original = f.control.run;
+    if (failure === "cleanup") f.control.run = async (args: string[]) => {
+      if (args[0] === "rm") throw Error("cleanup failed"); return original(args);
+    };
+    const work = checkFirstStackCanary(f.control, baseline, baseline.fingerprint, canary, f.authority);
+    const observed = work.then(() => true, () => false);
+    await f.ready; await Bun.sleep(5); f.handshake();
+    f.send({ kind: "replay", value: { kind: failure === "mismatch" ? "Mismatch" : "MatchesRecordedPrefix",
+      inputHash: expected.inputHash, expected: expected.fingerprint } });
+    if (failure !== "incomplete") f.send({ kind: "done" });
+    f.value.State.Running = false; f.child.stdout.end();
+    await Bun.sleep(5); f.child.emit("close", 0);
+    expect(await observed).toBe(failure === "none");
+    expect(f.creates).toBe(1);
+  }
+  const f = fixture();
+  await expect(runFirstStackContainer(f.control, f.config, { mode: "canary", input: "{}" } as any, f.authority)).rejects.toThrow("product execution mode");
+  expect(f.creates).toBe(0);
 });
 test("atomic create conflict never removes or attaches the other executor", async () => {
   const f = fixture(), stop = new AbortController();

@@ -3,11 +3,17 @@ import { Pool } from "pg";
 import { createReadinessCache } from "../health/readinessCache";
 import { verifyWorkerSession, workerDatabaseUrl } from "../infra/workerConnection";
 import { IsolationConnection } from "./isolationConnection";
-import { refreshVerifierQualification, readProtectedJson } from "./verifierQualification";
+import { createLiveQualification, readProtectedJson } from "./verifierQualification";
 import { availabilityMaxAgeMs, engineAvailability, verifierAvailabilityKey } from "./verifierAvailability";
 import { startSubmissionQueue } from "./submissionQueue";
 import type { SubmissionVerifier } from "./submissionWorker";
 import { boundedVerifierDrain } from "./verifierDrain";
+import { createHostFingerprintReader, assertLiveHeadroom } from "./qualificationFingerprint";
+import { checkFirstStackCanary } from "./isolationRunner";
+import { withFirstStackOwnership } from "./isolationOwnership";
+import { acquireVerifierOwnership } from "./verifierOwnership";
+import { renewBetweenJobs } from "./verifierRenewal";
+import { assertVerifierProductionResponsive } from "./verifierProductionProbe";
 
 export interface VerifierSettings { enabled: boolean; image: string; endpoint: string; qualification: string }
 export function createVerifierLifecycle(settings: VerifierSettings, source: string,
@@ -34,6 +40,7 @@ async function launchVerifier(settings: VerifierSettings, source: string, env: R
   let stopping = false, dependencies = false, generation = 0, lastHealthy = 0;
   let publishing: Promise<unknown> = Promise.resolve();
   let deleting = false;
+  let maintenance = false, renewalFailed = false, renewal: Promise<void> | undefined;
   const invalidate = () => {
     generation++; dependencies = false; cache?.invalidate();
     // Serialize with publishing so a successful in-flight SET cannot follow this DELETE.
@@ -53,22 +60,51 @@ async function launchVerifier(settings: VerifierSettings, source: string, env: R
       isolation: { image: settings.image, source, qualification: null }, control,
       healthy: () => dependencies && Date.now() - lastHealthy < availabilityMaxAgeMs,
     };
-    const refresh = () => refreshVerifierQualification(configuration.isolation, control!,
-      () => readProtectedJson(settings.qualification));
-    await refresh();
+    const fingerprint = createHostFingerprintReader(control);
+    const qualification = createLiveQualification(configuration.isolation, control, {
+      load: () => readProtectedJson(settings.qualification),
+      fingerprint: async () => (await fingerprint()).fingerprint,
+      headroom: async () => { assertLiveHeadroom(); await assertVerifierProductionResponsive(); },
+      canary: async baseline => {
+        const canary = await readProtectedJson("/etc/infraforge/verifier/canary.json", 2 * 1024 * 1024);
+        await withFirstStackOwnership(databaseUrl, {
+          check: async db => { await db.query("SELECT 1"); },
+          commit: async () => { throw Error("Canary must never persist product data"); },
+        }, async (authority, signal) => {
+          await checkFirstStackCanary(control!, baseline, (await fingerprint()).fingerprint, canary, authority, signal);
+        });
+      },
+    });
+    // A second lifecycle cannot take a canary slot between another worker's jobs.
+    // Release this temporary session before the queue acquires its own lifecycle
+    // session. A competing startup in that gap makes queue startup refuse safely.
+    const startup = await acquireVerifierOwnership(databaseUrl, qualification.revoke);
+    try { await qualification.renew(); await startup.assertHeld(); }
+    finally { await startup.close(); }
     dependencies = true; lastHealthy = Date.now();
     queue = await startSubmissionQueue(pool, databaseUrl, producer, consumer, configuration,
       { enabled: false }, invalidate);
+    await queue.queue.resume();
     cache = createReadinessCache(async () => {
       const began = generation;
       try {
-        await refresh();
+        await qualification.refresh();
         await queue!.health(() => stopping);
         await pool.query("SELECT 1");
         if (await producer.ping() !== "PONG" || consumer.status !== "ready") throw Error("Redis unavailable");
         if (began !== generation) return { success: false };
         dependencies = true; lastHealthy = Date.now();
-        if (stopping) return { success: false };
+        if (!stopping && !maintenance && !renewalFailed && qualification.due()) {
+          maintenance = true;
+          publishing = publishing.catch(() => {}).then(() => producer.del(verifierAvailabilityKey)).catch(() => {});
+          // Do not block the one-second identity/dependency probe while draining
+          // or running the bounded canary. Active work retains its existing lease.
+          renewal = boundedVerifierDrain(renewBetweenJobs(queue!.queue,
+            () => qualification.renew(), () => stopping), () => { qualification.revoke(); invalidate(); })
+            .catch(() => { renewalFailed = true; qualification.revoke(); invalidate(); })
+            .finally(() => { maintenance = false; renewal = undefined; });
+        }
+        if (stopping || maintenance || renewalFailed) return { success: false };
         const checkedAt = Date.now();
         const snapshot = { image: settings.image, source, checkedAt,
           expiresAt: checkedAt + availabilityMaxAgeMs,
@@ -87,7 +123,7 @@ async function launchVerifier(settings: VerifierSettings, source: string, env: R
         const checkedAt = Date.now(), q = configuration.isolation.qualification;
         return engineAvailability(q ? { image: settings.image, source, checkedAt,
           expiresAt: checkedAt + availabilityMaxAgeMs, qualifiedUntil: Date.parse(q.expiresAt) } : null,
-        configuration.admission.engine, !stopping && dependencies && cache!.check().success);
+        configuration.admission.engine, !stopping && !maintenance && !renewalFailed && dependencies && cache!.check().success);
       },
       close: () => closing ??= boundedVerifierDrain((async () => {
         stopping = true; cache!.invalidate();
@@ -98,6 +134,7 @@ async function launchVerifier(settings: VerifierSettings, source: string, env: R
         await publishing;
         // Keep qualification/dependency probes running while the whole scored job drains.
         await draining;
+        await renewal;
         await cache!.close();
         await control!.close(); producer.disconnect(); consumer.disconnect(); await pool.end();
       })(), invalidate),

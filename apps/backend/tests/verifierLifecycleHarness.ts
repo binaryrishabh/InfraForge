@@ -6,6 +6,9 @@ import { EventEmitter } from "node:events";
 const events: string[] = [], connections: FakeRedis[] = [];
 let starts = 0, failDelete = false, probe!: () => Promise<{ success: boolean }>;
 let finish!: () => void, healthy = true, cacheInvalidations = 0;
+let renewalDue = false, renewals = 0, executionHealthy: (() => boolean) | undefined;
+let finishRenewal!: () => void;
+const renewalJob = new Promise<void>(resolve => { finishRenewal = resolve; });
 const job = new Promise<void>(resolve => { finish = resolve; });
 class FakeRedis extends EventEmitter {
   status = "ready";
@@ -30,13 +33,28 @@ mock.module("../firstStack/isolationConnection", () => ({ IsolationConnection: {
 } }));
 mock.module("../firstStack/verifierQualification", () => ({
   readProtectedJson: async () => ({}),
-  refreshVerifierQualification: async (configuration: any) => {
+  createLiveQualification: (configuration: any) => {
+    const refresh = async () => {
     configuration.qualification = { expiresAt: new Date(Date.now() + 60000).toISOString() };
+    };
+    return { refresh, renew: async () => { renewals++; renewalDue = false; await refresh(); }, revoke() {}, due: () => renewalDue };
   },
 }));
-mock.module("../firstStack/submissionQueue", () => ({ startSubmissionQueue: async () => {
+mock.module("../firstStack/qualificationFingerprint", () => ({
+  createHostFingerprintReader: () => async () => ({}), assertLiveHeadroom() {},
+}));
+mock.module("../firstStack/verifierOwnership", () => ({ acquireVerifierOwnership: async () => ({
+  assertHeld: async () => {}, close: async () => {},
+}) }));
+mock.module("../firstStack/isolationOwnership", () => ({ withFirstStackOwnership: async () => {} }));
+mock.module("../firstStack/isolationRunner", () => ({ checkFirstStackCanary: async () => {} }));
+mock.module("../firstStack/submissionQueue", () => ({ startSubmissionQueue: async (...args: any[]) => {
   starts++;
+  executionHealthy = args[4].healthy;
   return {
+    queue: { pause: async () => { events.push("renewal-pause"); },
+      getActiveCount: async () => { await renewalJob; return 0; },
+      resume: async () => { events.push("renewal-resume"); } },
     health: async () => { if (!healthy) throw Error("Queue unavailable"); },
     close: async () => { events.push("stop-claims"); await job; events.push("drained"); },
   };
@@ -66,6 +84,18 @@ assert.ok(cacheInvalidations > 0);
 healthy = false;
 assert.equal((await probe()).success, false);
 healthy = true;
+assert.equal((await probe()).success, true);
+
+renewalDue = true;
+assert.equal((await probe()).success, false);
+assert.equal(verifier.availability().available, false);
+assert.equal(executionHealthy!(), true); // Existing scored job keeps its lease.
+assert.equal(renewals, 1); // Startup only until the whole active job completes.
+assert.ok(events.includes("renewal-pause"));
+assert.equal((await probe()).success, false);
+finishRenewal(); await Bun.sleep(5);
+assert.equal(renewals, 2);
+assert.equal(events.at(-1), "renewal-resume");
 assert.equal((await probe()).success, true);
 
 // Redis loss must not defer stopping claims or abandon a still-running scored job.

@@ -3,7 +3,7 @@ import { resolve, join } from "node:path";
 import { freemem, totalmem, cpus, platform, release } from "node:os";
 import { Pool } from "pg";
 import { IsolationConnection } from "../../apps/backend/firstStack/isolationConnection";
-import { probeFirstStackContainer, type IsolationAuthority } from "../../apps/backend/firstStack/isolationRunner";
+import { checkFirstStackCanary, probeFirstStackContainer, type IsolationAuthority } from "../../apps/backend/firstStack/isolationRunner";
 import { FIRST_STACK_ISOLATION as limits, isolationDigest, isolationPolicyHash, qualificationChecks, type HostQualification } from "../../apps/backend/firstStack/isolationPolicy";
 import { executionSource } from "../../apps/backend/internalModel2/identity";
 import { firstStackCompileFixture } from "../fixtures/first-stack-compile";
@@ -12,6 +12,9 @@ import { topology } from "./topology";
 import { stressFixture } from "./fixture";
 import { orphanChild, orphanProof } from "./orphan";
 import { serialProof } from "./serial";
+import { createHostFingerprintReader } from "../../apps/backend/firstStack/qualificationFingerprint";
+import type { QualificationBaseline } from "../../apps/backend/firstStack/qualificationBaseline";
+import { hash } from "../../apps/backend/firstStack/canonical";
 
 const arg = (key: string) => process.argv.find(v => v.startsWith(`--${key}=`))?.slice(key.length + 3);
 if (arg("orphan-child")) { await orphanChild(arg("orphan-child")!); process.exit(0); }
@@ -24,6 +27,7 @@ if (!endpoint || !image || full && (!postgres || !redis) || !output || !["laptop
 // Output is new; never overwrite a previous failed or passing observation.
 await mkdir(output, { recursive: false });
 const control = await IsolationConnection.open(endpoint), started = Date.now();
+const fingerprint = createHostFingerprintReader(control);
 const report: any = { schema: "first-stack-host-evidence/1", startedAt: new Date().toISOString(), target,
   policy: limits, policyHash: isolationPolicyHash, image, source: executionSource, daemon: control.identity,
   host: { platform: platform(), kernel: release(), logicalCpus: cpus().length, memoryBytes: totalmem(), freeBytes: freemem() },
@@ -69,10 +73,11 @@ try {
   const info = JSON.parse(await control.run(["info", "--format", "{{json .}}"]));
   report.docker = { version: info.ServerVersion, kernel: info.KernelVersion, cpus: info.NCPU, memoryBytes: info.MemTotal, cgroup: info.CgroupVersion, driver: info.CgroupDriver };
   if (full && (platform() !== "linux" || info.NCPU !== 2 || info.MemTotal < 3.5 * 1024 ** 3 || info.MemTotal > 4.5 * 1024 ** 3 ||
-      await control.run(["ps", "--quiet"]))) throw Error("Full EC2 proof requires an idle Linux 2-vCPU/4-GiB host; no live deployment overlap");
+      await control.run(["ps", "--all", "--quiet"]))) throw Error("Full EC2 proof requires an empty Linux 2-vCPU/4-GiB host; no live deployment overlap");
   if (!full) {
     await serialProof(control, { image, source: executionSource }, report, output, fixtureImage, save);
   } else {
+  report.fingerprint = await fingerprint();
   stack = await topology(control, image, postgres!, redis!); report.topology = { images: { image, postgres, redis }, limits: stack.configured };
   db = new Pool({ connectionString: stack.databaseUrl, max: 3, connectionTimeoutMillis: 3000, query_timeout: 5000 });
   await db.query("CREATE TABLE first_stack_probe (id text primary key, sequence integer NOT NULL, cut jsonb NOT NULL)");
@@ -161,6 +166,21 @@ try {
     { minimumHostFreeBytes: Math.min(...allSamples.map(s => s.hostFreeBytes)), capacity: 1,
       daemonOverhead: "Included in whole-host available memory; not separately attributed. Docker Desktop VM and Windows measurements are distinct.",
       limits: "Proof topology <= 1.75 CPUs / 2688 MiB with one verifier; capacity remains one" });
+  if (qualificationChecks.every(key => report.checks[key] === true)) {
+    const canary = { input, expected: one.durablePrefix };
+    const baseline: QualificationBaseline = { schema: "first-stack-baseline/2", target: "ec2-c7i-flex.large",
+      image, source: executionSource, daemon: control.identity, policy: isolationPolicyHash, capacity: 1,
+      qualified: true, checkedAt: new Date().toISOString(), checks: report.checks,
+      fingerprint: report.fingerprint.fingerprint, canary: hash(canary) };
+    const current = await fingerprint();
+    if (current.fingerprint !== baseline.fingerprint) throw Error("Host identity changed during full qualification");
+    report.observations.canary = await withFirstStackOwnership(stack.databaseUrl, {
+      check: async client => { await client.query("SELECT 1"); }, commit: async () => { throw Error("Canary cannot write"); },
+    }, (authority, signal) => checkFirstStackCanary(control, baseline, current.fingerprint, canary, authority, signal));
+    if ((await fingerprint()).fingerprint !== baseline.fingerprint) throw Error("Host identity changed during canary");
+    report.baseline = baseline;
+    await writeFile(join(output, "canary.json"), JSON.stringify(canary, null, 2) + "\n");
+  }
   }
 } catch (error) {
   report.failure = error instanceof Error ? error.message : "Qualification failed";
@@ -171,8 +191,10 @@ try {
   await stack?.close();
   await control.close();
   report.finishedAt = new Date().toISOString(); report.elapsedMs = Date.now() - started;
-  const passed = full && qualificationChecks.every(key => report.checks[key] === true) && !report.failure;
-  const qualification: HostQualification = { schema: "first-stack-host/1", target: target as HostQualification["target"],
+  const passed = full && !!report.baseline && qualificationChecks.every(key => report.checks[key] === true) && !report.failure;
+  const qualification: HostQualification | QualificationBaseline = full
+    ? { ...report.baseline, schema: "first-stack-baseline/2", qualified: passed }
+    : { schema: "first-stack-host/1", target: target as HostQualification["target"],
     image, source: executionSource, daemon: report.daemon, policy: isolationPolicyHash, capacity: 1, qualified: passed,
     checkedAt: report.finishedAt, expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), checks: report.checks };
   const containmentPassed = qualificationChecks.filter(key => !["databaseLoss", "apiResponsive", "headroom"].includes(key)).every(key => report.checks[key] === true) && !report.failure;
