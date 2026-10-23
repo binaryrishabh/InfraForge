@@ -74,7 +74,7 @@ for (const path of ["docs/reality/finite-io-source-review.json", "docs/reality/f
 }
 writeFileSync("docs/reality/account-essentials-source-review.json", JSON.stringify({ schema: "account-essentials-source-review/1", baseline,
   scope: "Disabled-by-default account recovery/export/profile deletion; independent optional signup challenge; no engine behavior change or Model 2 activation",
-  files: [...modules, "apps/backend/package.json", "bun.lock", "apps/backend/prisma/schema.prisma", "apps/backend/prisma/migrations/20261022000000_account_essentials/migration.sql", ...generatedFiles]
+  files: [...modules, "apps/backend/package.json", "bun.lock", "apps/backend/prisma/schema.prisma", "apps/backend/prisma/migrations/20261023000000_account_essentials/migration.sql", ...generatedFiles]
     .map(path => ({ path, hash: sourceHash(read(path)) })),
   acceptance: [acceptance, "apps/backend/tests/accountEssentials.test.ts", "apps/backend/tests/integration/accountEssentials.integration.test.ts"]
     .map(path => ({ path, hash: sourceHash(read(path)) })),

@@ -2,7 +2,7 @@ import { readFile } from "node:fs/promises";
 import type { Client, Pool } from "pg";
 
 export async function checkAccountSchema(db: Pick<Client | Pool, "query">) {
-  const source = await readFile(new URL("../prisma/migrations/20261022000000_account_essentials/migration.sql", import.meta.url), "utf8");
+  const source = await readFile(new URL("../prisma/migrations/20261023000000_account_essentials/migration.sql", import.meta.url), "utf8");
   const bodies = new Map([...source.matchAll(/CREATE FUNCTION (\w+)\(\) RETURNS trigger LANGUAGE plpgsql AS \$\$([\s\S]*?)\$\$/g)]
     .map(m => [m[1], m[2]!.replaceAll("\r\n", "\n").trim()]));
   const expected = [

@@ -5,6 +5,7 @@ import { checkCredentialSchema } from "./credentialSchema";
 import { checkInternalModel2Schema } from "./model2Schema";
 import { checkLessonSchema } from "./lessonSchema";
 import { checkFirstStackSchema } from "./firstStackSchema";
+import { checkAccountSchema } from "./accountSchema";
 
 type Database = Pick<Client | Pool, "query">;
 export type Migration = { name: string; checksum: string; checksums: string[] };
@@ -13,7 +14,7 @@ const hash = (value: string) => createHash("sha256").update(value).digest("hex")
 const ADDITIVE_MIGRATIONS = new Set(["20261009000000_capture_run_inputs", "20261009010000_add_authentication",
   "20261013000000_reliable_run_evidence", "20261013010000_honest_reruns", "20261014000000_challenge_attempts",
   "20261015000000_challenge_versions_experiments", "20261016000000_experiment_evidence",
-  "20261017000000_credential_usernames", "20261018000000_challenge_learning", "20261019000000_internal_model2", "20261020000000_model2_lesson", "20261021000000_first_stack_submissions", "20261022000000_historical_replay"]);
+  "20261017000000_credential_usernames", "20261018000000_challenge_learning", "20261019000000_internal_model2", "20261020000000_model2_lesson", "20261021000000_first_stack_submissions", "20261022000000_historical_replay", "20261023000000_account_essentials"]);
 
 export async function migrationManifest(): Promise<Migration[]> {
   const directory = new URL("../prisma/migrations/", import.meta.url);
@@ -109,6 +110,7 @@ export async function checkSchemaGuards(db: Database) {
   await checkInternalModel2Schema(db);
   await checkLessonSchema(db);
   await checkFirstStackSchema(db);
+  await checkAccountSchema(db);
 }
 
 export async function assertReleaseIdle(db: Database) {
