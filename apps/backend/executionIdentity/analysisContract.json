@@ -103,7 +103,7 @@
       ]
     },
     "apps/backend/auth/accountData.ts": {
-      "hash": "38c97f06fd660e78d6cc1ca938471d1458487fe60c5bd06fcb6b78bd69ec8996",
+      "hash": "76e1c133a47314eea679d7f20ee8225e66cd40cd4689daf014c41d8c2c77e0be",
       "requests": [
         {
           "path": "node:crypto",
@@ -111,6 +111,10 @@
         },
         {
           "path": "../utils/errors",
+          "kind": "import-statement"
+        },
+        {
+          "path": "../firstStack/scoredChallenges/projection",
           "kind": "import-statement"
         },
         {

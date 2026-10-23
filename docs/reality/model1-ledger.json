@@ -27,8 +27,8 @@
     },
     {
       "file": "apps/backend/auth/accountData.ts",
-      "sha256": "38c97f06fd660e78d6cc1ca938471d1458487fe60c5bd06fcb6b78bd69ec8996",
-      "numericSites": 14
+      "sha256": "76e1c133a47314eea679d7f20ee8225e66cd40cd4689daf014c41d8c2c77e0be",
+      "numericSites": 16
     },
     {
       "file": "apps/backend/auth/accountPolicy.ts",
@@ -377,7 +377,7 @@
     },
     {
       "file": "apps/backend/executionIdentity/loading.ts",
-      "sha256": "ddd9d7c5097e0e38e9b8a553ed379d517aa7e953bb928b4f36afceb76f8b5a4a",
+      "sha256": "dc926c7dac30edc2ff863031197d2ecb7034e8e274c58e949822aaa19b9a16fb",
       "numericSites": 14
     },
     {
@@ -3608,7 +3608,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountData.ts#L12",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountData.ts#L13",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -3622,7 +3622,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/auth/accountData.ts",
-        "line": 12,
+        "line": 13,
         "column": 16
       }
     },
@@ -3644,7 +3644,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountData.ts#L12",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountData.ts#L13",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -3658,7 +3658,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/auth/accountData.ts",
-        "line": 12,
+        "line": 13,
         "column": 28
       }
     },
@@ -3680,7 +3680,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountData.ts#L12",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountData.ts#L13",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -3694,7 +3694,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/auth/accountData.ts",
-        "line": 12,
+        "line": 13,
         "column": 84
       }
     },
@@ -3716,7 +3716,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountData.ts#L18",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountData.ts#L19",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -3730,7 +3730,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/auth/accountData.ts",
-        "line": 18,
+        "line": 19,
         "column": 130
       }
     },
@@ -3752,7 +3752,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountData.ts#L28",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountData.ts#L29",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -3766,7 +3766,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/auth/accountData.ts",
-        "line": 28,
+        "line": 29,
         "column": 49
       }
     },
@@ -3788,7 +3788,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountData.ts#L37",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountData.ts#L38",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -3802,7 +3802,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/auth/accountData.ts",
-        "line": 37,
+        "line": 38,
         "column": 24
       }
     },
@@ -3824,7 +3824,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountData.ts#L46",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountData.ts#L47",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -3838,7 +3838,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/auth/accountData.ts",
-        "line": 46,
+        "line": 47,
         "column": 64
       }
     },
@@ -3860,7 +3860,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountData.ts#L48",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountData.ts#L49",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -3874,7 +3874,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/auth/accountData.ts",
-        "line": 48,
+        "line": 49,
         "column": 72
       }
     },
@@ -3896,7 +3896,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountData.ts#L50",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountData.ts#L51",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -3910,7 +3910,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/auth/accountData.ts",
-        "line": 50,
+        "line": 51,
         "column": 78
       }
     },
@@ -3932,7 +3932,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountData.ts#L51",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountData.ts#L52",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -3946,7 +3946,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/auth/accountData.ts",
-        "line": 51,
+        "line": 52,
         "column": 65
       }
     },
@@ -3968,7 +3968,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountData.ts#L52",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountData.ts#L53",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -3982,7 +3982,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/auth/accountData.ts",
-        "line": 52,
+        "line": 53,
         "column": 136
       }
     },
@@ -4004,7 +4004,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountData.ts#L53",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountData.ts#L54",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -4018,7 +4018,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/auth/accountData.ts",
-        "line": 53,
+        "line": 54,
         "column": 71
       }
     },
@@ -4040,7 +4040,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountData.ts#L55",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountData.ts#L56",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -4054,7 +4054,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/auth/accountData.ts",
-        "line": 55,
+        "line": 56,
         "column": 78
       }
     },
@@ -4071,12 +4071,12 @@
           "m1.apps.backend.auth.accountData.14"
         ]
       },
-      "formula": "const row = rows[0];",
+      "formula": "const row = section === \"results\" && rows[0] ? exportResult(rows[0]) : rows[0];",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountData.ts#L58",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountData.ts#L61",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -4090,8 +4090,80 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/auth/accountData.ts",
-        "line": 58,
-        "column": 20
+        "line": 61,
+        "column": 45
+      }
+    },
+    {
+      "id": "m1.apps.backend.auth.accountData.15",
+      "concept": "row · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.auth.accountData.15"
+        ]
+      },
+      "formula": "const row = section === \"results\" && rows[0] ? exportResult(rows[0]) : rows[0];",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountData.ts#L61",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/auth/accountData.ts",
+        "line": 61,
+        "column": 68
+      }
+    },
+    {
+      "id": "m1.apps.backend.auth.accountData.16",
+      "concept": "row · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.auth.accountData.16"
+        ]
+      },
+      "formula": "const row = section === \"results\" && rows[0] ? exportResult(rows[0]) : rows[0];",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountData.ts#L61",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/auth/accountData.ts",
+        "line": 61,
+        "column": 79
       }
     },
     {
