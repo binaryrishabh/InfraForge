@@ -830,7 +830,8 @@
     },
     {
       "path": "scripts/reality/artifacts.ts",
-      "hash": "ad4d6589f18044b87cd86b7b7bb1656a6455c7275b9faf1cf57bf30d04e52b11"
+      "hash": "ad4d6589f18044b87cd86b7b7bb1656a6455c7275b9faf1cf57bf30d04e52b11",
+      "text": "import { readFileSync, existsSync } from \"node:fs\";\nimport { resolve } from \"node:path\";\nimport { RESOURCE_TYPES } from \"../../packages/domain/src/resource/RESOURCE_TYPES.constants\";\nimport { validateLedger, type RealityEntry } from \"../../packages/simulation/src/reality/ledger\";\n\nimport { validateProductArtifacts } from \"./product-artifacts\";\n\nexport const DEPTH_DIMENSIONS = [\"configuration\", \"inputTraffic\", \"outputTraffic\", \"state\", \"capacity\", \"limits\", \"cpu\", \"memory\", \"network\", \"connections\", \"storageIO\", \"queuing\", \"scaling\", \"failureModes\", \"chaos\", \"recovery\", \"security\", \"cost\", \"dependencies\", \"observableMetrics\"];\ninterface DepthRow { productBridge?: { revision: string; level: string; owner: string; compiler: string; proof: string; evidence: string; shippingEligible: boolean }; resource: string; dimensions: Record<string, string>; currentImplementation: string; realityGap: string; targetBehavior: string; model2?: { revision: string; foundation: string; dimensions: Record<string, string>; implemented: string[]; partial: string[]; unknown: string[]; remainingGap: string; mechanismOwners: string[]; proofs: string[]; shippingGate: string } }\nexport function validateDepth(rows: DepthRow[], root?: string): string[] {\n  const errors: string[] = [], expected = Object.values(RESOURCE_TYPES);\n  if (rows.length !== expected.length || new Set(rows.map((r) => r.resource)).size !== expected.length) errors.push(\"Resource coverage incomplete\");\n  for (const type of expected) if (!rows.some((r) => r.resource === type)) errors.push(`Missing resource: ${type}`);\n  for (const row of rows) {\n    if (Object.keys(row.dimensions).sort().join() !== [...DEPTH_DIMENSIONS].sort().join()) errors.push(`${row.resource}: dimension coverage incomplete`);\n    if (Object.values(row.dimensions).some((v) => ![\"partial\", \"generic\", \"synthetic\", \"absent\", \"not-applicable\", \"static\", \"approximation\"].includes(v))) errors.push(\"Unknown depth level\");\n    if (![row.currentImplementation, row.realityGap, row.targetBehavior].every((v) => v.trim())) errors.push(\"Missing current/gap/target behavior\");\n    const b = row.productBridge; if (!b || b.revision !== \"m2h/1\" || b.level !== \"product-semantic-bridge-proven\" || b.shippingEligible !== false || (root && [b.owner, b.compiler, b.proof, b.evidence].some((p) => !existsSync(resolve(root, p))))) errors.push(`${row.resource}: incomplete M2H bridge owner/proof/gap`);\n    const m = row.model2;\n    if (!m || m.revision !== \"m2g/1\" || !m.foundation || !m.implemented.length || !m.partial.length || !m.unknown.length || !m.remainingGap || !m.mechanismOwners.length || !m.proofs.length || m.shippingGate !== \"CLOSED: see shipping-reality.json\" || Object.keys(m.dimensions).sort().join() !== [...DEPTH_DIMENSIONS].sort().join() || Object.values(m.dimensions).some((v) => ![\"implemented\", \"partial\", \"Unknown\", \"not-applicable\"].includes(v))) errors.push(`${row.resource}: incomplete Model-2 depth/gap coverage`);\n    if (root && m && [...m.mechanismOwners, ...m.proofs].some((p) => !existsSync(resolve(root, p)))) errors.push(`${row.resource}: missing mechanism/proof source`);\n  }\n  return errors;\n}\nexport function validateArtifacts(root: string): string[] {\n  const facts = JSON.parse(readFileSync(resolve(root, \"docs/reality/provider-facts.json\"), \"utf8\")) as RealityEntry[];\n  const matrix = JSON.parse(readFileSync(resolve(root, \"docs/reality/resource-depth.json\"), \"utf8\")) as { resources: DepthRow[] };\n  const m2b = JSON.parse(readFileSync(resolve(root, \"docs/reality/m2b-calibration.json\"), \"utf8\")) as { ledger: RealityEntry[]; policyLedger: RealityEntry[] };\n  const m2c = JSON.parse(readFileSync(resolve(root, \"docs/reality/m2c-calibration.json\"), \"utf8\")) as { ledger: RealityEntry[]; policyLedger: RealityEntry[] };\n  const m2d = JSON.parse(readFileSync(resolve(root, \"docs/reality/m2d-calibration.json\"), \"utf8\")) as { ledger: RealityEntry[]; policyLedger: RealityEntry[] };\n  const m2e = JSON.parse(readFileSync(resolve(root, \"docs/reality/m2e-calibration.json\"), \"utf8\")) as { ledger: RealityEntry[]; policyLedger: RealityEntry[] };\n  const m2f = JSON.parse(readFileSync(resolve(root, \"docs/reality/m2f-calibration.json\"), \"utf8\")) as { ledger: RealityEntry[]; policyLedger: RealityEntry[] };\n  const m2g = JSON.parse(readFileSync(resolve(root, \"docs/reality/m2g-calibration.json\"), \"utf8\")) as { ledger: RealityEntry[]; policyLedger: RealityEntry[] };\n  const m2h = JSON.parse(readFileSync(resolve(root, \"docs/reality/m2h-ledger.json\"), \"utf8\")) as { ledger: RealityEntry[]; policyLedger: RealityEntry[] };\n  return [...validateLedger([...m2h.ledger, ...m2h.policyLedger]), ...validateProductArtifacts(root), ...validateLedger(facts), ...validateDepth(matrix.resources, root), ...validateLedger([...m2b.ledger, ...m2b.policyLedger]), ...validateLedger([...m2c.ledger, ...m2c.policyLedger]), ...validateLedger([...m2d.ledger, ...m2d.policyLedger]), ...validateLedger([...m2e.ledger, ...m2e.policyLedger]), ...validateLedger([...m2f.ledger, ...m2f.policyLedger]), ...validateLedger([...m2g.ledger, ...m2g.policyLedger])];\n}\n"
     },
     {
       "path": "scripts/reality/async-calibration.ts",
@@ -842,7 +843,8 @@
     },
     {
       "path": "scripts/reality/async-proofs.ts",
-      "hash": "02ec38492fc2350b7430433066dca26d27e6772eec3ef99b61feaf4a46646ede"
+      "hash": "02ec38492fc2350b7430433066dca26d27e6772eec3ef99b61feaf4a46646ede",
+      "text": "import { readFileSync, writeFileSync } from \"node:fs\";\nimport { asyncFixture } from \"../../packages/simulation/tests/asyncFixture\";\nimport { quantities } from \"../../packages/simulation/tests/workloadFixture\";\nimport { createAsyncModel2 } from \"../../packages/simulation/src/model2/async/run\";\nimport type { AsyncInput, WorkerConfig, BrokerConfig, PublisherConfig } from \"../../packages/simulation/src/model2/async/contracts\";\nconst run = (i: AsyncInput, cut?: number) => { const m = createAsyncModel2(i); m.advanceTo(cut ?? m.horizon); const e = m.evidence(); return { counts: e.counts, asynchronous: e.asynchronous, database: e.data.databases, paths: e.network.paths, links: e.network.links.map((l) => ({ id: l.id, offeredBytes: l.offeredBytes, transmittedBytes: l.transmittedBytes, deliveredBytes: l.deliveredBytes })), execution: e.execution, ledger: i.ledger }; };\nconst workers = (i: AsyncInput) => i.resources.filter((r) => r.kind === \"async-worker\") as WorkerConfig[];\nexport function asyncProofs() {\n  const normal = run(asyncFixture({ database: true })), backlogInput = asyncFixture({ count: 24, interval: 20, processing: 1000, horizon: 100000 }), q = quantities(\"Synthetic M2F fault windows and async proof; no performance applicability\");\n  backlogInput.asyncInterventions = [{ id: \"consumer-down\", kind: \"consumer-state\", target: \"worker-0\", available: false, at: q.q(\"down.at\", 1000, \"us\"), duration: q.q(\"down.duration\", 15000, \"us\") }]; backlogInput.ledger.push(...q.ledger);\n  const backlog = run(backlogInput, 12000), drained = run(backlogInput);\n  const poisonInput = asyncFixture({ count: 4 }); workers(poisonInput)[0]!.poisonKeys = [JSON.stringify([\"root\", \"load\", JSON.stringify([\"load\", 0])])];\n  const repeated = { count: 1, processing: 100, ackDelay: 3000, lease: 2000, horizon: 30000 };\n  const duplicate = run(asyncFixture(repeated)), idempotent = run(asyncFixture({ ...repeated, idempotent: true }));\n  const crashInput = asyncFixture({ count: 1, processing: 100, ackDelay: 5000, lease: 10000, horizon: 40000 }), c = quantities();\n  crashInput.asyncInterventions.push({ id: \"effect-ack-window\", kind: \"consumer-state\", target: \"worker-0\", available: false, at: c.q(\"window.at\", 2000, \"us\"), duration: c.q(\"window.duration\", 10000, \"us\") }); crashInput.ledger.push(...c.ledger);\n  const objectFailureInput = asyncFixture({ count: 8, maxAttempts: 20 }), f = quantities(); objectFailureInput.asyncInterventions.push({ id: \"reads-down\", kind: \"object-access\", target: \"objects\", reads: false, writes: true, at: f.q(\"reads.at\", 1000, \"us\"), duration: f.q(\"reads.duration\", 5000, \"us\") }); objectFailureInput.ledger.push(...f.ledger);\n  const retry = (dedup: boolean) => { const i = asyncFixture({ count: 1 }), q = quantities(); (i.resources.find((r) => r.kind === \"delivery-queue\") as BrokerConfig).deduplicatePublishes = dedup; (i.resources.find((r) => r.kind === \"async-publisher\") as PublisherConfig).publishAttempts = q.q(\"publisher.retry\", 2, \"count\"); const p = i.paths.find((p) => p.source === \"publisher\" && p.target === \"broker\")!; p.pool.responseTimeout = q.q(\"publisher.responseDeadline\", 500, \"us\"); i.links.find((l) => l.id === p.response[0])!.propagation = q.q(\"publisher.confirmDelay\", 1000, \"us\"); i.ledger.push(...q.ledger); return run(i); };\n  const results = { normal, backlog, drained, poison: run(poisonInput), duplicate, idempotent, failureWindow: run(crashInput), objectFailure: run(objectFailureInput), publisherRetry: retry(false), publisherDedup: retry(true), smallObject: run(asyncFixture({ count: 1, objectBytes: 1024, bandwidth: 1000000, lease: 1000000, horizon: 1000000 })), largeObject: run(asyncFixture({ count: 1, objectBytes: 65536, bandwidth: 1000000, lease: 1000000, horizon: 1000000 })) };\n  if (backlog.asynchronous.brokers[0]!.ready <= 10 || drained.asynchronous.brokers[0]!.acknowledged !== 24 || duplicate.asynchronous.workers[0]!.effects <= idempotent.asynchronous.workers[0]!.effects || results.poison.asynchronous.brokers[0]!.dlq.length !== 1 || results.failureWindow.asynchronous.workers[0]!.effects !== 2) throw Error(\"Async proof mechanism changed\");\n  return results;\n}\nif (import.meta.main) {\n  const report = asyncProofs(), file = new URL(\"../../docs/reality/m2f-proofs.json\", import.meta.url);\n  if (process.argv.includes(\"--write\")) writeFileSync(file, JSON.stringify(report, null, 2) + \"\\n\"); else if (JSON.stringify(report) !== JSON.stringify(JSON.parse(readFileSync(file, \"utf8\")))) throw Error(\"M2F proof drift\");\n  console.log(JSON.stringify(Object.fromEntries(Object.entries(report).map(([id, e]) => [id, { counts: e.counts, broker: (({ accepted, ready, inFlight, acknowledged, redelivered, deadLettered }) => ({ accepted, ready, inFlight, acknowledged, redelivered, deadLettered }))(e.asynchronous.brokers[0]!), workers: e.asynchronous.workers.map((w) => ({ effects: w.effects, failed: w.failed, deduplicated: w.deduplicated })) }]))));\n}\n"
     },
     {
       "path": "scripts/reality/classify.ts",
@@ -871,7 +873,8 @@
     },
     {
       "path": "scripts/reality/data-proofs.ts",
-      "hash": "12f62f9e1618454cb867e8f806b4af4f2bb8be34b0dbeaefb8b1e545874c3d3c"
+      "hash": "12f62f9e1618454cb867e8f806b4af4f2bb8be34b0dbeaefb8b1e545874c3d3c",
+      "text": "import { readFileSync, writeFileSync } from \"node:fs\";\nimport { dataFixture } from \"../../packages/simulation/tests/dataFixture\";\nimport { quantities } from \"../../packages/simulation/tests/workloadFixture\";\nimport { createDataModel2 } from \"../../packages/simulation/src/model2/data/run\";\nimport { relationalDatabase } from \"../../packages/simulation/src/model2/data/database\";\nimport { EventKernel } from \"../../packages/simulation/src/model2/time\";\nimport type { DataInput, RelationalConfig, CacheConfig } from \"../../packages/simulation/src/model2/data/contracts\";\nconst database = (i: DataInput) => i.resources.find((r) => r.kind === \"relational\") as RelationalConfig;\nconst cache = (i: DataInput) => i.resources.find((r) => r.kind === \"cache\") as CacheConfig;\nfunction run(i: DataInput) {\n  const m = createDataModel2(i); m.advanceTo(m.horizon); const e = m.evidence();\n  return { counts: e.counts, data: e.data, resources: e.resources, paths: e.network.paths, results: e.results, ledger: i.ledger, policy: \"Synthetic mechanism proof only; all inputs forbidden from Free Mode. Health probes are real additional internal operations.\" };\n}\nexport function dataProofs() {\n  const normal = run(dataFixture({ keys: 1, count: 24, interval: 1000, ttl: 100000 }));\n  const outage = dataFixture({ keys: 1, count: 24, interval: 1000, ttl: 100000 }), q = quantities(\"M2E synthetic cascade/lock/session proof; not calibrated performance\");\n  outage.networkInterventions.push({ id: \"cache-outage\", kind: \"service-state\", target: \"cache\", alive: false, ready: false, at: q.q(\"outage.at\", 5000, \"us\"), duration: q.q(\"outage.duration\", 6000, \"us\") });\n  outage.paths.find((p) => p.target === \"cache\")!.pool.connectTimeout = q.q(\"outage.connect\", 500, \"us\"); outage.paths.find((p) => p.target === \"cache\")!.pool.responseTimeout = q.q(\"outage.response\", 500, \"us\");\n  outage.dataInterventions.push({ id: \"cache-flush\", kind: \"flush\", target: \"cache\", at: q.q(\"flush.at\", 5000, \"us\") }); outage.ledger.push(...q.ledger); const cacheFailure = run(outage);\n  const dbOut = dataFixture({ keys: 2, count: 24, interval: 700, ttl: 100000 }), dq = quantities(); cache(dbOut).initial = [structuredClone(database(dbOut).initial[0]!)];\n  dbOut.networkInterventions.push({ id: \"db-outage\", kind: \"service-state\", target: \"db\", alive: false, ready: false, at: dq.q(\"db.at\", 0, \"us\"), duration: dq.q(\"db.duration\", 7000, \"us\") });\n  const dp = dbOut.paths.find((p) => p.target === \"db\")!; dp.pool.connectTimeout = dq.q(\"db.connect\", 500, \"us\"); dp.pool.responseTimeout = dq.q(\"db.response\", 500, \"us\"); dbOut.ledger.push(...dq.ledger);\n  const stampede = run(dataFixture({ keys: 1, count: 40, interval: 1, slots: 64, dbCpu: 1000, ttl: 100000 })), coalesced = run(dataFixture({ keys: 1, count: 40, interval: 1, slots: 64, dbCpu: 1000, ttl: 100000, coalesce: true }));\n  const capacity = run(dataFixture({ keys: 8, count: 32, interval: 500, capacity: 160, ttl: 100000 })), ttl = run(dataFixture({ keys: 1, count: 16, interval: 1000, ttl: 2000 }));\n  const exhaustionInput = (slots: number) => { const i = dataFixture({ keys: 32, count: 32, interval: 1, slots, connections: 32, sessions: 1, activeTransactions: 1, dbCpu: 3000, ttl: 100000 }), q = quantities(); const p = i.paths.find((p) => p.target === \"db\")!; p.pool.maxConnections = q.q(\"exhaustion.pool\", 1, \"count\"); p.pool.acquireTimeout = q.q(\"exhaustion.acquire\", 1000, \"us\"); i.ledger.push(...q.ledger); return i; };\n  const delayedExhaustion = (slots: number) => { const i = exhaustionInput(slots), q = quantities(); const arrival = i.arrivals[0]!; if (arrival.kind !== \"trace\") arrival.start = q.q(\"exhaustion.start\", 4000, \"us\"); i.ledger.push(...q.ledger); return run(i); };\n  const exhausted = delayedExhaustion(32), moreWorkers = delayedExhaustion(64);\n  const contention = (same: boolean) => {\n    const i = dataFixture({ keys: 8, sessions: 8, activeTransactions: 8 }), d = database(i), v = quantities(); d.execution.cores = v.q(\"contention.cores\", 4, \"cores\"); d.plans.heavy!.commitWait = v.q(\"contention.ack\", 1000, \"us\"); d.plans.heavy!.durability = \"authored-log-ack\";\n    const kernel = new EventKernel(100000), db = relationalDatabase(d, kernel), results: Array<{ id: string; at: number }> = []; let peakWaiting = 0;\n    for (let n = 0; n < 8; n++) { const id = JSON.stringify([n]); db.accept({ callId: id, rootId: id, operation: \"heavy\", attempt: 0, offeredAt: 0, sessionId: id, message: { request: { kind: \"query\", key: `k${same ? 0 : n}` } } }, () => results.push({ id, at: kernel.now })); peakWaiting = Math.max(peakWaiting, db.evidence().waiters.length); }\n    kernel.advanceTo(100000); return { sameKey: same, offered: 8, offeredAt: 0, peakWaiting, results, database: db.evidence(), ledger: [...i.ledger, ...v.ledger] };\n  };\n  const detached = run(dataFixture({ keys: 1, count: 10, interval: 1, slots: 16, timeout: 500, dbCpu: 1000, ttl: 100000 }));\n  const proof = { normal, cacheFailure, databaseFailure: run(dbOut), stampede, coalesced, capacity, ttl, exhausted, moreWorkers, independent: contention(false), conflicting: contention(true), detached };\n  if (cacheFailure.data.applications[0]!.databaseFetches <= normal.data.applications[0]!.databaseFetches || stampede.data.applications[0]!.databaseFetches <= coalesced.data.applications[0]!.databaseFetches || proof.conflicting.peakWaiting <= proof.independent.peakWaiting || !capacity.data.caches[0]!.evictions || !ttl.data.caches[0]!.expirations || !proof.detached.data.databases[0]!.transactions.committed) throw Error(\"M2E proof mechanism disappeared\");\n  return proof;\n}\nif (import.meta.main) {\n  const report = dataProofs(), file = new URL(\"../../docs/reality/m2e-proofs.json\", import.meta.url);\n  if (process.argv.includes(\"--write\")) writeFileSync(file, JSON.stringify(report, null, 2) + \"\\n\"); else if (JSON.stringify(report) !== JSON.stringify(JSON.parse(readFileSync(file, \"utf8\")))) throw Error(\"M2E proof drift\");\n  console.log(JSON.stringify(Object.fromEntries(Object.entries(report).map(([id, value]) => [id, \"counts\" in value ? { counts: value.counts, fetches: value.data.applications[0]!.databaseFetches, hits: value.data.caches[0]!.hits, misses: value.data.caches[0]!.misses, evictions: value.data.caches[0]!.evictions, expirations: value.data.caches[0]!.expirations } : { peakWaiting: value.peakWaiting, results: value.results }]))));\n}\n"
     },
     {
       "path": "scripts/reality/inventory.ts",
@@ -903,11 +906,13 @@
     },
     {
       "path": "scripts/reality/network-proofs.ts",
-      "hash": "b3bfa561c1a1ff9facaa00a852cc1aa39e218e4bbbe73e6ae513cc4d19e8e70d"
+      "hash": "b3bfa561c1a1ff9facaa00a852cc1aa39e218e4bbbe73e6ae513cc4d19e8e70d",
+      "text": "import { writeFileSync } from \"node:fs\";\nimport { createNetworkModel2 } from \"../../packages/simulation/src/model2/network/run\";\nimport { networkFixture, verticalFixture } from \"../../packages/simulation/tests/networkFixture\";\nimport { quantities } from \"../../packages/simulation/tests/workloadFixture\";\nimport type { NetworkInput, LoadBalancer } from \"../../packages/simulation/src/model2/network/contracts\";\n\nexport function networkProofInputs() {\n  const reuse = networkFixture({ count: 8, interval: 1000 }), fresh = networkFixture({ count: 8, interval: 1000, reuse: false });\n  const saturation = networkFixture({ count: 40, interval: 10, connections: 1, slots: 32, cpu: 1000, acquireTimeout: 2000, pending: 8 });\n  const multiplexed = networkFixture({ count: 8, interval: 1, connections: 1, streams: 8, slots: 8, cores: 4, cpu: 1000 });\n  const vertical = verticalFixture({ count: 40, interval: 300, connections: 4, horizon: 30000, timeout: 15000, responseTimeout: 6000, raw: 5000 }), q = quantities(\"Synthetic M2D vertical/fault proof; no real transport applicability\");\n  vertical.networkInterventions = [\n    { id: \"backend-not-ready\", kind: \"service-state\", target: \"a\", at: q.q(\"vertical.down.at\", 3000, \"us\"), duration: q.q(\"vertical.down.duration\", 6000, \"us\"), alive: true, ready: false },\n    { id: \"dependency-partition\", kind: \"partition\", target: \"b:dep:res\", at: q.q(\"vertical.partition.at\", 10000, \"us\"), duration: q.q(\"vertical.partition.duration\", 4000, \"us\") },\n    { id: \"drain-a\", kind: \"drain\", target: \"lb\", backend: \"a\", at: q.q(\"vertical.drain.at\", 17000, \"us\"), grace: q.q(\"vertical.drain.grace\", 3000, \"us\") },\n  ]; vertical.ledger.push(...q.ledger);\n  const storm = verticalFixture({ count: 40, interval: 150, cpu: 1000, connections: 4, responseTimeout: 2000, horizon: 300000, raw: 5000 }), s = quantities(\"Synthetic bounded retry amplification proof\");\n  const lb = storm.resources.find((r) => r.kind === \"load-balancer\") as LoadBalancer;\n  lb.health.unhealthy = s.q(\"storm.health.unhealthy\", 100, \"count\");\n  lb.health.interval = s.q(\"storm.health.interval\", 20000, \"us\");\n  lb.retry = { maxAttempts: s.q(\"storm.attempts\", 3, \"count\"), maxConcurrentRetries: s.q(\"storm.concurrent\", 16, \"count\"), backoff: s.q(\"storm.backoff\", 100, \"us\"), jitter: s.q(\"storm.jitter\", 0.2, \"ratio\"), retryOn: [\"response-timeout\", \"reset\"], allowAmbiguousNonIdempotent: false }; storm.ledger.push(...s.ledger);\n  const noRetry = structuredClone(storm); delete (noRetry.resources.find((r) => r.kind === \"load-balancer\") as LoadBalancer).retry;\n  const partition = verticalFixture({ count: 25, interval: 500, connections: 4, responseTimeout: 2000, raw: 5000 }), p = quantities();\n  partition.networkInterventions = [{ id: \"partition\", kind: \"partition\", target: \"a:dep:res\", at: p.q(\"partition.at\", 2000, \"us\"), duration: p.q(\"partition.duration\", 5000, \"us\") }]; partition.ledger.push(...p.ledger);\n  const graceful = verticalFixture({ count: 20, interval: 200, cpu: 500, connections: 4, raw: 5000 }), d = quantities();\n  const drainingLb = graceful.resources.find((r) => r.kind === \"load-balancer\") as LoadBalancer;\n  drainingLb.health.interval = d.q(\"drain.health.interval\", 20000, \"us\"); drainingLb.health.timeout = d.q(\"drain.health.timeout\", 10000, \"us\");\n  graceful.networkInterventions = [{ id: \"drain\", kind: \"drain\", target: \"lb\", backend: \"a\", at: d.q(\"drain.at\", 2500, \"us\"), grace: d.q(\"drain.grace\", 5000, \"us\") }]; graceful.ledger.push(...d.ledger);\n  const forced = structuredClone(graceful), f = quantities(); forced.networkInterventions = [{ id: \"drain\", kind: \"drain\", target: \"lb\", backend: \"a\", at: f.q(\"forced.at\", 2500, \"us\"), grace: f.q(\"forced.grace\", 0, \"us\") }]; forced.ledger.push(...f.ledger);\n  return { reuse, fresh, saturation, multiplexed, vertical, storm, noRetry, partition, graceful, forced };\n}\nfunction capture(input: NetworkInput) {\n  const model = createNetworkModel2(input), phases = [];\n  for (const at of [2500, 3500, 6500, 8500, 12000, 18000].filter((t) => t <= model.horizon)) {\n    model.advanceTo(at); const e = model.evidence(); phases.push({ at, counts: e.counts, resources: e.resources, links: e.network.links, paths: e.network.paths, loadBalancers: e.network.loadBalancers });\n  }\n  model.advanceTo(model.horizon); const e = model.evidence();\n  return { counts: e.counts, resources: e.resources, network: e.network, results: e.results, retention: e.resultRetention, execution: e.execution, phases };\n}\nexport const networkProofs = () => Object.fromEntries(Object.entries(networkProofInputs()).map(([name, input]) => [name, capture(input)]));\nif (import.meta.main) { const proofs = networkProofs(); if (process.argv.includes(\"--write\")) writeFileSync(new URL(\"../../docs/reality/m2d-proofs.json\", import.meta.url), JSON.stringify(proofs, null, 2) + \"\\n\"); console.log(JSON.stringify(Object.fromEntries(Object.entries(proofs).map(([name, p]) => [name, { counts: p.counts, paths: p.network.paths.map((x) => ({ id: x.id, failed: x.failed, created: x.pool.created, reused: x.pool.reused })), loadBalancers: p.network.loadBalancers }])))); }\n"
     },
     {
       "path": "scripts/reality/product-artifacts.ts",
-      "hash": "f701a3a9594cc4589bcb7ffec936367aca91f6aa1e266489999aece0d06ea733"
+      "hash": "f701a3a9594cc4589bcb7ffec936367aca91f6aa1e266489999aece0d06ea733",
+      "text": "import { readFileSync } from \"node:fs\";\nimport { resolve } from \"node:path\";\nimport { compileProduct } from \"../../packages/simulation/src/model2/product/compiler\";\nimport { validateLedger } from \"../../packages/simulation/src/reality/ledger\";\nimport type { productProofs } from \"./product-proofs\";\nimport { productHash, productRoot } from \"./product-source\";\nimport { historicalFoundationHash, verifyHistoricalArtifacts } from \"./source-lineage\";\nexport function retainedProductProofs(root = productRoot) { return JSON.parse(readFileSync(resolve(root, \"docs/reality/m2h-proofs.json\"), \"utf8\")) as ReturnType<typeof productProofs>; }\nexport function validateProductArtifacts(root = productRoot) {\n  verifyHistoricalArtifacts(root);\n  const errors: string[] = [], proofs = retainedProductProofs(root), sourceHash = historicalFoundationHash(root);\n  if (proofs.schema !== \"infraforge-product-proofs/1\" || !proofs.complete || proofs.sourceHash !== sourceHash || proofs.cases.length !== 6) errors.push(\"M2H proof schema/source/completeness drift\");\n  for (const c of proofs.cases) {\n    errors.push(...validateLedger(c.compiled.input.ledger));\n    if (c.authoredHash !== productHash({ design: c.design, contract: c.contract }) || c.compiledHash !== productHash(c.compiled) || !c.compiled.semantic.numericOrigins.length || c.final.capture.failure || !c.final.capture.reachedHorizon) errors.push(`Invalid M2H proof ${c.name}`);\n  }\n  const sweep = JSON.parse(readFileSync(resolve(root, \"docs/reality/m2h-sweeps.json\"), \"utf8\"));\n  if (!sweep.complete || sweep.sourceHash !== sourceHash || sweep.compiler.count !== 2048 || sweep.compiler.valid !== 1536 || sweep.compiler.refused !== 512 || sweep.controllers.count !== 2048 || sweep.controllers.replays !== 16 || sweep.controllers.created <= 2048 || !sweep.controllers.artifactFailures) errors.push(\"M2H generated campaign incomplete/source drift\");\n  const perf = JSON.parse(readFileSync(resolve(root, \"docs/reality/m2h-performance.json\"), \"utf8\"));\n  if (!perf.complete || perf.sourceHash !== sourceHash || perf.cases.length !== 6 || perf.cases.some((c: Record<string, unknown>) => [\"compileMs\", \"setupMs\", \"executionMs\", \"evidenceMs\", \"serializeMs\"].some((k) => typeof c[k] !== \"number\" || (c[k] as number) < 0))) errors.push(\"M2H executor measurement incomplete/source drift\");\n  return errors;\n}\nexport function replayProductCompilation() {\n  const failures: string[] = [];\n  for (const c of retainedProductProofs().cases) { const result = compileProduct(c.design, c.contract); if (!result.ok || productHash(result.value) !== c.compiledHash) failures.push(c.name); }\n  return failures;\n}\nif (import.meta.main) { const errors = [...validateProductArtifacts(), ...replayProductCompilation()]; if (errors.length) throw Error(errors.join(\"\\n\")); console.log(\"M2H: six saved-domain proofs and exact-source sweep/performance artifacts valid; Model 2 remains internal\"); }\n"
     },
     {
       "path": "scripts/reality/product-cases.ts",
@@ -923,7 +928,8 @@
     },
     {
       "path": "scripts/reality/product-proofs.ts",
-      "hash": "d8e98bc06e4f65402a71e313e949ce084037c6e2cfba33288d8e2c068775d3cb"
+      "hash": "d8e98bc06e4f65402a71e313e949ce084037c6e2cfba33288d8e2c068775d3cb",
+      "text": "import { writeFileSync } from \"node:fs\";\nimport { resolve } from \"node:path\";\nimport { productFixture } from \"../../packages/simulation/tests/productFixture\";\nimport { compileProduct } from \"../../packages/simulation/src/model2/product/compiler\";\nimport { createProductModel2 } from \"../../packages/simulation/src/model2/product/run\";\nimport { presentModel2 } from \"../../packages/simulation/src/model2/product/presentation\";\nimport { productRoot, productHash, productSourceHash } from \"./product-source\";\nimport { checkProduct, generatedCompilerCases, generatedControllerCases } from \"./product-cases\";\nimport type { ProductEvidence } from \"../../packages/simulation/src/model2/product/presentation\";\nexport function compactProductEvidence(e: ProductEvidence) {\n  // Complete authored/compiled inputs are retained once. Routine health trace duplication\n  // is omitted explicitly; all state counters, ownership and controller events remain.\n  const { provenance: _provenance, samples, product, computeProfiles: _profiles, computePolicyLedger: _policy, computeConfiguration: _compute, networkConfiguration: _network, dataConfiguration: _data, asyncConfiguration: _async, systemConfiguration: _systems, ...state } = e;\n  const selected = e.network.trace.events.filter((t) => [\"lb-selected\", \"backend-draining\", \"network-intervention\"].includes(t.kind));\n  return { ...state, samples: samples.map((s) => ({ at: s.at, counts: s.counts, resources: s.resources.filter((r) => r.id.startsWith(\"vm#\") && !r.id.includes(\"/\")) })), product: { versions: product.versions, controllers: product.controllers, scope: product.scope }, network: { ...e.network, trace: { ...e.network.trace, events: selected, additionalEventsOmitted: e.network.trace.events.length - selected.length, retention: \"Only actual LB selections, drain and intervention events; full determinism/ownership checked before retention\" } }, retainedInput: \"See compiled.input and semantic for full profiles/provenance/configuration\" };\n}\nexport function productProofs() {\n  const cases = [];\n  for (const name of [\"normal\", \"registry-outage\", \"stale-telemetry\", \"manual-drain\", \"warm-layers\", \"compute-crash\"] as const) {\n    const f = productFixture({ registryOutage: name === \"registry-outage\", observed: name === \"stale-telemetry\", monitorOutage: name === \"stale-telemetry\" });\n    if (name === \"manual-drain\") f.contract.nodes.vm!.controller!.manual.push({ id: \"operator-down\", at: f.q.q(\"proof.manual.at\", 75000, \"us\"), desired: f.q.q(\"proof.manual.desired\", 1, \"count\") });\n    if (name === \"warm-layers\") { const image = f.contract.nodes.vm!.resources.find((r) => r.role === \"image\")!.config; if (image.kind === \"artifact-client\") image.initialLayers = [{ digest: `sha256:${\"a\".repeat(64)}`, bytes: f.q.q(\"proof.initialLayer\", 4096, \"bytes\") }]; }\n    if (name === \"compute-crash\") f.contract.faults.push({ id: \"process-crash\", kind: \"Crash\", target: \"vm\", at: f.q.q(\"proof.crash.at\", 70000, \"us\"), duration: f.q.q(\"proof.crash.down\", 10000, \"us\"), restart: f.q.q(\"proof.crash.restart\", 5000, \"us\"), profile: \"retain-logical-state/1\" });\n    const c = compileProduct(f.design, f.contract); if (!c.ok) throw Error(JSON.stringify(c.diagnostics));\n    const runtime = createProductModel2(c.value); runtime.advanceTo(80000); const cut = runtime.evidence(); checkProduct(cut); runtime.advanceTo(runtime.horizon); const final = runtime.evidence(); checkProduct(final);\n    cases.push({ name, authoredHash: productHash({ design: f.design, contract: f.contract }), compiledHash: productHash(c.value), design: f.design, contract: f.contract, compiled: c.value, cut: compactProductEvidence(cut), final: compactProductEvidence(final), presentation: presentModel2(final) });\n  }\n  return { schema: \"infraforge-product-proofs/1\", sourceHash: productSourceHash(), scope: \"Actual saved-domain compile/run semantics, synthetic authored profiles; all physical M2G timing Unknown and earlier timing rejections preserved\", complete: true, cases };\n}\nif (import.meta.main) {\n  if (process.argv.includes(\"--sweeps\")) {\n    const sourceHash = productSourceHash(), compiler = generatedCompilerCases(); console.log(JSON.stringify({ stage: \"compiler\", ...compiler }));\n    const controllers = generatedControllerCases(); const report = { schema: \"infraforge-product-sweeps/1\", sourceHash, complete: true, compiler, controllers };\n    writeFileSync(resolve(productRoot, \"docs/reality/m2h-sweeps.json\"), JSON.stringify(report, null, 2) + \"\\n\"); console.log(JSON.stringify({ stage: \"controllers\", ...controllers }));\n  } else { const report = productProofs(); writeFileSync(resolve(productRoot, \"docs/reality/m2h-proofs.json\"), JSON.stringify(report, null, 2) + \"\\n\"); console.log(JSON.stringify({ cases: report.cases.length, complete: report.complete, sourceHash: report.sourceHash })); }\n}\n"
     },
     {
       "path": "scripts/reality/product-source.ts",
@@ -972,7 +978,8 @@
     },
     {
       "path": "scripts/reality/systems-proofs.ts",
-      "hash": "c4c9951c4a39e261b5a4f582f9df282e45ec8e35c2e991ad38d8c9890240b2b1"
+      "hash": "c4c9951c4a39e261b5a4f582f9df282e45ec8e35c2e991ad38d8c9890240b2b1",
+      "text": "import { readFileSync, writeFileSync } from \"node:fs\";\nimport { createHash } from \"node:crypto\";\nimport { createSystemsModel2 } from \"../../packages/simulation/src/model2/systems/run\";\nimport { systemCommand, systemPath, systemsFixture } from \"../../packages/simulation/tests/systemsFixture\";\nimport { dataFixture } from \"../../packages/simulation/tests/dataFixture\";\nimport { quantities } from \"../../packages/simulation/tests/workloadFixture\";\nimport type { ComputeResource } from \"../../packages/simulation/src/model2/compute/contracts\";\nimport type { FirewallRule, StartupConfig, SystemsInput } from \"../../packages/simulation/src/model2/systems/contracts\";\nimport { checkSystems } from \"./systems-invariants\";\nexport function blockRule(i: SystemsInput, id: string, target: string, port: number): FirewallRule { const q = quantities(); const rule: FirewallRule = { id, direction: \"ingress\", protocol: \"tcp\", source: { kind: \"any\" }, destination: { kind: \"identity\", value: target }, fromPort: q.q(`${id}.from`, port, \"count\"), toPort: q.q(`${id}.to`, port, \"count\"), priority: q.q(`${id}.priority`, 0, \"count\"), action: \"deny\" }; i.ledger.push(...q.ledger); return rule; }\nexport const proofLayer = `sha256:${\"a\".repeat(64)}`, proofImage = `sha256:${\"d\".repeat(64)}`;\nexport function seedRegistry(i: SystemsInput) {\n  systemCommand(i, \"upload\", 0, \"$caller\", \"registry\", { kind: \"upload\", digest: proofLayer, bytes: 128 }, 128); systemCommand(i, \"manifest\", 500, \"$caller\", \"registry\", { kind: \"manifest\", digest: proofImage, bytes: 64, layers: [{ digest: proofLayer, bytes: 128 }] }); systemCommand(i, \"tag\", 1000, \"$caller\", \"registry\", { kind: \"tag\", tag: \"latest\", digest: proofImage });\n}\nexport function systemsCases() {\n  const cases: Record<string, { input: SystemsInput; cut?: number }> = { normal: { input: systemsFixture() } };\n  for (const reuse of [false, true]) {\n    const i = systemsFixture({ count: 6, interval: 2000, ttl: 2500, monitoring: false }), q = quantities(); i.paths.find((p) => p.id === \"$caller:app\")!.pool.reuse = reuse; i.systems.connections.find((c) => c.path === \"$caller:app\")!.dns = { name: \"app.example\", resolver: \"resolver\", routes: [{ address: i.systems.identities.find((x) => x.id === \"app\")!.address, path: \"$caller:app\" }] }; i.networkInterventions.push({ id: \"authority-down\", kind: \"service-state\", target: \"authority\", at: q.q(\"authority.down\", 1000, \"us\"), duration: q.q(\"authority.duration\", 12000, \"us\"), alive: false, ready: false }); i.ledger.push(...q.ledger); cases[reuse ? \"dnsPooled\" : \"dnsFresh\"] = { input: i };\n  }\n  const cdn = systemsFixture({ count: 0, horizon: 40000, monitoring: false }), cq = quantities(); cdn.arrivals = []; for (const [id, at] of [[\"cold\", 0], [\"warm-down\", 2000], [\"expired-down\", 7000], [\"pending\", 15000], [\"recovered\", 26000]] as const) systemCommand(cdn, id, at, \"$caller\", \"cdn\", { kind: \"get\", key: \"asset\" }); cdn.networkInterventions.push({ id: \"origin-down\", kind: \"service-state\", target: \"objects\", alive: false, ready: false, at: cq.q(\"origin.down\", 1000, \"us\"), duration: cq.q(\"origin.duration\", 10000, \"us\") }); cdn.ledger.push(...cq.ledger); cases.cdnRecovery = { input: cdn };\n  for (const deny of [false, true]) { const i = systemsFixture({ monitoring: false }); systemCommand(i, \"external-db\", 0, \"$caller\", \"db\", { kind: \"execute\", key: \"k0\" }); if (deny) i.systems.firewalls[0]!.rules = [blockRule(i, \"deny-db\", \"db\", 5432)]; cases[deny ? \"firewallDeny\" : \"firewallAllow\"] = { input: i }; }\n  const noListener = systemsFixture({ monitoring: false }); noListener.systems.listeners = noListener.systems.listeners.filter((l) => l.resource !== \"app\"); cases.noListener = { input: noListener };\n  for (const mode of [\"plaintext\", \"compatible\", \"wrong-name\", \"untrusted\"] as const) { const i = systemsFixture({ count: 1, monitoring: false }), q = quantities(), listener = i.systems.listeners.find((l) => l.resource === \"app\")!; listener.tls = \"required\"; listener.certificate = { names: [\"app.example\"], issuer: \"lab\", notBefore: q.q(\"cert.start\", 0, \"us\"), notAfter: q.q(\"cert.end\", 100000, \"us\") }; if (mode !== \"plaintext\") i.systems.connections.find((c) => c.path === \"$caller:app\")!.tls = { mode: \"authenticated\", serverName: mode === \"wrong-name\" ? \"wrong.example\" : \"app.example\", trustedIssuers: [mode === \"untrusted\" ? \"other\" : \"lab\"] }; i.ledger.push(...q.ledger); cases[`tls-${mode}`] = { input: i }; }\n  for (const reuse of [false, true]) { const i = systemsFixture({ count: 4, interval: 2000, monitoring: false }), q = quantities(); i.paths.find((p) => p.id === \"$caller:app\")!.pool.reuse = reuse; i.systems.interventions.push({ id: \"policy-update\", kind: \"firewall-rules\", target: \"fw\", at: q.q(\"policy.at\", 1000, \"us\"), rules: [blockRule(i, \"deny-new\", \"app\", 80)] }); i.ledger.push(...q.ledger); cases[reuse ? \"policyExisting\" : \"policyFresh\"] = { input: i }; }\n  const registry = systemsFixture({ count: 0, monitoring: false }), rq = quantities(); registry.arrivals = []; seedRegistry(registry); const node = registry.resources.find((r): r is StartupConfig => r.kind === \"artifact-client\")!; node.replicas = [{ id: \"running\", target: \"replica-a\", reference: \"latest\", at: rq.q(\"running.at\", 2000, \"us\") }, { id: \"new\", target: \"replica-b\", reference: proofImage, at: rq.q(\"new.at\", 6000, \"us\") }]; registry.networkInterventions.push({ id: \"registry-down\", kind: \"service-state\", target: \"registry\", alive: false, ready: false, at: rq.q(\"registry.down\", 4000, \"us\"), duration: rq.q(\"registry.duration\", 6000, \"us\") }); registry.ledger.push(...rq.ledger); cases.registryOutage = { input: registry, cut: 8000 }; cases.registryRecovered = { input: registry };\n  const monitoring = systemsFixture({ count: 15, interval: 1000, horizon: 100000 }), mq = quantities(); for (const [id, at, duration] of [[\"app\", 2000, 12000], [\"monitor\", 3000, 7000]] as const) monitoring.networkInterventions.push({ id: `${id}-down`, kind: \"service-state\", target: id, alive: false, ready: false, at: mq.q(`${id}.at`, at, \"us\"), duration: mq.q(`${id}.duration`, duration, \"us\") }); monitoring.ledger.push(...mq.ledger); cases.monitorStale = { input: monitoring, cut: 7000 }; cases.monitorGap = { input: monitoring };\n  const exportFailure = systemsFixture(), eq = quantities(); exportFailure.networkInterventions.push({ id: \"export-down\", kind: \"service-state\", target: \"telemetry\", alive: false, ready: false, at: eq.q(\"export.at\", 0, \"us\"), duration: eq.q(\"export.duration\", 15000, \"us\") }); exportFailure.ledger.push(...eq.ledger); cases.exportLoss = { input: exportFailure };\n  const queue = systemsFixture({ count: 20, interval: 200, horizon: 300000 }), qq = quantities(); queue.networkInterventions.push({ id: \"db-down\", kind: \"service-state\", target: \"db\", alive: false, ready: false, at: qq.q(\"queue.db.at\", 1000, \"us\"), duration: qq.q(\"queue.db.duration\", 15000, \"us\") }); queue.ledger.push(...qq.ledger); cases.queueBacklog = { input: queue, cut: 10000 }; cases.queuePostFaultPending = { input: queue, cut: 60000 }; cases.queueRecovery = { input: queue };\n  for (const blocked of [false, true]) { const i = systemsFixture({ count: 12, interval: 500, monitoring: false }), data = dataFixture({ count: 12, interval: 500, horizon: 60000, slots: 32, connections: 16, bandwidth: 100000000, timeout: 50000, raw: 2000, cpu: 10 }), app = i.resources.find((r) => r.id === \"app\") as ComputeResource; app.downstream = \"aside\"; i.resources.push(data.resources.find((r) => r.id === \"cache\")!, data.resources.find((r) => r.id === \"aside\")!); systemPath(i, \"app\", \"aside\", 80); systemPath(i, \"aside\", \"cache\", 6379); systemPath(i, \"aside\", \"db\", 5432); if (blocked) i.systems.firewalls[0]!.rules = [blockRule(i, \"block-cache\", \"cache\", 6379)]; cases[blocked ? \"cacheDenied\" : \"cacheNormal\"] = { input: i }; }\n  return cases;\n}\nexport function systemsProofs() {\n  return Object.fromEntries(Object.entries(systemsCases()).map(([id, { input, cut }]) => { const m = createSystemsModel2(input); m.advanceTo(cut ?? m.horizon); const e = m.evidence(); checkSystems(e); return [id, { inputHash: createHash(\"sha256\").update(JSON.stringify(input)).digest(\"hex\"), at: e.at, counts: e.counts, systems: e.systems, database: e.data.databases, cache: e.data.caches, asynchronous: e.asynchronous, paths: e.network.paths, endpoints: e.network.endpoints, ledger: input.ledger }]; }));\n}\nif (import.meta.main) { const results = systemsProofs(), file = new URL(\"../../docs/reality/m2g-proofs.json\", import.meta.url); if (process.argv.includes(\"--write\")) writeFileSync(file, JSON.stringify(results, null, 2) + \"\\n\"); else if (JSON.stringify(results) !== JSON.stringify(JSON.parse(readFileSync(file, \"utf8\")))) throw Error(\"M2G proof drift\"); console.log(JSON.stringify(Object.fromEntries(Object.entries(results).map(([id, e]) => [id, { counts: e.counts, dns: e.systems.resolvers.map((r) => ({ hits: r.hits, misses: r.misses })), cdn: e.systems.cdns.map((c) => ({ hits: c.hits, fetches: c.originRequests })), startup: e.systems.clients.flatMap((n) => n.replicas.map((r) => ({ id: r.id, state: r.state }))), monitor: e.systems.monitors.map((m) => ({ generated: m.generated, exported: m.exported, dropped: m.dropped })) }])))); }\n"
     },
     {
       "path": "scripts/reality/trace-input.ts",
@@ -992,7 +999,8 @@
     },
     {
       "path": "scripts/tests/asyncCalibration.test.ts",
-      "hash": "c48b3fb7ca4638910ca90d38e0665731dfcbfef304e86f80d324017644b4910b"
+      "hash": "c48b3fb7ca4638910ca90d38e0665731dfcbfef304e86f80d324017644b4910b",
+      "text": "import { test, expect } from \"bun:test\";\nimport { readFileSync } from \"node:fs\";\nimport { asyncCalibration, readAsyncMeasurements } from \"../reality/async-calibration\";\nimport { asyncProofs } from \"../reality/async-proofs\";\nimport { validateLedger } from \"../../packages/simulation/src/reality/ledger\";\ntest(\"M2F fit/holdout artifacts preserve rejected timing, semantic identity and logical bytes\", () => {\n  const report = asyncCalibration(readAsyncMeasurements()); expect(report).toEqual(JSON.parse(readFileSync(new URL(\"../../docs/reality/m2f-calibration.json\", import.meta.url), \"utf8\"))); expect(report.results).toHaveLength(54); expect(report.objectResults).toHaveLength(108); expect(report.candidates).toHaveLength(8); expect(report.acceptance).toContain(\"REJECTED\"); expect(report.objectCpuZeroSamples).toBeGreaterThan(0); expect(validateLedger([...report.ledger, ...report.policyLedger])).toEqual([]);\n});\ntest(\"held-out measurements cannot alter M2F candidates; split, source and byte drift fail closed\", () => {\n  const input = readAsyncMeasurements(), baseline = asyncCalibration(input), bad = structuredClone(input);\n  for (const row of bad.broker.filter((r) => r.split === \"holdout\")) { row.wallUs *= 4; row.throughput /= 4; row.results.forEach((r) => r.responseUs *= 4); }\n  const changed = asyncCalibration(bad); expect(changed.candidates).toEqual(baseline.candidates); expect(changed.summaries).not.toEqual(baseline.summaries);\n  const split = structuredClone(input); split.broker[0]!.split = \"holdout\"; expect(() => asyncCalibration(split)).toThrow(\"split\"); const source = structuredClone(input); source.sourceHash = \"changed\"; expect(() => asyncCalibration(source)).toThrow(\"source\"); const bytes = structuredClone(input); bytes.objects[0]!.storedBytes++; expect(() => asyncCalibration(bytes)).toThrow(\"object\");\n});\ntest(\"M2F proof artifacts replay real backlog, poison attempts, duplicates and failed-confirm ambiguity\", () => {\n  const p = asyncProofs(); expect(p).toEqual(JSON.parse(readFileSync(new URL(\"../../docs/reality/m2f-proofs.json\", import.meta.url), \"utf8\"))); expect(p.failureWindow.asynchronous.workers[0]!.effects).toBe(2); expect(p.duplicate.asynchronous.workers[0]!.effects).toBeGreaterThan(p.idempotent.asynchronous.workers[0]!.effects); expect(p.publisherRetry.asynchronous.brokers[0]!.accepted).toBe(2); expect(p.publisherDedup.asynchronous.brokers[0]!.accepted).toBe(1);\n});\n"
     },
     {
       "path": "scripts/tests/boundaries.test.ts",
@@ -1005,7 +1013,8 @@
     },
     {
       "path": "scripts/tests/dataCalibration.test.ts",
-      "hash": "3f62fabd2644f90a252b163009ee06f2a328b658e700549c5f104799e914b5c2"
+      "hash": "3f62fabd2644f90a252b163009ee06f2a328b658e700549c5f104799e914b5c2",
+      "text": "import { test, expect } from \"bun:test\";\nimport { readFileSync } from \"node:fs\";\nimport { dataCalibration, readDataMeasurements } from \"../reality/data-calibration\";\nimport { dataProofs } from \"../reality/data-proofs\";\nimport { validateLedger } from \"../../packages/simulation/src/reality/ledger\";\ntest(\"M2E measurements replay disjoint CPU candidates, rejected timing and exact logical cache sequences\", () => {\n  const r = dataCalibration(readDataMeasurements()); expect(r).toEqual(JSON.parse(readFileSync(new URL(\"../../docs/reality/m2e-calibration.json\", import.meta.url), \"utf8\"))); expect(r.results).toHaveLength(60); expect(r.cacheResults).toHaveLength(54); expect(r.candidates).toHaveLength(10); expect(r.acceptance).toContain(\"REJECTED\"); expect(validateLedger([...r.ledger, ...r.policyLedger])).toEqual([]);\n});\ntest(\"held-out latency corruption cannot change fitted M2E demand; split/source drift is refused\", () => {\n  const input = readDataMeasurements(), original = dataCalibration(input), bad = structuredClone(input); for (const row of bad.database.filter((r) => r.split === \"holdout\")) { row.wallUs *= 10; row.throughput /= 10; row.results.forEach((v) => v.responseUs *= 10); }\n  const changed = dataCalibration(bad); expect(changed.candidates).toEqual(original.candidates); expect(changed.summaries).not.toEqual(original.summaries); bad.database[0]!.split = \"holdout\"; expect(() => dataCalibration(bad)).toThrow(\"split\");\n});\ntest(\"M2E proof artifacts replay cascades, contention, exhaustion and detached remote work\", () => {\n  const p = dataProofs(); expect(p).toEqual(JSON.parse(readFileSync(new URL(\"../../docs/reality/m2e-proofs.json\", import.meta.url), \"utf8\"))); expect(p.conflicting.peakWaiting).toBeGreaterThan(p.independent.peakWaiting); expect(p.cacheFailure.data.applications[0]!.databaseFetches).toBeGreaterThan(p.normal.data.applications[0]!.databaseFetches); expect(p.detached.counts.deadlineExceeded).toBeGreaterThan(0);\n});\n"
     },
     {
       "path": "scripts/tests/meteringArtifacts.test.ts",
@@ -1017,7 +1026,8 @@
     },
     {
       "path": "scripts/tests/networkCalibration.test.ts",
-      "hash": "5dd1f21be68388bbfb3a0d548bb457204b6b31a2ca740711ef1bed929644357c"
+      "hash": "5dd1f21be68388bbfb3a0d548bb457204b6b31a2ca740711ef1bed929644357c",
+      "text": "import { test, expect } from \"bun:test\";\nimport { readFileSync } from \"node:fs\";\nimport { networkCalibration, readNetworkMeasurements } from \"../reality/network-calibration\";\nimport { networkProofs } from \"../reality/network-proofs\";\nimport { validateLedger } from \"../../packages/simulation/src/reality/ledger\";\n\ntest(\"network campaign replays exact bytes, disjoint fit points and visible held-out residuals\", () => {\n  const data = readNetworkMeasurements(), report = networkCalibration(data);\n  expect(report).toEqual(JSON.parse(readFileSync(new URL(\"../../docs/reality/m2d-calibration.json\", import.meta.url), \"utf8\")));\n  expect(report.results).toHaveLength(90); expect(report.candidates).toHaveLength(16); expect(validateLedger([...report.ledger, ...report.policyLedger])).toEqual([]);\n  expect(report.candidates.every((c) => c.validity.payload !== 4096 && c.validity.pool !== 2 && c.validity.concurrency === 8 && c.freeMode === \"forbidden\")).toBe(true);\n  expect(report.summaries.find((s) => s.split === \"holdout\")!.throughputMARE).toBeGreaterThan(1);\n});\ntest(\"holdout corruption changes errors but cannot fit away poor network predictions\", () => {\n  const data = readNetworkMeasurements(), baseline = networkCalibration(data), bad = structuredClone(data);\n  bad.records.filter((r) => r.split === \"holdout\").forEach((r) => { r.throughput /= 10; r.results.forEach((x) => x.responseUs *= 10); });\n  const changed = networkCalibration(bad); expect(changed.candidates).toEqual(baseline.candidates); expect(changed.summaries[1]!.throughputMARE).toBeGreaterThan(baseline.summaries[1]!.throughputMARE);\n});\ntest(\"network proof artifacts replay reuse, graceful/forced drain and real retry work\", () => {\n  const proofs = networkProofs(); expect(proofs).toEqual(JSON.parse(readFileSync(new URL(\"../../docs/reality/m2d-proofs.json\", import.meta.url), \"utf8\")));\n  expect(proofs.reuse!.network.paths[0]!.pool.created).toBe(1); expect(proofs.fresh!.network.paths[0]!.pool.created).toBe(8);\n  expect(proofs.graceful!.counts.completed).toBeGreaterThan(proofs.forced!.counts.completed);\n  expect(proofs.storm!.network.loadBalancers[0]!.attempts).toBeGreaterThan(proofs.noRetry!.network.loadBalancers[0]!.attempts);\n  const bytes = (key: string) => proofs[key]!.network.links.reduce((n, l) => n + l.transmittedBytes, 0);\n  expect(bytes(\"storm\")).toBeGreaterThan(bytes(\"noRetry\"));\n});\n"
     },
     {
       "path": "scripts/tests/productArtifacts.test.ts",
@@ -1043,7 +1053,8 @@
     },
     {
       "path": "scripts/tests/systemsCalibration.test.ts",
-      "hash": "d3a3b99240aa100e04ce3230c09d2588d343abe0474af6e567651c93c77b4953"
+      "hash": "d3a3b99240aa100e04ce3230c09d2588d343abe0474af6e567651c93c77b4953",
+      "text": "import { expect, test } from \"bun:test\";\nimport { readFileSync } from \"node:fs\";\nimport { loadSystemsMeasurements, replaySystemsMeasurements } from \"../reality/systems-calibration\";\nimport { systemsProofs } from \"../reality/systems-proofs\";\ntest(\"M2G local observations replay byte/ownership semantics without a timing fit\", () => {\n  const result = replaySystemsMeasurements(loadSystemsMeasurements()); expect(result).toEqual(JSON.parse(readFileSync(new URL(\"../../docs/reality/m2g-calibration.json\", import.meta.url), \"utf8\"))); expect(result.fit.attempted).toBe(false); expect(Object.values(result.predictors).every((v) => v === \"Unknown\")).toBe(true); expect(result.cdn).toHaveLength(6); expect(result.registry.bytes).toBe(69760);\n});\ntest(\"timing corruption cannot create a fitted predictor; semantic/source/cleanup drift is refused\", () => {\n  const original = loadSystemsMeasurements(), changed = structuredClone(original); changed.tls.compatible.durationMs *= 100; changed.tls.untrusted.durationMs = 0; expect(replaySystemsMeasurements(changed)).toEqual(replaySystemsMeasurements(original));\n  const source = structuredClone(original); source.sourceHash = \"wrong\"; expect(() => replaySystemsMeasurements(source)).toThrow(\"source\"); const bytes = structuredClone(original); bytes.cdn[0]!.coldBodies[0]!.bytes++; expect(() => replaySystemsMeasurements(bytes)).toThrow(\"bytes\"); const cleanup = structuredClone(original); cleanup.cleanup.complete = false; expect(() => replaySystemsMeasurements(cleanup)).toThrow(\"cleanup\");\n});\ntest(\"M2G cross-resource proofs replay actual state, failures, gaps and recovery\", () => {\n  const result = systemsProofs(); expect(result).toEqual(JSON.parse(readFileSync(new URL(\"../../docs/reality/m2g-proofs.json\", import.meta.url), \"utf8\"))); expect(result.dnsPooled!.counts.completed).toBe(6); expect(result.dnsFresh!.counts.completed).toBe(2); expect(result.registryRecovered!.systems.clients[0]!.replicas.every((r) => r.state === \"running\")).toBe(true); expect(result.cacheDenied!.database[0]!.logicalReads).toBeGreaterThan(result.cacheNormal!.database[0]!.logicalReads);\n});\n"
     },
     {
       "path": "scripts/tests/traceInput.test.ts",
@@ -1949,7 +1960,7 @@
     },
     {
       "path": "scripts/reality/artifacts.ts",
-      "hash": "ad4d6589f18044b87cd86b7b7bb1656a6455c7275b9faf1cf57bf30d04e52b11"
+      "hash": "e0b6c2da16710033c3ada3e42fb68b6754e71df070242111a8e324409345613d"
     },
     {
       "path": "scripts/reality/async-calibration.ts",
@@ -1961,7 +1972,7 @@
     },
     {
       "path": "scripts/reality/async-proofs.ts",
-      "hash": "02ec38492fc2350b7430433066dca26d27e6772eec3ef99b61feaf4a46646ede"
+      "hash": "5ee410d4ad061f363e83873f4b2aeaa6c96c74060cc2b69d2d80763a3a878baf"
     },
     {
       "path": "scripts/reality/classify.ts",
@@ -1997,7 +2008,7 @@
     },
     {
       "path": "scripts/reality/data-proofs.ts",
-      "hash": "12f62f9e1618454cb867e8f806b4af4f2bb8be34b0dbeaefb8b1e545874c3d3c"
+      "hash": "8389ca274e580a9eab664c725b47fa0d6795bf8252dacffaee5456ba91cf66e5"
     },
     {
       "path": "scripts/reality/finite-io-proof.ts",
@@ -2104,6 +2115,10 @@
       "hash": "ef8c1fdaa869055c8b47bbb101355ee8ad10464aace163c9889066df69468b3b"
     },
     {
+      "path": "scripts/reality/frozen-artifacts.ts",
+      "hash": "908dbbb7d20146503a9c7e38a998eccae9944c96c9287ee6fc23e3d348bcf6f0"
+    },
+    {
       "path": "scripts/reality/inventory.ts",
       "hash": "7008caaf8e3475f5bf77105978e1f8aa6fc4b0d0320a3b18611f436c1370d414"
     },
@@ -2137,11 +2152,11 @@
     },
     {
       "path": "scripts/reality/network-proofs.ts",
-      "hash": "b3bfa561c1a1ff9facaa00a852cc1aa39e218e4bbbe73e6ae513cc4d19e8e70d"
+      "hash": "b84f2f71defffdeb544d8fcb32b0ea56e9bc95c7790affb39945c796a0993e48"
     },
     {
       "path": "scripts/reality/product-artifacts.ts",
-      "hash": "f701a3a9594cc4589bcb7ffec936367aca91f6aa1e266489999aece0d06ea733"
+      "hash": "6a92aae44b0cadd7c0d5e34b9e878ed6420e0ca524be31f57c7fc3e2c158b92b"
     },
     {
       "path": "scripts/reality/product-cases.ts",
@@ -2157,7 +2172,7 @@
     },
     {
       "path": "scripts/reality/product-proofs.ts",
-      "hash": "d8e98bc06e4f65402a71e313e949ce084037c6e2cfba33288d8e2c068775d3cb"
+      "hash": "afd0308533b3499c1228c4efba09fd662fb45b4279056aadaa6c0a62c4b3dd4d"
     },
     {
       "path": "scripts/reality/product-source.ts",
@@ -2193,7 +2208,7 @@
     },
     {
       "path": "scripts/reality/source-lineage.ts",
-      "hash": "a5dd9b0d03922c6f9e9bc6f12666161dd23212bd06a41e0db3707d6d4f101b6c"
+      "hash": "c6b1e3e7f77fd80bd691afad8e75f831f6c36e9c205629c3cd3ca67efc148fd4"
     },
     {
       "path": "scripts/reality/systems-calibration.ts",
@@ -2209,7 +2224,7 @@
     },
     {
       "path": "scripts/reality/systems-proofs.ts",
-      "hash": "c4c9951c4a39e261b5a4f582f9df282e45ec8e35c2e991ad38d8c9890240b2b1"
+      "hash": "4a36271530f7d2d82bd59533a0d77fa246ee07c9c98420d2d83173b48da91ca7"
     },
     {
       "path": "scripts/reality/trace-input.ts",
@@ -2229,7 +2244,7 @@
     },
     {
       "path": "scripts/tests/asyncCalibration.test.ts",
-      "hash": "c48b3fb7ca4638910ca90d38e0665731dfcbfef304e86f80d324017644b4910b"
+      "hash": "b3e5a48d7f7f8cd3e82684b058ee722880af99c352b26f03f88cca69ad784fd0"
     },
     {
       "path": "scripts/tests/backup-alerts.test.ts",
@@ -2273,7 +2288,7 @@
     },
     {
       "path": "scripts/tests/dataCalibration.test.ts",
-      "hash": "3f62fabd2644f90a252b163009ee06f2a328b658e700549c5f104799e914b5c2"
+      "hash": "f8c1f1e78ecab9b3f58e20ae0b03eadc082eb93c18ffcc7d79f7878b0ee57d77"
     },
     {
       "path": "scripts/tests/deployment.test.ts",
@@ -2289,7 +2304,7 @@
     },
     {
       "path": "scripts/tests/execution-identity.test.ts",
-      "hash": "2157bccd3868445ee9efbf7962c6362f2daddb6b7547b09d4341782db9dbe3a9"
+      "hash": "c59e64eaaf83fb51b2027c5e7590ca5bafd420d99d2f470e9ea26215b2898c1e"
     },
     {
       "path": "scripts/tests/finite-io.test.ts",
@@ -2313,7 +2328,7 @@
     },
     {
       "path": "scripts/tests/first-stack-cost.test.ts",
-      "hash": "5b79f2afaae4aa7116a17c012d2507190363afbcab097195f92d2537077c193e"
+      "hash": "53783cfd1482b22b685a8a872326f0a689916305d3da90ddd09d84f6d32ec1a5"
     },
     {
       "path": "scripts/tests/first-stack-faults.test.ts",
@@ -2325,7 +2340,7 @@
     },
     {
       "path": "scripts/tests/first-stack-profile.test.ts",
-      "hash": "7af05c1d23ade801ac63edb24648343855cacc228a3ce347d3d1e4087bdc7226"
+      "hash": "fb5bcb1d98c64cfe893b90558184d15329a5c20a89104b5454880cbad8f2ad78"
     },
     {
       "path": "scripts/tests/first-stack-report-data.test.ts",
@@ -2333,7 +2348,7 @@
     },
     {
       "path": "scripts/tests/first-stack-report.test.ts",
-      "hash": "87df5b7752076f420f19de775f88dff026a3862aa63bb014acf481a916770c0a"
+      "hash": "fee43b824dbbe94991b423e9dedcabf01ed80dea3c69a5ef7e7a5843634db36d"
     },
     {
       "path": "scripts/tests/firstStackPilots.test.ts",
@@ -2346,6 +2361,10 @@
     {
       "path": "scripts/tests/fixtures/unreviewed-host.ts",
       "hash": "8b5893720f4b693e3ce32ec4b99700cb45d9bd393128459110c88f3ad66bab06"
+    },
+    {
+      "path": "scripts/tests/frozen-artifacts.test.ts",
+      "hash": "ede0553c840f2ce83d3c3f619782593edff0ea83ed6f5e0aae8c641c0daab092"
     },
     {
       "path": "scripts/tests/futureBaseline.test.ts",
@@ -2368,12 +2387,24 @@
       "hash": "bf2ea5bed675fa8568130b546ed36a55e4b9c5f27025c29bf64f929731974b6e"
     },
     {
+      "path": "scripts/tests/historical-analysis-cache.test.ts",
+      "hash": "8a388497e0e31df36fe7f3acb7aa2bf66b4fe5bd297c760dc6a45ebb382b15ee"
+    },
+    {
       "path": "scripts/tests/historical-isolation.test.ts",
       "hash": "0da6c9fbe2ae10cbc073c8d1242600e02c681e7a07355057b0aa2819148566d3"
     },
     {
+      "path": "scripts/tests/historical-slice-reviews.test.ts",
+      "hash": "3ccee864c0d3bc480f3084cd60cd3cc0ab380b7033b937a921d0a3d155067150"
+    },
+    {
       "path": "scripts/tests/historicalCompatibility.test.ts",
-      "hash": "f7beb120f80a7134cef1bb539203963a257c1835765b056aa2ec911990b895cc"
+      "hash": "620fd334f2534b22bec0283a0add37da5f5a0047e589ff8360a8f294fdc6c2e1"
+    },
+    {
+      "path": "scripts/tests/history-preservation.test.ts",
+      "hash": "9e04c913c054bad2a379c9210273b343a3c0b67c314dac166cdcd00250b27d99"
     },
     {
       "path": "scripts/tests/landingSample.test.ts",
@@ -2393,7 +2424,7 @@
     },
     {
       "path": "scripts/tests/networkCalibration.test.ts",
-      "hash": "5dd1f21be68388bbfb3a0d548bb457204b6b31a2ca740711ef1bed929644357c"
+      "hash": "f11aee824536b32e271f32d02e272c98512a14b52e3875b4a332ed83781e8e5b"
     },
     {
       "path": "scripts/tests/productArtifacts.test.ts",
@@ -2413,7 +2444,7 @@
     },
     {
       "path": "scripts/tests/scored-challenges.test.ts",
-      "hash": "ae5645ef28c9160270fe50d74ca74292665ee09fef012a5ed72b1768c63243c2"
+      "hash": "decfd01ed8fd8cbc293208bbe952c5158050a4605ca8eb61736cec48a5519277"
     },
     {
       "path": "scripts/tests/shippingReality.test.ts",
@@ -2425,7 +2456,7 @@
     },
     {
       "path": "scripts/tests/systemsCalibration.test.ts",
-      "hash": "d3a3b99240aa100e04ce3230c09d2588d343abe0474af6e567651c93c77b4953"
+      "hash": "f26c91f192cf852953d267facd1f278ae293370c583e2e6d79d29c38edf52810"
     },
     {
       "path": "scripts/tests/traceInput.test.ts",
