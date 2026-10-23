@@ -1,5 +1,6 @@
+import { fixtureChallenges, fixtureDefinition } from "./scoringFixtures";
 import { expect, test } from "bun:test";
-import { challengeDefinition, publicChallenge, admitScoredChallenge } from "../firstStack/scoredChallenges/definition";
+import { publicChallenge, admitScoredChallenge } from "../firstStack/scoredChallenges/definition";
 import { challengeFence, executeScoredChallenge } from "../firstStack/scoredChallenges/execution";
 import { canonical, designRevision, hash } from "../firstStack/canonical";
 import { inputDigest, isolatedCut } from "../firstStack/isolationProtocol";
@@ -17,12 +18,12 @@ function execute(input: string) {
     receipt: { cleanup: "removed", fixture: "in-process software qualification only" }, summary: "{}", journal: "", interruption: null } as any;
 }
 async function attempt(id: string, cores: number, workers: number, queue: number) {
-  const sample = await publicChallenge(owner, id, "1");
+  const sample = await publicChallenge(owner, id, "2", fixtureChallenges);
   for (const node of sample.layout.firstStack.nodes.filter(n => n.owner === "compute")) {
     node.cores = cores; node.workers = workers; node.queue = queue;
     sample.layout.firstStack.placement.find(h => h.id === node.host)!.cores = cores;
   }
-  const admitted = await admitScoredChallenge(owner, sample.layout, { id, version: "1" }, sample.workload, sample.policy);
+  const admitted = await admitScoredChallenge(owner, sample.layout, { id, version: "2" }, sample.workload, sample.policy, fixtureChallenges);
   const input = canonical({ owner, layout: sample.layout, candidate: admitted.prepared.sidecar, recording: sample.workload, policy: sample.policy });
   const result = execute(input), run = { purpose: "scored", ownerId: owner, engine, input, inputHash: inputDigest(input), lock: admitted.prepared.lock,
     browserCut: result.durablePrefix, workload: { challenge: admitted.reference }, lineage: { designRevision: designRevision(sample.layout) } };
@@ -30,11 +31,12 @@ async function attempt(id: string, cores: number, workers: number, queue: number
   const authority = { token: "qualification", async assertHeld(signal: AbortSignal) { signal.throwIfAborted(); }, async commit() {} };
   const score = await executeScoredChallenge(run, result, authority, new AbortController().signal, fence.select, async (hidden, _authority, signal) => {
     const result = execute(hidden); signal.throwIfAborted(); await fence.commit({} as any, result.durablePrefix); return result;
-  });
-  return { sample, score: score! };
+  }, fixtureChallenges);
+  if (!score || !("workloads" in score)) throw Error("Fake scoring unavailable");
+  return { sample, score };
 }
 for (const id of scenarios) {
-  test(`${id}/1: two capacity choices pass every held-out workload with deterministic verified outcomes`, async () => {
+  test(`${id}/2: two capacity choices pass every held-out workload with deterministic verified outcomes`, async () => {
     for (const [cores, workers, queue] of [[4, 8, 32], [4, 16, 64]]) {
       const first = await attempt(id, cores!, workers!, queue!), replay = await attempt(id, cores!, workers!, queue!);
       expect(first.score).toEqual(replay.score);
@@ -46,7 +48,7 @@ for (const id of scenarios) {
         expect(w.evidence!.cut.counts.completed).toBe(JSON.parse(w.input).recording.rows.length);
         expect(w.evidence!.cut.completeness.horizonReached).toBe(true);
       }
-      const definition = challengeDefinition(id, "1"), visible = JSON.stringify(first.sample);
+      const definition = fixtureDefinition(id), visible = JSON.stringify(first.sample);
       for (const hidden of definition.hidden) {
         expect(visible).not.toContain(hidden.id);
         const fault = hidden.faults[0]!;
@@ -54,10 +56,10 @@ for (const id of scenarios) {
         expect(hidden.observation.toUs).toBeLessThanOrEqual(fault.atUs + (fault.kind === "app-process-crash" ? fault.downtimeUs : 0));
       }
       expect(visible).not.toContain('"rubric":'); expect(visible).not.toContain('"hidden":');
-      expect(first.score.challenge.definitionHash).toBe(hash(definition));
+      expect(first.score.challenge.definitionHash).toBe(hash(fixtureChallenges.definition(id, "2")));
     }
   });
-  test(`${id}/1: weak capacity fails delivered and fault goals, without rewarding a healthy label`, async () => {
+  test(`${id}/2: weak capacity fails delivered and fault goals, without rewarding a healthy label`, async () => {
     const { score } = await attempt(id, 1, 1, 0);
     expect(score.systemPassed).toBe(false);
     expect(score.workloads.some(w => w.outcomes.some(o => o.id === "delivered" && o.outcome === "fail"))).toBe(true);

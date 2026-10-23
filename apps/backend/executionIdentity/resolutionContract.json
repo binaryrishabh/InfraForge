@@ -40218,7 +40218,7 @@
     },
     {
       "owner": null,
-      "file": "apps/backend/firstStack/scoredChallenges/definition.ts",
+      "file": "apps/backend/firstStack/scoredChallenges/projection.ts",
       "specifier": "zod",
       "kind": "import-statement",
       "targetOwner": "zod@4.6.6:3",
@@ -40226,7 +40226,7 @@
     },
     {
       "owner": null,
-      "file": "apps/backend/firstStack/scoredChallenges/projection.ts",
+      "file": "apps/backend/firstStack/scoredChallenges/schema.ts",
       "specifier": "zod",
       "kind": "import-statement",
       "targetOwner": "zod@4.6.6:3",

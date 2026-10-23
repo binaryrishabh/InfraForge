@@ -1,10 +1,10 @@
 {
-  "schema": "infraforge-scored-challenge/1",
+  "schema": "infraforge-scored-challenge/2",
   "id": "catalogue-api",
-  "version": "1",
+  "version": "2",
   "brief": {
     "title": "Catalogue: serve product records during a burst",
-    "description": "Shoppers opening a product page need three prepared product records. Serve that finite read workload while one app is unavailable; extra app workers still share one database. A product page reads several records; app headroom cannot remove the shared database work. Choose each app's cores, workers and queue. Required goals on every held-out outage cohort: deliver at least 90% of offered requests, errors at most 10%, completed-request p95 at most 6000 us (20 completions required). Fault survival uses delivered caller outcomes during the outage, not a health label. All offers are in [10000,70000) us; observe terminals through 100000 us. Hidden variants change burst shape, keys and failed app within the stated domain. Timing is assumption-only. Supported subtotal and full cost are Unknown.",
+    "description": "Shoppers opening a product page need three prepared product records. Serve that finite read workload while one app is unavailable; extra app workers still share one database. A product page reads several records; app headroom cannot remove the shared database work. Choose each app's cores, workers and queue. The private assessment checks delivery, errors, completed-request latency and fault survival. Fault survival uses delivered caller outcomes during the outage, not a health label. All offers are in [10000,70000) us; observe terminals through 100000 us. Hidden variants change burst shape, keys and failed app within the stated domain. Timing is assumption-only. Supported subtotal and full cost are Unknown.",
     "exclusions": [
       "Search and discovery",
       "images and CDN delivery",
@@ -972,962 +972,927 @@
       "boundary": "offer-cohort-half-open; terminal-through-horizon"
     }
   },
-  "hidden": [
+  "provenance": "Authored R1 app-loss software exercise v2; synthetic teaching fixtures. Numeric demands and timings are assumptions, not measured cloud capacities or calibration. Retired v1 suites are public practice.",
+  "practice": [
     {
-      "id": "catalogue-api-heldout-tight",
-      "version": "1",
-      "provenance": "Authored R1 catalogue-api/1 synthetic teaching fixture, 22 October 2026. Finite demands, arrivals, faults and goals are software assumptions; no production trace, cloud calibration or Model 1 grader constants. catalogue-api-heldout-tight: single wave, 32 offers, 100 us spacing; app-1 loss.",
-      "header": {
-        "schema": "infraforge-first-stack-schedule/1",
-        "unit": "us",
-        "durationUs": 100000,
-        "origin": "authored-schedule",
-        "provenance": "Authored R1 catalogue-api/1 synthetic teaching fixture, 22 October 2026. Finite demands, arrivals, faults and goals are software assumptions; no production trace, cloud calibration or Model 1 grader constants."
-      },
-      "rows": [
-        {
-          "id": "catalogue-api-heldout-tight-0",
-          "atUs": 12000,
-          "operation": "product-page"
+      "label": "Public practice: retired v1 workload; synthetic teaching fixture, no grading thresholds.",
+      "workload": {
+        "id": "catalogue-api-heldout-tight",
+        "version": "1",
+        "provenance": "Authored R1 catalogue-api/1 synthetic teaching fixture, 22 October 2026. Finite demands, arrivals, faults and goals are software assumptions; no production trace, cloud calibration or Model 1 grader constants. catalogue-api-heldout-tight: single wave, 32 offers, 100 us spacing; app-1 loss.",
+        "header": {
+          "schema": "infraforge-first-stack-schedule/1",
+          "unit": "us",
+          "durationUs": 100000,
+          "origin": "authored-schedule",
+          "provenance": "Authored R1 catalogue-api/1 synthetic teaching fixture, 22 October 2026. Finite demands, arrivals, faults and goals are software assumptions; no production trace, cloud calibration or Model 1 grader constants."
         },
-        {
-          "id": "catalogue-api-heldout-tight-1",
-          "atUs": 12100,
-          "operation": "product-page"
-        },
-        {
-          "id": "catalogue-api-heldout-tight-2",
-          "atUs": 12200,
-          "operation": "product-page"
-        },
-        {
-          "id": "catalogue-api-heldout-tight-3",
-          "atUs": 12300,
-          "operation": "product-page"
-        },
-        {
-          "id": "catalogue-api-heldout-tight-4",
-          "atUs": 12400,
-          "operation": "product-page"
-        },
-        {
-          "id": "catalogue-api-heldout-tight-5",
-          "atUs": 12500,
-          "operation": "product-page"
-        },
-        {
-          "id": "catalogue-api-heldout-tight-6",
-          "atUs": 12600,
-          "operation": "product-page"
-        },
-        {
-          "id": "catalogue-api-heldout-tight-7",
-          "atUs": 12700,
-          "operation": "product-page"
-        },
-        {
-          "id": "catalogue-api-heldout-tight-8",
-          "atUs": 12800,
-          "operation": "product-page"
-        },
-        {
-          "id": "catalogue-api-heldout-tight-9",
-          "atUs": 12900,
-          "operation": "product-page"
-        },
-        {
-          "id": "catalogue-api-heldout-tight-10",
-          "atUs": 13000,
-          "operation": "product-page"
-        },
-        {
-          "id": "catalogue-api-heldout-tight-11",
-          "atUs": 13100,
-          "operation": "product-page"
-        },
-        {
-          "id": "catalogue-api-heldout-tight-12",
-          "atUs": 13200,
-          "operation": "product-page"
-        },
-        {
-          "id": "catalogue-api-heldout-tight-13",
-          "atUs": 13300,
-          "operation": "product-page"
-        },
-        {
-          "id": "catalogue-api-heldout-tight-14",
-          "atUs": 13400,
-          "operation": "product-page"
-        },
-        {
-          "id": "catalogue-api-heldout-tight-15",
-          "atUs": 13500,
-          "operation": "product-page"
-        },
-        {
-          "id": "catalogue-api-heldout-tight-16",
-          "atUs": 13600,
-          "operation": "product-page"
-        },
-        {
-          "id": "catalogue-api-heldout-tight-17",
-          "atUs": 13700,
-          "operation": "product-page"
-        },
-        {
-          "id": "catalogue-api-heldout-tight-18",
-          "atUs": 13800,
-          "operation": "product-page"
-        },
-        {
-          "id": "catalogue-api-heldout-tight-19",
-          "atUs": 13900,
-          "operation": "product-page"
-        },
-        {
-          "id": "catalogue-api-heldout-tight-20",
-          "atUs": 14000,
-          "operation": "product-page"
-        },
-        {
-          "id": "catalogue-api-heldout-tight-21",
-          "atUs": 14100,
-          "operation": "product-page"
-        },
-        {
-          "id": "catalogue-api-heldout-tight-22",
-          "atUs": 14200,
-          "operation": "product-page"
-        },
-        {
-          "id": "catalogue-api-heldout-tight-23",
-          "atUs": 14300,
-          "operation": "product-page"
-        },
-        {
-          "id": "catalogue-api-heldout-tight-24",
-          "atUs": 14400,
-          "operation": "product-page"
-        },
-        {
-          "id": "catalogue-api-heldout-tight-25",
-          "atUs": 14500,
-          "operation": "product-page"
-        },
-        {
-          "id": "catalogue-api-heldout-tight-26",
-          "atUs": 14600,
-          "operation": "product-page"
-        },
-        {
-          "id": "catalogue-api-heldout-tight-27",
-          "atUs": 14700,
-          "operation": "product-page"
-        },
-        {
-          "id": "catalogue-api-heldout-tight-28",
-          "atUs": 14800,
-          "operation": "product-page"
-        },
-        {
-          "id": "catalogue-api-heldout-tight-29",
-          "atUs": 14900,
-          "operation": "product-page"
-        },
-        {
-          "id": "catalogue-api-heldout-tight-30",
-          "atUs": 15000,
-          "operation": "product-page"
-        },
-        {
-          "id": "catalogue-api-heldout-tight-31",
-          "atUs": 15100,
-          "operation": "product-page"
-        }
-      ],
-      "parameters": {
-        "schema": "infraforge-first-stack-parameters/1",
         "rows": [
           {
             "id": "catalogue-api-heldout-tight-0",
-            "plan": "lookup",
-            "keys": [
-              "catalogue-api:0",
-              "catalogue-api:1",
-              "catalogue-api:2"
-            ]
+            "atUs": 12000,
+            "operation": "product-page"
           },
           {
             "id": "catalogue-api-heldout-tight-1",
-            "plan": "lookup",
-            "keys": [
-              "catalogue-api:0",
-              "catalogue-api:1",
-              "catalogue-api:2"
-            ]
+            "atUs": 12100,
+            "operation": "product-page"
           },
           {
             "id": "catalogue-api-heldout-tight-2",
-            "plan": "lookup",
-            "keys": [
-              "catalogue-api:0",
-              "catalogue-api:1",
-              "catalogue-api:2"
-            ]
+            "atUs": 12200,
+            "operation": "product-page"
           },
           {
             "id": "catalogue-api-heldout-tight-3",
-            "plan": "lookup",
-            "keys": [
-              "catalogue-api:0",
-              "catalogue-api:1",
-              "catalogue-api:2"
-            ]
+            "atUs": 12300,
+            "operation": "product-page"
           },
           {
             "id": "catalogue-api-heldout-tight-4",
-            "plan": "lookup",
-            "keys": [
-              "catalogue-api:0",
-              "catalogue-api:1",
-              "catalogue-api:2"
-            ]
+            "atUs": 12400,
+            "operation": "product-page"
           },
           {
             "id": "catalogue-api-heldout-tight-5",
-            "plan": "lookup",
-            "keys": [
-              "catalogue-api:0",
-              "catalogue-api:1",
-              "catalogue-api:2"
-            ]
+            "atUs": 12500,
+            "operation": "product-page"
           },
           {
             "id": "catalogue-api-heldout-tight-6",
-            "plan": "lookup",
-            "keys": [
-              "catalogue-api:0",
-              "catalogue-api:1",
-              "catalogue-api:2"
-            ]
+            "atUs": 12600,
+            "operation": "product-page"
           },
           {
             "id": "catalogue-api-heldout-tight-7",
-            "plan": "lookup",
-            "keys": [
-              "catalogue-api:0",
-              "catalogue-api:1",
-              "catalogue-api:2"
-            ]
+            "atUs": 12700,
+            "operation": "product-page"
           },
           {
             "id": "catalogue-api-heldout-tight-8",
-            "plan": "lookup",
-            "keys": [
-              "catalogue-api:0",
-              "catalogue-api:1",
-              "catalogue-api:2"
-            ]
+            "atUs": 12800,
+            "operation": "product-page"
           },
           {
             "id": "catalogue-api-heldout-tight-9",
-            "plan": "lookup",
-            "keys": [
-              "catalogue-api:0",
-              "catalogue-api:1",
-              "catalogue-api:2"
-            ]
+            "atUs": 12900,
+            "operation": "product-page"
           },
           {
             "id": "catalogue-api-heldout-tight-10",
-            "plan": "lookup",
-            "keys": [
-              "catalogue-api:0",
-              "catalogue-api:1",
-              "catalogue-api:2"
-            ]
+            "atUs": 13000,
+            "operation": "product-page"
           },
           {
             "id": "catalogue-api-heldout-tight-11",
-            "plan": "lookup",
-            "keys": [
-              "catalogue-api:0",
-              "catalogue-api:1",
-              "catalogue-api:2"
-            ]
+            "atUs": 13100,
+            "operation": "product-page"
           },
           {
             "id": "catalogue-api-heldout-tight-12",
-            "plan": "lookup",
-            "keys": [
-              "catalogue-api:0",
-              "catalogue-api:1",
-              "catalogue-api:2"
-            ]
+            "atUs": 13200,
+            "operation": "product-page"
           },
           {
             "id": "catalogue-api-heldout-tight-13",
-            "plan": "lookup",
-            "keys": [
-              "catalogue-api:0",
-              "catalogue-api:1",
-              "catalogue-api:2"
-            ]
+            "atUs": 13300,
+            "operation": "product-page"
           },
           {
             "id": "catalogue-api-heldout-tight-14",
-            "plan": "lookup",
-            "keys": [
-              "catalogue-api:0",
-              "catalogue-api:1",
-              "catalogue-api:2"
-            ]
+            "atUs": 13400,
+            "operation": "product-page"
           },
           {
             "id": "catalogue-api-heldout-tight-15",
-            "plan": "lookup",
-            "keys": [
-              "catalogue-api:0",
-              "catalogue-api:1",
-              "catalogue-api:2"
-            ]
+            "atUs": 13500,
+            "operation": "product-page"
           },
           {
             "id": "catalogue-api-heldout-tight-16",
-            "plan": "lookup",
-            "keys": [
-              "catalogue-api:0",
-              "catalogue-api:1",
-              "catalogue-api:2"
-            ]
+            "atUs": 13600,
+            "operation": "product-page"
           },
           {
             "id": "catalogue-api-heldout-tight-17",
-            "plan": "lookup",
-            "keys": [
-              "catalogue-api:0",
-              "catalogue-api:1",
-              "catalogue-api:2"
-            ]
+            "atUs": 13700,
+            "operation": "product-page"
           },
           {
             "id": "catalogue-api-heldout-tight-18",
-            "plan": "lookup",
-            "keys": [
-              "catalogue-api:0",
-              "catalogue-api:1",
-              "catalogue-api:2"
-            ]
+            "atUs": 13800,
+            "operation": "product-page"
           },
           {
             "id": "catalogue-api-heldout-tight-19",
-            "plan": "lookup",
-            "keys": [
-              "catalogue-api:0",
-              "catalogue-api:1",
-              "catalogue-api:2"
-            ]
+            "atUs": 13900,
+            "operation": "product-page"
           },
           {
             "id": "catalogue-api-heldout-tight-20",
-            "plan": "lookup",
-            "keys": [
-              "catalogue-api:0",
-              "catalogue-api:1",
-              "catalogue-api:2"
-            ]
+            "atUs": 14000,
+            "operation": "product-page"
           },
           {
             "id": "catalogue-api-heldout-tight-21",
-            "plan": "lookup",
-            "keys": [
-              "catalogue-api:0",
-              "catalogue-api:1",
-              "catalogue-api:2"
-            ]
+            "atUs": 14100,
+            "operation": "product-page"
           },
           {
             "id": "catalogue-api-heldout-tight-22",
-            "plan": "lookup",
-            "keys": [
-              "catalogue-api:0",
-              "catalogue-api:1",
-              "catalogue-api:2"
-            ]
+            "atUs": 14200,
+            "operation": "product-page"
           },
           {
             "id": "catalogue-api-heldout-tight-23",
-            "plan": "lookup",
-            "keys": [
-              "catalogue-api:0",
-              "catalogue-api:1",
-              "catalogue-api:2"
-            ]
+            "atUs": 14300,
+            "operation": "product-page"
           },
           {
             "id": "catalogue-api-heldout-tight-24",
-            "plan": "lookup",
-            "keys": [
-              "catalogue-api:0",
-              "catalogue-api:1",
-              "catalogue-api:2"
-            ]
+            "atUs": 14400,
+            "operation": "product-page"
           },
           {
             "id": "catalogue-api-heldout-tight-25",
-            "plan": "lookup",
-            "keys": [
-              "catalogue-api:0",
-              "catalogue-api:1",
-              "catalogue-api:2"
-            ]
+            "atUs": 14500,
+            "operation": "product-page"
           },
           {
             "id": "catalogue-api-heldout-tight-26",
-            "plan": "lookup",
-            "keys": [
-              "catalogue-api:0",
-              "catalogue-api:1",
-              "catalogue-api:2"
-            ]
+            "atUs": 14600,
+            "operation": "product-page"
           },
           {
             "id": "catalogue-api-heldout-tight-27",
-            "plan": "lookup",
-            "keys": [
-              "catalogue-api:0",
-              "catalogue-api:1",
-              "catalogue-api:2"
-            ]
+            "atUs": 14700,
+            "operation": "product-page"
           },
           {
             "id": "catalogue-api-heldout-tight-28",
-            "plan": "lookup",
-            "keys": [
-              "catalogue-api:0",
-              "catalogue-api:1",
-              "catalogue-api:2"
-            ]
+            "atUs": 14800,
+            "operation": "product-page"
           },
           {
             "id": "catalogue-api-heldout-tight-29",
-            "plan": "lookup",
-            "keys": [
-              "catalogue-api:0",
-              "catalogue-api:1",
-              "catalogue-api:2"
-            ]
+            "atUs": 14900,
+            "operation": "product-page"
           },
           {
             "id": "catalogue-api-heldout-tight-30",
-            "plan": "lookup",
-            "keys": [
-              "catalogue-api:0",
-              "catalogue-api:1",
-              "catalogue-api:2"
-            ]
+            "atUs": 15000,
+            "operation": "product-page"
           },
           {
             "id": "catalogue-api-heldout-tight-31",
-            "plan": "lookup",
-            "keys": [
-              "catalogue-api:0",
-              "catalogue-api:1",
-              "catalogue-api:2"
-            ]
+            "atUs": 15100,
+            "operation": "product-page"
           }
-        ]
-      },
-      "faults": [
-        {
-          "schema": "first-stack-fault/1",
-          "id": "lose-app",
-          "kind": "app-process-crash",
-          "target": "app-1",
-          "atUs": 3000,
-          "downtimeUs": 74000,
-          "recoveryUs": 3000
+        ],
+        "parameters": {
+          "schema": "infraforge-first-stack-parameters/1",
+          "rows": [
+            {
+              "id": "catalogue-api-heldout-tight-0",
+              "plan": "lookup",
+              "keys": [
+                "catalogue-api:0",
+                "catalogue-api:1",
+                "catalogue-api:2"
+              ]
+            },
+            {
+              "id": "catalogue-api-heldout-tight-1",
+              "plan": "lookup",
+              "keys": [
+                "catalogue-api:0",
+                "catalogue-api:1",
+                "catalogue-api:2"
+              ]
+            },
+            {
+              "id": "catalogue-api-heldout-tight-2",
+              "plan": "lookup",
+              "keys": [
+                "catalogue-api:0",
+                "catalogue-api:1",
+                "catalogue-api:2"
+              ]
+            },
+            {
+              "id": "catalogue-api-heldout-tight-3",
+              "plan": "lookup",
+              "keys": [
+                "catalogue-api:0",
+                "catalogue-api:1",
+                "catalogue-api:2"
+              ]
+            },
+            {
+              "id": "catalogue-api-heldout-tight-4",
+              "plan": "lookup",
+              "keys": [
+                "catalogue-api:0",
+                "catalogue-api:1",
+                "catalogue-api:2"
+              ]
+            },
+            {
+              "id": "catalogue-api-heldout-tight-5",
+              "plan": "lookup",
+              "keys": [
+                "catalogue-api:0",
+                "catalogue-api:1",
+                "catalogue-api:2"
+              ]
+            },
+            {
+              "id": "catalogue-api-heldout-tight-6",
+              "plan": "lookup",
+              "keys": [
+                "catalogue-api:0",
+                "catalogue-api:1",
+                "catalogue-api:2"
+              ]
+            },
+            {
+              "id": "catalogue-api-heldout-tight-7",
+              "plan": "lookup",
+              "keys": [
+                "catalogue-api:0",
+                "catalogue-api:1",
+                "catalogue-api:2"
+              ]
+            },
+            {
+              "id": "catalogue-api-heldout-tight-8",
+              "plan": "lookup",
+              "keys": [
+                "catalogue-api:0",
+                "catalogue-api:1",
+                "catalogue-api:2"
+              ]
+            },
+            {
+              "id": "catalogue-api-heldout-tight-9",
+              "plan": "lookup",
+              "keys": [
+                "catalogue-api:0",
+                "catalogue-api:1",
+                "catalogue-api:2"
+              ]
+            },
+            {
+              "id": "catalogue-api-heldout-tight-10",
+              "plan": "lookup",
+              "keys": [
+                "catalogue-api:0",
+                "catalogue-api:1",
+                "catalogue-api:2"
+              ]
+            },
+            {
+              "id": "catalogue-api-heldout-tight-11",
+              "plan": "lookup",
+              "keys": [
+                "catalogue-api:0",
+                "catalogue-api:1",
+                "catalogue-api:2"
+              ]
+            },
+            {
+              "id": "catalogue-api-heldout-tight-12",
+              "plan": "lookup",
+              "keys": [
+                "catalogue-api:0",
+                "catalogue-api:1",
+                "catalogue-api:2"
+              ]
+            },
+            {
+              "id": "catalogue-api-heldout-tight-13",
+              "plan": "lookup",
+              "keys": [
+                "catalogue-api:0",
+                "catalogue-api:1",
+                "catalogue-api:2"
+              ]
+            },
+            {
+              "id": "catalogue-api-heldout-tight-14",
+              "plan": "lookup",
+              "keys": [
+                "catalogue-api:0",
+                "catalogue-api:1",
+                "catalogue-api:2"
+              ]
+            },
+            {
+              "id": "catalogue-api-heldout-tight-15",
+              "plan": "lookup",
+              "keys": [
+                "catalogue-api:0",
+                "catalogue-api:1",
+                "catalogue-api:2"
+              ]
+            },
+            {
+              "id": "catalogue-api-heldout-tight-16",
+              "plan": "lookup",
+              "keys": [
+                "catalogue-api:0",
+                "catalogue-api:1",
+                "catalogue-api:2"
+              ]
+            },
+            {
+              "id": "catalogue-api-heldout-tight-17",
+              "plan": "lookup",
+              "keys": [
+                "catalogue-api:0",
+                "catalogue-api:1",
+                "catalogue-api:2"
+              ]
+            },
+            {
+              "id": "catalogue-api-heldout-tight-18",
+              "plan": "lookup",
+              "keys": [
+                "catalogue-api:0",
+                "catalogue-api:1",
+                "catalogue-api:2"
+              ]
+            },
+            {
+              "id": "catalogue-api-heldout-tight-19",
+              "plan": "lookup",
+              "keys": [
+                "catalogue-api:0",
+                "catalogue-api:1",
+                "catalogue-api:2"
+              ]
+            },
+            {
+              "id": "catalogue-api-heldout-tight-20",
+              "plan": "lookup",
+              "keys": [
+                "catalogue-api:0",
+                "catalogue-api:1",
+                "catalogue-api:2"
+              ]
+            },
+            {
+              "id": "catalogue-api-heldout-tight-21",
+              "plan": "lookup",
+              "keys": [
+                "catalogue-api:0",
+                "catalogue-api:1",
+                "catalogue-api:2"
+              ]
+            },
+            {
+              "id": "catalogue-api-heldout-tight-22",
+              "plan": "lookup",
+              "keys": [
+                "catalogue-api:0",
+                "catalogue-api:1",
+                "catalogue-api:2"
+              ]
+            },
+            {
+              "id": "catalogue-api-heldout-tight-23",
+              "plan": "lookup",
+              "keys": [
+                "catalogue-api:0",
+                "catalogue-api:1",
+                "catalogue-api:2"
+              ]
+            },
+            {
+              "id": "catalogue-api-heldout-tight-24",
+              "plan": "lookup",
+              "keys": [
+                "catalogue-api:0",
+                "catalogue-api:1",
+                "catalogue-api:2"
+              ]
+            },
+            {
+              "id": "catalogue-api-heldout-tight-25",
+              "plan": "lookup",
+              "keys": [
+                "catalogue-api:0",
+                "catalogue-api:1",
+                "catalogue-api:2"
+              ]
+            },
+            {
+              "id": "catalogue-api-heldout-tight-26",
+              "plan": "lookup",
+              "keys": [
+                "catalogue-api:0",
+                "catalogue-api:1",
+                "catalogue-api:2"
+              ]
+            },
+            {
+              "id": "catalogue-api-heldout-tight-27",
+              "plan": "lookup",
+              "keys": [
+                "catalogue-api:0",
+                "catalogue-api:1",
+                "catalogue-api:2"
+              ]
+            },
+            {
+              "id": "catalogue-api-heldout-tight-28",
+              "plan": "lookup",
+              "keys": [
+                "catalogue-api:0",
+                "catalogue-api:1",
+                "catalogue-api:2"
+              ]
+            },
+            {
+              "id": "catalogue-api-heldout-tight-29",
+              "plan": "lookup",
+              "keys": [
+                "catalogue-api:0",
+                "catalogue-api:1",
+                "catalogue-api:2"
+              ]
+            },
+            {
+              "id": "catalogue-api-heldout-tight-30",
+              "plan": "lookup",
+              "keys": [
+                "catalogue-api:0",
+                "catalogue-api:1",
+                "catalogue-api:2"
+              ]
+            },
+            {
+              "id": "catalogue-api-heldout-tight-31",
+              "plan": "lookup",
+              "keys": [
+                "catalogue-api:0",
+                "catalogue-api:1",
+                "catalogue-api:2"
+              ]
+            }
+          ]
+        },
+        "faults": [
+          {
+            "schema": "first-stack-fault/1",
+            "id": "lose-app",
+            "kind": "app-process-crash",
+            "target": "app-1",
+            "atUs": 3000,
+            "downtimeUs": 74000,
+            "recoveryUs": 3000
+          }
+        ],
+        "observation": {
+          "fromUs": 10000,
+          "toUs": 70000,
+          "boundary": "offer-cohort-half-open; terminal-through-horizon"
         }
-      ],
-      "observation": {
-        "fromUs": 10000,
-        "toUs": 70000,
-        "boundary": "offer-cohort-half-open; terminal-through-horizon"
       }
     },
     {
-      "id": "catalogue-api-heldout-waves",
-      "version": "1",
-      "provenance": "Authored R1 catalogue-api/1 synthetic teaching fixture, 22 October 2026. Finite demands, arrivals, faults and goals are software assumptions; no production trace, cloud calibration or Model 1 grader constants. catalogue-api-heldout-waves: two separated waves, 28 offers, 200 us spacing; app-0 loss.",
-      "header": {
-        "schema": "infraforge-first-stack-schedule/1",
-        "unit": "us",
-        "durationUs": 100000,
-        "origin": "authored-schedule",
-        "provenance": "Authored R1 catalogue-api/1 synthetic teaching fixture, 22 October 2026. Finite demands, arrivals, faults and goals are software assumptions; no production trace, cloud calibration or Model 1 grader constants."
-      },
-      "rows": [
-        {
-          "id": "catalogue-api-heldout-waves-0",
-          "atUs": 18000,
-          "operation": "product-page"
+      "label": "Public practice: retired v1 workload; synthetic teaching fixture, no grading thresholds.",
+      "workload": {
+        "id": "catalogue-api-heldout-waves",
+        "version": "1",
+        "provenance": "Authored R1 catalogue-api/1 synthetic teaching fixture, 22 October 2026. Finite demands, arrivals, faults and goals are software assumptions; no production trace, cloud calibration or Model 1 grader constants. catalogue-api-heldout-waves: two separated waves, 28 offers, 200 us spacing; app-0 loss.",
+        "header": {
+          "schema": "infraforge-first-stack-schedule/1",
+          "unit": "us",
+          "durationUs": 100000,
+          "origin": "authored-schedule",
+          "provenance": "Authored R1 catalogue-api/1 synthetic teaching fixture, 22 October 2026. Finite demands, arrivals, faults and goals are software assumptions; no production trace, cloud calibration or Model 1 grader constants."
         },
-        {
-          "id": "catalogue-api-heldout-waves-1",
-          "atUs": 18200,
-          "operation": "product-page"
-        },
-        {
-          "id": "catalogue-api-heldout-waves-2",
-          "atUs": 18400,
-          "operation": "product-page"
-        },
-        {
-          "id": "catalogue-api-heldout-waves-3",
-          "atUs": 18600,
-          "operation": "product-page"
-        },
-        {
-          "id": "catalogue-api-heldout-waves-4",
-          "atUs": 18800,
-          "operation": "product-page"
-        },
-        {
-          "id": "catalogue-api-heldout-waves-5",
-          "atUs": 19000,
-          "operation": "product-page"
-        },
-        {
-          "id": "catalogue-api-heldout-waves-6",
-          "atUs": 19200,
-          "operation": "product-page"
-        },
-        {
-          "id": "catalogue-api-heldout-waves-7",
-          "atUs": 19400,
-          "operation": "product-page"
-        },
-        {
-          "id": "catalogue-api-heldout-waves-8",
-          "atUs": 19600,
-          "operation": "product-page"
-        },
-        {
-          "id": "catalogue-api-heldout-waves-9",
-          "atUs": 19800,
-          "operation": "product-page"
-        },
-        {
-          "id": "catalogue-api-heldout-waves-10",
-          "atUs": 20000,
-          "operation": "product-page"
-        },
-        {
-          "id": "catalogue-api-heldout-waves-11",
-          "atUs": 20200,
-          "operation": "product-page"
-        },
-        {
-          "id": "catalogue-api-heldout-waves-12",
-          "atUs": 20400,
-          "operation": "product-page"
-        },
-        {
-          "id": "catalogue-api-heldout-waves-13",
-          "atUs": 20600,
-          "operation": "product-page"
-        },
-        {
-          "id": "catalogue-api-heldout-waves-14",
-          "atUs": 38800,
-          "operation": "product-page"
-        },
-        {
-          "id": "catalogue-api-heldout-waves-15",
-          "atUs": 39000,
-          "operation": "product-page"
-        },
-        {
-          "id": "catalogue-api-heldout-waves-16",
-          "atUs": 39200,
-          "operation": "product-page"
-        },
-        {
-          "id": "catalogue-api-heldout-waves-17",
-          "atUs": 39400,
-          "operation": "product-page"
-        },
-        {
-          "id": "catalogue-api-heldout-waves-18",
-          "atUs": 39600,
-          "operation": "product-page"
-        },
-        {
-          "id": "catalogue-api-heldout-waves-19",
-          "atUs": 39800,
-          "operation": "product-page"
-        },
-        {
-          "id": "catalogue-api-heldout-waves-20",
-          "atUs": 40000,
-          "operation": "product-page"
-        },
-        {
-          "id": "catalogue-api-heldout-waves-21",
-          "atUs": 40200,
-          "operation": "product-page"
-        },
-        {
-          "id": "catalogue-api-heldout-waves-22",
-          "atUs": 40400,
-          "operation": "product-page"
-        },
-        {
-          "id": "catalogue-api-heldout-waves-23",
-          "atUs": 40600,
-          "operation": "product-page"
-        },
-        {
-          "id": "catalogue-api-heldout-waves-24",
-          "atUs": 40800,
-          "operation": "product-page"
-        },
-        {
-          "id": "catalogue-api-heldout-waves-25",
-          "atUs": 41000,
-          "operation": "product-page"
-        },
-        {
-          "id": "catalogue-api-heldout-waves-26",
-          "atUs": 41200,
-          "operation": "product-page"
-        },
-        {
-          "id": "catalogue-api-heldout-waves-27",
-          "atUs": 41400,
-          "operation": "product-page"
-        }
-      ],
-      "parameters": {
-        "schema": "infraforge-first-stack-parameters/1",
         "rows": [
           {
             "id": "catalogue-api-heldout-waves-0",
-            "plan": "lookup",
-            "keys": [
-              "catalogue-api:0",
-              "catalogue-api:1",
-              "catalogue-api:2"
-            ]
+            "atUs": 18000,
+            "operation": "product-page"
           },
           {
             "id": "catalogue-api-heldout-waves-1",
-            "plan": "lookup",
-            "keys": [
-              "catalogue-api:0",
-              "catalogue-api:1",
-              "catalogue-api:2"
-            ]
+            "atUs": 18200,
+            "operation": "product-page"
           },
           {
             "id": "catalogue-api-heldout-waves-2",
-            "plan": "lookup",
-            "keys": [
-              "catalogue-api:0",
-              "catalogue-api:1",
-              "catalogue-api:2"
-            ]
+            "atUs": 18400,
+            "operation": "product-page"
           },
           {
             "id": "catalogue-api-heldout-waves-3",
-            "plan": "lookup",
-            "keys": [
-              "catalogue-api:0",
-              "catalogue-api:1",
-              "catalogue-api:2"
-            ]
+            "atUs": 18600,
+            "operation": "product-page"
           },
           {
             "id": "catalogue-api-heldout-waves-4",
-            "plan": "lookup",
-            "keys": [
-              "catalogue-api:0",
-              "catalogue-api:1",
-              "catalogue-api:2"
-            ]
+            "atUs": 18800,
+            "operation": "product-page"
           },
           {
             "id": "catalogue-api-heldout-waves-5",
-            "plan": "lookup",
-            "keys": [
-              "catalogue-api:0",
-              "catalogue-api:1",
-              "catalogue-api:2"
-            ]
+            "atUs": 19000,
+            "operation": "product-page"
           },
           {
             "id": "catalogue-api-heldout-waves-6",
-            "plan": "lookup",
-            "keys": [
-              "catalogue-api:0",
-              "catalogue-api:1",
-              "catalogue-api:2"
-            ]
+            "atUs": 19200,
+            "operation": "product-page"
           },
           {
             "id": "catalogue-api-heldout-waves-7",
-            "plan": "lookup",
-            "keys": [
-              "catalogue-api:0",
-              "catalogue-api:1",
-              "catalogue-api:2"
-            ]
+            "atUs": 19400,
+            "operation": "product-page"
           },
           {
             "id": "catalogue-api-heldout-waves-8",
-            "plan": "lookup",
-            "keys": [
-              "catalogue-api:0",
-              "catalogue-api:1",
-              "catalogue-api:2"
-            ]
+            "atUs": 19600,
+            "operation": "product-page"
           },
           {
             "id": "catalogue-api-heldout-waves-9",
-            "plan": "lookup",
-            "keys": [
-              "catalogue-api:0",
-              "catalogue-api:1",
-              "catalogue-api:2"
-            ]
+            "atUs": 19800,
+            "operation": "product-page"
           },
           {
             "id": "catalogue-api-heldout-waves-10",
-            "plan": "lookup",
-            "keys": [
-              "catalogue-api:0",
-              "catalogue-api:1",
-              "catalogue-api:2"
-            ]
+            "atUs": 20000,
+            "operation": "product-page"
           },
           {
             "id": "catalogue-api-heldout-waves-11",
-            "plan": "lookup",
-            "keys": [
-              "catalogue-api:0",
-              "catalogue-api:1",
-              "catalogue-api:2"
-            ]
+            "atUs": 20200,
+            "operation": "product-page"
           },
           {
             "id": "catalogue-api-heldout-waves-12",
-            "plan": "lookup",
-            "keys": [
-              "catalogue-api:0",
-              "catalogue-api:1",
-              "catalogue-api:2"
-            ]
+            "atUs": 20400,
+            "operation": "product-page"
           },
           {
             "id": "catalogue-api-heldout-waves-13",
-            "plan": "lookup",
-            "keys": [
-              "catalogue-api:0",
-              "catalogue-api:1",
-              "catalogue-api:2"
-            ]
+            "atUs": 20600,
+            "operation": "product-page"
           },
           {
             "id": "catalogue-api-heldout-waves-14",
-            "plan": "lookup",
-            "keys": [
-              "catalogue-api:0",
-              "catalogue-api:1",
-              "catalogue-api:2"
-            ]
+            "atUs": 38800,
+            "operation": "product-page"
           },
           {
             "id": "catalogue-api-heldout-waves-15",
-            "plan": "lookup",
-            "keys": [
-              "catalogue-api:0",
-              "catalogue-api:1",
-              "catalogue-api:2"
-            ]
+            "atUs": 39000,
+            "operation": "product-page"
           },
           {
             "id": "catalogue-api-heldout-waves-16",
-            "plan": "lookup",
-            "keys": [
-              "catalogue-api:0",
-              "catalogue-api:1",
-              "catalogue-api:2"
-            ]
+            "atUs": 39200,
+            "operation": "product-page"
           },
           {
             "id": "catalogue-api-heldout-waves-17",
-            "plan": "lookup",
-            "keys": [
-              "catalogue-api:0",
-              "catalogue-api:1",
-              "catalogue-api:2"
-            ]
+            "atUs": 39400,
+            "operation": "product-page"
           },
           {
             "id": "catalogue-api-heldout-waves-18",
-            "plan": "lookup",
-            "keys": [
-              "catalogue-api:0",
-              "catalogue-api:1",
-              "catalogue-api:2"
-            ]
+            "atUs": 39600,
+            "operation": "product-page"
           },
           {
             "id": "catalogue-api-heldout-waves-19",
-            "plan": "lookup",
-            "keys": [
-              "catalogue-api:0",
-              "catalogue-api:1",
-              "catalogue-api:2"
-            ]
+            "atUs": 39800,
+            "operation": "product-page"
           },
           {
             "id": "catalogue-api-heldout-waves-20",
-            "plan": "lookup",
-            "keys": [
-              "catalogue-api:0",
-              "catalogue-api:1",
-              "catalogue-api:2"
-            ]
+            "atUs": 40000,
+            "operation": "product-page"
           },
           {
             "id": "catalogue-api-heldout-waves-21",
-            "plan": "lookup",
-            "keys": [
-              "catalogue-api:0",
-              "catalogue-api:1",
-              "catalogue-api:2"
-            ]
+            "atUs": 40200,
+            "operation": "product-page"
           },
           {
             "id": "catalogue-api-heldout-waves-22",
-            "plan": "lookup",
-            "keys": [
-              "catalogue-api:0",
-              "catalogue-api:1",
-              "catalogue-api:2"
-            ]
+            "atUs": 40400,
+            "operation": "product-page"
           },
           {
             "id": "catalogue-api-heldout-waves-23",
-            "plan": "lookup",
-            "keys": [
-              "catalogue-api:0",
-              "catalogue-api:1",
-              "catalogue-api:2"
-            ]
+            "atUs": 40600,
+            "operation": "product-page"
           },
           {
             "id": "catalogue-api-heldout-waves-24",
-            "plan": "lookup",
-            "keys": [
-              "catalogue-api:0",
-              "catalogue-api:1",
-              "catalogue-api:2"
-            ]
+            "atUs": 40800,
+            "operation": "product-page"
           },
           {
             "id": "catalogue-api-heldout-waves-25",
-            "plan": "lookup",
-            "keys": [
-              "catalogue-api:0",
-              "catalogue-api:1",
-              "catalogue-api:2"
-            ]
+            "atUs": 41000,
+            "operation": "product-page"
           },
           {
             "id": "catalogue-api-heldout-waves-26",
-            "plan": "lookup",
-            "keys": [
-              "catalogue-api:0",
-              "catalogue-api:1",
-              "catalogue-api:2"
-            ]
+            "atUs": 41200,
+            "operation": "product-page"
           },
           {
             "id": "catalogue-api-heldout-waves-27",
-            "plan": "lookup",
-            "keys": [
-              "catalogue-api:0",
-              "catalogue-api:1",
-              "catalogue-api:2"
-            ]
+            "atUs": 41400,
+            "operation": "product-page"
           }
-        ]
-      },
-      "faults": [
-        {
-          "schema": "first-stack-fault/1",
-          "id": "lose-app",
-          "kind": "app-process-crash",
-          "target": "app-0",
-          "atUs": 6000,
-          "downtimeUs": 68000,
-          "recoveryUs": 6000
+        ],
+        "parameters": {
+          "schema": "infraforge-first-stack-parameters/1",
+          "rows": [
+            {
+              "id": "catalogue-api-heldout-waves-0",
+              "plan": "lookup",
+              "keys": [
+                "catalogue-api:0",
+                "catalogue-api:1",
+                "catalogue-api:2"
+              ]
+            },
+            {
+              "id": "catalogue-api-heldout-waves-1",
+              "plan": "lookup",
+              "keys": [
+                "catalogue-api:0",
+                "catalogue-api:1",
+                "catalogue-api:2"
+              ]
+            },
+            {
+              "id": "catalogue-api-heldout-waves-2",
+              "plan": "lookup",
+              "keys": [
+                "catalogue-api:0",
+                "catalogue-api:1",
+                "catalogue-api:2"
+              ]
+            },
+            {
+              "id": "catalogue-api-heldout-waves-3",
+              "plan": "lookup",
+              "keys": [
+                "catalogue-api:0",
+                "catalogue-api:1",
+                "catalogue-api:2"
+              ]
+            },
+            {
+              "id": "catalogue-api-heldout-waves-4",
+              "plan": "lookup",
+              "keys": [
+                "catalogue-api:0",
+                "catalogue-api:1",
+                "catalogue-api:2"
+              ]
+            },
+            {
+              "id": "catalogue-api-heldout-waves-5",
+              "plan": "lookup",
+              "keys": [
+                "catalogue-api:0",
+                "catalogue-api:1",
+                "catalogue-api:2"
+              ]
+            },
+            {
+              "id": "catalogue-api-heldout-waves-6",
+              "plan": "lookup",
+              "keys": [
+                "catalogue-api:0",
+                "catalogue-api:1",
+                "catalogue-api:2"
+              ]
+            },
+            {
+              "id": "catalogue-api-heldout-waves-7",
+              "plan": "lookup",
+              "keys": [
+                "catalogue-api:0",
+                "catalogue-api:1",
+                "catalogue-api:2"
+              ]
+            },
+            {
+              "id": "catalogue-api-heldout-waves-8",
+              "plan": "lookup",
+              "keys": [
+                "catalogue-api:0",
+                "catalogue-api:1",
+                "catalogue-api:2"
+              ]
+            },
+            {
+              "id": "catalogue-api-heldout-waves-9",
+              "plan": "lookup",
+              "keys": [
+                "catalogue-api:0",
+                "catalogue-api:1",
+                "catalogue-api:2"
+              ]
+            },
+            {
+              "id": "catalogue-api-heldout-waves-10",
+              "plan": "lookup",
+              "keys": [
+                "catalogue-api:0",
+                "catalogue-api:1",
+                "catalogue-api:2"
+              ]
+            },
+            {
+              "id": "catalogue-api-heldout-waves-11",
+              "plan": "lookup",
+              "keys": [
+                "catalogue-api:0",
+                "catalogue-api:1",
+                "catalogue-api:2"
+              ]
+            },
+            {
+              "id": "catalogue-api-heldout-waves-12",
+              "plan": "lookup",
+              "keys": [
+                "catalogue-api:0",
+                "catalogue-api:1",
+                "catalogue-api:2"
+              ]
+            },
+            {
+              "id": "catalogue-api-heldout-waves-13",
+              "plan": "lookup",
+              "keys": [
+                "catalogue-api:0",
+                "catalogue-api:1",
+                "catalogue-api:2"
+              ]
+            },
+            {
+              "id": "catalogue-api-heldout-waves-14",
+              "plan": "lookup",
+              "keys": [
+                "catalogue-api:0",
+                "catalogue-api:1",
+                "catalogue-api:2"
+              ]
+            },
+            {
+              "id": "catalogue-api-heldout-waves-15",
+              "plan": "lookup",
+              "keys": [
+                "catalogue-api:0",
+                "catalogue-api:1",
+                "catalogue-api:2"
+              ]
+            },
+            {
+              "id": "catalogue-api-heldout-waves-16",
+              "plan": "lookup",
+              "keys": [
+                "catalogue-api:0",
+                "catalogue-api:1",
+                "catalogue-api:2"
+              ]
+            },
+            {
+              "id": "catalogue-api-heldout-waves-17",
+              "plan": "lookup",
+              "keys": [
+                "catalogue-api:0",
+                "catalogue-api:1",
+                "catalogue-api:2"
+              ]
+            },
+            {
+              "id": "catalogue-api-heldout-waves-18",
+              "plan": "lookup",
+              "keys": [
+                "catalogue-api:0",
+                "catalogue-api:1",
+                "catalogue-api:2"
+              ]
+            },
+            {
+              "id": "catalogue-api-heldout-waves-19",
+              "plan": "lookup",
+              "keys": [
+                "catalogue-api:0",
+                "catalogue-api:1",
+                "catalogue-api:2"
+              ]
+            },
+            {
+              "id": "catalogue-api-heldout-waves-20",
+              "plan": "lookup",
+              "keys": [
+                "catalogue-api:0",
+                "catalogue-api:1",
+                "catalogue-api:2"
+              ]
+            },
+            {
+              "id": "catalogue-api-heldout-waves-21",
+              "plan": "lookup",
+              "keys": [
+                "catalogue-api:0",
+                "catalogue-api:1",
+                "catalogue-api:2"
+              ]
+            },
+            {
+              "id": "catalogue-api-heldout-waves-22",
+              "plan": "lookup",
+              "keys": [
+                "catalogue-api:0",
+                "catalogue-api:1",
+                "catalogue-api:2"
+              ]
+            },
+            {
+              "id": "catalogue-api-heldout-waves-23",
+              "plan": "lookup",
+              "keys": [
+                "catalogue-api:0",
+                "catalogue-api:1",
+                "catalogue-api:2"
+              ]
+            },
+            {
+              "id": "catalogue-api-heldout-waves-24",
+              "plan": "lookup",
+              "keys": [
+                "catalogue-api:0",
+                "catalogue-api:1",
+                "catalogue-api:2"
+              ]
+            },
+            {
+              "id": "catalogue-api-heldout-waves-25",
+              "plan": "lookup",
+              "keys": [
+                "catalogue-api:0",
+                "catalogue-api:1",
+                "catalogue-api:2"
+              ]
+            },
+            {
+              "id": "catalogue-api-heldout-waves-26",
+              "plan": "lookup",
+              "keys": [
+                "catalogue-api:0",
+                "catalogue-api:1",
+                "catalogue-api:2"
+              ]
+            },
+            {
+              "id": "catalogue-api-heldout-waves-27",
+              "plan": "lookup",
+              "keys": [
+                "catalogue-api:0",
+                "catalogue-api:1",
+                "catalogue-api:2"
+              ]
+            }
+          ]
+        },
+        "faults": [
+          {
+            "schema": "first-stack-fault/1",
+            "id": "lose-app",
+            "kind": "app-process-crash",
+            "target": "app-0",
+            "atUs": 6000,
+            "downtimeUs": 68000,
+            "recoveryUs": 6000
+          }
+        ],
+        "observation": {
+          "fromUs": 10000,
+          "toUs": 70000,
+          "boundary": "offer-cohort-half-open; terminal-through-horizon"
         }
-      ],
-      "observation": {
-        "fromUs": 10000,
-        "toUs": 70000,
-        "boundary": "offer-cohort-half-open; terminal-through-horizon"
       }
     }
   ],
-  "rubric": {
-    "version": "1",
-    "criteria": [
-      {
-        "id": "delivered",
-        "metric": "delivery-permille",
-        "operator": "gte",
-        "threshold": 900,
-        "required": true,
-        "provenance": "Authored R1 catalogue-api/1 synthetic teaching fixture, 22 October 2026. Finite demands, arrivals, faults and goals are software assumptions; no production trace, cloud calibration or Model 1 grader constants. Authored goal: 90% delivered including outage, at most 10% errors, exact completed p95 <=6000 us; not a capacity measurement."
-      },
-      {
-        "id": "errors",
-        "metric": "error-permille",
-        "operator": "lte",
-        "threshold": 100,
-        "required": true,
-        "provenance": "Authored R1 catalogue-api/1 synthetic teaching fixture, 22 October 2026. Finite demands, arrivals, faults and goals are software assumptions; no production trace, cloud calibration or Model 1 grader constants. Authored goal: 90% delivered including outage, at most 10% errors, exact completed p95 <=6000 us; not a capacity measurement."
-      },
-      {
-        "id": "slo",
-        "metric": "p95-us",
-        "operator": "lte",
-        "threshold": 6000,
-        "required": true,
-        "provenance": "Authored R1 catalogue-api/1 synthetic teaching fixture, 22 October 2026. Finite demands, arrivals, faults and goals are software assumptions; no production trace, cloud calibration or Model 1 grader constants. Authored goal: 90% delivered including outage, at most 10% errors, exact completed p95 <=6000 us; not a capacity measurement."
-      },
-      {
-        "id": "fault-survival",
-        "metric": "fault-delivery-permille",
-        "operator": "gte",
-        "threshold": 900,
-        "required": true,
-        "provenance": "Authored R1 catalogue-api/1 synthetic teaching fixture, 22 October 2026. Finite demands, arrivals, faults and goals are software assumptions; no production trace, cloud calibration or Model 1 grader constants. Authored goal: 90% delivered including outage, at most 10% errors, exact completed p95 <=6000 us; not a capacity measurement."
-      },
-      {
-        "id": "cost-subtotal",
-        "metric": "cost-subtotal",
-        "operator": "lte",
-        "threshold": null,
-        "required": false,
-        "provenance": "Numerical cost assessment reserved until comparable supported subtotal evidence exists. No price or zero is assumed."
-      }
-    ]
-  },
-  "provenance": "Authored R1 catalogue-api/1 synthetic teaching fixture, 22 October 2026. Finite demands, arrivals, faults and goals are software assumptions; no production trace, cloud calibration or Model 1 grader constants."
+  "scoring": {
+    "version": "2",
+    "sha256": "0e60939269f94c42dde4c0830c5d82b01fc65144022e003ac79c66ef4b6818a5"
+  }
 }

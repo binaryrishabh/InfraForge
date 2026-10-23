@@ -1,10 +1,10 @@
 {
-  "schema": "infraforge-scored-challenge/1",
+  "schema": "infraforge-scored-challenge/2",
   "id": "lose-an-app-server",
-  "version": "1",
+  "version": "2",
   "brief": {
     "title": "Keep redirect lookups working when an app server fails",
-    "description": "Serve finite preassigned redirect keys through a load balancer, two application processes and one relational database. One app crashes. Meet the stated caller goals across hidden within-domain workload variations.",
+    "description": "Serve finite preassigned redirect keys through a load balancer, two application processes and one relational database. One app crashes. Meet the caller goals across hidden within-domain workload variations.",
     "exclusions": [
       "ID generation",
       "global availability",
@@ -819,794 +819,759 @@
       "boundary": "offer-cohort-half-open; terminal-through-horizon"
     }
   },
-  "hidden": [
+  "provenance": "Authored R1 app-loss software exercise v2; synthetic teaching fixtures. Numeric demands and timings are assumptions, not measured cloud capacities or calibration. Retired v1 suites are public practice.",
+  "practice": [
     {
-      "id": "heldout-spread",
-      "version": "1",
-      "provenance": "Authored R1 app-loss software exercise v1; numeric demands and thresholds are assumptions, not measured cloud capacities or calibration.",
-      "header": {
-        "schema": "infraforge-first-stack-schedule/1",
-        "unit": "us",
-        "durationUs": 100000,
-        "origin": "authored-schedule",
-        "provenance": "Authored R1 app-loss software exercise v1; numeric demands and thresholds are assumptions, not measured cloud capacities or calibration."
-      },
-      "rows": [
-        {
-          "id": "heldout-spread-00",
-          "atUs": 11000,
-          "operation": "redirect"
+      "label": "Public practice: retired v1 workload; synthetic teaching fixture, no grading thresholds.",
+      "workload": {
+        "id": "heldout-spread",
+        "version": "1",
+        "provenance": "Authored R1 app-loss software exercise v1; numeric demands and thresholds are assumptions, not measured cloud capacities or calibration.",
+        "header": {
+          "schema": "infraforge-first-stack-schedule/1",
+          "unit": "us",
+          "durationUs": 100000,
+          "origin": "authored-schedule",
+          "provenance": "Authored R1 app-loss software exercise v1; numeric demands and thresholds are assumptions, not measured cloud capacities or calibration."
         },
-        {
-          "id": "heldout-spread-01",
-          "atUs": 11750,
-          "operation": "redirect"
-        },
-        {
-          "id": "heldout-spread-02",
-          "atUs": 12500,
-          "operation": "redirect"
-        },
-        {
-          "id": "heldout-spread-03",
-          "atUs": 13250,
-          "operation": "redirect"
-        },
-        {
-          "id": "heldout-spread-04",
-          "atUs": 14000,
-          "operation": "redirect"
-        },
-        {
-          "id": "heldout-spread-05",
-          "atUs": 14750,
-          "operation": "redirect"
-        },
-        {
-          "id": "heldout-spread-06",
-          "atUs": 15500,
-          "operation": "redirect"
-        },
-        {
-          "id": "heldout-spread-07",
-          "atUs": 16250,
-          "operation": "redirect"
-        },
-        {
-          "id": "heldout-spread-08",
-          "atUs": 17000,
-          "operation": "redirect"
-        },
-        {
-          "id": "heldout-spread-09",
-          "atUs": 17750,
-          "operation": "redirect"
-        },
-        {
-          "id": "heldout-spread-10",
-          "atUs": 18500,
-          "operation": "redirect"
-        },
-        {
-          "id": "heldout-spread-11",
-          "atUs": 19250,
-          "operation": "redirect"
-        },
-        {
-          "id": "heldout-spread-12",
-          "atUs": 20000,
-          "operation": "redirect"
-        },
-        {
-          "id": "heldout-spread-13",
-          "atUs": 20750,
-          "operation": "redirect"
-        },
-        {
-          "id": "heldout-spread-14",
-          "atUs": 21500,
-          "operation": "redirect"
-        },
-        {
-          "id": "heldout-spread-15",
-          "atUs": 22250,
-          "operation": "redirect"
-        },
-        {
-          "id": "heldout-spread-16",
-          "atUs": 23000,
-          "operation": "redirect"
-        },
-        {
-          "id": "heldout-spread-17",
-          "atUs": 23750,
-          "operation": "redirect"
-        },
-        {
-          "id": "heldout-spread-18",
-          "atUs": 24500,
-          "operation": "redirect"
-        },
-        {
-          "id": "heldout-spread-19",
-          "atUs": 25250,
-          "operation": "redirect"
-        },
-        {
-          "id": "heldout-spread-20",
-          "atUs": 26000,
-          "operation": "redirect"
-        },
-        {
-          "id": "heldout-spread-21",
-          "atUs": 26750,
-          "operation": "redirect"
-        },
-        {
-          "id": "heldout-spread-22",
-          "atUs": 27500,
-          "operation": "redirect"
-        },
-        {
-          "id": "heldout-spread-23",
-          "atUs": 28250,
-          "operation": "redirect"
-        }
-      ],
-      "parameters": {
-        "schema": "infraforge-first-stack-parameters/1",
         "rows": [
           {
             "id": "heldout-spread-00",
-            "plan": "lookup",
-            "keys": [
-              "redirect:b"
-            ]
+            "atUs": 11000,
+            "operation": "redirect"
           },
           {
             "id": "heldout-spread-01",
-            "plan": "lookup",
-            "keys": [
-              "redirect:a"
-            ]
+            "atUs": 11750,
+            "operation": "redirect"
           },
           {
             "id": "heldout-spread-02",
-            "plan": "lookup",
-            "keys": [
-              "redirect:b"
-            ]
+            "atUs": 12500,
+            "operation": "redirect"
           },
           {
             "id": "heldout-spread-03",
-            "plan": "lookup",
-            "keys": [
-              "redirect:a"
-            ]
+            "atUs": 13250,
+            "operation": "redirect"
           },
           {
             "id": "heldout-spread-04",
-            "plan": "lookup",
-            "keys": [
-              "redirect:b"
-            ]
+            "atUs": 14000,
+            "operation": "redirect"
           },
           {
             "id": "heldout-spread-05",
-            "plan": "lookup",
-            "keys": [
-              "redirect:a"
-            ]
+            "atUs": 14750,
+            "operation": "redirect"
           },
           {
             "id": "heldout-spread-06",
-            "plan": "lookup",
-            "keys": [
-              "redirect:b"
-            ]
+            "atUs": 15500,
+            "operation": "redirect"
           },
           {
             "id": "heldout-spread-07",
-            "plan": "lookup",
-            "keys": [
-              "redirect:a"
-            ]
+            "atUs": 16250,
+            "operation": "redirect"
           },
           {
             "id": "heldout-spread-08",
-            "plan": "lookup",
-            "keys": [
-              "redirect:b"
-            ]
+            "atUs": 17000,
+            "operation": "redirect"
           },
           {
             "id": "heldout-spread-09",
-            "plan": "lookup",
-            "keys": [
-              "redirect:a"
-            ]
+            "atUs": 17750,
+            "operation": "redirect"
           },
           {
             "id": "heldout-spread-10",
-            "plan": "lookup",
-            "keys": [
-              "redirect:b"
-            ]
+            "atUs": 18500,
+            "operation": "redirect"
           },
           {
             "id": "heldout-spread-11",
-            "plan": "lookup",
-            "keys": [
-              "redirect:a"
-            ]
+            "atUs": 19250,
+            "operation": "redirect"
           },
           {
             "id": "heldout-spread-12",
-            "plan": "lookup",
-            "keys": [
-              "redirect:b"
-            ]
+            "atUs": 20000,
+            "operation": "redirect"
           },
           {
             "id": "heldout-spread-13",
-            "plan": "lookup",
-            "keys": [
-              "redirect:a"
-            ]
+            "atUs": 20750,
+            "operation": "redirect"
           },
           {
             "id": "heldout-spread-14",
-            "plan": "lookup",
-            "keys": [
-              "redirect:b"
-            ]
+            "atUs": 21500,
+            "operation": "redirect"
           },
           {
             "id": "heldout-spread-15",
-            "plan": "lookup",
-            "keys": [
-              "redirect:a"
-            ]
+            "atUs": 22250,
+            "operation": "redirect"
           },
           {
             "id": "heldout-spread-16",
-            "plan": "lookup",
-            "keys": [
-              "redirect:b"
-            ]
+            "atUs": 23000,
+            "operation": "redirect"
           },
           {
             "id": "heldout-spread-17",
-            "plan": "lookup",
-            "keys": [
-              "redirect:a"
-            ]
+            "atUs": 23750,
+            "operation": "redirect"
           },
           {
             "id": "heldout-spread-18",
-            "plan": "lookup",
-            "keys": [
-              "redirect:b"
-            ]
+            "atUs": 24500,
+            "operation": "redirect"
           },
           {
             "id": "heldout-spread-19",
-            "plan": "lookup",
-            "keys": [
-              "redirect:a"
-            ]
+            "atUs": 25250,
+            "operation": "redirect"
           },
           {
             "id": "heldout-spread-20",
-            "plan": "lookup",
-            "keys": [
-              "redirect:b"
-            ]
+            "atUs": 26000,
+            "operation": "redirect"
           },
           {
             "id": "heldout-spread-21",
-            "plan": "lookup",
-            "keys": [
-              "redirect:a"
-            ]
+            "atUs": 26750,
+            "operation": "redirect"
           },
           {
             "id": "heldout-spread-22",
-            "plan": "lookup",
-            "keys": [
-              "redirect:b"
-            ]
+            "atUs": 27500,
+            "operation": "redirect"
           },
           {
             "id": "heldout-spread-23",
-            "plan": "lookup",
-            "keys": [
-              "redirect:a"
-            ]
+            "atUs": 28250,
+            "operation": "redirect"
           }
-        ]
-      },
-      "faults": [
-        {
-          "schema": "first-stack-fault/1",
-          "id": "lose-app",
-          "kind": "app-process-crash",
-          "target": "app-1",
-          "atUs": 5000,
-          "downtimeUs": 70000,
-          "recoveryUs": 5000
+        ],
+        "parameters": {
+          "schema": "infraforge-first-stack-parameters/1",
+          "rows": [
+            {
+              "id": "heldout-spread-00",
+              "plan": "lookup",
+              "keys": [
+                "redirect:b"
+              ]
+            },
+            {
+              "id": "heldout-spread-01",
+              "plan": "lookup",
+              "keys": [
+                "redirect:a"
+              ]
+            },
+            {
+              "id": "heldout-spread-02",
+              "plan": "lookup",
+              "keys": [
+                "redirect:b"
+              ]
+            },
+            {
+              "id": "heldout-spread-03",
+              "plan": "lookup",
+              "keys": [
+                "redirect:a"
+              ]
+            },
+            {
+              "id": "heldout-spread-04",
+              "plan": "lookup",
+              "keys": [
+                "redirect:b"
+              ]
+            },
+            {
+              "id": "heldout-spread-05",
+              "plan": "lookup",
+              "keys": [
+                "redirect:a"
+              ]
+            },
+            {
+              "id": "heldout-spread-06",
+              "plan": "lookup",
+              "keys": [
+                "redirect:b"
+              ]
+            },
+            {
+              "id": "heldout-spread-07",
+              "plan": "lookup",
+              "keys": [
+                "redirect:a"
+              ]
+            },
+            {
+              "id": "heldout-spread-08",
+              "plan": "lookup",
+              "keys": [
+                "redirect:b"
+              ]
+            },
+            {
+              "id": "heldout-spread-09",
+              "plan": "lookup",
+              "keys": [
+                "redirect:a"
+              ]
+            },
+            {
+              "id": "heldout-spread-10",
+              "plan": "lookup",
+              "keys": [
+                "redirect:b"
+              ]
+            },
+            {
+              "id": "heldout-spread-11",
+              "plan": "lookup",
+              "keys": [
+                "redirect:a"
+              ]
+            },
+            {
+              "id": "heldout-spread-12",
+              "plan": "lookup",
+              "keys": [
+                "redirect:b"
+              ]
+            },
+            {
+              "id": "heldout-spread-13",
+              "plan": "lookup",
+              "keys": [
+                "redirect:a"
+              ]
+            },
+            {
+              "id": "heldout-spread-14",
+              "plan": "lookup",
+              "keys": [
+                "redirect:b"
+              ]
+            },
+            {
+              "id": "heldout-spread-15",
+              "plan": "lookup",
+              "keys": [
+                "redirect:a"
+              ]
+            },
+            {
+              "id": "heldout-spread-16",
+              "plan": "lookup",
+              "keys": [
+                "redirect:b"
+              ]
+            },
+            {
+              "id": "heldout-spread-17",
+              "plan": "lookup",
+              "keys": [
+                "redirect:a"
+              ]
+            },
+            {
+              "id": "heldout-spread-18",
+              "plan": "lookup",
+              "keys": [
+                "redirect:b"
+              ]
+            },
+            {
+              "id": "heldout-spread-19",
+              "plan": "lookup",
+              "keys": [
+                "redirect:a"
+              ]
+            },
+            {
+              "id": "heldout-spread-20",
+              "plan": "lookup",
+              "keys": [
+                "redirect:b"
+              ]
+            },
+            {
+              "id": "heldout-spread-21",
+              "plan": "lookup",
+              "keys": [
+                "redirect:a"
+              ]
+            },
+            {
+              "id": "heldout-spread-22",
+              "plan": "lookup",
+              "keys": [
+                "redirect:b"
+              ]
+            },
+            {
+              "id": "heldout-spread-23",
+              "plan": "lookup",
+              "keys": [
+                "redirect:a"
+              ]
+            }
+          ]
+        },
+        "faults": [
+          {
+            "schema": "first-stack-fault/1",
+            "id": "lose-app",
+            "kind": "app-process-crash",
+            "target": "app-1",
+            "atUs": 5000,
+            "downtimeUs": 70000,
+            "recoveryUs": 5000
+          }
+        ],
+        "observation": {
+          "fromUs": 10000,
+          "toUs": 70000,
+          "boundary": "offer-cohort-half-open; terminal-through-horizon"
         }
-      ],
-      "observation": {
-        "fromUs": 10000,
-        "toUs": 70000,
-        "boundary": "offer-cohort-half-open; terminal-through-horizon"
       }
     },
     {
-      "id": "heldout-burst",
-      "version": "1",
-      "provenance": "Authored R1 app-loss software exercise v1; numeric demands and thresholds are assumptions, not measured cloud capacities or calibration.",
-      "header": {
-        "schema": "infraforge-first-stack-schedule/1",
-        "unit": "us",
-        "durationUs": 100000,
-        "origin": "authored-schedule",
-        "provenance": "Authored R1 app-loss software exercise v1; numeric demands and thresholds are assumptions, not measured cloud capacities or calibration."
-      },
-      "rows": [
-        {
-          "id": "heldout-burst-00",
-          "atUs": 30000,
-          "operation": "redirect"
+      "label": "Public practice: retired v1 workload; synthetic teaching fixture, no grading thresholds.",
+      "workload": {
+        "id": "heldout-burst",
+        "version": "1",
+        "provenance": "Authored R1 app-loss software exercise v1; numeric demands and thresholds are assumptions, not measured cloud capacities or calibration.",
+        "header": {
+          "schema": "infraforge-first-stack-schedule/1",
+          "unit": "us",
+          "durationUs": 100000,
+          "origin": "authored-schedule",
+          "provenance": "Authored R1 app-loss software exercise v1; numeric demands and thresholds are assumptions, not measured cloud capacities or calibration."
         },
-        {
-          "id": "heldout-burst-01",
-          "atUs": 30000,
-          "operation": "redirect"
-        },
-        {
-          "id": "heldout-burst-02",
-          "atUs": 30000,
-          "operation": "redirect"
-        },
-        {
-          "id": "heldout-burst-03",
-          "atUs": 30000,
-          "operation": "redirect"
-        },
-        {
-          "id": "heldout-burst-04",
-          "atUs": 30000,
-          "operation": "redirect"
-        },
-        {
-          "id": "heldout-burst-05",
-          "atUs": 30000,
-          "operation": "redirect"
-        },
-        {
-          "id": "heldout-burst-06",
-          "atUs": 30000,
-          "operation": "redirect"
-        },
-        {
-          "id": "heldout-burst-07",
-          "atUs": 30000,
-          "operation": "redirect"
-        },
-        {
-          "id": "heldout-burst-08",
-          "atUs": 30000,
-          "operation": "redirect"
-        },
-        {
-          "id": "heldout-burst-09",
-          "atUs": 30000,
-          "operation": "redirect"
-        },
-        {
-          "id": "heldout-burst-10",
-          "atUs": 30000,
-          "operation": "redirect"
-        },
-        {
-          "id": "heldout-burst-11",
-          "atUs": 30000,
-          "operation": "redirect"
-        },
-        {
-          "id": "heldout-burst-12",
-          "atUs": 30000,
-          "operation": "redirect"
-        },
-        {
-          "id": "heldout-burst-13",
-          "atUs": 30000,
-          "operation": "redirect"
-        },
-        {
-          "id": "heldout-burst-14",
-          "atUs": 30000,
-          "operation": "redirect"
-        },
-        {
-          "id": "heldout-burst-15",
-          "atUs": 30000,
-          "operation": "redirect"
-        },
-        {
-          "id": "heldout-burst-16",
-          "atUs": 30000,
-          "operation": "redirect"
-        },
-        {
-          "id": "heldout-burst-17",
-          "atUs": 30000,
-          "operation": "redirect"
-        },
-        {
-          "id": "heldout-burst-18",
-          "atUs": 30000,
-          "operation": "redirect"
-        },
-        {
-          "id": "heldout-burst-19",
-          "atUs": 30000,
-          "operation": "redirect"
-        },
-        {
-          "id": "heldout-burst-20",
-          "atUs": 30000,
-          "operation": "redirect"
-        },
-        {
-          "id": "heldout-burst-21",
-          "atUs": 30000,
-          "operation": "redirect"
-        },
-        {
-          "id": "heldout-burst-22",
-          "atUs": 30000,
-          "operation": "redirect"
-        },
-        {
-          "id": "heldout-burst-23",
-          "atUs": 30000,
-          "operation": "redirect"
-        },
-        {
-          "id": "heldout-burst-24",
-          "atUs": 30000,
-          "operation": "redirect"
-        },
-        {
-          "id": "heldout-burst-25",
-          "atUs": 30000,
-          "operation": "redirect"
-        },
-        {
-          "id": "heldout-burst-26",
-          "atUs": 30000,
-          "operation": "redirect"
-        },
-        {
-          "id": "heldout-burst-27",
-          "atUs": 30000,
-          "operation": "redirect"
-        },
-        {
-          "id": "heldout-burst-28",
-          "atUs": 30000,
-          "operation": "redirect"
-        },
-        {
-          "id": "heldout-burst-29",
-          "atUs": 30000,
-          "operation": "redirect"
-        },
-        {
-          "id": "heldout-burst-30",
-          "atUs": 30000,
-          "operation": "redirect"
-        },
-        {
-          "id": "heldout-burst-31",
-          "atUs": 30000,
-          "operation": "redirect"
-        }
-      ],
-      "parameters": {
-        "schema": "infraforge-first-stack-parameters/1",
         "rows": [
           {
             "id": "heldout-burst-00",
-            "plan": "lookup",
-            "keys": [
-              "redirect:b"
-            ]
+            "atUs": 30000,
+            "operation": "redirect"
           },
           {
             "id": "heldout-burst-01",
-            "plan": "lookup",
-            "keys": [
-              "redirect:a"
-            ]
+            "atUs": 30000,
+            "operation": "redirect"
           },
           {
             "id": "heldout-burst-02",
-            "plan": "lookup",
-            "keys": [
-              "redirect:b"
-            ]
+            "atUs": 30000,
+            "operation": "redirect"
           },
           {
             "id": "heldout-burst-03",
-            "plan": "lookup",
-            "keys": [
-              "redirect:a"
-            ]
+            "atUs": 30000,
+            "operation": "redirect"
           },
           {
             "id": "heldout-burst-04",
-            "plan": "lookup",
-            "keys": [
-              "redirect:b"
-            ]
+            "atUs": 30000,
+            "operation": "redirect"
           },
           {
             "id": "heldout-burst-05",
-            "plan": "lookup",
-            "keys": [
-              "redirect:a"
-            ]
+            "atUs": 30000,
+            "operation": "redirect"
           },
           {
             "id": "heldout-burst-06",
-            "plan": "lookup",
-            "keys": [
-              "redirect:b"
-            ]
+            "atUs": 30000,
+            "operation": "redirect"
           },
           {
             "id": "heldout-burst-07",
-            "plan": "lookup",
-            "keys": [
-              "redirect:a"
-            ]
+            "atUs": 30000,
+            "operation": "redirect"
           },
           {
             "id": "heldout-burst-08",
-            "plan": "lookup",
-            "keys": [
-              "redirect:b"
-            ]
+            "atUs": 30000,
+            "operation": "redirect"
           },
           {
             "id": "heldout-burst-09",
-            "plan": "lookup",
-            "keys": [
-              "redirect:a"
-            ]
+            "atUs": 30000,
+            "operation": "redirect"
           },
           {
             "id": "heldout-burst-10",
-            "plan": "lookup",
-            "keys": [
-              "redirect:b"
-            ]
+            "atUs": 30000,
+            "operation": "redirect"
           },
           {
             "id": "heldout-burst-11",
-            "plan": "lookup",
-            "keys": [
-              "redirect:a"
-            ]
+            "atUs": 30000,
+            "operation": "redirect"
           },
           {
             "id": "heldout-burst-12",
-            "plan": "lookup",
-            "keys": [
-              "redirect:b"
-            ]
+            "atUs": 30000,
+            "operation": "redirect"
           },
           {
             "id": "heldout-burst-13",
-            "plan": "lookup",
-            "keys": [
-              "redirect:a"
-            ]
+            "atUs": 30000,
+            "operation": "redirect"
           },
           {
             "id": "heldout-burst-14",
-            "plan": "lookup",
-            "keys": [
-              "redirect:b"
-            ]
+            "atUs": 30000,
+            "operation": "redirect"
           },
           {
             "id": "heldout-burst-15",
-            "plan": "lookup",
-            "keys": [
-              "redirect:a"
-            ]
+            "atUs": 30000,
+            "operation": "redirect"
           },
           {
             "id": "heldout-burst-16",
-            "plan": "lookup",
-            "keys": [
-              "redirect:b"
-            ]
+            "atUs": 30000,
+            "operation": "redirect"
           },
           {
             "id": "heldout-burst-17",
-            "plan": "lookup",
-            "keys": [
-              "redirect:a"
-            ]
+            "atUs": 30000,
+            "operation": "redirect"
           },
           {
             "id": "heldout-burst-18",
-            "plan": "lookup",
-            "keys": [
-              "redirect:b"
-            ]
+            "atUs": 30000,
+            "operation": "redirect"
           },
           {
             "id": "heldout-burst-19",
-            "plan": "lookup",
-            "keys": [
-              "redirect:a"
-            ]
+            "atUs": 30000,
+            "operation": "redirect"
           },
           {
             "id": "heldout-burst-20",
-            "plan": "lookup",
-            "keys": [
-              "redirect:b"
-            ]
+            "atUs": 30000,
+            "operation": "redirect"
           },
           {
             "id": "heldout-burst-21",
-            "plan": "lookup",
-            "keys": [
-              "redirect:a"
-            ]
+            "atUs": 30000,
+            "operation": "redirect"
           },
           {
             "id": "heldout-burst-22",
-            "plan": "lookup",
-            "keys": [
-              "redirect:b"
-            ]
+            "atUs": 30000,
+            "operation": "redirect"
           },
           {
             "id": "heldout-burst-23",
-            "plan": "lookup",
-            "keys": [
-              "redirect:a"
-            ]
+            "atUs": 30000,
+            "operation": "redirect"
           },
           {
             "id": "heldout-burst-24",
-            "plan": "lookup",
-            "keys": [
-              "redirect:b"
-            ]
+            "atUs": 30000,
+            "operation": "redirect"
           },
           {
             "id": "heldout-burst-25",
-            "plan": "lookup",
-            "keys": [
-              "redirect:a"
-            ]
+            "atUs": 30000,
+            "operation": "redirect"
           },
           {
             "id": "heldout-burst-26",
-            "plan": "lookup",
-            "keys": [
-              "redirect:b"
-            ]
+            "atUs": 30000,
+            "operation": "redirect"
           },
           {
             "id": "heldout-burst-27",
-            "plan": "lookup",
-            "keys": [
-              "redirect:a"
-            ]
+            "atUs": 30000,
+            "operation": "redirect"
           },
           {
             "id": "heldout-burst-28",
-            "plan": "lookup",
-            "keys": [
-              "redirect:b"
-            ]
+            "atUs": 30000,
+            "operation": "redirect"
           },
           {
             "id": "heldout-burst-29",
-            "plan": "lookup",
-            "keys": [
-              "redirect:a"
-            ]
+            "atUs": 30000,
+            "operation": "redirect"
           },
           {
             "id": "heldout-burst-30",
-            "plan": "lookup",
-            "keys": [
-              "redirect:b"
-            ]
+            "atUs": 30000,
+            "operation": "redirect"
           },
           {
             "id": "heldout-burst-31",
-            "plan": "lookup",
-            "keys": [
-              "redirect:a"
-            ]
+            "atUs": 30000,
+            "operation": "redirect"
           }
-        ]
-      },
-      "faults": [
-        {
-          "schema": "first-stack-fault/1",
-          "id": "lose-app",
-          "kind": "app-process-crash",
-          "target": "app-0",
-          "atUs": 5000,
-          "downtimeUs": 70000,
-          "recoveryUs": 5000
+        ],
+        "parameters": {
+          "schema": "infraforge-first-stack-parameters/1",
+          "rows": [
+            {
+              "id": "heldout-burst-00",
+              "plan": "lookup",
+              "keys": [
+                "redirect:b"
+              ]
+            },
+            {
+              "id": "heldout-burst-01",
+              "plan": "lookup",
+              "keys": [
+                "redirect:a"
+              ]
+            },
+            {
+              "id": "heldout-burst-02",
+              "plan": "lookup",
+              "keys": [
+                "redirect:b"
+              ]
+            },
+            {
+              "id": "heldout-burst-03",
+              "plan": "lookup",
+              "keys": [
+                "redirect:a"
+              ]
+            },
+            {
+              "id": "heldout-burst-04",
+              "plan": "lookup",
+              "keys": [
+                "redirect:b"
+              ]
+            },
+            {
+              "id": "heldout-burst-05",
+              "plan": "lookup",
+              "keys": [
+                "redirect:a"
+              ]
+            },
+            {
+              "id": "heldout-burst-06",
+              "plan": "lookup",
+              "keys": [
+                "redirect:b"
+              ]
+            },
+            {
+              "id": "heldout-burst-07",
+              "plan": "lookup",
+              "keys": [
+                "redirect:a"
+              ]
+            },
+            {
+              "id": "heldout-burst-08",
+              "plan": "lookup",
+              "keys": [
+                "redirect:b"
+              ]
+            },
+            {
+              "id": "heldout-burst-09",
+              "plan": "lookup",
+              "keys": [
+                "redirect:a"
+              ]
+            },
+            {
+              "id": "heldout-burst-10",
+              "plan": "lookup",
+              "keys": [
+                "redirect:b"
+              ]
+            },
+            {
+              "id": "heldout-burst-11",
+              "plan": "lookup",
+              "keys": [
+                "redirect:a"
+              ]
+            },
+            {
+              "id": "heldout-burst-12",
+              "plan": "lookup",
+              "keys": [
+                "redirect:b"
+              ]
+            },
+            {
+              "id": "heldout-burst-13",
+              "plan": "lookup",
+              "keys": [
+                "redirect:a"
+              ]
+            },
+            {
+              "id": "heldout-burst-14",
+              "plan": "lookup",
+              "keys": [
+                "redirect:b"
+              ]
+            },
+            {
+              "id": "heldout-burst-15",
+              "plan": "lookup",
+              "keys": [
+                "redirect:a"
+              ]
+            },
+            {
+              "id": "heldout-burst-16",
+              "plan": "lookup",
+              "keys": [
+                "redirect:b"
+              ]
+            },
+            {
+              "id": "heldout-burst-17",
+              "plan": "lookup",
+              "keys": [
+                "redirect:a"
+              ]
+            },
+            {
+              "id": "heldout-burst-18",
+              "plan": "lookup",
+              "keys": [
+                "redirect:b"
+              ]
+            },
+            {
+              "id": "heldout-burst-19",
+              "plan": "lookup",
+              "keys": [
+                "redirect:a"
+              ]
+            },
+            {
+              "id": "heldout-burst-20",
+              "plan": "lookup",
+              "keys": [
+                "redirect:b"
+              ]
+            },
+            {
+              "id": "heldout-burst-21",
+              "plan": "lookup",
+              "keys": [
+                "redirect:a"
+              ]
+            },
+            {
+              "id": "heldout-burst-22",
+              "plan": "lookup",
+              "keys": [
+                "redirect:b"
+              ]
+            },
+            {
+              "id": "heldout-burst-23",
+              "plan": "lookup",
+              "keys": [
+                "redirect:a"
+              ]
+            },
+            {
+              "id": "heldout-burst-24",
+              "plan": "lookup",
+              "keys": [
+                "redirect:b"
+              ]
+            },
+            {
+              "id": "heldout-burst-25",
+              "plan": "lookup",
+              "keys": [
+                "redirect:a"
+              ]
+            },
+            {
+              "id": "heldout-burst-26",
+              "plan": "lookup",
+              "keys": [
+                "redirect:b"
+              ]
+            },
+            {
+              "id": "heldout-burst-27",
+              "plan": "lookup",
+              "keys": [
+                "redirect:a"
+              ]
+            },
+            {
+              "id": "heldout-burst-28",
+              "plan": "lookup",
+              "keys": [
+                "redirect:b"
+              ]
+            },
+            {
+              "id": "heldout-burst-29",
+              "plan": "lookup",
+              "keys": [
+                "redirect:a"
+              ]
+            },
+            {
+              "id": "heldout-burst-30",
+              "plan": "lookup",
+              "keys": [
+                "redirect:b"
+              ]
+            },
+            {
+              "id": "heldout-burst-31",
+              "plan": "lookup",
+              "keys": [
+                "redirect:a"
+              ]
+            }
+          ]
+        },
+        "faults": [
+          {
+            "schema": "first-stack-fault/1",
+            "id": "lose-app",
+            "kind": "app-process-crash",
+            "target": "app-0",
+            "atUs": 5000,
+            "downtimeUs": 70000,
+            "recoveryUs": 5000
+          }
+        ],
+        "observation": {
+          "fromUs": 10000,
+          "toUs": 70000,
+          "boundary": "offer-cohort-half-open; terminal-through-horizon"
         }
-      ],
-      "observation": {
-        "fromUs": 10000,
-        "toUs": 70000,
-        "boundary": "offer-cohort-half-open; terminal-through-horizon"
       }
     }
   ],
-  "rubric": {
-    "version": "1",
-    "criteria": [
-      {
-        "id": "delivered",
-        "metric": "delivery-permille",
-        "operator": "gte",
-        "threshold": 900,
-        "required": true,
-        "provenance": "Authored R1 app-loss software exercise v1; numeric demands and thresholds are assumptions, not measured cloud capacities or calibration."
-      },
-      {
-        "id": "errors",
-        "metric": "error-permille",
-        "operator": "lte",
-        "threshold": 100,
-        "required": true,
-        "provenance": "Authored R1 app-loss software exercise v1; numeric demands and thresholds are assumptions, not measured cloud capacities or calibration."
-      },
-      {
-        "id": "slo",
-        "metric": "p95-us",
-        "operator": "lte",
-        "threshold": 6000,
-        "required": true,
-        "provenance": "Authored R1 app-loss software exercise v1; numeric demands and thresholds are assumptions, not measured cloud capacities or calibration."
-      },
-      {
-        "id": "fault-survival",
-        "metric": "fault-delivery-permille",
-        "operator": "gte",
-        "threshold": 900,
-        "required": true,
-        "provenance": "Authored R1 app-loss software exercise v1; numeric demands and thresholds are assumptions, not measured cloud capacities or calibration."
-      },
-      {
-        "id": "cost-subtotal",
-        "metric": "cost-subtotal",
-        "operator": "lte",
-        "threshold": null,
-        "required": false,
-        "provenance": "Numerical cost assessment reserved until comparable supported subtotal evidence exists. No price or zero is assumed."
-      }
-    ]
-  },
-  "provenance": "Authored R1 app-loss software exercise v1; numeric demands and thresholds are assumptions, not measured cloud capacities or calibration."
+  "scoring": {
+    "version": "2",
+    "sha256": "d56026cf8afc16779a6edf16cad24c3624911c344e2f18cf1dac952a45d4c41d"
+  }
 }

@@ -1,10 +1,77 @@
 # Server-owned scored challenges
 
-`infraforge-scored-challenge/1` is reviewed JSON data. `definition.ts` validates
-the format and selects an exact ID/version; the definition digest pins the entire
-brief, constrained design space, sample, hidden suite, fault schedules, observation
-cohorts, policy, rubric and provenance. Publish a new version when any data changes.
+`infraforge-scored-challenge/2` is public reviewed JSON data. `definition.ts`
+validates the format and selects an exact ID/version. The definition digest pins
+the brief, constraints, sample, policy, retired practice recordings and private
+scoring commitment. Publish a new challenge version when any data changes.
 The runtime never evaluates authored code or an architecture answer key.
+
+Each `scoring: { version, sha256 }` commits the entire private bundle, including
+its version, challenge identity, hidden workloads and rubric. SHA-256 uses the
+recursive sorted-object-key JSON canonicalization in `../canonical.ts`; array
+order and string values are preserved. JSON whitespace and file line endings do
+not affect the commitment. Private files use that canonical JSON plus a newline.
+The bundle schema is `infraforge-private-scoring/1`, with `id`,
+`challengeVersion`, `version`, `hidden` and `rubric`. Private workload seeds
+override the public sample seed only for their execution.
+
+Version 1 suites are burned and remain readable in Git history. Their exact
+workloads are now labelled public practice in each version 2 definition; no
+rubric or numeric grading goals remain in public definitions. Version 2 private
+suites rotate arrivals, populations, crash timing, seeds, IDs and rubric values
+within the same teaching difficulty. All recordings and thresholds are synthetic
+teaching fixtures, with no cloud calibration claim. Version 1 is no longer
+admitted; historical results remain readable through the existing projections.
+
+Only the scoring server reads `INFRAFORGE_SCORING_DIRECTORY`. There is no default
+directory, repository fallback, network fetch or fixture import. The configured
+directory must resolve outside the checkout. Each file is named
+`<challenge-id>.v<challenge-version>.json`. The loader checks its bounded regular
+file, canonical commitment, strict schema and exact identity/version before any
+hidden execution. It reads fresh bytes per scoring operation; no stale cache can
+hide removal or corruption. Missing, unreadable or mismatched data returns
+`infraforge-scoring-unavailable/1`, state `unavailable`, message `Scoring unavailable`.
+It grants no points and launches no hidden execution. This safe state passes
+through the existing verified-result projection and account export allowlists;
+raw errors, paths and bundle contents never appear there or in logs. Public
+samples and practice files remain available independently of the private store.
+
+Install and rotate the private store
+------------------------------------
+
+The owner-held local bundles live outside Git at
+`C:/Users/Rishabh/Documents/1_InfraForge/InfraForge_Private_Scoring/`. Transfer them
+over an owner-controlled secure channel; never put them in a checkout, image
+layer, CI artifact, build context or public report. On the host, create
+`/etc/infraforge/scoring` owned by `root:infraforge`, mode `0750`. Install the seven
+files as `root:infraforge`, mode `0640`; the scoring process must belong to that
+read-only group. Mount that directory read-only into the process that performs
+scoring and set `INFRAFORGE_SCORING_DIRECTORY=/etc/infraforge/scoring` through its
+service configuration. Keep the isolated child without access to this mount;
+it receives only the one prepared workload input through the existing protocol.
+The backend image continues to exclude tests and reference designs.
+
+From the deployed checkout, run
+`bun --no-env-file scripts/check-private-scoring.ts`. This verifies every public
+commitment with the production loader and executes the existing two qualifying
+capacity designs and weak capacity design for all seven scenarios. Output is
+restricted to public scenario IDs and pass/fail results; it prints no private
+measurements or workloads. This is an in-process software check with synthetic
+receipts, not Linux containment evidence. A failure exits nonzero and does not
+print underlying private diagnostics. Do not substitute a byte-file `sha256sum`
+for the canonical JSON commitment check.
+
+For future rotation, create new challenge and bundle versions in the private
+authoring location. Preserve each lesson, fault type, workload count and
+difficulty; choose fresh concrete workloads, seeds and rubric values. Qualify
+the existing passing and failing capacity designs before publication. Set the
+public commitment to `hash(parsedBundle)` using `../canonical.ts`, and publish
+only the public definition. Install the corresponding private files before
+admitting their new version. Keep old immutable version files while old queued
+work may still reference them; never replace bytes behind an existing version.
+If the backend later moves private, move the store with it without changing this
+commitment contract. Test fixtures under `tests/fixtures/scoring` remain clearly
+fake and never authorize a production commitment.
 
 The sample endpoint on the inactive submission router enumerates its response
 fields. It returns only the brief, constraints, template, resolved visible schedule
@@ -59,10 +126,10 @@ Public admission and Model 2 activation remain closed. Qualification tests use
 the real routed first-stack runtime with explicitly synthetic executor receipts;
 they are not host containment, database integration or Linux proof evidence.
 
-The cache-free R1 library follows the tutorial in this order. Each `/1` definition
-contains a 24-request visible sample and two authored hidden recordings (32-request
-tight burst and 28-request separated waves), with different app-loss targets and
-timings. Capacity edits remain 1..4 cores, 1..32 workers and 0..64 queued requests
+The cache-free R1 library follows the tutorial in this order. Each `/2` definition
+contains a visible sample, two retired public practice recordings and a commitment
+to two new private recordings, with different app-loss targets and timings.
+Capacity edits remain 1..4 cores, 1..32 workers and 0..64 queued requests
 per app, with matching host cores. These are finite teaching assumptions.
 
 | ID | One lesson | Executed API slice |

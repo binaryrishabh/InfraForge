@@ -134,7 +134,7 @@ apps/backend/firstStack/**
 !apps/backend/firstStack/scoredChallenges/
 apps/backend/firstStack/scoredChallenges/**
 !apps/backend/firstStack/scoredChallenges/*.ts
-!apps/backend/firstStack/scoredChallenges/lose-an-app-server.v1.json
+!apps/backend/firstStack/scoredChallenges/lose-an-app-server.v2.json
 !apps/backend/challenges/
 apps/backend/challenges/**
 !apps/backend/challenges/*.ts
@@ -205,9 +205,9 @@ apps/backend/resources/**
 !apps/backend/resources/*.json
 !apps/backend/resources/*.wasm
 !apps/backend/resources/README.md
-!apps/backend/firstStack/scoredChallenges/url-redirect.v1.json
-!apps/backend/firstStack/scoredChallenges/catalogue-api.v1.json
-!apps/backend/firstStack/scoredChallenges/reviews-api.v1.json
-!apps/backend/firstStack/scoredChallenges/small-paste-api.v1.json
-!apps/backend/firstStack/scoredChallenges/preloaded-news-api.v1.json
-!apps/backend/firstStack/scoredChallenges/price-history-api.v1.json
+!apps/backend/firstStack/scoredChallenges/url-redirect.v2.json
+!apps/backend/firstStack/scoredChallenges/catalogue-api.v2.json
+!apps/backend/firstStack/scoredChallenges/reviews-api.v2.json
+!apps/backend/firstStack/scoredChallenges/small-paste-api.v2.json
+!apps/backend/firstStack/scoredChallenges/preloaded-news-api.v2.json
+!apps/backend/firstStack/scoredChallenges/price-history-api.v2.json

@@ -1,10 +1,10 @@
 {
-  "schema": "infraforge-scored-challenge/1",
+  "schema": "infraforge-scored-challenge/2",
   "id": "url-redirect",
-  "version": "1",
+  "version": "2",
   "brief": {
     "title": "URL shortener: keep redirects working",
-    "description": "People following a shared link need a quick lookup even while an application process is unavailable. Resolve preassigned short IDs from the relational database. Keep spare application capacity for a popular link when one app fails. Choose each app's cores, workers and queue. Required goals on every held-out outage cohort: deliver at least 90% of offered requests, errors at most 10%, completed-request p95 at most 6000 us (20 completions required). Fault survival uses delivered caller outcomes during the outage, not a health label. All offers are in [10000,70000) us; observe terminals through 100000 us. Hidden variants change burst shape, keys and failed app within the stated domain. Timing is assumption-only. Supported subtotal and full cost are Unknown.",
+    "description": "People following a shared link need a quick lookup even while an application process is unavailable. Resolve preassigned short IDs from the relational database. Keep spare application capacity for a popular link when one app fails. Choose each app's cores, workers and queue. The private assessment checks delivery, errors, completed-request latency and fault survival. Fault survival uses delivered caller outcomes during the outage, not a health label. All offers are in [10000,70000) us; observe terminals through 100000 us. Hidden variants change burst shape, keys and failed app within the stated domain. Timing is assumption-only. Supported subtotal and full cost are Unknown.",
     "exclusions": [
       "ID allocation and collision correctness",
       "expiry and abuse protection",
@@ -920,842 +920,807 @@
       "boundary": "offer-cohort-half-open; terminal-through-horizon"
     }
   },
-  "hidden": [
+  "provenance": "Authored R1 app-loss software exercise v2; synthetic teaching fixtures. Numeric demands and timings are assumptions, not measured cloud capacities or calibration. Retired v1 suites are public practice.",
+  "practice": [
     {
-      "id": "url-redirect-heldout-tight",
-      "version": "1",
-      "provenance": "Authored R1 url-redirect/1 synthetic teaching fixture, 22 October 2026. Finite demands, arrivals, faults and goals are software assumptions; no production trace, cloud calibration or Model 1 grader constants. url-redirect-heldout-tight: single wave, 32 offers, 0 us spacing; app-1 loss.",
-      "header": {
-        "schema": "infraforge-first-stack-schedule/1",
-        "unit": "us",
-        "durationUs": 100000,
-        "origin": "authored-schedule",
-        "provenance": "Authored R1 url-redirect/1 synthetic teaching fixture, 22 October 2026. Finite demands, arrivals, faults and goals are software assumptions; no production trace, cloud calibration or Model 1 grader constants."
-      },
-      "rows": [
-        {
-          "id": "url-redirect-heldout-tight-0",
-          "atUs": 12000,
-          "operation": "redirect"
+      "label": "Public practice: retired v1 workload; synthetic teaching fixture, no grading thresholds.",
+      "workload": {
+        "id": "url-redirect-heldout-tight",
+        "version": "1",
+        "provenance": "Authored R1 url-redirect/1 synthetic teaching fixture, 22 October 2026. Finite demands, arrivals, faults and goals are software assumptions; no production trace, cloud calibration or Model 1 grader constants. url-redirect-heldout-tight: single wave, 32 offers, 0 us spacing; app-1 loss.",
+        "header": {
+          "schema": "infraforge-first-stack-schedule/1",
+          "unit": "us",
+          "durationUs": 100000,
+          "origin": "authored-schedule",
+          "provenance": "Authored R1 url-redirect/1 synthetic teaching fixture, 22 October 2026. Finite demands, arrivals, faults and goals are software assumptions; no production trace, cloud calibration or Model 1 grader constants."
         },
-        {
-          "id": "url-redirect-heldout-tight-1",
-          "atUs": 12000,
-          "operation": "redirect"
-        },
-        {
-          "id": "url-redirect-heldout-tight-2",
-          "atUs": 12000,
-          "operation": "redirect"
-        },
-        {
-          "id": "url-redirect-heldout-tight-3",
-          "atUs": 12000,
-          "operation": "redirect"
-        },
-        {
-          "id": "url-redirect-heldout-tight-4",
-          "atUs": 12000,
-          "operation": "redirect"
-        },
-        {
-          "id": "url-redirect-heldout-tight-5",
-          "atUs": 12000,
-          "operation": "redirect"
-        },
-        {
-          "id": "url-redirect-heldout-tight-6",
-          "atUs": 12000,
-          "operation": "redirect"
-        },
-        {
-          "id": "url-redirect-heldout-tight-7",
-          "atUs": 12000,
-          "operation": "redirect"
-        },
-        {
-          "id": "url-redirect-heldout-tight-8",
-          "atUs": 12000,
-          "operation": "redirect"
-        },
-        {
-          "id": "url-redirect-heldout-tight-9",
-          "atUs": 12000,
-          "operation": "redirect"
-        },
-        {
-          "id": "url-redirect-heldout-tight-10",
-          "atUs": 12000,
-          "operation": "redirect"
-        },
-        {
-          "id": "url-redirect-heldout-tight-11",
-          "atUs": 12000,
-          "operation": "redirect"
-        },
-        {
-          "id": "url-redirect-heldout-tight-12",
-          "atUs": 12000,
-          "operation": "redirect"
-        },
-        {
-          "id": "url-redirect-heldout-tight-13",
-          "atUs": 12000,
-          "operation": "redirect"
-        },
-        {
-          "id": "url-redirect-heldout-tight-14",
-          "atUs": 12000,
-          "operation": "redirect"
-        },
-        {
-          "id": "url-redirect-heldout-tight-15",
-          "atUs": 12000,
-          "operation": "redirect"
-        },
-        {
-          "id": "url-redirect-heldout-tight-16",
-          "atUs": 12000,
-          "operation": "redirect"
-        },
-        {
-          "id": "url-redirect-heldout-tight-17",
-          "atUs": 12000,
-          "operation": "redirect"
-        },
-        {
-          "id": "url-redirect-heldout-tight-18",
-          "atUs": 12000,
-          "operation": "redirect"
-        },
-        {
-          "id": "url-redirect-heldout-tight-19",
-          "atUs": 12000,
-          "operation": "redirect"
-        },
-        {
-          "id": "url-redirect-heldout-tight-20",
-          "atUs": 12000,
-          "operation": "redirect"
-        },
-        {
-          "id": "url-redirect-heldout-tight-21",
-          "atUs": 12000,
-          "operation": "redirect"
-        },
-        {
-          "id": "url-redirect-heldout-tight-22",
-          "atUs": 12000,
-          "operation": "redirect"
-        },
-        {
-          "id": "url-redirect-heldout-tight-23",
-          "atUs": 12000,
-          "operation": "redirect"
-        },
-        {
-          "id": "url-redirect-heldout-tight-24",
-          "atUs": 12000,
-          "operation": "redirect"
-        },
-        {
-          "id": "url-redirect-heldout-tight-25",
-          "atUs": 12000,
-          "operation": "redirect"
-        },
-        {
-          "id": "url-redirect-heldout-tight-26",
-          "atUs": 12000,
-          "operation": "redirect"
-        },
-        {
-          "id": "url-redirect-heldout-tight-27",
-          "atUs": 12000,
-          "operation": "redirect"
-        },
-        {
-          "id": "url-redirect-heldout-tight-28",
-          "atUs": 12000,
-          "operation": "redirect"
-        },
-        {
-          "id": "url-redirect-heldout-tight-29",
-          "atUs": 12000,
-          "operation": "redirect"
-        },
-        {
-          "id": "url-redirect-heldout-tight-30",
-          "atUs": 12000,
-          "operation": "redirect"
-        },
-        {
-          "id": "url-redirect-heldout-tight-31",
-          "atUs": 12000,
-          "operation": "redirect"
-        }
-      ],
-      "parameters": {
-        "schema": "infraforge-first-stack-parameters/1",
         "rows": [
           {
             "id": "url-redirect-heldout-tight-0",
-            "plan": "lookup",
-            "keys": [
-              "url-redirect:0"
-            ]
+            "atUs": 12000,
+            "operation": "redirect"
           },
           {
             "id": "url-redirect-heldout-tight-1",
-            "plan": "lookup",
-            "keys": [
-              "url-redirect:1"
-            ]
+            "atUs": 12000,
+            "operation": "redirect"
           },
           {
             "id": "url-redirect-heldout-tight-2",
-            "plan": "lookup",
-            "keys": [
-              "url-redirect:2"
-            ]
+            "atUs": 12000,
+            "operation": "redirect"
           },
           {
             "id": "url-redirect-heldout-tight-3",
-            "plan": "lookup",
-            "keys": [
-              "url-redirect:0"
-            ]
+            "atUs": 12000,
+            "operation": "redirect"
           },
           {
             "id": "url-redirect-heldout-tight-4",
-            "plan": "lookup",
-            "keys": [
-              "url-redirect:1"
-            ]
+            "atUs": 12000,
+            "operation": "redirect"
           },
           {
             "id": "url-redirect-heldout-tight-5",
-            "plan": "lookup",
-            "keys": [
-              "url-redirect:2"
-            ]
+            "atUs": 12000,
+            "operation": "redirect"
           },
           {
             "id": "url-redirect-heldout-tight-6",
-            "plan": "lookup",
-            "keys": [
-              "url-redirect:0"
-            ]
+            "atUs": 12000,
+            "operation": "redirect"
           },
           {
             "id": "url-redirect-heldout-tight-7",
-            "plan": "lookup",
-            "keys": [
-              "url-redirect:1"
-            ]
+            "atUs": 12000,
+            "operation": "redirect"
           },
           {
             "id": "url-redirect-heldout-tight-8",
-            "plan": "lookup",
-            "keys": [
-              "url-redirect:2"
-            ]
+            "atUs": 12000,
+            "operation": "redirect"
           },
           {
             "id": "url-redirect-heldout-tight-9",
-            "plan": "lookup",
-            "keys": [
-              "url-redirect:0"
-            ]
+            "atUs": 12000,
+            "operation": "redirect"
           },
           {
             "id": "url-redirect-heldout-tight-10",
-            "plan": "lookup",
-            "keys": [
-              "url-redirect:1"
-            ]
+            "atUs": 12000,
+            "operation": "redirect"
           },
           {
             "id": "url-redirect-heldout-tight-11",
-            "plan": "lookup",
-            "keys": [
-              "url-redirect:2"
-            ]
+            "atUs": 12000,
+            "operation": "redirect"
           },
           {
             "id": "url-redirect-heldout-tight-12",
-            "plan": "lookup",
-            "keys": [
-              "url-redirect:0"
-            ]
+            "atUs": 12000,
+            "operation": "redirect"
           },
           {
             "id": "url-redirect-heldout-tight-13",
-            "plan": "lookup",
-            "keys": [
-              "url-redirect:1"
-            ]
+            "atUs": 12000,
+            "operation": "redirect"
           },
           {
             "id": "url-redirect-heldout-tight-14",
-            "plan": "lookup",
-            "keys": [
-              "url-redirect:2"
-            ]
+            "atUs": 12000,
+            "operation": "redirect"
           },
           {
             "id": "url-redirect-heldout-tight-15",
-            "plan": "lookup",
-            "keys": [
-              "url-redirect:0"
-            ]
+            "atUs": 12000,
+            "operation": "redirect"
           },
           {
             "id": "url-redirect-heldout-tight-16",
-            "plan": "lookup",
-            "keys": [
-              "url-redirect:1"
-            ]
+            "atUs": 12000,
+            "operation": "redirect"
           },
           {
             "id": "url-redirect-heldout-tight-17",
-            "plan": "lookup",
-            "keys": [
-              "url-redirect:2"
-            ]
+            "atUs": 12000,
+            "operation": "redirect"
           },
           {
             "id": "url-redirect-heldout-tight-18",
-            "plan": "lookup",
-            "keys": [
-              "url-redirect:0"
-            ]
+            "atUs": 12000,
+            "operation": "redirect"
           },
           {
             "id": "url-redirect-heldout-tight-19",
-            "plan": "lookup",
-            "keys": [
-              "url-redirect:1"
-            ]
+            "atUs": 12000,
+            "operation": "redirect"
           },
           {
             "id": "url-redirect-heldout-tight-20",
-            "plan": "lookup",
-            "keys": [
-              "url-redirect:2"
-            ]
+            "atUs": 12000,
+            "operation": "redirect"
           },
           {
             "id": "url-redirect-heldout-tight-21",
-            "plan": "lookup",
-            "keys": [
-              "url-redirect:0"
-            ]
+            "atUs": 12000,
+            "operation": "redirect"
           },
           {
             "id": "url-redirect-heldout-tight-22",
-            "plan": "lookup",
-            "keys": [
-              "url-redirect:1"
-            ]
+            "atUs": 12000,
+            "operation": "redirect"
           },
           {
             "id": "url-redirect-heldout-tight-23",
-            "plan": "lookup",
-            "keys": [
-              "url-redirect:2"
-            ]
+            "atUs": 12000,
+            "operation": "redirect"
           },
           {
             "id": "url-redirect-heldout-tight-24",
-            "plan": "lookup",
-            "keys": [
-              "url-redirect:0"
-            ]
+            "atUs": 12000,
+            "operation": "redirect"
           },
           {
             "id": "url-redirect-heldout-tight-25",
-            "plan": "lookup",
-            "keys": [
-              "url-redirect:1"
-            ]
+            "atUs": 12000,
+            "operation": "redirect"
           },
           {
             "id": "url-redirect-heldout-tight-26",
-            "plan": "lookup",
-            "keys": [
-              "url-redirect:2"
-            ]
+            "atUs": 12000,
+            "operation": "redirect"
           },
           {
             "id": "url-redirect-heldout-tight-27",
-            "plan": "lookup",
-            "keys": [
-              "url-redirect:0"
-            ]
+            "atUs": 12000,
+            "operation": "redirect"
           },
           {
             "id": "url-redirect-heldout-tight-28",
-            "plan": "lookup",
-            "keys": [
-              "url-redirect:1"
-            ]
+            "atUs": 12000,
+            "operation": "redirect"
           },
           {
             "id": "url-redirect-heldout-tight-29",
-            "plan": "lookup",
-            "keys": [
-              "url-redirect:2"
-            ]
+            "atUs": 12000,
+            "operation": "redirect"
           },
           {
             "id": "url-redirect-heldout-tight-30",
-            "plan": "lookup",
-            "keys": [
-              "url-redirect:0"
-            ]
+            "atUs": 12000,
+            "operation": "redirect"
           },
           {
             "id": "url-redirect-heldout-tight-31",
-            "plan": "lookup",
-            "keys": [
-              "url-redirect:1"
-            ]
+            "atUs": 12000,
+            "operation": "redirect"
           }
-        ]
-      },
-      "faults": [
-        {
-          "schema": "first-stack-fault/1",
-          "id": "lose-app",
-          "kind": "app-process-crash",
-          "target": "app-1",
-          "atUs": 3000,
-          "downtimeUs": 74000,
-          "recoveryUs": 3000
+        ],
+        "parameters": {
+          "schema": "infraforge-first-stack-parameters/1",
+          "rows": [
+            {
+              "id": "url-redirect-heldout-tight-0",
+              "plan": "lookup",
+              "keys": [
+                "url-redirect:0"
+              ]
+            },
+            {
+              "id": "url-redirect-heldout-tight-1",
+              "plan": "lookup",
+              "keys": [
+                "url-redirect:1"
+              ]
+            },
+            {
+              "id": "url-redirect-heldout-tight-2",
+              "plan": "lookup",
+              "keys": [
+                "url-redirect:2"
+              ]
+            },
+            {
+              "id": "url-redirect-heldout-tight-3",
+              "plan": "lookup",
+              "keys": [
+                "url-redirect:0"
+              ]
+            },
+            {
+              "id": "url-redirect-heldout-tight-4",
+              "plan": "lookup",
+              "keys": [
+                "url-redirect:1"
+              ]
+            },
+            {
+              "id": "url-redirect-heldout-tight-5",
+              "plan": "lookup",
+              "keys": [
+                "url-redirect:2"
+              ]
+            },
+            {
+              "id": "url-redirect-heldout-tight-6",
+              "plan": "lookup",
+              "keys": [
+                "url-redirect:0"
+              ]
+            },
+            {
+              "id": "url-redirect-heldout-tight-7",
+              "plan": "lookup",
+              "keys": [
+                "url-redirect:1"
+              ]
+            },
+            {
+              "id": "url-redirect-heldout-tight-8",
+              "plan": "lookup",
+              "keys": [
+                "url-redirect:2"
+              ]
+            },
+            {
+              "id": "url-redirect-heldout-tight-9",
+              "plan": "lookup",
+              "keys": [
+                "url-redirect:0"
+              ]
+            },
+            {
+              "id": "url-redirect-heldout-tight-10",
+              "plan": "lookup",
+              "keys": [
+                "url-redirect:1"
+              ]
+            },
+            {
+              "id": "url-redirect-heldout-tight-11",
+              "plan": "lookup",
+              "keys": [
+                "url-redirect:2"
+              ]
+            },
+            {
+              "id": "url-redirect-heldout-tight-12",
+              "plan": "lookup",
+              "keys": [
+                "url-redirect:0"
+              ]
+            },
+            {
+              "id": "url-redirect-heldout-tight-13",
+              "plan": "lookup",
+              "keys": [
+                "url-redirect:1"
+              ]
+            },
+            {
+              "id": "url-redirect-heldout-tight-14",
+              "plan": "lookup",
+              "keys": [
+                "url-redirect:2"
+              ]
+            },
+            {
+              "id": "url-redirect-heldout-tight-15",
+              "plan": "lookup",
+              "keys": [
+                "url-redirect:0"
+              ]
+            },
+            {
+              "id": "url-redirect-heldout-tight-16",
+              "plan": "lookup",
+              "keys": [
+                "url-redirect:1"
+              ]
+            },
+            {
+              "id": "url-redirect-heldout-tight-17",
+              "plan": "lookup",
+              "keys": [
+                "url-redirect:2"
+              ]
+            },
+            {
+              "id": "url-redirect-heldout-tight-18",
+              "plan": "lookup",
+              "keys": [
+                "url-redirect:0"
+              ]
+            },
+            {
+              "id": "url-redirect-heldout-tight-19",
+              "plan": "lookup",
+              "keys": [
+                "url-redirect:1"
+              ]
+            },
+            {
+              "id": "url-redirect-heldout-tight-20",
+              "plan": "lookup",
+              "keys": [
+                "url-redirect:2"
+              ]
+            },
+            {
+              "id": "url-redirect-heldout-tight-21",
+              "plan": "lookup",
+              "keys": [
+                "url-redirect:0"
+              ]
+            },
+            {
+              "id": "url-redirect-heldout-tight-22",
+              "plan": "lookup",
+              "keys": [
+                "url-redirect:1"
+              ]
+            },
+            {
+              "id": "url-redirect-heldout-tight-23",
+              "plan": "lookup",
+              "keys": [
+                "url-redirect:2"
+              ]
+            },
+            {
+              "id": "url-redirect-heldout-tight-24",
+              "plan": "lookup",
+              "keys": [
+                "url-redirect:0"
+              ]
+            },
+            {
+              "id": "url-redirect-heldout-tight-25",
+              "plan": "lookup",
+              "keys": [
+                "url-redirect:1"
+              ]
+            },
+            {
+              "id": "url-redirect-heldout-tight-26",
+              "plan": "lookup",
+              "keys": [
+                "url-redirect:2"
+              ]
+            },
+            {
+              "id": "url-redirect-heldout-tight-27",
+              "plan": "lookup",
+              "keys": [
+                "url-redirect:0"
+              ]
+            },
+            {
+              "id": "url-redirect-heldout-tight-28",
+              "plan": "lookup",
+              "keys": [
+                "url-redirect:1"
+              ]
+            },
+            {
+              "id": "url-redirect-heldout-tight-29",
+              "plan": "lookup",
+              "keys": [
+                "url-redirect:2"
+              ]
+            },
+            {
+              "id": "url-redirect-heldout-tight-30",
+              "plan": "lookup",
+              "keys": [
+                "url-redirect:0"
+              ]
+            },
+            {
+              "id": "url-redirect-heldout-tight-31",
+              "plan": "lookup",
+              "keys": [
+                "url-redirect:1"
+              ]
+            }
+          ]
+        },
+        "faults": [
+          {
+            "schema": "first-stack-fault/1",
+            "id": "lose-app",
+            "kind": "app-process-crash",
+            "target": "app-1",
+            "atUs": 3000,
+            "downtimeUs": 74000,
+            "recoveryUs": 3000
+          }
+        ],
+        "observation": {
+          "fromUs": 10000,
+          "toUs": 70000,
+          "boundary": "offer-cohort-half-open; terminal-through-horizon"
         }
-      ],
-      "observation": {
-        "fromUs": 10000,
-        "toUs": 70000,
-        "boundary": "offer-cohort-half-open; terminal-through-horizon"
       }
     },
     {
-      "id": "url-redirect-heldout-waves",
-      "version": "1",
-      "provenance": "Authored R1 url-redirect/1 synthetic teaching fixture, 22 October 2026. Finite demands, arrivals, faults and goals are software assumptions; no production trace, cloud calibration or Model 1 grader constants. url-redirect-heldout-waves: two separated waves, 28 offers, 150 us spacing; app-0 loss.",
-      "header": {
-        "schema": "infraforge-first-stack-schedule/1",
-        "unit": "us",
-        "durationUs": 100000,
-        "origin": "authored-schedule",
-        "provenance": "Authored R1 url-redirect/1 synthetic teaching fixture, 22 October 2026. Finite demands, arrivals, faults and goals are software assumptions; no production trace, cloud calibration or Model 1 grader constants."
-      },
-      "rows": [
-        {
-          "id": "url-redirect-heldout-waves-0",
-          "atUs": 18000,
-          "operation": "redirect"
+      "label": "Public practice: retired v1 workload; synthetic teaching fixture, no grading thresholds.",
+      "workload": {
+        "id": "url-redirect-heldout-waves",
+        "version": "1",
+        "provenance": "Authored R1 url-redirect/1 synthetic teaching fixture, 22 October 2026. Finite demands, arrivals, faults and goals are software assumptions; no production trace, cloud calibration or Model 1 grader constants. url-redirect-heldout-waves: two separated waves, 28 offers, 150 us spacing; app-0 loss.",
+        "header": {
+          "schema": "infraforge-first-stack-schedule/1",
+          "unit": "us",
+          "durationUs": 100000,
+          "origin": "authored-schedule",
+          "provenance": "Authored R1 url-redirect/1 synthetic teaching fixture, 22 October 2026. Finite demands, arrivals, faults and goals are software assumptions; no production trace, cloud calibration or Model 1 grader constants."
         },
-        {
-          "id": "url-redirect-heldout-waves-1",
-          "atUs": 18150,
-          "operation": "redirect"
-        },
-        {
-          "id": "url-redirect-heldout-waves-2",
-          "atUs": 18300,
-          "operation": "redirect"
-        },
-        {
-          "id": "url-redirect-heldout-waves-3",
-          "atUs": 18450,
-          "operation": "redirect"
-        },
-        {
-          "id": "url-redirect-heldout-waves-4",
-          "atUs": 18600,
-          "operation": "redirect"
-        },
-        {
-          "id": "url-redirect-heldout-waves-5",
-          "atUs": 18750,
-          "operation": "redirect"
-        },
-        {
-          "id": "url-redirect-heldout-waves-6",
-          "atUs": 18900,
-          "operation": "redirect"
-        },
-        {
-          "id": "url-redirect-heldout-waves-7",
-          "atUs": 19050,
-          "operation": "redirect"
-        },
-        {
-          "id": "url-redirect-heldout-waves-8",
-          "atUs": 19200,
-          "operation": "redirect"
-        },
-        {
-          "id": "url-redirect-heldout-waves-9",
-          "atUs": 19350,
-          "operation": "redirect"
-        },
-        {
-          "id": "url-redirect-heldout-waves-10",
-          "atUs": 19500,
-          "operation": "redirect"
-        },
-        {
-          "id": "url-redirect-heldout-waves-11",
-          "atUs": 19650,
-          "operation": "redirect"
-        },
-        {
-          "id": "url-redirect-heldout-waves-12",
-          "atUs": 19800,
-          "operation": "redirect"
-        },
-        {
-          "id": "url-redirect-heldout-waves-13",
-          "atUs": 19950,
-          "operation": "redirect"
-        },
-        {
-          "id": "url-redirect-heldout-waves-14",
-          "atUs": 38100,
-          "operation": "redirect"
-        },
-        {
-          "id": "url-redirect-heldout-waves-15",
-          "atUs": 38250,
-          "operation": "redirect"
-        },
-        {
-          "id": "url-redirect-heldout-waves-16",
-          "atUs": 38400,
-          "operation": "redirect"
-        },
-        {
-          "id": "url-redirect-heldout-waves-17",
-          "atUs": 38550,
-          "operation": "redirect"
-        },
-        {
-          "id": "url-redirect-heldout-waves-18",
-          "atUs": 38700,
-          "operation": "redirect"
-        },
-        {
-          "id": "url-redirect-heldout-waves-19",
-          "atUs": 38850,
-          "operation": "redirect"
-        },
-        {
-          "id": "url-redirect-heldout-waves-20",
-          "atUs": 39000,
-          "operation": "redirect"
-        },
-        {
-          "id": "url-redirect-heldout-waves-21",
-          "atUs": 39150,
-          "operation": "redirect"
-        },
-        {
-          "id": "url-redirect-heldout-waves-22",
-          "atUs": 39300,
-          "operation": "redirect"
-        },
-        {
-          "id": "url-redirect-heldout-waves-23",
-          "atUs": 39450,
-          "operation": "redirect"
-        },
-        {
-          "id": "url-redirect-heldout-waves-24",
-          "atUs": 39600,
-          "operation": "redirect"
-        },
-        {
-          "id": "url-redirect-heldout-waves-25",
-          "atUs": 39750,
-          "operation": "redirect"
-        },
-        {
-          "id": "url-redirect-heldout-waves-26",
-          "atUs": 39900,
-          "operation": "redirect"
-        },
-        {
-          "id": "url-redirect-heldout-waves-27",
-          "atUs": 40050,
-          "operation": "redirect"
-        }
-      ],
-      "parameters": {
-        "schema": "infraforge-first-stack-parameters/1",
         "rows": [
           {
             "id": "url-redirect-heldout-waves-0",
-            "plan": "lookup",
-            "keys": [
-              "url-redirect:0"
-            ]
+            "atUs": 18000,
+            "operation": "redirect"
           },
           {
             "id": "url-redirect-heldout-waves-1",
-            "plan": "lookup",
-            "keys": [
-              "url-redirect:1"
-            ]
+            "atUs": 18150,
+            "operation": "redirect"
           },
           {
             "id": "url-redirect-heldout-waves-2",
-            "plan": "lookup",
-            "keys": [
-              "url-redirect:2"
-            ]
+            "atUs": 18300,
+            "operation": "redirect"
           },
           {
             "id": "url-redirect-heldout-waves-3",
-            "plan": "lookup",
-            "keys": [
-              "url-redirect:0"
-            ]
+            "atUs": 18450,
+            "operation": "redirect"
           },
           {
             "id": "url-redirect-heldout-waves-4",
-            "plan": "lookup",
-            "keys": [
-              "url-redirect:1"
-            ]
+            "atUs": 18600,
+            "operation": "redirect"
           },
           {
             "id": "url-redirect-heldout-waves-5",
-            "plan": "lookup",
-            "keys": [
-              "url-redirect:2"
-            ]
+            "atUs": 18750,
+            "operation": "redirect"
           },
           {
             "id": "url-redirect-heldout-waves-6",
-            "plan": "lookup",
-            "keys": [
-              "url-redirect:0"
-            ]
+            "atUs": 18900,
+            "operation": "redirect"
           },
           {
             "id": "url-redirect-heldout-waves-7",
-            "plan": "lookup",
-            "keys": [
-              "url-redirect:1"
-            ]
+            "atUs": 19050,
+            "operation": "redirect"
           },
           {
             "id": "url-redirect-heldout-waves-8",
-            "plan": "lookup",
-            "keys": [
-              "url-redirect:2"
-            ]
+            "atUs": 19200,
+            "operation": "redirect"
           },
           {
             "id": "url-redirect-heldout-waves-9",
-            "plan": "lookup",
-            "keys": [
-              "url-redirect:0"
-            ]
+            "atUs": 19350,
+            "operation": "redirect"
           },
           {
             "id": "url-redirect-heldout-waves-10",
-            "plan": "lookup",
-            "keys": [
-              "url-redirect:1"
-            ]
+            "atUs": 19500,
+            "operation": "redirect"
           },
           {
             "id": "url-redirect-heldout-waves-11",
-            "plan": "lookup",
-            "keys": [
-              "url-redirect:2"
-            ]
+            "atUs": 19650,
+            "operation": "redirect"
           },
           {
             "id": "url-redirect-heldout-waves-12",
-            "plan": "lookup",
-            "keys": [
-              "url-redirect:0"
-            ]
+            "atUs": 19800,
+            "operation": "redirect"
           },
           {
             "id": "url-redirect-heldout-waves-13",
-            "plan": "lookup",
-            "keys": [
-              "url-redirect:1"
-            ]
+            "atUs": 19950,
+            "operation": "redirect"
           },
           {
             "id": "url-redirect-heldout-waves-14",
-            "plan": "lookup",
-            "keys": [
-              "url-redirect:2"
-            ]
+            "atUs": 38100,
+            "operation": "redirect"
           },
           {
             "id": "url-redirect-heldout-waves-15",
-            "plan": "lookup",
-            "keys": [
-              "url-redirect:0"
-            ]
+            "atUs": 38250,
+            "operation": "redirect"
           },
           {
             "id": "url-redirect-heldout-waves-16",
-            "plan": "lookup",
-            "keys": [
-              "url-redirect:1"
-            ]
+            "atUs": 38400,
+            "operation": "redirect"
           },
           {
             "id": "url-redirect-heldout-waves-17",
-            "plan": "lookup",
-            "keys": [
-              "url-redirect:2"
-            ]
+            "atUs": 38550,
+            "operation": "redirect"
           },
           {
             "id": "url-redirect-heldout-waves-18",
-            "plan": "lookup",
-            "keys": [
-              "url-redirect:0"
-            ]
+            "atUs": 38700,
+            "operation": "redirect"
           },
           {
             "id": "url-redirect-heldout-waves-19",
-            "plan": "lookup",
-            "keys": [
-              "url-redirect:1"
-            ]
+            "atUs": 38850,
+            "operation": "redirect"
           },
           {
             "id": "url-redirect-heldout-waves-20",
-            "plan": "lookup",
-            "keys": [
-              "url-redirect:2"
-            ]
+            "atUs": 39000,
+            "operation": "redirect"
           },
           {
             "id": "url-redirect-heldout-waves-21",
-            "plan": "lookup",
-            "keys": [
-              "url-redirect:0"
-            ]
+            "atUs": 39150,
+            "operation": "redirect"
           },
           {
             "id": "url-redirect-heldout-waves-22",
-            "plan": "lookup",
-            "keys": [
-              "url-redirect:1"
-            ]
+            "atUs": 39300,
+            "operation": "redirect"
           },
           {
             "id": "url-redirect-heldout-waves-23",
-            "plan": "lookup",
-            "keys": [
-              "url-redirect:2"
-            ]
+            "atUs": 39450,
+            "operation": "redirect"
           },
           {
             "id": "url-redirect-heldout-waves-24",
-            "plan": "lookup",
-            "keys": [
-              "url-redirect:0"
-            ]
+            "atUs": 39600,
+            "operation": "redirect"
           },
           {
             "id": "url-redirect-heldout-waves-25",
-            "plan": "lookup",
-            "keys": [
-              "url-redirect:1"
-            ]
+            "atUs": 39750,
+            "operation": "redirect"
           },
           {
             "id": "url-redirect-heldout-waves-26",
-            "plan": "lookup",
-            "keys": [
-              "url-redirect:2"
-            ]
+            "atUs": 39900,
+            "operation": "redirect"
           },
           {
             "id": "url-redirect-heldout-waves-27",
-            "plan": "lookup",
-            "keys": [
-              "url-redirect:0"
-            ]
+            "atUs": 40050,
+            "operation": "redirect"
           }
-        ]
-      },
-      "faults": [
-        {
-          "schema": "first-stack-fault/1",
-          "id": "lose-app",
-          "kind": "app-process-crash",
-          "target": "app-0",
-          "atUs": 6000,
-          "downtimeUs": 68000,
-          "recoveryUs": 6000
+        ],
+        "parameters": {
+          "schema": "infraforge-first-stack-parameters/1",
+          "rows": [
+            {
+              "id": "url-redirect-heldout-waves-0",
+              "plan": "lookup",
+              "keys": [
+                "url-redirect:0"
+              ]
+            },
+            {
+              "id": "url-redirect-heldout-waves-1",
+              "plan": "lookup",
+              "keys": [
+                "url-redirect:1"
+              ]
+            },
+            {
+              "id": "url-redirect-heldout-waves-2",
+              "plan": "lookup",
+              "keys": [
+                "url-redirect:2"
+              ]
+            },
+            {
+              "id": "url-redirect-heldout-waves-3",
+              "plan": "lookup",
+              "keys": [
+                "url-redirect:0"
+              ]
+            },
+            {
+              "id": "url-redirect-heldout-waves-4",
+              "plan": "lookup",
+              "keys": [
+                "url-redirect:1"
+              ]
+            },
+            {
+              "id": "url-redirect-heldout-waves-5",
+              "plan": "lookup",
+              "keys": [
+                "url-redirect:2"
+              ]
+            },
+            {
+              "id": "url-redirect-heldout-waves-6",
+              "plan": "lookup",
+              "keys": [
+                "url-redirect:0"
+              ]
+            },
+            {
+              "id": "url-redirect-heldout-waves-7",
+              "plan": "lookup",
+              "keys": [
+                "url-redirect:1"
+              ]
+            },
+            {
+              "id": "url-redirect-heldout-waves-8",
+              "plan": "lookup",
+              "keys": [
+                "url-redirect:2"
+              ]
+            },
+            {
+              "id": "url-redirect-heldout-waves-9",
+              "plan": "lookup",
+              "keys": [
+                "url-redirect:0"
+              ]
+            },
+            {
+              "id": "url-redirect-heldout-waves-10",
+              "plan": "lookup",
+              "keys": [
+                "url-redirect:1"
+              ]
+            },
+            {
+              "id": "url-redirect-heldout-waves-11",
+              "plan": "lookup",
+              "keys": [
+                "url-redirect:2"
+              ]
+            },
+            {
+              "id": "url-redirect-heldout-waves-12",
+              "plan": "lookup",
+              "keys": [
+                "url-redirect:0"
+              ]
+            },
+            {
+              "id": "url-redirect-heldout-waves-13",
+              "plan": "lookup",
+              "keys": [
+                "url-redirect:1"
+              ]
+            },
+            {
+              "id": "url-redirect-heldout-waves-14",
+              "plan": "lookup",
+              "keys": [
+                "url-redirect:2"
+              ]
+            },
+            {
+              "id": "url-redirect-heldout-waves-15",
+              "plan": "lookup",
+              "keys": [
+                "url-redirect:0"
+              ]
+            },
+            {
+              "id": "url-redirect-heldout-waves-16",
+              "plan": "lookup",
+              "keys": [
+                "url-redirect:1"
+              ]
+            },
+            {
+              "id": "url-redirect-heldout-waves-17",
+              "plan": "lookup",
+              "keys": [
+                "url-redirect:2"
+              ]
+            },
+            {
+              "id": "url-redirect-heldout-waves-18",
+              "plan": "lookup",
+              "keys": [
+                "url-redirect:0"
+              ]
+            },
+            {
+              "id": "url-redirect-heldout-waves-19",
+              "plan": "lookup",
+              "keys": [
+                "url-redirect:1"
+              ]
+            },
+            {
+              "id": "url-redirect-heldout-waves-20",
+              "plan": "lookup",
+              "keys": [
+                "url-redirect:2"
+              ]
+            },
+            {
+              "id": "url-redirect-heldout-waves-21",
+              "plan": "lookup",
+              "keys": [
+                "url-redirect:0"
+              ]
+            },
+            {
+              "id": "url-redirect-heldout-waves-22",
+              "plan": "lookup",
+              "keys": [
+                "url-redirect:1"
+              ]
+            },
+            {
+              "id": "url-redirect-heldout-waves-23",
+              "plan": "lookup",
+              "keys": [
+                "url-redirect:2"
+              ]
+            },
+            {
+              "id": "url-redirect-heldout-waves-24",
+              "plan": "lookup",
+              "keys": [
+                "url-redirect:0"
+              ]
+            },
+            {
+              "id": "url-redirect-heldout-waves-25",
+              "plan": "lookup",
+              "keys": [
+                "url-redirect:1"
+              ]
+            },
+            {
+              "id": "url-redirect-heldout-waves-26",
+              "plan": "lookup",
+              "keys": [
+                "url-redirect:2"
+              ]
+            },
+            {
+              "id": "url-redirect-heldout-waves-27",
+              "plan": "lookup",
+              "keys": [
+                "url-redirect:0"
+              ]
+            }
+          ]
+        },
+        "faults": [
+          {
+            "schema": "first-stack-fault/1",
+            "id": "lose-app",
+            "kind": "app-process-crash",
+            "target": "app-0",
+            "atUs": 6000,
+            "downtimeUs": 68000,
+            "recoveryUs": 6000
+          }
+        ],
+        "observation": {
+          "fromUs": 10000,
+          "toUs": 70000,
+          "boundary": "offer-cohort-half-open; terminal-through-horizon"
         }
-      ],
-      "observation": {
-        "fromUs": 10000,
-        "toUs": 70000,
-        "boundary": "offer-cohort-half-open; terminal-through-horizon"
       }
     }
   ],
-  "rubric": {
-    "version": "1",
-    "criteria": [
-      {
-        "id": "delivered",
-        "metric": "delivery-permille",
-        "operator": "gte",
-        "threshold": 900,
-        "required": true,
-        "provenance": "Authored R1 url-redirect/1 synthetic teaching fixture, 22 October 2026. Finite demands, arrivals, faults and goals are software assumptions; no production trace, cloud calibration or Model 1 grader constants. Authored goal: 90% delivered including outage, at most 10% errors, exact completed p95 <=6000 us; not a capacity measurement."
-      },
-      {
-        "id": "errors",
-        "metric": "error-permille",
-        "operator": "lte",
-        "threshold": 100,
-        "required": true,
-        "provenance": "Authored R1 url-redirect/1 synthetic teaching fixture, 22 October 2026. Finite demands, arrivals, faults and goals are software assumptions; no production trace, cloud calibration or Model 1 grader constants. Authored goal: 90% delivered including outage, at most 10% errors, exact completed p95 <=6000 us; not a capacity measurement."
-      },
-      {
-        "id": "slo",
-        "metric": "p95-us",
-        "operator": "lte",
-        "threshold": 6000,
-        "required": true,
-        "provenance": "Authored R1 url-redirect/1 synthetic teaching fixture, 22 October 2026. Finite demands, arrivals, faults and goals are software assumptions; no production trace, cloud calibration or Model 1 grader constants. Authored goal: 90% delivered including outage, at most 10% errors, exact completed p95 <=6000 us; not a capacity measurement."
-      },
-      {
-        "id": "fault-survival",
-        "metric": "fault-delivery-permille",
-        "operator": "gte",
-        "threshold": 900,
-        "required": true,
-        "provenance": "Authored R1 url-redirect/1 synthetic teaching fixture, 22 October 2026. Finite demands, arrivals, faults and goals are software assumptions; no production trace, cloud calibration or Model 1 grader constants. Authored goal: 90% delivered including outage, at most 10% errors, exact completed p95 <=6000 us; not a capacity measurement."
-      },
-      {
-        "id": "cost-subtotal",
-        "metric": "cost-subtotal",
-        "operator": "lte",
-        "threshold": null,
-        "required": false,
-        "provenance": "Numerical cost assessment reserved until comparable supported subtotal evidence exists. No price or zero is assumed."
-      }
-    ]
-  },
-  "provenance": "Authored R1 url-redirect/1 synthetic teaching fixture, 22 October 2026. Finite demands, arrivals, faults and goals are software assumptions; no production trace, cloud calibration or Model 1 grader constants."
+  "scoring": {
+    "version": "2",
+    "sha256": "e4c76c5321acea54d7f3241495be95e5ffe3efd314561871eefe517a45e8b7a9"
+  }
 }

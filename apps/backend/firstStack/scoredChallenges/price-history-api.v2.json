@@ -1,0 +1,2323 @@
+{
+  "schema": "infraforge-scored-challenge/2",
+  "id": "price-history-api",
+  "version": "2",
+  "brief": {
+    "title": "Price history: serve bounded historical reads",
+    "description": "A chart page asks for eight preloaded price records for one product. Deliver that bounded history read during app loss and concentrated traffic. Wide historical reads do real database work; more app concurrency cannot make the database unlimited. Choose each app's cores, workers and queue. The private assessment checks delivery, errors, completed-request latency and fault survival. Fault survival uses delivered caller outcomes during the outage, not a health label. All offers are in [10000,70000) us; observe terminals through 100000 us. Hidden variants change burst shape, keys and failed app within the stated domain. Timing is assumption-only. Supported subtotal and full cost are Unknown.",
+    "exclusions": [
+      "Price ingestion and live market feeds",
+      "alerts, scheduling and external provider behavior",
+      "time-series compression, arbitrary SQL or financial correctness",
+      "cache and autoscaling (later versions)",
+      "post-fault recovery scoring",
+      "calibrated cloud timing and complete resident memory",
+      "supported cost subtotal and full cost"
+    ],
+    "support": {
+      "counts": "supported-logical",
+      "timing": "assumption-only"
+    }
+  },
+  "constraints": {
+    "topology": "fixed load balancer, two application processes and one relational DB; no cache",
+    "editable": [
+      "compute cores",
+      "compute workers",
+      "compute queue",
+      "matching host cores"
+    ],
+    "cores": {
+      "min": 1,
+      "max": 4
+    },
+    "workers": {
+      "min": 1,
+      "max": 32
+    },
+    "queue": {
+      "min": 0,
+      "max": 64
+    },
+    "domain": "24..32 history-page calls; 8 recorded keys per call; 0..1000 us within-wave spacing; one app crash at 3000..6000 us for 68000..74000 us, recovery 3000..6000 us; all offers in [10000,70000) us, terminals through 100000 us. Synthetic assumptions only."
+  },
+  "template": {
+    "layout": {
+      "resources": [
+        {
+          "id": "lb",
+          "type": "Load Balancer",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "id": "app-0",
+          "type": "Virtual Machine",
+          "x": 0,
+          "y": 10
+        },
+        {
+          "id": "app-1",
+          "type": "Virtual Machine",
+          "x": 10,
+          "y": 10
+        },
+        {
+          "id": "db",
+          "type": "Database",
+          "x": 0,
+          "y": 20
+        }
+      ],
+      "connectionLines": [
+        {
+          "id": "lb-app-0",
+          "sourceId": "lb",
+          "targetId": "app-0",
+          "sourceType": "Load Balancer",
+          "targetType": "Virtual Machine",
+          "port": 80
+        },
+        {
+          "id": "lb-app-1",
+          "sourceId": "lb",
+          "targetId": "app-1",
+          "sourceType": "Load Balancer",
+          "targetType": "Virtual Machine",
+          "port": 80
+        },
+        {
+          "id": "app-0-db",
+          "sourceId": "app-0",
+          "targetId": "db",
+          "sourceType": "Virtual Machine",
+          "targetType": "Database",
+          "port": 5432
+        },
+        {
+          "id": "app-1-db",
+          "sourceId": "app-1",
+          "targetId": "db",
+          "sourceType": "Virtual Machine",
+          "targetType": "Database",
+          "port": 5432
+        }
+      ],
+      "layoutVersion": 1
+    },
+    "sidecar": {
+      "schema": "infraforge-first-stack-sidecar/2",
+      "profile": "first-stack/1",
+      "compiler": "first-stack-compiler/2",
+      "designRevision": "0000000000000000000000000000000000000000000000000000000000000000",
+      "application": {
+        "id": "price-history-api",
+        "version": "1",
+        "origin": "authored",
+        "workloadDomain": "Finite preloaded history-page API; 8 recorded keys per call",
+        "runtime": "Authored finite operations",
+        "hardware": "Authored logical hosts",
+        "sources": [
+          "Authored R1 price-history-api/1 synthetic teaching fixture, 22 October 2026. Finite demands, arrivals, faults and goals are software assumptions; no production trace, cloud calibration or Model 1 grader constants."
+        ]
+      },
+      "operations": [
+        {
+          "id": "history-page",
+          "kind": "range-read",
+          "plan": "lookup",
+          "deadlineUs": 6000,
+          "requestBytes": 64,
+          "responseBytes": 2048,
+          "cpuUs": 280,
+          "parallelism": 1,
+          "blockingUs": 0,
+          "residentBytes": null
+        },
+        {
+          "id": "health",
+          "kind": "health-read",
+          "plan": "health-lookup",
+          "deadlineUs": 3000,
+          "requestBytes": 1,
+          "responseBytes": 2,
+          "cpuUs": 10,
+          "parallelism": 1,
+          "blockingUs": 0,
+          "residentBytes": null
+        }
+      ],
+      "nodes": [
+        {
+          "id": "lb",
+          "owner": "load-balancer",
+          "host": "host-lb",
+          "cores": 1,
+          "memoryBytes": null,
+          "reservationBytes": 0,
+          "workers": 32,
+          "queue": 64,
+          "listenerPort": 80,
+          "cancellation": "detach",
+          "alive": true,
+          "ready": true
+        },
+        {
+          "id": "app-0",
+          "owner": "compute",
+          "host": "host-app-0",
+          "cores": 1,
+          "memoryBytes": null,
+          "reservationBytes": 100,
+          "workers": 1,
+          "queue": 0,
+          "listenerPort": 80,
+          "cancellation": "detach",
+          "alive": true,
+          "ready": true
+        },
+        {
+          "id": "app-1",
+          "owner": "compute",
+          "host": "host-app-1",
+          "cores": 1,
+          "memoryBytes": null,
+          "reservationBytes": 100,
+          "workers": 1,
+          "queue": 0,
+          "listenerPort": 80,
+          "cancellation": "detach",
+          "alive": true,
+          "ready": true
+        },
+        {
+          "id": "db",
+          "owner": "relational",
+          "host": "host-db",
+          "cores": 1,
+          "memoryBytes": null,
+          "reservationBytes": 100,
+          "workers": 32,
+          "queue": 64,
+          "listenerPort": 5432,
+          "cancellation": "detach",
+          "alive": true,
+          "ready": true
+        }
+      ],
+      "caller": {
+        "entry": "lb",
+        "port": 80,
+        "transport": "plain-serial/1",
+        "connections": 32,
+        "pending": 64,
+        "timeoutUs": 6000,
+        "requestBytes": 64,
+        "responseBytes": 2048,
+        "requestLink": "caller:req",
+        "responseLink": "caller:res",
+        "pool": {
+          "reuse": true,
+          "establishUs": 2,
+          "acquireTimeoutUs": 6000,
+          "connectTimeoutUs": 6000,
+          "responseTimeoutUs": 6000,
+          "idleTimeoutUs": null,
+          "remoteCancellation": "detach"
+        }
+      },
+      "paths": [
+        {
+          "id": "lb-app-0",
+          "source": "lb",
+          "target": "app-0",
+          "purpose": "routing",
+          "port": 80,
+          "transport": "plain-serial/1",
+          "connections": 32,
+          "pending": 64,
+          "timeoutUs": 6000,
+          "requestBytes": 64,
+          "responseBytes": 2048,
+          "requestLink": "lb-app-0:req",
+          "responseLink": "lb-app-0:res",
+          "pool": {
+            "reuse": true,
+            "establishUs": 2,
+            "acquireTimeoutUs": 6000,
+            "connectTimeoutUs": 6000,
+            "responseTimeoutUs": 6000,
+            "idleTimeoutUs": null,
+            "remoteCancellation": "detach"
+          }
+        },
+        {
+          "id": "lb-app-1",
+          "source": "lb",
+          "target": "app-1",
+          "purpose": "routing",
+          "port": 80,
+          "transport": "plain-serial/1",
+          "connections": 32,
+          "pending": 64,
+          "timeoutUs": 6000,
+          "requestBytes": 64,
+          "responseBytes": 2048,
+          "requestLink": "lb-app-1:req",
+          "responseLink": "lb-app-1:res",
+          "pool": {
+            "reuse": true,
+            "establishUs": 2,
+            "acquireTimeoutUs": 6000,
+            "connectTimeoutUs": 6000,
+            "responseTimeoutUs": 6000,
+            "idleTimeoutUs": null,
+            "remoteCancellation": "detach"
+          }
+        },
+        {
+          "id": "app-0-db",
+          "source": "app-0",
+          "target": "db",
+          "purpose": "dependency",
+          "port": 5432,
+          "transport": "plain-serial/1",
+          "connections": 32,
+          "pending": 64,
+          "timeoutUs": 6000,
+          "requestBytes": 64,
+          "responseBytes": 2048,
+          "requestLink": "app-0-db:req",
+          "responseLink": "app-0-db:res",
+          "pool": {
+            "reuse": true,
+            "establishUs": 2,
+            "acquireTimeoutUs": 6000,
+            "connectTimeoutUs": 6000,
+            "responseTimeoutUs": 6000,
+            "idleTimeoutUs": null,
+            "remoteCancellation": "detach"
+          }
+        },
+        {
+          "id": "app-1-db",
+          "source": "app-1",
+          "target": "db",
+          "purpose": "dependency",
+          "port": 5432,
+          "transport": "plain-serial/1",
+          "connections": 32,
+          "pending": 64,
+          "timeoutUs": 6000,
+          "requestBytes": 64,
+          "responseBytes": 2048,
+          "requestLink": "app-1-db:req",
+          "responseLink": "app-1-db:res",
+          "pool": {
+            "reuse": true,
+            "establishUs": 2,
+            "acquireTimeoutUs": 6000,
+            "connectTimeoutUs": 6000,
+            "responseTimeoutUs": 6000,
+            "idleTimeoutUs": null,
+            "remoteCancellation": "detach"
+          }
+        }
+      ],
+      "links": [
+        {
+          "id": "caller:req",
+          "from": "$caller",
+          "to": "lb",
+          "bytesPerSecond": 500000000,
+          "latencyUs": 1,
+          "queueBytes": 262144
+        },
+        {
+          "id": "caller:res",
+          "from": "lb",
+          "to": "$caller",
+          "bytesPerSecond": 500000000,
+          "latencyUs": 1,
+          "queueBytes": 262144
+        },
+        {
+          "id": "lb-app-0:req",
+          "from": "lb",
+          "to": "app-0",
+          "bytesPerSecond": 500000000,
+          "latencyUs": 1,
+          "queueBytes": 262144
+        },
+        {
+          "id": "lb-app-0:res",
+          "from": "app-0",
+          "to": "lb",
+          "bytesPerSecond": 500000000,
+          "latencyUs": 1,
+          "queueBytes": 262144
+        },
+        {
+          "id": "lb-app-1:req",
+          "from": "lb",
+          "to": "app-1",
+          "bytesPerSecond": 500000000,
+          "latencyUs": 1,
+          "queueBytes": 262144
+        },
+        {
+          "id": "lb-app-1:res",
+          "from": "app-1",
+          "to": "lb",
+          "bytesPerSecond": 500000000,
+          "latencyUs": 1,
+          "queueBytes": 262144
+        },
+        {
+          "id": "app-0-db:req",
+          "from": "app-0",
+          "to": "db",
+          "bytesPerSecond": 500000000,
+          "latencyUs": 1,
+          "queueBytes": 262144
+        },
+        {
+          "id": "app-0-db:res",
+          "from": "db",
+          "to": "app-0",
+          "bytesPerSecond": 500000000,
+          "latencyUs": 1,
+          "queueBytes": 262144
+        },
+        {
+          "id": "app-1-db:req",
+          "from": "app-1",
+          "to": "db",
+          "bytesPerSecond": 500000000,
+          "latencyUs": 1,
+          "queueBytes": 262144
+        },
+        {
+          "id": "app-1-db:res",
+          "from": "db",
+          "to": "app-1",
+          "bytesPerSecond": 500000000,
+          "latencyUs": 1,
+          "queueBytes": 262144
+        }
+      ],
+      "placement": [
+        {
+          "id": "host-lb",
+          "cores": 1,
+          "memoryBytes": 100000
+        },
+        {
+          "id": "host-app-0",
+          "cores": 1,
+          "memoryBytes": 100000
+        },
+        {
+          "id": "host-app-1",
+          "cores": 1,
+          "memoryBytes": 100000
+        },
+        {
+          "id": "host-db",
+          "cores": 1,
+          "memoryBytes": 100000
+        }
+      ],
+      "balancer": {
+        "policy": "round-robin",
+        "outstanding": 64,
+        "pending": 64,
+        "timeoutUs": 6000,
+        "healthOperation": "health",
+        "intervalUs": 1000,
+        "healthy": 1,
+        "unhealthy": 1,
+        "allUnhealthy": "reject",
+        "initial": "ineligible",
+        "healthTimeoutUs": 1000,
+        "healthKeys": [
+          "price-history-api:0"
+        ]
+      },
+      "database": {
+        "semantics": "read-committed-keyed/1",
+        "keys": [
+          "price-history-api:0",
+          "price-history-api:1",
+          "price-history-api:2",
+          "price-history-api:3",
+          "price-history-api:4",
+          "price-history-api:5",
+          "price-history-api:6",
+          "price-history-api:7",
+          "price-history-api:8",
+          "price-history-api:9",
+          "price-history-api:10",
+          "price-history-api:11",
+          "price-history-api:12",
+          "price-history-api:13",
+          "price-history-api:14",
+          "price-history-api:15"
+        ],
+        "maxSessions": 64,
+        "activeTransactions": 32,
+        "pendingQueries": 64,
+        "initial": [
+          {
+            "key": "price-history-api:0",
+            "version": 1,
+            "bytes": 256
+          },
+          {
+            "key": "price-history-api:1",
+            "version": 1,
+            "bytes": 256
+          },
+          {
+            "key": "price-history-api:2",
+            "version": 1,
+            "bytes": 256
+          },
+          {
+            "key": "price-history-api:3",
+            "version": 1,
+            "bytes": 256
+          },
+          {
+            "key": "price-history-api:4",
+            "version": 1,
+            "bytes": 256
+          },
+          {
+            "key": "price-history-api:5",
+            "version": 1,
+            "bytes": 256
+          },
+          {
+            "key": "price-history-api:6",
+            "version": 1,
+            "bytes": 256
+          },
+          {
+            "key": "price-history-api:7",
+            "version": 1,
+            "bytes": 256
+          },
+          {
+            "key": "price-history-api:8",
+            "version": 1,
+            "bytes": 256
+          },
+          {
+            "key": "price-history-api:9",
+            "version": 1,
+            "bytes": 256
+          },
+          {
+            "key": "price-history-api:10",
+            "version": 1,
+            "bytes": 256
+          },
+          {
+            "key": "price-history-api:11",
+            "version": 1,
+            "bytes": 256
+          },
+          {
+            "key": "price-history-api:12",
+            "version": 1,
+            "bytes": 256
+          },
+          {
+            "key": "price-history-api:13",
+            "version": 1,
+            "bytes": 256
+          },
+          {
+            "key": "price-history-api:14",
+            "version": 1,
+            "bytes": 256
+          },
+          {
+            "key": "price-history-api:15",
+            "version": 1,
+            "bytes": 256
+          }
+        ],
+        "plans": [
+          {
+            "id": "lookup",
+            "kind": "read",
+            "keys": [
+              "price-history-api:0",
+              "price-history-api:1",
+              "price-history-api:2",
+              "price-history-api:3",
+              "price-history-api:4",
+              "price-history-api:5",
+              "price-history-api:6",
+              "price-history-api:7"
+            ],
+            "cpuUs": 85,
+            "parallelism": 1,
+            "blockingUs": 0,
+            "logBytes": 0,
+            "statementTimeoutUs": 3000,
+            "lockTimeoutUs": 3000,
+            "transactionTimeoutUs": 3000,
+            "commitWaitUs": 0,
+            "durability": "logical-only"
+          },
+          {
+            "id": "health-lookup",
+            "kind": "read",
+            "keys": "recorded",
+            "cpuUs": 10,
+            "parallelism": 1,
+            "blockingUs": 0,
+            "logBytes": 0,
+            "statementTimeoutUs": 3000,
+            "lockTimeoutUs": 3000,
+            "transactionTimeoutUs": 3000,
+            "commitWaitUs": 0,
+            "durability": "logical-only"
+          }
+        ]
+      },
+      "workload": null,
+      "faults": [],
+      "metrics": "first-stack-metrics/1",
+      "retention": "first-stack-bounded/1",
+      "sources": [
+        "Authored R1 price-history-api/1 synthetic teaching fixture, 22 October 2026. Finite demands, arrivals, faults and goals are software assumptions; no production trace, cloud calibration or Model 1 grader constants."
+      ]
+    }
+  },
+  "policy": {
+    "seed": "r1-price-history-api-v1",
+    "horizonUs": 100000,
+    "sampleIntervalUs": 1000,
+    "maxEvents": 100000,
+    "maxSamples": 101,
+    "maxRawResults": 64
+  },
+  "visible": {
+    "id": "visible-sample",
+    "version": "1",
+    "provenance": "Authored R1 price-history-api/1 synthetic teaching fixture, 22 October 2026. Finite demands, arrivals, faults and goals are software assumptions; no production trace, cloud calibration or Model 1 grader constants. visible-sample: single wave, 24 offers, 1000 us spacing; app-0 loss.",
+    "header": {
+      "schema": "infraforge-first-stack-schedule/1",
+      "unit": "us",
+      "durationUs": 100000,
+      "origin": "authored-schedule",
+      "provenance": "Authored R1 price-history-api/1 synthetic teaching fixture, 22 October 2026. Finite demands, arrivals, faults and goals are software assumptions; no production trace, cloud calibration or Model 1 grader constants."
+    },
+    "rows": [
+      {
+        "id": "visible-sample-0",
+        "atUs": 10000,
+        "operation": "history-page"
+      },
+      {
+        "id": "visible-sample-1",
+        "atUs": 11000,
+        "operation": "history-page"
+      },
+      {
+        "id": "visible-sample-2",
+        "atUs": 12000,
+        "operation": "history-page"
+      },
+      {
+        "id": "visible-sample-3",
+        "atUs": 13000,
+        "operation": "history-page"
+      },
+      {
+        "id": "visible-sample-4",
+        "atUs": 14000,
+        "operation": "history-page"
+      },
+      {
+        "id": "visible-sample-5",
+        "atUs": 15000,
+        "operation": "history-page"
+      },
+      {
+        "id": "visible-sample-6",
+        "atUs": 16000,
+        "operation": "history-page"
+      },
+      {
+        "id": "visible-sample-7",
+        "atUs": 17000,
+        "operation": "history-page"
+      },
+      {
+        "id": "visible-sample-8",
+        "atUs": 18000,
+        "operation": "history-page"
+      },
+      {
+        "id": "visible-sample-9",
+        "atUs": 19000,
+        "operation": "history-page"
+      },
+      {
+        "id": "visible-sample-10",
+        "atUs": 20000,
+        "operation": "history-page"
+      },
+      {
+        "id": "visible-sample-11",
+        "atUs": 21000,
+        "operation": "history-page"
+      },
+      {
+        "id": "visible-sample-12",
+        "atUs": 22000,
+        "operation": "history-page"
+      },
+      {
+        "id": "visible-sample-13",
+        "atUs": 23000,
+        "operation": "history-page"
+      },
+      {
+        "id": "visible-sample-14",
+        "atUs": 24000,
+        "operation": "history-page"
+      },
+      {
+        "id": "visible-sample-15",
+        "atUs": 25000,
+        "operation": "history-page"
+      },
+      {
+        "id": "visible-sample-16",
+        "atUs": 26000,
+        "operation": "history-page"
+      },
+      {
+        "id": "visible-sample-17",
+        "atUs": 27000,
+        "operation": "history-page"
+      },
+      {
+        "id": "visible-sample-18",
+        "atUs": 28000,
+        "operation": "history-page"
+      },
+      {
+        "id": "visible-sample-19",
+        "atUs": 29000,
+        "operation": "history-page"
+      },
+      {
+        "id": "visible-sample-20",
+        "atUs": 30000,
+        "operation": "history-page"
+      },
+      {
+        "id": "visible-sample-21",
+        "atUs": 31000,
+        "operation": "history-page"
+      },
+      {
+        "id": "visible-sample-22",
+        "atUs": 32000,
+        "operation": "history-page"
+      },
+      {
+        "id": "visible-sample-23",
+        "atUs": 33000,
+        "operation": "history-page"
+      }
+    ],
+    "parameters": {
+      "schema": "infraforge-first-stack-parameters/1",
+      "rows": [
+        {
+          "id": "visible-sample-0",
+          "plan": "lookup",
+          "keys": [
+            "price-history-api:0",
+            "price-history-api:1",
+            "price-history-api:2",
+            "price-history-api:3",
+            "price-history-api:4",
+            "price-history-api:5",
+            "price-history-api:6",
+            "price-history-api:7"
+          ]
+        },
+        {
+          "id": "visible-sample-1",
+          "plan": "lookup",
+          "keys": [
+            "price-history-api:0",
+            "price-history-api:1",
+            "price-history-api:2",
+            "price-history-api:3",
+            "price-history-api:4",
+            "price-history-api:5",
+            "price-history-api:6",
+            "price-history-api:7"
+          ]
+        },
+        {
+          "id": "visible-sample-2",
+          "plan": "lookup",
+          "keys": [
+            "price-history-api:0",
+            "price-history-api:1",
+            "price-history-api:2",
+            "price-history-api:3",
+            "price-history-api:4",
+            "price-history-api:5",
+            "price-history-api:6",
+            "price-history-api:7"
+          ]
+        },
+        {
+          "id": "visible-sample-3",
+          "plan": "lookup",
+          "keys": [
+            "price-history-api:0",
+            "price-history-api:1",
+            "price-history-api:2",
+            "price-history-api:3",
+            "price-history-api:4",
+            "price-history-api:5",
+            "price-history-api:6",
+            "price-history-api:7"
+          ]
+        },
+        {
+          "id": "visible-sample-4",
+          "plan": "lookup",
+          "keys": [
+            "price-history-api:0",
+            "price-history-api:1",
+            "price-history-api:2",
+            "price-history-api:3",
+            "price-history-api:4",
+            "price-history-api:5",
+            "price-history-api:6",
+            "price-history-api:7"
+          ]
+        },
+        {
+          "id": "visible-sample-5",
+          "plan": "lookup",
+          "keys": [
+            "price-history-api:0",
+            "price-history-api:1",
+            "price-history-api:2",
+            "price-history-api:3",
+            "price-history-api:4",
+            "price-history-api:5",
+            "price-history-api:6",
+            "price-history-api:7"
+          ]
+        },
+        {
+          "id": "visible-sample-6",
+          "plan": "lookup",
+          "keys": [
+            "price-history-api:0",
+            "price-history-api:1",
+            "price-history-api:2",
+            "price-history-api:3",
+            "price-history-api:4",
+            "price-history-api:5",
+            "price-history-api:6",
+            "price-history-api:7"
+          ]
+        },
+        {
+          "id": "visible-sample-7",
+          "plan": "lookup",
+          "keys": [
+            "price-history-api:0",
+            "price-history-api:1",
+            "price-history-api:2",
+            "price-history-api:3",
+            "price-history-api:4",
+            "price-history-api:5",
+            "price-history-api:6",
+            "price-history-api:7"
+          ]
+        },
+        {
+          "id": "visible-sample-8",
+          "plan": "lookup",
+          "keys": [
+            "price-history-api:0",
+            "price-history-api:1",
+            "price-history-api:2",
+            "price-history-api:3",
+            "price-history-api:4",
+            "price-history-api:5",
+            "price-history-api:6",
+            "price-history-api:7"
+          ]
+        },
+        {
+          "id": "visible-sample-9",
+          "plan": "lookup",
+          "keys": [
+            "price-history-api:0",
+            "price-history-api:1",
+            "price-history-api:2",
+            "price-history-api:3",
+            "price-history-api:4",
+            "price-history-api:5",
+            "price-history-api:6",
+            "price-history-api:7"
+          ]
+        },
+        {
+          "id": "visible-sample-10",
+          "plan": "lookup",
+          "keys": [
+            "price-history-api:0",
+            "price-history-api:1",
+            "price-history-api:2",
+            "price-history-api:3",
+            "price-history-api:4",
+            "price-history-api:5",
+            "price-history-api:6",
+            "price-history-api:7"
+          ]
+        },
+        {
+          "id": "visible-sample-11",
+          "plan": "lookup",
+          "keys": [
+            "price-history-api:0",
+            "price-history-api:1",
+            "price-history-api:2",
+            "price-history-api:3",
+            "price-history-api:4",
+            "price-history-api:5",
+            "price-history-api:6",
+            "price-history-api:7"
+          ]
+        },
+        {
+          "id": "visible-sample-12",
+          "plan": "lookup",
+          "keys": [
+            "price-history-api:0",
+            "price-history-api:1",
+            "price-history-api:2",
+            "price-history-api:3",
+            "price-history-api:4",
+            "price-history-api:5",
+            "price-history-api:6",
+            "price-history-api:7"
+          ]
+        },
+        {
+          "id": "visible-sample-13",
+          "plan": "lookup",
+          "keys": [
+            "price-history-api:0",
+            "price-history-api:1",
+            "price-history-api:2",
+            "price-history-api:3",
+            "price-history-api:4",
+            "price-history-api:5",
+            "price-history-api:6",
+            "price-history-api:7"
+          ]
+        },
+        {
+          "id": "visible-sample-14",
+          "plan": "lookup",
+          "keys": [
+            "price-history-api:0",
+            "price-history-api:1",
+            "price-history-api:2",
+            "price-history-api:3",
+            "price-history-api:4",
+            "price-history-api:5",
+            "price-history-api:6",
+            "price-history-api:7"
+          ]
+        },
+        {
+          "id": "visible-sample-15",
+          "plan": "lookup",
+          "keys": [
+            "price-history-api:0",
+            "price-history-api:1",
+            "price-history-api:2",
+            "price-history-api:3",
+            "price-history-api:4",
+            "price-history-api:5",
+            "price-history-api:6",
+            "price-history-api:7"
+          ]
+        },
+        {
+          "id": "visible-sample-16",
+          "plan": "lookup",
+          "keys": [
+            "price-history-api:0",
+            "price-history-api:1",
+            "price-history-api:2",
+            "price-history-api:3",
+            "price-history-api:4",
+            "price-history-api:5",
+            "price-history-api:6",
+            "price-history-api:7"
+          ]
+        },
+        {
+          "id": "visible-sample-17",
+          "plan": "lookup",
+          "keys": [
+            "price-history-api:0",
+            "price-history-api:1",
+            "price-history-api:2",
+            "price-history-api:3",
+            "price-history-api:4",
+            "price-history-api:5",
+            "price-history-api:6",
+            "price-history-api:7"
+          ]
+        },
+        {
+          "id": "visible-sample-18",
+          "plan": "lookup",
+          "keys": [
+            "price-history-api:0",
+            "price-history-api:1",
+            "price-history-api:2",
+            "price-history-api:3",
+            "price-history-api:4",
+            "price-history-api:5",
+            "price-history-api:6",
+            "price-history-api:7"
+          ]
+        },
+        {
+          "id": "visible-sample-19",
+          "plan": "lookup",
+          "keys": [
+            "price-history-api:0",
+            "price-history-api:1",
+            "price-history-api:2",
+            "price-history-api:3",
+            "price-history-api:4",
+            "price-history-api:5",
+            "price-history-api:6",
+            "price-history-api:7"
+          ]
+        },
+        {
+          "id": "visible-sample-20",
+          "plan": "lookup",
+          "keys": [
+            "price-history-api:0",
+            "price-history-api:1",
+            "price-history-api:2",
+            "price-history-api:3",
+            "price-history-api:4",
+            "price-history-api:5",
+            "price-history-api:6",
+            "price-history-api:7"
+          ]
+        },
+        {
+          "id": "visible-sample-21",
+          "plan": "lookup",
+          "keys": [
+            "price-history-api:0",
+            "price-history-api:1",
+            "price-history-api:2",
+            "price-history-api:3",
+            "price-history-api:4",
+            "price-history-api:5",
+            "price-history-api:6",
+            "price-history-api:7"
+          ]
+        },
+        {
+          "id": "visible-sample-22",
+          "plan": "lookup",
+          "keys": [
+            "price-history-api:0",
+            "price-history-api:1",
+            "price-history-api:2",
+            "price-history-api:3",
+            "price-history-api:4",
+            "price-history-api:5",
+            "price-history-api:6",
+            "price-history-api:7"
+          ]
+        },
+        {
+          "id": "visible-sample-23",
+          "plan": "lookup",
+          "keys": [
+            "price-history-api:0",
+            "price-history-api:1",
+            "price-history-api:2",
+            "price-history-api:3",
+            "price-history-api:4",
+            "price-history-api:5",
+            "price-history-api:6",
+            "price-history-api:7"
+          ]
+        }
+      ]
+    },
+    "faults": [
+      {
+        "schema": "first-stack-fault/1",
+        "id": "lose-app",
+        "kind": "app-process-crash",
+        "target": "app-0",
+        "atUs": 5000,
+        "downtimeUs": 70000,
+        "recoveryUs": 5000
+      }
+    ],
+    "observation": {
+      "fromUs": 10000,
+      "toUs": 70000,
+      "boundary": "offer-cohort-half-open; terminal-through-horizon"
+    }
+  },
+  "provenance": "Authored R1 app-loss software exercise v2; synthetic teaching fixtures. Numeric demands and timings are assumptions, not measured cloud capacities or calibration. Retired v1 suites are public practice.",
+  "practice": [
+    {
+      "label": "Public practice: retired v1 workload; synthetic teaching fixture, no grading thresholds.",
+      "workload": {
+        "id": "price-history-api-heldout-tight",
+        "version": "1",
+        "provenance": "Authored R1 price-history-api/1 synthetic teaching fixture, 22 October 2026. Finite demands, arrivals, faults and goals are software assumptions; no production trace, cloud calibration or Model 1 grader constants. price-history-api-heldout-tight: single wave, 32 offers, 200 us spacing; app-1 loss.",
+        "header": {
+          "schema": "infraforge-first-stack-schedule/1",
+          "unit": "us",
+          "durationUs": 100000,
+          "origin": "authored-schedule",
+          "provenance": "Authored R1 price-history-api/1 synthetic teaching fixture, 22 October 2026. Finite demands, arrivals, faults and goals are software assumptions; no production trace, cloud calibration or Model 1 grader constants."
+        },
+        "rows": [
+          {
+            "id": "price-history-api-heldout-tight-0",
+            "atUs": 12000,
+            "operation": "history-page"
+          },
+          {
+            "id": "price-history-api-heldout-tight-1",
+            "atUs": 12200,
+            "operation": "history-page"
+          },
+          {
+            "id": "price-history-api-heldout-tight-2",
+            "atUs": 12400,
+            "operation": "history-page"
+          },
+          {
+            "id": "price-history-api-heldout-tight-3",
+            "atUs": 12600,
+            "operation": "history-page"
+          },
+          {
+            "id": "price-history-api-heldout-tight-4",
+            "atUs": 12800,
+            "operation": "history-page"
+          },
+          {
+            "id": "price-history-api-heldout-tight-5",
+            "atUs": 13000,
+            "operation": "history-page"
+          },
+          {
+            "id": "price-history-api-heldout-tight-6",
+            "atUs": 13200,
+            "operation": "history-page"
+          },
+          {
+            "id": "price-history-api-heldout-tight-7",
+            "atUs": 13400,
+            "operation": "history-page"
+          },
+          {
+            "id": "price-history-api-heldout-tight-8",
+            "atUs": 13600,
+            "operation": "history-page"
+          },
+          {
+            "id": "price-history-api-heldout-tight-9",
+            "atUs": 13800,
+            "operation": "history-page"
+          },
+          {
+            "id": "price-history-api-heldout-tight-10",
+            "atUs": 14000,
+            "operation": "history-page"
+          },
+          {
+            "id": "price-history-api-heldout-tight-11",
+            "atUs": 14200,
+            "operation": "history-page"
+          },
+          {
+            "id": "price-history-api-heldout-tight-12",
+            "atUs": 14400,
+            "operation": "history-page"
+          },
+          {
+            "id": "price-history-api-heldout-tight-13",
+            "atUs": 14600,
+            "operation": "history-page"
+          },
+          {
+            "id": "price-history-api-heldout-tight-14",
+            "atUs": 14800,
+            "operation": "history-page"
+          },
+          {
+            "id": "price-history-api-heldout-tight-15",
+            "atUs": 15000,
+            "operation": "history-page"
+          },
+          {
+            "id": "price-history-api-heldout-tight-16",
+            "atUs": 15200,
+            "operation": "history-page"
+          },
+          {
+            "id": "price-history-api-heldout-tight-17",
+            "atUs": 15400,
+            "operation": "history-page"
+          },
+          {
+            "id": "price-history-api-heldout-tight-18",
+            "atUs": 15600,
+            "operation": "history-page"
+          },
+          {
+            "id": "price-history-api-heldout-tight-19",
+            "atUs": 15800,
+            "operation": "history-page"
+          },
+          {
+            "id": "price-history-api-heldout-tight-20",
+            "atUs": 16000,
+            "operation": "history-page"
+          },
+          {
+            "id": "price-history-api-heldout-tight-21",
+            "atUs": 16200,
+            "operation": "history-page"
+          },
+          {
+            "id": "price-history-api-heldout-tight-22",
+            "atUs": 16400,
+            "operation": "history-page"
+          },
+          {
+            "id": "price-history-api-heldout-tight-23",
+            "atUs": 16600,
+            "operation": "history-page"
+          },
+          {
+            "id": "price-history-api-heldout-tight-24",
+            "atUs": 16800,
+            "operation": "history-page"
+          },
+          {
+            "id": "price-history-api-heldout-tight-25",
+            "atUs": 17000,
+            "operation": "history-page"
+          },
+          {
+            "id": "price-history-api-heldout-tight-26",
+            "atUs": 17200,
+            "operation": "history-page"
+          },
+          {
+            "id": "price-history-api-heldout-tight-27",
+            "atUs": 17400,
+            "operation": "history-page"
+          },
+          {
+            "id": "price-history-api-heldout-tight-28",
+            "atUs": 17600,
+            "operation": "history-page"
+          },
+          {
+            "id": "price-history-api-heldout-tight-29",
+            "atUs": 17800,
+            "operation": "history-page"
+          },
+          {
+            "id": "price-history-api-heldout-tight-30",
+            "atUs": 18000,
+            "operation": "history-page"
+          },
+          {
+            "id": "price-history-api-heldout-tight-31",
+            "atUs": 18200,
+            "operation": "history-page"
+          }
+        ],
+        "parameters": {
+          "schema": "infraforge-first-stack-parameters/1",
+          "rows": [
+            {
+              "id": "price-history-api-heldout-tight-0",
+              "plan": "lookup",
+              "keys": [
+                "price-history-api:0",
+                "price-history-api:1",
+                "price-history-api:2",
+                "price-history-api:3",
+                "price-history-api:4",
+                "price-history-api:5",
+                "price-history-api:6",
+                "price-history-api:7"
+              ]
+            },
+            {
+              "id": "price-history-api-heldout-tight-1",
+              "plan": "lookup",
+              "keys": [
+                "price-history-api:0",
+                "price-history-api:1",
+                "price-history-api:2",
+                "price-history-api:3",
+                "price-history-api:4",
+                "price-history-api:5",
+                "price-history-api:6",
+                "price-history-api:7"
+              ]
+            },
+            {
+              "id": "price-history-api-heldout-tight-2",
+              "plan": "lookup",
+              "keys": [
+                "price-history-api:0",
+                "price-history-api:1",
+                "price-history-api:2",
+                "price-history-api:3",
+                "price-history-api:4",
+                "price-history-api:5",
+                "price-history-api:6",
+                "price-history-api:7"
+              ]
+            },
+            {
+              "id": "price-history-api-heldout-tight-3",
+              "plan": "lookup",
+              "keys": [
+                "price-history-api:0",
+                "price-history-api:1",
+                "price-history-api:2",
+                "price-history-api:3",
+                "price-history-api:4",
+                "price-history-api:5",
+                "price-history-api:6",
+                "price-history-api:7"
+              ]
+            },
+            {
+              "id": "price-history-api-heldout-tight-4",
+              "plan": "lookup",
+              "keys": [
+                "price-history-api:0",
+                "price-history-api:1",
+                "price-history-api:2",
+                "price-history-api:3",
+                "price-history-api:4",
+                "price-history-api:5",
+                "price-history-api:6",
+                "price-history-api:7"
+              ]
+            },
+            {
+              "id": "price-history-api-heldout-tight-5",
+              "plan": "lookup",
+              "keys": [
+                "price-history-api:0",
+                "price-history-api:1",
+                "price-history-api:2",
+                "price-history-api:3",
+                "price-history-api:4",
+                "price-history-api:5",
+                "price-history-api:6",
+                "price-history-api:7"
+              ]
+            },
+            {
+              "id": "price-history-api-heldout-tight-6",
+              "plan": "lookup",
+              "keys": [
+                "price-history-api:0",
+                "price-history-api:1",
+                "price-history-api:2",
+                "price-history-api:3",
+                "price-history-api:4",
+                "price-history-api:5",
+                "price-history-api:6",
+                "price-history-api:7"
+              ]
+            },
+            {
+              "id": "price-history-api-heldout-tight-7",
+              "plan": "lookup",
+              "keys": [
+                "price-history-api:0",
+                "price-history-api:1",
+                "price-history-api:2",
+                "price-history-api:3",
+                "price-history-api:4",
+                "price-history-api:5",
+                "price-history-api:6",
+                "price-history-api:7"
+              ]
+            },
+            {
+              "id": "price-history-api-heldout-tight-8",
+              "plan": "lookup",
+              "keys": [
+                "price-history-api:0",
+                "price-history-api:1",
+                "price-history-api:2",
+                "price-history-api:3",
+                "price-history-api:4",
+                "price-history-api:5",
+                "price-history-api:6",
+                "price-history-api:7"
+              ]
+            },
+            {
+              "id": "price-history-api-heldout-tight-9",
+              "plan": "lookup",
+              "keys": [
+                "price-history-api:0",
+                "price-history-api:1",
+                "price-history-api:2",
+                "price-history-api:3",
+                "price-history-api:4",
+                "price-history-api:5",
+                "price-history-api:6",
+                "price-history-api:7"
+              ]
+            },
+            {
+              "id": "price-history-api-heldout-tight-10",
+              "plan": "lookup",
+              "keys": [
+                "price-history-api:0",
+                "price-history-api:1",
+                "price-history-api:2",
+                "price-history-api:3",
+                "price-history-api:4",
+                "price-history-api:5",
+                "price-history-api:6",
+                "price-history-api:7"
+              ]
+            },
+            {
+              "id": "price-history-api-heldout-tight-11",
+              "plan": "lookup",
+              "keys": [
+                "price-history-api:0",
+                "price-history-api:1",
+                "price-history-api:2",
+                "price-history-api:3",
+                "price-history-api:4",
+                "price-history-api:5",
+                "price-history-api:6",
+                "price-history-api:7"
+              ]
+            },
+            {
+              "id": "price-history-api-heldout-tight-12",
+              "plan": "lookup",
+              "keys": [
+                "price-history-api:0",
+                "price-history-api:1",
+                "price-history-api:2",
+                "price-history-api:3",
+                "price-history-api:4",
+                "price-history-api:5",
+                "price-history-api:6",
+                "price-history-api:7"
+              ]
+            },
+            {
+              "id": "price-history-api-heldout-tight-13",
+              "plan": "lookup",
+              "keys": [
+                "price-history-api:0",
+                "price-history-api:1",
+                "price-history-api:2",
+                "price-history-api:3",
+                "price-history-api:4",
+                "price-history-api:5",
+                "price-history-api:6",
+                "price-history-api:7"
+              ]
+            },
+            {
+              "id": "price-history-api-heldout-tight-14",
+              "plan": "lookup",
+              "keys": [
+                "price-history-api:0",
+                "price-history-api:1",
+                "price-history-api:2",
+                "price-history-api:3",
+                "price-history-api:4",
+                "price-history-api:5",
+                "price-history-api:6",
+                "price-history-api:7"
+              ]
+            },
+            {
+              "id": "price-history-api-heldout-tight-15",
+              "plan": "lookup",
+              "keys": [
+                "price-history-api:0",
+                "price-history-api:1",
+                "price-history-api:2",
+                "price-history-api:3",
+                "price-history-api:4",
+                "price-history-api:5",
+                "price-history-api:6",
+                "price-history-api:7"
+              ]
+            },
+            {
+              "id": "price-history-api-heldout-tight-16",
+              "plan": "lookup",
+              "keys": [
+                "price-history-api:0",
+                "price-history-api:1",
+                "price-history-api:2",
+                "price-history-api:3",
+                "price-history-api:4",
+                "price-history-api:5",
+                "price-history-api:6",
+                "price-history-api:7"
+              ]
+            },
+            {
+              "id": "price-history-api-heldout-tight-17",
+              "plan": "lookup",
+              "keys": [
+                "price-history-api:0",
+                "price-history-api:1",
+                "price-history-api:2",
+                "price-history-api:3",
+                "price-history-api:4",
+                "price-history-api:5",
+                "price-history-api:6",
+                "price-history-api:7"
+              ]
+            },
+            {
+              "id": "price-history-api-heldout-tight-18",
+              "plan": "lookup",
+              "keys": [
+                "price-history-api:0",
+                "price-history-api:1",
+                "price-history-api:2",
+                "price-history-api:3",
+                "price-history-api:4",
+                "price-history-api:5",
+                "price-history-api:6",
+                "price-history-api:7"
+              ]
+            },
+            {
+              "id": "price-history-api-heldout-tight-19",
+              "plan": "lookup",
+              "keys": [
+                "price-history-api:0",
+                "price-history-api:1",
+                "price-history-api:2",
+                "price-history-api:3",
+                "price-history-api:4",
+                "price-history-api:5",
+                "price-history-api:6",
+                "price-history-api:7"
+              ]
+            },
+            {
+              "id": "price-history-api-heldout-tight-20",
+              "plan": "lookup",
+              "keys": [
+                "price-history-api:0",
+                "price-history-api:1",
+                "price-history-api:2",
+                "price-history-api:3",
+                "price-history-api:4",
+                "price-history-api:5",
+                "price-history-api:6",
+                "price-history-api:7"
+              ]
+            },
+            {
+              "id": "price-history-api-heldout-tight-21",
+              "plan": "lookup",
+              "keys": [
+                "price-history-api:0",
+                "price-history-api:1",
+                "price-history-api:2",
+                "price-history-api:3",
+                "price-history-api:4",
+                "price-history-api:5",
+                "price-history-api:6",
+                "price-history-api:7"
+              ]
+            },
+            {
+              "id": "price-history-api-heldout-tight-22",
+              "plan": "lookup",
+              "keys": [
+                "price-history-api:0",
+                "price-history-api:1",
+                "price-history-api:2",
+                "price-history-api:3",
+                "price-history-api:4",
+                "price-history-api:5",
+                "price-history-api:6",
+                "price-history-api:7"
+              ]
+            },
+            {
+              "id": "price-history-api-heldout-tight-23",
+              "plan": "lookup",
+              "keys": [
+                "price-history-api:0",
+                "price-history-api:1",
+                "price-history-api:2",
+                "price-history-api:3",
+                "price-history-api:4",
+                "price-history-api:5",
+                "price-history-api:6",
+                "price-history-api:7"
+              ]
+            },
+            {
+              "id": "price-history-api-heldout-tight-24",
+              "plan": "lookup",
+              "keys": [
+                "price-history-api:0",
+                "price-history-api:1",
+                "price-history-api:2",
+                "price-history-api:3",
+                "price-history-api:4",
+                "price-history-api:5",
+                "price-history-api:6",
+                "price-history-api:7"
+              ]
+            },
+            {
+              "id": "price-history-api-heldout-tight-25",
+              "plan": "lookup",
+              "keys": [
+                "price-history-api:0",
+                "price-history-api:1",
+                "price-history-api:2",
+                "price-history-api:3",
+                "price-history-api:4",
+                "price-history-api:5",
+                "price-history-api:6",
+                "price-history-api:7"
+              ]
+            },
+            {
+              "id": "price-history-api-heldout-tight-26",
+              "plan": "lookup",
+              "keys": [
+                "price-history-api:0",
+                "price-history-api:1",
+                "price-history-api:2",
+                "price-history-api:3",
+                "price-history-api:4",
+                "price-history-api:5",
+                "price-history-api:6",
+                "price-history-api:7"
+              ]
+            },
+            {
+              "id": "price-history-api-heldout-tight-27",
+              "plan": "lookup",
+              "keys": [
+                "price-history-api:0",
+                "price-history-api:1",
+                "price-history-api:2",
+                "price-history-api:3",
+                "price-history-api:4",
+                "price-history-api:5",
+                "price-history-api:6",
+                "price-history-api:7"
+              ]
+            },
+            {
+              "id": "price-history-api-heldout-tight-28",
+              "plan": "lookup",
+              "keys": [
+                "price-history-api:0",
+                "price-history-api:1",
+                "price-history-api:2",
+                "price-history-api:3",
+                "price-history-api:4",
+                "price-history-api:5",
+                "price-history-api:6",
+                "price-history-api:7"
+              ]
+            },
+            {
+              "id": "price-history-api-heldout-tight-29",
+              "plan": "lookup",
+              "keys": [
+                "price-history-api:0",
+                "price-history-api:1",
+                "price-history-api:2",
+                "price-history-api:3",
+                "price-history-api:4",
+                "price-history-api:5",
+                "price-history-api:6",
+                "price-history-api:7"
+              ]
+            },
+            {
+              "id": "price-history-api-heldout-tight-30",
+              "plan": "lookup",
+              "keys": [
+                "price-history-api:0",
+                "price-history-api:1",
+                "price-history-api:2",
+                "price-history-api:3",
+                "price-history-api:4",
+                "price-history-api:5",
+                "price-history-api:6",
+                "price-history-api:7"
+              ]
+            },
+            {
+              "id": "price-history-api-heldout-tight-31",
+              "plan": "lookup",
+              "keys": [
+                "price-history-api:0",
+                "price-history-api:1",
+                "price-history-api:2",
+                "price-history-api:3",
+                "price-history-api:4",
+                "price-history-api:5",
+                "price-history-api:6",
+                "price-history-api:7"
+              ]
+            }
+          ]
+        },
+        "faults": [
+          {
+            "schema": "first-stack-fault/1",
+            "id": "lose-app",
+            "kind": "app-process-crash",
+            "target": "app-1",
+            "atUs": 3000,
+            "downtimeUs": 74000,
+            "recoveryUs": 3000
+          }
+        ],
+        "observation": {
+          "fromUs": 10000,
+          "toUs": 70000,
+          "boundary": "offer-cohort-half-open; terminal-through-horizon"
+        }
+      }
+    },
+    {
+      "label": "Public practice: retired v1 workload; synthetic teaching fixture, no grading thresholds.",
+      "workload": {
+        "id": "price-history-api-heldout-waves",
+        "version": "1",
+        "provenance": "Authored R1 price-history-api/1 synthetic teaching fixture, 22 October 2026. Finite demands, arrivals, faults and goals are software assumptions; no production trace, cloud calibration or Model 1 grader constants. price-history-api-heldout-waves: two separated waves, 28 offers, 300 us spacing; app-0 loss.",
+        "header": {
+          "schema": "infraforge-first-stack-schedule/1",
+          "unit": "us",
+          "durationUs": 100000,
+          "origin": "authored-schedule",
+          "provenance": "Authored R1 price-history-api/1 synthetic teaching fixture, 22 October 2026. Finite demands, arrivals, faults and goals are software assumptions; no production trace, cloud calibration or Model 1 grader constants."
+        },
+        "rows": [
+          {
+            "id": "price-history-api-heldout-waves-0",
+            "atUs": 18000,
+            "operation": "history-page"
+          },
+          {
+            "id": "price-history-api-heldout-waves-1",
+            "atUs": 18300,
+            "operation": "history-page"
+          },
+          {
+            "id": "price-history-api-heldout-waves-2",
+            "atUs": 18600,
+            "operation": "history-page"
+          },
+          {
+            "id": "price-history-api-heldout-waves-3",
+            "atUs": 18900,
+            "operation": "history-page"
+          },
+          {
+            "id": "price-history-api-heldout-waves-4",
+            "atUs": 19200,
+            "operation": "history-page"
+          },
+          {
+            "id": "price-history-api-heldout-waves-5",
+            "atUs": 19500,
+            "operation": "history-page"
+          },
+          {
+            "id": "price-history-api-heldout-waves-6",
+            "atUs": 19800,
+            "operation": "history-page"
+          },
+          {
+            "id": "price-history-api-heldout-waves-7",
+            "atUs": 20100,
+            "operation": "history-page"
+          },
+          {
+            "id": "price-history-api-heldout-waves-8",
+            "atUs": 20400,
+            "operation": "history-page"
+          },
+          {
+            "id": "price-history-api-heldout-waves-9",
+            "atUs": 20700,
+            "operation": "history-page"
+          },
+          {
+            "id": "price-history-api-heldout-waves-10",
+            "atUs": 21000,
+            "operation": "history-page"
+          },
+          {
+            "id": "price-history-api-heldout-waves-11",
+            "atUs": 21300,
+            "operation": "history-page"
+          },
+          {
+            "id": "price-history-api-heldout-waves-12",
+            "atUs": 21600,
+            "operation": "history-page"
+          },
+          {
+            "id": "price-history-api-heldout-waves-13",
+            "atUs": 21900,
+            "operation": "history-page"
+          },
+          {
+            "id": "price-history-api-heldout-waves-14",
+            "atUs": 40200,
+            "operation": "history-page"
+          },
+          {
+            "id": "price-history-api-heldout-waves-15",
+            "atUs": 40500,
+            "operation": "history-page"
+          },
+          {
+            "id": "price-history-api-heldout-waves-16",
+            "atUs": 40800,
+            "operation": "history-page"
+          },
+          {
+            "id": "price-history-api-heldout-waves-17",
+            "atUs": 41100,
+            "operation": "history-page"
+          },
+          {
+            "id": "price-history-api-heldout-waves-18",
+            "atUs": 41400,
+            "operation": "history-page"
+          },
+          {
+            "id": "price-history-api-heldout-waves-19",
+            "atUs": 41700,
+            "operation": "history-page"
+          },
+          {
+            "id": "price-history-api-heldout-waves-20",
+            "atUs": 42000,
+            "operation": "history-page"
+          },
+          {
+            "id": "price-history-api-heldout-waves-21",
+            "atUs": 42300,
+            "operation": "history-page"
+          },
+          {
+            "id": "price-history-api-heldout-waves-22",
+            "atUs": 42600,
+            "operation": "history-page"
+          },
+          {
+            "id": "price-history-api-heldout-waves-23",
+            "atUs": 42900,
+            "operation": "history-page"
+          },
+          {
+            "id": "price-history-api-heldout-waves-24",
+            "atUs": 43200,
+            "operation": "history-page"
+          },
+          {
+            "id": "price-history-api-heldout-waves-25",
+            "atUs": 43500,
+            "operation": "history-page"
+          },
+          {
+            "id": "price-history-api-heldout-waves-26",
+            "atUs": 43800,
+            "operation": "history-page"
+          },
+          {
+            "id": "price-history-api-heldout-waves-27",
+            "atUs": 44100,
+            "operation": "history-page"
+          }
+        ],
+        "parameters": {
+          "schema": "infraforge-first-stack-parameters/1",
+          "rows": [
+            {
+              "id": "price-history-api-heldout-waves-0",
+              "plan": "lookup",
+              "keys": [
+                "price-history-api:0",
+                "price-history-api:1",
+                "price-history-api:2",
+                "price-history-api:3",
+                "price-history-api:4",
+                "price-history-api:5",
+                "price-history-api:6",
+                "price-history-api:7"
+              ]
+            },
+            {
+              "id": "price-history-api-heldout-waves-1",
+              "plan": "lookup",
+              "keys": [
+                "price-history-api:0",
+                "price-history-api:1",
+                "price-history-api:2",
+                "price-history-api:3",
+                "price-history-api:4",
+                "price-history-api:5",
+                "price-history-api:6",
+                "price-history-api:7"
+              ]
+            },
+            {
+              "id": "price-history-api-heldout-waves-2",
+              "plan": "lookup",
+              "keys": [
+                "price-history-api:0",
+                "price-history-api:1",
+                "price-history-api:2",
+                "price-history-api:3",
+                "price-history-api:4",
+                "price-history-api:5",
+                "price-history-api:6",
+                "price-history-api:7"
+              ]
+            },
+            {
+              "id": "price-history-api-heldout-waves-3",
+              "plan": "lookup",
+              "keys": [
+                "price-history-api:0",
+                "price-history-api:1",
+                "price-history-api:2",
+                "price-history-api:3",
+                "price-history-api:4",
+                "price-history-api:5",
+                "price-history-api:6",
+                "price-history-api:7"
+              ]
+            },
+            {
+              "id": "price-history-api-heldout-waves-4",
+              "plan": "lookup",
+              "keys": [
+                "price-history-api:0",
+                "price-history-api:1",
+                "price-history-api:2",
+                "price-history-api:3",
+                "price-history-api:4",
+                "price-history-api:5",
+                "price-history-api:6",
+                "price-history-api:7"
+              ]
+            },
+            {
+              "id": "price-history-api-heldout-waves-5",
+              "plan": "lookup",
+              "keys": [
+                "price-history-api:0",
+                "price-history-api:1",
+                "price-history-api:2",
+                "price-history-api:3",
+                "price-history-api:4",
+                "price-history-api:5",
+                "price-history-api:6",
+                "price-history-api:7"
+              ]
+            },
+            {
+              "id": "price-history-api-heldout-waves-6",
+              "plan": "lookup",
+              "keys": [
+                "price-history-api:0",
+                "price-history-api:1",
+                "price-history-api:2",
+                "price-history-api:3",
+                "price-history-api:4",
+                "price-history-api:5",
+                "price-history-api:6",
+                "price-history-api:7"
+              ]
+            },
+            {
+              "id": "price-history-api-heldout-waves-7",
+              "plan": "lookup",
+              "keys": [
+                "price-history-api:0",
+                "price-history-api:1",
+                "price-history-api:2",
+                "price-history-api:3",
+                "price-history-api:4",
+                "price-history-api:5",
+                "price-history-api:6",
+                "price-history-api:7"
+              ]
+            },
+            {
+              "id": "price-history-api-heldout-waves-8",
+              "plan": "lookup",
+              "keys": [
+                "price-history-api:0",
+                "price-history-api:1",
+                "price-history-api:2",
+                "price-history-api:3",
+                "price-history-api:4",
+                "price-history-api:5",
+                "price-history-api:6",
+                "price-history-api:7"
+              ]
+            },
+            {
+              "id": "price-history-api-heldout-waves-9",
+              "plan": "lookup",
+              "keys": [
+                "price-history-api:0",
+                "price-history-api:1",
+                "price-history-api:2",
+                "price-history-api:3",
+                "price-history-api:4",
+                "price-history-api:5",
+                "price-history-api:6",
+                "price-history-api:7"
+              ]
+            },
+            {
+              "id": "price-history-api-heldout-waves-10",
+              "plan": "lookup",
+              "keys": [
+                "price-history-api:0",
+                "price-history-api:1",
+                "price-history-api:2",
+                "price-history-api:3",
+                "price-history-api:4",
+                "price-history-api:5",
+                "price-history-api:6",
+                "price-history-api:7"
+              ]
+            },
+            {
+              "id": "price-history-api-heldout-waves-11",
+              "plan": "lookup",
+              "keys": [
+                "price-history-api:0",
+                "price-history-api:1",
+                "price-history-api:2",
+                "price-history-api:3",
+                "price-history-api:4",
+                "price-history-api:5",
+                "price-history-api:6",
+                "price-history-api:7"
+              ]
+            },
+            {
+              "id": "price-history-api-heldout-waves-12",
+              "plan": "lookup",
+              "keys": [
+                "price-history-api:0",
+                "price-history-api:1",
+                "price-history-api:2",
+                "price-history-api:3",
+                "price-history-api:4",
+                "price-history-api:5",
+                "price-history-api:6",
+                "price-history-api:7"
+              ]
+            },
+            {
+              "id": "price-history-api-heldout-waves-13",
+              "plan": "lookup",
+              "keys": [
+                "price-history-api:0",
+                "price-history-api:1",
+                "price-history-api:2",
+                "price-history-api:3",
+                "price-history-api:4",
+                "price-history-api:5",
+                "price-history-api:6",
+                "price-history-api:7"
+              ]
+            },
+            {
+              "id": "price-history-api-heldout-waves-14",
+              "plan": "lookup",
+              "keys": [
+                "price-history-api:0",
+                "price-history-api:1",
+                "price-history-api:2",
+                "price-history-api:3",
+                "price-history-api:4",
+                "price-history-api:5",
+                "price-history-api:6",
+                "price-history-api:7"
+              ]
+            },
+            {
+              "id": "price-history-api-heldout-waves-15",
+              "plan": "lookup",
+              "keys": [
+                "price-history-api:0",
+                "price-history-api:1",
+                "price-history-api:2",
+                "price-history-api:3",
+                "price-history-api:4",
+                "price-history-api:5",
+                "price-history-api:6",
+                "price-history-api:7"
+              ]
+            },
+            {
+              "id": "price-history-api-heldout-waves-16",
+              "plan": "lookup",
+              "keys": [
+                "price-history-api:0",
+                "price-history-api:1",
+                "price-history-api:2",
+                "price-history-api:3",
+                "price-history-api:4",
+                "price-history-api:5",
+                "price-history-api:6",
+                "price-history-api:7"
+              ]
+            },
+            {
+              "id": "price-history-api-heldout-waves-17",
+              "plan": "lookup",
+              "keys": [
+                "price-history-api:0",
+                "price-history-api:1",
+                "price-history-api:2",
+                "price-history-api:3",
+                "price-history-api:4",
+                "price-history-api:5",
+                "price-history-api:6",
+                "price-history-api:7"
+              ]
+            },
+            {
+              "id": "price-history-api-heldout-waves-18",
+              "plan": "lookup",
+              "keys": [
+                "price-history-api:0",
+                "price-history-api:1",
+                "price-history-api:2",
+                "price-history-api:3",
+                "price-history-api:4",
+                "price-history-api:5",
+                "price-history-api:6",
+                "price-history-api:7"
+              ]
+            },
+            {
+              "id": "price-history-api-heldout-waves-19",
+              "plan": "lookup",
+              "keys": [
+                "price-history-api:0",
+                "price-history-api:1",
+                "price-history-api:2",
+                "price-history-api:3",
+                "price-history-api:4",
+                "price-history-api:5",
+                "price-history-api:6",
+                "price-history-api:7"
+              ]
+            },
+            {
+              "id": "price-history-api-heldout-waves-20",
+              "plan": "lookup",
+              "keys": [
+                "price-history-api:0",
+                "price-history-api:1",
+                "price-history-api:2",
+                "price-history-api:3",
+                "price-history-api:4",
+                "price-history-api:5",
+                "price-history-api:6",
+                "price-history-api:7"
+              ]
+            },
+            {
+              "id": "price-history-api-heldout-waves-21",
+              "plan": "lookup",
+              "keys": [
+                "price-history-api:0",
+                "price-history-api:1",
+                "price-history-api:2",
+                "price-history-api:3",
+                "price-history-api:4",
+                "price-history-api:5",
+                "price-history-api:6",
+                "price-history-api:7"
+              ]
+            },
+            {
+              "id": "price-history-api-heldout-waves-22",
+              "plan": "lookup",
+              "keys": [
+                "price-history-api:0",
+                "price-history-api:1",
+                "price-history-api:2",
+                "price-history-api:3",
+                "price-history-api:4",
+                "price-history-api:5",
+                "price-history-api:6",
+                "price-history-api:7"
+              ]
+            },
+            {
+              "id": "price-history-api-heldout-waves-23",
+              "plan": "lookup",
+              "keys": [
+                "price-history-api:0",
+                "price-history-api:1",
+                "price-history-api:2",
+                "price-history-api:3",
+                "price-history-api:4",
+                "price-history-api:5",
+                "price-history-api:6",
+                "price-history-api:7"
+              ]
+            },
+            {
+              "id": "price-history-api-heldout-waves-24",
+              "plan": "lookup",
+              "keys": [
+                "price-history-api:0",
+                "price-history-api:1",
+                "price-history-api:2",
+                "price-history-api:3",
+                "price-history-api:4",
+                "price-history-api:5",
+                "price-history-api:6",
+                "price-history-api:7"
+              ]
+            },
+            {
+              "id": "price-history-api-heldout-waves-25",
+              "plan": "lookup",
+              "keys": [
+                "price-history-api:0",
+                "price-history-api:1",
+                "price-history-api:2",
+                "price-history-api:3",
+                "price-history-api:4",
+                "price-history-api:5",
+                "price-history-api:6",
+                "price-history-api:7"
+              ]
+            },
+            {
+              "id": "price-history-api-heldout-waves-26",
+              "plan": "lookup",
+              "keys": [
+                "price-history-api:0",
+                "price-history-api:1",
+                "price-history-api:2",
+                "price-history-api:3",
+                "price-history-api:4",
+                "price-history-api:5",
+                "price-history-api:6",
+                "price-history-api:7"
+              ]
+            },
+            {
+              "id": "price-history-api-heldout-waves-27",
+              "plan": "lookup",
+              "keys": [
+                "price-history-api:0",
+                "price-history-api:1",
+                "price-history-api:2",
+                "price-history-api:3",
+                "price-history-api:4",
+                "price-history-api:5",
+                "price-history-api:6",
+                "price-history-api:7"
+              ]
+            }
+          ]
+        },
+        "faults": [
+          {
+            "schema": "first-stack-fault/1",
+            "id": "lose-app",
+            "kind": "app-process-crash",
+            "target": "app-0",
+            "atUs": 6000,
+            "downtimeUs": 68000,
+            "recoveryUs": 6000
+          }
+        ],
+        "observation": {
+          "fromUs": 10000,
+          "toUs": 70000,
+          "boundary": "offer-cohort-half-open; terminal-through-horizon"
+        }
+      }
+    }
+  ],
+  "scoring": {
+    "version": "2",
+    "sha256": "06dcbad13673930543edea4e90a836e3cd8c08499a5307658cc8bc1e596d6280"
+  }
+}

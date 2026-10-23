@@ -3,7 +3,8 @@ import { canonical, designRevision, hash } from "../canonical";
 import { inputDigest, readIsolatedCut, type IsolatedCut } from "../isolationProtocol";
 import type { IsolationAuthority } from "../isolationRunner";
 import type { executeFirstStackIsolated } from "../isolatedExecution";
-import { pinnedChallenge, prepareChallengeWorkload, validateChallengeDesign } from "./definition";
+import { serverChallenges, prepareChallengeWorkload, validateChallengeDesign, type ChallengeRegistry } from "./definition";
+import { ScoringUnavailableError, scoringUnavailable } from "./privateStore";
 import { evaluateWorkload, scoreRecord } from "./scoring";
 
 type Result = Awaited<ReturnType<typeof executeFirstStackIsolated>>;
@@ -23,14 +24,21 @@ export function challengeFence(visible: { check(db: Client): Promise<void>; comm
 // The caller must hold slice 10b's session ownership across this entire serial
 // sequence. Only the production worker supplies the executor and commit fence.
 export async function executeScoredChallenge(run: any, sample: Result, authority: IsolationAuthority, signal: AbortSignal,
-  select: (target: HiddenTarget | null) => void, execute: (input: string, authority: IsolationAuthority, signal: AbortSignal) => Promise<Result>) {
+  select: (target: HiddenTarget | null) => void, execute: (input: string, authority: IsolationAuthority, signal: AbortSignal) => Promise<Result>,
+  registry: ChallengeRegistry = serverChallenges) {
   const visible = sample.durablePrefix;
   if (run.purpose !== "scored") return null;
   if (sample.status !== "completed" || sample.receipt.cleanup !== "removed" || !visible ||
     !visible.cut.completeness.horizonReached || visible.cut.interruption || hash(visible.cut.lock) !== hash(run.lock) ||
     visible.source !== run.engine.source || visible.inputHash !== run.inputHash || visible.fingerprint !== run.browserCut.fingerprint) return null;
   readIsolatedCut(visible, run.engine.source, run.inputHash);
-  const definition = pinnedChallenge(run.workload.challenge), saved = JSON.parse(run.input);
+  let definition;
+  try { definition = registry.scoring(run.workload.challenge); }
+  catch (error) {
+    if (error instanceof ScoringUnavailableError) return scoringUnavailable();
+    throw error;
+  }
+  const saved = JSON.parse(run.input);
   if (inputDigest(run.input) !== run.inputHash || designRevision(saved.layout) !== run.lineage.designRevision ||
     hash(saved.layout.firstStack) !== hash(saved.candidate)) throw Error("Scored saved design identity changed");
   validateChallengeDesign(saved.layout, definition);

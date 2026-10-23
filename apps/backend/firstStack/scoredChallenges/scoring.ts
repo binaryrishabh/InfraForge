@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { hash } from "../canonical";
 import { inputDigest, readIsolatedCut, type IsolatedCut } from "../isolationProtocol";
-import type { ChallengeDefinition, ChallengeWorkload } from "./definition";
+import type { ScoringDefinition, ChallengeWorkload } from "./definition";
 
 const tail = z.discriminatedUnion("kind", [z.object({ kind: z.literal("exact"), p: z.number(), valueUs: z.number().int().nonnegative() }),
   z.object({ kind: z.literal("bounded"), p: z.number(), minUs: z.number().nonnegative(), maxUs: z.number().nonnegative() }),
@@ -9,7 +9,7 @@ const tail = z.discriminatedUnion("kind", [z.object({ kind: z.literal("exact"), 
 const distributions = z.object({ censored: z.number().int().nonnegative(), groups: z.array(z.object({ operation: z.string(),
   outcome: z.enum(["completed", "rejected", "deadline-exceeded", "abandoned"]), count: z.number().int().positive(), percentiles: z.array(tail) })) });
 export interface CriterionOutcome { id: string; required: boolean; outcome: "pass" | "fail" | "Unknown"; measured: number | null; reason: string | null; support: "supported-logical" | "assumption-only" | "Unknown" }
-export function evaluateWorkload(definition: ChallengeDefinition, workload: ChallengeWorkload, input: string, cut: IsolatedCut | null): CriterionOutcome[] {
+export function evaluateWorkload(definition: ScoringDefinition, workload: ChallengeWorkload, input: string, cut: IsolatedCut | null): CriterionOutcome[] {
   let reason: string | null = null, evidence: z.infer<typeof distributions> | null = null;
   const recording = JSON.parse(input).recording;
   try {
@@ -52,9 +52,10 @@ export function evaluateWorkload(definition: ChallengeDefinition, workload: Chal
       outcome: (criterion.operator === "gte" ? measured >= criterion.threshold : measured <= criterion.threshold) ? "pass" : "fail" };
   });
 }
-export function scoreRecord(definition: ChallengeDefinition, run: any, workloads: { reference: ChallengeWorkload; input: string; evidence: IsolatedCut | null; receipt: unknown; outcomes: CriterionOutcome[] }[]) {
+export function scoreRecord(definition: ScoringDefinition, run: any, workloads: { reference: ChallengeWorkload; input: string; evidence: IsolatedCut | null; receipt: unknown; outcomes: CriterionOutcome[] }[]) {
   const outcomes = workloads.flatMap(w => w.outcomes), pending = outcomes.filter(c => c.outcome === "Unknown").length;
-  return { schema: "infraforge-server-score/1", challenge: { id: definition.id, version: definition.version, definitionHash: hash(definition) },
+  const { hidden: _hidden, rubric: _rubric, ...publicDefinition } = definition;
+  return { schema: "infraforge-server-score/1", challenge: { id: definition.id, version: definition.version, definitionHash: hash(publicDefinition) },
     rubricVersion: definition.rubric.version, rubric: structuredClone(definition.rubric), engine: run.engine, design: { lineage: run.lineage, visibleInputHash: run.inputHash },
     // This complete audit record is server-only and covered by FirstStackResult's
     // existing append-only trigger and hash. Client projections omit it entirely.

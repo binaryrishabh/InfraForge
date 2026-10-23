@@ -1,67 +1,50 @@
-import type { FirstStackSidecarV2, RecordedScheduleHeader, RecordedScheduleRow } from "@infraforge/contracts/first-stack";
-import { z } from "zod";
-import source from "./lose-an-app-server.v1.json";
-import redirect from "./url-redirect.v1.json";
-import catalogue from "./catalogue-api.v1.json";
-import reviews from "./reviews-api.v1.json";
-import paste from "./small-paste-api.v1.json";
-import news from "./preloaded-news-api.v1.json";
-import history from "./price-history-api.v1.json";
+import type { FirstStackSidecarV2 } from "@infraforge/contracts/first-stack";
+import source from "./lose-an-app-server.v2.json";
+import redirect from "./url-redirect.v2.json";
+import catalogue from "./catalogue-api.v2.json";
+import reviews from "./reviews-api.v2.json";
+import paste from "./small-paste-api.v2.json";
+import news from "./preloaded-news-api.v2.json";
+import history from "./price-history-api.v2.json";
 import { canonical, designRevision, hash } from "../canonical";
 import { prepareFirstStackExecution } from "../execution";
 import { resolveWorkload } from "../workload";
 import { ConflictError, ValidationError } from "../../utils/errors";
 import { reviewSidecar } from "../authoring";
+import { challengeDefinitionSchema, type ChallengeDefinition, type ChallengeWorkload } from "./schema";
+import { readPrivateBundle, configuredScoringDirectory, ScoringUnavailableError } from "./privateStore";
+export { challengeDefinitionSchema } from "./schema";
+export type { ChallengeDefinition, ChallengeWorkload, ChallengeCriterion, ScoringDefinition } from "./schema";
 
-export interface ChallengeWorkload {
-  id: string; version: string; provenance: string; header: RecordedScheduleHeader; rows: RecordedScheduleRow[];
-  parameters: { schema: "infraforge-first-stack-parameters/1"; rows: { id: string; plan: string; keys: string[] }[] };
-  faults: FirstStackSidecarV2["faults"];
-  observation: { fromUs: number; toUs: number; boundary: "offer-cohort-half-open; terminal-through-horizon" };
-}
-const criterionSchema = z.object({ id: z.string().min(1), metric: z.enum(["delivery-permille", "error-permille", "p95-us", "fault-delivery-permille", "cost-subtotal"]),
-  operator: z.enum(["gte", "lte"]), threshold: z.number().int().nonnegative().nullable(), required: z.boolean(), provenance: z.string().min(1) }).strict();
-const text = z.string().min(1).max(1024), amount = z.number().int().nonnegative(), time = amount.max(300_000_000);
-const range = z.object({ min: amount, max: amount }).strict().refine(r => r.min <= r.max);
-const workloadSchema = z.object({ id: text, version: text, provenance: text,
-  header: z.object({ schema: z.literal("infraforge-first-stack-schedule/1"), unit: z.literal("us"), durationUs: time.positive(), origin: z.literal("authored-schedule"), provenance: text }).strict(),
-  rows: z.array(z.object({ id: text, atUs: time, operation: text }).strict()).min(1).max(64),
-  parameters: z.object({ schema: z.literal("infraforge-first-stack-parameters/1"), rows: z.array(z.object({ id: text, plan: text, keys: z.array(text).min(1).max(128) }).strict()).max(64) }).strict(),
-  faults: z.array(z.object({ schema: z.literal("first-stack-fault/1"), id: text, kind: z.literal("app-process-crash"), target: text, atUs: time, downtimeUs: time.positive(), recoveryUs: time.positive() }).strict()).length(1),
-  observation: z.object({ fromUs: time, toUs: time, boundary: z.literal("offer-cohort-half-open; terminal-through-horizon") }).strict().refine(w => w.fromUs < w.toUs),
-}).strict().refine(w => w.rows.every(r => r.atUs >= w.observation.fromUs && r.atUs < w.observation.toUs), "All recorded offers must belong to the observation cohort");
-export const challengeDefinitionSchema = z.object({ schema: z.literal("infraforge-scored-challenge/1"), id: text, version: text, provenance: text,
-  brief: z.object({ title: text, description: text, exclusions: z.array(text), support: z.object({ counts: z.literal("supported-logical"), timing: z.literal("assumption-only") }).strict() }).strict(),
-  constraints: z.object({ topology: text, editable: z.array(text), cores: range, workers: range, queue: range, domain: text }).strict(),
-  template: z.object({ layout: z.record(z.string(), z.json()), sidecar: z.json() }).strict(),
-  policy: z.object({ seed: text, horizonUs: time.positive(), sampleIntervalUs: time.positive(), maxEvents: amount.positive().max(2_000_000), maxSamples: amount.positive().max(10_000), maxRawResults: amount.max(64) }).strict(),
-  visible: workloadSchema, hidden: z.array(workloadSchema).min(1).max(8),
-  rubric: z.object({ version: text, criteria: z.array(criterionSchema).min(1).max(32) }).strict(),
-}).strict().refine(d => new Set([d.visible.id, ...d.hidden.map(w => w.id)]).size === d.hidden.length + 1 &&
-  new Set(d.rubric.criteria.map(c => c.id)).size === d.rubric.criteria.length && d.rubric.criteria.some(c => c.required), "Workload and criterion IDs must be unique and required criteria must exist");
-export type ChallengeCriterion = z.infer<typeof criterionSchema>;
-export interface ChallengeDefinition {
-  schema: "infraforge-scored-challenge/1"; id: string; version: string;
-  brief: typeof source.brief; constraints: typeof source.constraints;
-  template: { layout: Record<string, unknown>; sidecar: FirstStackSidecarV2 };
-  policy: typeof source.policy; visible: ChallengeWorkload; hidden: ChallengeWorkload[];
-  rubric: { version: string; criteria: ChallengeCriterion[] }; provenance: string;
-}
 export interface ChallengeReference { id: string; version: string; definitionHash: string }
 
-// The registry and all rubric/workload data remain in this server-only closure.
-// Returning a copy prevents one request from changing another request's version.
-const definitions = [source, redirect, catalogue, reviews, paste, news, history];
-export function challengeDefinition(id: string, version: string): ChallengeDefinition {
-  const selected = definitions.find(d => d.id === id && d.version === version);
-  if (!selected) throw new ValidationError("Scored challenge version unavailable");
-  return challengeDefinitionSchema.parse(selected) as unknown as ChallengeDefinition;
+// A registry binds reviewed public commitments to one server-owned store.
+// Tests construct a separate fake registry; production never imports fixtures.
+export function createChallengeRegistry(sources: unknown[], directory: () => string | undefined) {
+  function definition(id: string, version: string): ChallengeDefinition {
+    const selected = sources.find(value => {
+      const d = value as { id?: string; version?: string };
+      return d.id === id && d.version === version;
+    });
+    if (!selected) throw new ValidationError("Scored challenge version unavailable");
+    return challengeDefinitionSchema.parse(selected) as unknown as ChallengeDefinition;
+  }
+  function scoring(reference: ChallengeReference) {
+    const selected = definition(reference.id, reference.version);
+    if (hash(selected) !== reference.definitionHash) throw new ConflictError("Pinned scored challenge definition unavailable");
+    const bundle = readPrivateBundle(selected, directory());
+    if (bundle.hidden.some(w => [selected.visible.id, ...selected.practice.map(p => p.workload.id)].includes(w.id))) {
+      throw new ScoringUnavailableError();
+    }
+    return { ...selected, hidden: bundle.hidden as ChallengeWorkload[], rubric: bundle.rubric };
+  }
+  return { definition, scoring };
 }
-export function pinnedChallenge(reference: ChallengeReference) {
-  const definition = challengeDefinition(reference.id, reference.version);
-  if (hash(definition) !== reference.definitionHash) throw new ConflictError("Pinned scored challenge definition unavailable");
-  return definition;
-}
+export type ChallengeRegistry = ReturnType<typeof createChallengeRegistry>;
+export const serverChallenges = createChallengeRegistry([source, redirect, catalogue, reviews, paste, news, history], configuredScoringDirectory);
+export const challengeDefinition = serverChallenges.definition;
+export const pinnedChallenge = serverChallenges.scoring;
+
 export async function prepareChallengeWorkload(owner: string, layout: Record<string, unknown>, definition: ChallengeDefinition, workload: ChallengeWorkload) {
   const candidate = structuredClone(layout.firstStack) as FirstStackSidecarV2;
   candidate.workload = null;
@@ -70,7 +53,7 @@ export async function prepareChallengeWorkload(owner: string, layout: Record<str
   const schedule = await resolveWorkload(bytes(), { owner, sidecar: candidate, parameters: workload.parameters });
   candidate.workload = { scheduleHash: schedule.scheduleHash, parametersHash: schedule.parametersHash,
     resolvedIdentity: schedule.identity, executedScheduleHash: schedule.executedScheduleHash };
-  return prepareFirstStackExecution(owner, layout, candidate, schedule, { ...definition.policy, maxRawResults: Math.min(definition.policy.maxRawResults, schedule.rows.length) });
+  return prepareFirstStackExecution(owner, layout, candidate, schedule, { ...definition.policy, seed: workload.seed ?? definition.policy.seed, maxRawResults: Math.min(definition.policy.maxRawResults, schedule.rows.length) });
 }
 // Only capacity choices are editable. Demand, routing, data, faults and policy
 // are exact authored inputs; a learner cannot make grading easier by editing them.
@@ -97,8 +80,8 @@ export function validateChallengeDesign(layout: Record<string, unknown>, definit
   actual.workload = null; expected.workload = null;
   if (canonical(actual) !== canonical(expected)) throw new ValidationError("Challenge inputs changed outside allowed capacity choices");
 }
-export async function admitScoredChallenge(owner: string, layout: Record<string, unknown>, reference: { id: string; version: string }, workload: unknown, policy: unknown) {
-  const definition = challengeDefinition(reference.id, reference.version);
+export async function admitScoredChallenge(owner: string, layout: Record<string, unknown>, reference: { id: string; version: string }, workload: unknown, policy: unknown, registry: ChallengeRegistry = serverChallenges) {
+  const definition = registry.definition(reference.id, reference.version);
   validateChallengeDesign(layout, definition);
   const prepared = await prepareChallengeWorkload(owner, layout, definition, definition.visible);
   if (canonical(workload) !== canonical(prepared.schedule) || canonical(policy) !== canonical(prepared.policy) ||
@@ -106,8 +89,8 @@ export async function admitScoredChallenge(owner: string, layout: Record<string,
   return { prepared, reference: { id: definition.id, version: definition.version, definitionHash: hash(definition) } };
 }
 // A deliberately enumerated client projection: no registry spread or raw JSON.
-export async function publicChallenge(owner: string, id: string, version: string) {
-  const definition = challengeDefinition(id, version), sidecar = structuredClone(definition.template.sidecar);
+export async function publicChallenge(owner: string, id: string, version: string, registry: ChallengeRegistry = serverChallenges) {
+  const definition = registry.definition(id, version), sidecar = structuredClone(definition.template.sidecar);
   sidecar.designRevision = designRevision(definition.template.layout);
   const layout = { ...definition.template.layout, firstStack: sidecar };
   const prepared = await prepareChallengeWorkload(owner, layout, definition, definition.visible);

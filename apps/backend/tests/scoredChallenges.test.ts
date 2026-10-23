@@ -1,6 +1,8 @@
+import { fixtureChallenges, fixtureDefinition, fixtureDirectory } from "./scoringFixtures";
+import { privateBundleSchema } from "../firstStack/scoredChallenges/schema";
 import { expect, test } from "bun:test";
 import express from "express";
-import { challengeDefinition, challengeDefinitionSchema, publicChallenge, admitScoredChallenge, validateChallengeDesign } from "../firstStack/scoredChallenges/definition";
+import { challengeDefinition, createChallengeRegistry, publicChallenge, admitScoredChallenge, validateChallengeDesign } from "../firstStack/scoredChallenges/definition";
 import { challengeFence, executeScoredChallenge } from "../firstStack/scoredChallenges/execution";
 import { evaluateWorkload } from "../firstStack/scoredChallenges/scoring";
 import { publicScore } from "../firstStack/scoredChallenges/projection";
@@ -24,11 +26,11 @@ function qualification(input: string) {
   return { status: "completed", durablePrefix: cut, receipt: { cleanup: "removed", fixture: "in-process software qualification only" }, summary: "{}", journal: "", interruption: null } as any;
 }
 async function fixture(cores = 4, workers = 8, queue = 64) {
-  const sample = await publicChallenge(owner, "lose-an-app-server", "1"), sidecar = sample.layout.firstStack;
+  const sample = await publicChallenge(owner, "lose-an-app-server", "2", fixtureChallenges), sidecar = sample.layout.firstStack;
   for (const n of sidecar.nodes.filter(n => n.owner === "compute")) {
     n.cores = cores; n.workers = workers; n.queue = queue; sidecar.placement.find(h => h.id === n.host)!.cores = cores;
   }
-  const admitted = await admitScoredChallenge(owner, sample.layout, { id: sample.id, version: sample.version }, sample.workload, sample.policy);
+  const admitted = await admitScoredChallenge(owner, sample.layout, { id: sample.id, version: sample.version }, sample.workload, sample.policy, fixtureChallenges);
   const input = canonical({ owner, layout: sample.layout, candidate: admitted.prepared.sidecar, recording: sample.workload, policy: sample.policy });
   const result = qualification(input);
   const run = { purpose: "scored", ownerId: owner, engine, input, inputHash: inputDigest(input), lock: admitted.prepared.lock,
@@ -47,7 +49,8 @@ async function scored(f: Awaited<ReturnType<typeof fixture>>, transform: (r: any
     if (result.durablePrefix) await a.commit(result.durablePrefix, signal);
     active--;
     return result;
-  });
+  }, fixtureChallenges);
+  if (score && !("workloads" in score)) throw Error("Fake scoring unavailable");
   return { score: score!, executions };
 }
 
@@ -91,7 +94,7 @@ test("sample HTTP endpoint has an explicit projection and inherits closed admiss
   app.use(createSubmissionRouter({} as any, { enabled: true, engine })); app.use(errorHandler);
   const server = app.listen(0, "127.0.0.1"), address = server.address() as any;
   try {
-    const response = await fetch(`http://127.0.0.1:${address.port}/challenges/lose-an-app-server/versions/1/sample`);
+    const response = await fetch(`http://127.0.0.1:${address.port}/challenges/lose-an-app-server/versions/2/sample`);
     expect(response.status).toBe(200); const body = await response.text();
     expect(body).toContain("visible-sample"); expect(body).not.toContain("heldout"); expect(body).not.toContain('"rubric"');
   } finally { server.closeAllConnections(); await new Promise<void>(done => server.close(() => done())); }
@@ -103,7 +106,7 @@ test("a self-consistent forged browser cut cannot start hidden execution or earn
   expect(score).toBeNull(); expect(executions).toBe(0);
 });
 test("saved revision, out-of-domain demands and forged sample policy are refused", async () => {
-  const f = await fixture(), definition = challengeDefinition("lose-an-app-server", "1");
+  const f = await fixture(), definition = fixtureDefinition("lose-an-app-server");
   const changed = structuredClone(f.sample.layout); ((changed as Record<string, unknown>).resources as any[])[0].x++;
   expect(() => validateChallengeDesign(changed, definition)).toThrow("revision changed");
   const demand = structuredClone(f.sample.layout); demand.firstStack.operations[0]!.cpuUs = 0;
@@ -120,7 +123,7 @@ test("saved revision, out-of-domain demands and forged sample policy are refused
     workload: f.sample.workload, policy: f.sample.policy, browserCut: f.run.browserCut, challenge: { id: definition.id, version: definition.version } })).rejects.toThrow("Saved design changed");
 });
 test("threshold equality is deterministic; missing and interrupted evidence remains Unknown", async () => {
-  const f = await fixture(), { score } = await scored(f), w = score.workloads[0]!, definition = challengeDefinition("lose-an-app-server", "1");
+  const f = await fixture(), { score } = await scored(f), w = score.workloads[0]!, definition = fixtureDefinition("lose-an-app-server");
   const workload = definition.hidden[0]!;
   const outcomes = evaluateWorkload(definition, workload, w.input, w.evidence);
   expect(evaluateWorkload(definition, workload, w.input, w.evidence)).toEqual(outcomes);
@@ -140,14 +143,14 @@ test("unconfirmed cleanup retains recovery; lost evidence cannot grant required 
   expect(score.earned).toBe(0); expect(score.pending).toBe(10); expect(score.systemPassed).toBe(false);
 });
 test("versioned data refuses missing provenance, uncovered windows, duplicate criteria and empty hidden suites", () => {
-  const definition = challengeDefinition("lose-an-app-server", "1");
-  expect(() => challengeDefinition("lose-an-app-server", "2")).toThrow("version unavailable");
+  const definition = fixtureDefinition("lose-an-app-server");
+  expect(() => challengeDefinition("lose-an-app-server", "1")).toThrow("version unavailable");
   for (const mutate of [
     (d: typeof definition) => { d.hidden = []; },
     (d: typeof definition) => { d.hidden[0]!.provenance = ""; },
     (d: typeof definition) => { d.hidden[0]!.observation.fromUs = 60000; },
     (d: typeof definition) => { d.rubric.criteria.push(d.rubric.criteria[0]!); },
-  ]) { const copy = structuredClone(definition); mutate(copy); expect(challengeDefinitionSchema.safeParse(copy).success).toBe(false); }
+  ]) { const copy = structuredClone(definition); mutate(copy); expect(privateBundleSchema.safeParse({ schema: "infraforge-private-scoring/1", id: copy.id, challengeVersion: copy.version, version: "fake-2", hidden: copy.hidden, rubric: copy.rubric }).success).toBe(false); }
 });
 test("the admission transaction pins the exact challenge in immutable workload metadata", async () => {
   const f = await fixture(), inserted: { sql: string; values: any[] }[] = [];
@@ -164,7 +167,7 @@ test("the admission transaction pins the exact challenge in immutable workload m
     expectedDesignRevision: f.run.lineage.designRevision, idempotencyKey: "scored", purpose: "scored", engine,
     workload: f.sample.workload, policy: f.sample.policy, browserCut: f.run.browserCut, challenge: { id: f.sample.id, version: f.sample.version } });
   const run = inserted.find(q => q.sql.includes('INSERT INTO "FirstStackRun"'))!;
-  expect(run.values[10]).toMatchObject({ origin: "server-challenge", challenge: f.admitted.reference });
+  expect(run.values[10]).toMatchObject({ origin: "server-challenge", challenge: { id: f.sample.id, version: f.sample.version, definitionHash: hash(challengeDefinition(f.sample.id, f.sample.version)) } });
   expect(run.values[6]).toBe(f.run.input);
   expect(inserted.some(q => q.sql.includes('INSERT INTO "FirstStackOutbox"'))).toBe(true);
   expect(inserted.at(-1)!.sql).toBe("COMMIT");
@@ -174,4 +177,26 @@ test("changed definition pins and hidden compile locks fail closed before score 
   await expect(scored(changed)).rejects.toThrow("Pinned scored challenge");
   await expect(scored(await fixture(), r => ({ ...r, durablePrefix: isolatedCut({ ...r.durablePrefix.cut,
     lock: { ...r.durablePrefix.cut.lock, compiledHash: "f".repeat(64) } }, engine.source, r.durablePrefix.inputHash) }))).rejects.toThrow("compile lock changed");
+});
+
+test("missing or mismatched private bundles execute no hidden work and publish only scoring unavailable", async () => {
+  const f = await fixture(), definition = fixtureChallenges.definition(f.sample.id, f.sample.version);
+  for (const directory of [undefined, "missing-private-scoring-store", fixtureDirectory]) {
+    const selected = structuredClone(definition);
+    if (directory === fixtureDirectory) selected.scoring.sha256 = "0".repeat(64);
+    const run = { ...f.run, workload: { challenge: { ...f.run.workload.challenge, definitionHash: hash(selected) } } };
+    let executions = 0;
+    const unavailable = await executeScoredChallenge(run, f.result, {} as any, new AbortController().signal, () => {}, async () => {
+      executions++; throw Error("Private work must not start");
+    }, createChallengeRegistry([selected], () => directory));
+    expect(executions).toBe(0);
+    expect(unavailable).toEqual({ schema: "infraforge-scoring-unavailable/1", state: "unavailable", message: "Scoring unavailable" });
+    if (!unavailable || "workloads" in unavailable) throw Error("Expected unavailable scoring state");
+    const result = { verification: "verified", score: unavailable }, row: any = { ...f.run, id: "unavailable", createdAt: new Date(),
+      status: "terminal", durablePrefix: f.result.durablePrefix, result, resultHash: hash(result) };
+    const response: any = await createSubmissionService({ query: async () => ({ rows: [row] }) } as any).read(owner, row.id);
+    expect(response.score).toEqual(unavailable);
+    expect(JSON.stringify(response.score)).not.toMatch(/earned|assessed|systemPassed|workloads|rubric/);
+    expect(publicScore({ ...result, score: { ...unavailable, input: "PRIVATE-SENTINEL" } }, hash({ ...result, score: { ...unavailable, input: "PRIVATE-SENTINEL" } }))).toEqual(unavailable);
+  }
 });

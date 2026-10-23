@@ -44,3 +44,11 @@ test("results without a score export unchanged", async () => {
   const page = await exportAccountPage(fakeDb(plain), "owner", "results");
   expect(page.records[0]).toEqual(plain);
 });
+
+test("unavailable scoring exports its safe state with no score or private diagnostics", async () => {
+  const score = { schema: "infraforge-scoring-unavailable/1", state: "unavailable", input: "HIDDEN-INPUT" };
+  const body = { verification: "verified", score };
+  const page = await exportAccountPage(fakeDb({ runId: "unavailable", body, hash: hash(body), createdAt: new Date(0) }), "owner", "results");
+  expect(JSON.stringify(page)).not.toContain("HIDDEN-");
+  expect((page.records[0] as any).body.scoreSummary).toEqual({ schema: "infraforge-scoring-unavailable/1", state: "unavailable", message: "Scoring unavailable" });
+});

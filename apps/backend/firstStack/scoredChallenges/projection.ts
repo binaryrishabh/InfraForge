@@ -10,6 +10,9 @@ const scoreSchema = z.object({ schema: z.literal("infraforge-server-score/1"),
 // arbitrary exception text crosses this allowlist. It does not resolve a registry.
 export function publicScore(result: any, resultHash: string | null) {
   if (!result || hash(result) !== resultHash || result.verification !== "verified") return null;
+  if (result.score?.schema === "infraforge-scoring-unavailable/1" && result.score.state === "unavailable") {
+    return { schema: "infraforge-scoring-unavailable/1" as const, state: "unavailable" as const, message: "Scoring unavailable" };
+  }
   const parsed = scoreSchema.safeParse(result.score);
   if (!parsed.success) return null;
   const score = parsed.data, criteria = new Map<string, { id: string; required: boolean; outcome: "pass" | "fail" | "Unknown" }>();

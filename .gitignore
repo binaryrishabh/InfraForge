@@ -49,3 +49,8 @@ CompleteCodeFiles
 ProblemsFaced
 CurrentAppVision
 sshKeyForAWSInstance
+
+# Private scoring bundles must live outside this checkout.
+InfraForge_Private_Scoring/
+private-scoring/
+*.private-scoring.json
