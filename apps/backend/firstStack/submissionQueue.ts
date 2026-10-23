@@ -80,20 +80,22 @@ export async function startSubmissionQueue(pool: Pool, databaseUrl: string, prod
     configuration.healthy = previousHealthy;
     pool.off("error", fail); throw error;
   }
-  async function health(draining = false) {
+  async function health(isDraining = () => false) {
     await ownership.assertHeld();
     const backend = worker.getBackend();
     const connections = [await queue.getBackend().client, await backend.client, await backend.blockingClient];
     if (lost || !worker.isRunning() || connections.some(c => c?.status !== "ready") ||
-      (!draining && (stopped || worker.isPaused() || Date.now() - lastDelivery > 5000))) {
+      (!isDraining() && (stopped || worker.isPaused() || Date.now() - lastDelivery > 5000))) {
       throw Error("Verifier queue or outbox unavailable");
     }
-    if (!draining) {
+    if (!isDraining()) {
       const lag = await pool.query(`SELECT EXISTS (SELECT 1 FROM "FirstStackOutbox"
         WHERE NOT delivered AND "createdAt" < CURRENT_TIMESTAMP - INTERVAL '15 seconds')
         OR EXISTS (SELECT 1 FROM "FirstStackReplay" WHERE NOT delivered AND status='queued'
         AND "createdAt" < CURRENT_TIMESTAMP - INTERVAL '15 seconds') AS stale`);
-      if (lag.rows[0]?.stale !== false) throw Error("Verifier outbox delivery stale");
+      // Shutdown can begin while either DB query is pending. Dispatch freshness
+      // stops mattering during drain; ownership/connections/loop must stay healthy.
+      if (!isDraining() && lag.rows[0]?.stale !== false) throw Error("Verifier outbox delivery stale");
     }
   }
   const replay = {

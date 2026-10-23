@@ -65,7 +65,7 @@ async function launchVerifier(settings: VerifierSettings, source: string, env: R
       const began = generation;
       try {
         await refresh();
-        await queue!.health(stopping);
+        await queue!.health(() => stopping);
         await pool.query("SELECT 1");
         if (await producer.ping() !== "PONG" || consumer.status !== "ready") throw Error("Redis unavailable");
         if (began !== generation) return { success: false };
