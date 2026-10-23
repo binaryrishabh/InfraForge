@@ -1,0 +1,7 @@
+# Explicit operator overlay for the dedicated host verifier. Not part of default Compose.
+services:
+  redis:
+    # Internal-only bridges do not provide a usable published host listener.
+    networks: [application, egress]
+    ports:
+      - "127.0.0.1:6380:6379"

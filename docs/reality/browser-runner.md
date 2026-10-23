@@ -32,8 +32,9 @@ a guarantee against browser/OS failure under unrelated memory pressure. Logical
 bounds and termination limit exposure. No physical timing calibration is claimed.
 
 `createFirstStackSubmissionClient({ endpoint, owner, fetch? })` exports
-`submit`, `read`, and `cancel`. Supply the future same-origin submission mount
-explicitly. `submit` snapshots the run, checks owner/revision/pinned engine,
+`submit`, `read`, and `cancel`. The agreed future transport is the configured API
+origin with existing credentials/Origin policy; the current client still needs
+that separate integration change. `submit` snapshots the run, checks owner/revision/pinned engine,
 immutable input and bounded finished evidence, and sends slice 11's strict fields.
 Authentication supplies the owner; the saved design supplies the design input;
 policy includes the seed. No extra owner/input/seed wire fields are invented.
@@ -81,4 +82,8 @@ comparison. Complete cut bytes must match except for host-specific
 - Distinct unverified/verified/mismatch/interrupted/unavailable/recovery states, with original local evidence retained.
 - An 8 GiB physical-device stress qualification before any device-safety marketing claim.
 
-No UI, styling, public route activation, queue startup, or Model 2 activation is included.
+The separately prepared trusted verifier lifecycle remains default closed; see
+`ops/FIRST_STACK_VERIFIER.md`. Its safe availability model supplies exact approved
+source/image and executor budgets for future browser integration. `shared` means
+request verification, never create a public share link. No UI, styling, public
+route activation or Model 2 activation is included.

@@ -1,7 +1,9 @@
 # First-stack submissions (inactive)
 
-Model 1 remains active. The shipped API and worker do not mount or start these
-factories. Internal grants never authorize public submissions. A future explicit
+Model 1 remains active. The shipped API and ordinary worker do not mount or start these
+factories. A separate, default-closed trusted host lifecycle is supplied in
+`firstStack/verifierHost.ts`; see [FIRST_STACK_VERIFIER.md](FIRST_STACK_VERIFIER.md).
+Internal grants never authorize public submissions. A future explicit
 activation must mount `createSubmissionRouter` behind session and origin checks
 before the ordinary JSON parser, and start `startSubmissionQueue` with trusted
 operator configuration, a direct session-preserving database URL, and producer
@@ -29,7 +31,19 @@ canonical executed input, original workload, seed, lineage, compile lock and
 envelope are retained. Private results stay `unverified`. Scored/shared inputs
 receive a PostgreSQL reservation and outbox in that same transaction, then a
 BullMQ job containing only the run ID. These purposes request verification;
-neither purpose grants public read access or a score.
+neither purpose grants public read access. `purpose: "shared"` is a verification
+request, never a public link. Public share links are outside launch scope.
+Scored requests require the exact server-owned challenge version and may produce
+an allowlisted score after verification; verification and passing remain separate.
+
+Admission requires both explicit `SubmissionAdmission.enabled` and a fresh
+`available` provider; missing providers fail closed. The future API host uses
+`createVerifierAdmission` with its trusted exact engine and bounded Redis client.
+`availability()` returns only available/engine/expiry/capacity/executor budgets;
+it never forwards qualification, daemon, paths, credentials or hidden data.
+No HTTP route is mounted here. Browser transport uses the configured API origin
+with the existing credentials and Origin policy. Historical owner reads and
+cancellation remain independent of admission and verification availability.
 
 Admission uses one transaction advisory lock for owner/global reservations and
 rate limits. Defaults: ten successful submissions per rolling database hour per
