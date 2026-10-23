@@ -21,6 +21,8 @@ export function createReadiness(extra: () => Promise<void> = async () => {}) {
     } catch { return { success: false }; }
   };
   const cache = createReadinessCache(check);
+  db.on("error", () => cache.invalidate());
+  redis.on("close", () => cache.invalidate());
   return { started: cache.started, check: cache.check,
     close: async () => { await cache.close(); redis.disconnect(); await db.end(); } };
 }

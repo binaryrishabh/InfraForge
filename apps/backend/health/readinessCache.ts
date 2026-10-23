@@ -14,12 +14,15 @@ export function createReadinessCache<T extends ReadinessSnapshot>(probe: () => P
     const timer = setTimeout(run, delay); timer.unref(); return () => clearTimeout(timer);
   });
   let snapshot: T | ReadinessSnapshot = { success: false }, completedAt: number | undefined;
-  let pending: Promise<void> | undefined, cancel: (() => void) | undefined, closed = false;
+  let pending: Promise<void> | undefined, cancel: (() => void) | undefined, closed = false, generation = 0;
   const refresh = (): Promise<void> => {
     if (closed) return Promise.resolve();
     return pending ??= (async () => {
-      try { snapshot = await probe(); } catch { snapshot = { success: false }; }
-      completedAt = now();
+      const started = generation;
+      let result: T | ReadinessSnapshot;
+      try { result = await probe(); } catch { result = { success: false }; }
+      // A probe that began before a dependency loss cannot restore success.
+      if (started === generation || !result.success) { snapshot = result; completedAt = now(); }
     })().finally(() => {
       pending = undefined;
       if (!closed) cancel = schedule(() => { void refresh(); }, interval);
@@ -28,6 +31,9 @@ export function createReadinessCache<T extends ReadinessSnapshot>(probe: () => P
   const started = refresh();
   return {
     started,
+    // A dependency connection loss marks the service unready immediately. It does not
+    // start a deep probe, so connection error storms cannot multiply deep checks.
+    invalidate: () => { if (closed) return; generation++; snapshot = { success: false }; completedAt = now(); },
     check: (): T | ReadinessSnapshot => !closed && completedAt !== undefined && now() - completedAt < maxAge ? snapshot : { success: false },
     close: async () => { closed = true; cancel?.(); await pending; },
   };

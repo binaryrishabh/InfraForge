@@ -874,11 +874,11 @@
     }
   },
   "apps/backend/health/readiness.ts": {
-    "hash": "c66c3112eb10c2fabdafa466289d8671c4bf581b8716fb6c4d661caa0b5d7368",
+    "hash": "49161910e2dcf14d3455434fc3e3469b43e7d633aebdf6f4198552ded56fec88",
     "capabilities": [],
-    "review": "Exact security admission/readiness review: shared PostgreSQL transaction lock, durable deployment reservations and terminal-only release, delayed capacity waits, finite simulator horizons and creation deadlines; startup/scheduled readiness snapshots. Existing fixed process configuration/lifecycle and data indexing only. No evaluator, dynamic loading, process adapter, engine physics change or activation.",
+    "review": "Exact security admission/readiness review: shared PostgreSQL transaction lock, durable deployment reservations and terminal-only release, delayed capacity waits, finite simulator horizons and creation deadlines; startup/scheduled readiness snapshots, invalidated at once on Redis connection close or database pool error without extra deep probes. Existing fixed process configuration/lifecycle and data indexing only. No evaluator, dynamic loading, process adapter, engine physics change or activation.",
     "globals": {
-      "hash": "c66c3112eb10c2fabdafa466289d8671c4bf581b8716fb6c4d661caa0b5d7368",
+      "hash": "49161910e2dcf14d3455434fc3e3469b43e7d633aebdf6f4198552ded56fec88",
       "names": [
         "process"
       ]

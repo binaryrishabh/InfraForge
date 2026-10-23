@@ -51,3 +51,22 @@ test("readiness rejects invalid timing", () => {
     expect(() => createReadinessCache(async () => ({ success: true }), options)).toThrow("timing");
   }
 });
+
+test("a dependency loss is unready at once, and a probe begun before it cannot restore success", async () => {
+  let calls = 0, complete: ((value: { success: boolean }) => void) | undefined, scheduled: (() => void) | undefined;
+  const cache = createReadinessCache(() => { calls++; return calls === 1 ? Promise.resolve({ success: true })
+    : new Promise<{ success: boolean }>((resolve) => { complete = resolve; }); },
+  { now: () => 0, schedule: (run) => { scheduled = run; return () => { scheduled = undefined; }; } });
+  await cache.started;
+  expect(cache.check()).toEqual({ success: true });
+  scheduled!(); expect(calls).toBe(2);
+  cache.invalidate();
+  expect(cache.check()).toEqual({ success: false });
+  // Invalidation itself never starts another deep probe.
+  expect(calls).toBe(2);
+  complete!({ success: true }); await Bun.sleep(0);
+  expect(cache.check()).toEqual({ success: false });
+  scheduled!(); complete!({ success: true }); await Bun.sleep(0);
+  expect(calls).toBe(3); expect(cache.check()).toEqual({ success: true });
+  await cache.close();
+});
