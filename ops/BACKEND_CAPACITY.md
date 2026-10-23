@@ -39,6 +39,53 @@ not consume the host reserve to make an unmeasured build pass. Also verify disk
 space for old/new images and Redis AOF. No production sizing, limits or deployment
 was changed by writing this policy.
 
+## Model 1 work admission and lifetime
+
+The following defaults are an initial operational containment policy for this
+owner-confirmed c7i-flex.large host and the worker's **768 MiB / 0.50 CPU**
+ceiling above. They are deliberately small limits chosen for initial operation;
+they do not establish how many simulations fit or a measured throughput. Peak
+simulation memory, ticks per second and host capacity remain **Unknown**. Measure
+representative topologies before raising them. Commercial capability policy does
+not override these limits.
+
+| Environment setting | Default | Meaning |
+| --- | ---: | --- |
+| `MODEL1_OWNER_RESERVATIONS` | 2 | All queued/gating/live work for one owner, including paused work. |
+| `MODEL1_GLOBAL_RESERVATIONS` | 4 | Total nonterminal reservations across all owners. |
+| `MODEL1_QUEUED_RESERVATIONS` | 2 | Pending rows, including delivery retries and capacity waits. |
+| `MODEL1_ACTIVE_RESERVATIONS` | 2 | Running gates plus live simulations; simulator also checks its local registry. |
+| `MODEL1_ADMISSION_BYTES` | 131072 | Maximum UTF-8 JSON create data per admitted row; two queued inputs total at most 256 KiB, excluding database/index overhead and completed history. |
+| `MODEL1_FREEFORM_SECONDS` | 900 | Simulated horizon for ordinary runs and unmatched reruns. |
+| `MODEL1_RUNTIME_SECONDS` | 3600 | Simulator ceiling on every recorded/freeform horizon. |
+| `MODEL1_LIFETIME_SECONDS` | 1800 | Wall-clock deadline from durable creation, including queue time and pauses. Activity cannot renew it. |
+
+Settings must be positive safe integers. Compose supplies the same values to API
+and worker; keep them equal in other launch arrangements. Reducing limits below
+current occupancy refuses new admission/starts until occupancy falls. A capacity
+refusal returns HTTP 429. Waiting for an active slot delays the BullMQ job without
+spending its processing retries. Gate retries keep their active reservation.
+
+All three public creation paths use one transaction-scoped PostgreSQL advisory
+lock (186542854, 20). The deployment row itself is the durable reservation, and
+its outbox record commits in the same transaction. Running transitions use that
+same lock. Rows count until a terminal status **and** `runtimeActive=false` are
+durable; neither HTTP completion, Redis delivery nor an in-memory timer releases
+capacity. Existing nonterminal rows also count. No schema change or reservation
+backfill is needed. Live deadlines and simulated ceilings use the existing
+terminal capture/action transaction, marked `operational-limit`; queued/gating
+deadlines fail durably in the worker's outbox loop. Storage/acknowledgement
+failures freeze live execution and retain capacity until persistence recovers.
+Deadlines are checked between worker cycles, rather than preempting synchronous
+ticks. Worker restart continues to retire interrupted live runs durably.
+
+Readiness performs deep startup/background verification, then serves a cached
+snapshot. The background refresh waits 10 seconds after completion; one check can
+run at a time. A snapshot older than 15 seconds fails closed while a slow check
+finishes. Public requests cannot schedule checks. Liveness remains lightweight.
+The nginx public readiness location allows 2 requests/second/IP with burst 4 and
+returns 429 on excess; its zone belongs in nginx's `http` context.
+
 Resource driver reference: [Docker container driver](https://docs.docker.com/build/builders/drivers/docker-container/).
 
 ## PostgreSQL and Neon connection allowance

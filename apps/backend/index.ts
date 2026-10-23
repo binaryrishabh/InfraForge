@@ -21,6 +21,7 @@ import { configureHttpServer, createShutdown, shutdownOnSignals } from "./utils/
 
 await assertRuntimeSchema();
 const readiness = createReadiness();
+await readiness.started;
 const app = express();
 // Ports are bound to loopback by Compose. The local TLS proxy replaces forwarded headers.
 app.set("trust proxy", config.NODE_ENV === "production" ? 1 : "loopback");

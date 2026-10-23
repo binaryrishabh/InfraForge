@@ -113,6 +113,8 @@ test("bootstrap rendering refuses injection and missing TLS inputs while HTTP re
   expect(tls).toContain("127.0.0.1:3000");
   expect(tls).toContain("X-Forwarded-For $remote_addr");
   expect(tls).not.toContain("DOMAIN");
+  expect(tls).toContain("limit_req_zone $binary_remote_addr zone=infraforge_health:1m rate=2r/s;");
+  expect(tls).toMatch(/location = \/health\/ready \{\s*limit_req zone=infraforge_health burst=4 nodelay;\s*limit_req_status 429;/);
   for (const name of [";include /etc/passwd", "*.example.invalid", "backend.invalid\n}", "-bad.example", "bad..example"]) {
     expect(() => nginxConfig(template, name, "http")).toThrow();
   }

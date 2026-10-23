@@ -14,6 +14,7 @@ import { MAX_SOCKET_CLIENTS, startSocketHeartbeat } from "./utils/socketLifecycl
 
 await assertRuntimeSchema();
 const readiness = createReadiness();
+await readiness.started;
 const server = http.createServer(async (req, res) => {
   if (lifecycle.isStopping()) { res.writeHead(503); res.end(); return; }
   if (req.url === "/health/live") { res.writeHead(200); res.end("ok"); return; }
