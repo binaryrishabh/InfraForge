@@ -5,17 +5,25 @@ import { sourceHash } from "../apps/backend/executionIdentity/hash";
 // Exact-source capability review precedes refresh-execution.ts. No verifier or
 // loader-policy changes, path-wide permissions, or runtime proof relabeling.
 if (!process.argv.includes("--write")) throw Error("Use --write after reviewing account service capabilities");
-const baseline = "3c5c530af8a47196b3d1641a77aeaaf6f63a314f";
+const baseline = "fd8253b26850b870465f15632cd82ea96eb441a7";
 execFileSync("git", ["merge-base", "--is-ancestor", baseline, "main"]);
 const read = (path: string) => readFileSync(path, "utf8").replaceAll("\r\n", "\n");
 const original = (path: string) => execFileSync("git", ["show", `${baseline}:${path}`], { encoding: "utf8", maxBuffer: 8 * 1024 * 1024 }).replaceAll("\r\n", "\n");
 const acceptance = "scripts/tests/execution-identity.test.ts";
 const beforeTest = original(acceptance);
-const expectedTest = beforeTest.replace("expect(table.entries.length).toBe(54);", `expect(table.entries.length).toBe(55);\n  expect(table.entries.some((row: { commit: string }) => row.commit === "${baseline}")).toBe(true);`);
+const expectedTest = beforeTest.replace("expect(table.entries.length).toBe(55);", `expect(table.entries.length).toBe(56);\n  expect(table.entries.some((row: { commit: string }) => row.commit === "${baseline}")).toBe(true);`);
 if (read(acceptance) !== expectedTest || expectedTest === beforeTest) throw Error("Account review permits only the new retained-main transition assertion");
 for (const path of ["apps/backend/executionIdentity/descriptor.ts", "scripts/execution-identity.ts", "scripts/refresh-execution.ts",
-  "apps/backend/executionIdentity/capabilities.ts", "apps/backend/executionIdentity/transitions.ts", "bun.lock", "package.json", "apps/backend/package.json"]) {
+  "apps/backend/executionIdentity/capabilities.ts", "apps/backend/executionIdentity/transitions.ts", "package.json"]) {
   if (read(path) !== original(path)) throw Error(`Outside account review: ${path}`);
+}
+// Declare the already-installed pinned core package for its public after-commit
+// API. No package resolution/version change or transitive dependency addition.
+for (const path of ["apps/backend/package.json", "bun.lock"]) {
+  const indent = path === "bun.lock" ? "        " : "    ";
+  const line = `${indent}"@better-auth/prisma-adapter": "1.7.7",`;
+  const expected = original(path).replace(line, `${indent}"@better-auth/core": "1.7.7",\n${line}`);
+  if (read(path) !== expected || expected === original(path)) throw Error(`Outside pinned after-commit dependency review: ${path}`);
 }
 const loading = "apps/backend/executionIdentity/loading.ts";
 const stripPin = (value: string) => value.replace(/const analysisPin = "[a-f0-9]{64}";/, 'const analysisPin = "generated";');
@@ -35,7 +43,7 @@ for (const path of modules) {
     ...(path.endsWith("/email.ts") ? ["computed-data"] : [])])];
   const names = [...new Set([...(old?.globals?.names ?? []), ...(globals[path] ?? [])])];
   reviews[path] = { ...old, hash, capabilities, ...(names.length ? { globals: { hash, names } } : {}),
-    review: "Exact account-service review: fixed SES/Resend/Turnstile HTTPS adapters; bounded email delivery and auth bodies; native Better Auth tokens/passwords; keyed quotas; owner-filtered export and serialized profile deletion. No evaluators, dynamic imports, new process adapters, engine changes or activation." };
+    review: "Exact account-service review: fixed SES/Resend/Turnstile HTTPS adapters; bounded email delivery after native transaction commit; atomic single-statement verification ledger; native Better Auth tokens/passwords; keyed quotas; owner-filtered export and serialized profile deletion. No evaluators, dynamic imports, new process adapters, engine changes or activation." };
 }
 // Only fresh pinned Prisma 7.9.1 outputs receive generated-client review.
 const generatedFiles: string[] = [];
@@ -66,7 +74,7 @@ for (const path of ["docs/reality/finite-io-source-review.json", "docs/reality/f
 }
 writeFileSync("docs/reality/account-essentials-source-review.json", JSON.stringify({ schema: "account-essentials-source-review/1", baseline,
   scope: "Disabled-by-default account recovery/export/profile deletion; independent optional signup challenge; no engine behavior change or Model 2 activation",
-  files: [...modules, "apps/backend/prisma/schema.prisma", "apps/backend/prisma/migrations/20261022000000_account_essentials/migration.sql", ...generatedFiles]
+  files: [...modules, "apps/backend/package.json", "bun.lock", "apps/backend/prisma/schema.prisma", "apps/backend/prisma/migrations/20261022000000_account_essentials/migration.sql", ...generatedFiles]
     .map(path => ({ path, hash: sourceHash(read(path)) })),
   acceptance: [acceptance, "apps/backend/tests/accountEssentials.test.ts", "apps/backend/tests/integration/accountEssentials.integration.test.ts"]
     .map(path => ({ path, hash: sourceHash(read(path)) })),

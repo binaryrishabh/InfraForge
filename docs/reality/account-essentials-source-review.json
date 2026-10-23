@@ -1,6 +1,6 @@
 {
   "schema": "account-essentials-source-review/1",
-  "baseline": "3c5c530af8a47196b3d1641a77aeaaf6f63a314f",
+  "baseline": "fd8253b26850b870465f15632cd82ea96eb441a7",
   "scope": "Disabled-by-default account recovery/export/profile deletion; independent optional signup challenge; no engine behavior change or Model 2 activation",
   "files": [
     {
@@ -21,7 +21,7 @@
     },
     {
       "path": "apps/backend/auth/createAuth.ts",
-      "hash": "e5482d31ed8eb82bcf8d15bbf4c0b9b2d5e036566bc710ad973f00b3c6f9e023"
+      "hash": "a15c706ba99209ca0963a0f414747de99e1aa4695d67db3086ecbf9c9a401543"
     },
     {
       "path": "apps/backend/auth/credentials.ts",
@@ -49,7 +49,7 @@
     },
     {
       "path": "apps/backend/auth/verification.ts",
-      "hash": "76bc9f65a78635032b533f65645ccc8e69fe1ea95b4c2c674236293ec261f056"
+      "hash": "bc0ab8e5c0e241c19ee29035555b5e39060de9493b825ab66d485a360989d732"
     },
     {
       "path": "apps/backend/index.ts",
@@ -62,6 +62,14 @@
     {
       "path": "apps/backend/release/migrations.ts",
       "hash": "f0d4de0960be6032d72bd0fc1fb264c185749a2a1fbca04ff20737b61dd122b4"
+    },
+    {
+      "path": "apps/backend/package.json",
+      "hash": "55da6299bb1a79d46f17b744a41f2298865f748f6326b5691d1c2b48432988ec"
+    },
+    {
+      "path": "bun.lock",
+      "hash": "d3aaa44cea0f09b9e949a7f26b0d1ed13bc499b228b5e50798dcea970a7d597b"
     },
     {
       "path": "apps/backend/prisma/schema.prisma",
@@ -183,11 +191,11 @@
     },
     {
       "path": "apps/backend/tests/accountEssentials.test.ts",
-      "hash": "50ae7237327c6cff2eab1c577353c0a73e1c0ee15a58ca1f3ea4ade5c5310994"
+      "hash": "bd2783211b30eef020e4961264b1545566a010393100df5f5ffcb41deae875a9"
     },
     {
       "path": "apps/backend/tests/integration/accountEssentials.integration.test.ts",
-      "hash": "63c72b80b65dc139b1816c4e032c66f53913465e8f37d7297b719d15b1dff9b9"
+      "hash": "a5964930c31e7873e76c06e4006631db4d71a3421b1b27940b79bb717b29bef1"
     }
   ]
 }
