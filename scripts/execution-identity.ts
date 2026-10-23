@@ -1,3 +1,4 @@
+import { assertHistoricalPreservation } from "./history-preservation";
 import { historicalIsolationDescriptor } from "./historical-isolation-descriptor";
 import { historicalDeclaredHostDescriptor } from "./historical-declared-host-descriptor";
 import { reviewHardeningSyntax, refreshHardeningTransitions, refreshHardeningAcceptance } from "./hardening-identity";
@@ -146,6 +147,7 @@ function buildTransitions() {
 export function checkTransitions(root = repositoryRoot, read?: (path: string) => string | Buffer) {
   const { table, mappings: mapping, history: readHistory } = loadTransitions(root, read);
   const history = readHistory();
+  assertHistoricalPreservation(table, history, root);
   if (digest(Object.keys(history.trees).sort()) !== digest(table.entries.map(row => row.commit).sort())) throw Error("Historical transition coverage changed");
   for (const [hash, text] of Object.entries(history.blobs)) if (sha256(text) !== hash) throw Error("Historical execution text changed");
   for (const row of table.entries) {
