@@ -2,34 +2,34 @@
   "schema": "frozen-artifacts/1",
   "files": {
     "docs/reality/m2d-proofs.json": {
-      "bytes": 5896033,
-      "sha256": "e1192b22ba0f934e4d1017d88dc70e0507d19514c4e2e51b01b85ecd51ad6034",
-      "gzipBytes": 199692,
-      "gzipSha256": "35afde46a58aefbf4e62737a6f343f8d304ab98dd1145c98348d58fa4c5afc3e"
+      "bytes": 5755290,
+      "sha256": "c6aba9d2e5859c4f75a1d22875d7ecee1469055df318cd232fc18cf9361ba7a5",
+      "gzipBytes": 198544,
+      "gzipSha256": "e07718464fa595502c89b59fcb7ce20c2ef4c8e5999e51fb0c34fd2b75845bf1"
     },
     "docs/reality/m2e-proofs.json": {
-      "bytes": 1626229,
-      "sha256": "75a5f83dc8cefe50013c0282551a2e0220ed1dfb2f1100d7392423cc0c81e909",
-      "gzipBytes": 64467,
-      "gzipSha256": "8189fb58b77451492687738aead60a5915a5226dbf21595a86a422f522737787"
+      "bytes": 1582158,
+      "sha256": "ec5acdb4032d21691225ca0da0dd0c8fe433411fd29de2304bf42431002491b3",
+      "gzipBytes": 64183,
+      "gzipSha256": "9e5df7ff46f2a751a0d398c134aa8112211f910ba6b48a5c29e8452fc4ebc83c"
     },
     "docs/reality/m2f-proofs.json": {
-      "bytes": 2527918,
-      "sha256": "8ebd1a56dbbfd53b78e77c619834835eb59e2934aab32c02ef84ebd1e8a7f891",
-      "gzipBytes": 82313,
-      "gzipSha256": "3a3f79a2ed83628f842d0b94cd9c138ed9dd3947d8c600e4b81eec6d5691d330"
+      "bytes": 2470048,
+      "sha256": "724120e56063d40578c971ea23abeead00547be503bd3b6ce44e9a0063720252",
+      "gzipBytes": 81400,
+      "gzipSha256": "57831d0d4119efa40f788865b9e239a1fcad45e70ed10a3959ac4361f15c3434"
     },
     "docs/reality/m2g-proofs.json": {
-      "bytes": 9449004,
-      "sha256": "ff8ae225f865a929ab515964c5693c8dc95b75308d37dccc5d5cca74f0b9f827",
-      "gzipBytes": 300260,
-      "gzipSha256": "7c698c6098119afeb4ab655e329418c35fa7bc25ecc903df5175fd7318ae83ad"
+      "bytes": 9197584,
+      "sha256": "7ebc8ca3188f872ddb061a6b99833bdde1b70bed24644861c2ac1d39f7b748c3",
+      "gzipBytes": 297285,
+      "gzipSha256": "ed8eb0b3173554c90d8b1116ff03e0b6602318491a7d9eba14cb4a720740d06b"
     },
     "docs/reality/m2h-proofs.json": {
-      "bytes": 24089001,
-      "sha256": "a846cd54994b2eceedc8023732a9acac47c7f7d7a512b2ec089adec735634137",
-      "gzipBytes": 692409,
-      "gzipSha256": "9595547768d85140cdf95ac18563c4a947d34f48a6b8eba42bfd6951dfb4555c"
+      "bytes": 23430083,
+      "sha256": "a3d0ff99990a89dc1e0e4e7bbff0052d9f804d0e826234f26ac72a2754407cb0",
+      "gzipBytes": 687213,
+      "gzipSha256": "2eebcc82edbc5d04192e471cf807bfa938eaf2cf05b153557f0344c2f76dee5c"
     },
     "docs/reality/historical-slice-snapshots.json": {
       "bytes": 3511345,

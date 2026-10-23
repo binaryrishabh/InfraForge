@@ -48,6 +48,8 @@ The M2D–M2H proof JSONs are stored as `.json.gz`. All consumers use
 `scripts/reality/frozen-artifacts.ts`; `readProofText` accepts their original
 logical `.json` path, and `readArtifactText` supports a supplied repository root.
 No network, historical Git objects or external artifact service is needed.
+Decoded proof bytes are exactly the original Git blobs, including their canonical
+LF line endings; Windows checkout CRLF conversion is not part of the archive.
 The decoder authenticates compressed bytes, enforces a 16 MiB compressed limit,
 uses the pinned decoded length as the decompressor allocation bound (at most
 32 MiB), verifies decoded SHA-256 and length, and validates UTF-8 and JSON.

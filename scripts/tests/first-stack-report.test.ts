@@ -4,10 +4,10 @@ import { sourceHash } from "../../apps/backend/executionIdentity/hash";
 import { diagnosticJournal } from "../../packages/simulation/src/firstStack/journal";
 
 test("first-stack report historical source review binds its data boundary and acceptance", () => {
-  const { review: review, read: historicalSource } = historicalSlice("docs/reality/first-stack-report-source-review.json");
+  const { review, read: historicalSource } = historicalSlice("docs/reality/first-stack-report-source-review.json");
   expect(review.schema).toBe("first-stack-report-source-review/1");
   expect(review.files.length).toBe(11); expect(review.acceptance!.length).toBe(5);
-  for (const row of [...review.files, ...review.acceptance ?? []]) expect(sourceHash(historicalSource(row.path))).toBe(row.hash);
+  for (const row of [...review.files, ...(review.acceptance ?? [])]) expect(sourceHash(historicalSource(row.path))).toBe(row.hash!);
 });
 
 test("diagnostic selection remains bounded and every selected ID addresses original journal bytes", () => {

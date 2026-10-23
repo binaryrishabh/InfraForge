@@ -5,9 +5,9 @@ import ignore from "ignore";
 import { sourceHash } from "../../apps/backend/executionIdentity/hash";
 
 test("historical compatibility receipt covers readers, containment, migration and acceptance", () => {
-  const { review: review, read: historicalSource } = historicalSlice("docs/reality/historical-compatibility-source-review.json");
+  const { review, read: historicalSource } = historicalSlice("docs/reality/historical-compatibility-source-review.json");
   expect(review.schema).toBe("historical-compatibility-source-review/1");
-  for (const row of [...review.files, ...review.acceptance ?? []]) expect(sourceHash(historicalSource(row.path))).toBe(row.hash);
+  for (const row of [...review.files, ...(review.acceptance ?? [])]) expect(sourceHash(historicalSource(row.path))).toBe(row.hash!);
   expect(review.files.some((r: { path: string }) => r.path.endsWith("historicalReplay.ts"))).toBe(true);
   expect(review.files.some((r: { path: string }) => r.path.endsWith("historical_replay/migration.sql"))).toBe(true);
 });

@@ -31,7 +31,7 @@ test("first stack historical source review binds new behavior and its acceptance
   expect(lock.baseline).toBe(baseline.source);
   expect(lock.files).toHaveLength(38);
   expect(lock.acceptance).toHaveLength(17);
-  for (const { path, hash } of [...lock.files, ...lock.acceptance ?? []]) expect(sourceHash(historicalSource(path))).toBe(hash);
+  for (const { path, hash } of [...lock.files, ...(lock.acceptance ?? [])]) expect(sourceHash(historicalSource(path))).toBe(hash!);
 });
 
 test("first stack V2 retained proof reproduces independently of its observers", async () => {

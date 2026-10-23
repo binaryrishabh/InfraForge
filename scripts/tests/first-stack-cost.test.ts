@@ -118,7 +118,7 @@ test("server tariffs change report cost without changing verified cut, replay or
 });
 
 test("cost source review pins the adapter, shared capture and acceptance", () => {
-  const { review: review, read: historicalSource } = historicalSlice("docs/reality/first-stack-cost-source-review.json");
+  const { review, read: historicalSource } = historicalSlice("docs/reality/first-stack-cost-source-review.json");
   expect(review.schema).toBe("first-stack-cost-source-review/1"); expect(review.files).toHaveLength(9); expect(review.acceptance).toHaveLength(2);
-  for (const row of [...review.files, ...review.acceptance ?? []]) expect(sourceHash(historicalSource(row.path))).toBe(row.hash);
+  for (const row of [...review.files, ...(review.acceptance ?? [])]) expect(sourceHash(historicalSource(row.path))).toBe(row.hash!);
 });

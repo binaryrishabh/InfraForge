@@ -21,7 +21,7 @@ export function validateHistoricalSlices(snapshot: SliceSnapshot, receipts: Reco
     if (sourceHash(receipts[path]!) !== entry.digest) throw Error(`Historical receipt changed: ${path}`);
     const review = JSON.parse(receipts[path]!) as SliceReview;
     const files: Record<string, string> = {};
-    for (const row of [...review.files, ...review.acceptance ?? []]) {
+    for (const row of [...review.files, ...(review.acceptance ?? [])]) {
       const hash = row.hash ?? row.sha256 ?? row.currentHash;
       if (!hash || !Object.hasOwn(snapshot.blobs, hash) || files[row.path]) throw Error(`Missing or duplicate historical slice source: ${row.path}`);
       files[row.path] = hash; referenced.add(hash);
