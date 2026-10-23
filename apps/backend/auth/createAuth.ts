@@ -23,6 +23,9 @@ export function createAuth(prisma: PrismaClient, settings: ReturnType<typeof rea
     database: prismaAdapter(prisma, { provider: "postgresql", transaction: true }),
     trustedOrigins: settings.origins,
     socialProviders: settings.socialProviders,
+    verification: {
+      storeIdentifier: { default: "plain", overrides: { "reset-password:": "hashed" } },
+    },
     emailAndPassword: { enabled: true, minPasswordLength: PASSWORD_MIN, maxPasswordLength: PASSWORD_MAX,
       requireEmailVerification: !!deliver && essentials.verificationRequired !== false, autoSignIn: !deliver,
       ...(deliver ? { resetPasswordTokenExpiresIn: EMAIL_TOKEN_SECONDS, revokeSessionsOnPasswordReset: true,

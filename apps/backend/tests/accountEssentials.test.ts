@@ -117,6 +117,22 @@ test("native reset uses expiring single-use tokens and revokes old sessions", as
   expect((await f.call("reset-password", { token: link(f.mail).pathname.split("/").at(-1), newPassword: password })).status).toBe(400);
 });
 
+test("stored reset identifiers cannot redeem the emailed reset credential", async () => {
+  const f = fixture();
+  await f.signup();
+  await f.call("request-password-reset", {
+    email: "learner@example.test", turnstileToken: "fixture-pass",
+  });
+  const token = link(f.mail).pathname.split("/").at(-1)!;
+  const stored = f.database.verification.at(-1)!.identifier;
+  expect(stored).not.toContain(token);
+  expect(JSON.stringify(f.database.verification)).not.toContain(token);
+  expect((await f.call("reset-password", {
+    token: stored.replace(/^reset-password:/, ""), newPassword: password,
+  })).status).toBe(400);
+  expect((await f.call("reset-password", { token, newPassword: password })).status).toBe(200);
+});
+
 test("email requests return identical responses for absent, verified and unverified accounts, with cookies", async () => {
   for (const verified of [false, true]) {
     const f = fixture(); await f.signup(); await delivered();

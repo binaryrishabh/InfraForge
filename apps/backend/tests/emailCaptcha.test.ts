@@ -104,6 +104,7 @@ test("outbox encrypts links, persists before send, wipes success and never retri
   expect(f.row().payload).not.toContain(message.to);
   expect(JSON.parse(await symmetricDecrypt({ key: secret, data: f.row().payload! }))).toEqual(message);
   await f.queue.drain(); await f.queue.drain();
+  expect(f.statements).toContain('DELETE FROM "Verification" WHERE "expiresAt" <= now()');
   expect(keys).toEqual([f.row().id]); expect(f.row().payload).toBeNull(); expect(f.row().status).toBe("sent");
 });
 

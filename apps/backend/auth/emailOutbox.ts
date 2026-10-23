@@ -30,7 +30,7 @@ export class EmailOutbox implements AccountMailQueue {
     // Also clear abandoned, expired links. Never keep plaintext tokens at rest.
     await this.db.$executeRaw`DELETE FROM "AccountMailOutbox" WHERE "expiresAt" <= now()`;
     await this.db.$executeRaw`DELETE FROM "AccountEmailToken" WHERE "expiresAt" <= now()`;
-    await this.db.$executeRaw`DELETE FROM "Verification" WHERE "expiresAt" <= now() AND identifier LIKE 'reset-password:%'`;
+    await this.db.$executeRaw`DELETE FROM "Verification" WHERE "expiresAt" <= now()`;
     // A crashed SES sender may have sent. Wipe it rather than duplicate mail.
     await this.db.$executeRaw`UPDATE "AccountMailOutbox" SET status = 'uncertain', payload = NULL
       WHERE status = 'sending' AND "retrySafe" = false AND "availableAt" <= now()`;
