@@ -5,6 +5,7 @@ import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 import { gzipSync } from "node:zlib";
 import { decodeFrozenArtifact, decodedLimit, compressedLimit, frozenArtifactPins, readArtifactText, writeProofText } from "../reality/frozen-artifacts";
+import { validateDepth } from "../reality/artifacts";
 
 const root = resolve(import.meta.dir, "../.."), hash = (bytes: Buffer) => createHash("sha256").update(bytes).digest("hex");
 const text = Buffer.from('{"evidence":"preserved"}\n'), bytes = gzipSync(text);
@@ -44,5 +45,24 @@ test("frozen evidence fails closed on missing archives, ambiguous copies and a c
     writeFileSync(resolve(base, manifest), JSON.stringify(changed));
     expect(() => readArtifactText(base, path)).toThrow("manifest changed");
     expect(() => writeProofText(resolve(root, path), "{}\n")).toThrow("Cannot overwrite frozen evidence");
+  } finally { rmSync(base, { recursive: true, force: true }); }
+});
+
+test("resource-depth evidence references authenticate archived proof content and reject missing or corrupt archives", () => {
+  const base = mkdtempSync(resolve(tmpdir(), "infraforge-depth-"));
+  try {
+    mkdirSync(resolve(base, "docs/reality"), { recursive: true });
+    const manifest = "docs/reality/frozen-artifacts.json", path = "docs/reality/m2h-proofs.json";
+    copyFileSync(resolve(root, manifest), resolve(base, manifest));
+    const row = JSON.parse(readFileSync(resolve(root, "docs/reality/resource-depth.json"), "utf8")).resources[0];
+    for (const key of ["owner", "compiler", "proof", "evidence"]) row.productBridge[key] = path;
+    row.model2.mechanismOwners = [path]; row.model2.proofs = [path];
+    expect(validateDepth([row], base)).toContain(`${row.resource}: incomplete M2H bridge owner/proof/gap`);
+    copyFileSync(resolve(root, path + ".gz"), resolve(base, path + ".gz"));
+    expect(validateDepth([row], base)).not.toContain(`${row.resource}: incomplete M2H bridge owner/proof/gap`);
+    expect(validateDepth([row], base)).not.toContain(`${row.resource}: missing mechanism/proof source`);
+    writeFileSync(resolve(base, path + ".gz"), "corrupt");
+    expect(validateDepth([row], base)).toContain(`${row.resource}: incomplete M2H bridge owner/proof/gap`);
+    expect(validateDepth([row], base)).toContain(`${row.resource}: missing mechanism/proof source`);
   } finally { rmSync(base, { recursive: true, force: true }); }
 });

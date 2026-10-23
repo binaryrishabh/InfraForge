@@ -46,6 +46,16 @@ export function readProofText(file: string | URL): string {
   return readArtifactText(root, relative(root, absolute).replaceAll("\\", "/"));
 }
 
+// Logical evidence references keep their original names. Archived references
+// must fully authenticate; merely finding a .gz file is not sufficient.
+export function artifactAvailable(base: string, path: string): boolean {
+  try {
+    if (!frozenArtifactPins(base)[path]) return existsSync(resolve(base, path));
+    readArtifactText(base, path);
+    return true;
+  } catch { return false; }
+}
+
 // Existing proof generators may reproduce an immutable proof, never replace it
 // with current-engine evidence. New measurements need a separately named file.
 export function writeProofText(file: string | URL, text: string) {
