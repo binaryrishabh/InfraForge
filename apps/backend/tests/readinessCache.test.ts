@@ -23,8 +23,10 @@ test("HTTP readiness bursts only read startup and scheduled deep snapshots", asy
     expect(calls).toBe(1);
     now = 10000; scheduled!(); scheduled = undefined;
     expect(calls).toBe(2); expect((await burst()).every(r => r.status === 200)).toBe(true);
+    // A slow refresh keeps serving the last success within the bound.
+    now = 25000; expect((await burst()).every(r => r.status === 200)).toBe(true); expect(calls).toBe(2);
     // A hung refresh cannot make the old success live indefinitely or spawn a new probe.
-    now = 15000; expect((await burst()).every(r => r.status === 503)).toBe(true); expect(calls).toBe(2);
+    now = 40000; expect((await burst()).every(r => r.status === 503)).toBe(true); expect(calls).toBe(2);
     complete!(snapshot); await Bun.sleep(0);
     expect(cache.check()).toEqual(snapshot); expect(scheduled).toBeDefined();
   } finally { await cache.close(); await new Promise<void>((resolve, reject) => server.close(e => e ? reject(e) : resolve())); }
@@ -45,7 +47,7 @@ test("failed background verification replaces success and the scheduler recovers
 });
 
 test("readiness rejects invalid timing", () => {
-  for (const options of [{ intervalMs: 0 }, { intervalMs: 20000 }, { maxAgeMs: NaN }]) {
+  for (const options of [{ intervalMs: 0 }, { intervalMs: 40000 }, { maxAgeMs: NaN }]) {
     expect(() => createReadinessCache(async () => ({ success: true }), options)).toThrow("timing");
   }
 });

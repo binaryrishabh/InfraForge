@@ -5,7 +5,9 @@ interface CacheOptions {
 }
 // Requests only read snapshots. Only startup and this background scheduler probe.
 export function createReadinessCache<T extends ReadinessSnapshot>(probe: () => Promise<T>, options: CacheOptions = {}) {
-  const interval = options.intervalMs ?? 10000, maxAge = options.maxAgeMs ?? 15000;
+  // maxAge covers one interval plus a slow deep probe (several 2 s query timeouts),
+  // so a slow but healthy check never flaps readiness to 503.
+  const interval = options.intervalMs ?? 10000, maxAge = options.maxAgeMs ?? 30000;
   if (!Number.isSafeInteger(interval) || interval < 1 || !Number.isSafeInteger(maxAge) || maxAge < interval) throw Error("Invalid readiness cache timing");
   const now = options.now ?? Date.now;
   const schedule = options.schedule ?? ((run, delay) => {
