@@ -71,7 +71,7 @@ try {
   const fixture = resolve(root, "apps/backend/tests/release-ownership.ts").replaceAll("\\", "/");
   await Bun.write(override, `services:
   postgres:
-    image: postgres:18-alpine
+    image: postgres:18-alpine@sha256:898c60cb390d1085bc97bdd6a1ae968757421df394b071848b52b1c09c89d6a5
     environment:
       POSTGRES_HOST_AUTH_METHOD: trust
       POSTGRES_DB: infraforge_reference_${suffix}
@@ -80,7 +80,7 @@ try {
     networks: [application, egress]
     volumes: [reference_data:/var/lib/postgresql]
   tools:
-    image: postgres:18-alpine
+    image: postgres:18-alpine@sha256:898c60cb390d1085bc97bdd6a1ae968757421df394b071848b52b1c09c89d6a5
     profiles: [release]
     networks: [egress]
     environment:

@@ -1,7 +1,7 @@
 name: infraforge-dev
 services:
   postgres:
-    image: postgres:18-alpine
+    image: postgres:18-alpine@sha256:898c60cb390d1085bc97bdd6a1ae968757421df394b071848b52b1c09c89d6a5
     container_name: infraforge-dev-postgres
     labels:
       infraforge.project: binaryrishabh/InfraForge
@@ -14,7 +14,7 @@ services:
     volumes: [postgres_data:/var/lib/postgresql]
     networks: [development]
   redis:
-    image: redis:8-alpine
+    image: redis:8-alpine@sha256:0bf6577d7774e592b29d093e3ac9390eb91e13d72c21e506afce736de5e0eeb0
     container_name: infraforge-dev-redis
     labels:
       infraforge.project: binaryrishabh/InfraForge

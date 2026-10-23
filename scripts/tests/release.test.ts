@@ -1,8 +1,10 @@
-import { expect, test } from "bun:test";
+import { expect, spyOn, test } from "bun:test";
+import { readFileSync } from "node:fs";
 import { releaseSequence, rollbackSequence, type Release, type ReleaseOperations } from "../release/sequence";
 import { webRelease } from "../../apps/web/releaseConfig";
 import { cancelCommands, command } from "../release/process";
-import { applicationStopBlockers, releaseDependencyClosure } from "../release/compose";
+import { applicationStopBlockers, ComposeRelease, releaseDependencyClosure } from "../release/compose";
+import * as releaseProcess from "../release/process";
 
 const release = (sha: string): Release => ({ sha, image: `image:${sha}`, imageId: sha, authContract: 1, migrationFingerprint: "same-schema", settingsFingerprint: "same-settings" });
 test("shutdown inspects actual owned states and rejects paused, restarting and unknown containers", () => {
@@ -91,4 +93,30 @@ test("release image preparation covers started services and their dependencies o
   // Transitive dependencies are followed; fixtures and unknown names are never selected.
   expect([...releaseDependencyClosure(declared, ["edge", "missing"])].sort()).toEqual(["cache", "edge"]);
   expect([...releaseDependencyClosure({ a: { depends_on: { b: {} } }, b: { depends_on: { a: {} } } }, ["a"])].sort()).toEqual(["a", "b"]);
+});
+
+for (const cached of [false, true]) test(`release ${cached ? "reuses" : "pulls"} the exact digest-pinned dependency before migration`, async () => {
+  const image = readFileSync("apps/backend/docker-compose.yml", "utf8").match(/^    image: (redis:7-alpine@sha256:[a-f0-9]{64})\r?$/m)?.[1];
+  expect(image).toBeDefined();
+  const next = release("next"), events: string[][] = [];
+  const declared = { api: { image: next.image, depends_on: { redis: {} } }, worker: { image: next.image },
+    "ws-server": { image: next.image }, redis: { image }, unrelated: { image: "unrelated:fixture" } };
+  const run = spyOn(releaseProcess, "command").mockImplementation(async args => {
+    events.push(args);
+    if (args.includes("config")) return JSON.stringify({ services: declared });
+    if (args[1] === "image" && !cached) throw new Error("Pinned dependency absent");
+    return "";
+  });
+  try {
+    const operations = new ComposeRelease(process.cwd(), "fixture.env", "fixture", next, async () => {});
+    await operations.preflight();
+    await operations.preflight();
+    expect(events.filter(args => args[1] === "image")).toEqual([["docker", "image", "inspect", image!]]);
+    const pulls = events.filter(args => args.includes("pull"));
+    expect(pulls.map(args => args.slice(-3))).toEqual(cached ? [] : [["pull", "--quiet", "redis"]]);
+    const migrations = events.filter(args => args.includes("preflight"));
+    expect(migrations).toHaveLength(2);
+    expect(events.indexOf(migrations[0]!)).toBeGreaterThan(events.findIndex(args => args[1] === "image"));
+    if (!cached) expect(events.indexOf(pulls[0]!)).toBeLessThan(events.indexOf(migrations[0]!));
+  } finally { run.mockRestore(); }
 });

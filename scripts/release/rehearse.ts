@@ -80,7 +80,7 @@ try {
   await Bun.write(envFile, `DATABASE_URL=postgresql://postgres@postgres/infraforge_release_${suffix}\nWORKER_DATABASE_URL=postgresql://postgres@postgres/infraforge_release_${suffix}\nMIGRATION_DATABASE_URL=postgresql://postgres@postgres/infraforge_release_${suffix}\nWORKER_DATABASE_MODE=direct\nBETTER_AUTH_SECRET=${randomBytes(32).toString("hex")}\nBETTER_AUTH_URL=https://api.example.invalid\nAPP_ORIGINS=https://app.example.invalid\nAPI_PORT=0\nWS_PORT=0\n`);
   await Bun.write(override, `services:
   postgres:
-    image: postgres:18-alpine
+    image: postgres:18-alpine@sha256:898c60cb390d1085bc97bdd6a1ae968757421df394b071848b52b1c09c89d6a5
     environment:
       POSTGRES_HOST_AUTH_METHOD: trust
       POSTGRES_DB: infraforge_release_${suffix}
@@ -109,7 +109,7 @@ try {
       - "${resolve(root, "apps/backend/tests/release-ownership.ts").replaceAll("\\", "/")}:/app/apps/backend/tests/release-ownership.ts:ro"
       - "${join(directory, "tls").replaceAll("\\", "/")}:/fixture/tls:ro"
   redis:
-    image: redis:8-alpine
+    image: redis:8-alpine@sha256:0bf6577d7774e592b29d093e3ac9390eb91e13d72c21e506afce736de5e0eeb0
   pool-transaction:
     image: ${poolImage}
     networks: [application]
@@ -227,7 +227,7 @@ volumes:
   await operations.start(release);
   await operations.ready(release);
   await operations.stop();
-  await Bun.write(join(directory, "Dockerfile"), `FROM alpine:3.22\nRUN apk add --no-cache pgbouncer=1.24.0-r0 nginx openssl\nLABEL org.infraforge.rehearsal="${suffix}"\nUSER nobody\nCMD ["pgbouncer", "/etc/pgbouncer.ini"]\n`);
+  await Bun.write(join(directory, "Dockerfile"), `FROM alpine:3.22@sha256:2e0b81d60597f449baa56dc25d355367869d2dca4cd57e866f1e2b52af3eb55f\nRUN apk add --no-cache pgbouncer=1.24.0-r0 nginx openssl\nLABEL org.infraforge.rehearsal="${suffix}"\nUSER nobody\nCMD ["pgbouncer", "/etc/pgbouncer.ini"]\n`);
   await docker(["build", "--builder", context.Name, "-t", poolImage, directory]);
   for (const mode of ["transaction", "session"]) {
     await Bun.write(join(directory, `${mode}.ini`), `[databases]\ninfraforge_release_${suffix} = host=postgres port=5432 dbname=infraforge_release_${suffix} user=postgres\n[pgbouncer]\nlisten_addr=0.0.0.0\nlisten_port=6432\nauth_type=any\npool_mode=${mode}\ndefault_pool_size=${mode === "transaction" ? 1 : 5}\nmax_client_conn=20\npidfile=/tmp/pgbouncer.pid\n`);
