@@ -2,7 +2,6 @@ import Redis from "ioredis";
 import { Pool } from "pg";
 import { createReadinessCache } from "../health/readinessCache";
 import { verifyWorkerSession, workerDatabaseUrl } from "../infra/workerConnection";
-import { checkHistory, checkSchemaGuards } from "../release/migrations";
 import { IsolationConnection } from "./isolationConnection";
 import { refreshVerifierQualification, readProtectedJson } from "./verifierQualification";
 import { availabilityMaxAgeMs, engineAvailability, verifierAvailabilityKey } from "./verifierAvailability";
@@ -48,7 +47,6 @@ async function launchVerifier(settings: VerifierSettings, source: string, env: R
   producer.on("error", invalidate); producer.on("close", invalidate);
   consumer.on("error", invalidate); consumer.on("close", invalidate); pool.on("error", invalidate);
   try {
-    await checkHistory(pool); await checkSchemaGuards(pool);
     control = await IsolationConnection.open(settings.endpoint);
     const configuration: SubmissionVerifier = {
       admission: { enabled: settings.enabled, engine: { image: settings.image, source } },

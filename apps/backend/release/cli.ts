@@ -1,5 +1,6 @@
 import { Client } from "pg";
-import { assertNoWorker, checkHistory, checkSchemaGuards, migrationPreflight, migrationManifest, migrationFingerprint } from "./migrations";
+import { acquireReleaseOwnership, assertNoWorker, checkHistory, checkSchemaGuards,
+  migrationPreflight, migrationManifest, migrationFingerprint } from "./migrations";
 import { AUTH_CONTRACT } from "./runtime";
 import { verifyWorkerSession, workerDatabaseUrl } from "../infra/workerConnection";
 import { verifyDatabaseTargets } from "./databaseTargets";
@@ -30,6 +31,7 @@ if (command === "manifest") {
       await verifyDatabaseTargets(migrationUrl, [process.env.API_DATABASE_URL, process.env.WORKER_DATABASE_URL]);
     }
     await db.connect();
+    if (command !== "preflight") await acquireReleaseOwnership(db);
     await migrationPreflight(db);
     if (command !== "preflight") {
       await assertNoWorker(db);

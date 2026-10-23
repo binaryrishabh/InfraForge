@@ -197,7 +197,11 @@ before a release; simply stopping the service is insufficient for release idle.
 
 Before invoking the existing release tooling, stop this host unit and verify
 all nonterminal reservations and executor ownership are cleared. Migration and
-postcheck also reject the lifecycle lock. Default Compose/rehearsal do not manage
+postcheck acquire that same session lock before checking idle state and hold it
+through all Prisma operations. A release and verifier startup exclude each other
+in either order; startup validates schema/history while holding the lock.
+The release excludes only its own lock 12 from the worker check, retaining the
+checks for other owners and executor locks. Default Compose/rehearsal do not manage
 this opt-in host service. After a release, install the matching host tree/image,
 qualify again, and explicitly restart. Follow FIRST_STACK_SUBMISSIONS and
 FIRST_STACK_ISOLATION recovery procedures for exact token/daemon/image/prefix

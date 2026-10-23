@@ -6,6 +6,7 @@ import { checkInternalModel2Schema } from "./model2Schema";
 import { checkLessonSchema } from "./lessonSchema";
 import { checkFirstStackSchema } from "./firstStackSchema";
 import { checkAccountSchema } from "./accountSchema";
+import { verifierLock } from "../firstStack/verifierOwnership";
 
 type Database = Pick<Client | Pool, "query">;
 export type Migration = { name: string; checksum: string; checksums: string[] };
@@ -129,10 +130,18 @@ export async function assertReleaseIdle(db: Database) {
   }
 }
 
+// The caller owns this dedicated session until migrate/postcheck has finished,
+// including all Prisma subprocesses. Client.end() releases the lock on every exit.
+export async function acquireReleaseOwnership(db: Client) {
+  const result = await db.query("SELECT pg_try_advisory_lock($1,$2) AS held", verifierLock);
+  if (result.rows[0]?.held !== true) throw new Error("A verifier or another release still owns this database");
+}
+
 export async function assertNoWorker(db: Database) {
   const locked = await db.query(`SELECT EXISTS (SELECT 1 FROM pg_locks WHERE locktype = 'advisory'
     AND database = (SELECT oid FROM pg_database WHERE datname = current_database())
-    AND classid = 186542854::oid AND objid IN (1::oid,10::oid,12::oid) AND objsubid = 2 AND granted) AS held`);
+    AND classid = 186542854::oid AND objid IN (1::oid,10::oid,12::oid) AND objsubid = 2 AND granted
+    AND (objid <> 12::oid OR pid <> pg_backend_pid())) AS held`);
   if (locked.rows[0].held) throw new Error("A simulation worker still owns this database; release must stop it first");
 }
 

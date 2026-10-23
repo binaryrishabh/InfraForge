@@ -7,6 +7,7 @@ const stage = process.argv[2];
 assert.ok(stage === "ownership" || stage === "outbox");
 let probe!: () => Promise<{ success: boolean }>, configuration: any;
 let invalidations = 0, paused = false, running = false, hold = false;
+let ownsLifecycle = false;
 let entered!: () => void, release!: () => void, finish!: () => void;
 const waiting = new Promise<void>(resolve => { entered = resolve; });
 const gate = new Promise<void>(resolve => { release = resolve; });
@@ -52,7 +53,10 @@ mock.module("bullmq", () => ({ Queue, Worker }));
 mock.module("../infra/workerConnection", () => ({
   workerDatabaseUrl: () => "fixture", verifyWorkerSession: async () => {},
 }));
-mock.module("../release/migrations", () => ({ checkHistory: async () => {}, checkSchemaGuards: async () => {} }));
+const checkSchema = async () => {
+  assert.equal(ownsLifecycle, true, "Startup schema checks must be protected from a concurrent release");
+};
+mock.module("../release/migrations", () => ({ checkHistory: checkSchema, checkSchemaGuards: checkSchema }));
 mock.module("../firstStack/isolationConnection", () => ({ IsolationConnection: {
   open: async () => ({ close: async () => {} }),
 } }));
@@ -62,13 +66,15 @@ mock.module("../firstStack/verifierQualification", () => ({
     value.qualification = { expiresAt: new Date(Date.now() + 60000).toISOString() };
   },
 }));
-mock.module("../firstStack/verifierOwnership", () => ({ acquireVerifierOwnership: async () => ({
+mock.module("../firstStack/verifierOwnership", () => ({ acquireVerifierOwnership: async () => {
+  ownsLifecycle = true;
+  return {
   held: true,
   assertHeld: async () => {
     if (hold && stage === "ownership") { hold = false; entered(); await gate; }
   },
-  close: async () => {},
-}) }));
+  close: async () => { ownsLifecycle = false; },
+}; } }));
 mock.module("../firstStack/submissionWorker", () => ({
   markSubmissionRecovery: async () => {}, verifySubmission: async () => {},
   verifierExecutionAllowed: () => true,

@@ -10,6 +10,7 @@ import { requireCapability } from "../capabilities/policy";
 import { acquireVerifierOwnership } from "./verifierOwnership";
 import { verifierExecutionAllowed } from "./submissionWorker";
 import { boundedVerifierDrain, drainVerifierWorker } from "./verifierDrain";
+import { checkHistory, checkSchemaGuards } from "../release/migrations";
 
 const name = "first-stack-verification";
 // Explicit lifecycle factory, never started by import or by the Model-1 worker.
@@ -63,6 +64,9 @@ export async function startSubmissionQueue(pool: Pool, databaseUrl: string, prod
   try {
     await queue.setGlobalConcurrency(1);
     await ownership.assertHeld();
+    // Validate under the same session lock used by releases; earlier checks can
+    // become stale while a migration acquires and releases ownership.
+    await checkHistory(pool); await checkSchemaGuards(pool);
     await markSubmissionRecovery(pool);
     await worker.waitUntilReady();
     const backend = worker.getBackend();
