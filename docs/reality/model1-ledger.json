@@ -387,7 +387,7 @@
     },
     {
       "file": "apps/backend/executionIdentity/loading.ts",
-      "sha256": "31026cc7aa103cd281fd824f70dbcc461d657ff9af405d8564345145f4d62475",
+      "sha256": "3ef4447dd6121fe4d05c01994d0973e67fe21f4fccfceba9a9972e7361adc19a",
       "numericSites": 14
     },
     {
@@ -582,13 +582,13 @@
     },
     {
       "file": "apps/backend/health/readiness.ts",
-      "sha256": "c66c3112eb10c2fabdafa466289d8671c4bf581b8716fb6c4d661caa0b5d7368",
+      "sha256": "49161910e2dcf14d3455434fc3e3469b43e7d633aebdf6f4198552ded56fec88",
       "numericSites": 7
     },
     {
       "file": "apps/backend/health/readinessCache.ts",
-      "sha256": "1429e62fe069040ae778c535cdc5c82a85e81440e23d89a6b358bd6b684ba1b3",
-      "numericSites": 3
+      "sha256": "51cb147f13804572fb257811b1dc2d716845b77351845f56ebc55b8d5e1b2978",
+      "numericSites": 4
     },
     {
       "file": "apps/backend/index.ts",
@@ -43039,6 +43039,42 @@
         "file": "apps/backend/health/readinessCache.ts",
         "line": 11,
         "column": 53
+      }
+    },
+    {
+      "id": "m1.apps.backend.health.readinessCache.4",
+      "concept": "generation · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.health.readinessCache.4"
+        ]
+      },
+      "formula": "let pending: Promise<void> | undefined, cancel: (() => void) | undefined, closed = false, generation = 0;",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/health/readinessCache.ts#L17",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/health/readinessCache.ts",
+        "line": 17,
+        "column": 106
       }
     },
     {
