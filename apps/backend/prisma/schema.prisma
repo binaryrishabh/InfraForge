@@ -326,6 +326,7 @@ model FirstStackOutbox {
   runId String @id
   run FirstStackRun @relation(fields: [runId], references: [id], onDelete: Restrict)
   delivered Boolean @default(false)
+  deliveredAt DateTime? @db.Timestamptz(3)
   createdAt DateTime @default(now()) @db.Timestamptz(3)
 }
 
@@ -338,9 +339,18 @@ model FirstStackReplay {
   fingerprint String @db.VarChar(64)
   status String @default("queued")
   delivered Boolean @default(false)
+  deliveredAt DateTime? @db.Timestamptz(3)
   cancelled Boolean @default(false)
   daemon String? @db.VarChar(64)
   result Json?
   createdAt DateTime @default(now()) @db.Timestamptz(3)
   @@index([status])
+}
+
+// Operational event receipts only; retained for thirty days.
+model FirstStackQueueEvent {
+  id BigInt @id @default(autoincrement())
+  kind String
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  @@index([createdAt])
 }

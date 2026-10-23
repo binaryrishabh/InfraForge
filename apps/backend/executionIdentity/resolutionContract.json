@@ -40802,6 +40802,22 @@
     },
     {
       "owner": null,
+      "file": "apps/backend/release/firstStackOperations.ts",
+      "specifier": "pg",
+      "kind": "import-statement",
+      "targetOwner": "pg@8.22.0:170",
+      "targetFile": "esm/index.mjs"
+    },
+    {
+      "owner": null,
+      "file": "apps/backend/release/firstStackOperations.ts",
+      "specifier": "zod",
+      "kind": "import-statement",
+      "targetOwner": "zod@4.4.3:11",
+      "targetFile": "index.js"
+    },
+    {
+      "owner": null,
       "file": "apps/backend/release/runtime.ts",
       "specifier": "pg",
       "kind": "import-statement",

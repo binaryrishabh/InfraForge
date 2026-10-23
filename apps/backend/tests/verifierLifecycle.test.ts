@@ -115,7 +115,8 @@ test("availability is checked again before reserving a submission after a lock w
     if (sql.startsWith('SELECT id,"requestHash"')) return { rows: [], rowCount: 0 };
     if (sql.startsWith('SELECT id,layout')) return { rows: [{ id: f.request.infrastructureId,
       layout: f.layout, updatedAt: new Date(f.request.expectedDesignUpdatedAt) }] };
-    if (sql.includes("AS retained")) return { rows: [{ queued: 0, owned: 0, bytes: 0, retained: 0 }] };
+    if (sql.includes("AS live")) return { rows: [{ recorded: "500", live: "0", runs: "0", cuts: "0", results: "0", replays: "0", physical: "0" }] };
+    if (sql.includes("AS queued")) return { rows: [{ queued: 0, owned: 0, bytes: 0 }] };
     if (sql.includes('FROM "FirstStackReplay"')) return { rows: [{ queued: 0, owned: 0 }] };
     if (sql.includes("count(*)")) return { rows: [{ count: 0 }] };
     if (sql.startsWith("INSERT")) inserted = true;

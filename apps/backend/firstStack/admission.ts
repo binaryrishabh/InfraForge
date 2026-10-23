@@ -12,6 +12,8 @@ import { admitScoredChallenge } from "./scoredChallenges/definition";
 import { publicScore } from "./scoredChallenges/projection";
 import { migrationSource, migrationSourceSchema } from "./migration";
 import type { RunReference } from "@infraforge/contracts/reports";
+import { submissionStorage, requireSubmissionStorage } from "./submissionStorage";
+import { requireOfflineRecovery } from "./recoveryOperations";
 
 export const submissionEnvelope = Object.freeze({ revision: "first-stack-submission/1", queued: 16,
   queuedBytes: 256 * 1024 * 1024, retainedBytes: 2 * 1024 * 1024 * 1024,
@@ -89,11 +91,10 @@ export function createSubmissionService(pool: Pool, configuration: SubmissionAdm
         const verifying = request.purpose !== "private", inputBytes = Buffer.byteLength(input), reservedBytes = inputBytes + submissionEnvelope.captureBytes + submissionEnvelope.metadataBytes;
         const usage = (await db.query(`SELECT count(*) FILTER (WHERE w.status<>'terminal')::int AS queued,
           count(*) FILTER (WHERE w.status<>'terminal' AND r."ownerId"=$1)::int AS owned,
-          COALESCE(sum(r."inputBytes") FILTER (WHERE w.status<>'terminal'),0)::bigint AS bytes,
-          COALESCE(sum(r."reservedBytes"),0)::bigint AS retained
+          COALESCE(sum(r."inputBytes") FILTER (WHERE w.status<>'terminal'),0)::bigint AS bytes
           FROM "FirstStackRun" r JOIN "FirstStackWork" w ON w."runId"=r.id`, [owner])).rows[0];
         const replays = (await db.query('SELECT count(*)::int AS queued,count(*) FILTER (WHERE "ownerId"=$1)::int AS owned FROM "FirstStackReplay" WHERE status<>\'terminal\'', [owner])).rows[0];
-        if (Number(usage.retained) + reservedBytes > submissionEnvelope.retainedBytes ||
+        if (!requireSubmissionStorage(await submissionStorage(db), reservedBytes, verifying) ||
           verifying && (usage.queued + replays.queued >= submissionEnvelope.queued || usage.owned + replays.owned >= submissionEnvelope.perOwner || Number(usage.bytes) + inputBytes > submissionEnvelope.queuedBytes)) throw new AppError("Submission storage or verification capacity busy", 503);
         const id = randomUUID(), lineage: SubmissionLineage = { kind: "design", infrastructureId: design.id, updatedAt: request.expectedDesignUpdatedAt, designRevision: request.expectedDesignRevision,
           ...(migratedFrom ? { migratedFrom } : {}) };
@@ -149,6 +150,7 @@ export async function closeSubmissionRecovery(pool: Pool, id: string, value: unk
   const review = z.object({ token: z.string().min(1).max(256), daemon: z.string().regex(digestPattern), image: z.string().regex(imagePattern),
     cleanup: z.enum(["removed", "not-created"]), reviewer: z.string().trim().min(1).max(256), proof: z.string().trim().min(1).max(500) }).strict().parse(value);
   await submissionTransaction(pool, async db => {
+    await requireOfflineRecovery(db);
     const run = (await db.query('SELECT r.engine,w.* FROM "FirstStackRun" r JOIN "FirstStackWork" w ON w."runId"=r.id WHERE r.id=$1 FOR UPDATE OF w', [id])).rows[0];
     if (!run || run.status !== "recovery" || run.token !== review.token || run.daemon !== review.daemon || run.engine.image !== review.image) throw new ConflictError("Recovery identity does not match the captured owner");
     const prefix = (await db.query('SELECT body FROM "FirstStackCut" WHERE "runId"=$1 ORDER BY sequence DESC LIMIT 1', [id])).rows[0]?.body;

@@ -23,7 +23,7 @@ if (import.meta.main) {
     await command(["docker", "run", "--rm", "--network", "none", "--workdir", workdir, image, "bun", "build", ...entrypoints, "--target=bun", "--outdir=/tmp/entrypoints"], process.cwd(), process.env);
     console.info(`Bundled Compose ${service}: ${entrypoints.join(", ")}`);
   }
-  for (const entrypoint of ["scripts/recover-ownership.ts", "cutover/cli.ts", "firstStack/verifierHost.ts"]) {
+  for (const entrypoint of ["scripts/recover-ownership.ts", "cutover/cli.ts", "firstStack/verifierHost.ts", "release/firstStackOperations.ts"]) {
     await command(["docker", "run", "--rm", "--network", "none", "--workdir", "/app/apps/backend", image, "bun", "build", entrypoint, "--target=bun", "--outdir=/tmp/entrypoints"], process.cwd(), process.env);
     console.info(`Bundled ${entrypoint}`);
   }

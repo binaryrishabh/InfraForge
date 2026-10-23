@@ -11,6 +11,8 @@ import { acquireVerifierOwnership } from "./verifierOwnership";
 import { verifierExecutionAllowed } from "./submissionWorker";
 import { boundedVerifierDrain, drainVerifierWorker } from "./verifierDrain";
 import { checkHistory, checkSchemaGuards } from "../release/migrations";
+import { verificationJobOptions, reconcileSubmissionQueue, recordQueueEvent, queueOperations, pruneVerificationJobs } from "./queueOperations";
+import { submissionStorage, requireSubmissionStorage } from "./submissionStorage";
 
 const name = "first-stack-verification";
 // Explicit lifecycle factory, never started by import or by the Model-1 worker.
@@ -26,7 +28,7 @@ export async function startSubmissionQueue(pool: Pool, databaseUrl: string, prod
   const previousHealthy = configuration.healthy;
   configuration.healthy = () => !lost && ownership.held && previousHealthy?.() === true;
   const queue = new Queue(name, { prefix, connection: producer,
-    defaultJobOptions: { attempts: 1, removeOnComplete: false, removeOnFail: false } });
+    defaultJobOptions: verificationJobOptions });
   const worker = new Worker(name, async job => {
     await ownership.assertHeld();
     if (job.data.operation === "replay") {
@@ -39,6 +41,10 @@ export async function startSubmissionQueue(pool: Pool, databaseUrl: string, prod
     await verifySubmission(pool, databaseUrl, runId, configuration);
   }, { prefix, connection: consumer, concurrency: 1, maxStalledCount: 0, autorun: false });
   worker.on("error", fail); queue.on("error", fail); pool.on("error", fail);
+  // Payloads and BullMQ failure messages never enter the operator read model.
+  worker.on("failed", () => { void recordQueueEvent(pool, "failed").catch(fail); });
+  worker.on("stalled", () => { void recordQueueEvent(pool, "stalled").catch(fail); });
+  let lastPrune = 0;
   const deliver = async () => {
     await ownership.assertHeld();
     const rows = await pool.query('SELECT "runId" FROM "FirstStackOutbox" WHERE NOT delivered ORDER BY "createdAt","runId" LIMIT 16');
@@ -47,13 +53,17 @@ export async function startSubmissionQueue(pool: Pool, databaseUrl: string, prod
       // Stable IDs plus the DB claim make lost Redis/DB responses safe. Only
       // delivery is retried; uncertain execution is never re-enqueued as work.
       await queue.add("verify", { runId: row.runId }, { jobId: row.runId });
-      await pool.query('UPDATE "FirstStackOutbox" SET delivered=true WHERE "runId"=$1', [row.runId]);
+      await pool.query('UPDATE "FirstStackOutbox" SET delivered=true,"deliveredAt"=CURRENT_TIMESTAMP WHERE "runId"=$1', [row.runId]);
     }
     const replays = await pool.query('SELECT id FROM "FirstStackReplay" WHERE NOT delivered AND status=\'queued\' ORDER BY "createdAt",id LIMIT 16');
     for (const row of replays.rows) {
       if (stopped) break;
       await queue.add("replay", { operation: "replay", replayId: row.id }, { jobId: `replay-${row.id}` });
-      await pool.query('UPDATE "FirstStackReplay" SET delivered=true WHERE id=$1 AND NOT delivered AND status<>\'terminal\'', [row.id]);
+      await pool.query('UPDATE "FirstStackReplay" SET delivered=true,"deliveredAt"=CURRENT_TIMESTAMP WHERE id=$1 AND NOT delivered AND status<>\'terminal\'', [row.id]);
+    }
+    await reconcileSubmissionQueue(pool, queue, configuration.control.identity);
+    if (Date.now() - lastPrune > 60000) {
+      await pruneVerificationJobs(queue); lastPrune = Date.now();
     }
   };
   const tick = () => {
@@ -121,6 +131,7 @@ export async function startSubmissionQueue(pool: Pool, databaseUrl: string, prod
       requireCapability(owner, { capability: "run.control", runId, control: "verify-recorded-prefix" });
       const row = await ownedReplayRow(pool, owner, runId), cut = historicalReplayTarget(row, configuration);
       return submissionTransaction(pool, async db => {
+        if (!requireSubmissionStorage(await submissionStorage(db), 32768, true)) throw new AppError("Replay storage busy", 503);
         if ((await db.query('SELECT count(*)::int AS count FROM "FirstStackReplay"')).rows[0].count >= 1000) throw new AppError("Replay diagnostic storage busy", 503);
         const pending = (await db.query('SELECT count(*)::int AS count FROM "FirstStackWork" WHERE status<>\'terminal\'')).rows[0].count;
         const replays = (await db.query('SELECT "ownerId" FROM "FirstStackReplay" WHERE status<>\'terminal\'')).rows;
@@ -149,7 +160,9 @@ export async function startSubmissionQueue(pool: Pool, databaseUrl: string, prod
     },
   };
   let closing: Promise<void> | undefined;
-  return { queue, worker, replay, health, close: () => closing ??= boundedVerifierDrain((async () => {
+  return { queue, worker, replay, health,
+    operations: async () => ({ queue: await queueOperations(pool, queue), storage: await submissionStorage(pool) }),
+    close: () => closing ??= boundedVerifierDrain((async () => {
     stopped = true; clearTimeout(timer);
     // Local pause stops fetching immediately; the current whole scored job keeps ownership.
     await Promise.all([poll, drainVerifierWorker(worker, loop!)]);

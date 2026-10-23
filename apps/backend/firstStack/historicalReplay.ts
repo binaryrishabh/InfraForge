@@ -10,6 +10,7 @@ import type { SubmissionVerifier } from "./submissionWorker";
 import { submissionTransaction } from "./admission";
 import { z } from "zod";
 import { requireCapability } from "../capabilities/policy";
+import { requireOfflineRecovery } from "./recoveryOperations";
 
 export interface HistoricalReplayRow extends FirstStackStoredReportRow {
   ownerId: string; authorized: boolean; engine: { source: string; image: string };
@@ -21,6 +22,7 @@ export async function closeHistoricalReplayRecovery(pool: Pool, id: string, valu
   const review = z.object({ token: z.uuid(), daemon: z.string().regex(/^[a-f0-9]{64}$/), cleanup: z.enum(["removed", "not-created"]),
     reviewer: z.string().trim().min(1).max(256), proof: z.string().trim().min(1).max(500) }).strict().parse(value);
   await submissionTransaction(pool, async db => {
+    await requireOfflineRecovery(db);
     const row = (await db.query('SELECT * FROM "FirstStackReplay" WHERE id=$1 FOR UPDATE', [id])).rows[0];
     if (!row || row.status !== "recovery" || row.id !== review.token || row.daemon !== review.daemon) throw Error("Historical replay recovery identity differs");
     await db.query('UPDATE "FirstStackReplay" SET status=\'terminal\',result=$2 WHERE id=$1', [id,

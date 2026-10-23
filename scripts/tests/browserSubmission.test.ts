@@ -16,6 +16,7 @@ test("typed client emits the slice 11 strict schema; actual admission recompiles
   const o = await options(), calls: string[] = [];
   const db = { release() {}, async query(sql: string, args: unknown[] = []) {
     calls.push(sql);
+    if (sql.includes('AS live')) return { rows: [{ recorded: "500", live: "0", runs: "0", cuts: "0", results: "0", replays: "0", physical: "0" }] };
     if (sql.startsWith('SELECT id,"requestHash"')) return { rows: [], rowCount: 0 };
     if (sql.startsWith("SELECT id,layout")) return { rows: [{ id, layout: o.run.input.layout, challengeId: null, updatedAt: new Date(o.design.updatedAt) }] };
     if (sql.startsWith("SELECT count(*)::int")) return { rows: [{ count: 0 }] };

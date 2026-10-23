@@ -22,8 +22,20 @@ const lifecycle = createVerifierLifecycle(settings, executionSource,
 const startupDeadline = setTimeout(() => process.exit(1), 30000);
 const verifier = await lifecycle.start();
 clearTimeout(startupDeadline);
-const server = createServer((request, response) => {
+const server = createServer(async (request, response) => {
   if (request.url === "/health/live") { response.writeHead(200); response.end("ok"); return; }
+  if (request.url === "/health/operations") {
+    // This dedicated server binds only loopback. Never proxy this operator route.
+    try {
+      const operations = await verifier.operations();
+      response.writeHead(200, { "Content-Type": "application/json", "Cache-Control": "no-store" });
+      response.end(JSON.stringify(operations));
+    } catch {
+      response.writeHead(503, { "Content-Type": "application/json", "Cache-Control": "no-store" });
+      response.end(JSON.stringify({ queue: null, storage: null }));
+    }
+    return;
+  }
   if (request.url !== "/health/ready") { response.writeHead(404); response.end(); return; }
   const available = verifier.availability();
   response.writeHead(available.available ? 200 : 503,

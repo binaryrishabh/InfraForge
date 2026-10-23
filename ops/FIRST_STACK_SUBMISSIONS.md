@@ -48,9 +48,13 @@ cancellation remain independent of admission and verification availability.
 Admission uses one transaction advisory lock for owner/global reservations and
 rate limits. Defaults: ten successful submissions per rolling database hour per
 owner, one outstanding verification per owner, sixteen outstanding globally,
-256 MiB outstanding input bytes and 2 GiB retained reservations. Each submission
+256 MiB outstanding input bytes and 2 GiB live reservations. Each submission
 reserves input bytes plus 32 MiB server evidence and 4 MiB for browser evidence
-and identity metadata, including private submissions. These
+and identity metadata. Terminal history, including private submissions, charges
+actual stored bytes instead of its unused execution reservation. A separate
+2 GiB finite-pilot storage ceiling includes full retained JSON, physical table/
+index/TOAST allocation and outstanding reservations. See
+`FIRST_STACK_RECOVERY_STORAGE.md` for exact accounting and operator actions. These
 are conservative software limits, not qualified host capacity measurements.
 Lost-response retries return the original ID without charging another rate or
 storage reservation, even after design edits or reaching the rate limit. A

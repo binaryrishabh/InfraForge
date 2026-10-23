@@ -158,6 +158,7 @@ test("the admission transaction pins the exact challenge in immutable workload m
   const f = await fixture(), inserted: { sql: string; values: any[] }[] = [];
   const db: any = { async query(sql: string, values: any[] = []) {
     inserted.push({ sql, values });
+    if (sql.includes('AS live')) return { rows: [{ recorded: "500", live: "0", runs: "0", cuts: "0", results: "0", replays: "0", physical: "0" }] };
     if (sql.includes('SELECT id,"requestHash"')) return { rowCount: 0, rows: [] };
     if (sql.includes('SELECT id,layout')) return { rows: [{ id: f.run.lineage.infrastructureId, layout: f.sample.layout, updatedAt: new Date(f.run.lineage.updatedAt) }] };
     if (sql.includes('SELECT count(*)::int AS count')) return { rows: [{ count: 0 }] };

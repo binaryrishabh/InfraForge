@@ -16,7 +16,8 @@ export const ADDITIVE_MIGRATIONS = new Set(["20261009000000_capture_run_inputs",
   "20261013000000_reliable_run_evidence", "20261013010000_honest_reruns", "20261014000000_challenge_attempts",
   "20261015000000_challenge_versions_experiments", "20261016000000_experiment_evidence",
   "20261017000000_credential_usernames", "20261018000000_challenge_learning", "20261019000000_internal_model2", "20261020000000_model2_lesson", "20261021000000_first_stack_submissions", "20261022000000_historical_replay", "20261023000000_account_essentials",
-  "20261024120000_account_mail_outbox", "20261024130000_account_mail_intents"]);
+  "20261024120000_account_mail_outbox", "20261024130000_account_mail_intents",
+  "20261025000000_first_stack_queue_operations"]);
 
 export async function migrationManifest(): Promise<Migration[]> {
   const directory = new URL("../prisma/migrations/", import.meta.url);

@@ -82,6 +82,7 @@ async function launchVerifier(settings: VerifierSettings, source: string, env: R
     await cache.started;
     let closing: Promise<void> | undefined;
     return {
+      operations: () => queue!.operations(),
       availability() {
         const checkedAt = Date.now(), q = configuration.isolation.qualification;
         return engineAvailability(q ? { image: settings.image, source, checkedAt,

@@ -138,5 +138,5 @@ export function executionDescriptor(tree = diskTree(), runtime = `bun-${Bun.vers
 }
 export const executionHosts = ["apps/backend/worker.ts", "apps/backend/index.ts", "apps/backend/ws-server.ts", "apps/backend/internalModel2/sandboxChild.ts",
   "apps/backend/firstStack/isolationChild.ts", "apps/backend/firstStack/isolatedExecution.ts", "apps/backend/firstStack/isolationConnection.ts", "apps/backend/firstStack/isolationOwnership.ts",
-  "apps/backend/firstStack/submissionRoutes.ts", "apps/backend/firstStack/submissionQueue.ts"];
+  "apps/backend/firstStack/submissionRoutes.ts", "apps/backend/firstStack/submissionQueue.ts", "apps/backend/release/firstStackOperations.ts"];
 export type ExecutionDescriptor = ReturnType<typeof executionDescriptor>;
