@@ -21,9 +21,10 @@ jobs:
     needs: [checks, integration, m2m-preview, packaging, operations]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           ref: ${{ inputs.ref || github.sha }}
+          persist-credentials: false
       - run: node scripts/ci/validation.cjs
         env:
           VALIDATION_RESULTS: ${{ toJSON(needs) }}
@@ -43,10 +44,11 @@ jobs:
           - check:challenges
           - audit
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           ref: ${{ inputs.ref || github.sha }}
-      - uses: oven-sh/setup-bun@v2
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version: 1.3.14
       - run: bun install --frozen-lockfile
@@ -56,13 +58,17 @@ jobs:
       - run: bun --no-env-file scripts/execution-identity.ts --check
       - run: bun --no-env-file scripts/execution-resolution.ts
       # Each command has its own job so an existing lint/type failure cannot hide other results.
-      - run: bun run ${{ matrix.command }}
+      - run: |
+          read -r -a validation_args <<< "$VALIDATION_COMMAND"
+          bun run "${validation_args[@]}"
+        env:
+          VALIDATION_COMMAND: ${{ matrix.command }}
 
   integration:
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: postgres:18-alpine
+        image: postgres:18-alpine@sha256:898c60cb390d1085bc97bdd6a1ae968757421df394b071848b52b1c09c89d6a5
         env:
           POSTGRES_HOST_AUTH_METHOD: trust
           POSTGRES_DB: infraforge_it_0123abcd
@@ -70,7 +76,7 @@ jobs:
         options: >-
           --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 12
       redis:
-        image: redis:8-alpine
+        image: redis:8-alpine@sha256:0bf6577d7774e592b29d093e3ac9390eb91e13d72c21e506afce736de5e0eeb0
         ports: ["56379:6379"]
         options: >-
           --health-cmd "redis-cli ping" --health-interval 5s --health-timeout 5s --health-retries 12
@@ -82,15 +88,16 @@ jobs:
       INTEGRATION_API_PORT: "3100"
       MODEL2_BROWSER_MODULE: /tmp/infraforge-browser/node_modules/playwright/index.mjs
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           ref: ${{ inputs.ref || github.sha }}
-      - uses: oven-sh/setup-bun@v2
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version: 1.3.14
       - run: bun install --frozen-lockfile
       # Browser tooling is test-only; keep the application lockfile/runtime unchanged.
-      - run: npm install --prefix /tmp/infraforge-browser --no-save --package-lock=false playwright@1.64.1
+      - run: npm install --prefix /tmp/infraforge-browser --no-save --package-lock=false playwright@1.64.1 # zizmor: ignore[adhoc-packages] -- Exact-version disposable browser tooling; no production secrets. Transitive registry resolution remains a documented risk.
       - run: node /tmp/infraforge-browser/node_modules/playwright/cli.js install --with-deps chromium firefox webkit
       - run: bun --no-env-file run db:generate
         working-directory: apps/backend
@@ -106,28 +113,28 @@ jobs:
       - run: bun --no-env-file scripts/verify-connected-proof.ts /tmp/infraforge-connected-proof.json
       - run: bun --no-env-file scripts/verify-connected-proof.ts docs/reality/connected-web-proof.json
       - run: bun --no-env-file scripts/connected-proof-negative.ts /tmp/infraforge-connected-proof.json
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
         with:
           name: integration-lifecycle-evidence
           path: /tmp/infraforge-integration-*.json
           if-no-files-found: error
           retention-days: 14
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
         with:
           name: internal-model2-connected-proof
           path: /tmp/infraforge-connected-proof.json
           if-no-files-found: error
           retention-days: 14
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
         with:
           name: internal-model2-product-proof
           path: /tmp/infraforge-model2-*.json
           if-no-files-found: ignore
           retention-days: 14
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
         with:
           name: internal-model2-browser-proof
@@ -140,7 +147,7 @@ jobs:
     timeout-minutes: 12
     services:
       postgres:
-        image: postgres:18-alpine
+        image: postgres:18-alpine@sha256:898c60cb390d1085bc97bdd6a1ae968757421df394b071848b52b1c09c89d6a5
         env:
           POSTGRES_HOST_AUTH_METHOD: trust
           POSTGRES_DB: infraforge_it_4567abcd
@@ -148,7 +155,7 @@ jobs:
         options: >-
           --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 12
       redis:
-        image: redis:8-alpine
+        image: redis:8-alpine@sha256:0bf6577d7774e592b29d093e3ac9390eb91e13d72c21e506afce736de5e0eeb0
         ports: ["56379:6379"]
         options: >-
           --health-cmd "redis-cli ping" --health-interval 5s --health-timeout 5s --health-retries 12
@@ -163,29 +170,32 @@ jobs:
       INTEGRATION_API_PORT: "3100"
       MODEL2_BROWSER_MODULE: /tmp/infraforge-browser/node_modules/playwright/index.mjs
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           ref: ${{ inputs.ref || github.sha }}
-      - uses: oven-sh/setup-bun@v2
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version: 1.3.14
       - run: bun install --frozen-lockfile
       - run: bun run db:generate
         working-directory: apps/backend
-      - run: docker --host "$MODEL2_LESSON_ENDPOINT" build --build-arg RELEASE_SHA="${{ inputs.ref || github.sha }}" -f apps/backend/Dockerfile -t infraforge-m2m-proof .
+      - run: docker --host "$MODEL2_LESSON_ENDPOINT" build --build-arg RELEASE_SHA="$RELEASE_SHA" -f apps/backend/Dockerfile -t infraforge-m2m-proof .
+        env:
+          RELEASE_SHA: ${{ inputs.ref || github.sha }}
       - run: echo "MODEL2_LESSON_IMAGE=$(docker --host "$MODEL2_LESSON_ENDPOINT" image inspect infraforge-m2m-proof --format '{{.Id}}')" >> "$GITHUB_ENV"
       - run: bun --no-env-file node_modules/typescript/bin/tsc --noEmit -p scripts/lesson-host/tsconfig.json
       - run: bun --no-env-file test scripts/lesson-host
         env:
           LESSON_HOST_CI_REFUSAL: "1"
-      - run: npm install --prefix /tmp/infraforge-browser --no-save --package-lock=false playwright@1.64.1
+      - run: npm install --prefix /tmp/infraforge-browser --no-save --package-lock=false playwright@1.64.1 # zizmor: ignore[adhoc-packages] -- Exact-version disposable browser tooling; no production secrets. Transitive registry resolution remains a documented risk.
       - run: node /tmp/infraforge-browser/node_modules/playwright/cli.js install --with-deps chromium
       - run: bun --no-env-file --no-install test tests/integration/lesson.integration.test.ts
         working-directory: apps/backend
       - run: bun --no-env-file scripts/verify-model2-lesson-proof.ts /tmp/infraforge-m2m/preview-proof.json
       - run: bun --no-env-file scripts/m2m-proof-negative.ts /tmp/infraforge-m2m/preview-proof.json
       - run: bun --no-env-file scripts/verify-model2-lesson-proof.ts docs/reality/m2m-preview-proof.json
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
         with:
           name: internal-model2-lesson-proof
@@ -206,10 +216,11 @@ jobs:
       RELEASE_SHA: ${{ inputs.ref || github.sha }}
       RELEASE_IMAGE: infraforge-packaging
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           ref: ${{ inputs.ref || github.sha }}
-      - uses: oven-sh/setup-bun@v2
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version: 1.3.14
       - run: bun install --frozen-lockfile
@@ -226,14 +237,14 @@ jobs:
       - run: |
           image=$(docker image inspect infraforge-packaging --format '{{.Id}}')
           bun --no-env-file --no-install scripts/first-stack-host/qualify.ts --endpoint=unix:///var/run/docker.sock --image="$image" --target=ci-linux --output=/tmp/infraforge-first-stack-host --containment-only
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
         with:
           name: first-stack-containment
           path: /tmp/infraforge-first-stack-host/
           if-no-files-found: error
           retention-days: 90
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
         with:
           name: restrictive-permission-proof
@@ -247,10 +258,11 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           ref: ${{ inputs.ref || github.sha }}
-      - uses: oven-sh/setup-bun@v2
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version: 1.3.14
       - run: bun install --frozen-lockfile
@@ -263,7 +275,7 @@ jobs:
       - run: bash scripts/deploy/prove-frontend.sh
       - run: pwsh -NoProfile -File scripts/deploy/prove-setup.ps1
       - run: bash ops/bootstrap/prove.sh
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
         with:
           name: bootstrap-proof

@@ -279,6 +279,31 @@ until forward repair or reviewed restore succeeds. Never delete the Redis volume
 release state, database or old host as a speculative fix. Redis is application queue
 state; stop writers before any approved recovery. Archive incident evidence privately.
 
+## Updating supply-chain pins
+
+For an action update, look up the release in its official GitHub repository, review
+the changelog and resolve its tag with `gh api repos/OWNER/REPO/git/ref/tags/vX.Y.Z`.
+If the object is an annotated tag, follow `git/tags/SHA` until the object type is
+`commit`. Verify the resulting full 40-character commit against the release, then
+update every workflow reference and its trailing `# vX.Y.Z` comment together.
+
+For an image update, review the publisher's release notes and run
+`docker buildx imagetools inspect NAME:TAG` against Docker Hub. Verify that the
+top-level digest is a multi-platform index including the required architectures;
+use `NAME:TAG@sha256:DIGEST`, retaining the readable tag. Update matching Dockerfiles,
+Compose files and CI/release fixtures together. Record the source and verification
+in the change review, run actionlint/zizmor and the affected release tests, and
+refresh execution identity and browser pins if tracked runtime files changed.
+Normally wait about two weeks after an upstream release before updating; security
+fixes can proceed sooner with an explicit review.
+
+The frontend release installer verifies the `vercel@64.5.0` npm tarball's pinned
+SHA-512 integrity before global installation. An update must review the exact
+version's registry metadata and tarball and change both the URL/version and hash.
+Its transitive npm dependencies still resolve outside `bun.lock`; the tarball
+check authenticates the direct CLI package only. Full transitive reproducibility
+would require a separately reviewed release-client lockfile.
+
 ## What is actually proved
 
 `scripts/release/permission-proof.sh` builds restricted 0600/0700 source, exercises
