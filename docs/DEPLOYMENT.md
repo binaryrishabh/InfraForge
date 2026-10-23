@@ -14,8 +14,8 @@ only `postgres:5432` on the private same-host bridge may use plaintext.
 
 ## Owner checklist: optional account essentials
 
-The release defaults to `ACCOUNT_ESSENTIALS_ENABLED=false`, with no mail provider
-or Turnstile configuration. Applying additive migration 21 does not activate the
+The release defaults to `ACCOUNT_ESSENTIALS_ENABLED=false` and `AUTH_EMAIL_ENABLED=false`, with no mail provider
+or Turnstile configuration. Applying additive account/mail migrations does not activate the
 feature. API configuration is forwarded by Compose from the private operator
 `release.env`; field names are in `ops/bootstrap/release.env.example`. Never print
 resolved Compose configuration or copy secrets into frontend settings.
@@ -53,7 +53,9 @@ resolved Compose configuration or copy secrets into frontend settings.
    `password_reset`; submit each fresh token as `turnstileToken`. Configuring these
    settings immediately protects credential signup, independently of the account
    flag. Test failure, replay, wrong-host/action and provider-outage behavior in
-   staging. Test adapters are injected in CI; no runtime fake switch exists.
+   staging. Local delivery and challenge bypass require explicit development/test
+   mode; production rejects both. See the exact flags and DNS records in
+   [authentication](AUTHENTICATION.md#email-and-turnstile-configuration).
 5. Install the updated managed Nginx template, which suppresses inherited request
    and error logs for this backend virtual host because native email links contain
    bearer tokens in URLs. Keep aggregate health/fixed operational-error monitoring.
@@ -69,7 +71,9 @@ resolved Compose configuration or copy secrets into frontend settings.
    for absent/existing addresses, session revocation, cross-user export isolation,
    active-run deletion refusal and profile erasure with immutable history retained.
    Alert on the fixed `Transactional email delivery failed` message; sends are
-   bounded and asynchronous, not durable, and a user may need to resend.
+   bounded and durable through an encrypted PostgreSQL outbox. Resend retries
+   use stable idempotency keys; ambiguous SES sends are not retried automatically,
+   so a user may need to request a new link.
 7. Keep the existing stable Better Auth secret, exact Origin/HTTPS/proxy settings,
    release approval and backup procedure. Promote configuration only after those
    staging checks and UI readiness. Setting the account flag back to false disables

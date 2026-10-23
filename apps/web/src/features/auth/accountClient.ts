@@ -16,7 +16,7 @@ export async function verifyEmail(token: string): Promise<{ status: boolean }> {
 export async function resetPassword(token: string, newPassword: string): Promise<{ status: boolean }> {
   return (await http.post(`${API_URL}/auth/reset-password`, { token, newPassword })).data;
 }
-export async function signupWithChallenge(input: { username: string; name: string; email: string; password: string; callbackURL?: string; turnstileToken?: string }): Promise<{ user: { id: string; email: string; name: string }; token: string | null }> {
+export async function signupWithChallenge(input: { username: string; name: string; email: string; password: string; callbackURL?: string; turnstileToken?: string }): Promise<{ status: true; message: string } | { user: { id: string; email: string; name: string }; token: string | null }> {
   return (await http.post(`${API_URL}/auth/sign-up/email`, input)).data;
 }
 export async function deleteAccount(password: string, confirmation: "DELETE"): Promise<{ success: true }> {

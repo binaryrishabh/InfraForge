@@ -12,4 +12,4 @@ export const ACCOUNT_EXPORT_SECTIONS = ["designs", "runs", "actions", "samples",
 export type AccountExportSection = typeof ACCOUNT_EXPORT_SECTIONS[number];
 export type AccountExportPage = { schema: "infraforge-account-export/1"; section: AccountExportSection;
   records: Record<string, unknown>[]; next: string | null };
-export type AccountFeatures = { enabled: boolean; turnstileSiteKey: string | null };
+export type AccountFeatures = { enabled: boolean; emailEnabled: boolean; verificationRequired: boolean; turnstileSiteKey: string | null };

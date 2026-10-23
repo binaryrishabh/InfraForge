@@ -5,14 +5,14 @@ import { requireProductionEndpoints } from "../release/runtime";
 
 test("release accepts only an unchanged ordered migration prefix", async () => {
   const manifest = await migrationManifest();
-  expect(manifest).toHaveLength(22);
+  expect(manifest).toHaveLength(23);
   expect(manifest[16]?.name).toBe("20261018000000_challenge_learning");
   expect(manifest[18]?.name).toBe("20261020000000_model2_lesson");
   expect(manifest[19]?.name).toBe("20261021000000_first_stack_submissions");
   expect(manifest[20]?.name).toBe("20261022000000_historical_replay");
-  expect(manifest.at(-1)?.name).toBe("20261023000000_account_essentials");
+  expect(manifest.at(-1)?.name).toBe("20261024120000_account_mail_outbox");
   const rows = manifest.map((item) => ({ migration_name: item.name, checksum: item.checksum, finished_at: "done", rolled_back_at: null }));
-  expect(inspectHistory(manifest, rows)).toBe(22);
+  expect(inspectHistory(manifest, rows)).toBe(23);
   expect(inspectHistory(manifest, rows.slice(0, 20))).toBe(20);
   expect(inspectHistory(manifest, rows.slice(0, 21))).toBe(21);
   expect(inspectHistory(manifest, rows.slice(0, 17))).toBe(17);

@@ -1,6 +1,7 @@
 import { createHmac } from "node:crypto";
 import { APIError } from "better-auth/api";
 import type { SignupChallenge } from "./turnstile";
+import { hashPassword } from "better-auth/crypto";
 
 export interface AccountQuota { allow(scope: string, identity: string, maximum: number): Promise<boolean> }
 interface RedisCounter { eval(script: string, keys: number, ...args: Array<string | number>): Promise<unknown> }
@@ -30,7 +31,7 @@ export async function enforceAccountPolicy(input: { path: string; body?: Record<
     if (error instanceof APIError) throw error;
     throw new APIError("SERVICE_UNAVAILABLE", { message: "Account service unavailable" });
   }
-  if (challenge && (signup || path === "/request-password-reset")) {
+  if (challenge && (signup || path === "/request-password-reset" && challenge.protectReset !== false)) {
     const token = typeof body?.turnstileToken === "string" ? body.turnstileToken : "";
     let accepted = false;
     try { accepted = await challenge.verify(token, signup ? "signup" : "password_reset", ip); } catch { /* fail closed */ }
@@ -38,8 +39,8 @@ export async function enforceAccountPolicy(input: { path: string; body?: Record<
   }
 }
 
-// Uniform public email requests, even with an authenticated cookie. Provider
-// latency is excluded by emailDispatcher. The floor covers native DB/JWT work;
+// Uniform public signup/email requests, even with an authenticated cookie.
+// Provider latency is excluded by the durable queue. The floor covers DB/JWT work;
 // it is not a hard real-time guarantee under infrastructure overload.
 export function accountAuthHandler(handler: (request: Request) => Promise<Response>, enabled: boolean,
   now = Date.now, sleep = (ms: number) => new Promise<void>(resolve => setTimeout(resolve, ms))) {
@@ -49,8 +50,16 @@ export function accountAuthHandler(handler: (request: Request) => Promise<Respon
     if (!enabled && path.startsWith("/api/auth/reset-password/")) {
       return new Response("Not Found", { status: 404, headers: { "Cache-Control": "no-store", "Referrer-Policy": "no-referrer" } });
     }
-    const uniform = enabled && request.method === "POST" && ["/api/auth/send-verification-email", "/api/auth/request-password-reset"].includes(path);
+    const signup = enabled && request.method === "POST" && path === "/api/auth/sign-up/email";
+    const uniform = enabled && request.method === "POST" && (signup || ["/api/auth/send-verification-email", "/api/auth/request-password-reset"].includes(path));
     const start = now();
+    let signupBody: { password?: unknown } | undefined;
+    if (signup) {
+      const copy = request.clone();
+      signupBody = request.headers.get("content-type")?.includes("application/x-www-form-urlencoded")
+        ? { password: new URLSearchParams(await copy.text()).get("password") }
+        : await copy.json().catch(() => undefined) as { password?: unknown } | undefined;
+    }
     if (uniform) {
       request = new Request(request);
       // Bun 1.3.14 merges RequestInit headers with the original request. Delete
@@ -59,10 +68,18 @@ export function accountAuthHandler(handler: (request: Request) => Promise<Respon
     }
     let response = await handler(request);
     if (uniform) {
+      let duplicate = false;
+      if (signup && !response.ok) {
+        const body = await response.clone().json().catch(() => ({})) as { code?: string };
+        duplicate = ["USERNAME_IS_ALREADY_TAKEN", "USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL", "FAILED_TO_CREATE_USER"].includes(body.code ?? "");
+        // The username plugin stops before native hashing. Match the native
+        // new/duplicate-email path's expensive work before applying the floor.
+        if (body.code === "USERNAME_IS_ALREADY_TAKEN" && typeof signupBody?.password === "string") await hashPassword(signupBody.password);
+      }
       await sleep(Math.max(0, 750 - (now() - start)));
       // Keep input/challenge/quota/CSRF errors; native successful requests share
-      // one body. Delivery failures never escape the asynchronous dispatcher.
-      if (response.ok) response = Response.json({ status: true, message: "If eligible, check your email for the link" });
+      // one body. Provider delivery is separate from durable queue insertion.
+      if (response.ok || duplicate) response = Response.json({ status: true, message: "If eligible, check your email for the link" });
     }
     const headers = new Headers(response.headers);
     headers.set("Cache-Control", "no-store"); headers.set("Referrer-Policy", "no-referrer");

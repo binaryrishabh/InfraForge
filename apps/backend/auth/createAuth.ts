@@ -5,15 +5,17 @@ import { credentialValidation } from "./credentials";
 import { prismaAdapter } from "@better-auth/prisma-adapter";
 import type { PrismaClient } from "../lib/generated/prisma/client";
 import { readAuthSettings } from "./settings";
-import { APIError, createAuthMiddleware } from "better-auth/api";
-import { emailDispatcher } from "./email";
-import { registerVerification, consumeVerification, EMAIL_TOKEN_SECONDS } from "./verification";
+import { APIError, createAuthMiddleware, originCheckMiddleware, formCsrfMiddleware } from "better-auth/api";
+import { EmailOutbox, type AccountMailQueue } from "./emailOutbox";
+import { accountEmail } from "./emailTemplate";
+import { consumeVerification, EMAIL_TOKEN_SECONDS } from "./verification";
 import { enforceAccountPolicy, type AccountQuota } from "./accountPolicy";
 import { queueAfterTransactionHook } from "@better-auth/core/context";
 
-export function createAuth(prisma: PrismaClient, settings: ReturnType<typeof readAuthSettings>, quota?: AccountQuota) {
+export function createAuth(prisma: PrismaClient, settings: ReturnType<typeof readAuthSettings>, quota?: AccountQuota, mailQueue?: AccountMailQueue) {
   const essentials = settings.accountEssentials;
-  const deliver = essentials.enabled && essentials.email ? emailDispatcher(essentials.email) : undefined;
+  const deliver = (essentials.emailEnabled || essentials.enabled) && essentials.email
+    ? mailQueue ?? new EmailOutbox(prisma, essentials.email, settings.secret) : undefined;
   return betterAuth({
     appName: "InfraForge",
     baseURL: settings.baseURL,
@@ -22,22 +24,17 @@ export function createAuth(prisma: PrismaClient, settings: ReturnType<typeof rea
     trustedOrigins: settings.origins,
     socialProviders: settings.socialProviders,
     emailAndPassword: { enabled: true, minPasswordLength: PASSWORD_MIN, maxPasswordLength: PASSWORD_MAX,
-      requireEmailVerification: !!deliver, autoSignIn: !deliver,
+      requireEmailVerification: !!deliver && essentials.verificationRequired !== false, autoSignIn: !deliver,
       ...(deliver ? { resetPasswordTokenExpiresIn: EMAIL_TOKEN_SECONDS, revokeSessionsOnPasswordReset: true,
-        sendResetPassword: async ({ user, url }: { user: { email: string }; url: string }) => {
-          deliver({ to: user.email, subject: "Reset your InfraForge password", text: `Reset your password within 30 minutes: ${url}` });
+        sendResetPassword: async ({ user, url }: { user: { id: string; email: string }; url: string }) => {
+          await queueAfterTransactionHook(() => deliver.enqueue(accountEmail(user.email, url, "reset", settings.baseURL), user.id));
         } } : {}) },
     ...(deliver ? { emailVerification: { sendOnSignUp: true, sendOnSignIn: false, expiresIn: EMAIL_TOKEN_SECONDS,
       autoSignInAfterVerification: false,
       sendVerificationEmail: async ({ user, url, token }: { user: { id: string; email: string }; url: string; token: string }) => {
-        // Native signup invokes this before its user transaction commits. A
-        // detached promise still races that commit; the FK cannot wait for a
-        // row invisible to its snapshot. Queue only after native commit, and
-        // then hand off to the bounded sender without holding a transaction.
-        await queueAfterTransactionHook(async () => {
-          deliver({ to: user.email, subject: "Verify your InfraForge email", text: `Verify your email within 30 minutes: ${url}` },
-            () => registerVerification(prisma, token, user.id));
-        });
+        // Native signup invokes this before its user transaction commits.
+        // Await durable ledger + queue insertion only after the account commit.
+        await queueAfterTransactionHook(() => deliver.enqueue(accountEmail(user.email, url, "verify", settings.baseURL), user.id, token));
       } } } : {}),
     plugins: [username({ displayUsername: false, immutableUsername: true,
       minUsernameLength: USERNAME_MIN, maxUsernameLength: USERNAME_MAX,
@@ -45,13 +42,19 @@ export function createAuth(prisma: PrismaClient, settings: ReturnType<typeof rea
     disabledPaths: ["/is-username-available", "/delete-user", "/delete-user/callback",
       ...(!deliver ? ["/send-verification-email", "/verify-email", "/request-password-reset", "/reset-password", "/reset-password/:token"] : [])],
     hooks: { before: createAuthMiddleware(async ctx => {
+      if (ctx.path === "/sign-up/email") {
+        // These native middleware checks must also precede the username
+        // plugin's early duplicate response, including form/Fetch Metadata.
+        await originCheckMiddleware(ctx);
+        await formCsrfMiddleware(ctx);
+      }
       await credentialValidation(ctx);
       if (ctx.path === "/request-password-reset" || ctx.path === "/send-verification-email") {
         if (typeof ctx.body?.email === "string") ctx.body.email = ctx.body.email.trim().toLowerCase();
         if (typeof ctx.body?.email !== "string" || ctx.body.email.length > 254) throw new APIError("BAD_REQUEST", { message: "Enter a valid email" });
       }
       await enforceAccountPolicy({ path: ctx.path, body: ctx.body, token: ctx.body?.token ?? ctx.query?.token,
-        ip: ctx.headers?.get("x-infraforge-client-ip") ?? "unknown", enabled: essentials.enabled, challenge: essentials.challenge, quota });
+        ip: ctx.headers?.get("x-infraforge-client-ip") ?? "unknown", enabled: essentials.enabled || !!deliver, challenge: essentials.challenge, quota });
       if (ctx.path === "/verify-email" && (!deliver || !await consumeVerification(prisma, String(ctx.query?.token ?? "")))) {
         throw new APIError("BAD_REQUEST", { code: "INVALID_TOKEN", message: "Invalid or expired link" });
       }

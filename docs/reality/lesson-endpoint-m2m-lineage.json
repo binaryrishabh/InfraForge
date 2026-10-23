@@ -378,7 +378,7 @@
     },
     {
       "file": "apps/backend/prisma/schema.prisma",
-      "hash": "fe9f3946b0e44dba9b3cff1114d08c416a0f5565323891206d8cf13ef0f29e69"
+      "hash": "2dbeee58ba4c82b3482b262c49fc3e2f58a2c83d318fce9960e39bbbf234aea6"
     },
     {
       "file": "apps/backend/release/lessonSchema.ts",

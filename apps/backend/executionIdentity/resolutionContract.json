@@ -766,7 +766,7 @@
       "owner": "@infraforge/contracts@workspace:packages/contracts:155",
       "file": "src/auth/index.ts",
       "key": "@infraforge/contracts/src/auth/index.ts",
-      "hash": "c639dc9380ea36c0c7ae4c6df9be16f76968c901a225544ea24324a8f9010093"
+      "hash": "a1c8867912e1d39e92276440a9b98202c54f0070ccca963b033d4114fa3aa715"
     },
     {
       "owner": "@infraforge/contracts@workspace:packages/contracts:155",
@@ -39626,6 +39626,14 @@
     },
     {
       "owner": null,
+      "file": "apps/backend/auth/accountPolicy.ts",
+      "specifier": "better-auth/crypto",
+      "kind": "import-statement",
+      "targetOwner": "better-auth@1.7.7:178",
+      "targetFile": "dist/crypto/index.mjs"
+    },
+    {
+      "owner": null,
       "file": "apps/backend/auth/accountRoutes.ts",
       "specifier": "better-auth/node",
       "kind": "import-statement",
@@ -39711,6 +39719,22 @@
       "kind": "import-statement",
       "targetOwner": "better-auth@1.7.7:177",
       "targetFile": "dist/api/index.mjs"
+    },
+    {
+      "owner": null,
+      "file": "apps/backend/auth/credentials.ts",
+      "specifier": "zod",
+      "kind": "import-statement",
+      "targetOwner": "zod@4.4.3:11",
+      "targetFile": "index.js"
+    },
+    {
+      "owner": null,
+      "file": "apps/backend/auth/emailOutbox.ts",
+      "specifier": "better-auth/crypto",
+      "kind": "import-statement",
+      "targetOwner": "better-auth@1.7.7:178",
+      "targetFile": "dist/crypto/index.mjs"
     },
     {
       "owner": null,

@@ -21,6 +21,7 @@ export async function deleteAccount(db: PrismaClient, userId: string) {
     await tx.account.deleteMany({ where: { userId } });
     await tx.verification.deleteMany({ where: { value: userId } });
     await tx.accountEmailToken.deleteMany({ where: { userId } });
+    await tx.accountMailOutbox.deleteMany({ where: { userId } });
     await tx.internalModel2Grant.deleteMany({ where: { userId } });
     // Keep referenced design IDs/owners because FirstStackRun is append-only.
     await tx.infrastructure.updateMany({ where: { ownerId: userId }, data: { name: "Deleted design", layout: {}, userId: "deleted" } });

@@ -28,9 +28,14 @@ export function readAuthSettings(env: Record<string, string | undefined>) {
   const github = provider("GITHUB");
   if (env.ACCOUNT_ESSENTIALS_ENABLED && !["true", "false"].includes(env.ACCOUNT_ESSENTIALS_ENABLED)) throw Error("ACCOUNT_ESSENTIALS_ENABLED must be true or false");
   const enabled = env.ACCOUNT_ESSENTIALS_ENABLED === "true";
+  for (const name of ["AUTH_EMAIL_ENABLED", "AUTH_EMAIL_VERIFICATION_REQUIRED"]) {
+    if (env[name] && !["true", "false"].includes(env[name]!)) throw Error(`${name} must be true or false`);
+  }
+  const emailEnabled = env.AUTH_EMAIL_ENABLED === "true" || enabled;
+  const verificationRequired = env.AUTH_EMAIL_VERIFICATION_REQUIRED !== "false";
   const email = readEmail(env), challenge = readChallenge(env);
-  if (enabled && !email) throw Error("Account essentials require a configured transactional email provider");
+  if (emailEnabled && !email) throw Error("Email requires a configured transactional email provider");
   return { baseURL, origins, secret: env.BETTER_AUTH_SECRET, secure: new URL(baseURL).protocol === "https:",
-    accountEssentials: { enabled, email, challenge, siteKey: env.TURNSTILE_SITE_KEY },
+    accountEssentials: { enabled, emailEnabled, verificationRequired, email, challenge, siteKey: env.TURNSTILE_SITE_KEY },
     socialProviders: { ...(google ? { google } : {}), ...(github ? { github } : {}) } };
 }

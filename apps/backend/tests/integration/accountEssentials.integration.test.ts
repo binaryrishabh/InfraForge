@@ -19,6 +19,7 @@ import { checkFirstStackSchema } from "../../release/firstStackSchema";
 import { submissionFixture } from "../submissionFixture";
 import { createSubmissionService } from "../../firstStack/admission";
 import { registerVerification } from "../../auth/verification";
+import { EmailOutbox } from "../../auth/emailOutbox";
 
 (process.env.INTEGRATION_RUN === "1" ? test : test.skip)("account migration, re-authentication, isolated export and immutable-history deletion", async () => {
   const settings = readLocalSettings(process.env);
@@ -33,10 +34,11 @@ import { registerVerification } from "../../auth/verification";
   try {
     const folder = new URL("../../prisma/migrations/", import.meta.url);
     const migrations = (await readdir(folder, { withFileTypes: true })).filter(d => d.isDirectory()).map(d => d.name).sort();
-    for (const migration of migrations.slice(0, -1)) await sql.query(await Bun.file(new URL(`${migration}/migration.sql`, folder)).text());
+    const accountIndex = migrations.indexOf("20261023000000_account_essentials");
+    for (const migration of migrations.slice(0, accountIndex)) await sql.query(await Bun.file(new URL(`${migration}/migration.sql`, folder)).text());
     await sql.query('INSERT INTO "User" (id,name,email,"updatedAt") VALUES (\'legacy\',\'Preserved\',\'legacy@example.test\',now())');
     const before = (await sql.query('SELECT * FROM "User"')).rows[0];
-    await sql.query(await Bun.file(new URL(`${migrations.at(-1)}/migration.sql`, folder)).text());
+    for (const migration of migrations.slice(accountIndex)) await sql.query(await Bun.file(new URL(`${migration}/migration.sql`, folder)).text());
     const { deletedAt, ...preserved } = (await sql.query('SELECT * FROM "User" WHERE id=\'legacy\'')).rows[0];
     expect(preserved).toEqual(before); expect(deletedAt).toBeNull();
     await checkAccountSchema(sql); await checkFirstStackSchema(sql);
@@ -59,8 +61,9 @@ import { registerVerification } from "../../auth/verification";
       }, options);
       return Reflect.get(client, key);
     } });
-    const auth = createAuth(authDb, { ...readAuthSettings({ BETTER_AUTH_URL: "http://localhost:3100", APP_ORIGINS: origin,
-      BETTER_AUTH_SECRET: randomUUID() + randomUUID() }), accountEssentials: { enabled: true, email: mail, challenge: new FakeChallenge(), siteKey: "fixture" } }, quota);
+    const defaults = readAuthSettings({ BETTER_AUTH_URL: "http://localhost:3100", APP_ORIGINS: origin, BETTER_AUTH_SECRET: randomUUID() + randomUUID() });
+    const mailOutbox = new EmailOutbox(authDb, mail, defaults.secret);
+    const auth = createAuth(authDb, { ...defaults, accountEssentials: { ...defaults.accountEssentials, enabled: true, emailEnabled: true, email: mail, challenge: new FakeChallenge(), siteKey: "fixture" } }, quota, mailOutbox);
     const create = async (username: string) => {
       const messageCount = mail.messages.length;
       const earlyLedgerCount = ledgerBeforeCommit;
@@ -79,7 +82,7 @@ import { registerVerification } from "../../auth/verification";
         expect(ledgerBeforeCommit).toBe(earlyLedgerCount);
       } finally { beforeCommit = undefined; release(); response = await signup; }
       // Verification is the native endpoint; token comes from the injected email fake.
-      await until(async () => mail.messages.length > messageCount || undefined, "account verification delivery");
+      await until(async () => { await mailOutbox.drain(); return mail.messages.length > messageCount || undefined; }, "account verification delivery");
       expect(prismaPool.idleCount).toBe(prismaPool.totalCount);
       const started = Date.now();
       await db.$transaction(async tx => { await tx.$queryRaw`SELECT 1`; }, { maxWait: 500, timeout: 1000 });

@@ -7,7 +7,7 @@ import { readAuthSettings } from "../auth/settings";
 import { FakeEmail, ResendEmail, SesEmail, emailDispatcher } from "../auth/email";
 import { FakeChallenge, Turnstile, readChallenge } from "../auth/turnstile";
 import { accountAuthHandler, enforceAccountPolicy, RedisAccountQuota, type AccountQuota } from "../auth/accountPolicy";
-import { verificationHash, consumeVerification } from "../auth/verification";
+import { verificationHash, consumeVerification, registerVerification } from "../auth/verification";
 import { deleteAccount, exportAccountPage, exportSections } from "../auth/accountData";
 import { createOriginCheck } from "../auth/origin";
 
@@ -21,13 +21,13 @@ class Quota implements AccountQuota {
     this.counts.set(key, count); return count <= max;
   }
 }
-function fixture(enabled = true) {
+function fixture(enabled = true, verificationRequired = true) {
   const mail = new FakeEmail(), challenge = new FakeChallenge(), quota = new Quota();
   const ledger = new Map<string, { expiresAt: Date; usedAt: Date | null }>();
   const tokenStore = {
     upsert: async (q: any) => { if (!ledger.has(q.where.hash)) ledger.set(q.where.hash, { ...q.create, usedAt: null }); },
     updateMany: async (q: any) => { const row = ledger.get(q.where.hash);
-      if (!row || row.usedAt || row.expiresAt <= q.where.expiresAt.gt) return { count: 0 };
+      if (!row || q.where.usedAt === null && row.usedAt || q.where.expiresAt?.gt && row.expiresAt <= q.where.expiresAt.gt) return { count: 0 };
       row.usedAt = q.data.usedAt; return { count: 1 }; },
   };
   const prisma = { accountEmailToken: tokenStore,
@@ -36,8 +36,12 @@ function fixture(enabled = true) {
       return [{ id: userId }];
     },
   } as unknown as PrismaClient;
-  const settings = { ...readAuthSettings(config), accountEssentials: { enabled, email: mail, challenge: enabled ? challenge : undefined, siteKey: undefined } };
-  const options = createAuth(prisma, settings, quota).options;
+  const defaults = readAuthSettings(config);
+  const settings = { ...defaults, accountEssentials: { ...defaults.accountEssentials, enabled, emailEnabled: enabled, verificationRequired, email: mail, challenge: enabled ? challenge : undefined, siteKey: undefined } };
+  const options = createAuth(prisma, settings, quota, { enqueue: async (message, userId, token) => {
+    if (token) await registerVerification(prisma, token, userId);
+    await mail.send(message);
+  } }).options;
   const database: { user: any[]; session: any[]; account: any[]; verification: any[] } = { user: [], session: [], account: [], verification: [] };
   // Exercise the actual pinned library handlers/hashing/tokens. Only persistence
   // and external delivery/challenge verification are replaced in this unit suite.
@@ -175,15 +179,57 @@ test("email dispatcher bounds in-flight work without returning provider details"
   release(); await delivered();
 });
 
-test("verification delivery does not hold native signup open while ledger registration waits", async () => {
+test("verification waits for ledger persistence before accepting signup and sending", async () => {
   const f = fixture();
   let release!: () => void;
   const waiting = new Promise<void>(resolve => { release = resolve; });
   const query = f.prisma.$queryRaw;
   f.prisma.$queryRaw = (async (...args: any[]) => { await waiting; return (query as any)(...args); }) as any;
-  const signup = await f.signup();
-  expect(signup.status).toBe(200); expect(f.mail.messages).toHaveLength(0);
-  release(); await delivered(); expect(f.mail.messages).toHaveLength(1);
+  let accepted = false;
+  const signup = f.signup().then(response => { accepted = true; return response; });
+  await new Promise(resolve => setTimeout(resolve, 150));
+  expect(accepted).toBe(false); expect(f.mail.messages).toHaveLength(0);
+  release(); expect((await signup).status).toBe(200); expect(f.mail.messages).toHaveLength(1);
+});
+
+test("verified-email signup masks duplicate username, email and absent identifiers with no session", async () => {
+  const f = fixture();
+  const initial = await f.signup(), expected = await initial.text();
+  for (const [username, email] of [["Learner", "fresh@example.test"], ["fresh_name", "learner@example.test"], ["fresh_name", "fresh@example.test"]]) {
+    const response = await f.call("sign-up/email", { username, email, name: "Name", password, turnstileToken: "fixture" });
+    expect(response.status).toBe(200); expect(await response.text()).toBe(expected);
+    expect(response.headers.get("set-cookie")).toBeNull();
+  }
+  expect(f.database.user).toHaveLength(2);
+  expect(f.database.account).toHaveLength(2);
+});
+
+test("invalid signup input is rejected consistently before username membership lookup", async () => {
+  const f = fixture(); await f.signup();
+  for (const bad of [{ email: "invalid", password }, { email: "new@example.test", password: "short" }]) {
+    const responses = await Promise.all(["Learner", "new_name"].map(username => f.call("sign-up/email", { username, name: "Name", ...bad, turnstileToken: "fixture" })));
+    expect(responses[0]!.status).toBe(400);
+    expect(await responses[0]!.text()).toBe(await responses[1]!.text());
+  }
+});
+
+test("optional verification sends mail and keeps signup generic while allowing password sign-in", async () => {
+  const f = fixture(true, false);
+  expect((await f.signup()).headers.get("set-cookie")).toBeNull();
+  expect(f.mail.messages).toHaveLength(1);
+  expect((await f.call("sign-in/email", { email: "learner@example.test", password })).status).toBe(200);
+  const taken = await f.call("sign-up/email", { username: "Learner", email: "another@example.test", name: "Name", password, turnstileToken: "fixture" });
+  expect(await taken.json()).toEqual({ status: true, message: "If eligible, check your email for the link" });
+});
+
+test("signup callback rejection and missing-name errors cannot enumerate usernames", async () => {
+  const f = fixture(); await f.signup();
+  for (const bad of [{ callbackURL: "https://evil.invalid", name: "Name" }, { name: undefined }]) {
+    const responses = await Promise.all(["Learner", "fresh_name"].map(username => f.call("sign-up/email", { username, email: "fresh@example.test", password, turnstileToken: "fixture", ...bad })));
+    expect(responses[0]!.status).toBe(responses[1]!.status);
+    expect(responses[0]!.ok).toBe(false);
+    expect(await responses[0]!.text()).toBe(await responses[1]!.text());
+  }
 });
 
 test("shared Redis quotas store only keyed hashes with expiry", async () => {

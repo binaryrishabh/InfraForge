@@ -4,7 +4,7 @@ import { errorHandler } from "./utils/middleware";
 import { config } from "./utils/config";
 import { rateLimiter } from "./utils/rateLimiter";
 import { toNodeHandler } from "better-auth/node";
-import { auth, authSettings, accountQuota } from "./auth/auth";
+import { auth, authSettings, accountQuota, emailOutbox } from "./auth/auth";
 import { accountRouter } from "./auth/accountRoutes";
 import { accountAuthHandler } from "./auth/accountPolicy";
 import { identifierSignIn } from "./auth/credentials";
@@ -22,6 +22,7 @@ import { configureHttpServer, createShutdown, shutdownOnSignals } from "./utils/
 await assertRuntimeSchema();
 const readiness = createReadiness();
 await readiness.started;
+const stopEmail = emailOutbox?.start();
 const app = express();
 // Ports are bound to loopback by Compose. The local TLS proxy replaces forwarded headers.
 app.set("trust proxy", config.NODE_ENV === "production" ? 1 : "loopback");
@@ -39,7 +40,8 @@ app.use("/api", checkOrigin);
 app.use(cors({ origin: authSettings.origins, credentials: true }));
 app.get("/api/auth/providers", (_req, res) => res.json({ credentials: true, providers: Object.keys(authSettings.socialProviders) }));
 app.get("/api/auth/account-features", (_req, res) => res.json({ enabled: authSettings.accountEssentials.enabled,
-  turnstileSiteKey: authSettings.accountEssentials.challenge ? authSettings.accountEssentials.siteKey : null }));
+  emailEnabled: authSettings.accountEssentials.emailEnabled, verificationRequired: authSettings.accountEssentials.verificationRequired,
+  turnstileSiteKey: authSettings.accountEssentials.challenge ? authSettings.accountEssentials.siteKey ?? null : null }));
 app.use("/api/auth", (req, res, next) => {
   // Keep parser/rate/timing route matching identical to the native handler.
   if (req.path.includes("%") || req.path.includes("//")) { res.status(400).json({ success: false }); return; }
@@ -59,7 +61,7 @@ app.post(["/api/auth/sign-up/email", "/api/auth/sign-in/email", "/api/auth/sign-
     }
     next();
   }, express.json({ limit: "8kb" }), express.urlencoded({ extended: false, limit: "8kb" }));
-const authHandler = toNodeHandler({ handler: accountAuthHandler(auth.handler, authSettings.accountEssentials.enabled) });
+const authHandler = toNodeHandler({ handler: accountAuthHandler(auth.handler, authSettings.accountEssentials.emailEnabled) });
 app.post("/api/auth/sign-in/identifier", identifierSignIn(authHandler));
 app.all("/api/auth/*splat", authHandler);
 app.use("/api/account", express.json({ limit: "8kb" }), accountRouter(prisma, auth, accountQuota, authSettings.accountEssentials.enabled));
@@ -79,6 +81,7 @@ app.use(errorHandler);
 const server = app.listen(Number(config.PORT), config.LISTEN_HOST);
 configureHttpServer(server);
 const lifecycle = createShutdown(server, async () => {
+  await stopEmail?.();
   redis.disconnect(); commandRedis.disconnect();
   await Promise.all([readiness.close(), prisma.$disconnect()]);
 });

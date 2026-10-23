@@ -32,7 +32,7 @@ Your browser also stores drafts, preferences and hint progress. Some drafts surv
 
 ## Sign-in, verification and reset
 
-Username/email/password sign-in is enabled. Google and GitHub are optional and appear only when configured. Automatic account linking is disabled. Account essentials default to disabled; configuring an email provider alone does not enable them. When enabled with real SES or Resend delivery, credential signup requires email verification before sign-in. Verification does not automatically sign you in. Verification and reset links expire after 30 minutes and are single-use. Resetting a password revokes all sessions. Expired or already used links require a new email request. Delivery is bounded and asynchronous, so failed or dropped mail may require resending.
+Username/email/password sign-in is enabled. Google and GitHub are optional and appear only when configured. Automatic account linking is disabled. Email and account essentials default to disabled; configuring an email provider alone does not enable them. When email is enabled with SES or Resend, credential signup requires verification before sign-in by default; the operator can make it optional. [OWNER: confirm required verification for launch]. Signup and reset use generic accepted responses when email is enabled. Verification does not automatically sign you in. Verification and reset links expire after 30 minutes and are single-use. Resetting a password revokes all sessions. Expired or used links require a new request. Delivery uses an encrypted durable queue; uncertain SES sends may require resending.
 
 These APIs and typed clients are implemented; verification, recovery, deletion, export and Turnstile user interfaces remain pending. We do not promise that in-app controls are already available. Sources: [authentication](../AUTHENTICATION.md), [configuration](../../apps/backend/auth/createAuth.ts), [token ledger](../../apps/backend/auth/verification.ts) and [deployment defaults](../DEPLOYMENT.md#owner-checklist-optional-account-essentials).
 
@@ -54,9 +54,9 @@ Use browser privacy settings or tracking protection to block analytics requests;
 | AWS EC2, us-east-1 (United States) | Backend processing, authenticated requests and server execution | Hosting region supplied by the task brief; not a live-account audit |
 | AWS S3, planned in us-east-1 | Encrypted database backup copies containing database personal data | Planned; not yet installed in the new AWS account |
 | Vercel | Frontend delivery/request metadata and cookieless aggregate Web Analytics | Frontend and retained analytics provider; collection depends on project settings |
-| AWS SES | Recipient address and verification/reset message/link data | Only if selected and enabled with account essentials; region follows SES configuration |
-| Resend | Recipient address and verification/reset message/link data | Only if selected and enabled with account essentials |
-| Cloudflare Turnstile | Bot-check browser/network signals; server validation sends the token and, when supplied, client IP | Only if enabled by site key, secret and exact hostname settings; frontend widget is pending |
+| Amazon Web Services, Simple Email Service (SES) | Recipient address and verification/reset text, HTML and bearer link; no template tracking pixels or third-party links | Optional email processor when selected; [OWNER: confirm selection, AWS contracting entity, SES region, retention and transfer safeguards] |
+| Resend | Recipient address and verification/reset text, HTML and bearer link; no template tracking pixels or third-party links | Alternative email processor when selected; [OWNER: confirm selection, contracting entity, sending region, provider retention, disabled tracking and transfer safeguards] |
+| Cloudflare, Turnstile | Bot-check browser/network signals; validation sends the token, secret and client IP | Optional signup/reset challenge processor; UI bridge exists, owner widget pending; [OWNER: confirm activation, widget mode, domains, contracting entity, provider retention and transfers] |
 | Google or GitHub | Authorised profile/account information for sign-in | Only if configured and selected by you; provider privacy terms also apply |
 
 Turnstile protects credential signup when configured, independently of the account-essentials flag, and password reset when that API is enabled. No configured Turnstile provider is inferred from the presence of its adapter.
@@ -69,7 +69,7 @@ Data is processed in the United States for the specified AWS hosting and may be 
 | --- | --- |
 | Account profile and sign-in records | Until account deletion; the deletion transaction removes credentials, OAuth tokens and sessions and replaces the profile as described below |
 | Sessions | Fixed seven-day validity with no silent renewal; expiry is separate from database-row cleanup |
-| Reset and email-verification tokens | Expire after 30 minutes; the policy is to purge expired records. No scheduled expiry purge is implemented in the reviewed application; deletion removes user-linked reset/verification records and the verification ledger |
+| Reset and email-verification tokens and delivery queue | Tokens expire after 30 minutes. While email is enabled, the API polls every five seconds and purges expired reset records, verification ledger and outbox rows. Delivery payloads are encrypted and wiped after success or terminal uncertainty. Cleanup waits while the API is stopped/disabled; deletion removes user-linked tokens and queued mail. Provider copies follow their terms. [OWNER: confirm provider retention and operations] |
 | Designs, runs and evidence | Kept until account deletion; deletion scrubs saved designs but retains immutable historical run records under a disabled opaque owner ID |
 | Operational logs | 30-day retention target; Docker size rotation alone does not enforce this period |
 | Backups | Planned rolling 28-day backup policy once installed, with the recovery and deletion limits below |

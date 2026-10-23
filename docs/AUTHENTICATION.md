@@ -38,7 +38,7 @@ The existing unique email key remains, with an additional unique `lower(email)`
 index protecting historical case collisions. Credential sign-up leaves
 `emailVerified=false`. Verification and account-management APIs default to disabled.
 Configuring a mail provider alone does not enable them. With
-`ACCOUNT_ESSENTIALS_ENABLED=true`, credential signup requires verification and
+`AUTH_EMAIL_ENABLED=true` (or `ACCOUNT_ESSENTIALS_ENABLED=true`), credential signup requires verification by default and
 issues no session; the user verifies, then signs in. Registering an existing OAuth email does not add a credential account or
 merge identities: use the original sign-in method.
 
@@ -61,10 +61,13 @@ errors and omit routine login/signup messages; passwords are never logged, retur
 in browser storage. Forms use password-manager autocomplete and keep passwords
 only in transient input state. Sign-in failures use a common message; rate limits
 have a separate retry message. The username-availability endpoint is disabled.
-With essentials disabled, native registration still returns a failure for duplicate
+With email disabled, native registration still returns a failure for duplicate
 email/username; automatic sign-in cannot provide a sessionless synthetic duplicate
-response. When enabled, Better Auth's verification-required signup masks duplicate
-emails. Usernames can still be enumerated. Do not claim zero registration enumeration.
+response. With email enabled, the public HTTP wrapper masks both duplicate email
+and username responses and returns the same sessionless accepted body as fresh
+signup. A username remains unique: accepted does not promise account creation or
+username reservation. If no email arrives, request recovery or try another name.
+The username-availability endpoint stays disabled; no public availability UX is added.
 
 Migration 16 adds nullable `User.username`, its format/unique guards and the email
 case-fold index. Migrations 1–15 are unchanged. Existing users/accounts/ownership
@@ -85,14 +88,15 @@ unverified email/phone claim.
 ## Optional account essentials (backend APIs)
 
 Set up real delivery and the owner checklist in [deployment](DEPLOYMENT.md) before
-enabling `ACCOUNT_ESSENTIALS_ENABLED=true`. Invalid/partial configured providers
-fail startup. No fake can be selected through environment variables. The existing
+enabling `AUTH_EMAIL_ENABLED=true` for email, or `ACCOUNT_ESSENTIALS_ENABLED=true`
+for email plus deletion/export. Invalid/partial configured providers
+fail startup. A local outbox is available only with explicit development/test mode. The existing
 UI is unchanged and does not yet expose these flows. Turning on verification or
 Turnstile before implementing the UI needs below will interrupt existing signup UX.
 
 | API | Request / behavior |
 | --- | --- |
-| `GET /api/auth/account-features` | `{enabled, turnstileSiteKey}`; site key is public; no secrets |
+| `GET /api/auth/account-features` | `{enabled, emailEnabled, verificationRequired, turnstileSiteKey}`; site key is public; no secrets |
 | `POST /api/auth/sign-up/email` | Existing credential fields plus optional `turnstileToken`, action `signup` |
 | `POST /api/auth/send-verification-email` | `{email, callbackURL}`; uniform response regardless of existence/verification/session |
 | `GET /api/auth/verify-email?token=...` | Native verification; expired, invalid or redeemed links fail |
@@ -101,8 +105,8 @@ Turnstile before implementing the UI needs below will interrupt existing signup 
 | `POST /api/account/delete` | Session plus `{password, confirmation:"DELETE"}`; current password required on every attempt |
 | `GET /api/account/export?section=...&after=...` | Session; paginated JSON, opaque `next` cursor or null |
 
-The feature-discovery endpoint stays available; email flows and `/api/account/*`
-return 404 while essentials are disabled. The
+The feature-discovery endpoint stays available. Email flows return 404 while both
+email and essentials flags are disabled; `/api/account/*` requires essentials. The
 native hard-delete endpoints stay disabled even when enabled: foreign keys and
 append-only records require the explicit semantics below. Account mutation uses
 the same exact-Origin check as other APIs; no missing-Origin exemption is added.
@@ -123,22 +127,36 @@ flow before deletion; there is no fresh-session-only deletion bypass. This expli
 mailbox recovery can create a credential on that same user ID; ordinary duplicate
 signup still cannot add a credential or merge accounts.
 
-Public email requests normalize email, strip cookies before the native handler,
+Public signup/email requests normalize email, strip cookies before the native handler,
 return the same success body, and apply a 750 ms minimum response duration. Email
-verification delivery is queued through Better Auth's after-commit hook; its
-hash-only ledger uses one atomic SQL statement locking the live account before
-insertion, without a detached interactive transaction. No mail or ledger access
-starts before signup commits. Delivery runs outside the request timing path, with at most 32 pending sends and
-a five-second provider timeout. The timing floor covers ordinary DB/JWT work; it
+verification delivery is queued through Better Auth's after-commit hook. Ledger
+and encrypted outbox insertion share a transaction locking the live account;
+no mail or ledger access starts before signup commits. Insertion is awaited;
+queue/database errors are operational failures, not silent skipped delivery.
+The duplicate-username path performs native password hashing to match fresh and
+duplicate-email signup work. Provider delivery runs outside the request timing
+path with a five-second timeout. The timing floor covers ordinary DB/JWT work; it
 cannot guarantee identical wall-clock latency under infrastructure overload.
-Delivery failure/queue saturation logs only a fixed operational message and does
-not change the response. There is no durable mail queue: restart or saturation can
-drop delivery; users can resend. Monitor fixed failure counts before activation.
+The API polls the separate `AccountMailOutbox` every five seconds, at most 16 sends
+sequentially per poll, with atomic claims and 30-second leases. Restart resumes
+pending mail. Resend retries use one stable idempotency key, at most five attempts,
+with exponential delay capped at five minutes, always before link expiry. Its
+[idempotency window is 24 hours](https://resend.com/docs/dashboard/emails/idempotency-keys).
+SES's [SendEmail API](https://docs.aws.amazon.com/ses/latest/APIReference-V2/API_SendEmail.html)
+has no idempotency key: only explicit HTTP 429 rejection is retried. Timeouts,
+lost acknowledgements or crashes during SES delivery become uncertain and are
+never resent automatically; request a new link. This trades possible loss for
+avoiding duplicate sends. Provider errors log only a fixed message. Success or
+terminal failure immediately wipes the encrypted payload; expired queue/ledger
+and reset-token rows are purged on polling. Outbox payloads use Better Auth's
+authenticated encryption with `BETTER_AUTH_SECRET`; keep it stable during delivery.
+Do not change providers while mail is pending; drain or expire that queue first.
+Cleanup is delayed while the API is stopped or email is disabled; tokens still expire.
 
 Redis quotas use HMAC keys, never addresses/tokens in keys. All email-request
 identities, including nonexistent ones, share the same accounting: 3 per normalized
 email and 20 per IP per 15 minutes across reset/verification. Signup has separate
-3/email and 20/IP quotas when essentials or Turnstile are enabled. Redemption has
+3/email and 20/IP quotas when email, essentials or Turnstile are enabled. Redemption has
 5/token and 30/IP quotas. Deletion has 10/user and 30/IP; export has 600/user and
 600/IP. These fixed windows are shared across API processes; Redis failure closes
 the routes. Better Auth's existing limits and the outer HTTP limiter also apply.
@@ -149,7 +167,8 @@ Turnstile is independent of the essentials flag: configuring all three Turnstile
 settings protects credential signup immediately. Reset is protected when its API
 is enabled. An unconfigured challenge is skipped; a configured challenge rejects
 missing/oversized tokens, provider errors/timeouts, replay rejection, wrong hostname
-or wrong action. No positive validation cache or bypass is used. Cloudflare enforces
+or wrong action. No positive validation cache is used. An explicit development/test
+bypass is rejected in production. Cloudflare enforces
 token expiry and single use through [Siteverify](https://developers.cloudflare.com/turnstile/get-started/server-side-validation/).
 OAuth callbacks retain their existing provider protections; Turnstile applies to
 the credential signup endpoint, not OAuth redirects.
@@ -201,6 +220,88 @@ and the retained-history explanation. OAuth users need mailbox password recovery
 guidance. After successful deletion, clear per-user local drafts and auth/app state.
 Keep passwords/tokens transient, scrub reset tokens from browser history immediately,
 and exclude auth callbacks and export contents from analytics/error capture.
+`turnstileToken.ts` exposes `setTurnstileTokenProvider` and
+`obtainTurnstileToken("signup" | "password_reset")`. Register a bridge to the
+owner-selected widget; call it immediately before submission and pass the fresh
+token as `turnstileToken`. It loads no scripts, renders no UI and caches no tokens.
+
+### Email and Turnstile configuration
+
+All settings below are backend environment variables. Nothing is enabled by
+default. `AUTH_EMAIL_VERIFICATION_REQUIRED=false` makes verification optional for
+sign-in; email-enabled signup still sends verification and returns no session.
+`ACCOUNT_ESSENTIALS_ENABLED=true` also enables email for backward compatibility.
+Production configuration is validated before the server starts listening.
+
+| Variable | Default / exact meaning |
+| --- | --- |
+| `AUTH_EMAIL_ENABLED` | `false`; verification + reset without enabling deletion/export |
+| `AUTH_EMAIL_VERIFICATION_REQUIRED` | `true`; require verified email for credential sign-in when email is enabled |
+| `ACCOUNT_ESSENTIALS_ENABLED` | `false`; enables email plus account deletion/export |
+| `TRANSACTIONAL_EMAIL_PROVIDER` | Unset; `ses`, `resend`, or `local` (local only with `NODE_ENV=development` or `test`) |
+| `TRANSACTIONAL_EMAIL_FROM` | Required plain sending mailbox for SES/Resend, for example `accounts@auth.example.com` |
+| `RESEND_API_KEY` | Required only for Resend; sending-only key scoped to the verified domain |
+| `SES_REGION` | Required for SES, e.g. `us-east-1`; commercial regions only |
+| `SES_ACCESS_KEY_ID`, `SES_SECRET_ACCESS_KEY` | SES IAM API credentials, not SMTP credentials |
+| `SES_SESSION_TOKEN` | Optional session credential token; renew before it expires |
+| `TURNSTILE_ENABLED` | Unset: activates when any Turnstile key/hostname is supplied; `true` requires complete config, `false` explicitly disables |
+| `TURNSTILE_SITE_KEY` | Public widget key; exposed by feature discovery |
+| `TURNSTILE_SECRET_KEY` | Backend-only Siteverify secret |
+| `TURNSTILE_HOSTNAMES` | Comma-separated exact frontend hostnames, no schemes, paths or wildcards |
+| `TURNSTILE_PROTECT_RESET` | `true`; set `false` to challenge signup only |
+| `TURNSTILE_DEV_BYPASS` | `false`; explicit bypass allowed only in development/test, rejected in production |
+
+Use `TRANSACTIONAL_EMAIL_PROVIDER=local` and `AUTH_EMAIL_ENABLED=true` with
+`NODE_ENV=development` for local mail. It writes exclusive JSON files under the
+worktree's ignored `.cache/mail-outbox/`, never console output. These files contain
+plaintext development links; delete them after testing. No local adapter can run
+in production. Production adapters have fixed HTTPS endpoints, bounded timeouts,
+no redirects and sanitized errors. No provider secrets are returned or logged.
+
+1. **SES:** in the selected region, create a verified domain identity and enable
+   [Easy DKIM](https://docs.aws.amazon.com/ses/latest/dg/send-email-authentication-dkim-easy.html).
+   Publish the identity's exact three generated CNAME records, typically
+   `<selector>._domainkey.auth.example.com` → `<selector>.dkim.amazonses.com`;
+   selectors/targets must come from that account's console. Request production
+   access outside the sandbox. Create IAM API credentials with `ses:SendEmail`
+   restricted to that identity and sending address. Set the SES variables above;
+   arrange rotation and bounce/complaint monitoring. [OWNER: confirm domain,
+   region, IAM policy and delivery operations].
+2. **SES SPF:** configure a custom MAIL FROM subdomain, for example
+   `bounce.auth.example.com`. Publish MX priority `10` to
+   `feedback-smtp.<SES_REGION>.amazonses.com` and a single TXT SPF record
+   `v=spf1 include:amazonses.com ~all` at that MAIL FROM name. Choose rejection
+   rather than fallback if custom MAIL FROM DNS fails. These are envelope-domain
+   records; they do not replace DKIM at the visible From domain. Follow
+   [SES MAIL FROM setup](https://docs.aws.amazon.com/ses/latest/dg/mail-from.html).
+3. **Resend alternative:** add and [verify the sending domain](https://resend.com/docs/dashboard/domains/introduction).
+   Publish the exact generated DKIM TXT at its selector and the displayed sending
+   subdomain's SPF TXT and feedback MX. Copy account/region-specific values from
+   the dashboard; do not invent a public key or assume another region's MX target.
+   Create a [sending-access API key](https://resend.com/docs/dashboard/api-keys/introduction)
+   limited to that domain, store it as `RESEND_API_KEY`, and select `resend`.
+   Disable open and click tracking/link rewriting in domain settings.
+   [OWNER: confirm provider, domain, region, tracking settings and processor terms].
+4. **DMARC for either provider:** publish one TXT at
+   `_dmarc.auth.example.com`, initially `v=DMARC1; p=none` while verifying alignment.
+   After inspecting deliveries and authorizing every sender, move to `p=quarantine`
+   then `p=reject` as appropriate. [OWNER: confirm enforcement policy and any
+   aggregate-report mailbox; reports disclose message metadata]. Keep one SPF
+   record per name, merge authorized senders if needed, and never replace existing
+   business-mail DNS blindly. Verify SPF, DKIM and DMARC in actual received headers.
+5. **Turnstile:** create a widget in the
+   [Cloudflare dashboard](https://developers.cloudflare.com/turnstile/get-started/),
+   restrict it to the frontend hostnames, and copy its public site key and secret
+   to the matching variables. Set `TURNSTILE_ENABLED=true`. The UI must issue
+   actions `signup` / `password_reset`; backend checks hostname and action on
+   every request through Siteverify. Tokens expire after five minutes and are
+   single use. [OWNER: confirm widget mode, domains and privacy disclosure].
+
+Add these settings through the release operator's environment; Compose forwards
+them to the API. The example environment file is not an activation record. Complete
+the owner-selected UI before turning on email or Turnstile. Test real delivery,
+expired/replayed links, failed challenges and generic signup/reset responses in
+staging. No owner provider credentials or DNS changes were exercised by unit tests.
 
 ## Configuration
 
