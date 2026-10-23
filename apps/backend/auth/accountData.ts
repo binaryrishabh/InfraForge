@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import type { PrismaClient } from "../lib/generated/prisma/client";
 import { AppError } from "../utils/errors";
+import { publicScore } from "../firstStack/scoredChallenges/projection";
 import { ACCOUNT_EXPORT_SECTIONS, type AccountExportSection } from "@infraforge/contracts/auth";
 
 // The profile is erased; immutable run ownership/inputs/results are retained
@@ -55,8 +56,16 @@ export async function exportAccountPage(db: PrismaClient, ownerId: string, secti
     case "lessons": rows = await db.internalModel2LessonRun.findMany({ take: 1, orderBy: { runId: "asc" },
       where: { run: { ownerId }, ...(after ? { runId: { gt: after.id } } : {}) } }); break;
   }
-  const row = rows[0];
+  // Scored results keep a complete server-only audit (rubric, hidden workload inputs, evidence, receipts).
+  // Exports carry only the same public score summary the application shows, never the audit.
+  const row = section === "results" && rows[0] ? exportResult(rows[0]) : rows[0];
   const next: ExportCursor | null = row ? { id: String(row.id ?? row.deploymentId ?? row.runId),
     ...(section === "samples" ? { sequence: Number(row.simulatedSeconds) } : section === "cuts" ? { sequence: Number(row.sequence) } : {}) } : null;
   return { schema: "infraforge-account-export/1" as const, section, records: row ? [row] : [], next };
+}
+
+function exportResult(row: Record<string, unknown>): Record<string, unknown> {
+  const { score: _audit, ...body } = (row.body ?? {}) as Record<string, unknown>;
+  const summary = _audit === undefined ? null : publicScore(row.body, typeof row.hash === "string" ? row.hash : null);
+  return { ...row, body: { ...body, ...(summary ? { scoreSummary: summary } : {}) } };
 }
