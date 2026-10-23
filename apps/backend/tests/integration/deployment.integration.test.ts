@@ -254,7 +254,8 @@ integration("local deployment lifecycle", () => {
       workerStarted = true;
       await until(async () => (await queue!.getJob(id))?.getState().then((state) => state === "delayed" || undefined), "worker retry delay");
       const intermediateStatus = (await deployment(id)).status;
-      expect(intermediateStatus).toBe("running");
+      // A failed claim transaction keeps its queued reservation, without taking an active slot.
+      expect(intermediateStatus).toBe("pending");
       expect(evidence.wsEvents.some((event: Event) => event.deploymentId === id && event.publishType === "deployment-failed")).toBe(false);
       await harness.sql.query('DROP TRIGGER integration_worker_retry ON "Deployment"');
       await harness.sql.query("DROP FUNCTION integration_worker_retry()");
