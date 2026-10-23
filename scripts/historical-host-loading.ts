@@ -1,3 +1,4 @@
+import { memoHistoricalImports, historicalModuleReview } from "./historical-analysis-cache";
 import { parse } from "acorn";
 import { sha256 } from "../apps/backend/executionIdentity/hash";
 export function historicalHostLoading(reviews: Record<string, {hash: string; capabilities: string[]}>, selected: {modules: Array<{key: string; hash: string}>}) {
@@ -248,5 +249,5 @@ const reviewedLoaders = new Map<string, string>([
   ["bullmq/dist/cjs/classes/child-processor.js", "79e70f93580ce61844d91c3a9736925b337d621ae7a404a8d7e350c237258a17"],
   ["express/lib/view.js", "74f4171b66263e22481820bc5975708f7dd8a61484f570aac7c5b4ab77ecbd79"],
 ]);
-return { executable, executionImports };
+return { executable, executionImports: (text: string, path: string) => memoHistoricalImports("host-boundary/1", path, text, historicalModuleReview(reviews, path), () => executionImports(text, path)) };
 }

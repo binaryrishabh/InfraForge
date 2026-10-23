@@ -1,3 +1,4 @@
+import { historicalContentHash as sha256 } from "./historical-analysis-cache";
 // Frozen isolation-boundary/1 reconstruction of the entrypoint closure shipped
 // on main at f945fa5. Older historical algorithms remain unchanged. Every
 // source, dependency, resource and launch value still participates in its digest.
@@ -6,7 +7,7 @@ import { posix } from "node:path";
 import { builtinModules } from "node:module";
 import { dependencyClosure, parseLock, requireWorkspace } from "../apps/backend/executionIdentity/dependencies";
 import type { Manifest } from "../apps/backend/executionIdentity/dependencies";
-import { lf, sha256 } from "../apps/backend/executionIdentity/hash";
+import { lf } from "../apps/backend/executionIdentity/hash";
 import { configurationInventory, verifyInstallation } from "./historical-host-configuration";
 import { historicalIsolationLoading } from "./historical-isolation-loading";
 const launchContract = { runtime: "bun-1.3.14", target: "bun", conditions: ["bun", "node", "import", "require", "default"], preloads: [], envFiles: false };

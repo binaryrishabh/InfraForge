@@ -1,6 +1,7 @@
+import { memoHistoricalImports, historicalModuleReview } from "./historical-analysis-cache";
 // Frozen full syntax analysis for isolation-boundary/1, from main f945fa5.
 // Exact snapshot reviews are supplied explicitly. No live files or writable
-// analysis cache participate in historical reconstruction.
+// persisted analysis cache participates in historical reconstruction.
 import { parse } from "acorn";
 import { lf, sourceHash } from "../apps/backend/executionIdentity/hash";
 interface Review { hash: string; capabilities: string[]; globals?: { hash: string; names: string[] }; alternatives?: Review[] }
@@ -221,5 +222,5 @@ function verifyModuleLoading(text: string, path: string) {
 }
 
 
-return { executable, executionImports };
+return { executable, executionImports: (text: string, path: string) => memoHistoricalImports("isolation-boundary/1", path, text, historicalModuleReview(reviews, path), () => executionImports(text, path)) };
 }

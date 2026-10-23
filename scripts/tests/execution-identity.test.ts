@@ -8,7 +8,6 @@ import { parseLock } from "../../apps/backend/executionIdentity/dependencies";
 import { loadTransitions, validateTransitions } from "../../apps/backend/executionIdentity/transitions";
 import { compatibleReviewedSource } from "../../apps/backend/internalModel2/legacyCompatibility";
 import { executionSource } from "../../apps/backend/internalModel2/identity";
-import { checkTransitions } from "../execution-identity";
 import { checkExecutionResolution } from "../execution-resolution";
 
 const tree = diskTree(), original = executionDescriptor(tree);
@@ -66,9 +65,9 @@ test("every execution workspace dependency and imported backend source is pinned
   expect(() => changed({ "bun.lock": JSON.stringify(lock) })).toThrow("Unresolved");
   expect(() => changed({ "bun.lock": JSON.stringify({ ...lock, patchedDependencies: {} }) })).toThrow("Unreviewed");
 }, 60000);
-// History reconstruction includes the retained source archive and a clean child-process verification.
+// Reconstruct every historical closure once in a clean process without Git.
+// The former in-process call repeated the exact same checker before this call.
 test("history reconstructs without Git and only reviewed digests resolve", () => {
-  expect(checkTransitions().current).toBe(executionSource);
   const isolated = Bun.spawnSync([process.execPath, "--no-env-file", `${repositoryRoot}/scripts/execution-identity.ts`, "--check"], {
     cwd: repositoryRoot, env: { PATH: "", SystemRoot: process.env.SystemRoot ?? "/" },
   });
@@ -89,7 +88,7 @@ test("history reconstructs without Git and only reviewed digests resolve", () =>
     const copy = structuredClone(table); mutate(copy);
     expect(() => validateTransitions(copy, pin.digest)).toThrow();
   }
-}, 300000); // Full history reconstruction grows with every recorded transition; see the identity simplification plan.
+}, 60000); // Allow laptop load; the measured target for the complete test is <30 s.
 test("installed execution imports resolve within the declared closure", async () => {
   expect((await checkExecutionResolution()).resolvedPackages).toBeGreaterThan(50);
 }, 180000);

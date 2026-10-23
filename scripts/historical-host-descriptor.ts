@@ -1,9 +1,10 @@
+import { historicalContentHash as sha256 } from "./historical-analysis-cache";
 import { readdirSync, readFileSync } from "node:fs";
 import { posix, relative, resolve } from "node:path";
 import { builtinModules } from "node:module";
 import { dependencyClosure, parseLock, requireWorkspace } from "../apps/backend/executionIdentity/dependencies";
 import type { Manifest } from "../apps/backend/executionIdentity/dependencies";
-import { lf, sha256 } from "../apps/backend/executionIdentity/hash";
+import { lf } from "../apps/backend/executionIdentity/hash";
 import { configurationInventory, verifyInstallation } from "./historical-host-configuration";
 import { historicalHostLoading } from "./historical-host-loading";
 const launchContract = { runtime: "bun-1.3.14", target: "bun", conditions: ["bun", "node", "import", "require", "default"], preloads: [], envFiles: false };

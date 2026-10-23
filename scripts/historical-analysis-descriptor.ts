@@ -1,6 +1,6 @@
+import { historicalContentHash as sha256 } from "./historical-analysis-cache";
 import { historicalLaunchDescriptor } from "./historical-launch-descriptor";
 import type { SourceTree } from "../apps/backend/executionIdentity/sourceTree";
-import { sha256 } from "../apps/backend/executionIdentity/hash";
 
 // Frozen delta for the committed loading-analysis boundary (3837b94).
 // Its descriptor also pins the reviewed analysis data; earlier algorithms do not.

@@ -1,10 +1,11 @@
+import { historicalContentHash as sha256 } from "./historical-analysis-cache";
 // Frozen descriptor algorithm from the first v2 migration; never use for current execution.
 import { readdirSync, readFileSync } from "node:fs";
 import { posix, resolve } from "node:path";
 import { builtinModules } from "node:module";
 import { dependencyClosure, parseLock, requireWorkspace } from "../apps/backend/executionIdentity/dependencies";
 import type { Manifest } from "../apps/backend/executionIdentity/dependencies";
-import { lf, sha256 } from "../apps/backend/executionIdentity/hash";
+import { lf } from "../apps/backend/executionIdentity/hash";
 
 export interface SourceTree { paths: string[]; read(path: string): string }
 export const repositoryRoot = resolve(import.meta.dir, "..");
