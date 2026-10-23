@@ -302,7 +302,7 @@
     },
     {
       "file": "apps/backend/internalModel2/legacyRuntime.json",
-      "hash": "ed929fbb2c131d50a9613cbf9e71b193d818f2d2c0357c795149d38cb4ee0ea2"
+      "hash": "f9f2e15a254111235905cc3ef399839a3f213b9c85200189cfaa53de866a5d16"
     },
     {
       "file": "apps/backend/internalModel2/lessonAuthoring.ts",
@@ -390,7 +390,7 @@
     },
     {
       "file": "apps/backend/worker.ts",
-      "hash": "3c6d53b41143cfb21bc01986eef62678c6b594f01b932075e828060308280b42"
+      "hash": "ed51fe2446cd3cef6d6d5208dd44119379d1bed0ce090b10df6fe3fbcccf9207"
     },
     {
       "file": "apps/web/src/api/internalLesson.api.ts",

@@ -42,11 +42,11 @@
     "review": "Fixed data indexing; resource adapters require the separate documented review"
   },
   "apps/backend/challenges/routes.ts": {
-    "hash": "2f5fc279b36fb2a7b30bd58b8df853e607a025ce8490c3df724c9444606b13e1",
+    "hash": "18fbdc376cf2d849404dfdf3fafd78acf9382b216004f753b66192c1438c164a",
     "capabilities": [
       "computed-data"
     ],
-    "review": "Fixed data indexing; resource adapters require the separate documented review"
+    "review": "Exact security admission/readiness review: shared PostgreSQL transaction lock, durable deployment reservations and terminal-only release, delayed capacity waits, finite simulator horizons and creation deadlines; startup/scheduled readiness snapshots. Existing fixed process configuration/lifecycle and data indexing only. No evaluator, dynamic loading, process adapter, engine physics change or activation."
   },
   "apps/backend/challenges/starter.ts": {
     "hash": "45a07e7ac5fcc29457a6fe6ba960eb6938a1bc08157948e9ca115a5b88c3c10e",
@@ -164,7 +164,7 @@
     }
   },
   "apps/backend/executionIdentity/loading.ts": {
-    "hash": "dc926c7dac30edc2ff863031197d2ecb7034e8e274c58e949822aaa19b9a16fb",
+    "hash": "31026cc7aa103cd281fd824f70dbcc461d657ff9af405d8564345145f4d62475",
     "capabilities": [
       "computed-data",
       "verifier",
@@ -172,7 +172,7 @@
     ],
     "review": "Fixed data indexing; resource adapters require the separate documented review",
     "globals": {
-      "hash": "dc926c7dac30edc2ff863031197d2ecb7034e8e274c58e949822aaa19b9a16fb",
+      "hash": "31026cc7aa103cd281fd824f70dbcc461d657ff9af405d8564345145f4d62475",
       "names": [
         "Bun"
       ]
@@ -874,11 +874,11 @@
     }
   },
   "apps/backend/health/readiness.ts": {
-    "hash": "da5016d24607720121c87a222779bd576f39fd3b82af1057ed4b319faf1dde09",
+    "hash": "c66c3112eb10c2fabdafa466289d8671c4bf581b8716fb6c4d661caa0b5d7368",
     "capabilities": [],
-    "review": "Existing host configuration/lifecycle access only; exact source bytes, no global-alias permission for new code",
+    "review": "Exact security admission/readiness review: shared PostgreSQL transaction lock, durable deployment reservations and terminal-only release, delayed capacity waits, finite simulator horizons and creation deadlines; startup/scheduled readiness snapshots. Existing fixed process configuration/lifecycle and data indexing only. No evaluator, dynamic loading, process adapter, engine physics change or activation.",
     "globals": {
-      "hash": "da5016d24607720121c87a222779bd576f39fd3b82af1057ed4b319faf1dde09",
+      "hash": "c66c3112eb10c2fabdafa466289d8671c4bf581b8716fb6c4d661caa0b5d7368",
       "names": [
         "process"
       ]
@@ -940,11 +940,11 @@
     }
   },
   "apps/backend/worker.ts": {
-    "hash": "8db81b68397869c70726c3453b3411d1bf51797706a0dda3977c69d6e34860b7",
+    "hash": "886e84b44e3d025bde6dd5de043cf50020809e5c5f8a4fa3c527a31fc953925f",
     "capabilities": [],
-    "review": "Existing host configuration/lifecycle access only; exact source bytes, no global-alias permission for new code",
+    "review": "Exact security admission/readiness review: shared PostgreSQL transaction lock, durable deployment reservations and terminal-only release, delayed capacity waits, finite simulator horizons and creation deadlines; startup/scheduled readiness snapshots. Existing fixed process configuration/lifecycle and data indexing only. No evaluator, dynamic loading, process adapter, engine physics change or activation.",
     "globals": {
-      "hash": "8db81b68397869c70726c3453b3411d1bf51797706a0dda3977c69d6e34860b7",
+      "hash": "886e84b44e3d025bde6dd5de043cf50020809e5c5f8a4fa3c527a31fc953925f",
       "names": [
         "process"
       ]
@@ -1757,5 +1757,16 @@
       "computed-data"
     ],
     "review": "Exact historical compatibility review: versioned stored-data readers, typed migration audit lineage and bounded replay under the existing isolated executor/session fence; additive replay reservations; no evaluator, new process permission, physics change, latest-input resolution or activation"
+  },
+  "apps/backend/deployments/operationalLimits.ts": {
+    "hash": "c192a82cfcc45669f02f5f10275a96a5d4bfb52b18639633be8546e507964725",
+    "capabilities": [],
+    "globals": {
+      "hash": "c192a82cfcc45669f02f5f10275a96a5d4bfb52b18639633be8546e507964725",
+      "names": [
+        "process"
+      ]
+    },
+    "review": "Exact operational configuration review: eight literal MODEL1_* environment lookups, positive safe integer validation, finite horizon/deadline arithmetic and durable reservation status predicate only. No dynamic keys, resource loading or process execution."
   }
 }
