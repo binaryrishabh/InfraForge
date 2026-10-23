@@ -9,6 +9,7 @@ import { APIError, createAuthMiddleware } from "better-auth/api";
 import { emailDispatcher } from "./email";
 import { registerVerification, consumeVerification, EMAIL_TOKEN_SECONDS } from "./verification";
 import { enforceAccountPolicy, type AccountQuota } from "./accountPolicy";
+import { queueAfterTransactionHook } from "@better-auth/core/context";
 
 export function createAuth(prisma: PrismaClient, settings: ReturnType<typeof readAuthSettings>, quota?: AccountQuota) {
   const essentials = settings.accountEssentials;
@@ -29,10 +30,14 @@ export function createAuth(prisma: PrismaClient, settings: ReturnType<typeof rea
     ...(deliver ? { emailVerification: { sendOnSignUp: true, sendOnSignIn: false, expiresIn: EMAIL_TOKEN_SECONDS,
       autoSignInAfterVerification: false,
       sendVerificationEmail: async ({ user, url, token }: { user: { id: string; email: string }; url: string; token: string }) => {
-        // Native signup invokes this inside its user-creation transaction. The
-        // independent ledger FK must wait in background so signup can commit.
-        deliver({ to: user.email, subject: "Verify your InfraForge email", text: `Verify your email within 30 minutes: ${url}` },
-          () => registerVerification(prisma, token, user.id));
+        // Native signup invokes this before its user transaction commits. A
+        // detached promise still races that commit; the FK cannot wait for a
+        // row invisible to its snapshot. Queue only after native commit, and
+        // then hand off to the bounded sender without holding a transaction.
+        await queueAfterTransactionHook(async () => {
+          deliver({ to: user.email, subject: "Verify your InfraForge email", text: `Verify your email within 30 minutes: ${url}` },
+            () => registerVerification(prisma, token, user.id));
+        });
       } } } : {}),
     plugins: [username({ displayUsername: false, immutableUsername: true,
       minUsernameLength: USERNAME_MIN, maxUsernameLength: USERNAME_MAX,

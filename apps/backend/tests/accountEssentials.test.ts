@@ -31,7 +31,10 @@ function fixture(enabled = true) {
       row.usedAt = q.data.usedAt; return { count: 1 }; },
   };
   const prisma = { accountEmailToken: tokenStore,
-    $transaction: async (work: any) => work({ accountEmailToken: tokenStore, $queryRaw: async () => [{ deletedAt: null }] }),
+    $queryRaw: async (_sql: TemplateStringsArray, userId: string, hash: string, expiresAt: Date) => {
+      if (!ledger.has(hash)) ledger.set(hash, { expiresAt, usedAt: null });
+      return [{ id: userId }];
+    },
   } as unknown as PrismaClient;
   const settings = { ...readAuthSettings(config), accountEssentials: { enabled, email: mail, challenge: enabled ? challenge : undefined, siteKey: undefined } };
   const options = createAuth(prisma, settings, quota).options;
@@ -176,8 +179,8 @@ test("verification delivery does not hold native signup open while ledger regist
   const f = fixture();
   let release!: () => void;
   const waiting = new Promise<void>(resolve => { release = resolve; });
-  const transaction = f.prisma.$transaction;
-  f.prisma.$transaction = (async (work: any) => { await waiting; return transaction(work); }) as any;
+  const query = f.prisma.$queryRaw;
+  f.prisma.$queryRaw = (async (...args: any[]) => { await waiting; return (query as any)(...args); }) as any;
   const signup = await f.signup();
   expect(signup.status).toBe(200); expect(f.mail.messages).toHaveLength(0);
   release(); await delivered(); expect(f.mail.messages).toHaveLength(1);

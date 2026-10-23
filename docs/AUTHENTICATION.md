@@ -125,7 +125,10 @@ signup still cannot add a credential or merge accounts.
 
 Public email requests normalize email, strip cookies before the native handler,
 return the same success body, and apply a 750 ms minimum response duration. Email
-delivery runs outside the request timing path, with at most 32 pending sends and
+verification delivery is queued through Better Auth's after-commit hook; its
+hash-only ledger uses one atomic SQL statement locking the live account before
+insertion, without a detached interactive transaction. No mail or ledger access
+starts before signup commits. Delivery runs outside the request timing path, with at most 32 pending sends and
 a five-second provider timeout. The timing floor covers ordinary DB/JWT work; it
 cannot guarantee identical wall-clock latency under infrastructure overload.
 Delivery failure/queue saturation logs only a fixed operational message and does

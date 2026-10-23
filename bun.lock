@@ -14,6 +14,7 @@
     "apps/backend": {
       "name": "@infraforge/backend",
       "dependencies": {
+        "@better-auth/core": "1.7.7",
         "@better-auth/prisma-adapter": "1.7.7",
         "@infraforge/catalog": "workspace:*",
         "@infraforge/contracts": "workspace:*",
