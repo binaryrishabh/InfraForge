@@ -29,9 +29,10 @@ or egress network. The production service uses the same multi-platform
 Prerequisites: the existing Nginx HTTPS/maintenance configuration, Bun 1.3.14,
 Docker Compose with `up --wait`, encrypted Docker/EBS and backup storage, and the
 existing release operator. Keep `BETTER_AUTH_SECRET`, public origins and any
-enabled mail/OAuth settings unchanged. First provision the S3 bucket and EC2 IAM
-instance role using [backup installation](operations/backup-alerts.md); do not
-put static AWS keys on this host. Its daily and weekly retention is 28 days.
+enabled mail/OAuth settings unchanged. First provision the private R2 bucket and
+its bucket-scoped token using [backup installation](operations/backup-alerts.md).
+Store the R2 keys only in the root-owned 0600 credentials file documented there.
+Daily and weekly retention is 28 days; do not deploy the legacy AWS stack.
 
 1. Pause automated deployment during the cutover. In the release operator shell,
    select the approved commit in the existing checkout:
@@ -149,7 +150,7 @@ put static AWS keys on this host. Its daily and weekly retention is 28 days.
 
 6. Follow the [backup host installation](operations/backup-alerts.md) to install
    PostgreSQL 18 clients, AWS CLI v2, scripts, config and systemd units. Use the
-   existing instance role, never `aws configure`. The unit reads the new migration
+   explicit R2 endpoint and private credentials, never `aws configure`. The unit reads the new migration
    URL automatically. Run the first backup before declaring recovery complete:
 
    ```sh
@@ -161,8 +162,11 @@ put static AWS keys on this host. Its daily and weekly retention is 28 days.
    sudo systemctl list-timers 'infraforge-*' --all
    ```
 
-   Require PASS, `Result=success`, exit 0, both required S3 PUTs and confirmed SNS
-   email delivery. The daily timer is 02:15 UTC plus up to five minutes jitter.
+   Require PASS, `Result=success`, exit 0, both R2 objects visible in Cloudflare,
+   and `sudo /bin/bash /opt/infraforge-ops/backup-alerts/run.sh status` passing.
+   Verify Resend delivery if configured; otherwise connect the independent
+   operator status check described in the runbook. The daily timer is 02:15 UTC
+   plus up to five minutes jitter.
    Restore time and data size remain Unknown until the following test. Keep the
    monthly full restore timer off this live 4 GiB host unless its extra resources
    have been measured and budgeted. Do the first scratch restore now, then schedule
@@ -170,16 +174,18 @@ put static AWS keys on this host. Its daily and weekly retention is 28 days.
 
 ## Restore a backup into a scratch database
 
-Use a separate encrypted disposable Linux host and an operator IAM identity with
-read access to the exact S3 object/version. The production instance role remains
-upload-only. [Backup retrieval and drill](operations/backup-alerts.md#restore-drill-retrieval-and-incident-handling)
-documents S3 retrieval, exact archive members and checksums, and the reusable
+Use a separate encrypted disposable Linux host with a separate bucket-scoped
+R2 Object Read token in its own root-owned 0600 credentials file. Keep the
+production write/delete token off the scratch host.
+[Backup retrieval and drill](operations/backup-alerts.md#restore-drill-retrieval-and-incident-handling)
+documents endpoint-configured R2 retrieval, exact archive members and checksums, and the reusable
 `postgres-restore-verify.sh` command. That verifier creates a random empty
 `infraforge_restore_*` database, restores with `--exit-on-error --single-transaction`,
 reads every application table, and removes only that generated database on exit.
 
 For a copy-paste network-isolated drill after retrieving and safely extracting
-`archive.dump` and `SHA256SUMS` to `retrieved-backup`, run on that scratch host:
+`archive.dump` and `SHA256SUMS` to `/var/lib/infraforge-ops/retrieved-backup`,
+run on that scratch host:
 
 ```sh
 set -euo pipefail
@@ -196,14 +202,14 @@ for attempt in $(seq 1 30); do
 done
 test "$ready" = true
 docker exec "$DRILL_NAME" mkdir -m 700 /restore
-docker cp retrieved-backup/archive.dump "$DRILL_NAME:/restore/archive.dump"
-docker cp retrieved-backup/SHA256SUMS "$DRILL_NAME:/restore/SHA256SUMS"
+sudo docker cp /var/lib/infraforge-ops/retrieved-backup/archive.dump "$DRILL_NAME:/restore/archive.dump"
+sudo docker cp /var/lib/infraforge-ops/retrieved-backup/SHA256SUMS "$DRILL_NAME:/restore/SHA256SUMS"
 docker cp ops/bootstrap/postgres-restore-verify.sh "$DRILL_NAME:/restore/verify.sh"
 docker exec "$DRILL_NAME" env -i PATH=/usr/local/bin:/usr/bin:/bin \
   RESTORE_DISPOSABLE=local-only bash /restore/verify.sh /restore 5432 postgres
 ```
 
-Record the image digest, S3 key/version, checksum, PASS and elapsed time privately.
+Record the image digest, R2 bucket/key, checksum, PASS and elapsed time privately.
 Trust authentication is only for this new `--network none` scratch container.
 This proves archive retrieval/readability, not exact equality with a changing live
 source or application recovery. A real recovery restores into a new empty server,
@@ -306,7 +312,7 @@ continues to refuse rebuilding either retained accepted image.
    sudo systemctl start infraforge-backup.timer
    ```
 
-   Require `Result=success`, exit 0 and the required S3 receipts. Backups read the
+   Require `Result=success`, exit 0 and the required R2 receipts. Backups read the
    migration URL at each start. Keep auth secrets unchanged. Stop the unused
    local service later only after acceptance; retain its volume until the owner's
    retention decision. Resume automated deployments after the application smoke.
@@ -320,8 +326,8 @@ Capacity: [BACKEND_CAPACITY.md](../ops/BACKEND_CAPACITY.md) records 2432 MiB /
 896 MiB / 0.05 CPU arithmetic host allowance during builds. These are ceilings
 and allowances, not measured headroom. PostgreSQL shares a failure domain with
 the application; daily dumps give up to a one-day RPO, not point-in-time recovery.
-Disk, query performance, actual RTO and successful S3 restores remain unmeasured.
+Disk, query performance, actual RTO and successful R2 restores remain unmeasured.
 
 References: [PostgreSQL verified TLS](https://www.postgresql.org/docs/18/libpq-ssl.html),
 [PostgreSQL image volume layout](https://hub.docker.com/_/postgres), and
-[S3 lifecycle expiry](https://docs.aws.amazon.com/AmazonS3/latest/userguide/intro-lifecycle-rules.html).
+[R2 API compatibility](https://developers.cloudflare.com/r2/api/s3/api/).

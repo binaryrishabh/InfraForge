@@ -1,139 +1,124 @@
-# Backups and email alerting
+# PostgreSQL backups to R2 and independent alerts
 
-This is an owner-operated installation procedure, not a record of an installed
-system. The repository changes create no AWS resources, contact no database and
-install no host services. Self-hosted PostgreSQL has no managed restore history; these daily off-host
-snapshots are mandatory. For a managed provider, separately verify its actual
-restore-history window. The independent backup RPO
-is up to one day. Recovery time and actual database size are **Unknown** until
-measured. There is no automatic production restore.
+This is an owner-run installation procedure. Repository validation accessed no
+host, bucket, database or secret. Daily off-host snapshots are mandatory for
+self-hosted PostgreSQL. The recovery point is up to one day; database size, restore
+time and successful production retrieval remain **Unknown** until measured.
+There is no automatic production restore.
 
-The configuration lives in `ops/backup-alerts/stack.json`, `runner.py`, `run.sh`
-and `systemd/`. It reuses `ops/bootstrap/postgres-backup.sh`,
-`postgres-restore-verify.sh` and `prove-backup.sh` without modifying them.
+The owner selected Cloudflare R2 so loss of the AWS account cannot erase these
+backups. **Do not deploy `ops/backup-alerts/stack.json`.** It is optional legacy
+AWS-only infrastructure, retained for reference and template validation. The
+current runner does not use its policy, lifecycle, CloudWatch or SNS. Replace old
+scripts/configuration and verify a new remote receipt; an old S3 receipt is not
+evidence of an R2 upload. Receipts are bound to endpoint/bucket/region; changing
+the target requires fresh daily and weekly uploads, and old receipts cannot pass
+the status check or start a restore drill against the new target.
 
-## Storage, access and retention
+## Storage and safety
 
-CloudFormation creates an unnamed private bucket in the stack's region with
-SSE-S3 default encryption, versioning, owner-enforced ownership, all four Block
-Public Access switches, a TLS-only policy and retained deletion/replacement
-policies. Uploads explicitly request AES256 and a SHA256 transport checksum.
-Only the archive and its byte-exact SHA256SUMS receipt enter the tar object;
-private database diagnostics are excluded. SSE-S3 is encryption at rest, not
-client-side encryption or Object Lock.
+AWS CLI v2 acts solely as an S3-compatible client. Configuration requires an
+explicit HTTPS `endpoint_url`, `bucket` and `region` (`auto` for R2). The endpoint
+is an origin without a bucket path, credentials, query or fragment. There is no
+AWS endpoint or instance-role fallback. Other compatible services must implement
+the same conditional PUT, HEAD/GET and list/delete operations. This pruner targets
+unversioned R2 objects; versioned AWS storage needs its own version-retention design.
 
-One successful backup per UTC date is stored at
-`backups/daily/YYYY-MM-DD.tar`. The first successful backup of each ISO week is
-also uploaded at `backups/weekly/YYYY-Www.tar`; missed Monday runs therefore
-catch up later in that week. Daily and weekly objects expire after 28 days, matching the backup window in
-the legal drafts, targeting 28 daily plus 4 weekly copies during healthy operation.
-Lifecycle expiry is asynchronous and rounds to UTC day boundaries: these are
-age windows, not an exact object count or a guarantee when jobs fail. Retrying
-the same date/week creates a version; noncurrent versions expire after one day
-and expired delete markers are cleaned up. Budget for temporary overlap. No host
-retention process deletes S3 objects.
+Each run writes `backups/daily/YYYY-MM-DD-<random>.tar`. The first successful run
+of an ISO week also writes `backups/weekly/YYYY-Www-<random>.tar`. Unique names
+allow retries after partial failures; every PUT uses `If-None-Match: *` and
+refuses overwrites atomically. Keep both prefixes exclusive to this runner;
+never manually replace these objects or run another writer against them.
 
-The added host policy grants only `s3:PutObject` to the two backup prefixes and
-`cloudwatch:PutMetricData` restricted to `InfraForge/Ops`. It grants no S3 read,
-list, delete, multipart or role-assumption access. IAM permissions are additive:
-the owner must remove pre-existing wider grants or use a dedicated EC2 role.
-The uploader uses single PUTs, refuses tar objects above 5,000,000,000 bytes and
-does not silently request broader permissions for larger databases.
+Only `archive.dump` and `SHA256SUMS` enter the tar. Single PUTs are limited to
+5,000,000,000 bytes. Content-MD5 checks transport, followed by a remote GET and
+SHA256 comparison against the uploaded tar. R2 encrypts storage at rest; the
+runner omits AWS-only SSE-S3 headers and unsupported full-object SHA256 request
+checksums. This is not client-side encryption or Object Lock. See the official
+[R2 API compatibility](https://developers.cloudflare.com/r2/api/s3/api/) reference.
 
-The local latest archive and temporary working copies contain production data.
-They require encrypted EBS, root-owned mode-0700 state, and disk headroom for
-the previous dump, next dump, its tar, and a disposable restored database. The
-next run removes interrupted dump directories; the last successful local copy
-is retained until its replacement uploads successfully. Never share its contents
-or private diagnostics in tickets or logs.
+After verified uploads, explicit retention prunes objects **strictly older than
+28 days**, using remote `LastModified`. Only exact daily/weekly tar key shapes
+are accepted, including historical names without the random suffix. Listing is
+restricted to those two prefixes, at most four pages of 1,000 entries per prefix.
+The full plan is checked before deletion. More than 128 candidates, unexpected
+keys, invalid timestamps or incomplete pagination fail the job. Each candidate's
+age is checked again with HEAD immediately before deletion. Objects exactly 28
+days old remain until a later run. There is no broad bucket delete, automatic
+budget increase or AWS lifecycle dependency. Failed jobs or a stopped host delay
+pruning; this is a job-based retention window, not an expiry guarantee.
 
-## Owner's one-time AWS steps
+The success receipt advances only after required uploads, readbacks and pruning
+succeed. Failure retains the previous receipt/local dump. Interrupted work is
+cleaned beneath the private backup root on the next run. Encrypted local storage
+needs room for the previous dump, new dump, tar, remote readback and restored DB.
+Never share dumps, credentials, source URLs or private diagnostics in logs/tickets.
 
-1. In **EC2 → Instances**, select the host. Record its **region**, instance ID
-   and IAM role name (not the instance-profile name). Confirm every volume
-   containing `/var/lib/infraforge-ops`, `/tmp` or Docker data is encrypted under
-   **EBS → Volumes → Encryption**. Do not proceed with plaintext local staging.
-   Confirm the host really uses Ubuntu 24.04, Docker Compose and systemd.
-2. In **IAM → Roles → the host role → Permissions**, audit attached and inline
-   policies and bucket grants. Ensure no other policy grants S3 read/list/delete
-   or writes outside the backup prefixes. Keep existing application permissions
-   only after reviewing them. Do not give the instance administrative credentials.
-3. Switch the **CloudFormation console to that same EC2 region**. Choose
-   **Create stack → With new resources → Upload a template file** and upload
-   `ops/backup-alerts/stack.json`. Name the stack `infraforge-backup-alerts`.
-   Set `HostRoleName`, `InstanceId`, and `AlertEmail` to the recorded values and
-   the owner's alert address. Review the change set, acknowledge named IAM
-   capabilities, and create it. CloudFormation creates storage, policies, SNS and
-   alarms only; it does not modify EC2, Compose, Neon or application code.
-4. Wait for **CREATE_COMPLETE**. Record the `BucketName`, `Region`, and
-   `TopicArn` outputs. In **SNS → Subscriptions**, confirm the email subscription
-   by following the email sent to the owner. It must show a subscription ARN,
-   not `PendingConfirmation`. No alarms can deliver email before confirmation.
-5. In **S3 → the new bucket → Properties/Permissions/Management**, check SSE-S3,
-   versioning, Block Public Access, TLS policy and all three lifecycle rules.
-   In **CloudWatch → Alarms**, expect seven alarms. Initial missing-data alarms
-   are expected until the metrics publisher, first backup and first drill pass.
+## Owner: create the bucket and keys
 
-## Owner's one-time host steps
+1. In Cloudflare **R2 Object Storage**, create one dedicated **Standard** bucket.
+   Keep public access, `r2.dev` and public custom domains disabled.
+2. Under **Manage R2 API tokens**, create an **Object Read & Write** token scoped
+   to **only this bucket**, as already decided by the owner. Never select all
+   buckets or account administration. Verification/restore need read; retention
+   needs list/delete. Prefix restrictions are code guards, not token restrictions;
+   keep unrelated data in other buckets.
+3. Save the S3 Access Key ID and Secret Access Key privately. Copy the account's
+   S3 API endpoint, including a jurisdiction hostname if applicable, usually
+   `https://<account-id>.r2.cloudflarestorage.com`. See
+   [R2 authentication](https://developers.cloudflare.com/r2/api/tokens/).
+4. Preserve independent Cloudflare account recovery access. Rotate a lost token
+   in Cloudflare and replace the private file below; never print it to inspect it.
 
-Run these only after separately approving the AWS/host installation. Use a
-reviewed immutable source checkout; do not run them during repository validation.
-The host needs PostgreSQL **18** clients, Python 3.11+, GNU coreutils, `flock`,
-AWS CLI v2, Docker and Bash. Install the clients without creating a local database
-service. Ubuntu commands for the PostgreSQL upstream package repository are:
+R2 Standard includes 10 GB-month storage, 1 million Class A and 10 million Class B
+operations monthly, with no egress charge; allowances are shared with other
+account usage. See [R2 pricing](https://developers.cloudflare.com/r2/pricing/).
+Roughly 28 daily plus four weekly copies are retained, with extra copies from
+retries and temporary overlap. At 300 MB per tar, 32 copies alone use 9.6 GB;
+this is planning arithmetic, not measured size or a spending cap. Check account
+usage and first archive size before enabling unattended backups. Total cost is
+Unknown; the 5 GB object guard is not a free-tier guard.
+
+## Owner: install on the host
+
+Use a reviewed immutable checkout after merge/CI. These are owner instructions,
+not repository validation commands. The Linux host needs Python 3.11+,
+PostgreSQL **18** clients, Bash, GNU coreutils, `flock`, Docker, and current AWS
+CLI v2 supporting `put-object --if-none-match`. Install clients without starting
+a second DB service. Use the [signed CLI installer](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
+if needed; no AWS account or `aws configure` is required.
 
 ```sh
-sudo apt-get update
-sudo apt-get install -y postgresql-common ca-certificates python3 unzip
-sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
-sudo apt-get install -y postgresql-client-18
 pg_dump --version
 pg_restore --version
 aws --version
-docker version
-```
-
-If AWS CLI v2 is absent, follow the official signed Linux x86_64 installer
-[instructions](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html).
-Use the existing EC2 instance profile through IMDS; **do not run `aws configure`**
-or put AWS access keys on the host. The runner clears ambient credentials and
-profiles and uses only that role. For a remote database, the host must reach PostgreSQL over verified TLS and S3,
-CloudWatch, the public site and API over HTTPS. Prefer the existing S3 gateway
-endpoint if present; this stack creates no endpoint, NAT gateway or network rule.
-
-From the reviewed checkout root:
-
-```sh
 sudo install -d -m 0755 /opt/infraforge-ops/backup-alerts /opt/infraforge-ops/bootstrap
 sudo install -m 0644 ops/backup-alerts/runner.py /opt/infraforge-ops/backup-alerts/
 sudo install -m 0755 ops/backup-alerts/run.sh /opt/infraforge-ops/backup-alerts/
 sudo install -m 0644 ops/bootstrap/postgres-backup.sh ops/bootstrap/postgres-restore-verify.sh ops/bootstrap/prove-backup.sh ops/bootstrap/postgres-backup-proof.sh ops/bootstrap/backup-proof-isolation.test.sh /opt/infraforge-ops/bootstrap/
-sudo install -d -m 0700 /etc/infraforge/ops /var/lib/infraforge-ops
-sudo install -m 0600 ops/backup-alerts/config.example.json /etc/infraforge/ops/config.json
+sudo install -d -o root -g root -m 0700 /etc/infraforge/ops /var/lib/infraforge-ops
+sudo install -o root -g root -m 0600 ops/backup-alerts/config.example.json /etc/infraforge/ops/config.json
 sudoedit /etc/infraforge/ops/config.json
+sudo install -o root -g root -m 0600 /dev/null /etc/infraforge/ops/r2.credentials
+sudoedit /etc/infraforge/ops/r2.credentials
 ```
 
-Replace every placeholder with the stack outputs, host ID and actual public
-HTTPS URLs. The API URL must end at its `/health/ready` route. Set
-`worker_container` to the exact active Compose worker container name, discovered
-with `docker ps --format '{{.Names}}'`. Update this setting if release tooling
-replaces the worker with a different name. No worker port is published.
+The last install command creates an empty credentials file: use it only for
+initial installation, not rotation. Enter this structure **only in sudoedit**,
+replacing placeholders with the R2 keys. Never put keys in shell commands,
+environment dumps, service `Environment=`, arguments or journal:
 
-Pre-pull and approve the PostgreSQL 18 image during installation:
-
-```sh
-sudo docker pull postgres:18
-sudo docker image inspect postgres:18 --format '{{index .RepoDigests 0}}'
+```ini
+[default]
+aws_access_key_id=REPLACE_PRIVATELY
+aws_secret_access_key=REPLACE_PRIVATELY
 ```
 
-Set `drill_image` to `postgres:18@sha256:` followed by that digest. Keep the
-`postgres:18` tag pointing to the same approved PostgreSQL 18 image because the
-unchanged synthetic proof uses that tag. Reapprove/update both regularly; the
-actual snapshot drill uses `--pull=never` with the pinned digest. The synthetic
-proof and snapshot restore run sequentially: their database limits are 1 CPU /
-768 MiB and 0.25 CPU / 384 MiB respectively. Account for production memory and
-Docker disk headroom on the 4 GiB host before enabling the drill. The unit's
-MemoryMax bounds the client processes, not Docker-daemon-created containers.
+Exact path: **`/etc/infraforge/ops/r2.credentials`**, root:root, **0600**, under
+the root-owned **0700** directory. The runner refuses symlinks, wrong owner/mode
+and extra profiles/keys. It supplies keys only to the S3 subprocess. DB/restore
+processes receive neither key; ambient AWS profiles and metadata are disabled.
+Check metadata only with `sudo stat -c '%U %G %a %n' /etc/infraforge/ops/r2.credentials`.
 
 The daily backup uses the same literal `MIGRATION_DATABASE_URL` as the release.
 The service requires Docker and starts after it. For the private local endpoint,
@@ -142,7 +127,7 @@ the runner retries missing-container or SQL connection failures for 180 seconds
 bridge on each attempt, and requires an authenticated `SELECT 1` before dumping.
 An ownership/network mismatch fails immediately. Exhausting startup recovery
 fails the job without advancing its receipt or deleting the prior archive; the
-existing 26-hour backup-age alarm (or missing-data alarm) remains authoritative.
+independent monitor retains failed/missing-backup status and the 26-hour age check.
 During provider changes, pause the backup timer before editing the URL and resume
 it only after release acceptance and the first successful backup, as described in
 [the provider-switch procedure](../SELF_HOSTED_POSTGRES.md#switch-to-neon-or-another-postgresql-provider).
@@ -153,193 +138,121 @@ routing option, duplicate query option or weaker TLS mode is accepted. Credentia
 must be percent-encoded. Keep the URL on one `MIGRATION_DATABASE_URL=...` line;
 single/double quotes are allowed, interpolation and whitespace are refused.
 
-For the local `postgres:5432` service, `sslmode=disable` is permitted. The runner
-resolves its current bridge address using Docker labels, verifies exactly one
-running container in project `infraforge`, service `postgres`, no published ports,
-and exactly one owned internal bridge. Host-side libpq reaches that private
-address without a published listener; traffic never leaves the machine. Other
-hosts, including RFC1918 and loopback addresses in the URL, still require TLS.
-The local initial owner role can dump all application tables. For a remote backup
-role, ensure read access to every application table/sequence, including RLS.
+Set `endpoint_url`, the one `bucket`, `region: "auto"`, public site/API readiness
+URLs, active worker container name and approved `drill_image`
+(`postgres:18@sha256:<digest>`) in `config.json`. Pre-pull/inspect that image on
+the drill host; the synthetic proof also uses its `postgres:18` tag. Set
+`alert_email` to the operator mailbox or leave empty for status-only monitoring.
+No credential belongs in `config.json`.
+
+Systemd `LoadCredential` supplies the existing literal `MIGRATION_DATABASE_URL`
+from `/etc/infraforge/release.env`. Local PostgreSQL resolves only the owned
+internal Compose service; remote databases need direct verified TLS. Never source
+or print `release.env` or export a source URL in shell history.
+
+## First backup and alerts
 
 ```sh
 sudo install -m 0644 ops/backup-alerts/systemd/* /etc/systemd/system/
 sudo systemctl daemon-reload
-sudo systemd-analyze verify /etc/systemd/system/infraforge-backup.service /etc/systemd/system/infraforge-restore-drill.service /etc/systemd/system/infraforge-ops-metrics.service
-```
-
-`LoadCredential=release-env:/etc/infraforge/release.env` supplies a fresh private
-copy at each backup start. Only the migration URL is extracted, never sourced or
-printed; no extra backup URL needs updating on a provider switch. The runner
-uses an otherwise clean libpq environment, and the existing custom-format dump
-script receives no URL argument. AWS and restore commands receive no database
-credentials. AWS still uses only the instance role. The old `neon-url` credential
-is no longer consumed; remove it through the owner's secret-management process.
-
-Run the first jobs sequentially, check their results, then enable schedules.
-On the 4 GiB host, run the full restore drill in a maintenance window with the
-application stopped, or on an encrypted scratch host: its synthetic proof adds
-1 CPU / 768 MiB beyond the client cgroup. Do not automatically enable the monthly
-drill timer on the live self-hosted stack. Daily backup and metrics timers fit
-the documented allowance; serialize backups and release builds.
-
-```sh
+sudo /bin/bash /opt/infraforge-ops/backup-alerts/run.sh prune-dry-run
 sudo systemctl start infraforge-backup.service
-sudo systemctl start infraforge-restore-drill.service
+sudo systemctl show infraforge-backup.service -p Result -p ExecMainStatus
+sudo journalctl -u infraforge-backup --since today --no-pager
 sudo systemctl start infraforge-ops-metrics.service
-sudo systemctl status infraforge-backup.service infraforge-restore-drill.service infraforge-ops-metrics.service --no-pager
-sudo journalctl -u infraforge-backup -u infraforge-restore-drill -u infraforge-ops-metrics --since today --no-pager
+sudo /bin/bash /opt/infraforge-ops/backup-alerts/run.sh status
 sudo systemctl enable --now infraforge-backup.timer infraforge-ops-metrics.timer
-# Enable infraforge-restore-drill.timer only on a separately budgeted drill host.
 sudo systemctl list-timers 'infraforge-*' --all
 ```
 
-Oneshot services normally show **inactive (dead)** after success; check
-`Result=success`, exit status and PASS log lines. The daily backup runs at 02:15
-UTC plus up to five minutes jitter; the monthly drill at 04:15 UTC on day 1 plus
-up to five minutes jitter. Persistent timers catch up once after downtime; they
-do not recreate missed daily/weekly recovery points. Jobs share a nonblocking
-lock and log a failure if they overlap. There is no unbounded retry loop. Their
-outer budget is 45 minutes and systemd budget 46 minutes; individual DB calls
-retain the bootstrap script's bounds. Metrics run every minute with a 50-second
-outer budget. Configure bounded system journal retention under the host's
-existing logging policy; no database output is sent to CloudWatch Logs.
+Require `BACKUP PASS`, `Result=success`, exit 0 and `STATUS PASS`. Daily runs start
+at 02:15 UTC plus up to five minutes jitter. In **Cloudflare → R2 → the bucket →
+Objects**, open `backups/daily/` and `backups/weekly/`. Match the exact keys from
+root-private `/var/lib/infraforge-ops/backup.json`, UTC time and sizes; both
+first-run objects must exist. Dashboard visibility is not a restore proof.
 
-## Alarm behavior and acceptance
+The minute timer writes local observations and checks backup health without
+CloudWatch/SNS. Failure, missing/invalid/future receipts or age over 26 hours
+writes `ok: false` to **`/var/lib/infraforge-ops/ops-status.json`** and a generic
+journal message. Failure remains latched even with a fresh previous receipt.
+Systemd pre-start/stop hooks cover lock refusal, timeout, SIGKILL and service
+failure; interrupted running markers become unhealthy after 46 minutes.
 
-The stdlib publisher supplies all seven metrics; **no CloudWatch agent is
-required**. Namespace `InfraForge/Ops`, dimension `InstanceId=<host ID>` must
-match the template. It publishes one standard-resolution batch per minute.
+If existing literal release settings are `TRANSACTIONAL_EMAIL_PROVIDER=resend`,
+`TRANSACTIONAL_EMAIL_FROM=<verified mailbox>` and `RESEND_API_KEY=<key>`, and
+`alert_email` is configured, the runner uses the same
+[Resend API](https://resend.com/docs/api-reference/emails/send-email).
+Only these three mail settings are parsed from the private systemd credential.
+Email contains a generic message without DB/bucket details. Sent alerts repeat
+at most hourly while unhealthy; failed/unconfigured delivery retries at most
+every 15 minutes. `alert_delivery` records `sent`, `failed` or `unconfigured`;
+`sent` means API acceptance, not confirmed inbox delivery.
 
-| Metric | Trigger | Observation |
-| --- | --- | --- |
-| SiteReady | Below 1 for 3 minutes | Public HTTPS GET returns 200 |
-| ApiReady | Below 1 for 3 minutes | Public HTTPS readiness returns 200 and `success: true` |
-| WorkerReady | Below 1 for 3 minutes | Execute the existing readiness probe inside the exact worker container; checks queues, ownership and outbox success within 15 seconds |
-| DiskUsedPercent | Above 80% for 5 minutes | Maximum usage of `/`, state and `/var/lib/docker` filesystems |
-| MemoryUsedPercent | Above 85% for 5 minutes | `(MemTotal - MemAvailable) / MemTotal` from `/proc/meminfo` |
-| BackupAgeSeconds | Above 93,600 seconds for 2 minutes | Snapshot start time of last fully successful daily/required-weekly upload |
-| RestoreDrillHealthy | Below 1 for 2 minutes | Last attempt passed and success is no older than 35 days |
+Without Resend, **connect an independent uptime monitor to the operator command**
+`sudo /bin/bash /opt/infraforge-ops/backup-alerts/run.sh status`, for example through
+an existing restricted SSH check. Exit 0 requires a fresh successful backup and
+healthy monitor observation no older than three minutes. Exit 1 or inability to
+reach the host must alert. Only generic PASS/failure text is emitted; the private
+JSON is never served publicly. This change installs no public HTTP route or
+external monitor. Application readiness alone cannot detect backup failure.
+The independent checker must also detect host/account loss: a lost host cannot
+send email.
 
-Every alarm treats missing data as breaching and emails on ALARM and recovery.
-Missing/invalid/future backup receipts omit the age metric, never report zero.
-The drill writes failure before starting, so a killed job remains unhealthy;
-`ExecStopPost` removes only its recorded random container after termination.
-A failed cleanup fails the drill too. Do not reset receipts to quiet an alarm.
-
-In **CloudWatch → Metrics**, verify the seven metrics and same instance ID.
-In **SNS → Topics → the stack topic → Publish message**, send a harmless test
-message and verify receipt. To exercise an alarm route using the owner's AWS
-identity, use a harmless temporary alarm state (normal evaluation will resume):
-
-```sh
-aws cloudwatch set-alarm-state --region REGION --alarm-name EXACT_STACK_ALARM_NAME --state-value ALARM --state-reason 'Owner acceptance test'
-```
-
-Use the generated alarm name from the console. Do not stop production to test
-alerts. Monitoring runs on this EC2 host: host/network loss produces missing
-metric alerts, but an independent regional/site synthetic checker is not part
-of this stack. The worker check measures poll-loop/readiness health, not a
-guarantee that every outbox item has completed; investigate retry backlogs
-separately.
+Test alerts on a fresh host **before** its first backup: configure/start
+`infraforge-ops-metrics.service` and require missing-receipt failure status and
+mail if configured. Inspect private `alert_delivery` and confirm inbox delivery.
+Then run the first backup and require `STATUS PASS`. Do not damage a working DB
+or credentials for an alert test. Failed mail delivery never clears failure.
 
 ## Restore drill, retrieval and incident handling
 
-Each drill runs the unchanged owned-container synthetic backup/proof first,
-then copies the latest successfully uploaded snapshot into a new PostgreSQL 18
-container with `--network none` and no published ports. The hardened verifier
-checks its checksum, creates a random database, restores atomically, reads all
-application tables and removes that database. The container and anonymous
-volumes are removed afterwards. No database URL or remote destination can enter
-the verifier. Incompatible extensions, insufficient memory/disk, corruption,
-empty archives and restore errors fail the drill. That is not a reason to skip
-tables or silently loosen validation.
-
-**Scope:** this automated drill uses the retained local copy to preserve the
-host role's upload-only S3 permission. It proves dump readability and local
-restoration, not S3 retrieval, source equality during live writes, application
-recovery, provider settings/roles or measured RTO. A successful PUT plus SHA256
-does not replace an independent retrieval check.
-
-The owner should perform an initial and periodic S3 retrieval check with a
-**separate operator identity**, on a separate encrypted disposable machine. The
-owner's identity needs `s3:GetObject` (and `s3:GetObjectVersion` for historical
-versions) on the exact key; it need not grant the host any access. In the S3
-console, select the exact daily/weekly key and version from a successful run,
-or use these commands under that operator identity:
+Use a **separate encrypted disposable Linux host**, not the live 4 GiB backend,
+for the first restore and periodic owner drills. Install scripts/client and
+private config as above, but use a separate bucket-scoped **Object Read** token
+in its own 0600 credentials file. Keep the production token off this machine.
+`retrieve` checks size, ETag-pinned download, exact regular tar members and dump
+SHA256. Select an exact daily key from the dashboard; the destination must not exist:
 
 ```sh
-umask 077
-mkdir -m 700 retrieved-backup
-aws s3api get-object --region REGION --bucket BUCKET --key backups/daily/YYYY-MM-DD.tar retrieved-backup/backup.tar
-tar -tf retrieved-backup/backup.tar
-# Expected regular files only: archive.dump and SHA256SUMS. Reject other entries.
-tar --extract --file retrieved-backup/backup.tar --directory retrieved-backup --no-same-owner --no-same-permissions archive.dump SHA256SUMS
-RESTORE_DISPOSABLE=local-only bash ops/bootstrap/postgres-restore-verify.sh "$PWD/retrieved-backup" 55432 local_restore_role
+read -r -p 'Exact R2 daily backup key: ' BACKUP_KEY
+sudo /bin/bash /opt/infraforge-ops/backup-alerts/run.sh retrieve "$BACKUP_KEY" /var/lib/infraforge-ops/retrieved-backup
 ```
 
-The loopback PostgreSQL 18 server and `local_restore_role` must be newly
-provisioned disposable resources; never choose an existing application server.
-Keep archive checksums byte exact. On a real incident, restore S3 data into a **new** database/server (or use
-a separately verified managed-provider restore point),
-recreate required roles/provider settings, validate application login and old/new
-run reports in isolation, and obtain the owner's explicit cutover approval.
+Then follow [the scratch database commands](../SELF_HOSTED_POSTGRES.md#restore-a-backup-into-a-scratch-database).
+The verifier creates a random empty DB, runs `pg_restore --exit-on-error
+--single-transaction`, reads every application table and drops only that generated
+DB. Record bucket/key, image digest, checksum, PASS and elapsed time privately.
+This proves remote archive readability, not application recovery or equality
+with a changing source.
 
-For a backup alarm, check unit status, disk, direct endpoint configuration and
-private diagnostics before one manual rerun. The last successful receipt must
-stay unchanged after a failed upload. For a drill alarm, fix the restore or
-cleanup failure and rerun the unit; leave the failure latched until success.
-After a host reboot during a drill, inspect the root-private
-`drill-container.json` and only the named `infraforge-restore-drill-<random>`
-container. An interrupted synthetic proof can require manual cleanup of its
-`infraforge-backup-proof-<random>` container. Never use broad Docker prune on
-this shared production host. To pause maintenance, disable the relevant timer;
-the missing/stale monitoring alerts intentionally remain active.
+The optional monthly `infraforge-restore-drill.service` also retrieves the latest
+daily key from R2 before synthetic refusal checks and a restore in a new
+network-isolated container. It uses no source DB credentials. Keep its timer off
+on the live 4 GiB host unless resources have been measured/budgeted. Use a
+suitable host/maintenance window with matching private receipt/configuration;
+require `drill.json` with `ok: true` and PASS. No Docker drill was executed here.
 
-## Estimated monthly cost
-
-Planning example, **not measured production cost**: US East (N. Virginia), one
-host, seven metrics/alarms, a 1 GB tar snapshot, 32 retained copies, 35 PUTs,
-43,200 metric batches, and fewer than 1,000 email deliveries/month. Excluding
-free tiers, seven metrics at $0.30 plus seven standard alarms at $0.10 are
-about **$2.80/month**. S3 Standard at $0.023/GB-month adds about **$0.74/month**
-for the nominal 32 GB, plus well under $0.01 for those PUTs. At $0.01 per 1,000
-API requests before free-tier allowances, 43,200 metric batches add about $0.43.
-Allow roughly
-**$3–4/month** for this example and lifecycle/version overlap. Reprice in the
-actual EC2 region before activation.
-
-The **full cost is Unknown**: dump size, remote backup-read/compute/egress impact,
-encrypted EBS capacity, actual retained versions, existing NAT/data paths,
-operator downloads, taxes and application baseline are unmeasured. This stack
-adds no EC2 host, paid external checker, KMS key, agent logs or NAT gateway.
-CloudWatch metric/API free-tier eligibility and SNS free tiers vary by account;
-do not assume the bill is zero. See official [CloudWatch pricing](https://aws.amazon.com/cloudwatch/pricing/),
-[S3 pricing](https://aws.amazon.com/s3/pricing/), and [SNS pricing](https://aws.amazon.com/sns/pricing/).
+On failure inspect unit status, disk, private config and token permissions,
+then rerun once. Never edit success receipts to clear failure. A successful
+backup clears its latch; a successful drill clears its drill latch. For prune
+bounds/unexpected keys, review contents and dry run; never broaden prefixes or
+budgets just to pass. Never run broad Docker prune; inspect only recorded owned
+random containers. A real recovery restores into a new empty server, recreates
+roles/settings, validates login/reports/readiness in isolation, and requires
+owner cutover approval. Never restore over the active database.
 
 ## Offline validation
 
-Once dependencies/tools are installed, these checks need no credentials,
-network, database or Docker daemon:
-
 ```sh
-python3 -m venv .agent/w17-tools
-.agent/w17-tools/bin/pip install cfn-lint==1.46.0
-# Subsequent validation is offline; do not use cfn-lint --update-specs.
-.agent/w17-tools/bin/cfn-lint -t ops/backup-alerts/stack.json
+python3 -B ops/backup-alerts/test_runner.py
 bash -n ops/backup-alerts/run.sh
 shellcheck ops/backup-alerts/run.sh
-python3 -B ops/backup-alerts/test_runner.py
 bun --no-env-file --no-install test scripts/tests/backup-alerts.test.ts
 ```
 
-The Python tests mock HTTP and every external command, explicitly prohibit
-sockets, and exercise daily/weekly encrypted PUT paths, failed uploads, state
-retention, invalid routing, worker timeout, corrupt archives, failed restores and
-cleanup. Template and shell checks also run in the operations CI job; the Bun
-wrapper runs through `test:tooling`. No measured restore result is claimed by
-these offline checks. Official references: [Neon pg_dump guidance](https://neon.com/docs/manage/backup-pg-dump),
-[S3 lifecycle semantics](https://docs.aws.amazon.com/AmazonS3/latest/userguide/intro-lifecycle-rules.html),
-and [PostgreSQL libpq TLS parameters](https://www.postgresql.org/docs/18/libpq-connect.html).
-
-For the fresh-start owner cutover and a URL-only provider switch, see [SELF_HOSTED_POSTGRES.md](../SELF_HOSTED_POSTGRES.md). No backup or restore result is claimed until the owner runs and records it.
+Tests prohibit sockets and mock external commands/mail. They cover endpoint and
+credential policy, conditional uploads, readback corruption, size limits, prune
+bounds/dry run/age, failed/missed backups, mail failure, stale monitoring and
+remote restore corruption/isolation/cleanup. The Bun wrapper also validates
+legacy AWS template invariants; CI retains cfn-lint. No production upload,
+deletion, delivery or restore result is claimed by these offline checks.

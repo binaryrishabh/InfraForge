@@ -9,7 +9,7 @@ The 2026-10-24 owner decision is a fresh self-hosted PostgreSQL 18 database,
 abandoning the exhausted Neon database. Follow [the cutover and provider-switch
 runbook](SELF_HOSTED_POSTGRES.md); this is a procedure, not a deployment claim.
 The three database URLs in `/etc/infraforge/release.env` select the provider; daily
-S3 backups use the same migration URL. Remote connections require verified TLS;
+R2 backups use the same migration URL. Remote connections require verified TLS;
 only `postgres:5432` on the private same-host bridge may use plaintext.
 
 ## Owner checklist: optional account essentials

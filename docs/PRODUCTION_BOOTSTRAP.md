@@ -2,7 +2,7 @@
 
 For the owner-decided fresh database replacement, follow the copy-paste
 [self-hosted PostgreSQL cutover](SELF_HOSTED_POSTGRES.md). It includes URL-only
-provider switching, mandatory daily S3 backups and a scratch restore test.
+provider switching, mandatory daily R2 backups and a scratch restore test.
 
 Current operation is described in [DEPLOYMENT.md](DEPLOYMENT.md). This runbook is
 for provisioning or recovery, when initial operator access is appropriate. Normal
@@ -302,11 +302,11 @@ separately recorded compatible frontend only after backend acceptance. Failed mi
 or postcheck leaves services stopped and maintenance/lock retained. No `migrate resolve`,
 marker deletion or automatic database downgrade is part of recovery.
 
-The data owner must install the mandatory [daily S3 backup](operations/backup-alerts.md)
+The data owner must install the mandatory [daily R2 backup](operations/backup-alerts.md)
 and test restoring into a separate approved scratch database before relying on it. Keep dump credentials in private libpq service/
 password files, not shell history. Record restore point, migration state and application
 SHA. Disposable packaging exercises `pg_dump`/restore mechanics; it proves neither
-S3 retention nor the owner's ability to recover production data.
+R2 retention nor the owner's ability to recover production data.
 
 For an incident: set repository `PRODUCTION_RELEASE_ENABLED=false` to block new
 releases; it does not cancel an in-progress migration. Inspect the current Actions run,
