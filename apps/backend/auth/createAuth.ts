@@ -1,6 +1,8 @@
 import { betterAuth } from "better-auth";
 import { username } from "better-auth/plugins";
-import { PASSWORD_MIN, PASSWORD_MAX, USERNAME_MIN, USERNAME_MAX, validUsername, normalizeUsername } from "@infraforge/contracts/auth";
+import {
+  PASSWORD_MIN, PASSWORD_MAX, USERNAME_MIN, USERNAME_MAX, validUsername, normalizeUsername,
+} from "@infraforge/contracts/auth";
 import { credentialValidation } from "./credentials";
 import { prismaAdapter } from "@better-auth/prisma-adapter";
 import type { PrismaClient } from "../lib/generated/prisma/client";
@@ -12,7 +14,9 @@ import { mailAdmission, invalidProof, acceptedMail } from "./mailAdmission";
 import { consumeVerification, EMAIL_TOKEN_SECONDS } from "./verification";
 import { enforceAccountPolicy, type AccountQuota } from "./accountPolicy";
 
-export function createAuth(prisma: PrismaClient, settings: ReturnType<typeof readAuthSettings>, quota?: AccountQuota, mailQueue?: MailRequests) {
+export function createAuth(
+  prisma: PrismaClient, settings: ReturnType<typeof readAuthSettings>, quota?: AccountQuota, mailQueue?: MailRequests,
+) {
   const essentials = settings.accountEssentials;
   const deliver = (essentials.emailEnabled || essentials.enabled) && essentials.email
     ? mailQueue ?? new AccountEmailRequests(prisma, essentials.email, settings) : undefined;
@@ -48,7 +52,8 @@ export function createAuth(prisma: PrismaClient, settings: ReturnType<typeof rea
       minUsernameLength: USERNAME_MIN, maxUsernameLength: USERNAME_MAX,
       usernameValidator: validUsername, usernameNormalization: normalizeUsername })],
     disabledPaths: ["/is-username-available", "/delete-user", "/delete-user/callback",
-      ...(!deliver ? ["/send-verification-email", "/verify-email", "/request-password-reset", "/reset-password", "/reset-password/:token"] : [])],
+      ...(!deliver ? ["/send-verification-email", "/verify-email", "/request-password-reset",
+        "/reset-password", "/reset-password/:token"] : [])],
     hooks: { before: createAuthMiddleware(async ctx => {
       if (ctx.path === "/sign-up/email") {
         // These native middleware checks must also precede the username
@@ -59,7 +64,7 @@ export function createAuth(prisma: PrismaClient, settings: ReturnType<typeof rea
       await enforceAccountPolicy({
         path: ctx.path, body: ctx.body, token: ctx.body?.token ?? ctx.query?.token,
         ip: ctx.headers?.get("x-infraforge-client-ip") ?? "unknown",
-        enabled: essentials.enabled || !!deliver, challenge: essentials.challenge, quota,
+        enabled: essentials.enabled || !!deliver, proofSignup: !!deliver, challenge: essentials.challenge, quota,
       });
       if (deliver) {
         await mailAdmission(deliver, settings)(ctx);
@@ -69,7 +74,8 @@ export function createAuth(prisma: PrismaClient, settings: ReturnType<typeof rea
         }
       }
       await credentialValidation(ctx);
-      if (ctx.path === "/verify-email" && (!deliver || !await consumeVerification(prisma, String(ctx.query?.token ?? "")))) {
+      if (ctx.path === "/verify-email"
+        && (!deliver || !await consumeVerification(prisma, String(ctx.query?.token ?? "")))) {
         throw new APIError("BAD_REQUEST", { code: "INVALID_TOKEN", message: "Invalid or expired link" });
       }
     }) },

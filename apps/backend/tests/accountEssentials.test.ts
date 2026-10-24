@@ -193,6 +193,13 @@ test("configured challenges and quota outages fail closed", async () => {
   await expect(enforceAccountPolicy({ path: "/request-password-reset", enabled: true, ip: "fixture", quota: { allow: async () => { throw Error("private provider data"); } } })).rejects.toMatchObject({ status: "SERVICE_UNAVAILABLE" });
 });
 
+test("a supplied proof field cannot bypass Turnstile when email signup is disabled", async () => {
+  await expect(enforceAccountPolicy({
+    path: "/sign-up/email", body: { email: "fixture@example.test", emailProof: "unissued" },
+    enabled: false, ip: "fixture", quota: new Quota(), challenge: new FakeChallenge(false),
+  })).rejects.toMatchObject({ status: "FORBIDDEN" });
+});
+
 test("native email/reset routes enforce trusted callback origins", async () => {
   const f = fixture();
   expect((await f.call("request-password-reset", { email: "absent@example.test", redirectTo: "http://evil.invalid/reset", turnstileToken: "fixture" })).status).toBe(403);
