@@ -1,5 +1,8 @@
 # Rebuild and recover production
 
+For an AWS-to-Oracle A1 fresh-database move, use [ORACLE_MIGRATION.md](ORACLE_MIGRATION.md).
+It adds OCI networking, ARM evidence, DNS/TLS ordering and the owner/lead cutover gates.
+
 For the owner-decided fresh database replacement, follow the copy-paste
 [self-hosted PostgreSQL cutover](SELF_HOSTED_POSTGRES.md). It includes URL-only
 provider switching, mandatory daily R2 backups and a scratch restore test.
@@ -45,6 +48,98 @@ uses only an internal Docker bridge; remote providers require verified TLS. No s
 may inject forwarded identity headers without reviewing the existing trust contract.
 
 ## Bootstrap repeatable host pieces
+
+### Oracle A1: network, firewall, clock and swap
+
+Owner: select Ubuntu 24.04 on `VM.Standard.A1.Flex`, **2 OCPUs / 8 GB RAM /
+100 GB boot**, in Mumbai only if Mumbai is the tenancy's home region. Confirm the
+console marks the resources Always Free eligible and the tenancy's combined volume
+allocation remains within its allowance. Capacity is not guaranteed; retry an
+eligible availability domain or use the documented fallback, without selecting a
+paid shape by accident. See the [ARM64 audit](operations/oracle-arm64-audit.md).
+
+Owner: give the public subnet an internet-gateway route and the VM a public IPv4
+address. In the applicable OCI security lists **and** attached NSGs, review the
+union of ingress permissions (a restrictive NSG does not cancel a permissive
+security-list rule). Keep only these application/administration TCP allowances:
+
+| Source | Destination ports | Stateful |
+| --- | --- | --- |
+| `0.0.0.0/0` | `80`, `443` | Yes |
+| Approved operator/release source CIDRs only | `22` | Yes |
+
+Remove default world-open SSH and any broad TCP ingress after verifying a second
+SSH connection from an allowed source. Preserve required ICMP/path-MTU and provider
+service traffic; these are not application listeners. Never allow public
+3000/3001/3002/5432/6379. The current GitHub-hosted runner needs an explicitly
+maintained source policy; its IP is not fixed. Revalidate that policy before the
+first workflow. Keep this migration IPv4-only: remove stale backend AAAA records,
+and do not add public IPv6 ingress without a separate equivalent firewall review.
+Allow outbound DNS, time synchronization and HTTPS for apt, GitHub, registry,
+ACME, R2 and enabled providers; preserve OCI's metadata/service rules.
+
+Lead, on the **new VM only**, before installing Docker: Oracle's Ubuntu image can
+reject HTTP/S in its existing iptables INPUT chain even when UFW is inactive.
+Inspect it rather than assuming a rule number. Keep console access and an existing
+SSH connection while applying this exact addition; never flush the rules or delete
+the terminal REJECT or OCI `InstanceServices` rules:
+
+```sh
+set -euo pipefail
+sudo iptables -S INPUT
+sudo iptables -S OUTPUT
+sudo iptables -L INPUT -n -v --line-numbers
+command -v netfilter-persistent
+# On the stock image, insert before the terminal REJECT. -C makes reruns harmless.
+if ! sudo iptables -C INPUT -p tcp -m state --state NEW -m multiport --dports 80,443 -j ACCEPT; then
+  sudo iptables -I INPUT 1 -p tcp -m state --state NEW -m multiport --dports 80,443 -j ACCEPT
+fi
+sudo netfilter-persistent save
+sudo iptables -C INPUT -p tcp -m state --state NEW -m multiport --dports 80,443 -j ACCEPT
+sudo grep -- '--dports 80,443' /etc/iptables/rules.v4
+```
+
+The persistent filter entry is exactly
+`-A INPUT -p tcp -m state --state NEW -m multiport --dports 80,443 -j ACCEPT`,
+before the stock reject. Existing custom rules require review before insertion.
+If `netfilter-persistent` is absent, stop and review the image/firewall manager;
+for the stock iptables image install `iptables-persistent` and
+`netfilter-persistent` with apt, then repeat. Save before Docker creates its dynamic
+network chains. Verify persistence after reboot and external 80/443 reachability
+after Nginx is configured. Do not use `ufw allow` as proof that OCI's iptables
+chain accepts traffic. [Oracle's Ubuntu HTTP instructions](https://docs.oracle.com/en-us/iaas/Content/developer/apache-on-ubuntu/01oci-ubuntu-apache-summary.htm)
+also require an INPUT insertion and `netfilter-persistent save`.
+
+Lead: use UTC for operational schedules; the owner's local timezone remains
+Asia/Kolkata (02:15 UTC is 07:45 IST). Check synchronization before TLS/releases:
+
+```sh
+sudo timedatectl set-timezone Etc/UTC
+sudo timedatectl set-ntp true
+timedatectl status
+test "$(timedatectl show -p NTPSynchronized --value)" = yes
+date -u
+free -h
+swapon --show
+df -h /
+df -i /
+```
+
+If synchronization is not yet `yes`, inspect the image's time service (timesyncd
+or chrony) and wait for synchronization; do not run two competing NTP clients or
+bypass the check. **Do not create swap for the initial 8 GB deployment.** The
+2432 MiB steady ceilings plus 768 MiB builder leave 4992 MiB of an assumed 8192 MiB
+host before host work; actual working sets remain unknown. Existing image swap
+must be recorded and reviewed, never removed automatically. Swap is emergency
+buffering, not capacity, a performance fix or idle-reclaim protection. Keep the
+builder's `memory=768m,memory-swap=768m` (no extra swap) and all service limits.
+Measure pressure/OOMs before changing this decision.
+
+Oracle may reclaim idle A1 instances. See [idle policy and memory arithmetic](ORACLE_MIGRATION.md#idle-reclaim-and-capacity):
+2432 MiB is a ceiling, not a guaranteed working set above the 20% threshold. Enable
+OCI memory monitoring and notices; do not install a CPU burner.
+
+### Common host installation
 
 From a reviewed exact checkout on the selected host, invoke as root:
 
