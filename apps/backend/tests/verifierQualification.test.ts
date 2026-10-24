@@ -145,12 +145,19 @@ function hostFixture() {
   content.set("/proc/42/comm", "dockerd"); content.set("/proc/42/cmdline", "dockerd\0--config-file=/etc/infraforge/verifier/daemon.json\0");
   content.set("/proc/42/stat", "42 (dockerd) " + Array(20).fill("1").join(" "));
   content.set("/proc/42/cgroup", "0::/user.slice/user-1001.slice/service");
+  for (const [name, value] of Object.entries({ "vm/panic_on_oom": "0", "vm/oom_kill_allocating_task": "0",
+    "vm/overcommit_memory": "0", "vm/overcommit_ratio": "50", "vm/overcommit_kbytes": "0",
+    "vm/min_free_kbytes": "65536", "vm/swappiness": "60", "kernel/sched_cfs_bandwidth_slice_us": "5000",
+    "kernel/threads-max": "30000", "kernel/pid_max": "4194304", "fs/file-max": "1000000", "fs/nr_open": "1048576" })) {
+    content.set(`/proc/sys/${name}`, value);
+  }
   const host: FingerprintHost = { platform: "linux", uid: 1001, executable: "/usr/bin/bun",
     read: async path => Buffer.from(content.get(path) ?? "fixture"), realpath: async path => path,
     list: async () => ["42"], which: name => `/usr/bin/${name}`, cpuModels: () => ["fixture", "fixture"], memory: () => 4 * 1024 ** 3,
     stat: async path => ({ isFile: () => true, uid: path === "/proc/42" ? 1001n : 0n,
       size: 10n, mode: 0o100644n, ctimeNs: stamps.get(path) ?? 1n, mtimeNs: 1n, ino: 1n, dev: 1n }) as any };
-  f.control.run = async args => JSON.stringify(args[0] === "info" ? info : version);
+  f.control.run = async args => JSON.stringify(args[0] === "info" ? info : args[0] === "image"
+    ? [{ Id: f.baseline.image, Os: "linux" }] : version);
   return { ...f, host, info, version, content, stamps, read: createHostFingerprintReader(f.control, host) };
 }
 
@@ -199,6 +206,29 @@ test("unknown or unsupported host and daemon facts fail closed", async () => {
   await expect(malformed.read()).rejects.toThrow("start identity Unknown");
   const component = hostFixture(); component.version.Components[0]!.Version = "";
   await expect(component.read()).rejects.toThrow("Runtime identity Unknown");
+});
+
+test("live OOM changes and unknown kernel policies cannot retain a lease", async () => {
+  for (const value of ["2", "1", "", "Unknown", "-1"]) {
+    const f = hostFixture();
+    f.dependencies.fingerprint = async () => (await f.read()).fingerprint;
+    f.baseline.fingerprint = (await f.read()).fingerprint;
+    await f.live.renew();
+    f.content.set("/proc/sys/vm/panic_on_oom", value);
+    await expect(f.live.refresh()).rejects.toThrow();
+    expect(f.configuration.qualification).toBeNull();
+    f.content.set("/proc/sys/vm/panic_on_oom", "0");
+    await expect(f.live.renew()).rejects.toThrow();
+  }
+  const reference = hostFixture();
+  for (const [path, value] of reference.content) {
+    if (!path.startsWith("/proc/sys/")) continue;
+    const f = hostFixture(), before = await f.read();
+    f.content.set(path, ""); await expect(f.read()).rejects.toThrow();
+    f.content.set(path, String(Number(value) + 1));
+    if (path.endsWith("panic_on_oom") || path.endsWith("oom_kill_allocating_task")) await expect(f.read()).rejects.toThrow();
+    else expect((await f.read()).fingerprint).not.toBe(before.fingerprint);
+  }
 });
 
 test("live production health requires successful responses from all three fixed probes", async () => {

@@ -1889,18 +1889,18 @@
     }
   },
   "apps/backend/firstStack/qualificationFingerprint.ts": {
-    "hash": "fbec19c31ba778217435ad7bb29e2a86a535785cc185aa105ce9fab74ead45a6",
+    "hash": "10555de6a0ff562813e8359be4eacf4651230c1aeb1064b59b1f4bedc4da11f7",
     "capabilities": [
       "computed-data",
       "resources"
     ],
     "globals": {
-      "hash": "fbec19c31ba778217435ad7bb29e2a86a535785cc185aa105ce9fab74ead45a6",
+      "hash": "10555de6a0ff562813e8359be4eacf4651230c1aeb1064b59b1f4bedc4da11f7",
       "names": [
         "process"
       ]
     },
-    "review": "Exact Linux host observation review: fixed proc/sys/cgroup/package/config/unit paths and five named PATH executables plus current Bun; root-owned regular-file bytes are hashed, metadata-cached and checked for races. Only the dedicated user dockerd PID is selected; command contents are hashed. Explicit rootless c7i-flex.large/systemd/runc restrictions. Existing Docker control facade only; no process launch, secret/env-file read, dynamic loader or host mutation."
+    "review": "Exact Linux host observation review: fixed proc/sys/cgroup/package/config/unit paths and five named PATH executables plus current Bun; root-owned regular-file bytes are hashed, metadata-cached and checked for races. Only the dedicated user dockerd PID is selected; command contents are hashed. Explicit rootless c7i-flex.large/systemd/runc restrictions. Existing Docker control facade only; no process launch, secret/env-file read, dynamic loader or host mutation. Effective OOM/allocation, scheduler and global task/FD sysctls are read on every observation; supported OOM policy is validated and all values enter the fingerprint. No sysctl writes."
   },
   "apps/backend/firstStack/isolationSelfCheck.ts": {
     "hash": "0d8d54cd7bfd203a96911fa0e52bdd8af40cf1956239434f3a9064ee52fbf63b",

@@ -10,6 +10,13 @@ const daemonConfig = "/etc/infraforge/verifier/daemon.json";
 const binaryNames = ["docker", "dockerd", "containerd", "runc", "rootlesskit"] as const;
 const cgroupFiles = ["cgroup.controllers", "cgroup.subtree_control", "cpu.max", "memory.max",
   "memory.swap.max", "pids.max", "cpuset.cpus.effective", "cpuset.mems.effective"];
+// Effective values, not sysctl configuration files: these can change without
+// a reboot. Keep allocation, OOM selection, scheduler and global task/FD limits
+// bound to the destructive rehearsal. Unknown policies never inherit evidence.
+const kernelPolicies = ["vm/panic_on_oom", "vm/oom_kill_allocating_task", "vm/overcommit_memory",
+  "vm/overcommit_ratio", "vm/overcommit_kbytes", "vm/min_free_kbytes", "vm/swappiness",
+  "kernel/sched_cfs_bandwidth_slice_us", "kernel/threads-max", "kernel/pid_max",
+  "fs/file-max", "fs/nr_open"];
 export interface FingerprintHost {
   platform: string; uid: number; executable: string;
   read(path: string): Promise<Buffer>; stat(path: string): Promise<BigIntStats>;
@@ -105,10 +112,18 @@ export function createHostFingerprintReader(control: IsolationControl, host?: Fi
     const stat = await text(`/proc/${pid}/stat`);
     const start = stat.slice(stat.lastIndexOf(")") + 2).split(" ")[19];
     if (!start || !/^[0-9]+$/.test(start)) throw Error("Daemon start identity Unknown");
+    const policies: Record<string, string> = {};
+    for (const name of kernelPolicies) {
+      const value = (await text(`/proc/sys/${name}`)).trim();
+      if (!/^(0|[1-9][0-9]*)$/.test(value)) throw Error("Live kernel policy Unknown");
+      policies[name] = value;
+    }
+    if (policies["vm/panic_on_oom"] !== "0" || policies["vm/oom_kill_allocating_task"] !== "0" ||
+      !["0", "1"].includes(policies["vm/overcommit_memory"]!)) throw Error("Unsupported live OOM policy");
     const observation = {
       schema: "first-stack-fingerprint/2", daemon: control.identity,
       boot: (await text("/proc/sys/kernel/random/boot_id")).trim(),
-      kernel: (await text("/proc/version")).trim(), machine,
+      kernel: (await text("/proc/version")).trim(), machine, policies,
       cpus: machineHost().cpuModels(), memory: machineHost().memory(),
       docker: { version, kernel: info.KernelVersion, architecture: info.Architecture,
         driver: info.Driver, driverStatus: info.DriverStatus, cgroup: info.CgroupVersion,
