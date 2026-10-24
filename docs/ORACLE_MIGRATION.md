@@ -288,6 +288,8 @@ Its HTTPS maintenance/readiness requests must reach this Oracle host
 ```sh
 git fetch origin main
 test "$RELEASE_TARGET" = "$(git rev-parse origin/main)"
+read -r -p 'Oracle public IPv4 from the OCI console: ' ORACLE_IPV4
+test "$(getent ahostsv4 "$BACKEND_DNS_NAME" | awk '{print $1}' | sort -u)" = "$ORACLE_IPV4"
 test "$RELEASE_TARGET" = "$(git rev-parse HEAD)"
 test -z "$(git status --porcelain)"
 test ! -e /var/lib/infraforge/releases/release.lock
