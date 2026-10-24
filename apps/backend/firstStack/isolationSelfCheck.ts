@@ -11,19 +11,24 @@ export function assertIsolationSelfCheck(value: { readonly: boolean; fdDenied: b
 
 // Only called by the canary child, inside the normal executor budget. Every
 // probe is finite even when a limit is broken; no host or production writes.
-export function isolationSelfCheck() {
+const nativeProbe = { write: () => writeFileSync("/app/qualification-forbidden", "canary"),
+  open: () => openSync("/dev/null", "r"), close: closeSync,
+  counters: () => readFileSync("/sys/fs/cgroup/cpu.stat", "utf8"),
+  interfaces: () => readdirSync("/sys/class/net"), now: () => performance.now(),
+  work: () => { Math.sqrt(Math.random()); } };
+export function isolationSelfCheck(probe = nativeProbe) {
   let readonly = false, fdDenied = false;
   const descriptors: number[] = [];
-  try { writeFileSync("/app/qualification-forbidden", "canary"); }
+  try { probe.write(); }
   catch (error) { readonly = (error as NodeJS.ErrnoException).code === "EROFS"; }
-  try { for (let i = 0; i < 160; i++) descriptors.push(openSync("/dev/null", "r")); }
+  try { for (let i = 0; i < 160; i++) descriptors.push(probe.open()); }
   catch (error) { fdDenied = (error as NodeJS.ErrnoException).code === "EMFILE"; }
-  finally { descriptors.forEach(closeSync); }
-  const counters = () => Object.fromEntries(readFileSync("/sys/fs/cgroup/cpu.stat", "utf8").trim()
+  finally { descriptors.forEach(fd => probe.close(fd)); }
+  const counters = () => Object.fromEntries(probe.counters().trim()
     .split("\n").map(row => { const [key, value] = row.split(/\s+/); return [key, Number(value)]; }));
-  const before = counters(), began = performance.now();
-  while (performance.now() - began < 4000) Math.sqrt(Math.random());
+  const before = counters(), began = probe.now();
+  while (probe.now() - began < 4000) probe.work();
   const after = counters();
   assertIsolationSelfCheck({ readonly, fdDenied, files: descriptors.length,
-    interfaces: readdirSync("/sys/class/net").sort(), before, after });
+    interfaces: probe.interfaces().sort(), before, after });
 }

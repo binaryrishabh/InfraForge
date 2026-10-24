@@ -1904,17 +1904,17 @@
     "review": "Exact Linux host observation review: live kernel policies, effective systemd safety properties and separate supervisor/executor-parent/daemon cgroups. Fixed /usr/bin/systemctl show calls only (two-second/64KiB bounds, scrubbed environment, no shell or mutations). Runtime identity comes from loaded dockerd/containerd/rootlesskit executables and protected runc/shim/init files opened through actual proc namespaces; only supported merged /usr/bin:/bin search and working-directory layout is accepted. Selects PATH and rejects linker overrides without retaining process environments. Parses only managed runtime TOML data with no evaluation; custom runtime/plugin/import overrides reject. Protected daemon config must predate launch and match its namespace. Root-owned file bytes cached by metadata with race checks. Unknown observations fail closed. No credential/env-file access, dynamic loading or host mutation."
   },
   "apps/backend/firstStack/isolationSelfCheck.ts": {
-    "hash": "0d8d54cd7bfd203a96911fa0e52bdd8af40cf1956239434f3a9064ee52fbf63b",
+    "hash": "b4e53c7f1f791f0c17ddbbd9b3840fad344b1b4d19b3b06917efec8c96a37fdb",
     "capabilities": [
       "resources"
     ],
     "globals": {
-      "hash": "0d8d54cd7bfd203a96911fa0e52bdd8af40cf1956239434f3a9064ee52fbf63b",
+      "hash": "b4e53c7f1f791f0c17ddbbd9b3840fad344b1b4d19b3b06917efec8c96a37fdb",
       "names": [
         "performance"
       ]
     },
-    "review": "Exact canary-child filesystem review: fixed /app write-denial probe, at most 160 /dev/null descriptor opens with closure, fixed CPU counters and network-interface reads; finite four-second throttle exercise. Executes only inside the existing isolated child budget. No host writes, process launches or credentials."
+    "review": "Exact canary-child filesystem review: fixed /app write-denial probe, at most 160 /dev/null descriptor opens with closure, fixed CPU counters and network-interface reads; finite four-second throttle exercise. Executes only inside the existing isolated child budget. No host writes, process launches or credentials. Collector takes an internal probe adapter for deterministic behavioral tests; the child always calls the fixed native adapter without workload-controlled injection. Real collector negative cases, child entrypoint invocation and descriptor cleanup are exercised separately from predicate/protocol doubles."
   },
   "apps/backend/firstStack/verifierProductionProbe.ts": {
     "hash": "e218ac22619320de3668928c110990acc793dfccd9b08daf8818123f35ccbadb",

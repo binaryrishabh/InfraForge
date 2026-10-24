@@ -21,6 +21,16 @@ test("host lifecycle starts once, invalidates dependency loss and drains despite
   expect(output).toContain("Verifier lifecycle ordering and dependency invalidation passed");
 });
 
+test("lifecycle executes its supplied fingerprint, headroom and owned canary callbacks", async () => {
+  for (const failure of ["fingerprint", "headroom", "canary"]) {
+    const child = Bun.spawn([process.execPath, "--no-env-file", "--no-install",
+      fileURLToPath(new URL("./verifierLifecycleHarness.ts", import.meta.url)), failure], { stdout: "pipe", stderr: "pipe" });
+    const [output, error, code] = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text(), child.exited]);
+    expect({ code, error }).toEqual({ code: 0, error: "" });
+    expect(output).toContain("Verifier callback failure closes startup");
+  }
+});
+
 function fixture() {
   const source = "a".repeat(64), image = `sha256:${"b".repeat(64)}`, daemon = "c".repeat(64);
   const qualification: HostQualification = { schema: "first-stack-host/1", target: "ec2-c7i-flex.large",
