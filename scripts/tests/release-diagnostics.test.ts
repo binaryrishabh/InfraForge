@@ -34,6 +34,47 @@ test("diagnostic redaction covers URLs, secret values/assignments and authorizat
   expect(redactReleaseDiagnostic('"GITHUB_CLIENT_SECRET": "synthetic-json", API_KEY=synthetic-key', {})).not.toContain("synthetic");
 }, 30000);
 
+test("raw known credentials without a key, URL or encoded spelling are removed", () => {
+  const secret = "review raw%credential";
+  const redacted = redactReleaseDiagnostic(`upstream rejected ${secret} during login`, { BETTER_AUTH_SECRET: secret });
+  expect(redacted).toContain("upstream rejected [redacted] during login");
+  expect(redacted).not.toContain("credential");
+});
+
+test("persisted diagnostics suppress env-only parser payloads and multiline or escaped secret fragments", async () => {
+  const directory = await mkdtemp(join(tmpdir(), "infraforge-parser-diagnostic-"));
+  const examples = [
+    'line 1: unterminated quoted value "review-first-secret\nreview-second-secret',
+    'line 2: unexpected character "!" in variable name "review-first-secret"\nreview-second-secret',
+    'invalid interpolation format for "review-first-secret"\nreview-second-secret',
+    'POSTGRES_PASSWORD="review-first-secret\nreview-second-secret"',
+    String.raw`POSTGRES_PASSWORD="review-first-secret\"review-second-secret"`,
+    String.raw`POSTGRES_PASSWORD='review-first-secret\'review-second-secret'`,
+    'POSTGRES_PASSWORD="review-first-secret\nreview-second-secret',
+    'POSTGRES_PASSWORD=review-first-secret review-second-secret',
+  ];
+  try {
+    for (const input of examples) {
+      const path = await writeComposeDiagnostic(input, directory, {}, async () => {});
+      const saved = await readFile(path, "utf8");
+      expect(saved).toContain("redacted");
+      expect(saved).not.toContain("review-first-secret");
+      expect(saved).not.toContain("review-second-secret");
+    }
+  } finally { await rm(directory, { recursive: true }); }
+}, 30000);
+
+test("diagnostic filename collisions preserve the existing evidence instead of overwriting it", async () => {
+  const directory = await mkdtemp(join(tmpdir(), "infraforge-diagnostic-collision-"));
+  try {
+    const name = () => "compose-error-collision.log";
+    const path = await writeComposeDiagnostic("original evidence", directory, {}, async () => {}, name);
+    await expect(writeComposeDiagnostic("replacement evidence", directory, {}, async () => {}, name)).rejects.toMatchObject({ code: "EEXIST" });
+    expect(await readFile(path, "utf8")).toBe("original evidence\n");
+    expect(await readdir(directory)).toEqual([name()]);
+  } finally { await rm(directory, { recursive: true }); }
+}, 30000);
+
 test("the diagnostic file contains only a redacted bounded tail, uses an exclusive private file, and calls ownership security", async () => {
   const directory = await mkdtemp(join(tmpdir(), "infraforge-diagnostic-"));
   try {

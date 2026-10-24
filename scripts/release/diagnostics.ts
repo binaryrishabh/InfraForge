@@ -11,6 +11,13 @@ export function assertPrivateDiagnostic(opened: DiagnosticStat, named: Diagnosti
 }
 export function redactReleaseDiagnostic(text: string, environment: Record<string, string | undefined>) {
   let result = text.replace(/\x1b\[[0-9;]*[A-Za-z]/g, "");
+  // dotenv parser errors can echo a value without its key. The private env-file
+  // values are deliberately unavailable here, so suppress the entire payload,
+  // including continuation lines, rather than guessing which words are secrets.
+  if (/\bline\s+\d+:\s*(?:unterminated quoted value|unexpected character|key cannot contain a space)\b/i.test(result) ||
+      /invalid interpolation format/i.test(result)) {
+    return "[redacted Compose environment-file parser diagnostic; inspect private configuration syntax]";
+  }
   // Replace known secret values before taking the tail, even if they contain
   // punctuation, whitespace or newlines. Compose's env-file values are also
   // covered by the URL/assignment rules below without reading the private file.
@@ -21,7 +28,7 @@ export function redactReleaseDiagnostic(text: string, environment: Record<string
   return result
     .replace(/[a-z][a-z0-9+.-]*:\/\/[^\s<>"']+/gi, "[redacted URL]")
     .replace(/\b(Bearer|Basic)\s+[^\s,"']+/gi, "$1 [redacted]")
-    .replace(/(["']?[\w.-]*(?:PASSWORD|SECRET|TOKEN|KEY|CREDENTIAL|DATABASE_URL)[\w.-]*["']?\s*[:=]\s*)("[^"\r\n]*"|'[^'\r\n]*'|[^\s,;]+)/gi, "$1[redacted]");
+    .replace(/(["']?[\w.-]*(?:PASSWORD|SECRET|TOKEN|KEY|CREDENTIAL|DATABASE_URL)[\w.-]*["']?\s*[:=]\s*)("(?:\\[\s\S]|[^"\\])*(?:"|$)|'(?:\\[\s\S]|[^'\\])*(?:'|$)|[^\r\n,;]+)/gi, "$1[redacted]");
 }
 
 export async function secureRootDiagnostic(path: string, file: FileHandle) {
@@ -41,8 +48,8 @@ export async function secureRootDiagnostic(path: string, file: FileHandle) {
 }
 
 export async function writeComposeDiagnostic(stderr: string, directory: string, environment: Record<string, string | undefined>,
-  secure = secureRootDiagnostic) {
-  const path = resolve(directory, `compose-error-${Date.now()}-${randomUUID()}.log`);
+  secure = secureRootDiagnostic, filename = () => `compose-error-${Date.now()}-${randomUUID()}.log`) {
+  const path = resolve(directory, filename());
   const file = await open(path, "wx", 0o600);
   try {
     await file.writeFile(redactReleaseDiagnostic(stderr, environment).slice(-16000) + "\n");
