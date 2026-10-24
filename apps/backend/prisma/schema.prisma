@@ -129,6 +129,7 @@ model User {
   deletedAt     DateTime?
   emailTokens   AccountEmailToken[]
   mailOutbox    AccountMailOutbox[]
+  mailIntents   AccountMailIntent[]
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   sessions      Session[]
@@ -155,6 +156,22 @@ model AccountMailOutbox {
   @@index([availableAt])
   @@index([userId])
   @@index([expiresAt])
+}
+
+model AccountMailIntent {
+  id          String   @id
+  kind        String
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  payload     String?
+  status      String   @default("pending")
+  attempts    Int      @default(0)
+  retrySafe   Boolean
+  availableAt DateTime @default(now())
+  expiresAt   DateTime
+  @@index([availableAt])
+  @@index([expiresAt])
+  @@index([userId])
 }
 
 model AccountEmailToken {
