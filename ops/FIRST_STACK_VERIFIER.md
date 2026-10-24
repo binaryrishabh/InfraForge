@@ -56,7 +56,11 @@ explicit operator coordination with releases. No automatic fallback is supported
    Root installs `/etc/infraforge/verifier/daemon.json` (0644); the dedicated
    daemon must start with the literal argument
    `--config-file=/etc/infraforge/verifier/daemon.json`. Use an explicit protected
-   configuration even when it is `{}`. The delegated daemon cgroup and every
+   configuration with `"cgroup-parent": "user.slice"`; arbitrary executor parents
+   and command-line parent overrides are unsupported. The fingerprint resolves
+   the running user manager's `ControlGroup` through systemd, then observes that
+   manager's `user.slice` and its ancestors separately from dockerd's ancestry.
+   The delegated daemon cgroup and every
    ancestor below the cgroup root must expose memory, swap, CPU, PID and cpuset
    controls. Missing/unreadable facts refuse qualification.
 3. Install an immutable copy of the exact release workspace at
@@ -148,6 +152,29 @@ service must exit zero. Keep the separate full qualification and real-container
 acceptance gates; do not substitute this regression for them.
 
 ## Full qualification after identity changes
+
+The full EC2 producer must now run **inside the installed
+`first-stack-verifier.service`**, with its 512 MiB, 0.15 CPU, no-swap, task/FD and
+sandbox restrictions. A shell invocation outside that service fails closed.
+For the maintenance rehearsal, keep activation disabled and ordinary production
+stopped. Use a temporary root-owned runtime drop-in that changes only `ExecStart`
+to the full command below and grants write access to a new disposable evidence
+directory. Keep the installed base unit unchanged. After collecting evidence,
+stop the service, remove that temporary drop-in and reload systemd before the
+normal verifier launch. The fingerprint binds effective safety properties,
+running cgroup controls, process no-new-privileges/capabilities/FD limit and the
+installed base unit; it deliberately excludes the qualification command and
+its output-directory exception. Other effective policy changes require new
+qualification. Run the intended-host unit validation before activation; it has
+not been performed on this development machine.
+
+Both full and live observations require `vm.panic_on_oom=0`,
+`vm.oom_kill_allocating_task=0` and `vm.overcommit_memory` equal to 0 or 1. They
+also bind the effective allocation/reserve, CPU-bandwidth scheduling, global
+task/PID and file-descriptor sysctls. Missing values reject qualification. A
+runtime systemd override cannot remove the supervisor ceiling unnoticed: live
+kernel cgroup controls and effective systemd properties are both checked.
+Executor ancestor limits below the 768 MiB/0.5 CPU/64-task budget are rejected.
 
 The full producer in FIRST_STACK_ISOLATION.md remains authoritative for all
 sixteen behavioral gates. Containment-only/CI output and legacy v1 records never

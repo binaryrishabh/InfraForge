@@ -144,7 +144,31 @@ function hostFixture() {
   content.set("/sys/devices/virtual/dmi/id/product_name", "c7i-flex.large");
   content.set("/proc/42/comm", "dockerd"); content.set("/proc/42/cmdline", "dockerd\0--config-file=/etc/infraforge/verifier/daemon.json\0");
   content.set("/proc/42/stat", "42 (dockerd) " + Array(20).fill("1").join(" "));
-  content.set("/proc/42/cgroup", "0::/user.slice/user-1001.slice/service");
+  const managerGroup = "/user.slice/user-1001.slice/user@1001.service";
+  const supervisorGroup = "/system.slice/first-stack-verifier.service";
+  content.set("/proc/42/cgroup", `0::${managerGroup}/app.slice/docker.service`);
+  content.set("/proc/self/cgroup", `0::${supervisorGroup}`);
+  content.set("/proc/self/status", "NoNewPrivs:\t1\nCapEff:\t00000000\n");
+  content.set("/proc/self/limits", "Max open files 512 512 files\n");
+  content.set("/etc/infraforge/verifier/daemon.json", '{"cgroup-parent":"user.slice"}');
+  const supervisor: Record<string, string> = { ControlGroup: supervisorGroup, User: "infraforge-verifier", Group: "infraforge-verifier",
+    MemoryMax: "536870912", MemorySwapMax: "0", TasksMax: "128", CPUQuotaPerSecUSec: "150ms", CPUQuotaPeriodUSec: "100ms",
+    LimitNOFILE: "512", LimitNOFILESoft: "512", NoNewPrivileges: "yes", ProtectSystem: "strict", ProtectHome: "tmpfs",
+    PrivateTmp: "yes", PrivateDevices: "yes", RestrictSUIDSGID: "yes", CapabilityBoundingSet: "", KillMode: "control-group", UMask: "0077",
+    RestrictAddressFamilies: "AF_UNIX AF_INET AF_INET6", BindReadOnlyPaths: "/run/user/1001/docker.sock" };
+  const manager: Record<string, string> = { ControlGroup: managerGroup };
+  for (const group of ["/user.slice", "/user.slice/user-1001.slice", managerGroup,
+    `${managerGroup}/app.slice`, `${managerGroup}/app.slice/docker.service`, `${managerGroup}/user.slice`, "/system.slice", supervisorGroup]) {
+    for (const [key, value] of Object.entries({ "cpu.max": "max 100000", "memory.max": "max", "memory.swap.max": "max",
+      "pids.max": "max", "cpuset.cpus.effective": "0-1", "cpuset.mems.effective": "0", "memory.high": "max",
+      "memory.low": "0", "memory.min": "0", "memory.oom.group": "0", "cpu.weight": "100",
+      "cgroup.controllers": "cpu memory pids cpuset", "cgroup.subtree_control": "cpu memory pids cpuset" })) {
+      content.set(`/sys/fs/cgroup${group}/${key}`, value);
+    }
+  }
+  for (const [key, value] of Object.entries({ "cpu.max": "15000 100000", "memory.max": "536870912", "memory.swap.max": "0", "pids.max": "128" })) {
+    content.set(`/sys/fs/cgroup${supervisorGroup}/${key}`, value);
+  }
   for (const [name, value] of Object.entries({ "vm/panic_on_oom": "0", "vm/oom_kill_allocating_task": "0",
     "vm/overcommit_memory": "0", "vm/overcommit_ratio": "50", "vm/overcommit_kbytes": "0",
     "vm/min_free_kbytes": "65536", "vm/swappiness": "60", "kernel/sched_cfs_bandwidth_slice_us": "5000",
@@ -152,23 +176,29 @@ function hostFixture() {
     content.set(`/proc/sys/${name}`, value);
   }
   const host: FingerprintHost = { platform: "linux", uid: 1001, executable: "/usr/bin/bun",
-    read: async path => Buffer.from(content.get(path) ?? "fixture"), realpath: async path => path,
+    read: async path => {
+      if (!content.has(path) && (path.startsWith("/sys/fs/cgroup/") || path.startsWith("/proc/sys/"))) throw Error("Missing host fact");
+      return Buffer.from(content.get(path) ?? "fixture");
+    }, realpath: async path => path,
+    systemd: async unit => Object.entries(unit === "supervisor" ? supervisor : manager).map(([k, v]) => `${k}=${v}`).join("\n"),
     list: async () => ["42"], which: name => `/usr/bin/${name}`, cpuModels: () => ["fixture", "fixture"], memory: () => 4 * 1024 ** 3,
     stat: async path => ({ isFile: () => true, uid: path === "/proc/42" ? 1001n : 0n,
       size: 10n, mode: 0o100644n, ctimeNs: stamps.get(path) ?? 1n, mtimeNs: 1n, ino: 1n, dev: 1n }) as any };
   f.control.run = async args => JSON.stringify(args[0] === "info" ? info : args[0] === "image"
     ? [{ Id: f.baseline.image, Os: "linux" }] : version);
-  return { ...f, host, info, version, content, stamps, read: createHostFingerprintReader(f.control, host) };
+  content.set("/proc/sys/kernel/random/boot_id", "fixture");
+  return { ...f, host, info, version, content, stamps, supervisor, manager, managerGroup, supervisorGroup,
+    read: createHostFingerprintReader(f.control, host) };
 }
 
 test("fingerprint observes reboot, kernel, runtime, binary, packages, daemon config and delegated limits", async () => {
   for (const path of ["/proc/sys/kernel/random/boot_id", "/proc/version", "/proc/42/stat",
-    "/etc/infraforge/verifier/daemon.json", "/etc/systemd/system/first-stack-verifier.service",
+    "/etc/systemd/system/first-stack-verifier.service",
     "/var/lib/dpkg/status", "/usr/bin/bun", "/usr/bin/docker", "/usr/bin/dockerd", "/usr/bin/containerd", "/usr/bin/runc", "/usr/bin/rootlesskit",
-    "/sys/fs/cgroup/user.slice/cpu.max", "/sys/fs/cgroup/user.slice/user-1001.slice/service/memory.max"]) {
+    "/sys/fs/cgroup/user.slice/cpu.weight"]) {
     const f = hostFixture(), before = await f.read();
     expect((await f.read()).fingerprint).toBe(before.fingerprint);
-    f.content.set(path, path === "/proc/42/stat" ? "42 (dockerd) " + Array(20).fill("2").join(" ") : "changed"); f.stamps.set(path, 2n);
+    f.content.set(path, path === "/proc/42/stat" ? "42 (dockerd) " + Array(20).fill("2").join(" ") : path.endsWith("cpu.weight") ? "200" : "changed"); f.stamps.set(path, 2n);
     expect((await f.read()).fingerprint).not.toBe(before.fingerprint);
   }
   const f = hostFixture(), before = await f.read(); f.version.Components[0]!.Version = "changed";
@@ -222,13 +252,52 @@ test("live OOM changes and unknown kernel policies cannot retain a lease", async
   }
   const reference = hostFixture();
   for (const [path, value] of reference.content) {
-    if (!path.startsWith("/proc/sys/")) continue;
+    if (!path.startsWith("/proc/sys/") || path.endsWith("boot_id")) continue;
     const f = hostFixture(), before = await f.read();
     f.content.set(path, ""); await expect(f.read()).rejects.toThrow();
     f.content.set(path, String(Number(value) + 1));
     if (path.endsWith("panic_on_oom") || path.endsWith("oom_kill_allocating_task")) await expect(f.read()).rejects.toThrow();
     else expect((await f.read()).fingerprint).not.toBe(before.fingerprint);
   }
+});
+
+test("effective supervisor and separate executor ancestry are mandatory live evidence", async () => {
+  const reference = hostFixture();
+  for (const group of [reference.supervisorGroup, `${reference.managerGroup}/user.slice`, "/system.slice"]) {
+    for (const name of ["cpu.max", "memory.max", "memory.swap.max", "pids.max", "memory.high", "memory.oom.group", "cpuset.cpus.effective"]) {
+      const f = hostFixture(), path = `/sys/fs/cgroup${group}/${name}`, before = await f.read();
+      f.content.delete(path); await expect(f.read()).rejects.toThrow();
+      f.content.set(path, name === "cpu.max" ? "20000 100000" : name === "cpuset.cpus.effective" ? "1" : "1");
+      const result = await f.read().then(value => value.fingerprint, () => null);
+      expect(result).not.toBe(before.fingerprint);
+    }
+  }
+  for (const [name, value] of [["cpu.max", "max 100000"], ["memory.max", "max"]]) {
+    const f = hostFixture(); f.content.set(`/sys/fs/cgroup${f.supervisorGroup}/${name}`, value!);
+    await expect(f.read()).rejects.toThrow("Supervisor budget");
+  }
+  const executor = hostFixture();
+  executor.content.set(`/sys/fs/cgroup${executor.managerGroup}/user.slice/memory.max`, "536870912");
+  await expect(executor.read()).rejects.toThrow("Executor ancestor");
+  for (const key of Object.keys(reference.supervisor)) {
+    const f = hostFixture(), before = await f.read(); delete f.supervisor[key];
+    await expect(f.read()).rejects.toThrow("systemd policy Unknown");
+    f.supervisor[key] = "changed";
+    const result = await f.read().then(value => value.fingerprint, () => null);
+    expect(result).not.toBe(before.fingerprint);
+  }
+  for (const [path, value] of [["/proc/self/cgroup", "0::/unconstrained"], ["/proc/self/limits", "Max open files 4096 4096 files"],
+    ["/proc/self/status", "NoNewPrivs: 0\nCapEff: 00000000\n"],
+    ["/etc/infraforge/verifier/daemon.json", '{}'], ["/etc/infraforge/verifier/daemon.json", '{"cgroup-parent":"other.slice"}']]) {
+    const f = hostFixture(); f.content.set(path!, value!); await expect(f.read()).rejects.toThrow();
+  }
+  const unknown = hostFixture(); unknown.manager.ControlGroup = ""; await expect(unknown.read()).rejects.toThrow();
+  const outside = hostFixture(), other = "/system.slice/other.service";
+  outside.supervisor.ControlGroup = other; outside.content.set("/proc/self/cgroup", `0::${other}`);
+  for (const [path, value] of [...outside.content]) {
+    if (path.startsWith(`/sys/fs/cgroup${outside.supervisorGroup}/`)) outside.content.set(path.replace(outside.supervisorGroup, other), value);
+  }
+  await expect(outside.read()).rejects.toThrow("Running service hierarchy");
 });
 
 test("live production health requires successful responses from all three fixed probes", async () => {

@@ -18,6 +18,7 @@ KillMode=mixed
 MemoryMax=512M
 MemorySwapMax=0
 CPUQuota=15%
+CPUQuotaPeriodSec=100ms
 TasksMax=128
 LimitNOFILE=512
 NoNewPrivileges=yes

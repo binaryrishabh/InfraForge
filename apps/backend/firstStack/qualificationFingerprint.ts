@@ -5,11 +5,18 @@ import { cpus, freemem, platform, totalmem } from "node:os";
 import { hash } from "./canonical";
 import type { IsolationControl } from "./isolationConnection";
 import { accessSync, constants, type BigIntStats } from "node:fs";
+import { execFile } from "node:child_process";
 
 const daemonConfig = "/etc/infraforge/verifier/daemon.json";
 const binaryNames = ["docker", "dockerd", "containerd", "runc", "rootlesskit"] as const;
 const cgroupFiles = ["cgroup.controllers", "cgroup.subtree_control", "cpu.max", "memory.max",
-  "memory.swap.max", "pids.max", "cpuset.cpus.effective", "cpuset.mems.effective"];
+  "memory.swap.max", "pids.max", "cpuset.cpus.effective", "cpuset.mems.effective",
+  "memory.high", "memory.low", "memory.min", "memory.oom.group", "cpu.weight"];
+const supervisorUnit = "first-stack-verifier.service";
+const supervisorProperties = ["ControlGroup", "User", "Group", "MemoryMax", "MemorySwapMax", "TasksMax",
+  "CPUQuotaPerSecUSec", "CPUQuotaPeriodUSec", "LimitNOFILE", "LimitNOFILESoft", "NoNewPrivileges",
+  "ProtectSystem", "ProtectHome", "PrivateTmp", "PrivateDevices", "RestrictSUIDSGID",
+  "CapabilityBoundingSet", "RestrictAddressFamilies", "BindReadOnlyPaths", "KillMode", "UMask"];
 // Effective values, not sysctl configuration files: these can change without
 // a reboot. Keep allocation, OOM selection, scheduler and global task/FD limits
 // bound to the destructive rehearsal. Unknown policies never inherit evidence.
@@ -22,6 +29,7 @@ export interface FingerprintHost {
   read(path: string): Promise<Buffer>; stat(path: string): Promise<BigIntStats>;
   realpath(path: string): Promise<string>; list(path: string): Promise<string[]>;
   which(name: string): string | null; cpuModels(): string[]; memory(): number;
+  systemd(unit: "supervisor" | "manager"): Promise<string>;
 }
 function nativeHost(): FingerprintHost {
   return { platform: platform(), uid: process.getuid!(), executable: process.execPath,
@@ -35,7 +43,13 @@ function nativeHost(): FingerprintHost {
       }
       return null;
     },
-    cpuModels: () => cpus().map(cpu => cpu.model), memory: totalmem };
+    cpuModels: () => cpus().map(cpu => cpu.model), memory: totalmem,
+    systemd: unit => new Promise((resolve, reject) => {
+      execFile("/usr/bin/systemctl", ["show", unit === "supervisor" ? supervisorUnit : `user@${process.getuid!()}.service`,
+        `--property=${unit === "supervisor" ? supervisorProperties.join(",") : "ControlGroup"}`],
+      { timeout: 2000, maxBuffer: 65536, env: { PATH: "/usr/bin:/bin", LC_ALL: "C" } },
+      (error, stdout) => error ? reject(Error("Effective systemd policy unavailable")) : resolve(stdout));
+    }) };
 }
 
 // Cache only unchanged regular files. ctime/inode changes invalidate the cache
@@ -60,19 +74,42 @@ export function createHostFingerprintReader(control: IsolationControl, host?: Fi
     }
     return { path: resolved, ...cached };
   }
-  async function cgroups(pid: string) {
+  async function processGroup(pid: string) {
     const rows = (await text(`/proc/${pid}/cgroup`)).trim().split("\n");
     if (rows.length !== 1 || !rows[0]!.startsWith("0::/")) throw Error("Unified cgroup hierarchy required");
-    const relative = rows[0]!.slice(4);
-    if (relative.split("/").includes("..")) throw Error("Invalid daemon cgroup path");
-    let path = join("/sys/fs/cgroup", relative);
+    return rows[0]!.slice(3);
+  }
+  async function cgroups(group: string) {
+    if (!/^\/(?:[A-Za-z0-9_.@-]+\/)*[A-Za-z0-9_.@-]+$/.test(group) ||
+      group.split("/").some(part => part === "." || part === "..")) throw Error("Invalid cgroup path");
+    let path = join("/sys/fs/cgroup", group);
     const ancestry: Array<{ path: string; controls: Record<string, string> }> = [];
     while (path !== "/sys/fs/cgroup") {
       const controls: Record<string, string> = {};
-      for (const name of cgroupFiles) controls[name] = (await text(join(path, name))).trim();
+      for (const name of cgroupFiles) {
+        const value = (await text(join(path, name))).trim();
+        const valid = name === "cpu.max" ? /^(max|[1-9][0-9]*) [1-9][0-9]*$/.test(value)
+          : name.startsWith("cpuset.") ? /^[0-9]+(?:[-,][0-9]+)*$/.test(value)
+          : name.startsWith("cgroup.") ? /^(?:[a-z]+(?: [a-z]+)*)?$/.test(value)
+          : /^(max|0|[1-9][0-9]*)$/.test(value);
+        if (!valid) throw Error("Effective cgroup policy Unknown");
+        controls[name] = value;
+      }
       ancestry.push({ path, controls }); path = dirname(path);
     }
     return ancestry;
+  }
+  async function effectiveUnit(unit: "supervisor" | "manager") {
+    const properties: Record<string, string> = {};
+    for (const row of (await machineHost().systemd(unit)).trim().split("\n")) {
+      const at = row.indexOf("=");
+      if (at < 1 || row.slice(0, at) in properties) throw Error("Effective systemd policy Unknown");
+      properties[row.slice(0, at)] = row.slice(at + 1);
+    }
+    for (const key of unit === "supervisor" ? supervisorProperties : ["ControlGroup"]) {
+      if (!(key in properties) || key !== "CapabilityBoundingSet" && !properties[key]) throw Error("Effective systemd policy Unknown");
+    }
+    return properties;
   }
   return async () => {
     if (platform() !== "linux" && !host || machineHost().platform !== "linux") throw Error("Linux host fingerprint required");
@@ -109,6 +146,32 @@ export function createHostFingerprintReader(control: IsolationControl, host?: Fi
     if (candidates.length !== 1) throw Error("Exactly one dedicated user daemon required");
     const pid = candidates[0]!, command = (await text(`/proc/${pid}/cmdline`)).split("\0");
     if (!command.includes(`--config-file=${daemonConfig}`)) throw Error("Dedicated protected daemon configuration required");
+    const configIdentity = await fileIdentity(daemonConfig), config = JSON.parse(await text(daemonConfig));
+    if (config["cgroup-parent"] !== "user.slice" || command.some(arg => arg.startsWith("--cgroup-parent"))) {
+      throw Error("Explicit supported executor cgroup parent required");
+    }
+    const supervisor = await effectiveUnit("supervisor"), manager = await effectiveUnit("manager");
+    const supervisorGroup = await processGroup("self"), daemonGroup = await processGroup(pid);
+    if (supervisorGroup !== `/system.slice/${supervisorUnit}` || supervisor.ControlGroup !== supervisorGroup ||
+      !manager.ControlGroup || !daemonGroup.startsWith(manager.ControlGroup + "/")) throw Error("Running service hierarchy unsupported");
+    const supervisorGroups = await cgroups(supervisorGroup), executorGroups = await cgroups(`${manager.ControlGroup}/user.slice`);
+    const budget = supervisorGroups[0]!.controls;
+    if (budget["memory.max"] !== "536870912" || budget["memory.swap.max"] !== "0" ||
+      budget["pids.max"] !== "128" || budget["cpu.max"] !== "15000 100000") throw Error("Supervisor budget not enforced");
+    const required = { User: "infraforge-verifier", Group: "infraforge-verifier", MemoryMax: "536870912",
+      MemorySwapMax: "0", TasksMax: "128", CPUQuotaPerSecUSec: "150ms", CPUQuotaPeriodUSec: "100ms",
+      LimitNOFILE: "512", LimitNOFILESoft: "512", NoNewPrivileges: "yes", ProtectSystem: "strict", ProtectHome: "tmpfs",
+      PrivateTmp: "yes", PrivateDevices: "yes", RestrictSUIDSGID: "yes", CapabilityBoundingSet: "", KillMode: "control-group", UMask: "0077" };
+    for (const [key, value] of Object.entries(required)) if (supervisor[key] !== value) throw Error("Effective supervisor safety policy unsupported");
+    if (!(await text("/proc/self/status")).match(/NoNewPrivs:\s+1\b/) ||
+      !(await text("/proc/self/status")).match(/CapEff:\s+0+\s/) ||
+      !(await text("/proc/self/limits")).match(/Max open files\s+512\s+512\b/)) throw Error("Running supervisor restrictions missing");
+    for (const { controls } of executorGroups) {
+      const [quota, period] = controls["cpu.max"]!.split(" ");
+      if (controls["memory.max"] !== "max" && BigInt(controls["memory.max"]!) < 768n * 1024n ** 2n ||
+        controls["pids.max"] !== "max" && BigInt(controls["pids.max"]!) < 64n ||
+        quota !== "max" && Number(quota) / Number(period) < 0.5) throw Error("Executor ancestor below qualified budget");
+    }
     const stat = await text(`/proc/${pid}/stat`);
     const start = stat.slice(stat.lastIndexOf(")") + 2).split(" ")[19];
     if (!start || !/^[0-9]+$/.test(start)) throw Error("Daemon start identity Unknown");
@@ -132,11 +195,13 @@ export function createHostFingerprintReader(control: IsolationControl, host?: Fi
       // Debian/Ubuntu package database binds installed libraries and package updates,
       // including live kernel patch packages. Other distributions remain unsupported.
       packages: await fileIdentity("/var/lib/dpkg/status"), binaries,
-      config: await fileIdentity(daemonConfig),
-      supervisor: await fileIdentity("/etc/systemd/system/first-stack-verifier.service"),
+      config: configIdentity,
+      supervisor: { unit: await fileIdentity("/etc/systemd/system/first-stack-verifier.service"),
+        effective: supervisor, cgroups: supervisorGroups },
+      executorParent: { manager, cgroups: executorGroups },
       daemonProcess: { pid, start,
         executable: await fileIdentity(`/proc/${pid}/exe`), command: hash(command),
-        cgroups: await cgroups(pid) },
+        cgroups: await cgroups(daemonGroup) },
     };
     await control.assertIdentity();
     return { fingerprint: hash(observation), observation };
