@@ -2360,7 +2360,7 @@
     },
     {
       "path": "scripts/tests/fixtures/reconfigure.ts",
-      "hash": "ad127a9929fe105d89742a66d0207d7d7f47285e4a35436bf3cae73512299d71"
+      "hash": "2f25a381bfc62489aa7ab10e634f65518fdacb68751c8d3b58ef264f8ea59e7f"
     },
     {
       "path": "scripts/tests/fixtures/unreviewed-host.ts",
@@ -2444,7 +2444,7 @@
     },
     {
       "path": "scripts/tests/reconfigure.test.ts",
-      "hash": "da989c9930db356a0eb85e3319ca7e1df20a50f0e2bf0a765096e6581163b3bf"
+      "hash": "01b592e87b21ac376b3bf70013507d676af2baf7b2948ad00dce42476d3a7a86"
     },
     {
       "path": "scripts/tests/release-compose.test.ts",
@@ -2452,11 +2452,11 @@
     },
     {
       "path": "scripts/tests/release-diagnostics.test.ts",
-      "hash": "f3e383cee0f5eb7185cade8e0435750565a4ea8d5bcb6e5cdb027b89f1fe5c8e"
+      "hash": "aa234bfcb7b86203db51c4cb45c86320aa6bb5b7eece31bb1ca4d8ac7d21d85f"
     },
     {
       "path": "scripts/tests/release-hygiene.test.ts",
-      "hash": "66bc10d1e3973184c64c6bb5faeab24c7d9d10dce18b167f460eb0f7ad51d158"
+      "hash": "b17cca0ee30f38ad8cb5f4465fcc695fd40dea8d84aa2c172345c9b9977d69ed"
     },
     {
       "path": "scripts/tests/release-image.test.ts",
