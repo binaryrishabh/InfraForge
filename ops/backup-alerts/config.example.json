@@ -3,6 +3,7 @@
   "region": "auto",
   "bucket": "REPLACE_WITH_PRIVATE_R2_BUCKET",
   "alert_email": "",
+  "prune_enabled": false,
   "site_url": "https://REPLACE_WITH_SITE_HOST/",
   "api_url": "https://REPLACE_WITH_API_HOST/health/ready",
   "worker_container": "REPLACE_WITH_CURRENT_WORKER_CONTAINER_NAME",

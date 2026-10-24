@@ -34,7 +34,8 @@ Only `archive.dump` and `SHA256SUMS` enter the tar. Single PUTs are limited to
 5,000,000,000 bytes. Content-MD5 checks transport, followed by a remote GET and
 SHA256 comparison against the uploaded tar. R2 encrypts storage at rest; the
 runner omits AWS-only SSE-S3 headers and unsupported full-object SHA256 request
-checksums. This is not client-side encryption or Object Lock. See the official
+checksums. This is not client-side encryption. The required R2 bucket age locks
+below enforce minimum retention at the storage boundary. See the official
 [R2 API compatibility](https://developers.cloudflare.com/r2/api/s3/api/) reference.
 
 After verified uploads, explicit retention prunes objects **strictly older than
@@ -45,7 +46,9 @@ The full plan is checked before deletion. More than 128 candidates, unexpected
 keys, invalid timestamps or incomplete pagination fail the job. Each candidate's
 age is checked again with HEAD immediately before deletion. Objects exactly 28
 days old remain until a later run. There is no broad bucket delete, automatic
-budget increase or AWS lifecycle dependency. Failed jobs or a stopped host delay
+budget increase or AWS lifecycle dependency. HEAD is only a change check: it does
+not protect against clock skew or replacement before DELETE. Required bucket
+age locks protect the object storage actually sees. Failed jobs or a stopped host delay
 pruning; this is a job-based retention window, not an expiry guarantee.
 
 The success receipt advances only after required uploads, readbacks and pruning
@@ -69,6 +72,64 @@ Never share dumps, credentials, source URLs or private diagnostics in logs/ticke
    [R2 authentication](https://developers.cloudflare.com/r2/api/tokens/).
 4. Preserve independent Cloudflare account recovery access. Rotate a lost token
    in Cloudflare and replace the private file below; never print it to inspect it.
+
+### Required storage age locks before destructive pruning
+
+In **R2 → this bucket → Settings → Bucket lock rules**, add two **enabled age**
+rules: `backups/daily/` for **28 days (2,419,200 seconds)** and `backups/weekly/`
+for the same duration. Longer age locks are accepted, but can delay pruning.
+Do not use date-based or disabled rules as substitutes. Cloudflare documents
+that [bucket locks protect existing/new objects against deletion and overwrite](https://developers.cloudflare.com/r2/buckets/bucket-locks/).
+Keep these rules enabled; a host clock error or replacement between HEAD and
+DELETE must still be rejected by storage while the affected object is young.
+
+`prune_enabled` defaults to **false**. Even when explicitly enabled, every
+destructive prune must verify live age-rule coverage through Cloudflare's fixed
+[GET bucket lock rules API](https://developers.cloudflare.com/api/resources/r2/subresources/buckets/subresources/locks/methods/get/).
+Missing/short/disabled rules, endpoint/account mismatch, API failure or unreadable
+credentials fail the job before any HEAD/DELETE. Dry run works while disabled
+and does not establish protection. A backup cannot advance its success receipt
+until required retention verification/pruning succeeds. Generic S3 uploads and
+retrieval still work, but destructive pruning is supported only for verified R2.
+
+Keep the existing **Object Read & Write storage token scoped to this one bucket**.
+It cannot call Cloudflare's configuration REST API. Verification needs a separate
+**Workers R2 Storage Read / Admin Read only** API bearer token, restricted to the
+selected account, in `/etc/infraforge/ops/r2-lock-read.token` (root:root 0600).
+Cloudflare's [permission documentation](https://developers.cloudflare.com/r2/api/tokens/)
+states that configuration read permission is account-scoped and also permits
+object reads in that account: it is broader than the one-bucket object token.
+Provision this distinct read-only credential only after reviewing that scope;
+do not grant configuration write/admin-write or broaden the original storage
+token. Without it, leave destructive pruning disabled. This change provisions
+no token or account permission. The bearer is read only by the fixed HTTPS
+control request, rejects redirects, and is never passed to AWS/DB/Docker or argv.
+
+On initial installation create the empty file, then enter the single literal
+bearer token privately in the editor (never shell commands or environment dumps):
+
+```sh
+sudo install -o root -g root -m 0600 /dev/null /etc/infraforge/ops/r2-lock-read.token
+sudoedit /etc/infraforge/ops/r2-lock-read.token
+sudo /bin/bash /opt/infraforge-ops/backup-alerts/run.sh verify-retention-locks
+```
+
+Do not use the empty-file install command during rotation. The verification
+derives account/jurisdiction from the configured R2 endpoint and uses the exact
+configured bucket. Require `VERIFY-RETENTION-LOCKS PASS` before opting in.
+
+**Owner acceptance check (live storage, not performed by offline tests):** In
+the dashboard upload a tiny harmless fixture to each backup prefix using the
+recognized `YYYY-MM-DD-<32 random lowercase hex>.tar` daily or
+`YYYY-Www-<32 random lowercase hex>.tar` weekly shape. Record these exact keys
+privately as acceptance fixtures, never restore sources or success receipts.
+Immediately attempt to delete each: storage must refuse, and each object must
+still exist. Check the enabled 28-day rules again. If either deletion succeeds,
+stop; do not enable pruning. Protected fixtures remain for 28 days and the normal
+bounded prune can later remove them. Only after both refusals and successful
+live rule verification set `prune_enabled: true` in private `config.json`, then
+run the first backup below. A local timestamp or another HEAD is not evidence
+of server-enforced retention.
 
 R2 Standard includes 10 GB-month storage, 1 million Class A and 10 million Class B
 operations monthly, with no egress charge; allowances are shared with other

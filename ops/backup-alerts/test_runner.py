@@ -20,11 +20,14 @@ spec = importlib.util.spec_from_file_location("ops_runner", Path(__file__).with_
 ops = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(ops)
 PRIVATE_CREDENTIALS = ops.private_credentials
+VERIFY_LOCKS = ops.verify_retention_locks
 CONFIG = {"region": "auto", "endpoint_url": "https://storage.example.invalid", "bucket": "fixture-backups",
+          "prune_enabled": True,
           "site_url": "https://site.example.invalid/", "api_url": "https://api.example.invalid/health/ready",
           "worker_container": "fixture-worker", "drill_image": "postgres:18@sha256:" + "a" * 64}
 URL = "postgresql://fixture:synthetic%24password@ep-fixture.us-east-1.aws.neon.tech/neondb?sslmode=verify-full&channel_binding=require"
 NOW = dt.datetime(2026, 10, 20, 2, 15, tzinfo=dt.timezone.utc).timestamp()
+R2_CONFIG = {**CONFIG, "endpoint_url": "https://" + "a" * 32 + ".r2.cloudflarestorage.com"}
 
 
 class OperationsTests(unittest.TestCase):
@@ -37,6 +40,9 @@ class OperationsTests(unittest.TestCase):
         self.addCleanup(patch.stopall)
         patch.object(ops, "STATE", self.state).start()
         patch.object(ops, "private_credentials", return_value=("fixture-access", "fixture-secret")).start()
+        # Ordinary storage tests assume verified locks; dedicated tests below
+        # exercise the real control API and its fail-closed pruning gate.
+        self.lock_check = patch.object(ops, "verify_retention_locks").start()
         patch.object(socket, "socket", side_effect=AssertionError("Network forbidden in offline tests")).start()
         self.calls = []
         self.objects = {}
@@ -564,6 +570,111 @@ class OperationsTests(unittest.TestCase):
         unit = Path(__file__).with_name("systemd").joinpath("infraforge-backup.service").read_text()
         self.assertIn("ExecStartPre=/usr/bin/python3 /opt/infraforge-ops/backup-alerts/runner.py begin-backup", unit.splitlines())
         self.assertIn("ExecStopPost=/bin/bash /opt/infraforge-ops/backup-alerts/run.sh fail-backup", unit.splitlines())
+
+    def lock_rules(self):
+        return [{"enabled": True, "prefix": prefix, "condition": {"type": "Age", "maxAgeSeconds": ops.RETENTION_SECONDS}}
+                for prefix in ops.PREFIXES]
+
+    @contextlib.contextmanager
+    def lock_api(self, rules=None, status=200, success=True):
+        opener = unittest.mock.MagicMock()
+        response = opener.open.return_value.__enter__.return_value
+        response.status = status
+        response.read.return_value = json.dumps({"success": success, "result": {"rules": self.lock_rules() if rules is None else rules}}).encode()
+        with patch.object(ops, "verify_retention_locks", VERIFY_LOCKS), \
+                patch.object(ops, "private_text", return_value="fixture-lock-read-token"), \
+                patch.object(ops.urllib.request, "build_opener", return_value=opener):
+            yield opener
+
+    def test_prune_requires_explicit_opt_in_before_any_storage_call(self):
+        for enabled in (False, None, "true", 1):
+            with patch.object(ops, "s3") as storage, self.assertRaisesRegex(ValueError, "pruning is disabled"):
+                ops.prune({**CONFIG, "prune_enabled": enabled}, NOW)
+            storage.assert_not_called()
+        with patch.object(ops, "s3", self.listing([])), self.lock_api(rules=[]):
+            # Dry runs remain available before opting in or creating any token.
+            self.assertEqual(ops.prune({**R2_CONFIG, "prune_enabled": False}, NOW, dry_run=True), [])
+
+    def test_lock_verification_requires_enabled_age_coverage_for_both_prefixes(self):
+        variants = [[], self.lock_rules()[:1]]
+        for change in ({"enabled": False}, {"prefix": "backups/daily/subset/"},
+                       {"condition": {"type": "Age", "maxAgeSeconds": ops.RETENTION_SECONDS - 1}},
+                       {"condition": {"type": "Indefinite"}},
+                       {"condition": {"type": "Age", "maxAgeSeconds": True}}):
+            rules = self.lock_rules()
+            rules[0] = {**rules[0], **change}
+            variants.append(rules)
+        for rules in variants:
+            with self.lock_api(rules), self.assertRaisesRegex(ValueError, "age locks of at least 28 days"):
+                ops.verify_retention_locks(R2_CONFIG)
+        with self.lock_api():
+            ops.verify_retention_locks(R2_CONFIG)
+
+    def test_lock_api_is_fixed_to_configured_account_bucket_and_jurisdiction(self):
+        config = {**R2_CONFIG, "endpoint_url": "https://" + "a" * 32 + ".eu.r2.cloudflarestorage.com"}
+        with self.lock_api() as opener:
+            ops.verify_retention_locks(config)
+            request = opener.open.call_args.args[0]
+            self.assertEqual(request.full_url, "https://api.cloudflare.com/client/v4/accounts/" + "a" * 32 + "/r2/buckets/fixture-backups/lock")
+            self.assertEqual(request.get_header("Cf-r2-jurisdiction"), "eu")
+            self.assertEqual(request.get_header("Authorization"), "Bearer fixture-lock-read-token")
+            self.assertEqual(opener.open.call_args.kwargs["timeout"], 5)
+        for bad in [CONFIG, {**R2_CONFIG, "region": "us-east-1"},
+                    {**R2_CONFIG, "endpoint_url": R2_CONFIG["endpoint_url"] + ".evil.invalid"}]:
+            with self.lock_api(), self.assertRaisesRegex(ValueError, "configured R2 origin"):
+                ops.verify_retention_locks(bad)
+
+    def test_lock_verification_fails_closed_and_is_not_cached(self):
+        items = [{"Key": "backups/daily/2025-01-01.tar", "LastModified": "2025-01-01T00:00:00Z"}]
+        for status, success in [(403, True), (200, False)]:
+            self.calls.clear()
+            with patch.object(ops, "s3", self.listing(items)), self.lock_api(status=status, success=success), \
+                    self.assertRaisesRegex(ValueError, "Cannot verify storage retention locks"):
+                ops.prune(R2_CONFIG, NOW)
+            self.assertTrue(all("list-objects-v2" in args for args in self.calls))
+        with patch.object(ops, "s3", self.listing([])), self.lock_api() as opener:
+            ops.prune(R2_CONFIG, NOW)
+            opener.open.return_value.__enter__.return_value.read.return_value = b'{"success":true,"result":{"rules":[]}}'
+            with self.assertRaisesRegex(ValueError, "age locks"):
+                ops.prune(R2_CONFIG, NOW)
+            self.assertEqual(opener.open.call_count, 2)
+
+    def test_unverified_locks_preserve_previous_backup_receipt_and_local_copy(self):
+        self.archive("backup.old")
+        receipt = {"snapshot_at": NOW - 86400, "archive": "backup.old"}
+        ops.write_json(self.state / "backup.json", receipt)
+        with patch.object(ops, "verify_retention_locks", side_effect=ValueError("fixture locks unavailable")):
+            with self.assertRaisesRegex(ValueError, "locks unavailable"):
+                self.backup()
+        self.assertEqual(ops.read_json(self.state / "backup.json"), receipt)
+        self.assertTrue((self.state / "backups/backup.old/archive.dump").exists())
+
+    def test_storage_lock_protects_young_objects_despite_fast_clock_or_replacement(self):
+        # This fixture models the documented R2 age lock at DELETE, independently
+        # of the host cutoff and HEAD. It is not a live Cloudflare acceptance test.
+        for replace in (False, True):
+            birth = NOW - ops.RETENTION_SECONDS - 1 if replace else NOW - ops.RETENTION_SECONDS + 60
+            key = "backups/daily/2026-09-22.tar"
+            item = {"Key": key, "LastModified": dt.datetime.fromtimestamp(birth, dt.timezone.utc).isoformat()}
+            actual_deletions = []
+            attempted = []
+            def storage(_config, args, **_kwargs):
+                nonlocal birth
+                if "delete-object" in args:
+                    attempted.append(key)
+                    if replace:
+                        birth = NOW  # Replaced after the old HEAD, before DELETE.
+                    if NOW - birth < ops.RETENTION_SECONDS:
+                        raise subprocess.CalledProcessError(1, "fixture-storage-age-lock")
+                    actual_deletions.append(key)
+                    return b"{}"
+                return self.listing([item])(_config, args)
+            with patch.object(ops, "s3", storage), self.lock_api() as opener:
+                with self.assertRaisesRegex(subprocess.CalledProcessError, "storage-age-lock"):
+                    ops.prune(R2_CONFIG, NOW + 120)
+                self.assertEqual(opener.open.call_count, 1)
+            self.assertEqual(attempted, [key])
+            self.assertEqual(actual_deletions, [])
 
     def test_prune_rechecks_remote_age_before_delete(self):
         items = [{"Key": "backups/daily/2025-01-01.tar", "LastModified": "2025-01-01T00:00:00Z"}]

@@ -24,6 +24,7 @@ STATE = Path("/var/lib/infraforge-ops")
 BOOTSTRAP = Path(__file__).resolve().parents[1] / "bootstrap"
 MAX_OBJECT_BYTES = 5_000_000_000  # Single PUT; no multipart or abort operations.
 CREDENTIALS = Path("/etc/infraforge/ops/r2.credentials")
+LOCK_TOKEN = Path("/etc/infraforge/ops/r2-lock-read.token")
 PREFIXES = ("backups/daily/", "backups/weekly/")
 RETENTION_SECONDS = 28 * 86400
 MAX_LIST_PAGES = 4  # Per prefix, 1000 objects per page.
@@ -195,15 +196,19 @@ def validate_config(config):
             raise ValueError("Expected credential-free public HTTPS URLs")
 
 
-def private_credentials():
-    # Check the opened file, not a path subsequently reopened by the CLI.
-    fd = os.open(CREDENTIALS, os.O_RDONLY | os.O_NOFOLLOW)
+def private_text(path):
+    # Validate the opened descriptor before reading any credential bytes.
+    fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW)
     with os.fdopen(fd) as source:
         info = os.fstat(source.fileno())
         if not stat.S_ISREG(info.st_mode) or info.st_uid != 0 or stat.S_IMODE(info.st_mode) != 0o600:
             raise ValueError("Credentials require root ownership and mode 0600")
-        parser = configparser.ConfigParser(interpolation=None)
-        parser.read_file(source)
+        return source.read()
+
+
+def private_credentials():
+    parser = configparser.ConfigParser(interpolation=None)
+    parser.read_string(private_text(CREDENTIALS))
     if parser.sections() != ["default"] or set(parser["default"]) != {"aws_access_key_id", "aws_secret_access_key"}:
         raise ValueError("Expected one explicit storage credential pair")
     values = [parser["default"][key] for key in ("aws_access_key_id", "aws_secret_access_key")]
@@ -275,7 +280,52 @@ def object_time(value):
     return instant.timestamp()
 
 
+def verify_retention_locks(config):
+    # Only R2 has a verified retention boundary here. Generic S3-compatible
+    # uploads/retrieval remain supported; destructive pruning fails closed.
+    endpoint = urlsplit(config["endpoint_url"])
+    match = re.fullmatch(r"([0-9a-f]{32})(?:\.(eu|us|fedramp))?\.r2\.cloudflarestorage\.com", endpoint.hostname or "")
+    if (not match or endpoint.scheme != "https" or endpoint.port not in (None, 443) or
+            endpoint.username or endpoint.password or endpoint.query or endpoint.fragment or
+            endpoint.path not in ("", "/") or config["region"] != "auto" or
+            not re.fullmatch(r"[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]", config["bucket"])):
+        raise ValueError("Destructive pruning requires the configured R2 origin")
+    token = private_text(LOCK_TOKEN).strip()
+    if not re.fullmatch(r"[A-Za-z0-9_-]{20,256}", token):
+        raise ValueError("Invalid private lock-read API token")
+    headers = {"Authorization": "Bearer " + token}
+    if match[2]:
+        headers["cf-r2-jurisdiction"] = match[2]
+    request = urllib.request.Request(
+        f"https://api.cloudflare.com/client/v4/accounts/{match[1]}/r2/buckets/{config['bucket']}/lock",
+        headers=headers)
+    with urllib.request.build_opener(NoRedirect()).open(request, timeout=5) as response:
+        if response.status != 200:
+            raise ValueError("Cannot verify storage retention locks")
+        payload = response.read(262145)
+    if len(payload) > 262144:
+        raise ValueError("Lock configuration exceeds verification budget")
+    body = json.loads(payload)
+    if body.get("success") is not True:
+        raise ValueError("Cannot verify storage retention locks")
+    rules = body.get("result", {}).get("rules", [])
+    for prefix in PREFIXES:
+        protected = False
+        for rule in rules:
+            condition = rule.get("condition", {})
+            duration = condition.get("maxAgeSeconds")
+            scope = rule.get("prefix", "")
+            if (rule.get("enabled") is True and condition.get("type") == "Age" and
+                    type(duration) in (int, float) and math.isfinite(duration) and duration >= RETENTION_SECONDS and
+                    isinstance(scope, str) and prefix.startswith(scope)):
+                protected = True
+        if not protected:
+            raise ValueError("Enabled age locks of at least 28 days must cover both backup prefixes")
+
+
 def prune(config, now=None, dry_run=False):
+    if not dry_run and config.get("prune_enabled") is not True:
+        raise ValueError("Destructive pruning is disabled until storage age locks are verified")
     cutoff = (time.time() if now is None else now) - RETENTION_SECONDS
     candidates = {}
     # Plan the entire bounded operation before deleting anything.
@@ -304,6 +354,10 @@ def prune(config, now=None, dry_run=False):
             seen.add(token)
         else:
             raise ValueError("Prune exceeds listing budget; operator review required")
+    if not dry_run:
+        # The storage boundary, not the host clock or a racy HEAD, enforces the
+        # minimum age of the object DELETE actually sees. Never cache this check.
+        verify_retention_locks(config)
     for key, modified in candidates.items():
         if not dry_run:
             head = json.loads(s3(config, ["s3api", "head-object", "--bucket", config["bucket"], "--key", key]))
@@ -635,7 +689,7 @@ def main():
     operation = sys.argv[1] if len(sys.argv) >= 2 else ""
     try:
         if operation not in ("backup", "drill", "metrics", "cleanup-drill", "begin-drill", "prune-dry-run",
-                             "status", "begin-backup", "fail-backup", "retrieve"):
+                             "status", "begin-backup", "fail-backup", "retrieve", "verify-retention-locks"):
             raise ValueError("Expected operation")
         if len(sys.argv) != (4 if operation == "retrieve" else 2):
             raise ValueError("Unexpected operation arguments")
