@@ -71,7 +71,7 @@ async function until(check: () => Promise<boolean>, maximum = 15000) {
     } }, fixture.control.identity).then(() => undefined, error => error);
     try {
       await until(async () => observed);
-      live.worker.resume();
+      await live.worker.resume();
       await until(async () => began);
       const claimed = await status(race.id);
       expect(claimed.status).toBe("running");
@@ -104,7 +104,7 @@ async function until(check: () => Promise<boolean>, maximum = 15000) {
     for (let i = 0; i < 2; i++) {
       expect(verifierExecutionAllowed(configuration)).toBe(true);
       await live.queue.add("verify", { runId: lost.id }, { jobId: lost.id });
-      live.worker.resume();
+      await live.worker.resume();
       await until(() => completed(lost.id));
       expect(fixture.launches).toBe(launches);
       expect(await status(lost.id)).toEqual(quarantined);
