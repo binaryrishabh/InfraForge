@@ -275,7 +275,7 @@ account/repository becomes private, verify protection availability again before 
 | Build invocation only | `RELEASE_BUILD=1`, `RELEASE_SHA=FULL_SHA` (workflow supplies these) |
 
 Obtain the SSH SHA256 fingerprint through a trusted provider console/previously
-verified record (for example console-side `ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub -E sha256`).
+verified record (for example console-side `ssh-keygen -lf /etc/ssh/ssh_host_ecdsa_key.pub -E sha256`).
 An unverified `ssh-keyscan` is discovery, not proof of host identity. Never print the
 private key/token, or send secrets through chat. Use a dedicated Vercel token with
 only the necessary team/project authority and a documented expiry/rotation owner.
