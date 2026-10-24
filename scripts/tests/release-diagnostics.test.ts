@@ -48,7 +48,7 @@ for (const [label, diagnostic] of [
   ["bare required-variable reason", 'required variable W50_NONEXISTENT is missing a value: review-fixture-db-password'],
   ["unfamiliar dotenv failure", 'dotenv: unfamiliar failure: review-fixture-db-password'],
   ["unfamiliar configuration read failure", 'failed to read /private/settings: unfamiliar failure: review-fixture-db-password'],
-]) test(`persisted configuration failures suppress ${label}`, async () => {
+] as const) test(`persisted configuration failures suppress ${label}`, async () => {
   const directory = await mkdtemp(join(tmpdir(), "infraforge-interpolation-diagnostic-"));
   try {
     // Actual Compose stderr forms carry an env-file-only value, without the
