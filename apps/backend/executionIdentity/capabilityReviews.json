@@ -380,12 +380,12 @@
     "review": "Fixed data indexing; resource adapters require the separate documented review"
   },
   "apps/backend/release/migrations.ts": {
-    "hash": "5ad6c8692d0f33a3d14316e76f2f9ad8577f1c1e8f9fc3da4b64b22affcf0349",
+    "hash": "6382c174e07c277eb0aa38c910bea1ea9b53fe51ca330ff453701b160a6544c8",
     "capabilities": [
       "computed-data",
       "resources"
     ],
-    "review": "Exact historical compatibility review: versioned stored-data readers, typed migration audit lineage and bounded replay under the existing isolated executor/session fence; additive replay reservations; no evaluator, new process permission, physics change, latest-input resolution or activation; merged release manifest/guards: historical replay idle check plus account schema guard, ordered migrations"
+    "review": "Exact historical compatibility review: versioned stored-data readers, typed migration audit lineage and bounded replay under the existing isolated executor/session fence; additive replay reservations; no evaluator, new process permission, physics change, latest-input resolution or activation; merged release manifest/guards: historical replay idle check plus account schema guard, ordered migrations Release ownership takes the verifier session lock (186542854,12) so releases and the verifier exclude each other; assertNoWorker also counts that lock except the caller's own session."
   },
   "apps/backend/release/model2Schema.ts": {
     "hash": "938f32e0a1b5371155aced66767440a78dd80e2e4a34bdac50c86374b9ca0a39",
@@ -863,11 +863,11 @@
     }
   },
   "apps/backend/executionIdentity/launcher.ts": {
-    "hash": "96bcf521c2e3623cbb14097559f9e8d3645cdbc0a50bd03f208483d84a3e5042",
+    "hash": "9f1a39055e0cd64caf362de084558e9de122862bfb35d4e740fafda7709cd6d9",
     "capabilities": [],
-    "review": "Existing host configuration/lifecycle access only; exact source bytes, no global-alias permission for new code",
+    "review": "Exact verifier lifecycle review: fail-closed admission and qualified engine availability, one session-owned queue lifecycle, bounded connections and scored drain; release refuses the lifecycle lock. No engine physics, dynamic evaluator or public activation.",
     "globals": {
-      "hash": "96bcf521c2e3623cbb14097559f9e8d3645cdbc0a50bd03f208483d84a3e5042",
+      "hash": "9f1a39055e0cd64caf362de084558e9de122862bfb35d4e740fafda7709cd6d9",
       "names": [
         "process"
       ]
@@ -1333,11 +1333,11 @@
     "review": "Internal first-stack V2 review/compiler/qualification: fixed JSON indexing and statically imported Stage 1 registry/host composition; bounded recorded keys and DB health; opt-in host bounds, finite reducers and cooperative qualification only; no evaluator, dynamic loader, product dispatch, HTTP executor or activation"
   },
   "apps/backend/firstStack/admission.ts": {
-    "hash": "887ac5407cd846578a2c316a12b11ca92d7560be64ede97ad683b5d4be48d0a0",
+    "hash": "2dcdc5400020383421b560570f388718508854cfdadf6cd086bfb309cac9c9a8",
     "capabilities": [
       "computed-data"
     ],
-    "review": "Exact historical compatibility review: versioned stored-data readers, typed migration audit lineage and bounded replay under the existing isolated executor/session fence; additive replay reservations; no evaluator, new process permission, physics change, latest-input resolution or activation"
+    "review": "Exact verifier lifecycle review: fail-closed admission and qualified engine availability, one session-owned queue lifecycle, bounded connections and scored drain; release refuses the lifecycle lock. No engine physics, dynamic evaluator or public activation."
   },
   "apps/backend/firstStack/submissionRoutes.ts": {
     "hash": "6840ed301decafc64ab1d036cd2dfdce946bb7d80e79c73d1ca4ca76fc86b24a",
@@ -1347,11 +1347,11 @@
     "review": "Exact historical compatibility review: versioned stored-data readers, typed migration audit lineage and bounded replay under the existing isolated executor/session fence; additive replay reservations; no evaluator, new process permission, physics change, latest-input resolution or activation"
   },
   "apps/backend/firstStack/submissionWorker.ts": {
-    "hash": "7af7801e3a1f584b2b70376625243286ad2668af1b08b39e2c2458366dd677c5",
+    "hash": "1b1ae55283764d5a37b17841ba73487a2730d0c32add5e8a4d4cd6b63fa0c658",
     "capabilities": [
       "computed-data"
     ],
-    "review": "Exact historical compatibility review: versioned stored-data readers, typed migration audit lineage and bounded replay under the existing isolated executor/session fence; additive replay reservations; no evaluator, new process permission, physics change, latest-input resolution or activation"
+    "review": "Exact verifier lifecycle review: fail-closed admission and qualified engine availability, one session-owned queue lifecycle, bounded connections and scored drain; release refuses the lifecycle lock. No engine physics, dynamic evaluator or public activation."
   },
   "apps/backend/firstStack/submissionQueue.ts": {
     "hash": "fae38d456fde401ecc4b4b560dc4f7a8b6980eb925da7d1d66574613beb32e64",
@@ -1785,6 +1785,32 @@
     "review": "Exact read-only private scoring adapter review: one configured absolute directory resolved outside the checkout; fixed validated challenge filename, realpath containment, bounded regular-file read, SHA-256 canonical JSON commitment and strict exact identity/version verification. Opens read-only and closes descriptor; all errors become fixed Scoring unavailable with no contents, paths or causes. No writes, network, code loading, executable content or process launch. process.env reads only INFRAFORGE_SCORING_DIRECTORY.",
     "globals": {
       "hash": "cacf87f7bc4a87212ea257650be8feb109ee91f1bec11e1b10d6ec69de20b5be",
+      "names": [
+        "process"
+      ]
+    }
+  },
+  "apps/backend/firstStack/verifierQualification.ts": {
+    "hash": "ff28724a358a87b925509a0b163bc8ee7d99f64da51170977b7e1f67ea7e57ad",
+    "capabilities": [
+      "resources"
+    ],
+    "review": "Exact trusted host adapter review: fixed root-owned bounded settings/qualification reads; no-follow file open and protected ancestors. Dedicated host startup, credentials, signals and process exit only. No dynamic loading, child launch permission or public route.",
+    "globals": {
+      "hash": "ff28724a358a87b925509a0b163bc8ee7d99f64da51170977b7e1f67ea7e57ad",
+      "names": [
+        "process"
+      ]
+    }
+  },
+  "apps/backend/firstStack/verifierHost.ts": {
+    "hash": "d0284ca64adcc98321c6bfd9891164aa22adee5d2e7db33974278d0c334a1fff",
+    "capabilities": [
+      "resources"
+    ],
+    "review": "Exact trusted host adapter review: fixed root-owned bounded settings/qualification reads; no-follow file open and protected ancestors. Dedicated host startup, credentials, signals and process exit only. No dynamic loading, child launch permission or public route.",
+    "globals": {
+      "hash": "d0284ca64adcc98321c6bfd9891164aa22adee5d2e7db33974278d0c334a1fff",
       "names": [
         "process"
       ]
