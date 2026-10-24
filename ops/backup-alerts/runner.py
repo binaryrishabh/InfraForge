@@ -85,15 +85,21 @@ def source_url():
     return value
 
 
+class DatabaseStartingError(ValueError):
+    pass
+
+
 def local_source(env):
     """Resolve only our private, unpublished Compose service on the Linux host."""
     if env["PGHOST"] != "postgres" or env["PGPORT"] != "5432":
         return
     ids = command(["docker", "ps", "-q", "--filter", "label=com.docker.compose.project=infraforge",
-                   "--filter", "label=com.docker.compose.service=postgres"], env=clean_env()).decode().split()
+                   "--filter", "label=com.docker.compose.service=postgres"], env=clean_env(), seconds=10).decode().split()
+    if not ids:
+        raise DatabaseStartingError("Private PostgreSQL container has not started")
     if len(ids) != 1:
         raise ValueError("Exactly one running private PostgreSQL container is required")
-    records = json.loads(command(["docker", "inspect", ids[0]], env=clean_env()))
+    records = json.loads(command(["docker", "inspect", ids[0]], env=clean_env(), seconds=10))
     db = records[0]
     labels = db["Config"]["Labels"]
     networks = db["NetworkSettings"]["Networks"]
@@ -102,7 +108,7 @@ def local_source(env):
             db["HostConfig"].get("PortBindings") or len(networks) != 1):
         raise ValueError("PostgreSQL container ownership/network mismatch")
     attached = next(iter(networks.values()))
-    network = json.loads(command(["docker", "network", "inspect", attached["NetworkID"]], env=clean_env()))[0]
+    network = json.loads(command(["docker", "network", "inspect", attached["NetworkID"]], env=clean_env(), seconds=10))[0]
     if (not network.get("Internal") or network.get("Driver") != "bridge" or
             network.get("Labels", {}).get("com.docker.compose.project") != "infraforge"):
         raise ValueError("PostgreSQL backup requires the owned internal bridge")
@@ -110,6 +116,29 @@ def local_source(env):
     if not address.is_private or address.is_loopback or address.is_unspecified:
         raise ValueError("Invalid private PostgreSQL address")
     env.update(PGHOST=str(address), PGHOSTADDR=str(address))
+
+
+def wait_local_source(env, budget=180):
+    """Allow reboot recovery within the job budget; never retry unsafe ownership."""
+    if env["PGHOST"] != "postgres" or env["PGPORT"] != "5432":
+        return
+    deadline = time.monotonic() + budget
+    while time.monotonic() < deadline:
+        candidate = env.copy()
+        try:
+            # Resolve again on every attempt in case recovery replaced the container.
+            local_source(candidate)
+            result = command(["psql", "-X", "--no-password", "-At", "-v", "ON_ERROR_STOP=1",
+                              "-c", "SELECT 1"], env=candidate, seconds=10)
+            if result.strip() != b"1":
+                raise ValueError("Unexpected authenticated readiness result")
+            env.update(candidate)
+            return
+        except (DatabaseStartingError, subprocess.CalledProcessError, subprocess.TimeoutExpired):
+            remaining = deadline - time.monotonic()
+            if remaining > 0:
+                time.sleep(min(5, remaining))
+    raise TimeoutError("Private PostgreSQL startup readiness deadline exceeded")
 
 
 def read_json(path):
@@ -175,7 +204,7 @@ def backup(config, now=None):
     url = source_url()
     db_env = source_env(url)
     del url
-    local_source(db_env)
+    wait_local_source(db_env)
     root = STATE / "backups"
     root.mkdir(mode=0o700, exist_ok=True)
     previous = read_json(STATE / "backup.json")

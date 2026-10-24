@@ -136,6 +136,67 @@ class OperationsTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     ops.local_source(ops.source_env("postgresql://fixture:password@postgres/app"))
 
+    def test_reboot_waits_for_container_and_authenticated_sql_before_dump(self):
+        db = {"Config": {"Labels": {"com.docker.compose.project": "infraforge", "com.docker.compose.service": "postgres"}},
+              "State": {"Running": True}, "HostConfig": {"PortBindings": {}},
+              "NetworkSettings": {"Networks": {"private": {"NetworkID": "network", "IPAddress": "172.20.0.2"}}}}
+        network = {"Internal": True, "Driver": "bridge", "Labels": {"com.docker.compose.project": "infraforge"}}
+        counts = {"ps": 0, "sql": 0}
+        events = []
+        def recovering(args, **kwargs):
+            events.append(args[0])
+            if args[0] == "docker":
+                self.assertNotIn("PGPASSWORD", kwargs["env"])
+                if args[1] == "ps":
+                    counts["ps"] += 1
+                    return b"" if counts["ps"] == 1 else b"owned"
+                return json.dumps([network] if args[1] == "network" else [db]).encode()
+            if args[0] == "psql":
+                counts["sql"] += 1
+                self.assertEqual(kwargs["env"]["PGHOSTADDR"], "172.20.0.2")
+                self.assertEqual(kwargs["env"]["PGPASSWORD"], "synthetic")
+                self.assertIn("--no-password", args)
+                if counts["sql"] == 1:
+                    raise subprocess.CalledProcessError(1, "mock recovery")
+                return b"1\n"
+            return self.fake_command(args, **kwargs)
+        with patch.dict(os.environ, {"BACKUP_DATABASE_URL": "postgresql://fixture:synthetic@postgres/app"}, clear=True), \
+                patch.object(ops, "command", recovering), patch.object(ops.time, "sleep") as sleep:
+            ops.backup(CONFIG, NOW)
+        self.assertEqual(counts, {"ps": 3, "sql": 2})
+        self.assertEqual(sleep.call_count, 2)
+        self.assertLess(max(i for i, item in enumerate(events) if item == "psql"), events.index("bash"))
+        self.assertEqual(ops.read_json(self.state / "backup.json")["snapshot_at"], NOW)
+
+    def test_startup_timeout_preserves_receipt_and_archive_without_dump_or_upload(self):
+        self.archive("backup.old")
+        receipt = {"snapshot_at": NOW - 86400, "archive": "backup.old"}
+        ops.write_json(self.state / "backup.json", receipt)
+        clock = [0]
+        def advance(seconds):
+            clock[0] += seconds
+        with patch.dict(os.environ, {"BACKUP_DATABASE_URL": "postgresql://fixture:synthetic@postgres/app"}, clear=True), \
+                patch.object(ops, "command", return_value=b"") as run, \
+                patch.object(ops.time, "monotonic", side_effect=lambda: clock[0]), \
+                patch.object(ops.time, "sleep", side_effect=advance):
+            with self.assertRaisesRegex(TimeoutError, "deadline"):
+                ops.backup(CONFIG, NOW)
+        self.assertEqual(clock[0], 180)
+        self.assertTrue(all(call.args[0][:2] == ["docker", "ps"] for call in run.call_args_list))
+        self.assertEqual(ops.read_json(self.state / "backup.json"), receipt)
+        self.assertTrue((self.state / "backups/backup.old/archive.dump").exists())
+
+    def test_startup_wait_does_not_retry_unsafe_container(self):
+        with patch.object(ops, "command", return_value=b"one two"), patch.object(ops.time, "sleep") as sleep:
+            with self.assertRaises(ValueError):
+                ops.wait_local_source(ops.source_env("postgresql://fixture:synthetic@postgres/app"))
+        sleep.assert_not_called()
+
+    def test_backup_unit_requires_docker_before_persistent_timer_catchup(self):
+        unit = Path(__file__).with_name("systemd").joinpath("infraforge-backup.service").read_text()
+        self.assertIn("Requires=docker.service", unit)
+        self.assertIn("After=network-online.target docker.service", unit)
+
     def test_daily_and_weekly_put_only_encrypted_checked_bundle(self):
         import tarfile
         original = self.fake_command
