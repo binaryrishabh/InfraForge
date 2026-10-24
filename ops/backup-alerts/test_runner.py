@@ -396,12 +396,15 @@ class OperationsTests(unittest.TestCase):
 
     def test_old_target_receipt_cannot_report_health_or_start_restore(self):
         self.healthy_receipt()
+        key = self.remote_archive(self.archive())
+        receipt = ops.read_json(self.state / "backup.json")
+        ops.write_json(self.state / "backup.json", {**receipt, "daily_key": key})
         other = {**CONFIG, "endpoint_url": "https://different.example.invalid"}
-        with patch.object(ops.time, "time", return_value=NOW), patch.object(ops, "command") as command:
+        with patch.object(ops.time, "time", return_value=NOW), patch.object(ops, "command", self.fake_command):
             self.assertFalse(ops.backup_healthy(other))
-            with self.assertRaises(ValueError):
+            with self.assertRaisesRegex(ValueError, "Fresh uploaded archive required"):
                 ops.drill(other)
-            command.assert_not_called()
+        self.assertEqual(self.calls, [])
 
     def test_state_refuses_wrong_owner_public_modes_symlinks_and_non_directories(self):
         state = unittest.mock.MagicMock()
@@ -500,22 +503,67 @@ class OperationsTests(unittest.TestCase):
             self.calls.clear()
             def escaped(_config, args, **_kwargs):
                 self.calls.append(args)
-                return json.dumps({"IsTruncated": False, "Contents": [{"Key": key, "LastModified": "2025-01-01T00:00:00Z"}]}).encode()
-            with patch.object(ops, "s3", escaped), self.assertRaises(ValueError):
+                item = {"Key": key, "LastModified": "2025-01-01T00:00:00Z"}
+                if "list-objects-v2" in args:
+                    prefix = args[args.index("--prefix") + 1]
+                    return json.dumps({"IsTruncated": False, "Contents": [item] if prefix == "backups/daily/" else []}).encode()
+                return json.dumps(item if "head-object" in args else {}).encode()
+            reason = "requested backup prefix" if key.startswith("backups/weekly/") else "supported backup keys"
+            with patch.object(ops, "s3", escaped), self.assertRaisesRegex(ValueError, reason):
                 ops.prune(CONFIG, NOW)
-            self.assertFalse(any("delete-object" in args for args in self.calls))
+            self.assertTrue(all("list-objects-v2" in args for args in self.calls))
 
     def test_prune_bounds_pages_and_deletions(self):
         for pages in [True, False]:
             self.calls.clear()
             def huge(_config, args, **_kwargs):
                 self.calls.append(args)
-                items = [] if pages else [{"Key": f"backups/daily/2025-01-01-{i:032x}.tar", "LastModified": "2025-01-01T00:00:00Z"} for i in range(129)]
-                return json.dumps({"IsTruncated": pages, "NextContinuationToken": str(len(self.calls)), "Contents": items}).encode()
-            with patch.object(ops, "s3", huge), self.assertRaises(ValueError):
+                if "list-objects-v2" in args:
+                    prefix = args[args.index("--prefix") + 1]
+                    items = [] if pages or prefix != "backups/daily/" else [
+                        {"Key": f"backups/daily/2025-01-01-{i:032x}.tar", "LastModified": "2025-01-01T00:00:00Z"} for i in range(129)]
+                    return json.dumps({"IsTruncated": pages, "NextContinuationToken": str(len(self.calls)), "Contents": items}).encode()
+                return b'{"LastModified":"2025-01-01T00:00:00Z"}'
+            reason = "listing budget" if pages else "deletion budget"
+            with patch.object(ops, "s3", huge), self.assertRaisesRegex(ValueError, reason):
                 ops.prune(CONFIG, NOW)
             self.assertLessEqual(len(self.calls), ops.MAX_LIST_PAGES)
-            self.assertFalse(any("delete-object" in args for args in self.calls))
+            self.assertTrue(all("list-objects-v2" in args for args in self.calls))
+
+    def test_storage_credentials_never_enter_client_arguments(self):
+        with patch.object(ops, "command", self.fake_command):
+            ops.s3(CONFIG, ["s3api", "list-objects-v2", "--bucket", CONFIG["bucket"]])
+        args, env, _ = self.calls[0]
+        for credential in ("fixture-access", "fixture-secret"):
+            self.assertTrue(all(credential not in argument for argument in args))
+        self.assertEqual(env["AWS_ACCESS_KEY_ID"], "fixture-access")
+        self.assertEqual(env["AWS_SECRET_ACCESS_KEY"], "fixture-secret")
+
+    def test_command_suppresses_child_output(self):
+        with patch.object(ops.subprocess, "run") as run:
+            run.return_value.stdout = b"private diagnostics"
+            self.assertEqual(ops.command(["fixture"], env={"PATH": "fixture"}, seconds=7), b"private diagnostics")
+        self.assertEqual(run.call_args.kwargs["stdout"], subprocess.PIPE)
+        self.assertEqual(run.call_args.kwargs["stderr"], subprocess.DEVNULL)
+        self.assertTrue(run.call_args.kwargs["check"])
+        self.assertEqual(run.call_args.kwargs["timeout"], 7)
+
+    def test_monitor_persists_failure_before_interrupted_delivery(self):
+        ops.write_json(self.state / "ops-status.json", {"ok": True, "checked_at": NOW - 1})
+        observed = []
+        def interrupted(_config):
+            observed.append(ops.read_json(self.state / "ops-status.json"))
+            raise KeyboardInterrupt
+        with patch.object(ops.time, "time", return_value=NOW), patch.object(ops, "send_alert", interrupted):
+            with self.assertRaises(KeyboardInterrupt):
+                ops.monitor(CONFIG)
+        self.assertIs(observed[0]["ok"], False)
+        self.assertIs(ops.read_json(self.state / "ops-status.json")["ok"], False)
+
+    def test_backup_service_wires_both_failure_hooks(self):
+        unit = Path(__file__).with_name("systemd").joinpath("infraforge-backup.service").read_text()
+        self.assertIn("ExecStartPre=/usr/bin/python3 /opt/infraforge-ops/backup-alerts/runner.py begin-backup", unit.splitlines())
+        self.assertIn("ExecStopPost=/bin/bash /opt/infraforge-ops/backup-alerts/run.sh fail-backup", unit.splitlines())
 
     def test_prune_rechecks_remote_age_before_delete(self):
         items = [{"Key": "backups/daily/2025-01-01.tar", "LastModified": "2025-01-01T00:00:00Z"}]
