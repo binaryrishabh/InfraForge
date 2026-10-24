@@ -1,6 +1,6 @@
 {
   "schema": "execution-loading-analysis/1",
-  "policy": "85f6c8edd2fd0ba3541e1694442173308dedc0c9124e1eb862b0895008d42e33",
+  "policy": "28ed2e8a98b18f590b5672fdf16ac35efd61c20d0f18f3fa5dc91419dd20d71e",
   "modules": {
     "apps/backend/actions/contract.ts": {
       "hash": "15fe6aa3879ab8ccc67a23d579a4e2e9b79f71631dd7687ad192f788c27229ad",
