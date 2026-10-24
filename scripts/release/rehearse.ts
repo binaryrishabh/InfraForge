@@ -78,8 +78,14 @@ try {
   const release: Release = { ...metadata, image, imageId: built.Id, settingsFingerprint: "" };
   await mkdir(join(directory, "tls"));
   await mkdir(join(directory, "control"));
+  // Keep the socket-only initialization server alive beyond start_period. It
+  // must never satisfy the production TCP health gate on an empty volume.
+  const slowInit = join(directory, "slow-init.sh");
+  await Bun.write(slowInit, "touch /tmp/initialization-delaying\nsleep 30\nrm /tmp/initialization-delaying\n");
   await Bun.write(envFile, `DATABASE_URL=postgresql://postgres:${password}@postgres/infraforge_release_${suffix}\nWORKER_DATABASE_URL=postgresql://postgres:${password}@postgres/infraforge_release_${suffix}\nMIGRATION_DATABASE_URL=postgresql://postgres:${password}@postgres/infraforge_release_${suffix}\nWORKER_DATABASE_MODE=direct\nPOSTGRES_USER=postgres\nPOSTGRES_DB=infraforge_release_${suffix}\nPOSTGRES_PASSWORD=${password}\nBETTER_AUTH_SECRET=${randomBytes(32).toString("hex")}\nBETTER_AUTH_URL=https://api.example.invalid\nAPP_ORIGINS=https://app.example.invalid\nAPI_PORT=0\nWS_PORT=0\n`);
   await Bun.write(override, `services:
+  postgres:
+    volumes: ["${slowInit.replaceAll("\\", "/")}:/docker-entrypoint-initdb.d/slow-init.sh:ro"]
   migration:
     environment:
       RELEASE_REHEARSAL: owned-local
@@ -129,14 +135,25 @@ try {
   phase("interrupted migration CLI and owned helper cleanup passed");
   // No manual database start: the release must pull/start the production
   // PostgreSQL service, initialize its named volume and migrate an empty DB.
-  await releaseSequence(operations, release);
+  const freshRelease = releaseSequence(operations, release).then(() => undefined, (error: unknown) => error);
+  await waitFor(async () => {
+    try { await operations!.compose(["exec", "-T", "postgres", "test", "-e", "/tmp/initialization-delaying"]); return true; }
+    catch { return false; }
+  }, 90000);
+  // Observe after more than one healthcheck interval, while init is still slow.
+  await Bun.sleep(7000);
+  await operations.compose(["exec", "-T", "postgres", "test", "-e", "/tmp/initialization-delaying"]);
+  const databaseId = await operations.compose(["ps", "-q", "postgres"]);
+  const [initializing] = JSON.parse(await docker(["inspect", databaseId]));
+  if (initializing.State.Health?.Status === "healthy") throw new Error("Temporary initialization server passed the TCP health gate");
+  const freshError = await freshRelease;
+  if (freshError) throw freshError;
   phase("fresh self-hosted database initialized, all migrations and readiness passed");
   await operations.stop();
   // The fresh path above uses the production internal-only service unchanged.
   // Only the older host-side proof needs a loopback listener; retain the same
   // named volume when Compose recreates this owned fixture container.
-  await Bun.write(override, (await readFile(override, "utf8")).replace("services:\n", `services:
-  postgres:
+  await Bun.write(override, (await readFile(override, "utf8")).replace("  postgres:\n", `  postgres:
     networks: [application, egress]
     ports: ["127.0.0.1:0:5432"]
 `));

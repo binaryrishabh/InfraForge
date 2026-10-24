@@ -218,3 +218,10 @@ test("production PostgreSQL keeps data persistent, bounded and exclusively on th
   expect(db.command).toContain("work_mem=2MB");
   expect(db.command).toContain("shared_buffers=192MB");
 });
+
+test("PostgreSQL health requires the final TCP server, not the temporary init socket", () => {
+  const config = Bun.YAML.parse(readFileSync("apps/backend/docker-compose.yml", "utf8")) as any;
+  expect(config.services.postgres.healthcheck.test).toEqual([
+    "CMD-SHELL", 'pg_isready -h 127.0.0.1 -p 5432 -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"',
+  ]);
+});
