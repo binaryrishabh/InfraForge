@@ -57,7 +57,7 @@ try {
     finally { await file.close(); }
     await rename(temporary, resolve(directory, "accepted.json"));
   };
-  const operations = new ComposeRelease(root, resolve(environmentFile), "infraforge", next, save);
+  const operations = new ComposeRelease(root, resolve(environmentFile), "infraforge", next, save, undefined, 90000, process.env, directory);
   operationsInProgress = operations;
   operations.onMutation = () => { mutationStarted = true; };
   const stop = operations.stop.bind(operations);

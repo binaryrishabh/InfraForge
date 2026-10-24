@@ -27,7 +27,8 @@ if (import.meta.main) {
   if (await command(["git", "rev-parse", "HEAD"], root) !== sha || await command(["git", "status", "--porcelain"], root)) throw new Error("Clean exact checkout required");
   const accepted = await backendState(stateDirectory);
   if (accepted?.sha === sha) {
-    const operations = new ComposeRelease(root, envFile, "infraforge", accepted, async () => { throw new Error("Read-only acceptance verification"); });
+    const operations = new ComposeRelease(root, envFile, "infraforge", accepted, async () => { throw new Error("Read-only acceptance verification"); },
+      undefined, 90000, process.env, resolve(stateDirectory));
     if (settingsFingerprint(await operations.config()) !== accepted.settingsFingerprint) throw new Error("Accepted backend settings changed");
     await verifyImage(accepted, root);
     await operations.ready(accepted);

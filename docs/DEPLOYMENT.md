@@ -134,8 +134,6 @@ CI, and does not run the expensive suite again. A same-SHA retry can reuse the
 recorded accepted backend only after image/settings/container readiness verification;
 it cannot rebuild/retag a retained image or clear maintenance/a release lock.
 
-## Activation status
-
 ## Release disk capacity and image retention
 
 Before creating release state, building, pulling dependencies or stopping services,
@@ -184,6 +182,20 @@ failure blocks acceptance. This leaves no retained cache for that owned builder
 and never prunes a running build or another builder. See Docker's
 [builder removal contract](https://docs.docker.com/reference/cli/docker/buildx/rm/)
 and [image removal contract](https://docs.docker.com/reference/cli/docker/image/rm/).
+
+Production Compose failures save a redacted final 16,000 characters of stderr in
+`/var/lib/infraforge/releases/compose-error-<time>-<uuid>.log` and print that exact
+path. Files are created exclusively with mode `0600`, assigned to root and checked
+before their path is reported. The non-root release operator needs working
+`sudo -n chown` for these files; bootstrap does not grant additional sudo rights.
+Read the reported path with `sudo cat -- PATH`. URLs, secret assignments, known
+secret environment values and authorization values are redacted before writing;
+stderr is never copied into Actions output. If storage or ownership fails, the
+error explicitly says diagnostics could not be secured and identifies the checks
+needed, while keeping stderr private. Archive/remove old diagnostics through
+operator incident retention; image cleanup does not delete incident evidence.
+
+## Activation status
 
 Automatic release admission is **disabled** by repository variable
 `PRODUCTION_RELEASE_ENABLED=false`. This commit can run CI without deploying itself.

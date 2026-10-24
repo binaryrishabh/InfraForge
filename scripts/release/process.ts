@@ -1,3 +1,5 @@
+import { composeFailureDetail, redactReleaseDiagnostic } from "./diagnostics";
+
 const children = new Set<ReturnType<typeof Bun.spawn>>();
 export async function cancelCommands() {
   const owned = [...children];
@@ -5,13 +7,15 @@ export async function cancelCommands() {
   await Promise.allSettled(owned.map((child) => child.exited));
 }
 
-export async function command(args: string[], cwd: string, env: Record<string, string | undefined> = process.env) {
+export async function command(args: string[], cwd: string, env: Record<string, string | undefined> = process.env, diagnosticsDirectory?: string) {
   const child = Bun.spawn(args, { cwd, env, stdout: "pipe", stderr: "pipe", stdin: "ignore" });
   children.add(child);
   const timeout = setTimeout(() => child.kill("SIGKILL"), (args[1] === "build" || args[1] === "buildx" && args[2] === "build") ? 600000 : 120000);
   const [output, diagnostic] = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text()]).finally(() => { clearTimeout(timeout); children.delete(child); });
   if (await child.exited !== 0) {
-    const detail = env.RELEASE_REHEARSAL === "owned-local" ? diagnostic.replace(/postgres(?:ql)?:\/\/\S+/g, "[fixture database]").slice(-2000) : "inspect private operator diagnostics";
+    const detail = env.RELEASE_REHEARSAL === "owned-local" ? redactReleaseDiagnostic(diagnostic, env).slice(-2000)
+      : args[0] === "docker" && args[1] === "compose" && diagnosticsDirectory
+        ? await composeFailureDetail(diagnostic, diagnosticsDirectory, env) : "inspect private operator diagnostics";
     throw new Error(`${args[0]} ${args[1] ?? ""} failed; ${detail}`);
   }
   return output.trim();

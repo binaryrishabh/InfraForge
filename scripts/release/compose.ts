@@ -40,12 +40,13 @@ export class ComposeRelease implements ReleaseOperations {
   onMutation: () => void = () => {};
   constructor(readonly root: string, readonly envFile: string, readonly project: string, readonly next: Release,
     readonly save: ReleaseOperations["save"], readonly override?: string, readonly healthTimeout = 90000,
-    readonly environment: Record<string, string | undefined> = process.env) { this.active = next; }
+    readonly environment: Record<string, string | undefined> = process.env,
+    readonly diagnosticsDirectory?: string) { this.active = next; }
 
   async compose(args: string[], release = this.active) {
     return command(["docker", "compose", "--project-name", this.project, "--env-file", this.envFile,
       "-f", "apps/backend/docker-compose.yml", ...(this.override ? ["-f", this.override] : []), "--profile", "database", ...args], this.root,
-      { ...this.environment, RELEASE_SHA: release.sha, RELEASE_IMAGE: release.image });
+      { ...this.environment, RELEASE_SHA: release.sha, RELEASE_IMAGE: release.image }, this.diagnosticsDirectory);
   }
   async config() { return JSON.parse(await this.compose(["config", "--format", "json"])); }
   async stopMigration() {

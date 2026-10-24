@@ -251,6 +251,12 @@ If capacity preflight refuses, use the printed lock-protected
 command from the approved checkout; expand capacity if retained/in-use data still
 leaves too little room. Never clear an interrupted release lock just to prune.
 
+Compose failures print a private diagnostic path under the release state directory,
+`compose-error-<time>-<uuid>.log`. The redacted stderr tail is root-owned `0600`;
+read it with `sudo cat -- PATH`. Verify the operator can use noninteractive
+`sudo -n chown` for those files (bootstrap does not grant sudo rights). An inability
+to create/secure diagnostics is reported explicitly without exposing stderr.
+
 **New host:** a new state directory starts in maintenance, so the workflow refuses it with
 "Interrupted/maintenance release requires operator recovery". Run the command above once over
 SSH from the clean exact checkout. Preflight fetches only missing third-party images such as
