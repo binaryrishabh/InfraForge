@@ -1,5 +1,9 @@
 # Rebuild and recover production
 
+For the owner-decided fresh database replacement, follow the copy-paste
+[self-hosted PostgreSQL cutover](SELF_HOSTED_POSTGRES.md). It includes URL-only
+provider switching, mandatory daily S3 backups and a scratch restore test.
+
 Current operation is described in [DEPLOYMENT.md](DEPLOYMENT.md). This runbook is
 for provisioning or recovery, when initial operator access is appropriate. Normal
 releases use GitHub Actions and need no EC2 terminal. Commands below require an
@@ -9,9 +13,9 @@ explicitly selected new/recovery host; they are never run by workspace tests.
 
 | Situation | Preserve | Explicit changes |
 | --- | --- | --- |
-| Replace EC2, keep database and domain | Neon database, stable auth secret, OAuth clients, frontend project/domain, backups | Fence old API/WS/worker, provision host, independently verify new SSH identity, update GitHub EC2 settings and backend DNS, issue/reuse valid TLS certificate |
+| Replace EC2, keep database and domain | PostgreSQL database/volume or off-host restore, stable auth secret, OAuth clients, frontend project/domain, backups | Fence old API/WS/worker, provision host, independently verify new SSH identity, update GitHub EC2 settings and backend DNS, issue/reuse valid TLS certificate |
 | Move AWS account, keep data | Same items; data need not move with EC2 | Recreate network/security groups/IAM in new account, transfer DNS authority if necessary, verify new SSH identity, fence old writers before enabling new worker |
-| Fresh database/account | Preserve only deliberately selected account/domain configuration | Create new Neon project/database and roles, use explicit empty-database first release; old users/designs/sessions do not appear automatically. A restored database is a data-preserving migration, not this case |
+| Fresh database/account | Preserve only deliberately selected account/domain configuration | Create a new PostgreSQL database and roles, use explicit empty-database first release; old users/designs/sessions do not appear automatically. A restored database is a data-preserving migration, not this case |
 
 Never run workers on old and new hosts concurrently. The session advisory lock is
 a second fence, not permission to leave an unguarded old worker running. Teardown
@@ -20,7 +24,7 @@ Keep the old host fenced until new acceptance, including DNS cache overlap.
 
 ## External services and prerequisites
 
-Obtain owner-controlled AWS/hosting, GitHub, Neon, DNS and Vercel access. Optional
+Obtain owner-controlled AWS/hosting, GitHub, database-provider (if remote), DNS and Vercel access. Optional
 Google/GitHub OAuth applications are separate. Know who owns database backups,
 retention, restore approval, encryption keys, DNS and billing. Keep these records
 and real credentials in the operator secret manager, outside the repository.
@@ -36,7 +40,8 @@ Security group/host firewall: public TCP 443; TCP 80 for redirect/ACME; SSH 22 o
 from approved administration/release sources. GitHub-hosted runner source addresses
 can change; choose a maintained network policy, not a guessed permanent runner IP.
 Do not open 3000, 3001, 3002, 6379 or 5432. Compose binds API/WS to loopback and
-publishes neither worker nor Redis. PostgreSQL stays in Neon. No second public proxy
+publishes neither worker, Redis nor PostgreSQL. The local PostgreSQL service
+uses only an internal Docker bridge; remote providers require verified TLS. No second public proxy
 may inject forwarded identity headers without reviewing the existing trust contract.
 
 ## Bootstrap repeatable host pieces
@@ -88,22 +93,28 @@ file; it is not a shell script. URL-encode database credentials with provider to
 
 | Variable | Required meaning |
 | --- | --- |
-| `DATABASE_URL` | API/WS Neon **pooled** endpoint, current database/role, `sslmode=verify-full` |
+| `DATABASE_URL` | API/WS PostgreSQL endpoint, direct or transaction pooled; remote `sslmode=verify-full` |
 | `MIGRATION_DATABASE_URL` | **Direct** endpoint to the same database, migration privileges, verified TLS |
 | `WORKER_DATABASE_URL` | **Direct**, session-preserving endpoint to the same database, verified TLS |
-| `WORKER_DATABASE_MODE` | `direct` for current Neon topology; `session` only for separately verified session pooling |
+| `WORKER_DATABASE_MODE` | `direct` for the default local or remote topology; `session` only for separately verified session pooling |
 | `BETTER_AUTH_SECRET` | Stable secret, at least 32 characters; preserve when preserving data/sessions |
 | `BETTER_AUTH_URL` | Exact public HTTPS backend origin, no `/api` suffix |
 | `APP_ORIGINS` | Comma-separated exact approved HTTPS frontend origins |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Optional pair; omit/empty both if disabled |
 | `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` | Optional pair; omit/empty both if disabled |
 
+For self-hosting, also set `POSTGRES_USER`, `POSTGRES_DB` and `POSTGRES_PASSWORD`.
+All three URLs may use `postgres:5432` with `sslmode=disable`; traffic stays on
+the internal same-host Docker bridge. This exception never applies to arbitrary
+private/loopback addresses. The role/database/password initialize an empty named
+volume only; changing them later does not rotate credentials in an existing DB.
+
 Do not configure `RELEASE_SHA` or `RELEASE_IMAGE` in this file; the release operator
 supplies them. `API_PORT`/`WS_PORT` should remain default 3000/3001 to match the proxy.
 Compose supplies production mode and private Redis host/port. General Model 2 stays
 INTERNAL; do not add lesson grants, a runner socket or activation settings here.
 
-Neon pooling is transaction pooling and is unsuitable for the worker's session
+Transaction pooling (including Neon's pooler endpoint) is unsuitable for the worker's session
 advisory lock. Runtime probes cannot certify an arbitrary transparent pooler; use
 provider-verified direct endpoints. Migration preflight checks all connections reach
 the same database. Preserve TLS verification; never use `rejectUnauthorized=false`.
@@ -230,7 +241,7 @@ Do not run it routinely by SSH. The workflow invokes it through the retry-aware 
 **New host:** a new state directory starts in maintenance, so the workflow refuses it with
 "Interrupted/maintenance release requires operator recovery". Run the command above once over
 SSH from the clean exact checkout. Preflight fetches only missing third-party images such as
-Redis before anything stops; an existing host keeps the image it already runs. After that
+Redis and, when a URL selects it, PostgreSQL before anything stops; an existing host keeps the image it already runs. After that
 first acceptance, re-run the workflow for the same SHA to stage and promote the frontend.
 Set `EC2_HOST_FINGERPRINT` to the host's **ECDSA** key fingerprint
 (`ssh-keygen -lf /etc/ssh/ssh_host_ecdsa_key.pub`): the release SSH client negotiates ECDSA
@@ -265,11 +276,11 @@ separately recorded compatible frontend only after backend acceptance. Failed mi
 or postcheck leaves services stopped and maintenance/lock retained. No `migrate resolve`,
 marker deletion or automatic database downgrade is part of recovery.
 
-The data owner must arrange Neon retention/export and test restoring into a separate
-approved database before relying on it. Keep dump credentials in private libpq service/
+The data owner must install the mandatory [daily S3 backup](operations/backup-alerts.md)
+and test restoring into a separate approved scratch database before relying on it. Keep dump credentials in private libpq service/
 password files, not shell history. Record restore point, migration state and application
 SHA. Disposable packaging exercises `pg_dump`/restore mechanics; it proves neither
-Neon retention nor the owner's ability to restore hosted data.
+S3 retention nor the owner's ability to recover production data.
 
 For an incident: set repository `PRODUCTION_RELEASE_ENABLED=false` to block new
 releases; it does not cancel an in-progress migration. Inspect the current Actions run,

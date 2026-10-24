@@ -3,6 +3,15 @@
 `main` is the sole working/release branch. Start new-host or account recovery with
 [PRODUCTION_BOOTSTRAP.md](PRODUCTION_BOOTSTRAP.md), not the historical cutover notes.
 
+## PostgreSQL hosting
+
+The 2026-10-24 owner decision is a fresh self-hosted PostgreSQL 18 database,
+abandoning the exhausted Neon database. Follow [the cutover and provider-switch
+runbook](SELF_HOSTED_POSTGRES.md); this is a procedure, not a deployment claim.
+The three database URLs in `/etc/infraforge/release.env` select the provider; daily
+S3 backups use the same migration URL. Remote connections require verified TLS;
+only `postgres:5432` on the private same-host bridge may use plaintext.
+
 ## Owner checklist: optional account essentials
 
 The release defaults to `ACCOUNT_ESSENTIALS_ENABLED=false`, with no mail provider
@@ -87,7 +96,7 @@ Backend readiness and frontend metadata agreed on full SHA/auth contract 1;
 maintenance was false and credential auth enabled. The owner reports the completed
 EC2 cutover, healthy API/WS/worker/private Redis and a fresh Neon database, and
 manually tested the product. Public checks do not independently inspect the host or
-database. API uses Neon pooling; migration/worker use direct connections with
+database. At that earlier acceptance, API used Neon pooling; migration/worker used direct connections with
 `sslmode=verify-full`, `WORKER_DATABASE_MODE=direct` per the verified owner handoff.
 Model 1 remains ACTIVE and Model 2 INTERNAL; no general Model-2 activation follows
 from production being live.
@@ -162,7 +171,8 @@ bun --no-env-file scripts/release.ts apply FULL_SHA /etc/infraforge/release.env 
 ```
 
 It builds an exact commit-tagged image with OCI revision/embedded release metadata,
-preflights database targets/history and idle runs, sets maintenance and verifies the
+pre-pulls missing dependencies, starts/waits for the private PostgreSQL service
+when selected by URL, preflights database targets/history and idle runs, sets maintenance and verifies the
 public proxy actually returns 503 for API/WS, stops API/WS, repeats idle checks,
 stops the sole worker and refuses a remaining worker lock before migration. Original
 migrations and schema guards are unchanged. Prisma 7.9.1 deploy/status/diff and exact
