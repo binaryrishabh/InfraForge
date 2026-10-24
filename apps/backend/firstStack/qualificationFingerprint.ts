@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { lstat, readFile, readdir, realpath } from "node:fs/promises";
+import { lstat, stat, readFile, readdir, realpath } from "node:fs/promises";
 import { dirname, isAbsolute, join } from "node:path/posix";
 import { cpus, freemem, platform, totalmem } from "node:os";
 import { hash } from "./canonical";
@@ -8,7 +8,6 @@ import { accessSync, constants, type BigIntStats } from "node:fs";
 import { execFile } from "node:child_process";
 
 const daemonConfig = "/etc/infraforge/verifier/daemon.json";
-const binaryNames = ["docker", "dockerd", "containerd", "runc", "rootlesskit"] as const;
 const cgroupFiles = ["cgroup.controllers", "cgroup.subtree_control", "cpu.max", "memory.max",
   "memory.swap.max", "pids.max", "cpuset.cpus.effective", "cpuset.mems.effective",
   "memory.high", "memory.low", "memory.min", "memory.oom.group", "cpu.weight"];
@@ -27,13 +26,14 @@ const kernelPolicies = ["vm/panic_on_oom", "vm/oom_kill_allocating_task", "vm/ov
 export interface FingerprintHost {
   platform: string; uid: number; executable: string;
   read(path: string): Promise<Buffer>; stat(path: string): Promise<BigIntStats>;
+  statTarget(path: string): Promise<BigIntStats>;
   realpath(path: string): Promise<string>; list(path: string): Promise<string[]>;
   which(name: string): string | null; cpuModels(): string[]; memory(): number;
   systemd(unit: "supervisor" | "manager"): Promise<string>;
 }
 function nativeHost(): FingerprintHost {
   return { platform: platform(), uid: process.getuid!(), executable: process.execPath,
-    read: path => readFile(path), stat: path => lstat(path, { bigint: true }),
+    read: path => readFile(path), stat: path => lstat(path, { bigint: true }), statTarget: path => stat(path, { bigint: true }),
     realpath, list: path => readdir(path), which: name => {
       for (const directory of (process.env.PATH ?? "").split(":")) {
         if (!isAbsolute(directory)) throw Error("Absolute runtime search path required");
@@ -60,19 +60,60 @@ export function createHostFingerprintReader(control: IsolationControl, host?: Fi
   const machineHost = () => host ??= nativeHost();
   const text = async (path: string) => (await machineHost().read(path)).toString("utf8");
   async function fileIdentity(path: string) {
-    const resolved = await machineHost().realpath(path), stat = await machineHost().stat(resolved);
+    const resolved = await machineHost().realpath(path), stat = await machineHost().statTarget(path);
     if (!stat.isFile() || stat.uid !== 0n || stat.size > 256n * 1024n * 1024n || (stat.mode & 0o022n)) {
       throw Error("Unsafe or oversized host identity file");
     }
     const stamp = [resolved, stat.dev, stat.ino, stat.size, stat.ctimeNs, stat.mtimeNs, stat.uid, stat.mode].join(":");
     let cached = files.get(path);
     if (cached?.stamp !== stamp) {
-      const digest = createHash("sha256").update(await machineHost().read(resolved)).digest("hex");
-      const after = await machineHost().stat(resolved);
+      // Read through the original proc-root/exe path: resolving it and then
+      // opening that name in OUR mount namespace can hash a different binary.
+      const digest = createHash("sha256").update(await machineHost().read(path)).digest("hex");
+      const after = await machineHost().statTarget(path);
       if (after.ctimeNs !== stat.ctimeNs || after.ino !== stat.ino || after.size !== stat.size) throw Error("Host file changed during observation");
       cached = { stamp, digest }; files.set(path, cached);
     }
     return { path: resolved, ...cached };
+  }
+  async function processIdentity(pid: string) {
+    const value = await text(`/proc/${pid}/stat`), fields = value.slice(value.lastIndexOf(")") + 2).split(" ");
+    const start = fields[19], parent = fields[1];
+    if (!start || !/^[0-9]+$/.test(start) || !parent || !/^[0-9]+$/.test(parent)) throw Error("Daemon start identity Unknown");
+    return { pid, start, parent, executable: await fileIdentity(`/proc/${pid}/exe`) };
+  }
+  async function processPath(pid: string) {
+    // Select only the runtime search path. Never retain/log the process environment.
+    const environment = (await text(`/proc/${pid}/environ`)).split("\0");
+    const paths = environment.filter(value => value.startsWith("PATH="));
+    if (paths.length !== 1 || environment.some(value => /^(LD_PRELOAD|LD_LIBRARY_PATH|DOCKER_RAMDISK)=.+/.test(value))) {
+      throw Error("Runtime search environment unsupported");
+    }
+    const directories = paths[0]!.slice(5).split(":");
+    if (directories.join(":") !== "/usr/bin:/bin") throw Error("Supported runtime search path required");
+    if (await machineHost().realpath(`/proc/${pid}/root/bin`) !== await machineHost().realpath(`/proc/${pid}/root/usr/bin`)) {
+      throw Error("Merged protected runtime search directories required");
+    }
+    for (const directory of directories) {
+      let path = directory;
+      while (path !== "/") {
+        const value = await machineHost().statTarget(`/proc/${pid}/root${path}`);
+        if (!value.isDirectory() || value.uid !== 0n || (value.mode & 0o022n)) throw Error("Unprotected runtime search directory");
+        path = dirname(path);
+      }
+    }
+    return directories;
+  }
+  async function runtimeBinary(pid: string, directories: string[], name: string) {
+    for (const directory of directories.slice(0, 1)) {
+      const path = `/proc/${pid}/root${directory}/${name}`;
+      try {
+        const value = await machineHost().statTarget(path);
+        if (!value.isFile() || !(value.mode & 0o111n)) continue;
+        return await fileIdentity(path);
+      } catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; }
+    }
+    throw Error("Actual runtime executable unavailable; no fallback");
   }
   async function processGroup(pid: string) {
     const rows = (await text(`/proc/${pid}/cgroup`)).trim().split("\n");
@@ -118,7 +159,7 @@ export function createHostFingerprintReader(control: IsolationControl, host?: Fi
     const version = JSON.parse(await control.run(["version", "--format", "{{json .Server}}"]));
     const machine = (await text("/sys/devices/virtual/dmi/id/product_name")).trim();
     if (info.OSType !== "linux" || info.CgroupVersion !== "2" || info.CgroupDriver !== "systemd" ||
-      !info.SecurityOptions?.includes("name=rootless") || info.NCPU !== 2 ||
+      !info.SecurityOptions?.includes("name=rootless") || info.NCPU !== 2 || info.Architecture !== "x86_64" ||
       info.MemTotal < 3.5 * 1024 ** 3 || info.MemTotal > 4.5 * 1024 ** 3 || machine !== "c7i-flex.large") {
       throw Error("Qualified rootless c7i-flex.large with delegated cgroup v2 required");
     }
@@ -128,27 +169,68 @@ export function createHostFingerprintReader(control: IsolationControl, host?: Fi
       version.Components.some((component: { Name?: unknown; Version?: unknown }) => !knownText(component?.Name) || !knownText(component?.Version)) ||
       !info.Runtimes || info.DefaultRuntime !== "runc" ||
       !["overlay2", "overlayfs"].includes(info.Driver)) throw Error("Runtime identity Unknown or unsupported");
-    const binaries: Record<string, unknown> = {};
-    for (const name of binaryNames) {
-      const path = machineHost().which(name);
-      if (!path) throw Error("Required host runtime executable unavailable");
-      binaries[name] = await fileIdentity(path);
-    }
-    binaries.bun = await fileIdentity(machineHost().executable);
-    const candidates: string[] = [];
+    const cli = machineHost().which("docker");
+    if (!cli) throw Error("Required host runtime executable unavailable");
+    const binaries: Record<string, unknown> = { docker: await fileIdentity(cli), bun: await fileIdentity(machineHost().executable) };
+    const candidates: string[] = [], containers: string[] = [];
     for (const pid of await machineHost().list("/proc")) {
       if (!/^[0-9]+$/.test(pid)) continue;
       try {
-        if ((await machineHost().stat(`/proc/${pid}`)).uid === BigInt(machineHost().uid) &&
-          (await text(`/proc/${pid}/comm`)).trim() === "dockerd") candidates.push(pid);
+        if ((await machineHost().stat(`/proc/${pid}`)).uid === BigInt(machineHost().uid)) {
+          const name = (await text(`/proc/${pid}/comm`)).trim();
+          if (name === "dockerd") candidates.push(pid);
+          if (name === "containerd") containers.push(pid);
+        }
       } catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; }
     }
     if (candidates.length !== 1) throw Error("Exactly one dedicated user daemon required");
     const pid = candidates[0]!, command = (await text(`/proc/${pid}/cmdline`)).split("\0");
-    if (!command.includes(`--config-file=${daemonConfig}`)) throw Error("Dedicated protected daemon configuration required");
+    if (command.filter(Boolean).length !== 2 || command[1] !== `--config-file=${daemonConfig}`) throw Error("Dedicated protected daemon configuration required");
     const configIdentity = await fileIdentity(daemonConfig), config = JSON.parse(await text(daemonConfig));
     if (config["cgroup-parent"] !== "user.slice" || command.some(arg => arg.startsWith("--cgroup-parent"))) {
       throw Error("Explicit supported executor cgroup parent required");
+    }
+    if (config.runtimes || config.containerd || config["containerd-plugins-namespace"] ||
+      config["default-runtime"] && config["default-runtime"] !== "runc" ||
+      config["init-path"] !== "/usr/bin/docker-init" || config["exec-root"] || info.Runtimes.runc?.path !== "runc" || info.Runtimes.runc?.runtimeArgs?.length) {
+      throw Error("Unresolved custom runtime configuration");
+    }
+    if (containers.length !== 1) throw Error("Exactly one managed containerd required");
+    const daemonProcess = await processIdentity(pid), containerd = await processIdentity(containers[0]!);
+    // The selected Intel Linux host exposes process start ticks in USER_HZ=100.
+    // Require config to predate daemon launch, so an edited-but-not-reloaded
+    // cgroup/runtime policy cannot masquerade as the daemon's effective config.
+    const bootSeconds = (await text("/proc/stat")).match(/^btime ([0-9]+)$/m)?.[1];
+    if (!bootSeconds) throw Error("Daemon configuration load time Unknown");
+    const earliestStartNs = BigInt(bootSeconds) * 1_000_000_000n + BigInt(daemonProcess.start) * 10_000_000n;
+    if ((await machineHost().statTarget(daemonConfig)).ctimeNs >= earliestStartNs ||
+      hash(await fileIdentity(`/proc/${pid}/root${daemonConfig}`)) !== hash(configIdentity)) {
+      throw Error("Daemon configuration must be installed before restart in its actual namespace");
+    }
+    if (containerd.parent !== pid) throw Error("Containerd is not managed by the selected daemon");
+    const rootless = await processIdentity(daemonProcess.parent);
+    if ((await text(`/proc/${rootless.pid}/comm`)).trim() !== "rootlesskit") throw Error("Actual rootless launcher Unknown");
+    const daemonPath = await processPath(pid), runtimePath = await processPath(containerd.pid);
+    // Containerd checks the working directory before PATH, and caches the path.
+    // Make both resolutions identical; never guess which cached fallback won.
+    if (await machineHost().realpath(`/proc/${containerd.pid}/cwd`) !== await machineHost().realpath(`/proc/${containerd.pid}/root/usr/bin`)) {
+      throw Error("Runtime working directory cannot establish shim path");
+    }
+    binaries.dockerd = daemonProcess.executable; binaries.containerd = containerd.executable; binaries.rootlesskit = rootless.executable;
+    binaries.runc = await runtimeBinary(containerd.pid, runtimePath, "runc");
+    binaries.shim = await runtimeBinary(containerd.pid, runtimePath, "containerd-shim-runc-v2");
+    binaries.init = await runtimeBinary(pid, daemonPath, "docker-init");
+    // Docker's stock runc must resolve to the same file for feature discovery
+    // and shim execution. No alternative runtime or sibling-binary fallback.
+    if (hash(await runtimeBinary(pid, daemonPath, "runc")) !== hash(binaries.runc)) throw Error("Runtime resolution disagrees");
+    const runtimeConfig = `/run/user/${machineHost().uid}/docker/containerd/containerd.toml`;
+    const runtimeCommand = (await text(`/proc/${containerd.pid}/cmdline`)).split("\0").filter(Boolean);
+    if (runtimeCommand.length !== 3 || runtimeCommand[1] !== "--config" || runtimeCommand[2] !== runtimeConfig) throw Error("Managed runtime configuration Unknown");
+    const runtimeConfigText = await text(`/proc/${containerd.pid}/root${runtimeConfig}`), runtimeConfigValue = Bun.TOML.parse(runtimeConfigText) as Record<string, any>;
+    if (runtimeConfigValue.version !== 2 || runtimeConfigValue.imports?.length || runtimeConfigValue.plugin_dir ||
+      Object.keys(runtimeConfigValue.proxy_plugins ?? {}).length ||
+      Object.keys(runtimeConfigValue.plugins ?? {}).some(key => !["io.containerd.grpc.v1.cri", "io.containerd.runtime.v1.linux"].includes(key))) {
+      throw Error("Runtime helper overrides unsupported");
     }
     const supervisor = await effectiveUnit("supervisor"), manager = await effectiveUnit("manager");
     const supervisorGroup = await processGroup("self"), daemonGroup = await processGroup(pid);
@@ -172,9 +254,6 @@ export function createHostFingerprintReader(control: IsolationControl, host?: Fi
         controls["pids.max"] !== "max" && BigInt(controls["pids.max"]!) < 64n ||
         quota !== "max" && Number(quota) / Number(period) < 0.5) throw Error("Executor ancestor below qualified budget");
     }
-    const stat = await text(`/proc/${pid}/stat`);
-    const start = stat.slice(stat.lastIndexOf(")") + 2).split(" ")[19];
-    if (!start || !/^[0-9]+$/.test(start)) throw Error("Daemon start identity Unknown");
     const policies: Record<string, string> = {};
     for (const name of kernelPolicies) {
       const value = (await text(`/proc/sys/${name}`)).trim();
@@ -199,8 +278,8 @@ export function createHostFingerprintReader(control: IsolationControl, host?: Fi
       supervisor: { unit: await fileIdentity("/etc/systemd/system/first-stack-verifier.service"),
         effective: supervisor, cgroups: supervisorGroups },
       executorParent: { manager, cgroups: executorGroups },
-      daemonProcess: { pid, start,
-        executable: await fileIdentity(`/proc/${pid}/exe`), command: hash(command),
+      runtime: { containerd, rootless, daemonPath, runtimePath, config: hash(runtimeConfigText) },
+      daemonProcess: { ...daemonProcess, command: hash(command),
         cgroups: await cgroups(daemonGroup) },
     };
     await control.assertIdentity();

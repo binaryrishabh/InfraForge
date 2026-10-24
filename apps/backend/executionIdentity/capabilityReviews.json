@@ -1889,18 +1889,19 @@
     }
   },
   "apps/backend/firstStack/qualificationFingerprint.ts": {
-    "hash": "09d007b7a139be27abb8dca9b0ca9881e93a04bbb171b345cd38485f3fb3d654",
+    "hash": "e29341a24eff0e6b8d87f58cfceb0d75f041b47e2bb57e3c7a408cab146ec830",
     "capabilities": [
       "computed-data",
       "resources"
     ],
     "globals": {
-      "hash": "09d007b7a139be27abb8dca9b0ca9881e93a04bbb171b345cd38485f3fb3d654",
+      "hash": "e29341a24eff0e6b8d87f58cfceb0d75f041b47e2bb57e3c7a408cab146ec830",
       "names": [
+        "Bun",
         "process"
       ]
     },
-    "review": "Exact Linux host observation review: fixed proc/sys/cgroup/package/config/unit paths and five named PATH executables plus current Bun; root-owned regular-file bytes are hashed, metadata-cached and checked for races. Only the dedicated user dockerd PID is selected; command contents are hashed. Explicit rootless c7i-flex.large/systemd/runc restrictions. Existing Docker control facade only; no process launch, secret/env-file read, dynamic loader or host mutation. Effective OOM/allocation, scheduler and global task/FD sysctls are read on every observation; supported OOM policy is validated and all values enter the fingerprint. No sysctl writes. Also reviews fixed /usr/bin/systemctl show calls (two-second/64KiB bounds, scrubbed environment, no shell or mutations) for only the supervisor and dedicated user manager. Binds effective safety settings and separate supervisor/executor-parent/daemon cgroup ancestries. Unknown limits, wrong service placement and undersized executor ancestry reject."
+    "review": "Exact Linux host observation review: live kernel policies, effective systemd safety properties and separate supervisor/executor-parent/daemon cgroups. Fixed /usr/bin/systemctl show calls only (two-second/64KiB bounds, scrubbed environment, no shell or mutations). Runtime identity comes from loaded dockerd/containerd/rootlesskit executables and protected runc/shim/init files opened through actual proc namespaces; only supported merged /usr/bin:/bin search and working-directory layout is accepted. Selects PATH and rejects linker overrides without retaining process environments. Parses only managed runtime TOML data with no evaluation; custom runtime/plugin/import overrides reject. Protected daemon config must predate launch and match its namespace. Root-owned file bytes cached by metadata with race checks. Unknown observations fail closed. No credential/env-file access, dynamic loading or host mutation."
   },
   "apps/backend/firstStack/isolationSelfCheck.ts": {
     "hash": "0d8d54cd7bfd203a96911fa0e52bdd8af40cf1956239434f3a9064ee52fbf63b",

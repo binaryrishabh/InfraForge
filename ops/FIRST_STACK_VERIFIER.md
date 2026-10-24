@@ -53,13 +53,31 @@ explicit operator coordination with releases. No automatic fallback is supported
    The fingerprint implementation supports Debian/Ubuntu hosts with the dpkg
    package database, `runc`, overlay2/overlayfs and the systemd cgroup driver.
    Install the runtime executables root-owned and not group/world writable.
+   The supported layout uses merged `/bin` -> `/usr/bin`, with `runc`,
+   `containerd-shim-runc-v2` and `docker-init` in `/usr/bin`. Set the dedicated
+   Docker user unit's `Environment=PATH=/usr/bin:/bin` and
+   `WorkingDirectory=/usr/bin` so its managed containerd inherits both. This
+   makes containerd's working-directory, PATH and cached shim lookup select
+   the same protected file. Arbitrary PATHs, shim environment/plugin overrides,
+   external containerd and custom runtimes are unsupported. The observer hashes
+   loaded dockerd/containerd/rootlesskit executables and the selected helpers
+   through their actual process namespaces, not the supervisor's PATH. Missing
+   helpers, inaccessible procfs, writable search directories and ambiguous
+   configuration all reject qualification. The managed containerd uses its
+   Docker-generated version-2 config at
+   `/run/user/UID/docker/containerd/containerd.toml`; custom imports/proxy plugins
+   are refused. No process environment is retained in evidence.
    Root installs `/etc/infraforge/verifier/daemon.json` (0644); the dedicated
    daemon must start with the literal argument
    `--config-file=/etc/infraforge/verifier/daemon.json`. Use an explicit protected
-   configuration with `"cgroup-parent": "user.slice"`; arbitrary executor parents
+   configuration with `"cgroup-parent": "user.slice"` and
+   `"init-path": "/usr/bin/docker-init"`; arbitrary executor parents
    and command-line parent overrides are unsupported. The fingerprint resolves
    the running user manager's `ControlGroup` through systemd, then observes that
    manager's `user.slice` and its ancestors separately from dockerd's ancestry.
+   Install this configuration before restarting the daemon. Its ctime must
+   predate that launch and its bytes/metadata must agree in the daemon's mount
+   namespace; an edited-but-not-reloaded file is not accepted as effective policy.
    The delegated daemon cgroup and every
    ancestor below the cgroup root must expose memory, swap, CPU, PID and cpuset
    controls. Missing/unreadable facts refuse qualification.

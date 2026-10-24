@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test";
+import { createHash } from "node:crypto";
 import { hash } from "../firstStack/canonical";
 import { qualificationChecks, isolationPolicyHash, assertQualified } from "../firstStack/isolationPolicy";
 import { readQualificationBaseline, readQualificationCanary, selfCheckIntervalMs, selfCheckLeaseMs, type QualificationBaseline } from "../firstStack/qualificationBaseline";
@@ -138,19 +139,27 @@ function hostFixture() {
   const f = fixture(), content = new Map<string, string>(), stamps = new Map<string, bigint>();
   const info: any = { OSType: "linux", CgroupVersion: "2", CgroupDriver: "systemd",
     SecurityOptions: ["name=rootless"], NCPU: 2, MemTotal: 4 * 1024 ** 3,
-    KernelVersion: "fixture", Architecture: "fixture", DockerRootDir: "/fixture",
+    KernelVersion: "fixture", Architecture: "x86_64", DockerRootDir: "/fixture",
     Runtimes: { runc: { path: "runc" } }, DefaultRuntime: "runc", Driver: "overlay2" };
   const version = { Version: "fixture", Components: [{ Name: "runc", Version: "fixture" }] };
   content.set("/sys/devices/virtual/dmi/id/product_name", "c7i-flex.large");
+  content.set("/proc/stat", "btime 1000\n");
   content.set("/proc/42/comm", "dockerd"); content.set("/proc/42/cmdline", "dockerd\0--config-file=/etc/infraforge/verifier/daemon.json\0");
-  content.set("/proc/42/stat", "42 (dockerd) " + Array(20).fill("1").join(" "));
+  for (const [pid, name, parent] of [["41", "rootlesskit", "1"], ["42", "dockerd", "41"], ["43", "containerd", "42"]]) {
+    content.set(`/proc/${pid}/comm`, name!);
+    const fields = Array(20).fill("1"); fields[1] = parent;
+    content.set(`/proc/${pid}/stat`, `${pid} (${name}) ${fields.join(" ")}`);
+    content.set(`/proc/${pid}/environ`, "PATH=/usr/bin:/bin\0");
+  }
+  content.set("/proc/43/cmdline", "containerd\0--config\0/run/user/1001/docker/containerd/containerd.toml\0");
+  content.set("/run/user/1001/docker/containerd/containerd.toml", "version = 2\n");
   const managerGroup = "/user.slice/user-1001.slice/user@1001.service";
   const supervisorGroup = "/system.slice/first-stack-verifier.service";
   content.set("/proc/42/cgroup", `0::${managerGroup}/app.slice/docker.service`);
   content.set("/proc/self/cgroup", `0::${supervisorGroup}`);
   content.set("/proc/self/status", "NoNewPrivs:\t1\nCapEff:\t00000000\n");
   content.set("/proc/self/limits", "Max open files 512 512 files\n");
-  content.set("/etc/infraforge/verifier/daemon.json", '{"cgroup-parent":"user.slice"}');
+  content.set("/etc/infraforge/verifier/daemon.json", '{"cgroup-parent":"user.slice","init-path":"/usr/bin/docker-init"}');
   const supervisor: Record<string, string> = { ControlGroup: supervisorGroup, User: "infraforge-verifier", Group: "infraforge-verifier",
     MemoryMax: "536870912", MemorySwapMax: "0", TasksMax: "128", CPUQuotaPerSecUSec: "150ms", CPUQuotaPeriodUSec: "100ms",
     LimitNOFILE: "512", LimitNOFILESoft: "512", NoNewPrivileges: "yes", ProtectSystem: "strict", ProtectHome: "tmpfs",
@@ -175,15 +184,30 @@ function hostFixture() {
     "kernel/threads-max": "30000", "kernel/pid_max": "4194304", "fs/file-max": "1000000", "fs/nr_open": "1048576" })) {
     content.set(`/proc/sys/${name}`, value);
   }
+  const resolve = (path: string) => {
+    const processes: Record<string, string> = { "41": "rootlesskit", "42": "dockerd", "43": "containerd" };
+    const executable = path.match(/^\/proc\/(41|42|43)\/exe$/);
+    if (executable) return `/usr/bin/${processes[executable[1]!]}`;
+    if (path === "/proc/43/cwd") return "/usr/bin";
+    return path.replace(/^\/proc\/\d+\/root/, "").replace(/^\/bin(?=\/|$)/, "/usr/bin");
+  };
+  const directories = ["/usr", "/usr/bin"];
+  for (const name of ["bun", "docker", "dockerd", "containerd", "runc", "rootlesskit", "containerd-shim-runc-v2", "docker-init"]) content.set(`/usr/bin/${name}`, `fixture-${name}`);
   const host: FingerprintHost = { platform: "linux", uid: 1001, executable: "/usr/bin/bun",
     read: async path => {
-      if (!content.has(path) && (path.startsWith("/sys/fs/cgroup/") || path.startsWith("/proc/sys/"))) throw Error("Missing host fact");
+      path = resolve(path);
+      if (!content.has(path) && (path.startsWith("/sys/fs/cgroup/") || path.startsWith("/proc/sys/") || path.startsWith("/usr/bin/"))) throw Error("Missing host fact");
       return Buffer.from(content.get(path) ?? "fixture");
-    }, realpath: async path => path,
+    }, realpath: async path => resolve(path),
+    statTarget: path => host.stat(resolve(path)),
     systemd: async unit => Object.entries(unit === "supervisor" ? supervisor : manager).map(([k, v]) => `${k}=${v}`).join("\n"),
-    list: async () => ["42"], which: name => `/usr/bin/${name}`, cpuModels: () => ["fixture", "fixture"], memory: () => 4 * 1024 ** 3,
-    stat: async path => ({ isFile: () => true, uid: path === "/proc/42" ? 1001n : 0n,
-      size: 10n, mode: 0o100644n, ctimeNs: stamps.get(path) ?? 1n, mtimeNs: 1n, ino: 1n, dev: 1n }) as any };
+    list: async () => ["41", "42", "43"], which: name => `/usr/bin/${name}`, cpuModels: () => ["fixture", "fixture"], memory: () => 4 * 1024 ** 3,
+    stat: async path => {
+      if (path.startsWith("/usr/bin/") && !content.has(path)) throw Object.assign(Error("Missing executable"), { code: "ENOENT" });
+      return { isFile: () => !directories.includes(path), isDirectory: () => directories.includes(path), uid: /^\/proc\/(41|42|43)$/.test(path) ? 1001n : 0n,
+        size: 10n, mode: directories.includes(path) ? 0o40755n : path.startsWith("/usr/bin/") ? 0o100755n : 0o100644n,
+        ctimeNs: stamps.get(path) ?? 1n, mtimeNs: 1n, ino: 1n, dev: 1n } as any;
+    } };
   f.control.run = async args => JSON.stringify(args[0] === "info" ? info : args[0] === "image"
     ? [{ Id: f.baseline.image, Os: "linux" }] : version);
   content.set("/proc/sys/kernel/random/boot_id", "fixture");
@@ -194,11 +218,11 @@ function hostFixture() {
 test("fingerprint observes reboot, kernel, runtime, binary, packages, daemon config and delegated limits", async () => {
   for (const path of ["/proc/sys/kernel/random/boot_id", "/proc/version", "/proc/42/stat",
     "/etc/systemd/system/first-stack-verifier.service",
-    "/var/lib/dpkg/status", "/usr/bin/bun", "/usr/bin/docker", "/usr/bin/dockerd", "/usr/bin/containerd", "/usr/bin/runc", "/usr/bin/rootlesskit",
+    "/var/lib/dpkg/status", "/usr/bin/bun", "/usr/bin/docker", "/usr/bin/dockerd", "/usr/bin/containerd", "/usr/bin/runc", "/usr/bin/rootlesskit", "/usr/bin/containerd-shim-runc-v2", "/usr/bin/docker-init",
     "/sys/fs/cgroup/user.slice/cpu.weight"]) {
     const f = hostFixture(), before = await f.read();
     expect((await f.read()).fingerprint).toBe(before.fingerprint);
-    f.content.set(path, path === "/proc/42/stat" ? "42 (dockerd) " + Array(20).fill("2").join(" ") : path.endsWith("cpu.weight") ? "200" : "changed"); f.stamps.set(path, 2n);
+    f.content.set(path, path === "/proc/42/stat" ? f.content.get(path)!.replace(/1$/, "2") : path.endsWith("cpu.weight") ? "200" : "changed"); f.stamps.set(path, 2n);
     expect((await f.read()).fingerprint).not.toBe(before.fingerprint);
   }
   const f = hostFixture(), before = await f.read(); f.version.Components[0]!.Version = "changed";
@@ -298,6 +322,58 @@ test("effective supervisor and separate executor ancestry are mandatory live evi
     if (path.startsWith(`/sys/fs/cgroup${outside.supervisorGroup}/`)) outside.content.set(path.replace(outside.supervisorGroup, other), value);
   }
   await expect(outside.read()).rejects.toThrow("Running service hierarchy");
+});
+
+test("actual runtime helpers are measured even with unchanged versions and a different supervisor PATH", async () => {
+  const f = hostFixture();
+  // The supervisor's PATH only selects its Docker CLI, never runc or the shim.
+  f.host.which = name => name === "docker" ? "/usr/bin/docker" : `/unrelated/${name}`;
+  f.dependencies.fingerprint = async () => (await f.read()).fingerprint;
+  f.baseline.fingerprint = (await f.read()).fingerprint;
+  await f.live.renew();
+  f.content.set("/usr/bin/containerd-shim-runc-v2", "same-version replacement");
+  f.stamps.set("/usr/bin/containerd-shim-runc-v2", 2n);
+  await expect(f.live.refresh()).rejects.toThrow(); expect(f.configuration.qualification).toBeNull();
+
+  const namespace = hostFixture(), before = await namespace.read(), read = namespace.host.read, stat = namespace.host.statTarget;
+  // realpath names agree, but the runtime namespace mounts different bytes.
+  const actual = "/proc/43/root/usr/bin/containerd-shim-runc-v2";
+  namespace.host.read = async path => path === actual ? Buffer.from("namespace replacement") : read(path);
+  namespace.host.statTarget = async path => path === actual ? { ...await stat(path), ctimeNs: 2n } as any : stat(path);
+  const changed = await namespace.read();
+  expect(changed.fingerprint).not.toBe(before.fingerprint);
+  expect((changed.observation.binaries.shim as { digest: string }).digest)
+    .toBe(createHash("sha256").update("namespace replacement").digest("hex"));
+});
+
+test("unknown or unsafe runtime resolution fails closed instead of hashing a PATH substitute", async () => {
+  const edited = hostFixture(); edited.stamps.set("/etc/infraforge/verifier/daemon.json", 1002_000_000_000n);
+  await expect(edited.read()).rejects.toThrow("before restart");
+  for (const name of ["runc", "containerd-shim-runc-v2", "docker-init"]) {
+    const f = hostFixture(); f.content.delete(`/usr/bin/${name}`);
+    await expect(f.read()).rejects.toThrow("executable unavailable");
+    for (const change of [{ uid: 1001n }, { mode: 0o100777n }]) {
+      const f = hostFixture(), stat = f.host.statTarget;
+      f.host.statTarget = async path => path.endsWith(`/${name}`) ? { ...await stat(path), ...change } as any : stat(path);
+      await expect(f.read()).rejects.toThrow("identity file");
+    }
+  }
+  for (const pid of ["42", "43"]) {
+    for (const value of ["", "PATH=relative\0", "PATH=/opt/bin:/usr/bin:/bin\0", "PATH=/usr/bin:/bin:/usr/bin\0", "PATH=/usr/bin:/bin\0LD_PRELOAD=/unsafe\0"]) {
+      const f = hostFixture(); f.content.set(`/proc/${pid}/environ`, value); await expect(f.read()).rejects.toThrow();
+    }
+  }
+  for (const change of ["cwd", "directory", "manager", "configuration", "custom-runtime", "shim-env", "imports"] as const) {
+    const f = hostFixture();
+    if (change === "cwd") { const realpath = f.host.realpath; f.host.realpath = async path => path === "/proc/43/cwd" ? "/tmp" : realpath(path); }
+    if (change === "directory") { const stat = f.host.statTarget; f.host.statTarget = async path => path.endsWith("/root/usr/bin") ? { ...await stat(path), mode: 0o40777n } as any : stat(path); }
+    if (change === "manager") f.host.list = async () => ["41", "42"];
+    if (change === "configuration") f.content.set("/proc/43/cmdline", "containerd\0--config\0/unknown.toml\0");
+    if (change === "custom-runtime") f.info.Runtimes.runc.path = "/opt/runc";
+    if (change === "shim-env") f.content.set("/run/user/1001/docker/containerd/containerd.toml", 'version = 2\n[plugins."io.containerd.shim.v1.manager"]\nenv=["PATH=/tmp"]\n');
+    if (change === "imports") f.content.set("/run/user/1001/docker/containerd/containerd.toml", 'version = 2\nimports=["/unknown.toml"]\n');
+    await expect(f.read()).rejects.toThrow();
+  }
 });
 
 test("live production health requires successful responses from all three fixed probes", async () => {
