@@ -1,6 +1,6 @@
 {
   "schema": "execution-loading-analysis/1",
-  "policy": "eeb8703a5988c7887ad8fac520bdbff28b0a0663d5ada4e4e731e06ef9137f6b",
+  "policy": "2e2852deec444471abe48b1241f68a9fbc99118f2d1cda94f9121e3f1f7aff51",
   "modules": {
     "apps/backend/actions/contract.ts": {
       "hash": "15fe6aa3879ab8ccc67a23d579a4e2e9b79f71631dd7687ad192f788c27229ad",
@@ -1610,38 +1610,34 @@
       ]
     },
     "apps/backend/firstStack/scoredChallenges/definition.ts": {
-      "hash": "224b27abce700b771dd6e9d680e6ea7bb0e21f4dfe622d218aec220f16f7eb70",
+      "hash": "a7292404295a3c2188e7ad6e70492ded10fb4888a8cd2225bf1024f2b4ee1cf4",
       "requests": [
         {
-          "path": "zod",
+          "path": "./lose-an-app-server.v2.json",
           "kind": "import-statement"
         },
         {
-          "path": "./lose-an-app-server.v1.json",
+          "path": "./url-redirect.v2.json",
           "kind": "import-statement"
         },
         {
-          "path": "./url-redirect.v1.json",
+          "path": "./catalogue-api.v2.json",
           "kind": "import-statement"
         },
         {
-          "path": "./catalogue-api.v1.json",
+          "path": "./reviews-api.v2.json",
           "kind": "import-statement"
         },
         {
-          "path": "./reviews-api.v1.json",
+          "path": "./small-paste-api.v2.json",
           "kind": "import-statement"
         },
         {
-          "path": "./small-paste-api.v1.json",
+          "path": "./preloaded-news-api.v2.json",
           "kind": "import-statement"
         },
         {
-          "path": "./preloaded-news-api.v1.json",
-          "kind": "import-statement"
-        },
-        {
-          "path": "./price-history-api.v1.json",
+          "path": "./price-history-api.v2.json",
           "kind": "import-statement"
         },
         {
@@ -1663,11 +1659,23 @@
         {
           "path": "../authoring",
           "kind": "import-statement"
+        },
+        {
+          "path": "./schema",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./privateStore",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./schema",
+          "kind": "import-statement"
         }
       ]
     },
     "apps/backend/firstStack/scoredChallenges/execution.ts": {
-      "hash": "d7b980a0b20b6d08ed72fd5e49aed1f55a7746f141105104152f374ef0c1955b",
+      "hash": "e879f195764f31a7c5f0fa89194e8ee94641724db271ed47acccec59e830394f",
       "requests": [
         {
           "path": "../canonical",
@@ -1682,13 +1690,42 @@
           "kind": "import-statement"
         },
         {
+          "path": "./privateStore",
+          "kind": "import-statement"
+        },
+        {
           "path": "./scoring",
           "kind": "import-statement"
         }
       ]
     },
+    "apps/backend/firstStack/scoredChallenges/privateStore.ts": {
+      "hash": "cacf87f7bc4a87212ea257650be8feb109ee91f1bec11e1b10d6ec69de20b5be",
+      "requests": [
+        {
+          "path": "node:fs",
+          "kind": "import-statement"
+        },
+        {
+          "path": "node:path",
+          "kind": "import-statement"
+        },
+        {
+          "path": "../../utils/errors",
+          "kind": "import-statement"
+        },
+        {
+          "path": "../canonical",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./schema",
+          "kind": "import-statement"
+        }
+      ]
+    },
     "apps/backend/firstStack/scoredChallenges/projection.ts": {
-      "hash": "4674534a02c7b55ce51a2042670a78392f19b3ae1201b959025695a84a821015",
+      "hash": "ae64bb684624658590fbd58f4d26f9758431384a56320d9640460062336628d5",
       "requests": [
         {
           "path": "zod",
@@ -1700,8 +1737,17 @@
         }
       ]
     },
+    "apps/backend/firstStack/scoredChallenges/schema.ts": {
+      "hash": "d0ae14f7253044b09385d86a2e5ba6c98df9941f93b600a7da4ca7913d3ecac2",
+      "requests": [
+        {
+          "path": "zod",
+          "kind": "import-statement"
+        }
+      ]
+    },
     "apps/backend/firstStack/scoredChallenges/scoring.ts": {
-      "hash": "abb265e33309ce07789635fb70ee679fb3e734a265cc1c01ae86344e46e36281",
+      "hash": "1cf406cfd9521a8df7a28f2263655be9e363a013e91636c98b2e81af0ad6b6e5",
       "requests": [
         {
           "path": "zod",
