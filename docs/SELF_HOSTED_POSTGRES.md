@@ -257,9 +257,11 @@ continues to refuse rebuilding either retained accepted image.
      case "$state" in created|exited|dead) ;; *) echo 'Application shutdown not verified'; exit 1 ;; esac
    done
    sudo systemctl stop infraforge-backup.timer
-   if sudo systemctl is-active --quiet infraforge-backup.service; then
-     echo 'Wait for the current backup to finish before changing URLs'; exit 1
-   fi
+   backup_state=$(sudo systemctl show infraforge-backup.service -p ActiveState --value)
+   case "$backup_state" in
+     inactive|failed) ;;
+     *) echo 'Wait for the current backup to finish before changing URLs'; exit 1 ;;
+   esac
    ```
 
    Verify public maintenance responses as in the fresh-start procedure. If
