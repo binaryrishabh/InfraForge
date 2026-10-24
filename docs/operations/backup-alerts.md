@@ -105,7 +105,8 @@ token. Without it, leave destructive pruning disabled. This change provisions
 no token or account permission. The bearer is read only by the fixed HTTPS
 control request, rejects redirects, and is never passed to AWS/DB/Docker or argv.
 
-On initial installation create the empty file, then enter the single literal
+After installing the scripts/private directories in the host section below,
+create the empty file, then enter the single literal
 bearer token privately in the editor (never shell commands or environment dumps):
 
 ```sh
@@ -232,27 +233,40 @@ Objects**, open `backups/daily/` and `backups/weekly/`. Match the exact keys fro
 root-private `/var/lib/infraforge-ops/backup.json`, UTC time and sizes; both
 first-run objects must exist. Dashboard visibility is not a restore proof.
 
-The minute timer writes local observations and checks backup health without
-CloudWatch/SNS. Failure, missing/invalid/future receipts or age over 26 hours
+The minute timer writes local observations and checks backup **and restore**
+health without CloudWatch/SNS. Backup failure, missing/invalid/future receipts or age over 26 hours
 writes `ok: false` to **`/var/lib/infraforge-ops/ops-status.json`** and a generic
 journal message. Failure remains latched even with a fresh previous receipt.
 Systemd pre-start/stop hooks cover lock refusal, timeout, SIGKILL and service
 failure; interrupted running markers become unhealthy after 46 minutes.
+
+An existing failed, interrupted or corrupt `drill.json` also makes status
+unhealthy and sends a restore-specific alert, even if the backup is fresh or
+a later backup succeeds. Only a successful restore drill clears that latch.
+The example uses `restore_drill_required: false`: a deliberately disabled timer
+does not require a nonexistent drill, and a past successful drill does not expire.
+It still never hides a known failed attempt. If a scheduled monthly drill is
+enabled, set `restore_drill_required: true` and
+`restore_drill_max_age_days: 35` (integer 1–366). Then missing drills and passes
+older than that interval are unhealthy too. `status` checks this predicate live;
+it cannot pass using an old healthy monitor snapshot after a restore failure.
 
 If existing literal release settings are `TRANSACTIONAL_EMAIL_PROVIDER=resend`,
 `TRANSACTIONAL_EMAIL_FROM=<verified mailbox>` and `RESEND_API_KEY=<key>`, and
 `alert_email` is configured, the runner uses the same
 [Resend API](https://resend.com/docs/api-reference/emails/send-email).
 Only these three mail settings are parsed from the private systemd credential.
-Email contains a generic message without DB/bucket details. Sent alerts repeat
+Email distinguishes backup and restore failure without DB/bucket details. Sent alerts repeat
 at most hourly while unhealthy; failed/unconfigured delivery retries at most
-every 15 minutes. `alert_delivery` records `sent`, `failed` or `unconfigured`;
+every 15 minutes. A newly changed failure reason alerts immediately, even during
+the prior reason's suppression interval. `alert_delivery` records `sent`, `failed` or `unconfigured`;
 `sent` means API acceptance, not confirmed inbox delivery.
 
 Without Resend, **connect an independent uptime monitor to the operator command**
 `sudo /bin/bash /opt/infraforge-ops/backup-alerts/run.sh status`, for example through
-an existing restricted SSH check. Exit 0 requires a fresh successful backup and
-healthy monitor observation no older than three minutes. Exit 1 or inability to
+an existing restricted SSH check. Exit 0 requires a fresh successful backup,
+restore health under the policy above, and a healthy monitor observation no
+older than three minutes. Exit 1 or inability to
 reach the host must alert. Only generic PASS/failure text is emitted; the private
 JSON is never served publicly. This change installs no public HTTP route or
 external monitor. Application readiness alone cannot detect backup failure.
@@ -292,6 +306,9 @@ network-isolated container. It uses no source DB credentials. Keep its timer off
 on the live 4 GiB host unless resources have been measured/budgeted. Use a
 suitable host/maintenance window with matching private receipt/configuration;
 require `drill.json` with `ok: true` and PASS. No Docker drill was executed here.
+The drill unit reads only the required literal mail settings from its private
+systemd credential for immediate failure notification; Docker/restore children
+still receive neither database-source nor mail/storage credentials.
 
 On failure inspect unit status, disk, private config and token permissions,
 then rerun once. Never edit success receipts to clear failure. A successful
@@ -306,6 +323,7 @@ owner cutover approval. Never restore over the active database.
 
 ```sh
 python3 -B ops/backup-alerts/test_runner.py
+python3 -B ops/backup-alerts/test_mutations.py
 bash -n ops/backup-alerts/run.sh
 shellcheck ops/backup-alerts/run.sh
 bun --no-env-file --no-install test scripts/tests/backup-alerts.test.ts
@@ -313,7 +331,11 @@ bun --no-env-file --no-install test scripts/tests/backup-alerts.test.ts
 
 Tests prohibit sockets and mock external commands/mail. They cover endpoint and
 credential policy, conditional uploads, readback corruption, size limits, prune
-bounds/dry run/age, failed/missed backups, mail failure, stale monitoring and
-remote restore corruption/isolation/cleanup. The Bun wrapper also validates
+bounds/dry run/age, live lock-verification refusal, simulated storage enforcement
+under clock skew/replacement, failed/missed backups, failed/overdue remote drills,
+mail failure, stale monitoring and remote restore corruption/isolation/cleanup.
+The mutation suite makes all eight escaped review changes fail their targeted
+regressions in memory; an unrelated fixture error is not accepted as detection.
+The Bun wrapper also validates
 legacy AWS template invariants; CI retains cfn-lint. No production upload,
 deletion, delivery or restore result is claimed by these offline checks.

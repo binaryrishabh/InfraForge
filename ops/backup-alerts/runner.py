@@ -180,6 +180,12 @@ def write_json(path, value):
 
 
 def validate_config(config):
+    for key in ("prune_enabled", "restore_drill_required"):
+        if key in config and type(config[key]) is not bool:
+            raise ValueError("Operations switches must be booleans")
+    days = config.get("restore_drill_max_age_days", 35)
+    if type(days) is not int or not 1 <= days <= 366:
+        raise ValueError("Restore freshness must be 1 to 366 days")
     for key, pattern in {
         "region": r"auto|[a-z]{2}(?:-[a-z]+)+-\d",
         "bucket": r"[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]",
@@ -583,9 +589,29 @@ def backup_healthy(config, now=None):
             (attempt.get("ok") is True or running))
 
 
+def drill_healthy(config, now=None):
+    now = time.time() if now is None else now
+    path = STATE / "drill.json"
+    required = config.get("restore_drill_required", False)
+    if not path.exists():
+        return not required
+    receipt = read_json(path)
+    elapsed = age(receipt, "passed_at", now)
+    # Once attempted, failure/corruption/interruption stays latched even when
+    # the monthly timer is intentionally disabled. Only a passed drill clears it.
+    if receipt.get("ok") is not True or elapsed is None:
+        return False
+    return not required or elapsed <= config.get("restore_drill_max_age_days", 35) * 86400
+
+
+def health_reasons(config, now=None):
+    return (["backup-failed-or-missed"] if not backup_healthy(config, now) else []) + (
+        ["restore-failed-or-overdue"] if not drill_healthy(config, now) else [])
+
+
 class NoRedirect(urllib.request.HTTPRedirectHandler):
     def redirect_request(self, req, fp, code, msg, headers, newurl):
-        raise ValueError("Mail redirects are forbidden")
+        raise ValueError("Credential-bearing redirects are forbidden")
 
 
 def send_alert(config):
@@ -610,9 +636,12 @@ def send_alert(config):
             not re.fullmatch(mailbox, config["alert_email"]) or
             not values.get("RESEND_API_KEY") or re.search(r"[\s$]", values["RESEND_API_KEY"])):
         raise ValueError("Invalid literal Resend configuration")
+    reasons = read_json(STATE / "ops-status.json").get("reasons", ["backup-failed-or-missed"])
+    messages = {"backup-failed-or-missed": "A backup failed or no verified backup is less than 26 hours old.",
+                "restore-failed-or-overdue": "A restore drill failed, was interrupted, or is overdue."}
     payload = {"from": values["TRANSACTIONAL_EMAIL_FROM"], "to": [config["alert_email"]],
-               "subject": "InfraForge backup needs attention",
-               "text": "A backup failed or no verified backup is less than 26 hours old. Check the backup unit and ops status privately."}
+               "subject": "InfraForge recovery needs attention",
+               "text": " ".join(messages[reason] for reason in reasons) + " Check ops status and service units privately."}
     request = urllib.request.Request("https://api.resend.com/emails", method="POST",
                                      data=json.dumps(payload).encode(),
                                      headers={"Authorization": "Bearer " + values["RESEND_API_KEY"],
@@ -625,15 +654,17 @@ def send_alert(config):
 
 def monitor(config):
     now = time.time()
-    healthy = backup_healthy(config, now)
+    reasons = health_reasons(config, now)
+    healthy = not reasons
     previous = read_json(STATE / "ops-status.json")
-    state = {"ok": healthy, "checked_at": now,
+    state = {"ok": healthy, "checked_at": now, "reasons": reasons,
              "alert_delivery": "not-needed" if healthy else previous.get("alert_delivery", "pending")}
     # Persist failure BEFORE attempting delivery; provider failure never hides it.
     if not healthy:
         attempt_age = age(previous, "alert_attempt_at", now)
         retry_after = 3600 if previous.get("alert_delivery") == "sent" else 900
-        if previous.get("ok") is not True and attempt_age is not None and attempt_age < retry_after:
+        if (previous.get("ok") is not True and previous.get("reasons") == reasons and
+                attempt_age is not None and attempt_age < retry_after):
             state["alert_attempt_at"] = previous["alert_attempt_at"]
         else:
             state["alert_attempt_at"] = now
@@ -644,15 +675,15 @@ def monitor(config):
                     state["alert_sent_at"] = now
             except Exception:
                 state["alert_delivery"] = "failed"
-        print("BACKUP UNHEALTHY; check private unit status and ops-status.json", file=sys.stderr)
+        print("RECOVERY UNHEALTHY; check private unit status and ops-status.json", file=sys.stderr)
     write_json(STATE / "ops-status.json", state)
 
 
 def status(config):
     snapshot = read_json(STATE / "ops-status.json")
     elapsed = age(snapshot, "checked_at", time.time())
-    if not backup_healthy(config) or snapshot.get("ok") is not True or elapsed is None or elapsed > 180:
-        raise ValueError("Backup or monitoring is unhealthy")
+    if health_reasons(config) or snapshot.get("ok") is not True or elapsed is None or elapsed > 180:
+        raise ValueError("Backup, restore or monitoring is unhealthy")
 
 
 def begin_backup(_config):
@@ -707,6 +738,8 @@ def main():
         if operation == "backup":
             write_json(STATE / "backup-attempt.json", {"ok": True})
             monitor(config)
+        elif operation == "drill":
+            monitor(config)
     except Exception:
         if operation in ("backup", "begin-backup", "fail-backup"):
             try:
@@ -714,6 +747,12 @@ def main():
                 monitor(locals().get("config", {}))
             except Exception:
                 print("BACKUP FAILURE STATE COULD NOT BE UPDATED; operator action required", file=sys.stderr)
+        elif operation in ("drill", "begin-drill", "cleanup-drill"):
+            try:
+                write_json(STATE / "drill.json", {"ok": False})
+                monitor(locals().get("config", {}))
+            except Exception:
+                print("RESTORE FAILURE STATE COULD NOT BE UPDATED; operator action required", file=sys.stderr)
         # No exception string: URL parsers, pg tools and AWS errors can contain secrets.
         print("Operations job failed; inspect configuration, private backup diagnostics and unit status", file=sys.stderr)
         return 1

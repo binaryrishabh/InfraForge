@@ -34,7 +34,7 @@ test("all seven alarms notify email and fail on missing metrics", () => {
 
 test("operations runner passes offline upload, isolation and failure regressions", () => {
   const result = Bun.spawnSync([process.platform === "win32" ? "python" : "python3", "-B", "ops/backup-alerts/test_runner.py"], { cwd: root });
-  expect(result.stderr.toString()).toContain("Ran 59 tests");
+  expect(result.stderr.toString()).toContain("Ran 64 tests");
   expect(result.stderr.toString()).toContain("OK");
   expect(result.exitCode).toBe(0);
 }, 30_000);

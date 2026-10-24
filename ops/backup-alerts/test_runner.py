@@ -566,6 +566,85 @@ class OperationsTests(unittest.TestCase):
         self.assertIs(observed[0]["ok"], False)
         self.assertIs(ops.read_json(self.state / "ops-status.json")["ok"], False)
 
+    def test_failed_remote_drill_alerts_and_stays_failed_through_backup_success(self):
+        self.healthy_receipt()
+        key = self.remote_archive(self.archive())
+        receipt = ops.read_json(self.state / "backup.json")
+        ops.write_json(self.state / "backup.json", {**receipt, "daily_key": key})
+        def fail_verifier(args, **kwargs):
+            if "/restore/verify.sh" in args:
+                raise subprocess.CalledProcessError(1, "fixture-verifier")
+            return self.fake_command(args, **kwargs)
+        with patch.object(ops.time, "time", return_value=NOW), patch.object(ops, "send_alert", return_value="sent") as send:
+            with patch.object(ops, "command", fail_verifier), self.assertRaises(subprocess.CalledProcessError):
+                ops.drill(CONFIG)
+            ops.monitor(CONFIG)
+            send.assert_called_once_with(CONFIG)
+            self.assertEqual(ops.read_json(self.state / "ops-status.json")["reasons"], ["restore-failed-or-overdue"])
+            with self.assertRaisesRegex(ValueError, "restore"):
+                ops.status(CONFIG)
+            original = ops.read_json
+            with patch.object(ops.sys, "argv", ["runner.py", "backup"]), patch.object(ops, "validate_state"), \
+                    patch.object(ops, "read_json", side_effect=lambda path: CONFIG if path.name == "config.json" else original(path)), \
+                    patch.object(ops, "command", self.fake_command), patch.dict(os.environ, {"BACKUP_DATABASE_URL": URL}, clear=True):
+                self.assertEqual(ops.main(), 0)  # Real successful backup entrypoint.
+            self.assertTrue(ops.backup_healthy(CONFIG))
+            self.assertFalse(ops.read_json(self.state / "drill.json")["ok"])
+            with self.assertRaisesRegex(ValueError, "restore"):
+                ops.status(CONFIG)
+            # Only a successful remote drill clears that latch.
+            with patch.object(ops, "command", self.fake_command):
+                ops.drill(CONFIG)
+            ops.monitor(CONFIG)
+            ops.status(CONFIG)
+            self.assertEqual(ops.read_json(self.state / "ops-status.json")["reasons"], [])
+
+    def test_restore_freshness_is_optional_but_known_failure_is_always_unhealthy(self):
+        path = self.state / "drill.json"
+        with patch.object(ops.time, "time", return_value=NOW):
+            self.assertTrue(ops.drill_healthy(CONFIG))
+            self.assertFalse(ops.drill_healthy({**CONFIG, "restore_drill_required": True}))
+            for receipt, optional, required in [({"ok": False}, False, False), ({}, False, False),
+                    ({"ok": True, "passed_at": NOW + 1}, False, False),
+                    ({"ok": True, "passed_at": NOW - 35 * 86400}, True, True),
+                    ({"ok": True, "passed_at": NOW - 35 * 86400 - 1}, True, False)]:
+                ops.write_json(path, receipt)
+                self.assertEqual(ops.drill_healthy(CONFIG), optional)
+                self.assertEqual(ops.drill_healthy({**CONFIG, "restore_drill_required": True}), required)
+            ops.write_json(path, {"ok": True, "passed_at": NOW - 86401})
+            self.assertFalse(ops.drill_healthy({**CONFIG, "restore_drill_required": True, "restore_drill_max_age_days": 1}))
+            path.write_text("corrupt receipt")
+            self.assertFalse(ops.drill_healthy(CONFIG))
+
+    def test_new_restore_failure_notifies_even_during_backup_alert_deduplication(self):
+        with patch.object(ops.time, "time", return_value=NOW), patch.object(ops, "send_alert", return_value="sent") as send:
+            ops.monitor(CONFIG)
+            ops.write_json(self.state / "drill.json", {"ok": False})
+            ops.monitor(CONFIG)
+            self.assertEqual(send.call_count, 2)
+            self.assertIn("restore-failed-or-overdue", ops.read_json(self.state / "ops-status.json")["reasons"])
+
+    def test_restore_entrypoint_failure_persists_and_alerts_without_secret_logs(self):
+        self.healthy_receipt()
+        original = ops.read_json
+        stderr = io.StringIO()
+        with patch.object(ops.sys, "argv", ["runner.py", "drill"]), patch.object(ops, "validate_state"), \
+                patch.object(ops, "read_json", side_effect=lambda path: CONFIG if path.name == "config.json" else original(path)), \
+                patch.object(ops, "drill", side_effect=RuntimeError(URL)), \
+                patch.object(ops, "send_alert", return_value="sent") as send, \
+                patch.object(ops.time, "time", return_value=NOW), contextlib.redirect_stderr(stderr):
+            self.assertEqual(ops.main(), 1)
+            send.assert_called_once_with(CONFIG)
+        self.assertFalse(ops.read_json(self.state / "drill.json")["ok"])
+        self.assertFalse(ops.read_json(self.state / "ops-status.json")["ok"])
+        self.assertNotIn(URL, stderr.getvalue())
+
+    def test_restore_health_configuration_rejects_ambiguous_switches_and_ages(self):
+        for changes in [{"restore_drill_required": "false"}, {"prune_enabled": "true"},
+                        *({"restore_drill_max_age_days": value} for value in (0, 367, True, 1.5, "35"))]:
+            with self.assertRaises(ValueError):
+                ops.validate_config({**CONFIG, **changes})
+
     def test_backup_service_wires_both_failure_hooks(self):
         unit = Path(__file__).with_name("systemd").joinpath("infraforge-backup.service").read_text()
         self.assertIn("ExecStartPre=/usr/bin/python3 /opt/infraforge-ops/backup-alerts/runner.py begin-backup", unit.splitlines())
@@ -850,6 +929,9 @@ class OperationsTests(unittest.TestCase):
             self.assertEqual(request.get_header("Authorization"), "Bearer fixture-resend-key")
             self.assertEqual(json.loads(request.data)["to"], ["owner@example.invalid"])
             self.assertNotIn("fixture-resend-key", request.data.decode())
+            ops.write_json(self.state / "ops-status.json", {"reasons": ["restore-failed-or-overdue"]})
+            ops.send_alert({**CONFIG, "alert_email": "owner@example.invalid"})
+            self.assertIn("restore drill failed", json.loads(opener.open.call_args.args[0].data)["text"])
             response.status = 500
             with self.assertRaises(ValueError):
                 ops.send_alert({**CONFIG, "alert_email": "owner@example.invalid"})
