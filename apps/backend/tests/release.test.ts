@@ -44,3 +44,12 @@ test("production dependency checks cannot fall back to ambient PostgreSQL or loc
   expect(() => requireProductionEndpoints({ ...endpoints, DATABASE_URL: "postgresql:///fixture" })).toThrow("invalid");
   expect(() => requireProductionEndpoints({ ...endpoints, REDIS_PORT: "NaN" })).toThrow("invalid");
 });
+
+test("every migration after the original baseline is reviewed as additive, so populated upgrades can apply it", async () => {
+  const { ADDITIVE_MIGRATIONS } = await import("../release/migrations");
+  const manifest = await migrationManifest();
+  const first = manifest.findIndex((migration) => migration.name === "20261009000000_capture_run_inputs");
+  expect(first).toBeGreaterThan(0);
+  const later = manifest.slice(first).map((migration) => migration.name);
+  expect(later.filter((name) => !ADDITIVE_MIGRATIONS.has(name))).toEqual([]);
+});

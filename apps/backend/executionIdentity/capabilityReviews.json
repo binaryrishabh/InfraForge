@@ -380,12 +380,12 @@
     "review": "Fixed data indexing; resource adapters require the separate documented review"
   },
   "apps/backend/release/migrations.ts": {
-    "hash": "6382c174e07c277eb0aa38c910bea1ea9b53fe51ca330ff453701b160a6544c8",
+    "hash": "67ef68f7cc397b42ac18909dcfed25547d2dbffdf0a8edb3e5b27765d80b4666",
     "capabilities": [
       "computed-data",
       "resources"
     ],
-    "review": "Exact historical compatibility review: versioned stored-data readers, typed migration audit lineage and bounded replay under the existing isolated executor/session fence; additive replay reservations; no evaluator, new process permission, physics change, latest-input resolution or activation; merged release manifest/guards: historical replay idle check plus account schema guard, ordered migrations Release ownership takes the verifier session lock (186542854,12) so releases and the verifier exclude each other; assertNoWorker also counts that lock except the caller's own session."
+    "review": "Exact historical compatibility review: versioned stored-data readers, typed migration audit lineage and bounded replay under the existing isolated executor/session fence; additive replay reservations; no evaluator, new process permission, physics change, latest-input resolution or activation; merged release manifest/guards: historical replay idle check plus account schema guard, ordered migrations Release ownership takes the verifier session lock (186542854,12) so releases and the verifier exclude each other; assertNoWorker also counts that lock except the caller's own session. The reviewed additive list also includes the two strictly additive mail tables (CREATE TABLE plus indexes only) and is exported for a regression test."
   },
   "apps/backend/release/model2Schema.ts": {
     "hash": "938f32e0a1b5371155aced66767440a78dd80e2e4a34bdac50c86374b9ca0a39",
