@@ -25,7 +25,8 @@ export function releaseDependencyClosure(declared: Record<string, { depends_on?:
     // This dependency is selected by URL, so remote providers need no local DB
     // credentials or Compose edits. Include it in the same image pre-pull closure.
     const url = declared[name]!.environment?.DATABASE_URL;
-    if (url && postgresUrl(url).hostname === "postgres") {
+    const target = url ? postgresUrl(url) : undefined;
+    if (target?.hostname === "postgres" && (!target.port || target.port === "5432")) {
       if (!declared.postgres) throw new Error("Local PostgreSQL service is missing");
       pending.push("postgres");
     }

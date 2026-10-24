@@ -160,6 +160,7 @@ test("local URL includes PostgreSQL in pre-pull and waits for it before migratio
   } finally { run.mockRestore(); }
   expect(() => releaseDependencyClosure({ api: declared.api }, ["api"])).toThrow("missing");
   expect([...releaseDependencyClosure({ api: { environment: { DATABASE_URL: "postgresql://fixture@remote/fixture?sslmode=verify-full" } }, postgres: {} }, ["api"])]).toEqual(["api"]);
+  expect([...releaseDependencyClosure({ api: { environment: { DATABASE_URL: "postgresql://fixture@postgres:6432/fixture?sslmode=verify-full" } } }, ["api"])]).toEqual(["api"]);
 });
 
 test("production PostgreSQL keeps data persistent, bounded and exclusively on the internal network", () => {

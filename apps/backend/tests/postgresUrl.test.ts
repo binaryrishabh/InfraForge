@@ -28,7 +28,8 @@ test("redirects, duplicate options and TLS overrides cannot escape the URL polic
     expect(() => postgresUrl(remote + extra)).toThrow();
   }
   expect(postgresUrl(remote + "&channel_binding=require").hostname).toBe("db.example.invalid");
-  for (const url of [undefined, "not-a-url", "https://user@db/app", "postgresql://db/app", "postgresql://user@db/"]) {
+  for (const url of [undefined, "not-a-url", "https://user@db/app", "postgresql://db/app", "postgresql://user@db/",
+    "postgresql://user@post%67res/app?sslmode=verify-full", "postgresql://user@db:0/app?sslmode=verify-full"]) {
     expect(() => postgresUrl(url)).toThrow();
   }
 });

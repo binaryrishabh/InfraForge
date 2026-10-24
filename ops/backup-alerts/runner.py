@@ -87,7 +87,7 @@ def source_url():
 
 def local_source(env):
     """Resolve only our private, unpublished Compose service on the Linux host."""
-    if env["PGHOST"] != "postgres":
+    if env["PGHOST"] != "postgres" or env["PGPORT"] != "5432":
         return
     ids = command(["docker", "ps", "-q", "--filter", "label=com.docker.compose.project=infraforge",
                    "--filter", "label=com.docker.compose.service=postgres"], env=clean_env()).decode().split()

@@ -80,10 +80,6 @@ try {
   await mkdir(join(directory, "control"));
   await Bun.write(envFile, `DATABASE_URL=postgresql://postgres:${password}@postgres/infraforge_release_${suffix}\nWORKER_DATABASE_URL=postgresql://postgres:${password}@postgres/infraforge_release_${suffix}\nMIGRATION_DATABASE_URL=postgresql://postgres:${password}@postgres/infraforge_release_${suffix}\nWORKER_DATABASE_MODE=direct\nPOSTGRES_USER=postgres\nPOSTGRES_DB=infraforge_release_${suffix}\nPOSTGRES_PASSWORD=${password}\nBETTER_AUTH_SECRET=${randomBytes(32).toString("hex")}\nBETTER_AUTH_URL=https://api.example.invalid\nAPP_ORIGINS=https://app.example.invalid\nAPI_PORT=0\nWS_PORT=0\n`);
   await Bun.write(override, `services:
-  postgres:
-    # A host-side proof client needs the loopback listener; internal-only bridges do not publish it.
-    networks: [application, egress]
-    ports: ["127.0.0.1:0:5432"]
   migration:
     environment:
       RELEASE_REHEARSAL: owned-local
@@ -136,6 +132,15 @@ try {
   await releaseSequence(operations, release);
   phase("fresh self-hosted database initialized, all migrations and readiness passed");
   await operations.stop();
+  // The fresh path above uses the production internal-only service unchanged.
+  // Only the older host-side proof needs a loopback listener; retain the same
+  // named volume when Compose recreates this owned fixture container.
+  await Bun.write(override, (await readFile(override, "utf8")).replace("services:\n", `services:
+  postgres:
+    networks: [application, egress]
+    ports: ["127.0.0.1:0:5432"]
+`));
+  await operations.compose(["up", "-d", "--pull", "never", "--wait", "--wait-timeout", "90", "postgres"]);
   // Reset only this random owned fixture database for the older cutover proof.
   await operations.compose(["exec", "-T", "postgres", "dropdb", "-U", "postgres", `infraforge_release_${suffix}`]);
   await operations.compose(["exec", "-T", "postgres", "createdb", "-U", "postgres", `infraforge_release_${suffix}`]);

@@ -77,6 +77,10 @@ class OperationsTests(unittest.TestCase):
         remote = "postgresql://fixture:password@db.example.invalid:6543/app?sslmode=verify-full"
         self.assertEqual(ops.source_env(remote)["PGPORT"], "6543")
         self.assertEqual(ops.source_env(remote)["PGCHANNELBINDING"], "prefer")
+        with patch.object(ops, "command") as run:
+            ops.local_source(ops.source_env(remote))
+            ops.local_source(ops.source_env(remote.replace("db.example.invalid:6543", "postgres:6432")))
+            run.assert_not_called()
         local = "postgresql://fixture:password@postgres/app?sslmode=disable"
         self.assertEqual(ops.source_env(local)["PGSSLMODE"], "disable")
         self.assertNotIn("PGSSLROOTCERT", ops.source_env(local))

@@ -396,14 +396,14 @@
     "review": "Fixed data indexing; resource adapters require the separate documented review"
   },
   "apps/backend/release/runtime.ts": {
-    "hash": "c7ce7e7be1868c70f750ec03d038f142d72f4d7c3c01cedb2a1ca5d2cf38f637",
+    "hash": "49901fcdfc6c79acbdc78f8d6b15baf3f4ec921c474aa73cee5e9edcbb955912",
     "capabilities": [
       "computed-data",
       "resources"
     ],
-    "review": "Fixed data indexing; resource adapters require the separate documented review",
+    "review": "Read the fixed image release metadata and production endpoint variables; validate PostgreSQL through the pure URL policy before existing migration/schema checks. Existing filesystem/database resources and fixed metadata indexing only; no dynamic code loading or new process capability.",
     "globals": {
-      "hash": "c7ce7e7be1868c70f750ec03d038f142d72f4d7c3c01cedb2a1ca5d2cf38f637",
+      "hash": "49901fcdfc6c79acbdc78f8d6b15baf3f4ec921c474aa73cee5e9edcbb955912",
       "names": [
         "process"
       ]
