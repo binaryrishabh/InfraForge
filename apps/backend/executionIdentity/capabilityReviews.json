@@ -1,10 +1,10 @@
 {
   "apps/backend/auth/settings.ts": {
-    "hash": "0bfd3d52ce76538f5acba51c23715bfdd8d8812585648a2ffa3a21e252d0b1fc",
+    "hash": "1d761093479be310b8b58eae6eb4e9b9e5171c7d5f21aad580fdfff02e1dc7e6",
     "capabilities": [
       "computed-data"
     ],
-    "review": "Exact account-service review: fixed SES/Resend/Turnstile HTTPS adapters; bounded email delivery after native transaction commit; atomic single-statement verification ledger; native Better Auth tokens/passwords; keyed quotas; owner-filtered export and serialized profile deletion. No evaluators, dynamic imports, new process adapters, engine changes or activation."
+    "review": "Exact email/captcha review: fixed HTTPS SES/Resend/Turnstile adapters; development/test-only exclusive local mail files; native Better Auth scrypt, tokens and authenticated encryption; after-commit transactional ledger/outbox insertion, atomic bounded claims, stable Resend keys and no ambiguous SES resend; expiring encrypted payload cleanup; generic public signup/reset with native validation and quotas. No evaluator, dynamic loader, process adapter, engine change or activation. PostgreSQL concurrency coverage is authored but not executed locally."
   },
   "apps/backend/challenges/criteria.ts": {
     "hash": "ee00b07a68f911681b241a81f98153f5d55ae734489db2ee4a7ebce625ba2e0e",
@@ -348,7 +348,7 @@
     "capabilities": [
       "generated-client"
     ],
-    "review": "Prisma 7.9.1 generated client for the additive immutable submission schema; fixed literal imports, pinned generator/schema and no authored runtime injected"
+    "review": "Pinned Prisma 7.9.1 output regenerated for the additive AccountMailOutbox model and User relation; existing generator/template and literal imports, no authored runtime code or widened adapter capability."
   },
   "apps/backend/lib/generated/prisma/internal/class.ts": {
     "hash": "157a8924ff94570d0b69dc650160f18a5241b718e9e79f9caedbceecb663c06d",
@@ -1380,7 +1380,7 @@
     "capabilities": [
       "generated-client"
     ],
-    "review": "Prisma 7.9.1 generated client for the additive immutable submission schema; fixed literal imports, pinned generator/schema and no authored runtime injected"
+    "review": "Pinned Prisma 7.9.1 output regenerated for the additive AccountMailOutbox model and User relation; existing generator/template and literal imports, no authored runtime code or widened adapter capability."
   },
   "apps/backend/lib/generated/prisma/internal/prismaNamespaceBrowser.ts": {
     "hash": "078b60971451d4d27dd170b79177ac9ae6040c5f0af00923e8b2be5fe608b72c",
@@ -1394,105 +1394,105 @@
     "capabilities": [
       "generated-client"
     ],
-    "review": "Prisma 7.9.1 generated client for the additive immutable submission schema; fixed literal imports, pinned generator/schema and no authored runtime injected"
+    "review": "Pinned Prisma 7.9.1 output regenerated for the additive AccountMailOutbox model and User relation; existing generator/template and literal imports, no authored runtime code or widened adapter capability."
   },
   "apps/backend/lib/generated/prisma/models/Deployment.ts": {
     "hash": "ebf19acfe634b77cf7fb2be77d95380ad70589ce21b90a8815d8b51043afabb4",
     "capabilities": [
       "generated-client"
     ],
-    "review": "Prisma 7.9.1 generated client for the additive immutable submission schema; fixed literal imports, pinned generator/schema and no authored runtime injected"
+    "review": "Pinned Prisma 7.9.1 output regenerated for the additive AccountMailOutbox model and User relation; existing generator/template and literal imports, no authored runtime code or widened adapter capability."
   },
   "apps/backend/lib/generated/prisma/models/FirstStackCut.ts": {
     "hash": "232c82a6be18d9f5da67e67f65c7aaf85aa0d090c8305e0da77e4154776213ab",
     "capabilities": [
       "generated-client"
     ],
-    "review": "Prisma 7.9.1 generated client for the additive immutable submission schema; fixed literal imports, pinned generator/schema and no authored runtime injected"
+    "review": "Pinned Prisma 7.9.1 output regenerated for the additive AccountMailOutbox model and User relation; existing generator/template and literal imports, no authored runtime code or widened adapter capability."
   },
   "apps/backend/lib/generated/prisma/models/FirstStackOutbox.ts": {
     "hash": "20d6a2abb6e257252457b13b323848b851434216c39c3df2f9bc26fc4f927a85",
     "capabilities": [
       "generated-client"
     ],
-    "review": "Prisma 7.9.1 generated client for the additive immutable submission schema; fixed literal imports, pinned generator/schema and no authored runtime injected"
+    "review": "Pinned Prisma 7.9.1 output regenerated for the additive AccountMailOutbox model and User relation; existing generator/template and literal imports, no authored runtime code or widened adapter capability."
   },
   "apps/backend/lib/generated/prisma/models/FirstStackResult.ts": {
     "hash": "fa7942ccd6d2267285e9a6351907c1cce4f835c7766c3493fa8f29d0874f2972",
     "capabilities": [
       "generated-client"
     ],
-    "review": "Prisma 7.9.1 generated client for the additive immutable submission schema; fixed literal imports, pinned generator/schema and no authored runtime injected"
+    "review": "Pinned Prisma 7.9.1 output regenerated for the additive AccountMailOutbox model and User relation; existing generator/template and literal imports, no authored runtime code or widened adapter capability."
   },
   "apps/backend/lib/generated/prisma/models/FirstStackRun.ts": {
     "hash": "05e2c68881112d353c61fb26443d053c7bef2f1a383c12b2fc29f9d2e0179647",
     "capabilities": [
       "generated-client"
     ],
-    "review": "Exact Prisma 7.9.1 generated bytes for the strictly additive historical replay reservation; pinned schema/generator, fixed literal imports"
+    "review": "Pinned Prisma 7.9.1 output regenerated for the additive AccountMailOutbox model and User relation; existing generator/template and literal imports, no authored runtime code or widened adapter capability."
   },
   "apps/backend/lib/generated/prisma/models/FirstStackWork.ts": {
     "hash": "57ae745e91ddd37c51fbae6ac0c2050446c56e7613f89de4a8d6ac8fd72d2d98",
     "capabilities": [
       "generated-client"
     ],
-    "review": "Prisma 7.9.1 generated client for the additive immutable submission schema; fixed literal imports, pinned generator/schema and no authored runtime injected"
+    "review": "Pinned Prisma 7.9.1 output regenerated for the additive AccountMailOutbox model and User relation; existing generator/template and literal imports, no authored runtime code or widened adapter capability."
   },
   "apps/backend/lib/generated/prisma/models/Infrastructure.ts": {
     "hash": "131d80c5c7e86e7d286b30428425c26ef0b1883b631d84e9a7c6359f71410b5a",
     "capabilities": [
       "generated-client"
     ],
-    "review": "Prisma 7.9.1 generated client for the additive immutable submission schema; fixed literal imports, pinned generator/schema and no authored runtime injected"
+    "review": "Pinned Prisma 7.9.1 output regenerated for the additive AccountMailOutbox model and User relation; existing generator/template and literal imports, no authored runtime code or widened adapter capability."
   },
   "apps/backend/lib/generated/prisma/models/InternalModel2Grant.ts": {
     "hash": "2a0092fdc7ac896af2d99f2cfa2d45b70ff60efcd3db29b7f8a0182fdbae8faf",
     "capabilities": [
       "generated-client"
     ],
-    "review": "Prisma 7.9.1 generated client for the additive immutable submission schema; fixed literal imports, pinned generator/schema and no authored runtime injected"
+    "review": "Pinned Prisma 7.9.1 output regenerated for the additive AccountMailOutbox model and User relation; existing generator/template and literal imports, no authored runtime code or widened adapter capability."
   },
   "apps/backend/lib/generated/prisma/models/InternalModel2LessonRun.ts": {
     "hash": "5cd160c72936f7e7ca9f806c234471ed3669363f3ec3fcad73e691bca62abad6",
     "capabilities": [
       "generated-client"
     ],
-    "review": "Prisma 7.9.1 generated client for the additive immutable submission schema; fixed literal imports, pinned generator/schema and no authored runtime injected"
+    "review": "Pinned Prisma 7.9.1 output regenerated for the additive AccountMailOutbox model and User relation; existing generator/template and literal imports, no authored runtime code or widened adapter capability."
   },
   "apps/backend/lib/generated/prisma/models/InternalModel2Run.ts": {
     "hash": "c898cdea28a3556a75ddc0c0ddfb02bcadd231d8e221a27dd23cb3c69bf4cae4",
     "capabilities": [
       "generated-client"
     ],
-    "review": "Prisma 7.9.1 generated client for the additive immutable submission schema; fixed literal imports, pinned generator/schema and no authored runtime injected"
+    "review": "Pinned Prisma 7.9.1 output regenerated for the additive AccountMailOutbox model and User relation; existing generator/template and literal imports, no authored runtime code or widened adapter capability."
   },
   "apps/backend/lib/generated/prisma/models/Outbox.ts": {
     "hash": "915ee67964729392a0a21e46478cca959dd0ca59db604475cd7d3b6258fb9c56",
     "capabilities": [
       "generated-client"
     ],
-    "review": "Prisma 7.9.1 generated client for the additive immutable submission schema; fixed literal imports, pinned generator/schema and no authored runtime injected"
+    "review": "Pinned Prisma 7.9.1 output regenerated for the additive AccountMailOutbox model and User relation; existing generator/template and literal imports, no authored runtime code or widened adapter capability."
   },
   "apps/backend/lib/generated/prisma/models/RunAction.ts": {
     "hash": "eddf8150fa1b2770b27832eeee1069bcee83c4be60617806592865c9b17d97c9",
     "capabilities": [
       "generated-client"
     ],
-    "review": "Prisma 7.9.1 generated client for the additive immutable submission schema; fixed literal imports, pinned generator/schema and no authored runtime injected"
+    "review": "Pinned Prisma 7.9.1 output regenerated for the additive AccountMailOutbox model and User relation; existing generator/template and literal imports, no authored runtime code or widened adapter capability."
   },
   "apps/backend/lib/generated/prisma/models/RunEvidenceSample.ts": {
     "hash": "228d66968ef341f67d5e78912439a304f5729cf075b5018092de3cc58ef06cd5",
     "capabilities": [
       "generated-client"
     ],
-    "review": "Prisma 7.9.1 generated client for the additive immutable submission schema; fixed literal imports, pinned generator/schema and no authored runtime injected"
+    "review": "Pinned Prisma 7.9.1 output regenerated for the additive AccountMailOutbox model and User relation; existing generator/template and literal imports, no authored runtime code or widened adapter capability."
   },
   "apps/backend/lib/generated/prisma/models/Session.ts": {
     "hash": "56784350026710c9078458f8cb81aa2711f537a8ecf51eddd930c640f9c826f4",
     "capabilities": [
       "generated-client"
     ],
-    "review": "Prisma 7.9.1 generated client for the additive immutable submission schema; fixed literal imports, pinned generator/schema and no authored runtime injected"
+    "review": "Pinned Prisma 7.9.1 output regenerated for the additive AccountMailOutbox model and User relation; existing generator/template and literal imports, no authored runtime code or widened adapter capability."
   },
   "apps/backend/lib/generated/prisma/models/User.ts": {
     "hash": "58e3c7dc2229e837c8d18112280e59e7191c93f96673b0ab676611db7ecfb310",
@@ -1506,7 +1506,7 @@
     "capabilities": [
       "generated-client"
     ],
-    "review": "Prisma 7.9.1 generated client for the additive immutable submission schema; fixed literal imports, pinned generator/schema and no authored runtime injected"
+    "review": "Pinned Prisma 7.9.1 output regenerated for the additive AccountMailOutbox model and User relation; existing generator/template and literal imports, no authored runtime code or widened adapter capability."
   },
   "apps/backend/lib/generated/prisma/models.ts": {
     "hash": "d6e6e710255a0a242d3a6de2fb0e5d21e40fe21f48240483ab4f61b817e53182",
@@ -1686,7 +1686,7 @@
     "capabilities": [
       "generated-client"
     ],
-    "review": "Prisma 7.9.1 output for additive account tombstone and hash-only verification redemption schema; pinned generator/dependencies; fixed literal imports and no authored runtime injected"
+    "review": "Pinned Prisma 7.9.1 output regenerated for the additive AccountMailOutbox model and User relation; existing generator/template and literal imports, no authored runtime code or widened adapter capability."
   },
   "apps/backend/firstStack/historicalReplay.ts": {
     "hash": "4f6e39a106dc44a34edab35a60ffa721468b9e34ad20c624cb01a7b3466501d1",
@@ -1749,7 +1749,7 @@
     "capabilities": [
       "generated-client"
     ],
-    "review": "Exact Prisma 7.9.1 generated bytes for the strictly additive historical replay reservation; pinned schema/generator, fixed literal imports"
+    "review": "Pinned Prisma 7.9.1 output regenerated for the additive AccountMailOutbox model and User relation; existing generator/template and literal imports, no authored runtime code or widened adapter capability."
   },
   "apps/backend/challenges/improvements.ts": {
     "hash": "e575582f9e2cde40c32891bf407c8d5877e489e0b862803eabb5d1200760655c",
@@ -1815,5 +1815,12 @@
         "process"
       ]
     }
+  },
+  "apps/backend/lib/generated/prisma/models/AccountMailOutbox.ts": {
+    "hash": "cd237593b977923b01c2252d2b20c56fdd3531d63ff9686a62c5335fc6fd57b5",
+    "capabilities": [
+      "generated-client"
+    ],
+    "review": "Pinned Prisma 7.9.1 output regenerated for the additive AccountMailOutbox model and User relation; existing generator/template and literal imports, no authored runtime code or widened adapter capability."
   }
 }
