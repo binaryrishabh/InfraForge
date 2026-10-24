@@ -25,7 +25,7 @@ export class AccountEmailRequests implements MailRequests {
       data: JSON.stringify({ email, callbackURL }),
     });
     await this.db.accountMailIntent.create({ data: {
-      id: randomUUID(), kind, payload,
+      id: randomUUID(), kind, payload, availableAt: new Date(),
       expiresAt: new Date(Date.now() + 1800_000),
       retrySafe: this.sender.retrySafe === true,
     } });
@@ -35,7 +35,7 @@ export class AccountEmailRequests implements MailRequests {
     return this.db.$transaction(async tx => {
       const pending = await tx.$queryRaw<MailIntent[]>`
         SELECT id, kind, payload, "expiresAt" FROM "AccountMailIntent"
-        WHERE status = 'pending' AND "expiresAt" > now()
+        WHERE status = 'pending' AND "expiresAt" > (CURRENT_TIMESTAMP AT TIME ZONE 'UTC')
         ORDER BY "availableAt", id FOR UPDATE SKIP LOCKED LIMIT 1`;
       const row = pending[0];
       if (!row) return false;
@@ -50,21 +50,21 @@ export class AccountEmailRequests implements MailRequests {
   }
 
   async drain() {
-    await this.db.$executeRaw`DELETE FROM "AccountMailIntent" WHERE "expiresAt" <= now()`;
-    await this.db.$executeRaw`DELETE FROM "AccountEmailToken" WHERE "expiresAt" <= now()`;
-    await this.db.$executeRaw`DELETE FROM "Verification" WHERE "expiresAt" <= now()`;
+    await this.db.$executeRaw`DELETE FROM "AccountMailIntent" WHERE "expiresAt" <= (CURRENT_TIMESTAMP AT TIME ZONE 'UTC')`;
+    await this.db.$executeRaw`DELETE FROM "AccountEmailToken" WHERE "expiresAt" <= (CURRENT_TIMESTAMP AT TIME ZONE 'UTC')`;
+    await this.db.$executeRaw`DELETE FROM "Verification" WHERE "expiresAt" <= (CURRENT_TIMESTAMP AT TIME ZONE 'UTC')`;
     for (let n = 0; n < 16 && await this.prepareOne(); n++) { /* bounded preparation */ }
 
     await this.db.$executeRaw`UPDATE "AccountMailIntent" SET status = 'uncertain', payload = NULL
-      WHERE status = 'sending' AND "retrySafe" = false AND "availableAt" <= now()`;
+      WHERE status = 'sending' AND "retrySafe" = false AND "availableAt" <= (CURRENT_TIMESTAMP AT TIME ZONE 'UTC')`;
     for (let n = 0; n < 16; n++) {
       const rows = await this.db.$queryRaw<ClaimedMail[]>`
         WITH candidate AS (SELECT id FROM "AccountMailIntent"
           WHERE (status = 'ready' OR (status = 'sending' AND "retrySafe" = true))
-            AND "availableAt" <= now() AND "expiresAt" > now() AND attempts < ${MAIL_REQUEST_ATTEMPTS}
+            AND "availableAt" <= (CURRENT_TIMESTAMP AT TIME ZONE 'UTC') AND "expiresAt" > (CURRENT_TIMESTAMP AT TIME ZONE 'UTC') AND attempts < ${MAIL_REQUEST_ATTEMPTS}
           ORDER BY "availableAt", id FOR UPDATE SKIP LOCKED LIMIT 1)
         UPDATE "AccountMailIntent" m SET status = 'sending', attempts = attempts + 1,
-          "availableAt" = now() + interval '30 seconds'
+          "availableAt" = (CURRENT_TIMESTAMP AT TIME ZONE 'UTC') + interval '30 seconds'
         FROM candidate c WHERE m.id = c.id
         RETURNING m.id, m.kind, m.payload, m."expiresAt", m.attempts, m."retrySafe"`;
       const row = rows[0];
@@ -88,7 +88,7 @@ export class AccountEmailRequests implements MailRequests {
       } });
     }
     await this.db.$executeRaw`UPDATE "AccountMailIntent" SET status = 'uncertain', payload = NULL
-      WHERE attempts >= ${MAIL_REQUEST_ATTEMPTS} AND status = 'sending' AND "availableAt" <= now()`;
+      WHERE attempts >= ${MAIL_REQUEST_ATTEMPTS} AND status = 'sending' AND "availableAt" <= (CURRENT_TIMESTAMP AT TIME ZONE 'UTC')`;
   }
 
   start() {

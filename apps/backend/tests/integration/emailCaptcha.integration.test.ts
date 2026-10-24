@@ -9,8 +9,8 @@ import { readLocalSettings } from "./localHarness";
 import { readAuthSettings } from "../../auth/settings";
 import { createAuth } from "../../auth/createAuth";
 import { accountAuthHandler } from "../../auth/accountPolicy";
-import { EmailOutbox } from "../../auth/emailOutbox";
-import { AccountEmailRequests } from "../../auth/mailRequests";
+import { checkSesLeaseAndNegativeControl, checkPreparationAndRetries } from "./mailLeaseChecks";
+import { AccountEmailRequests, retireLegacyResetStorage } from "../../auth/mailRequests";
 import { FakeEmail, ResendEmail } from "../../auth/email";
 import { Turnstile } from "../../auth/turnstile";
 import { registerVerification } from "../../auth/verification";
@@ -20,7 +20,7 @@ import { registerVerification } from "../../auth/verification";
   const name = `infraforge_it_${randomUUID().replaceAll("-", "")}`, target = new URL(local.databaseUrl); target.pathname = `/${name}`;
   await admin.query(`CREATE DATABASE "${name}" TEMPLATE template0`);
   const sql = new Pool({ connectionString: target.href, max: 3 });
-  const db = new PrismaClient({ adapter: new PrismaPg({ connectionString: target.href, max: 3 }) });
+  const db = new PrismaClient({ adapter: new PrismaPg({ connectionString: target.href, max: 3, options: "-c timezone=Asia/Kolkata" }) });
   try {
     const folder = new URL("../../prisma/migrations/", import.meta.url);
     for (const migration of (await readdir(folder, { withFileTypes: true })).filter(d => d.isDirectory()).map(d => d.name).sort()) {
@@ -85,33 +85,49 @@ import { registerVerification } from "../../auth/verification";
 
     // Provider accepts mail, database ack is lost: stable Resend keys dedupe
     // retry after restart. No real provider/network credentials are used.
-    const keys = new Set<string>(); let requests = 0;
+    const keys = new Set<string>(), bodies = new Set<string>(); let requests = 0;
     const resend = new ResendEmail("fixture", "sender@example.test", (async (_url: string, init: RequestInit) => {
-      requests++; keys.add((init.headers as Record<string, string>)["Idempotency-Key"]!); return Response.json({});
+      requests++; bodies.add(String(init.body)); keys.add((init.headers as Record<string, string>)["Idempotency-Key"]!); return Response.json({});
     }) as typeof fetch);
     let loseAck = true;
     const ackDb = new Proxy(db, { get(client, key) {
-      if (key === "$executeRaw") return (parts: TemplateStringsArray, ...values: unknown[]) => {
-        if (loseAck && parts.join("").includes("SET status = ") && values[0] === "sent") { loseAck = false; throw Error("fixture lost ack"); }
-        return client.$executeRaw(parts, ...values);
-      };
+      if (key === "accountMailIntent") return new Proxy(client.accountMailIntent, { get(model, operation) {
+        if (operation === "update") return async (args: any) => {
+          if (loseAck && args.data.status === "sent") { loseAck = false; throw Error("fixture lost ack"); }
+          return model.update(args);
+        };
+        return Reflect.get(model, operation);
+      } });
       return Reflect.get(client, key);
     } });
-    const ackQueue = new EmailOutbox(ackDb, resend, defaults.secret);
-    await ackQueue.enqueue(mail.messages[0]!, learner.id);
+    const ackQueue = new AccountEmailRequests(ackDb, resend, defaults);
+    await ackQueue.admit("reset", learner.email, `${defaults.origins[0]}/reset`);
     let failed = false; try { await ackQueue.drain(); } catch { failed = true; }
     expect(failed).toBe(true);
-    await sql.query('UPDATE "AccountMailOutbox" SET "availableAt"=now()-interval \'1 second\' WHERE status=\'sending\'');
-    await new EmailOutbox(db, resend, defaults.secret).drain();
-    expect(requests).toBe(2); expect(keys.size).toBe(1);
-    expect(await db.accountMailOutbox.count({ where: { status: "sending" } })).toBe(0);
-    expect(await db.accountMailOutbox.count({ where: { status: "sent", payload: { not: null } } })).toBe(0);
+    await db.accountMailIntent.updateMany({ where: { status: "sending" }, data: { availableAt: new Date(0) } });
+    await new AccountEmailRequests(db, resend, defaults).drain();
+    expect(requests).toBe(2); expect(keys.size).toBe(1); expect(bodies.size).toBe(1);
+    expect(await db.accountMailIntent.count({ where: { status: "sending" } })).toBe(0);
+    expect(await db.accountMailIntent.count({ where: { status: "sent", payload: { not: null } } })).toBe(0);
     // Database enforces the bounded-attempt and payload erasure guards itself.
     let constraintRejected = false;
-    try { await sql.query('UPDATE "AccountMailOutbox" SET attempts=6'); } catch { constraintRejected = true; }
+    try { await sql.query('UPDATE "AccountMailIntent" SET attempts=6'); } catch { constraintRejected = true; }
     expect(constraintRejected).toBe(true);
-    await db.accountMailOutbox.updateMany({ data: { expiresAt: new Date(0) } }); await queue.drain();
+    await db.accountMailIntent.updateMany({ data: { expiresAt: new Date(0) } }); await queue.drain();
+    expect(await db.accountMailIntent.count()).toBe(0);
+    // Startup removes legacy readable reset copies without deleting hash-only rows.
+    await db.verification.create({ data: { id: "legacy-reset", identifier: "reset-password:fixture-old-bearer",
+      value: learner.id, expiresAt: new Date(Date.now() + 60000) } });
+    await db.verification.create({ data: { id: "hashed-reset", identifier: "fixture-hash-only",
+      value: learner.id, expiresAt: new Date(Date.now() + 60000) } });
+    await db.accountMailOutbox.create({ data: { id: "legacy-mail", userId: learner.id,
+      payload: "fixture-encrypted-legacy-payload", retrySafe: true, expiresAt: new Date(Date.now() + 60000) } });
+    await retireLegacyResetStorage(db);
+    expect(await db.verification.count({ where: { id: "legacy-reset" } })).toBe(0);
+    expect(await db.verification.count({ where: { id: "hashed-reset" } })).toBe(1);
     expect(await db.accountMailOutbox.count()).toBe(0);
+    await checkSesLeaseAndNegativeControl(db, defaults);
+    await checkPreparationAndRetries(db, defaults);
   } finally {
     await db.$disconnect(); await sql.end(); await admin.query(`DROP DATABASE "${name}"`); await admin.end();
   }

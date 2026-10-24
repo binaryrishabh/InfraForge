@@ -2,11 +2,8 @@ import { expect, test } from "bun:test";
 import { mkdtemp, readdir, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { symmetricDecrypt } from "better-auth/crypto";
-import type { PrismaClient } from "../lib/generated/prisma/client";
-import { EmailOutbox } from "../auth/emailOutbox";
 import { accountEmail } from "../auth/emailTemplate";
-import { DeliveryError, LocalOutboxEmail, ResendEmail, SesEmail, type TransactionalEmail } from "../auth/email";
+import { DeliveryError, LocalOutboxEmail, ResendEmail, SesEmail } from "../auth/email";
 import { readAuthSettings } from "../auth/settings";
 import { readChallenge, Turnstile } from "../auth/turnstile";
 import { accountAuthHandler } from "../auth/accountPolicy";
@@ -78,71 +75,8 @@ test("HTTPS adapters send HTML and stable Resend idempotency keys; SES retries o
   }
 });
 
-// SQL is exercised against PostgreSQL in emailCaptcha.integration.test.ts. This
-// fixture isolates encryption, delivery retries and ack/crash behavior.
-function queueFixture(sender: TransactionalEmail) {
-  const statements: string[] = [];
-  let row: { id: string; payload: string | null; retrySafe: boolean; attempts: number; status: string } | undefined;
-  let ackFailure = false;
-  const db: any = {
-    $transaction: async (work: (tx: unknown) => unknown) => work(db),
-    $queryRaw: async (parts: TemplateStringsArray, ...values: any[]) => {
-      const sql = parts.join("?"); statements.push(sql);
-      if (sql.startsWith("SELECT id FROM")) return [{ id: "fixture-user" }];
-      if (sql.includes("WITH candidate")) {
-        if (!row || row.status !== "pending") return [];
-        row.status = "sending"; row.attempts++; return [{ ...row }];
-      }
-      return [];
-    },
-    $executeRaw: async (parts: TemplateStringsArray, ...values: any[]) => {
-      const sql = parts.join("?"); statements.push(sql);
-      if (sql.startsWith("INSERT INTO")) row = { id: values[0], payload: values[2], retrySafe: values[4], attempts: 0, status: "pending" };
-      if (sql.includes("SET status = ?")) {
-        if (ackFailure) throw Error("fixture ack failure");
-        row!.status = values[0]; row!.payload = values[1];
-      }
-      return 1;
-    },
-  };
-  return { queue: new EmailOutbox(db as PrismaClient, sender, secret, () => {}), db, row: () => row!, statements, failAck: () => { ackFailure = true; } };
-}
-
-test("outbox encrypts links, persists before send, wipes success and never retries an acked send", async () => {
-  const keys: string[] = [];
-  const f = queueFixture({ retrySafe: true, send: async (_message, key) => { keys.push(key!); } });
-  await f.queue.enqueue(message, "fixture-user");
-  expect(keys).toHaveLength(0); expect(f.row().payload).not.toContain("fixture&");
-  expect(f.row().payload).not.toContain(message.to);
-  expect(JSON.parse(await symmetricDecrypt({ key: secret, data: f.row().payload! }))).toEqual(message);
-  await f.queue.drain(); await f.queue.drain();
-  expect(f.statements).toContain('DELETE FROM "Verification" WHERE "expiresAt" <= now()');
-  expect(keys).toEqual([f.row().id]); expect(f.row().payload).toBeNull(); expect(f.row().status).toBe("sent");
-});
-
-test("outbox bounds retry attempts with stable keys and refuses ambiguous SES retries", async () => {
-  const keys: string[] = [];
-  const f = queueFixture({ retrySafe: true, send: async (_message, key) => { keys.push(key!); throw Error("fixture network timeout"); } });
-  await f.queue.enqueue(message, "fixture-user"); await f.queue.drain();
-  expect(keys).toHaveLength(5); expect(new Set(keys).size).toBe(1); expect(f.row().status).toBe("uncertain"); expect(f.row().payload).toBeNull();
-  let calls = 0;
-  const ses = queueFixture({ send: async () => { calls++; throw Error("ambiguous SES timeout"); } });
-  await ses.queue.enqueue(message, "fixture-user"); await ses.queue.drain(); await ses.queue.drain();
-  expect(calls).toBe(1); expect(ses.row().status).toBe("uncertain");
-  let rejected = 0;
-  const throttled = queueFixture({ send: async () => { rejected++; throw new DeliveryError(true); } });
-  await throttled.queue.enqueue(message, "fixture-user"); await throttled.queue.drain();
-  expect(rejected).toBe(5);
-});
-
-test("an accepted SES send with failed database ack is never sent again", async () => {
-  let calls = 0;
-  const f = queueFixture({ send: async () => { calls++; } });
-  await f.queue.enqueue(message, "fixture-user"); f.failAck();
-  await expect(f.queue.drain()).rejects.toThrow("fixture ack failure");
-  await f.queue.drain(); expect(calls).toBe(1);
-  expect(f.statements.some(sql => sql.includes('"retrySafe" = false'))).toBe(true);
-});
+// Queue claim/lease recovery is tested against PostgreSQL, including an unsafe
+// SQL negative control, in integration/mailLeaseChecks.ts. No fake SQL guard.
 
 test("signup response padding preserves admission failure and actionable errors", async () => {
   const waits: number[] = [];
