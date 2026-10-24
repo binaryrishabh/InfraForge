@@ -73,6 +73,8 @@ try {
   postgres:
     image: postgres:18-alpine@sha256:898c60cb390d1085bc97bdd6a1ae968757421df394b071848b52b1c09c89d6a5
     environment:
+      POSTGRES_USER: postgres
+      POSTGRES_INITDB_ARGS: --auth-host=trust
       POSTGRES_HOST_AUTH_METHOD: trust
       POSTGRES_DB: infraforge_reference_${suffix}
     ports: ["127.0.0.1:0:5432"]
@@ -113,7 +115,7 @@ volumes:
   operations = new VerifiedRehearsal(root, envFile, project, release, async () => {}, override, 90000, environment);
   release.settingsFingerprint = settingsFingerprint(await operations.config());
   await operations.compose(["up", "-d", "postgres", "redis"]);
-  await waitFor(async () => { try { await operations!.compose(["exec", "-T", "postgres", "pg_isready", "-U", "postgres"]); return true; } catch { return false; } });
+  await waitFor(async () => { try { await operations!.compose(["exec", "-T", "postgres", "pg_isready", "-h", "127.0.0.1", "-U", "postgres"]); return true; } catch { return false; } });
   const address = await operations.compose(["port", "postgres", "5432"]);
   if (!/^127\.0\.0\.1:\d+$/.test(address)) throw new CutoverError("Unexpected reference PostgreSQL listener");
   await operations.compose(["exec", "-T", "postgres", "createdb", "-U", "postgres", `infraforge_restore_${suffix}`]);
