@@ -11,13 +11,8 @@ This is the complete remaining owner register. Policy decisions and code-verifia
 | Location | Remaining fact |
 | --- | --- |
 | Terms T01, Privacy P01, Cookies C01 (effective-date lines) | Effective dates, to be set at publication |
-| [Terms T02](terms-of-service.md#who-provides-the-service), [Privacy P02](privacy-policy.md#who-handles-your-data) | Legal name and trading name |
-| [Terms T03](terms-of-service.md#who-provides-the-service), referenced by Privacy | Service address |
-| [Terms T04](terms-of-service.md#who-provides-the-service), referenced throughout the notices | Monitored support and legal email |
-| [Privacy P03](privacy-policy.md#who-handles-your-data) | Grievance officer name and contact |
-| [Terms T08](terms-of-service.md#acceptable-use-and-intellectual-property) | Counsel confirmation of ownership/license scope and engine/scoring restrictions |
-| [Terms T11](terms-of-service.md#warranties-and-liability) | Liability cap, scope and exclusions; an HTML comment suggests a free-service cap for counsel only |
-| [Terms T13](terms-of-service.md#changes-and-disputes) | Governing-law city and competent courts |
+
+Owner facts supplied on 2026-10-24 and applied: operator Rishabh Srivastava trading as InfraForge (T02/P02); service address 64/72 Mall Road, Kanpur, Uttar Pradesh 208001 (T03); support/legal email lapwork24@gmail.com (T04); grievance officer Rishabh Srivastava (P03); courts at Kanpur Nagar with a 30-day informal-resolution step (T13); aggregate liability cap of the greater of INR 500 or fees paid in the prior three months, plus an educational-use reliance statement (T11, owner decision). T08 (ownership/licence scope) is resolved by the existing wording. A one-time lawyer review is still recommended before paid plans launch.
 
 ## Technical evidence and configuration limits
 

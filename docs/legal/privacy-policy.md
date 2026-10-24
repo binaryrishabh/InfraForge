@@ -6,7 +6,7 @@ Effective date: [OWNER: set at publication]
 
 ## Who handles your data
 
-InfraForge is operated by an individual founder in India. The responsible operator is [OWNER: P02 - Insert the same legal name and trading name as the Terms.]. The service address and support/legal email are listed in the [Terms](terms-of-service.md#who-provides-the-service). Privacy requests and grievances: [OWNER: P03 - Give the grievance officer's name and contact details.].
+InfraForge is operated by an individual founder in India. The responsible operator is Rishabh Srivastava, trading as InfraForge. The service address and support/legal email are listed in the [Terms](terms-of-service.md#who-provides-the-service). Privacy requests and grievances: Grievance Officer: Rishabh Srivastava, lapwork24@gmail.com, 64/72 Mall Road, Kanpur, Uttar Pradesh 208001, India.
 
 This policy covers InfraForge Learning and Engineering. Technical descriptions reflect this checkout; deployment-dependent services are identified below.
 

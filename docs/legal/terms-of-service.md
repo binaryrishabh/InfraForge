@@ -6,7 +6,7 @@ Effective date: [OWNER: set at publication]
 
 ## Who provides the service
 
-InfraForge is a distributed-systems and cloud design simulator for learners and engineers. Its owner is an individual founder in India. Your agreement is with [OWNER: T02 - Give the founder's full legal name and trading name, or the legal entity if one is formed.], at [OWNER: T03 - Provide the legal service address.]. Contact: [OWNER: T04 - Provide a monitored support and legal contact email.].
+InfraForge is a distributed-systems and cloud design simulator for learners and engineers. Its owner is an individual founder in India. Your agreement is with Rishabh Srivastava, trading as InfraForge, at 64/72 Mall Road, Kanpur, Uttar Pradesh 208001, India. Contact: lapwork24@gmail.com.
 
 These draft terms do not implement a sign-up acceptance mechanism. You must be at least 18 years old to use InfraForge. The service is for adults only.
 
@@ -34,7 +34,7 @@ You retain rights you have in designs and other content you submit. You give the
 
 You may use the available interface for your own learning and engineering evaluation. Do not attack the service, overload or evade its limits, access another user's records, introduce malicious content, falsify results, bypass scoring protections, scrape hidden tests or use accounts to manipulate scores.
 
-Except to the extent a mandatory law or a separate applicable license permits it, do not reverse engineer, decompile, extract, copy for redistribution, sell or redistribute InfraForge's engine, scoring content or hidden tests without written permission. Ordinary use of the browser-delivered engine through the service is permitted. Third-party open-source components remain subject to their own licenses; these terms do not remove rights those licenses grant. [OWNER: T08 - Confirm ownership, the service-use license and the scope of engine/scoring restrictions with counsel.]
+Except to the extent a mandatory law or a separate applicable license permits it, do not reverse engineer, decompile, extract, copy for redistribution, sell or redistribute InfraForge's engine, scoring content or hidden tests without written permission. Ordinary use of the browser-delivered engine through the service is permitted. Third-party open-source components remain subject to their own licenses; these terms do not remove rights those licenses grant.
 
 ## Fees
 
@@ -50,9 +50,7 @@ You may stop using the service and ask the privacy contact to close your account
 
 To the extent permitted by law, the service and its simulation results are provided as available, without a warranty that they are accurate, uninterrupted, secure, error-free or suitable for a particular purpose. There is no service-level guarantee in these proposed terms. This does not exclude mandatory consumer rights or duties that cannot lawfully be excluded.
 
-To the extent permitted by law, the proposed terms exclude liability for indirect or consequential loss, lost profits and losses from relying on simulation results for real systems. [OWNER: T11 - Have counsel set a reasonable monetary liability cap, scope and exclusions, including treatment of a free service. Do not publish an invented amount or a zero-liability promise.]
-
-<!-- Counsel discussion only, not an adopted cap: consider an aggregate INR 1,000 cap for this free service, with appropriate scope and mandatory-law exclusions. -->
+To the extent permitted by law, the proposed terms exclude liability for indirect or consequential loss, lost profits and losses from relying on simulation results for real systems. InfraForge is an educational tool: simulation results are approximations and are not professional, engineering or financial advice, and you must not rely on them alone for decisions about real systems. To the extent permitted by law, our total aggregate liability for all claims relating to the service is limited to the greater of INR 500 or the amount you paid us for the service in the three months before the event giving rise to the claim.
 
 No exclusion or cap applies where the law prohibits it, including fraud or other liability that cannot be limited. These terms do not waive statutory privacy remedies.
 
@@ -62,7 +60,9 @@ We will give at least 14 days' notice of material changes by email and a site ba
 
 If you disagree with new terms, you may stop using the service and request account closure. Do not treat acceptance of contract changes as consent to unrelated data processing.
 
-Governing law and courts: Indian law governs these terms, subject to mandatory protections in your jurisdiction. Competent city/courts: [OWNER: T13 - Choose the city and competent courts with counsel, preserving mandatory consumer protections and privacy complaint rights.]
+Governing law and courts: Indian law governs these terms, subject to mandatory protections in your jurisdiction. Subject to those mandatory protections, the courts at Kanpur Nagar, Uttar Pradesh (including the District and Sessions Court, Kanpur Nagar) have jurisdiction.
+
+Before starting any legal proceedings, please contact us at lapwork24@gmail.com with a description of your concern and give us 30 days to try to resolve it informally. This does not limit statutory complaint rights that cannot be waived.
 
 For questions or disputes, use the legal contact above. Privacy complaints follow the [Privacy Policy](privacy-policy.md).
 
