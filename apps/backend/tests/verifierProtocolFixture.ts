@@ -8,7 +8,8 @@ import { FIRST_STACK_ISOLATION as limits } from "../firstStack/isolationPolicy";
 // Real engine + protocol fixture, deliberately no host/containment measurement.
 export function fixtureCut(input: string, source: string) {
   const saved = JSON.parse(input);
-  const prepared = prepareFirstStackExecution(saved.owner, saved.layout, saved.candidate, saved.recording, saved.policy);
+  const prepared = prepareFirstStackExecution(saved.owner, saved.layout, saved.candidate,
+    saved.recording, saved.policy);
   const runtime = instantiatePreparedFirstStack(prepared); runtime.advanceTo(runtime.horizon);
   return isolatedCut(captureExecutionCut(prepared, runtime, 1, { wallMs: 60000, cpuUs: 20000000,
     rssBytes: 536870912, frameBytes: 1048576, summaryBytes: 10485760, captureBytes: 33554432 }, null).value,

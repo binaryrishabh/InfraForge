@@ -91,7 +91,8 @@ test("hidden schedules, faults, rubric and inputs never appear in sample or run 
 });
 test("sample HTTP endpoint has an explicit projection and inherits closed admission", async () => {
   const app = express(); app.use((_req, res, next) => { res.locals.userId = owner; next(); });
-  app.use(createSubmissionRouter({} as any, { enabled: true, available: async () => true, engine })); app.use(errorHandler);
+  app.use(createSubmissionRouter({} as any, { enabled: true, available: async () => true, engine }));
+  app.use(errorHandler);
   const server = app.listen(0, "127.0.0.1"), address = server.address() as any;
   try {
     const response = await fetch(`http://127.0.0.1:${address.port}/challenges/lose-an-app-server/versions/2/sample`);
@@ -117,7 +118,8 @@ test("saved revision, out-of-domain demands and forged sample policy are refused
     if (sql.includes('SELECT id,layout')) return { rows: [{ id: f.run.lineage.infrastructureId, layout: f.sample.layout, updatedAt: new Date("2026-10-22T00:00:01.000Z") }] };
     return { rows: [] };
   }, release() {} };
-  const service = createSubmissionService({ connect: async () => db } as any, { enabled: true, available: async () => true, engine });
+  const service = createSubmissionService({ connect: async () => db } as any,
+    { enabled: true, available: async () => true, engine });
   await expect(service.submit(owner, { infrastructureId: f.run.lineage.infrastructureId, expectedDesignUpdatedAt: f.run.lineage.updatedAt,
     expectedDesignRevision: f.run.lineage.designRevision, idempotencyKey: "stale", purpose: "scored", engine,
     workload: f.sample.workload, policy: f.sample.policy, browserCut: f.run.browserCut, challenge: { id: definition.id, version: definition.version } })).rejects.toThrow("Saved design changed");
@@ -162,7 +164,8 @@ test("the admission transaction pins the exact challenge in immutable workload m
     if (sql.includes('AS queued')) return { rows: [{ queued: 0, owned: 0, bytes: 0, retained: 0 }] };
     return { rows: [] };
   }, release() {} };
-  const service = createSubmissionService({ connect: async () => db } as any, { enabled: true, available: async () => true, engine });
+  const service = createSubmissionService({ connect: async () => db } as any,
+    { enabled: true, available: async () => true, engine });
   await service.submit(owner, { infrastructureId: f.run.lineage.infrastructureId, expectedDesignUpdatedAt: f.run.lineage.updatedAt,
     expectedDesignRevision: f.run.lineage.designRevision, idempotencyKey: "scored", purpose: "scored", engine,
     workload: f.sample.workload, policy: f.sample.policy, browserCut: f.run.browserCut, challenge: { id: f.sample.id, version: f.sample.version } });

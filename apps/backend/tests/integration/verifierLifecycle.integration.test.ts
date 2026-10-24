@@ -25,7 +25,8 @@ async function until(check: () => Promise<boolean>) {
 // Bun 1.3.14 on Windows segfaults in a background thread during this test (reproduced
 // 2026-10-24); it passes repeatedly on Linux, where CI and production run it.
 const supported = url && process.platform !== "win32";
-(supported ? test : test.skip)("real queue owns recovery once, fails closed, drains scored work and preserves reads", async () => {
+(supported ? test : test.skip)(
+  "real queue owns recovery once, fails closed, drains scored work and preserves reads", async () => {
   const parsed = new URL(url!);
   if (process.env.INTEGRATION_DISPOSABLE !== "local-only" ||
     !["localhost", "127.0.0.1"].includes(parsed.hostname) ||

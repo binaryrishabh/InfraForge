@@ -30,7 +30,8 @@ function fixture() {
   const configuration: SubmissionVerifier = { admission: { enabled: true, engine: { source, image } },
     isolation: { source, image, qualification }, healthy: () => true,
     control: { identity: daemon, assertIdentity: async () => {},
-      run: async () => JSON.stringify([{ Id: image, Os: "linux" }]), attach: async () => { throw Error("No child"); } } };
+      run: async () => JSON.stringify([{ Id: image, Os: "linux" }]),
+      attach: async () => { throw Error("No child"); } } };
   return configuration;
 }
 

@@ -23,7 +23,8 @@ test("typed client emits the slice 11 strict schema; actual admission recompiles
     if (sql.startsWith('INSERT INTO "FirstStackRun"')) { expect(args[8]).toEqual(o.result.evidence!.cut.lock); expect(args[9]).toBe(o.run.input.policy.seed); }
     return { rows: [], rowCount: 1 };
   } };
-  const service = createSubmissionService({ connect: async () => db } as unknown as Pool, { enabled: true, available: async () => true, engine: o.run.engine });
+  const service = createSubmissionService({ connect: async () => db } as unknown as Pool,
+    { enabled: true, available: async () => true, engine: o.run.engine });
   let wire: Record<string, unknown> = {};
   const client = createFirstStackSubmissionClient({ endpoint: "/test-submissions", owner: () => o.run.input.owner,
     fetch: (async (url: string | URL | Request, init: RequestInit) => {
