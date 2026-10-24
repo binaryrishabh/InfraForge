@@ -136,6 +136,55 @@ it cannot rebuild/retag a retained image or clear maintenance/a release lock.
 
 ## Activation status
 
+## Release disk capacity and image retention
+
+Before creating release state, building, pulling dependencies or stopping services,
+the release measures available bytes with `statfs` at Docker's `DockerRootDir`
+(`docker info`) and the release state directory (its existing parent on a fresh
+host). Both must have **8 GiB = 8,589,934,592 bytes free**, even when they share a
+filesystem. An unavailable measurement refuses the release; it is never zero.
+
+This is a minimum operating budget, not a prediction: the incident's roughly
+1.46 GB backend image rounds up to **1.5 GiB loaded image + 1.5 GiB export/load
+staging + 2 GiB BuildKit intermediate/cache work + 1 GiB PostgreSQL/Redis growth
++ 1 GiB pg_dump staging + 1 GiB host/log safety = 8 GiB**. The latter allowances
+are capacity assumptions, not measurements of production data. Increase disk
+capacity before releasing if build intermediates, growth or a staged dump exceed
+those allowances. Existing current/previous images already consume used space;
+the free-space requirement is additional. A preflight cannot prevent concurrent
+writers from filling a disk later; monitor capacity between releases too.
+
+Only after durable backend acceptance and maintenance removal does automatic
+cleanup read `accepted.json` and remove old `infraforge-backend:*` tags. It keeps
+the exact accepted and previous content IDs and every image referenced by any
+container, including stopped containers and other projects. Images also tagged
+outside that exact repository, untagged images, PostgreSQL/Redis images and volumes
+are untouched. Each removal logs its ID, tag and Docker's deletion output. A
+cleanup failure is reported separately and does not reverse an accepted release.
+No automatic image pruning runs before acceptance or on a failed release.
+
+For a low-space refusal, the error prints exact measurements and this safe,
+lock-protected operator recovery command (run from the approved checkout):
+
+```sh
+bun --no-env-file scripts/release/hygiene.ts prune /var/lib/infraforge/releases
+```
+
+It requires an existing accepted record and refuses an existing `release.lock`;
+inspect interrupted releases before recovery. It can recover space from earlier
+accepted releases without building or promoting anything. If retained/in-use data
+still leaves insufficient room, expand the filesystem or review capacity. Never
+use broad `docker system prune`, volume pruning or default/shared-builder pruning
+as release recovery.
+
+Each release build already uses a dedicated `infraforge-release-*` BuildKit
+builder. Its daemon and cache are removed after the build finishes, including
+build failure/interruption, without `--keep-state` or `--keep-daemon`; cleanup
+failure blocks acceptance. This leaves no retained cache for that owned builder
+and never prunes a running build or another builder. See Docker's
+[builder removal contract](https://docs.docker.com/reference/cli/docker/buildx/rm/)
+and [image removal contract](https://docs.docker.com/reference/cli/docker/image/rm/).
+
 Automatic release admission is **disabled** by repository variable
 `PRODUCTION_RELEASE_ENABLED=false`. This commit can run CI without deploying itself.
 The repository had EC2 host/user/key secret names, but no host fingerprint or Vercel

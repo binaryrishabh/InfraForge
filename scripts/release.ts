@@ -6,6 +6,7 @@ import { ComposeRelease, settingsFingerprint } from "./release/compose";
 import { cancelCommands, command } from "./release/process";
 import { releaseSequence, rollbackSequence, type Release } from "./release/sequence";
 import { prepareReleaseImage, type AcceptedState, type ReleaseAction } from "./release/image";
+import { preflightReleaseSpace, pruneAcceptedImages } from "./release/hygiene";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
 const [action, sha, environmentFile, stateDirectory] = process.argv.slice(2);
@@ -20,6 +21,7 @@ if (action !== "rollback") {
   if (main !== sha) throw new Error("Release checkout must match remote main; this command never promotes develop");
 }
 const directory = resolve(stateDirectory);
+await preflightReleaseSpace(root, directory);
 // Nginx must be able to stat the maintenance marker; state files stay private.
 await mkdir(directory, { recursive: true, mode: 0o711 });
 const lockPath = resolve(directory, "release.lock");
@@ -91,6 +93,10 @@ try {
   }
   await unlink(maintenance);
   console.log(`Accepted ${action !== "rollback" ? sha : state!.previous!.sha}; verify public TLS/WS/auth before frontend promotion.`);
+  // Cleanup is post-acceptance housekeeping. Its failure cannot undo acceptance
+  // or cause the controller to treat healthy services as a failed release.
+  try { await pruneAcceptedImages(root, directory); }
+  catch (error) { console.error(`Accepted release cleanup incomplete: ${(error as Error).message}`); }
 } catch (error) {
   failedAfterStop = mutationStarted;
   if (failedAfterStop && operationsInProgress) await operationsInProgress.stopMigration().catch(() => {});

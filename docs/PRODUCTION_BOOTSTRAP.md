@@ -238,6 +238,19 @@ bun --no-env-file scripts/release.ts apply FULL_SHA /etc/infraforge/release.env 
 
 Do not run it routinely by SSH. The workflow invokes it through the retry-aware wrapper.
 
+Provision at least **8 GiB (8,589,934,592 bytes) free** on both Docker's data-root
+filesystem and `/var/lib/infraforge/releases` before a release. The controller
+checks both before any build/state/service mutation. The budget and assumptions
+are documented in [release disk capacity and image retention](DEPLOYMENT.md#release-disk-capacity-and-image-retention).
+After acceptance it retains the exact accepted/previous images plus all images
+used by containers, and logs removal of other exclusively `infraforge-backend:*`
+images. It never prunes volumes, database/cache images or shared builders. The
+dedicated release builder and its cache are destroyed after its build finishes.
+If capacity preflight refuses, use the printed lock-protected
+`bun --no-env-file scripts/release/hygiene.ts prune /var/lib/infraforge/releases`
+command from the approved checkout; expand capacity if retained/in-use data still
+leaves too little room. Never clear an interrupted release lock just to prune.
+
 **New host:** a new state directory starts in maintenance, so the workflow refuses it with
 "Interrupted/maintenance release requires operator recovery". Run the command above once over
 SSH from the clean exact checkout. Preflight fetches only missing third-party images such as

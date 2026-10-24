@@ -5,6 +5,7 @@ import { mkdir, mkdtemp, readFile, rm } from "node:fs/promises";
 import { resolve } from "node:path";
 import * as processTools from "../../release/process";
 import * as build from "../../release/build";
+import * as hygiene from "../../release/hygiene";
 import { settingsFingerprint } from "../../release/compose";
 
 const mode = process.argv[2];
@@ -23,6 +24,10 @@ await mkdir(".agent", { recursive: true });
 const directory = await mkdtemp(resolve(".agent", "reconfigure-test-"));
 try {
   await Bun.write(resolve(directory, "accepted.json"), JSON.stringify({ current }));
+  spyOn(hygiene, "preflightReleaseSpace").mockImplementation(async () => {
+    events.push(["disk-preflight"]);
+    if (mode === "disk-full") throw new Error("Release disk preflight refused");
+  });
   spyOn(build, "buildReleaseImage").mockImplementation(async () => { throw new Error("Unexpected rebuild"); });
   spyOn(processTools, "waitFor").mockImplementation(async check => { if (!await check()) throw new Error("fixture readiness failed"); });
   spyOn(processTools, "command").mockImplementation(async args => {
@@ -30,6 +35,13 @@ try {
     if (args[0] === "git") {
       if (args[1] === "status") return "";
       return args[1] === "ls-remote" && mode === "wrong-main" ? "c".repeat(40) : sha;
+    }
+    if (args[1] === "image" && args[2] === "ls") {
+      if (await Bun.file(resolve(directory, "maintenance")).exists()) throw new Error("Cleanup before maintenance cleared");
+      const saved = JSON.parse(await readFile(resolve(directory, "accepted.json"), "utf8"));
+      if (saved.current.settingsFingerprint === current.settingsFingerprint) throw new Error("Cleanup before acceptance");
+      if (mode === "cleanup-failure") throw new Error("fixture cleanup failure");
+      return "";
     }
     if (args[1] === "image") return JSON.stringify([{ Id: imageId, Config: { Labels: {
       "org.opencontainers.image.revision": sha, "org.opencontainers.image.source": "https://github.com/binaryrishabh/InfraForge",
