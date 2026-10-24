@@ -23,3 +23,16 @@ test("systemd lets the supervisor drain children before the final cgroup kill", 
   expect(values("KillSignal")).toEqual([]); // Default SIGTERM reaches the main process only.
   expect(unit).not.toContain("[Install]");
 });
+
+test.skipIf(process.env.VERIFIER_SYSTEMD_PROOF !== "owned-local")(
+  "Linux systemd exposes the exact socket and drains active visible and hidden scored subprocesses", async () => {
+    const child = Bun.spawn([process.execPath, "--no-env-file", "--no-install",
+      "scripts/first-stack-host/service-stop-proof.ts", "--allow-disposable-service"],
+    { stdout: "pipe", stderr: "pipe" });
+    const [code, output, error] = await Promise.all([
+      child.exited, new Response(child.stdout).text(), new Response(child.stderr).text(),
+    ]);
+    expect({ code, error }).toEqual({ code: 0, error: "" });
+    expect(output).toContain("scored drain during visible: passed");
+    expect(output).toContain("scored drain during hidden-1: passed");
+  }, 300000);

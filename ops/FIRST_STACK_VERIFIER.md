@@ -114,6 +114,25 @@ explicit operator coordination with releases. No automatic fallback is supported
    `[Install]` section or default enable operation. Run the full qualification
    below before supplying a true enabled setting or starting the service.
 
+Before activation, run the opt-in Linux service regression from a complete,
+identity-refreshed immutable checkout readable by `infraforge-verifier`, using the
+installed `/usr/local/bin/bun` and the dedicated daemon already running:
+
+```sh
+sudo env VERIFIER_SYSTEMD_PROOF=owned-local /usr/local/bin/bun --no-env-file --no-install \
+  test scripts/tests/verifier-service.test.ts
+```
+
+This creates and removes only randomly named `infraforge-verifier-proof-*` units
+and `/run` evidence directories. It copies the shipped sandbox and signal policy,
+removes production credentials/conditions, checks the exact socket and read-only
+Docker `_ping`, then stops a real scored job during both its visible and hidden
+subprocesses. It uses the actual engine/scorer with subprocess test receipts;
+it creates no containers and is not Docker containment or production qualification.
+Both scored jobs must finish, no child may receive the initial SIGTERM, and the
+service must exit zero. Keep the separate full qualification and real-container
+acceptance gates; do not substitute this regression for them.
+
 ## Qualification and renewal (maximum 24 hours)
 
 The existing full producer in FIRST_STACK_ISOLATION.md is authoritative.
