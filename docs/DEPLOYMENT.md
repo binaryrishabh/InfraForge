@@ -137,15 +137,30 @@ it cannot rebuild/retag a retained image or clear maintenance/a release lock.
 ## Release disk capacity and image retention
 
 Before creating release state, building, pulling dependencies or stopping services,
-the release measures available bytes with `statfs` at Docker's `DockerRootDir`
-(`docker info`) and the release state directory (its existing parent on a fresh
-host). Both must have **8 GiB = 8,589,934,592 bytes free**, even when they share a
-filesystem. An unavailable measurement refuses the release; it is never zero.
+the release reads Docker's storage driver and `DockerRootDir` using `docker info`.
+For the supported classic `overlay2` layout it measures available bytes at the
+Docker root, its `overlay2` image directory and the release state directory (its
+existing parent on a fresh host). Each must have **8 GiB = 8,589,934,592 bytes
+free**, even when they share a filesystem. `statfs` uses available blocks; if the
+operator cannot traverse Docker's private directory, a read-only
+`sudo -n stat --file-system` measures available blocks instead. Noninteractive
+sudo access for that read is required on such hosts. Missing paths, denied sudo
+or unavailable measurements refuse the release; capacity is never guessed.
+
+Containerd image stores and unknown drivers currently **refuse before building**:
+their active content/snapshot root cannot be verified from `docker info`. Fresh
+Docker Engine 29+ installations commonly use this layout; bootstrap installation
+alone does not qualify it for this release controller. An operator must qualify
+discovery and measurement of the active storage root before those layouts can be
+supported. Do not assume `/var/lib/containerd`, bypass the gate or switch drivers
+as cleanup. Docker documents the separate storage paths and the fact that
+`data-root` does not move containerd storage in its
+[daemon data-directory contract](https://docs.docker.com/engine/daemon/#daemon-data-directory).
 
 This is a minimum operating budget, not a prediction: the incident's roughly
 1.46 GB backend image rounds up to **1.5 GiB loaded image + 1.5 GiB export/load
-staging + 2 GiB BuildKit intermediate/cache work + 1 GiB PostgreSQL/Redis growth
-+ 1 GiB pg_dump staging + 1 GiB host/log safety = 8 GiB**. The latter allowances
+staging + 2 GiB BuildKit intermediate/cache work + 1 GiB PostgreSQL/Redis growth +
+1 GiB pg_dump staging + 1 GiB host/log safety = 8 GiB**. The latter allowances
 are capacity assumptions, not measurements of production data. Increase disk
 capacity before releasing if build intermediates, growth or a staged dump exceed
 those allowances. Existing current/previous images already consume used space;
@@ -160,6 +175,9 @@ outside that exact repository, untagged images, PostgreSQL/Redis images and volu
 are untouched. Each removal logs its ID, tag and Docker's deletion output. A
 cleanup failure is reported separately and does not reverse an accepted release.
 No automatic image pruning runs before acceptance or on a failed release.
+After acceptance and maintenance removal, SIGINT/SIGTERM cancels owned cleanup
+commands and removes the release lock while leaving accepted services running.
+Before that point, interrupted-release recovery retains its existing stop/lock rules.
 
 For a low-space refusal, the error prints exact measurements and this safe,
 lock-protected operator recovery command (run from the approved checkout):

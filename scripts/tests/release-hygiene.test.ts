@@ -2,12 +2,13 @@ import { expect, test } from "bun:test";
 import { mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { assertReleaseSpace, minimumReleaseFreeBytes, preflightReleaseSpace, pruneAcceptedImages, selectReleaseImages } from "../release/hygiene";
+import { assertReleaseSpace, availableReleaseBytes, minimumReleaseFreeBytes, preflightReleaseSpace, pruneAcceptedImages, selectReleaseImages } from "../release/hygiene";
 
 const release = (imageId: string) => ({ sha: imageId, image: `infraforge-backend:${imageId}`, imageId,
   authContract: 1, migrationFingerprint: "schema", settingsFingerprint: "settings" });
 const state = { current: release("accepted"), previous: release("previous") };
 const image = (Id: string, ...RepoTags: string[]) => ({ Id, RepoTags });
+const dockerInfo = { DockerRootDir: "/docker-root", Driver: "overlay2", DriverStatus: [["Backing Filesystem", "extfs"]] };
 
 test("disk floor checks each filesystem, includes exact numbers and safe recovery, accepts equality", () => {
   for (const low of [0, 1]) {
@@ -19,18 +20,55 @@ test("disk floor checks each filesystem, includes exact numbers and safe recover
   expect(() => assertReleaseSpace([{ path: "/same", available: minimumReleaseFreeBytes }], "/state")).not.toThrow();
 });
 
-test("preflight measures DockerRootDir and nearest existing state parent without creating state; unknown refuses", async () => {
+test("preflight measures DockerRootDir, image directory and nearest existing state parent without creating state; unknown refuses", async () => {
   const directory = await mkdtemp(join(tmpdir(), "infraforge-space-"));
   try {
     const paths: string[] = [], commands: string[][] = [];
-    await preflightReleaseSpace(".", join(directory, "new", "state"), async args => { commands.push(args); return "/docker-root"; },
+    await preflightReleaseSpace(".", join(directory, "new", "state"), async args => { commands.push(args); return JSON.stringify(dockerInfo); },
       async path => { paths.push(path); return minimumReleaseFreeBytes; });
-    expect(paths).toEqual(["/docker-root", directory]);
-    expect(commands).toEqual([["docker", "info", "--format", "{{.DockerRootDir}}"]]);
+    expect(paths).toEqual(["/docker-root", "/docker-root/overlay2", directory]);
+    expect(commands).toEqual([["docker", "info", "--format", "{{json .}}"]]);
     expect(await Bun.file(join(directory, "new", "state", "release.lock")).exists()).toBe(false);
     expect(await readdir(directory)).toEqual([]);
     await expect(preflightReleaseSpace(".", directory, async () => "")).rejects.toThrow("Unknown");
-    await expect(preflightReleaseSpace(".", directory, async () => "/docker", async () => { throw new Error("statfs unavailable"); })).rejects.toThrow("statfs unavailable");
+    await expect(preflightReleaseSpace(".", directory, async () => JSON.stringify(dockerInfo), async () => { throw new Error("statfs unavailable"); })).rejects.toThrow("Unknown");
+  } finally { await rm(directory, { recursive: true }); }
+});
+
+test("available release bytes exclude reserved free blocks", async () => {
+  expect(await availableReleaseBytes("/storage", async () => ({ bavail: 2n, bfree: 9n, bsize: 4096n }))).toBe(8192n);
+});
+
+test("protected Docker directories use only available-block counters through noninteractive read-only stat", async () => {
+  const denied = async () => { throw Object.assign(new Error("private Docker directory"), { code: "EACCES" }); };
+  const calls: string[][] = [];
+  expect(await availableReleaseBytes("/docker/overlay2", denied, async args => { calls.push(args); return "2 4096"; })).toBe(8192n);
+  expect(calls).toEqual([["sudo", "-n", "stat", "--file-system", "--format=%a %S", "--", "/docker/overlay2"]]);
+  for (const counters of ["", "unknown", "-1 4096", "2 0"]) {
+    await expect(availableReleaseBytes("/docker/overlay2", denied, async () => counters)).rejects.toThrow("unavailable");
+  }
+  await expect(availableReleaseBytes("/docker/overlay2", denied, async () => { throw new Error("sudo unavailable"); })).rejects.toThrow("sudo unavailable");
+  calls.length = 0;
+  await expect(availableReleaseBytes("/docker/overlay2", async () => { throw Object.assign(new Error("missing path"), { code: "ENOENT" }); },
+    async args => { calls.push(args); return "2 4096"; })).rejects.toThrow("missing path");
+  expect(calls).toEqual([]);
+});
+
+test("preflight refuses a low image filesystem even when Docker metadata and state have enough room", async () => {
+  const directory = await mkdtemp(join(tmpdir(), "infraforge-split-store-"));
+  try {
+    const capacities = new Map([[dockerInfo.DockerRootDir, minimumReleaseFreeBytes], [directory, minimumReleaseFreeBytes],
+      ["/docker-root/overlay2", 7n], ["/separate/containerd", 3n]]);
+    const measure = async (path: string) => capacities.get(path)!;
+    await expect(preflightReleaseSpace(".", directory, async () => JSON.stringify(dockerInfo), measure)).rejects.toThrow("/docker-root/overlay2: 7 bytes available");
+    // The old DockerRootDir-only query would pass this fixture. The active
+    // containerd root cannot be verified from info, so this layout must refuse.
+    const containerd = { ...dockerInfo, Driver: "overlayfs", DriverStatus: [["driver-type", "io.containerd.snapshotter.v1"]] };
+    const run = async (args: string[]) => args.at(-1) === "{{.DockerRootDir}}" ? dockerInfo.DockerRootDir : JSON.stringify(containerd);
+    await expect(preflightReleaseSpace(".", directory, run, measure)).rejects.toThrow("image/snapshot storage filesystem is Unknown");
+    for (const change of [{ Driver: "unknown" }, { DriverStatus: null }, { DriverStatus: containerd.DriverStatus }]) {
+      await expect(preflightReleaseSpace(".", directory, async () => JSON.stringify({ ...dockerInfo, ...change }), measure)).rejects.toThrow("Unknown");
+    }
   } finally { await rm(directory, { recursive: true }); }
 });
 
@@ -56,6 +94,7 @@ test("selection keeps accepted, previous and every container image, and never se
     image("shared", "infraforge-backend:shared", "foreign:shared"), image("dangling"),
   ], state, ["running", "stopped"])).toEqual([stale]);
   expect(() => selectReleaseImages([], {} as typeof state, [])).toThrow("cleanup refused");
+  expect(() => selectReleaseImages([stale], { current: state.current, previous: { ...state.previous, imageId: "" } }, [])).toThrow("cleanup refused");
 });
 
 test("cleanup reads durable accepted IDs, inspects all containers and only removes exact owned tags without force or parent pruning", async () => {

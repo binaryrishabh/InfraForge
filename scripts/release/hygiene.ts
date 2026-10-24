@@ -26,13 +26,45 @@ async function existingParent(path: string): Promise<string> {
     return existingParent(dirname(path));
   }
 }
-export async function preflightReleaseSpace(root: string, stateDirectory: string, run = command,
-  measure = async (path: string) => { const fs = await statfs(path, { bigint: true }); return fs.bavail * fs.bsize; }) {
-  const dockerRoot = await run(["docker", "info", "--format", "{{.DockerRootDir}}"], root);
-  if (!dockerRoot.startsWith("/")) throw new Error("Docker data root unavailable; disk capacity is Unknown, release refused");
+export async function availableReleaseBytes(path: string,
+  readStats: (path: string) => Promise<{ bavail: bigint; bfree: bigint; bsize: bigint }> = path => statfs(path, { bigint: true }), run = command) {
+  try {
+    const fs = await readStats(path);
+    return fs.bavail * fs.bsize;
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "EACCES") throw error;
+    // The operator cannot traverse Docker's private data directory. Read only
+    // filesystem counters through sudo; %a excludes reserved blocks, unlike %f.
+    const counters = await run(["sudo", "-n", "stat", "--file-system", "--format=%a %S", "--", path], process.cwd());
+    if (!/^\d+ \d+$/.test(counters)) throw new Error("Filesystem counters unavailable");
+    const [available, blockSize] = counters.split(" ").map(BigInt);
+    if (blockSize === 0n) throw new Error("Filesystem block size unavailable");
+    return available! * blockSize!;
+  }
+}
+
+export async function preflightReleaseSpace(root: string, stateDirectory: string, run = command, measure = availableReleaseBytes) {
+  let info: { DockerRootDir?: unknown; Driver?: unknown; DriverStatus?: unknown };
+  try { info = JSON.parse(await run(["docker", "info", "--format", "{{json .}}"], root)); }
+  catch (error) { throw new Error("Docker storage layout unavailable; disk capacity is Unknown, release refused", { cause: error }); }
+  const dockerRoot = info?.DockerRootDir;
+  if (typeof dockerRoot !== "string" || !dockerRoot.startsWith("/")) throw new Error("Docker data root unavailable; disk capacity is Unknown, release refused");
+  // DockerRootDir does not locate containerd's content/snapshot storage. Accept
+  // only the classic driver whose image directory we can actually measure;
+  // never guess /var/lib/containerd, since its configured root can differ.
+  if (info.Driver !== "overlay2" || !Array.isArray(info.DriverStatus) ||
+      info.DriverStatus.some(row => Array.isArray(row) && row[0] === "driver-type")) {
+    throw new Error("Release disk preflight refused: image/snapshot storage filesystem is Unknown. " +
+      "Only classic overlay2 storage is currently verified; qualify discovery of the active containerd/snapshotter root before releasing. " +
+      "Do not assume /var/lib/containerd or switch storage drivers as cleanup.");
+  }
+  const imageRoot = `${dockerRoot.replace(/\/+$/, "")}/overlay2`;
   const statePath = await existingParent(resolve(stateDirectory));
   const measurements = [];
-  for (const path of [dockerRoot, statePath]) measurements.push({ path, available: await measure(path) });
+  for (const path of [dockerRoot, imageRoot, statePath]) {
+    try { measurements.push({ path, available: await measure(path) }); }
+    catch (error) { throw new Error(`Disk capacity for ${path} is Unknown; release refused`, { cause: error }); }
+  }
   assertReleaseSpace(measurements, stateDirectory);
 }
 
