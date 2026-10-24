@@ -79,9 +79,12 @@ resolved Compose configuration or copy secrets into frontend settings.
    staging checks and UI readiness. Email-enabled signup needs email proof before
    username/password selection. Deploy the additive mail-intent migration first;
    startup invalidates legacy reset links and discards the old encrypted-link queue.
-   Users must request those links again. Setting the account flag back to false disables
-   these APIs without deleting data or weakening database/history guards. Removing
-   all three Turnstile settings disables that independent challenge integration.
+   Users must request those links again. The flags are independent: setting
+   `ACCOUNT_ESSENTIALS_ENABLED=false` disables only the account-management APIs. To also
+   disable email (verification, signup proof, reset and resend), set
+   `AUTH_EMAIL_ENABLED=false` too. Neither deletes data or weakens database/history
+   guards. To disable the challenge, set `TURNSTILE_ENABLED=false` explicitly; removing
+   only its keys while it stays enabled fails startup by design.
    Do not roll back across migration fingerprints; use a reviewed forward fix.
 
 Expired `AccountEmailToken` ledger rows can be purged by an authorized maintenance
