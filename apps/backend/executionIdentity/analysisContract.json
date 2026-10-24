@@ -1,6 +1,6 @@
 {
   "schema": "execution-loading-analysis/1",
-  "policy": "984d83b8d82fe7aca2847ee295d2d6e05a384b8774ebcc328f2ba59ae96d6162",
+  "policy": "9d316facdcd02edebcab446a0cbea583947fda3b70b619180f6e767185398aa0",
   "modules": {
     "apps/backend/actions/contract.ts": {
       "hash": "15fe6aa3879ab8ccc67a23d579a4e2e9b79f71631dd7687ad192f788c27229ad",
@@ -103,7 +103,7 @@
       ]
     },
     "apps/backend/auth/accountData.ts": {
-      "hash": "76e1c133a47314eea679d7f20ee8225e66cd40cd4689daf014c41d8c2c77e0be",
+      "hash": "b967dd2e650814b2279b595b8ac8d5485f55196f3e7abe490fb163eea0e6303b",
       "requests": [
         {
           "path": "node:crypto",
@@ -124,7 +124,7 @@
       ]
     },
     "apps/backend/auth/accountPolicy.ts": {
-      "hash": "d3f8d8135f1aba4b3443268f958ba958d768bef92442820956bd28ced38096ce",
+      "hash": "0fa68dd2404c8da0a43332223627a190f4f445f39a647eabe796413ab6d7e550",
       "requests": [
         {
           "path": "node:crypto",
@@ -132,6 +132,10 @@
         },
         {
           "path": "better-auth/api",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./mailAdmission",
           "kind": "import-statement"
         }
       ]
@@ -158,7 +162,7 @@
       ]
     },
     "apps/backend/auth/auth.ts": {
-      "hash": "a229f113d01b03de854b10415a618539e17511bbc736564cc8527cbe858283b6",
+      "hash": "22a15655724427505751a6279356cf2ce808aa31b66991b624120ad0cdaba38b",
       "requests": [
         {
           "path": "../lib/prisma",
@@ -183,11 +187,15 @@
         {
           "path": "./accountPolicy",
           "kind": "import-statement"
+        },
+        {
+          "path": "./mailRequests",
+          "kind": "import-statement"
         }
       ]
     },
     "apps/backend/auth/createAuth.ts": {
-      "hash": "a15c706ba99209ca0963a0f414747de99e1aa4695d67db3086ecbf9c9a401543",
+      "hash": "c7b66085d5dffd852cdc3299c0ce5c98b17eb56e5acf4d2e83ef6c6e57159282",
       "requests": [
         {
           "path": "better-auth",
@@ -218,7 +226,11 @@
           "kind": "import-statement"
         },
         {
-          "path": "./email",
+          "path": "./mailRequests",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./mailAdmission",
           "kind": "import-statement"
         },
         {
@@ -228,15 +240,11 @@
         {
           "path": "./accountPolicy",
           "kind": "import-statement"
-        },
-        {
-          "path": "@better-auth/core/context",
-          "kind": "import-statement"
         }
       ]
     },
     "apps/backend/auth/credentials.ts": {
-      "hash": "365e57212636e921aa61deeff21793ad181ab873731a425b71e276f3191ab362",
+      "hash": "e3646c96c39fd6b4ddea2f676878dd1a2c4fb69371553bd93a255a45ff90bbb5",
       "requests": [
         {
           "path": "better-auth/api",
@@ -245,17 +253,37 @@
         {
           "path": "@infraforge/contracts/auth",
           "kind": "import-statement"
+        },
+        {
+          "path": "zod",
+          "kind": "import-statement"
         }
       ]
     },
     "apps/backend/auth/email.ts": {
-      "hash": "3c5ae34f4ae389645590f7fe07afdb2a46a8378bcd8c212b36ef4113f29d3c19",
+      "hash": "69ec92db44a2497ac5f573f8fae06ff628aaeccdcf3e4be96493ea9bc42ff8a3",
       "requests": [
         {
           "path": "node:crypto",
           "kind": "import-statement"
+        },
+        {
+          "path": "node:fs/promises",
+          "kind": "import-statement"
+        },
+        {
+          "path": "node:path",
+          "kind": "import-statement"
+        },
+        {
+          "path": "node:url",
+          "kind": "import-statement"
         }
       ]
+    },
+    "apps/backend/auth/emailTemplate.ts": {
+      "hash": "0c7c4299de86c16c83cadee1d9e88886aef771a1f9ed7222ecfb16b0280d15e9",
+      "requests": []
     },
     "apps/backend/auth/httpSecurity.ts": {
       "hash": "b61d0741b9da0726bf8aac194c727603bd483b55ff269593728daf289912b18b",
@@ -274,12 +302,71 @@
         }
       ]
     },
+    "apps/backend/auth/mailAdmission.ts": {
+      "hash": "1677f3daf3dabbaedc6ffaa35e89830c97c8b95aeaf47bb39b77bf41b996dfb0",
+      "requests": [
+        {
+          "path": "better-auth/api",
+          "kind": "import-statement"
+        },
+        {
+          "path": "zod",
+          "kind": "import-statement"
+        }
+      ]
+    },
+    "apps/backend/auth/mailIntent.ts": {
+      "hash": "d898dd26bb55a00fa1ce591a3ba5da0afdf6028ac661c78afaa230b6a138eafa",
+      "requests": [
+        {
+          "path": "node:crypto",
+          "kind": "import-statement"
+        },
+        {
+          "path": "better-auth/api",
+          "kind": "import-statement"
+        },
+        {
+          "path": "better-auth/crypto",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./emailTemplate",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./verification",
+          "kind": "import-statement"
+        }
+      ]
+    },
+    "apps/backend/auth/mailRequests.ts": {
+      "hash": "6696cf7a5501a36e6666085ce1e9fc763f08f8c1a428008b4a8cac8565b99bf9",
+      "requests": [
+        {
+          "path": "node:crypto",
+          "kind": "import-statement"
+        },
+        {
+          "path": "better-auth/crypto",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./email",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./mailIntent",
+          "kind": "import-statement"
+        }
+      ]
+    },
     "apps/backend/auth/origin.ts": {
       "hash": "b41d243139ac3fb4303963547a205ac9405472457d5ab880ab93908e4f3a828c",
       "requests": []
     },
     "apps/backend/auth/settings.ts": {
-      "hash": "0bfd3d52ce76538f5acba51c23715bfdd8d8812585648a2ffa3a21e252d0b1fc",
+      "hash": "1d761093479be310b8b58eae6eb4e9b9e5171c7d5f21aad580fdfff02e1dc7e6",
       "requests": [
         {
           "path": "./email",
@@ -292,7 +379,7 @@
       ]
     },
     "apps/backend/auth/turnstile.ts": {
-      "hash": "83adf4c5ec6ef2f6eb40caa53bc03f6ebcc932f015f36a42b548f609ded5f3a9",
+      "hash": "3cc4dee84f7a8cf6e343af4d3220b186d69a816b997a3e8573fd4ffd1f70e118",
       "requests": []
     },
     "apps/backend/auth/verification.ts": {
@@ -2099,10 +2186,14 @@
       "requests": []
     },
     "apps/backend/index.ts": {
-      "hash": "33077ab9a53b7f44494e3fc3826c4d9f899a5656ec5cfe91e5b3fdab2734fe87",
+      "hash": "88744cd1d80540b53414a7b47d9d65f629f62e2f5fabd59f0c442498e3c24236",
       "requests": [
         {
           "path": "express",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./auth/mailRequests",
           "kind": "import-statement"
         },
         {
@@ -3146,7 +3237,7 @@
       ]
     },
     "apps/backend/lib/generated/prisma/client.ts": {
-      "hash": "1db1f0c6548780654d64c7d25fa515143d91c070bc07edde19aa6ecca9b6d18c",
+      "hash": "aa0dea48fcfb966ae66ea8eeceb3263402be88df3900f9497788cf1b42777fae",
       "requests": [
         {
           "kind": "import-statement",
@@ -3191,7 +3282,7 @@
       "requests": []
     },
     "apps/backend/lib/generated/prisma/internal/class.ts": {
-      "hash": "157a8924ff94570d0b69dc650160f18a5241b718e9e79f9caedbceecb663c06d",
+      "hash": "62505ab38b11e24ab9531031aa7f6a185aae1bbf439442b98941a673681665cf",
       "requests": [
         {
           "kind": "import-statement",
@@ -3212,7 +3303,7 @@
       ]
     },
     "apps/backend/lib/generated/prisma/internal/prismaNamespace.ts": {
-      "hash": "9e97edc8d4fd81e790ada4b4dc5285fc606bc9edfc76123acebff82f9ed0644c",
+      "hash": "b7b47e6a2d61a1e8a9fa883e28d25cc24bb2514a07bcb0e3621731d2047c73ff",
       "requests": [
         {
           "kind": "import-statement",
@@ -3255,7 +3346,7 @@
       ]
     },
     "apps/backend/release/accountSchema.ts": {
-      "hash": "57d522916ea5d3932728bbb21769ff9e90ae3ca82b53eb07b6b456258a065ec6",
+      "hash": "b0873eaaeeb0e2e5eec1ced90f5a02a42edacaeb4c76216acf4e7fe8f4c248b4",
       "requests": [
         {
           "path": "node:fs/promises",
@@ -4313,7 +4404,7 @@
       "requests": []
     },
     "packages/contracts/src/auth/index.ts": {
-      "hash": "c639dc9380ea36c0c7ae4c6df9be16f76968c901a225544ea24324a8f9010093",
+      "hash": "a1c8867912e1d39e92276440a9b98202c54f0070ccca963b033d4114fa3aa715",
       "requests": []
     },
     "packages/contracts/src/challenges/index.ts": {

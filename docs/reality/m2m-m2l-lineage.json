@@ -268,7 +268,7 @@
     },
     {
       "file": "apps/backend/prisma/schema.prisma",
-      "hash": "2dbeee58ba4c82b3482b262c49fc3e2f58a2c83d318fce9960e39bbbf234aea6"
+      "hash": "833752b36171299470b1a81e63d93711d46cd175278c34005b4478bceea06782"
     },
     {
       "file": "apps/backend/release/lessonSchema.ts",
