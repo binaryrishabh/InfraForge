@@ -3,7 +3,11 @@ import { makeSignature } from "better-auth/crypto";
 import { auth } from "../auth/auth";
 import { prisma } from "../lib/prisma";
 
-if (process.env.RELEASE_REHEARSAL !== "owned-local" || !/^postgresql:\/\/postgres@postgres\/infraforge_release_[a-f0-9]{8}$/.test(process.env.DATABASE_URL || "")) {
+// Parsed like release-fixture.ts: the disposable database now has a password, so match
+// the exact host and database name rather than the whole URL text.
+const database = new URL(process.env.DATABASE_URL || "postgresql://invalid");
+if (process.env.RELEASE_REHEARSAL !== "owned-local" || database.hostname !== "postgres" ||
+  database.username !== "postgres" || !/^\/infraforge_release_[a-f0-9]{8}$/.test(database.pathname) || database.search) {
   throw new Error("TLS/session rehearsal requires its isolated disposable Compose database");
 }
 const ca = await readFile("/fixture/tls/cert.pem", "utf8");
