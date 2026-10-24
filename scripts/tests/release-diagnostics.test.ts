@@ -61,6 +61,7 @@ test("the diagnostic file contains only a redacted bounded tail, uses an exclusi
 
 test("production compose command failure reports the secured diagnostic path and never stderr", async () => {
   const directory = await mkdtemp(join(tmpdir(), "infraforge-command-diagnostic-"));
+  const reported = spyOn(console, "error").mockImplementation(() => {});
   const spawn = spyOn(Bun, "spawn").mockImplementation(() => ({
     stdout: new Blob([""]).stream(), stderr: new Blob([stderr]).stream(), exited: Promise.resolve(1), kill: () => {},
   }) as unknown as ReturnType<typeof Bun.spawn>);
@@ -76,7 +77,8 @@ test("production compose command failure reports the secured diagnostic path and
     const [name] = await readdir(directory);
     expect(await readFile(join(directory, name!), "utf8")).toBe(redactReleaseDiagnostic(stderr, environment) + "\n");
     expect(detail).toHaveBeenCalledTimes(1);
-  } finally { spawn.mockRestore(); detail.mockRestore(); await rm(directory, { recursive: true }); }
+    expect(reported).toHaveBeenCalledWith(String(error).replace(/^Error: /, ""));
+  } finally { spawn.mockRestore(); detail.mockRestore(); reported.mockRestore(); await rm(directory, { recursive: true }); }
 }, 30000);
 
 test("Compose passes the release state directory to command diagnostics", async () => {

@@ -16,6 +16,11 @@ export async function command(args: string[], cwd: string, env: Record<string, s
     const detail = env.RELEASE_REHEARSAL === "owned-local" ? redactReleaseDiagnostic(diagnostic, env).slice(-2000)
       : args[0] === "docker" && args[1] === "compose" && diagnosticsDirectory
         ? await composeFailureDetail(diagnostic, diagnosticsDirectory, env) : "inspect private operator diagnostics";
+    // Readiness retries may catch this exception. Report the private path here
+    // as well so their eventual deadline never hides the operator's evidence.
+    if (args[0] === "docker" && args[1] === "compose" && diagnosticsDirectory && env.RELEASE_REHEARSAL !== "owned-local") {
+      console.error(`docker compose failed; ${detail}`);
+    }
     throw new Error(`${args[0]} ${args[1] ?? ""} failed; ${detail}`);
   }
   return output.trim();
