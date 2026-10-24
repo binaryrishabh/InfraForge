@@ -33,4 +33,5 @@ export async function checkAccountSchema(db: Pick<Client | Pool, "query">) {
   if (constraint.rowCount !== 1 || !["deletedAt", "Deleted account", "deleted[.]invalid", "username IS NULL", "image IS NULL"].every(s => constraint.rows[0].definition.includes(s))) throw Error("Deleted profile constraint missing");
   await db.query('SELECT u."deletedAt",t.hash,t."userId",t."expiresAt",t."usedAt" FROM "User" u CROSS JOIN "AccountEmailToken" t LIMIT 0');
   await db.query('SELECT id,"userId",payload,status,attempts,"retrySafe","availableAt","expiresAt" FROM "AccountMailOutbox" LIMIT 0');
+  await db.query('SELECT id,kind,"userId",payload,status,attempts,"retrySafe","availableAt","expiresAt" FROM "AccountMailIntent" LIMIT 0');
 }

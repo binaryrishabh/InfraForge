@@ -19,7 +19,8 @@ import { checkFirstStackSchema } from "../../release/firstStackSchema";
 import { submissionFixture } from "../submissionFixture";
 import { createSubmissionService } from "../../firstStack/admission";
 import { registerVerification } from "../../auth/verification";
-import { EmailOutbox } from "../../auth/emailOutbox";
+import { AccountEmailRequests } from "../../auth/mailRequests";
+import { createEmailVerificationToken } from "better-auth/api";
 
 (process.env.INTEGRATION_RUN === "1" ? test : test.skip)("account migration, re-authentication, isolated export and immutable-history deletion", async () => {
   const settings = readLocalSettings(process.env);
@@ -62,16 +63,20 @@ import { EmailOutbox } from "../../auth/emailOutbox";
       return Reflect.get(client, key);
     } });
     const defaults = readAuthSettings({ BETTER_AUTH_URL: "http://localhost:3100", APP_ORIGINS: origin, BETTER_AUTH_SECRET: randomUUID() + randomUUID() });
-    const mailOutbox = new EmailOutbox(authDb, mail, defaults.secret);
+    const mailOutbox = new AccountEmailRequests(authDb, mail, defaults);
     const auth = createAuth(authDb, { ...defaults, accountEssentials: { ...defaults.accountEssentials, enabled: true, emailEnabled: true, email: mail, challenge: new FakeChallenge(), siteKey: "fixture" } }, quota, mailOutbox);
     const create = async (username: string) => {
+      await mailOutbox.admit("signup", `${username}@example.test`, `${origin}/signup`);
+      await mailOutbox.drain();
+      const proofURL = new URL(mail.messages.at(-1)!.text.split("\n").at(-1)!);
+      const emailProof = proofURL.searchParams.get("emailProof")!;
       const messageCount = mail.messages.length;
       const earlyLedgerCount = ledgerBeforeCommit;
       let reached!: () => void, release!: () => void;
       const atCommit = new Promise<void>(resolve => { reached = resolve; });
       const allowCommit = new Promise<void>(resolve => { release = resolve; });
       beforeCommit = async () => { reached(); await allowCommit; };
-      const signup = auth.api.signUpEmail({ body: { username, name: username, email: `${username}@example.test`, password, turnstileToken: "fixture" } as any });
+      const signup = auth.api.signUpEmail({ body: { username, name: username, email: `${username}@example.test`, password, emailProof, turnstileToken: "fixture" } as any });
       let response: Awaited<typeof signup>;
       try {
         await atCommit;
@@ -81,15 +86,14 @@ import { EmailOutbox } from "../../auth/emailOutbox";
         expect(prismaPool.waitingCount).toBe(0);
         expect(ledgerBeforeCommit).toBe(earlyLedgerCount);
       } finally { beforeCommit = undefined; release(); response = await signup; }
-      // Verification is the native endpoint; token comes from the injected email fake.
-      await until(async () => { await mailOutbox.drain(); return mail.messages.length > messageCount || undefined; }, "account verification delivery");
       expect(prismaPool.idleCount).toBe(prismaPool.totalCount);
       const started = Date.now();
       await db.$transaction(async tx => { await tx.$queryRaw`SELECT 1`; }, { maxWait: 500, timeout: 1000 });
       expect(Date.now() - started).toBeLessThan(1000);
-      const url = new URL(mail.messages.at(-1)!.text.split(" ").at(-1)!);
-      await auth.api.verifyEmail({ query: { token: url.searchParams.get("token")! } });
-      await registerVerification(db, url.searchParams.get("token")!, response.user.id);
+      const token = await createEmailVerificationToken(defaults.secret, `${username}@example.test`);
+      await registerVerification(db, token, response.user.id);
+      await auth.api.verifyEmail({ query: { token } });
+      await registerVerification(db, token, response.user.id);
       expect(await db.accountEmailToken.count({ where: { userId: response.user.id, usedAt: { not: null } } })).toBe(1);
       const login = await auth.api.signInEmail({ body: { email: `${username}@example.test`, password }, asResponse: true });
       return { id: response.user.id, cookie: login.headers.getSetCookie().find(c => c.startsWith("better-auth.session_token="))!.split(";")[0]! };

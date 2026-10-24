@@ -1,4 +1,5 @@
 import express from "express";
+import { retireLegacyResetStorage } from "./auth/mailRequests";
 import cors from "cors";
 import { errorHandler } from "./utils/middleware";
 import { config } from "./utils/config";
@@ -20,6 +21,7 @@ import { redis, commandRedis } from "./infra/redis";
 import { configureHttpServer, createShutdown, shutdownOnSignals } from "./utils/lifecycle";
 
 await assertRuntimeSchema();
+await retireLegacyResetStorage(prisma);
 const readiness = createReadiness();
 await readiness.started;
 const stopEmail = emailOutbox?.start();

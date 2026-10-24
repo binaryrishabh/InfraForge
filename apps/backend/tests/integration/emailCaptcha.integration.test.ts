@@ -10,6 +10,7 @@ import { readAuthSettings } from "../../auth/settings";
 import { createAuth } from "../../auth/createAuth";
 import { accountAuthHandler } from "../../auth/accountPolicy";
 import { EmailOutbox } from "../../auth/emailOutbox";
+import { AccountEmailRequests } from "../../auth/mailRequests";
 import { FakeEmail, ResendEmail } from "../../auth/email";
 import { Turnstile } from "../../auth/turnstile";
 import { registerVerification } from "../../auth/verification";
@@ -26,7 +27,7 @@ import { registerVerification } from "../../auth/verification";
       await sql.query(await Bun.file(new URL(`${migration}/migration.sql`, folder)).text());
     }
     const defaults = readAuthSettings({ BETTER_AUTH_URL: "http://localhost:3100", APP_ORIGINS: "http://localhost:5173", BETTER_AUTH_SECRET: randomUUID() + randomUUID() });
-    const mail = new FakeEmail(), queue = new EmailOutbox(db, mail, defaults.secret);
+    const mail = new FakeEmail(), queue = new AccountEmailRequests(db, mail, defaults);
     let challengeAccepted = true;
     const challenge = new Turnstile("fixture", ["localhost"], (async () => Response.json({ success: challengeAccepted, hostname: "localhost", action: "signup" })) as unknown as typeof fetch, false);
     const auth = createAuth(db, { ...defaults, accountEssentials: { ...defaults.accountEssentials, emailEnabled: true, email: mail, challenge } }, { allow: async () => true }, queue);
@@ -40,26 +41,29 @@ import { registerVerification } from "../../auth/verification";
     const signup = (username: string, email: string) => call("sign-up/email", { name: "Fixture", username, email, password, turnstileToken: "fixture-token" });
     challengeAccepted = false;
     expect((await signup("blocked", "blocked@example.test")).status).toBe(403);
-    expect(await db.user.count()).toBe(0); expect(await db.accountMailOutbox.count()).toBe(0);
+    expect(await db.user.count()).toBe(0); expect(await db.accountMailIntent.count()).toBe(0);
     challengeAccepted = true;
     const fresh = await signup("learner", "learner@example.test"), accepted = await fresh.text();
     expect(fresh.status).toBe(200); expect(fresh.headers.get("set-cookie")).toBeNull();
     expect(mail.messages).toHaveLength(0); // Durable insertion precedes delivery.
-    const queued = await db.accountMailOutbox.findFirstOrThrow();
+    const queued = await db.accountMailIntent.findFirstOrThrow();
     expect(queued.payload).not.toContain("learner@example.test"); expect(queued.status).toBe("pending");
     for (const [username, email] of [["learner", "other@example.test"], ["another", "learner@example.test"], ["another", "other@example.test"]]) {
       const result = await signup(username!, email!); expect(result.status).toBe(200); expect(await result.text()).toBe(accepted); expect(result.headers.get("set-cookie")).toBeNull();
     }
-    expect(await db.user.count()).toBe(2); expect(await db.account.count()).toBe(2);
+    expect(await db.user.count()).toBe(0); expect(await db.account.count()).toBe(0);
     // A new dispatcher/process can deliver pending rows; concurrent pollers
     // cannot claim the same live lease.
-    await Promise.all([queue.drain(), new EmailOutbox(db, mail, defaults.secret).drain()]);
-    expect(mail.messages).toHaveLength(2);
+    await Promise.all([queue.drain(), new AccountEmailRequests(db, mail, defaults).drain()]);
+    expect(mail.messages).toHaveLength(4);
     const link = new URL(mail.messages.find(m => m.to === "learner@example.test")!.text.split("\n").at(-1)!);
-    const token = link.searchParams.get("token")!;
-    const replay = await Promise.all([call(`verify-email?token=${token}`), call(`verify-email?token=${token}`)]);
+    const emailProof = link.searchParams.get("emailProof")!;
+    const complete = () => call("sign-up/email", { name: "Fixture", username: "learner",
+      email: "learner@example.test", password, emailProof });
+    const replay = await Promise.all([complete(), complete()]);
     expect(replay.map(r => r.status).sort()).toEqual([200, 400]);
     const learner = await db.user.findUniqueOrThrow({ where: { email: "learner@example.test" } });
+    expect(learner.emailVerified).toBe(true);
     const expired = await createEmailVerificationToken(defaults.secret, learner.email, undefined, -1);
     await registerVerification(db, expired, learner.id);
     expect((await call(`verify-email?token=${expired}`)).status).toBe(401);

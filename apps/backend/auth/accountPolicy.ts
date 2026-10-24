@@ -1,7 +1,7 @@
 import { createHmac } from "node:crypto";
 import { APIError } from "better-auth/api";
 import type { SignupChallenge } from "./turnstile";
-import { hashPassword } from "better-auth/crypto";
+import { acceptedMail } from "./mailAdmission";
 
 export interface AccountQuota { allow(scope: string, identity: string, maximum: number): Promise<boolean> }
 interface RedisCounter { eval(script: string, keys: number, ...args: Array<string | number>): Promise<unknown> }
@@ -17,21 +17,23 @@ export async function enforceAccountPolicy(input: { path: string; body?: Record<
   enabled: boolean; challenge?: SignupChallenge; quota?: AccountQuota }) {
   const { path, enabled, challenge, quota, ip, body } = input;
   const signup = path === "/sign-up/email";
+  const completion = signup && body?.emailProof !== undefined;
   const emailRequest = path === "/request-password-reset" || path === "/send-verification-email";
   const redeem = path === "/verify-email" || path === "/reset-password";
   if (!(signup && challenge || enabled && (emailRequest || redeem || signup))) return;
   if (!quota) throw new APIError("SERVICE_UNAVAILABLE", { message: "Account service unavailable" });
   try {
     const email = typeof body?.email === "string" ? body.email.trim().toLowerCase().slice(0, 254) : "";
-    const scope = signup ? "signup" : emailRequest ? "email-request" : "redeem";
-    const ipAllowed = await quota.allow(`${scope}:ip`, ip, redeem ? 30 : 20);
-    const accountAllowed = await quota.allow(`${scope}:account`, emailRequest || signup ? email : input.token ?? "", emailRequest || signup ? 3 : 5);
+    const scope = completion ? "signup-complete" : signup ? "signup" : emailRequest ? "email-request" : "redeem";
+    const ipAllowed = await quota.allow(`${scope}:ip`, ip, redeem || completion ? 30 : 20);
+    const accountAllowed = await quota.allow(`${scope}:account`, completion ? String(body?.emailProof).slice(0, 100) : emailRequest || signup ? email : input.token ?? "",
+      completion ? 5 : emailRequest || signup ? 3 : 5);
     if (!ipAllowed || !accountAllowed) throw new APIError("TOO_MANY_REQUESTS", { message: "Try again later" });
   } catch (error) {
     if (error instanceof APIError) throw error;
     throw new APIError("SERVICE_UNAVAILABLE", { message: "Account service unavailable" });
   }
-  if (challenge && (signup || path === "/request-password-reset" && challenge.protectReset !== false)) {
+  if (challenge && (signup && !completion || path === "/request-password-reset" && challenge.protectReset !== false)) {
     const token = typeof body?.turnstileToken === "string" ? body.turnstileToken : "";
     let accepted = false;
     try { accepted = await challenge.verify(token, signup ? "signup" : "password_reset", ip); } catch { /* fail closed */ }
@@ -51,14 +53,15 @@ export function accountAuthHandler(handler: (request: Request) => Promise<Respon
       return new Response("Not Found", { status: 404, headers: { "Cache-Control": "no-store", "Referrer-Policy": "no-referrer" } });
     }
     const signup = enabled && request.method === "POST" && path === "/api/auth/sign-up/email";
-    const uniform = enabled && request.method === "POST" && (signup || ["/api/auth/send-verification-email", "/api/auth/request-password-reset"].includes(path));
+    let uniform = enabled && request.method === "POST" && (signup || ["/api/auth/send-verification-email", "/api/auth/request-password-reset"].includes(path));
     const start = now();
-    let signupBody: { password?: unknown } | undefined;
+    let signupBody: { emailProof?: unknown } | undefined;
     if (signup) {
       const copy = request.clone();
       signupBody = request.headers.get("content-type")?.includes("application/x-www-form-urlencoded")
-        ? { password: new URLSearchParams(await copy.text()).get("password") }
-        : await copy.json().catch(() => undefined) as { password?: unknown } | undefined;
+        ? { emailProof: new URLSearchParams(await copy.text()).get("emailProof") ?? undefined }
+        : await copy.json().catch(() => undefined) as { emailProof?: unknown } | undefined;
+      if (signupBody?.emailProof !== undefined) uniform = false;
     }
     if (uniform) {
       request = new Request(request);
@@ -68,18 +71,10 @@ export function accountAuthHandler(handler: (request: Request) => Promise<Respon
     }
     let response = await handler(request);
     if (uniform) {
-      let duplicate = false;
-      if (signup && !response.ok) {
-        const body = await response.clone().json().catch(() => ({})) as { code?: string };
-        duplicate = ["USERNAME_IS_ALREADY_TAKEN", "USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL", "FAILED_TO_CREATE_USER"].includes(body.code ?? "");
-        // The username plugin stops before native hashing. Match the native
-        // new/duplicate-email path's expensive work before applying the floor.
-        if (body.code === "USERNAME_IS_ALREADY_TAKEN" && typeof signupBody?.password === "string") await hashPassword(signupBody.password);
-      }
       await sleep(Math.max(0, 750 - (now() - start)));
       // Keep input/challenge/quota/CSRF errors; native successful requests share
       // one body. Provider delivery is separate from durable queue insertion.
-      if (response.ok || duplicate) response = Response.json({ status: true, message: "If eligible, check your email for the link" });
+      if (response.ok) response = Response.json(acceptedMail);
     }
     const headers = new Headers(response.headers);
     headers.set("Cache-Control", "no-store"); headers.set("Referrer-Policy", "no-referrer");

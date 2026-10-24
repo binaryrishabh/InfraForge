@@ -48,6 +48,18 @@ test("local outbox uses exclusive idempotent files and rejects path traversal", 
   } finally { await rm(directory, { recursive: true, force: true }); }
 });
 
+test("local reset receipts never persist the reset bearer", async () => {
+  const directory = await mkdtemp(join(tmpdir(), "infraforge-reset-fixture-"));
+  try {
+    const reset = accountEmail("fixture@example.test",
+      `${base.BETTER_AUTH_URL}/api/auth/reset-password/fixture-bearer`, "reset", base.BETTER_AUTH_URL);
+    await new LocalOutboxEmail(directory).send(reset, "reset-receipt");
+    const stored = await readFile(join(directory, "reset-receipt.json"), "utf8");
+    expect(stored).not.toContain("fixture-bearer");
+    expect(stored).not.toContain("/reset-password/");
+  } finally { await rm(directory, { recursive: true, force: true }); }
+});
+
 test("HTTPS adapters send HTML and stable Resend idempotency keys; SES retries only explicit rejection", async () => {
   const requests: RequestInit[] = [];
   const transport = (async (_url: string, init: RequestInit) => { requests.push(init); return Response.json({}); }) as typeof fetch;
@@ -132,13 +144,15 @@ test("an accepted SES send with failed database ack is never sent again", async 
   expect(f.statements.some(sql => sql.includes('"retrySafe" = false'))).toBe(true);
 });
 
-test("signup response padding applies equally to new and duplicate responses", async () => {
+test("signup response padding preserves admission failure and actionable errors", async () => {
   const waits: number[] = [];
   for (const code of [undefined, "USERNAME_IS_ALREADY_TAKEN", "FAILED_TO_CREATE_USER"]) {
     const handler = accountAuthHandler(async () => code ? Response.json({ code }, { status: 400 }) : Response.json({ user: { id: "must-not-leak" } }), true,
       () => 100, async ms => { waits.push(ms); });
     const response = await handler(new Request("https://api.example.test/api/auth/sign-up/email", { method: "POST", body: JSON.stringify({ password: "fixture-long-password" }) }));
-    expect(response.status).toBe(200); expect(await response.json()).toEqual({ status: true, message: "If eligible, check your email for the link" });
+    expect(response.status).toBe(code ? 400 : 200);
+    expect(await response.json()).toEqual(code ? { code }
+      : { status: true, message: "If eligible, check your email for the link" });
   }
   expect(waits).toEqual([750, 750, 750]);
 });

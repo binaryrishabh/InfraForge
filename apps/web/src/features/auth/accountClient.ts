@@ -16,6 +16,18 @@ export async function verifyEmail(token: string): Promise<{ status: boolean }> {
 export async function resetPassword(token: string, newPassword: string): Promise<{ status: boolean }> {
   return (await http.post(`${API_URL}/auth/reset-password`, { token, newPassword })).data;
 }
+// Email-enabled signup first proves mailbox control, then chooses credentials.
+// Keep the proof only in memory; the UI must remove it from the address bar.
+export async function requestSignupProof(email: string, callbackURL: string, turnstileToken?: string) {
+  return (await http.post<{ status: true; message: string }>(`${API_URL}/auth/sign-up/email`, {
+    email, callbackURL, turnstileToken,
+  })).data;
+}
+export async function completeEmailSignup(input: {
+  emailProof: string; email: string; username: string; name: string; password: string;
+}) {
+  return (await http.post(`${API_URL}/auth/sign-up/email`, input)).data;
+}
 export async function signupWithChallenge(input: { username: string; name: string; email: string; password: string; callbackURL?: string; turnstileToken?: string }): Promise<{ status: true; message: string } | { user: { id: string; email: string; name: string }; token: string | null }> {
   return (await http.post(`${API_URL}/auth/sign-up/email`, input)).data;
 }

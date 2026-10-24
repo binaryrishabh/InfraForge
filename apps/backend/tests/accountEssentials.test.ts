@@ -9,6 +9,8 @@ import { FakeChallenge, Turnstile, readChallenge } from "../auth/turnstile";
 import { accountAuthHandler, enforceAccountPolicy, RedisAccountQuota, type AccountQuota } from "../auth/accountPolicy";
 import { verificationHash, consumeVerification, registerVerification } from "../auth/verification";
 import { deleteAccount, exportAccountPage, exportSections } from "../auth/accountData";
+import { symmetricEncrypt } from "better-auth/crypto";
+import { prepareMailIntent, renderMailIntent } from "../auth/mailIntent";
 import { createOriginCheck } from "../auth/origin";
 
 const config = { BETTER_AUTH_SECRET: "fixture-only-secret-at-least-32-characters", BETTER_AUTH_URL: "http://localhost:3100", APP_ORIGINS: "http://localhost:5173" };
@@ -38,11 +40,20 @@ function fixture(enabled = true, verificationRequired = true) {
   } as unknown as PrismaClient;
   const defaults = readAuthSettings(config);
   const settings = { ...defaults, accountEssentials: { ...defaults.accountEssentials, enabled, emailEnabled: enabled, verificationRequired, email: mail, challenge: enabled ? challenge : undefined, siteKey: undefined } };
-  const options = createAuth(prisma, settings, quota, { enqueue: async (message, userId, token) => {
-    if (token) await registerVerification(prisma, token, userId);
-    await mail.send(message);
+  const database: { user: any[]; session: any[]; account: any[]; verification: any[] } = {
+    user: [], session: [], account: [], verification: [],
+  };
+  const admission = { wait: async () => {} };
+  const options = createAuth(prisma, settings, quota, { admit: async (kind, email, callbackURL) => {
+    await admission.wait();
+    const intent = { id: crypto.randomUUID(), kind, expiresAt: new Date(Date.now() + 1800_000),
+      payload: await symmetricEncrypt({ key: settings.secret, data: JSON.stringify({ email, callbackURL }) }) };
+    const tx = { verification: { create: async ({ data }: any) => database.verification.push(data) },
+      $queryRaw: async (parts: TemplateStringsArray, ...args: any[]) => parts.join("").trimStart().startsWith('SELECT id, "emailVerified"')
+        ? database.user.filter(u => u.email === args[0]) : (prisma.$queryRaw as any)(parts, ...args) };
+    const prepared = await prepareMailIntent(tx as any, intent, settings);
+    if (prepared) await mail.send(await renderMailIntent({ ...intent, ...prepared }, settings));
   } }).options;
-  const database: { user: any[]; session: any[]; account: any[]; verification: any[] } = { user: [], session: [], account: [], verification: [] };
   // Exercise the actual pinned library handlers/hashing/tokens. Only persistence
   // and external delivery/challenge verification are replaced in this unit suite.
   const auth = betterAuth({ ...options, database: memoryAdapter(database) });
@@ -53,8 +64,19 @@ function fixture(enabled = true, verificationRequired = true) {
     method: body ? "POST" : "GET", headers: { Origin: config.APP_ORIGINS, "Content-Type": "application/json",
       "x-forwarded-for": ip, "x-infraforge-client-ip": ip, ...extra }, body: body ? JSON.stringify(body) : undefined,
   })); };
-  const signup = () => call("sign-up/email", { username: "Learner", name: "Test learner", email: "learner@example.test", password, turnstileToken: "fixture-pass" });
-  return { auth, call, signup, ledger, prisma, database, mail, quota, challenge };
+  const signup = async () => {
+    const body = { username: "Learner", name: "Test learner", email: "learner@example.test",
+      password, turnstileToken: "fixture-pass" };
+    const begun = await call("sign-up/email", body);
+    if (!enabled || !begun.ok) return begun;
+    const emailProof = link(mail).searchParams.get("emailProof");
+    return call("sign-up/email", { ...body, emailProof });
+  };
+  const legacyUnverified = async () => {
+    await signup(); database.user[0].emailVerified = false;
+    await call("send-verification-email", { email: "learner@example.test" });
+  };
+  return { auth, call, signup, legacyUnverified, ledger, prisma, database, mail, quota, challenge, admission };
 }
 const link = (mail: FakeEmail) => new URL(mail.messages.at(-1)!.text.split(" ").at(-1)!);
 const delivered = () => new Promise(resolve => setTimeout(resolve, 5));
@@ -86,7 +108,9 @@ test("native signup challenge fails closed before user creation", async () => {
 });
 
 test("native email verification expires and redeems once, including concurrent replay", async () => {
-  const f = fixture(), signup = await f.signup(); await delivered();
+  const f = fixture(), signup = await f.signup();
+  f.database.user[0].emailVerified = false;
+  await f.call("send-verification-email", { email: "learner@example.test" });
   expect(signup.status).toBe(200); expect(signup.headers.get("set-cookie")).toBeNull();
   expect(f.database.user[0].emailVerified).toBe(false);
   const token = link(f.mail).searchParams.get("token")!;
@@ -95,7 +119,7 @@ test("native email verification expires and redeems once, including concurrent r
   expect(responses.map(r => r.status).sort()).toEqual([200, 400]);
   expect(f.database.user[0].emailVerified).toBe(true);
   expect(JSON.stringify([...f.ledger])).not.toContain(token);
-  const expired = fixture(); await expired.signup(); await delivered();
+  const expired = fixture(); await expired.legacyUnverified();
   for (const row of expired.ledger.values()) row.expiresAt = new Date(0);
   expect((await expired.call(`verify-email?token=${link(expired.mail).searchParams.get("token")}`)).status).toBe(400);
   expect(expired.database.user[0].emailVerified).toBe(false);
@@ -136,7 +160,7 @@ test("stored reset identifiers cannot redeem the emailed reset credential", asyn
 test("email requests return identical responses for absent, verified and unverified accounts, with cookies", async () => {
   for (const verified of [false, true]) {
     const f = fixture(); await f.signup(); await delivered();
-    if (verified) await f.call(`verify-email?token=${link(f.mail).searchParams.get("token")}`);
+    f.database.user[0].emailVerified = verified;
     for (const path of ["request-password-reset", "send-verification-email"]) {
       const existing = await f.call(path, { email: "learner@example.test", turnstileToken: "fixture-pass" }, { Cookie: "irrelevant=fixture" });
       const absent = await f.call(path, { email: "absent@example.test", turnstileToken: "fixture-pass" });
@@ -195,12 +219,11 @@ test("email dispatcher bounds in-flight work without returning provider details"
   release(); await delivered();
 });
 
-test("verification waits for ledger persistence before accepting signup and sending", async () => {
+test("signup waits for durable admission before accepting or delivering", async () => {
   const f = fixture();
   let release!: () => void;
   const waiting = new Promise<void>(resolve => { release = resolve; });
-  const query = f.prisma.$queryRaw;
-  f.prisma.$queryRaw = (async (...args: any[]) => { await waiting; return (query as any)(...args); }) as any;
+  f.admission.wait = () => waiting;
   let accepted = false;
   const signup = f.signup().then(response => { accepted = true; return response; });
   await new Promise(resolve => setTimeout(resolve, 150));
@@ -210,19 +233,21 @@ test("verification waits for ledger persistence before accepting signup and send
 
 test("verified-email signup masks duplicate username, email and absent identifiers with no session", async () => {
   const f = fixture();
-  const initial = await f.signup(), expected = await initial.text();
+  await f.signup();
+  const expected = JSON.stringify({ status: true, message: "If eligible, check your email for the link" });
   for (const [username, email] of [["Learner", "fresh@example.test"], ["fresh_name", "learner@example.test"], ["fresh_name", "fresh@example.test"]]) {
     const response = await f.call("sign-up/email", { username, email, name: "Name", password, turnstileToken: "fixture" });
     expect(response.status).toBe(200); expect(await response.text()).toBe(expected);
     expect(response.headers.get("set-cookie")).toBeNull();
   }
-  expect(f.database.user).toHaveLength(2);
-  expect(f.database.account).toHaveLength(2);
+  expect(f.database.user).toHaveLength(1);
+  expect(f.database.account).toHaveLength(1);
+  expect(f.mail.messages).toHaveLength(4);
 });
 
 test("invalid signup input is rejected consistently before username membership lookup", async () => {
   const f = fixture(); await f.signup();
-  for (const bad of [{ email: "invalid", password }, { email: "new@example.test", password: "short" }]) {
+  for (const bad of [{ email: "invalid", password }, { email: "x".repeat(255) + "@example.test", password }]) {
     const responses = await Promise.all(["Learner", "new_name"].map(username => f.call("sign-up/email", { username, name: "Name", ...bad, turnstileToken: "fixture" })));
     expect(responses[0]!.status).toBe(400);
     expect(await responses[0]!.text()).toBe(await responses[1]!.text());
@@ -238,9 +263,9 @@ test("optional verification sends mail and keeps signup generic while allowing p
   expect(await taken.json()).toEqual({ status: true, message: "If eligible, check your email for the link" });
 });
 
-test("signup callback rejection and missing-name errors cannot enumerate usernames", async () => {
+test("signup callback rejection cannot enumerate usernames", async () => {
   const f = fixture(); await f.signup();
-  for (const bad of [{ callbackURL: "https://evil.invalid", name: "Name" }, { name: undefined }]) {
+  for (const bad of [{ callbackURL: "https://evil.invalid", name: "Name" }]) {
     const responses = await Promise.all(["Learner", "fresh_name"].map(username => f.call("sign-up/email", { username, email: "fresh@example.test", password, turnstileToken: "fixture", ...bad })));
     expect(responses[0]!.status).toBe(responses[1]!.status);
     expect(responses[0]!.ok).toBe(false);

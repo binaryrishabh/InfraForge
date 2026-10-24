@@ -3,7 +3,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-export type TransactionalMessage = { to: string; subject: string; text: string; html?: string };
+export type TransactionalMessage = { to: string; subject: string; text: string; html?: string; sensitive?: boolean };
 export interface TransactionalEmail {
   readonly retrySafe?: boolean;
   send(message: TransactionalMessage, idempotencyKey?: string): Promise<void>;
@@ -79,7 +79,9 @@ export class LocalOutboxEmail implements TransactionalEmail {
   async send(message: TransactionalMessage, idempotencyKey: string = randomUUID()) {
     if (!/^[a-zA-Z0-9-]{1,100}$/.test(idempotencyKey)) throw failure();
     await mkdir(this.directory, { recursive: true });
-    try { await writeFile(join(this.directory, `${idempotencyKey}.json`), JSON.stringify(message), { flag: "wx", mode: 0o600 }); }
+    const receipt = message.sensitive
+      ? { to: message.to, subject: message.subject, text: "Sensitive link omitted from local storage" } : message;
+    try { await writeFile(join(this.directory, `${idempotencyKey}.json`), JSON.stringify(receipt), { flag: "wx", mode: 0o600 }); }
     catch (error) { if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw failure(); }
   }
 }

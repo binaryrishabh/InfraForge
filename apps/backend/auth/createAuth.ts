@@ -6,16 +6,16 @@ import { prismaAdapter } from "@better-auth/prisma-adapter";
 import type { PrismaClient } from "../lib/generated/prisma/client";
 import { readAuthSettings } from "./settings";
 import { APIError, createAuthMiddleware, originCheckMiddleware, formCsrfMiddleware } from "better-auth/api";
-import { EmailOutbox, type AccountMailQueue } from "./emailOutbox";
-import { accountEmail } from "./emailTemplate";
+import { AccountEmailRequests } from "./mailRequests";
+import type { MailRequests } from "./mailIntent";
+import { mailAdmission, invalidProof, acceptedMail } from "./mailAdmission";
 import { consumeVerification, EMAIL_TOKEN_SECONDS } from "./verification";
 import { enforceAccountPolicy, type AccountQuota } from "./accountPolicy";
-import { queueAfterTransactionHook } from "@better-auth/core/context";
 
-export function createAuth(prisma: PrismaClient, settings: ReturnType<typeof readAuthSettings>, quota?: AccountQuota, mailQueue?: AccountMailQueue) {
+export function createAuth(prisma: PrismaClient, settings: ReturnType<typeof readAuthSettings>, quota?: AccountQuota, mailQueue?: MailRequests) {
   const essentials = settings.accountEssentials;
   const deliver = (essentials.emailEnabled || essentials.enabled) && essentials.email
-    ? mailQueue ?? new EmailOutbox(prisma, essentials.email, settings.secret) : undefined;
+    ? mailQueue ?? new AccountEmailRequests(prisma, essentials.email, settings) : undefined;
   return betterAuth({
     appName: "InfraForge",
     baseURL: settings.baseURL,
@@ -24,21 +24,26 @@ export function createAuth(prisma: PrismaClient, settings: ReturnType<typeof rea
     trustedOrigins: settings.origins,
     socialProviders: settings.socialProviders,
     verification: {
-      storeIdentifier: { default: "plain", overrides: { "reset-password:": "hashed" } },
+      storeIdentifier: { default: "plain", overrides: { "reset-password:": "hashed", "signup-proof:": "hashed" } },
     },
-    emailAndPassword: { enabled: true, minPasswordLength: PASSWORD_MIN, maxPasswordLength: PASSWORD_MAX,
+    emailAndPassword: {
+      enabled: true, minPasswordLength: PASSWORD_MIN, maxPasswordLength: PASSWORD_MAX,
       requireEmailVerification: !!deliver && essentials.verificationRequired !== false, autoSignIn: !deliver,
-      ...(deliver ? { resetPasswordTokenExpiresIn: EMAIL_TOKEN_SECONDS, revokeSessionsOnPasswordReset: true,
-        sendResetPassword: async ({ user, url }: { user: { id: string; email: string }; url: string }) => {
-          await queueAfterTransactionHook(() => deliver.enqueue(accountEmail(user.email, url, "reset", settings.baseURL), user.id));
-        } } : {}) },
-    ...(deliver ? { emailVerification: { sendOnSignUp: true, sendOnSignIn: false, expiresIn: EMAIL_TOKEN_SECONDS,
+      resetPasswordTokenExpiresIn: EMAIL_TOKEN_SECONDS, revokeSessionsOnPasswordReset: true,
+    },
+    ...(deliver ? { emailVerification: {
+      sendOnSignUp: false, sendOnSignIn: false, expiresIn: EMAIL_TOKEN_SECONDS,
       autoSignInAfterVerification: false,
-      sendVerificationEmail: async ({ user, url, token }: { user: { id: string; email: string }; url: string; token: string }) => {
-        // Native signup invokes this before its user transaction commits.
-        // Await durable ledger + queue insertion only after the account commit.
-        await queueAfterTransactionHook(() => deliver.enqueue(accountEmail(user.email, url, "verify", settings.baseURL), user.id, token));
-      } } } : {}),
+    } } : {}),
+    databaseHooks: { user: { create: { before: async (user, ctx) => {
+      if (!deliver || ctx?.path !== "/sign-up/email") return;
+      // Native signup's transaction includes proof consumption and user creation.
+      const proof = ctx.body?.emailProof;
+      if (typeof proof !== "string") throw invalidProof();
+      const row = await ctx.context.internalAdapter.consumeVerificationValue(`signup-proof:${proof}`);
+      if (!row || row.value !== user.email || row.expiresAt <= new Date()) throw invalidProof();
+      return { data: { ...user, emailVerified: true } };
+    } } } },
     plugins: [username({ displayUsername: false, immutableUsername: true,
       minUsernameLength: USERNAME_MIN, maxUsernameLength: USERNAME_MAX,
       usernameValidator: validUsername, usernameNormalization: normalizeUsername })],
@@ -51,13 +56,19 @@ export function createAuth(prisma: PrismaClient, settings: ReturnType<typeof rea
         await originCheckMiddleware(ctx);
         await formCsrfMiddleware(ctx);
       }
-      await credentialValidation(ctx);
-      if (ctx.path === "/request-password-reset" || ctx.path === "/send-verification-email") {
-        if (typeof ctx.body?.email === "string") ctx.body.email = ctx.body.email.trim().toLowerCase();
-        if (typeof ctx.body?.email !== "string" || ctx.body.email.length > 254) throw new APIError("BAD_REQUEST", { message: "Enter a valid email" });
+      await enforceAccountPolicy({
+        path: ctx.path, body: ctx.body, token: ctx.body?.token ?? ctx.query?.token,
+        ip: ctx.headers?.get("x-infraforge-client-ip") ?? "unknown",
+        enabled: essentials.enabled || !!deliver, challenge: essentials.challenge, quota,
+      });
+      if (deliver) {
+        await mailAdmission(deliver, settings)(ctx);
+        const initialSignup = ctx.path === "/sign-up/email" && ctx.body?.emailProof === undefined;
+        if (initialSignup || ctx.path === "/request-password-reset" || ctx.path === "/send-verification-email") {
+          return ctx.json(acceptedMail);
+        }
       }
-      await enforceAccountPolicy({ path: ctx.path, body: ctx.body, token: ctx.body?.token ?? ctx.query?.token,
-        ip: ctx.headers?.get("x-infraforge-client-ip") ?? "unknown", enabled: essentials.enabled || !!deliver, challenge: essentials.challenge, quota });
+      await credentialValidation(ctx);
       if (ctx.path === "/verify-email" && (!deliver || !await consumeVerification(prisma, String(ctx.query?.token ?? "")))) {
         throw new APIError("BAD_REQUEST", { code: "INVALID_TOKEN", message: "Invalid or expired link" });
       }

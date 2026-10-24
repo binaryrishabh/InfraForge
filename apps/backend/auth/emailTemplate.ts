@@ -11,7 +11,7 @@ export function accountEmail(
   }
   const title = kind === "reset" ? "Reset your InfraForge password"
     : kind === "signup" ? "Continue your InfraForge signup" : "Verify your InfraForge email";
-  return { to, subject: title,
+  return { to, subject: title, ...(kind === "reset" ? { sensitive: true } : {}),
     text: `${title}. This link expires in 30 minutes and can be used once. If you did not request it, ignore this email.\n\n${url}`,
     html: `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>${title}</title></head><body><h1>${title}</h1><p>This link expires in 30 minutes and can be used once.</p><p><a href="${escape(url)}">${title}</a></p><p>If you did not request it, ignore this email.</p></body></html>` };
 }
