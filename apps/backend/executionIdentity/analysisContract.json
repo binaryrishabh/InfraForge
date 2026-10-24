@@ -1,6 +1,6 @@
 {
   "schema": "execution-loading-analysis/1",
-  "policy": "28ed2e8a98b18f590b5672fdf16ac35efd61c20d0f18f3fa5dc91419dd20d71e",
+  "policy": "51d1a0608962348029995c310510a160e362260aa4ba2263a89eeaab0a3ae397",
   "modules": {
     "apps/backend/actions/contract.ts": {
       "hash": "15fe6aa3879ab8ccc67a23d579a4e2e9b79f71631dd7687ad192f788c27229ad",
@@ -1875,7 +1875,7 @@
       ]
     },
     "apps/backend/health/readiness.ts": {
-      "hash": "49161910e2dcf14d3455434fc3e3469b43e7d633aebdf6f4198552ded56fec88",
+      "hash": "9e24d633e47e17f9dea3b0a9025c8d7f45255d85669e2b97e3185033ff828b3e",
       "requests": [
         {
           "path": "pg",

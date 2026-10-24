@@ -387,7 +387,7 @@
     },
     {
       "file": "apps/backend/executionIdentity/loading.ts",
-      "sha256": "807603f96a34f92ffbb034c0051cb342cfe943f752f244212369d9501d5a4012",
+      "sha256": "cfb7307c3b2f40264e0e7f2d47bc01eb7d612af03222dc948d72b7e0876d2d60",
       "numericSites": 14
     },
     {
@@ -582,7 +582,7 @@
     },
     {
       "file": "apps/backend/health/readiness.ts",
-      "sha256": "49161910e2dcf14d3455434fc3e3469b43e7d633aebdf6f4198552ded56fec88",
+      "sha256": "9e24d633e47e17f9dea3b0a9025c8d7f45255d85669e2b97e3185033ff828b3e",
       "numericSites": 7
     },
     {
@@ -42699,7 +42699,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/health/readiness.ts#L8",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/health/readiness.ts#L35",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -42713,7 +42713,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/health/readiness.ts",
-        "line": 8,
+        "line": 35,
         "column": 74
       }
     },
@@ -42735,7 +42735,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/health/readiness.ts#L8",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/health/readiness.ts#L35",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -42749,7 +42749,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/health/readiness.ts",
-        "line": 8,
+        "line": 35,
         "column": 102
       }
     },
@@ -42771,7 +42771,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/health/readiness.ts#L8",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/health/readiness.ts#L35",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -42785,7 +42785,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/health/readiness.ts",
-        "line": 8,
+        "line": 35,
         "column": 123
       }
     },
@@ -42807,7 +42807,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/health/readiness.ts#L10",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/health/readiness.ts#L37",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -42821,7 +42821,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/health/readiness.ts",
-        "line": 10,
+        "line": 37,
         "column": 113
       }
     },
@@ -42843,7 +42843,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/health/readiness.ts#L11",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/health/readiness.ts#L38",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -42857,7 +42857,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/health/readiness.ts",
-        "line": 11,
+        "line": 38,
         "column": 73
       }
     },
@@ -42879,7 +42879,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/health/readiness.ts#L11",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/health/readiness.ts#L38",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -42893,7 +42893,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/health/readiness.ts",
-        "line": 11,
+        "line": 38,
         "column": 92
       }
     },
@@ -42915,7 +42915,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/health/readiness.ts#L11",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/health/readiness.ts#L38",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -42929,7 +42929,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/health/readiness.ts",
-        "line": 11,
+        "line": 38,
         "column": 114
       }
     },
