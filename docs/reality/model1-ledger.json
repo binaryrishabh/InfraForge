@@ -387,7 +387,7 @@
     },
     {
       "file": "apps/backend/executionIdentity/loading.ts",
-      "sha256": "cfb7307c3b2f40264e0e7f2d47bc01eb7d612af03222dc948d72b7e0876d2d60",
+      "sha256": "ed7f538c0c215ae6e9812671fd1d427310b94bf9eb62a15e1fd86ab0a7d040ea",
       "numericSites": 14
     },
     {
@@ -617,7 +617,7 @@
     },
     {
       "file": "apps/backend/infra/workerConnection.ts",
-      "sha256": "96b6f24b763b0eb7bde1e8491faa5a455925c1ba541e76e5aadc21a100a748f8",
+      "sha256": "e8cc0dc32ae54ddde80e81d821402208405830de1c4ffeb6df8a8ac31e41d2f6",
       "numericSites": 12
     },
     {
@@ -817,7 +817,7 @@
     },
     {
       "file": "apps/backend/release/cli.ts",
-      "sha256": "1294bf7d382f7c2dfceb3dc73fbaa53d95745e7c7fba31b97b7496c7cfa2e777",
+      "sha256": "fe8b1bd7f0bff6f4c52f6feadd93436f76985f9ec3ec3a31a33f87508662fc6c",
       "numericSites": 7
     },
     {
@@ -852,8 +852,8 @@
     },
     {
       "file": "apps/backend/release/runtime.ts",
-      "sha256": "c7ce7e7be1868c70f750ec03d038f142d72f4d7c3c01cedb2a1ca5d2cf38f637",
-      "numericSites": 6
+      "sha256": "49901fcdfc6c79acbdc78f8d6b15baf3f4ec921c474aa73cee5e9edcbb955912",
+      "numericSites": 5
     },
     {
       "file": "apps/backend/reports/actions.ts",
@@ -1059,6 +1059,11 @@
       "file": "apps/backend/utils/middleware.ts",
       "sha256": "97c91f5dbc03a23a54a034ff5245fc35e496c6f87886e6feb952ae252d04a253",
       "numericSites": 6
+    },
+    {
+      "file": "apps/backend/utils/postgresUrl.ts",
+      "sha256": "af16f53b61959d07bceb684e839b44d5e30dde604641547c39aae2b762d96d76",
+      "numericSites": 1
     },
     {
       "file": "apps/backend/utils/rateLimiter.ts",
@@ -43959,7 +43964,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/infra/workerConnection.ts#L10",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/infra/workerConnection.ts#L11",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -43973,7 +43978,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/infra/workerConnection.ts",
-        "line": 10,
+        "line": 11,
         "column": 102
       }
     },
@@ -43995,7 +44000,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/infra/workerConnection.ts#L19",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/infra/workerConnection.ts#L21",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -44009,7 +44014,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/infra/workerConnection.ts",
-        "line": 19,
+        "line": 21,
         "column": 77
       }
     },
@@ -44031,7 +44036,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/infra/workerConnection.ts#L19",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/infra/workerConnection.ts#L21",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -44045,7 +44050,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/infra/workerConnection.ts",
-        "line": 19,
+        "line": 21,
         "column": 98
       }
     },
@@ -44067,7 +44072,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/infra/workerConnection.ts#L22",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/infra/workerConnection.ts#L24",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -44081,7 +44086,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/infra/workerConnection.ts",
-        "line": 22,
+        "line": 24,
         "column": 17
       }
     },
@@ -44103,7 +44108,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/infra/workerConnection.ts#L22",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/infra/workerConnection.ts#L24",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -44117,7 +44122,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/infra/workerConnection.ts",
-        "line": 22,
+        "line": 24,
         "column": 38
       }
     },
@@ -44139,7 +44144,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/infra/workerConnection.ts#L22",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/infra/workerConnection.ts#L24",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -44153,7 +44158,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/infra/workerConnection.ts",
-        "line": 22,
+        "line": 24,
         "column": 41
       }
     },
@@ -44175,7 +44180,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/infra/workerConnection.ts#L29",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/infra/workerConnection.ts#L31",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -44189,7 +44194,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/infra/workerConnection.ts",
-        "line": 29,
+        "line": 31,
         "column": 28
       }
     },
@@ -44211,7 +44216,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/infra/workerConnection.ts#L31",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/infra/workerConnection.ts#L33",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -44225,7 +44230,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/infra/workerConnection.ts",
-        "line": 31,
+        "line": 33,
         "column": 29
       }
     },
@@ -44247,7 +44252,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/infra/workerConnection.ts#L32",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/infra/workerConnection.ts#L34",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -44261,7 +44266,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/infra/workerConnection.ts",
-        "line": 32,
+        "line": 34,
         "column": 50
       }
     },
@@ -44283,7 +44288,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/infra/workerConnection.ts#L32",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/infra/workerConnection.ts#L34",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -44297,7 +44302,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/infra/workerConnection.ts",
-        "line": 32,
+        "line": 34,
         "column": 70
       }
     },
@@ -44319,7 +44324,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/infra/workerConnection.ts#L36",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/infra/workerConnection.ts#L38",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -44333,7 +44338,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/infra/workerConnection.ts",
-        "line": 36,
+        "line": 38,
         "column": 21
       }
     },
@@ -44355,7 +44360,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/infra/workerConnection.ts#L36",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/infra/workerConnection.ts#L38",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -44369,7 +44374,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/infra/workerConnection.ts",
-        "line": 36,
+        "line": 38,
         "column": 41
       }
     },
@@ -56739,7 +56744,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/cli.ts#L7",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/cli.ts#L8",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -56753,7 +56758,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/release/cli.ts",
-        "line": 7,
+        "line": 8,
         "column": 30
       }
     },
@@ -56775,7 +56780,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/cli.ts#L9",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/cli.ts#L10",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -56789,7 +56794,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/release/cli.ts",
-        "line": 9,
+        "line": 10,
         "column": 28
       }
     },
@@ -56811,7 +56816,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/cli.ts#L14",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/cli.ts#L15",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -56825,7 +56830,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/release/cli.ts",
-        "line": 14,
+        "line": 15,
         "column": 96
       }
     },
@@ -56847,7 +56852,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/cli.ts#L14",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/cli.ts#L15",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -56861,7 +56866,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/release/cli.ts",
-        "line": 14,
+        "line": 15,
         "column": 117
       }
     },
@@ -56883,7 +56888,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/cli.ts#L20",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/cli.ts#L21",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -56897,7 +56902,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/release/cli.ts",
-        "line": 20,
+        "line": 21,
         "column": 32
       }
     },
@@ -56919,7 +56924,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/cli.ts#L20",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/cli.ts#L21",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -56933,7 +56938,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/release/cli.ts",
-        "line": 20,
+        "line": 21,
         "column": 80
       }
     },
@@ -56955,7 +56960,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/cli.ts#L42",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/cli.ts#L45",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -56969,7 +56974,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/release/cli.ts",
-        "line": 42,
+        "line": 45,
         "column": 24
       }
     },
@@ -59799,7 +59804,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/runtime.ts#L5",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/runtime.ts#L6",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -59813,48 +59818,12 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/release/runtime.ts",
-        "line": 5,
+        "line": 6,
         "column": 30
       }
     },
     {
       "id": "m1.apps.backend.release.runtime.2",
-      "concept": "requireProductionEndpoints · literal 2",
-      "modelVersion": "1",
-      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
-      "quantity": {
-        "kind": "known",
-        "value": 2,
-        "unit": "code-number",
-        "provenance": [
-          "m1.apps.backend.release.runtime.2"
-        ]
-      },
-      "formula": "if (![\"postgres:\", \"postgresql:\"].includes(database.protocol) || !database.hostname || database.pathname.length < 2 || !Number.isInteger(port) || port < 1 || port > 65535) throw new Error(\"Production database/Redis endpoints are invalid\");",
-      "classification": "implementation-policy",
-      "confidence": "high",
-      "provenance": [
-        {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/runtime.ts#L12",
-          "supports": "implementation",
-          "detail": "Exact historical literal and source expression; not external validation."
-        }
-      ],
-      "assumptions": [
-        "This literal is not evidence of real infrastructure capacity or performance.",
-        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
-      ],
-      "researchedOn": "2026-10-15",
-      "freeMode": "conditional",
-      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
-      "location": {
-        "file": "apps/backend/release/runtime.ts",
-        "line": 12,
-        "column": 117
-      }
-    },
-    {
-      "id": "m1.apps.backend.release.runtime.3",
       "concept": "requireProductionEndpoints · literal 1",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
@@ -59863,10 +59832,10 @@
         "value": 1,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.release.runtime.3"
+          "m1.apps.backend.release.runtime.2"
         ]
       },
-      "formula": "if (![\"postgres:\", \"postgresql:\"].includes(database.protocol) || !database.hostname || database.pathname.length < 2 || !Number.isInteger(port) || port < 1 || port > 65535) throw new Error(\"Production database/Redis endpoints are invalid\");",
+      "formula": "if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error(\"Production database/Redis endpoints are invalid\");",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
@@ -59890,7 +59859,7 @@
       }
     },
     {
-      "id": "m1.apps.backend.release.runtime.4",
+      "id": "m1.apps.backend.release.runtime.3",
       "concept": "requireProductionEndpoints · literal 65535",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
@@ -59899,10 +59868,10 @@
         "value": 65535,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.release.runtime.4"
+          "m1.apps.backend.release.runtime.3"
         ]
       },
-      "formula": "if (![\"postgres:\", \"postgresql:\"].includes(database.protocol) || !database.hostname || database.pathname.length < 2 || !Number.isInteger(port) || port < 1 || port > 65535) throw new Error(\"Production database/Redis endpoints are invalid\");",
+      "formula": "if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error(\"Production database/Redis endpoints are invalid\");",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
@@ -59926,7 +59895,7 @@
       }
     },
     {
-      "id": "m1.apps.backend.release.runtime.5",
+      "id": "m1.apps.backend.release.runtime.4",
       "concept": "db.connectionTimeoutMillis · literal 3000",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
@@ -59935,7 +59904,7 @@
         "value": 3000,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.release.runtime.5"
+          "m1.apps.backend.release.runtime.4"
         ]
       },
       "formula": "connectionTimeoutMillis: 3000",
@@ -59962,7 +59931,7 @@
       }
     },
     {
-      "id": "m1.apps.backend.release.runtime.6",
+      "id": "m1.apps.backend.release.runtime.5",
       "concept": "db.query_timeout · literal 3000",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
@@ -59971,7 +59940,7 @@
         "value": 3000,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.release.runtime.6"
+          "m1.apps.backend.release.runtime.5"
         ]
       },
       "formula": "query_timeout: 3000",
@@ -66258,6 +66227,42 @@
         "file": "apps/backend/utils/middleware.ts",
         "line": 39,
         "column": 23
+      }
+    },
+    {
+      "id": "m1.apps.backend.utils.postgresUrl.1",
+      "concept": "postgresUrl · literal 2",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 2,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.utils.postgresUrl.1"
+        ]
+      },
+      "formula": "if (![\"postgres:\", \"postgresql:\"].includes(url.protocol) || !url.hostname || !url.username || url.pathname.length < 2 || url.hash || /[\\s/%\\\\]/.test(url.hostname) || url.port === \"0\") { throw new Error(\"Production database endpoint is invalid\"); }",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/utils/postgresUrl.ts#L7",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/utils/postgresUrl.ts",
+        "line": 7,
+        "column": 29
       }
     },
     {

@@ -2248,7 +2248,7 @@
     },
     {
       "path": "scripts/tests/backup-alerts.test.ts",
-      "hash": "953691c5828b6eec298af3a28c9aae07827816f8dfc5853fb64e1b5e183a3d26"
+      "hash": "7ccbe4bb445003fa8229ebea43e8cac0f4563bd7e96aa30ed19d11832bf7ab56"
     },
     {
       "path": "scripts/tests/boundaries.test.ts",
@@ -2359,6 +2359,10 @@
       "hash": "9c91911450ba57ea9c556e3363d8a7f28af5d2aa4c9185fbb46ac12acbdff998"
     },
     {
+      "path": "scripts/tests/fixtures/reconfigure.ts",
+      "hash": "2e2435e3e51971cb91858b81fde07d3528a70e6a217c0380fef9b8a9cbe39b2f"
+    },
+    {
       "path": "scripts/tests/fixtures/unreviewed-host.ts",
       "hash": "8b5893720f4b693e3ce32ec4b99700cb45d9bd393128459110c88f3ad66bab06"
     },
@@ -2384,7 +2388,7 @@
     },
     {
       "path": "scripts/tests/hardening-operations.test.ts",
-      "hash": "bf2ea5bed675fa8568130b546ed36a55e4b9c5f27025c29bf64f929731974b6e"
+      "hash": "ac9cd977778d0607fbde84ace136a4e58560cdc21030ce6e0b48a6e5318ee76b"
     },
     {
       "path": "scripts/tests/historical-analysis-cache.test.ts",
@@ -2439,8 +2443,20 @@
       "hash": "d714ba2657d0826cd5013f9812726c6b715e4180ae9b3efafbba2b3d54078b02"
     },
     {
+      "path": "scripts/tests/reconfigure.test.ts",
+      "hash": "d9e3df57a8b9d577a69730ed384bfa38efab05fd7456ebe9c1e8c79cd42136e3"
+    },
+    {
+      "path": "scripts/tests/release-compose.test.ts",
+      "hash": "f3f207b518bdb705763a55ec00839004f7a1483d865e73873c7dc6596fed32ef"
+    },
+    {
+      "path": "scripts/tests/release-image.test.ts",
+      "hash": "22d4adb22a4746d5a2a704f798e71946e84e43073b5a3e4f041b411e5f3f71f4"
+    },
+    {
       "path": "scripts/tests/release.test.ts",
-      "hash": "1d6af15468cde07079aedcb20a9c97de0cf8ba3f548bf9ae7f387055dbff267b"
+      "hash": "baf4878d5106255d37481befe7d5e284bafd41b7ced76c114a7e0fb6f587251a"
     },
     {
       "path": "scripts/tests/scored-challenges.test.ts",

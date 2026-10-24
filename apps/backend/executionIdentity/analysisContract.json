@@ -1,6 +1,6 @@
 {
   "schema": "execution-loading-analysis/1",
-  "policy": "51d1a0608962348029995c310510a160e362260aa4ba2263a89eeaab0a3ae397",
+  "policy": "eeb8703a5988c7887ad8fac520bdbff28b0a0663d5ada4e4e731e06ef9137f6b",
   "modules": {
     "apps/backend/actions/contract.ts": {
       "hash": "15fe6aa3879ab8ccc67a23d579a4e2e9b79f71631dd7687ad192f788c27229ad",
@@ -2053,7 +2053,7 @@
       ]
     },
     "apps/backend/infra/workerConnection.ts": {
-      "hash": "96b6f24b763b0eb7bde1e8491faa5a455925c1ba541e76e5aadc21a100a748f8",
+      "hash": "e8cc0dc32ae54ddde80e81d821402208405830de1c4ffeb6df8a8ac31e41d2f6",
       "requests": [
         {
           "path": "pg",
@@ -2061,6 +2061,10 @@
         },
         {
           "path": "node:crypto",
+          "kind": "import-statement"
+        },
+        {
+          "path": "../utils/postgresUrl",
           "kind": "import-statement"
         }
       ]
@@ -3129,7 +3133,7 @@
       ]
     },
     "apps/backend/release/runtime.ts": {
-      "hash": "c7ce7e7be1868c70f750ec03d038f142d72f4d7c3c01cedb2a1ca5d2cf38f637",
+      "hash": "49901fcdfc6c79acbdc78f8d6b15baf3f4ec921c474aa73cee5e9edcbb955912",
       "requests": [
         {
           "path": "node:fs/promises",
@@ -3141,6 +3145,10 @@
         },
         {
           "path": "./migrations",
+          "kind": "import-statement"
+        },
+        {
+          "path": "../utils/postgresUrl",
           "kind": "import-statement"
         }
       ]
@@ -3834,6 +3842,10 @@
           "kind": "import-statement"
         }
       ]
+    },
+    "apps/backend/utils/postgresUrl.ts": {
+      "hash": "af16f53b61959d07bceb684e839b44d5e30dde604641547c39aae2b762d96d76",
+      "requests": []
     },
     "apps/backend/utils/rateLimiter.ts": {
       "hash": "77acf8d15de12e1575b1fa1073d4aaf5d259501ced76e95ee5847b648ce66915",
