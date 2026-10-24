@@ -625,6 +625,8 @@ class OperationsTests(unittest.TestCase):
             self.assertIn("restore-failed-or-overdue", ops.read_json(self.state / "ops-status.json")["reasons"])
 
     def test_restore_entrypoint_failure_persists_and_alerts_without_secret_logs(self):
+        unit = Path(__file__).with_name("systemd").joinpath("infraforge-restore-drill.service").read_text()
+        self.assertIn("LoadCredential=release-env:/etc/infraforge/release.env", unit.splitlines())
         self.healthy_receipt()
         original = ops.read_json
         stderr = io.StringIO()
@@ -717,6 +719,18 @@ class OperationsTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "age locks"):
                 ops.prune(R2_CONFIG, NOW)
             self.assertEqual(opener.open.call_count, 2)
+
+    def test_lock_verification_bounds_body_and_refuses_invalid_token_before_http(self):
+        with self.lock_api() as opener:
+            response = opener.open.return_value.__enter__.return_value
+            response.read.return_value += b" " * 262145  # Valid JSON plus padding.
+            with self.assertRaisesRegex(ValueError, "verification budget"):
+                ops.verify_retention_locks(R2_CONFIG)
+            response.read.assert_called_once_with(262145)
+        with self.lock_api() as opener, patch.object(ops, "private_text", return_value="two token values"):
+            with self.assertRaisesRegex(ValueError, "Invalid private lock-read API token"):
+                ops.verify_retention_locks(R2_CONFIG)
+            opener.open.assert_not_called()
 
     def test_unverified_locks_preserve_previous_backup_receipt_and_local_copy(self):
         self.archive("backup.old")
