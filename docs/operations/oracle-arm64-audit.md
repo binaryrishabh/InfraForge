@@ -45,6 +45,16 @@ The bootstrap backup proof uses mutable `postgres:18`
 and record those exact image indexes before any separately authorized scratch
 drill; do not call those fixtures pinned. This task did not execute them.
 
+Also checked those secondary image inputs through the same registry/config method:
+
+| Fixture image / source | Observed index SHA256 | ARM64 child SHA256 |
+| --- | --- | --- |
+| `postgres:18` — `ops/bootstrap/prove-backup.sh:16` (mutable tag) | [`sha256:edb0c08dc33befd0262ab3b5cf1c4f3f8cfd8b09e88c05b45adee29d6761ddb6`](https://registry-1.docker.io/v2/library/postgres/manifests/sha256:edb0c08dc33befd0262ab3b5cf1c4f3f8cfd8b09e88c05b45adee29d6761ddb6) | `sha256:a8be76d23699a6c366437e9f80ead007975f24c35e01c9ee0533c6930ab57ac1` |
+| `redis:8-alpine` — `scripts/release/rehearse.ts:105` (pinned) | [`sha256:0bf6577d7774e592b29d093e3ac9390eb91e13d72c21e506afce736de5e0eeb0`](https://registry-1.docker.io/v2/library/redis/manifests/sha256:0bf6577d7774e592b29d093e3ac9390eb91e13d72c21e506afce736de5e0eeb0) | `sha256:0819246a2bb1979f7745a8bae2559a2ffa49071ef7a5e7213b3e347e162aeb26` |
+
+The dynamically built pool/proxy fixture derives from the audited Alpine index;
+other fixture application images derive from the audited application base.
+
 ## Native dependency inventory
 
 The Dockerfile installs the **whole workspace**, including web build dependencies
@@ -103,7 +113,7 @@ succeeded. Artifact contents/checksums, not that initial error, support this res
 [Prisma's ARM target table](https://www.prisma.io/docs/orm/v7/reference/prisma-schema-reference)
 also identifies `linux-arm64-openssl-3.0.x`. `prisma-client` generation
 (`apps/backend/prisma/schema.prisma:1-4`) happens **inside the native image**
-(`apps/backend/Dockerfile:61`). Runtime uses the JavaScript PostgreSQL adapter
+(`apps/backend/Dockerfile:57`). Runtime uses the JavaScript PostgreSQL adapter
 (`apps/backend/lib/prisma.ts:2-15`), not an x86 Rust query engine copied from this
 Windows workspace. Schema-engine migrate/status/diff still require the native
 CLI engine. Check `prisma -v` in the actual image and retain all migration/session,

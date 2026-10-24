@@ -2,6 +2,9 @@
 
 `main` is the sole working/release branch. Start new-host or account recovery with
 [PRODUCTION_BOOTSTRAP.md](PRODUCTION_BOOTSTRAP.md), not the historical cutover notes.
+For the planned fresh-database move to Oracle A1, use [ORACLE_MIGRATION.md](ORACLE_MIGRATION.md)
+and its [ARM64 evidence](operations/oracle-arm64-audit.md). The existing `EC2_*`
+GitHub setting names still select the SSH host; their names do not require AWS.
 
 ## PostgreSQL hosting
 
