@@ -2,8 +2,9 @@
 
 This is an owner-operated installation procedure, not a record of an installed
 system. The repository changes create no AWS resources, contact no database and
-install no host services. Use Neon's built-in restore history first; verify the
-project's actual history window in the Neon console. The independent backup RPO
+install no host services. Self-hosted PostgreSQL has no managed restore history; these daily off-host
+snapshots are mandatory. For a managed provider, separately verify its actual
+restore-history window. The independent backup RPO
 is up to one day. Recovery time and actual database size are **Unknown** until
 measured. There is no automatic production restore.
 
@@ -24,8 +25,8 @@ client-side encryption or Object Lock.
 One successful backup per UTC date is stored at
 `backups/daily/YYYY-MM-DD.tar`. The first successful backup of each ISO week is
 also uploaded at `backups/weekly/YYYY-Www.tar`; missed Monday runs therefore
-catch up later in that week. Daily objects expire after 7 days and weekly ones
-after 28 days, targeting 7 daily plus 4 weekly copies during healthy operation.
+catch up later in that week. Daily and weekly objects expire after 28 days, matching the backup window in
+the legal drafts, targeting 28 daily plus 4 weekly copies during healthy operation.
 Lifecycle expiry is asynchronous and rounds to UTC day boundaries: these are
 age windows, not an exact object count or a guarantee when jobs fail. Retrying
 the same date/week creates a version; noncurrent versions expire after one day
@@ -96,7 +97,7 @@ If AWS CLI v2 is absent, follow the official signed Linux x86_64 installer
 [instructions](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html).
 Use the existing EC2 instance profile through IMDS; **do not run `aws configure`**
 or put AWS access keys on the host. The runner clears ambient credentials and
-profiles and uses only that role. The host must reach Neon over TLS and S3,
+profiles and uses only that role. For a remote database, the host must reach PostgreSQL over verified TLS and S3,
 CloudWatch, the public site and API over HTTPS. Prefer the existing S3 gateway
 endpoint if present; this stack creates no endpoint, NAT gateway or network rule.
 
@@ -134,32 +135,43 @@ proof and snapshot restore run sequentially: their database limits are 1 CPU /
 Docker disk headroom on the 4 GiB host before enabling the drill. The unit's
 MemoryMax bounds the client processes, not Docker-daemon-created containers.
 
-In **Neon → Connect**, choose the production database and turn **Connection
-pooling off**. Choose a backup role that can read all application tables,
-sequences and required schemas (including any RLS-protected tables). Use a
-PostgreSQL URL, percent-encode special credential characters, and retain only
-`sslmode=require` or `sslmode=verify-full`, and optional
-`channel_binding=require` query parameters. The runner always enforces
-`verify-full`, system CA trust and required channel binding. It rejects pooler
-hosts and any alternate host, service or routing query parameter.
+The daily backup uses the same literal `MIGRATION_DATABASE_URL` as the release.
+For any remote provider use a direct endpoint with `sslmode=verify-full` and a
+certificate trusted by the system CA store. Optional `channel_binding=require`
+is retained if requested; it is not a provider-wide requirement. No pooler host,
+routing option, duplicate query option or weaker TLS mode is accepted. Credentials
+must be percent-encoded. Keep the URL on one `MIGRATION_DATABASE_URL=...` line;
+single/double quotes are allowed, interpolation and whitespace are refused.
 
-Enter that URL through this hidden prompt; it never appears in argv or history:
+For the local `postgres:5432` service, `sslmode=disable` is permitted. The runner
+resolves its current bridge address using Docker labels, verifies exactly one
+running container in project `infraforge`, service `postgres`, no published ports,
+and exactly one owned internal bridge. Host-side libpq reaches that private
+address without a published listener; traffic never leaves the machine. Other
+hosts, including RFC1918 and loopback addresses in the URL, still require TLS.
+The local initial owner role can dump all application tables. For a remote backup
+role, ensure read access to every application table/sequence, including RLS.
 
 ```sh
-sudo sh -c 'umask 077; systemd-ask-password --timeout=60 "Direct Neon backup URL:" > /etc/infraforge/ops/neon-url'
-sudo chmod 0600 /etc/infraforge/ops/neon-url
 sudo install -m 0644 ops/backup-alerts/systemd/* /etc/systemd/system/
 sudo systemctl daemon-reload
 sudo systemd-analyze verify /etc/systemd/system/infraforge-backup.service /etc/systemd/system/infraforge-restore-drill.service /etc/systemd/system/infraforge-ops-metrics.service
 ```
 
-`LoadCredential` exposes the private URL only to the backup unit; `run.sh`
-passes it as `NEON_BACKUP_DATABASE_URL`. The Python runner consumes and removes
-that variable, parses it into an otherwise clean libpq environment, then invokes
-the existing backup script without any URL argument. Restore and AWS commands
-receive no source credentials. No environment file is loaded.
+`LoadCredential=release-env:/etc/infraforge/release.env` supplies a fresh private
+copy at each backup start. Only the migration URL is extracted, never sourced or
+printed; no extra backup URL needs updating on a provider switch. The runner
+uses an otherwise clean libpq environment, and the existing custom-format dump
+script receives no URL argument. AWS and restore commands receive no database
+credentials. AWS still uses only the instance role. The old `neon-url` credential
+is no longer consumed; remove it through the owner's secret-management process.
 
-Run the first jobs sequentially, check their results, then enable schedules:
+Run the first jobs sequentially, check their results, then enable schedules.
+On the 4 GiB host, run the full restore drill in a maintenance window with the
+application stopped, or on an encrypted scratch host: its synthetic proof adds
+1 CPU / 768 MiB beyond the client cgroup. Do not automatically enable the monthly
+drill timer on the live self-hosted stack. Daily backup and metrics timers fit
+the documented allowance; serialize backups and release builds.
 
 ```sh
 sudo systemctl start infraforge-backup.service
@@ -167,7 +179,8 @@ sudo systemctl start infraforge-restore-drill.service
 sudo systemctl start infraforge-ops-metrics.service
 sudo systemctl status infraforge-backup.service infraforge-restore-drill.service infraforge-ops-metrics.service --no-pager
 sudo journalctl -u infraforge-backup -u infraforge-restore-drill -u infraforge-ops-metrics --since today --no-pager
-sudo systemctl enable --now infraforge-backup.timer infraforge-restore-drill.timer infraforge-ops-metrics.timer
+sudo systemctl enable --now infraforge-backup.timer infraforge-ops-metrics.timer
+# Enable infraforge-restore-drill.timer only on a separately budgeted drill host.
 sudo systemctl list-timers 'infraforge-*' --all
 ```
 
@@ -257,8 +270,8 @@ RESTORE_DISPOSABLE=local-only bash ops/bootstrap/postgres-restore-verify.sh "$PW
 
 The loopback PostgreSQL 18 server and `local_restore_role` must be newly
 provisioned disposable resources; never choose an existing application server.
-Keep archive checksums byte exact. On a real incident, use Neon's built-in
-restore history first, or restore S3 data into a **new** database/project,
+Keep archive checksums byte exact. On a real incident, restore S3 data into a **new** database/server (or use
+a separately verified managed-provider restore point),
 recreate required roles/provider settings, validate application login and old/new
 run reports in isolation, and obtain the owner's explicit cutover approval.
 
@@ -276,17 +289,17 @@ the missing/stale monitoring alerts intentionally remain active.
 ## Estimated monthly cost
 
 Planning example, **not measured production cost**: US East (N. Virginia), one
-host, seven metrics/alarms, a 1 GB tar snapshot, 11 retained copies, 35 PUTs,
+host, seven metrics/alarms, a 1 GB tar snapshot, 32 retained copies, 35 PUTs,
 43,200 metric batches, and fewer than 1,000 email deliveries/month. Excluding
 free tiers, seven metrics at $0.30 plus seven standard alarms at $0.10 are
-about **$2.80/month**. S3 Standard at $0.023/GB-month adds about **$0.25/month**
-for the nominal 11 GB, plus well under $0.01 for those PUTs. At $0.01 per 1,000
+about **$2.80/month**. S3 Standard at $0.023/GB-month adds about **$0.74/month**
+for the nominal 32 GB, plus well under $0.01 for those PUTs. At $0.01 per 1,000
 API requests before free-tier allowances, 43,200 metric batches add about $0.43.
 Allow roughly
 **$3–4/month** for this example and lifecycle/version overlap. Reprice in the
 actual EC2 region before activation.
 
-The **full cost is Unknown**: dump size, Neon backup-read/compute/egress impact,
+The **full cost is Unknown**: dump size, remote backup-read/compute/egress impact,
 encrypted EBS capacity, actual retained versions, existing NAT/data paths,
 operator downloads, taxes and application baseline are unmeasured. This stack
 adds no EC2 host, paid external checker, KMS key, agent logs or NAT gateway.
@@ -318,3 +331,5 @@ wrapper runs through `test:tooling`. No measured restore result is claimed by
 these offline checks. Official references: [Neon pg_dump guidance](https://neon.com/docs/manage/backup-pg-dump),
 [S3 lifecycle semantics](https://docs.aws.amazon.com/AmazonS3/latest/userguide/intro-lifecycle-rules.html),
 and [PostgreSQL libpq TLS parameters](https://www.postgresql.org/docs/18/libpq-connect.html).
+
+For the fresh-start owner cutover and a URL-only provider switch, see [SELF_HOSTED_POSTGRES.md](../SELF_HOSTED_POSTGRES.md). No backup or restore result is claimed until the owner runs and records it.

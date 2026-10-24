@@ -19,7 +19,7 @@
         "BucketEncryption": { "ServerSideEncryptionConfiguration": [{ "ServerSideEncryptionByDefault": { "SSEAlgorithm": "AES256" } }] },
         "VersioningConfiguration": { "Status": "Enabled" },
         "LifecycleConfiguration": { "Rules": [
-          { "Id": "DailySevenDays", "Status": "Enabled", "Prefix": "backups/daily/", "ExpirationInDays": 7, "NoncurrentVersionExpiration": { "NoncurrentDays": 1 } },
+          { "Id": "DailyFourWeeks", "Status": "Enabled", "Prefix": "backups/daily/", "ExpirationInDays": 28, "NoncurrentVersionExpiration": { "NoncurrentDays": 1 } },
           { "Id": "WeeklyFourWeeks", "Status": "Enabled", "Prefix": "backups/weekly/", "ExpirationInDays": 28, "NoncurrentVersionExpiration": { "NoncurrentDays": 1 } },
           { "Id": "RemoveExpiredMarkers", "Status": "Enabled", "Prefix": "backups/", "ExpiredObjectDeleteMarker": true, "AbortIncompleteMultipartUpload": { "DaysAfterInitiation": 1 } }
         ] }

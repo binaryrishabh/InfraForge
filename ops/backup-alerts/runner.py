@@ -1,6 +1,7 @@
 """Linux-only operational entrypoint. No SDK, dotenv loading, URL argv or secret logs."""
 import datetime as dt
 import hashlib
+import ipaddress
 import json
 import math
 import os
@@ -35,28 +36,80 @@ def clean_env():
 
 
 def source_env(url):
-    """Accept only one direct Neon endpoint; discard all ambient libpq routing."""
+    """Accept one direct PostgreSQL endpoint; discard ambient libpq routing."""
     try:
         parsed = urlsplit(url)
         host = parsed.hostname or ""
-        params = parse_qs(parsed.query, strict_parsing=True)
+        params = parse_qs(parsed.query, strict_parsing=True, keep_blank_values=True)
+        local = host == "postgres" and parsed.port in (None, 5432)
         if (parsed.scheme not in ("postgres", "postgresql") or parsed.fragment or
-                not re.fullmatch(r"ep-[a-z0-9-]+\.[a-z0-9.-]+\.neon\.tech", host) or
-                "-pooler" in host or parsed.port not in (None, 5432) or
+                not host or re.search(r"[\s/\\%]", host) or
+                "-pooler." in host or
                 not parsed.username or not parsed.password or not parsed.path[1:] or
-                "/" in parsed.path[1:] or
-                set(params) - {"sslmode", "channel_binding"} or
-                params.get("sslmode", ["require"]) not in (["require"], ["verify-full"]) or
-                params.get("channel_binding", ["require"]) != ["require"]):
+                "/" in parsed.path[1:] or parsed.port == 0 or
+                set(params) - {"sslmode", "channel_binding"}):
+            raise ValueError
+        modes = (["disable"], ["verify-full"]) if local else (["verify-full"],)
+        if params.get("sslmode", ["disable"] if local else []) not in modes:
+            raise ValueError
+        if params.get("channel_binding", ["require"]) != ["require"]:
             raise ValueError
         result = clean_env()
-        result.update(PGHOST=host, PGPORT="5432", PGUSER=unquote(parsed.username),
+        result.update(PGHOST=host, PGPORT=str(parsed.port or 5432), PGUSER=unquote(parsed.username),
                       PGPASSWORD=unquote(parsed.password), PGDATABASE=unquote(parsed.path[1:]),
-                      PGSSLMODE="verify-full", PGSSLROOTCERT="system", PGCHANNELBINDING="require",
+                      PGSSLMODE=params.get("sslmode", ["disable"])[0],
+                      PGCHANNELBINDING=params.get("channel_binding", ["prefer"])[0],
                       PGPASSFILE="/dev/null", PGCONNECT_TIMEOUT="5")
+        if result["PGSSLMODE"] == "verify-full":
+            result["PGSSLROOTCERT"] = "system"
         return result
     except (ValueError, TypeError):
-        raise ValueError("Invalid direct Neon backup connection") from None
+        raise ValueError("Invalid direct PostgreSQL backup connection") from None
+
+
+def source_url():
+    # systemd copies the owner-managed release.env into a private credential.
+    # Parse one literal URL only; never execute/source the file or interpolate it.
+    injected = os.environ.pop("BACKUP_DATABASE_URL", None)
+    if injected is not None:
+        return injected
+    lines = (Path(os.environ["CREDENTIALS_DIRECTORY"]) / "release-env").read_text().splitlines()
+    values = [line.split("=", 1)[1].strip() for line in lines if line.startswith("MIGRATION_DATABASE_URL=")]
+    if len(values) != 1:
+        raise ValueError("Exactly one literal MIGRATION_DATABASE_URL is required")
+    value = values[0]
+    if len(value) > 1 and value[0] == value[-1] and value[0] in "\"'":
+        value = value[1:-1]
+    if not value or re.search(r"[\s$]", value):
+        raise ValueError("Backup URL must be literal; percent-encode special characters")
+    return value
+
+
+def local_source(env):
+    """Resolve only our private, unpublished Compose service on the Linux host."""
+    if env["PGHOST"] != "postgres":
+        return
+    ids = command(["docker", "ps", "-q", "--filter", "label=com.docker.compose.project=infraforge",
+                   "--filter", "label=com.docker.compose.service=postgres"], env=clean_env()).decode().split()
+    if len(ids) != 1:
+        raise ValueError("Exactly one running private PostgreSQL container is required")
+    records = json.loads(command(["docker", "inspect", ids[0]], env=clean_env()))
+    db = records[0]
+    labels = db["Config"]["Labels"]
+    networks = db["NetworkSettings"]["Networks"]
+    if (len(records) != 1 or labels.get("com.docker.compose.project") != "infraforge" or
+            labels.get("com.docker.compose.service") != "postgres" or not db["State"]["Running"] or
+            db["HostConfig"].get("PortBindings") or len(networks) != 1):
+        raise ValueError("PostgreSQL container ownership/network mismatch")
+    attached = next(iter(networks.values()))
+    network = json.loads(command(["docker", "network", "inspect", attached["NetworkID"]], env=clean_env()))[0]
+    if (not network.get("Internal") or network.get("Driver") != "bridge" or
+            network.get("Labels", {}).get("com.docker.compose.project") != "infraforge"):
+        raise ValueError("PostgreSQL backup requires the owned internal bridge")
+    address = ipaddress.ip_address(attached["IPAddress"])
+    if not address.is_private or address.is_loopback or address.is_unspecified:
+        raise ValueError("Invalid private PostgreSQL address")
+    env.update(PGHOST=str(address), PGHOSTADDR=str(address))
 
 
 def read_json(path):
@@ -119,9 +172,10 @@ def verify_archive(archive):
 def backup(config, now=None):
     started = time.time() if now is None else now
     instant = dt.datetime.fromtimestamp(started, dt.timezone.utc)
-    url = os.environ.pop("NEON_BACKUP_DATABASE_URL")
+    url = source_url()
     db_env = source_env(url)
     del url
+    local_source(db_env)
     root = STATE / "backups"
     root.mkdir(mode=0o700, exist_ok=True)
     previous = read_json(STATE / "backup.json")

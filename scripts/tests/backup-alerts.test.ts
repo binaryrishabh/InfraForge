@@ -11,7 +11,7 @@ test("backup template keeps storage private, encrypted, versioned and retained",
   expect(Object.values(bucket.Properties.PublicAccessBlockConfiguration)).toEqual([true, true, true, true]);
   expect(bucket.Properties.VersioningConfiguration.Status).toBe("Enabled");
   expect(bucket.Properties.BucketEncryption.ServerSideEncryptionConfiguration[0].ServerSideEncryptionByDefault.SSEAlgorithm).toBe("AES256");
-  expect(bucket.Properties.LifecycleConfiguration.Rules.slice(0, 2).map((rule: { ExpirationInDays: number }) => rule.ExpirationInDays)).toEqual([7, 28]);
+  expect(bucket.Properties.LifecycleConfiguration.Rules.slice(0, 2).map((rule: { ExpirationInDays: number }) => rule.ExpirationInDays)).toEqual([28, 28]);
   const statements = template.Resources.HostPolicy.Properties.PolicyDocument.Statement;
   expect(statements.map((statement: { Action: string }) => statement.Action)).toEqual(["s3:PutObject", "cloudwatch:PutMetricData"]);
   expect(statements[0].Resource.map((resource: Record<string, string>) => resource["Fn::Sub"])).toEqual([
@@ -34,7 +34,7 @@ test("all seven alarms notify email and fail on missing metrics", () => {
 
 test("operations runner passes offline upload, isolation and failure regressions", () => {
   const result = Bun.spawnSync([process.platform === "win32" ? "python" : "python3", "-B", "ops/backup-alerts/test_runner.py"], { cwd: root });
-  expect(result.stderr.toString()).toContain("Ran 20 tests");
+  expect(result.stderr.toString()).toContain("Ran 23 tests");
   expect(result.stderr.toString()).toContain("OK");
   expect(result.exitCode).toBe(0);
 }, 30_000);

@@ -20,7 +20,7 @@ spec.loader.exec_module(ops)
 CONFIG = {"region": "us-east-1", "bucket": "fixture-backups", "instance_id": "i-0123456789abcdef0",
           "site_url": "https://site.example.invalid/", "api_url": "https://api.example.invalid/health/ready",
           "worker_container": "fixture-worker", "drill_image": "postgres:18@sha256:" + "a" * 64}
-URL = "postgresql://fixture:synthetic%24password@ep-fixture.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+URL = "postgresql://fixture:synthetic%24password@ep-fixture.us-east-1.aws.neon.tech/neondb?sslmode=verify-full&channel_binding=require"
 NOW = dt.datetime(2026, 10, 20, 2, 15, tzinfo=dt.timezone.utc).timestamp()
 
 
@@ -53,7 +53,7 @@ class OperationsTests(unittest.TestCase):
         return b""
 
     def backup(self, now=NOW):
-        with patch.dict(os.environ, {"NEON_BACKUP_DATABASE_URL": URL}, clear=True), patch.object(ops, "command", self.fake_command):
+        with patch.dict(os.environ, {"BACKUP_DATABASE_URL": URL}, clear=True), patch.object(ops, "command", self.fake_command):
             ops.backup(CONFIG, now)
 
     def test_direct_url_and_clean_libpq_environment(self):
@@ -62,17 +62,75 @@ class OperationsTests(unittest.TestCase):
         self.assertEqual(env["PGSSLMODE"], "verify-full")
         self.assertEqual(env["PGSSLROOTCERT"], "system")
         self.assertEqual(env["PGPASSWORD"], "synthetic$password")
-        self.assertFalse({"PGHOSTADDR", "PGSERVICE", "SECRET_MARKER", "NEON_BACKUP_DATABASE_URL"} & env.keys())
+        self.assertFalse({"PGHOSTADDR", "PGSERVICE", "SECRET_MARKER", "BACKUP_DATABASE_URL"} & env.keys())
 
     def test_pooled_remote_routing_and_weak_tls_refused(self):
         for bad in [URL.replace("ep-fixture.", "ep-fixture-pooler."),
-                    URL.replace(".neon.tech", ".attacker.invalid"),
                     URL + "&hostaddr=127.0.0.1", URL + "&service=redirect",
-                    URL.replace("sslmode=require", "sslmode=disable"),
+                    URL.replace("sslmode=verify-full", "sslmode=disable"),
                     URL.replace("channel_binding=require", "channel_binding=disable"),
                     URL.replace("postgresql:", "https:"), URL + "#fragment"]:
-            with self.subTest(url_variant=bad.split("@")[-1]), self.assertRaisesRegex(ValueError, "Invalid direct Neon"):
+            with self.subTest(url_variant=bad.split("@")[-1]), self.assertRaisesRegex(ValueError, "Invalid direct PostgreSQL"):
                 ops.source_env(bad)
+
+    def test_remote_provider_and_private_service_policy(self):
+        remote = "postgresql://fixture:password@db.example.invalid:6543/app?sslmode=verify-full"
+        self.assertEqual(ops.source_env(remote)["PGPORT"], "6543")
+        self.assertEqual(ops.source_env(remote)["PGCHANNELBINDING"], "prefer")
+        local = "postgresql://fixture:password@postgres/app?sslmode=disable"
+        self.assertEqual(ops.source_env(local)["PGSSLMODE"], "disable")
+        self.assertNotIn("PGSSLROOTCERT", ops.source_env(local))
+        for host in ["localhost", "127.0.0.1", "10.0.0.1", "postgres:6432", "other"]:
+            with self.assertRaises(ValueError):
+                ops.source_env(local.replace("@postgres/", "@" + host + "/"))
+        for extra in ["&sslmode=disable", "&sslmode=verify-full", "&host=postgres", "&pgbouncer=true", "&pool_mode=transaction"]:
+            with self.assertRaises(ValueError):
+                ops.source_env(remote + extra)
+        for bad in [remote.replace("sslmode=verify-full", "sslmode=require"), remote.split("?")[0],
+                    remote.replace(":6543", ":0"), remote.replace("fixture:password@", ""),
+                    remote.replace("postgresql:", "https:"), remote + "&channel_binding=", remote + "#fragment"]:
+            with self.assertRaises(ValueError):
+                ops.source_env(bad)
+
+    def test_source_url_is_literal_migration_url_from_release_credential(self):
+        path = self.state / "release-env"
+        with patch.dict(os.environ, {"CREDENTIALS_DIRECTORY": str(self.state)}, clear=True):
+            path.write_text('OTHER=ignored\nMIGRATION_DATABASE_URL="' + URL + '"\n')
+            self.assertEqual(ops.source_url(), URL)
+            for content in ["OTHER=ignored", "MIGRATION_DATABASE_URL=" + URL + "\nMIGRATION_DATABASE_URL=" + URL,
+                            "MIGRATION_DATABASE_URL=${REDIRECT}", "MIGRATION_DATABASE_URL=some url"]:
+                path.write_text(content)
+                with self.assertRaises(ValueError):
+                    ops.source_url()
+
+    def test_local_backup_checks_container_and_internal_network_ownership(self):
+        db = {"Config": {"Labels": {"com.docker.compose.project": "infraforge", "com.docker.compose.service": "postgres"}},
+              "State": {"Running": True}, "HostConfig": {"PortBindings": {}},
+              "NetworkSettings": {"Networks": {"private": {"NetworkID": "network", "IPAddress": "172.20.0.2"}}}}
+        network = {"Internal": True, "Driver": "bridge", "Labels": {"com.docker.compose.project": "infraforge"}}
+        ids = b"owned"
+        def inspect(args, **kwargs):
+            self.assertNotIn("PGPASSWORD", kwargs["env"])
+            if args[1] == "ps":
+                return ids
+            return json.dumps([network] if args[1] == "network" else [db]).encode()
+        with patch.object(ops, "command", inspect):
+            env = ops.source_env("postgresql://fixture:password@postgres/app")
+            ops.local_source(env)
+            self.assertEqual(env["PGHOSTADDR"], "172.20.0.2")
+            for target, key, bad in [(db["Config"]["Labels"], "com.docker.compose.project", "other"),
+                    (db["Config"]["Labels"], "com.docker.compose.service", "other"),
+                    (db["State"], "Running", False), (db["HostConfig"], "PortBindings", {"5432/tcp": [{}]}),
+                    (network, "Internal", False), (network, "Driver", "host"),
+                    (network["Labels"], "com.docker.compose.project", "other"),
+                    (db["NetworkSettings"]["Networks"]["private"], "IPAddress", "8.8.8.8")]:
+                old = target[key]; target[key] = bad
+                with self.assertRaises(ValueError):
+                    ops.local_source(ops.source_env("postgresql://fixture:password@postgres/app"))
+                target[key] = old
+            for ids in [b"", b"one two"]:
+                with self.assertRaises(ValueError):
+                    ops.local_source(ops.source_env("postgresql://fixture:password@postgres/app"))
 
     def test_daily_and_weekly_put_only_encrypted_checked_bundle(self):
         import tarfile
@@ -86,7 +144,7 @@ class OperationsTests(unittest.TestCase):
                     self.assertEqual(tar.getnames(), ["archive.dump", "SHA256SUMS"])
                 self.assertNotIn("PGPASSWORD", kwargs["env"])
             return original(args, **kwargs)
-        with patch.object(ops, "command", check), patch.dict(os.environ, {"NEON_BACKUP_DATABASE_URL": URL}, clear=True):
+        with patch.object(ops, "command", check), patch.dict(os.environ, {"BACKUP_DATABASE_URL": URL}, clear=True):
             ops.backup(CONFIG, NOW)
         uploads = [args for args, _, _ in self.calls if args[0] == "aws"]
         self.assertEqual([args[args.index("--key") + 1] for args in uploads],
@@ -110,7 +168,7 @@ class OperationsTests(unittest.TestCase):
             if any("backups/weekly" in arg for arg in args):
                 raise subprocess.CalledProcessError(1, "mock-aws")
             return original(args, **kwargs)
-        with patch.object(ops, "command", fail_weekly), patch.dict(os.environ, {"NEON_BACKUP_DATABASE_URL": URL}, clear=True):
+        with patch.object(ops, "command", fail_weekly), patch.dict(os.environ, {"BACKUP_DATABASE_URL": URL}, clear=True):
             with self.assertRaises(subprocess.CalledProcessError):
                 ops.backup(CONFIG, NOW)
         self.assertEqual(ops.read_json(self.state / "backup.json"), receipt)
@@ -118,7 +176,7 @@ class OperationsTests(unittest.TestCase):
         self.assertFalse((self.state / "backups/backup.fixture/backup.tar").exists())
 
     def test_failed_dump_never_uploads_or_writes_receipt(self):
-        with patch.object(ops, "command", side_effect=subprocess.TimeoutExpired("mock-dump", 700)), patch.dict(os.environ, {"NEON_BACKUP_DATABASE_URL": URL}, clear=True):
+        with patch.object(ops, "command", side_effect=subprocess.TimeoutExpired("mock-dump", 700)), patch.dict(os.environ, {"BACKUP_DATABASE_URL": URL}, clear=True):
             with self.assertRaises(subprocess.TimeoutExpired):
                 ops.backup(CONFIG, NOW)
         self.assertFalse((self.state / "backup.json").exists())
@@ -187,7 +245,7 @@ class OperationsTests(unittest.TestCase):
     def test_restore_reuses_proof_and_hardened_restore_with_no_source_credentials(self):
         archive = self.archive()
         ops.write_json(self.state / "backup.json", {"snapshot_at": NOW - 60, "archive": archive.name})
-        with patch.object(ops.time, "time", return_value=NOW), patch.object(ops, "command", self.fake_command), patch.dict(os.environ, {"PGPASSWORD": "synthetic", "NEON_BACKUP_DATABASE_URL": URL}):
+        with patch.object(ops.time, "time", return_value=NOW), patch.object(ops, "command", self.fake_command), patch.dict(os.environ, {"PGPASSWORD": "synthetic", "BACKUP_DATABASE_URL": URL}):
             ops.drill(CONFIG)
         self.assertTrue(ops.read_json(self.state / "drill.json")["ok"])
         self.assertTrue(any(args[0] == "bash" and args[1].endswith("prove-backup.sh") for args, _, _ in self.calls))
@@ -197,7 +255,7 @@ class OperationsTests(unittest.TestCase):
         self.assertFalse((self.state / "drill-container.json").exists())
         for _, env, _ in self.calls:
             self.assertNotIn("PGPASSWORD", env)
-            self.assertNotIn("NEON_BACKUP_DATABASE_URL", env)
+            self.assertNotIn("BACKUP_DATABASE_URL", env)
 
     def test_restore_failure_cleans_container_and_latches_failure(self):
         archive = self.archive()
