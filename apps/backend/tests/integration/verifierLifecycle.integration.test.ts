@@ -1,4 +1,5 @@
 import { expect, spyOn, test } from "bun:test";
+import { rejects } from "node:assert/strict";
 import { Client, Pool } from "pg";
 import Redis from "ioredis";
 import { Queue } from "bullmq";
@@ -72,9 +73,9 @@ const supported = url && process.platform !== "win32";
     queue = await startSubmissionQueue(pool, target.href, producer, consumer, configuration,
       { enabled: false }, () => { invalidations++; healthy = false; }, prefix);
     await until(async () => { try { await queue!.health(); return true; } catch { return false; } });
-    await expect(assertNoWorker(pool)).rejects.toThrow();
-    await expect(startSubmissionQueue(pool, target.href, producer, consumer, configuration,
-      { enabled: false }, () => {}, prefix)).rejects.toThrow("Another");
+    await rejects(assertNoWorker(pool));
+    await rejects(startSubmissionQueue(pool, target.href, producer, consumer, configuration,
+      { enabled: false }, () => {}, prefix), /Another/);
     const owner = randomUUID(), infrastructureId = randomUUID();
     const sample = await publicChallenge(owner, "lose-an-app-server", "2", fixtureChallenges);
     const input = canonical({ owner, layout: sample.layout, candidate: sample.layout.firstStack,
@@ -107,7 +108,7 @@ const supported = url && process.platform !== "win32";
     let drained = false;
     const closing = queue.close().then(() => { drained = true; });
     await Bun.sleep(30); expect(drained).toBe(false);
-    await expect(queue.health()).rejects.toThrow();
+    await rejects(queue.health());
     release(); await closing;
     expect(fixture.launches).toBeGreaterThan(1); expect(fixture.removed).toBe(fixture.launches);
     const result = (await pool.query('SELECT body FROM "FirstStackResult" WHERE "runId"=$1', [run.id])).rows[0].body;
@@ -117,7 +118,7 @@ const supported = url && process.platform !== "win32";
     expect(result.score.workloads).toHaveLength(fixtureDefinition(sample.id).hidden.length);
     const disabled = createSubmissionService(pool);
     expect((await disabled.read(owner, run.id)).reference?.id).toBe(run.id);
-    await expect(disabled.submit(owner, request)).rejects.toThrow("Resource");
+    await rejects(disabled.submit(owner, request), /Resource/);
     await assertNoWorker(pool);
     let lost = false;
     const ownership = await acquireVerifierOwnership(target.href, () => { lost = true; });
@@ -126,20 +127,37 @@ const supported = url && process.platform !== "win32";
       AND classid=$1::oid AND objid=$2::oid AND objsubid=2`, verifierLock);
     await until(async () => lost);
     expect(ownership.held).toBe(false);
-    await expect(ownership.assertHeld()).rejects.toThrow("lost"); await ownership.close();
+    await rejects(ownership.assertHeld(), /lost/); await ownership.close();
     healthy = true;
     queue = await startSubmissionQueue(pool, target.href, producer, consumer, configuration,
       { enabled: false }, () => { invalidations++; healthy = false; }, prefix);
     await until(async () => { try { await queue!.health(); return true; } catch { return false; } });
     const before = invalidations;
     const blocking = await queue.worker.getBackend().blockingClient;
-    blocking!.disconnect();
-    await until(async () => invalidations > before);
-    await expect(queue.health()).rejects.toThrow();
-    await expect(service.submit(owner, { ...request, idempotencyKey: randomUUID() })).rejects.toThrow("unavailable");
-    // BullMQ may already be reconnecting its blocking client; only reconnect a closed one.
-    if (blocking!.status === "end" || blocking!.status === "close") await blocking!.connect();
+    expect(blocking!.status).toBe("ready");
+    // BullMQ explicitly calls connect() after a blocking command loses its socket,
+    // bypassing ioredis's retryStrategy. Gate that real reconnect until both
+    // fail-closed assertions finish; leave health and admission unmocked.
+    const connect = blocking!.connect.bind(blocking);
+    let allowReconnect!: () => void, reconnecting: Promise<void> | undefined;
+    const reconnectAllowed = new Promise<void>(resolve => { allowReconnect = resolve; });
+    // Assign through BullMQ's client proxy so it forwards the gate to ioredis.
+    blocking!.connect = () => reconnecting ??= reconnectAllowed.then(() => connect());
+    try {
+      blocking!.disconnect();
+      await until(async () => invalidations > before && reconnecting !== undefined);
+      expect(invalidations).toBeGreaterThan(before);
+      expect(blocking!.status).toBe("end");
+      await rejects(queue.health(), /unavailable/);
+      await rejects(service.submit(owner, { ...request, idempotencyKey: randomUUID() }), /unavailable/);
+      expect(blocking!.status).toBe("end");
+    } finally {
+      blocking!.connect = connect;
+      allowReconnect();
+      await (reconnecting ?? connect());
+    }
     await until(async () => { try { await queue!.health(); return true; } catch { return false; } });
+    expect(blocking!.status).toBe("ready");
   } finally {
     try {
       release(); await queue?.close();
