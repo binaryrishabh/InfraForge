@@ -22,7 +22,7 @@ import uuid
 
 STATE = Path("/var/lib/infraforge-ops")
 BOOTSTRAP = Path(__file__).resolve().parents[1] / "bootstrap"
-MAX_OBJECT_BYTES = 5_000_000_000  # Single PUT: no multipart/list/abort IAM permissions.
+MAX_OBJECT_BYTES = 5_000_000_000  # Single PUT; no multipart or abort operations.
 CREDENTIALS = Path("/etc/infraforge/ops/r2.credentials")
 PREFIXES = ("backups/daily/", "backups/weekly/")
 RETENTION_SECONDS = 28 * 86400
@@ -498,7 +498,7 @@ def collect(config, now=None, meminfo=Path("/proc/meminfo")):
             raise ValueError("Invalid memory observation")
         values["MemoryUsedPercent"] = (100 * (total - available) / total, "Percent")
     except (OSError, KeyError, ValueError, ZeroDivisionError):
-        pass  # Omit unknown observations; alarms treat missing as breaching.
+        pass  # Omit unknown host observations rather than invent measurements.
     elapsed = age(read_json(STATE / "backup.json"), "snapshot_at", now)
     if elapsed is not None:
         values["BackupAgeSeconds"] = (elapsed, "Seconds")
@@ -611,7 +611,7 @@ def fail_backup(config):
 
 
 def begin_drill(_config):
-    # Run by systemd before the job lock: even a refused overlapping attempt alerts.
+    # Run before the job lock so a refused overlapping drill stays recorded.
     write_json(STATE / "drill.json", {"ok": False})
 
 
