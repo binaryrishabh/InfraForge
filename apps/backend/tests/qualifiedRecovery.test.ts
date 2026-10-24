@@ -55,12 +55,13 @@ async function qualifiedRecoveryHarness() {
   };
   const verify = () => verifySubmission(pool, "unused-protocol-fixture", row.id, configuration);
   const liveBytes = () => row.status === "terminal" ? 0 : row.reservedBytes;
+  const resultStatus = () => result?.verification;
 
   assert.equal(verifierExecutionAllowed(configuration), true, "Positive control requires an enabled executor");
   prepare(); await verify();
   assert.equal(fixture.launches, 1, "Positive control must actually launch");
   assert.equal(fixture.removed, 1);
-  assert.equal(result?.verification, "verified", "Positive control must complete verification");
+  assert.equal(resultStatus(), "verified", "Positive control must complete verification");
   assert.equal(row.status, "terminal"); assert.equal(liveBytes(), 0);
 
   prepare(); const reserved = liveBytes();
@@ -98,7 +99,7 @@ async function qualifiedRecoveryHarness() {
     assert.equal(reconciled, 1); assert.equal(result, null);
   } finally { lookup.resolve(undefined); release.resolve(); await work; }
   assert.equal(await work, undefined, "Winning worker must complete successfully");
-  assert.equal(fixture.launches, launches + 1); assert.equal(result?.verification, "verified");
+  assert.equal(fixture.launches, launches + 1); assert.equal(resultStatus(), "verified");
   assert.equal(fixture.removed, fixture.launches); assert.equal(liveBytes(), 0);
   console.info("Qualified recovery: positive launch, quarantined duplicates fenced, worker claim preserved");
 }
