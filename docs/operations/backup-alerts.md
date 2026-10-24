@@ -136,6 +136,16 @@ Docker disk headroom on the 4 GiB host before enabling the drill. The unit's
 MemoryMax bounds the client processes, not Docker-daemon-created containers.
 
 The daily backup uses the same literal `MIGRATION_DATABASE_URL` as the release.
+The service requires Docker and starts after it. For the private local endpoint,
+the runner retries missing-container or SQL connection failures for 180 seconds
+(each Docker/SQL call is capped at 10 seconds), revalidates the owned internal
+bridge on each attempt, and requires an authenticated `SELECT 1` before dumping.
+An ownership/network mismatch fails immediately. Exhausting startup recovery
+fails the job without advancing its receipt or deleting the prior archive; the
+existing 26-hour backup-age alarm (or missing-data alarm) remains authoritative.
+During provider changes, pause the backup timer before editing the URL and resume
+it only after release acceptance and the first successful backup, as described in
+[the provider-switch procedure](../SELF_HOSTED_POSTGRES.md#switch-to-neon-or-another-postgresql-provider).
 For any remote provider use a direct endpoint with `sslmode=verify-full` and a
 certificate trusted by the system CA store. Optional `channel_binding=require`
 is retained if requested; it is not a provider-wide requirement. No pooler host,

@@ -1,20 +1,21 @@
-import { buildReleaseImage, cleanupReleaseBuilder } from "./release/build";
+import { cleanupReleaseBuilder } from "./release/build";
 import { mkdir, readFile, rename, open, unlink } from "node:fs/promises";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { ComposeRelease, settingsFingerprint } from "./release/compose";
 import { cancelCommands, command } from "./release/process";
 import { releaseSequence, rollbackSequence, type Release } from "./release/sequence";
+import { prepareReleaseImage, type AcceptedState, type ReleaseAction } from "./release/image";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
 const [action, sha, environmentFile, stateDirectory] = process.argv.slice(2);
-if (!["apply", "rollback"].includes(action ?? "") || !sha || !/^[a-f0-9]{40}$/.test(sha) || !environmentFile || !stateDirectory) {
-  throw new Error("Use: bun --no-env-file scripts/release.ts apply|rollback <full-sha> <operator-env-file> <state-directory>");
+if (!["apply", "reconfigure", "rollback"].includes(action ?? "") || !sha || !/^[a-f0-9]{40}$/.test(sha) || !environmentFile || !stateDirectory) {
+  throw new Error("Use: bun --no-env-file scripts/release.ts apply|reconfigure|rollback <full-sha> <operator-env-file> <state-directory>");
 }
 if (await command(["git", "rev-parse", "HEAD"], root) !== sha || await command(["git", "status", "--porcelain"], root)) {
   throw new Error("Release requires a clean checkout at the exact approved SHA");
 }
-if (action === "apply") {
+if (action !== "rollback") {
   const main = (await command(["git", "ls-remote", "origin", "refs/heads/main"], root)).split(/\s+/)[0];
   if (main !== sha) throw new Error("Release checkout must match remote main; this command never promotes develop");
 }
@@ -43,19 +44,10 @@ const interrupt = async () => {
 process.on("SIGINT", interrupt);
 process.on("SIGTERM", interrupt);
 try {
-  let state: { current: Release; previous?: Release } | undefined;
+  let state: AcceptedState | undefined;
   try { state = JSON.parse(await readFile(resolve(directory, "accepted.json"), "utf8")); }
   catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; }
-  if (action === "apply" && [state?.current.sha, state?.previous?.sha].includes(sha)) {
-    throw new Error("This SHA already has a retained accepted image; do not rebuild or retag it. Use the documented rollback for a previous release.");
-  }
-  const image = `infraforge-backend:${sha}`;
-  if (action === "apply") await buildReleaseImage(sha, image, root);
-  const [built] = JSON.parse(await command(["docker", "image", "inspect", image], root));
-  if (built.Config.Labels?.["org.infraforge.rehearsal"]) throw new Error("Test-only images cannot be accepted for production release");
-  const metadata = JSON.parse(await command(["docker", "run", "--rm", "--network", "none", image, "cat", "/app/apps/backend/release.json"], root));
-  if (metadata.sha !== sha) throw new Error("Embedded release SHA does not match checkout");
-  const next: Release = { ...metadata, image, imageId: built.Id, settingsFingerprint: "" };
+  const next = await prepareReleaseImage(action as ReleaseAction, sha, state, root);
   const save = async (current: Release, previous?: Release) => {
     const temporary = resolve(directory, "accepted.json.tmp");
     const file = await open(temporary, "w", 0o600);
@@ -88,7 +80,7 @@ try {
     const result = await response.json() as { success?: boolean; release?: { sha?: string } };
     if (!response.ok || !result.success || result.release?.sha !== release.sha) throw new Error("Public TLS proxy release identity/readiness failed");
   };
-  if (action === "apply") {
+  if (action !== "rollback") {
     await operations.compose(["up", "-d", "--pull", "never", "redis"]);
     await releaseSequence(operations, next, state?.current);
   } else {
@@ -98,7 +90,7 @@ try {
     await rollbackSequence(operations, state.current, state.previous);
   }
   await unlink(maintenance);
-  console.log(`Accepted ${action === "apply" ? sha : state!.previous!.sha}; verify public TLS/WS/auth before frontend promotion.`);
+  console.log(`Accepted ${action !== "rollback" ? sha : state!.previous!.sha}; verify public TLS/WS/auth before frontend promotion.`);
 } catch (error) {
   failedAfterStop = mutationStarted;
   if (failedAfterStop && operationsInProgress) await operationsInProgress.stopMigration().catch(() => {});

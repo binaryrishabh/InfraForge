@@ -125,6 +125,12 @@ put static AWS keys on this host. Its daily and weekly retention is 28 days.
    worker, identity or history checks. This database/configuration change cannot
    automatically roll back to the old provider.
 
+   Early startup uses `--no-recreate`: it cannot replace an existing live database.
+   Service configuration drift is detected and deferred until maintenance, idle
+   checks, verified application shutdown and migration worker-lock checks pass.
+   Replacement is followed by another preflight and the normal postchecks. A
+   startup/replacement failure retains the release lock for investigation.
+
 5. Check acceptance externally, substituting the actual public API origin:
 
    ```sh
@@ -206,26 +212,102 @@ before the owner approves the URL switch. Never restore over the active database
 
 ## Switch to Neon or another PostgreSQL provider
 
-1. Provision PostgreSQL 18 with sufficient connection allowance and trusted TLS.
-   If keeping data, fence writes, take a final backup and restore it into the new
-   empty database first. **Changing a URL does not copy data.** Verify schema,
-   roles, extensions and restore evidence before cutover.
-2. Privately edit **only the three URL values** in `/etc/infraforge/release.env`:
+Use `reconfigure` at the **currently accepted, merged main SHA**, including when
+there is no application change. It verifies the retained image ID, source/revision
+labels and embedded SHA/schema/auth metadata, and uses that immutable ID without
+building or retagging. A previous or unaccepted SHA is refused. Normal `apply`
+continues to refuse rebuilding either retained accepted image.
+
+1. Provision PostgreSQL 18 with sufficient connections and trusted TLS. Pause
+   automated deployments. In the existing clean checkout, select the currently
+   accepted SHA and require that it still equals remote main:
+
+   ```sh
+   cd ~/InfraForge
+   RELEASE_TARGET=$(python3 -c 'import json; print(json.load(open("/var/lib/infraforge/releases/accepted.json"))["current"]["sha"])')
+   ACCEPTED_IMAGE=$(python3 -c 'import json; print(json.load(open("/var/lib/infraforge/releases/accepted.json"))["current"]["imageId"])')
+   git fetch origin main
+   test "$RELEASE_TARGET" = "$(git rev-parse origin/main)"
+   test -z "$(git status --porcelain)"
+   git checkout --detach "$RELEASE_TARGET"
+   test ! -e /var/lib/infraforge/releases/release.lock
+   ```
+
+   If main has advanced, use the normal approved `apply` release for that main
+   SHA. No empty commit is needed for a switch at the accepted main SHA.
+
+2. Fence writers **before editing the URLs**. Use the old configuration to check
+   idle runs, then stop the worker. Each command must succeed before continuing;
+   an active-run refusal means wait for the existing worker to finish. Keep
+   maintenance until acceptance. The exhausted-Neon intentional fresh-start case
+   uses the earlier runbook instead of this data-preserving procedure.
+
+   ```sh
+   current_compose() {
+     RELEASE_SHA="$RELEASE_TARGET" RELEASE_IMAGE="$ACCEPTED_IMAGE" \
+       docker compose --project-name infraforge --env-file /etc/infraforge/release.env \
+       -f apps/backend/docker-compose.yml "$@"
+   }
+   printf '%s\n' "$RELEASE_TARGET" > /var/lib/infraforge/releases/maintenance
+   current_compose stop --timeout 30 api ws-server
+   current_compose run --rm --no-deps migration bun release/cli.ts preflight
+   current_compose stop --timeout 30 worker
+   for id in $(current_compose ps -aq api worker ws-server); do
+     state=$(docker inspect --format '{{.State.Status}}' "$id")
+     case "$state" in created|exited|dead) ;; *) echo 'Application shutdown not verified'; exit 1 ;; esac
+   done
+   sudo systemctl stop infraforge-backup.timer
+   if sudo systemctl is-active --quiet infraforge-backup.service; then
+     echo 'Wait for the current backup to finish before changing URLs'; exit 1
+   fi
+   ```
+
+   Verify public maintenance responses as in the fresh-start procedure. If
+   preserving data, run a final backup using the old URL, verify its successful
+   receipt, and restore into the new empty server now. **Changing a URL does not
+   copy data.** Verify schema, roles, extensions and restore evidence. Keep the
+   backup timer paused throughout the switch; do not run a backup against the
+   edited URL before release acceptance.
+
+3. Privately edit **only the three URL values** in `/etc/infraforge/release.env`:
    `DATABASE_URL`, `MIGRATION_DATABASE_URL`, `WORKER_DATABASE_URL`. Use
    `postgresql://ROLE:ENCODED_PASSWORD@HOST:PORT/DB?sslmode=verify-full` for a
    direct endpoint; all may be the same URL. For Neon, API/WS may use its pooler
    URL, while migration/worker must use direct URLs. Leave
    `WORKER_DATABASE_MODE=direct` unless deliberately adopting a verified session
    pooler (`session`). Optional channel binding may be appended if supported.
-3. Select a new approved full `main` SHA and run the same `scripts/release.ts apply`
-   command above. Preflight verifies all targets reach the same database. No
-   provider flag, source edit or Compose edit is required. The local database
-   is not started for remote URLs; an already-running local server/volume is
+4. Apply the edited configuration at that same SHA:
+
+   ```sh
+   bun --no-env-file scripts/release.ts reconfigure "$RELEASE_TARGET" \
+     /etc/infraforge/release.env /var/lib/infraforge/releases
+   ```
+
+   This runs public maintenance verification, same-database/session endpoint
+   checks, idle and worker shutdown checks, migrations, schema/history checks,
+   and internal/public readiness before accepting the new settings. Changed
+   settings prevent automatic rollback to the old configuration. On failure,
+   keep maintenance and backups paused, investigate the retained release lock,
+   then repair forward or restore the old URLs under the recovery procedure.
+   Do not invoke `rollback` to reverse a provider change.
+
+   No provider flag, source edit, new commit or Compose edit is required. Local
+   PostgreSQL is not started for remote URLs; an existing server/volume is
    retained for recovery, never automatically deleted.
-4. Verify readiness, authenticated behavior and a first backup. Backups pick up
-   the new migration URL at their next start. Do not change any auth secret merely
-   to change database providers. Stop the unused local service later only after
-   acceptance; retain its volume until the owner's retention decision.
+
+5. Verify readiness and authenticated behavior, then run the first backup against
+   the accepted target and resume the timer only after it succeeds:
+
+   ```sh
+   sudo systemctl start infraforge-backup.service
+   sudo systemctl show infraforge-backup.service -p Result -p ExecMainStatus
+   sudo systemctl start infraforge-backup.timer
+   ```
+
+   Require `Result=success`, exit 0 and the required S3 receipts. Backups read the
+   migration URL at each start. Keep auth secrets unchanged. Stop the unused
+   local service later only after acceptance; retain its volume until the owner's
+   retention decision. Resume automated deployments after the application smoke.
 
 The old Neon-specific `scripts/release/neon.ts` belongs to the historical,
 disposable-Neon-clone proof only. Its API-verified branch/endpoint, password-routing
