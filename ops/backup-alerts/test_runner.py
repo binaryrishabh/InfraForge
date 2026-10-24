@@ -17,7 +17,7 @@ from unittest.mock import patch
 spec = importlib.util.spec_from_file_location("ops_runner", Path(__file__).with_name("runner.py"))
 ops = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(ops)
-CONFIG = {"region": "us-east-1", "bucket": "fixture-backups", "instance_id": "i-0123456789abcdef0",
+CONFIG = {"region": "auto", "endpoint_url": "https://storage.example.invalid", "bucket": "fixture-backups",
           "site_url": "https://site.example.invalid/", "api_url": "https://api.example.invalid/health/ready",
           "worker_container": "fixture-worker", "drill_image": "postgres:18@sha256:" + "a" * 64}
 URL = "postgresql://fixture:synthetic%24password@ep-fixture.us-east-1.aws.neon.tech/neondb?sslmode=verify-full&channel_binding=require"
@@ -33,8 +33,10 @@ class OperationsTests(unittest.TestCase):
         self.state = Path(self.temp.name)
         self.addCleanup(patch.stopall)
         patch.object(ops, "STATE", self.state).start()
+        patch.object(ops, "private_credentials", return_value=("fixture-access", "fixture-secret")).start()
         patch.object(socket, "socket", side_effect=AssertionError("Network forbidden in offline tests")).start()
         self.calls = []
+        self.objects = {}
 
     def archive(self, name="backup.fixture"):
         root = self.state / "backups"
@@ -50,6 +52,18 @@ class OperationsTests(unittest.TestCase):
         self.calls.append((args, env, seconds))
         if args[0] == "bash" and args[1].endswith("postgres-backup.sh"):
             return f"BACKUP PASS {self.archive()}\n".encode()
+        if args[0] == "aws":
+            if "list-objects-v2" in args:
+                return b'{"IsTruncated": false}'
+            key = args[args.index("--key") + 1]
+            if "put-object" in args:
+                if key in self.objects:
+                    raise subprocess.CalledProcessError(1, "fixture-precondition")
+                self.objects[key] = Path(args[args.index("--body") + 1]).read_bytes()
+            elif "head-object" in args:
+                return json.dumps({"ContentLength": len(self.objects[key]), "ETag": '"fixture"'}).encode()
+            elif "get-object" in args:
+                Path(args[-1]).write_bytes(self.objects[key])
         return b""
 
     def backup(self, now=NOW):
@@ -197,23 +211,30 @@ class OperationsTests(unittest.TestCase):
         self.assertIn("Requires=docker.service", unit)
         self.assertIn("After=network-online.target docker.service", unit)
 
-    def test_daily_and_weekly_put_only_encrypted_checked_bundle(self):
+    def test_daily_and_weekly_put_only_checked_bundle_to_explicit_endpoint(self):
         import tarfile
         original = self.fake_command
         def check(args, **kwargs):
-            if args[0] == "aws":
-                self.assertIn("put-object", args)
-                self.assertEqual(args[args.index("--server-side-encryption") + 1], "AES256")
-                self.assertEqual(args[args.index("--checksum-algorithm") + 1], "SHA256")
+            if "put-object" in args:
+                self.assertEqual(args[args.index("--endpoint-url") + 1], CONFIG["endpoint_url"])
+                self.assertEqual(args[args.index("--region") + 1], "auto")
+                self.assertEqual(args[args.index("--if-none-match") + 1], "*")
+                self.assertIn("--content-md5", args)
+                self.assertNotIn("--server-side-encryption", args)
                 with tarfile.open(args[args.index("--body") + 1]) as tar:
                     self.assertEqual(tar.getnames(), ["archive.dump", "SHA256SUMS"])
                 self.assertNotIn("PGPASSWORD", kwargs["env"])
+                self.assertEqual(kwargs["env"]["AWS_ACCESS_KEY_ID"], "fixture-access")
+                self.assertEqual(kwargs["env"]["AWS_EC2_METADATA_DISABLED"], "true")
+                self.assertNotIn("fixture-secret", args)
             return original(args, **kwargs)
         with patch.object(ops, "command", check), patch.dict(os.environ, {"BACKUP_DATABASE_URL": URL}, clear=True):
             ops.backup(CONFIG, NOW)
-        uploads = [args for args, _, _ in self.calls if args[0] == "aws"]
-        self.assertEqual([args[args.index("--key") + 1] for args in uploads],
-                         ["backups/daily/2026-10-20.tar", "backups/weekly/2026-W43.tar"])
+        uploads = [args for args, _, _ in self.calls if "put-object" in args]
+        keys = [args[args.index("--key") + 1] for args in uploads]
+        self.assertEqual(len(keys), 2)
+        self.assertRegex(keys[0], r"^backups/daily/2026-10-20-[0-9a-f]{32}\.tar$")
+        self.assertRegex(keys[1], r"^backups/weekly/2026-W43-[0-9a-f]{32}\.tar$")
         self.assertEqual(ops.read_json(self.state / "backup.json")["snapshot_at"], NOW)
         self.assertFalse((self.state / "backups/backup.fixture/backup.tar").exists())
 
@@ -221,7 +242,7 @@ class OperationsTests(unittest.TestCase):
         self.archive("backup.old")
         ops.write_json(self.state / "backup.json", {"archive": "backup.old", "week": "2026-W43"})
         self.backup()
-        self.assertEqual(sum(args[0] == "aws" for args, _, _ in self.calls), 1)
+        self.assertEqual(sum("put-object" in args for args, _, _ in self.calls), 1)
         self.assertFalse((self.state / "backups/backup.old").exists())
 
     def test_failed_weekly_upload_preserves_previous_receipt_and_local_copy(self):
@@ -248,9 +269,9 @@ class OperationsTests(unittest.TestCase):
 
     def test_oversized_upload_refused_before_aws(self):
         archive = self.archive()
-        with patch.object(ops, "MAX_OBJECT_BYTES", 1), patch.object(ops, "aws") as aws:
+        with patch.object(ops, "MAX_OBJECT_BYTES", 1), patch.object(ops, "s3") as aws:
             with self.assertRaises(ValueError):
-                ops.upload(CONFIG, archive / "archive.dump", "backups/daily/fixture.tar")
+                ops.upload(CONFIG, archive / "archive.dump", "backups/daily/2026-10-20.tar")
             aws.assert_not_called()
 
     def test_checksum_corruption_refused(self):
@@ -364,6 +385,102 @@ class OperationsTests(unittest.TestCase):
                            ("api_url", "http://api.example.invalid"), ("drill_image", "postgres:latest")]:
             with self.subTest(key=key), self.assertRaises(ValueError):
                 ops.validate_config({**CONFIG, key: value})
+
+    def test_endpoint_must_be_explicit_credential_free_https_origin(self):
+        for value in ["", "http://storage.example.invalid", "https://key:secret@storage.example.invalid",
+                      "https://storage.example.invalid/bucket", "https://storage.example.invalid?token=secret",
+                      "https://storage.example.invalid#fragment"]:
+            with self.subTest(value=value), self.assertRaises(ValueError):
+                ops.validate_config({**CONFIG, "endpoint_url": value})
+        missing = dict(CONFIG)
+        del missing["endpoint_url"]
+        with self.assertRaises(ValueError):
+            ops.validate_config(missing)
+
+    def test_conditional_upload_refuses_overwrite_and_checks_readback(self):
+        bundle = self.archive() / "archive.dump"
+        key = "backups/daily/2026-10-20.tar"
+        with patch.object(ops, "command", self.fake_command):
+            ops.upload(CONFIG, bundle, key)
+            with self.assertRaises(subprocess.CalledProcessError):
+                ops.upload(CONFIG, bundle, key)
+        original = self.fake_command
+        def corrupt(args, **kwargs):
+            result = original(args, **kwargs)
+            if "get-object" in args:
+                target = Path(args[-1])
+                target.write_bytes(b"x" * target.stat().st_size)
+            return result
+        with patch.object(ops, "command", corrupt), self.assertRaisesRegex(ValueError, "checksum"):
+            ops.upload(CONFIG, bundle, "backups/daily/2026-10-21.tar")
+
+    def listing(self, items):
+        def storage(_config, args, **_kwargs):
+            self.calls.append(args)
+            if "list-objects-v2" in args:
+                prefix = args[args.index("--prefix") + 1]
+                return json.dumps({"IsTruncated": False, "Contents": [item for item in items if item["Key"].startswith(prefix)]}).encode()
+            if "head-object" in args:
+                key = args[args.index("--key") + 1]
+                return json.dumps(next(item for item in items if item["Key"] == key)).encode()
+            return b"{}"
+        return storage
+
+    def test_prune_dry_run_and_strict_28_day_boundary(self):
+        def item(key, seconds):
+            return {"Key": key, "LastModified": dt.datetime.fromtimestamp(NOW - seconds, dt.timezone.utc).isoformat()}
+        old = "backups/daily/2026-09-01.tar"
+        items = [item(old, ops.RETENTION_SECONDS + 1),
+                 item("backups/daily/2026-09-02.tar", ops.RETENTION_SECONDS),
+                 item("backups/weekly/2026-W42.tar", 1),
+                 item("unrelated/keep.tar", ops.RETENTION_SECONDS + 100)]
+        with patch.object(ops, "s3", self.listing(items)):
+            self.assertEqual(ops.prune(CONFIG, NOW, dry_run=True), [old])
+            self.assertFalse(any("delete-object" in args for args in self.calls))
+            self.assertEqual(ops.prune(CONFIG, NOW), [old])
+        deletes = [args[args.index("--key") + 1] for args in self.calls if "delete-object" in args]
+        self.assertEqual(deletes, [old])
+
+    def test_prune_rejects_escaped_keys_before_any_deletion(self):
+        for key in ["other/2026-01-01.tar", "backups/daily/../private.tar", "backups/daily/private.txt",
+                    "backups/weekly/2026-W01.tar"]:
+            self.calls.clear()
+            def escaped(_config, args, **_kwargs):
+                self.calls.append(args)
+                return json.dumps({"IsTruncated": False, "Contents": [{"Key": key, "LastModified": "2025-01-01T00:00:00Z"}]}).encode()
+            with patch.object(ops, "s3", escaped), self.assertRaises(ValueError):
+                ops.prune(CONFIG, NOW)
+            self.assertFalse(any("delete-object" in args for args in self.calls))
+
+    def test_prune_bounds_pages_and_deletions(self):
+        for pages in [True, False]:
+            self.calls.clear()
+            def huge(_config, args, **_kwargs):
+                self.calls.append(args)
+                items = [] if pages else [{"Key": f"backups/daily/2025-01-01-{i:032x}.tar", "LastModified": "2025-01-01T00:00:00Z"} for i in range(129)]
+                return json.dumps({"IsTruncated": pages, "NextContinuationToken": str(len(self.calls)), "Contents": items}).encode()
+            with patch.object(ops, "s3", huge), self.assertRaises(ValueError):
+                ops.prune(CONFIG, NOW)
+            self.assertLessEqual(len(self.calls), ops.MAX_LIST_PAGES)
+            self.assertFalse(any("delete-object" in args for args in self.calls))
+
+    def test_prune_rechecks_remote_age_before_delete(self):
+        items = [{"Key": "backups/daily/2025-01-01.tar", "LastModified": "2025-01-01T00:00:00Z"}]
+        original = self.listing(items)
+        def changed(config, args, **kwargs):
+            if "head-object" in args:
+                return b'{"LastModified":"2026-10-20T00:00:00Z"}'
+            return original(config, args, **kwargs)
+        with patch.object(ops, "s3", changed), self.assertRaises(ValueError):
+            ops.prune(CONFIG, NOW)
+        self.assertFalse(any("delete-object" in args for args in self.calls))
+
+    def test_remote_retrieval_refuses_unknown_oversize_and_incomplete_content(self):
+        for size in [0, None, ops.MAX_OBJECT_BYTES + 1]:
+            with patch.object(ops, "s3", return_value=json.dumps({"ContentLength": size, "ETag": '"fixture"'}).encode()) as storage:
+                with self.assertRaises(ValueError):
+                    ops.download(CONFIG, "backups/daily/2026-10-20.tar", self.state / "download.tar")
+                self.assertEqual(storage.call_count, 1)
 
 
 if __name__ == "__main__":

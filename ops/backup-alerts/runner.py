@@ -1,5 +1,7 @@
 """Linux-only operational entrypoint. No SDK, dotenv loading, URL argv or secret logs."""
 import datetime as dt
+import base64
+import configparser
 import hashlib
 import ipaddress
 import json
@@ -8,6 +10,7 @@ import os
 from pathlib import Path
 import re
 import shutil
+import stat
 import subprocess
 import sys
 import tarfile
@@ -20,6 +23,11 @@ import uuid
 STATE = Path("/var/lib/infraforge-ops")
 BOOTSTRAP = Path(__file__).resolve().parents[1] / "bootstrap"
 MAX_OBJECT_BYTES = 5_000_000_000  # Single PUT: no multipart/list/abort IAM permissions.
+CREDENTIALS = Path("/etc/infraforge/ops/r2.credentials")
+PREFIXES = ("backups/daily/", "backups/weekly/")
+RETENTION_SECONDS = 28 * 86400
+MAX_LIST_PAGES = 4  # Per prefix, 1000 objects per page.
+MAX_PRUNE_OBJECTS = 128
 
 
 def command(args, *, env=None, seconds=60):
@@ -32,7 +40,10 @@ def clean_env():
     # Separate source DB credentials from Docker, AWS CLI and restore processes.
     return {"PATH": os.environ.get("PATH", "/usr/local/bin:/usr/bin:/bin"),
             "HOME": "/nonexistent", "AWS_MAX_ATTEMPTS": "2", "AWS_PAGER": "",
-            "AWS_RETRY_MODE": "standard"}
+            "AWS_RETRY_MODE": "standard", "AWS_EC2_METADATA_DISABLED": "true",
+            "AWS_CONFIG_FILE": "/dev/null", "AWS_SHARED_CREDENTIALS_FILE": "/dev/null",
+            "AWS_REQUEST_CHECKSUM_CALCULATION": "when_required",
+            "AWS_RESPONSE_CHECKSUM_VALIDATION": "when_required"}
 
 
 def source_env(url):
@@ -158,33 +169,138 @@ def write_json(path, value):
 
 def validate_config(config):
     for key, pattern in {
-        "region": r"[a-z]{2}(?:-[a-z]+)+-\d",
+        "region": r"auto|[a-z]{2}(?:-[a-z]+)+-\d",
         "bucket": r"[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]",
-        "instance_id": r"i-[0-9a-f]{8,17}",
         "worker_container": r"[a-zA-Z0-9][a-zA-Z0-9_.-]{0,127}",
         "drill_image": r"postgres:18@sha256:[0-9a-f]{64}",
     }.items():
         if not re.fullmatch(pattern, config.get(key, "")):
             raise ValueError("Invalid operations configuration")
-    for key in ("site_url", "api_url"):
+    for key in ("endpoint_url", "site_url", "api_url"):
         url = urlsplit(config.get(key, ""))
         if (url.scheme != "https" or not url.hostname or url.username or
-                url.password or url.fragment or url.query):
+                url.password or url.fragment or url.query or
+                (key == "endpoint_url" and url.path not in ("", "/"))):
             raise ValueError("Expected credential-free public HTTPS URLs")
 
 
-def aws(config, args, seconds=180):
-    return command(["aws", "--region", config["region"], "--no-cli-pager",
+def private_credentials():
+    # Check the opened file, not a path subsequently reopened by the CLI.
+    fd = os.open(CREDENTIALS, os.O_RDONLY | os.O_NOFOLLOW)
+    with os.fdopen(fd) as source:
+        info = os.fstat(source.fileno())
+        if not stat.S_ISREG(info.st_mode) or info.st_uid != 0 or stat.S_IMODE(info.st_mode) != 0o600:
+            raise ValueError("Credentials require root ownership and mode 0600")
+        parser = configparser.ConfigParser(interpolation=None)
+        parser.read_file(source)
+    if parser.sections() != ["default"] or set(parser["default"]) != {"aws_access_key_id", "aws_secret_access_key"}:
+        raise ValueError("Expected one explicit storage credential pair")
+    values = [parser["default"][key] for key in ("aws_access_key_id", "aws_secret_access_key")]
+    if any(not value or re.search(r"\s", value) for value in values):
+        raise ValueError("Invalid storage credentials")
+    return values
+
+
+def s3(config, args, seconds=180):
+    access, secret = private_credentials()
+    env = clean_env()
+    # Credentials go only to the client process; never argv, journal or diagnostics.
+    env.update(AWS_ACCESS_KEY_ID=access, AWS_SECRET_ACCESS_KEY=secret)
+    return command(["aws", "--endpoint-url", config["endpoint_url"],
+                    "--region", config["region"], "--no-cli-pager", "--output", "json",
                     "--cli-connect-timeout", "5", "--cli-read-timeout", "60", *args],
-                   env=clean_env(), seconds=seconds)
+                   env=env, seconds=seconds)
+
+
+def backup_key(key):
+    if not isinstance(key, str) or not re.fullmatch(
+            r"backups/(?:daily/\d{4}-\d{2}-\d{2}|weekly/\d{4}-W\d{2})(?:-[0-9a-f]{32})?\.tar", key):
+        raise ValueError("Object is outside the supported backup keys")
+    return key
+
+
+def file_hash(path, algorithm="sha256"):
+    with path.open("rb") as source:
+        return hashlib.file_digest(source, algorithm).digest()
+
+
+def download(config, key, target):
+    backup_key(key)
+    head = json.loads(s3(config, ["s3api", "head-object", "--bucket", config["bucket"], "--key", key]))
+    size = head.get("ContentLength")
+    if type(size) is not int or not 0 < size <= MAX_OBJECT_BYTES or not head.get("ETag"):
+        raise ValueError("Remote archive exceeds bounded retrieval policy")
+    s3(config, ["s3api", "get-object", "--bucket", config["bucket"], "--key", key,
+                "--if-match", head["ETag"], str(target)], seconds=700)
+    if target.stat().st_size != size:
+        raise ValueError("Incomplete retrieved archive")
 
 
 def upload(config, bundle, key):
+    backup_key(key)
     if not 0 < bundle.stat().st_size <= MAX_OBJECT_BYTES:
         raise ValueError("Archive exceeds bounded single-PUT policy")
-    aws(config, ["s3api", "put-object", "--bucket", config["bucket"], "--key", key,
-                 "--body", str(bundle), "--server-side-encryption", "AES256",
-                 "--checksum-algorithm", "SHA256"])
+    # R2 does not implement AWS SSE-S3 or full-object SHA256 request checksums.
+    # Content-MD5 checks transport; SHA256 of a remote readback verifies the bytes.
+    digest = file_hash(bundle)
+    s3(config, ["s3api", "put-object", "--bucket", config["bucket"], "--key", key,
+                "--body", str(bundle), "--if-none-match", "*",
+                "--content-md5", base64.b64encode(file_hash(bundle, "md5")).decode()], seconds=700)
+    with tempfile.TemporaryDirectory(dir=STATE) as work:
+        retrieved = Path(work) / "readback.tar"
+        download(config, key, retrieved)
+        if file_hash(retrieved) != digest:
+            raise ValueError("Remote backup checksum mismatch")
+
+
+def object_time(value):
+    instant = dt.datetime.fromisoformat(value.replace("Z", "+00:00"))
+    if instant.tzinfo is None:
+        raise ValueError("Object age must include timezone")
+    return instant.timestamp()
+
+
+def prune(config, now=None, dry_run=False):
+    cutoff = (time.time() if now is None else now) - RETENTION_SECONDS
+    candidates = {}
+    # Plan the entire bounded operation before deleting anything.
+    for prefix in PREFIXES:
+        token = None
+        seen = set()
+        for _ in range(MAX_LIST_PAGES):
+            args = ["s3api", "list-objects-v2", "--bucket", config["bucket"],
+                    "--prefix", prefix, "--max-keys", "1000", "--no-paginate"]
+            if token:
+                args += ["--continuation-token", token]
+            page = json.loads(s3(config, args))
+            for item in page.get("Contents", []):
+                key = backup_key(item["Key"])
+                if not key.startswith(prefix):
+                    raise ValueError("Listing escaped requested backup prefix")
+                if object_time(item["LastModified"]) < cutoff:
+                    candidates[key] = item["LastModified"]
+                    if len(candidates) > MAX_PRUNE_OBJECTS:
+                        raise ValueError("Prune exceeds deletion budget; operator review required")
+            if page.get("IsTruncated") is False:
+                break
+            token = page.get("NextContinuationToken")
+            if not token or token in seen:
+                raise ValueError("Invalid bounded listing continuation")
+            seen.add(token)
+        else:
+            raise ValueError("Prune exceeds listing budget; operator review required")
+    for key, modified in candidates.items():
+        if not dry_run:
+            head = json.loads(s3(config, ["s3api", "head-object", "--bucket", config["bucket"], "--key", key]))
+            if head.get("LastModified") != modified or object_time(head["LastModified"]) >= cutoff:
+                raise ValueError("Prune candidate changed; refusing deletion")
+            s3(config, ["s3api", "delete-object", "--bucket", config["bucket"], "--key", key])
+    return sorted(candidates)
+
+
+def prune_dry_run(config):
+    for key in prune(config, dry_run=True):
+        print(key)
 
 
 def verify_archive(archive):
@@ -226,11 +342,13 @@ def backup(config, now=None):
         with tarfile.open(bundle, "w") as tar:
             for name in ("archive.dump", "SHA256SUMS"):
                 tar.add(archive / name, arcname=name, recursive=False)
-        daily = f"backups/daily/{instant:%Y-%m-%d}.tar"
+        suffix = uuid.uuid4().hex
+        daily = f"backups/daily/{instant:%Y-%m-%d}-{suffix}.tar"
         week = instant.strftime("%G-W%V")
         upload(config, bundle, daily)
         if previous.get("week") != week:
-            upload(config, bundle, f"backups/weekly/{week}.tar")
+            upload(config, bundle, f"backups/weekly/{week}-{suffix}.tar")
+        prune(config, started)
         # Receipt advances only after every required PUT succeeds; age starts at dump start.
         write_json(STATE / "backup.json", {"snapshot_at": started, "archive": archive.name,
                                           "daily_key": daily, "week": week})
@@ -345,17 +463,13 @@ def collect(config, now=None, meminfo=Path("/proc/meminfo")):
     elapsed = age(receipt, "passed_at", now)
     values["RestoreDrillHealthy"] = (int(receipt.get("ok") is True and elapsed is not None and elapsed <= 35 * 86400), "Count")
     return [{"MetricName": key, "Value": value, "Unit": unit,
-             "Dimensions": [{"Name": "InstanceId", "Value": config["instance_id"]}]}
+             "Dimensions": []}
             for key, (value, unit) in values.items()]
 
 
 def metrics(config):
-    # One bounded API call per minute; only metric names/numbers, no app response bodies.
-    with tempfile.TemporaryDirectory(dir=STATE) as work:
-        payload = Path(work) / "metrics.json"
-        payload.write_text(json.dumps(collect(config)), encoding="utf-8")
-        aws(config, ["cloudwatch", "put-metric-data", "--namespace", "InfraForge/Ops",
-                     "--metric-data", "file://" + str(payload)], seconds=15)
+    # Local observations only; the current installation never calls CloudWatch.
+    write_json(STATE / "metrics.json", {"observed_at": time.time(), "values": collect(config)})
 
 
 def begin_drill(_config):
@@ -367,7 +481,7 @@ def main():
     os.umask(0o077)
     operation = sys.argv[1] if len(sys.argv) == 2 else ""
     try:
-        if operation not in ("backup", "drill", "metrics", "cleanup-drill", "begin-drill"):
+        if operation not in ("backup", "drill", "metrics", "cleanup-drill", "begin-drill", "prune-dry-run"):
             raise ValueError("Expected operation")
         if STATE.is_symlink() or STATE.stat().st_mode & 0o077:
             raise ValueError("State must be private")

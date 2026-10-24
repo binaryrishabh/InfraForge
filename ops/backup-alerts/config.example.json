@@ -1,7 +1,7 @@
 {
-  "region": "REPLACE_WITH_EC2_REGION",
-  "bucket": "REPLACE_WITH_STACK_BUCKET_OUTPUT",
-  "instance_id": "REPLACE_WITH_EC2_INSTANCE_ID",
+  "endpoint_url": "https://REPLACE_WITH_ACCOUNT_ID.r2.cloudflarestorage.com",
+  "region": "auto",
+  "bucket": "REPLACE_WITH_PRIVATE_R2_BUCKET",
   "site_url": "https://REPLACE_WITH_SITE_HOST/",
   "api_url": "https://REPLACE_WITH_API_HOST/health/ready",
   "worker_container": "REPLACE_WITH_CURRENT_WORKER_CONTAINER_NAME",
