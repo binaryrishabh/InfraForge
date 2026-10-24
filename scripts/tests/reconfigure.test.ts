@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 
-for (const mode of ["success", "wrong-main", "active", "migration-failure", "readiness-failure"]) {
+for (const mode of ["success", "wrong-main", "active", "migration-failure", "readiness-failure", "database-start-failure", "proxy-failure"]) {
   test(`same-SHA configuration CLI preserves release gates: ${mode}`, () => {
     const child = Bun.spawnSync([process.execPath, "--no-env-file", "scripts/tests/fixtures/reconfigure.ts", mode]);
     expect(child.exitCode).toBe(0);
@@ -22,12 +22,13 @@ for (const mode of ["success", "wrong-main", "active", "migration-failure", "rea
       expect(result.lock).toBe(false);
     } else {
       expect(result.failure).toContain({ "wrong-main": "remote main", active: "active run",
-        "migration-failure": "migration failed", "readiness-failure": "cannot reverse" }[mode]!);
+        "migration-failure": "migration failed", "readiness-failure": "cannot reverse",
+        "database-start-failure": "database startup failed", "proxy-failure": "did not enter maintenance" }[mode]!);
       expect(result.accepted.current).toEqual(result.current);
       expect(starts).toHaveLength(mode === "readiness-failure" ? 1 : 0);
       const mutated = mode === "migration-failure" || mode === "readiness-failure";
-      expect(result.lock).toBe(mutated);
-      expect(result.maintenance).toBe(mutated);
+      expect(result.lock).toBe(mutated || mode === "database-start-failure");
+      expect(result.maintenance).toBe(mutated || mode === "proxy-failure");
       if (mode === "active" || mode === "wrong-main") expect(events.some(args => args.includes("stop"))).toBe(false);
     }
   }, 30000);

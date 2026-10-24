@@ -171,7 +171,7 @@ test("active-run refusal never recreates a changed live database; drift waits fo
   const declared = { api: { image: next.image, environment: { DATABASE_URL: url } },
     migration: { image: next.image, environment: { DATABASE_URL: url, API_DATABASE_URL: url, WORKER_DATABASE_URL: url } },
     postgres: { image: "postgres:pinned", environment: { POSTGRES_PASSWORD: "synthetic" } } };
-  let activeRun = true, hash = "old-hash", mutations = 0;
+  let activeRun = true, hash = "old-hash", mutations = 0, workerLock = false;
   const run = spyOn(releaseProcess, "command").mockImplementation(async args => {
     events.push(args);
     if (args.includes("--hash")) return "postgres desired-hash";
@@ -181,6 +181,7 @@ test("active-run refusal never recreates a changed live database; drift waits fo
       "com.docker.compose.project": "fixture", "com.docker.compose.service": "postgres", "com.docker.compose.config-hash": hash,
     } }, State: { Running: true } }]);
     if (args.includes("preflight") && activeRun) throw new Error("active run");
+    if (args.includes("migrate") && workerLock) throw new Error("worker lock");
     if (args.includes("up") && !args.includes("--no-recreate")) hash = "desired-hash";
     return "";
   });
@@ -194,11 +195,42 @@ test("active-run refusal never recreates a changed live database; drift waits fo
     activeRun = false;
     await expect(operations.migrate()).rejects.toThrow("verified application shutdown");
     await operations.stop();
+    workerLock = true;
+    await expect(operations.migrate()).rejects.toThrow("worker lock");
+    expect(events.some(args => args.includes("up") && !args.includes("--no-recreate"))).toBe(false);
+    workerLock = false;
     await operations.migrate();
     const replacement = events.findIndex(args => args.includes("up") && !args.includes("--no-recreate"));
     expect(replacement).toBeGreaterThan(events.findIndex(args => args.includes("ps") && args.at(-1) === "ws-server"));
     expect(events.findIndex(args => args.includes("migrate"))).toBeLessThan(replacement);
     expect(mutations).toBe(1);
+  } finally { run.mockRestore(); }
+});
+
+test("database preflight refuses foreign ownership and unavailable configuration hashes", async () => {
+  const next = release("next"), url = "postgresql://fixture:synthetic@postgres/fixture";
+  let project = "foreign", hash = "postgres desired-hash";
+  const events: string[][] = [];
+  const run = spyOn(releaseProcess, "command").mockImplementation(async args => {
+    events.push(args);
+    if (args.includes("--hash")) return hash;
+    if (args.includes("config")) return JSON.stringify({ services: {
+      api: { image: next.image, environment: { DATABASE_URL: url } },
+      postgres: { image: "postgres:pinned", environment: { POSTGRES_PASSWORD: "synthetic" } },
+    } });
+    if (args.includes("ps")) return "owned";
+    if (args[1] === "inspect") return JSON.stringify([{ Config: { Labels: {
+      "com.docker.compose.project": project, "com.docker.compose.service": "postgres",
+    } }, State: { Running: true } }]);
+    return "";
+  });
+  try {
+    const operations = new ComposeRelease(process.cwd(), "fixture.env", "fixture", next, async () => {});
+    await expect(operations.preflight()).rejects.toThrow("ownership");
+    expect(events.some(args => args.includes("up"))).toBe(false);
+    project = "fixture"; hash = "";
+    await expect(operations.preflight()).rejects.toThrow("configuration hash unavailable");
+    expect(events.some(args => args.includes("preflight"))).toBe(false);
   } finally { run.mockRestore(); }
 });
 

@@ -41,7 +41,20 @@ try {
     })));
     if (args[1] === "ps") return ""; // stopMigration: no helper survives.
     if (args[1] !== "compose") throw new Error("Unexpected command");
-    if (args.includes("config")) return JSON.stringify(config("new.example.invalid"));
+    if (args.includes("config")) {
+      const next = config("new.example.invalid");
+      if (mode === "database-start-failure") {
+        for (const service of Object.values(next.services)) {
+          for (const key of ["DATABASE_URL", "API_DATABASE_URL", "WORKER_DATABASE_URL"] as const) {
+            service.environment[key] = "postgresql://fixture:synthetic@postgres/app";
+          }
+        }
+        Object.assign(next.services, { postgres: { image: "postgres:pinned", environment: { POSTGRES_PASSWORD: "synthetic" } } });
+      }
+      return JSON.stringify(next);
+    }
+    if (args.includes("ps") && args.at(-1) === "postgres") return "";
+    if (args.includes("--wait") && mode === "database-start-failure") throw new Error("database startup failed");
     if (args.includes("preflight") && mode === "active") throw new Error("active run");
     if (args.includes("migrate") && mode === "migration-failure") throw new Error("migration failed");
     if (args.includes("up") && args.includes("api")) running = true;
@@ -50,7 +63,7 @@ try {
     if (args.includes("health/probe.ts") && mode === "readiness-failure") throw new Error("unhealthy");
     return "";
   });
-  globalThis.fetch = (async (url: string | URL | Request) => String(url).endsWith("/health/ready")
+  globalThis.fetch = (async (url: string | URL | Request) => mode === "proxy-failure" ? new Response(null, { status: 200 }) : String(url).endsWith("/health/ready")
     ? Response.json({ success: true, release: { sha } })
     : new Response(null, { status: 503, headers: { "X-InfraForge-Maintenance": "true" } })) as typeof fetch;
   process.argv = [process.execPath, "scripts/release.ts", "reconfigure", sha, resolve(directory, "synthetic-config"), directory];
