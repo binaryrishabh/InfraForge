@@ -29,6 +29,7 @@ if (!/^Driver:\s+docker\s*$/m.test(builder) ||
 }
 const suffix = randomBytes(4).toString("hex");
 const project = `infraforge_release_${suffix}`;
+const password = randomBytes(32).toString("hex");
 const directory = await mkdtemp(join(tmpdir(), "infraforge-release-"));
 const envFile = join(directory, "fixture.env");
 const override = join(directory, "compose.yml");
@@ -77,22 +78,12 @@ try {
   const release: Release = { ...metadata, image, imageId: built.Id, settingsFingerprint: "" };
   await mkdir(join(directory, "tls"));
   await mkdir(join(directory, "control"));
-  await Bun.write(envFile, `DATABASE_URL=postgresql://postgres@postgres/infraforge_release_${suffix}\nWORKER_DATABASE_URL=postgresql://postgres@postgres/infraforge_release_${suffix}\nMIGRATION_DATABASE_URL=postgresql://postgres@postgres/infraforge_release_${suffix}\nWORKER_DATABASE_MODE=direct\nBETTER_AUTH_SECRET=${randomBytes(32).toString("hex")}\nBETTER_AUTH_URL=https://api.example.invalid\nAPP_ORIGINS=https://app.example.invalid\nAPI_PORT=0\nWS_PORT=0\n`);
+  await Bun.write(envFile, `DATABASE_URL=postgresql://postgres:${password}@postgres/infraforge_release_${suffix}\nWORKER_DATABASE_URL=postgresql://postgres:${password}@postgres/infraforge_release_${suffix}\nMIGRATION_DATABASE_URL=postgresql://postgres:${password}@postgres/infraforge_release_${suffix}\nWORKER_DATABASE_MODE=direct\nPOSTGRES_USER=postgres\nPOSTGRES_DB=infraforge_release_${suffix}\nPOSTGRES_PASSWORD=${password}\nBETTER_AUTH_SECRET=${randomBytes(32).toString("hex")}\nBETTER_AUTH_URL=https://api.example.invalid\nAPP_ORIGINS=https://app.example.invalid\nAPI_PORT=0\nWS_PORT=0\n`);
   await Bun.write(override, `services:
   postgres:
-    image: postgres:18-alpine@sha256:898c60cb390d1085bc97bdd6a1ae968757421df394b071848b52b1c09c89d6a5
-    environment:
-      POSTGRES_HOST_AUTH_METHOD: trust
-      POSTGRES_DB: infraforge_release_${suffix}
     # A host-side proof client needs the loopback listener; internal-only bridges do not publish it.
     networks: [application, egress]
     ports: ["127.0.0.1:0:5432"]
-    volumes: [fixture_postgres:/var/lib/postgresql]
-    healthcheck:
-      test: [CMD, pg_isready, -U, postgres]
-      interval: 1s
-      timeout: 2s
-      retries: 30
   migration:
     environment:
       RELEASE_REHEARSAL: owned-local
@@ -127,8 +118,6 @@ try {
       - "${join(directory, "nginx.conf").replaceAll("\\", "/")}:/etc/nginx/nginx.conf:ro"
       - "${join(directory, "tls").replaceAll("\\", "/")}:/fixture/tls:ro"
       - "${join(directory, "control").replaceAll("\\", "/")}:/fixture/control:ro"
-volumes:
-  fixture_postgres:
 `);
   operations = new ComposeRelease(root, envFile, project, release, async (current, prior) => { accepted = current; previous = prior; }, override, 25000, environment);
   release.settingsFingerprint = settingsFingerprint(await operations.config());
@@ -142,17 +131,20 @@ volumes:
   await operations.stopMigration();
   await waitFor(async () => !await helperIds(), 10000);
   phase("interrupted migration CLI and owned helper cleanup passed");
-  await operations.compose(["up", "-d", "postgres", "redis"]);
-  await waitFor(async () => {
-    const id = await operations!.compose(["ps", "-q", "postgres"]);
-    return JSON.parse(await docker(["inspect", id]))[0].State.Health.Status === "healthy";
-  });
+  // No manual database start: the release must pull/start the production
+  // PostgreSQL service, initialize its named volume and migrate an empty DB.
+  await releaseSequence(operations, release);
+  phase("fresh self-hosted database initialized, all migrations and readiness passed");
+  await operations.stop();
+  // Reset only this random owned fixture database for the older cutover proof.
+  await operations.compose(["exec", "-T", "postgres", "dropdb", "-U", "postgres", `infraforge_release_${suffix}`]);
+  await operations.compose(["exec", "-T", "postgres", "createdb", "-U", "postgres", `infraforge_release_${suffix}`]);
   const fixtureCommand = (action: string) => operations!.compose(["run", "--rm", "--no-deps", "migration", "bun", "tests/release-fixture.ts", action]);
   await fixtureCommand("legacy");
   phase("legacy eight-migration database prepared");
   const address = await operations.compose(["port", "postgres", "5432"]);
   if (!/^127\.0\.0\.1:\d+$/.test(address)) throw new Error("Unexpected owned PostgreSQL listener");
-  const localUrl = (name: string) => `postgresql://postgres@${address}/${name}_${suffix}`;
+  const localUrl = (name: string) => `postgresql://postgres:${password}@${address}/${name}_${suffix}`;
   const sourceUrl = localUrl("infraforge_release");
   for (const name of ["reference", "restore"]) await operations.compose(["exec", "-T", "postgres", "createdb", "-U", "postgres", `infraforge_${name}_${suffix}`]);
   const db = connectDatabase(sourceUrl, "infraforge-fixture-ids");
@@ -230,7 +222,7 @@ volumes:
   await Bun.write(join(directory, "Dockerfile"), `FROM alpine:3.22@sha256:2e0b81d60597f449baa56dc25d355367869d2dca4cd57e866f1e2b52af3eb55f\nRUN apk add --no-cache pgbouncer=1.24.0-r0 nginx openssl\nLABEL org.infraforge.rehearsal="${suffix}"\nUSER nobody\nCMD ["pgbouncer", "/etc/pgbouncer.ini"]\n`);
   await docker(["build", "--builder", context.Name, "-t", poolImage, directory]);
   for (const mode of ["transaction", "session"]) {
-    await Bun.write(join(directory, `${mode}.ini`), `[databases]\ninfraforge_release_${suffix} = host=postgres port=5432 dbname=infraforge_release_${suffix} user=postgres\n[pgbouncer]\nlisten_addr=0.0.0.0\nlisten_port=6432\nauth_type=any\npool_mode=${mode}\ndefault_pool_size=${mode === "transaction" ? 1 : 5}\nmax_client_conn=20\npidfile=/tmp/pgbouncer.pid\n`);
+    await Bun.write(join(directory, `${mode}.ini`), `[databases]\ninfraforge_release_${suffix} = host=postgres port=5432 dbname=infraforge_release_${suffix} user=postgres password=${password}\n[pgbouncer]\nlisten_addr=0.0.0.0\nlisten_port=6432\nauth_type=any\npool_mode=${mode}\ndefault_pool_size=${mode === "transaction" ? 1 : 5}\nmax_client_conn=20\npidfile=/tmp/pgbouncer.pid\n`);
   }
   await operations.compose(["up", "-d", "pool-transaction", "pool-session"]);
   const probe = (mode: string) => operations!.compose(["run", "--rm", "--no-deps", "-e", `DATABASE_URL=postgresql://postgres@pool-${mode}:6432/infraforge_release_${suffix}`,

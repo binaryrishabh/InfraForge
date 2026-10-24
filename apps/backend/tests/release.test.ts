@@ -25,7 +25,7 @@ test("release accepts only an unchanged ordered migration prefix", async () => {
 });
 
 test("production worker requires an explicitly supported connection mode", () => {
-  const base = { NODE_ENV: "production", DATABASE_URL: "postgresql://worker@localhost/infraforge" };
+  const base = { NODE_ENV: "production", DATABASE_URL: "postgresql://worker@postgres/infraforge" };
   expect(() => workerDatabaseUrl(base)).toThrow("WORKER_DATABASE_MODE");
   expect(workerDatabaseUrl({ ...base, WORKER_DATABASE_MODE: "direct" })).toBe(base.DATABASE_URL);
   expect(workerDatabaseUrl({ ...base, WORKER_DATABASE_MODE: "session" })).toBe(base.DATABASE_URL);
@@ -36,7 +36,7 @@ test("production worker requires an explicitly supported connection mode", () =>
 });
 
 test("production dependency checks cannot fall back to ambient PostgreSQL or localhost Redis", () => {
-  const endpoints = { DATABASE_URL: "postgresql://fixture@database/fixture", REDIS_HOST: "redis", REDIS_PORT: "6379" };
+  const endpoints = { DATABASE_URL: "postgresql://fixture@database/fixture?sslmode=verify-full", REDIS_HOST: "redis", REDIS_PORT: "6379" };
   expect(() => requireProductionEndpoints(endpoints)).not.toThrow();
   for (const missing of ["DATABASE_URL", "REDIS_HOST", "REDIS_PORT"]) {
     expect(() => requireProductionEndpoints({ ...endpoints, [missing]: undefined })).toThrow("explicit");

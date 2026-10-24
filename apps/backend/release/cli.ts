@@ -3,6 +3,7 @@ import { assertNoWorker, checkHistory, checkSchemaGuards, migrationPreflight, mi
 import { AUTH_CONTRACT } from "./runtime";
 import { verifyWorkerSession, workerDatabaseUrl } from "../infra/workerConnection";
 import { verifyDatabaseTargets } from "./databaseTargets";
+import { postgresUrl } from "../utils/postgresUrl";
 
 const command = process.argv[2];
 if (command === "manifest") {
@@ -23,6 +24,8 @@ if (command === "manifest") {
     if (process.env.NODE_ENV === "production") {
       const migrationUrl = workerDatabaseUrl({ ...process.env, WORKER_DATABASE_MODE: "direct" });
       if (!process.env.API_DATABASE_URL || !process.env.WORKER_DATABASE_URL) throw new Error("All database endpoints must be verified");
+      postgresUrl(process.env.API_DATABASE_URL);
+      postgresUrl(process.env.WORKER_DATABASE_URL, true);
       await verifyWorkerSession(migrationUrl);
       await verifyDatabaseTargets(migrationUrl, [process.env.API_DATABASE_URL, process.env.WORKER_DATABASE_URL]);
     }

@@ -1,5 +1,6 @@
 import { Client } from "pg";
 import { randomInt } from "node:crypto";
+import { postgresUrl } from "../utils/postgresUrl";
 
 export function workerDatabaseUrl(env: Record<string, string | undefined>) {
   if (!env.DATABASE_URL) throw new Error("Worker requires DATABASE_URL");
@@ -12,6 +13,7 @@ export function workerDatabaseUrl(env: Record<string, string | undefined>) {
     url.searchParams.get("pool_mode") === "transaction" || env.WORKER_DATABASE_MODE === "transaction") {
     throw new Error("Worker requires a PostgreSQL session-preserving endpoint; transaction pooling is unsupported");
   }
+  if (env.NODE_ENV === "production") postgresUrl(env.DATABASE_URL, true);
   return env.DATABASE_URL;
 }
 

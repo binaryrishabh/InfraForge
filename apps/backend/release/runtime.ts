@@ -1,16 +1,16 @@
 import { readFile } from "node:fs/promises";
 import { Pool } from "pg";
 import { checkHistory, checkSchemaGuards } from "./migrations";
+import { postgresUrl } from "../utils/postgresUrl";
 
 export const AUTH_CONTRACT = 1;
 export type ReleaseMetadata = { sha: string; authContract: number; migrationFingerprint: string };
 
 export function requireProductionEndpoints(env: Record<string, string | undefined>) {
   if (!env.DATABASE_URL || !env.REDIS_HOST || !env.REDIS_PORT) throw new Error("Production database and Redis endpoints must be explicit");
-  const database = new URL(env.DATABASE_URL);
+  postgresUrl(env.DATABASE_URL);
   const port = Number(env.REDIS_PORT);
-  if (!["postgres:", "postgresql:"].includes(database.protocol) || !database.hostname || database.pathname.length < 2 ||
-      !Number.isInteger(port) || port < 1 || port > 65535) throw new Error("Production database/Redis endpoints are invalid");
+  if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error("Production database/Redis endpoints are invalid");
 }
 
 export async function releaseMetadata(): Promise<ReleaseMetadata> {

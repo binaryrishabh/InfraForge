@@ -120,3 +120,61 @@ for (const cached of [false, true]) test(`release ${cached ? "reuses" : "pulls"}
     if (!cached) expect(events.indexOf(pulls[0]!)).toBeLessThan(events.indexOf(migrations[0]!));
   } finally { run.mockRestore(); }
 });
+
+test("local URL includes PostgreSQL in pre-pull and waits for it before migration preflight", async () => {
+  const next = release("next"), events: string[][] = [];
+  const url = "postgresql://fixture:synthetic@postgres/fixture";
+  const declared = {
+    api: { image: next.image, environment: { DATABASE_URL: url } }, worker: { image: next.image }, "ws-server": { image: next.image },
+    migration: { image: next.image, environment: { DATABASE_URL: url, API_DATABASE_URL: url, WORKER_DATABASE_URL: url } },
+    postgres: { image: "postgres:pinned-fixture", environment: { POSTGRES_PASSWORD: "synthetic" } },
+  };
+  let failStartup = false;
+  const run = spyOn(releaseProcess, "command").mockImplementation(async args => {
+    events.push(args);
+    if (args.includes("config")) return JSON.stringify({ services: declared });
+    if (args[1] === "image") throw Error("absent");
+    if (args.includes("--wait") && failStartup) throw Error("database unhealthy");
+    return "";
+  });
+  try {
+    const operations = new ComposeRelease(process.cwd(), "fixture.env", "fixture", next, async () => {});
+    await operations.preflight();
+    const pull = events.findIndex(args => args.includes("pull") && args.at(-1) === "postgres");
+    const start = events.findIndex(args => args.includes("--wait") && args.at(-1) === "postgres");
+    expect(pull).toBeGreaterThanOrEqual(0);
+    expect(start).toBeGreaterThan(pull);
+    expect(events.findIndex(args => args.includes("preflight"))).toBeGreaterThan(start);
+    failStartup = true; events.length = 0;
+    await expect(operations.preflight()).rejects.toThrow("unhealthy");
+    expect(events.some(args => args.includes("preflight"))).toBe(false);
+    failStartup = false; declared.postgres.environment.POSTGRES_PASSWORD = ""; events.length = 0;
+    await expect(operations.preflight()).rejects.toThrow("POSTGRES_PASSWORD");
+    expect(events.some(args => args.includes("--wait") || args.includes("preflight"))).toBe(false);
+    declared.postgres.environment.POSTGRES_PASSWORD = "synthetic";
+    declared.migration.environment.API_DATABASE_URL = "postgresql://fixture@remote/fixture";
+    await expect(operations.preflight()).rejects.toThrow("verify-full");
+    declared.migration.environment.API_DATABASE_URL = url;
+    declared.migration.environment.WORKER_DATABASE_URL = "postgresql://fixture@ep-pooler.example/fixture?sslmode=verify-full";
+    await expect(operations.preflight()).rejects.toThrow("transaction pooling");
+  } finally { run.mockRestore(); }
+  expect(() => releaseDependencyClosure({ api: declared.api }, ["api"])).toThrow("missing");
+  expect([...releaseDependencyClosure({ api: { environment: { DATABASE_URL: "postgresql://fixture@remote/fixture?sslmode=verify-full" } }, postgres: {} }, ["api"])]).toEqual(["api"]);
+});
+
+test("production PostgreSQL keeps data persistent, bounded and exclusively on the internal network", () => {
+  const config = Bun.YAML.parse(readFileSync("apps/backend/docker-compose.yml", "utf8")) as any;
+  const db = config.services.postgres;
+  expect(db.image).toBe("postgres:18-alpine@sha256:898c60cb390d1085bc97bdd6a1ae968757421df394b071848b52b1c09c89d6a5");
+  expect(db.ports).toBeUndefined();
+  expect(db.networks).toEqual(["application"]);
+  expect(config.networks.application.internal).toBe(true);
+  expect(db.volumes).toEqual(["postgres_data:/var/lib/postgresql"]);
+  expect(config.volumes).toHaveProperty("postgres_data");
+  expect(db.environment.POSTGRES_PASSWORD).toBe("${POSTGRES_PASSWORD:-}");
+  expect(db.environment.POSTGRES_HOST_AUTH_METHOD).toBeUndefined();
+  expect(db.environment.POSTGRES_INITDB_ARGS).toBe("--auth-host=scram-sha-256");
+  expect(db.command).toContain("max_connections=80");
+  expect(db.command).toContain("work_mem=2MB");
+  expect(db.command).toContain("shared_buffers=192MB");
+});

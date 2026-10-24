@@ -47,6 +47,37 @@ x-health: &health
   start_period: 15s
 
 services:
+  # Started by the release controller only when a selected URL names postgres.
+  # No host listener or egress network: plaintext traffic stays on this host.
+  postgres:
+    image: postgres:18-alpine@sha256:898c60cb390d1085bc97bdd6a1ae968757421df394b071848b52b1c09c89d6a5
+    profiles: [database]
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-infraforge}
+      POSTGRES_DB: ${POSTGRES_DB:-infraforge}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-}
+      POSTGRES_INITDB_ARGS: --auth-host=scram-sha-256
+    volumes: [postgres_data:/var/lib/postgresql]
+    networks: [application]
+    restart: unless-stopped
+    stop_grace_period: 60s
+    mem_limit: 768m
+    cpus: 0.50
+    shm_size: 128m
+    pids_limit: 128
+    logging:
+      driver: local
+      options:
+        max-size: "10m"
+        max-file: "3"
+    command: [postgres, -c, shared_buffers=192MB, -c, work_mem=2MB, -c, maintenance_work_mem=32MB, -c, max_connections=80, -c, max_parallel_workers_per_gather=0, -c, max_wal_size=512MB]
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"']
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 20s
+
   migration:
     <<: *app
     profiles: [release]
@@ -136,6 +167,7 @@ services:
 
 volumes:
   redis_data:
+  postgres_data:
 networks:
   application:
     internal: true

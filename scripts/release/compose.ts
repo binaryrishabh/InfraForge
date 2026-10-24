@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { command, waitFor } from "./process";
 import type { Release, ReleaseOperations } from "./sequence";
+import { postgresUrl } from "../../apps/backend/utils/postgresUrl";
 
 const services = ["api", "worker", "ws-server"];
 type ContainerState = { Name: string; Config: { Labels: Record<string, string> };
@@ -15,12 +16,19 @@ export function applicationStopBlockers(records: ContainerState[], project: stri
   });
 }
 // Services a release starts plus everything they transitively depend on (for example Redis).
-export function releaseDependencyClosure(declared: Record<string, { depends_on?: Record<string, unknown> }>, roots: readonly string[]) {
+export function releaseDependencyClosure(declared: Record<string, { depends_on?: Record<string, unknown>; environment?: Record<string, string> }>, roots: readonly string[]) {
   const needed = new Set<string>(), pending = [...roots];
   for (let name = pending.pop(); name !== undefined; name = pending.pop()) {
     if (needed.has(name) || !declared[name]) continue;
     needed.add(name);
     pending.push(...Object.keys(declared[name]!.depends_on ?? {}));
+    // This dependency is selected by URL, so remote providers need no local DB
+    // credentials or Compose edits. Include it in the same image pre-pull closure.
+    const url = declared[name]!.environment?.DATABASE_URL;
+    if (url && postgresUrl(url).hostname === "postgres") {
+      if (!declared.postgres) throw new Error("Local PostgreSQL service is missing");
+      pending.push("postgres");
+    }
   }
   return needed;
 }
@@ -32,7 +40,7 @@ export class ComposeRelease implements ReleaseOperations {
 
   async compose(args: string[], release = this.active) {
     return command(["docker", "compose", "--project-name", this.project, "--env-file", this.envFile,
-      "-f", "apps/backend/docker-compose.yml", ...(this.override ? ["-f", this.override] : []), ...args], this.root,
+      "-f", "apps/backend/docker-compose.yml", ...(this.override ? ["-f", this.override] : []), "--profile", "database", ...args], this.root,
       { ...this.environment, RELEASE_SHA: release.sha, RELEASE_IMAGE: release.image });
   }
   async config() { return JSON.parse(await this.compose(["config", "--format", "json"])); }
@@ -53,8 +61,8 @@ export class ComposeRelease implements ReleaseOperations {
   // exactly the image it already runs, and unrelated (for example fixture) services are not touched.
   private async ensureDependencyImages() {
     if (this.dependencyImagesReady) return;
-    const declared = (await this.config()).services as Record<string, { image?: string; depends_on?: Record<string, unknown> }>;
-    for (const name of releaseDependencyClosure(declared, services)) {
+    const declared = (await this.config()).services as Record<string, { image?: string; depends_on?: Record<string, unknown>; environment?: Record<string, string> }>;
+    for (const name of releaseDependencyClosure(declared, [...services, "migration"])) {
       const image = declared[name]!.image;
       if (!image || image === this.next.image) continue;
       try { await command(["docker", "image", "inspect", image], this.root, this.environment); }
@@ -64,6 +72,21 @@ export class ComposeRelease implements ReleaseOperations {
   }
   async preflight() {
     await this.ensureDependencyImages();
+    const config = await this.config();
+    const declared = config.services;
+    const migration = declared.migration?.environment;
+    if (migration) {
+      postgresUrl(migration.DATABASE_URL, true);
+      postgresUrl(migration.API_DATABASE_URL);
+      postgresUrl(migration.WORKER_DATABASE_URL, true);
+    }
+    if (releaseDependencyClosure(declared, [...services, "migration"]).has("postgres")) {
+      const db = declared.postgres;
+      if (!db?.environment?.POSTGRES_PASSWORD) {
+        throw new Error("Local PostgreSQL requires POSTGRES_PASSWORD");
+      }
+      await this.compose(["up", "-d", "--no-build", "--pull", "never", "--wait", "--wait-timeout", "90", "postgres"], this.next);
+    }
     await this.compose(["run", "--rm", "--no-deps", "migration", "bun", "release/cli.ts", "preflight"], this.next);
   }
   async stop() {
