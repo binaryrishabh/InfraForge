@@ -625,7 +625,18 @@ class OperationsTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     ops.status(CONFIG)
             for start, expected in [(NOW - 1, True), (NOW - 2761, False), (NOW + 1, False)]:
-                ops.write_json(self.state / "backup-attempt.json", {"ok": False, "running": True, "started_at": start})
+                ops.write_json(self.state / "backup-attempt.json", {"ok": False, "running": True,
+                                                                  "previous_ok": True, "started_at": start})
+                self.assertEqual(ops.backup_healthy(CONFIG), expected)
+
+    def test_retry_start_does_not_clear_failed_or_interrupted_backup_latch(self):
+        for previous, expected in [({"ok": True}, True), ({"ok": False}, False),
+                ({"ok": False, "running": True, "previous_ok": True, "started_at": NOW - 2761}, False)]:
+            self.healthy_receipt()
+            ops.write_json(self.state / "backup-attempt.json", previous)
+            with patch.object(ops.time, "time", return_value=NOW):
+                ops.begin_backup(CONFIG)
+                ops.begin_backup(CONFIG)  # systemd pre-start followed by the locked runner.
                 self.assertEqual(ops.backup_healthy(CONFIG), expected)
 
     def test_systemd_failure_hook_records_failure_for_timeout_or_lock_refusal(self):

@@ -522,7 +522,8 @@ def backup_healthy(config, now=None):
     elapsed = age(receipt, "snapshot_at", now)
     attempt = read_json(STATE / "backup-attempt.json")
     running_age = age(attempt, "started_at", now)
-    running = attempt.get("running") is True and running_age is not None and running_age <= 46 * 60
+    running = (attempt.get("running") is True and attempt.get("previous_ok") is True and
+               running_age is not None and running_age <= 46 * 60)
     return (receipt.get("storage") == storage_identity(config) and
             elapsed is not None and elapsed <= 26 * 3600 and
             (attempt.get("ok") is True or running))
@@ -601,7 +602,16 @@ def status(config):
 
 
 def begin_backup(_config):
-    write_json(STATE / "backup-attempt.json", {"ok": False, "running": True, "started_at": time.time()})
+    previous = read_json(STATE / "backup-attempt.json")
+    now = time.time()
+    elapsed = age(previous, "started_at", now)
+    # ExecStartPre and the locked runner both call this. Preserve healthy grace
+    # across those two starts, but never clear a failed/interrupted attempt.
+    previous_ok = (previous.get("ok") is True or
+                   (previous.get("running") is True and previous.get("previous_ok") is True and
+                    elapsed is not None and elapsed <= 46 * 60))
+    write_json(STATE / "backup-attempt.json", {"ok": False, "running": True,
+                                              "previous_ok": previous_ok, "started_at": now})
 
 
 def fail_backup(config):
