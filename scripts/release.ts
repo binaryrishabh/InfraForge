@@ -31,10 +31,18 @@ let interrupted = false;
 let operationsInProgress: ComposeRelease | undefined;
 let mutationStarted = false;
 let failedAfterStop = false;
+let acceptanceComplete = false;
+let lockCleanup: Promise<void> | undefined;
+const releaseLock = () => lockCleanup ??= lock.close().then(() => unlink(lockPath));
 const interrupt = async () => {
   if (interrupted) return;
   interrupted = true;
   await cancelCommands();
+  if (acceptanceComplete) {
+    await releaseLock();
+    console.error("Accepted release cleanup interrupted; application remains running and release lock is removed.");
+    return process.exit(0);
+  }
   await cleanupReleaseBuilder(command, root);
   if (mutationStarted && operationsInProgress) {
     await operationsInProgress.compose(["stop", "--timeout", "30", "api", "worker", "ws-server"]).catch(() => {});
@@ -92,16 +100,17 @@ try {
     await rollbackSequence(operations, state.current, state.previous);
   }
   await unlink(maintenance);
+  acceptanceComplete = true;
   console.log(`Accepted ${action !== "rollback" ? sha : state!.previous!.sha}; verify public TLS/WS/auth before frontend promotion.`);
   // Cleanup is post-acceptance housekeeping. Its failure cannot undo acceptance
   // or cause the controller to treat healthy services as a failed release.
   try { await pruneAcceptedImages(root, directory); }
   catch (error) { console.error(`Accepted release cleanup incomplete: ${(error as Error).message}`); }
 } catch (error) {
-  failedAfterStop = mutationStarted;
+  failedAfterStop = mutationStarted && !acceptanceComplete;
   if (failedAfterStop && operationsInProgress) await operationsInProgress.stopMigration().catch(() => {});
   throw error;
 } finally {
-  await lock.close();
-  if (!interrupted && !failedAfterStop) await unlink(lockPath);
+  if (acceptanceComplete || !interrupted && !failedAfterStop) await releaseLock();
+  else await lock.close();
 }

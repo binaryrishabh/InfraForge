@@ -12,6 +12,8 @@ const mode = process.argv[2];
 const sha = "a".repeat(40), imageId = `sha256:${"b".repeat(64)}`;
 const metadata = { sha, migrationFingerprint: "schema", authContract: 1 };
 const events: string[][] = [];
+const cleanupObservations: { accepted: typeof current; maintenance: boolean; running: boolean }[] = [];
+let interruptedExit: number | undefined;
 let running = false;
 const services = ["api", "worker", "ws-server"];
 const config = (host: string) => ({ services: Object.fromEntries([...services, "migration"].map(service => [service, {
@@ -37,9 +39,13 @@ try {
       return args[1] === "ls-remote" && mode === "wrong-main" ? "c".repeat(40) : sha;
     }
     if (args[1] === "image" && args[2] === "ls") {
-      if (await Bun.file(resolve(directory, "maintenance")).exists()) throw new Error("Cleanup before maintenance cleared");
       const saved = JSON.parse(await readFile(resolve(directory, "accepted.json"), "utf8"));
-      if (saved.current.settingsFingerprint === current.settingsFingerprint) throw new Error("Cleanup before acceptance");
+      cleanupObservations.push({ accepted: saved.current, maintenance: await Bun.file(resolve(directory, "maintenance")).exists(), running });
+      if (mode === "cleanup-SIGINT" || mode === "cleanup-SIGTERM") {
+        spyOn(process, "exit").mockImplementation(code => { interruptedExit = Number(code); return undefined as never; });
+        const handler = process.listeners(mode.slice(8) as "SIGINT" | "SIGTERM").at(-1) as () => Promise<void>;
+        await handler();
+      }
       if (mode === "cleanup-failure") throw new Error("fixture cleanup failure");
       return "";
     }
@@ -81,7 +87,7 @@ try {
   process.argv = [process.execPath, "scripts/release.ts", "reconfigure", sha, resolve(directory, "synthetic-config"), directory];
   let failure = "";
   try { await import("../../release.ts"); } catch (error) { failure = (error as Error).message; }
-  console.log(JSON.stringify({ failure, events, current,
+  console.log(JSON.stringify({ failure, events, current, cleanupObservations, interruptedExit, running,
     accepted: JSON.parse(await readFile(resolve(directory, "accepted.json"), "utf8")),
     maintenance: await Bun.file(resolve(directory, "maintenance")).exists(), lock: await Bun.file(resolve(directory, "release.lock")).exists() }));
 } finally { await rm(directory, { recursive: true }); }

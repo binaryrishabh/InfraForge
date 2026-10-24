@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 
-for (const mode of ["success", "cleanup-failure", "disk-full", "wrong-main", "active", "migration-failure", "readiness-failure", "database-start-failure", "proxy-failure"]) {
+for (const mode of ["success", "cleanup-failure", "cleanup-SIGINT", "cleanup-SIGTERM", "disk-full", "wrong-main", "active", "migration-failure", "readiness-failure", "database-start-failure", "proxy-failure"]) {
   test(`same-SHA configuration CLI preserves release gates: ${mode}`, () => {
     const child = Bun.spawnSync([process.execPath, "--no-env-file", "scripts/tests/fixtures/reconfigure.ts", mode]);
     expect(child.exitCode).toBe(0);
@@ -8,7 +8,7 @@ for (const mode of ["success", "cleanup-failure", "disk-full", "wrong-main", "ac
     const events = result.events as string[][];
     const starts = events.filter(args => args.includes("up") && args.includes("api"));
     expect(events.some(args => args.includes("build") || args.includes("tag"))).toBe(false);
-    if (mode === "success" || mode === "cleanup-failure") {
+    if (mode === "success" || mode.startsWith("cleanup-")) {
       expect(result.failure).toBe("");
       expect(result.accepted.current.sha).toBe(result.current.sha);
       expect(result.accepted.current.image).toBe(result.current.imageId);
@@ -21,6 +21,13 @@ for (const mode of ["success", "cleanup-failure", "disk-full", "wrong-main", "ac
       expect(result.maintenance).toBe(false);
       expect(result.lock).toBe(false);
       expect(events.filter(args => args[1] === "image" && args[2] === "ls")).toHaveLength(1);
+      expect(result.cleanupObservations).toEqual([{ accepted: result.accepted.current, maintenance: false, running: true }]);
+      if (mode === "cleanup-SIGINT" || mode === "cleanup-SIGTERM") {
+        expect(result.interruptedExit).toBe(0);
+        expect(result.running).toBe(true);
+        const cleanup = events.findIndex(args => args[1] === "image" && args[2] === "ls");
+        expect(events.slice(cleanup + 1).some(args => args.includes("stop"))).toBe(false);
+      }
       expect(events.findIndex(args => args[0] === "disk-preflight")).toBeLessThan(events.findIndex(args => args[0] === "docker"));
     } else {
       expect(result.failure).toContain({ "wrong-main": "remote main", active: "active run",
