@@ -208,8 +208,10 @@ before their path is reported. The non-root release operator needs working
 `sudo -n chown` for these files; bootstrap does not grant additional sudo rights.
 Read the reported path with `sudo cat -- PATH`. URLs, secret assignments, known
 secret environment values and authorization values are redacted before writing;
-value-bearing dotenv parser errors are replaced entirely with a syntax-check
-message, since malformed values may appear without their assignment key. Quoted
+diagnostics with environment, variable, template or interpolation context, parser
+line locations, or read/load/parse failures are replaced entirely with a syntax-check
+message. This conservative suppression covers unfamiliar error wording and
+required-variable reasons that can contain values without assignment keys. Quoted
 secret assignments are redacted across escaped quotes and multiple lines.
 stderr is never copied into Actions output. If storage or ownership fails, the
 error explicitly says diagnostics could not be secured and identifies the checks

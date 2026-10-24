@@ -3,6 +3,8 @@ import { lstat, open, unlink, type FileHandle } from "node:fs/promises";
 import { resolve } from "node:path";
 
 const sensitive = /PASSWORD|SECRET|TOKEN|KEY|CREDENTIAL|DATABASE_URL/i;
+const configurationContext = /\b(?:dotenv|env(?:ironment)?(?:[-_\s]*files?)?|interpolat\w*|templates?|variables?)\b|\$\{|\bline\s+\d+\s*:/i;
+const configurationReadFailure = /\b(?:failed|unable|cannot|could not|error)\b[^\r\n]*\b(?:read(?:ing)?|load(?:ing)?|pars(?:e|ing))\b/i;
 type DiagnosticStat = { ino: number; dev: number; uid: number; mode: number; isFile(): boolean };
 export function assertPrivateDiagnostic(opened: DiagnosticStat, named: DiagnosticStat) {
   if (!named.isFile() || named.ino !== opened.ino || named.dev !== opened.dev || opened.uid !== 0 || (opened.mode & 0o777) !== 0o600) {
@@ -11,12 +13,11 @@ export function assertPrivateDiagnostic(opened: DiagnosticStat, named: Diagnosti
 }
 export function redactReleaseDiagnostic(text: string, environment: Record<string, string | undefined>) {
   let result = text.replace(/\x1b\[[0-9;]*[A-Za-z]/g, "");
-  // dotenv parser errors can echo a value without its key. The private env-file
-  // values are deliberately unavailable here, so suppress the entire payload,
-  // including continuation lines, rather than guessing which words are secrets.
-  if (/\bline\s+\d+:\s*(?:unterminated quoted value|unexpected character|key cannot contain a space)\b/i.test(result) ||
-      /invalid interpolation format/i.test(result)) {
-    return "[redacted Compose environment-file parser diagnostic; inspect private configuration syntax]";
+  // Configuration errors can echo templates or required-variable reasons without
+  // their assignment keys. Suppress their entire payload by context, including
+  // ambiguous read/parse failures and continuation lines; error wording varies.
+  if (configurationContext.test(result) || configurationReadFailure.test(result)) {
+    return "[redacted Compose configuration/interpolation diagnostic; inspect private configuration syntax]";
   }
   // Replace known secret values before taking the tail, even if they contain
   // punctuation, whitespace or newlines. Compose's env-file values are also

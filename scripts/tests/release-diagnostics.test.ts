@@ -41,6 +41,25 @@ test("raw known credentials without a key, URL or encoded spelling are removed",
   expect(redacted).not.toContain("credential");
 });
 
+for (const [label, diagnostic] of [
+  ["env-file Invalid template", 'failed to read /tmp/w50-review/synthetic.env: Invalid template: "review-fixture-db-password${"'],
+  ["bare Invalid template", 'Invalid template: "review-fixture-db-password${"'],
+  ["env-file required-variable reason", 'failed to read /tmp/w50-review/synthetic.env: required variable W50_NONEXISTENT is missing a value: review-fixture-db-password'],
+  ["bare required-variable reason", 'required variable W50_NONEXISTENT is missing a value: review-fixture-db-password'],
+  ["unfamiliar dotenv failure", 'dotenv: unfamiliar failure: review-fixture-db-password'],
+  ["unfamiliar configuration read failure", 'failed to read /private/settings: unfamiliar failure: review-fixture-db-password'],
+]) test(`persisted configuration failures suppress ${label}`, async () => {
+  const directory = await mkdtemp(join(tmpdir(), "infraforge-interpolation-diagnostic-"));
+  try {
+    // Actual Compose stderr forms carry an env-file-only value, without the
+    // sensitive assignment key. No known-value substitution can protect it.
+    const path = await writeComposeDiagnostic(diagnostic, directory, {}, async () => {});
+    const saved = await readFile(path, "utf8");
+    expect(saved).not.toContain("review-fixture-db-password");
+    expect(saved).toBe("[redacted Compose configuration/interpolation diagnostic; inspect private configuration syntax]\n");
+  } finally { await rm(directory, { recursive: true }); }
+}, 30000);
+
 test("persisted diagnostics suppress env-only parser payloads and multiline or escaped secret fragments", async () => {
   const directory = await mkdtemp(join(tmpdir(), "infraforge-parser-diagnostic-"));
   const examples = [
