@@ -243,7 +243,7 @@ class OperationsTests(unittest.TestCase):
 
     def test_existing_week_only_uploads_daily_and_removes_old_local_copy(self):
         self.archive("backup.old")
-        ops.write_json(self.state / "backup.json", {"archive": "backup.old", "week": "2026-W43"})
+        ops.write_json(self.state / "backup.json", {"archive": "backup.old", "week": "2026-W43", "storage": ops.storage_identity(CONFIG)})
         self.backup()
         self.assertEqual(sum("put-object" in args for args, _, _ in self.calls), 1)
         self.assertFalse((self.state / "backups/backup.old").exists())
@@ -334,7 +334,7 @@ class OperationsTests(unittest.TestCase):
     def test_restore_reuses_proof_and_hardened_restore_with_no_source_credentials(self):
         archive = self.archive()
         key = self.remote_archive(archive)
-        ops.write_json(self.state / "backup.json", {"snapshot_at": NOW - 60, "daily_key": key})
+        ops.write_json(self.state / "backup.json", {"snapshot_at": NOW - 60, "daily_key": key, "storage": ops.storage_identity(CONFIG)})
         # A successful drill must not depend on the local staging archive.
         shutil.rmtree(archive)
         with patch.object(ops.time, "time", return_value=NOW), patch.object(ops, "command", self.fake_command), patch.dict(os.environ, {"PGPASSWORD": "synthetic", "BACKUP_DATABASE_URL": URL}):
@@ -364,7 +364,7 @@ class OperationsTests(unittest.TestCase):
     def test_restore_failure_cleans_container_and_latches_failure(self):
         archive = self.archive()
         key = self.remote_archive(archive)
-        ops.write_json(self.state / "backup.json", {"snapshot_at": NOW - 60, "daily_key": key})
+        ops.write_json(self.state / "backup.json", {"snapshot_at": NOW - 60, "daily_key": key, "storage": ops.storage_identity(CONFIG)})
         def fail_restore(args, **kwargs):
             result = self.fake_command(args, **kwargs)
             if "/restore/verify.sh" in args:
@@ -377,11 +377,45 @@ class OperationsTests(unittest.TestCase):
         self.assertTrue(any(args[:3] == ["docker", "rm", "-fv"] for args, _, _ in self.calls))
 
     def test_stale_restore_source_never_starts_docker(self):
-        ops.write_json(self.state / "backup.json", {"snapshot_at": NOW - 93601, "archive": "backup.fixture"})
+        ops.write_json(self.state / "backup.json", {"snapshot_at": NOW - 93601, "storage": ops.storage_identity(CONFIG),
+                                                    "daily_key": "backups/daily/2026-10-20.tar"})
         with patch.object(ops.time, "time", return_value=NOW), patch.object(ops, "command") as command:
             with self.assertRaises(ValueError):
                 ops.drill(CONFIG)
             command.assert_not_called()
+
+    def test_new_storage_target_forces_weekly_copy_even_with_old_receipt(self):
+        for previous_storage in [None, ops.storage_identity({**CONFIG, "bucket": "old-bucket"})]:
+            self.calls.clear()
+            ops.write_json(self.state / "backup.json", {"week": "2026-W43", "storage": previous_storage})
+            self.backup()
+            self.assertEqual(sum("put-object" in args for args, _, _ in self.calls), 2)
+            receipt = ops.read_json(self.state / "backup.json")
+            self.assertEqual(receipt["storage"], ops.storage_identity(CONFIG))
+            self.assertTrue(receipt["weekly_key"].startswith("backups/weekly/"))
+
+    def test_old_target_receipt_cannot_report_health_or_start_restore(self):
+        self.healthy_receipt()
+        other = {**CONFIG, "endpoint_url": "https://different.example.invalid"}
+        with patch.object(ops.time, "time", return_value=NOW), patch.object(ops, "command") as command:
+            self.assertFalse(ops.backup_healthy(other))
+            with self.assertRaises(ValueError):
+                ops.drill(other)
+            command.assert_not_called()
+
+    def test_state_refuses_wrong_owner_public_modes_symlinks_and_non_directories(self):
+        state = unittest.mock.MagicMock()
+        with patch.object(ops, "STATE", state):
+            for owner, mode, symlink, directory in [(0, 0o700, False, True), (1, 0o700, False, True),
+                    (0, 0o755, False, True), (0, 0o700, True, True), (0, 0o700, False, False)]:
+                state.is_symlink.return_value = symlink
+                state.is_dir.return_value = directory
+                state.stat.return_value = types.SimpleNamespace(st_uid=owner, st_mode=mode)
+                if owner == 0 and mode == 0o700 and not symlink and directory:
+                    ops.validate_state()
+                else:
+                    with self.assertRaises(ValueError):
+                        ops.validate_state()
 
     def test_cleanup_refuses_unowned_container_name(self):
         ops.write_json(self.state / "drill-container.json", {"name": "production"})
@@ -542,7 +576,7 @@ class OperationsTests(unittest.TestCase):
                 self.assertFalse((self.state / "escape").exists())
 
     def healthy_receipt(self):
-        ops.write_json(self.state / "backup.json", {"snapshot_at": NOW - 60})
+        ops.write_json(self.state / "backup.json", {"snapshot_at": NOW - 60, "storage": ops.storage_identity(CONFIG)})
         ops.write_json(self.state / "backup-attempt.json", {"ok": True})
 
     def test_monitor_alerts_on_missing_stale_future_and_failed_backup(self):
@@ -550,7 +584,7 @@ class OperationsTests(unittest.TestCase):
                  ({"snapshot_at": NOW + 1}, {"ok": True}), ({"snapshot_at": NOW - 60}, {"ok": False})]
         for receipt, attempt in cases:
             (self.state / "ops-status.json").unlink(missing_ok=True)
-            ops.write_json(self.state / "backup.json", receipt)
+            ops.write_json(self.state / "backup.json", {**receipt, "storage": ops.storage_identity(CONFIG)})
             ops.write_json(self.state / "backup-attempt.json", attempt)
             with patch.object(ops.time, "time", return_value=NOW), patch.object(ops, "send_alert", return_value="sent") as send:
                 ops.monitor(CONFIG)
@@ -592,7 +626,7 @@ class OperationsTests(unittest.TestCase):
                     ops.status(CONFIG)
             for start, expected in [(NOW - 1, True), (NOW - 2761, False), (NOW + 1, False)]:
                 ops.write_json(self.state / "backup-attempt.json", {"ok": False, "running": True, "started_at": start})
-                self.assertEqual(ops.backup_healthy(), expected)
+                self.assertEqual(ops.backup_healthy(CONFIG), expected)
 
     def test_systemd_failure_hook_records_failure_for_timeout_or_lock_refusal(self):
         self.healthy_receipt()

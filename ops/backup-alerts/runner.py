@@ -235,6 +235,10 @@ def file_hash(path, algorithm="sha256"):
         return hashlib.file_digest(source, algorithm).digest()
 
 
+def storage_identity(config):
+    return hashlib.sha256(json.dumps([config["endpoint_url"].rstrip("/"), config["bucket"], config["region"]]).encode()).hexdigest()
+
+
 def download(config, key, target):
     backup_key(key)
     head = json.loads(s3(config, ["s3api", "head-object", "--bucket", config["bucket"], "--key", key]))
@@ -357,12 +361,15 @@ def backup(config, now=None):
         daily = f"backups/daily/{instant:%Y-%m-%d}-{suffix}.tar"
         week = instant.strftime("%G-W%V")
         upload(config, bundle, daily)
-        if previous.get("week") != week:
-            upload(config, bundle, f"backups/weekly/{week}-{suffix}.tar")
+        weekly = previous.get("weekly_key")
+        if previous.get("storage") != storage_identity(config) or previous.get("week") != week:
+            weekly = f"backups/weekly/{week}-{suffix}.tar"
+            upload(config, bundle, weekly)
         prune(config, started)
         # Receipt advances only after every required PUT succeeds; age starts at dump start.
         write_json(STATE / "backup.json", {"snapshot_at": started, "archive": archive.name,
-                                          "daily_key": daily, "week": week})
+                                          "daily_key": daily, "week": week, "weekly_key": weekly,
+                                          "storage": storage_identity(config)})
     finally:
         bundle.unlink(missing_ok=True)
     old_name = previous.get("archive", "")
@@ -385,7 +392,7 @@ def drill(config):
     cleanup_drill(config)  # Recover a recorded owned container left by a host reboot.
     receipt = read_json(STATE / "backup.json")
     elapsed = age(receipt, "snapshot_at", time.time())
-    if elapsed is None or elapsed > 93600:
+    if elapsed is None or elapsed > 93600 or receipt.get("storage") != storage_identity(config):
         raise ValueError("Fresh uploaded archive required for drill")
     # Prove retrieval from off-host storage rather than trust the local dump.
     with tempfile.TemporaryDirectory(dir=STATE) as work:
@@ -509,13 +516,15 @@ def metrics(config):
     write_json(STATE / "metrics.json", {"observed_at": time.time(), "values": collect(config)})
 
 
-def backup_healthy(now=None):
+def backup_healthy(config, now=None):
     now = time.time() if now is None else now
-    elapsed = age(read_json(STATE / "backup.json"), "snapshot_at", now)
+    receipt = read_json(STATE / "backup.json")
+    elapsed = age(receipt, "snapshot_at", now)
     attempt = read_json(STATE / "backup-attempt.json")
     running_age = age(attempt, "started_at", now)
     running = attempt.get("running") is True and running_age is not None and running_age <= 46 * 60
-    return (elapsed is not None and elapsed <= 26 * 3600 and
+    return (receipt.get("storage") == storage_identity(config) and
+            elapsed is not None and elapsed <= 26 * 3600 and
             (attempt.get("ok") is True or running))
 
 
@@ -561,7 +570,7 @@ def send_alert(config):
 
 def monitor(config):
     now = time.time()
-    healthy = backup_healthy(now)
+    healthy = backup_healthy(config, now)
     previous = read_json(STATE / "ops-status.json")
     state = {"ok": healthy, "checked_at": now,
              "alert_delivery": "not-needed" if healthy else previous.get("alert_delivery", "pending")}
@@ -584,10 +593,10 @@ def monitor(config):
     write_json(STATE / "ops-status.json", state)
 
 
-def status(_config):
+def status(config):
     snapshot = read_json(STATE / "ops-status.json")
     elapsed = age(snapshot, "checked_at", time.time())
-    if not backup_healthy() or snapshot.get("ok") is not True or elapsed is None or elapsed > 180:
+    if not backup_healthy(config) or snapshot.get("ok") is not True or elapsed is None or elapsed > 180:
         raise ValueError("Backup or monitoring is unhealthy")
 
 
