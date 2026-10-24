@@ -327,12 +327,46 @@ def verify_retention_locks(config):
                 protected = True
         if not protected:
             raise ValueError("Enabled age locks of at least 28 days must cover both backup prefixes")
+    return rules
+
+
+def retention_deadline(key, modified, rules):
+    """The strictest applicable rule wins, including narrower prefix locks."""
+    created = object_time(modified)
+    deadline = created + RETENTION_SECONDS
+    for rule in rules:
+        if rule.get("enabled") is not True:
+            continue
+        prefix = rule.get("prefix", "")
+        if not isinstance(prefix, str):
+            raise ValueError("Invalid lock prefix")
+        if not key.startswith(prefix):
+            continue
+        condition = rule.get("condition", {})
+        kind = condition.get("type")
+        if kind == "Age":
+            duration = condition.get("maxAgeSeconds")
+            if type(duration) not in (int, float) or not math.isfinite(duration) or duration < 0:
+                raise ValueError("Invalid lock age")
+            deadline = max(deadline, created + duration)
+        elif kind == "Date":
+            deadline = max(deadline, object_time(condition["date"]))
+        elif kind == "Indefinite":
+            deadline = math.inf
+        else:
+            raise ValueError("Unknown lock condition")
+    return deadline
 
 
 def prune(config, now=None, dry_run=False):
     if not dry_run and config.get("prune_enabled") is not True:
         raise ValueError("Destructive pruning is disabled until storage age locks are verified")
-    cutoff = (time.time() if now is None else now) - RETENTION_SECONDS
+    instant = time.time() if now is None else now
+    cutoff = instant - RETENTION_SECONDS
+    # Never cache verification. Storage enforces the minimum at DELETE; this
+    # policy also avoids attempting deletes that stronger rules still protect.
+    # A disabled dry run is only a 28-day inventory, not a verified delete plan.
+    rules = verify_retention_locks(config) if not dry_run or config.get("prune_enabled") is True else None
     candidates = {}
     # Plan the entire bounded operation before deleting anything.
     for prefix in PREFIXES:
@@ -348,7 +382,8 @@ def prune(config, now=None, dry_run=False):
                 key = backup_key(item["Key"])
                 if not key.startswith(prefix):
                     raise ValueError("Listing escaped requested backup prefix")
-                if object_time(item["LastModified"]) < cutoff:
+                if object_time(item["LastModified"]) < cutoff and (
+                        rules is None or instant > retention_deadline(key, item["LastModified"], rules)):
                     candidates[key] = item["LastModified"]
                     if len(candidates) > MAX_PRUNE_OBJECTS:
                         raise ValueError("Prune exceeds deletion budget; operator review required")
@@ -360,10 +395,6 @@ def prune(config, now=None, dry_run=False):
             seen.add(token)
         else:
             raise ValueError("Prune exceeds listing budget; operator review required")
-    if not dry_run:
-        # The storage boundary, not the host clock or a racy HEAD, enforces the
-        # minimum age of the object DELETE actually sees. Never cache this check.
-        verify_retention_locks(config)
     for key, modified in candidates.items():
         if not dry_run:
             head = json.loads(s3(config, ["s3api", "head-object", "--bucket", config["bucket"], "--key", key]))

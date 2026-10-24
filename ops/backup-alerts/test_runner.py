@@ -42,7 +42,7 @@ class OperationsTests(unittest.TestCase):
         patch.object(ops, "private_credentials", return_value=("fixture-access", "fixture-secret")).start()
         # Ordinary storage tests assume verified locks; dedicated tests below
         # exercise the real control API and its fail-closed pruning gate.
-        self.lock_check = patch.object(ops, "verify_retention_locks").start()
+        self.lock_check = patch.object(ops, "verify_retention_locks", return_value=self.lock_rules()).start()
         patch.object(socket, "socket", side_effect=AssertionError("Network forbidden in offline tests")).start()
         self.calls = []
         self.objects = {}
@@ -699,12 +699,125 @@ class OperationsTests(unittest.TestCase):
 
     def test_prune_requires_explicit_opt_in_before_any_storage_call(self):
         for enabled in (False, None, "true", 1):
-            with patch.object(ops, "s3") as storage, self.assertRaisesRegex(ValueError, "pruning is disabled"):
+            # A removed opt-in must fail by assertion, not a later JSON error.
+            with patch.object(ops, "s3", side_effect=self.listing([])) as storage, self.assertRaisesRegex(ValueError, "pruning is disabled"):
                 ops.prune({**CONFIG, "prune_enabled": enabled}, NOW)
             storage.assert_not_called()
         with patch.object(ops, "s3", self.listing([])), self.lock_api(rules=[]):
             # Dry runs remain available before opting in or creating any token.
             self.assertEqual(ops.prune({**R2_CONFIG, "prune_enabled": False}, NOW, dry_run=True), [])
+
+    def test_longer_locks_keep_daily_backups_advancing_without_premature_deletes(self):
+        rules = self.lock_rules()
+        for rule in rules:
+            rule["condition"]["maxAgeSeconds"] = 35 * 86400
+        current = NOW
+        births = {}
+        premature = []
+        deleted = []
+        storage_errors = []
+        fail_delete = False
+        def client(args, **kwargs):
+            if args[0] != "aws":
+                return self.fake_command(args, **kwargs)
+            if "list-objects-v2" in args:
+                prefix = args[args.index("--prefix") + 1]
+                items = [{"Key": key, "LastModified": dt.datetime.fromtimestamp(birth, dt.timezone.utc).isoformat()}
+                         for key, birth in births.items() if key.startswith(prefix)]
+                return json.dumps({"IsTruncated": False, "Contents": items}).encode()
+            key = args[args.index("--key") + 1]
+            if "head-object" in args:
+                return json.dumps({"ContentLength": len(self.objects[key]), "ETag": '"fixture"',
+                                   "LastModified": dt.datetime.fromtimestamp(births[key], dt.timezone.utc).isoformat()}).encode()
+            if "delete-object" in args:
+                age = current - births[key]
+                if age < 35 * 86400:
+                    premature.append((key, age))
+                    raise subprocess.CalledProcessError(1, "fixture-still-locked")
+                if fail_delete:
+                    storage_errors.append(key)
+                    raise subprocess.CalledProcessError(1, "fixture-storage-unavailable")
+                deleted.append((key, age))
+                del births[key]
+                del self.objects[key]
+                return b"{}"
+            result = self.fake_command(args, **kwargs)
+            if "put-object" in args:
+                births[key] = current
+            return result
+        original = ops.read_json
+        exits = []
+        with self.lock_api(rules), patch.object(ops, "validate_state"), \
+                patch.object(ops.sys, "argv", ["runner.py", "backup"]), \
+                patch.object(ops, "read_json", side_effect=lambda path: R2_CONFIG if path.name == "config.json" else original(path)), \
+                patch.object(ops.time, "time", side_effect=lambda: current), patch.object(ops, "command", client), \
+                patch.object(ops, "send_alert", return_value="unconfigured"), \
+                contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+            for day in range(46):
+                current = NOW + day * 86400
+                with patch.dict(os.environ, {"BACKUP_DATABASE_URL": URL}, clear=True):
+                    exits.append(ops.main())
+            self.assertEqual(exits, [0] * 46, "Longer locks must defer pruning, not freeze successful receipts")
+            self.assertEqual(ops.read_json(self.state / "backup.json")["snapshot_at"], current)
+            self.assertTrue(ops.read_json(self.state / "backup-attempt.json")["ok"])
+            ops.status(R2_CONFIG)
+            self.assertEqual(premature, [])
+            self.assertTrue(deleted, "Eligible old objects must still be pruned")
+            self.assertTrue(all(age > 35 * 86400 for _, age in deleted))
+            # An actual error deleting an eligible object must still fail the
+            # next backup and retain the last successful receipt.
+            previous = ops.read_json(self.state / "backup.json")
+            current += 86400
+            fail_delete = True
+            with patch.dict(os.environ, {"BACKUP_DATABASE_URL": URL}, clear=True):
+                self.assertEqual(ops.main(), 1)
+            self.assertTrue(storage_errors)
+            self.assertEqual(ops.read_json(self.state / "backup.json"), previous)
+
+    def test_prune_honors_strongest_overlapping_rule_for_each_key(self):
+        rules = self.lock_rules() + [
+            {"enabled": True, "prefix": "backups/", "condition": {"type": "Age", "maxAgeSeconds": 35 * 86400}},
+            {"enabled": True, "prefix": "backups/daily/2026-09-01", "condition": {"type": "Age", "maxAgeSeconds": 45 * 86400}},
+            {"enabled": True, "prefix": "backups/weekly/2026-W30", "condition": {"type": "Date", "date": dt.datetime.fromtimestamp(NOW + 86400, dt.timezone.utc).isoformat()}},
+            {"enabled": True, "prefix": "backups/weekly/2026-W31", "condition": {"type": "Indefinite"}},
+            {"enabled": False, "prefix": "backups/", "condition": {"type": "Indefinite"}},
+        ]
+        items = [{"Key": key, "LastModified": dt.datetime.fromtimestamp(NOW - days * 86400, dt.timezone.utc).isoformat()}
+                 for key, days in [("backups/daily/2026-08-01.tar", 50), ("backups/daily/2026-09-01.tar", 40),
+                                   ("backups/daily/2026-09-02.tar", 35), ("backups/weekly/2026-W30.tar", 50),
+                                   ("backups/weekly/2026-W31.tar", 50)]]
+        eligible = "backups/daily/2026-08-01.tar"
+        with self.lock_api(rules), patch.object(ops, "s3", self.listing(items)):
+            self.assertEqual(ops.prune(R2_CONFIG, NOW), [eligible])
+            self.assertEqual(ops.prune(R2_CONFIG, NOW, dry_run=True), [eligible])
+        heads = [args[args.index("--key") + 1] for args in self.calls if "head-object" in args]
+        deletes = [args[args.index("--key") + 1] for args in self.calls if "delete-object" in args]
+        self.assertEqual(heads, [eligible])
+        self.assertEqual(deletes, [eligible])
+
+    def test_retention_protected_objects_do_not_consume_deletion_budget(self):
+        rules = self.lock_rules()
+        for rule in rules:
+            rule["condition"]["maxAgeSeconds"] = 100 * 86400
+        items = [{"Key": f"backups/daily/2026-09-01-{index:032x}.tar",
+                  "LastModified": dt.datetime.fromtimestamp(NOW - 40 * 86400, dt.timezone.utc).isoformat()}
+                 for index in range(129)]
+        eligible = "backups/daily/2026-01-01.tar"
+        items.append({"Key": eligible, "LastModified": dt.datetime.fromtimestamp(NOW - 101 * 86400, dt.timezone.utc).isoformat()})
+        with self.lock_api(rules), patch.object(ops, "s3", self.listing(items)):
+            self.assertEqual(ops.prune(R2_CONFIG, NOW), [eligible])
+        self.assertEqual(sum("delete-object" in args for args in self.calls), 1)
+
+    def test_malformed_matching_locks_fail_before_any_deletion(self):
+        items = [{"Key": key, "LastModified": "2025-01-01T00:00:00Z"}
+                 for key in ("backups/daily/2025-01-01.tar", "backups/daily/2025-01-02.tar")]
+        for condition in [{"type": "Age", "maxAgeSeconds": value} for value in (-1, True, "35d", float("nan"), float("inf"))] + [
+                {"type": "Date", "date": "not-a-date"}, {"type": "Date", "date": "2026-01-01T00:00:00"}, {"type": "Unknown"}]:
+            self.calls.clear()
+            rules = self.lock_rules() + [{"enabled": True, "prefix": "backups/daily/2025-01-02", "condition": condition}]
+            with self.lock_api(rules), patch.object(ops, "s3", self.listing(items)), self.assertRaises(ValueError):
+                ops.prune(R2_CONFIG, NOW)
+            self.assertTrue(all("list-objects-v2" in args for args in self.calls))
 
     def test_lock_verification_requires_enabled_age_coverage_for_both_prefixes(self):
         variants = [[], self.lock_rules()[:1]]

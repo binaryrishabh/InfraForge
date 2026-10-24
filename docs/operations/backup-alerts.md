@@ -39,7 +39,12 @@ below enforce minimum retention at the storage boundary. See the official
 [R2 API compatibility](https://developers.cloudflare.com/r2/api/s3/api/) reference.
 
 After verified uploads, explicit retention prunes objects **strictly older than
-28 days**, using remote `LastModified`. Only exact daily/weekly tar key shapes
+28 days**, using remote `LastModified`, and only after each key's strongest
+applicable verified retention requirement expires. Longer Age rules use that
+object's timestamp; overlapping date locks extend the deadline; indefinite
+locks prevent pruning that key. Disabled rules do not extend retention. These
+protected objects are skipped before the deletion budget is counted, so longer
+locks defer pruning without freezing successful backup receipts. Only exact daily/weekly tar key shapes
 are accepted, including historical names without the random suffix. Listing is
 restricted to those two prefixes, at most four pages of 1,000 entries per prefix.
 The full plan is checked before deletion. More than 128 candidates, unexpected
@@ -77,7 +82,11 @@ Never share dumps, credentials, source URLs or private diagnostics in logs/ticke
 
 In **R2 → this bucket → Settings → Bucket lock rules**, add two **enabled age**
 rules: `backups/daily/` for **28 days (2,419,200 seconds)** and `backups/weekly/`
-for the same duration. Longer age locks are accepted, but can delay pruning.
+for the same duration. Longer age locks are accepted and defer deletion of
+protected keys while backups continue. All stronger overlapping rules apply,
+including narrower prefixes, future date locks and indefinite locks. This uses
+Cloudflare's [longest applicable retention rule](https://developers.cloudflare.com/r2/buckets/bucket-locks/).
+Longer policies increase retained storage; check the account's storage allowance.
 Do not use date-based or disabled rules as substitutes. Cloudflare documents
 that [bucket locks protect existing/new objects against deletion and overwrite](https://developers.cloudflare.com/r2/buckets/bucket-locks/).
 Keep these rules enabled; a host clock error or replacement between HEAD and
@@ -87,8 +96,12 @@ DELETE must still be rejected by storage while the affected object is young.
 destructive prune must verify live age-rule coverage through Cloudflare's fixed
 [GET bucket lock rules API](https://developers.cloudflare.com/api/resources/r2/subresources/buckets/subresources/locks/methods/get/).
 Missing/short/disabled rules, endpoint/account mismatch, API failure or unreadable
-credentials fail the job before any HEAD/DELETE. Dry run works while disabled
-and does not establish protection. A backup cannot advance its success receipt
+credentials fail the job before any HEAD/DELETE. Real storage errors still fail
+the job; the runner does not swallow AccessDenied or other deletion errors.
+Dry run works while disabled as an **advisory inventory of objects older than
+28 days**; it does not know stronger server policies or establish protection.
+With pruning enabled, dry run verifies live rules and shows only eligible keys.
+A backup cannot advance its success receipt
 until required retention verification/pruning succeeds. Generic S3 uploads and
 retrieval still work, but destructive pruning is supported only for verified R2.
 
@@ -334,7 +347,8 @@ credential policy, conditional uploads, readback corruption, size limits, prune
 bounds/dry run/age, live lock-verification refusal, simulated storage enforcement
 under clock skew/replacement, failed/missed backups, failed/overdue remote drills,
 mail failure, stale monitoring and remote restore corruption/isolation/cleanup.
-The mutation suite makes all eight escaped review changes fail their targeted
+The mutation suite makes all eight original escaped changes and the later
+live-status/effective-retention/opt-in guard removals fail their targeted
 regressions in memory; an unrelated fixture error is not accepted as detection.
 The Bun wrapper also validates
 legacy AWS template invariants; CI retains cfn-lint. No production upload,

@@ -17,7 +17,7 @@ tests = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(tests)
 SOURCE = (ROOT / "runner.py").read_text()
 
-# The original escaped edits plus the independent live-status review regression.
+# Original escapes and the subsequent retention/live-status review regressions.
 MUTATIONS = {
     "access_key_in_arguments": (
         '"--cli-connect-timeout", "5", "--cli-read-timeout", "60", *args]',
@@ -49,6 +49,13 @@ MUTATIONS = {
         'if health_reasons(config) or snapshot.get("ok") is not True or elapsed is None or elapsed > 180:',
         'if snapshot.get("ok") is not True or elapsed is None or elapsed > 180:',
         "test_status_refuses_failed_drill_before_monitor_update"),
+    "ignore_effective_key_retention": (
+        'rules is None or instant > retention_deadline(key, item["LastModified"], rules)',
+        'True', "test_longer_locks_keep_daily_backups_advancing_without_premature_deletes"),
+    "skip_prune_opt_in": (
+        '    if not dry_run and config.get("prune_enabled") is not True:\n'
+        '        raise ValueError("Destructive pruning is disabled until storage age locks are verified")\n',
+        '', "test_prune_requires_explicit_opt_in_before_any_storage_call"),
 }
 
 
