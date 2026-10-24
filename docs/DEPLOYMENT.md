@@ -71,12 +71,15 @@ resolved Compose configuration or copy secrets into frontend settings.
    for absent/existing addresses, session revocation, cross-user export isolation,
    active-run deletion refusal and profile erasure with immutable history retained.
    Alert on the fixed `Transactional email delivery failed` message; sends are
-   bounded and durable through an encrypted PostgreSQL outbox. Resend retries
-   use stable idempotency keys; ambiguous SES sends are not retried automatically,
+   bounded and durable through encrypted PostgreSQL request intents; reset bearers
+   are never persisted. Resend retries use stable idempotency keys; ambiguous SES sends are not retried automatically,
    so a user may need to request a new link.
 7. Keep the existing stable Better Auth secret, exact Origin/HTTPS/proxy settings,
    release approval and backup procedure. Promote configuration only after those
-   staging checks and UI readiness. Setting the account flag back to false disables
+   staging checks and UI readiness. Email-enabled signup needs email proof before
+   username/password selection. Deploy the additive mail-intent migration first;
+   startup invalidates legacy reset links and discards the old encrypted-link queue.
+   Users must request those links again. Setting the account flag back to false disables
    these APIs without deleting data or weakening database/history guards. Removing
    all three Turnstile settings disables that independent challenge integration.
    Do not roll back across migration fingerprints; use a reviewed forward fix.

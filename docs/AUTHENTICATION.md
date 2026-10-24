@@ -35,12 +35,13 @@ database enforces format and uniqueness, including concurrent registration.
 New emails are trimmed/lowercased; the library validates them and the server
 bounds them to 254 characters. No provider-specific dot/plus aliases are invented.
 The existing unique email key remains, with an additional unique `lower(email)`
-index protecting historical case collisions. Credential sign-up leaves
+index protecting historical case collisions. With email disabled, credential sign-up leaves
 `emailVerified=false`. Verification and account-management APIs default to disabled.
 Configuring a mail provider alone does not enable them. With
-`AUTH_EMAIL_ENABLED=true` (or `ACCOUNT_ESSENTIALS_ENABLED=true`), credential signup requires verification by default and
-issues no session; the user verifies, then signs in. Registering an existing OAuth email does not add a credential account or
-merge identities: use the original sign-in method.
+`AUTH_EMAIL_ENABLED=true` (or `ACCOUNT_ESSENTIALS_ENABLED=true`), signup first proves
+mailbox control, then accepts username/password and creates a verified user without
+a session; the user then signs in. Registering an existing OAuth email does not add
+a credential account or merge identities: use the original sign-in method.
 
 Passwords use Better Auth's salted scrypt implementation and verification, with
 explicit 15–128 library string-length bounds and no composition rules. The
@@ -63,11 +64,14 @@ only in transient input state. Sign-in failures use a common message; rate limit
 have a separate retry message. The username-availability endpoint is disabled.
 With email disabled, native registration still returns a failure for duplicate
 email/username; automatic sign-in cannot provide a sessionless synthetic duplicate
-response. With email enabled, the public HTTP wrapper masks both duplicate email
-and username responses and returns the same sessionless accepted body as fresh
-signup. A username remains unique: accepted does not promise account creation or
-username reservation. If no email arrives, request recovery or try another name.
-The username-availability endpoint stays disabled; no public availability UX is added.
+response. With email enabled, initial signup accepts an email address and sends
+mailbox proof without consulting username or account membership. Requested
+usernames/passwords are neither checked nor stored at this stage. After the user
+opens that link, the UI submits email, proof and credentials. Username availability
+is actionable only after valid mailbox proof and is rate limited (5/proof, 30/IP
+per 15 minutes). A taken name leaves the proof usable for another attempt within
+those limits. The availability endpoint stays disabled. Initial acceptance promises
+durable work, not account creation or username reservation.
 
 Migration 16 adds nullable `User.username`, its format/unique guards and the email
 case-fold index. Migrations 1–15 are unchanged. Existing users/accounts/ownership
@@ -97,7 +101,9 @@ Turnstile before implementing the UI needs below will interrupt existing signup 
 | API | Request / behavior |
 | --- | --- |
 | `GET /api/auth/account-features` | `{enabled, emailEnabled, verificationRequired, turnstileSiteKey}`; site key is public; no secrets |
-| `POST /api/auth/sign-up/email` | Existing credential fields plus optional `turnstileToken`, action `signup` |
+| `POST /api/auth/sign-up/email` (email enabled, initial) | `{email, callbackURL?, turnstileToken?}`; action `signup`; generic durable admission, no account/username lookup; callback defaults to first app origin `/signup` |
+| `POST /api/auth/sign-up/email` (email enabled, completion) | `{email, emailProof, username, name, password}`; proof from emailed callback query; native credential validation and username errors after proof; verified account, no session |
+| `POST /api/auth/sign-up/email` (email disabled) | Native credential fields plus configured `turnstileToken`; existing sessionful behavior |
 | `POST /api/auth/send-verification-email` | `{email, callbackURL}`; uniform response regardless of existence/verification/session |
 | `GET /api/auth/verify-email?token=...` | Native verification; expired, invalid or redeemed links fail |
 | `POST /api/auth/request-password-reset` | `{email, redirectTo, turnstileToken?}`; action `password_reset`; uniform response |
@@ -114,49 +120,68 @@ Better Auth additionally validates redirect/callback origins and its own CSRF ch
 Body limits are 8 KiB on the new POST routes. Responses use `Cache-Control: no-store`
 and `Referrer-Policy: no-referrer`. Do not add request/response tracing on these routes.
 
-[Pinned Better Auth's native flows](https://better-auth.com/docs/authentication/email-password)
-issue 30-minute reset tokens and verification JWTs. Reset consumes the database
-verification value atomically before changing credentials. InfraForge adds a
-hash-only `AccountEmailToken` redemption ledger to the library-issued verification
-JWT, consumed atomically before native verification. Neither hashing nor token
-generation/signature verification is reimplemented. Reissuing a same-second JWT
-does not reactivate a consumed link. Failed redemption burns that issued link;
-request another email. Successful verification does not automatically sign in.
-OAuth-only users can establish a current password through the native mailbox reset
-flow before deletion; there is no fresh-session-only deletion bypass. This explicit
-mailbox recovery can create a credential on that same user ID; ordinary duplicate
-signup still cannot add a credential or merge accounts.
+Reset and signup proof expire 30 minutes after admission. The worker derives a
+transient bearer with HMAC-SHA256 over a domain-separated kind and random intent
+ID using `BETTER_AUTH_SECRET`. Only SHA-256 digests of `reset-password:<bearer>`
+and `signup-proof:<bearer>` enter `Verification`; reset bearers are never persisted
+as plaintext or encrypted payloads. Better Auth 1.7.7's supported
+`verification.storeIdentifier` hashing handles lookup/redemption. Native reset
+atomically consumes the value, updates the password and revokes sessions. Signup
+proof consumption and native user creation share the same database transaction.
+The proof is bound to the normalized email and cannot authorize another address.
 
-Public signup/email requests normalize email, strip cookies before the native handler,
-return the same success body, and apply a 750 ms minimum response duration. Email
-verification delivery is queued through Better Auth's after-commit hook. Ledger
-and encrypted outbox insertion share a transaction locking the live account;
-no mail or ledger access starts before signup commits. Insertion is awaited;
-queue/database errors are operational failures, not silent skipped delivery.
-The duplicate-username path performs native password hashing to match fresh and
-duplicate-email signup work. Provider delivery runs outside the request timing
-path with a five-second timeout. The timing floor covers ordinary DB/JWT work; it
-cannot guarantee identical wall-clock latency under infrastructure overload.
-The API polls the separate `AccountMailOutbox` every five seconds, at most 16 sends
-sequentially per poll, with atomic claims and 30-second leases. Restart resumes
-pending mail. Resend retries use one stable idempotency key, at most five attempts,
-with exponential delay capped at five minutes, always before link expiry. Its
+Verification resend uses the library's signed JWT and a hash-only single-use
+`AccountEmailToken` ledger. A prepared verification JWT is encrypted in the mail
+intent until delivery. Reissuing a same-second JWT does not revive a consumed
+link. Failed redemption burns the link; request another email. Verification and
+signup completion do not automatically sign in. OAuth-only users can establish a
+password through native mailbox reset; duplicate signup cannot add credentials
+or merge identities.
+
+Initial signup, reset and resend normalize email, strip cookies, return the same
+accepted body and apply a 750 ms minimum duration. A supported before hook commits
+a generic `AccountMailIntent` before any membership-dependent work. All three
+routes return the same service-unavailable response if admission fails, whether
+the email exists or not. Input, challenge, origin and quota errors remain
+actionable. Provider delivery is outside the request path; no native background
+callback can swallow an admission error. The floor cannot guarantee equal latency
+under infrastructure overload.
+
+The API polls `AccountMailIntent` every five seconds, preparing at most 16 requests
+and sending at most 16 messages sequentially per poll. Pending encrypted metadata
+contains only email and callback, never username, password or reset bearer.
+Preparation and token issuance share a transaction: rollback leaves pending work
+for restart; a ready request is never reissued. Reset/resend membership lookup
+happens here, while signup always prepares the same mailbox-proof step.
+Claims use `SKIP LOCKED`, 30-second leases and explicit UTC timestamps, independent
+of the PostgreSQL session timezone. Resend retries use identical messages and
+idempotency keys, at most five attempts, within the 30-minute expiry; its
 [idempotency window is 24 hours](https://resend.com/docs/dashboard/emails/idempotency-keys).
 SES's [SendEmail API](https://docs.aws.amazon.com/ses/latest/APIReference-V2/API_SendEmail.html)
 has no idempotency key: only explicit HTTP 429 rejection is retried. Timeouts,
 lost acknowledgements or crashes during SES delivery become uncertain and are
 never resent automatically; request a new link. This trades possible loss for
-avoiding duplicate sends. Provider errors log only a fixed message. Success or
-terminal failure immediately wipes the encrypted payload; expired queue/ledger
-and reset-token rows are purged on polling. Outbox payloads use Better Auth's
-authenticated encryption with `BETTER_AUTH_SECRET`; keep it stable during delivery.
-Do not change providers while mail is pending; drain or expire that queue first.
-Cleanup is delayed while the API is stopped or email is disabled; tokens still expire.
+avoiding duplicates after ambiguous provider acceptance. Provider errors log only
+a fixed message. Terminal outcomes erase payloads. Polling purges expired intents,
+verification ledger and native verification records. Disabled/stopped polling
+delays physical cleanup, never token expiry.
+
+Keep `BETTER_AUTH_SECRET`, base URL and sender settings stable while requests are
+pending; secret rotation invalidates pending proofs and decryption. Migration
+`20261024130000_account_mail_intents` adds the new table; existing migrations are
+unchanged. On every startup, before HTTP opens, legacy plaintext reset identifiers
+and all legacy `AccountMailOutbox` payloads are retired, even if email is disabled.
+Old reset links and pending legacy emails must be requested again. Existing
+accounts and passwords are preserved. New account deletion removes user-linked
+intents; pending generic requests have no user association and expire in 30 minutes.
 
 Redis quotas use HMAC keys, never addresses/tokens in keys. All email-request
 identities, including nonexistent ones, share the same accounting: 3 per normalized
 email and 20 per IP per 15 minutes across reset/verification. Signup has separate
-3/email and 20/IP quotas when email, essentials or Turnstile are enabled. Redemption has
+3/email and 20/IP quotas when email, essentials or Turnstile are enabled. Email-enabled
+signup completion has a separate 5/proof and 30/IP quota; mailbox proof replaces
+the challenge only on that completion path. Email-disabled signup always keeps
+its configured challenge, regardless of a caller-supplied proof field. Redemption has
 5/token and 30/IP quotas. Deletion has 10/user and 30/IP; export has 600/user and
 600/IP. These fixed windows are shared across API processes; Redis failure closes
 the routes. Better Auth's existing limits and the outer HTTP limiter also apply.
@@ -212,14 +237,15 @@ delivery state and other users' records are excluded. Pages are live reads rathe
 than a point-in-time snapshot; export after stopping runs for a stable archive.
 
 Typed client functions live in `apps/web/src/features/auth/accountClient.ts`,
-including an async page iterator. UI work still needed: pending-verification signup
-state; resend/verification completion; forgot/reset password pages and safe token
-handling; Turnstile widgets with matching actions; download progress/cancellation;
+including an async page iterator, `requestSignupProof` and `completeEmailSignup`.
+UI work still needed: email-only signup, pending-proof state, callback parsing of
+`emailProof`, then username/password selection with actionable taken-name errors;
+resend/verification completion; forgot/reset password pages and safe token handling; Turnstile widgets with matching actions; download progress/cancellation;
 deletion dialog with current-password input, `DELETE`, active-run conflict guidance,
 and the retained-history explanation. OAuth users need mailbox password recovery
 guidance. After successful deletion, clear per-user local drafts and auth/app state.
-Keep passwords/tokens transient, scrub reset tokens from browser history immediately,
-and exclude auth callbacks and export contents from analytics/error capture.
+Keep passwords/tokens transient; scrub reset tokens and signup proof from browser
+history before analytics/scripts, and exclude auth callbacks and export contents from analytics/error capture.
 `turnstileToken.ts` exposes `setTurnstileTokenProvider` and
 `obtainTurnstileToken("signup" | "password_reset")`. Register a bridge to the
 owner-selected widget; call it immediately before submission and pass the fresh
@@ -229,7 +255,7 @@ token as `turnstileToken`. It loads no scripts, renders no UI and caches no toke
 
 All settings below are backend environment variables. Nothing is enabled by
 default. `AUTH_EMAIL_VERIFICATION_REQUIRED=false` makes verification optional for
-sign-in; email-enabled signup still sends verification and returns no session.
+sign-in for existing accounts; email-enabled signup always proves mailbox control and returns no session.
 `ACCOUNT_ESSENTIALS_ENABLED=true` also enables email for backward compatibility.
 Production configuration is validated before the server starts listening.
 
@@ -253,9 +279,11 @@ Production configuration is validated before the server starts listening.
 
 Use `TRANSACTIONAL_EMAIL_PROVIDER=local` and `AUTH_EMAIL_ENABLED=true` with
 `NODE_ENV=development` for local mail. It writes exclusive JSON files under the
-worktree's ignored `.cache/mail-outbox/`, never console output. These files contain
-plaintext development links; delete them after testing. No local adapter can run
-in production. Production adapters have fixed HTTPS endpoints, bounded timeouts,
+worktree's ignored `.cache/mail-outbox/`, never console output. Signup-proof and
+verification files contain plaintext development links; delete them after testing.
+Reset messages write only a redacted receipt, never the bearer. Use the in-memory
+email fake for local reset redemption tests or staging delivery for a manual reset.
+No local adapter can run in production. Production adapters have fixed HTTPS endpoints, bounded timeouts,
 no redirects and sanitized errors. No provider secrets are returned or logged.
 
 1. **SES:** in the selected region, create a verified domain identity and enable
