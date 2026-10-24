@@ -3,19 +3,15 @@ import { lstat, stat, readFile, readdir, realpath } from "node:fs/promises";
 import { dirname, isAbsolute, join } from "node:path/posix";
 import { cpus, freemem, platform, totalmem } from "node:os";
 import { hash } from "./canonical";
-import type { IsolationControl } from "./isolationConnection";
+import { readVerifierUnit, verifierUnitProperties, type IsolationControl } from "./isolationConnection";
 import { accessSync, constants, type BigIntStats } from "node:fs";
-import { execFile } from "node:child_process";
+import { parse as parseToml } from "smol-toml";
 
 const daemonConfig = "/etc/infraforge/verifier/daemon.json";
 const cgroupFiles = ["cgroup.controllers", "cgroup.subtree_control", "cpu.max", "memory.max",
   "memory.swap.max", "pids.max", "cpuset.cpus.effective", "cpuset.mems.effective",
   "memory.high", "memory.low", "memory.min", "memory.oom.group", "cpu.weight"];
 const supervisorUnit = "first-stack-verifier.service";
-const supervisorProperties = ["ControlGroup", "User", "Group", "MemoryMax", "MemorySwapMax", "TasksMax",
-  "CPUQuotaPerSecUSec", "CPUQuotaPeriodUSec", "LimitNOFILE", "LimitNOFILESoft", "NoNewPrivileges",
-  "ProtectSystem", "ProtectHome", "PrivateTmp", "PrivateDevices", "RestrictSUIDSGID",
-  "CapabilityBoundingSet", "RestrictAddressFamilies", "BindReadOnlyPaths", "KillMode", "UMask"];
 // Effective values, not sysctl configuration files: these can change without
 // a reboot. Keep allocation, OOM selection, scheduler and global task/FD limits
 // bound to the destructive rehearsal. Unknown policies never inherit evidence.
@@ -43,13 +39,7 @@ function nativeHost(): FingerprintHost {
       }
       return null;
     },
-    cpuModels: () => cpus().map(cpu => cpu.model), memory: totalmem,
-    systemd: unit => new Promise((resolve, reject) => {
-      execFile("/usr/bin/systemctl", ["show", unit === "supervisor" ? supervisorUnit : `user@${process.getuid!()}.service`,
-        `--property=${unit === "supervisor" ? supervisorProperties.join(",") : "ControlGroup"}`],
-      { timeout: 2000, maxBuffer: 65536, env: { PATH: "/usr/bin:/bin", LC_ALL: "C" } },
-      (error, stdout) => error ? reject(Error("Effective systemd policy unavailable")) : resolve(stdout));
-    }) };
+    cpuModels: () => cpus().map(cpu => cpu.model), memory: totalmem, systemd: readVerifierUnit };
 }
 
 // Cache only unchanged regular files. ctime/inode changes invalidate the cache
@@ -147,7 +137,7 @@ export function createHostFingerprintReader(control: IsolationControl, host?: Fi
       if (at < 1 || row.slice(0, at) in properties) throw Error("Effective systemd policy Unknown");
       properties[row.slice(0, at)] = row.slice(at + 1);
     }
-    for (const key of unit === "supervisor" ? supervisorProperties : ["ControlGroup"]) {
+    for (const key of unit === "supervisor" ? verifierUnitProperties : ["ControlGroup"]) {
       if (!(key in properties) || key !== "CapabilityBoundingSet" && !properties[key]) throw Error("Effective systemd policy Unknown");
     }
     return properties;
@@ -226,7 +216,11 @@ export function createHostFingerprintReader(control: IsolationControl, host?: Fi
     const runtimeConfig = `/run/user/${machineHost().uid}/docker/containerd/containerd.toml`;
     const runtimeCommand = (await text(`/proc/${containerd.pid}/cmdline`)).split("\0").filter(Boolean);
     if (runtimeCommand.length !== 3 || runtimeCommand[1] !== "--config" || runtimeCommand[2] !== runtimeConfig) throw Error("Managed runtime configuration Unknown");
-    const runtimeConfigText = await text(`/proc/${containerd.pid}/root${runtimeConfig}`), runtimeConfigValue = Bun.TOML.parse(runtimeConfigText) as Record<string, any>;
+    const runtimeConfigPath = `/proc/${containerd.pid}/root${runtimeConfig}`;
+    if ((await machineHost().statTarget(runtimeConfigPath)).size > 65536n) throw Error("Oversized managed runtime configuration");
+    const runtimeConfigText = await text(runtimeConfigPath);
+    if (Buffer.byteLength(runtimeConfigText) > 65536) throw Error("Oversized managed runtime configuration");
+    const runtimeConfigValue = parseToml(runtimeConfigText, { unsafeKeyBehaviour: "throw" }) as Record<string, any>;
     if (runtimeConfigValue.version !== 2 || runtimeConfigValue.imports?.length || runtimeConfigValue.plugin_dir ||
       Object.keys(runtimeConfigValue.proxy_plugins ?? {}).length ||
       Object.keys(runtimeConfigValue.plugins ?? {}).some(key => !["io.containerd.grpc.v1.cri", "io.containerd.runtime.v1.linux"].includes(key))) {

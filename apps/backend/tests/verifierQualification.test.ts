@@ -349,6 +349,13 @@ test("actual runtime helpers are measured even with unchanged versions and a dif
 test("unknown or unsafe runtime resolution fails closed instead of hashing a PATH substitute", async () => {
   const edited = hostFixture(); edited.stamps.set("/etc/infraforge/verifier/daemon.json", 1002_000_000_000n);
   await expect(edited.read()).rejects.toThrow("before restart");
+  for (const value of ["invalid toml [", "version = 2\n" + "#".repeat(65536)]) {
+    const f = hostFixture(); f.content.set("/run/user/1001/docker/containerd/containerd.toml", value);
+    await expect(f.read()).rejects.toThrow();
+  }
+  const oversized = hostFixture(), statConfig = oversized.host.statTarget;
+  oversized.host.statTarget = async path => path.endsWith("/containerd.toml") ? { ...await statConfig(path), size: 65537n } as any : statConfig(path);
+  await expect(oversized.read()).rejects.toThrow("Oversized");
   for (const name of ["runc", "containerd-shim-runc-v2", "docker-init"]) {
     const f = hostFixture(); f.content.delete(`/usr/bin/${name}`);
     await expect(f.read()).rejects.toThrow("executable unavailable");

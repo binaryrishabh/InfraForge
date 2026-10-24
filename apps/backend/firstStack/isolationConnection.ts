@@ -1,9 +1,28 @@
-import { spawn } from "node:child_process";
+import { execFile, spawn } from "node:child_process";
 import { lstat, mkdtemp, realpath, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { boundProcess } from "../internalModel2/dockerConnection";
 import { FIRST_STACK_ISOLATION as limits, isolationDigest } from "./isolationPolicy";
+
+export const verifierUnitProperties = ["ControlGroup", "User", "Group", "MemoryMax", "MemorySwapMax", "TasksMax",
+  "CPUQuotaPerSecUSec", "CPUQuotaPeriodUSec", "LimitNOFILE", "LimitNOFILESoft", "NoNewPrivileges",
+  "ProtectSystem", "ProtectHome", "PrivateTmp", "PrivateDevices", "RestrictSUIDSGID",
+  "CapabilityBoundingSet", "RestrictAddressFamilies", "BindReadOnlyPaths", "KillMode", "UMask"] as const;
+
+// Fixed read-only host observation through the existing exact-reviewed process
+// adapter. No caller-provided executable, property list, environment or unit.
+export function readVerifierUnit(unit: "supervisor" | "manager"): Promise<string> {
+  if (process.platform !== "linux" || !["supervisor", "manager"].includes(unit) || !process.getuid?.()) {
+    return Promise.reject(Error("Supported non-root Linux service required"));
+  }
+  return new Promise((resolve, reject) => {
+    execFile("/usr/bin/systemctl", ["show", unit === "supervisor" ? "first-stack-verifier.service" : `user@${process.getuid!()}.service`,
+      `--property=${unit === "supervisor" ? verifierUnitProperties.join(",") : "ControlGroup"}`],
+    { timeout: 2000, maxBuffer: 65536, env: { PATH: "/usr/bin:/bin", LC_ALL: "C" } },
+    (error, stdout) => error ? reject(Error("Effective systemd policy unavailable")) : resolve(stdout));
+  });
+}
 
 // Explicit local endpoint only. No context, credential helper, inherited Docker
 // configuration, TLS environment, or remote daemon fallback.

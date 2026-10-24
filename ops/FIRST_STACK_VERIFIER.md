@@ -245,10 +245,12 @@ startup must acquire that same lock; it cannot steal a slot between active jobs.
 
 The fingerprint binds boot ID, kernel build, DMI instance type, CPU models and
 memory; Docker server/component versions, storage/security/runtime settings;
-content and filesystem identity of Bun, Docker CLI, dockerd, containerd, runc,
-rootlesskit and the dpkg package database; the protected daemon config and
-installed supervisor unit; and the daemon PID/start time, loaded executable,
-command and all delegated ancestor cgroup limits/controllers/cpusets. Exact
+content and filesystem identity of Bun, Docker CLI, loaded dockerd/containerd/
+rootlesskit, selected runc/shim/init and the dpkg package database; effective
+kernel policies, protected daemon config, bounded managed-runtime TOML and
+installed supervisor unit; effective systemd safety properties and the separate
+supervisor, executor-parent and daemon cgroup ancestries; and runtime process
+start identities. Unknown observations fail closed. Exact
 source, release image, daemon identity and isolation policy are bound separately.
 Regular-file hashes are cached only while inode, size, ownership, mode, mtime and
 ctime stay unchanged. Kernel/cgroup values are reread. The selected endpoint's
