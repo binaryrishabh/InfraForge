@@ -27,7 +27,7 @@ async function sesLostAck(db: PrismaClient, settings: MailSettings, unsafe: bool
       const changed = parts.map(part => part
         .replace(`(status = 'ready' OR (status = 'sending' AND "retrySafe" = true))`,
           `(status = 'ready' OR status = 'sending')`)
-        .replace(`AND "availableAt" <= (CURRENT_TIMESTAMP AT TIME ZONE 'UTC') AND`, "AND"));
+        .replace(/AND "availableAt" <= \(CURRENT_TIMESTAMP AT TIME ZONE 'UTC'\)\s+AND/, "AND"));
       return client.$queryRaw(Object.assign(changed, { raw: [...changed] }), ...values);
     };
     return Reflect.get(client, key);

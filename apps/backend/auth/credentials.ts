@@ -26,7 +26,8 @@ export function identifierSignIn(handler: (req: Request, res: Response) => Promi
 export const credentialValidation = createAuthMiddleware(async (ctx) => {
   if (ctx.path === "/sign-up/email") {
     if (typeof ctx.body?.username !== "string" || !validUsername(ctx.body.username)) {
-      throw new APIError("BAD_REQUEST", { code: "INVALID_USERNAME", message: "Use 3–30 letters, numbers or underscores, starting with a letter." });
+      throw new APIError("BAD_REQUEST", { code: "INVALID_USERNAME",
+        message: "Use 3–30 letters, numbers or underscores, starting with a letter." });
     }
   }
   if (ctx.path === "/sign-up/email" || ctx.path === "/sign-in/email") {
@@ -38,14 +39,24 @@ export const credentialValidation = createAuthMiddleware(async (ctx) => {
   if (ctx.path === "/sign-up/email") {
     // Validate before the username plugin's duplicate lookup, so malformed
     // input errors cannot themselves disclose membership.
-    if (!z.email().safeParse(ctx.body?.email).success) throw new APIError("BAD_REQUEST", { code: "INVALID_EMAIL", message: "Enter a valid email address." });
-    if (typeof ctx.body?.password !== "string" || ctx.body.password.length < PASSWORD_MIN || ctx.body.password.length > PASSWORD_MAX) {
-      throw new APIError("BAD_REQUEST", { code: "INVALID_PASSWORD", message: "Enter a password within the supported length." });
+    if (!z.email().safeParse(ctx.body?.email).success) {
+      throw new APIError("BAD_REQUEST", { code: "INVALID_EMAIL", message: "Enter a valid email address." });
     }
-    if (!z.object({ name: z.string(), image: z.string().optional(), callbackURL: z.string().optional(), rememberMe: z.boolean().optional() }).safeParse(ctx.body).success) {
+    if (typeof ctx.body?.password !== "string"
+      || ctx.body.password.length < PASSWORD_MIN || ctx.body.password.length > PASSWORD_MAX) {
+      throw new APIError("BAD_REQUEST", { code: "INVALID_PASSWORD",
+        message: "Enter a password within the supported length." });
+    }
+    const details = z.object({
+      name: z.string(), image: z.string().optional(),
+      callbackURL: z.string().optional(), rememberMe: z.boolean().optional(),
+    });
+    if (!details.safeParse(ctx.body).success) {
       throw new APIError("BAD_REQUEST", { code: "INVALID_SIGNUP", message: "Enter valid account details." });
     }
-    for (const value of [ctx.body?.callbackURL, ctx.body?.redirectTo, ctx.body?.errorCallbackURL, ctx.body?.newUserCallbackURL]) {
+    const callbacks = [ctx.body?.callbackURL, ctx.body?.redirectTo,
+      ctx.body?.errorCallbackURL, ctx.body?.newUserCallbackURL];
+    for (const value of callbacks) {
       if (value && (typeof value !== "string" || !ctx.context.isTrustedOrigin(value, { allowRelativePaths: true }))) {
         throw new APIError("FORBIDDEN", { code: "INVALID_CALLBACK_URL", message: "Invalid callback URL" });
       }

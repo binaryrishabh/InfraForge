@@ -35,7 +35,8 @@ export class AccountEmailRequests implements MailRequests {
     return this.db.$transaction(async tx => {
       const pending = await tx.$queryRaw<MailIntent[]>`
         SELECT id, kind, payload, "expiresAt" FROM "AccountMailIntent"
-        WHERE status = 'pending' AND "expiresAt" > (CURRENT_TIMESTAMP AT TIME ZONE 'UTC')
+        WHERE status = 'pending'
+            AND "expiresAt" > (CURRENT_TIMESTAMP AT TIME ZONE 'UTC')
         ORDER BY "availableAt", id FOR UPDATE SKIP LOCKED LIMIT 1`;
       const row = pending[0];
       if (!row) return false;
@@ -50,9 +51,12 @@ export class AccountEmailRequests implements MailRequests {
   }
 
   async drain() {
-    await this.db.$executeRaw`DELETE FROM "AccountMailIntent" WHERE "expiresAt" <= (CURRENT_TIMESTAMP AT TIME ZONE 'UTC')`;
-    await this.db.$executeRaw`DELETE FROM "AccountEmailToken" WHERE "expiresAt" <= (CURRENT_TIMESTAMP AT TIME ZONE 'UTC')`;
-    await this.db.$executeRaw`DELETE FROM "Verification" WHERE "expiresAt" <= (CURRENT_TIMESTAMP AT TIME ZONE 'UTC')`;
+    await this.db.$executeRaw`DELETE FROM "AccountMailIntent"
+      WHERE "expiresAt" <= (CURRENT_TIMESTAMP AT TIME ZONE 'UTC')`;
+    await this.db.$executeRaw`DELETE FROM "AccountEmailToken"
+      WHERE "expiresAt" <= (CURRENT_TIMESTAMP AT TIME ZONE 'UTC')`;
+    await this.db.$executeRaw`DELETE FROM "Verification"
+      WHERE "expiresAt" <= (CURRENT_TIMESTAMP AT TIME ZONE 'UTC')`;
     for (let n = 0; n < 16 && await this.prepareOne(); n++) { /* bounded preparation */ }
 
     await this.db.$executeRaw`UPDATE "AccountMailIntent" SET status = 'uncertain', payload = NULL
@@ -61,7 +65,8 @@ export class AccountEmailRequests implements MailRequests {
       const rows = await this.db.$queryRaw<ClaimedMail[]>`
         WITH candidate AS (SELECT id FROM "AccountMailIntent"
           WHERE (status = 'ready' OR (status = 'sending' AND "retrySafe" = true))
-            AND "availableAt" <= (CURRENT_TIMESTAMP AT TIME ZONE 'UTC') AND "expiresAt" > (CURRENT_TIMESTAMP AT TIME ZONE 'UTC') AND attempts < ${MAIL_REQUEST_ATTEMPTS}
+            AND "availableAt" <= (CURRENT_TIMESTAMP AT TIME ZONE 'UTC')
+            AND "expiresAt" > (CURRENT_TIMESTAMP AT TIME ZONE 'UTC') AND attempts < ${MAIL_REQUEST_ATTEMPTS}
           ORDER BY "availableAt", id FOR UPDATE SKIP LOCKED LIMIT 1)
         UPDATE "AccountMailIntent" m SET status = 'sending', attempts = attempts + 1,
           "availableAt" = (CURRENT_TIMESTAMP AT TIME ZONE 'UTC') + interval '30 seconds'
@@ -88,7 +93,8 @@ export class AccountEmailRequests implements MailRequests {
       } });
     }
     await this.db.$executeRaw`UPDATE "AccountMailIntent" SET status = 'uncertain', payload = NULL
-      WHERE attempts >= ${MAIL_REQUEST_ATTEMPTS} AND status = 'sending' AND "availableAt" <= (CURRENT_TIMESTAMP AT TIME ZONE 'UTC')`;
+      WHERE attempts >= ${MAIL_REQUEST_ATTEMPTS} AND status = 'sending'
+        AND "availableAt" <= (CURRENT_TIMESTAMP AT TIME ZONE 'UTC')`;
   }
 
   start() {
@@ -110,7 +116,8 @@ export class AccountEmailRequests implements MailRequests {
 // persists only request metadata; native reset redemption still uses hashes.
 export async function retireLegacyResetStorage(db: PrismaClient) {
   await db.$transaction(async tx => {
-    await tx.$executeRaw`DELETE FROM "Verification" WHERE identifier LIKE 'reset-password:%'`;
+    await tx.$executeRaw`DELETE FROM "Verification"
+      WHERE identifier LIKE 'reset-password:%'`;
     await tx.$executeRaw`DELETE FROM "AccountMailOutbox"`;
   });
 }
