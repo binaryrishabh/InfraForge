@@ -4,7 +4,7 @@
     "capabilities": [
       "computed-data"
     ],
-    "review": "Exact email/captcha review: fixed HTTPS SES/Resend/Turnstile adapters; development/test-only exclusive local mail files; native Better Auth scrypt, tokens and authenticated encryption; after-commit transactional ledger/outbox insertion, atomic bounded claims, stable Resend keys and no ambiguous SES resend; expiring encrypted payload cleanup; generic public signup/reset with native validation and quotas. No evaluator, dynamic loader, process adapter, engine change or activation. PostgreSQL concurrency coverage is authored but not executed locally."
+    "review": "Reviewed exact auth settings: computed-data covers environment lookups for fixed OAuth provider suffixes and the two literal email flags. Validates exact origins, explicit secret and provider completeness; independent email/account flags default off and configured Turnstile fails closed. Receives an environment object, with no direct host, loader or evaluator access."
   },
   "apps/backend/challenges/criteria.ts": {
     "hash": "ee00b07a68f911681b241a81f98153f5d55ae734489db2ee4a7ebce625ba2e0e",
@@ -852,11 +852,11 @@
     "review": "Pure import-capability propagation, exact importer hashes and two reviewed narrow facades"
   },
   "apps/backend/auth/auth.ts": {
-    "hash": "a229f113d01b03de854b10415a618539e17511bbc736564cc8527cbe858283b6",
+    "hash": "22a15655724427505751a6279356cf2ce808aa31b66991b624120ad0cdaba38b",
     "capabilities": [],
-    "review": "Exact account-service review: fixed SES/Resend/Turnstile HTTPS adapters; bounded email delivery after native transaction commit; atomic single-statement verification ledger; native Better Auth tokens/passwords; keyed quotas; owner-filtered export and serialized profile deletion. No evaluators, dynamic imports, new process adapters, engine changes or activation.",
+    "review": "Reviewed exact auth composition: process.env is passed to the validated settings reader; fixed Prisma, Redis quota, Better Auth and mail-request imports wire the default-off email dispatcher. process is used only for environment configuration, with no process execution, loader or evaluator access.",
     "globals": {
-      "hash": "a229f113d01b03de854b10415a618539e17511bbc736564cc8527cbe858283b6",
+      "hash": "22a15655724427505751a6279356cf2ce808aa31b66991b624120ad0cdaba38b",
       "names": [
         "process"
       ]
@@ -1592,22 +1592,23 @@
     "review": "Server-only frozen tariff projection from matching verified usage; shared pure simulation capture has no tariff inputs; exact EC2 arithmetic, no process/clock/network access, provider inference or activation"
   },
   "apps/backend/auth/accountData.ts": {
-    "hash": "38c97f06fd660e78d6cc1ca938471d1458487fe60c5bd06fcb6b78bd69ec8996",
+    "hash": "b967dd2e650814b2279b595b8ac8d5485f55196f3e7abe490fb163eea0e6303b",
     "capabilities": [],
-    "review": "Exact account-service review: fixed SES/Resend/Turnstile HTTPS adapters; bounded email delivery after native transaction commit; atomic single-statement verification ledger; native Better Auth tokens/passwords; keyed quotas; owner-filtered export and serialized profile deletion. No evaluators, dynamic imports, new process adapters, engine changes or activation."
+    "review": "Reviewed exact account deletion/export: a serializable owner-locked transaction removes sessions, credentials and user-linked legacy/new mail rows before profile pseudonymisation; paginated owner-filtered exports use the public score projection. Fixed model/property calls and literal row indices need no syntax exception; existing privileged imports remain separately hash-reviewed."
   },
   "apps/backend/auth/accountPolicy.ts": {
-    "hash": "d3f8d8135f1aba4b3443268f958ba958d768bef92442820956bd28ced38096ce",
+    "hash": "0fa68dd2404c8da0a43332223627a190f4f445f39a647eabe796413ab6d7e550",
     "capabilities": [],
+    "review": "Reviewed exact account policy: fixed Redis quota script uses HMAC identity keys; email proof completion has a server-enabled scope and cannot bypass email-disabled Turnstile. Request/Response/Headers clone requests, strip initial-request cookies and set generic no-store responses with a timing floor; URLSearchParams parses form proof presence only. No resource, dynamic indexing or verifier permission.",
     "globals": {
-      "hash": "d3f8d8135f1aba4b3443268f958ba958d768bef92442820956bd28ced38096ce",
+      "hash": "0fa68dd2404c8da0a43332223627a190f4f445f39a647eabe796413ab6d7e550",
       "names": [
         "Headers",
         "Request",
-        "Response"
+        "Response",
+        "URLSearchParams"
       ]
-    },
-    "review": "Exact account-service review: fixed SES/Resend/Turnstile HTTPS adapters; bounded email delivery after native transaction commit; atomic single-statement verification ledger; native Better Auth tokens/passwords; keyed quotas; owner-filtered export and serialized profile deletion. No evaluators, dynamic imports, new process adapters, engine changes or activation."
+    }
   },
   "apps/backend/auth/accountRoutes.ts": {
     "hash": "45c48187d436be1ca82993ab2d9caa86c9e27269cf1cadc03d04cfc56f8024e2",
@@ -1615,14 +1616,14 @@
     "review": "Exact account-service review: fixed SES/Resend/Turnstile HTTPS adapters; bounded email delivery after native transaction commit; atomic single-statement verification ledger; native Better Auth tokens/passwords; keyed quotas; owner-filtered export and serialized profile deletion. No evaluators, dynamic imports, new process adapters, engine changes or activation."
   },
   "apps/backend/auth/createAuth.ts": {
-    "hash": "a15c706ba99209ca0963a0f414747de99e1aa4695d67db3086ecbf9c9a401543",
+    "hash": "c7b66085d5dffd852cdc3299c0ce5c98b17eb56e5acf4d2e83ef6c6e57159282",
     "capabilities": [],
-    "review": "Exact account-service review: fixed SES/Resend/Turnstile HTTPS adapters; bounded email delivery after native transaction commit; atomic single-statement verification ledger; native Better Auth tokens/passwords; keyed quotas; owner-filtered export and serialized profile deletion. No evaluators, dynamic imports, new process adapters, engine changes or activation."
+    "review": "Reviewed exact Better Auth configuration: fixed adapters/plugins enforce hashed reset/signup identifiers, transactional proof consumption with user creation, durable generic initial admission, independent feature flags, quota/challenge/origin checks and native redemption/session behavior. Only literal fields and fixed callbacks; no syntax capability or additional global is required."
   },
   "apps/backend/auth/credentials.ts": {
-    "hash": "365e57212636e921aa61deeff21793ad181ab873731a425b71e276f3191ab362",
+    "hash": "e3646c96c39fd6b4ddea2f676878dd1a2c4fb69371553bd93a255a45ff90bbb5",
     "capabilities": [],
-    "review": "Exact account-service review: fixed SES/Resend/Turnstile HTTPS adapters; bounded email delivery after native transaction commit; atomic single-statement verification ledger; native Better Auth tokens/passwords; keyed quotas; owner-filtered export and serialized profile deletion. No evaluators, dynamic imports, new process adapters, engine changes or activation."
+    "review": "Reviewed exact credential validation and sign-in routing: validates bounded identifiers/passwords and trusted callbacks, selects one of two literal credential handlers, and constructs an email-or-username field without dynamic property reads. Native handlers retain hashing/session checks. No resource, computed-data or verifier exception is needed."
   },
   "apps/backend/auth/email.ts": {
     "hash": "69ec92db44a2497ac5f573f8fae06ff628aaeccdcf3e4be96493ea9bc42ff8a3",
@@ -1650,19 +1651,20 @@
     "review": "Exact account-service review: fixed SES/Resend/Turnstile HTTPS adapters; bounded email delivery after native transaction commit; atomic single-statement verification ledger; native Better Auth tokens/passwords; keyed quotas; owner-filtered export and serialized profile deletion. No evaluators, dynamic imports, new process adapters, engine changes or activation."
   },
   "apps/backend/auth/turnstile.ts": {
-    "hash": "83adf4c5ec6ef2f6eb40caa53bc03f6ebcc932f015f36a42b548f609ded5f3a9",
+    "hash": "3cc4dee84f7a8cf6e343af4d3220b186d69a816b997a3e8573fd4ffd1f70e118",
     "capabilities": [
-      "resources"
+      "resources",
+      "computed-data"
     ],
+    "review": "Reviewed exact Turnstile adapter: resources permits fetch only for the fixed HTTPS Siteverify endpoint, with AbortSignal timeout and URLSearchParams request encoding. computed-data covers env[name] reads over the three literal boolean-flag names. Responses must match success, action and configured hostname; bypass is development/test-only. No dynamic loader, evaluator or verifier permission.",
     "globals": {
-      "hash": "83adf4c5ec6ef2f6eb40caa53bc03f6ebcc932f015f36a42b548f609ded5f3a9",
+      "hash": "3cc4dee84f7a8cf6e343af4d3220b186d69a816b997a3e8573fd4ffd1f70e118",
       "names": [
         "AbortSignal",
         "URLSearchParams",
         "fetch"
       ]
-    },
-    "review": "Exact account-service review: fixed SES/Resend/Turnstile HTTPS adapters; bounded email delivery after native transaction commit; atomic single-statement verification ledger; native Better Auth tokens/passwords; keyed quotas; owner-filtered export and serialized profile deletion. No evaluators, dynamic imports, new process adapters, engine changes or activation."
+    }
   },
   "apps/backend/auth/verification.ts": {
     "hash": "bc0ab8e5c0e241c19ee29035555b5e39060de9493b825ab66d485a360989d732",
@@ -1670,9 +1672,9 @@
     "review": "Exact account-service review: fixed SES/Resend/Turnstile HTTPS adapters; bounded email delivery after native transaction commit; atomic single-statement verification ledger; native Better Auth tokens/passwords; keyed quotas; owner-filtered export and serialized profile deletion. No evaluators, dynamic imports, new process adapters, engine changes or activation."
   },
   "apps/backend/index.ts": {
-    "hash": "bed1446c8c8425e0b12979da645bf64210683bccc2e3616e083b18401117d75a",
+    "hash": "88744cd1d80540b53414a7b47d9d65f629f62e2f5fabd59f0c442498e3c24236",
     "capabilities": [],
-    "review": "Exact account-service review: fixed SES/Resend/Turnstile HTTPS adapters; bounded email delivery after native transaction commit; atomic single-statement verification ledger; native Better Auth tokens/passwords; keyed quotas; owner-filtered export and serialized profile deletion. No evaluators, dynamic imports, new process adapters, engine changes or activation."
+    "review": "Reviewed exact API composition: fixed imports perform schema/readiness checks and retire legacy reset storage before HTTP listening; the configured mail dispatcher starts and is awaited on shutdown. Existing origin, session, request-body and rate guards wrap literal routes. No syntax capability or extra-global permission; resource-bearing imports are separately reviewed."
   },
   "apps/backend/release/accountSchema.ts": {
     "hash": "b0873eaaeeb0e2e5eec1ced90f5a02a42edacaeb4c76216acf4e7fe8f4c248b4",
@@ -1822,5 +1824,33 @@
       "generated-client"
     ],
     "review": "Pinned Prisma 7.9.1 output regenerated for the additive AccountMailOutbox model and User relation; existing generator/template and literal imports, no authored runtime code or widened adapter capability."
+  },
+  "apps/backend/auth/mailIntent.ts": {
+    "hash": "d898dd26bb55a00fa1ce591a3ba5da0afdf6028ac661c78afaa230b6a138eafa",
+    "capabilities": [],
+    "review": "Reviewed exact mail-intent preparation: fixed crypto and Better Auth imports derive domain-separated HMAC reset/signup bearers transiently and persist redemption digests; encrypted metadata and verification JWTs use the supplied transaction. encodeURIComponent encodes the validated callback query value only. Fixed-index reads and first-party URL/template construction require no computed-data, resource or verifier exception.",
+    "globals": {
+      "hash": "d898dd26bb55a00fa1ce591a3ba5da0afdf6028ac661c78afaa230b6a138eafa",
+      "names": [
+        "encodeURIComponent"
+      ]
+    }
+  },
+  "apps/backend/auth/mailRequests.ts": {
+    "hash": "6696cf7a5501a36e6666085ce1e9fc763f08f8c1a428008b4a8cac8565b99bf9",
+    "capabilities": [],
+    "review": "Reviewed exact durable mail dispatcher: supplied Prisma client uses parameterized tagged SQL, transactional preparation, bounded UTC lease claims, five delivery attempts, terminal payload erasure and legacy-reset retirement. Calls the injected sender and fixed mail-intent helpers; uses standard timers for polling. No direct filesystem/network global, dynamic property lookup, loader or evaluator permission is required."
+  },
+  "apps/backend/auth/mailAdmission.ts": {
+    "hash": "1677f3daf3dabbaedc6ffaa35e89830c97c8b95aeaf47bb39b77bf41b996dfb0",
+    "capabilities": [],
+    "review": "Reviewed exact public mail admission: fixed Better Auth/Zod imports validate origin, normalized email, first-party callback and email-bound proof; generic queue admission is awaited before acceptance and failures become uniform 503. Fixed properties and literal origin index only; no resource, computed-data, verifier or extra-global exception."
+  },
+  "apps/backend/auth/emailTemplate.ts": {
+    "hash": "0c7c4299de86c16c83cadee1d9e88886aef771a1f9ed7222ecfb16b0280d15e9",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Reviewed exact email template: computed-data covers escapes[c] in a fixed five-character HTML escape map. URL validation restricts the action link to supplied first-party HTTP(S) origins without credentials; fixed text/HTML fragments contain no remote assets, and reset messages are marked sensitive for local redaction. No resource or verifier exception."
   }
 }
