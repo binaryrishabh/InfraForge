@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { assertReleaseSpace, minimumReleaseFreeBytes, preflightReleaseSpace, pruneAcceptedImages, selectReleaseImages } from "../release/hygiene";
@@ -28,8 +28,22 @@ test("preflight measures DockerRootDir and nearest existing state parent without
     expect(paths).toEqual(["/docker-root", directory]);
     expect(commands).toEqual([["docker", "info", "--format", "{{.DockerRootDir}}"]]);
     expect(await Bun.file(join(directory, "new", "state", "release.lock")).exists()).toBe(false);
+    expect(await readdir(directory)).toEqual([]);
     await expect(preflightReleaseSpace(".", directory, async () => "")).rejects.toThrow("Unknown");
     await expect(preflightReleaseSpace(".", directory, async () => "/docker", async () => { throw new Error("statfs unavailable"); })).rejects.toThrow("statfs unavailable");
+  } finally { await rm(directory, { recursive: true }); }
+});
+
+test("operator cleanup refuses an existing release lock without changing its contents", async () => {
+  const directory = await mkdtemp(join(tmpdir(), "infraforge-cleanup-lock-"));
+  try {
+    const path = join(directory, "release.lock");
+    await writeFile(path, "owned by release");
+    const child = Bun.spawnSync([process.execPath, "--no-env-file", "scripts/release/hygiene.ts", "prune", directory]);
+    expect(child.exitCode).not.toBe(0);
+    expect(child.stderr.toString()).toContain("Release lock exists");
+    expect(await readFile(path, "utf8")).toBe("owned by release");
+    expect(await readdir(directory)).toEqual(["release.lock"]);
   } finally { await rm(directory, { recursive: true }); }
 });
 
