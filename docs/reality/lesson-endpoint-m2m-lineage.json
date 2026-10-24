@@ -302,7 +302,7 @@
     },
     {
       "file": "apps/backend/internalModel2/legacyRuntime.json",
-      "hash": "4ac550a402aed4f2a5a95e38663dd2ab8957d914a31fca3b1584ab49e6294259"
+      "hash": "ca92785124abbe29888035aa3ee6ae448626a8fa6385fbac76cad18de0690ed0"
     },
     {
       "file": "apps/backend/internalModel2/lessonAuthoring.ts",
@@ -386,7 +386,7 @@
     },
     {
       "file": "apps/backend/release/migrations.ts",
-      "hash": "ad73be5121a3caa6b93d698cfe4a3bf03b72763b7530bbb7e2001a752eae1034"
+      "hash": "df66447357b50e50d2875bc58fba8925c25d64a450e5c76767cc0a38f5fe91bf"
     },
     {
       "file": "apps/backend/worker.ts",

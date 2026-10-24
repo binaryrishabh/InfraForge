@@ -2268,7 +2268,7 @@
     },
     {
       "path": "scripts/tests/browserSubmission.test.ts",
-      "hash": "1c52ebfc7c0f81a0b42b4324b8f700d5c51c989c2d1fb90b0dfe40e277a1ad98"
+      "hash": "351d6e1003e4ed0380a91424f880612868c8141f48fd5419b0faddd9b4e170e2"
     },
     {
       "path": "scripts/tests/ci-repair.test.ts",
@@ -2481,6 +2481,10 @@
     {
       "path": "scripts/tests/transition-store.test.ts",
       "hash": "ee7561c0a4494b6892a8604b60e8cc3bce56a6d4d7d8c480138451357b7e4d8f"
+    },
+    {
+      "path": "scripts/tests/verifier-service.test.ts",
+      "hash": "fa50e516279f03c39557f810075af1518de80b1261e6a1d6f1ccee983014d415"
     },
     {
       "path": "scripts/tests/workloadCalibration.test.ts",

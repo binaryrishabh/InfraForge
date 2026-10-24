@@ -40293,7 +40293,7 @@
       "file": "apps/backend/firstStack/verifierAvailability.ts",
       "specifier": "zod",
       "kind": "import-statement",
-      "targetOwner": "zod@4.4.3:11",
+      "targetOwner": "zod@4.6.6:3",
       "targetFile": "index.js"
     },
     {
@@ -40301,7 +40301,7 @@
       "file": "apps/backend/firstStack/verifierHost.ts",
       "specifier": "zod",
       "kind": "import-statement",
-      "targetOwner": "zod@4.4.3:11",
+      "targetOwner": "zod@4.6.6:3",
       "targetFile": "index.js"
     },
     {
@@ -40309,7 +40309,7 @@
       "file": "apps/backend/firstStack/verifierLifecycle.ts",
       "specifier": "ioredis",
       "kind": "import-statement",
-      "targetOwner": "ioredis@6.0.0:202",
+      "targetOwner": "ioredis@6.0.0:200",
       "targetFile": "built/index.js"
     },
     {
@@ -40317,7 +40317,7 @@
       "file": "apps/backend/firstStack/verifierLifecycle.ts",
       "specifier": "pg",
       "kind": "import-statement",
-      "targetOwner": "pg@8.22.0:170",
+      "targetOwner": "pg@8.22.0:169",
       "targetFile": "esm/index.mjs"
     },
     {
@@ -40325,7 +40325,7 @@
       "file": "apps/backend/firstStack/verifierOwnership.ts",
       "specifier": "pg",
       "kind": "import-statement",
-      "targetOwner": "pg@8.22.0:170",
+      "targetOwner": "pg@8.22.0:169",
       "targetFile": "esm/index.mjs"
     },
     {
