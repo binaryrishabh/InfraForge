@@ -1544,38 +1544,38 @@
     "review": "Exact historical compatibility review: versioned stored-data readers, typed migration audit lineage and bounded replay under the existing isolated executor/session fence; additive replay reservations; no evaluator, new process permission, physics change, latest-input resolution or activation"
   },
   "apps/backend/firstStack/scoredChallenges/definition.ts": {
-    "hash": "224b27abce700b771dd6e9d680e6ea7bb0e21f4dfe622d218aec220f16f7eb70",
+    "hash": "a7292404295a3c2188e7ad6e70492ded10fb4888a8cd2225bf1024f2b4ee1cf4",
     "capabilities": [
       "computed-data"
     ],
-    "review": "Exact R1 static registry review: six server-only finite API JSON versions and exact ID/version selection; existing strict validation, capacity-only admission and public projection unchanged; no host, engine, scoring or activation changes",
+    "review": "Exact public/private challenge review: seven v2 public definitions commit canonical private bundle content and version; separate injected test registry, capacity-only admission, fresh strict parsing and per-workload seed. Only the server-owned scoring registry resolves private files. Public sample projection enumerates fields. No evaluator, reference design imports, engine physics change, process launch or activation.",
     "globals": {
-      "hash": "224b27abce700b771dd6e9d680e6ea7bb0e21f4dfe622d218aec220f16f7eb70",
+      "hash": "a7292404295a3c2188e7ad6e70492ded10fb4888a8cd2225bf1024f2b4ee1cf4",
       "names": [
         "TextEncoder"
       ]
     }
   },
   "apps/backend/firstStack/scoredChallenges/execution.ts": {
-    "hash": "d7b980a0b20b6d08ed72fd5e49aed1f55a7746f141105104152f374ef0c1955b",
+    "hash": "e879f195764f31a7c5f0fa89194e8ee94641724db271ed47acccec59e830394f",
     "capabilities": [
       "computed-data"
     ],
-    "review": "Exact scored challenge review: strict server-owned JSON and capacity constraints; fixed bounded data projection and grading; same serial isolated executor/session fence; append-only score result; no evaluator, host activation, new process adapter, engine physics or Model 1 rubric constants"
+    "review": "Exact serial scoring review: resolve and authenticate the private bundle before hidden execution; missing, unreadable or mismatched store returns only a fixed scoring-unavailable state. Existing evidence, ownership, cleanup and compile-lock fences preserved; no retry or score is granted on unavailable data."
   },
   "apps/backend/firstStack/scoredChallenges/projection.ts": {
-    "hash": "4674534a02c7b55ce51a2042670a78392f19b3ae1201b959025695a84a821015",
+    "hash": "ae64bb684624658590fbd58f4d26f9758431384a56320d9640460062336628d5",
     "capabilities": [
       "computed-data"
     ],
-    "review": "Exact scored challenge review: strict server-owned JSON and capacity constraints; fixed bounded data projection and grading; same serial isolated executor/session fence; append-only score result; no evaluator, host activation, new process adapter, engine physics or Model 1 rubric constants"
+    "review": "Exact score projection review: authenticate result hash and verified status, then enumerate a fixed scoring-unavailable state without points or raw diagnostics. Existing successful-score allowlist and aggregate criterion projection unchanged; no hidden data or paths returned."
   },
   "apps/backend/firstStack/scoredChallenges/scoring.ts": {
-    "hash": "abb265e33309ce07789635fb70ee679fb3e734a265cc1c01ae86344e46e36281",
+    "hash": "1cf406cfd9521a8df7a28f2263655be9e363a013e91636c98b2e81af0ad6b6e5",
     "capabilities": [
       "computed-data"
     ],
-    "review": "Exact scored challenge review: strict server-owned JSON and capacity constraints; fixed bounded data projection and grading; same serial isolated executor/session fence; append-only score result; no evaluator, host activation, new process adapter, engine physics or Model 1 rubric constants"
+    "review": "Exact scoring identity review: preserve existing criterion evaluation, Unknown handling and full server-only audit; score challenge identity now hashes the public definition containing its private-content commitment, excluding the loaded secret fields. No thresholds or engine semantics changed in evaluator."
   },
   "apps/backend/firstStack/providerCost.ts": {
     "hash": "0a410eb1489eed820367af7a775438b3541db4176ca695cc25c948881151ab37",
@@ -1768,5 +1768,26 @@
       ]
     },
     "review": "Exact operational configuration review: eight literal MODEL1_* environment lookups, positive safe integer validation, finite horizon/deadline arithmetic and durable reservation status predicate only. No dynamic keys, resource loading or process execution."
+  },
+  "apps/backend/firstStack/scoredChallenges/schema.ts": {
+    "hash": "d0ae14f7253044b09385d86a2e5ba6c98df9941f93b600a7da4ca7913d3ecac2",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Exact strict schema review: separate public v2 definitions and private versioned bounded workload/rubric bundle; public definitions reject hidden/rubric fields, criteria require unique IDs and mandatory goals. Synthetic teaching data only; no evaluator or external loading."
+  },
+  "apps/backend/firstStack/scoredChallenges/privateStore.ts": {
+    "hash": "cacf87f7bc4a87212ea257650be8feb109ee91f1bec11e1b10d6ec69de20b5be",
+    "capabilities": [
+      "computed-data",
+      "resources"
+    ],
+    "review": "Exact read-only private scoring adapter review: one configured absolute directory resolved outside the checkout; fixed validated challenge filename, realpath containment, bounded regular-file read, SHA-256 canonical JSON commitment and strict exact identity/version verification. Opens read-only and closes descriptor; all errors become fixed Scoring unavailable with no contents, paths or causes. No writes, network, code loading, executable content or process launch. process.env reads only INFRAFORGE_SCORING_DIRECTORY.",
+    "globals": {
+      "hash": "cacf87f7bc4a87212ea257650be8feb109ee91f1bec11e1b10d6ec69de20b5be",
+      "names": [
+        "process"
+      ]
+    }
   }
 }
