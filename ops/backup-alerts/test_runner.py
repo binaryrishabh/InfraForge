@@ -599,6 +599,36 @@ class OperationsTests(unittest.TestCase):
             ops.status(CONFIG)
             self.assertEqual(ops.read_json(self.state / "ops-status.json")["reasons"], [])
 
+    def test_status_refuses_failed_drill_before_monitor_update(self):
+        self.healthy_receipt()
+        key = self.remote_archive(self.archive())
+        receipt = ops.read_json(self.state / "backup.json")
+        ops.write_json(self.state / "backup.json", {**receipt, "daily_key": key})
+        def fail_verifier(args, **kwargs):
+            if "/restore/verify.sh" in args:
+                raise subprocess.CalledProcessError(1, "fixture-verifier")
+            return self.fake_command(args, **kwargs)
+        for failure in ("failed-verifier", "interrupted"):
+            (self.state / "drill.json").unlink(missing_ok=True)
+            with patch.object(ops.time, "time", return_value=NOW), patch.object(ops, "send_alert") as send:
+                ops.monitor(CONFIG)
+                snapshot = ops.read_json(self.state / "ops-status.json")
+                self.assertIs(snapshot["ok"], True)
+                ops.status(CONFIG)
+                if failure == "failed-verifier":
+                    with patch.object(ops, "command", fail_verifier), self.assertRaises(subprocess.CalledProcessError):
+                        ops.drill(CONFIG)
+                else:
+                    # Model interruption after the real systemd pre-start marker.
+                    ops.begin_drill(CONFIG)
+                self.assertEqual(ops.read_json(self.state / "drill.json"), {"ok": False})
+                self.assertEqual(ops.read_json(self.state / "ops-status.json"), snapshot)
+                # No monitor/backup entrypoint has refreshed the still-healthy
+                # snapshot: refusal must come from the independent live check.
+                with self.assertRaisesRegex(ValueError, "restore"):
+                    ops.status(CONFIG)
+                send.assert_not_called()
+
     def test_restore_freshness_is_optional_but_known_failure_is_always_unhealthy(self):
         path = self.state / "drill.json"
         with patch.object(ops.time, "time", return_value=NOW):

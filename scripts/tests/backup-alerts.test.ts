@@ -34,14 +34,14 @@ test("all seven alarms notify email and fail on missing metrics", () => {
 
 test("operations runner passes offline upload, isolation and failure regressions", () => {
   const result = Bun.spawnSync([process.platform === "win32" ? "python" : "python3", "-B", "ops/backup-alerts/test_runner.py"], { cwd: root });
-  expect(result.stderr.toString()).toContain("Ran 65 tests");
+  expect(result.stderr.toString()).toContain("Ran 66 tests");
   expect(result.stderr.toString()).toContain("OK");
   expect(result.exitCode).toBe(0);
 }, 30_000);
 
-test("all eight escaped review mutations fail their targeted regressions", () => {
+test("backup safety mutations fail their targeted regressions", () => {
   const result = Bun.spawnSync([process.platform === "win32" ? "python" : "python3", "-B", "ops/backup-alerts/test_mutations.py"], { cwd: root });
-  expect(result.stderr.toString()).toContain("Ran 8 tests");
+  expect(result.stderr.toString()).toContain("Ran 9 tests");
   expect(result.stderr.toString()).toContain("OK");
   expect(result.exitCode).toBe(0);
 }, 30_000);

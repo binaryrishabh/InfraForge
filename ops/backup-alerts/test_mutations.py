@@ -1,4 +1,4 @@
-"""Run the eight escaped review mutations in memory against their regressions.
+"""Run backup safety mutations in memory against their regressions.
 
 No source file is modified. A mutation must make its targeted ordinary test fail;
 syntax errors and fixture setup failures do not count as detected guards.
@@ -17,7 +17,7 @@ tests = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(tests)
 SOURCE = (ROOT / "runner.py").read_text()
 
-# The exact edits correspond to the eight escapes documented by the review.
+# The original escaped edits plus the independent live-status review regression.
 MUTATIONS = {
     "access_key_in_arguments": (
         '"--cli-connect-timeout", "5", "--cli-read-timeout", "60", *args]',
@@ -45,6 +45,10 @@ MUTATIONS = {
     "skip_pre_delivery_persistence": (
         '            write_json(STATE / "ops-status.json", state)\n            try:',
         '            try:', "test_monitor_persists_failure_before_interrupted_delivery"),
+    "ignore_live_restore_status": (
+        'if health_reasons(config) or snapshot.get("ok") is not True or elapsed is None or elapsed > 180:',
+        'if snapshot.get("ok") is not True or elapsed is None or elapsed > 180:',
+        "test_status_refuses_failed_drill_before_monitor_update"),
 }
 
 
