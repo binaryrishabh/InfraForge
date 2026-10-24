@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test";
+import { strict as assert } from "node:assert";
 import { Client } from "pg";
 import { randomUUID } from "node:crypto";
 import { acquireReleaseOwnership, assertNoWorker } from "../../release/migrations";
@@ -28,22 +29,34 @@ const url = process.env.INTEGRATION_RUN === "1" ? process.env.INTEGRATION_DATABA
     release = await connect();
     await acquireReleaseOwnership(release);
     await assertNoWorker(release);
-    await expect(acquireVerifierOwnership(target.href, () => {})).rejects.toThrow("Another");
+    // Bun 1.3.14 on Windows times out live pg queries inside rejects.toThrow.
+    // Await with node:assert so socket I/O progresses; require the actual denial, never a timeout.
+    await assert.rejects(acquireVerifierOwnership(target.href, () => {}), {
+      message: "Another first-stack verifier owns this database",
+    });
     const otherRelease = await connect();
-    try { await expect(acquireReleaseOwnership(otherRelease)).rejects.toThrow("owns"); }
+    const releaseDenied = { message: "A verifier or another release still owns this database" };
+    const workerPresent = { message: "A simulation worker still owns this database; release must stop it first" };
+    try {
+      await assert.rejects(acquireReleaseOwnership(otherRelease), releaseDenied);
+      expect((await otherRelease.query("SELECT 1 AS ready")).rows[0].ready).toBe(1);
+    }
     finally { await otherRelease.end(); }
     // Excluding the release's own lock 12 must not hide its worker/executor locks.
     for (const lock of [1, 10]) {
       await release.query("SELECT pg_advisory_lock(186542854,$1)", [lock]);
-      await expect(assertNoWorker(release)).rejects.toThrow("worker");
+      await assert.rejects(assertNoWorker(release), workerPresent);
       await release.query("SELECT pg_advisory_unlock(186542854,$1)", [lock]);
     }
     await release.end(); release = undefined;
     // Verifier-first: release cannot pass acquisition or the existing observation check.
     verifier = await acquireVerifierOwnership(target.href, () => {});
+    await verifier.assertHeld();
     release = await connect();
-    await expect(acquireReleaseOwnership(release)).rejects.toThrow("owns");
-    await expect(assertNoWorker(release)).rejects.toThrow("worker");
+    await assert.rejects(acquireReleaseOwnership(release), releaseDenied);
+    await assert.rejects(assertNoWorker(release), workerPresent);
+    await verifier.assertHeld();
+    expect(verifier.held).toBe(true);
     await verifier.close(); verifier = undefined;
     await acquireReleaseOwnership(release);
     await assertNoWorker(release);
