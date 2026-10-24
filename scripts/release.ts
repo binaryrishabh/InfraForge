@@ -65,6 +65,7 @@ try {
   };
   const operations = new ComposeRelease(root, resolve(environmentFile), "infraforge", next, save);
   operationsInProgress = operations;
+  operations.onMutation = () => { mutationStarted = true; };
   const stop = operations.stop.bind(operations);
   operations.stop = async () => { mutationStarted = true; await stop(); };
   const configuration = await operations.config();

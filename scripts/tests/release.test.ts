@@ -103,6 +103,7 @@ for (const cached of [false, true]) test(`release ${cached ? "reuses" : "pulls"}
     "ws-server": { image: next.image }, redis: { image }, unrelated: { image: "unrelated:fixture" } };
   const run = spyOn(releaseProcess, "command").mockImplementation(async args => {
     events.push(args);
+    if (args.includes("--hash")) return "postgres desired-hash";
     if (args.includes("config")) return JSON.stringify({ services: declared });
     if (args[1] === "image" && !cached) throw new Error("Pinned dependency absent");
     return "";
@@ -132,6 +133,7 @@ test("local URL includes PostgreSQL in pre-pull and waits for it before migratio
   let failStartup = false;
   const run = spyOn(releaseProcess, "command").mockImplementation(async args => {
     events.push(args);
+    if (args.includes("--hash")) return "postgres desired-hash";
     if (args.includes("config")) return JSON.stringify({ services: declared });
     if (args[1] === "image") throw Error("absent");
     if (args.includes("--wait") && failStartup) throw Error("database unhealthy");
@@ -161,6 +163,43 @@ test("local URL includes PostgreSQL in pre-pull and waits for it before migratio
   expect(() => releaseDependencyClosure({ api: declared.api }, ["api"])).toThrow("missing");
   expect([...releaseDependencyClosure({ api: { environment: { DATABASE_URL: "postgresql://fixture@remote/fixture?sslmode=verify-full" } }, postgres: {} }, ["api"])]).toEqual(["api"]);
   expect([...releaseDependencyClosure({ api: { environment: { DATABASE_URL: "postgresql://fixture@postgres:6432/fixture?sslmode=verify-full" } } }, ["api"])]).toEqual(["api"]);
+});
+
+test("active-run refusal never recreates a changed live database; drift waits for verified shutdown", async () => {
+  const next = release("next"), events: string[][] = [];
+  const url = "postgresql://fixture:synthetic@postgres/fixture";
+  const declared = { api: { image: next.image, environment: { DATABASE_URL: url } },
+    migration: { image: next.image, environment: { DATABASE_URL: url, API_DATABASE_URL: url, WORKER_DATABASE_URL: url } },
+    postgres: { image: "postgres:pinned", environment: { POSTGRES_PASSWORD: "synthetic" } } };
+  let activeRun = true, hash = "old-hash", mutations = 0;
+  const run = spyOn(releaseProcess, "command").mockImplementation(async args => {
+    events.push(args);
+    if (args.includes("--hash")) return "postgres desired-hash";
+    if (args.includes("config")) return JSON.stringify({ services: declared });
+    if (args.includes("ps")) return args.at(-1) === "postgres" ? "database-id" : "";
+    if (args[1] === "inspect") return JSON.stringify([{ Config: { Labels: {
+      "com.docker.compose.project": "fixture", "com.docker.compose.service": "postgres", "com.docker.compose.config-hash": hash,
+    } }, State: { Running: true } }]);
+    if (args.includes("preflight") && activeRun) throw new Error("active run");
+    if (args.includes("up") && !args.includes("--no-recreate")) hash = "desired-hash";
+    return "";
+  });
+  try {
+    const operations = new ComposeRelease(process.cwd(), "fixture.env", "fixture", next, async () => {});
+    operations.onMutation = () => { mutations++; };
+    await expect(releaseSequence(operations, next)).rejects.toThrow("active run");
+    expect(events.filter(args => args.includes("up")).every(args => args.includes("--no-recreate"))).toBe(true);
+    expect(events.some(args => args.includes("stop"))).toBe(false);
+    expect(mutations).toBe(0);
+    activeRun = false;
+    await expect(operations.migrate()).rejects.toThrow("verified application shutdown");
+    await operations.stop();
+    await operations.migrate();
+    const replacement = events.findIndex(args => args.includes("up") && !args.includes("--no-recreate"));
+    expect(replacement).toBeGreaterThan(events.findIndex(args => args.includes("ps") && args.at(-1) === "ws-server"));
+    expect(events.findIndex(args => args.includes("migrate"))).toBeLessThan(replacement);
+    expect(mutations).toBe(1);
+  } finally { run.mockRestore(); }
 });
 
 test("production PostgreSQL keeps data persistent, bounded and exclusively on the internal network", () => {

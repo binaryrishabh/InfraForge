@@ -35,6 +35,9 @@ export function releaseDependencyClosure(declared: Record<string, { depends_on?:
 }
 export class ComposeRelease implements ReleaseOperations {
   private active: Release;
+  private databaseDrift = false;
+  private stopped = false;
+  onMutation: () => void = () => {};
   constructor(readonly root: string, readonly envFile: string, readonly project: string, readonly next: Release,
     readonly save: ReleaseOperations["save"], readonly override?: string, readonly healthTimeout = 90000,
     readonly environment: Record<string, string | undefined> = process.env) { this.active = next; }
@@ -86,11 +89,22 @@ export class ComposeRelease implements ReleaseOperations {
       if (!db?.environment?.POSTGRES_PASSWORD) {
         throw new Error("Local PostgreSQL requires POSTGRES_PASSWORD");
       }
-      await this.compose(["up", "-d", "--no-build", "--pull", "never", "--wait", "--wait-timeout", "90", "postgres"], this.next);
+      const ids = (await this.compose(["ps", "-aq", "postgres"])).split(/\s+/).filter(Boolean);
+      const records = ids.length ? JSON.parse(await command(["docker", "inspect", ...ids], this.root, this.environment)) : [];
+      if (records.length > 1 || records.some((record: ContainerState) =>
+        record.Config.Labels["com.docker.compose.project"] !== this.project ||
+        record.Config.Labels["com.docker.compose.service"] !== "postgres")) throw new Error("PostgreSQL container ownership mismatch");
+      if (!records.length || !records[0].State.Running) this.onMutation();
+      // Preflight can initialize a fresh host, but must never replace a live DB.
+      await this.compose(["up", "-d", "--no-recreate", "--no-build", "--pull", "never", "--wait", "--wait-timeout", "90", "postgres"], this.next);
+      const expected = (await this.compose(["config", "--hash", "postgres"])).split(/\s+/);
+      if (expected.length !== 2 || expected[0] !== "postgres") throw new Error("PostgreSQL configuration hash unavailable");
+      this.databaseDrift = records.length > 0 && records[0].Config.Labels["com.docker.compose.config-hash"] !== expected[1];
     }
     await this.compose(["run", "--rm", "--no-deps", "migration", "bun", "release/cli.ts", "preflight"], this.next);
   }
   async stop() {
+    this.stopped = false;
     // Stop new requests first, then recheck runs before stopping their owner.
     await this.compose(["stop", "--timeout", "30", "api", "ws-server"]);
     try { await this.preflight(); }
@@ -109,10 +123,23 @@ export class ComposeRelease implements ReleaseOperations {
         return blockers.length === 0;
       }, 5000);
     } catch (error) { throw new Error(`Application shutdown not verified${blockers.length ? ` (${blockers.join(", ")})` : ""}`, { cause: error }); }
+    this.stopped = true;
   }
-  async migrate() { await this.compose(["run", "--rm", "--no-deps", "migration", "bun", "release/cli.ts", "migrate"], this.next); }
+  async migrate() {
+    if (this.databaseDrift && !this.stopped) throw new Error("PostgreSQL configuration drift requires verified application shutdown");
+    // The migration CLI also proves no worker owns the database. Do that before
+    // replacement, which would otherwise erase evidence of a foreign session lock.
+    await this.compose(["run", "--rm", "--no-deps", "migration", "bun", "release/cli.ts", "migrate"], this.next);
+    if (this.databaseDrift) {
+      this.onMutation();
+      await this.compose(["up", "-d", "--no-build", "--pull", "never", "--wait", "--wait-timeout", "90", "postgres"], this.next);
+      await this.preflight();
+      if (this.databaseDrift) throw new Error("PostgreSQL configuration drift remains after replacement");
+    }
+  }
   async postcheck() { await this.compose(["run", "--rm", "--no-deps", "migration", "bun", "release/cli.ts", "postcheck"], this.next); }
   async start(release: Release) {
+    this.stopped = false;
     this.active = release;
     await verifyImage(release, this.root, this.environment);
     await this.compose(["up", "-d", "--no-build", "--pull", "never", "--scale", "worker=1", ...services]);
