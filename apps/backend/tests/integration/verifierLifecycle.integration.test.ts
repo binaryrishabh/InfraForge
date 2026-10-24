@@ -1,4 +1,4 @@
-import { expect, test } from "bun:test";
+import { expect, spyOn, test } from "bun:test";
 import { Client, Pool } from "pg";
 import Redis from "ioredis";
 import { Queue } from "bullmq";
@@ -7,12 +7,13 @@ import { fileURLToPath } from "node:url";
 import { startSubmissionQueue } from "../../firstStack/submissionQueue";
 import { createSubmissionService } from "../../firstStack/admission";
 import { isolationPolicyHash, qualificationChecks, type HostQualification } from "../../firstStack/isolationPolicy";
-import { publicChallenge } from "../../firstStack/scoredChallenges/definition";
+import { publicChallenge, serverChallenges } from "../../firstStack/scoredChallenges/definition";
 import { canonical, designRevision } from "../../firstStack/canonical";
 import { fixtureCut, verifierProtocolFixture } from "../verifierProtocolFixture";
 import { assertNoWorker } from "../../release/migrations";
 import type { SubmissionVerifier } from "../../firstStack/submissionWorker";
 import { acquireVerifierOwnership, verifierLock } from "../../firstStack/verifierOwnership";
+import { fixtureChallenges, fixtureDefinition } from "../scoringFixtures";
 
 const url = process.env.INTEGRATION_RUN === "1" ? process.env.INTEGRATION_DATABASE_URL : undefined;
 async function until(check: () => Promise<boolean>) {
@@ -62,6 +63,10 @@ const supported = url && process.platform !== "win32";
     checks: Object.fromEntries(qualificationChecks.map(k => [k, true])) as HostQualification["checks"] };
   const configuration: SubmissionVerifier = { admission: { enabled: true, engine },
     isolation: { ...engine, qualification }, control: fixture.control, healthy: () => healthy };
+  // Admission and the queue worker use the default registry. Bind both to the
+  // fake v2 commitments/store for this test, without configuring a private store.
+  const definitionSpy = spyOn(serverChallenges, "definition").mockImplementation(fixtureChallenges.definition);
+  const scoringSpy = spyOn(serverChallenges, "scoring").mockImplementation(fixtureChallenges.scoring);
   try {
     healthy = true;
     queue = await startSubmissionQueue(pool, target.href, producer, consumer, configuration,
@@ -71,7 +76,7 @@ const supported = url && process.platform !== "win32";
     await expect(startSubmissionQueue(pool, target.href, producer, consumer, configuration,
       { enabled: false }, () => {}, prefix)).rejects.toThrow("Another");
     const owner = randomUUID(), infrastructureId = randomUUID();
-    const sample = await publicChallenge(owner, "lose-an-app-server", "1");
+    const sample = await publicChallenge(owner, "lose-an-app-server", "2", fixtureChallenges);
     const input = canonical({ owner, layout: sample.layout, candidate: sample.layout.firstStack,
       recording: sample.workload, policy: sample.policy });
     const updated = "2026-10-23T00:00:00.000Z";
@@ -107,6 +112,9 @@ const supported = url && process.platform !== "win32";
     expect(fixture.launches).toBeGreaterThan(1); expect(fixture.removed).toBe(fixture.launches);
     const result = (await pool.query('SELECT body FROM "FirstStackResult" WHERE "runId"=$1', [run.id])).rows[0].body;
     expect(result.verification).toBe("verified"); expect(result.score).toBeDefined();
+    expect(result.score.schema).toBe("infraforge-server-score/1");
+    expect(result.score.challenge).toMatchObject({ id: sample.id, version: "2" });
+    expect(result.score.workloads).toHaveLength(fixtureDefinition(sample.id).hidden.length);
     const disabled = createSubmissionService(pool);
     expect((await disabled.read(owner, run.id)).reference?.id).toBe(run.id);
     await expect(disabled.submit(owner, request)).rejects.toThrow("Resource");
@@ -133,10 +141,14 @@ const supported = url && process.platform !== "win32";
     if (blocking!.status === "end" || blocking!.status === "close") await blocking!.connect();
     await until(async () => { try { await queue!.health(); return true; } catch { return false; } });
   } finally {
-    release(); await queue?.close();
-    const cleanup = new Queue("first-stack-verification", { prefix, connection: producer });
-    await cleanup.obliterate({ force: true }); await cleanup.close();
-    producer.disconnect(); consumer.disconnect(); await pool.end();
-    await admin.query(`DROP DATABASE "${name}" WITH (FORCE)`); await admin.end();
+    try {
+      release(); await queue?.close();
+      const cleanup = new Queue("first-stack-verification", { prefix, connection: producer });
+      await cleanup.obliterate({ force: true }); await cleanup.close();
+      producer.disconnect(); consumer.disconnect(); await pool.end();
+      await admin.query(`DROP DATABASE "${name}" WITH (FORCE)`); await admin.end();
+    } finally {
+      definitionSpy.mockRestore(); scoringSpy.mockRestore();
+    }
   }
 }, 120000);
