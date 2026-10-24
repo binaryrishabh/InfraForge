@@ -1,6 +1,6 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
-  "Description": "InfraForge private daily/weekly backups and host readiness alarms. Owner-operated; no compute or database changes.",
+  "Description": "Optional legacy AWS-only backup/CloudWatch/SNS infrastructure. Not used by the R2 runner; do not deploy for the current backup installation.",
   "Parameters": {
     "HostRoleName": { "Type": "String", "AllowedPattern": "[A-Za-z0-9+=,.@_-]{1,64}" },
     "InstanceId": { "Type": "AWS::EC2::Instance::Id" },

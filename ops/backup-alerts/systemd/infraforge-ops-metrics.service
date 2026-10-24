@@ -1,5 +1,5 @@
 [Unit]
-Description=InfraForge readiness, host capacity and backup health metrics
+Description=InfraForge local ops status and AWS-independent backup alerts
 Wants=network-online.target
 After=network-online.target docker.service
 
@@ -9,6 +9,7 @@ User=root
 UMask=0077
 StateDirectory=infraforge-ops
 StateDirectoryMode=0700
+LoadCredential=release-env:/etc/infraforge/release.env
 ExecStart=/bin/bash /opt/infraforge-ops/backup-alerts/run.sh metrics
 TimeoutStartSec=55s
 TimeoutStopSec=5s

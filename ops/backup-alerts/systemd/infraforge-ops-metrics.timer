@@ -1,5 +1,5 @@
 [Unit]
-Description=Publish InfraForge operational metrics every minute
+Description=Check InfraForge backup status and alert every minute
 
 [Timer]
 OnCalendar=*-*-* *:*:00 UTC

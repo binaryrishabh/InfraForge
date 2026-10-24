@@ -161,10 +161,21 @@ def read_json(path):
 
 
 def write_json(path, value):
-    temporary = path.with_suffix(".partial")
-    temporary.write_text(json.dumps(value) + "\n", encoding="utf-8")
-    os.chmod(temporary, 0o600)
-    temporary.replace(path)
+    # Backup failure hooks and the minute monitor can write concurrently.
+    with tempfile.NamedTemporaryFile(mode="w", dir=path.parent, delete=False, encoding="utf-8") as target:
+        temporary = Path(target.name)
+        try:
+            os.chmod(temporary, 0o600)
+            target.write(json.dumps(value) + "\n")
+            target.flush()
+            os.fsync(target.fileno())
+        except Exception:
+            temporary.unlink(missing_ok=True)
+            raise
+    try:
+        temporary.replace(path)
+    finally:
+        temporary.unlink(missing_ok=True)
 
 
 def validate_config(config):
@@ -374,10 +385,36 @@ def drill(config):
     cleanup_drill(config)  # Recover a recorded owned container left by a host reboot.
     receipt = read_json(STATE / "backup.json")
     elapsed = age(receipt, "snapshot_at", time.time())
-    if elapsed is None or elapsed > 93600 or not re.fullmatch(r"backup\.[A-Za-z0-9]+", receipt.get("archive", "")):
+    if elapsed is None or elapsed > 93600:
         raise ValueError("Fresh uploaded archive required for drill")
-    archive = STATE / "backups" / receipt["archive"]
-    verify_archive(archive)
+    # Prove retrieval from off-host storage rather than trust the local dump.
+    with tempfile.TemporaryDirectory(dir=STATE) as work:
+        archive = Path(work)
+        retrieve(config, receipt.get("daily_key", ""), archive)
+        restore_drill(config, archive)
+    write_json(STATE / "drill.json", {"ok": True, "passed_at": time.time()})
+
+
+def retrieve(config, key, archive):
+    bundle = archive / "backup.tar"
+    download(config, key, bundle)
+    try:
+        with tarfile.open(bundle, "r:") as tar:
+            members = tar.getmembers()
+            if len(members) != 2 or {item.name for item in members} != {"archive.dump", "SHA256SUMS"}:
+                raise ValueError("Unexpected remote archive members")
+            for item in members:
+                if not item.isfile() or item.size <= 0 or item.size > MAX_OBJECT_BYTES:
+                    raise ValueError("Unsafe remote archive member")
+                # Copy exact allowed regular members; never use tar path extraction.
+                with tar.extractfile(item) as source, (archive / item.name).open("xb") as target:
+                    shutil.copyfileobj(source, target)
+        verify_archive(archive)
+    finally:
+        bundle.unlink(missing_ok=True)
+
+
+def restore_drill(config, archive):
     # First exercise the unchanged owned-container synthetic proof and its refusals.
     command(["bash", str(BOOTSTRAP / "prove-backup.sh")], env=clean_env(), seconds=900)
     name = "infraforge-restore-drill-" + uuid.uuid4().hex
@@ -407,7 +444,6 @@ def drill(config):
         # Failure to remove the owned container also fails the drill; no false pass.
         command(["docker", "rm", "-fv", name], env=clean_env())
         (STATE / "drill-container.json").unlink(missing_ok=True)
-    write_json(STATE / "drill.json", {"ok": True, "passed_at": time.time()})
 
 
 def cleanup_drill(_config):
@@ -469,7 +505,100 @@ def collect(config, now=None, meminfo=Path("/proc/meminfo")):
 
 def metrics(config):
     # Local observations only; the current installation never calls CloudWatch.
+    monitor(config)
     write_json(STATE / "metrics.json", {"observed_at": time.time(), "values": collect(config)})
+
+
+def backup_healthy(now=None):
+    now = time.time() if now is None else now
+    elapsed = age(read_json(STATE / "backup.json"), "snapshot_at", now)
+    attempt = read_json(STATE / "backup-attempt.json")
+    running_age = age(attempt, "started_at", now)
+    running = attempt.get("running") is True and running_age is not None and running_age <= 46 * 60
+    return (elapsed is not None and elapsed <= 26 * 3600 and
+            (attempt.get("ok") is True or running))
+
+
+class NoRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        raise ValueError("Mail redirects are forbidden")
+
+
+def send_alert(config):
+    # Reuse the application's Resend settings, copied privately by systemd.
+    # No shell/dotenv interpolation; only these three literal keys are read.
+    path = Path(os.environ["CREDENTIALS_DIRECTORY"]) / "release-env"
+    wanted = {"TRANSACTIONAL_EMAIL_PROVIDER", "TRANSACTIONAL_EMAIL_FROM", "RESEND_API_KEY"}
+    values = {}
+    for line in path.read_text().splitlines():
+        key, sep, value = line.partition("=")
+        if sep and key in wanted:
+            if key in values:
+                raise ValueError("Duplicate mail setting")
+            value = value.strip()
+            if len(value) > 1 and value[0] == value[-1] and value[0] in "\"'":
+                value = value[1:-1]
+            values[key] = value
+    if values.get("TRANSACTIONAL_EMAIL_PROVIDER") != "resend" or not config.get("alert_email"):
+        return "unconfigured"
+    mailbox = r"[^\s<>@]+@[^\s<>@]+\.[^\s<>@]+"
+    if (not re.fullmatch(mailbox, values.get("TRANSACTIONAL_EMAIL_FROM", "")) or
+            not re.fullmatch(mailbox, config["alert_email"]) or
+            not values.get("RESEND_API_KEY") or re.search(r"[\s$]", values["RESEND_API_KEY"])):
+        raise ValueError("Invalid literal Resend configuration")
+    payload = {"from": values["TRANSACTIONAL_EMAIL_FROM"], "to": [config["alert_email"]],
+               "subject": "InfraForge backup needs attention",
+               "text": "A backup failed or no verified backup is less than 26 hours old. Check the backup unit and ops status privately."}
+    request = urllib.request.Request("https://api.resend.com/emails", method="POST",
+                                     data=json.dumps(payload).encode(),
+                                     headers={"Authorization": "Bearer " + values["RESEND_API_KEY"],
+                                              "Content-Type": "application/json"})
+    with urllib.request.build_opener(NoRedirect()).open(request, timeout=5) as response:
+        if not 200 <= response.status < 300:
+            raise ValueError("Mail delivery failed")
+    return "sent"
+
+
+def monitor(config):
+    now = time.time()
+    healthy = backup_healthy(now)
+    previous = read_json(STATE / "ops-status.json")
+    state = {"ok": healthy, "checked_at": now,
+             "alert_delivery": "not-needed" if healthy else previous.get("alert_delivery", "pending")}
+    # Persist failure BEFORE attempting delivery; provider failure never hides it.
+    if not healthy:
+        attempt_age = age(previous, "alert_attempt_at", now)
+        retry_after = 3600 if previous.get("alert_delivery") == "sent" else 900
+        if previous.get("ok") is not True and attempt_age is not None and attempt_age < retry_after:
+            state["alert_attempt_at"] = previous["alert_attempt_at"]
+        else:
+            state["alert_attempt_at"] = now
+            write_json(STATE / "ops-status.json", state)
+            try:
+                state["alert_delivery"] = send_alert(config)
+                if state["alert_delivery"] == "sent":
+                    state["alert_sent_at"] = now
+            except Exception:
+                state["alert_delivery"] = "failed"
+        print("BACKUP UNHEALTHY; check private unit status and ops-status.json", file=sys.stderr)
+    write_json(STATE / "ops-status.json", state)
+
+
+def status(_config):
+    snapshot = read_json(STATE / "ops-status.json")
+    elapsed = age(snapshot, "checked_at", time.time())
+    if not backup_healthy() or snapshot.get("ok") is not True or elapsed is None or elapsed > 180:
+        raise ValueError("Backup or monitoring is unhealthy")
+
+
+def begin_backup(_config):
+    write_json(STATE / "backup-attempt.json", {"ok": False, "running": True, "started_at": time.time()})
+
+
+def fail_backup(config):
+    if os.environ.get("SERVICE_RESULT") != "success":
+        write_json(STATE / "backup-attempt.json", {"ok": False})
+        monitor(config)
 
 
 def begin_drill(_config):
@@ -477,18 +606,41 @@ def begin_drill(_config):
     write_json(STATE / "drill.json", {"ok": False})
 
 
+def validate_state():
+    if STATE.is_symlink() or not STATE.is_dir() or STATE.stat().st_mode & 0o077 or STATE.stat().st_uid != 0:
+        raise ValueError("State must be root-owned and private")
+
+
 def main():
     os.umask(0o077)
-    operation = sys.argv[1] if len(sys.argv) == 2 else ""
+    operation = sys.argv[1] if len(sys.argv) >= 2 else ""
     try:
-        if operation not in ("backup", "drill", "metrics", "cleanup-drill", "begin-drill", "prune-dry-run"):
+        if operation not in ("backup", "drill", "metrics", "cleanup-drill", "begin-drill", "prune-dry-run",
+                             "status", "begin-backup", "fail-backup", "retrieve"):
             raise ValueError("Expected operation")
-        if STATE.is_symlink() or STATE.stat().st_mode & 0o077:
-            raise ValueError("State must be private")
+        if len(sys.argv) != (4 if operation == "retrieve" else 2):
+            raise ValueError("Unexpected operation arguments")
+        validate_state()
         config = read_json(Path("/etc/infraforge/ops/config.json"))
         validate_config(config)
-        globals()[operation.replace("-", "_")](config)
+        if operation == "backup":
+            begin_backup(config)
+        if operation == "retrieve":
+            target = Path(sys.argv[3])
+            target.mkdir(mode=0o700)  # Refuse an existing destination, including symlinks.
+            retrieve(config, sys.argv[2], target)
+        else:
+            globals()[operation.replace("-", "_")](config)
+        if operation == "backup":
+            write_json(STATE / "backup-attempt.json", {"ok": True})
+            monitor(config)
     except Exception:
+        if operation in ("backup", "begin-backup", "fail-backup"):
+            try:
+                write_json(STATE / "backup-attempt.json", {"ok": False})
+                monitor(locals().get("config", {}))
+            except Exception:
+                print("BACKUP FAILURE STATE COULD NOT BE UPDATED; operator action required", file=sys.stderr)
         # No exception string: URL parsers, pg tools and AWS errors can contain secrets.
         print("Operations job failed; inspect configuration, private backup diagnostics and unit status", file=sys.stderr)
         return 1

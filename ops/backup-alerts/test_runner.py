@@ -11,12 +11,15 @@ import shutil
 import socket
 import subprocess
 import tempfile
+import tarfile
+import types
 import unittest
 from unittest.mock import patch
 
 spec = importlib.util.spec_from_file_location("ops_runner", Path(__file__).with_name("runner.py"))
 ops = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(ops)
+PRIVATE_CREDENTIALS = ops.private_credentials
 CONFIG = {"region": "auto", "endpoint_url": "https://storage.example.invalid", "bucket": "fixture-backups",
           "site_url": "https://site.example.invalid/", "api_url": "https://api.example.invalid/health/ready",
           "worker_container": "fixture-worker", "drill_image": "postgres:18@sha256:" + "a" * 64}
@@ -330,27 +333,43 @@ class OperationsTests(unittest.TestCase):
 
     def test_restore_reuses_proof_and_hardened_restore_with_no_source_credentials(self):
         archive = self.archive()
-        ops.write_json(self.state / "backup.json", {"snapshot_at": NOW - 60, "archive": archive.name})
+        key = self.remote_archive(archive)
+        ops.write_json(self.state / "backup.json", {"snapshot_at": NOW - 60, "daily_key": key})
+        # A successful drill must not depend on the local staging archive.
+        shutil.rmtree(archive)
         with patch.object(ops.time, "time", return_value=NOW), patch.object(ops, "command", self.fake_command), patch.dict(os.environ, {"PGPASSWORD": "synthetic", "BACKUP_DATABASE_URL": URL}):
             ops.drill(CONFIG)
         self.assertTrue(ops.read_json(self.state / "drill.json")["ok"])
+        self.assertTrue(any("get-object" in args for args, _, _ in self.calls))
         self.assertTrue(any(args[0] == "bash" and args[1].endswith("prove-backup.sh") for args, _, _ in self.calls))
         self.assertTrue(any("/restore/verify.sh" in args and "local-only" in " ".join(args) for args, _, _ in self.calls))
         run = next(args for args, _, _ in self.calls if args[:2] == ["docker", "run"])
         self.assertEqual(run[run.index("--network") + 1], "none")
         self.assertFalse((self.state / "drill-container.json").exists())
-        for _, env, _ in self.calls:
+        for args, env, _ in self.calls:
             self.assertNotIn("PGPASSWORD", env)
             self.assertNotIn("BACKUP_DATABASE_URL", env)
+            if args[0] != "aws":
+                self.assertNotIn("AWS_SECRET_ACCESS_KEY", env)
+
+    def remote_archive(self, archive):
+        content = io.BytesIO()
+        with tarfile.open(fileobj=content, mode="w") as tar:
+            for name in ("archive.dump", "SHA256SUMS"):
+                tar.add(archive / name, arcname=name)
+        key = "backups/daily/2026-10-20.tar"
+        self.objects[key] = content.getvalue()
+        return key
 
     def test_restore_failure_cleans_container_and_latches_failure(self):
         archive = self.archive()
-        ops.write_json(self.state / "backup.json", {"snapshot_at": NOW - 60, "archive": archive.name})
+        key = self.remote_archive(archive)
+        ops.write_json(self.state / "backup.json", {"snapshot_at": NOW - 60, "daily_key": key})
         def fail_restore(args, **kwargs):
-            self.fake_command(args, **kwargs)
+            result = self.fake_command(args, **kwargs)
             if "/restore/verify.sh" in args:
                 raise subprocess.CalledProcessError(1, "mock-restore")
-            return b""
+            return result
         with patch.object(ops.time, "time", return_value=NOW), patch.object(ops, "command", fail_restore):
             with self.assertRaises(subprocess.CalledProcessError):
                 ops.drill(CONFIG)
@@ -481,6 +500,158 @@ class OperationsTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     ops.download(CONFIG, "backups/daily/2026-10-20.tar", self.state / "download.tar")
                 self.assertEqual(storage.call_count, 1)
+
+    def test_private_credentials_checks_opened_file_owner_mode_and_exact_pair(self):
+        fixture = self.state / "fixture.credentials"
+        fixture.write_text("[default]\naws_access_key_id=fixture-access\naws_secret_access_key=fixture-secret\n")
+        with patch.object(ops, "CREDENTIALS", fixture), patch.object(ops.os, "O_NOFOLLOW", 0, create=True):
+            for uid, mode in [(0, 0o100600), (1, 0o100600), (0, 0o100644), (0, 0o040600)]:
+                with patch.object(ops.os, "fstat", return_value=types.SimpleNamespace(st_uid=uid, st_mode=mode)):
+                    if uid == 0 and mode == 0o100600:
+                        self.assertEqual(PRIVATE_CREDENTIALS(), ["fixture-access", "fixture-secret"])
+                    else:
+                        with self.assertRaises(ValueError):
+                            PRIVATE_CREDENTIALS()
+            with patch.object(ops.os, "fstat", return_value=types.SimpleNamespace(st_uid=0, st_mode=0o100600)):
+                for text in ["[default]\naws_access_key_id=fixture\n", "[other]\naws_access_key_id=fixture\naws_secret_access_key=fixture\n",
+                             "[default]\naws_access_key_id=fixture\naws_secret_access_key=fixture\naws_session_token=extra\n"]:
+                    fixture.write_text(text)
+                    with self.assertRaises(ValueError):
+                        PRIVATE_CREDENTIALS()
+
+    def test_retrieve_rejects_paths_links_duplicates_and_corrupt_dump(self):
+        for names in [["../escape", "SHA256SUMS"], ["archive.dump", "archive.dump"],
+                      ["archive.dump", "SHA256SUMS", "extra"], ["archive.dump", "SHA256SUMS"]]:
+            for symlink in [False, True]:
+                content = io.BytesIO()
+                with tarfile.open(fileobj=content, mode="w") as tar:
+                    for name in names:
+                        item = tarfile.TarInfo(name)
+                        if symlink:
+                            item.type = tarfile.SYMTYPE
+                            item.linkname = "../escape"
+                            tar.addfile(item)
+                        else:
+                            item.size = 7
+                            tar.addfile(item, io.BytesIO(b"corrupt"))
+                key = "backups/daily/2026-10-20.tar"
+                self.objects[key] = content.getvalue()
+                with tempfile.TemporaryDirectory(dir=self.state) as work, patch.object(ops, "command", self.fake_command):
+                    with self.assertRaises(ValueError):
+                        ops.retrieve(CONFIG, key, Path(work))
+                self.assertFalse((self.state / "escape").exists())
+
+    def healthy_receipt(self):
+        ops.write_json(self.state / "backup.json", {"snapshot_at": NOW - 60})
+        ops.write_json(self.state / "backup-attempt.json", {"ok": True})
+
+    def test_monitor_alerts_on_missing_stale_future_and_failed_backup(self):
+        cases = [({}, {"ok": True}), ({"snapshot_at": NOW - 93601}, {"ok": True}),
+                 ({"snapshot_at": NOW + 1}, {"ok": True}), ({"snapshot_at": NOW - 60}, {"ok": False})]
+        for receipt, attempt in cases:
+            (self.state / "ops-status.json").unlink(missing_ok=True)
+            ops.write_json(self.state / "backup.json", receipt)
+            ops.write_json(self.state / "backup-attempt.json", attempt)
+            with patch.object(ops.time, "time", return_value=NOW), patch.object(ops, "send_alert", return_value="sent") as send:
+                ops.monitor(CONFIG)
+                send.assert_called_once_with(CONFIG)
+                self.assertFalse(ops.read_json(self.state / "ops-status.json")["ok"])
+
+    def test_monitor_latches_failure_when_mail_absent_or_provider_fails(self):
+        for outcome in ["unconfigured", RuntimeError(URL)]:
+            (self.state / "ops-status.json").unlink(missing_ok=True)
+            kwargs = {"side_effect": outcome} if isinstance(outcome, Exception) else {"return_value": outcome}
+            stderr = io.StringIO()
+            with patch.object(ops.time, "time", return_value=NOW), patch.object(ops, "send_alert", **kwargs), contextlib.redirect_stderr(stderr):
+                ops.monitor(CONFIG)
+            state = ops.read_json(self.state / "ops-status.json")
+            self.assertFalse(state["ok"])
+            self.assertEqual(state["alert_delivery"], "failed" if isinstance(outcome, Exception) else "unconfigured")
+            self.assertNotIn(URL, stderr.getvalue() + json.dumps(state))
+
+    def test_monitor_deduplicates_and_retries_delivery(self):
+        with patch.object(ops.time, "time", return_value=NOW), patch.object(ops, "send_alert", return_value="sent") as send:
+            ops.monitor(CONFIG)
+            ops.monitor(CONFIG)
+            self.assertEqual(send.call_count, 1)
+        with patch.object(ops.time, "time", return_value=NOW + 3601), patch.object(ops, "send_alert", return_value="sent") as send:
+            ops.monitor(CONFIG)
+            send.assert_called_once()
+        self.healthy_receipt()
+        with patch.object(ops.time, "time", return_value=NOW), patch.object(ops, "send_alert") as send:
+            ops.monitor(CONFIG)
+            send.assert_not_called()
+            ops.status(CONFIG)
+
+    def test_status_refuses_stale_monitor_and_expired_running_attempt(self):
+        self.healthy_receipt()
+        with patch.object(ops.time, "time", return_value=NOW):
+            for snapshot in [{}, {"ok": True, "checked_at": NOW - 181}, {"ok": False, "checked_at": NOW - 1}]:
+                ops.write_json(self.state / "ops-status.json", snapshot)
+                with self.assertRaises(ValueError):
+                    ops.status(CONFIG)
+            for start, expected in [(NOW - 1, True), (NOW - 2761, False), (NOW + 1, False)]:
+                ops.write_json(self.state / "backup-attempt.json", {"ok": False, "running": True, "started_at": start})
+                self.assertEqual(ops.backup_healthy(), expected)
+
+    def test_systemd_failure_hook_records_failure_for_timeout_or_lock_refusal(self):
+        self.healthy_receipt()
+        with patch.dict(os.environ, {"SERVICE_RESULT": "timeout"}), patch.object(ops, "monitor") as monitor:
+            ops.fail_backup(CONFIG)
+            monitor.assert_called_once_with(CONFIG)
+        self.assertEqual(ops.read_json(self.state / "backup-attempt.json"), {"ok": False})
+
+    def test_backup_entrypoint_alerts_on_exception_without_leaking_details(self):
+        original = ops.read_json
+        def config_or_state(path):
+            return CONFIG if path.name == "config.json" else original(path)
+        stderr = io.StringIO()
+        with patch.object(ops.sys, "argv", ["runner.py", "backup"]), patch.object(ops, "validate_state"), \
+                patch.object(ops, "read_json", config_or_state), patch.object(ops, "backup", side_effect=RuntimeError(URL)), \
+                patch.object(ops, "send_alert", return_value="sent") as send, \
+                patch.object(ops.time, "time", return_value=NOW), contextlib.redirect_stderr(stderr):
+            self.assertEqual(ops.main(), 1)
+            send.assert_called_once_with(CONFIG)
+        self.assertEqual(ops.read_json(self.state / "backup-attempt.json"), {"ok": False})
+        self.assertFalse(ops.read_json(self.state / "ops-status.json")["ok"])
+        self.assertNotIn(URL, stderr.getvalue())
+
+    def test_credentials_open_refuses_symlinks_before_reading(self):
+        with patch.object(ops.os, "O_NOFOLLOW", 131072, create=True), \
+                patch.object(ops.os, "open", side_effect=OSError("fixture symlink")) as opened:
+            with self.assertRaises(OSError):
+                PRIVATE_CREDENTIALS()
+            self.assertTrue(opened.call_args.args[1] & 131072)
+
+    def test_get_is_pinned_to_head_etag_and_checks_byte_count(self):
+        def incomplete(_config, args, **_kwargs):
+            if "head-object" in args:
+                return b'{"ContentLength":10,"ETag":"fixture-etag"}'
+            self.assertEqual(args[args.index("--if-match") + 1], "fixture-etag")
+            Path(args[-1]).write_bytes(b"short")
+            return b"{}"
+        with patch.object(ops, "s3", incomplete), self.assertRaisesRegex(ValueError, "Incomplete"):
+            ops.download(CONFIG, "backups/daily/2026-10-20.tar", self.state / "download.tar")
+
+    def test_resend_uses_existing_literal_mail_settings_and_redacts_failures(self):
+        path = self.state / "release-env"
+        path.write_text('TRANSACTIONAL_EMAIL_PROVIDER=resend\nTRANSACTIONAL_EMAIL_FROM=ops@example.invalid\nRESEND_API_KEY="fixture-resend-key"\n')
+        opener = unittest.mock.MagicMock()
+        response = opener.open.return_value.__enter__.return_value
+        response.status = 202
+        with patch.dict(os.environ, {"CREDENTIALS_DIRECTORY": str(self.state)}), patch.object(ops.urllib.request, "build_opener", return_value=opener):
+            self.assertEqual(ops.send_alert({**CONFIG, "alert_email": "owner@example.invalid"}), "sent")
+            request = opener.open.call_args.args[0]
+            self.assertEqual(request.full_url, "https://api.resend.com/emails")
+            self.assertEqual(request.get_header("Authorization"), "Bearer fixture-resend-key")
+            self.assertEqual(json.loads(request.data)["to"], ["owner@example.invalid"])
+            self.assertNotIn("fixture-resend-key", request.data.decode())
+            response.status = 500
+            with self.assertRaises(ValueError):
+                ops.send_alert({**CONFIG, "alert_email": "owner@example.invalid"})
+            self.assertEqual(ops.send_alert(CONFIG), "unconfigured")
+        with self.assertRaises(ValueError):
+            ops.NoRedirect().redirect_request(None, None, 302, "", {}, "https://other.invalid")
 
 
 if __name__ == "__main__":
