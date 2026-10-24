@@ -70,3 +70,37 @@ test("a dependency loss is unready at once, and a probe begun before it cannot r
   expect(calls).toBe(3); expect(cache.check()).toEqual({ success: true });
   await cache.close();
 });
+
+test("deep schema verification runs once, then again only after a failure or a lost session", async () => {
+  const { deepOnce } = await import("../health/readiness");
+  let light = 0, deep = 0, lightFails = false;
+  const probe = deepOnce({
+    light: async () => { light++; if (lightFails) throw Error("database unavailable"); },
+    deep: async () => { deep++; },
+    extra: async () => {},
+    release: async () => "release",
+  });
+  for (let i = 0; i < 5; i++) expect(await probe()).toEqual({ success: true, release: "release" });
+  // Scheduled probes stay light: one deep check, five light checks.
+  expect([light, deep]).toEqual([5, 1]);
+  lightFails = true;
+  expect(await probe()).toEqual({ success: false });
+  lightFails = false;
+  expect(await probe()).toEqual({ success: true, release: "release" });
+  expect(deep).toBe(2);
+  probe.reverify();
+  await probe();
+  expect(deep).toBe(3);
+});
+
+test("a failed deep check never reports ready and is retried on the next probe", async () => {
+  const { deepOnce } = await import("../health/readiness");
+  let deep = 0, broken = true;
+  const probe = deepOnce({ light: async () => {}, deep: async () => { deep++; if (broken) throw Error("drift"); },
+    extra: async () => {}, release: async () => "release" });
+  expect(await probe()).toEqual({ success: false });
+  expect(await probe()).toEqual({ success: false });
+  broken = false;
+  expect((await probe()).success).toBe(true);
+  expect(deep).toBe(3);
+});

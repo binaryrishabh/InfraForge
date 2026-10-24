@@ -874,11 +874,11 @@
     }
   },
   "apps/backend/health/readiness.ts": {
-    "hash": "49161910e2dcf14d3455434fc3e3469b43e7d633aebdf6f4198552ded56fec88",
+    "hash": "9e24d633e47e17f9dea3b0a9025c8d7f45255d85669e2b97e3185033ff828b3e",
     "capabilities": [],
-    "review": "Exact security admission/readiness review: shared PostgreSQL transaction lock, durable deployment reservations and terminal-only release, delayed capacity waits, finite simulator horizons and creation deadlines; startup/scheduled readiness snapshots, invalidated at once on Redis connection close or database pool error without extra deep probes. Existing fixed process configuration/lifecycle and data indexing only. No evaluator, dynamic loading, process adapter, engine physics change or activation.",
+    "review": "Exact security admission/readiness review: shared PostgreSQL transaction lock, durable deployment reservations and terminal-only release, delayed capacity waits, finite simulator horizons and creation deadlines; startup/scheduled readiness snapshots, invalidated at once on Redis connection close or database pool error without extra deep probes. Existing fixed process configuration/lifecycle and data indexing only. No evaluator, dynamic loading, process adapter, engine physics change or activation. Deep schema/history verification runs at startup and after a failure or lost database session; scheduled probes run only SELECT 1 and a Redis ping.",
     "globals": {
-      "hash": "49161910e2dcf14d3455434fc3e3469b43e7d633aebdf6f4198552ded56fec88",
+      "hash": "9e24d633e47e17f9dea3b0a9025c8d7f45255d85669e2b97e3185033ff828b3e",
       "names": [
         "process"
       ]
