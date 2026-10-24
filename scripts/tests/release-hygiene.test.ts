@@ -61,6 +61,7 @@ test("preflight refuses a low image filesystem even when Docker metadata and sta
       ["/docker-root/overlay2", 7n], ["/separate/containerd", 3n]]);
     const measure = async (path: string) => capacities.get(path)!;
     await expect(preflightReleaseSpace(".", directory, async () => JSON.stringify(dockerInfo), measure)).rejects.toThrow("/docker-root/overlay2: 7 bytes available");
+    capacities.set("/docker-root/overlay2", minimumReleaseFreeBytes);
     // The old DockerRootDir-only query would pass this fixture. The active
     // containerd root cannot be verified from info, so this layout must refuse.
     const containerd = { ...dockerInfo, Driver: "overlayfs", DriverStatus: [["driver-type", "io.containerd.snapshotter.v1"]] };
