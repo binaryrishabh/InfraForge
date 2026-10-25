@@ -335,15 +335,16 @@ Do not run it routinely by SSH. The workflow invokes it through the retry-aware 
 
 Provision at least **8 GiB (8,589,934,592 bytes) free** on both Docker's data-root
 filesystem and `/var/lib/infraforge/releases` before a release, and on the classic
-`overlay2` image directory if it is separately mounted. The controller checks all
-three paths before any build/state/service mutation. Protected Docker directories
+`overlay2` image directory if it is separately mounted. The controller checks every
+storage path below before any build/state/service mutation. Protected Docker directories
 require noninteractive read-only `sudo -n stat --file-system` access. The budget and assumptions
 are documented in [release disk capacity and image retention](DEPLOYMENT.md#release-disk-capacity-and-image-retention).
-Only classic `overlay2` storage is currently qualified. Containerd image stores
-(including fresh Docker Engine 29+ defaults) and unknown layouts refuse because
-the controller cannot verify their active content/snapshot root. Bootstrap does
-not qualify that layout. Extend reviewed storage-root discovery before releasing
-on it; never bypass the gate or switch storage drivers to reclaim space.
+Two layouts are qualified: classic `overlay2`, and the containerd image store
+(the Docker Engine 29+ default) when Docker uses the default system containerd
+started without flags. For the latter the controller also checks containerd's
+root, content and overlayfs snapshot directories, and needs noninteractive
+`sudo -n containerd config dump`. Unknown layouts refuse; never bypass the gate
+or switch storage drivers to reclaim space.
 After acceptance it retains the exact accepted/previous images plus all images
 used by containers, and logs removal of other exclusively `infraforge-backend:*`
 images. It never prunes volumes, database/cache images or shared builders. The

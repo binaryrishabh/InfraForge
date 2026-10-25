@@ -160,14 +160,25 @@ operator cannot traverse Docker's private directory, a read-only
 sudo access for that read is required on such hosts. Missing paths, denied sudo
 or unavailable measurements refuse the release; capacity is never guessed.
 
-Containerd image stores and unknown drivers currently **refuse before building**:
-their active content/snapshot root cannot be verified from `docker info`. Fresh
-Docker Engine 29+ installations commonly use this layout; bootstrap installation
-alone does not qualify it for this release controller. An operator must qualify
-discovery and measurement of the active storage root before those layouts can be
-supported. Do not assume `/var/lib/containerd`, bypass the gate or switch drivers
-as cleanup. Docker documents the separate storage paths and the fact that
-`data-root` does not move containerd storage in its
+The containerd image store (the Docker Engine 29+ default: driver `overlayfs`
+with `driver-type io.containerd.snapshotter.v1`) keeps image content and snapshots
+under **containerd's own root**, which `docker info` does not report. The release
+accepts it only for the default system containerd, verified step by step:
+
+- `docker info` reports exactly that driver type and an absolute containerd socket;
+- `systemctl show containerd.service` gives its main PID, and that process was
+  started as plain `containerd` with no flags (`--config`, `--root`, `--address` or
+  any other flag would make the default config dump differ from the running daemon);
+- `sudo -n containerd config dump` (the effective config) names that same socket
+  under `[grpc] address` and an absolute top-level `root`.
+
+It then measures Docker's root, containerd's root, its
+`io.containerd.content.v1.content` and `io.containerd.snapshotter.v1.overlayfs`
+directories and the release state directory, each against the same 8 GiB floor.
+Any other layout, any mismatch or any failed read **refuses before building**.
+Do not assume `/var/lib/containerd`, bypass the gate or switch drivers as cleanup.
+Docker documents the separate storage paths and the fact that `data-root` does
+not move containerd storage in its
 [daemon data-directory contract](https://docs.docker.com/engine/daemon/#daemon-data-directory).
 
 This is a minimum operating budget, not a prediction: the incident's roughly
