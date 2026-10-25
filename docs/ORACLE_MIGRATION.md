@@ -148,51 +148,6 @@ native release. Measure free bytes/inodes for image/cache, both retained release
 PostgreSQL WAL/data, Redis AOF, logs and backup staging; 100 GB is an allocation,
 not measured sufficient free space. Do not increase resource/admission limits.
 
-### Read-only storage gate before fencing EC2 or changing DNS
-
-On **Oracle**, from the approved main checkout, run the w50b release preflight
-itself. It must already be merged and live; this branch does not supply the fix.
-The following import calls only its read-only preflight, not release or pruning.
-The measurement wrapper also requires `df` available bytes to meet the same floor:
-
-```sh
-set -euo pipefail
-cd "$HOME/InfraForge"
-bun --no-env-file -e '
-import {preflightReleaseSpace, availableReleaseBytes, minimumReleaseFreeBytes} from "./scripts/release/hygiene.ts";
-import {command} from "./scripts/release/process.ts";
-await preflightReleaseSpace(process.cwd(), "/var/lib/infraforge/releases", command, async path => {
-  const output = await command(["sudo", "-n", "df", "-B1", "--output=avail", "--", path], process.cwd());
-  const rows = output.trim().split(/\n/);
-  if (rows.length !== 2 || !/^\s*\d+\s*$/.test(rows[1])) throw Error(`df unavailable: ${path}`);
-  const available = BigInt(rows[1].trim());
-  console.log(`df ${path}: ${available} bytes available`);
-  if (available < minimumReleaseFreeBytes) throw Error(`df below 8 GiB: ${path}`);
-  return await availableReleaseBytes(path);
-});'
-```
-
-Review the measured paths against [release storage discovery](DEPLOYMENT.md#release-disk-capacity-and-image-retention)
-in merged main. The imported check reads `docker info --format '{{json .}}'`:
-classic `overlay2` must have no snapshotter driver-type; containerd must report
-`overlayfs`, exactly `driver-type=io.containerd.snapshotter.v1` and an absolute
-`Containerd.Address`. For containerd it runs
-`systemctl show containerd.service --property=MainPID --value`, reads that PID's
-`/proc/PID/cmdline` and requires **plain containerd with no flags**, then reads
-`sudo -n containerd config dump`. The absolute top-level `root` and `[grpc]`
-`address` must exist, and the address must equal Docker's socket.
-
-Every measured path needs **8 GiB = 8,589,934,592 available bytes**: Docker root,
-classic root's `overlay2` directory, or containerd root plus its
-`io.containerd.content.v1.content` and `io.containerd.snapshotter.v1.overlayfs`
-directories, and the release state directory (nearest existing parent if absent).
-Measure each even if filesystems coincide. Noninteractive sudo for the config,
-`df`, and the preflight's private-path `stat --file-system` fallback must work.
-Any failed read, missing path, extra daemon flag, socket mismatch, unknown layout
-or low-space result **stops the migration here**. Do not guess `/var/lib/containerd`,
-create missing image-store paths or switch drivers on a populated host. Provision
-a supported host/capacity and repeat the gate; the release repeats it before build.
-
 ### Install native backup clients before cutover
 
 On **Oracle Ubuntu noble/ARM64**, install only the PostgreSQL 18 client from the
@@ -327,11 +282,41 @@ owner review/no admin bypass/main-only policy. Check for old environment-level
 update deliberately without printing secrets. Ensure approved release-runner SSH
 CIDRs are admitted. Do not open SSH worldwide to make a hosted retry pass.
 
+### Final storage qualification before cutover
+
+Finish **all** pre-cutover package, daemon and configuration setup first:
+sections 1–3, section 8's pre-cutover installation through `daemon-reload`, and
+implementation/rehearsal of the recovery and independent public-traffic plans.
+Then, on **Oracle**, from the approved main checkout, execute and record the
+complete [release storage qualification checklist](DEPLOYMENT.md#release-disk-capacity-and-image-retention)
+immediately before section 4. That checklist in `local/release-containerd` must
+be merged into the approved checkout with its implementation; an older copy in
+this Oracle branch does not qualify. It is the **single authoritative source**
+for qualification conditions, commands and sanitized evidence. Run its actual
+read-only qualification sequence, including the evidence helper and
+`bun --no-env-file scripts/release/hygiene.ts qualify /var/lib/infraforge/releases`;
+a recorded pass from before installation is insufficient.
+
+For clarity, the checklist runs both `config default` and `config dump` through
+`sudo -n /proc/PID/exe`, the live containerd executable, not a binary found via
+PATH. Follow the checklist's current provenance rules rather than an Oracle
+copy of the storage contract. Keep its sanitized qualification record privately;
+never publish raw configuration dumps.
+
+**Any refusal stops cutover while Oracle is still out of service.** Diagnose and
+establish a reviewed qualifying instance, then repeat the complete checklist.
+Do not weaken timestamp checks, invent storage directories or switch image stores.
+Any later package, daemon, configuration or storage change invalidates the recorded
+pass and requires the full checklist and evidence again before proceeding. This
+includes changes after entering section 4; a stale pass never authorizes fencing
+EC2 or changing DNS. The real release-time guard remains a second check, not a
+substitute for this final pre-cutover qualification.
+
 ## 4. Lead with owner: drain and fence EC2
 
-**Stop gate:** require recorded passes for section 2 storage and client checks,
-section 8 pre-cutover setup, and the rehearsed recovery and public-traffic plans
-below. Neither the retained-current EC2 recovery nor an independent public gate
+**Stop gate:** require a current recorded pass from the final storage qualification
+immediately above, section 2 client checks, section 8 pre-cutover setup, and the
+rehearsed recovery and public-traffic plans below. Neither the retained-current EC2 recovery nor an independent public gate
 is implemented/validated by this document. Do not begin the outage with either
 plan unresolved.
 
