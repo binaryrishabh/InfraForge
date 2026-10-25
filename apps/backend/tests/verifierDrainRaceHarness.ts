@@ -35,6 +35,10 @@ class Pool extends EventEmitter {
 class Queue extends EventEmitter {
   getBackend() { return backend; }
   async setGlobalConcurrency() {}
+  // Startup retention pruning and operation counts; this race has no retained jobs.
+  async clean() { return []; }
+  async getJobs() { return []; }
+  async getJobCounts() { return {}; }
   async add() {}
   async close() {}
 }
