@@ -1,4 +1,4 @@
-export type ChallengeAction = "signup" | "password_reset";
+export type ChallengeAction = "signup" | "password_reset" | "email_login";
 export interface SignupChallenge {
   readonly protectReset?: boolean;
   verify(token: string, action: ChallengeAction, ip?: string): Promise<boolean>;

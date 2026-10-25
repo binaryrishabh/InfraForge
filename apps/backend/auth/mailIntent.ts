@@ -5,7 +5,7 @@ import type { Prisma, PrismaClient } from "../lib/generated/prisma/client";
 import { accountEmail } from "./emailTemplate";
 import { registerVerification } from "./verification";
 
-export type MailKind = "signup" | "reset" | "verify";
+export type MailKind = "signup" | "reset" | "verify" | "magic" | "otp";
 export type MailSettings = { secret: string; baseURL: string; origins: string[] };
 export type MailIntent = {
   id: string;
@@ -29,6 +29,15 @@ export function mailCredential(intent: Pick<MailIntent, "id" | "kind">, secret: 
     .update(`infraforge-mail-credential/1\0${intent.kind}\0${intent.id}`)
     .digest("base64url");
 }
+
+export function mailOTP(intent: Pick<MailIntent, "id" | "kind">, secret: string) {
+  const bytes = createHmac("sha256", secret).update(`infraforge-mail-otp/1\0${intent.id}`).digest();
+  return String(bytes.readUInt32BE(0) % 1_000_000).padStart(6, "0");
+}
+
+// A database reader cannot brute-force a six-digit code without the server key.
+export const otpDigest = (otp: string, secret: string) =>
+  createHmac("sha256", secret).update(`infraforge-otp-digest/1\0${otp}`).digest("base64url");
 
 export async function readMailPayload(payload: string, secret: string): Promise<MailPayload> {
   return JSON.parse(await symmetricDecrypt({ key: secret, data: payload }));
@@ -62,6 +71,22 @@ export async function prepareMailIntent(
   const user = users[0];
   if (!user || intent.kind === "verify" && user.emailVerified) return null;
 
+  if (intent.kind === "magic" || intent.kind === "otp") {
+    // Email login never adopts an unverified pre-registration or creates users.
+    if (!user.emailVerified) return null;
+    const magic = intent.kind === "magic";
+    const identifier = magic ? `magic-link:${storedIdentifier(mailCredential(intent, settings.secret))}`
+      : `sign-in-otp-${data.email}`;
+    if (!magic) await tx.verification.deleteMany({ where: { identifier } });
+    await tx.verification.create({ data: {
+      id: `mail:${intent.id}`, identifier,
+      value: magic ? JSON.stringify({ type: "magic-link", email: data.email })
+        : `${otpDigest(mailOTP(intent, settings.secret), settings.secret)}:0`,
+      expiresAt: intent.expiresAt,
+    } });
+    return { payload: intent.payload, userId: user.id };
+  }
+
   if (intent.kind === "reset") {
     await tx.verification.create({ data: {
       id: `mail:${intent.id}`,
@@ -84,6 +109,16 @@ export async function prepareMailIntent(
 export async function renderMailIntent(intent: MailIntent, settings: MailSettings) {
   const data = await readMailPayload(intent.payload, settings.secret);
   const token = mailCredential(intent, settings.secret);
+  if (intent.kind === "otp") {
+    return { to: data.email, subject: "Your InfraForge sign-in code", sensitive: true,
+      text: `Your sign-in code is ${mailOTP(intent, settings.secret)}. It expires within 10 minutes. `
+        + "Use it once. If you did not request it, ignore this email." };
+  }
+  if (intent.kind === "magic") {
+    const url = `${settings.baseURL}/api/auth/magic-link/verify?token=${token}`
+      + `&callbackURL=${encodeURIComponent(data.callbackURL)}`;
+    return accountEmail(data.email, url, "magic", settings.baseURL);
+  }
   if (intent.kind === "signup") {
     const link = new URL(data.callbackURL || "/signup", settings.origins[0]);
     link.searchParams.set("emailProof", token);

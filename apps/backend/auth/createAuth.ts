@@ -1,5 +1,5 @@
 import { betterAuth } from "better-auth";
-import { username } from "better-auth/plugins";
+import { username, magicLink, emailOTP } from "better-auth/plugins";
 import {
   PASSWORD_MIN, PASSWORD_MAX, USERNAME_MIN, USERNAME_MAX, validUsername, normalizeUsername,
 } from "@infraforge/contracts/auth";
@@ -13,11 +13,14 @@ import type { MailRequests } from "./mailIntent";
 import { mailAdmission, invalidProof, acceptedMail } from "./mailAdmission";
 import { consumeVerification, EMAIL_TOKEN_SECONDS } from "./verification";
 import { enforceAccountPolicy, type AccountQuota } from "./accountPolicy";
+import { loginMethodPolicy, validateLink } from "./loginMethods";
+import { otpDigest } from "./mailIntent";
 
 export function createAuth(
   prisma: PrismaClient, settings: ReturnType<typeof readAuthSettings>, quota?: AccountQuota, mailQueue?: MailRequests,
 ) {
   const essentials = settings.accountEssentials;
+  const methods = settings.loginMethods;
   const deliver = (essentials.emailEnabled || essentials.enabled) && essentials.email
     ? mailQueue ?? new AccountEmailRequests(prisma, essentials.email, settings) : undefined;
   return betterAuth({
@@ -27,6 +30,7 @@ export function createAuth(
     database: prismaAdapter(prisma, { provider: "postgresql", transaction: true }),
     trustedOrigins: settings.origins,
     socialProviders: settings.socialProviders,
+    ...(methods.linking ? { user: { validateUserInfo: validateLink } } : {}),
     verification: {
       storeIdentifier: { default: "plain", overrides: { "reset-password:": "hashed", "signup-proof:": "hashed" } },
     },
@@ -50,8 +54,19 @@ export function createAuth(
     } } } },
     plugins: [username({ displayUsername: false, immutableUsername: true,
       minUsernameLength: USERNAME_MIN, maxUsernameLength: USERNAME_MAX,
-      usernameValidator: validUsername, usernameNormalization: normalizeUsername })],
+      usernameValidator: validUsername, usernameNormalization: normalizeUsername }),
+      // Installed plugins/{magic-link/index,email-otp/types}.d.mts. Public
+      // issuance is intercepted below; only the durable worker creates records.
+      ...(methods.magicLink ? [magicLink({ expiresIn: 900, disableSignUp: true, storeToken: "hashed",
+        sendMagicLink: async () => { throw Error("Use durable mail admission"); } })] : []),
+      ...(methods.emailOtp ? [emailOTP({ otpLength: 6, expiresIn: 600, allowedAttempts: 3,
+        disableSignUp: true, storeOTP: { hash: async otp => otpDigest(otp, settings.secret) },
+        sendVerificationOTP: async () => { throw Error("Use durable mail admission"); } })] : [])],
     disabledPaths: ["/is-username-available", "/delete-user", "/delete-user/callback",
+      ...(methods.settings ? ["/unlink-account"] : []),
+      ...(methods.emailOtp ? ["/email-otp/check-verification-otp", "/email-otp/verify-email",
+        "/email-otp/forget-password", "/email-otp/request-password-reset", "/email-otp/reset-password",
+        "/email-otp/request-email-change", "/email-otp/change-email"] : []),
       ...(!deliver ? ["/send-verification-email", "/verify-email", "/request-password-reset",
         "/reset-password", "/reset-password/:token"] : [])],
     hooks: { before: createAuthMiddleware(async ctx => {
@@ -65,7 +80,11 @@ export function createAuth(
         path: ctx.path, body: ctx.body, token: ctx.body?.token ?? ctx.query?.token,
         ip: ctx.headers?.get("x-infraforge-client-ip") ?? "unknown",
         enabled: essentials.enabled || !!deliver, proofSignup: !!deliver, challenge: essentials.challenge, quota,
+        loginMethods: methods,
       });
+      await loginMethodPolicy(settings, deliver)(ctx);
+      if (methods.magicLink && ctx.path === "/sign-in/magic-link"
+        || methods.emailOtp && ctx.path === "/email-otp/send-verification-otp") return ctx.json(acceptedMail);
       if (deliver) {
         await mailAdmission(deliver, settings)(ctx);
         const initialSignup = ctx.path === "/sign-up/email" && ctx.body?.emailProof === undefined;
@@ -83,7 +102,10 @@ export function createAuth(
     // Neither the application nor auth middleware logs credential request bodies.
     logger: { level: "error", log: () => console.error("Authentication operation failed") },
     session: { cookieCache: { enabled: false }, disableSessionRefresh: true },
-    account: { accountLinking: { enabled: false }, encryptOAuthTokens: true },
+    account: { accountLinking: methods.linking ? {
+      enabled: true, trustedProviders: ["google", "github"], requireLocalEmailVerified: true,
+      allowDifferentEmails: false, allowUnlinkingAll: false, updateUserInfoOnLink: false,
+    } : { enabled: false }, encryptOAuthTokens: true },
     rateLimit: { enabled: true },
     advanced: { useSecureCookies: settings.secure, disableOriginCheck: false, disableCSRFCheck: false,
       defaultCookieAttributes: { httpOnly: true, sameSite: "lax", path: "/" } },

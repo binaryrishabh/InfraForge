@@ -1,5 +1,6 @@
 import { readEmail } from "./email";
 import { readChallenge } from "./turnstile";
+import { HOSTED_LOGIN_ORIGIN, LOGIN_FLAGS } from "./loginMethods";
 
 export function readAuthSettings(env: Record<string, string | undefined>) {
   const production = env.NODE_ENV === "production";
@@ -35,7 +36,22 @@ export function readAuthSettings(env: Record<string, string | undefined>) {
   const verificationRequired = env.AUTH_EMAIL_VERIFICATION_REQUIRED !== "false";
   const email = readEmail(env), challenge = readChallenge(env);
   if (emailEnabled && !email) throw Error("Email requires a configured transactional email provider");
+  for (const name of LOGIN_FLAGS) {
+    if (env[name] && !["true", "false"].includes(env[name]!)) throw Error(`${name} must be true or false`);
+  }
+  const loginMethods = {
+    linking: env.AUTH_ACCOUNT_LINKING_ENABLED === "true", magicLink: env.AUTH_MAGIC_LINK_ENABLED === "true",
+    emailOtp: env.AUTH_EMAIL_OTP_ENABLED === "true", settings: env.AUTH_METHOD_SETTINGS_ENABLED === "true",
+    hosted: env.AUTH_HOSTED_LOGIN_ENABLED === "true",
+  };
+  if ((loginMethods.magicLink || loginMethods.emailOtp)
+    && (!emailEnabled || env.TRANSACTIONAL_EMAIL_PROVIDER !== "resend" || !challenge)) {
+    throw Error("Email login requires enabled email, Resend and Turnstile");
+  }
+  const returnOrigins = [...origins];
+  if (loginMethods.hosted && !origins.includes(HOSTED_LOGIN_ORIGIN)) origins.push(HOSTED_LOGIN_ORIGIN);
   return { baseURL, origins, secret: env.BETTER_AUTH_SECRET, secure: new URL(baseURL).protocol === "https:",
+    returnOrigins, loginMethods,
     accountEssentials: { enabled, emailEnabled, verificationRequired, email, challenge, siteKey: env.TURNSTILE_SITE_KEY },
     socialProviders: { ...(google ? { google } : {}), ...(github ? { github } : {}) } };
 }

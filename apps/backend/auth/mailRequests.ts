@@ -26,7 +26,7 @@ export class AccountEmailRequests implements MailRequests {
     });
     await this.db.accountMailIntent.create({ data: {
       id: randomUUID(), kind, payload, availableAt: new Date(),
-      expiresAt: new Date(Date.now() + 1800_000),
+      expiresAt: new Date(Date.now() + (kind === "magic" ? 900_000 : kind === "otp" ? 600_000 : 1800_000)),
       retrySafe: this.sender.retrySafe === true,
     } });
   }

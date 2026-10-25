@@ -17,12 +17,17 @@ export class RedisAccountQuota implements AccountQuota {
 }
 export async function enforceAccountPolicy(input: {
   path: string; body?: Record<string, unknown>; token?: string; ip: string;
-  enabled: boolean; proofSignup?: boolean; challenge?: SignupChallenge; quota?: AccountQuota }) {
+  enabled: boolean; proofSignup?: boolean; challenge?: SignupChallenge; quota?: AccountQuota;
+  loginMethods?: { magicLink: boolean; emailOtp: boolean } }) {
   const { path, enabled, challenge, quota, ip, body } = input;
   const signup = path === "/sign-up/email";
   const completion = input.proofSignup === true && signup && body?.emailProof !== undefined;
-  const emailRequest = path === "/request-password-reset" || path === "/send-verification-email";
-  const redeem = path === "/verify-email" || path === "/reset-password";
+  const loginRequest = input.loginMethods?.magicLink && path === "/sign-in/magic-link"
+    || input.loginMethods?.emailOtp && path === "/email-otp/send-verification-otp";
+  const loginRedeem = input.loginMethods?.magicLink && path === "/magic-link/verify"
+    || input.loginMethods?.emailOtp && path === "/sign-in/email-otp";
+  const emailRequest = path === "/request-password-reset" || path === "/send-verification-email" || loginRequest;
+  const redeem = path === "/verify-email" || path === "/reset-password" || loginRedeem;
   if (!(signup && challenge || enabled && (emailRequest || redeem || signup))) return;
   if (!quota) throw new APIError("SERVICE_UNAVAILABLE", { message: "Account service unavailable" });
   try {
@@ -30,7 +35,7 @@ export async function enforceAccountPolicy(input: {
     const scope = completion ? "signup-complete" : signup ? "signup" : emailRequest ? "email-request" : "redeem";
     const ipAllowed = await quota.allow(`${scope}:ip`, ip, redeem || completion ? 30 : 20);
     const identity = completion ? String(body?.emailProof).slice(0, 100)
-      : emailRequest || signup ? email : input.token ?? "";
+      : emailRequest || signup || path === "/sign-in/email-otp" ? email : input.token ?? "";
     const accountAllowed = await quota.allow(`${scope}:account`, identity,
       completion ? 5 : emailRequest || signup ? 3 : 5);
     if (!ipAllowed || !accountAllowed) throw new APIError("TOO_MANY_REQUESTS", { message: "Try again later" });
@@ -38,10 +43,15 @@ export async function enforceAccountPolicy(input: {
     if (error instanceof APIError) throw error;
     throw new APIError("SERVICE_UNAVAILABLE", { message: "Account service unavailable" });
   }
-  if (challenge && (signup && !completion || path === "/request-password-reset" && challenge.protectReset !== false)) {
+  if (loginRequest && !challenge) {
+    throw new APIError("SERVICE_UNAVAILABLE", { message: "Account service unavailable" });
+  }
+  if (challenge && (loginRequest || signup && !completion
+    || path === "/request-password-reset" && challenge.protectReset !== false)) {
     const token = typeof body?.turnstileToken === "string" ? body.turnstileToken : "";
     let accepted = false;
-    try { accepted = await challenge.verify(token, signup ? "signup" : "password_reset", ip); }
+    const action = loginRequest ? "email_login" : signup ? "signup" : "password_reset";
+    try { accepted = await challenge.verify(token, action, ip); }
     catch { /* fail closed */ }
     if (!accepted) throw new APIError("FORBIDDEN", { message: "Complete the security check" });
   }
@@ -51,7 +61,8 @@ export async function enforceAccountPolicy(input: {
 // Provider latency is excluded by the durable queue. The floor covers DB/JWT work;
 // it is not a hard real-time guarantee under infrastructure overload.
 export function accountAuthHandler(handler: (request: Request) => Promise<Response>, enabled: boolean,
-  now = Date.now, sleep = (ms: number) => new Promise<void>(resolve => setTimeout(resolve, ms))) {
+  now = Date.now, sleep = (ms: number) => new Promise<void>(resolve => setTimeout(resolve, ms)),
+  methods = { magicLink: false, emailOtp: false }) {
   return async (request: Request) => {
     const path = new URL(request.url).pathname.replace(/\/$/, "").toLowerCase();
     // Better Auth's disabledPaths compares literal URLs, not route patterns.
@@ -61,7 +72,9 @@ export function accountAuthHandler(handler: (request: Request) => Promise<Respon
     }
     const signup = enabled && request.method === "POST" && path === "/api/auth/sign-up/email";
     const emailRequest = ["/api/auth/send-verification-email", "/api/auth/request-password-reset"].includes(path);
-    let uniform = enabled && request.method === "POST" && (signup || emailRequest);
+    const loginRequest = methods.magicLink && path === "/api/auth/sign-in/magic-link"
+      || methods.emailOtp && path === "/api/auth/email-otp/send-verification-otp";
+    let uniform = request.method === "POST" && (enabled && (signup || emailRequest) || loginRequest);
     const start = now();
     let signupBody: { emailProof?: unknown } | undefined;
     if (signup) {

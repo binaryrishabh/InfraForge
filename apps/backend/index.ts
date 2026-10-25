@@ -56,14 +56,17 @@ app.use("/api/auth", (req, res, next) => {
 // The pinned Better Call Node adapter supports parsed JSON/form bodies. OAuth
 // callbacks keep the library's original raw-body handling.
 app.post(["/api/auth/sign-up/email", "/api/auth/sign-in/email", "/api/auth/sign-in/username", "/api/auth/sign-in/identifier",
-  "/api/auth/request-password-reset", "/api/auth/send-verification-email", "/api/auth/reset-password"],
+  "/api/auth/request-password-reset", "/api/auth/send-verification-email", "/api/auth/reset-password",
+  ...(authSettings.loginMethods.magicLink ? ["/api/auth/sign-in/magic-link"] : []),
+  ...(authSettings.loginMethods.emailOtp ? ["/api/auth/email-otp/send-verification-otp", "/api/auth/sign-in/email-otp"] : [])],
   (req, res, next) => {
     if (!req.is("application/json") && !req.is("application/x-www-form-urlencoded")) {
       res.status(415).json({ success: false, message: "Use JSON or form data" }); return;
     }
     next();
   }, express.json({ limit: "8kb" }), express.urlencoded({ extended: false, limit: "8kb" }));
-const authHandler = toNodeHandler({ handler: accountAuthHandler(auth.handler, authSettings.accountEssentials.emailEnabled) });
+const authHandler = toNodeHandler({ handler: accountAuthHandler(auth.handler,
+  authSettings.accountEssentials.emailEnabled, undefined, undefined, authSettings.loginMethods) });
 app.post("/api/auth/sign-in/identifier", identifierSignIn(authHandler));
 app.all("/api/auth/*splat", authHandler);
 app.use("/api/account", express.json({ limit: "8kb" }), accountRouter(prisma, auth, accountQuota, authSettings.accountEssentials.enabled));
