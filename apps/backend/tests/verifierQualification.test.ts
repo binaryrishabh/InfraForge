@@ -370,7 +370,7 @@ test("unknown or unsafe runtime resolution fails closed instead of hashing a PAT
       const f = hostFixture(); f.content.set(`/proc/${pid}/environ`, value); await expect(f.read()).rejects.toThrow();
     }
   }
-  for (const change of ["cwd", "directory", "manager", "configuration", "custom-runtime", "shim-env", "imports"] as const) {
+  for (const change of ["cwd", "directory", "manager", "configuration", "custom-runtime", "shim-env", "imports", "containerd-path"] as const) {
     const f = hostFixture();
     if (change === "cwd") { const realpath = f.host.realpath; f.host.realpath = async path => path === "/proc/43/cwd" ? "/tmp" : realpath(path); }
     if (change === "directory") { const stat = f.host.statTarget; f.host.statTarget = async path => path.endsWith("/root/usr/bin") ? { ...await stat(path), mode: 0o40777n } as any : stat(path); }
@@ -378,6 +378,8 @@ test("unknown or unsafe runtime resolution fails closed instead of hashing a PAT
     if (change === "configuration") f.content.set("/proc/43/cmdline", "containerd\0--config\0/unknown.toml\0");
     if (change === "custom-runtime") f.info.Runtimes.runc.path = "/opt/runc";
     if (change === "shim-env") f.content.set("/run/user/1001/docker/containerd/containerd.toml", 'version = 2\n[plugins."io.containerd.shim.v1.manager"]\nenv=["PATH=/tmp"]\n');
+    // A containerd loaded outside /usr/bin could use an unmeasured cached sibling shim.
+    if (change === "containerd-path") { const realpath = f.host.realpath; f.host.realpath = async path => path === "/proc/43/exe" ? "/opt/runtime/containerd" : realpath(path); }
     if (change === "imports") f.content.set("/run/user/1001/docker/containerd/containerd.toml", 'version = 2\nimports=["/unknown.toml"]\n');
     await expect(f.read()).rejects.toThrow();
   }

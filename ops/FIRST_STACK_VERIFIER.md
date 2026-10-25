@@ -54,7 +54,10 @@ explicit operator coordination with releases. No automatic fallback is supported
    package database, `runc`, overlay2/overlayfs and the systemd cgroup driver.
    Install the runtime executables root-owned and not group/world writable.
    The supported layout uses merged `/bin` -> `/usr/bin`, with `runc`,
-   `containerd-shim-runc-v2` and `docker-init` in `/usr/bin`. Set the dedicated
+   `containerd-shim-runc-v2` and `docker-init` in `/usr/bin`. The managed
+   containerd must itself run from `/usr/bin/containerd`, because containerd
+   also falls back to a shim beside its own executable; qualification rejects
+   a containerd loaded from anywhere else. Set the dedicated
    Docker user unit's `Environment=PATH=/usr/bin:/bin` and
    `WorkingDirectory=/usr/bin` so its managed containerd inherits both. This
    makes containerd's working-directory, PATH and cached shim lookup select

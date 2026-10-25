@@ -206,6 +206,14 @@ export function createHostFingerprintReader(control: IsolationControl, host?: Fi
     if (await machineHost().realpath(`/proc/${containerd.pid}/cwd`) !== await machineHost().realpath(`/proc/${containerd.pid}/root/usr/bin`)) {
       throw Error("Runtime working directory cannot establish shim path");
     }
+    // Containerd also falls back to shims beside its own executable and caches that choice.
+    // Require the loaded executable to be the measured /usr/bin one, so any fallback is the measured shim.
+    const loaded = `/proc/${containerd.pid}/exe`, measured = `/proc/${containerd.pid}/root/usr/bin/containerd`;
+    const loadedFile = await machineHost().statTarget(loaded), measuredFile = await machineHost().statTarget(measured);
+    if (await machineHost().realpath(loaded) !== await machineHost().realpath(measured) ||
+      loadedFile.dev !== measuredFile.dev || loadedFile.ino !== measuredFile.ino) {
+      throw Error("Runtime must run the measured /usr/bin containerd");
+    }
     binaries.dockerd = daemonProcess.executable; binaries.containerd = containerd.executable; binaries.rootlesskit = rootless.executable;
     binaries.runc = await runtimeBinary(containerd.pid, runtimePath, "runc");
     binaries.shim = await runtimeBinary(containerd.pid, runtimePath, "containerd-shim-runc-v2");
