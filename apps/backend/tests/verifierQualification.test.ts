@@ -346,6 +346,14 @@ test("actual runtime helpers are measured even with unchanged versions and a dif
     .toBe(createHash("sha256").update("namespace replacement").digest("hex"));
 });
 
+test("loaded containerd must match the measured executable device and inode even when paths agree", async () => {
+  for (const field of ["dev", "ino"] as const) {
+    const f = hostFixture(), stat = f.host.statTarget;
+    f.host.statTarget = async path => ({ ...await stat(path), ...(path === "/proc/43/exe" ? { [field]: BigInt(2) } : {}) });
+    await expect(f.read()).rejects.toThrow("Runtime must run the measured /usr/bin containerd");
+  }
+});
+
 test("unknown or unsafe runtime resolution fails closed instead of hashing a PATH substitute", async () => {
   const edited = hostFixture(); edited.stamps.set("/etc/infraforge/verifier/daemon.json", BigInt(1002_000_000_000));
   await expect(edited.read()).rejects.toThrow("before restart");
