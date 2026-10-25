@@ -93,6 +93,58 @@ Expired `AccountEmailToken` ledger rows can be purged by an authorized maintenan
 job after their expiry; preserve unexpired used rows to avoid reactivating a
 same-second JWT. No task here schedules production maintenance or changes backups.
 
+## Optional login methods
+
+These backend-only settings are independent and all default to `false`. Compose
+forwards each flag only to the API. No auth server, DNS, cookie domain, secret or
+production setting is changed by this work. Keep them off until the owner-designed
+screens, staging provider checks and the security review are complete.
+
+| Variable | When true |
+| --- | --- |
+| `AUTH_ACCOUNT_LINKING_ENABLED` | Automatically link Google/GitHub only when both provider and existing local emails are verified; explicit linking also requires method settings |
+| `AUTH_MAGIC_LINK_ENABLED` | Existing verified accounts can request a single-use link, valid at most 15 minutes |
+| `AUTH_EMAIL_OTP_ENABLED` | Existing verified accounts can request a six-digit code, valid at most 10 minutes, with 3 wrong guesses maximum |
+| `AUTH_METHOD_SETTINGS_ENABLED` | List own methods/sessions, link through native OAuth, password-confirmed unlink, and revoke sessions; independent of deletion/export |
+| `AUTH_HOSTED_LOGIN_ENABLED` | Trust exactly `https://auth.infraforge.lapwork.in` for browser requests while the server and host-only cookie remain on the backend hostname |
+
+Magic-link or OTP activation requires `AUTH_EMAIL_ENABLED=true` (or the existing
+essentials flag), `TRANSACTIONAL_EMAIL_PROVIDER=resend`, the existing Resend sender
+configuration and configured Turnstile. Invalid combinations fail startup. In
+production, configure `TURNSTILE_ENABLED=true` and its key/site-key/hostnames; the
+widget must submit fresh `email_login` action tokens. There is no new mail
+processor. Both login plugins have automatic signup disabled; new accounts follow
+the existing W35-03 signup proof flow. The three-attempt OTP redemption quota is
+shared across resends for 15 minutes; wrong, missing, expired and locked codes have
+one public error and timing floor. Outages and quotas fail closed.
+
+Apply migration `20261025120000_email_login_intents` before enabling the mail
+methods. It only widens the existing mail-intent kind constraint; it adds no tables
+or columns, changes no relation defaults and preserves existing rows. Disabling
+the flags blocks redemption; pending mail already admitted can still be delivered
+by the email worker until it expires. Disable both mail-method flags independently
+of the existing email/account flags to stop new login requests. To disable all
+new functionality, set all five flags to false. Never use a cookie-domain change
+to connect the hosted-login UI.
+
+Keep `APP_ORIGINS` limited to exact origins of owned apps (production frontend:
+`https://infraforge.lapwork.in`). This is also the final return-URL allowlist.
+The hosted-login origin is added to browser request origins separately. Relative
+returns use the first app origin; escaped URLs, userinfo, backslashes,
+protocol-relative forms and other schemes/hosts are rejected. The server remains
+`https://infraforge.backend.lapwork.in`; OAuth callbacks and email redemption URLs
+remain on that server. Include the hosted login hostname in the Turnstile widget
+only when that UI is deployed. Do not configure analytics or request logging on
+token-bearing routes.
+
+Before activation, check real Resend delivery, provider-verified email assertions,
+attacker pre-registration refusal, OTP exhaustion/replay, magic replay/expiry,
+trusted-origin CORS and return rejection, password-confirmed unlink, concurrent
+last-method removal, cross-user session isolation and revocation. Verify OAuth
+callback registration still points to the backend. Passkeys remain deferred: the
+installed Better Auth package does not ship the plugin. See the API evidence and
+post-launch plan in [authentication](AUTHENTICATION.md#installed-api-evidence-and-passkey-deferral).
+
 ## Verified production checkpoint
 
 On 2026-10-17 independent public checks returned HTTP 200 for backend readiness,

@@ -2,8 +2,8 @@
 
 InfraForge uses Better Auth 1.7.7 with its Prisma adapter and PostgreSQL sessions.
 Username/email/password is available without OAuth credentials. The native
-username plugin is the only auth plugin; Google and GitHub remain optional.
-Automatic account linking and cookie session caching stay disabled. An
+username plugin is always installed; magic-link and email-OTP plugins are optional.
+Google and GitHub remain optional. Automatic account linking defaults off and cookie session caching stays disabled. An
 unconfigured provider never appears as a working sign-in option.
 
 The [1.7.7 release](https://github.com/better-auth/better-auth/releases/tag/v1.7.7)
@@ -84,10 +84,123 @@ The controlled release refuses image rollback across differing migration
 fingerprints. It does not drop usernames or credential accounts to downgrade;
 use a reviewed forward fix or the established authorized backup/restore procedure.
 
-Future methods, **not implemented**: email OTP/magic link and phone-number auth.
-They must reuse the same user ID/ownership model, require real delivery and
-verified linking decisions, and cannot adopt an existing account merely from an
-unverified email/phone claim.
+Magic-link and email-OTP login are optional backend methods described below.
+Passkeys and phone-number authentication are not implemented.
+
+## Optional login methods and account settings
+
+All five new flags default to false; deployment activation and prerequisites are
+listed in [deployment](DEPLOYMENT.md#optional-login-methods). No screens are added.
+Enabling a backend method before its UI and staging checks are ready is unsupported.
+
+`AUTH_ACCOUNT_LINKING_ENABLED=true` permits automatic Google/GitHub linking only
+when both the provider's current email assertion and the existing local email are
+verified. The exact provider account ID remains the identity after linking. An
+attacker's unverified pre-registration is never adopted by the victim's OAuth
+login; that login fails without granting a session or merging ownership. The
+unverified registration must use the existing mailbox-proof recovery process.
+An unverified provider email cannot link, including from a trusted provider.
+Email matching retains the existing trim/lowercase rules; no Unicode, dot or
+plus-address alias folding is introduced. Linking does not change existing
+sessions, user IDs, roles or owned data. Provider profile updates on link are off.
+
+Magic links and OTPs sign in **existing verified users only**. They never create
+accounts or promote an unverified pre-registration. New users must complete the
+existing W35-03 mailbox-proof signup, then sign in. There is no separate signup
+exception in either plugin. Both methods require enabled email, Resend and
+Turnstile. The challenge action is `email_login`. They share existing mail-request
+quotas (3/normalized email and 20/IP per 15 minutes), including nonexistent emails.
+All accepted requests persist identical encrypted metadata before membership
+lookup, strip cookies and return the existing generic mail response with a 750 ms
+floor. Queue failures return the same sanitized 503. Delivery and eligibility
+checks happen in the existing worker, outside HTTP timing. This is a timing class,
+not a hard latency guarantee during infrastructure overload.
+
+| Endpoint | Contract |
+| --- | --- |
+| `POST /api/auth/sign-in/magic-link` | `{email, callbackURL?, turnstileToken}`; generic admission |
+| `GET /api/auth/magic-link/verify?token=...&callbackURL=...` | Native single-use redemption and fresh session; link lifetime at most 15 minutes from admission |
+| `POST /api/auth/email-otp/send-verification-otp` | `{email, type:"sign-in", turnstileToken}`; generic admission; other OTP purposes rejected |
+| `POST /api/auth/sign-in/email-otp` | `{email, otp}`; six digits, at most 10 minutes from admission; native lock after 3 wrong guesses |
+
+OTP redemption also has a shared 3-attempt/email and 30-attempt/IP quota per
+15 minutes, including successful attempts and new requests. Resending does not
+reset this quota. Incorrect, absent, expired and exhausted OTPs return the same
+400 body with a 750 ms floor; quota exhaustion is a common 429. The public OTP
+check-only, verification, reset and email-change routes are disabled. Concurrent
+redemption can mint at most one session. Successful login requires an additional
+atomic user-bound proof in `AccountEmailToken`, preventing a proof from following
+a deleted/re-registered mailbox. Account deletion retires native mailbox records
+and the user-bound ledger. The native session hooks also reject an unverified or
+deleted owner.
+
+Magic bearers and six-digit codes are derived transiently from a random mail
+intent ID and the server key. The queue persists encrypted email/callback metadata,
+not plaintext or encrypted login credentials. Native magic records store SHA-256
+token digests; OTP records use keyed HMAC digests to resist offline six-digit
+guessing. Ledger hashes are separately domain-separated HMACs. Tokens expire from
+admission, so delayed mail can have less remaining validity. Resend retries keep
+the same body and intent ID. Local receipt storage redacts these credentials,
+although local delivery cannot be configured for enabled email login. Cleanup
+uses the existing five-second poll; stopped polling delays removal, not expiry.
+
+`AUTH_METHOD_SETTINGS_ENABLED=true` exposes the following session-owned APIs,
+independently of deletion/export. Every request has shared 30/user and 60/IP quotas
+per 15 minutes and requires the existing exact-Origin check.
+
+| Endpoint | Contract |
+| --- | --- |
+| `GET /api/account/settings/methods` | Own provider/credential record IDs, provider names and dates; separate `emailLogin` availability flags; no password hashes or OAuth tokens |
+| `POST /api/auth/link-social` | Native OAuth linking, with `{provider, callbackURL}` and the session cookie; also requires account linking enabled and both verified emails |
+| `POST /api/account/settings/unlink` | `{accountId, password}`; verify the current password every time; serialize removals and retain at least one usable credential/configured provider |
+| `GET /api/account/settings/sessions?after=...` | Up to 100 active own sessions, IDs, dates, optional IP/browser and `current`; follow `next`; no session tokens |
+| `POST /api/account/settings/sessions/revoke` | `{sessionId}`; revoke only an owned session, including the current one |
+| `POST /api/account/settings/sessions/revoke-others` | Revoke all own sessions except the requesting session |
+
+The native unlink endpoint is disabled while method settings are enabled so it
+cannot bypass password re-authentication or the serialized last-method check.
+OAuth-only users must first establish a password through the existing mailbox
+reset flow to unlink. Adding a password uses that same flow. Email login is a
+deployment-wide capability for verified mailboxes, shown separately from linked
+provider accounts; this release does not offer per-user email-login enrollment or
+opt-out. It is not counted as a fallback when removing the last stored method.
+
+`AUTH_HOSTED_LOGIN_ENABLED=true` adds exactly
+`https://auth.infraforge.lapwork.in` to Better Auth trusted origins, HTTP CORS and
+the existing origin check. The auth server and its host-only HttpOnly cookie stay
+on the backend hostname. No cookie domain is set. Return destinations use the
+exact `APP_ORIGINS` list captured before adding the hosted-login origin. Any new
+feature flag enables the stricter return-URL validator on callback/return fields:
+only exact HTTP(S) app origins or a single-slash relative app path are accepted;
+userinfo, other hosts, backslashes, protocol-relative URLs, whitespace/control
+characters, percent-encoded variants and non-HTTP schemes are rejected. Relative
+paths resolve to the first app origin. Percent encoding is deliberately rejected
+even for harmless path escapes; choose a plain return path. The hosted-login
+origin is not automatically an allowed final destination. Keep all credentials
+and callback query strings out of browser history, analytics and logs.
+
+### Installed API evidence and passkey deferral
+
+The implementation uses the installed **1.7.7** declarations and code:
+
+| API or behavior | Installed file under `node_modules/` |
+| --- | --- |
+| `user.validateUserInfo`, `account.accountLinking` (including `requireLocalEmailVerified`, `trustedProviders`), session-create before hook | `@better-auth/core/dist/types/init-options.d.mts` |
+| Verified-provider/local gate and explicit/implicit linking | `better-auth/dist/oauth2/link-account.mjs`, `better-auth/dist/api/routes/account.mjs` |
+| Provider verified assertion | `@better-auth/core/dist/social-providers/google.mjs`, `@better-auth/core/dist/social-providers/github.mjs` |
+| `magicLink({expiresIn, disableSignUp, storeToken, sendMagicLink})` | `better-auth/dist/plugins/magic-link/index.d.mts`; native record/atomic consumption in `index.mjs`, hashing in `utils.mjs` |
+| `emailOTP({otpLength, expiresIn, allowedAttempts, disableSignUp, storeOTP, sendVerificationOTP})` | `better-auth/dist/plugins/email-otp/types.d.mts`; native record/atomic attempts in `routes.mjs`, hash callback in `otp-token.mjs` |
+| Native `getSession`, `verifyPassword`, `linkSocial`; session and account ownership | `better-auth/dist/api/routes/session.d.mts`, `password.d.mts`, `account.d.mts` |
+| Existing `internalAdapter.findUserById`, `findVerificationValue` and consumption | `@better-auth/core/dist/types/context.d.mts`, `better-auth/dist/db/internal-adapter.mjs` |
+| Middleware/CSRF, Prisma adapter, encryption and cookies | `better-auth/dist/api/index.d.mts`, `@better-auth/prisma-adapter/dist/index.d.mts`, `better-auth/dist/crypto/index.d.mts`, `better-auth/dist/cookies/index.mjs` |
+
+The installed package exports and plugin directory do not ship passkeys, and
+`bun.lock` contains no passkey package. No dependency or native WebAuthn binary is
+added. After launch, review and pin the official separate plugin and its complete
+dependency tree, choose the backend RP ID and exact client origins, add reviewed
+credential tables with matching relation defaults, and test enrollment, user
+verification, replay, ownership, removal and recovery before enabling a default-off
+passkey flag. No passkey or biometric data is collected by this implementation.
 
 ## Optional account essentials (backend APIs)
 

@@ -74,6 +74,7 @@ export function accountAuthHandler(handler: (request: Request) => Promise<Respon
     const emailRequest = ["/api/auth/send-verification-email", "/api/auth/request-password-reset"].includes(path);
     const loginRequest = methods.magicLink && path === "/api/auth/sign-in/magic-link"
       || methods.emailOtp && path === "/api/auth/email-otp/send-verification-otp";
+    const otpRedeem = methods.emailOtp && request.method === "POST" && path === "/api/auth/sign-in/email-otp";
     let uniform = request.method === "POST" && (enabled && (signup || emailRequest) || loginRequest);
     const start = now();
     let signupBody: { emailProof?: unknown } | undefined;
@@ -84,18 +85,23 @@ export function accountAuthHandler(handler: (request: Request) => Promise<Respon
         : await copy.json().catch(() => undefined) as { emailProof?: unknown } | undefined;
       if (signupBody?.emailProof !== undefined) uniform = false;
     }
-    if (uniform) {
+    if (uniform || otpRedeem) {
       request = new Request(request);
       // Bun 1.3.14 merges RequestInit headers with the original request. Delete
       // from the cloned Request itself so the cookie is actually absent.
       request.headers.delete("cookie");
     }
     let response = await handler(request);
-    if (uniform) {
+    if (uniform || otpRedeem) {
       await sleep(Math.max(0, 750 - (now() - start)));
       // Keep input/challenge/quota/CSRF errors; native successful requests share
       // one body. Provider delivery is separate from durable queue insertion.
-      if (response.ok) response = Response.json(acceptedMail);
+      if (uniform && response.ok) response = Response.json(acceptedMail);
+      // A lockout-specific native error would reveal that an OTP record exists.
+      // Incorrect, expired, absent and exhausted proofs share one public failure.
+      if (otpRedeem && [400, 401, 403].includes(response.status)) {
+        response = Response.json({ code: "INVALID_OTP", message: "Invalid or expired code" }, { status: 400 });
+      }
     }
     const headers = new Headers(response.headers);
     headers.set("Cache-Control", "no-store"); headers.set("Referrer-Policy", "no-referrer");

@@ -90,8 +90,13 @@ test("OTP is six digits, keyed at rest, expires, locks after three wrong attempt
   expect(JSON.stringify(f.database.verification)).not.toContain(otp);
   expect(f.database.verification![0].expiresAt.getTime() - Date.now()).toBeLessThanOrEqual(600_000);
   const wrong = otp === "000000" ? "000001" : "000000";
-  for (let i = 0; i < 3; i++) expect((await redeem(wrong)).ok).toBe(false);
-  expect((await redeem(otp)).ok).toBe(false); expect(f.database.session).toHaveLength(0);
+  const absent = await f.call("sign-in/email-otp", { email: "absent@example.test", otp: wrong });
+  const failure = [absent.status, await absent.text()];
+  for (let i = 0; i < 3; i++) {
+    const response = await redeem(wrong); expect([response.status, await response.text()]).toEqual(failure);
+  }
+  const locked = await redeem(otp); expect([locked.status, await locked.text()]).toEqual(failure);
+  expect(f.database.session).toHaveLength(0);
   otp = await issue();
   const results = await Promise.all([redeem(otp), redeem(otp)]);
   expect(results.filter(r => r.ok)).toHaveLength(1); expect(f.database.session).toHaveLength(1);
