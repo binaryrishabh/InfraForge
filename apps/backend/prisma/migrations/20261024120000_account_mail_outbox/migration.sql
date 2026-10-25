@@ -1,6 +1,6 @@
 CREATE TABLE "AccountMailOutbox" (
   id TEXT PRIMARY KEY,
-  "userId" TEXT NOT NULL REFERENCES "User"(id) ON DELETE CASCADE,
+  "userId" TEXT NOT NULL REFERENCES "User"(id) ON DELETE CASCADE ON UPDATE CASCADE,
   payload TEXT,
   status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','sending','sent','uncertain')),
   attempts INTEGER NOT NULL DEFAULT 0 CHECK (attempts BETWEEN 0 AND 5),
