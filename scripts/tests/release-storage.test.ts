@@ -117,6 +117,14 @@ const refusals: [string, Change][] = [
   ["dockerd connects to another containerd socket", { dockerSockets: dockerSockets.replaceAll(address, "/run/other.sock") }],
   ["dockerd peer belongs to another containerd", { dockerSockets: dockerSockets.replace("pid=812", "pid=999") }],
   ["dockerd peer inode does not match", { dockerSockets: dockerSockets.replace("402 * 401", "403 * 401") }],
+  ["dockerd reverse peer inode does not match", { dockerSockets: dockerSockets.replace("402 * 401", "402 * 499") }],
+  ["dockerd peer inode unavailable", { dockerSockets: dockerSockets.replaceAll("402", "0") }],
+  ["dockerd local inode unavailable", { dockerSockets: dockerSockets.replaceAll("401", "0") }],
+  ["dockerd connection has no owner", { dockerSockets: dockerSockets.replace('users:(("dockerd",pid=900,fd=8))', "") }],
+  ["containerd connection has no owner", { dockerSockets: dockerSockets.replace('users:(("containerd",pid=812,fd=10))', "") }],
+  ["containerd connection is not established", { dockerSockets: dockerSockets.replace(`ESTAB 0 0 ${address}`, `LISTEN 0 0 ${address}`) }],
+  ["dockerd connection is not established", { dockerSockets: dockerSockets.replace("ESTAB 0 0 *", "LISTEN 0 0 *") }],
+  ["containerd connection evidence missing", { dockerSockets: dockerSockets.split("\n").slice(0, 2).join("\n") }],
   ["dockerd restarted during qualification", { dockerRestart: true }],
   ["replaced own directory", { parentCtime: 1200000 }],
   ["replaced imported file own directory", { config: "imports = ['/etc/imports/extra.toml']", importedParentCtime: 1200000 }],
@@ -243,6 +251,12 @@ test("classic overlay2 also rejects a forwarded or namespaced Docker endpoint", 
 
 test("Docker socket activation permits systemd alongside the verified dockerd", async () => {
   await host({ dockerSockets: dockerSockets.replace('pid=900,fd=3))', 'pid=900,fd=3),("systemd",pid=1,fd=4))') }).preflight();
+});
+
+test("normal ss wildcard peer names qualify through reciprocal inodes", async () => {
+  const h = host({ production: true });
+  await expect(h.preflight()).resolves.toBeUndefined();
+  expect(h.paths).toHaveLength(5);
 });
 
 for (const kind of ["accept", "symlink", "fifo", "ancestor", "normalized", "control", "swap", "limit", "generic", "argv"]) {

@@ -1,7 +1,7 @@
 import type { StorageHost } from "../../release/storage";
 
 export const dockerSockets = `u_str LISTEN 0 4096 /run/docker.sock 200 * 0 users:(("dockerd",pid=900,fd=3))
-u_str ESTAB 0 0 * 401 /run/containerd/containerd.sock 402 users:(("dockerd",pid=900,fd=8))
+u_str ESTAB 0 0 * 401 * 402 users:(("dockerd",pid=900,fd=8))
 u_str ESTAB 0 0 /run/containerd/containerd.sock 402 * 401 users:(("containerd",pid=812,fd=10))`;
 export const dockerHost: StorageHost = {
   async read(path) {

@@ -127,8 +127,10 @@ export async function dockerdEvidence(cwd: string, run = command, host = storage
     if ((await host.metadata(proc))?.uid !== 0 || await host.link(`${proc}/ns/mnt`) !== namespace ||
         await host.link(`${proc}/root`) !== "/") return refuse();
     if (address) {
+      // ss netlink normally prints '*' for the peer name. Join reciprocal inode
+      // numbers, then check the server's local pathname and verified process PID.
       const connected = rows.some(client => client.fields[1] === "ESTAB" && client.pids.includes(pid!) &&
-        client.fields[6] === address && /^[1-9]\d*$/.test(client.fields[5] ?? "") &&
+        /^[1-9]\d*$/.test(client.fields[5] ?? "") && /^[1-9]\d*$/.test(client.fields[7] ?? "") &&
         rows.some(server => server.fields[1] === "ESTAB" && server.pids.includes(containerdPid!) &&
           server.fields[4] === address && server.fields[5] === client.fields[7] && server.fields[7] === client.fields[5]));
       if (!connected) return refuse();
