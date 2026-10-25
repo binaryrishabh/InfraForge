@@ -3,10 +3,37 @@ import posixpath
 import runpy
 import stat
 import sys
+import contextlib
+import io
 from types import SimpleNamespace
 
-inspect = runpy.run_path("scripts/release/config-evidence.py")["inspect_configuration"]
+module = runpy.run_path("scripts/release/config-evidence.py")
+inspect = module["inspect_configuration"]
 case = sys.argv[1]
+
+if case in ("generic", "argv"):
+    main = module["main"]
+    def fake_open(path, *args, **kwargs):
+        if path.endswith("cmdline"):
+            return io.BytesIO(b"/usr/bin/containerd\0" + (b"--token\0PRIVATE_CONFIG_MARKER\0" if case == "argv" else b""))
+        if path == "/proc/stat":
+            return io.StringIO("btime 1000\n")
+        return io.StringIO("812 (containerd) S " + "0 " * 18 + "10000 0")
+    def fail_inspection(*args):
+        raise ValueError("PRIVATE_CONFIG_MARKER")
+    main.__globals__.update(open=fake_open, os=SimpleNamespace(readlink=lambda _: "/usr/bin/containerd", sysconf=lambda _: 100),
+                            inspect_configuration=fail_inspection if case == "generic" else lambda _: None)
+    sys.argv = ["config-evidence.py", "812"]
+    stdout, stderr = io.StringIO(), io.StringIO()
+    with contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
+        result = main()
+    assert result == 1
+    assert "PRIVATE_CONFIG_MARKER" not in stdout.getvalue() + stderr.getvalue()
+    assert stderr.getvalue() == "Config provenance unavailable; do not publish raw config diagnostics\n"
+    if case == "argv":
+        assert not stdout.getvalue(), "unvalidated argv emitted"
+    print("owner evidence probe passed")
+    sys.exit(0)
 
 
 class Filesystem:
@@ -66,7 +93,7 @@ class Filesystem:
             if case == "control":
                 text = b"imports = ['/etc/containerd/bad name.toml']"
         if case == "limit" and path.endswith("import.toml"):
-            return b"a" * size
+            return b" " * size
         offset = self.offsets.get(fd, 0)
         self.offsets[fd] = offset + size
         return text[offset:offset + size]

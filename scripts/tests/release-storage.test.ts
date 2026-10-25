@@ -21,7 +21,8 @@ type Change = { info?: object; dump?: string; defaults?: string; pid?: string; a
   importedCtime?: number; fail?: string; duringDump?: boolean; restart?: boolean; importMissing?: boolean; symlink?: boolean;
   production?: boolean; ancestor?: "writable" | "symlink" | "unowned" | "missing"; mount?: string; daemonMount?: string;
   mountDuringDump?: boolean; boot?: string; recorded?: string; dockerExe?: string; dockerNamespace?: string; dockerRoot?: string;
-  dockerSockets?: string; dockerKind?: "file" | "other"; dockerRestart?: boolean; dockerUid?: number };
+  dockerSockets?: string; dockerKind?: "file" | "other"; dockerRestart?: boolean; dockerUid?: number; socketUid?: number;
+  socketAlias?: boolean; importedParentCtime?: number; sharedRoot?: string; initMount?: string };
 const rootMount = "29 1 259:1 / / rw,relatime - ext4 /dev/root rw";
 function host(change: Change = {}) {
   const calls: string[][] = [], paths: string[] = [];
@@ -47,13 +48,14 @@ function host(change: Change = {}) {
     async read(path) {
       if (path === "/proc/900/stat") return (await dockerHost.read(path)).replace("12000 0", dumped && change.dockerRestart ? "13000 0" : "12000 0");
       if (path.includes(change.fail ?? "NEVER")) throw new Error("PRIVATE_CONFIG_MARKER");
-      if (path.endsWith("/mountinfo")) return path === "/proc/812/mountinfo" && change.daemonMount ? change.daemonMount :
-        rootMount + (change.mount || dumped && change.mountDuringDump ? `\n55 29 259:1 /prepared ${change.mount ?? "/etc/containerd"} rw - ext4 /dev/root rw` : "");
+      if (path === "/proc/1/mountinfo" && change.initMount) return change.initMount;
+      if (path.endsWith("/mountinfo")) return path === `/proc/${daemonPid}/mountinfo` && change.daemonMount ? change.daemonMount :
+        (change.sharedRoot ?? rootMount) + (change.mount || dumped && change.mountDuringDump ? `\n55 29 259:1 /prepared ${change.mount ?? "/etc/containerd"} rw - ext4 /dev/root rw` : "");
       if (path === "/proc/stat") return change.boot ?? (change.production ? "btime 1792610199\n" : "btime 1000\n");
       if (path.endsWith("/stat")) return change.production ? procStat.replace("812 (", "390826 (").replace("10000 0", "3988762 0") : procStat;
       if (path.endsWith("/cmdline")) return change.argv ?? "/usr/bin/containerd\0";
       if (path === "/etc/containerd/config.toml") return change.config ?? "version = 3";
-      if (path === "/etc/containerd/import.toml") return "version = 3";
+      if (path === "/etc/containerd/import.toml" || path === "/etc/imports/extra.toml") return "version = 3";
       throw new Error("Unexpected read");
     },
     async link(path) {
@@ -68,7 +70,8 @@ function host(change: Change = {}) {
       throw new Error("Unexpected link");
     },
     async metadata(path) {
-      if (path.endsWith("docker.sock")) return { ...await dockerHost.metadata(path), kind: change.dockerKind ?? "socket" } as Awaited<ReturnType<StorageHost["metadata"]>>;
+      if (path.endsWith("docker.sock")) return { ...await dockerHost.metadata(path), kind: change.dockerKind ?? "socket", uid: change.socketUid ?? 0,
+        identity: path === "/run/docker.sock" && change.socketAlias ? "different-socket-inode" : "docker-socket-inode" } as Awaited<ReturnType<StorageHost["metadata"]>>;
       if (path === "/proc/900") return { ...await dockerHost.metadata(path), uid: change.dockerUid ?? 0 } as Awaited<ReturnType<StorageHost["metadata"]>>;
       if (path.endsWith("config.toml") && change.missing || path.endsWith("import.toml") && change.importMissing) return undefined;
       const file = path.endsWith(".toml");
@@ -77,7 +80,8 @@ function host(change: Change = {}) {
         uid: change.ancestor === "unowned" ? 1000 : 0, mode: change.ancestor === "writable" ? 0o777 : 0o755, ctimeMs: 900000, identity: path };
       return { kind: change.symlink && file ? "other" : file ? "file" : "directory",
         uid: 0, mode: file ? 0o644 : 0o755,
-        ctimeMs: change.production ? (path === "/" ? 1792610207.998 : path === "/etc" ? 1792823033.81 : 1792610946.53) * 1000 :
+        ctimeMs: path === "/etc/imports" && change.importedParentCtime ? change.importedParentCtime :
+          change.production ? (path === "/" ? 1792610207.998 : path === "/etc" ? 1792823033.81 : 1792610946.53) * 1000 :
           file ? dumped && change.duringDump ? 1200000 : path.endsWith("import.toml") ? change.importedCtime ?? 900000 : change.ctime ?? 900000 : change.parentCtime ?? 900000,
         identity: dumped && change.duringDump ? "changed" : path };
     },
@@ -106,12 +110,15 @@ const refusals: [string, Change][] = [
   ["unprivileged dockerd", { dockerUid: 1000 }],
   ["Docker endpoint is a regular file", { dockerKind: "file" }],
   ["Docker endpoint is a symlink", { dockerKind: "other" }],
+  ["Docker endpoint is not root owned", { socketUid: 1000 }],
+  ["Docker socket spelling names another inode", { socketAlias: true }],
   ["Docker listener has no owner", { dockerSockets: dockerSockets.replace('users:(("dockerd",pid=900,fd=3))', "") }],
   ["dockerd connects to another containerd socket", { dockerSockets: dockerSockets.replaceAll(address, "/run/other.sock") }],
   ["dockerd peer belongs to another containerd", { dockerSockets: dockerSockets.replace("pid=812", "pid=999") }],
   ["dockerd peer inode does not match", { dockerSockets: dockerSockets.replace("402 * 401", "403 * 401") }],
   ["dockerd restarted during qualification", { dockerRestart: true }],
   ["replaced own directory", { parentCtime: 1200000 }],
+  ["replaced imported file own directory", { config: "imports = ['/etc/imports/extra.toml']", importedParentCtime: 1200000 }],
   ["writable higher ancestor", { ancestor: "writable" }],
   ["symlinked higher ancestor", { ancestor: "symlink" }],
   ["unowned higher ancestor", { ancestor: "unowned" }],
@@ -121,6 +128,8 @@ const refusals: [string, Change][] = [
   ["higher ancestor mounted after startup", { mount: "/etc" }],
   ["old import bind-mounted after startup", { config: "imports = ['/etc/containerd/import.toml']", mount: "/etc/containerd/import.toml" }],
   ["daemon sees another mount ID", { daemonMount: rootMount.replace("29 1", "30 1") }],
+  ["init sees another root mount", { initMount: rootMount.replace("29 1", "30 1") }],
+  ["bind mounted root subtree", { sharedRoot: rootMount.replace(" / / ", " /prepared / ") }],
   ["mount changes during dump", { mountDuringDump: true }],
   ["clock correction moves reconstructed startup forward", { boot: "btime 2000", ctime: 1150000 }],
   ["clock correction even with old config", { boot: "btime 2000" }],
@@ -191,7 +200,7 @@ for (const [name, change] of refusals) test(`storage refuses ${name}`, async () 
 
 test("exact production timestamps accept an unrelated later etc change", async () => {
   const h = host({ production: true });
-  await h.preflight();
+  await expect(h.preflight()).resolves.toBeUndefined();
   expect(h.paths).toHaveLength(5);
   expect(daemonStartMilliseconds(procStat.replace("10000 0", "3988762 0"), "btime 1792610199", "100")).toBe(1792650086620);
 });
@@ -210,7 +219,7 @@ test("Docker socket activation permits systemd alongside the verified dockerd", 
   await host({ dockerSockets: dockerSockets.replace('pid=900,fd=3))', 'pid=900,fd=3),("systemd",pid=1,fd=4))') }).preflight();
 });
 
-for (const kind of ["accept", "symlink", "fifo", "ancestor", "normalized", "control", "swap", "limit"]) {
+for (const kind of ["accept", "symlink", "fifo", "ancestor", "normalized", "control", "swap", "limit", "generic", "argv"]) {
   test(`owner evidence helper ${kind}`, () => {
     const result = Bun.spawnSync([process.platform === "win32" ? "python" : "python3", "scripts/tests/fixtures/config-evidence.py", kind], { timeout: 5000 });
     expect(result.stderr.toString()).toBe("");
@@ -220,13 +229,23 @@ for (const kind of ["accept", "symlink", "fifo", "ancestor", "normalized", "cont
 }
 
 test("owner endpoint evidence never prints environment credentials", async () => {
-  const doc = await Bun.file("docs/DEPLOYMENT.md").text();
+  const doc = (await Bun.file("docs/DEPLOYMENT.md").text()).replaceAll("\r\n", "\n");
   const block = doc.split("<!-- owner-endpoint-evidence -->")[1]!.split("```bash")[1]!.split("```")[0]!;
   const result = Bun.spawnSync([process.platform === "win32" ? "C:/Program Files/Git/bin/bash.exe" : "bash", "-c", block], {
     env: { ...process.env, DOCKER_HOST: "ssh://user:PRIVATE_CONFIG_MARKER@example.invalid", DOCKER_CONTEXT: "PRIVATE_CONTEXT_MARKER" }, timeout: 5000,
   });
   expect(result.exitCode).toBe(0);
   expect(result.stdout.toString()).toBe("DOCKER_HOST=set DOCKER_CONTEXT=set\n");
+  expect(result.stderr.toString()).toBe("");
+});
+
+test("owner command sequence stops before qualify when bounded inspection fails", async () => {
+  const doc = (await Bun.file("docs/DEPLOYMENT.md").text()).replaceAll("\r\n", "\n");
+  const block = doc.slice(doc.indexOf("<!-- owner-endpoint-evidence -->")).split("```bash")[2]!.split("```")[0]!;
+  const stubs = 'systemctl() { printf 812; }\ntimeout() { printf "%s\\n" "$*"; return 1; }\nbun() { printf QUALIFY_RAN; }\n';
+  const result = Bun.spawnSync([process.platform === "win32" ? "C:/Program Files/Git/bin/bash.exe" : "bash", "-c", stubs + block], { timeout: 5000 });
+  expect(result.exitCode).toBe(1);
+  expect(result.stdout.toString()).toBe("30s sudo -n python3 scripts/release/config-evidence.py 812\n");
   expect(result.stderr.toString()).toBe("");
 });
 
