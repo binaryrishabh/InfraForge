@@ -51,7 +51,7 @@ export function createHostFingerprintReader(control: IsolationControl, host?: Fi
   const text = async (path: string) => (await machineHost().read(path)).toString("utf8");
   async function fileIdentity(path: string) {
     const resolved = await machineHost().realpath(path), stat = await machineHost().statTarget(path);
-    if (!stat.isFile() || stat.uid !== 0n || stat.size > 256n * 1024n * 1024n || (stat.mode & 0o022n)) {
+    if (!stat.isFile() || stat.uid !== BigInt(0) || stat.size > BigInt(256) * BigInt(1024) * BigInt(1024) || (stat.mode & BigInt(0o022))) {
       throw Error("Unsafe or oversized host identity file");
     }
     const stamp = [resolved, stat.dev, stat.ino, stat.size, stat.ctimeNs, stat.mtimeNs, stat.uid, stat.mode].join(":");
@@ -88,7 +88,7 @@ export function createHostFingerprintReader(control: IsolationControl, host?: Fi
       let path = directory;
       while (path !== "/") {
         const value = await machineHost().statTarget(`/proc/${pid}/root${path}`);
-        if (!value.isDirectory() || value.uid !== 0n || (value.mode & 0o022n)) throw Error("Unprotected runtime search directory");
+        if (!value.isDirectory() || value.uid !== BigInt(0) || (value.mode & BigInt(0o022))) throw Error("Unprotected runtime search directory");
         path = dirname(path);
       }
     }
@@ -99,7 +99,7 @@ export function createHostFingerprintReader(control: IsolationControl, host?: Fi
       const path = `/proc/${pid}/root${directory}/${name}`;
       try {
         const value = await machineHost().statTarget(path);
-        if (!value.isFile() || !(value.mode & 0o111n)) continue;
+        if (!value.isFile() || !(value.mode & BigInt(0o111))) continue;
         return await fileIdentity(path);
       } catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; }
     }
@@ -192,7 +192,7 @@ export function createHostFingerprintReader(control: IsolationControl, host?: Fi
     // cgroup/runtime policy cannot masquerade as the daemon's effective config.
     const bootSeconds = (await text("/proc/stat")).match(/^btime ([0-9]+)$/m)?.[1];
     if (!bootSeconds) throw Error("Daemon configuration load time Unknown");
-    const earliestStartNs = BigInt(bootSeconds) * 1_000_000_000n + BigInt(daemonProcess.start) * 10_000_000n;
+    const earliestStartNs = BigInt(bootSeconds) * BigInt(1_000_000_000) + BigInt(daemonProcess.start) * BigInt(10_000_000);
     if ((await machineHost().statTarget(daemonConfig)).ctimeNs >= earliestStartNs ||
       hash(await fileIdentity(`/proc/${pid}/root${daemonConfig}`)) !== hash(configIdentity)) {
       throw Error("Daemon configuration must be installed before restart in its actual namespace");
@@ -225,7 +225,7 @@ export function createHostFingerprintReader(control: IsolationControl, host?: Fi
     const runtimeCommand = (await text(`/proc/${containerd.pid}/cmdline`)).split("\0").filter(Boolean);
     if (runtimeCommand.length !== 3 || runtimeCommand[1] !== "--config" || runtimeCommand[2] !== runtimeConfig) throw Error("Managed runtime configuration Unknown");
     const runtimeConfigPath = `/proc/${containerd.pid}/root${runtimeConfig}`;
-    if ((await machineHost().statTarget(runtimeConfigPath)).size > 65536n) throw Error("Oversized managed runtime configuration");
+    if ((await machineHost().statTarget(runtimeConfigPath)).size > BigInt(65536)) throw Error("Oversized managed runtime configuration");
     const runtimeConfigText = await text(runtimeConfigPath);
     if (Buffer.byteLength(runtimeConfigText) > 65536) throw Error("Oversized managed runtime configuration");
     const runtimeConfigValue = parseToml(runtimeConfigText, { unsafeKeyBehaviour: "throw" }) as Record<string, any>;
@@ -252,8 +252,8 @@ export function createHostFingerprintReader(control: IsolationControl, host?: Fi
       !(await text("/proc/self/limits")).match(/Max open files\s+512\s+512\b/)) throw Error("Running supervisor restrictions missing");
     for (const { controls } of executorGroups) {
       const [quota, period] = controls["cpu.max"]!.split(" ");
-      if (controls["memory.max"] !== "max" && BigInt(controls["memory.max"]!) < 768n * 1024n ** 2n ||
-        controls["pids.max"] !== "max" && BigInt(controls["pids.max"]!) < 64n ||
+      if (controls["memory.max"] !== "max" && BigInt(controls["memory.max"]!) < BigInt(768) * BigInt(1024) ** BigInt(2) ||
+        controls["pids.max"] !== "max" && BigInt(controls["pids.max"]!) < BigInt(64) ||
         quota !== "max" && Number(quota) / Number(period) < 0.5) throw Error("Executor ancestor below qualified budget");
     }
     const policies: Record<string, string> = {};

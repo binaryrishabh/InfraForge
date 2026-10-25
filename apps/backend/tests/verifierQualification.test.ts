@@ -204,9 +204,9 @@ function hostFixture() {
     list: async () => ["41", "42", "43"], which: name => `/usr/bin/${name}`, cpuModels: () => ["fixture", "fixture"], memory: () => 4 * 1024 ** 3,
     stat: async path => {
       if (path.startsWith("/usr/bin/") && !content.has(path)) throw Object.assign(Error("Missing executable"), { code: "ENOENT" });
-      return { isFile: () => !directories.includes(path), isDirectory: () => directories.includes(path), uid: /^\/proc\/(41|42|43)$/.test(path) ? 1001n : 0n,
-        size: 10n, mode: directories.includes(path) ? 0o40755n : path.startsWith("/usr/bin/") ? 0o100755n : 0o100644n,
-        ctimeNs: stamps.get(path) ?? 1n, mtimeNs: 1n, ino: 1n, dev: 1n } as any;
+      return { isFile: () => !directories.includes(path), isDirectory: () => directories.includes(path), uid: /^\/proc\/(41|42|43)$/.test(path) ? BigInt(1001) : BigInt(0),
+        size: BigInt(10), mode: directories.includes(path) ? BigInt(0o40755) : path.startsWith("/usr/bin/") ? BigInt(0o100755) : BigInt(0o100644),
+        ctimeNs: stamps.get(path) ?? BigInt(1), mtimeNs: BigInt(1), ino: BigInt(1), dev: BigInt(1) } as any;
     } };
   f.control.run = async args => JSON.stringify(args[0] === "info" ? info : args[0] === "image"
     ? [{ Id: f.baseline.image, Os: "linux" }] : version);
@@ -222,7 +222,7 @@ test("fingerprint observes reboot, kernel, runtime, binary, packages, daemon con
     "/sys/fs/cgroup/user.slice/cpu.weight"]) {
     const f = hostFixture(), before = await f.read();
     expect((await f.read()).fingerprint).toBe(before.fingerprint);
-    f.content.set(path, path === "/proc/42/stat" ? f.content.get(path)!.replace(/1$/, "2") : path.endsWith("cpu.weight") ? "200" : "changed"); f.stamps.set(path, 2n);
+    f.content.set(path, path === "/proc/42/stat" ? f.content.get(path)!.replace(/1$/, "2") : path.endsWith("cpu.weight") ? "200" : "changed"); f.stamps.set(path, BigInt(2));
     expect((await f.read()).fingerprint).not.toBe(before.fingerprint);
   }
   const f = hostFixture(), before = await f.read(); f.version.Components[0]!.Version = "changed";
@@ -243,12 +243,12 @@ test("unknown or unsupported host and daemon facts fail closed", async () => {
     if (change === "daemon") f.host.list = async () => [];
     if (change === "command") f.content.set("/proc/42/cmdline", "dockerd");
     if (change === "binary") f.host.which = () => null;
-    if (change === "permissions") { const stat = f.host.stat; f.host.stat = async path => ({ ...await stat(path), mode: 0o100666n }) as any; }
+    if (change === "permissions") { const stat = f.host.stat; f.host.stat = async path => ({ ...await stat(path), mode: BigInt(0o100666) }) as any; }
     if (change === "cgroup") f.content.set("/proc/42/cgroup", "0::/../outside");
     if (change === "read") f.host.read = async () => { throw Error("unreadable"); };
     await expect(f.read()).rejects.toThrow();
   }
-  for (const change of [{ uid: 1001n }, { size: 257n * 1024n * 1024n }, { isFile: () => false }]) {
+  for (const change of [{ uid: BigInt(1001) }, { size: BigInt(257) * BigInt(1024) * BigInt(1024) }, { isFile: () => false }]) {
     const f = hostFixture(), stat = f.host.stat;
     f.host.stat = async path => ({ ...await stat(path), ...change }) as any;
     await expect(f.read()).rejects.toThrow("identity file");
@@ -332,14 +332,14 @@ test("actual runtime helpers are measured even with unchanged versions and a dif
   f.baseline.fingerprint = (await f.read()).fingerprint;
   await f.live.renew();
   f.content.set("/usr/bin/containerd-shim-runc-v2", "same-version replacement");
-  f.stamps.set("/usr/bin/containerd-shim-runc-v2", 2n);
+  f.stamps.set("/usr/bin/containerd-shim-runc-v2", BigInt(2));
   await expect(f.live.refresh()).rejects.toThrow(); expect(f.configuration.qualification).toBeNull();
 
   const namespace = hostFixture(), before = await namespace.read(), read = namespace.host.read, stat = namespace.host.statTarget;
   // realpath names agree, but the runtime namespace mounts different bytes.
   const actual = "/proc/43/root/usr/bin/containerd-shim-runc-v2";
   namespace.host.read = async path => path === actual ? Buffer.from("namespace replacement") : read(path);
-  namespace.host.statTarget = async path => path === actual ? { ...await stat(path), ctimeNs: 2n } as any : stat(path);
+  namespace.host.statTarget = async path => path === actual ? { ...await stat(path), ctimeNs: BigInt(2) } as any : stat(path);
   const changed = await namespace.read();
   expect(changed.fingerprint).not.toBe(before.fingerprint);
   expect((changed.observation.binaries.shim as { digest: string }).digest)
@@ -347,19 +347,19 @@ test("actual runtime helpers are measured even with unchanged versions and a dif
 });
 
 test("unknown or unsafe runtime resolution fails closed instead of hashing a PATH substitute", async () => {
-  const edited = hostFixture(); edited.stamps.set("/etc/infraforge/verifier/daemon.json", 1002_000_000_000n);
+  const edited = hostFixture(); edited.stamps.set("/etc/infraforge/verifier/daemon.json", BigInt(1002_000_000_000));
   await expect(edited.read()).rejects.toThrow("before restart");
   for (const value of ["invalid toml [", "version = 2\n" + "#".repeat(65536)]) {
     const f = hostFixture(); f.content.set("/run/user/1001/docker/containerd/containerd.toml", value);
     await expect(f.read()).rejects.toThrow();
   }
   const oversized = hostFixture(), statConfig = oversized.host.statTarget;
-  oversized.host.statTarget = async path => path.endsWith("/containerd.toml") ? { ...await statConfig(path), size: 65537n } as any : statConfig(path);
+  oversized.host.statTarget = async path => path.endsWith("/containerd.toml") ? { ...await statConfig(path), size: BigInt(65537) } as any : statConfig(path);
   await expect(oversized.read()).rejects.toThrow("Oversized");
   for (const name of ["runc", "containerd-shim-runc-v2", "docker-init"]) {
     const f = hostFixture(); f.content.delete(`/usr/bin/${name}`);
     await expect(f.read()).rejects.toThrow("executable unavailable");
-    for (const change of [{ uid: 1001n }, { mode: 0o100777n }]) {
+    for (const change of [{ uid: BigInt(1001) }, { mode: BigInt(0o100777) }]) {
       const f = hostFixture(), stat = f.host.statTarget;
       f.host.statTarget = async path => path.endsWith(`/${name}`) ? { ...await stat(path), ...change } as any : stat(path);
       await expect(f.read()).rejects.toThrow("identity file");
@@ -373,7 +373,7 @@ test("unknown or unsafe runtime resolution fails closed instead of hashing a PAT
   for (const change of ["cwd", "directory", "manager", "configuration", "custom-runtime", "shim-env", "imports", "containerd-path"] as const) {
     const f = hostFixture();
     if (change === "cwd") { const realpath = f.host.realpath; f.host.realpath = async path => path === "/proc/43/cwd" ? "/tmp" : realpath(path); }
-    if (change === "directory") { const stat = f.host.statTarget; f.host.statTarget = async path => path.endsWith("/root/usr/bin") ? { ...await stat(path), mode: 0o40777n } as any : stat(path); }
+    if (change === "directory") { const stat = f.host.statTarget; f.host.statTarget = async path => path.endsWith("/root/usr/bin") ? { ...await stat(path), mode: BigInt(0o40777) } as any : stat(path); }
     if (change === "manager") f.host.list = async () => ["41", "42"];
     if (change === "configuration") f.content.set("/proc/43/cmdline", "containerd\0--config\0/unknown.toml\0");
     if (change === "custom-runtime") f.info.Runtimes.runc.path = "/opt/runc";
