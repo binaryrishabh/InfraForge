@@ -38,6 +38,9 @@ try {
       if (args[1] === "status") return "";
       return args[1] === "ls-remote" && mode === "wrong-main" ? "c".repeat(40) : sha;
     }
+    if (args[1] === "context") return args[2] === "show" ? "default" : JSON.stringify([
+      { Name: "default", Endpoints: { docker: { Host: "unix:///var/run/docker.sock" } } },
+    ]);
     if (args[1] === "image" && args[2] === "ls") {
       const saved = JSON.parse(await readFile(resolve(directory, "accepted.json"), "utf8"));
       cleanupObservations.push({ accepted: saved.current, maintenance: await Bun.file(resolve(directory, "maintenance")).exists(), running });
