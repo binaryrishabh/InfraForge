@@ -66,9 +66,18 @@ mock.module("../firstStack/isolationConnection", () => ({ IsolationConnection: {
 } }));
 mock.module("../firstStack/verifierQualification", () => ({
   readProtectedJson: async () => ({}),
-  refreshVerifierQualification: async (value: any) => {
-    value.qualification = { expiresAt: new Date(Date.now() + 60000).toISOString() };
+  // This race covers shutdown readiness only; live renewal has its own lifecycle tests.
+  createLiveQualification: (value: any) => {
+    const refresh = async () => { value.qualification = { expiresAt: new Date(Date.now() + 60000).toISOString() }; };
+    return { refresh, renew: refresh, revoke() {}, due: () => false };
   },
+}));
+mock.module("../firstStack/qualificationFingerprint", () => ({
+  createHostFingerprintReader: () => async () => ({ fingerprint: "fixture" }), assertLiveHeadroom() {},
+}));
+mock.module("../firstStack/verifierProductionProbe", () => ({ assertVerifierProductionResponsive: async () => {} }));
+mock.module("../firstStack/isolationOwnership", () => ({
+  withFirstStackOwnership: async () => { throw Error("The canary is not part of this race"); },
 }));
 mock.module("../firstStack/verifierOwnership", () => ({ acquireVerifierOwnership: async () => {
   ownsLifecycle = true;
