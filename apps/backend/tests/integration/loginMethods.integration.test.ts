@@ -47,7 +47,8 @@ import { accountAuthHandler } from "../../auth/accountPolicy";
       const handler = accountAuthHandler(auth.handler, true, Date.now, async () => {}, settings.loginMethods);
       const call = (path: string, body?: object, cookie?: string) => handler(new Request(
         `${settings.baseURL}/api/auth/${path}`, { method: body ? "POST" : "GET",
-          headers: { Origin: HOSTED_LOGIN_ORIGIN, "Content-Type": "application/json", ...(cookie ? { cookie } : {}) },
+          headers: { Origin: HOSTED_LOGIN_ORIGIN, "Content-Type": "application/json", "x-turnstile-token": "fixture-pass",
+            ...(cookie ? { cookie } : {}) },
           ...(body ? { body: JSON.stringify(body) } : {}) }));
       const password = "fixture-password-long-enough", hashed = await hashPassword(password);
       const user = await db.user.create({ data: { id: randomUUID(), name: "Fixture", email: "victim@example.test",

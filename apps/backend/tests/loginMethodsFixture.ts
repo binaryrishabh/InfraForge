@@ -1,13 +1,13 @@
 import { betterAuth } from "better-auth";
 import { memoryAdapter } from "better-auth/adapters/memory";
-import { symmetricEncrypt } from "better-auth/crypto";
 import { randomUUID } from "node:crypto";
 import { createAuth } from "../auth/createAuth";
 import { readAuthSettings } from "../auth/settings";
 import { accountAuthHandler } from "../auth/accountPolicy";
 import { FakeChallenge } from "../auth/turnstile";
 import { FakeEmail } from "../auth/email";
-import { prepareMailIntent, renderMailIntent, type MailKind } from "../auth/mailIntent";
+import { prepareMailIntent, renderMailIntent } from "../auth/mailIntent";
+import { AccountEmailRequests } from "../auth/mailRequests";
 
 export const loginEnvironment = { BETTER_AUTH_SECRET: "fixture-only-secret-at-least-32-characters",
   BETTER_AUTH_URL: "http://localhost:3100", APP_ORIGINS: "http://localhost:5173" };
@@ -31,21 +31,20 @@ export function loginFixture(flags: Record<string, string> = {}, change?: (optio
       Object.assign(row, data); return { count: 1 };
     },
   };
-  const queue = { admit: async (kind: MailKind, email: string, callbackURL: string) => {
+  const queue = new AccountEmailRequests({ accountMailIntent: { create: async ({ data }: any) => {
     if (failing) throw Error("fixture unavailable");
-    intents.push({ id: randomUUID(), kind,
-      expiresAt: new Date(Date.now() + (kind === "magic" ? 900_000 : 600_000)),
-      payload: await symmetricEncrypt({ key: settings.secret, data: JSON.stringify({ email, callbackURL }) }) });
-  } };
+    intents.push(data);
+  } } } as any, mail, settings);
   const options = createAuth({ accountEmailToken } as any, settings, { allow: async scope => {
     scopes.push(scope); return quotaAllowed;
   } }, queue).options;
   change?.(options);
   const auth = betterAuth({ ...options, database: memoryAdapter(database), rateLimit: { enabled: false } });
   const handler = accountAuthHandler(auth.handler, true, Date.now, async () => {}, settings.loginMethods);
-  const call = (path: string, body?: object, cookie?: string) => handler(new Request(
+  const call = (path: string, body?: object, cookie?: string, challengeToken: string | null = "fixture-pass") => handler(new Request(
     `${settings.baseURL}/api/auth/${path}`, { method: body ? "POST" : "GET",
-      headers: { Origin: settings.origins[0]!, "Content-Type": "application/json", ...(cookie ? { cookie } : {}) },
+      headers: { Origin: settings.origins[0]!, "Content-Type": "application/json", ...(cookie ? { cookie } : {}),
+        ...(challengeToken !== null ? { "x-turnstile-token": challengeToken } : {}) },
       ...(body ? { body: JSON.stringify(body) } : {}) }));
   const drain = async () => {
     for (const intent of intents.splice(0)) {

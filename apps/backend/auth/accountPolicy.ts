@@ -16,7 +16,7 @@ export class RedisAccountQuota implements AccountQuota {
   }
 }
 export async function enforceAccountPolicy(input: {
-  path: string; body?: Record<string, unknown>; token?: string; ip: string;
+  path: string; body?: Record<string, unknown>; token?: string; ip: string; challengeToken?: string | null;
   enabled: boolean; proofSignup?: boolean; challenge?: SignupChallenge; quota?: AccountQuota;
   loginMethods?: { magicLink: boolean; emailOtp: boolean } }) {
   const { path, enabled, challenge, quota, ip, body } = input;
@@ -43,15 +43,16 @@ export async function enforceAccountPolicy(input: {
     if (error instanceof APIError) throw error;
     throw new APIError("SERVICE_UNAVAILABLE", { message: "Account service unavailable" });
   }
-  if (loginRequest && !challenge) {
+  if ((loginRequest || loginRedeem) && !challenge) {
     throw new APIError("SERVICE_UNAVAILABLE", { message: "Account service unavailable" });
   }
-  if (challenge && (loginRequest || signup && !completion
+  if (challenge && (loginRequest || loginRedeem || signup && !completion
     || path === "/request-password-reset" && challenge.protectReset !== false)) {
-    const token = typeof body?.turnstileToken === "string" ? body.turnstileToken : "";
+    const token = input.challengeToken ?? (typeof body?.turnstileToken === "string" ? body.turnstileToken : "");
     let accepted = false;
-    const action = loginRequest ? "email_login" : signup ? "signup" : "password_reset";
-    try { accepted = await challenge.verify(token, action, ip); }
+    const action = loginRedeem ? "email_login_redeem"
+      : loginRequest ? "email_login" : signup ? "signup" : "password_reset";
+    try { accepted = (!loginRedeem || !!token) && await challenge.verify(token, action, ip); }
     catch { /* fail closed */ }
     if (!accepted) throw new APIError("FORBIDDEN", { message: "Complete the security check" });
   }

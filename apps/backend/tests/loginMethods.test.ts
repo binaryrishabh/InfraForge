@@ -132,6 +132,7 @@ test("shared OTP quota bounds even concurrent guesses and resends to three attem
   const results = await Promise.allSettled(Array.from({ length: 8 }, (_, i) => enforceAccountPolicy({
     path: "/sign-in/email-otp", body: { email: " VICTIM@example.test ", otp: String(i) },
     ip: `fixture-${i}`, enabled: true, loginMethods: { magicLink: false, emailOtp: true }, quota,
+    challengeToken: "fixture-pass", challenge: { verify: async () => true },
   })));
   expect(results.filter(r => r.status === "fulfilled")).toHaveLength(3);
 });

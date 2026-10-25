@@ -13,7 +13,7 @@ import type { MailRequests } from "./mailIntent";
 import { mailAdmission, invalidProof, acceptedMail } from "./mailAdmission";
 import { consumeVerification, EMAIL_TOKEN_SECONDS } from "./verification";
 import { enforceAccountPolicy, type AccountQuota } from "./accountPolicy";
-import { loginMethodPolicy, validateLink } from "./loginMethods";
+import { loginMethodPolicy, validateLink, magicConfirmation } from "./loginMethods";
 import { otpDigest, loginProofHash } from "./mailIntent";
 
 export function createAuth(
@@ -78,11 +78,15 @@ export function createAuth(
     disabledPaths: ["/is-username-available", "/delete-user", "/delete-user/callback",
       ...(methods.settings ? ["/unlink-account"] : []),
       ...(methods.emailOtp ? ["/email-otp/check-verification-otp", "/email-otp/verify-email",
-        "/email-otp/forget-password", "/email-otp/request-password-reset", "/email-otp/reset-password",
+        "/forget-password/email-otp", "/email-otp/request-password-reset", "/email-otp/reset-password",
         "/email-otp/request-email-change", "/email-otp/change-email"] : []),
       ...(!deliver ? ["/send-verification-email", "/verify-email", "/request-password-reset",
         "/reset-password", "/reset-password/:token"] : [])],
     hooks: { before: createAuthMiddleware(async ctx => {
+      if (methods.magicLink && ctx.path === "/magic-link/verify") {
+        const confirmation = magicConfirmation(settings, ctx.request);
+        if (confirmation) return confirmation;
+      }
       if (ctx.path === "/sign-up/email") {
         // These native middleware checks must also precede the username
         // plugin's early duplicate response, including form/Fetch Metadata.
@@ -94,6 +98,8 @@ export function createAuth(
         ip: ctx.headers?.get("x-infraforge-client-ip") ?? "unknown",
         enabled: essentials.enabled || !!deliver, proofSignup: !!deliver, challenge: essentials.challenge, quota,
         loginMethods: methods,
+        challengeToken: ctx.headers?.get("x-turnstile-token")
+          ?? (ctx.request ? new URL(ctx.request.url).searchParams.get("cf-turnstile-response") : undefined),
       });
       await loginMethodPolicy(settings, deliver)(ctx);
       if (methods.magicLink && ctx.path === "/sign-in/magic-link"
