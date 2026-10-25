@@ -54,7 +54,9 @@ export function methodSettingsRouter(db: PrismaClient,
     const body = z.object({ accountId: z.string().min(1).max(128),
       password: z.string().min(1).max(128) }).strict().safeParse(req.body);
     if (!body.success) { res.status(400).json({ success: false }); return; }
-    try { await auth.api.verifyPassword({ headers: fromNodeHeaders(req.headers), body: { password: body.data.password } }); }
+    try {
+      await auth.api.verifyPassword({ headers: fromNodeHeaders(req.headers), body: { password: body.data.password } });
+    }
     catch { res.status(403).json({ success: false, message: "Re-authentication failed" }); return; }
     const { user, session } = res.locals.authSession;
     await unlinkMethod(db, user.id, session.id, body.data.accountId, Object.keys(settings.socialProviders));
