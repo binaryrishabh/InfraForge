@@ -87,6 +87,18 @@ test("native magic redirects use canonical app URLs for success, error and omitt
   }
 });
 
+test("magic confirmation escapes bearer text and never consumes it on display", async () => {
+  const f = loginFixture({ AUTH_MAGIC_LINK_ENABLED: "true" });
+  const token = '"><script>alert(1)</script>';
+  const response = await f.call(`magic-link/verify?token=${encodeURIComponent(token)}`, undefined, undefined, null);
+  expect(response.status).toBe(200);
+  const html = await response.text();
+  expect(html).toContain('&quot;&gt;&lt;script&gt;alert(1)&lt;/script&gt;');
+  expect(html).not.toContain(token);
+  expect(response.headers.has("set-cookie")).toBe(false);
+  expect(f.database.session).toHaveLength(0);
+});
+
 test("production admission caps both login lifetimes and persists only encrypted request metadata", async () => {
   const f = loginFixture({ AUTH_MAGIC_LINK_ENABLED: "true", AUTH_EMAIL_OTP_ENABLED: "true" });
   const clock = spyOn(Date, "now").mockReturnValue(1_800_000_000_000);
