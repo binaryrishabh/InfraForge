@@ -1,6 +1,7 @@
 import { open, readFile, statfs, stat, unlink } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { command } from "./process";
+import { absoluteStoragePath, containerdStorage, storageHost, unknownStorage, verifyLocalDocker, type StorageHost } from "./storage";
 import type { AcceptedState } from "./image";
 
 export const minimumReleaseFreeBytes = 8n * 1024n ** 3n;
@@ -43,58 +44,20 @@ export async function availableReleaseBytes(path: string,
   }
 }
 
-const unknownStorage = "Release disk preflight refused: image/snapshot storage filesystem is Unknown. " +
-  "Only classic overlay2 or the default system containerd overlayfs snapshotter is verified. " +
-  "Do not assume /var/lib/containerd or switch storage drivers as cleanup.";
-const absolute = (value: unknown): value is string => typeof value === "string" && value.startsWith("/") &&
-  !value.split("/").includes("..") && !/[\0\n\r]/.test(value);
-
-// Values of one TOML table from `containerd config dump` (top level is ""). Only
-// plain single-line string assignments are read; anything else stays Unknown.
-export function containerdTable(dump: string, table: string) {
-  const values = new Map<string, string>();
-  let current = "";
-  for (const line of dump.split(/\r?\n/)) {
-    const header = line.match(/^\s*\[([^\][]+)\]\s*$/);
-    if (header) { current = header[1]!.trim().replace(/^'(.*)'$|^"(.*)"$/, "$1$2"); continue; }
-    const pair = line.match(/^\s*([A-Za-z_]+)\s*=\s*(?:'([^']*)'|"([^"\\]*)")\s*$/);
-    if (current === table && pair) values.set(pair[1]!, pair[2] ?? pair[3]!);
-  }
-  return values;
-}
-
-// The containerd image store keeps content and snapshots under containerd's own
-// root, not DockerRootDir. Accept it only when Docker uses the default system
-// containerd and that exact daemon's effective config names Docker's socket.
-async function containerdStorage(info: { Driver?: unknown; Containerd?: unknown }, root: string, run: typeof command,
-  read: (path: string) => Promise<string>) {
-  const address = (info.Containerd as { Address?: unknown } | null | undefined)?.Address;
-  if (info.Driver !== "overlayfs" || !absolute(address)) throw new Error(unknownStorage);
-  const pid = (await run(["systemctl", "show", "containerd.service", "--property=MainPID", "--value"], root)).trim();
-  if (!/^[1-9][0-9]*$/.test(pid)) throw new Error(unknownStorage);
-  // Flags such as --config, --root or --address would make the default dump differ from the running daemon.
-  const argv = (await read(`/proc/${pid}/cmdline`)).split("\0").filter(Boolean);
-  if (argv.length !== 1 || !/(^|\/)containerd$/.test(argv[0]!)) throw new Error(unknownStorage);
-  const dump = await run(["sudo", "-n", "containerd", "config", "dump"], root);
-  const containerdRoot = containerdTable(dump, "").get("root"), grpc = containerdTable(dump, "grpc").get("address");
-  if (!absolute(containerdRoot) || grpc !== address) throw new Error(unknownStorage);
-  const base = containerdRoot.replace(/\/+$/, "");
-  return [base, `${base}/io.containerd.content.v1.content`, `${base}/io.containerd.snapshotter.v1.overlayfs`];
-}
-
 export async function preflightReleaseSpace(root: string, stateDirectory: string, run = command, measure = availableReleaseBytes,
-  read = (path: string) => readFile(path, "utf8")) {
-  let info: { DockerRootDir?: unknown; Driver?: unknown; DriverStatus?: unknown; Containerd?: unknown };
-  try { info = JSON.parse(await run(["docker", "info", "--format", "{{json .}}"], root)); }
+  host: StorageHost = storageHost(run, root), env = process.env) {
+  let info: { DockerRootDir?: unknown; Driver?: unknown; DriverStatus?: unknown; Containerd?: unknown; SecurityOptions?: unknown };
+  try { await verifyLocalDocker(root, run, env); info = JSON.parse(await run(["docker", "info", "--format", "{{json .}}"], root)); }
   catch (error) { throw new Error("Docker storage layout unavailable; disk capacity is Unknown, release refused", { cause: error }); }
   const dockerRoot = info?.DockerRootDir;
-  if (typeof dockerRoot !== "string" || !dockerRoot.startsWith("/")) throw new Error("Docker data root unavailable; disk capacity is Unknown, release refused");
+  if (!absoluteStoragePath(dockerRoot)) throw new Error("Docker data root unavailable; disk capacity is Unknown, release refused");
+  if (!Array.isArray(info.SecurityOptions) || info.SecurityOptions.some(value => typeof value !== "string" || /rootless/i.test(value))) throw new Error(unknownStorage);
   if (!Array.isArray(info.DriverStatus)) throw new Error(unknownStorage);
   const driverTypes = info.DriverStatus.filter(row => Array.isArray(row) && row[0] === "driver-type");
   let imagePaths: string[];
   if (info.Driver === "overlay2" && driverTypes.length === 0) imagePaths = [`${dockerRoot.replace(/\/+$/, "")}/overlay2`];
   else if (driverTypes.length === 1 && driverTypes[0]![1] === "io.containerd.snapshotter.v1") {
-    try { imagePaths = await containerdStorage(info, root, run, read); }
+    try { imagePaths = await containerdStorage(info, root, run, host); }
     catch (error) { throw new Error(unknownStorage, { cause: error }); }
   } else throw new Error(unknownStorage);
   const statePath = await existingParent(resolve(stateDirectory));
@@ -114,6 +77,7 @@ export function selectReleaseImages(images: Image[], state: AcceptedState, inUse
 }
 
 export async function pruneAcceptedImages(root: string, stateDirectory: string, run = command, log = console.log) {
+  await verifyLocalDocker(root, run);
   // Read the durable acceptance, never a proposed release or a guessed latest tag.
   const state = JSON.parse(await readFile(resolve(stateDirectory, "accepted.json"), "utf8")) as AcceptedState;
   const ids = (await run(["docker", "image", "ls", "--quiet", "--no-trunc", "--filter", "reference=infraforge-backend:*"], root)).split(/\s+/).filter(Boolean);
@@ -134,7 +98,11 @@ export async function pruneAcceptedImages(root: string, stateDirectory: string, 
 
 if (import.meta.main) {
   const [action, directory] = process.argv.slice(2);
-  if (action !== "prune" || !directory) throw new Error("Use: bun --no-env-file scripts/release/hygiene.ts prune <state-directory>");
+  if (!directory || !["prune", "qualify"].includes(action ?? "")) throw new Error("Use: bun --no-env-file scripts/release/hygiene.ts <prune|qualify> <state-directory>");
+  if (action === "qualify") {
+    await preflightReleaseSpace(process.cwd(), directory);
+    process.exit(0);
+  }
   const lockPath = resolve(directory, "release.lock");
   const lock = await open(lockPath, "wx", 0o600).catch(() => { throw new Error("Release lock exists; inspect recovery state before cleanup"); });
   try { await pruneAcceptedImages(process.cwd(), directory); }

@@ -1,6 +1,7 @@
 import { readFile, lstat } from "node:fs/promises";
 import { resolve } from "node:path";
 import { command } from "../release/process";
+import { verifyLocalDocker } from "../release/storage";
 import { ComposeRelease, settingsFingerprint, verifyImage } from "../release/compose";
 import type { Release } from "../release/sequence";
 import { fullSha } from "../release/public-check";
@@ -26,6 +27,7 @@ if (import.meta.main) {
   const root = process.cwd();
   if (await command(["git", "rev-parse", "HEAD"], root) !== sha || await command(["git", "status", "--porcelain"], root)) throw new Error("Clean exact checkout required");
   const accepted = await backendState(stateDirectory);
+  await verifyLocalDocker(root);
   if (accepted?.sha === sha) {
     const operations = new ComposeRelease(root, envFile, "infraforge", accepted, async () => { throw new Error("Read-only acceptance verification"); },
       undefined, 90000, process.env, resolve(stateDirectory));

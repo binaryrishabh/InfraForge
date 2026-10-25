@@ -2,13 +2,14 @@ import { expect, test } from "bun:test";
 import { mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { assertReleaseSpace, availableReleaseBytes, containerdTable, minimumReleaseFreeBytes, preflightReleaseSpace, pruneAcceptedImages, selectReleaseImages } from "../release/hygiene";
+import { assertReleaseSpace, availableReleaseBytes, minimumReleaseFreeBytes, preflightReleaseSpace, pruneAcceptedImages, selectReleaseImages } from "../release/hygiene";
 
+const context = (args: string[]) => args[1] === "context" ? args[2] === "show" ? "default" : JSON.stringify([{ Name: "default", Endpoints: { docker: { Host: "unix:///var/run/docker.sock" } } }]) : undefined;
 const release = (imageId: string) => ({ sha: imageId, image: `infraforge-backend:${imageId}`, imageId,
   authContract: 1, migrationFingerprint: "schema", settingsFingerprint: "settings" });
 const state = { current: release("accepted"), previous: release("previous") };
 const image = (Id: string, ...RepoTags: string[]) => ({ Id, RepoTags });
-const dockerInfo = { DockerRootDir: "/docker-root", Driver: "overlay2", DriverStatus: [["Backing Filesystem", "extfs"]] };
+const dockerInfo = { SecurityOptions: ["name=seccomp,profile=builtin"], DockerRootDir: "/docker-root", Driver: "overlay2", DriverStatus: [["Backing Filesystem", "extfs"]] };
 
 test("disk floor checks each filesystem, includes exact numbers and safe recovery, accepts equality", () => {
   for (const low of [0, 1]) {
@@ -24,14 +25,14 @@ test("preflight measures DockerRootDir, image directory and nearest existing sta
   const directory = await mkdtemp(join(tmpdir(), "infraforge-space-"));
   try {
     const paths: string[] = [], commands: string[][] = [];
-    await preflightReleaseSpace(".", join(directory, "new", "state"), async args => { commands.push(args); return JSON.stringify(dockerInfo); },
+    await preflightReleaseSpace(".", join(directory, "new", "state"), async args => { commands.push(args); return context(args) ?? JSON.stringify(dockerInfo); },
       async path => { paths.push(path); return minimumReleaseFreeBytes; });
     expect(paths).toEqual(["/docker-root", "/docker-root/overlay2", directory]);
-    expect(commands).toEqual([["docker", "info", "--format", "{{json .}}"]]);
+    expect(commands).toEqual([["docker", "context", "show"], ["docker", "context", "inspect", "default"], ["docker", "info", "--format", "{{json .}}"]]);
     expect(await Bun.file(join(directory, "new", "state", "release.lock")).exists()).toBe(false);
     expect(await readdir(directory)).toEqual([]);
     await expect(preflightReleaseSpace(".", directory, async () => "")).rejects.toThrow("Unknown");
-    await expect(preflightReleaseSpace(".", directory, async () => JSON.stringify(dockerInfo), async () => { throw new Error("statfs unavailable"); })).rejects.toThrow("Unknown");
+    await expect(preflightReleaseSpace(".", directory, async args => context(args) ?? JSON.stringify(dockerInfo), async () => { throw new Error("statfs unavailable"); })).rejects.toThrow("Unknown");
   } finally { await rm(directory, { recursive: true }); }
 });
 
@@ -60,86 +61,16 @@ test("preflight refuses a low image filesystem even when Docker metadata and sta
     const capacities = new Map([[dockerInfo.DockerRootDir, minimumReleaseFreeBytes], [directory, minimumReleaseFreeBytes],
       ["/docker-root/overlay2", 7n], ["/separate/containerd", 3n]]);
     const measure = async (path: string) => capacities.get(path)!;
-    await expect(preflightReleaseSpace(".", directory, async () => JSON.stringify(dockerInfo), measure)).rejects.toThrow("/docker-root/overlay2: 7 bytes available");
+    await expect(preflightReleaseSpace(".", directory, async args => context(args) ?? JSON.stringify(dockerInfo), measure)).rejects.toThrow("/docker-root/overlay2: 7 bytes available");
     capacities.set("/docker-root/overlay2", minimumReleaseFreeBytes);
     // The old DockerRootDir-only query would pass this fixture. The active
     // containerd root cannot be verified from info, so this layout must refuse.
     const containerd = { ...dockerInfo, Driver: "overlayfs", DriverStatus: [["driver-type", "io.containerd.snapshotter.v1"]] };
-    const run = async (args: string[]) => args.at(-1) === "{{.DockerRootDir}}" ? dockerInfo.DockerRootDir : JSON.stringify(containerd);
+    const run = async (args: string[]) => context(args) ?? (args.at(-1) === "{{.DockerRootDir}}" ? dockerInfo.DockerRootDir : JSON.stringify(containerd));
     await expect(preflightReleaseSpace(".", directory, run, measure)).rejects.toThrow("image/snapshot storage filesystem is Unknown");
     for (const change of [{ Driver: "unknown" }, { DriverStatus: null }, { DriverStatus: containerd.DriverStatus }]) {
-      await expect(preflightReleaseSpace(".", directory, async () => JSON.stringify({ ...dockerInfo, ...change }), measure)).rejects.toThrow("Unknown");
+      await expect(preflightReleaseSpace(".", directory, async args => context(args) ?? JSON.stringify({ ...dockerInfo, ...change }), measure)).rejects.toThrow("Unknown");
     }
-  } finally { await rm(directory, { recursive: true }); }
-});
-
-// Shape of the production host's own output (docker info and `containerd config dump`), 2026-10-25.
-const imageStore = { DockerRootDir: "/var/lib/docker", Driver: "overlayfs", DriverStatus: [["driver-type", "io.containerd.snapshotter.v1"]],
-  Containerd: { Address: "/run/containerd/containerd.sock", Namespaces: { Containers: "moby", Plugins: "plugins.moby" } } };
-const dump = ["version = 3", "root = '/var/lib/containerd'", "state = '/run/containerd'", "", "[debug]", "  address = ''", "",
-  "[grpc]", "  address = '/run/containerd/containerd.sock'", "", "[ttrpc]", "  address = ''", "",
-  "[plugins.'io.containerd.grpc.v1.cri']", "  root = '/elsewhere'"].join("\n");
-function storeHost(change: { info?: object; pid?: string; argv?: string; dump?: string } = {}) {
-  const commands: string[][] = [];
-  const run = async (args: string[]) => {
-    commands.push(args);
-    if (args[0] === "docker") return JSON.stringify({ ...imageStore, ...change.info });
-    if (args[0] === "systemctl") return change.pid ?? "812\n";
-    if (args.join(" ") === "sudo -n containerd config dump") return change.dump ?? dump;
-    throw new Error(`unexpected command ${args.join(" ")}`);
-  };
-  const read = async (path: string) => {
-    expect(path).toBe(`/proc/${(change.pid ?? "812").trim()}/cmdline`);
-    return change.argv ?? "/usr/bin/containerd\0";
-  };
-  return { commands, run, read };
-}
-
-test("containerd config tables read only plain top-level and named-table strings", () => {
-  expect(containerdTable(dump, "").get("root")).toBe("/var/lib/containerd");
-  expect(containerdTable(dump, "grpc").get("address")).toBe("/run/containerd/containerd.sock");
-  expect(containerdTable(dump, "debug").get("address")).toBe("");
-  expect(containerdTable('root = "/a\\"b"', "").get("root")).toBeUndefined();
-});
-
-test("containerd image store measures the verified system containerd root, content and snapshots", async () => {
-  const directory = await mkdtemp(join(tmpdir(), "infraforge-image-store-"));
-  try {
-    const host = storeHost(), paths: string[] = [];
-    await preflightReleaseSpace(".", directory, host.run, async path => { paths.push(path); return minimumReleaseFreeBytes; }, host.read);
-    expect(paths).toEqual(["/var/lib/docker", "/var/lib/containerd", "/var/lib/containerd/io.containerd.content.v1.content",
-      "/var/lib/containerd/io.containerd.snapshotter.v1.overlayfs", directory]);
-    expect(host.commands).toEqual([["docker", "info", "--format", "{{json .}}"],
-      ["systemctl", "show", "containerd.service", "--property=MainPID", "--value"], ["sudo", "-n", "containerd", "config", "dump"]]);
-    // A low snapshot filesystem refuses even when every other path has room.
-    await expect(preflightReleaseSpace(".", directory, host.run,
-      async path => path.endsWith("snapshotter.v1.overlayfs") ? 5n : minimumReleaseFreeBytes, host.read)).rejects.toThrow("overlayfs: 5 bytes available");
-  } finally { await rm(directory, { recursive: true }); }
-});
-
-test("containerd image store refuses every unverified daemon, socket or root", async () => {
-  const directory = await mkdtemp(join(tmpdir(), "infraforge-image-store-refuse-"));
-  try {
-    const cases = [
-      { info: { Containerd: { Address: "/run/other/containerd.sock" } } }, { info: { Containerd: null } },
-      { info: { Containerd: { Address: "relative.sock" } } }, { info: { Driver: "overlay2" } },
-      { info: { DriverStatus: [["driver-type", "io.containerd.snapshotter.v1"], ["driver-type", "other"]] } },
-      { info: { DriverStatus: [["driver-type", "io.containerd.snapshotter.v2"]] } },
-      { pid: "0\n" }, { pid: "" }, { pid: "12 13" },
-      { argv: "/usr/bin/containerd\0--config\0/etc/other.toml\0" }, { argv: "/usr/bin/containerd\0--root\0/data\0" }, { argv: "/usr/bin/dockerd\0" },
-      { dump: dump.replace("[grpc]", "[grpc.tcp]") }, { dump: dump.replace("/run/containerd/containerd.sock'", "/run/x.sock'") },
-      { dump: dump.replace("root = '/var/lib/containerd'", "root = 'var/lib/containerd'") },
-      { dump: dump.replace("root = '/var/lib/containerd'", "root = '/var/lib/../tmp'") },
-      { dump: dump.replace("root = '/var/lib/containerd'\n", "") },
-    ];
-    for (const change of cases) {
-      const host = storeHost(change);
-      await expect(preflightReleaseSpace(".", directory, host.run, async () => minimumReleaseFreeBytes, host.read),
-        JSON.stringify(change)).rejects.toThrow("image/snapshot storage filesystem is Unknown");
-    }
-    const failing = storeHost();
-    await expect(preflightReleaseSpace(".", directory, async args => args[0] === "sudo" ? Promise.reject(new Error("sudo denied")) : failing.run(args),
-      async () => minimumReleaseFreeBytes, failing.read)).rejects.toThrow("Unknown");
   } finally { await rm(directory, { recursive: true }); }
 });
 
@@ -176,6 +107,7 @@ test("cleanup reads durable accepted IDs, inspects all containers and only remov
     await writeFile(join(directory, "accepted.json"), JSON.stringify(state));
     const run = async (args: string[]) => {
       calls.push(args);
+      if (context(args)) return context(args)!;
       if (args[2] === "ls") return "accepted previous stale running";
       if (args[1] === "ps") return "running-container stopped-container";
       if (args[1] === "inspect") return JSON.stringify([{ Image: "running" }, { Image: "previous" }]);
@@ -195,6 +127,6 @@ test("cleanup reads durable accepted IDs, inspects all containers and only remov
     expect(calls.some(args => args[2] === "rm")).toBe(false);
     await rm(join(directory, "accepted.json")); calls.length = 0;
     await expect(pruneAcceptedImages(".", directory, run)).rejects.toThrow();
-    expect(calls).toEqual([]);
+    expect(calls).toEqual([["docker", "context", "show"], ["docker", "context", "inspect", "default"]]);
   } finally { await rm(directory, { recursive: true }); }
 });
