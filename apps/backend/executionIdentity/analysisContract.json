@@ -1,6 +1,6 @@
 {
   "schema": "execution-loading-analysis/1",
-  "policy": "5dc8429ff10c5ded004cdc2445c0ff32344962e0a642f14f744ca337eeb08f4d",
+  "policy": "0b3c165d711214d8fe7e2d3541fc1ca969d2eff202afa050eaca798fab6b5a92",
   "modules": {
     "apps/backend/actions/contract.ts": {
       "hash": "15fe6aa3879ab8ccc67a23d579a4e2e9b79f71631dd7687ad192f788c27229ad",
@@ -1439,7 +1439,7 @@
       ]
     },
     "apps/backend/firstStack/isolationChild.ts": {
-      "hash": "2d096d039f394a76b3989a72d8a5211c23495a46f6551a301258b5407c78d752",
+      "hash": "8b5be39c355e2b012c2ffb1e040448a74721742428ee10fa7b398abcf4b1fcdb",
       "requests": [
         {
           "path": "node:fs",
@@ -1476,11 +1476,15 @@
         {
           "path": "@infraforge/simulation/internal-first-stack",
           "kind": "import-statement"
+        },
+        {
+          "path": "./isolationSelfCheck",
+          "kind": "import-statement"
         }
       ]
     },
     "apps/backend/firstStack/isolationConnection.ts": {
-      "hash": "13c2a168cc178a4ad53080716564545add86f9e95e081884f414d3b51d6b774c",
+      "hash": "2a722cddced3fce9100664fee6b392057bee608bce1544b8b3c02c93bf09d5f1",
       "requests": [
         {
           "path": "node:child_process",
@@ -1574,7 +1578,7 @@
       ]
     },
     "apps/backend/firstStack/isolationRunner.ts": {
-      "hash": "a70a9575cc51e4269e104831277730a6386a0fd1dfb9c72ac0ae6f588ad0706d",
+      "hash": "5dadb1c0f43069fc07635fdffd5656da2ee843e5ecca631133450817711401a2",
       "requests": [
         {
           "path": "node:crypto",
@@ -1598,6 +1602,19 @@
         },
         {
           "path": "./isolationProtocol",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./qualificationBaseline",
+          "kind": "import-statement"
+        }
+      ]
+    },
+    "apps/backend/firstStack/isolationSelfCheck.ts": {
+      "hash": "b4e53c7f1f791f0c17ddbbd9b3840fad344b1b4d19b3b06917efec8c96a37fdb",
+      "requests": [
+        {
+          "path": "node:fs",
           "kind": "import-statement"
         }
       ]
@@ -1633,6 +1650,64 @@
         },
         {
           "path": "@infraforge/simulation/internal-first-stack",
+          "kind": "import-statement"
+        }
+      ]
+    },
+    "apps/backend/firstStack/qualificationBaseline.ts": {
+      "hash": "bc5a693ecff774a04cee53315381322902017f8371df66169ae20312e6fb52c9",
+      "requests": [
+        {
+          "path": "zod",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./canonical",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./isolationPolicy",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./isolationProtocol",
+          "kind": "import-statement"
+        }
+      ]
+    },
+    "apps/backend/firstStack/qualificationFingerprint.ts": {
+      "hash": "2e593e816a0e422537b3959f4c1071a76d6bf7213b911b77d1d8d445e3e68ccc",
+      "requests": [
+        {
+          "path": "node:crypto",
+          "kind": "import-statement"
+        },
+        {
+          "path": "node:fs/promises",
+          "kind": "import-statement"
+        },
+        {
+          "path": "node:path/posix",
+          "kind": "import-statement"
+        },
+        {
+          "path": "node:os",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./canonical",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./isolationConnection",
+          "kind": "import-statement"
+        },
+        {
+          "path": "node:fs",
+          "kind": "import-statement"
+        },
+        {
+          "path": "smol-toml",
           "kind": "import-statement"
         }
       ]
@@ -2102,7 +2177,7 @@
       ]
     },
     "apps/backend/firstStack/verifierLifecycle.ts": {
-      "hash": "0d4f5b13d0e442fcea653abbdc4fb9f53b451e5bf9dee28eea46abb9348e6848",
+      "hash": "61003c5def18b429f78c72d212f2b170de2fa65b2397e9294228c3687fe0106e",
       "requests": [
         {
           "path": "ioredis",
@@ -2139,6 +2214,30 @@
         {
           "path": "./verifierDrain",
           "kind": "import-statement"
+        },
+        {
+          "path": "./qualificationFingerprint",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./isolationRunner",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./isolationOwnership",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./verifierOwnership",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./verifierRenewal",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./verifierProductionProbe",
+          "kind": "import-statement"
         }
       ]
     },
@@ -2151,8 +2250,12 @@
         }
       ]
     },
+    "apps/backend/firstStack/verifierProductionProbe.ts": {
+      "hash": "e218ac22619320de3668928c110990acc793dfccd9b08daf8818123f35ccbadb",
+      "requests": []
+    },
     "apps/backend/firstStack/verifierQualification.ts": {
-      "hash": "ff28724a358a87b925509a0b163bc8ee7d99f64da51170977b7e1f67ea7e57ad",
+      "hash": "a5fc8e25cf85c7cc78d349707521ed4d4bc2b75a3fee97fbf72badb72876ca9e",
       "requests": [
         {
           "path": "node:fs",
@@ -2169,8 +2272,20 @@
         {
           "path": "./isolationPolicy",
           "kind": "import-statement"
+        },
+        {
+          "path": "./canonical",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./qualificationBaseline",
+          "kind": "import-statement"
         }
       ]
+    },
+    "apps/backend/firstStack/verifierRenewal.ts": {
+      "hash": "431c736cd0a1996752b6ab6ec2609b23aac50e02dd182aab238c284857c66070",
+      "requests": []
     },
     "apps/backend/firstStack/workload.ts": {
       "hash": "d67ea785ca7d27dcdbd83c27283f33399a0de8ac68c7ce05baa36d09cca013cf",

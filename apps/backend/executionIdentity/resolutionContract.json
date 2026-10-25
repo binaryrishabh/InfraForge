@@ -7501,6 +7501,60 @@
       "hash": "54f0fec2ecb069f39b17455cc77a86e5ad135138a6e6ab5f7b33dc44ed157e86"
     },
     {
+      "owner": "smol-toml@1.9.1:279",
+      "file": "dist/date.js",
+      "key": "smol-toml/dist/date.js",
+      "hash": "ef924a2a42c7f16761e7098c3ed8e04195ecbcb02d5c369db0aee76f251a409c"
+    },
+    {
+      "owner": "smol-toml@1.9.1:279",
+      "file": "dist/error.js",
+      "key": "smol-toml/dist/error.js",
+      "hash": "76f8e47f5fc57273748242d59570656d7c921a80bceb2291ca5a4d7a723e9f29"
+    },
+    {
+      "owner": "smol-toml@1.9.1:279",
+      "file": "dist/extract.js",
+      "key": "smol-toml/dist/extract.js",
+      "hash": "3e6f1e5764a091acf2df6a3f257d0467c37a2b9dbfecab1573f17a6489349c90"
+    },
+    {
+      "owner": "smol-toml@1.9.1:279",
+      "file": "dist/index.js",
+      "key": "smol-toml/dist/index.js",
+      "hash": "dc8e0afc74477e514f5cb8492b587560c1d7d68cec03a994cc8bc4af99c8da2a"
+    },
+    {
+      "owner": "smol-toml@1.9.1:279",
+      "file": "dist/parse.js",
+      "key": "smol-toml/dist/parse.js",
+      "hash": "195e33ea068bf6f3acb5b3342792ac4aa954bba7e751519ba869c00da395ecdb"
+    },
+    {
+      "owner": "smol-toml@1.9.1:279",
+      "file": "dist/primitive.js",
+      "key": "smol-toml/dist/primitive.js",
+      "hash": "be47fe90bf9a410af0b9204b6b34617f4b38e57f08198b10cb024a0272eb5936"
+    },
+    {
+      "owner": "smol-toml@1.9.1:279",
+      "file": "dist/stringify.js",
+      "key": "smol-toml/dist/stringify.js",
+      "hash": "c717d95456426dc8a0b07c9d03a4e434d5dea8254fca24e5fd93a22de3bcd44c"
+    },
+    {
+      "owner": "smol-toml@1.9.1:279",
+      "file": "dist/struct.js",
+      "key": "smol-toml/dist/struct.js",
+      "hash": "736742cfa645bbd08bc5396c5f7ddbea5c3b7ac5d61fe86031846f5769131deb"
+    },
+    {
+      "owner": "smol-toml@1.9.1:279",
+      "file": "dist/util.js",
+      "key": "smol-toml/dist/util.js",
+      "hash": "6327e40efd957128da15867c3a32293950a925570b457b1b78c735452cebc08e"
+    },
+    {
       "owner": "split2@4.2.0:173",
       "file": "index.js",
       "key": "split2/index.js",
@@ -37729,6 +37783,150 @@
       "targetFile": "index.js"
     },
     {
+      "owner": "smol-toml@1.9.1:279",
+      "file": "dist/extract.js",
+      "specifier": "./date.js",
+      "kind": "import-statement",
+      "targetOwner": "smol-toml@1.9.1:279",
+      "targetFile": "dist/date.js"
+    },
+    {
+      "owner": "smol-toml@1.9.1:279",
+      "file": "dist/extract.js",
+      "specifier": "./error.js",
+      "kind": "import-statement",
+      "targetOwner": "smol-toml@1.9.1:279",
+      "targetFile": "dist/error.js"
+    },
+    {
+      "owner": "smol-toml@1.9.1:279",
+      "file": "dist/extract.js",
+      "specifier": "./primitive.js",
+      "kind": "import-statement",
+      "targetOwner": "smol-toml@1.9.1:279",
+      "targetFile": "dist/primitive.js"
+    },
+    {
+      "owner": "smol-toml@1.9.1:279",
+      "file": "dist/extract.js",
+      "specifier": "./struct.js",
+      "kind": "import-statement",
+      "targetOwner": "smol-toml@1.9.1:279",
+      "targetFile": "dist/struct.js"
+    },
+    {
+      "owner": "smol-toml@1.9.1:279",
+      "file": "dist/index.js",
+      "specifier": "./date.js",
+      "kind": "import-statement",
+      "targetOwner": "smol-toml@1.9.1:279",
+      "targetFile": "dist/date.js"
+    },
+    {
+      "owner": "smol-toml@1.9.1:279",
+      "file": "dist/index.js",
+      "specifier": "./error.js",
+      "kind": "import-statement",
+      "targetOwner": "smol-toml@1.9.1:279",
+      "targetFile": "dist/error.js"
+    },
+    {
+      "owner": "smol-toml@1.9.1:279",
+      "file": "dist/index.js",
+      "specifier": "./parse.js",
+      "kind": "import-statement",
+      "targetOwner": "smol-toml@1.9.1:279",
+      "targetFile": "dist/parse.js"
+    },
+    {
+      "owner": "smol-toml@1.9.1:279",
+      "file": "dist/index.js",
+      "specifier": "./stringify.js",
+      "kind": "import-statement",
+      "targetOwner": "smol-toml@1.9.1:279",
+      "targetFile": "dist/stringify.js"
+    },
+    {
+      "owner": "smol-toml@1.9.1:279",
+      "file": "dist/parse.js",
+      "specifier": "./error.js",
+      "kind": "import-statement",
+      "targetOwner": "smol-toml@1.9.1:279",
+      "targetFile": "dist/error.js"
+    },
+    {
+      "owner": "smol-toml@1.9.1:279",
+      "file": "dist/parse.js",
+      "specifier": "./extract.js",
+      "kind": "import-statement",
+      "targetOwner": "smol-toml@1.9.1:279",
+      "targetFile": "dist/extract.js"
+    },
+    {
+      "owner": "smol-toml@1.9.1:279",
+      "file": "dist/parse.js",
+      "specifier": "./struct.js",
+      "kind": "import-statement",
+      "targetOwner": "smol-toml@1.9.1:279",
+      "targetFile": "dist/struct.js"
+    },
+    {
+      "owner": "smol-toml@1.9.1:279",
+      "file": "dist/parse.js",
+      "specifier": "./util.js",
+      "kind": "import-statement",
+      "targetOwner": "smol-toml@1.9.1:279",
+      "targetFile": "dist/util.js"
+    },
+    {
+      "owner": "smol-toml@1.9.1:279",
+      "file": "dist/primitive.js",
+      "specifier": "./error.js",
+      "kind": "import-statement",
+      "targetOwner": "smol-toml@1.9.1:279",
+      "targetFile": "dist/error.js"
+    },
+    {
+      "owner": "smol-toml@1.9.1:279",
+      "file": "dist/struct.js",
+      "specifier": "./error.js",
+      "kind": "import-statement",
+      "targetOwner": "smol-toml@1.9.1:279",
+      "targetFile": "dist/error.js"
+    },
+    {
+      "owner": "smol-toml@1.9.1:279",
+      "file": "dist/struct.js",
+      "specifier": "./extract.js",
+      "kind": "import-statement",
+      "targetOwner": "smol-toml@1.9.1:279",
+      "targetFile": "dist/extract.js"
+    },
+    {
+      "owner": "smol-toml@1.9.1:279",
+      "file": "dist/struct.js",
+      "specifier": "./primitive.js",
+      "kind": "import-statement",
+      "targetOwner": "smol-toml@1.9.1:279",
+      "targetFile": "dist/primitive.js"
+    },
+    {
+      "owner": "smol-toml@1.9.1:279",
+      "file": "dist/struct.js",
+      "specifier": "./util.js",
+      "kind": "import-statement",
+      "targetOwner": "smol-toml@1.9.1:279",
+      "targetFile": "dist/util.js"
+    },
+    {
+      "owner": "smol-toml@1.9.1:279",
+      "file": "dist/util.js",
+      "specifier": "./error.js",
+      "kind": "import-statement",
+      "targetOwner": "smol-toml@1.9.1:279",
+      "targetFile": "dist/error.js"
+    },
+    {
       "owner": "standard-as-callback@2.1.0:206",
       "file": "built/index.js",
       "specifier": "./utils",
@@ -40207,6 +40405,22 @@
       "kind": "import-statement",
       "targetOwner": "zod@4.6.6:4",
       "targetFile": "index.js"
+    },
+    {
+      "owner": null,
+      "file": "apps/backend/firstStack/qualificationBaseline.ts",
+      "specifier": "zod",
+      "kind": "import-statement",
+      "targetOwner": "zod@4.6.6:4",
+      "targetFile": "index.js"
+    },
+    {
+      "owner": null,
+      "file": "apps/backend/firstStack/qualificationFingerprint.ts",
+      "specifier": "smol-toml",
+      "kind": "import-statement",
+      "targetOwner": "smol-toml@1.9.1:279",
+      "targetFile": "dist/index.js"
     },
     {
       "owner": null,
