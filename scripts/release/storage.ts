@@ -1,4 +1,5 @@
 import { lstat, readFile, readlink } from "node:fs/promises";
+import type { Stats } from "node:fs";
 import { posix } from "node:path";
 import { command } from "./process";
 import { localDockerEndpoint, localDockerEnvironment } from "./docker-endpoint";
@@ -59,13 +60,25 @@ export async function verifyLocalDocker(root: string, run = command, env = proce
       contexts[0]?.Endpoints?.docker?.Host !== localDockerEndpoint) return refuse();
 }
 
-export type ConfigMetadata = { kind: "file" | "directory" | "socket" | "other"; ctimeMs: number; identity: string; uid: number; mode: number };
+// UNIX_DIAG_VFS exports a 32-bit inode and the kernel's internal dev_t, while
+// stat uses new_encode_dev. ss applies libc major/minor to that raw kernel value.
+// Refuse identities outside the lossless range instead of comparing truncated inodes.
+export function socketVfsIdentity(device: string, inode: string): string | undefined {
+  if (!/^\d+$/.test(device) || !/^[1-9]\d*$/.test(inode)) return undefined;
+  const dev = BigInt(device), ino = BigInt(inode);
+  if (dev > 0xffffffffn || ino > 0xffffffffn) return undefined;
+  const major = (dev >> 8n) & 0xfffn, minor = (dev & 0xffn) | ((dev >> 12n) & 0xfff00n);
+  const kernelDevice = (major << 20n) | minor;
+  return `ino:${ino} dev:${(kernelDevice >> 8n) & 0xfffn}/${(kernelDevice & 0xffn) | ((kernelDevice >> 12n) & 0xfff00n)}`;
+}
+
+export type ConfigMetadata = { kind: "file" | "directory" | "socket" | "other"; ctimeMs: number; identity: string; uid: number; mode: number; vfs?: string };
 export type StorageHost = {
   read: (path: string) => Promise<string>;
   link: (path: string) => Promise<string>;
   metadata: (path: string) => Promise<ConfigMetadata | undefined>;
 };
-export function storageHost(run = command, cwd = process.cwd()): StorageHost {
+export function storageHost(run = command, cwd = process.cwd(), inspect: (path: string) => Promise<Stats> = lstat): StorageHost {
   return {
     async read(path) {
       try { return await readFile(path, "utf8"); }
@@ -83,9 +96,10 @@ export function storageHost(run = command, cwd = process.cwd()): StorageHost {
     },
     async metadata(path) {
       try {
-        const value = await lstat(path);
+        const value = await inspect(path);
         return { kind: value.isFile() ? "file" : value.isDirectory() ? "directory" : value.isSocket() ? "socket" : "other",
-          ctimeMs: value.ctimeMs, identity: `${value.dev}:${value.ino}:${value.size}:${value.ctimeMs}`, uid: value.uid, mode: value.mode };
+          ctimeMs: value.ctimeMs, identity: `${value.dev}:${value.ino}:${value.size}:${value.ctimeMs}`, uid: value.uid, mode: value.mode,
+          vfs: socketVfsIdentity(String(value.dev), String(value.ino)) };
       } catch (error) {
         if ((error as NodeJS.ErrnoException).code === "ENOENT") return undefined;
         if ((error as NodeJS.ErrnoException).code !== "EACCES") throw error;
@@ -94,7 +108,8 @@ export function storageHost(run = command, cwd = process.cwd()): StorageHost {
         if (!/^\d+$/.test(seconds ?? "") || !identity || !/^\d+$/.test(uid ?? "") || !/^[0-7]+$/.test(mode ?? "")) return refuse();
         // stat's seconds are truncated: round UP before comparing with start.
         return { kind: kind === "regular file" ? "file" : kind === "directory" ? "directory" : kind === "socket" ? "socket" : "other",
-          ctimeMs: (Number(seconds) + 1) * 1000, identity, uid: Number(uid), mode: parseInt(mode!, 8) };
+          ctimeMs: (Number(seconds) + 1) * 1000, identity, uid: Number(uid), mode: parseInt(mode!, 8),
+          vfs: socketVfsIdentity(identity.split(":")[0]!, identity.split(":")[1] ?? "") };
       }
     },
   };
@@ -106,14 +121,19 @@ export async function dockerdEvidence(cwd: string, run = command, host = storage
     if (socket?.kind !== "socket" || socket.uid !== 0) return refuse();
     const namespace = await host.link("/proc/self/ns/mnt");
     if (!/^mnt:\[\d+\]$/.test(namespace)) return refuse();
-    const rows = (await run(["sudo", "-n", "ss", "-H", "-xapn"], cwd)).trim().split("\n").map(line => ({
+    const rows = (await run(["sudo", "-n", "ss", "-H", "-O", "-xapn", "-e"], cwd)).trim().split("\n").map(line => ({
       fields: line.trim().split(/\s+/), pids: [...line.matchAll(/pid=(\d+),/g)].map(match => match[1]!),
+      vfs: [...line.matchAll(/(?:^|\s)(ino:\d+ dev:\d+\/\d+)(?=\s|$)/g)].map(match => match[1]!),
     }));
     // /var/run normally aliases /run. Accept either spelling only for the same inode.
     const alias = await host.metadata("/run/docker.sock");
     const listeners = rows.filter(({ fields }) => fields[1] === "LISTEN" &&
       (fields[4] === "/var/run/docker.sock" || fields[4] === "/run/docker.sock" && alias?.identity === socket.identity));
     if (listeners.length !== 1 || !listeners[0]!.pids.length) return refuse();
+    // Saved socket names survive rename/overmount. Bind the selected listener to
+    // the CURRENT endpoint inode using VFS evidence, never ss's socket inode column.
+    const binding = listeners[0]!.vfs;
+    if (!socket.vfs || binding.length !== 1 || binding[0] !== socket.vfs) return refuse();
     let pid: string | undefined;
     for (const owner of new Set(listeners[0]!.pids)) {
       const exe = await host.link(`/proc/${owner}/exe`);
@@ -139,7 +159,7 @@ export async function dockerdEvidence(cwd: string, run = command, host = storage
     const start = stat.slice(stat.lastIndexOf(")") + 2).split(/\s+/)[19];
     if (!stat.startsWith(`${pid} (`) || !/^\d+$/.test(start ?? "")) return refuse();
     return canonical({ pid, start, exe: await host.link(`${proc}/exe`), namespace,
-      socket: socket.identity });
+      socket: socket.identity, vfs: socket.vfs });
   } catch { return refuse(); }
 }
 

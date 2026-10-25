@@ -1,6 +1,7 @@
 import type { StorageHost } from "../../release/storage";
 
-export const dockerSockets = `u_str LISTEN 0 4096 /run/docker.sock 200 * 0 users:(("dockerd",pid=900,fd=3))
+// Synthetic ss -H -O -xapn -e output: socket inode 200 is NOT VFS inode 700.
+export const dockerSockets = `u_str LISTEN 0 4096 /run/docker.sock 200 * 0 users:(("dockerd",pid=900,fd=3)) <-> ino:700 dev:0/26
 u_str ESTAB 0 0 * 401 * 402 users:(("dockerd",pid=900,fd=8))
 u_str ESTAB 0 0 /run/containerd/containerd.sock 402 * 401 users:(("containerd",pid=812,fd=10))`;
 export const dockerHost: StorageHost = {
@@ -17,6 +18,6 @@ export const dockerHost: StorageHost = {
   },
   async metadata(path) {
     return { kind: path.endsWith("docker.sock") ? "socket" : "directory", uid: 0, mode: 0o755,
-      ctimeMs: 900000, identity: path.endsWith("docker.sock") ? "docker-socket-inode" : path };
+      ctimeMs: 900000, identity: path.endsWith("docker.sock") ? "docker-socket-inode" : path, vfs: "ino:700 dev:0/26" };
   },
 };

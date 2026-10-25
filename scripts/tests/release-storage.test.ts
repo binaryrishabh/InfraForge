@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test";
+import type { Stats } from "node:fs";
 import { preflightReleaseSpace, minimumReleaseFreeBytes } from "../release/hygiene";
-import { daemonStartMilliseconds, localDockerEnvironment, parseContainerdConfig, type StorageHost } from "../release/storage";
+import { daemonStartMilliseconds, localDockerEnvironment, parseContainerdConfig, socketVfsIdentity, storageHost, type StorageHost } from "../release/storage";
 import { dockerHost, dockerSockets } from "./fixtures/release-dockerd";
 import { containerd242 } from "./fixtures/containerd-v2.4.2";
 
@@ -24,13 +25,13 @@ type Change = { info?: object; dump?: string; defaults?: string; pid?: string; a
   mountDuringDump?: boolean; boot?: string; recorded?: string; dockerExe?: string; dockerNamespace?: string; dockerRoot?: string;
   dockerSockets?: string; dockerKind?: "file" | "other"; dockerRestart?: boolean; dockerUid?: number; socketUid?: number;
   socketAlias?: boolean; importedParentCtime?: number; sharedRoot?: string; initMount?: string;
-  directoryTimes?: Record<string, number>; importedConfig?: string };
+  directoryTimes?: Record<string, number>; importedConfig?: string; socketVfs?: string | null; laterDockerSockets?: string };
 const rootMount = "29 1 259:1 / / rw,relatime - ext4 /dev/root rw";
 function host(change: Change = {}) {
   const calls: string[][] = [], paths: string[] = [];
   const daemonPid = change.production ? "390826" : "812";
   const namespace = change.production ? "mnt:[4026531832]" : "mnt:[123]";
-  let dumped = false, systemCalls = 0;
+  let dumped = false, systemCalls = 0, dockerObservations = 0;
   const run = async (args: string[]) => {
     calls.push(args);
     if (args.join(" ").includes(change.fail ?? "NEVER")) throw new Error("PRIVATE_CONFIG_MARKER");
@@ -40,8 +41,13 @@ function host(change: Change = {}) {
     if (args.includes("--property=ExecMainStartTimestamp")) return change.recorded ?? (change.production ? "@1792650086.62" : "@1100");
     if (args[0] === "systemctl") return change.restart && systemCalls++ > 0 ? "813" : change.pid ?? daemonPid;
     if (args[0] === "getconf") return "100";
-    if (args[2] === "ss") return args.includes("-xapn") ? change.dockerSockets ?? dockerSockets.replace("pid=812", `pid=${daemonPid}`) :
-      change.sockets ?? `u_str LISTEN 0 4096 ${address} 123 * 0 users:(("containerd",pid=${daemonPid},fd=9))`;
+    if (args[2] === "ss") {
+      if (!args.includes("-xapn")) return change.sockets ?? `u_str LISTEN 0 4096 ${address} 123 * 0 users:(("containerd",pid=${daemonPid},fd=9))`;
+      const output = dockerObservations++ > 0 && change.laterDockerSockets !== undefined ? change.laterDockerSockets :
+        change.dockerSockets ?? dockerSockets.replace("pid=812", `pid=${daemonPid}`);
+      // Ordinary ss lacks VFS attributes: the command must request extended evidence.
+      return args.includes("-e") ? output : output.replace(/ ino:\d+ dev:\d+\/\d+/g, "");
+    }
     if (args[3] === "config" && args[4] === "default") return change.defaults ?? (change.production ? containerd242 : dump);
     if (args[3] === "config" && args[4] === "dump") { dumped = true; return change.dump ?? (change.production ? containerd242 : dump); }
     throw new Error("Unexpected command");
@@ -75,7 +81,8 @@ function host(change: Change = {}) {
     },
     async metadata(path) {
       if (path.endsWith("docker.sock")) return { ...await dockerHost.metadata(path), kind: change.dockerKind ?? "socket", uid: change.socketUid ?? 0,
-        identity: path === "/run/docker.sock" && change.socketAlias ? "different-socket-inode" : "docker-socket-inode" } as Awaited<ReturnType<StorageHost["metadata"]>>;
+        identity: path === "/run/docker.sock" && change.socketAlias ? "different-socket-inode" : "docker-socket-inode",
+        vfs: change.socketVfs === null ? undefined : change.socketVfs ?? "ino:700 dev:0/26" } as Awaited<ReturnType<StorageHost["metadata"]>>;
       if (path === "/proc/900") return { ...await dockerHost.metadata(path), uid: change.dockerUid ?? 0 } as Awaited<ReturnType<StorageHost["metadata"]>>;
       if (path.endsWith("config.toml") && change.missing || path.endsWith("import.toml") && change.importMissing) return undefined;
       const file = path.endsWith(".toml");
@@ -271,6 +278,60 @@ test("classic overlay2 also rejects a forwarded or namespaced Docker endpoint", 
 
 test("Docker socket activation permits systemd alongside the verified dockerd", async () => {
   await host({ dockerSockets: dockerSockets.replace('pid=900,fd=3))', 'pid=900,fd=3),("systemd",pid=1,fd=4))') }).preflight();
+});
+
+const replacementSockets = dockerSockets + '\nu_str LISTEN 0 4096 /run/forward.sock 300 * 0 users:(("socat",pid=999,fd=6)) <-> ino:701 dev:0/26';
+const bindingRefusals: [string, Change][] = [
+  ["renamed replacement beside stale dockerd name", { dockerSockets: replacementSockets, socketVfs: "ino:701 dev:0/26" }],
+  ["overmounted replacement beside stale dockerd name", { dockerSockets: replacementSockets, socketVfs: "ino:701 dev:0/26", mount: "/run/docker.sock" }],
+  ["missing listener VFS evidence", { dockerSockets: dockerSockets.replace("ino:700 dev:0/26", "") }],
+  ["missing endpoint VFS evidence", { socketVfs: null }],
+  ["wrong listener VFS inode", { dockerSockets: dockerSockets.replace("ino:700", "ino:701") }],
+  ["wrong listener VFS device", { dockerSockets: dockerSockets.replace("dev:0/26", "dev:0/27") }],
+  ["duplicate listener VFS evidence", { dockerSockets: dockerSockets.replace("ino:700 dev:0/26", "ino:700 dev:0/26 ino:700 dev:0/26") }],
+  ["malformed listener VFS evidence", { dockerSockets: dockerSockets.replace("ino:700", "ino:700invalid") }],
+  ["socket inode mistaken for VFS inode", { socketVfs: "ino:200 dev:0/26" }],
+  ["binding changes on repeated observation", { laterDockerSockets: dockerSockets.replace("ino:700", "ino:701") }],
+];
+for (const store of ["containerd", "classic"] as const) {
+  for (const [name, change] of bindingRefusals) test(`${store} endpoint refuses ${name}`, async () => {
+    const h = host({ ...change, ...(store === "classic" ? { info: { Driver: "overlay2", DriverStatus: [] } } : {}) });
+    await expect(h.preflight()).rejects.toThrow("Unknown");
+    expect(h.paths).toEqual([]);
+  });
+  test(`${store} endpoint accepts VFS binding and socket activation`, async () => {
+    const h = host({ dockerSockets: dockerSockets.replace('pid=900,fd=3))', 'pid=900,fd=3),("systemd",pid=1,fd=4))'),
+      ...(store === "classic" ? { info: { Driver: "overlay2", DriverStatus: [] } } : {}) });
+    await expect(h.preflight()).resolves.toBeUndefined();
+    expect(h.paths).toHaveLength(store === "classic" ? 3 : 5);
+    expect(h.calls).toContainEqual(["sudo", "-n", "ss", "-H", "-O", "-xapn", "-e"]);
+  });
+}
+
+test("VFS device encoding matches Linux diagnostic and ss formats without inode truncation", () => {
+  expect(socketVfsIdentity("26", "700")).toBe("ino:700 dev:0/26"); // tmpfs 0:26
+  expect(socketVfsIdentity("66305", "700")).toBe("ino:700 dev:0/66305"); // disk 259:1
+  expect(socketVfsIdentity("1048602", "700")).toBe("ino:700 dev:1/26"); // tmpfs 0:282
+  expect(socketVfsIdentity("4294967295", "4294967295")).toBe("ino:4294967295 dev:4095/1048575");
+  for (const [dev, ino] of [["26", "4294967296"], ["4294967296", "700"], ["26", "0"], ["bad", "700"], ["26", "bad"]]) {
+    expect(socketVfsIdentity(dev!, ino!)).toBeUndefined();
+  }
+});
+
+test("endpoint VFS metadata comes from lstat or the permission fallback stat", async () => {
+  const calls: string[][] = [];
+  const run = async (args: string[]) => { calls.push(args); return "socket|900|66305:700:0:timestamp|0|660"; };
+  const value = { isFile: () => false, isDirectory: () => false, isSocket: () => true,
+    ctimeMs: 900000, dev: 66305, ino: 700, size: 0, uid: 0, mode: 0o660 } as Stats;
+  const direct = await storageHost(run, ".", async () => value).metadata("/var/run/docker.sock");
+  expect(direct?.vfs).toBe("ino:700 dev:0/66305");
+  expect(direct?.kind).toBe("socket");
+  expect(calls).toEqual([]);
+  const denied = async (): Promise<Stats> => { throw Object.assign(new Error("denied"), { code: "EACCES" }); };
+  const fallback = await storageHost(run, ".", denied).metadata("/var/run/docker.sock");
+  expect(fallback?.vfs).toBe("ino:700 dev:0/66305");
+  expect(fallback?.kind).toBe("socket");
+  expect(calls).toEqual([["sudo", "-n", "stat", "--format=%F|%Z|%d:%i:%s:%z|%u|%a", "--", "/var/run/docker.sock"]]);
 });
 
 test("normal ss wildcard peer names qualify through reciprocal inodes", async () => {

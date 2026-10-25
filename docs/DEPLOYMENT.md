@@ -173,9 +173,15 @@ of the running daemon's configuration.
   continues to use its explicitly selected local development engine.
   For both stores, the endpoint must be a root-owned Unix socket with an actual
   `dockerd` listener, a root-owned process, our mount namespace and `/` root.
+  Extended `ss -H -O -xapn -e` VFS inode/device evidence must match the current
+  endpoint's filesystem identity. Saved socket names and the ordinary socket
+  inode column cannot establish that binding: renaming or overmounting a socket
+  can leave a stale name beside another listener. Missing, ambiguous or mismatched
+  VFS evidence refuses; inode/device values outside the lossless 32-bit diagnostic
+  range refuse too. Device encoding is converted between stat, kernel and ss formats.
   A forwarding listener or another namespace refuses. Systemd may retain a
   socket-activation descriptor alongside dockerd. For the containerd store,
-  `ss -H -xapn` must show reciprocal established socket inodes connecting that
+  The same `ss` observation must show reciprocal established socket inodes connecting that
   dockerd to the verified containerd PID and server-local address. Client peer
   names may be `*`, as in ordinary netlink output. These checks repeat after
   the dump; a local socket pathname or matching path strings alone do not qualify.
