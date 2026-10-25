@@ -1,0 +1,266 @@
+[
+  {
+    "emailEnabled": false,
+    "path": "get-session",
+    "status": 200,
+    "headers": [
+      [
+        "cache-control",
+        "no-store"
+      ],
+      [
+        "content-type",
+        "application/json"
+      ],
+      [
+        "pragma",
+        "no-cache"
+      ],
+      [
+        "referrer-policy",
+        "no-referrer"
+      ]
+    ],
+    "body": "null"
+  },
+  {
+    "emailEnabled": false,
+    "path": "sign-in/email",
+    "status": 401,
+    "headers": [
+      [
+        "cache-control",
+        "no-store"
+      ],
+      [
+        "content-type",
+        "application/json"
+      ],
+      [
+        "referrer-policy",
+        "no-referrer"
+      ]
+    ],
+    "body": "{\"message\":\"Invalid email or password\",\"code\":\"INVALID_EMAIL_OR_PASSWORD\"}"
+  },
+  {
+    "emailEnabled": false,
+    "path": "sign-up/email",
+    "status": 400,
+    "headers": [
+      [
+        "cache-control",
+        "no-store"
+      ],
+      [
+        "content-type",
+        "application/json"
+      ],
+      [
+        "referrer-policy",
+        "no-referrer"
+      ]
+    ],
+    "body": "{\"code\":\"INVALID_USERNAME\",\"message\":\"Use 3–30 letters, numbers or underscores, starting with a letter.\"}"
+  },
+  {
+    "emailEnabled": false,
+    "path": "request-password-reset",
+    "status": 404,
+    "headers": [
+      [
+        "cache-control",
+        "no-store"
+      ],
+      [
+        "referrer-policy",
+        "no-referrer"
+      ]
+    ],
+    "body": "Not Found"
+  },
+  {
+    "emailEnabled": false,
+    "path": "send-verification-email",
+    "status": 404,
+    "headers": [
+      [
+        "cache-control",
+        "no-store"
+      ],
+      [
+        "referrer-policy",
+        "no-referrer"
+      ]
+    ],
+    "body": "Not Found"
+  },
+  {
+    "emailEnabled": false,
+    "path": "sign-in/magic-link",
+    "status": 404,
+    "headers": [
+      [
+        "cache-control",
+        "no-store"
+      ],
+      [
+        "referrer-policy",
+        "no-referrer"
+      ]
+    ],
+    "body": ""
+  },
+  {
+    "emailEnabled": false,
+    "path": "email-otp/send-verification-otp",
+    "status": 404,
+    "headers": [
+      [
+        "cache-control",
+        "no-store"
+      ],
+      [
+        "referrer-policy",
+        "no-referrer"
+      ]
+    ],
+    "body": ""
+  },
+  {
+    "emailEnabled": true,
+    "path": "get-session",
+    "status": 200,
+    "headers": [
+      [
+        "cache-control",
+        "no-store"
+      ],
+      [
+        "content-type",
+        "application/json"
+      ],
+      [
+        "pragma",
+        "no-cache"
+      ],
+      [
+        "referrer-policy",
+        "no-referrer"
+      ]
+    ],
+    "body": "null"
+  },
+  {
+    "emailEnabled": true,
+    "path": "sign-in/email",
+    "status": 401,
+    "headers": [
+      [
+        "cache-control",
+        "no-store"
+      ],
+      [
+        "content-type",
+        "application/json"
+      ],
+      [
+        "referrer-policy",
+        "no-referrer"
+      ]
+    ],
+    "body": "{\"message\":\"Invalid email or password\",\"code\":\"INVALID_EMAIL_OR_PASSWORD\"}"
+  },
+  {
+    "emailEnabled": true,
+    "path": "sign-up/email",
+    "status": 400,
+    "headers": [
+      [
+        "cache-control",
+        "no-store"
+      ],
+      [
+        "content-type",
+        "application/json"
+      ],
+      [
+        "referrer-policy",
+        "no-referrer"
+      ]
+    ],
+    "body": "{\"message\":\"Enter a valid email\"}"
+  },
+  {
+    "emailEnabled": true,
+    "path": "request-password-reset",
+    "status": 200,
+    "headers": [
+      [
+        "cache-control",
+        "no-store"
+      ],
+      [
+        "content-type",
+        "application/json;charset=utf-8"
+      ],
+      [
+        "referrer-policy",
+        "no-referrer"
+      ]
+    ],
+    "body": "{\"status\":true,\"message\":\"If eligible, check your email for the link\"}"
+  },
+  {
+    "emailEnabled": true,
+    "path": "send-verification-email",
+    "status": 200,
+    "headers": [
+      [
+        "cache-control",
+        "no-store"
+      ],
+      [
+        "content-type",
+        "application/json;charset=utf-8"
+      ],
+      [
+        "referrer-policy",
+        "no-referrer"
+      ]
+    ],
+    "body": "{\"status\":true,\"message\":\"If eligible, check your email for the link\"}"
+  },
+  {
+    "emailEnabled": true,
+    "path": "sign-in/magic-link",
+    "status": 404,
+    "headers": [
+      [
+        "cache-control",
+        "no-store"
+      ],
+      [
+        "referrer-policy",
+        "no-referrer"
+      ]
+    ],
+    "body": ""
+  },
+  {
+    "emailEnabled": true,
+    "path": "email-otp/send-verification-otp",
+    "status": 404,
+    "headers": [
+      [
+        "cache-control",
+        "no-store"
+      ],
+      [
+        "referrer-policy",
+        "no-referrer"
+      ]
+    ],
+    "body": ""
+  }
+]

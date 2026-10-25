@@ -14,7 +14,7 @@ import { mailAdmission, invalidProof, acceptedMail } from "./mailAdmission";
 import { consumeVerification, EMAIL_TOKEN_SECONDS } from "./verification";
 import { enforceAccountPolicy, type AccountQuota } from "./accountPolicy";
 import { loginMethodPolicy, validateLink } from "./loginMethods";
-import { otpDigest } from "./mailIntent";
+import { otpDigest, loginProofHash } from "./mailIntent";
 
 export function createAuth(
   prisma: PrismaClient, settings: ReturnType<typeof readAuthSettings>, quota?: AccountQuota, mailQueue?: MailRequests,
@@ -51,7 +51,20 @@ export function createAuth(
       const row = await ctx.context.internalAdapter.consumeVerificationValue(`signup-proof:${proof}`);
       if (!row || row.value !== user.email || row.expiresAt <= new Date()) throw invalidProof();
       return { data: { ...user, emailVerified: true } };
-    } } } },
+    } } }, ...(methods.magicLink || methods.emailOtp ? { session: { create: { before: async (session, ctx) => {
+      const magic = methods.magicLink && ctx?.path === "/magic-link/verify";
+      const otp = methods.emailOtp && ctx?.path === "/sign-in/email-otp";
+      if (!magic && !otp) return;
+      const hash = loginProofHash(magic ? "magic" : "otp", magic ? "" : String(ctx?.body?.email ?? ""),
+        String(magic ? ctx?.query?.token ?? "" : ctx?.body?.otp ?? ""), settings.secret);
+      // Bind mailbox proof to its originally verified owner, even if an account
+      // is deleted and the same address registered while redemption is running.
+      const consumed = await prisma.accountEmailToken.updateMany({ where: {
+        hash, userId: session.userId, usedAt: null, expiresAt: { gt: new Date() },
+        user: { deletedAt: null, emailVerified: true },
+      }, data: { usedAt: new Date() } });
+      if (consumed.count !== 1) throw invalidProof();
+    } } } } : {}) },
     plugins: [username({ displayUsername: false, immutableUsername: true,
       minUsernameLength: USERNAME_MIN, maxUsernameLength: USERNAME_MAX,
       usernameValidator: validUsername, usernameNormalization: normalizeUsername }),

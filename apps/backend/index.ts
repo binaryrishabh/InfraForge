@@ -7,6 +7,7 @@ import { rateLimiter } from "./utils/rateLimiter";
 import { toNodeHandler } from "better-auth/node";
 import { auth, authSettings, accountQuota, emailOutbox } from "./auth/auth";
 import { accountRouter } from "./auth/accountRoutes";
+import { methodSettingsRouter } from "./auth/methodSettings";
 import { accountAuthHandler } from "./auth/accountPolicy";
 import { identifierSignIn } from "./auth/credentials";
 import { checkOrigin, requireSession } from "./auth/httpSecurity";
@@ -69,6 +70,8 @@ const authHandler = toNodeHandler({ handler: accountAuthHandler(auth.handler,
   authSettings.accountEssentials.emailEnabled, undefined, undefined, authSettings.loginMethods) });
 app.post("/api/auth/sign-in/identifier", identifierSignIn(authHandler));
 app.all("/api/auth/*splat", authHandler);
+if (authSettings.loginMethods.settings) app.use("/api/account/settings", express.json({ limit: "8kb" }),
+  methodSettingsRouter(prisma, auth, accountQuota, authSettings));
 app.use("/api/account", express.json({ limit: "8kb" }), accountRouter(prisma, auth, accountQuota, authSettings.accountEssentials.enabled));
 app.use("/api/infrastructure", requireSession);
 app.use("/api/deployments", requireSession);

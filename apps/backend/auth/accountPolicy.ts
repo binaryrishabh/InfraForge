@@ -37,7 +37,7 @@ export async function enforceAccountPolicy(input: {
     const identity = completion ? String(body?.emailProof).slice(0, 100)
       : emailRequest || signup || path === "/sign-in/email-otp" ? email : input.token ?? "";
     const accountAllowed = await quota.allow(`${scope}:account`, identity,
-      completion ? 5 : emailRequest || signup ? 3 : 5);
+      path === "/sign-in/email-otp" ? 3 : completion ? 5 : emailRequest || signup ? 3 : 5);
     if (!ipAllowed || !accountAllowed) throw new APIError("TOO_MANY_REQUESTS", { message: "Try again later" });
   } catch (error) {
     if (error instanceof APIError) throw error;

@@ -39,6 +39,9 @@ export function mailOTP(intent: Pick<MailIntent, "id" | "kind">, secret: string)
 export const otpDigest = (otp: string, secret: string) =>
   createHmac("sha256", secret).update(`infraforge-otp-digest/1\0${otp}`).digest("base64url");
 
+export const loginProofHash = (kind: string, email: string, proof: string, secret: string) =>
+  createHmac("sha256", secret).update(`infraforge-login-proof/1\0${kind}\0${email}\0${proof}`).digest("hex");
+
 export async function readMailPayload(payload: string, secret: string): Promise<MailPayload> {
   return JSON.parse(await symmetricDecrypt({ key: secret, data: payload }));
 }
@@ -65,7 +68,10 @@ export async function prepareMailIntent(
     return { payload: intent.payload, userId: null };
   }
 
-  const users = await tx.$queryRaw<Array<{ id: string; emailVerified: boolean }>>`
+  const users = intent.kind === "otp" ? await tx.$queryRaw<Array<{ id: string; emailVerified: boolean }>>`
+    SELECT id, "emailVerified" FROM "User"
+    WHERE email = ${data.email} AND "deletedAt" IS NULL FOR UPDATE`
+    : await tx.$queryRaw<Array<{ id: string; emailVerified: boolean }>>`
     SELECT id, "emailVerified" FROM "User"
     WHERE email = ${data.email} AND "deletedAt" IS NULL FOR SHARE`;
   const user = users[0];
@@ -75,6 +81,11 @@ export async function prepareMailIntent(
     // Email login never adopts an unverified pre-registration or creates users.
     if (!user.emailVerified) return null;
     const magic = intent.kind === "magic";
+    await tx.accountEmailToken.create({ data: {
+      hash: loginProofHash(intent.kind, magic ? "" : data.email,
+        magic ? mailCredential(intent, settings.secret) : mailOTP(intent, settings.secret), settings.secret),
+      userId: user.id, expiresAt: intent.expiresAt,
+    } });
     const identifier = magic ? `magic-link:${storedIdentifier(mailCredential(intent, settings.secret))}`
       : `sign-in-otp-${data.email}`;
     if (!magic) await tx.verification.deleteMany({ where: { identifier } });

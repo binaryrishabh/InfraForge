@@ -9,7 +9,8 @@ import { ACCOUNT_EXPORT_SECTIONS, type AccountExportSection } from "@infraforge/
 // of arbitrary personal text that a user may have submitted inside a run.
 export async function deleteAccount(db: PrismaClient, userId: string) {
   await db.$transaction(async tx => {
-    const users = await tx.$queryRaw<Array<{ id: string; deletedAt: Date | null }>>`SELECT id, "deletedAt" FROM "User" WHERE id = ${userId} FOR UPDATE`;
+    const users = await tx.$queryRaw<Array<{ id: string; email: string; deletedAt: Date | null }>>`
+      SELECT id, email, "deletedAt" FROM "User" WHERE id = ${userId} FOR UPDATE`;
     if (!users[0] || users[0].deletedAt) throw new AppError("Sign in to continue", 401);
     const [deployments, internal, firstStack] = await Promise.all([
       tx.deployment.count({ where: { ownerId: userId, OR: [{ status: { in: ["pending", "running", "live"] } }, { runtimeActive: true }] } }),
@@ -20,6 +21,12 @@ export async function deleteAccount(db: PrismaClient, userId: string) {
     await tx.session.deleteMany({ where: { userId } });
     await tx.account.deleteMany({ where: { userId } });
     await tx.verification.deleteMany({ where: { value: userId } });
+    // Native email login records are keyed by mailbox, not user ID. Retire them
+    // before freeing the address so an old proof cannot enter a new account.
+    await tx.verification.deleteMany({ where: { OR: [
+      { identifier: `sign-in-otp-${users[0].email}` },
+      { value: JSON.stringify({ type: "magic-link", email: users[0].email }) },
+    ] } });
     await tx.accountEmailToken.deleteMany({ where: { userId } });
     await tx.accountMailOutbox.deleteMany({ where: { userId } });
     await tx.accountMailIntent.deleteMany({ where: { userId } });

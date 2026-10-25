@@ -21,13 +21,23 @@ export function loginFixture(flags: Record<string, string> = {}, change?: (optio
   settings.accountEssentials.challenge = challenge;
   const mail = new FakeEmail(), intents: any[] = [], scopes: string[] = [];
   let failing = false, quotaAllowed = true;
+  const ledger: any[] = [];
+  const accountEmailToken = {
+    create: async ({ data }: any) => ledger.push({ usedAt: null, ...data }),
+    updateMany: async ({ where, data }: any) => {
+      const row = ledger.find(r => r.hash === where.hash && r.userId === where.userId && !r.usedAt
+        && r.expiresAt > new Date() && database.user!.some(u => u.id === r.userId && u.emailVerified && !u.deletedAt));
+      if (!row) return { count: 0 };
+      Object.assign(row, data); return { count: 1 };
+    },
+  };
   const queue = { admit: async (kind: MailKind, email: string, callbackURL: string) => {
     if (failing) throw Error("fixture unavailable");
     intents.push({ id: randomUUID(), kind,
       expiresAt: new Date(Date.now() + (kind === "magic" ? 900_000 : 600_000)),
       payload: await symmetricEncrypt({ key: settings.secret, data: JSON.stringify({ email, callbackURL }) }) });
   } };
-  const options = createAuth({} as any, settings, { allow: async scope => {
+  const options = createAuth({ accountEmailToken } as any, settings, { allow: async scope => {
     scopes.push(scope); return quotaAllowed;
   } }, queue).options;
   change?.(options);
@@ -39,7 +49,7 @@ export function loginFixture(flags: Record<string, string> = {}, change?: (optio
       ...(body ? { body: JSON.stringify(body) } : {}) }));
   const drain = async () => {
     for (const intent of intents.splice(0)) {
-      const tx = { verification: {
+      const tx = { accountEmailToken, verification: {
         create: async ({ data }: any) => database.verification!.push(data),
         deleteMany: async ({ where }: any) => {
           database.verification = database.verification!.filter(v => v.identifier !== where.identifier);
@@ -56,6 +66,6 @@ export function loginFixture(flags: Record<string, string> = {}, change?: (optio
     database.account!.push({ id: randomUUID(), userId: user.id, accountId: user.id, providerId: "credential" });
     return user;
   };
-  return { auth, settings, call, drain, mail, database, intents, challenge, scopes, addUser,
+  return { auth, settings, call, drain, mail, database, intents, challenge, scopes, addUser, ledger,
     fail: () => { failing = true; }, denyQuota: () => { quotaAllowed = false; } };
 }
