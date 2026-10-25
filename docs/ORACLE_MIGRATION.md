@@ -28,8 +28,9 @@ release afterward; it does not assume a preaccepted backend can serve before DNS
    confirmed for shape, 2 OCPUs, 8 GB, boot and combined tenancy storage. Record
    instance/volume IDs, image version and public IPv4 privately. A1 capacity and
    uptime are not guaranteed. Keep access to the OCI console and recovery console.
-2. Lead: merge this documentation plus the reviewed w48 R2 work and w50 release
-   hygiene work into main, resolving their overlaps. Require normal successful
+2. Lead: merge this documentation and require the w48 R2, w50 release hygiene
+   and **w50b containerd release fix merged and live first** in the approved
+   main checkout used on Oracle. Resolve their documentation overlaps. Require normal successful
    exact-main CI; do not run a release from this worktree branch. Recheck the
    [ARM audit](operations/oracle-arm64-audit.md), especially the unpinned BuildKit
    default and optional msgpackr acceleration. Reaudit any changed pins/lockfile.
@@ -52,10 +53,15 @@ release afterward; it does not assume a preaccepted backend can serve before DNS
    Optional SES credentials must remain valid without an EC2 instance role;
    do not activate new features as part of moving hosts. No Model 2 activation,
    runner socket or grant is part of this move.
-6. Owner: announce maintenance and the explicit fresh-account reset. Lead: ensure
-   R2 credentials, independent stale/missing-backup alerting and a separate scratch
-   restore destination are ready using section 8. A local dump on this VM alone
-   is not an offsite recovery plan.
+6. Owner: announce maintenance and the explicit fresh-account reset. Complete
+   section 2's storage/client checks and section 8's bucket, credentials, lock
+   rules, installation and independent monitor setup **before fencing EC2**.
+   Prepare a separate scratch restore destination; a local dump is not offsite recovery.
+7. Lead/owner: record and rehearse the recovery choice in **Rollback** before
+   section 4. Resuming an older accepted EC2 SHA is not supported by the ordinary
+   release commands. Default: require a rehearsed forward-repair plan; otherwise
+   stop before fencing EC2. The separate public-traffic gate described in section
+   6 is also an unresolved prerequisite if maintenance must cover all acceptance.
 
 On the **trusted owner workstation** with authenticated GitHub CLI:
 
@@ -141,6 +147,128 @@ Require cgroup v2/systemd and verify the actual 2 CPU/memory limits during the
 native release. Measure free bytes/inodes for image/cache, both retained releases,
 PostgreSQL WAL/data, Redis AOF, logs and backup staging; 100 GB is an allocation,
 not measured sufficient free space. Do not increase resource/admission limits.
+
+### Read-only storage gate before fencing EC2 or changing DNS
+
+On **Oracle**, from the approved main checkout, run the w50b release preflight
+itself. It must already be merged and live; this branch does not supply the fix.
+The following import calls only its read-only preflight, not release or pruning.
+The measurement wrapper also requires `df` available bytes to meet the same floor:
+
+```sh
+set -euo pipefail
+cd "$HOME/InfraForge"
+bun --no-env-file -e '
+import {preflightReleaseSpace, availableReleaseBytes, minimumReleaseFreeBytes} from "./scripts/release/hygiene.ts";
+import {command} from "./scripts/release/process.ts";
+await preflightReleaseSpace(process.cwd(), "/var/lib/infraforge/releases", command, async path => {
+  const output = await command(["sudo", "-n", "df", "-B1", "--output=avail", "--", path], process.cwd());
+  const rows = output.trim().split(/\n/);
+  if (rows.length !== 2 || !/^\s*\d+\s*$/.test(rows[1])) throw Error(`df unavailable: ${path}`);
+  const available = BigInt(rows[1].trim());
+  console.log(`df ${path}: ${available} bytes available`);
+  if (available < minimumReleaseFreeBytes) throw Error(`df below 8 GiB: ${path}`);
+  return await availableReleaseBytes(path);
+});'
+```
+
+Review the measured paths against [release storage discovery](DEPLOYMENT.md#release-disk-capacity-and-image-retention)
+in merged main. The imported check reads `docker info --format '{{json .}}'`:
+classic `overlay2` must have no snapshotter driver-type; containerd must report
+`overlayfs`, exactly `driver-type=io.containerd.snapshotter.v1` and an absolute
+`Containerd.Address`. For containerd it runs
+`systemctl show containerd.service --property=MainPID --value`, reads that PID's
+`/proc/PID/cmdline` and requires **plain containerd with no flags**, then reads
+`sudo -n containerd config dump`. The absolute top-level `root` and `[grpc]`
+`address` must exist, and the address must equal Docker's socket.
+
+Every measured path needs **8 GiB = 8,589,934,592 available bytes**: Docker root,
+classic root's `overlay2` directory, or containerd root plus its
+`io.containerd.content.v1.content` and `io.containerd.snapshotter.v1.overlayfs`
+directories, and the release state directory (nearest existing parent if absent).
+Measure each even if filesystems coincide. Noninteractive sudo for the config,
+`df`, and the preflight's private-path `stat --file-system` fallback must work.
+Any failed read, missing path, extra daemon flag, socket mismatch, unknown layout
+or low-space result **stops the migration here**. Do not guess `/var/lib/containerd`,
+create missing image-store paths or switch drivers on a populated host. Provision
+a supported host/capacity and repeat the gate; the release repeats it before build.
+
+### Install native backup clients before cutover
+
+On **Oracle Ubuntu noble/ARM64**, install only the PostgreSQL 18 client from the
+[signed PostgreSQL Apt repository](https://www.postgresql.org/download/linux/ubuntu/).
+This supports noble/arm64 and avoids installing a second database server:
+
+```sh
+set -euo pipefail
+test "$(uname -m)" = aarch64
+test "$(dpkg --print-architecture)" = arm64
+. /etc/os-release
+test "$ID:$VERSION_ID:$VERSION_CODENAME" = ubuntu:24.04:noble
+sudo apt-get update
+sudo apt-get install -y curl ca-certificates gnupg unzip groff less
+sudo install -d -m 0755 /usr/share/postgresql-common/pgdg
+sudo curl --fail --silent --show-error \
+  https://www.postgresql.org/media/keys/ACCC4CF8.asc \
+  -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc
+sudo chmod 0644 /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc
+sudo tee /etc/apt/sources.list.d/pgdg.sources >/dev/null <<'PGDG'
+Types: deb
+URIs: https://apt.postgresql.org/pub/repos/apt
+Suites: noble-pgdg
+Architectures: arm64
+Components: main
+Signed-By: /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc
+PGDG
+sudo apt-get update
+sudo apt-get install -y --no-install-recommends postgresql-client-18
+test "$(dpkg-query -W -f='${Architecture}' postgresql-client-18)" = arm64
+pg_dump --version | grep -E '^pg_dump \(PostgreSQL\) 18\.'
+pg_restore --version | grep -E '^pg_restore \(PostgreSQL\) 18\.'
+```
+
+Install the signed **Linux aarch64 AWS CLI v2** system-wide, using the
+[AWS signature instructions](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html).
+In a fresh staging directory, save the public PGP key from that official page as
+`aws-cli-public-key.asc` (public material, not a credential). The expected full
+fingerprint is `FB5DB77FD5C118B80511ADA8A6310ACC4672475C`; if AWS rotates it,
+stop for review of the new official key. On this fresh host:
+
+```sh
+set -euo pipefail
+CLI_STAGE=$(mktemp -d)
+printf 'Save the official AWS public key in %s/aws-cli-public-key.asc\n' "$CLI_STAGE"
+read -r -p 'Press Enter after saving the public key: ' _
+test -s "$CLI_STAGE/aws-cli-public-key.asc"
+mkdir -m 0700 "$CLI_STAGE/gnupg"
+gpg --homedir "$CLI_STAGE/gnupg" --batch --import "$CLI_STAGE/aws-cli-public-key.asc"
+test "$(gpg --homedir "$CLI_STAGE/gnupg" --with-colons --fingerprint | awk -F: '$1 == "fpr" {print $10; exit}')" = FB5DB77FD5C118B80511ADA8A6310ACC4672475C
+curl --fail --silent --show-error https://awscli.amazonaws.com/awscli-exe-linux-aarch64.zip -o "$CLI_STAGE/awscliv2.zip"
+curl --fail --silent --show-error https://awscli.amazonaws.com/awscli-exe-linux-aarch64.zip.sig -o "$CLI_STAGE/awscliv2.sig"
+gpg --homedir "$CLI_STAGE/gnupg" --batch --status-fd 1 \
+  --verify "$CLI_STAGE/awscliv2.sig" "$CLI_STAGE/awscliv2.zip" > "$CLI_STAGE/signature.status"
+grep -Eq '^\[GNUPG:\] VALIDSIG FB5DB77FD5C118B80511ADA8A6310ACC4672475C ' "$CLI_STAGE/signature.status"
+unzip -q "$CLI_STAGE/awscliv2.zip" -d "$CLI_STAGE"
+sudo "$CLI_STAGE/aws/install" --install-dir /usr/local/aws-cli --bin-dir /usr/local/bin
+hash -r
+test "$(command -v aws)" = /usr/local/bin/aws
+aws --version | grep -E '^aws-cli/2\..*aarch64'
+AWS_EC2_METADATA_DISABLED=true AWS_PAGER='' aws s3api put-object \
+  --generate-cli-skeleton input > "$CLI_STAGE/put-object.json"
+python3 - "$CLI_STAGE/put-object.json" <<'PY'
+import json, sys
+assert 'IfNoneMatch' in json.load(open(sys.argv[1])), 'CLI lacks conditional PUT'
+PY
+```
+
+Record package/CLI versions and the verified archive checksum (`sha256sum
+"$CLI_STAGE/awscliv2.zip"`). The download is mutable, not a repository pin.
+The skeleton check is offline and proves CLI support for
+[`If-None-Match`](https://docs.aws.amazon.com/cli/latest/reference/s3api/put-object.html),
+not a successful R2 write. Actual conditional upload/readback/restore remains
+section 8 acceptance. Any install, signature, architecture, major-version or
+capability failure stops cutover. Review an existing CLI installation separately;
+do not silently overwrite it. Complete section 8's pre-cutover setup now.
 
 Owner: use the private secret-manager workflow from
 [bootstrap configuration](PRODUCTION_BOOTSTRAP.md#private-configuration-and-data-connections)
@@ -367,32 +495,49 @@ Require matching full frontend/backend SHA, auth contract, HTTPS API and WSS URL
 Keep release receipts and timings privately. Maintenance ends when public product
 smoke and acceptance pass, not merely when DNS changes.
 
-## 8. Owner and lead: R2 backup acceptance after w48
+## 8. Owner and lead: isolated R2 setup before cutover, recovery acceptance afterward
 
-**Merge gate:** this branch's [backup guide](operations/backup-alerts.md) still
-uses AWS S3/IMDS/CloudWatch/SNS and describes an x86 AWS CLI install. Do not run
-those EC2 installation steps on OCI or assume an IAM instance role follows it.
-w48's report describes R2 support, but unmerged implementation is not a deployment
-claim. After w48 is merged, use its updated guide's exact **Oracle/ARM64 host
-installation, R2 endpoint/bucket/prefix/private credential and independent monitor**
-steps. Lead must confirm the installed cloud client is ARM64. No secret values
-or speculative R2 config keys are provided here. Completion of this section is a
-required migration acceptance gate; it is not delegated to a later unspecified task.
+The w48 R2 work is on main. Use the merged [backup guide](operations/backup-alerts.md)
+from the approved checkout, not this branch's older AWS-only copy. No AWS account,
+IMDS role, CloudWatch stack or `aws configure` is needed on OCI. Section 2 supplies
+the missing native client installation. Complete the following **before section 4**:
 
-Owner: provide R2 account endpoint, bucket, scoped write/prune credentials,
-separate retrieval credentials, approved retention and alert destination through
-the merged private configuration procedure. Use a new host-specific prefix so
-retention cannot prune EC2's recovery material. Keep TLS verification and secrets
-outside the checkout. Independent monitoring must detect a missing VM/heartbeat,
-not just failures emitted by a surviving process on that VM.
+1. **Owner — bucket:** create a separate private Standard **Oracle R2 bucket**.
+   Disable public access, `r2.dev` and public custom domains. EC2 keeps its existing
+   bucket, credentials and recovery access. Never point Oracle at EC2's bucket.
+   The runner has fixed `backups/daily/` and `backups/weekly/` prefixes and no
+   host-prefix configuration. Isolation comes from the bucket, not a new config key.
+2. **Owner — tokens:** create a new Object Read & Write storage token scoped to
+   **only the Oracle bucket**. Supply endpoint, bucket and region `auto` via the
+   guide's private configuration, and keys through its root-only credential file.
+   Preserve a separate retrieval identity outside the VM, scoped to the Oracle
+   bucket. Do not reuse or broaden EC2's credentials.
+3. **Owner — lock rules:** in the Oracle bucket's Settings, create enabled age
+   locks for both `backups/daily/` and `backups/weekly/`, each at least **28 days
+   (2,419,200 seconds)**. Preserve stronger overlapping locks. Leave
+   `prune_enabled=false` until the guide's live lock verification succeeds.
+   Verification uses a distinct **Workers R2 Storage Read / Admin Read only**
+   bearer token: that configuration-read permission is account-scoped and broader
+   than the bucket-scoped object token. Review that scope explicitly; never grant
+   configuration write or expand the storage token. Without the read credential,
+   keep pruning disabled. Do not change EC2's lock rules.
+4. **Lead — installation:** after section 2's client checks, follow the merged
+   guide's host installation/private configuration and systemd unit installation
+   through `daemon-reload`. Keep timers disabled until first backup acceptance.
+   Record that the Oracle configuration selects the new bucket; preserve old
+   receipts as evidence, never copy them to satisfy Oracle acceptance. Set up the
+   independent monitor, alert destination and isolated restore destination now.
+   Monitoring must detect a missing VM/heartbeat, not just local process failures.
 
-After the merged installer has created the existing backup units, on **Oracle**,
-serialize this with builds and use w48's merged status/receipt interpretation:
+After section 6's accepted release, on **Oracle**, serialize this with builds
+and use the merged guide's status/receipt interpretation. This remains a required
+migration acceptance gate; backend acceptance alone does not establish recovery:
 
 ```sh
 sudo systemctl start infraforge-backup.service
 sudo systemctl show infraforge-backup.service -p Result -p ExecMainStatus
 sudo systemctl start infraforge-ops-metrics.service
+sudo /bin/bash /opt/infraforge-ops/backup-alerts/run.sh status
 sudo systemctl enable --now infraforge-backup.timer infraforge-ops-metrics.timer
 sudo systemctl list-timers 'infraforge-*' --all
 ```
