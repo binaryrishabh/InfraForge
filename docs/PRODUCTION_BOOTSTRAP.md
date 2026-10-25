@@ -344,8 +344,16 @@ Two layouts are qualified: local rootful classic `overlay2`, and the narrow
 [qualification checklist and exact owner commands](DEPLOYMENT.md#release-disk-capacity-and-image-retention).
 The latter requires a flagless live systemd PID, its actual `/proc/PID/exe`,
 matching mount namespace and socket ownership, and configuration/import files
-(and directory ancestry) unchanged before process start. A missing default file
-means executable defaults only when unchanged ancestry proves that absence.
+plus their own containing directories predating process start. Higher ancestors
+must be root-owned, non-writable directories without symlinks; their ctimes do
+not gate releases. A missing default file requires its own directory to predate
+start. Config/import mounts below the root filesystem refuse; root mount records
+must match the operator, daemon and PID 1. Systemd's captured start time must
+agree with the reconstructed start. These are current observations, not a full
+historical mount/clock audit; the linked checklist defines that boundary.
+For both stores, the Docker socket must actually be listened on by local rootful
+dockerd in our mount namespace/root. For the containerd store, established socket
+peer inodes must bind that dockerd to the verified containerd instance.
 Only absolute literal imports are qualified; glob/relative imports and symlinks
 refuse. The dump must retain default plugin settings: custom content/snapshotter
 roots, proxies and unknown storage configuration refuse. Noninteractive read-only
@@ -354,6 +362,8 @@ and `/proc/PID/exe config default` / `config dump`.
 The controller measures containerd's root, content and overlayfs snapshot paths
 as well as Docker metadata and release state, each against the unchanged 8 GiB
 floor. Requalify before first release and after relevant updates or relocation.
+Finish all pre-cutover package/configuration setup before recording the final
+qualification; an earlier pre-install pass does not authorize cutover.
 Ubuntu 24.04 ARM64 and fresh Docker packages alone do not certify the layout;
 collect the linked sanitized evidence on that host. Unknown layouts refuse;
 never bypass the gate, manufacture plugin directories or switch storage drivers

@@ -171,6 +171,13 @@ of the running daemon's configuration.
   refuse. Release Docker subprocesses pin the local endpoint, including cleanup
   and already-accepted backend verification. The separate owned-local rehearsal
   continues to use its explicitly selected local development engine.
+  For both stores, the endpoint must be a root-owned Unix socket with an actual
+  `dockerd` listener, a root-owned process, our mount namespace and `/` root.
+  A forwarding listener or another namespace refuses. Systemd may retain a
+  socket-activation descriptor alongside dockerd. For the containerd store,
+  `ss -H -xapn` must show reciprocal established socket inodes connecting that
+  dockerd to the verified containerd PID and address. These checks repeat after
+  the dump; a local socket pathname or matching path strings alone do not qualify.
 - `containerd.service` must have a positive MainPID, a readable flagless
   `containerd` command line and an absolute, non-deleted executable ending in
   `/containerd`. All flags are outside this qualified contract, even harmless
@@ -180,15 +187,34 @@ of the running daemon's configuration.
   This uses the live executable inode rather than whichever binary PATH finds.
   Version 2 or 3 TOML is parsed with Bun 1.3.14's `Bun.TOML.parse`. Parser errors
   and command failures never expose the dump or parser causes.
-- `/etc/containerd/config.toml` and every recursively imported file must be
-  regular files, with ctime strictly before daemon startup (boot `btime` plus
-  `/proc/PID/stat` field 22 / `getconf CLK_TCK`, with a conservative one-second
-  margin). Directory ancestry must also predate startup, protecting against
-  replacement/deletion. A missing default config means **executable defaults**
-  only with unchanged ancestry. Missing imports, symlinks, glob/relative imports,
-  cycles, more than 64 config files, unreadable metadata and config changes
-  during qualification refuse. Directory changes can conservatively refuse even
-  when unrelated to containerd; diagnose and requalify rather than bypassing.
+- `/etc/containerd/config.toml`, every recursively imported file, and each
+  file's **own containing directory** must have ctime plus one second strictly
+  before startup. Higher ancestors such as `/etc` and `/` must be real,
+  root-owned directories without group/world write permission; their ctimes
+  are not checked. Thus unrelated package changes in `/etc` do not invalidate
+  unchanged `/etc/containerd` inputs. Config files must also be root-owned,
+  non-writable by group/others and regular. A missing default file means
+  executable defaults only when its own directory passes; missing directories
+  or imports refuse. Symlinks, glob/relative/non-normalized imports, cycles,
+  more than 64 files and unreadable metadata refuse. Metadata is observed again
+  after the dump, including the higher ancestors.
+- Mount attachment does not change the source inode's ctime, and `mountinfo`
+  supplies no mount timestamp. This narrow gate therefore refuses **all mounts
+  below `/` covering a config, import or containing directory**, even if mounted
+  before startup. Each input must be on the same whole-filesystem root mount
+  (including mount ID) in `/proc/self/mountinfo`, `/proc/PID/mountinfo` and
+  `/proc/1/mountinfo`. A later bind mount of an old file/directory refuses.
+  Relevant mount records are observed again after the dump. This is a root-disk
+  contract, not support for independently mounted configuration directories.
+- The start cutoff uses systemd's captured `ExecMainStartTimestamp`
+  (`systemctl --timestamp=unix`), checked against boot `btime` plus process-start
+  ticks. Missing timestamps or a discrepancy over one second refuse; both are
+  rechecked after the dump. A later clock correction cannot simply move the
+  reconstructed cutoff forward. These observations are not a historical mount
+  or clock audit: arbitrary root replacement or clock steps that later cancel
+  cannot be certified from current `/proc` metadata. Such administration is
+  outside this qualification contract and requires a reviewed restart and
+  requalification. Do not describe ctime alone as proof of loaded configuration.
 - The dump must match that executable's default plugin settings, disabled and
   required plugins, plugin directory, temp path and stream processors. Even
   harmless plugin customization is currently unqualified. Non-empty proxy
@@ -199,7 +225,7 @@ of the running daemon's configuration.
   gRPC address must match Docker's socket. PID, start time, executable, mount
   namespace and config evidence are rechecked after the dump.
 
-The gate measures Docker's root, the proven containerd root, its built-in
+The gate measures Docker's root, the qualified containerd root, its built-in
 `io.containerd.content.v1.content` and `io.containerd.snapshotter.v1.overlayfs`
 directories, and the release state directory, each against **8 GiB**. Missing
 plugin paths refuse; do not create empty stale directories to satisfy this test.
@@ -221,72 +247,41 @@ additional checks, and Ubuntu 24.04 ARM64 bootstrap does not certify them.
 
 The owner can paste the following **read-only** commands from the production
 checkout, as the release operator. They do not restart services or create state.
-The first block emits only the selected endpoint and storage/instance metadata:
+Endpoint overrides are classified without disclosing values:
 
+<!-- owner-endpoint-evidence -->
 ```bash
-printf 'DOCKER_HOST=%s DOCKER_CONTEXT=%s\n' "${DOCKER_HOST-}" "${DOCKER_CONTEXT-}"
-docker context show
-docker context inspect default --format '{{json .Endpoints.docker.Host}}'
-docker --host unix:///var/run/docker.sock info --format '{{json .Driver}} {{json .DriverStatus}} {{json .DockerRootDir}} {{json .Containerd}} {{json .SecurityOptions}}'
-pid=$(systemctl show containerd.service --property=MainPID --value)
-printf 'MainPID=%s\n' "$pid"
-sudo -n cat "/proc/$pid/cmdline" | tr '\0' ' '; printf '\n'
-sudo -n readlink "/proc/$pid/exe"
-sudo -n "/proc/$pid/exe" --version
-readlink /proc/self/ns/mnt
-sudo -n readlink "/proc/$pid/ns/mnt"
-sudo -n readlink "/proc/$pid/root"
-sudo -n ss -H -xlpn
-getconf CLK_TCK
-sudo -n cat "/proc/$pid/stat"
-awk '$1 == "btime" { print }' /proc/stat
+printf 'DOCKER_HOST=%s DOCKER_CONTEXT=%s\n' "$(if [ -n "${DOCKER_HOST-}" ]; then printf set; else printf empty; fi)" "$(if [ -n "${DOCKER_CONTEXT-}" ]; then printf set; else printf empty; fi)"
 ```
 
-This second block reports config/import and ancestor timestamps against process
-start, without printing file contents. It intentionally refuses unqualified
-imports and emits a generic error if parsing or reading fails:
+Run this sequence in one shell. `set -e` stops on failed evidence; the helper is
+bounded by 30 seconds, 64 files and a combined 1 MiB read budget. It requires
+Python 3.11+ (`tomllib`). It validates flagless containerd before printing a
+selected process summary, and never prints arbitrary argv or config contents.
+The helper checks kind **before** opening, uses descriptor-relative directory
+walks and no-follow/nonblocking regular-file reads, and matches the gate's
+literal normalized import rules. It emits generic parsing/read failures.
 
 ```bash
-sudo -n python3 - "$pid" <<'PY'
-import os, pathlib, stat, sys, tomllib
-try:
-    pid = int(sys.argv[1])
-    proc = pathlib.Path(f"/proc/{pid}/stat").read_text()
-    ticks = int(proc[proc.rfind(")") + 2:].split()[19])
-    boot = next(int(line.split()[1]) for line in pathlib.Path("/proc/stat").read_text().splitlines() if line.startswith("btime "))
-    started = boot + ticks / os.sysconf("SC_CLK_TCK")
-    print(f"daemon_start_epoch={started:.6f}; require ctime+1 < start")
-    seen = set()
-    def visit(path, imported=False):
-        if not isinstance(path, str) or not path.startswith("/") or any(c in path for c in "*?[]{}\\") or ".." in path.split("/") or path in seen or len(seen) >= 64:
-            raise ValueError()
-        seen.add(path)
-        target = pathlib.Path(path)
-        for item in [*reversed(target.parents), target]:
-            try:
-                value = item.lstat()
-                print(f"{item}: kind={stat.S_IFMT(value.st_mode):o} ctime={value.st_ctime:.9f} predates_start={value.st_ctime + 1 < started}")
-            except FileNotFoundError:
-                print(f"{item}: missing")
-        try:
-            with target.open("rb") as source:
-                config = tomllib.load(source)
-        except FileNotFoundError:
-            if imported: raise
-            print("Missing default config: executable defaults, subject to ancestry checks")
-            return
-        for entry in config.get("imports", []): visit(entry, True)
-    visit("/etc/containerd/config.toml")
-except Exception:
-    print("Config provenance unavailable; do not publish raw config diagnostics", file=sys.stderr)
-    sys.exit(1)
-PY
+set -euo pipefail
+pid=$(systemctl show containerd.service --property=MainPID --value)
+[[ "$pid" =~ ^[1-9][0-9]*$ ]]
+timeout 30s sudo -n python3 scripts/release/config-evidence.py "$pid"
 bun --no-env-file scripts/release/hygiene.ts qualify /var/lib/infraforge/releases
 ```
 
-The final command runs the actual read-only preflight, including both config
-commands and each filesystem measurement; paste its sanitized result as well.
-Only a successful result confirms this checkout's checks pass at that moment.
+The final command is authoritative: it runs the read-only preflight, both config
+commands, mount and clock checks, Docker listener/process/namespace/connection
+checks, and every capacity measurement. It prints selected verified Docker and
+containerd instance metadata and capacities, not raw socket listings, command
+lines or dumps. Keep that sanitized output with the helper timestamps. A failed
+helper or qualify result is a stop condition. Only a successful result confirms
+this checkout's checks pass at that moment; the supplied production facts do
+not yet contain all the newly required observations.
+
+After all package/configuration setup, run and record this sequence again before
+cutover, while the replacement host is still out of service. An earlier
+pre-install pass is not final cutover evidence. The real release repeats its gate.
 
 This is a minimum operating budget, not a prediction: the incident's roughly
 1.46 GB backend image rounds up to **1.5 GiB loaded image + 1.5 GiB export/load

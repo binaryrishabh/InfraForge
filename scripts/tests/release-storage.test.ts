@@ -25,6 +25,8 @@ type Change = { info?: object; dump?: string; defaults?: string; pid?: string; a
 const rootMount = "29 1 259:1 / / rw,relatime - ext4 /dev/root rw";
 function host(change: Change = {}) {
   const calls: string[][] = [], paths: string[] = [];
+  const daemonPid = change.production ? "390826" : "812";
+  const namespace = change.production ? "mnt:[4026531832]" : "mnt:[123]";
   let dumped = false, systemCalls = 0;
   const run = async (args: string[]) => {
     calls.push(args);
@@ -33,10 +35,10 @@ function host(change: Change = {}) {
       { Name: "default", Endpoints: { docker: { Host: change.endpoint ?? "unix:///var/run/docker.sock" } } }]);
     if (args[0] === "docker") return JSON.stringify({ ...info, ...change.info });
     if (args.includes("--property=ExecMainStartTimestamp")) return change.recorded ?? (change.production ? "@1792650086.62" : "@1100");
-    if (args[0] === "systemctl") return change.restart && systemCalls++ > 0 ? "813" : change.pid ?? "812";
+    if (args[0] === "systemctl") return change.restart && systemCalls++ > 0 ? "813" : change.pid ?? daemonPid;
     if (args[0] === "getconf") return "100";
-    if (args[2] === "ss") return args.includes("-xapn") ? change.dockerSockets ?? dockerSockets :
-      change.sockets ?? `u_str LISTEN 0 4096 ${address} 123 * 0 users:(("containerd",pid=812,fd=9))`;
+    if (args[2] === "ss") return args.includes("-xapn") ? change.dockerSockets ?? dockerSockets.replace("pid=812", `pid=${daemonPid}`) :
+      change.sockets ?? `u_str LISTEN 0 4096 ${address} 123 * 0 users:(("containerd",pid=${daemonPid},fd=9))`;
     if (args[3] === "config" && args[4] === "default") return change.defaults ?? dump;
     if (args[3] === "config" && args[4] === "dump") { dumped = true; return change.dump ?? dump; }
     throw new Error("Unexpected command");
@@ -48,7 +50,7 @@ function host(change: Change = {}) {
       if (path.endsWith("/mountinfo")) return path === "/proc/812/mountinfo" && change.daemonMount ? change.daemonMount :
         rootMount + (change.mount || dumped && change.mountDuringDump ? `\n55 29 259:1 /prepared ${change.mount ?? "/etc/containerd"} rw - ext4 /dev/root rw` : "");
       if (path === "/proc/stat") return change.boot ?? (change.production ? "btime 1792610199\n" : "btime 1000\n");
-      if (path.endsWith("/stat")) return change.production ? procStat.replace("10000 0", "3988762 0") : procStat;
+      if (path.endsWith("/stat")) return change.production ? procStat.replace("812 (", "390826 (").replace("10000 0", "3988762 0") : procStat;
       if (path.endsWith("/cmdline")) return change.argv ?? "/usr/bin/containerd\0";
       if (path === "/etc/containerd/config.toml") return change.config ?? "version = 3";
       if (path === "/etc/containerd/import.toml") return "version = 3";
@@ -56,12 +58,12 @@ function host(change: Change = {}) {
     },
     async link(path) {
       if (path === "/proc/900/exe") return change.dockerExe ?? dockerHost.link(path);
-      if (path === "/proc/900/ns/mnt") return change.dockerNamespace ?? dockerHost.link(path);
+      if (path === "/proc/900/ns/mnt") return change.dockerNamespace ?? namespace;
       if (path === "/proc/900/root") return change.dockerRoot ?? dockerHost.link(path);
       if (path === "/proc/1/exe") return dockerHost.link(path);
       if (path.endsWith("/exe")) return change.exe ?? "/usr/bin/containerd";
-      if (path === "/proc/self/ns/mnt") return "mnt:[123]";
-      if (path.endsWith("/ns/mnt")) return change.namespace ?? "mnt:[123]";
+      if (path === "/proc/self/ns/mnt") return namespace;
+      if (path.endsWith("/ns/mnt")) return change.namespace ?? namespace;
       if (path.endsWith("/root")) return "/";
       throw new Error("Unexpected link");
     },
@@ -121,6 +123,7 @@ const refusals: [string, Change][] = [
   ["daemon sees another mount ID", { daemonMount: rootMount.replace("29 1", "30 1") }],
   ["mount changes during dump", { mountDuringDump: true }],
   ["clock correction moves reconstructed startup forward", { boot: "btime 2000", ctime: 1150000 }],
+  ["clock correction even with old config", { boot: "btime 2000" }],
   ["staged config after daemon start", { ctime: 1200000 }],
   ["config timestamp in uncertain start second", { ctime: 1099500 }],
   ["changed imported config", { config: "imports = ['/etc/containerd/import.toml']", importedCtime: 1200000 }],
@@ -205,6 +208,26 @@ test("classic overlay2 also rejects a forwarded or namespaced Docker endpoint", 
 
 test("Docker socket activation permits systemd alongside the verified dockerd", async () => {
   await host({ dockerSockets: dockerSockets.replace('pid=900,fd=3))', 'pid=900,fd=3),("systemd",pid=1,fd=4))') }).preflight();
+});
+
+for (const kind of ["accept", "symlink", "fifo", "ancestor", "normalized", "control", "swap", "limit"]) {
+  test(`owner evidence helper ${kind}`, () => {
+    const result = Bun.spawnSync([process.platform === "win32" ? "python" : "python3", "scripts/tests/fixtures/config-evidence.py", kind], { timeout: 5000 });
+    expect(result.stderr.toString()).toBe("");
+    expect(result.exitCode).toBe(0);
+    expect(result.stdout.toString()).toContain("owner evidence probe passed");
+  });
+}
+
+test("owner endpoint evidence never prints environment credentials", async () => {
+  const doc = await Bun.file("docs/DEPLOYMENT.md").text();
+  const block = doc.split("<!-- owner-endpoint-evidence -->")[1]!.split("```bash")[1]!.split("```")[0]!;
+  const result = Bun.spawnSync([process.platform === "win32" ? "C:/Program Files/Git/bin/bash.exe" : "bash", "-c", block], {
+    env: { ...process.env, DOCKER_HOST: "ssh://user:PRIVATE_CONFIG_MARKER@example.invalid", DOCKER_CONTEXT: "PRIVATE_CONTEXT_MARKER" }, timeout: 5000,
+  });
+  expect(result.exitCode).toBe(0);
+  expect(result.stdout.toString()).toBe("DOCKER_HOST=set DOCKER_CONTEXT=set\n");
+  expect(result.stderr.toString()).toBe("");
 });
 
 test("valid TOML syntax preserves field meaning and suppresses parser diagnostics", async () => {

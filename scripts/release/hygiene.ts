@@ -69,6 +69,7 @@ export async function preflightReleaseSpace(root: string, stateDirectory: string
     catch (error) { throw new Error(`Disk capacity for ${path} is Unknown; release refused`, { cause: error }); }
   }
   assertReleaseSpace(measurements, stateDirectory);
+  console.log(`Release Docker instance: ${docker}`);
 }
 
 export function selectReleaseImages(images: Image[], state: AcceptedState, inUse: string[]) {

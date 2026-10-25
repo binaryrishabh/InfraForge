@@ -243,6 +243,7 @@ export async function containerdStorage(info: { Driver?: unknown; Containerd?: u
         (await run(startCommand, cwd)).trim() !== recorded ||
         await host.link(`${proc}/ns/mnt`) !== namespace ||
         (await run(["systemctl", "show", "containerd.service", "--property=MainPID", "--value"], cwd)).trim() !== pid) return refuse();
+    console.log(`Release containerd instance: ${canonical({ pid, started, exe, namespace, address, docker })}`);
     return paths;
   } catch { return refuse(); }
 }
