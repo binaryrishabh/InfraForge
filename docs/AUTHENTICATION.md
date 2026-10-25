@@ -108,7 +108,8 @@ Magic links and OTPs sign in **existing verified users only**. They never create
 accounts or promote an unverified pre-registration. New users must complete the
 existing W35-03 mailbox-proof signup, then sign in. There is no separate signup
 exception in either plugin. Both methods require enabled email, Resend and
-Turnstile. The challenge action is `email_login`. They share existing mail-request
+Turnstile. Issuance uses action `email_login`; redemption requires a fresh,
+single-use challenge with action `email_login_redeem`. They share existing mail-request
 quotas (3/normalized email and 20/IP per 15 minutes), including nonexistent emails.
 All accepted requests persist identical encrypted metadata before membership
 lookup, strip cookies and return the existing generic mail response with a 750 ms
@@ -119,15 +120,16 @@ not a hard latency guarantee during infrastructure overload.
 | Endpoint | Contract |
 | --- | --- |
 | `POST /api/auth/sign-in/magic-link` | `{email, callbackURL?, turnstileToken}`; generic admission |
-| `GET /api/auth/magic-link/verify?token=...&callbackURL=...` | Native single-use redemption and fresh session; link lifetime at most 15 minutes from admission |
+| `GET /api/auth/magic-link/verify?token=...&callbackURL=...` | Opens a confirmation form without consuming the proof. Submit its fresh Turnstile `cf-turnstile-response` to redeem; API clients may send `x-turnstile-token`. Lifetime at most 15 minutes from admission |
 | `POST /api/auth/email-otp/send-verification-otp` | `{email, type:"sign-in", turnstileToken}`; generic admission; other OTP purposes rejected |
-| `POST /api/auth/sign-in/email-otp` | `{email, otp}`; six digits, at most 10 minutes from admission; native lock after 3 wrong guesses |
+| `POST /api/auth/sign-in/email-otp` | `{email, otp, turnstileToken}`; fresh redemption challenge, six digits, at most 10 minutes from admission; native lock after 3 wrong guesses |
 
 OTP redemption also has a shared 3-attempt/email and 30-attempt/IP quota per
 15 minutes, including successful attempts and new requests. Resending does not
 reset this quota. Incorrect, absent, expired and exhausted OTPs return the same
 400 body with a 750 ms floor; quota exhaustion is a common 429. The public OTP
-check-only, verification, reset and email-change routes are disabled. Concurrent
+check-only, verification, reset and email-change routes are disabled, including
+the deprecated `/api/auth/forget-password/email-otp` alias. Concurrent
 redemption can mint at most one session. Successful login requires an additional
 atomic user-bound proof in `AccountEmailToken`, preventing a proof from following
 a deleted/re-registered mailbox. Account deletion retires native mailbox records
@@ -151,7 +153,7 @@ per 15 minutes and requires the existing exact-Origin check.
 | Endpoint | Contract |
 | --- | --- |
 | `GET /api/account/settings/methods` | Own provider/credential record IDs, provider names and dates; separate `emailLogin` availability flags; no password hashes or OAuth tokens |
-| `POST /api/auth/link-social` | Native OAuth linking, with `{provider, callbackURL}` and the session cookie; also requires account linking enabled and both verified emails |
+| `POST /api/auth/link-social` | Redirect OAuth linking, with `{provider, callbackURL}` and the session cookie; requires linking/settings flags and both verified emails. Direct `idToken` requests return 400 because the installed direct branch skips the verification hook |
 | `POST /api/account/settings/unlink` | `{accountId, password}`; verify the current password every time; serialize removals and retain at least one usable credential/configured provider |
 | `GET /api/account/settings/sessions?after=...` | Up to 100 active own sessions, IDs, dates, optional IP/browser and `current`; follow `next`; no session tokens |
 | `POST /api/account/settings/sessions/revoke` | `{sessionId}`; revoke only an owned session, including the current one |
@@ -174,10 +176,22 @@ feature flag enables the stricter return-URL validator on callback/return fields
 only exact HTTP(S) app origins or a single-slash relative app path are accepted;
 userinfo, other hosts, backslashes, protocol-relative URLs, whitespace/control
 characters, percent-encoded variants and non-HTTP schemes are rejected. Relative
-paths resolve to the first app origin. Percent encoding is deliberately rejected
+paths are rewritten to absolute URLs on the first app origin before native
+handlers receive them. Magic verification and OAuth start/link requests default
+omitted success/error/new-user callbacks to the app root (or supplied success URL).
+Percent encoding is deliberately rejected
 even for harmless path escapes; choose a plain return path. The hosted-login
 origin is not automatically an allowed final destination. Keep all credentials
 and callback query strings out of browser history, analytics and logs.
+
+The magic confirmation form is served by the backend with no-store, no-referrer
+and a restrictive content security policy. Configure the public Turnstile site key
+and allow the backend hostname in both the widget and `TURNSTILE_HOSTNAMES`.
+It sends the fresh challenge in the GET form query; redact that query alongside
+the magic bearer from access logs. Missing/invalid/expired/replayed challenges
+cannot consume a proof or create a session. Siteverify enforces single use;
+requesting a new email does not make an old challenge reusable. The development
+bypass is for fixtures only and does not exercise Cloudflare's service.
 
 ### Installed API evidence and passkey deferral
 
@@ -308,8 +322,9 @@ missing/oversized tokens, provider errors/timeouts, replay rejection, wrong host
 or wrong action. No positive validation cache is used. An explicit development/test
 bypass is rejected in production. Cloudflare enforces
 token expiry and single use through [Siteverify](https://developers.cloudflare.com/turnstile/get-started/server-side-validation/).
-OAuth callbacks retain their existing provider protections; Turnstile applies to
-the credential signup endpoint, not OAuth redirects.
+OAuth callbacks retain their existing provider protections. Turnstile applies to
+credential signup, configured password-reset requests, and both issuance and
+redemption of enabled email-login methods; it is not added to OAuth redirects.
 
 ### Deletion and retained history
 

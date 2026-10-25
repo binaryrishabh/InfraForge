@@ -130,10 +130,15 @@ to connect the hosted-login UI.
 Keep `APP_ORIGINS` limited to exact origins of owned apps (production frontend:
 `https://infraforge.lapwork.in`). This is also the final return-URL allowlist.
 The hosted-login origin is added to browser request origins separately. Relative
-returns use the first app origin; escaped URLs, userinfo, backslashes,
+returns are rewritten to absolute URLs on the first app origin before native
+handlers run; omitted magic/OAuth success callbacks default to that app root,
+with error/new-user callbacks defaulting to the success URL. Escaped URLs, userinfo, backslashes,
 protocol-relative forms and other schemes/hosts are rejected. The server remains
 `https://infraforge.backend.lapwork.in`; OAuth callbacks and email redemption URLs
-remain on that server. Include the hosted login hostname in the Turnstile widget
+remain on that server. Magic links open a backend confirmation form and redeem
+only after a fresh `email_login_redeem` Turnstile challenge. Configure the backend
+hostname in the widget and exact `TURNSTILE_HOSTNAMES` list, alongside the app
+hostnames used for issuance and OTP redemption. Include the hosted login hostname in the Turnstile widget
 only when that UI is deployed. Do not configure analytics or request logging on
 token-bearing routes.
 
