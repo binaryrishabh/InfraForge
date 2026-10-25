@@ -329,6 +329,12 @@ CIDRs are admitted. Do not open SSH worldwide to make a hosted retry pass.
 
 ## 4. Lead with owner: drain and fence EC2
 
+**Stop gate:** require recorded passes for section 2 storage and client checks,
+section 8 pre-cutover setup, and the rehearsed recovery and public-traffic plans
+below. Neither the retained-current EC2 recovery nor an independent public gate
+is implemented/validated by this document. Do not begin the outage with either
+plan unresolved.
+
 Maintenance begins here. On **old EC2 only**, in the current accepted checkout,
 as its release operator (never substitute Oracle settings):
 
@@ -408,6 +414,31 @@ failure. There is no copying of EC2 TLS private keys in this procedure.
 
 ## 6. Lead: first native release, fresh PostgreSQL
 
+**Actual traffic boundary:** successful `apply` removes the controller's
+maintenance marker immediately after backend acceptance. With DNS already on
+Oracle, Nginx then admits public API/WS traffic and writes, **before** sections
+7–8's product, frontend and R2 acceptance. `PRODUCTION_RELEASE_ENABLED=false`
+only disables workflow admission; announcements do not keep HTTP traffic fenced.
+Without a separate gate, assume new writes from this point and use the post-write
+recovery branch even if the remaining smoke checks have not begun.
+
+**Open question — public gate (release/proxy owner):** how will public maintenance
+last through end-to-end and backup acceptance? Recommended default: **hold cutover**
+until a separate, owner-approved gate is implemented and rehearsed. It must keep
+ordinary API/WS clients blocked while allowing ACME, the controller's local/public
+probes, the approved Actions runner, independent checks and designated testers.
+Before section 4, record tests of 503/blocked writes for unapproved clients,
+successful maintenance/readiness transitions for release probes, authenticated
+tester HTTP/WS and backup/monitor access, plus persistence across proxy reload and
+reboot. Prefer a separately managed ingress allowlist; its exact trusted sources,
+IPv4/IPv6 coverage and handling of hosted runner/tester addresses require review.
+Do not weaken release probes, expose bypass headers to arbitrary clients or take
+over the controller's marker. A second marker with no integration/test is not a
+validated gate. This branch supplies no gate or claim that these tests passed.
+After sections 7–8 and owner acceptance, lift that separate gate, repeat public
+checks, and record the actual public-opening time. Designated tester writes still
+count as Oracle writes for recovery unless explicitly approved as disposable.
+
 The workflow refuses a new state directory in maintenance and cannot bootstrap
 it. On **Oracle** run the existing guarded operator **once**, after DNS and TLS.
 Its HTTPS maintenance/readiness requests must reach this Oracle host
@@ -471,7 +502,8 @@ intentionally reset); verify enabled OAuth, authenticated WS updates, design
 save/load, representative run/report and worker/queue progress. Lead: compare
 latency, run duration, errors, memory and queue behavior against recorded EC2
 baseline under the same representative workload. Unknown performance is not
-parity. Do not enable public use if these checks fail.
+parity. Keep the separate public gate closed if these checks fail; absent that
+gate, traffic is already open and failure requires incident fencing/recovery.
 
 Owner, workstation: enable admission and dispatch the accepted current SHA:
 
@@ -492,8 +524,9 @@ bun --no-env-file scripts/release/frontend-check.ts "$RELEASE_TARGET" \
 ```
 
 Require matching full frontend/backend SHA, auth contract, HTTPS API and WSS URLs.
-Keep release receipts and timings privately. Maintenance ends when public product
-smoke and acceptance pass, not merely when DNS changes.
+Keep release receipts and timings privately. The controller's maintenance ended
+in section 6; lift the separate public gate only after section 8 and owner
+acceptance, then repeat these checks from an ordinary public client.
 
 ## 8. Owner and lead: isolated R2 setup before cutover, recovery acceptance afterward
 
@@ -576,20 +609,86 @@ deletion of either host's data volumes.
 
 ## Rollback
 
-Disable release admission first and inspect active runs. On Oracle set maintenance,
-stop API/WS, check idle runs and stop the sole worker using the same fenced
-procedure as section 4 with **Oracle's accepted** SHA/image. Verify all writers
-stopped and no automatic restart path before allowing any EC2 writer.
+Before section 4, owner/lead must rehearse each applicable branch below on isolated
+equivalent hosts and record evidence/timing. These instructions have not been
+executed on a host. Disable release admission and inspect active runs first;
+close the separate public gate and verify it before recovery. Inspect the release
+controller's process and owned helpers privately; let it exit or use its reviewed
+interruption procedure before fencing containers. A still-running controller can
+restart writers. Retain maintenance/lock files, images, volumes and diagnostics.
 
-**Before Oracle accepts user writes:** owner restores the old GoDaddy A/AAAA
-records and old GitHub target secrets/fingerprint from the private record. Lead
-resumes the unchanged accepted EC2 deployment through its reviewed recovery
-procedure and verifies TLS, readiness, exact frontend/backend identity and actual
-auth/WS. Keep Oracle fenced during DNS overlap. Its fresh state can be retained
-for diagnosis. An old exhausted Neon database cannot be made healthy by DNS rollback;
-if EC2 has no usable database, repair forward on Oracle or restore a verified backup.
+**Open question — retained-current EC2 resume (release owner):** there is no
+supported ordinary command here to resume an older accepted current SHA after
+main advances. `apply` rejects an already accepted SHA; `reconfigure` and the
+normal workflow require current main; the workflow also refuses maintenance.
+Image `rollback` selects a compatible previous image, not resume-current. Do not
+delete markers or invent an unverified Compose start to bridge this gap.
+Recommended default: require an **owner-approved, rehearsed forward-repair plan
+on Oracle before fencing EC2**. Record the exact failure-state recovery commands,
+current-main release authority, schema/history and worker-lock checks, retained
+image/settings verification, public acceptance and measured outage allowance.
+Include failures before and after migration/acceptance and retained-lock handling.
+If forward repair cannot be rehearsed, stop the migration until the release owner
+implements/tests a retained-current recovery path preserving those same checks.
+An EC2 fallback remains conditional on that separately reviewed path; this
+document does not claim it exists.
 
-**After Oracle accepts user writes:** a DNS-only return to EC2 would discard or
+### A. No Oracle accepted record
+
+A build/preflight/migration failure may leave no `accepted.json`. Do **not** read
+it or reuse section 4's accepted-image lookup. On **Oracle**, once the controller
+has exited, inspect actual project containers without environments:
+
+```sh
+set -euo pipefail
+test ! -e /var/lib/infraforge/releases/accepted.json
+test -f /var/lib/infraforge/releases/maintenance
+docker ps -a --filter label=com.docker.compose.project=infraforge \
+  --format 'table {{.ID}}\t{{.Names}}\t{{.Image}}\t{{.Status}}'
+docker buildx ls
+docker ps -a --filter name=buildx_buildkit_infraforge-release- \
+  --format 'table {{.ID}}\t{{.Names}}\t{{.Image}}\t{{.Status}}'
+for service in api ws-server worker migration; do
+  ids=$(docker ps -aq --filter label=com.docker.compose.project=infraforge \
+    --filter "label=com.docker.compose.service=$service")
+  for id in $ids; do
+    test "$(docker inspect --format '{{index .Config.Labels "com.docker.compose.project"}}:{{index .Config.Labels "com.docker.compose.service"}}' "$id")" = "infraforge:$service"
+    docker update --restart=no "$id" >/dev/null
+    docker stop --timeout 30 "$id" >/dev/null
+    test "$(docker inspect --format '{{.State.Running}}:{{.State.Restarting}}:{{.State.Paused}}' "$id")" = false:false:false
+  done
+done
+```
+
+No containers is valid for an early build failure. Missing maintenance, paused
+containers or any failed inspection/stop is an unresolved fence, not a pass.
+Match any residual `infraforge-release-SHA-PID` builder to the failed release's
+private record, then stop/remove only that owned builder using
+`docker buildx rm --force EXACT_REVIEWED_BUILDER_NAME`; never remove shared/default
+builders. Inspect all remaining containers' names/labels for unexpected writers
+or helpers and verify no systemd/cron/deploy path can restart them. Preserve
+PostgreSQL/Redis. Verify Oracle's API/WS remain blocked from outside the host.
+Use the rehearsed forward repair. Returning to EC2 is possible only after its
+separately reviewed resume path has passed; absence of Oracle acceptance alone
+does not certify data state or that no writes occurred.
+
+### B. Oracle accepted, no external writes
+
+Require evidence from the separate gate and application/database audit, including
+designated tester activity. If evidence is missing, use branch C. With no active
+release controller/lock, apply section 4's drain/idle/worker fence **on Oracle**
+using Oracle's accepted SHA/image and configuration. If a retained lock, helpers
+or active runs remain, use the rehearsed incident plan; do not bypass them.
+Verify all writers stopped and restart paths disabled before any EC2 writer.
+Default to rehearsed forward repair. Only if a separately supported EC2 resume
+has been reviewed/rehearsed may the owner restore old target secrets/fingerprint
+and DNS after verifying the retained image/settings/schema/worker checks, TLS,
+matching frontend/backend identity and actual auth/WS. Keep Oracle fenced during
+DNS overlap. An exhausted old database cannot be repaired by changing DNS.
+
+### C. Oracle has writes, or writes are unknown
+
+A DNS-only return to EC2 would discard or
 diverge new accounts/runs. Fence Oracle, take/verify its latest database backup,
 then rehearse/perform a reverse restore into a **new empty** compatible EC2
 PostgreSQL database and reconcile the queue/outbox under the lead's recovery plan,
