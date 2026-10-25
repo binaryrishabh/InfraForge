@@ -16,7 +16,7 @@ import { FakeEmail } from "../../auth/email";
 import { AccountEmailRequests } from "../../auth/mailRequests";
 import { methodSettingsRouter, unlinkMethod } from "../../auth/methodSettings";
 import { createOriginCheck } from "../../auth/origin";
-import { HOSTED_LOGIN_ORIGIN } from "../../auth/loginMethods";
+import { HOSTED_LOGIN_ORIGIN } from "../../auth/settings";
 import { deleteAccount } from "../../auth/accountData";
 import { accountAuthHandler } from "../../auth/accountPolicy";
 

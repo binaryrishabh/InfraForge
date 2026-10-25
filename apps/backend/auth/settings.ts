@@ -1,6 +1,9 @@
 import { readEmail } from "./email";
 import { readChallenge } from "./turnstile";
-import { HOSTED_LOGIN_ORIGIN, LOGIN_FLAGS } from "./loginMethods";
+
+export const HOSTED_LOGIN_ORIGIN = "https://auth.infraforge.lapwork.in";
+export const LOGIN_FLAGS = ["AUTH_ACCOUNT_LINKING_ENABLED", "AUTH_MAGIC_LINK_ENABLED", "AUTH_EMAIL_OTP_ENABLED",
+  "AUTH_METHOD_SETTINGS_ENABLED", "AUTH_HOSTED_LOGIN_ENABLED"] as const;
 
 export function readAuthSettings(env: Record<string, string | undefined>) {
   const production = env.NODE_ENV === "production";

@@ -5,10 +5,6 @@ import type { MailRequests } from "./mailIntent";
 import { acceptedMail } from "./mailAdmission";
 import type { readAuthSettings } from "./settings";
 
-export const HOSTED_LOGIN_ORIGIN = "https://auth.infraforge.lapwork.in";
-export const LOGIN_FLAGS = ["AUTH_ACCOUNT_LINKING_ENABLED", "AUTH_MAGIC_LINK_ENABLED", "AUTH_EMAIL_OTP_ENABLED",
-  "AUTH_METHOD_SETTINGS_ENABLED", "AUTH_HOSTED_LOGIN_ENABLED"] as const;
-
 // Reject ambiguous spellings before WHATWG URL normalization or another decode.
 // Relative paths are rooted on the first application, never on an arbitrary host.
 export function returnURL(value: unknown, origins: string[]) {

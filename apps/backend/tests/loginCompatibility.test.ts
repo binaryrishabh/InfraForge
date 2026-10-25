@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { compatibilityResponses } from "./loginCompatibility";
-import { LOGIN_FLAGS } from "../auth/loginMethods";
+import { LOGIN_FLAGS } from "../auth/settings";
 import baseline from "./fixtures/loginMethodsOff.json";
 
 test("all new flags off preserves pre-W53 response bytes, status and headers", async () => {

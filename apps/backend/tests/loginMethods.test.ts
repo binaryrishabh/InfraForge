@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
-import { readAuthSettings } from "../auth/settings";
-import { HOSTED_LOGIN_ORIGIN, LOGIN_FLAGS, returnURL } from "../auth/loginMethods";
+import { readAuthSettings, HOSTED_LOGIN_ORIGIN, LOGIN_FLAGS } from "../auth/settings";
+import { returnURL } from "../auth/loginMethods";
 import { loginEnvironment, loginFixture } from "./loginMethodsFixture";
 import { emailOTP } from "better-auth/plugins";
 import { accountAuthHandler, enforceAccountPolicy } from "../auth/accountPolicy";
