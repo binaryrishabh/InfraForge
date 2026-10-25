@@ -43,25 +43,63 @@ export async function availableReleaseBytes(path: string,
   }
 }
 
-export async function preflightReleaseSpace(root: string, stateDirectory: string, run = command, measure = availableReleaseBytes) {
-  let info: { DockerRootDir?: unknown; Driver?: unknown; DriverStatus?: unknown };
+const unknownStorage = "Release disk preflight refused: image/snapshot storage filesystem is Unknown. " +
+  "Only classic overlay2 or the default system containerd overlayfs snapshotter is verified. " +
+  "Do not assume /var/lib/containerd or switch storage drivers as cleanup.";
+const absolute = (value: unknown): value is string => typeof value === "string" && value.startsWith("/") &&
+  !value.split("/").includes("..") && !/[\0\n\r]/.test(value);
+
+// Values of one TOML table from `containerd config dump` (top level is ""). Only
+// plain single-line string assignments are read; anything else stays Unknown.
+export function containerdTable(dump: string, table: string) {
+  const values = new Map<string, string>();
+  let current = "";
+  for (const line of dump.split(/\r?\n/)) {
+    const header = line.match(/^\s*\[([^\][]+)\]\s*$/);
+    if (header) { current = header[1]!.trim().replace(/^'(.*)'$|^"(.*)"$/, "$1$2"); continue; }
+    const pair = line.match(/^\s*([A-Za-z_]+)\s*=\s*(?:'([^']*)'|"([^"\\]*)")\s*$/);
+    if (current === table && pair) values.set(pair[1]!, pair[2] ?? pair[3]!);
+  }
+  return values;
+}
+
+// The containerd image store keeps content and snapshots under containerd's own
+// root, not DockerRootDir. Accept it only when Docker uses the default system
+// containerd and that exact daemon's effective config names Docker's socket.
+async function containerdStorage(info: { Driver?: unknown; Containerd?: unknown }, root: string, run: typeof command,
+  read: (path: string) => Promise<string>) {
+  const address = (info.Containerd as { Address?: unknown } | null | undefined)?.Address;
+  if (info.Driver !== "overlayfs" || !absolute(address)) throw new Error(unknownStorage);
+  const pid = (await run(["systemctl", "show", "containerd.service", "--property=MainPID", "--value"], root)).trim();
+  if (!/^[1-9][0-9]*$/.test(pid)) throw new Error(unknownStorage);
+  // Flags such as --config, --root or --address would make the default dump differ from the running daemon.
+  const argv = (await read(`/proc/${pid}/cmdline`)).split("\0").filter(Boolean);
+  if (argv.length !== 1 || !/(^|\/)containerd$/.test(argv[0]!)) throw new Error(unknownStorage);
+  const dump = await run(["sudo", "-n", "containerd", "config", "dump"], root);
+  const containerdRoot = containerdTable(dump, "").get("root"), grpc = containerdTable(dump, "grpc").get("address");
+  if (!absolute(containerdRoot) || grpc !== address) throw new Error(unknownStorage);
+  const base = containerdRoot.replace(/\/+$/, "");
+  return [base, `${base}/io.containerd.content.v1.content`, `${base}/io.containerd.snapshotter.v1.overlayfs`];
+}
+
+export async function preflightReleaseSpace(root: string, stateDirectory: string, run = command, measure = availableReleaseBytes,
+  read = (path: string) => readFile(path, "utf8")) {
+  let info: { DockerRootDir?: unknown; Driver?: unknown; DriverStatus?: unknown; Containerd?: unknown };
   try { info = JSON.parse(await run(["docker", "info", "--format", "{{json .}}"], root)); }
   catch (error) { throw new Error("Docker storage layout unavailable; disk capacity is Unknown, release refused", { cause: error }); }
   const dockerRoot = info?.DockerRootDir;
   if (typeof dockerRoot !== "string" || !dockerRoot.startsWith("/")) throw new Error("Docker data root unavailable; disk capacity is Unknown, release refused");
-  // DockerRootDir does not locate containerd's content/snapshot storage. Accept
-  // only the classic driver whose image directory we can actually measure;
-  // never guess /var/lib/containerd, since its configured root can differ.
-  if (info.Driver !== "overlay2" || !Array.isArray(info.DriverStatus) ||
-      info.DriverStatus.some(row => Array.isArray(row) && row[0] === "driver-type")) {
-    throw new Error("Release disk preflight refused: image/snapshot storage filesystem is Unknown. " +
-      "Only classic overlay2 storage is currently verified; qualify discovery of the active containerd/snapshotter root before releasing. " +
-      "Do not assume /var/lib/containerd or switch storage drivers as cleanup.");
-  }
-  const imageRoot = `${dockerRoot.replace(/\/+$/, "")}/overlay2`;
+  if (!Array.isArray(info.DriverStatus)) throw new Error(unknownStorage);
+  const driverTypes = info.DriverStatus.filter(row => Array.isArray(row) && row[0] === "driver-type");
+  let imagePaths: string[];
+  if (info.Driver === "overlay2" && driverTypes.length === 0) imagePaths = [`${dockerRoot.replace(/\/+$/, "")}/overlay2`];
+  else if (driverTypes.length === 1 && driverTypes[0]![1] === "io.containerd.snapshotter.v1") {
+    try { imagePaths = await containerdStorage(info, root, run, read); }
+    catch (error) { throw new Error(unknownStorage, { cause: error }); }
+  } else throw new Error(unknownStorage);
   const statePath = await existingParent(resolve(stateDirectory));
   const measurements = [];
-  for (const path of [dockerRoot, imageRoot, statePath]) {
+  for (const path of [dockerRoot, ...imagePaths, statePath]) {
     try { measurements.push({ path, available: await measure(path) }); }
     catch (error) { throw new Error(`Disk capacity for ${path} is Unknown; release refused`, { cause: error }); }
   }
