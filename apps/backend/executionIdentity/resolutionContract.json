@@ -39920,6 +39920,22 @@
     },
     {
       "owner": null,
+      "file": "apps/backend/auth/loginMethods.ts",
+      "specifier": "better-auth/api",
+      "kind": "import-statement",
+      "targetOwner": "better-auth@1.7.7:177",
+      "targetFile": "dist/api/index.mjs"
+    },
+    {
+      "owner": null,
+      "file": "apps/backend/auth/loginMethods.ts",
+      "specifier": "zod",
+      "kind": "import-statement",
+      "targetOwner": "zod@4.6.6:4",
+      "targetFile": "index.js"
+    },
+    {
+      "owner": null,
       "file": "apps/backend/auth/mailAdmission.ts",
       "specifier": "better-auth/api",
       "kind": "import-statement",
@@ -39957,6 +39973,30 @@
       "kind": "import-statement",
       "targetOwner": "better-auth@1.7.7:177",
       "targetFile": "dist/crypto/index.mjs"
+    },
+    {
+      "owner": null,
+      "file": "apps/backend/auth/methodSettings.ts",
+      "specifier": "better-auth/node",
+      "kind": "import-statement",
+      "targetOwner": "better-auth@1.7.7:177",
+      "targetFile": "dist/integrations/node.mjs"
+    },
+    {
+      "owner": null,
+      "file": "apps/backend/auth/methodSettings.ts",
+      "specifier": "express",
+      "kind": "import-statement",
+      "targetOwner": "express@5.2.1:217",
+      "targetFile": "index.js"
+    },
+    {
+      "owner": null,
+      "file": "apps/backend/auth/methodSettings.ts",
+      "specifier": "zod",
+      "kind": "import-statement",
+      "targetOwner": "zod@4.6.6:4",
+      "targetFile": "index.js"
     },
     {
       "owner": null,
