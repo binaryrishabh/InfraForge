@@ -1,6 +1,6 @@
 {
   "schema": "execution-loading-analysis/1",
-  "policy": "0e6a874ec7c8249f7473d2530d953ab8f2f3d37cc08fbd3dfaf6f396f38b73fc",
+  "policy": "5dc8429ff10c5ded004cdc2445c0ff32344962e0a642f14f744ca337eeb08f4d",
   "modules": {
     "apps/backend/actions/contract.ts": {
       "hash": "15fe6aa3879ab8ccc67a23d579a4e2e9b79f71631dd7687ad192f788c27229ad",
@@ -1198,7 +1198,7 @@
       ]
     },
     "apps/backend/firstStack/admission.ts": {
-      "hash": "2dcdc5400020383421b560570f388718508854cfdadf6cd086bfb309cac9c9a8",
+      "hash": "a70d4bccf00de4e2f6acb86714cce2e039e9d9e8180f2d4e8162c2ddd9581c99",
       "requests": [
         {
           "path": "node:crypto",
@@ -1246,6 +1246,14 @@
         },
         {
           "path": "./migration",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./submissionStorage",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./recoveryOperations",
           "kind": "import-statement"
         }
       ]
@@ -1356,7 +1364,7 @@
       ]
     },
     "apps/backend/firstStack/historicalReplay.ts": {
-      "hash": "4f6e39a106dc44a34edab35a60ffa721468b9e34ad20c624cb01a7b3466501d1",
+      "hash": "ed9d99c8f0ac4ec058449c121c9a8522617df2c8372aecd6de8fbf13e5898392",
       "requests": [
         {
           "path": "../utils/errors",
@@ -1396,6 +1404,10 @@
         },
         {
           "path": "../capabilities/policy",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./recoveryOperations",
           "kind": "import-statement"
         }
       ]
@@ -1624,6 +1636,23 @@
           "kind": "import-statement"
         }
       ]
+    },
+    "apps/backend/firstStack/queueOperations.ts": {
+      "hash": "755f9ecbcaeeb8ae1c110694d661a135212b4264dc3ba427b73812c7e58d1514",
+      "requests": [
+        {
+          "path": "node:crypto",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./admission",
+          "kind": "import-statement"
+        }
+      ]
+    },
+    "apps/backend/firstStack/recoveryOperations.ts": {
+      "hash": "014d45e8baae06cfa5972e476bf5f697158120b08241bc93dcdaa40649cfe7d3",
+      "requests": []
     },
     "apps/backend/firstStack/report.ts": {
       "hash": "0c672631922df98c3d22edbbad30da89fb87f8cce0714b3c60cffcc91fdbea5b",
@@ -1884,7 +1913,7 @@
       ]
     },
     "apps/backend/firstStack/submissionQueue.ts": {
-      "hash": "e7b9e230135548cfeaeb797ad3d2895c202e461bba475c6a7bb4a20933ee2e04",
+      "hash": "4c719cd623775d55efad2d6164fefa0f37c87b14ee3d9d806795d51e368a8307",
       "requests": [
         {
           "path": "bullmq",
@@ -1933,6 +1962,14 @@
         {
           "path": "../release/migrations",
           "kind": "import-statement"
+        },
+        {
+          "path": "./queueOperations",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./submissionStorage",
+          "kind": "import-statement"
         }
       ]
     },
@@ -1964,6 +2001,10 @@
           "kind": "import-statement"
         }
       ]
+    },
+    "apps/backend/firstStack/submissionStorage.ts": {
+      "hash": "75e93f74b1d8e24371d5b7a6487c80a4ed3fc46d8d0d7c7d5ba1184e508566de",
+      "requests": []
     },
     "apps/backend/firstStack/submissionWorker.ts": {
       "hash": "1b1ae55283764d5a37b17841ba73487a2730d0c32add5e8a4d4cd6b63fa0c658",
@@ -2020,7 +2061,7 @@
       "requests": []
     },
     "apps/backend/firstStack/verifierHost.ts": {
-      "hash": "d0284ca64adcc98321c6bfd9891164aa22adee5d2e7db33974278d0c334a1fff",
+      "hash": "f9892d212974b271dcf736194ce870c3a147155521001cd6728a3133de704fb2",
       "requests": [
         {
           "path": "node:http",
@@ -2061,7 +2102,7 @@
       ]
     },
     "apps/backend/firstStack/verifierLifecycle.ts": {
-      "hash": "d030d2487f0399319f1ecf7efc8b46ffbb30797f9bfcb348efde48647ad37cfe",
+      "hash": "0d4f5b13d0e442fcea653abbdc4fb9f53b451e5bf9dee28eea46abb9348e6848",
       "requests": [
         {
           "path": "ioredis",
@@ -3237,7 +3278,7 @@
       ]
     },
     "apps/backend/lib/generated/prisma/client.ts": {
-      "hash": "aa0dea48fcfb966ae66ea8eeceb3263402be88df3900f9497788cf1b42777fae",
+      "hash": "9d0564a0bad3e9e285c378d5baa9c0265031d708352fb95c04f43b9f81fccfbf",
       "requests": [
         {
           "kind": "import-statement",
@@ -3282,7 +3323,7 @@
       "requests": []
     },
     "apps/backend/lib/generated/prisma/internal/class.ts": {
-      "hash": "62505ab38b11e24ab9531031aa7f6a185aae1bbf439442b98941a673681665cf",
+      "hash": "40dd8f5e59e384c32c4ef392a7d7fde3913299970f18a4c6089f327219b852ab",
       "requests": [
         {
           "kind": "import-statement",
@@ -3303,7 +3344,7 @@
       ]
     },
     "apps/backend/lib/generated/prisma/internal/prismaNamespace.ts": {
-      "hash": "b7b47e6a2d61a1e8a9fa883e28d25cc24bb2514a07bcb0e3621731d2047c73ff",
+      "hash": "61e2a043c4e8f3c9910cacb86a565b83a22127cdc47f2b261cc8dfa66de6491f",
       "requests": [
         {
           "kind": "import-statement",
@@ -3358,8 +3399,45 @@
       "hash": "6ba47f47089be38386b53ed90e8c8f8635753d0f83cd1503a3d8ed6ebe8a1589",
       "requests": []
     },
+    "apps/backend/release/firstStackOperations.ts": {
+      "hash": "8047c8b17ed9dd618f97848214d5c84b74c9a01c6fe7c75601361196368f4ce1",
+      "requests": [
+        {
+          "path": "node:fs/promises",
+          "kind": "import-statement"
+        },
+        {
+          "path": "node:path",
+          "kind": "import-statement"
+        },
+        {
+          "path": "pg",
+          "kind": "import-statement"
+        },
+        {
+          "path": "zod",
+          "kind": "import-statement"
+        },
+        {
+          "path": "../firstStack/admission",
+          "kind": "import-statement"
+        },
+        {
+          "path": "../firstStack/historicalReplay",
+          "kind": "import-statement"
+        },
+        {
+          "path": "../firstStack/submissionStorage",
+          "kind": "import-statement"
+        },
+        {
+          "path": "../infra/workerConnection",
+          "kind": "import-statement"
+        }
+      ]
+    },
     "apps/backend/release/firstStackSchema.ts": {
-      "hash": "d77d57c2f808aed47689b396d3e18baf20f68b43bec48277082374f0fd2364a2",
+      "hash": "1557c0c63f76c5b32456b1fe297da1e15ee121cd06062406057ba492263abc4e",
       "requests": [
         {
           "path": "node:fs/promises",
@@ -3377,7 +3455,7 @@
       ]
     },
     "apps/backend/release/migrations.ts": {
-      "hash": "67ef68f7cc397b42ac18909dcfed25547d2dbffdf0a8edb3e5b27765d80b4666",
+      "hash": "3385fb8c3fd94ebd843cb05f77aec03ecd830f6cf48f5e52604cde7f8638f35e",
       "requests": [
         {
           "path": "node:crypto",

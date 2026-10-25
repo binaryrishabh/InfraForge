@@ -40805,7 +40805,7 @@
       "file": "apps/backend/release/firstStackOperations.ts",
       "specifier": "pg",
       "kind": "import-statement",
-      "targetOwner": "pg@8.22.0:170",
+      "targetOwner": "pg@8.22.0:169",
       "targetFile": "esm/index.mjs"
     },
     {
@@ -40813,7 +40813,7 @@
       "file": "apps/backend/release/firstStackOperations.ts",
       "specifier": "zod",
       "kind": "import-statement",
-      "targetOwner": "zod@4.4.3:11",
+      "targetOwner": "zod@4.6.6:4",
       "targetFile": "index.js"
     },
     {
