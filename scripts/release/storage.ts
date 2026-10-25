@@ -97,6 +97,47 @@ export function storageHost(run = command, cwd = process.cwd()): StorageHost {
   };
 }
 
+export async function dockerdEvidence(cwd: string, run = command, host = storageHost(run, cwd), address?: string, containerdPid?: string) {
+  try {
+    const socket = await host.metadata("/var/run/docker.sock");
+    if (socket?.kind !== "socket" || socket.uid !== 0) return refuse();
+    const namespace = await host.link("/proc/self/ns/mnt");
+    if (!/^mnt:\[\d+\]$/.test(namespace)) return refuse();
+    const rows = (await run(["sudo", "-n", "ss", "-H", "-xapn"], cwd)).trim().split("\n").map(line => ({
+      fields: line.trim().split(/\s+/), pids: [...line.matchAll(/pid=(\d+),/g)].map(match => match[1]!),
+    }));
+    // /var/run normally aliases /run. Accept either spelling only for the same inode.
+    const alias = await host.metadata("/run/docker.sock");
+    const listeners = rows.filter(({ fields }) => fields[1] === "LISTEN" &&
+      (fields[4] === "/var/run/docker.sock" || fields[4] === "/run/docker.sock" && alias?.identity === socket.identity));
+    if (listeners.length !== 1 || !listeners[0]!.pids.length) return refuse();
+    let pid: string | undefined;
+    for (const owner of new Set(listeners[0]!.pids)) {
+      const exe = await host.link(`/proc/${owner}/exe`);
+      // Socket activation can leave systemd holding the listening descriptor.
+      if (owner === "1" && exe.endsWith("/systemd")) continue;
+      if (!absoluteStoragePath(exe) || !exe.endsWith("/dockerd") || pid) return refuse();
+      pid = owner;
+    }
+    if (!pid) return refuse();
+    const proc = `/proc/${pid}`;
+    if ((await host.metadata(proc))?.uid !== 0 || await host.link(`${proc}/ns/mnt`) !== namespace ||
+        await host.link(`${proc}/root`) !== "/") return refuse();
+    if (address) {
+      const connected = rows.some(client => client.fields[1] === "ESTAB" && client.pids.includes(pid!) &&
+        client.fields[6] === address && /^[1-9]\d*$/.test(client.fields[5] ?? "") &&
+        rows.some(server => server.fields[1] === "ESTAB" && server.pids.includes(containerdPid!) &&
+          server.fields[4] === address && server.fields[5] === client.fields[7] && server.fields[7] === client.fields[5]));
+      if (!connected) return refuse();
+    }
+    const stat = await host.read(`${proc}/stat`);
+    const start = stat.slice(stat.lastIndexOf(")") + 2).split(/\s+/)[19];
+    if (!stat.startsWith(`${pid} (`) || !/^\d+$/.test(start ?? "")) return refuse();
+    return canonical({ pid, start, exe: await host.link(`${proc}/exe`), namespace,
+      socket: socket.identity });
+  } catch { return refuse(); }
+}
+
 export function daemonStartMilliseconds(stat: string, bootStat: string, ticks: string) {
   // /proc/PID/stat field 22 is ticks since boot; comm may itself contain spaces/parentheses.
   const start = stat.slice(stat.lastIndexOf(")") + 2).split(/\s+/)[19];
@@ -181,6 +222,7 @@ export async function containerdStorage(info: { Driver?: unknown; Containerd?: u
     if (owners.length !== 1 || !owners[0]!.includes("LISTEN") ||
         [...owners[0]!.matchAll(/pid=(\d+),/g)].map(match => match[1]).some(owner => owner !== pid) ||
         !owners[0]!.includes(`pid=${pid},`)) return refuse();
+    const docker = await dockerdEvidence(cwd, run, host, address, pid);
     const bootStat = await host.read("/proc/stat"), ticks = await run(["getconf", "CLK_TCK"], cwd);
     const reconstructed = daemonStartMilliseconds(stat, bootStat, ticks);
     // systemd captured realtime when it created this process. A later boot-epoch
@@ -196,6 +238,7 @@ export async function containerdStorage(info: { Driver?: unknown; Containerd?: u
     const dump = parseContainerdConfig(await run(["sudo", "-n", `${proc}/exe`, "config", "dump"], cwd));
     const paths = qualifiedContainerdPaths(dump, defaults, address);
     if (await configurationEvidence(host, started, proc) !== before || await host.link(`${proc}/exe`) !== exe ||
+        await dockerdEvidence(cwd, run, host, address, pid) !== docker ||
         daemonStartMilliseconds(await host.read(`${proc}/stat`), await host.read("/proc/stat"), ticks) !== reconstructed ||
         (await run(startCommand, cwd)).trim() !== recorded ||
         await host.link(`${proc}/ns/mnt`) !== namespace ||

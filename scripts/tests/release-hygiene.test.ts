@@ -2,9 +2,12 @@ import { expect, test } from "bun:test";
 import { mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { assertReleaseSpace, availableReleaseBytes, minimumReleaseFreeBytes, preflightReleaseSpace, pruneAcceptedImages, selectReleaseImages } from "../release/hygiene";
+import { assertReleaseSpace, availableReleaseBytes, minimumReleaseFreeBytes, preflightReleaseSpace as preflight, pruneAcceptedImages, selectReleaseImages } from "../release/hygiene";
+import { dockerHost, dockerSockets } from "./fixtures/release-dockerd";
 
-const context = (args: string[]) => args[1] === "context" ? args[2] === "show" ? "default" : JSON.stringify([{ Name: "default", Endpoints: { docker: { Host: "unix:///var/run/docker.sock" } } }]) : undefined;
+const preflightReleaseSpace = (root: string, state: string, run: Parameters<typeof preflight>[2], measure?: Parameters<typeof preflight>[3]) =>
+  preflight(root, state, run, measure, dockerHost, {});
+const context = (args: string[]) => args[2] === "ss" ? dockerSockets : args[1] === "context" ? args[2] === "show" ? "default" : JSON.stringify([{ Name: "default", Endpoints: { docker: { Host: "unix:///var/run/docker.sock" } } }]) : undefined;
 const release = (imageId: string) => ({ sha: imageId, image: `infraforge-backend:${imageId}`, imageId,
   authContract: 1, migrationFingerprint: "schema", settingsFingerprint: "settings" });
 const state = { current: release("accepted"), previous: release("previous") };
@@ -28,7 +31,8 @@ test("preflight measures DockerRootDir, image directory and nearest existing sta
     await preflightReleaseSpace(".", join(directory, "new", "state"), async args => { commands.push(args); return context(args) ?? JSON.stringify(dockerInfo); },
       async path => { paths.push(path); return minimumReleaseFreeBytes; });
     expect(paths).toEqual(["/docker-root", "/docker-root/overlay2", directory]);
-    expect(commands).toEqual([["docker", "context", "show"], ["docker", "context", "inspect", "default"], ["docker", "info", "--format", "{{json .}}"]]);
+    expect(commands.filter(args => args[0] === "docker")).toEqual([["docker", "context", "show"], ["docker", "context", "inspect", "default"], ["docker", "info", "--format", "{{json .}}"]]);
+    expect(commands.filter(args => args[2] === "ss")).toHaveLength(2);
     expect(await Bun.file(join(directory, "new", "state", "release.lock")).exists()).toBe(false);
     expect(await readdir(directory)).toEqual([]);
     await expect(preflightReleaseSpace(".", directory, async () => "")).rejects.toThrow("Unknown");

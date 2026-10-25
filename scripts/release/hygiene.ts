@@ -1,7 +1,7 @@
 import { open, readFile, statfs, stat, unlink } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { command } from "./process";
-import { absoluteStoragePath, containerdStorage, storageHost, unknownStorage, verifyLocalDocker, type StorageHost } from "./storage";
+import { absoluteStoragePath, containerdStorage, dockerdEvidence, storageHost, unknownStorage, verifyLocalDocker, type StorageHost } from "./storage";
 import type { AcceptedState } from "./image";
 
 export const minimumReleaseFreeBytes = 8n * 1024n ** 3n;
@@ -53,6 +53,7 @@ export async function preflightReleaseSpace(root: string, stateDirectory: string
   if (!absoluteStoragePath(dockerRoot)) throw new Error("Docker data root unavailable; disk capacity is Unknown, release refused");
   if (!Array.isArray(info.SecurityOptions) || info.SecurityOptions.some(value => typeof value !== "string" || /rootless/i.test(value))) throw new Error(unknownStorage);
   if (!Array.isArray(info.DriverStatus)) throw new Error(unknownStorage);
+  const docker = await dockerdEvidence(root, run, host);
   const driverTypes = info.DriverStatus.filter(row => Array.isArray(row) && row[0] === "driver-type");
   let imagePaths: string[];
   if (info.Driver === "overlay2" && driverTypes.length === 0) imagePaths = [`${dockerRoot.replace(/\/+$/, "")}/overlay2`];
@@ -60,6 +61,7 @@ export async function preflightReleaseSpace(root: string, stateDirectory: string
     try { imagePaths = await containerdStorage(info, root, run, host); }
     catch (error) { throw new Error(unknownStorage, { cause: error }); }
   } else throw new Error(unknownStorage);
+  if (await dockerdEvidence(root, run, host) !== docker) throw new Error(unknownStorage);
   const statePath = await existingParent(resolve(stateDirectory));
   const measurements = [];
   for (const path of [dockerRoot, ...imagePaths, statePath]) {

@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test";
 import { preflightReleaseSpace, minimumReleaseFreeBytes } from "../release/hygiene";
 import { daemonStartMilliseconds, localDockerEnvironment, parseContainerdConfig, type StorageHost } from "../release/storage";
+import { dockerHost, dockerSockets } from "./fixtures/release-dockerd";
 
 const address = "/run/containerd/containerd.sock";
 const info = { DockerRootDir: "/var/lib/docker", Driver: "overlayfs", DriverStatus: [["driver-type", "io.containerd.snapshotter.v1"]],
@@ -19,7 +20,8 @@ type Change = { info?: object; dump?: string; defaults?: string; pid?: string; a
   sockets?: string; context?: string; endpoint?: string; ctime?: number; config?: string; missing?: boolean; parentCtime?: number;
   importedCtime?: number; fail?: string; duringDump?: boolean; restart?: boolean; importMissing?: boolean; symlink?: boolean;
   production?: boolean; ancestor?: "writable" | "symlink" | "unowned" | "missing"; mount?: string; daemonMount?: string;
-  mountDuringDump?: boolean; boot?: string; recorded?: string };
+  mountDuringDump?: boolean; boot?: string; recorded?: string; dockerExe?: string; dockerNamespace?: string; dockerRoot?: string;
+  dockerSockets?: string; dockerKind?: "file" | "other"; dockerRestart?: boolean; dockerUid?: number };
 const rootMount = "29 1 259:1 / / rw,relatime - ext4 /dev/root rw";
 function host(change: Change = {}) {
   const calls: string[][] = [], paths: string[] = [];
@@ -33,13 +35,15 @@ function host(change: Change = {}) {
     if (args.includes("--property=ExecMainStartTimestamp")) return change.recorded ?? (change.production ? "@1792650086.62" : "@1100");
     if (args[0] === "systemctl") return change.restart && systemCalls++ > 0 ? "813" : change.pid ?? "812";
     if (args[0] === "getconf") return "100";
-    if (args[2] === "ss") return change.sockets ?? `u_str LISTEN 0 4096 ${address} 123 * 0 users:(("containerd",pid=812,fd=9))`;
+    if (args[2] === "ss") return args.includes("-xapn") ? change.dockerSockets ?? dockerSockets :
+      change.sockets ?? `u_str LISTEN 0 4096 ${address} 123 * 0 users:(("containerd",pid=812,fd=9))`;
     if (args[3] === "config" && args[4] === "default") return change.defaults ?? dump;
     if (args[3] === "config" && args[4] === "dump") { dumped = true; return change.dump ?? dump; }
     throw new Error("Unexpected command");
   };
   const io: StorageHost = {
     async read(path) {
+      if (path === "/proc/900/stat") return (await dockerHost.read(path)).replace("12000 0", dumped && change.dockerRestart ? "13000 0" : "12000 0");
       if (path.includes(change.fail ?? "NEVER")) throw new Error("PRIVATE_CONFIG_MARKER");
       if (path.endsWith("/mountinfo")) return path === "/proc/812/mountinfo" && change.daemonMount ? change.daemonMount :
         rootMount + (change.mount || dumped && change.mountDuringDump ? `\n55 29 259:1 /prepared ${change.mount ?? "/etc/containerd"} rw - ext4 /dev/root rw` : "");
@@ -51,6 +55,10 @@ function host(change: Change = {}) {
       throw new Error("Unexpected read");
     },
     async link(path) {
+      if (path === "/proc/900/exe") return change.dockerExe ?? dockerHost.link(path);
+      if (path === "/proc/900/ns/mnt") return change.dockerNamespace ?? dockerHost.link(path);
+      if (path === "/proc/900/root") return change.dockerRoot ?? dockerHost.link(path);
+      if (path === "/proc/1/exe") return dockerHost.link(path);
       if (path.endsWith("/exe")) return change.exe ?? "/usr/bin/containerd";
       if (path === "/proc/self/ns/mnt") return "mnt:[123]";
       if (path.endsWith("/ns/mnt")) return change.namespace ?? "mnt:[123]";
@@ -58,6 +66,8 @@ function host(change: Change = {}) {
       throw new Error("Unexpected link");
     },
     async metadata(path) {
+      if (path.endsWith("docker.sock")) return { ...await dockerHost.metadata(path), kind: change.dockerKind ?? "socket" } as Awaited<ReturnType<StorageHost["metadata"]>>;
+      if (path === "/proc/900") return { ...await dockerHost.metadata(path), uid: change.dockerUid ?? 0 } as Awaited<ReturnType<StorageHost["metadata"]>>;
       if (path.endsWith("config.toml") && change.missing || path.endsWith("import.toml") && change.importMissing) return undefined;
       const file = path.endsWith(".toml");
       if (path === "/etc" && change.ancestor === "missing") return undefined;
@@ -88,6 +98,17 @@ test("qualified containerd uses the live executable, provenance and each real st
 });
 
 const refusals: [string, Change][] = [
+  ["local socket forwarding to remote Docker", { dockerExe: "/usr/bin/socat" }],
+  ["dockerd in another mount namespace", { dockerNamespace: "mnt:[456]" }],
+  ["dockerd in another root", { dockerRoot: "/other" }],
+  ["unprivileged dockerd", { dockerUid: 1000 }],
+  ["Docker endpoint is a regular file", { dockerKind: "file" }],
+  ["Docker endpoint is a symlink", { dockerKind: "other" }],
+  ["Docker listener has no owner", { dockerSockets: dockerSockets.replace('users:(("dockerd",pid=900,fd=3))', "") }],
+  ["dockerd connects to another containerd socket", { dockerSockets: dockerSockets.replaceAll(address, "/run/other.sock") }],
+  ["dockerd peer belongs to another containerd", { dockerSockets: dockerSockets.replace("pid=812", "pid=999") }],
+  ["dockerd peer inode does not match", { dockerSockets: dockerSockets.replace("402 * 401", "403 * 401") }],
+  ["dockerd restarted during qualification", { dockerRestart: true }],
   ["replaced own directory", { parentCtime: 1200000 }],
   ["writable higher ancestor", { ancestor: "writable" }],
   ["symlinked higher ancestor", { ancestor: "symlink" }],
@@ -170,6 +191,20 @@ test("exact production timestamps accept an unrelated later etc change", async (
   await h.preflight();
   expect(h.paths).toHaveLength(5);
   expect(daemonStartMilliseconds(procStat.replace("10000 0", "3988762 0"), "btime 1792610199", "100")).toBe(1792650086620);
+});
+
+test("classic overlay2 also rejects a forwarded or namespaced Docker endpoint", async () => {
+  const classic = { Driver: "overlay2", DriverStatus: [] };
+  await host({ info: classic }).preflight();
+  for (const change of [{ dockerExe: "/usr/bin/socat" }, { dockerNamespace: "mnt:[456]" }]) {
+    const h = host({ info: classic, ...change });
+    await expect(h.preflight()).rejects.toThrow("Unknown");
+    expect(h.paths).toEqual([]);
+  }
+});
+
+test("Docker socket activation permits systemd alongside the verified dockerd", async () => {
+  await host({ dockerSockets: dockerSockets.replace('pid=900,fd=3))', 'pid=900,fd=3),("systemd",pid=1,fd=4))') }).preflight();
 });
 
 test("valid TOML syntax preserves field meaning and suppresses parser diagnostics", async () => {
