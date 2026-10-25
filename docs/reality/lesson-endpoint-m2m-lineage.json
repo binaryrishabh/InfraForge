@@ -386,7 +386,7 @@
     },
     {
       "file": "apps/backend/release/migrations.ts",
-      "hash": "df66447357b50e50d2875bc58fba8925c25d64a450e5c76767cc0a38f5fe91bf"
+      "hash": "1e18d7beed32df1f6d115e1e5a39615bba9c8e720912acf4e50ffa486eaedf86"
     },
     {
       "file": "apps/backend/worker.ts",

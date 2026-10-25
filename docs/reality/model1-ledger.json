@@ -407,7 +407,7 @@
     },
     {
       "file": "apps/backend/executionIdentity/loading.ts",
-      "sha256": "02af201f64df4c8af7980648de29a4336055f093a1a0c694a2eb0657a472000c",
+      "sha256": "e8e58230c31659f6c53ecb29db527fa7a3fce81342d4c46cc6b8215000eb70da",
       "numericSites": 14
     },
     {
@@ -902,7 +902,7 @@
     },
     {
       "file": "apps/backend/release/migrations.ts",
-      "sha256": "6382c174e07c277eb0aa38c910bea1ea9b53fe51ca330ff453701b160a6544c8",
+      "sha256": "67ef68f7cc397b42ac18909dcfed25547d2dbffdf0a8edb3e5b27765d80b4666",
       "numericSites": 35
     },
     {
@@ -61561,7 +61561,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L55",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L56",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -61575,7 +61575,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/release/migrations.ts",
-        "line": 55,
+        "line": 56,
         "column": 28
       }
     },
@@ -61597,7 +61597,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L72",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L73",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -61611,7 +61611,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/release/migrations.ts",
-        "line": 72,
+        "line": 73,
         "column": 30
       }
     },
@@ -61633,7 +61633,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L76",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L77",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -61647,7 +61647,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/release/migrations.ts",
-        "line": 76,
+        "line": 77,
         "column": 28
       }
     },
@@ -61669,7 +61669,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L76",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L77",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -61683,7 +61683,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/release/migrations.ts",
-        "line": 76,
+        "line": 77,
         "column": 38
       }
     },
@@ -61701,42 +61701,6 @@
         ]
       },
       "formula": "deployment_learning_insert: [\"verify_challenge_learning\", 7, 'BEFORE INSERT ON public.\"Deployment\"']",
-      "classification": "implementation-policy",
-      "confidence": "high",
-      "provenance": [
-        {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L78",
-          "supports": "implementation",
-          "detail": "Exact historical literal and source expression; not external validation."
-        }
-      ],
-      "assumptions": [
-        "This literal is not evidence of real infrastructure capacity or performance.",
-        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
-      ],
-      "researchedOn": "2026-10-15",
-      "freeMode": "conditional",
-      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
-      "location": {
-        "file": "apps/backend/release/migrations.ts",
-        "line": 78,
-        "column": 63
-      }
-    },
-    {
-      "id": "m1.apps.backend.release.migrations.6",
-      "concept": "expected.deployment_learning_guard · literal 19",
-      "modelVersion": "1",
-      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
-      "quantity": {
-        "kind": "known",
-        "value": 19,
-        "unit": "code-number",
-        "provenance": [
-          "m1.apps.backend.release.migrations.6"
-        ]
-      },
-      "formula": "deployment_learning_guard: [\"protect_challenge_learning\", 19, 'BEFORE UPDATE OF \"improvementSourceId\", \"learningHypothesis\", \"learningIntent\" ON public.\"Deployment\"']",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
@@ -61760,19 +61724,19 @@
       }
     },
     {
-      "id": "m1.apps.backend.release.migrations.7",
-      "concept": "expected.run_experiment_evidence_guard · literal 23",
+      "id": "m1.apps.backend.release.migrations.6",
+      "concept": "expected.deployment_learning_guard · literal 19",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
       "quantity": {
         "kind": "known",
-        "value": 23,
+        "value": 19,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.release.migrations.7"
+          "m1.apps.backend.release.migrations.6"
         ]
       },
-      "formula": "run_experiment_evidence_guard: [\"protect_experiment_evidence\", 23, 'BEFORE INSERT OR UPDATE ON public.\"RunEvidenceSample\"']",
+      "formula": "deployment_learning_guard: [\"protect_challenge_learning\", 19, 'BEFORE UPDATE OF \"improvementSourceId\", \"learningHypothesis\", \"learningIntent\" ON public.\"Deployment\"']",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
@@ -61792,6 +61756,42 @@
       "location": {
         "file": "apps/backend/release/migrations.ts",
         "line": 80,
+        "column": 63
+      }
+    },
+    {
+      "id": "m1.apps.backend.release.migrations.7",
+      "concept": "expected.run_experiment_evidence_guard · literal 23",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 23,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.release.migrations.7"
+        ]
+      },
+      "formula": "run_experiment_evidence_guard: [\"protect_experiment_evidence\", 23, 'BEFORE INSERT OR UPDATE ON public.\"RunEvidenceSample\"']",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L81",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/release/migrations.ts",
+        "line": 81,
         "column": 68
       }
     },
@@ -61813,7 +61813,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L81",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L82",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -61827,7 +61827,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/release/migrations.ts",
-        "line": 81,
+        "line": 82,
         "column": 64
       }
     },
@@ -61849,7 +61849,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L82",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L83",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -61863,7 +61863,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/release/migrations.ts",
-        "line": 82,
+        "line": 83,
         "column": 67
       }
     },
@@ -61885,7 +61885,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L83",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L84",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -61899,7 +61899,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/release/migrations.ts",
-        "line": 83,
+        "line": 84,
         "column": 50
       }
     },
@@ -61921,7 +61921,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L84",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L85",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -61935,7 +61935,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/release/migrations.ts",
-        "line": 84,
+        "line": 85,
         "column": 59
       }
     },
@@ -61957,7 +61957,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L85",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L86",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -61971,7 +61971,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/release/migrations.ts",
-        "line": 85,
+        "line": 86,
         "column": 57
       }
     },
@@ -61993,7 +61993,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L86",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L87",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -62007,7 +62007,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/release/migrations.ts",
-        "line": 86,
+        "line": 87,
         "column": 60
       }
     },
@@ -62025,42 +62025,6 @@
         ]
       },
       "formula": "run_action_evidence_guard: [\"protect_run_action\", 19, 'BEFORE UPDATE ON public.\"RunAction\"']",
-      "classification": "implementation-policy",
-      "confidence": "high",
-      "provenance": [
-        {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L87",
-          "supports": "implementation",
-          "detail": "Exact historical literal and source expression; not external validation."
-        }
-      ],
-      "assumptions": [
-        "This literal is not evidence of real infrastructure capacity or performance.",
-        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
-      ],
-      "researchedOn": "2026-10-15",
-      "freeMode": "conditional",
-      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
-      "location": {
-        "file": "apps/backend/release/migrations.ts",
-        "line": 87,
-        "column": 55
-      }
-    },
-    {
-      "id": "m1.apps.backend.release.migrations.15",
-      "concept": "expected.deployment_lineage_guard · literal 19",
-      "modelVersion": "1",
-      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
-      "quantity": {
-        "kind": "known",
-        "value": 19,
-        "unit": "code-number",
-        "provenance": [
-          "m1.apps.backend.release.migrations.15"
-        ]
-      },
-      "formula": "deployment_lineage_guard: [\"protect_run_lineage\", 19, 'BEFORE UPDATE OF \"sourceRunId\", \"rerunMode\", \"autoStopAtSimulatedSeconds\" ON public.\"Deployment\"']",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
@@ -62084,19 +62048,19 @@
       }
     },
     {
-      "id": "m1.apps.backend.release.migrations.16",
-      "concept": "expected.deployment_challenge_attempt · literal 7",
+      "id": "m1.apps.backend.release.migrations.15",
+      "concept": "expected.deployment_lineage_guard · literal 19",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
       "quantity": {
         "kind": "known",
-        "value": 7,
+        "value": 19,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.release.migrations.16"
+          "m1.apps.backend.release.migrations.15"
         ]
       },
-      "formula": "deployment_challenge_attempt: [\"verify_challenge_attempt\", 7, 'BEFORE INSERT ON public.\"Deployment\"']",
+      "formula": "deployment_lineage_guard: [\"protect_run_lineage\", 19, 'BEFORE UPDATE OF \"sourceRunId\", \"rerunMode\", \"autoStopAtSimulatedSeconds\" ON public.\"Deployment\"']",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
@@ -62116,6 +62080,42 @@
       "location": {
         "file": "apps/backend/release/migrations.ts",
         "line": 89,
+        "column": 55
+      }
+    },
+    {
+      "id": "m1.apps.backend.release.migrations.16",
+      "concept": "expected.deployment_challenge_attempt · literal 7",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 7,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.release.migrations.16"
+        ]
+      },
+      "formula": "deployment_challenge_attempt: [\"verify_challenge_attempt\", 7, 'BEFORE INSERT ON public.\"Deployment\"']",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L90",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/release/migrations.ts",
+        "line": 90,
         "column": 64
       }
     },
@@ -62137,7 +62137,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L90",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L91",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -62151,7 +62151,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/release/migrations.ts",
-        "line": 90,
+        "line": 91,
         "column": 63
       }
     },
@@ -62173,7 +62173,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L91",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L92",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -62187,7 +62187,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/release/migrations.ts",
-        "line": 91,
+        "line": 92,
         "column": 66
       }
     },
@@ -62209,7 +62209,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L92",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L93",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -62223,7 +62223,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/release/migrations.ts",
-        "line": 92,
+        "line": 93,
         "column": 64
       }
     },
@@ -62245,7 +62245,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L96",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L97",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -62259,7 +62259,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/release/migrations.ts",
-        "line": 96,
+        "line": 97,
         "column": 41
       }
     },
@@ -62281,7 +62281,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L96",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L97",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -62295,7 +62295,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/release/migrations.ts",
-        "line": 96,
+        "line": 97,
         "column": 68
       }
     },
@@ -62317,7 +62317,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L96",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L97",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -62331,7 +62331,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/release/migrations.ts",
-        "line": 96,
+        "line": 97,
         "column": 105
       }
     },
@@ -62353,7 +62353,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L119",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L120",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -62367,7 +62367,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/release/migrations.ts",
-        "line": 119,
+        "line": 120,
         "column": 20
       }
     },
@@ -62389,7 +62389,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L121",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L122",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -62403,7 +62403,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/release/migrations.ts",
-        "line": 121,
+        "line": 122,
         "column": 24
       }
     },
@@ -62425,7 +62425,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L123",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L124",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -62439,7 +62439,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/release/migrations.ts",
-        "line": 123,
+        "line": 124,
         "column": 21
       }
     },
@@ -62461,7 +62461,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L125",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L126",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -62475,7 +62475,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/release/migrations.ts",
-        "line": 125,
+        "line": 126,
         "column": 19
       }
     },
@@ -62497,7 +62497,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L129",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L130",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -62511,7 +62511,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/release/migrations.ts",
-        "line": 129,
+        "line": 130,
         "column": 21
       }
     },
@@ -62533,7 +62533,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L129",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L130",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -62547,7 +62547,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/release/migrations.ts",
-        "line": 129,
+        "line": 130,
         "column": 34
       }
     },
@@ -62569,7 +62569,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L137",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L138",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -62583,7 +62583,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/release/migrations.ts",
-        "line": 137,
+        "line": 138,
         "column": 19
       }
     },
@@ -62605,7 +62605,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L145",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L146",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -62619,7 +62619,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/release/migrations.ts",
-        "line": 145,
+        "line": 146,
         "column": 19
       }
     },
@@ -62641,7 +62641,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L150",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L151",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -62655,7 +62655,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/release/migrations.ts",
-        "line": 150,
+        "line": 151,
         "column": 25
       }
     },
@@ -62677,7 +62677,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L152",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L153",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -62691,7 +62691,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/release/migrations.ts",
-        "line": 152,
+        "line": 153,
         "column": 21
       }
     },
@@ -62713,7 +62713,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L152",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L153",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -62727,7 +62727,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/release/migrations.ts",
-        "line": 152,
+        "line": 153,
         "column": 34
       }
     },
@@ -62749,7 +62749,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L153",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L154",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -62763,7 +62763,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/release/migrations.ts",
-        "line": 153,
+        "line": 154,
         "column": 30
       }
     },
@@ -62785,7 +62785,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L156",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/release/migrations.ts#L157",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -62799,7 +62799,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/release/migrations.ts",
-        "line": 156,
+        "line": 157,
         "column": 23
       }
     },
