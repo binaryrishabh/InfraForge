@@ -180,7 +180,7 @@ async function configurationEvidence(host: StorageHost, started: number, proc: s
     const value = await host.metadata(path);
     if (!value && kind === "directory") return refuse();
     if (value && (value.kind !== kind || value.uid !== 0 || !Number.isInteger(value.mode) || (value.mode & 0o022) !== 0 ||
-        checkTime && (!Number.isFinite(value.ctimeMs) || value.ctimeMs + 1000 >= started))) return refuse();
+        !Number.isFinite(value.ctimeMs) || checkTime && value.ctimeMs + 1000 >= started)) return refuse();
     evidence.set(path, value?.identity ?? "missing");
     return value;
   }
@@ -189,10 +189,16 @@ async function configurationEvidence(host: StorageHost, started: number, proc: s
     if (!absoluteStoragePath(path) || /[*?\[\]{}\\]/.test(path) || posix.normalize(path) !== path || seen.has(path) || seen.size >= 64) return refuse();
     seen.add(path);
     evidence.set(`mount:${path}`, await inputMount(host, proc, path));
-    // Only the OWN containing directory must predate startup. Higher ancestors
-    // must remain real root-owned, non-writable directories, regardless of ctime.
+    // A subtree rename updates the moved directory AND its destination parent.
+    // Permit isolated later ancestor changes (e.g. /etc package activity), but
+    // never adjacent later directories. Anchor the chain in a pre-start root;
+    // the own directory must also predate startup, even for an absent config.
+    let childChanged = false;
     for (let parent = posix.dirname(path);; parent = posix.dirname(parent)) {
-      await inspect(parent, "directory", parent === posix.dirname(path));
+      const value = (await inspect(parent, "directory", parent === posix.dirname(path) || parent === "/"))!;
+      const changed = value.ctimeMs + 1000 >= started;
+      if (changed && childChanged) return refuse();
+      childChanged = changed;
       if (parent === "/") break;
     }
     if (!await inspect(path, "file")) { if (imported) return refuse(); return; }

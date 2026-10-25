@@ -23,7 +23,8 @@ type Change = { info?: object; dump?: string; defaults?: string; pid?: string; a
   production?: boolean; ancestor?: "writable" | "symlink" | "unowned" | "missing"; mount?: string; daemonMount?: string;
   mountDuringDump?: boolean; boot?: string; recorded?: string; dockerExe?: string; dockerNamespace?: string; dockerRoot?: string;
   dockerSockets?: string; dockerKind?: "file" | "other"; dockerRestart?: boolean; dockerUid?: number; socketUid?: number;
-  socketAlias?: boolean; importedParentCtime?: number; sharedRoot?: string; initMount?: string };
+  socketAlias?: boolean; importedParentCtime?: number; sharedRoot?: string; initMount?: string;
+  directoryTimes?: Record<string, number>; importedConfig?: string };
 const rootMount = "29 1 259:1 / / rw,relatime - ext4 /dev/root rw";
 function host(change: Change = {}) {
   const calls: string[][] = [], paths: string[] = [];
@@ -56,7 +57,9 @@ function host(change: Change = {}) {
       if (path.endsWith("/stat")) return change.production ? procStat.replace("812 (", "390826 (").replace("10000 0", "3988762 0") : procStat;
       if (path.endsWith("/cmdline")) return change.argv ?? "/usr/bin/containerd\0";
       if (path === "/etc/containerd/config.toml") return change.config ?? "version = 3";
-      if (path === "/etc/containerd/import.toml" || path === "/etc/imports/extra.toml") return "version = 3";
+      if (path === "/etc/containerd/import.toml" || path === "/etc/imports/extra.toml" || path === "/etc/service-config/containerd/extra.toml") {
+        return change.importedConfig ?? "version = 3";
+      }
       throw new Error("Unexpected read");
     },
     async link(path) {
@@ -81,9 +84,9 @@ function host(change: Change = {}) {
         uid: change.ancestor === "unowned" ? 1000 : 0, mode: change.ancestor === "writable" ? 0o777 : 0o755, ctimeMs: 900000, identity: path };
       return { kind: change.symlink && file ? "other" : file ? "file" : "directory",
         uid: 0, mode: file ? 0o644 : 0o755,
-        ctimeMs: path === "/etc/imports" && change.importedParentCtime ? change.importedParentCtime :
+        ctimeMs: change.directoryTimes?.[path] ?? (path === "/etc/imports" && change.importedParentCtime ? change.importedParentCtime :
           change.production ? (path === "/" ? 1792610207.998 : path === "/etc" ? 1792823033.81 : 1792610946.53) * 1000 :
-          file ? dumped && change.duringDump ? 1200000 : path.endsWith("import.toml") ? change.importedCtime ?? 900000 : change.ctime ?? 900000 : change.parentCtime ?? 900000,
+          file ? dumped && change.duringDump ? 1200000 : path.endsWith("import.toml") ? change.importedCtime ?? 900000 : change.ctime ?? 900000 : change.parentCtime ?? 900000),
         identity: dumped && change.duringDump ? "changed" : path };
     },
   };
@@ -126,8 +129,13 @@ const refusals: [string, Change][] = [
   ["dockerd connection is not established", { dockerSockets: dockerSockets.replace("ESTAB 0 0 *", "LISTEN 0 0 *") }],
   ["containerd connection evidence missing", { dockerSockets: dockerSockets.split("\n").slice(0, 2).join("\n") }],
   ["dockerd restarted during qualification", { dockerRestart: true }],
-  ["replaced own directory", { parentCtime: 1200000 }],
+  ["replaced own directory", { directoryTimes: { "/etc/containerd": 1200000 } }],
   ["replaced imported file own directory", { config: "imports = ['/etc/imports/extra.toml']", importedParentCtime: 1200000 }],
+  ["renamed higher import subtree with old descendants", { config: "imports = ['/etc/service-config/containerd/extra.toml']",
+    importedConfig: "root = '/stale/roomy'", dump: dump.replace("/var/lib/containerd", "/stale/roomy"),
+    directoryTimes: { "/etc": 1200000, "/etc/service-config": 1200000 } }],
+  ["root anchor changed after startup", { directoryTimes: { "/": 1200000 } }],
+  ["unknown higher ancestor timestamp", { directoryTimes: { "/etc": Number.NaN } }],
   ["writable higher ancestor", { ancestor: "writable" }],
   ["symlinked higher ancestor", { ancestor: "symlink" }],
   ["unowned higher ancestor", { ancestor: "unowned" }],
@@ -214,6 +222,17 @@ test("exact production timestamps accept an unrelated later etc change", async (
   expect(daemonStartMilliseconds(procStat.replace("10000 0", "3988762 0"), "btime 1792610199", "100")).toBe(1792650086620);
 });
 
+test("isolated later ancestor activity accepts literal imports in schema 4", async () => {
+  const h = host({ dump: containerd242, defaults: containerd242,
+    config: "imports = ['/etc/service-config/containerd/extra.toml']",
+    directoryTimes: { "/etc/service-config": 1200000 } });
+  await expect(h.preflight()).resolves.toBeUndefined();
+  expect(h.paths).toHaveLength(5);
+  for (const config of ["imports = ['/etc/containerd/*.toml']", "imports = ['extra.toml']"]) {
+    await expect(host({ dump: containerd242, defaults: containerd242, config }).preflight()).rejects.toThrow("Unknown");
+  }
+});
+
 test("schema 4 qualifies the server plugin and built-in storage paths", async () => {
   const h = host({ dump: containerd242, defaults: containerd242 });
   await expect(h.preflight()).resolves.toBeUndefined();
@@ -259,7 +278,8 @@ test("normal ss wildcard peer names qualify through reciprocal inodes", async ()
   expect(h.paths).toHaveLength(5);
 });
 
-for (const kind of ["accept", "symlink", "fifo", "ancestor", "normalized", "control", "swap", "limit", "generic", "argv"]) {
+for (const kind of ["accept", "symlink", "fifo", "ancestor", "normalized", "control", "swap", "limit", "generic", "argv",
+  "ancestor-rename", "root-anchor", "unknown-time"]) {
   test(`owner evidence helper ${kind}`, () => {
     const result = Bun.spawnSync([process.platform === "win32" ? "python" : "python3", "scripts/tests/fixtures/config-evidence.py", kind], { timeout: 5000 });
     expect(result.stderr.toString()).toBe("");

@@ -1,5 +1,6 @@
 """Bounded, read-only owner evidence; the release qualify command remains the gate."""
 import os
+import math
 import posixpath
 import stat
 import sys
@@ -12,7 +13,8 @@ def inspect_configuration(started, fs=os, emit=print):
 
     def validate(value, kind, timed):
         if (stat.S_IFMT(value.st_mode) != kind or value.st_uid != 0
-                or value.st_mode & 0o022 or timed and value.st_ctime + 1 >= started):
+                or value.st_mode & 0o022 or not math.isfinite(value.st_ctime)
+                or timed and value.st_ctime + 1 >= started):
             raise ValueError("Unqualified input")
 
     def visit(path, imported=False):
@@ -26,7 +28,8 @@ def inspect_configuration(started, fs=os, emit=print):
         parts = path.split("/")[1:]
         directory = fs.open("/", fs.O_RDONLY | fs.O_DIRECTORY | fs.O_NOFOLLOW)
         try:
-            validate(fs.fstat(directory), stat.S_IFDIR, len(parts) == 1)
+            validate(fs.fstat(directory), stat.S_IFDIR, True)
+            parent_changed = False
             # Walk with pinned directory descriptors: even a concurrent parent
             # symlink substitution cannot redirect the subsequent file open.
             for index, component in enumerate(parts[:-1]):
@@ -35,6 +38,10 @@ def inspect_configuration(started, fs=os, emit=print):
                 directory = child
                 value = fs.fstat(directory)
                 validate(value, stat.S_IFDIR, index == len(parts) - 2)
+                changed = value.st_ctime + 1 >= started
+                if changed and parent_changed:
+                    raise ValueError("Unqualified ancestor replacement")
+                parent_changed = changed
                 emit(f"/{'/'.join(parts[:index + 1])}: directory ctime={value.st_ctime:.9f}")
             try:
                 value = fs.stat(parts[-1], dir_fd=directory, follow_symlinks=False)

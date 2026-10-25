@@ -5,6 +5,7 @@ import stat
 import sys
 import contextlib
 import io
+import math
 from types import SimpleNamespace
 
 module = runpy.run_path("scripts/release/config-evidence.py")
@@ -60,9 +61,13 @@ class Filesystem:
         if path == "/etc":
             ctime = 1792823033.81
         if path == "/":
-            ctime = 1792610207.998
+            ctime = 1792823033.81 if case == "root-anchor" else 1792610207.998
+        if path == "/etc/service-config" and case == "ancestor-rename":
+            ctime = 1792823033.81
+        if path == "/etc" and case == "unknown-time":
+            ctime = float("nan")
         return SimpleNamespace(st_mode=kind | 0o755, st_uid=0, st_ctime=ctime,
-                               st_dev=1, st_ino=hash(path), st_ctime_ns=int(ctime * 1e9))
+                               st_dev=1, st_ino=hash(path), st_ctime_ns=int(ctime * 1e9) if math.isfinite(ctime) else 0)
 
     def open(self, name, flags, dir_fd=None):
         path = self.path(name, dir_fd)
@@ -92,6 +97,8 @@ class Filesystem:
                 text = b"imports = ['/etc/containerd/../containerd/import.toml']"
             if case == "control":
                 text = b"imports = ['/etc/containerd/bad name.toml']"
+            if case == "ancestor-rename":
+                text = b"imports = ['/etc/service-config/containerd/extra.toml']"
         if case == "limit" and path.endswith("import.toml"):
             return b" " * size
         offset = self.offsets.get(fd, 0)

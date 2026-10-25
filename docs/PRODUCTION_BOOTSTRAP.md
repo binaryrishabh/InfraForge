@@ -344,16 +344,19 @@ Two layouts are qualified: local rootful classic `overlay2`, and the narrow
 [qualification checklist and exact owner commands](DEPLOYMENT.md#release-disk-capacity-and-image-retention).
 The latter requires a flagless live systemd PID, its actual `/proc/PID/exe`,
 matching mount namespace and socket ownership, and configuration/import files
-plus their own containing directories predating process start. Higher ancestors
-must be root-owned, non-writable directories without symlinks; their ctimes do
-not gate releases. A missing default file requires its own directory to predate
+plus their own containing directories predating process start. All ancestors
+must be root-owned, non-writable directories without symlinks. The root directory
+must predate startup; no two adjacent ancestor directories may have later or
+uncertain ctimes. This detects renamed subtrees while allowing an isolated later
+`/etc` change between older `/` and `/etc/containerd`. A missing default file requires its own directory to predate
 start. Config/import mounts below the root filesystem refuse; root mount records
 must match the operator, daemon and PID 1. Systemd's captured start time must
 agree with the reconstructed start. These are current observations, not a full
 historical mount/clock audit; the linked checklist defines that boundary.
 For both stores, the Docker socket must actually be listened on by local rootful
 dockerd in our mount namespace/root. For the containerd store, established socket
-peer inodes must bind that dockerd to the verified containerd instance.
+peer inodes must bind that dockerd to the verified containerd instance. The server
+row must carry the verified local pathname and PID; client peer names may be `*`.
 Only absolute literal imports are qualified; glob/relative imports and symlinks
 refuse. The dump must retain default plugin settings: custom content/snapshotter
 roots, proxies and unknown storage configuration refuse. Noninteractive read-only

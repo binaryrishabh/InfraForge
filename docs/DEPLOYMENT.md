@@ -185,14 +185,22 @@ of the running daemon's configuration.
   own the exact listening socket reported by Docker (`sudo -n ss -H -xlpn`).
 - Both `config default` and `config dump` run through `sudo -n /proc/PID/exe`.
   This uses the live executable inode rather than whichever binary PATH finds.
-  Version 2 or 3 TOML is parsed with Bun 1.3.14's `Bun.TOML.parse`. Parser errors
+  Version 2, 3 or 4 TOML is parsed with Bun 1.3.14's `Bun.TOML.parse`. Schema 4
+  (including containerd v2.4.2) uses `plugins."io.containerd.server.v1.grpc"`
+  for the gRPC address; versions 2/3 use top-level `grpc`. Parser errors
   and command failures never expose the dump or parser causes.
 - `/etc/containerd/config.toml`, every recursively imported file, and each
   file's **own containing directory** must have ctime plus one second strictly
-  before startup. Higher ancestors such as `/etc` and `/` must be real,
-  root-owned directories without group/world write permission; their ctimes
-  are not checked. Thus unrelated package changes in `/etc` do not invalidate
-  unchanged `/etc/containerd` inputs. Config files must also be root-owned,
+  before startup. All ancestors must be real, root-owned directories without
+  group/world write permission and with finite ctimes. The filesystem root `/`
+  must also predate startup. Higher ancestors may change later, provided no two
+  adjacent directories in the input's ancestry have ctime plus one second at or
+  after startup. A subtree rename changes both the moved directory and its
+  destination parent; this rule refuses even when nested files/directories
+  retain old timestamps. An isolated later `/etc` change between older `/` and
+  `/etc/containerd` therefore passes. Unrelated changes to adjacent ancestors
+  or `/` conservatively refuse and need a reviewed restart/requalification.
+  Config files must also be root-owned,
   non-writable by group/others and regular. A missing default file means
   executable defaults only when its own directory passes; missing directories
   or imports refuse. Symlinks, glob/relative/non-normalized imports, cycles,
