@@ -160,26 +160,133 @@ operator cannot traverse Docker's private directory, a read-only
 sudo access for that read is required on such hosts. Missing paths, denied sudo
 or unavailable measurements refuse the release; capacity is never guessed.
 
-The containerd image store (the Docker Engine 29+ default: driver `overlayfs`
-with `driver-type io.containerd.snapshotter.v1`) keeps image content and snapshots
-under **containerd's own root**, which `docker info` does not report. The release
-accepts it only for the default system containerd, verified step by step:
+The containerd image store (`overlayfs` with exactly one `driver-type
+io.containerd.snapshotter.v1`) is qualified only for the narrow default **local,
+rootful system containerd** contract below. A fresh config dump alone is not proof
+of the running daemon's configuration.
 
-- `docker info` reports exactly that driver type and an absolute containerd socket;
-- `systemctl show containerd.service` gives its main PID, and that process was
-  started as plain `containerd` with no flags (`--config`, `--root`, `--address` or
-  any other flag would make the default config dump differ from the running daemon);
-- `sudo -n containerd config dump` (the effective config) names that same socket
-  under `[grpc] address` and an absolute top-level `root`.
+- Docker must select context `default` and `unix:///var/run/docker.sock`.
+  Remote `DOCKER_HOST`, non-default `DOCKER_CONTEXT` or selected context, TLS
+  endpoint overrides, rootless security options and missing security evidence
+  refuse. Release Docker subprocesses pin the local endpoint, including cleanup
+  and already-accepted backend verification. The separate owned-local rehearsal
+  continues to use its explicitly selected local development engine.
+- `containerd.service` must have a positive MainPID, a readable flagless
+  `containerd` command line and an absolute, non-deleted executable ending in
+  `/containerd`. All flags are outside this qualified contract, even harmless
+  ones. The process must share our mount namespace, have `/` as its root, and
+  own the exact listening socket reported by Docker (`sudo -n ss -H -xlpn`).
+- Both `config default` and `config dump` run through `sudo -n /proc/PID/exe`.
+  This uses the live executable inode rather than whichever binary PATH finds.
+  Version 2 or 3 TOML is parsed with Bun 1.3.14's `Bun.TOML.parse`. Parser errors
+  and command failures never expose the dump or parser causes.
+- `/etc/containerd/config.toml` and every recursively imported file must be
+  regular files, with ctime strictly before daemon startup (boot `btime` plus
+  `/proc/PID/stat` field 22 / `getconf CLK_TCK`, with a conservative one-second
+  margin). Directory ancestry must also predate startup, protecting against
+  replacement/deletion. A missing default config means **executable defaults**
+  only with unchanged ancestry. Missing imports, symlinks, glob/relative imports,
+  cycles, more than 64 config files, unreadable metadata and config changes
+  during qualification refuse. Directory changes can conservatively refuse even
+  when unrelated to containerd; diagnose and requalify rather than bypassing.
+- The dump must match that executable's default plugin settings, disabled and
+  required plugins, plugin directory, temp path and stream processors. Even
+  harmless plugin customization is currently unqualified. Non-empty proxy
+  plugins, any non-empty overlayfs `root_path`, content/snapshotter overrides,
+  unknown top-level configuration keys and plugin fields absent from defaults
+  refuse. State must match the executable default; the root must be an absolute,
+  non-empty path without traversal, whitespace or control characters. The parsed
+  gRPC address must match Docker's socket. PID, start time, executable, mount
+  namespace and config evidence are rechecked after the dump.
 
-It then measures Docker's root, containerd's root, its
+The gate measures Docker's root, the proven containerd root, its built-in
 `io.containerd.content.v1.content` and `io.containerd.snapshotter.v1.overlayfs`
-directories and the release state directory, each against the same 8 GiB floor.
-Any other layout, any mismatch or any failed read **refuses before building**.
-Do not assume `/var/lib/containerd`, bypass the gate or switch drivers as cleanup.
-Docker documents the separate storage paths and the fact that `data-root` does
-not move containerd storage in its
-[daemon data-directory contract](https://docs.docker.com/engine/daemon/#daemon-data-directory).
+directories, and the release state directory, each against **8 GiB**. Missing
+plugin paths refuse; do not create empty stale directories to satisfy this test.
+Every unsupported or unavailable observation refuses before building. Never
+assume `/var/lib/containerd`, bypass the gate, or switch storage drivers as cleanup.
+Subprocess deadlines remain active through both output and exit (120 seconds,
+10 minutes for builds), with a 16 MiB combined output cap. Timeout rejection does
+not wait for privileged descendants; OS-level process-tree termination is not
+certified by the local tests.
+
+Before first release and after daemon/package/config/storage changes, qualify the
+endpoint, instance, unchanged inputs, default plugins and capacity. Keep a small
+sanitized record of version, PID/start, executable, namespace/socket ownership,
+config timestamps and measured capacities. Do not publish raw config dumps.
+A frontend retry reusing accepted backend state verifies the local endpoint but
+skips capacity preflight; that is not a new host qualification. The supplied
+production root/driver/socket/free-space facts alone do not establish these
+additional checks, and Ubuntu 24.04 ARM64 bootstrap does not certify them.
+
+The owner can paste the following **read-only** commands from the production
+checkout, as the release operator. They do not restart services or create state.
+The first block emits only the selected endpoint and storage/instance metadata:
+
+```bash
+printf 'DOCKER_HOST=%s DOCKER_CONTEXT=%s\n' "${DOCKER_HOST-}" "${DOCKER_CONTEXT-}"
+docker context show
+docker context inspect default --format '{{json .Endpoints.docker.Host}}'
+docker --host unix:///var/run/docker.sock info --format '{{json .Driver}} {{json .DriverStatus}} {{json .DockerRootDir}} {{json .Containerd}} {{json .SecurityOptions}}'
+pid=$(systemctl show containerd.service --property=MainPID --value)
+printf 'MainPID=%s\n' "$pid"
+sudo -n cat "/proc/$pid/cmdline" | tr '\0' ' '; printf '\n'
+sudo -n readlink "/proc/$pid/exe"
+sudo -n "/proc/$pid/exe" --version
+readlink /proc/self/ns/mnt
+sudo -n readlink "/proc/$pid/ns/mnt"
+sudo -n readlink "/proc/$pid/root"
+sudo -n ss -H -xlpn
+getconf CLK_TCK
+sudo -n cat "/proc/$pid/stat"
+awk '$1 == "btime" { print }' /proc/stat
+```
+
+This second block reports config/import and ancestor timestamps against process
+start, without printing file contents. It intentionally refuses unqualified
+imports and emits a generic error if parsing or reading fails:
+
+```bash
+sudo -n python3 - "$pid" <<'PY'
+import os, pathlib, stat, sys, tomllib
+try:
+    pid = int(sys.argv[1])
+    proc = pathlib.Path(f"/proc/{pid}/stat").read_text()
+    ticks = int(proc[proc.rfind(")") + 2:].split()[19])
+    boot = next(int(line.split()[1]) for line in pathlib.Path("/proc/stat").read_text().splitlines() if line.startswith("btime "))
+    started = boot + ticks / os.sysconf("SC_CLK_TCK")
+    print(f"daemon_start_epoch={started:.6f}; require ctime+1 < start")
+    seen = set()
+    def visit(path, imported=False):
+        if not isinstance(path, str) or not path.startswith("/") or any(c in path for c in "*?[]{}\\") or ".." in path.split("/") or path in seen or len(seen) >= 64:
+            raise ValueError()
+        seen.add(path)
+        target = pathlib.Path(path)
+        for item in [*reversed(target.parents), target]:
+            try:
+                value = item.lstat()
+                print(f"{item}: kind={stat.S_IFMT(value.st_mode):o} ctime={value.st_ctime:.9f} predates_start={value.st_ctime + 1 < started}")
+            except FileNotFoundError:
+                print(f"{item}: missing")
+        try:
+            with target.open("rb") as source:
+                config = tomllib.load(source)
+        except FileNotFoundError:
+            if imported: raise
+            print("Missing default config: executable defaults, subject to ancestry checks")
+            return
+        for entry in config.get("imports", []): visit(entry, True)
+    visit("/etc/containerd/config.toml")
+except Exception:
+    print("Config provenance unavailable; do not publish raw config diagnostics", file=sys.stderr)
+    sys.exit(1)
+PY
+bun --no-env-file scripts/release/hygiene.ts qualify /var/lib/infraforge/releases
+```
+
+The final command runs the actual read-only preflight, including both config
+commands and each filesystem measurement; paste its sanitized result as well.
+Only a successful result confirms this checkout's checks pass at that moment.
 
 This is a minimum operating budget, not a prediction: the incident's roughly
 1.46 GB backend image rounds up to **1.5 GiB loaded image + 1.5 GiB export/load

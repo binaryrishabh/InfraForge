@@ -339,12 +339,25 @@ filesystem and `/var/lib/infraforge/releases` before a release, and on the class
 storage path below before any build/state/service mutation. Protected Docker directories
 require noninteractive read-only `sudo -n stat --file-system` access. The budget and assumptions
 are documented in [release disk capacity and image retention](DEPLOYMENT.md#release-disk-capacity-and-image-retention).
-Two layouts are qualified: classic `overlay2`, and the containerd image store
-(the Docker Engine 29+ default) when Docker uses the default system containerd
-started without flags. For the latter the controller also checks containerd's
-root, content and overlayfs snapshot directories, and needs noninteractive
-`sudo -n containerd config dump`. Unknown layouts refuse; never bypass the gate
-or switch storage drivers to reclaim space.
+Two layouts are qualified: local rootful classic `overlay2`, and the narrow
+**default system containerd overlayfs** contract in the
+[qualification checklist and exact owner commands](DEPLOYMENT.md#release-disk-capacity-and-image-retention).
+The latter requires a flagless live systemd PID, its actual `/proc/PID/exe`,
+matching mount namespace and socket ownership, and configuration/import files
+(and directory ancestry) unchanged before process start. A missing default file
+means executable defaults only when unchanged ancestry proves that absence.
+Only absolute literal imports are qualified; glob/relative imports and symlinks
+refuse. The dump must retain default plugin settings: custom content/snapshotter
+roots, proxies and unknown storage configuration refuse. Noninteractive read-only
+sudo is needed for `ss`, `/proc`/config reads when protected, filesystem `stat`,
+and `/proc/PID/exe config default` / `config dump`.
+The controller measures containerd's root, content and overlayfs snapshot paths
+as well as Docker metadata and release state, each against the unchanged 8 GiB
+floor. Requalify before first release and after relevant updates or relocation.
+Ubuntu 24.04 ARM64 and fresh Docker packages alone do not certify the layout;
+collect the linked sanitized evidence on that host. Unknown layouts refuse;
+never bypass the gate, manufacture plugin directories or switch storage drivers
+as cleanup. An accepted-backend frontend retry is not a fresh disk qualification.
 After acceptance it retains the exact accepted/previous images plus all images
 used by containers, and logs removal of other exclusively `infraforge-backend:*`
 images. It never prunes volumes, database/cache images or shared builders. The

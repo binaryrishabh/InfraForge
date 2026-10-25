@@ -5,7 +5,12 @@ const closed = () => new ReadableStream<Uint8Array>({ start(controller) { contro
 test("command deadline survives closed pipes while child stays alive", async () => {
   let killed = false;
   const child = { stdout: closed(), stderr: closed(), exited: new Promise<number>(() => {}), kill: () => { killed = true; } };
-  await expect(collectCommand(child, 20)).rejects.toThrow("deadline");
+  let watchdog: ReturnType<typeof setTimeout> | undefined;
+  try {
+    await expect(Promise.race([collectCommand(child, 20), new Promise<never>((_, reject) => {
+      watchdog = setTimeout(() => reject(new Error("test watchdog: child hung")), 200);
+    })])).rejects.toThrow("deadline");
+  } finally { clearTimeout(watchdog); }
   expect(killed).toBe(true);
 });
 test("command deadline also bounds inherited pipes after the child exits", async () => {

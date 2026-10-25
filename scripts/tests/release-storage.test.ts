@@ -30,8 +30,8 @@ function host(change: Change = {}) {
     if (args[0] === "systemctl") return change.restart && systemCalls++ > 0 ? "813" : change.pid ?? "812";
     if (args[0] === "getconf") return "100";
     if (args[2] === "ss") return change.sockets ?? `u_str LISTEN 0 4096 ${address} 123 * 0 users:(("containerd",pid=812,fd=9))`;
-    if (args.join(" ") === "sudo -n /proc/812/exe config default") return change.defaults ?? dump;
-    if (args.join(" ") === "sudo -n /proc/812/exe config dump") { dumped = true; return change.dump ?? dump; }
+    if (args[3] === "config" && args[4] === "default") return change.defaults ?? dump;
+    if (args[3] === "config" && args[4] === "dump") { dumped = true; return change.dump ?? dump; }
     throw new Error("Unexpected command");
   };
   const io: StorageHost = {
@@ -60,7 +60,7 @@ function host(change: Change = {}) {
     },
   };
   const preflight = (env: Record<string, string | undefined> = {}) => preflightReleaseSpace(".", process.cwd(), run,
-    async path => { paths.push(path); return minimumReleaseFreeBytes; }, io, env);
+    async path => { paths.push(path); return path === "/snapshots/full" ? 7n : minimumReleaseFreeBytes; }, io, env);
   return { run, io, calls, paths, preflight };
 }
 
@@ -102,13 +102,14 @@ const refusals: [string, Change][] = [
   ["systemctl failure", { fail: "systemctl" }],
   ["unreadable cmdline", { fail: "cmdline" }],
   ["dump failure", { fail: "config dump" }],
-  ["invalid PID", { pid: "0" }],
+  ["invalid PID", { pid: "0", sockets: `u_str LISTEN 0 4096 ${address} 123 * 0 users:(("containerd",pid=0,fd=9))` }],
   ["non-numeric PID", { pid: "12 13" }],
   ["flagged daemon", { argv: "/usr/bin/containerd\0--root\0/data\0" }],
   ["wrong daemon argv", { argv: "/usr/bin/dockerd\0" }],
   ["non-default snapshotter", { info: { Driver: "native" } }],
   ["duplicate driver type", { info: { DriverStatus: [["driver-type", "io.containerd.snapshotter.v1"], ["driver-type", "other"]] } }],
-  ["matching relative socket strings", { info: { Containerd: { Address: "relative.sock" } }, dump: dump.replace(address, "relative.sock") }],
+  ["matching relative socket strings", { info: { Containerd: { Address: "relative.sock" } }, dump: dump.replace(address, "relative.sock"),
+    sockets: 'u_str LISTEN 0 4096 relative.sock 123 * 0 users:(("containerd",pid=812,fd=9))' }],
   ["socket mismatch", { dump: dump.replace(address, "/run/other.sock") }],
   ["socket traversal", { info: { Containerd: { Address: "/run/../containerd.sock" } }, dump: dump.replace(address, "/run/../containerd.sock") }],
   ["relative root", { dump: dump.replace("/var/lib/containerd", "relative/root") }],
@@ -117,6 +118,8 @@ const refusals: [string, Change][] = [
   ["typed root", { dump: dump.replace("'/var/lib/containerd'", "123") }],
   ["control character root", { dump: dump.replace("'/var/lib/containerd'", '"/var/lib/\\u0000containerd"') }],
   ["active overlay override despite roomy stale default", { dump: dump.replace("root_path = ''", "root_path = '/snapshots/full'") }],
+  ["nonempty overlay root even in executable defaults", { dump: dump.replace("root_path = ''", "root_path = '/snapshots/full'"),
+    defaults: dump.replace("root_path = ''", "root_path = '/snapshots/full'") }],
   ["content override", { dump: dump + "root = '/content/full'\n" }],
   ["proxy provider", { dump: dump + "[proxy_plugins.overlayfs]\ntype = 'snapshot'\naddress = '/proxy.sock'\n" }],
   ["unknown storage key", { dump: "storage_root = '/full'\n" + dump }],
