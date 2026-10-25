@@ -17,7 +17,10 @@ root_path = ''
 const procStat = `812 (containerd) S ${Array(18).fill("0").join(" ")} 10000 0`;
 type Change = { info?: object; dump?: string; defaults?: string; pid?: string; argv?: string; exe?: string; namespace?: string;
   sockets?: string; context?: string; endpoint?: string; ctime?: number; config?: string; missing?: boolean; parentCtime?: number;
-  importedCtime?: number; fail?: string; duringDump?: boolean; restart?: boolean; importMissing?: boolean; symlink?: boolean };
+  importedCtime?: number; fail?: string; duringDump?: boolean; restart?: boolean; importMissing?: boolean; symlink?: boolean;
+  production?: boolean; ancestor?: "writable" | "symlink" | "unowned" | "missing"; mount?: string; daemonMount?: string;
+  mountDuringDump?: boolean; boot?: string; recorded?: string };
+const rootMount = "29 1 259:1 / / rw,relatime - ext4 /dev/root rw";
 function host(change: Change = {}) {
   const calls: string[][] = [], paths: string[] = [];
   let dumped = false, systemCalls = 0;
@@ -27,6 +30,7 @@ function host(change: Change = {}) {
     if (args[1] === "context") return args[2] === "show" ? change.context ?? "default" : JSON.stringify([
       { Name: "default", Endpoints: { docker: { Host: change.endpoint ?? "unix:///var/run/docker.sock" } } }]);
     if (args[0] === "docker") return JSON.stringify({ ...info, ...change.info });
+    if (args.includes("--property=ExecMainStartTimestamp")) return change.recorded ?? (change.production ? "@1792650086.62" : "@1100");
     if (args[0] === "systemctl") return change.restart && systemCalls++ > 0 ? "813" : change.pid ?? "812";
     if (args[0] === "getconf") return "100";
     if (args[2] === "ss") return change.sockets ?? `u_str LISTEN 0 4096 ${address} 123 * 0 users:(("containerd",pid=812,fd=9))`;
@@ -37,8 +41,10 @@ function host(change: Change = {}) {
   const io: StorageHost = {
     async read(path) {
       if (path.includes(change.fail ?? "NEVER")) throw new Error("PRIVATE_CONFIG_MARKER");
-      if (path === "/proc/stat") return "btime 1000\n";
-      if (path.endsWith("/stat")) return procStat;
+      if (path.endsWith("/mountinfo")) return path === "/proc/812/mountinfo" && change.daemonMount ? change.daemonMount :
+        rootMount + (change.mount || dumped && change.mountDuringDump ? `\n55 29 259:1 /prepared ${change.mount ?? "/etc/containerd"} rw - ext4 /dev/root rw` : "");
+      if (path === "/proc/stat") return change.boot ?? (change.production ? "btime 1792610199\n" : "btime 1000\n");
+      if (path.endsWith("/stat")) return change.production ? procStat.replace("10000 0", "3988762 0") : procStat;
       if (path.endsWith("/cmdline")) return change.argv ?? "/usr/bin/containerd\0";
       if (path === "/etc/containerd/config.toml") return change.config ?? "version = 3";
       if (path === "/etc/containerd/import.toml") return "version = 3";
@@ -54,8 +60,13 @@ function host(change: Change = {}) {
     async metadata(path) {
       if (path.endsWith("config.toml") && change.missing || path.endsWith("import.toml") && change.importMissing) return undefined;
       const file = path.endsWith(".toml");
+      if (path === "/etc" && change.ancestor === "missing") return undefined;
+      if (path === "/etc" && change.ancestor) return { kind: change.ancestor === "symlink" ? "other" : "directory",
+        uid: change.ancestor === "unowned" ? 1000 : 0, mode: change.ancestor === "writable" ? 0o777 : 0o755, ctimeMs: 900000, identity: path };
       return { kind: change.symlink && file ? "other" : file ? "file" : "directory",
-        ctimeMs: file ? dumped && change.duringDump ? 1200000 : path.endsWith("import.toml") ? change.importedCtime ?? 900000 : change.ctime ?? 900000 : change.parentCtime ?? 900000,
+        uid: 0, mode: file ? 0o644 : 0o755,
+        ctimeMs: change.production ? (path === "/" ? 1792610207.998 : path === "/etc" ? 1792823033.81 : 1792610946.53) * 1000 :
+          file ? dumped && change.duringDump ? 1200000 : path.endsWith("import.toml") ? change.importedCtime ?? 900000 : change.ctime ?? 900000 : change.parentCtime ?? 900000,
         identity: dumped && change.duringDump ? "changed" : path };
     },
   };
@@ -77,6 +88,18 @@ test("qualified containerd uses the live executable, provenance and each real st
 });
 
 const refusals: [string, Change][] = [
+  ["replaced own directory", { parentCtime: 1200000 }],
+  ["writable higher ancestor", { ancestor: "writable" }],
+  ["symlinked higher ancestor", { ancestor: "symlink" }],
+  ["unowned higher ancestor", { ancestor: "unowned" }],
+  ["missing higher ancestor", { ancestor: "missing" }],
+  ["old config bind-mounted after startup", { mount: "/etc/containerd/config.toml" }],
+  ["old directory bind-mounted after startup", { mount: "/etc/containerd" }],
+  ["higher ancestor mounted after startup", { mount: "/etc" }],
+  ["old import bind-mounted after startup", { config: "imports = ['/etc/containerd/import.toml']", mount: "/etc/containerd/import.toml" }],
+  ["daemon sees another mount ID", { daemonMount: rootMount.replace("29 1", "30 1") }],
+  ["mount changes during dump", { mountDuringDump: true }],
+  ["clock correction moves reconstructed startup forward", { boot: "btime 2000", ctime: 1150000 }],
   ["staged config after daemon start", { ctime: 1200000 }],
   ["config timestamp in uncertain start second", { ctime: 1099500 }],
   ["changed imported config", { config: "imports = ['/etc/containerd/import.toml']", importedCtime: 1200000 }],
@@ -140,6 +163,13 @@ for (const [name, change] of refusals) test(`storage refuses ${name}`, async () 
   expect((caught as Error).message).toContain("Unknown");
   expect(Bun.inspect(caught)).not.toContain("PRIVATE_CONFIG_MARKER");
   expect(h.paths).toEqual([]);
+});
+
+test("exact production timestamps accept an unrelated later etc change", async () => {
+  const h = host({ production: true });
+  await h.preflight();
+  expect(h.paths).toHaveLength(5);
+  expect(daemonStartMilliseconds(procStat.replace("10000 0", "3988762 0"), "btime 1792610199", "100")).toBe(1792650086620);
 });
 
 test("valid TOML syntax preserves field meaning and suppresses parser diagnostics", async () => {

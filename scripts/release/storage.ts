@@ -56,7 +56,7 @@ export async function verifyLocalDocker(root: string, run = command, env = proce
       contexts[0]?.Endpoints?.docker?.Host !== localDockerEndpoint) return refuse();
 }
 
-export type ConfigMetadata = { kind: "file" | "directory" | "other"; ctimeMs: number; identity: string };
+export type ConfigMetadata = { kind: "file" | "directory" | "socket" | "other"; ctimeMs: number; identity: string; uid: number; mode: number };
 export type StorageHost = {
   read: (path: string) => Promise<string>;
   link: (path: string) => Promise<string>;
@@ -81,17 +81,17 @@ export function storageHost(run = command, cwd = process.cwd()): StorageHost {
     async metadata(path) {
       try {
         const value = await lstat(path);
-        return { kind: value.isFile() ? "file" : value.isDirectory() ? "directory" : "other",
-          ctimeMs: value.ctimeMs, identity: `${value.dev}:${value.ino}:${value.size}:${value.ctimeMs}` };
+        return { kind: value.isFile() ? "file" : value.isDirectory() ? "directory" : value.isSocket() ? "socket" : "other",
+          ctimeMs: value.ctimeMs, identity: `${value.dev}:${value.ino}:${value.size}:${value.ctimeMs}`, uid: value.uid, mode: value.mode };
       } catch (error) {
         if ((error as NodeJS.ErrnoException).code === "ENOENT") return undefined;
         if ((error as NodeJS.ErrnoException).code !== "EACCES") throw error;
-        const value = await run(["sudo", "-n", "stat", "--format=%F|%Z|%d:%i:%s:%z", "--", path], cwd);
-        const [kind, seconds, identity] = value.split("|");
-        if (!/^\d+$/.test(seconds ?? "") || !identity) return refuse();
+        const value = await run(["sudo", "-n", "stat", "--format=%F|%Z|%d:%i:%s:%z|%u|%a", "--", path], cwd);
+        const [kind, seconds, identity, uid, mode] = value.trim().split("|");
+        if (!/^\d+$/.test(seconds ?? "") || !identity || !/^\d+$/.test(uid ?? "") || !/^[0-7]+$/.test(mode ?? "")) return refuse();
         // stat's seconds are truncated: round UP before comparing with start.
-        return { kind: kind === "regular file" ? "file" : kind === "directory" ? "directory" : "other",
-          ctimeMs: (Number(seconds) + 1) * 1000, identity };
+        return { kind: kind === "regular file" ? "file" : kind === "directory" ? "directory" : kind === "socket" ? "socket" : "other",
+          ctimeMs: (Number(seconds) + 1) * 1000, identity, uid: Number(uid), mode: parseInt(mode!, 8) };
       }
     },
   };
@@ -107,12 +107,34 @@ export function daemonStartMilliseconds(stat: string, bootStat: string, ticks: s
   return result;
 }
 
-async function configurationEvidence(host: StorageHost, started: number) {
+// mountinfo has no attachment timestamp. Refuse ALL subordinate mounts covering
+// an input, including old-looking bind sources; never infer mount age from ctime.
+// The only supported backing mount is the same whole-filesystem root as PID 1.
+async function inputMount(host: StorageHost, proc: string, path: string) {
+  const roots: string[] = [];
+  for (const owner of ["/proc/self", proc, "/proc/1"]) {
+    const rows = (await host.read(`${owner}/mountinfo`)).trim().split("\n").map(line => {
+      const fields = line.trim().split(/\s+/), separator = fields.indexOf("-");
+      if (fields.length < 10 || separator < 6 || !/^\d+$/.test(fields[0]!) || !/^\d+:\d+$/.test(fields[2]!)) return refuse();
+      const point = fields[4]!.replace(/\\([0-7]{3})/g, (_, octal: string) => String.fromCharCode(parseInt(octal, 8)));
+      return { fields, point, line };
+    });
+    const covering = rows.filter(({ point }) => point === "/" || path === point || path.startsWith(`${point}/`));
+    if (covering.length !== 1 || covering[0]!.point !== "/" || covering[0]!.fields[3] !== "/") return refuse();
+    roots.push(covering[0]!.line);
+  }
+  if (roots.some(root => root !== roots[0])) return refuse();
+  return roots[0]!;
+}
+
+async function configurationEvidence(host: StorageHost, started: number, proc: string) {
   const evidence = new Map<string, string>();
   const seen = new Set<string>();
-  async function inspect(path: string, kind: "file" | "directory") {
+  async function inspect(path: string, kind: "file" | "directory", checkTime = true) {
     const value = await host.metadata(path);
-    if (value && (value.kind !== kind || !Number.isFinite(value.ctimeMs) || value.ctimeMs + 1000 >= started)) return refuse();
+    if (!value && kind === "directory") return refuse();
+    if (value && (value.kind !== kind || value.uid !== 0 || !Number.isInteger(value.mode) || (value.mode & 0o022) !== 0 ||
+        checkTime && (!Number.isFinite(value.ctimeMs) || value.ctimeMs + 1000 >= started))) return refuse();
     evidence.set(path, value?.identity ?? "missing");
     return value;
   }
@@ -120,10 +142,11 @@ async function configurationEvidence(host: StorageHost, started: number) {
     // Literal absolute imports only: glob/relative resolution is not qualified.
     if (!absoluteStoragePath(path) || /[*?\[\]{}\\]/.test(path) || posix.normalize(path) !== path || seen.has(path) || seen.size >= 64) return refuse();
     seen.add(path);
-    // An absent default file means defaults ONLY when its directory ancestry was
-    // unchanged before startup. This also catches deleted/replaced inputs.
+    evidence.set(`mount:${path}`, await inputMount(host, proc, path));
+    // Only the OWN containing directory must predate startup. Higher ancestors
+    // must remain real root-owned, non-writable directories, regardless of ctime.
     for (let parent = posix.dirname(path);; parent = posix.dirname(parent)) {
-      await inspect(parent, "directory");
+      await inspect(parent, "directory", parent === posix.dirname(path));
       if (parent === "/") break;
     }
     if (!await inspect(path, "file")) { if (imported) return refuse(); return; }
@@ -159,14 +182,22 @@ export async function containerdStorage(info: { Driver?: unknown; Containerd?: u
         [...owners[0]!.matchAll(/pid=(\d+),/g)].map(match => match[1]).some(owner => owner !== pid) ||
         !owners[0]!.includes(`pid=${pid},`)) return refuse();
     const bootStat = await host.read("/proc/stat"), ticks = await run(["getconf", "CLK_TCK"], cwd);
-    const started = daemonStartMilliseconds(stat, bootStat, ticks);
-    const before = await configurationEvidence(host, started);
+    const reconstructed = daemonStartMilliseconds(stat, bootStat, ticks);
+    // systemd captured realtime when it created this process. A later boot-epoch
+    // correction must not move the cutoff forward and qualify a post-start file.
+    const startCommand = ["systemctl", "show", "containerd.service", "--property=ExecMainStartTimestamp", "--value", "--timestamp=unix"];
+    const recorded = (await run(startCommand, cwd)).trim();
+    if (!/^@\d+(\.\d+)?$/.test(recorded)) return refuse();
+    const started = Number(recorded.slice(1)) * 1000;
+    if (!Number.isFinite(started) || Math.abs(reconstructed - started) > 1000) return refuse();
+    const before = await configurationEvidence(host, started, proc);
     // Execute the live inode through proc, even if PATH now resolves another binary.
     const defaults = parseContainerdConfig(await run(["sudo", "-n", `${proc}/exe`, "config", "default"], cwd));
     const dump = parseContainerdConfig(await run(["sudo", "-n", `${proc}/exe`, "config", "dump"], cwd));
     const paths = qualifiedContainerdPaths(dump, defaults, address);
-    if (await configurationEvidence(host, started) !== before || await host.link(`${proc}/exe`) !== exe ||
-        daemonStartMilliseconds(await host.read(`${proc}/stat`), bootStat, ticks) !== started ||
+    if (await configurationEvidence(host, started, proc) !== before || await host.link(`${proc}/exe`) !== exe ||
+        daemonStartMilliseconds(await host.read(`${proc}/stat`), await host.read("/proc/stat"), ticks) !== reconstructed ||
+        (await run(startCommand, cwd)).trim() !== recorded ||
         await host.link(`${proc}/ns/mnt`) !== namespace ||
         (await run(["systemctl", "show", "containerd.service", "--property=MainPID", "--value"], cwd)).trim() !== pid) return refuse();
     return paths;
