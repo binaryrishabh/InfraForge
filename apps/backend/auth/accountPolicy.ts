@@ -48,7 +48,10 @@ export async function enforceAccountPolicy(input: {
   }
   if (challenge && (loginRequest || loginRedeem || signup && !completion
     || path === "/request-password-reset" && challenge.protectReset !== false)) {
-    const token = input.challengeToken ?? (typeof body?.turnstileToken === "string" ? body.turnstileToken : "");
+    // Header/query transports belong only to the enabled email-login routes.
+    // Legacy signup/reset must retain body-only selection, even with login enabled.
+    const transported = loginRequest || loginRedeem ? input.challengeToken : undefined;
+    const token = transported ?? (typeof body?.turnstileToken === "string" ? body.turnstileToken : "");
     let accepted = false;
     const action = loginRedeem ? "email_login_redeem"
       : loginRequest ? "email_login" : signup ? "signup" : "password_reset";

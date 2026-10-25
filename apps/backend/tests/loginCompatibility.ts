@@ -33,3 +33,52 @@ export async function compatibilityResponses(factory = createAuth, flags: Record
   }
   return result;
 }
+
+// The same request matrix runs against an unmodified main auth source tree when
+// capturing the fixture. Record response bytes and observable policy side effects.
+export async function challengeCompatibilityResponses(flags: Record<string, string> = {},
+  implementation = { createAuth, readAuthSettings, accountAuthHandler }) {
+  const result = [];
+  const settings = implementation.readAuthSettings({ ...loginEnvironment, NODE_ENV: "test",
+    AUTH_EMAIL_ENABLED: "true", TRANSACTIONAL_EMAIL_PROVIDER: "local", ...flags });
+  const attempts: object[] = [], admissions: object[] = [];
+  settings.accountEssentials.challenge = { verify: async (token, action, ip) => {
+    attempts.push({ token, action, ip }); return token === "fixture-pass";
+  } };
+  const options = implementation.createAuth({} as any, settings, { allow: async () => true }, {
+    admit: async (kind, email, callback) => { admissions.push({ kind, email, callback }); },
+  }).options;
+  const database = { user: [], account: [], session: [], verification: [] };
+  const auth = betterAuth({ ...options, database: memoryAdapter(database), rateLimit: { enabled: false } });
+  const handler = implementation.accountAuthHandler(auth.handler, true, () => 0, async () => {}, settings.loginMethods);
+  for (const path of ["sign-up/email", "request-password-reset"]) {
+    for (const [name, bodyToken, header, query] of [
+      ["body-only", "fixture-pass"],
+      ["body-with-invalid-header", "fixture-pass", "invalid"],
+      ["body-with-invalid-query", "fixture-pass", undefined, "invalid"],
+      ["header-only", undefined, "fixture-pass"],
+      ["query-only", undefined, undefined, "fixture-pass"],
+      ["invalid-body-valid-header", "invalid", "fixture-pass"],
+      ["invalid-body-valid-query", "invalid", undefined, "fixture-pass"],
+      ["no-token"],
+    ] as const) {
+      attempts.length = 0; admissions.length = 0;
+      const url = new URL(`${settings.baseURL}/api/auth/${path}`);
+      if (query !== undefined) url.searchParams.set("cf-turnstile-response", query);
+      const response = await handler(new Request(url, { method: "POST", headers: {
+        Origin: settings.origins[0]!, "Content-Type": "application/json",
+        ...(header === undefined ? {} : { "x-turnstile-token": header }),
+      }, body: JSON.stringify({ email: "absent@example.test", username: "fixtureuser",
+        password: "fixture-long-password", turnstileToken: bodyToken }) }));
+      result.push({ path, name, status: response.status, headers: [...response.headers].sort(),
+        body: await response.text(), attempts: [...attempts], admissions: [...admissions], database });
+    }
+  }
+  // No usable OAuth state: all-off behavior must retain main's backend fallback.
+  for (const suffix of ["", "&state=invalid-state"]) {
+    const response = await handler(new Request(`${settings.baseURL}/api/auth/callback/google?error=access_denied${suffix}`));
+    result.push({ path: `callback/google?error=access_denied${suffix}`, status: response.status,
+      headers: [...response.headers].sort(), body: await response.text() });
+  }
+  return result;
+}

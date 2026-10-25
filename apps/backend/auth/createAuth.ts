@@ -13,7 +13,7 @@ import type { MailRequests } from "./mailIntent";
 import { mailAdmission, invalidProof, acceptedMail } from "./mailAdmission";
 import { consumeVerification, EMAIL_TOKEN_SECONDS } from "./verification";
 import { enforceAccountPolicy, type AccountQuota } from "./accountPolicy";
-import { loginMethodPolicy, validateLink, magicConfirmation } from "./loginMethods";
+import { loginMethodPolicy, validateLink, magicConfirmation, returnURL } from "./loginMethods";
 import { otpDigest, loginProofHash } from "./mailIntent";
 
 export function createAuth(
@@ -30,6 +30,8 @@ export function createAuth(
     database: prismaAdapter(prisma, { provider: "postgresql", transaction: true }),
     trustedOrigins: settings.origins,
     socialProviders: settings.socialProviders,
+    ...(Object.values(methods).some(Boolean)
+      ? { onAPIError: { errorURL: returnURL("/", settings.returnOrigins) } } : {}),
     ...(methods.linking ? { user: { validateUserInfo: validateLink } } : {}),
     verification: {
       storeIdentifier: { default: "plain", overrides: { "reset-password:": "hashed", "signup-proof:": "hashed" } },

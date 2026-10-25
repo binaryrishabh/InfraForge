@@ -1,0 +1,632 @@
+{
+  "main": "09c375cacde922bbbb235387ee91a764b48f3eeb",
+  "description": "Native responses from unmodified main auth sources, LF normalized; injected memory adapter, challenge and recording mail queue.",
+  "responses": [
+    {
+      "path": "sign-up/email",
+      "name": "body-only",
+      "status": 200,
+      "headers": [
+        [
+          "cache-control",
+          "no-store"
+        ],
+        [
+          "content-type",
+          "application/json;charset=utf-8"
+        ],
+        [
+          "referrer-policy",
+          "no-referrer"
+        ]
+      ],
+      "body": "{\"status\":true,\"message\":\"If eligible, check your email for the link\"}",
+      "attempts": [
+        {
+          "token": "fixture-pass",
+          "action": "signup",
+          "ip": "unknown"
+        }
+      ],
+      "admissions": [
+        {
+          "kind": "signup",
+          "email": "absent@example.test",
+          "callback": "http://localhost:5173/signup"
+        }
+      ],
+      "database": {
+        "user": [],
+        "account": [],
+        "session": [],
+        "verification": []
+      }
+    },
+    {
+      "path": "sign-up/email",
+      "name": "body-with-invalid-header",
+      "status": 200,
+      "headers": [
+        [
+          "cache-control",
+          "no-store"
+        ],
+        [
+          "content-type",
+          "application/json;charset=utf-8"
+        ],
+        [
+          "referrer-policy",
+          "no-referrer"
+        ]
+      ],
+      "body": "{\"status\":true,\"message\":\"If eligible, check your email for the link\"}",
+      "attempts": [
+        {
+          "token": "fixture-pass",
+          "action": "signup",
+          "ip": "unknown"
+        }
+      ],
+      "admissions": [
+        {
+          "kind": "signup",
+          "email": "absent@example.test",
+          "callback": "http://localhost:5173/signup"
+        }
+      ],
+      "database": {
+        "user": [],
+        "account": [],
+        "session": [],
+        "verification": []
+      }
+    },
+    {
+      "path": "sign-up/email",
+      "name": "body-with-invalid-query",
+      "status": 200,
+      "headers": [
+        [
+          "cache-control",
+          "no-store"
+        ],
+        [
+          "content-type",
+          "application/json;charset=utf-8"
+        ],
+        [
+          "referrer-policy",
+          "no-referrer"
+        ]
+      ],
+      "body": "{\"status\":true,\"message\":\"If eligible, check your email for the link\"}",
+      "attempts": [
+        {
+          "token": "fixture-pass",
+          "action": "signup",
+          "ip": "unknown"
+        }
+      ],
+      "admissions": [
+        {
+          "kind": "signup",
+          "email": "absent@example.test",
+          "callback": "http://localhost:5173/signup"
+        }
+      ],
+      "database": {
+        "user": [],
+        "account": [],
+        "session": [],
+        "verification": []
+      }
+    },
+    {
+      "path": "sign-up/email",
+      "name": "header-only",
+      "status": 403,
+      "headers": [
+        [
+          "cache-control",
+          "no-store"
+        ],
+        [
+          "content-type",
+          "application/json"
+        ],
+        [
+          "referrer-policy",
+          "no-referrer"
+        ]
+      ],
+      "body": "{\"message\":\"Complete the security check\"}",
+      "attempts": [
+        {
+          "token": "",
+          "action": "signup",
+          "ip": "unknown"
+        }
+      ],
+      "admissions": [],
+      "database": {
+        "user": [],
+        "account": [],
+        "session": [],
+        "verification": []
+      }
+    },
+    {
+      "path": "sign-up/email",
+      "name": "query-only",
+      "status": 403,
+      "headers": [
+        [
+          "cache-control",
+          "no-store"
+        ],
+        [
+          "content-type",
+          "application/json"
+        ],
+        [
+          "referrer-policy",
+          "no-referrer"
+        ]
+      ],
+      "body": "{\"message\":\"Complete the security check\"}",
+      "attempts": [
+        {
+          "token": "",
+          "action": "signup",
+          "ip": "unknown"
+        }
+      ],
+      "admissions": [],
+      "database": {
+        "user": [],
+        "account": [],
+        "session": [],
+        "verification": []
+      }
+    },
+    {
+      "path": "sign-up/email",
+      "name": "invalid-body-valid-header",
+      "status": 403,
+      "headers": [
+        [
+          "cache-control",
+          "no-store"
+        ],
+        [
+          "content-type",
+          "application/json"
+        ],
+        [
+          "referrer-policy",
+          "no-referrer"
+        ]
+      ],
+      "body": "{\"message\":\"Complete the security check\"}",
+      "attempts": [
+        {
+          "token": "invalid",
+          "action": "signup",
+          "ip": "unknown"
+        }
+      ],
+      "admissions": [],
+      "database": {
+        "user": [],
+        "account": [],
+        "session": [],
+        "verification": []
+      }
+    },
+    {
+      "path": "sign-up/email",
+      "name": "invalid-body-valid-query",
+      "status": 403,
+      "headers": [
+        [
+          "cache-control",
+          "no-store"
+        ],
+        [
+          "content-type",
+          "application/json"
+        ],
+        [
+          "referrer-policy",
+          "no-referrer"
+        ]
+      ],
+      "body": "{\"message\":\"Complete the security check\"}",
+      "attempts": [
+        {
+          "token": "invalid",
+          "action": "signup",
+          "ip": "unknown"
+        }
+      ],
+      "admissions": [],
+      "database": {
+        "user": [],
+        "account": [],
+        "session": [],
+        "verification": []
+      }
+    },
+    {
+      "path": "sign-up/email",
+      "name": "no-token",
+      "status": 403,
+      "headers": [
+        [
+          "cache-control",
+          "no-store"
+        ],
+        [
+          "content-type",
+          "application/json"
+        ],
+        [
+          "referrer-policy",
+          "no-referrer"
+        ]
+      ],
+      "body": "{\"message\":\"Complete the security check\"}",
+      "attempts": [
+        {
+          "token": "",
+          "action": "signup",
+          "ip": "unknown"
+        }
+      ],
+      "admissions": [],
+      "database": {
+        "user": [],
+        "account": [],
+        "session": [],
+        "verification": []
+      }
+    },
+    {
+      "path": "request-password-reset",
+      "name": "body-only",
+      "status": 200,
+      "headers": [
+        [
+          "cache-control",
+          "no-store"
+        ],
+        [
+          "content-type",
+          "application/json;charset=utf-8"
+        ],
+        [
+          "referrer-policy",
+          "no-referrer"
+        ]
+      ],
+      "body": "{\"status\":true,\"message\":\"If eligible, check your email for the link\"}",
+      "attempts": [
+        {
+          "token": "fixture-pass",
+          "action": "password_reset",
+          "ip": "unknown"
+        }
+      ],
+      "admissions": [
+        {
+          "kind": "reset",
+          "email": "absent@example.test",
+          "callback": "http://localhost:5173/"
+        }
+      ],
+      "database": {
+        "user": [],
+        "account": [],
+        "session": [],
+        "verification": []
+      }
+    },
+    {
+      "path": "request-password-reset",
+      "name": "body-with-invalid-header",
+      "status": 200,
+      "headers": [
+        [
+          "cache-control",
+          "no-store"
+        ],
+        [
+          "content-type",
+          "application/json;charset=utf-8"
+        ],
+        [
+          "referrer-policy",
+          "no-referrer"
+        ]
+      ],
+      "body": "{\"status\":true,\"message\":\"If eligible, check your email for the link\"}",
+      "attempts": [
+        {
+          "token": "fixture-pass",
+          "action": "password_reset",
+          "ip": "unknown"
+        }
+      ],
+      "admissions": [
+        {
+          "kind": "reset",
+          "email": "absent@example.test",
+          "callback": "http://localhost:5173/"
+        }
+      ],
+      "database": {
+        "user": [],
+        "account": [],
+        "session": [],
+        "verification": []
+      }
+    },
+    {
+      "path": "request-password-reset",
+      "name": "body-with-invalid-query",
+      "status": 200,
+      "headers": [
+        [
+          "cache-control",
+          "no-store"
+        ],
+        [
+          "content-type",
+          "application/json;charset=utf-8"
+        ],
+        [
+          "referrer-policy",
+          "no-referrer"
+        ]
+      ],
+      "body": "{\"status\":true,\"message\":\"If eligible, check your email for the link\"}",
+      "attempts": [
+        {
+          "token": "fixture-pass",
+          "action": "password_reset",
+          "ip": "unknown"
+        }
+      ],
+      "admissions": [
+        {
+          "kind": "reset",
+          "email": "absent@example.test",
+          "callback": "http://localhost:5173/"
+        }
+      ],
+      "database": {
+        "user": [],
+        "account": [],
+        "session": [],
+        "verification": []
+      }
+    },
+    {
+      "path": "request-password-reset",
+      "name": "header-only",
+      "status": 403,
+      "headers": [
+        [
+          "cache-control",
+          "no-store"
+        ],
+        [
+          "content-type",
+          "application/json"
+        ],
+        [
+          "referrer-policy",
+          "no-referrer"
+        ]
+      ],
+      "body": "{\"message\":\"Complete the security check\"}",
+      "attempts": [
+        {
+          "token": "",
+          "action": "password_reset",
+          "ip": "unknown"
+        }
+      ],
+      "admissions": [],
+      "database": {
+        "user": [],
+        "account": [],
+        "session": [],
+        "verification": []
+      }
+    },
+    {
+      "path": "request-password-reset",
+      "name": "query-only",
+      "status": 403,
+      "headers": [
+        [
+          "cache-control",
+          "no-store"
+        ],
+        [
+          "content-type",
+          "application/json"
+        ],
+        [
+          "referrer-policy",
+          "no-referrer"
+        ]
+      ],
+      "body": "{\"message\":\"Complete the security check\"}",
+      "attempts": [
+        {
+          "token": "",
+          "action": "password_reset",
+          "ip": "unknown"
+        }
+      ],
+      "admissions": [],
+      "database": {
+        "user": [],
+        "account": [],
+        "session": [],
+        "verification": []
+      }
+    },
+    {
+      "path": "request-password-reset",
+      "name": "invalid-body-valid-header",
+      "status": 403,
+      "headers": [
+        [
+          "cache-control",
+          "no-store"
+        ],
+        [
+          "content-type",
+          "application/json"
+        ],
+        [
+          "referrer-policy",
+          "no-referrer"
+        ]
+      ],
+      "body": "{\"message\":\"Complete the security check\"}",
+      "attempts": [
+        {
+          "token": "invalid",
+          "action": "password_reset",
+          "ip": "unknown"
+        }
+      ],
+      "admissions": [],
+      "database": {
+        "user": [],
+        "account": [],
+        "session": [],
+        "verification": []
+      }
+    },
+    {
+      "path": "request-password-reset",
+      "name": "invalid-body-valid-query",
+      "status": 403,
+      "headers": [
+        [
+          "cache-control",
+          "no-store"
+        ],
+        [
+          "content-type",
+          "application/json"
+        ],
+        [
+          "referrer-policy",
+          "no-referrer"
+        ]
+      ],
+      "body": "{\"message\":\"Complete the security check\"}",
+      "attempts": [
+        {
+          "token": "invalid",
+          "action": "password_reset",
+          "ip": "unknown"
+        }
+      ],
+      "admissions": [],
+      "database": {
+        "user": [],
+        "account": [],
+        "session": [],
+        "verification": []
+      }
+    },
+    {
+      "path": "request-password-reset",
+      "name": "no-token",
+      "status": 403,
+      "headers": [
+        [
+          "cache-control",
+          "no-store"
+        ],
+        [
+          "content-type",
+          "application/json"
+        ],
+        [
+          "referrer-policy",
+          "no-referrer"
+        ]
+      ],
+      "body": "{\"message\":\"Complete the security check\"}",
+      "attempts": [
+        {
+          "token": "",
+          "action": "password_reset",
+          "ip": "unknown"
+        }
+      ],
+      "admissions": [],
+      "database": {
+        "user": [],
+        "account": [],
+        "session": [],
+        "verification": []
+      }
+    },
+    {
+      "path": "callback/google?error=access_denied",
+      "status": 302,
+      "headers": [
+        [
+          "cache-control",
+          "no-store"
+        ],
+        [
+          "content-type",
+          "application/json"
+        ],
+        [
+          "location",
+          "http://localhost:3100/api/auth/error?error=state_not_found"
+        ],
+        [
+          "referrer-policy",
+          "no-referrer"
+        ]
+      ],
+      "body": ""
+    },
+    {
+      "path": "callback/google?error=access_denied&state=invalid-state",
+      "status": 302,
+      "headers": [
+        [
+          "cache-control",
+          "no-store"
+        ],
+        [
+          "content-type",
+          "application/json"
+        ],
+        [
+          "location",
+          "http://localhost:3100/api/auth/error?error=state_mismatch"
+        ],
+        [
+          "referrer-policy",
+          "no-referrer"
+        ]
+      ],
+      "body": ""
+    }
+  ]
+}
