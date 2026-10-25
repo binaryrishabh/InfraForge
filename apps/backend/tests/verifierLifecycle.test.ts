@@ -10,7 +10,7 @@ import type { SubmissionVerifier } from "../firstStack/submissionWorker";
 import { submissionFixture } from "./submissionFixture";
 import { fileURLToPath } from "node:url";
 
-test("host lifecycle starts once, invalidates dependency loss and drains despite Redis deletion failure", async () => {
+test("host lifecycle resumes a queue left paused before restart, starts once and drains despite Redis loss", async () => {
   const child = Bun.spawn([process.execPath, "--no-env-file", "--no-install",
     fileURLToPath(new URL("./verifierLifecycleHarness.ts", import.meta.url))],
   { stdout: "pipe", stderr: "pipe" });
@@ -21,14 +21,22 @@ test("host lifecycle starts once, invalidates dependency loss and drains despite
   expect(output).toContain("Verifier lifecycle ordering and dependency invalidation passed");
 });
 
-test("lifecycle executes its supplied fingerprint, headroom and owned canary callbacks", async () => {
-  for (const failure of ["fingerprint", "headroom", "canary"]) {
+for (const failure of ["fingerprint", "headroom", "canary", "ownership"]) {
+  test(`lifecycle rejects startup and releases ownership after ${failure === "ownership" ? "ownership is lost during the canary" : `${failure} failure`}`, async () => {
     const child = Bun.spawn([process.execPath, "--no-env-file", "--no-install",
       fileURLToPath(new URL("./verifierLifecycleHarness.ts", import.meta.url)), failure], { stdout: "pipe", stderr: "pipe" });
     const [output, error, code] = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text(), child.exited]);
     expect({ code, error }).toEqual({ code: 0, error: "" });
     expect(output).toContain("Verifier callback failure closes startup");
-  }
+  });
+}
+
+test("shutdown waits for an unfinished renewal after queue drain before closing dependencies", async () => {
+  const child = Bun.spawn([process.execPath, "--no-env-file", "--no-install",
+    fileURLToPath(new URL("./verifierLifecycleHarness.ts", import.meta.url)), "unfinished-renewal"], { stdout: "pipe", stderr: "pipe" });
+  const [output, error, code] = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text(), child.exited]);
+  expect({ code, error }).toEqual({ code: 0, error: "" });
+  expect(output).toContain("Shutdown keeps dependencies open until renewal settles");
 });
 
 function fixture() {

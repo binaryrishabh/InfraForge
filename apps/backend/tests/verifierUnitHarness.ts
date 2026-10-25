@@ -3,12 +3,20 @@ import { strict as assert } from "node:assert";
 import * as childProcess from "node:child_process";
 const calls: any[][] = [];
 let failed = false, uid = 1001;
-Object.defineProperties(process, { platform: { value: "linux" }, getuid: { value: () => uid } });
+const unsupported = process.argv[2] === "unsupported-platform";
+Object.defineProperties(process, { platform: { value: unsupported ? "darwin" : "linux" }, getuid: { value: () => uid } });
 mock.module("node:child_process", () => ({ ...childProcess, spawn: () => { throw Error("No Docker process allowed"); },
   execFile: (file: string, args: string[], options: unknown, callback: any) => {
     calls.push([file, args, options]); callback(failed ? Error("private runtime failure") : null, "ControlGroup=fixture");
   } }));
 const { readVerifierUnit } = await import("../firstStack/isolationConnection");
+if (unsupported) {
+  for (const unit of ["supervisor", "manager"] as const) {
+    await assert.rejects(readVerifierUnit(unit), { message: "Supported non-root Linux service required" });
+    assert.equal(calls.length, 0, "unsupported platforms must not invoke execFile");
+  }
+  console.log("Unsupported platform refused without execFile"); process.exit(0);
+}
 assert.equal(await readVerifierUnit("supervisor"), "ControlGroup=fixture");
 assert.equal(await readVerifierUnit("manager"), "ControlGroup=fixture");
 assert.equal(calls[0]![0], "/usr/bin/systemctl");

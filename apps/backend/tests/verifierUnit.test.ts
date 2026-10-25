@@ -11,6 +11,14 @@ test("systemd observation is fixed, bounded, non-root and fails closed", async (
   expect(output).toContain("Fixed bounded systemd observation passed");
 });
 
+test("systemd observation rejects an unsupported platform without execFile", async () => {
+  const child = Bun.spawn([process.execPath, "--no-env-file", "--no-install",
+    fileURLToPath(new URL("./verifierUnitHarness.ts", import.meta.url)), "unsupported-platform"], { stdout: "pipe", stderr: "pipe" });
+  const [output, error, code] = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text(), child.exited]);
+  expect({ code, error }).toEqual({ code: 0, error: "" });
+  expect(output).toContain("Unsupported platform refused without execFile");
+});
+
 test("host observations retain exact-source loader permissions without general process access", () => {
   for (const file of ["firstStack/isolationConnection.ts", "firstStack/qualificationFingerprint.ts", "executionIdentity/loading.ts"]) {
     const path = `apps/backend/${file}`, source = readFileSync(fileURLToPath(new URL(`../${file}`, import.meta.url)), "utf8");

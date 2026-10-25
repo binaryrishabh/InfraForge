@@ -8,7 +8,16 @@ let starts = 0, failDelete = false, probe!: () => Promise<{ success: boolean }>;
 let finish!: () => void, healthy = true, cacheInvalidations = 0;
 let renewalDue = false, renewals = 0, executionHealthy: (() => boolean) | undefined;
 let lifecycleHeld = false, executorHeld = false, canaries = 0, fingerprints = 0, headrooms = 0, healthProbes = 0;
-const failure = process.argv[2];
+const scenario = process.argv[2];
+const failure = scenario === "unfinished-renewal" ? undefined : scenario;
+let ownershipLost = false;
+// A failed renewal can leave the global queue paused across a process restart.
+let paused = true;
+let pausedAtReadiness: boolean | undefined;
+let startupEvents: string[] = [];
+let enterCanary!: () => void, finishCanary!: () => void;
+const canaryEntered = new Promise<void>(resolve => { enterCanary = resolve; });
+const canaryPending = new Promise<void>(resolve => { finishCanary = resolve; });
 let finishRenewal!: () => void;
 const renewalJob = new Promise<void>(resolve => { finishRenewal = resolve; });
 const job = new Promise<void>(resolve => { finish = resolve; });
@@ -52,7 +61,10 @@ mock.module("../firstStack/qualificationFingerprint", () => ({
 mock.module("../firstStack/verifierProductionProbe", () => ({ assertVerifierProductionResponsive: async () => { healthProbes++; } }));
 mock.module("../firstStack/verifierOwnership", () => ({ acquireVerifierOwnership: async () => {
   assert.equal(lifecycleHeld, false); lifecycleHeld = true;
-  return { assertHeld: async () => { assert.equal(lifecycleHeld, true); }, close: async () => { lifecycleHeld = false; } };
+  return { assertHeld: async () => {
+    assert.equal(lifecycleHeld, true);
+    if (ownershipLost) throw Error("injected ownership");
+  }, close: async () => { lifecycleHeld = false; events.push("startup-release"); } };
 } }));
 const authority = { assertHeld: async () => { assert.equal(executorHeld, true); } }, signal = new AbortController().signal;
 mock.module("../firstStack/isolationOwnership", () => ({ withFirstStackOwnership: async (_url: string, hooks: any, work: any) => {
@@ -68,20 +80,28 @@ mock.module("../firstStack/isolationRunner", () => ({ checkFirstStackCanary: asy
   assert.equal(held, authority); assert.equal(abort, signal); assert.deepEqual(baseline, { baseline: true });
   assert.equal(fingerprint, "fingerprint"); assert.equal(canary.path, "/etc/infraforge/verifier/canary.json");
   canaries++; if (failure === "canary") throw Error("injected canary");
+  if (failure === "ownership") ownershipLost = true;
+  if (canaries === 2 && scenario === "unfinished-renewal") {
+    events.push("canary-pending"); enterCanary(); await canaryPending;
+  }
+  events.push("canary-complete");
 } }));
 mock.module("../firstStack/submissionQueue", () => ({ startSubmissionQueue: async (...args: any[]) => {
   starts++;
+  events.push("queue-start");
   assert.equal(lifecycleHeld, false); lifecycleHeld = true; // Queue takes lifecycle ownership after startup releases it.
   executionHealthy = args[4].healthy;
   return {
-    queue: { pause: async () => { events.push("renewal-pause"); },
+    queue: { pause: async () => { paused = true; events.push("renewal-pause"); },
       getActiveCount: async () => { await renewalJob; return 0; },
-      resume: async () => { events.push("renewal-resume"); } },
+      resume: async () => { paused = false; events.push("renewal-resume"); } },
     health: async () => { if (!healthy) throw Error("Queue unavailable"); },
     close: async () => { events.push("stop-claims"); await job; events.push("drained"); },
   };
 } }));
 mock.module("../health/readinessCache", () => ({ createReadinessCache: (check: typeof probe) => {
+  pausedAtReadiness = paused;
+  startupEvents = [...events];
   probe = check;
   let success = false;
   return {
@@ -100,10 +120,19 @@ if (failure) {
   await assert.rejects(first, new RegExp(`injected ${failure}`));
   assert.equal(starts, 0); assert.equal(lifecycleHeld, false); assert.equal(executorHeld, false);
   if (failure === "canary") assert.equal(canaries, 1);
+  if (failure === "ownership") {
+    assert.equal(canaries, 1); assert.equal(ownershipLost, true);
+    assert.equal(events.filter(event => event === "startup-release").length, 1);
+  }
   assert.ok(!events.includes("renewal-resume"));
   console.log("Verifier callback failure closes startup"); process.exit(0);
 }
 const verifier = await first;
+assert.equal(pausedAtReadiness, false, "startup must resume the paused queue before readiness");
+assert.equal(paused, false);
+assert.equal(startupEvents.filter(event => event === "renewal-resume").length, 1);
+assert.deepEqual(startupEvents.filter(event => ["canary-complete", "startup-release", "queue-start", "renewal-resume"].includes(event)),
+  ["canary-complete", "startup-release", "queue-start", "renewal-resume"]);
 assert.equal(canaries, 1); assert.ok(fingerprints >= 2); assert.ok(headrooms > 0); assert.ok(healthProbes > 0);
 assert.equal(starts, 1);
 assert.equal(verifier.availability().available, true);
@@ -115,6 +144,31 @@ healthy = false;
 assert.equal((await probe()).success, false);
 healthy = true;
 assert.equal((await probe()).success, true);
+
+if (scenario === "unfinished-renewal") {
+  renewalDue = true;
+  assert.equal((await probe()).success, false);
+  finishRenewal(); await canaryEntered;
+  assert.equal(renewals, 2); assert.equal(executorHeld, true);
+  events.length = 0;
+  let closed = false;
+  const closing = verifier.close().then(() => { closed = true; });
+  finish();
+  // Let the completed ordinary drain and all its continuations run while the canary is held.
+  await new Promise<void>(resolve => { setImmediate(resolve); });
+  assert.ok(events.includes("drained"));
+  assert.equal(closed, false, "shutdown must await the unfinished renewal");
+  for (const event of ["cache-close", "control-close", "disconnect", "pool-end"])
+    assert.ok(!events.includes(event), `${event} must wait for renewal`);
+  assert.equal(executorHeld, true);
+  finishCanary(); await closing;
+  assert.equal(closed, true); assert.equal(executorHeld, false);
+  assert.ok(events.indexOf("canary-complete") < events.indexOf("control-close"));
+  assert.equal(events.filter(event => event === "disconnect").length, 2);
+  assert.equal(events.at(-1), "pool-end");
+  assert.ok(!events.includes("renewal-resume"));
+  console.log("Shutdown keeps dependencies open until renewal settles"); process.exit(0);
+}
 
 renewalDue = true;
 assert.equal((await probe()).success, false);

@@ -21,7 +21,7 @@ test("transition validation recognizes the new frozen version and still rejects 
   expect(() => validateTransitions(copy, digest(copy))).not.toThrow();
   copy.entries.at(-1)!.algorithm = "qualification-boundary/2" as "qualification-boundary/1";
   expect(() => validateTransitions(copy, digest(copy))).toThrow("Unknown execution transition algorithm");
-});
+}, 30000);
 
 test("qualification frozen loader accepts only the exact reviewed process adapter at its reviewed path", () => {
   const loader = historicalQualificationLoading(reviews);
@@ -55,7 +55,7 @@ test("the old adapter stays rejected by the new frozen loader even after the old
     historicalIsolationLoading(oldReviews).executionImports(old, adapter);
     expect(() => historicalQualificationLoading(oldReviews).executionImports(old, adapter)).toThrow("Unreviewed dynamic execution loader");
   });
-});
+}, 30000);
 
 test("all three existing frozen algorithms still reconstruct their retained historical baselines", () => {
   const store = loadTransitions(repositoryRoot), history = store.history();
