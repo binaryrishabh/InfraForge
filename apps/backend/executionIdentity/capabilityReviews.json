@@ -194,12 +194,12 @@
     }
   },
   "apps/backend/executionIdentity/transitions.ts": {
-    "hash": "f684caaa47e196421ae478e32be2f29cd2713e6d8d1ee7a4c44ba39dead5ff4c",
+    "hash": "208ad2cebb3fda8ca4285d3995fbe44825abd2ab7abfa04bf1e975563f6e19ab",
     "capabilities": [
       "computed-data",
       "resources"
     ],
-    "review": "Canonical Merkle transition data and fixed bounded resource reads; additive isolation-boundary/1 tag reconstructs the independently pinned eight-entrypoint baseline with exact digest equality. Earlier tags, unknown-tag refusal, snapshot and descriptor integrity checks remain intact; no execution or new resource paths."
+    "review": "Canonical Merkle transition data and fixed bounded resource reads; additive qualification-boundary/1 tag selects the independently frozen descriptor and exact systemd process-adapter hash. Earlier tags, unknown-tag refusal, snapshot and descriptor integrity checks remain intact; no execution or new resource paths."
   },
   "apps/backend/internalModel2/authoring.ts": {
     "hash": "fbf3e20b5c82cb9460e087aca74b39f10c1efa5e210b3ae3593beab922067e00",

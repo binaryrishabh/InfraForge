@@ -1,0 +1,167 @@
+import { historicalContentHash as sha256 } from "./historical-analysis-cache";
+// Frozen qualification-boundary/1 reconstruction. Hosts come only from the
+// baseline descriptor literal, never the current process. Every
+// source, dependency, resource and launch value still participates in its digest.
+import { parse } from "acorn";
+import { posix } from "node:path";
+import { builtinModules } from "node:module";
+import { dependencyClosure, parseLock, requireWorkspace } from "../apps/backend/executionIdentity/dependencies";
+import type { Manifest } from "../apps/backend/executionIdentity/dependencies";
+import { lf } from "../apps/backend/executionIdentity/hash";
+import { configurationInventory, verifyInstallation } from "./historical-host-configuration";
+import { historicalQualificationLoading } from "./historical-qualification-loading";
+const launchContract = { runtime: "bun-1.3.14", target: "bun", conditions: ["bun", "node", "import", "require", "default"], preloads: [], envFiles: false };
+import type { SourceTree } from "../apps/backend/executionIdentity/sourceTree";
+export type { SourceTree } from "../apps/backend/executionIdentity/sourceTree";
+
+const engineFolders = ["packages/simulation/src/model2/", "packages/simulation/src/reality/", "packages/domain/src/", "packages/catalog/src/"];
+export function wholeLockFiles(tree: SourceTree, includeSandbox = false) {
+  return tree.paths.filter(path => engineFolders.some(folder => path.startsWith(folder)) && path.endsWith(".ts") ||
+    path.startsWith("apps/backend/internalModel2/") && path.endsWith(".ts") && (includeSandbox || !path.endsWith("/sandboxChild.ts")) ||
+    ["packages/simulation/src/internalProduct.ts", "apps/backend/internalModel2/legacyRuntime.json", "bun.lock", "apps/backend/zod_schemas/layout.schema.ts", "apps/backend/zod_schemas/deployment.schema.ts"].includes(path)).sort();
+}
+export const workspacePaths = ["packages/simulation", "packages/domain", "packages/catalog", "packages/contracts"];
+const builtins = new Set([...builtinModules, ...builtinModules.map(name => `node:${name}`), "bun"]);
+export const packageName = (specifier: string) => specifier.startsWith("@") ? specifier.split("/").slice(0, 2).join("/") : specifier.split("/")[0]!;
+
+// Decode data only. Never import/evaluate the retained descriptor or consult
+// the live executionHosts export. Relative, canonical paths keep archive reads
+// inside the retained tree; each host still passes the frozen loading policy.
+export function declaredExecutionHosts(tree: SourceTree): string[] {
+  const code = new Bun.Transpiler({ loader: "ts", target: "bun" }).transformSync(tree.read("apps/backend/executionIdentity/descriptor.ts"));
+  const ast = parse(code, { ecmaVersion: "latest", sourceType: "module" }) as unknown as Node;
+  const declarations: Node[] = [];
+  for (const statement of ast.body as Node[]) {
+    const declaration = statement.declaration as Node | undefined;
+    if (statement.type !== "ExportNamedDeclaration" || declaration?.type !== "VariableDeclaration") continue;
+    for (const item of declaration.declarations as Node[]) if ((item.id as Node).name === "executionHosts") declarations.push(item);
+  }
+  const init = declarations[0]?.init as Node | undefined;
+  if (declarations.length !== 1 || init?.type !== "ArrayExpression" || !(init.elements as Node[]).length) throw Error("Missing literal retained execution hosts");
+  return (init.elements as Node[]).map(node => {
+    if (node?.type !== "Literal" || typeof node.value !== "string" || /[\\:\x00-\x1f]/.test(node.value) ||
+      node.value.startsWith("/") || node.value.split("/").some(part => !part || part === "." || part === "..")) throw Error("Invalid retained execution host");
+    return node.value;
+  });
+}
+
+function qualificationDescriptor(tree: SourceTree, runtime: string) {
+  const { executable, executionImports } = historicalQualificationLoading(JSON.parse(tree.read("apps/backend/executionIdentity/capabilityReviews.json")));
+  const available = new Set(tree.paths), files = new Set<string>();
+  const configure = configurationInventory(tree, files);
+  const lock = parseLock(tree.read("bun.lock"));
+  verifyInstallation(tree, Object.keys(lock.workspaces));
+  const manifests = Object.fromEntries([...workspacePaths, "apps/backend"].map(path => {
+    const manifest = JSON.parse(tree.read(`${path}/package.json`)) as Manifest;
+    requireWorkspace(lock, path, manifest);
+    return [path, manifest];
+  }));
+  const roots: Record<string, Record<string, string>> = {};
+  for (const path of workspacePaths) roots[manifests[path]!.name] = { ...manifests[path]!.dependencies, ...manifests[path]!.optionalDependencies, ...manifests[path]!.peerDependencies };
+  roots[manifests["apps/backend"]!.name] = {};
+  const imports: Array<{ file: string; specifier: string; kind: string }> = [];
+  function local(path: string) {
+    const extensions = ["ts", "tsx", "js", "jsx", "mjs", "cjs", "mts", "cts", "json"];
+    const found = [path, ...extensions.map(ext => `${path}.${ext}`), ...extensions.map(ext => `${path}/index.${ext}`)].find(candidate => available.has(candidate));
+    if (!found || found.startsWith("../") || found.includes("/.env")) throw Error(`Unresolved execution source: ${path}`);
+    visit(found);
+  }
+  function visit(path: string) {
+    if (files.has(path)) return;
+    files.add(path);
+    if (path.endsWith(".json")) return;
+    if (!executable.test(path)) throw Error(`Unsupported execution source: ${path}`);
+    configure(path);
+    const source = tree.read(path);
+    for (const entry of executionImports(source, path)) {
+      const specifier = entry.path;
+      if (builtins.has(specifier)) continue;
+      if (specifier.startsWith(".")) {
+        local(tree.resolveImport?.(specifier, path) ?? posix.normalize(posix.join(posix.dirname(path), specifier))); continue;
+      }
+      const name = packageName(specifier);
+      const owner = Object.keys(manifests).find(folder => path.startsWith(`${folder}/`));
+      if (!owner) throw Error(`No execution workspace for ${path}`);
+      const manifest = manifests[owner]!;
+      const range = manifest.dependencies?.[name] ?? manifest.optionalDependencies?.[name] ?? manifest.peerDependencies?.[name];
+      if (!range && name !== manifest.name) throw Error(`Undeclared execution import: ${path} -> ${specifier}`);
+      roots[manifest.name]![name] = range ?? "workspace:*";
+      const workspace = Object.entries(manifests).find(([, value]) => value.name === name);
+      if (workspace) {
+        const [folder, value] = workspace;
+        const key = specifier === name ? "." : `.${specifier.slice(name.length)}`;
+        const exports = value.exports as Record<string, string | { default?: string; bun?: string; import?: string }>;
+        const entry = exports?.[key];
+        if (entry && typeof entry === "object" && Object.keys(entry).some(condition => !["types", "default"].includes(condition))) throw Error(`Unreviewed workspace export condition: ${specifier}`);
+        const target = typeof entry === "string" ? entry : entry?.default;
+        if (!target) throw Error(`Unresolved workspace export: ${specifier}`);
+        const expected = posix.normalize(posix.join(folder, target));
+        const actual = tree.resolveImport?.(specifier, path) ?? expected;
+        if (actual !== expected) throw Error(`Unexpected workspace resolution: ${path} -> ${specifier}: ${actual}`);
+        local(actual);
+      } else imports.push({ file: path, specifier, kind: entry.kind });
+    }
+  }
+  for (const path of wholeLockFiles(tree).filter(path => path !== "bun.lock")) visit(path);
+  for (const path of tree.paths.filter(path => path.startsWith("packages/contracts/src/") && path.endsWith(".ts"))) visit(path);
+  for (const path of ["tsconfig.base.json", "apps/backend/tsconfig.json"]) visit(path);
+  // Execution capabilities are injected by these hosts, not just internalModel2 imports.
+  for (const path of declaredExecutionHosts(tree)) visit(path);
+  for (const path of ["apps/backend/prisma.config.ts"]) visit(path);
+  for (const path of tree.paths.filter(path => path.startsWith("apps/backend/prisma/") && /(?:\.prisma|\.sql|\.toml)$/.test(path))) files.add(path);
+  for (const path of ["apps/backend/Dockerfile", "apps/backend/docker-compose.yml", ".dockerignore"]) files.add(path);
+  // The sandbox child is an explicit dynamic entrypoint, with its own image provenance as well.
+  visit("apps/backend/internalModel2/sandboxChild.ts");
+  const resourcePaths: unknown = JSON.parse(tree.read("apps/backend/executionIdentity/resourceInventory.json"));
+  if (!Array.isArray(resourcePaths) || resourcePaths.some(path => typeof path !== "string" || !/^apps\/backend\/resources\/[a-zA-Z0-9_/-]+\.(json|wasm)$/.test(path) || path.includes("..") || !available.has(path))) throw Error("Unreviewed execution resource path");
+  visit("apps/backend/executionIdentity/resources.ts");
+  visit("apps/backend/executionIdentity/launcher.ts");
+  visit("apps/backend/executionIdentity/resolutionContract.json");
+  visit("apps/backend/executionIdentity/resourceInventory.json");
+  const resources = [...new Set(resourcePaths as string[])].sort().map(path => [path, sha256(tree.resourceBytes?.(path) ?? tree.read(path))]);
+  const dependencies = dependencyClosure(lock, roots);
+  const install = Bun.TOML.parse(tree.read("bunfig.toml"));
+  const root = JSON.parse(tree.read("package.json"));
+  for (const [name, version] of Object.entries(dependencies.overrides)) if (root.overrides?.[name] !== version) throw Error(`Stale execution override: ${name}`);
+  for (const name of Object.keys(root.overrides ?? {})) {
+    if (name.slice(1).includes("@")) throw Error(`Unreviewed scoped override: ${name}`);
+    if (dependencies.packages.some(item => item.name === name) && lock.overrides?.[name] !== root.overrides[name]) throw Error(`Unresolved execution override: ${name}`);
+  }
+  const workspaces = Object.entries(manifests).map(([path, value]) => {
+    const { devDependencies: _dev, scripts: _scripts, ...manifest } = value;
+    // Backend dependency roots are imports, not unrelated API-only packages.
+    return [path, path === "apps/backend" ? { ...manifest, dependencies: roots[value.name] } : manifest];
+  });
+  return { schema: "execution-source/2", runtime, resources, files: [...files].sort().map(path => [path, sha256(tree.read(path))]),
+    workspaces, dependencies, settings: { install, packageManager: root.packageManager, launch: launchContract }, imports: imports.sort((a, b) => `${a.file}:${a.specifier}`.localeCompare(`${b.file}:${b.specifier}`)) };
+}
+
+
+interface Node { type: string; [key:string]: unknown }
+// The same literal launch decoder and explicit analysis/import data pins.
+export function historicalQualificationDescriptor(tree: SourceTree, runtime: string) {
+  const base = qualificationDescriptor(tree, runtime);
+  const source = new Bun.Transpiler({loader:"ts",target:"bun"}).transformSync(tree.read("apps/backend/executionIdentity/launch.ts"));
+  const ast = parse(source,{ecmaVersion:"latest",sourceType:"module"}) as unknown as Node;
+  function value(node: Node): unknown {
+    if (node.type === "Literal") return node.value;
+    if (node.type === "UnaryExpression" && node.operator === "!") return !value(node.argument as Node);
+    if (node.type === "ArrayExpression") return (node.elements as Node[]).map(value);
+    if (node.type === "ObjectExpression") return Object.fromEntries((node.properties as Node[]).map(property => {
+      const key=property.key as Node;
+      if (property.type !== "Property" || property.computed || property.method || !["Identifier","Literal"].includes(key.type)) throw Error("Unreviewed historical launch data");
+      return [String(key.name ?? key.value),value(property.value as Node)];
+    }));
+    throw Error("Nonliteral historical launch data");
+  }
+  for (const statement of ast.body as Node[]) {
+    if (statement.type !== "ExportNamedDeclaration") continue;
+    const declaration=statement.declaration as Node | undefined;
+    if (declaration?.type !== "VariableDeclaration") continue;
+    for (const item of declaration.declarations as Node[]) if ((item.id as Node).name === "launchContract") return { ...base, files: [...base.files,
+        ["apps/backend/executionIdentity/capabilityImportReviews.json", sha256(tree.read("apps/backend/executionIdentity/capabilityImportReviews.json"))],
+        ["apps/backend/executionIdentity/analysisContract.json", sha256(tree.read("apps/backend/executionIdentity/analysisContract.json"))],
+      ].sort((a, b) => a[0]! < b[0]! ? -1 : a[0]! > b[0]! ? 1 : 0), settings: { ...base.settings, launch: value(item.init as Node) } };
+  }
+  throw Error("Missing historical launch contract");
+}

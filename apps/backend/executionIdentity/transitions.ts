@@ -7,7 +7,7 @@ import { readMerklePack } from "./merkle";
 export interface TransitionTable {
   schema: string; first: string; last: string;
   descriptors: Record<string, { schema: string; runtime: string; [key: string]: unknown }>;
-  entries: Array<{ commit: string; source: string; descriptor: string; target: string; review: string; kind?: "descriptor"; algorithm?: "host-boundary/1" | "import-boundary/1" | "launch-boundary/1" | "analysis-boundary/1" | "isolation-boundary/1" | "declared-host-boundary/1" }>;
+  entries: Array<{ commit: string; source: string; descriptor: string; target: string; review: string; kind?: "descriptor"; algorithm?: "host-boundary/1" | "import-boundary/1" | "launch-boundary/1" | "analysis-boundary/1" | "isolation-boundary/1" | "declared-host-boundary/1" | "qualification-boundary/1" }>;
 }
 export function validateTransitions(table: TransitionTable, expectedHash: string) {
   if (digest(table) !== expectedHash || table.schema !== "execution-source-transitions/1") throw Error("Execution transition table changed");
@@ -18,7 +18,7 @@ export function validateTransitions(table: TransitionTable, expectedHash: string
     if (!/^[a-f0-9]{40}$/.test(row.commit) || !/^[a-f0-9]{64}$/.test(row.source) || !table.descriptors[row.descriptor] || !table.descriptors[row.target] || !row.review) throw Error("Invalid execution transition");
     if (mappings.has(row.source) && mappings.get(row.source) !== row.target) throw Error("Ambiguous execution transition");
     if (commits.has(row.commit)) throw Error("Duplicate execution transition commit");
-    if (row.kind !== undefined && row.kind !== "descriptor" || row.algorithm !== undefined && !["host-boundary/1", "import-boundary/1", "launch-boundary/1", "analysis-boundary/1", "isolation-boundary/1", "declared-host-boundary/1"].includes(row.algorithm)) throw Error("Unknown execution transition algorithm");
+    if (row.kind !== undefined && row.kind !== "descriptor" || row.algorithm !== undefined && !["host-boundary/1", "import-boundary/1", "launch-boundary/1", "analysis-boundary/1", "isolation-boundary/1", "declared-host-boundary/1", "qualification-boundary/1"].includes(row.algorithm)) throw Error("Unknown execution transition algorithm");
     commits.add(row.commit);
     mappings.set(row.source, row.target);
   }

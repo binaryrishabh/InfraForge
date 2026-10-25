@@ -3,11 +3,13 @@ import type { SourceTree } from "../apps/backend/executionIdentity/sourceTree";
 import { historicalAnalysisDescriptor } from "./historical-analysis-descriptor";
 import { historicalIsolationDescriptor } from "./historical-isolation-descriptor";
 import { historicalDeclaredHostDescriptor } from "./historical-declared-host-descriptor";
+import { historicalQualificationDescriptor } from "./historical-qualification-descriptor";
 
 export const frozenBaselineAlgorithms = [
   { id: "analysis-boundary/1" as const, reconstruct: historicalAnalysisDescriptor },
   { id: "isolation-boundary/1" as const, reconstruct: historicalIsolationDescriptor },
   { id: "declared-host-boundary/1" as const, reconstruct: historicalDeclaredHostDescriptor },
+  { id: "qualification-boundary/1" as const, reconstruct: historicalQualificationDescriptor },
 ];
 
 export function selectFrozenBaseline(tree: SourceTree, runtime: string, expected: string) {

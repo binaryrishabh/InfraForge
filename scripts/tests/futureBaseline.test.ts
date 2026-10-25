@@ -4,6 +4,7 @@ import { digest } from "../../apps/backend/executionIdentity/hash";
 import type { SourceTree } from "../../apps/backend/executionIdentity/sourceTree";
 import { declaredExecutionHosts } from "../historical-declared-host-descriptor";
 import { frozenBaselineAlgorithms, selectFrozenBaseline } from "../frozen-baseline";
+import { reconstructTransitionDescriptor } from "../execution-identity";
 
 function futureBaseline() {
   const current = diskTree(), descriptor = executionDescriptor(current);
@@ -24,6 +25,7 @@ test("CURRENT working tree remains exactly reconstructable as the next slice's f
   const selected = frozenBaselineAlgorithms.find(row => row.id === algorithm);
   expect(selected).toBeDefined();
   expect(digest(selected!.reconstruct(tree, runtime))).toBe(expected);
+  expect(digest(reconstructTransitionDescriptor(tree, runtime, { algorithm, commit: "CURRENT" }))).toBe(expected);
 }, 120000);
 
 test("missing or mutated declared submission hosts cannot reconstruct the current baseline", () => {

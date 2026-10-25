@@ -2,6 +2,7 @@ import { withHistoricalAnalysisCache } from "./historical-analysis-cache";
 import { assertHistoricalPreservation } from "./history-preservation";
 import { historicalIsolationDescriptor } from "./historical-isolation-descriptor";
 import { historicalDeclaredHostDescriptor } from "./historical-declared-host-descriptor";
+import { historicalQualificationDescriptor } from "./historical-qualification-descriptor";
 import { reviewHardeningSyntax, refreshHardeningTransitions, refreshHardeningAcceptance } from "./hardening-identity";
 import { buildCompositionTransitions } from "./stage1-identity";
 import { refreshPostgresAcceptance, reviewPostgresSessions, reviewPostgresSyntax, refreshPostgresTransitions } from "./postgres-session-identity";
@@ -148,6 +149,9 @@ function buildTransitions() {
 export function checkTransitions(root = repositoryRoot, read?: (path: string) => string | Buffer) {
   return withHistoricalAnalysisCache(() => reconstructTransitions(root, read));
 }
+export function reconstructTransitionDescriptor(tree: SourceTree, runtime: string, row: Pick<TransitionTable["entries"][number], "algorithm" | "commit">) {
+  return (row.algorithm === "qualification-boundary/1" ? historicalQualificationDescriptor : row.algorithm === "declared-host-boundary/1" ? historicalDeclaredHostDescriptor : row.algorithm === "isolation-boundary/1" ? historicalIsolationDescriptor : row.algorithm === "analysis-boundary/1" ? historicalAnalysisDescriptor : row.algorithm === "launch-boundary/1" ? historicalLaunchDescriptor : row.algorithm === "import-boundary/1" ? historicalImportDescriptor : row.algorithm === "host-boundary/1" ? historicalHostDescriptor : row.commit.startsWith("2da5b74") ? verifiedHistoricalDescriptor : historicalDescriptor)(tree, runtime);
+}
 function reconstructTransitions(root: string, read?: (path: string) => string | Buffer) {
   const { table, mappings: mapping, history: readHistory } = loadTransitions(root, read);
   const history = readHistory();
@@ -164,7 +168,7 @@ function reconstructTransitions(root: string, read?: (path: string) => string | 
     const key = digest([algorithm, table.descriptors[row.descriptor]!.runtime, files]);
     let rebuilt = reconstructed.get(key);
     if (rebuilt === undefined) {
-      rebuilt = digest((row.algorithm === "declared-host-boundary/1" ? historicalDeclaredHostDescriptor : row.algorithm === "isolation-boundary/1" ? historicalIsolationDescriptor : row.algorithm === "analysis-boundary/1" ? historicalAnalysisDescriptor : row.algorithm === "launch-boundary/1" ? historicalLaunchDescriptor : row.algorithm === "import-boundary/1" ? historicalImportDescriptor : row.algorithm === "host-boundary/1" ? historicalHostDescriptor : row.commit.startsWith("2da5b74") ? verifiedHistoricalDescriptor : historicalDescriptor)(tree, table.descriptors[row.descriptor]!.runtime));
+      rebuilt = digest(reconstructTransitionDescriptor(tree, table.descriptors[row.descriptor]!.runtime, row));
       // Memoize only after the complete reconstruction matches its authenticated descriptor.
       if (rebuilt !== row.descriptor) throw Error("Historical closure does not reconstruct");
       reconstructed.set(key, rebuilt);
