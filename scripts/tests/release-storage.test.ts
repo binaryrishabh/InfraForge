@@ -240,9 +240,10 @@ test("schema 4 qualifies the server plugin and built-in storage paths", async ()
     "/var/lib/containerd/io.containerd.snapshotter.v1.overlayfs", process.cwd()]);
 });
 
+const futureSchema = containerd242.replace("version = 4", "version = 5") + `\n[grpc]\naddress = '${address}'\n`;
 const schema4Refusals: [string, string, string?][] = [
-  ["unknown schema", containerd242.replace("version = 4", "version = 5"), containerd242.replace("version = 4", "version = 5")],
-  ["mismatched executable schema", containerd242, dump],
+  ["unknown schema", futureSchema, futureSchema],
+  ["mismatched executable schema", containerd242, containerd242.replace("version = 4", "version = 3")],
   ["legacy grpc cannot replace the server plugin", containerd242.replace("plugins.'io.containerd.server.v1.grpc'", "grpc"),
     containerd242.replace("plugins.'io.containerd.server.v1.grpc'", "grpc")],
   ["wrong server address even in defaults", containerd242.replace(address, "/run/other.sock"), containerd242.replace(address, "/run/other.sock")],

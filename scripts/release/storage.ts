@@ -195,8 +195,8 @@ async function configurationEvidence(host: StorageHost, started: number, proc: s
     // the own directory must also predate startup, even for an absent config.
     let childChanged = false;
     for (let parent = posix.dirname(path);; parent = posix.dirname(parent)) {
-      const value = (await inspect(parent, "directory", parent === posix.dirname(path) || parent === "/"))!;
-      const changed = value.ctimeMs + 1000 >= started;
+      const value = await inspect(parent, "directory", parent === posix.dirname(path) || parent === "/");
+      const changed = value !== undefined && value.ctimeMs + 1000 >= started;
       if (changed && childChanged) return refuse();
       childChanged = changed;
       if (parent === "/") break;

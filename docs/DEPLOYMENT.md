@@ -176,7 +176,8 @@ of the running daemon's configuration.
   A forwarding listener or another namespace refuses. Systemd may retain a
   socket-activation descriptor alongside dockerd. For the containerd store,
   `ss -H -xapn` must show reciprocal established socket inodes connecting that
-  dockerd to the verified containerd PID and address. These checks repeat after
+  dockerd to the verified containerd PID and server-local address. Client peer
+  names may be `*`, as in ordinary netlink output. These checks repeat after
   the dump; a local socket pathname or matching path strings alone do not qualify.
 - `containerd.service` must have a positive MainPID, a readable flagless
   `containerd` command line and an absolute, non-deleted executable ending in
