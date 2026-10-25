@@ -65,7 +65,7 @@ export async function challengeCompatibilityResponses(flags: Record<string, stri
       attempts.length = 0; admissions.length = 0;
       const url = new URL(`${settings.baseURL}/api/auth/${path}`);
       if (query !== undefined) url.searchParams.set("cf-turnstile-response", query);
-      const response = await handler(new Request(url, { method: "POST", headers: {
+      const response = await handler(new Request(url.href, { method: "POST", headers: {
         Origin: settings.origins[0]!, "Content-Type": "application/json",
         ...(header === undefined ? {} : { "x-turnstile-token": header }),
       }, body: JSON.stringify({ email: "absent@example.test", username: "fixtureuser",

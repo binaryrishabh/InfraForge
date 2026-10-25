@@ -20,6 +20,6 @@ test("enabled email login still preserves main's body-only legacy signup and res
   const responses = await challengeCompatibilityResponses({ AUTH_MAGIC_LINK_ENABLED: "true",
     AUTH_EMAIL_OTP_ENABLED: "true", TRANSACTIONAL_EMAIL_PROVIDER: "resend", RESEND_API_KEY: "fixture-only",
     TRANSACTIONAL_EMAIL_FROM: "auth@example.test", TURNSTILE_DEV_BYPASS: "true" });
-  expect(responses.filter(r => !r.path.startsWith("callback/")))
-    .toEqual(challengeBaseline.responses.filter(r => !r.path.startsWith("callback/")));
+  expect(JSON.stringify(responses.filter(r => !r.path.startsWith("callback/"))))
+    .toBe(JSON.stringify(challengeBaseline.responses.filter(r => !r.path.startsWith("callback/"))));
 });
