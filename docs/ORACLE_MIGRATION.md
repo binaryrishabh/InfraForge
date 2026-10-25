@@ -316,8 +316,8 @@ substitute for this final pre-cutover qualification.
 
 **Stop gate:** require a current recorded pass from the final storage qualification
 immediately above, section 2 client checks, section 8 pre-cutover setup, and the
-rehearsed recovery and public-traffic plans below. Neither the retained-current EC2 recovery nor an independent public gate
-is implemented/validated by this document. Do not begin the outage with either
+rehearsed recovery and public-traffic plans below. Neither the retained-current
+EC2 recovery nor an independent public gate is implemented/validated by this document. Do not begin the outage with either
 plan unresolved.
 
 Maintenance begins here. On **old EC2 only**, in the current accepted checkout,
@@ -549,20 +549,60 @@ the missing native client installation. Complete the following **before section 
 
 After section 6's accepted release, on **Oracle**, serialize this with builds
 and use the merged guide's status/receipt interpretation. This remains a required
-migration acceptance gate; backend acceptance alone does not establish recovery:
+migration acceptance gate; backend acceptance alone does not establish recovery.
+Keep both timers disabled. **Before the first backup**, run the merged guide's
+fresh-host missing-receipt alert test:
 
 ```sh
+set -euo pipefail
+sudo test ! -e /var/lib/infraforge-ops/backup.json
+sudo systemctl start infraforge-ops-metrics.service
+if sudo /bin/bash /opt/infraforge-ops/backup-alerts/run.sh status; then
+  echo 'STOP: expected missing-receipt failure before the first backup'
+  exit 1
+else
+  status_rc=$?
+  test "$status_rc" -eq 1
+fi
+```
+
+The `if` deliberately handles the expected failing status under `set -e`; exit 1
+alone is not alert acceptance. Inspect the private status/diagnostics and require
+the missing-backup-receipt reason, not a configuration, permission or delivery
+failure. Require the configured independent checker to observe that failure and
+actually notify its destination. If mail is configured, inspect `alert_delivery`
+and confirm inbox delivery; `sent` alone proves only API acceptance. **Stop here
+until actual failure notification is confirmed.** If a valid receipt already
+exists, preserve it and stop for a reviewed alternative alert test. Never delete
+receipts, corrupt credentials or damage the database to recreate fresh-host state.
+
+Only after that negative test passes, run the first backup and prove recovery:
+
+```sh
+set -euo pipefail
 sudo systemctl start infraforge-backup.service
 sudo systemctl show infraforge-backup.service -p Result -p ExecMainStatus
 sudo systemctl start infraforge-ops-metrics.service
 sudo /bin/bash /opt/infraforge-ops/backup-alerts/run.sh status
+```
+
+Require `BACKUP PASS`, `Result=success`, `ExecMainStatus=0`, `STATUS PASS`, verified
+R2 objects/checksums/readback and the correct new destination. Confirm that the
+independent checker observes healthy recovery and delivers its configured recovery
+notification. A healthy `alert_delivery: not-needed` is not proof of failure-mail
+delivery; retain the preceding negative-test evidence. Then enable timers:
+
+```sh
+set -euo pipefail
 sudo systemctl enable --now infraforge-backup.timer infraforge-ops-metrics.timer
 sudo systemctl list-timers 'infraforge-*' --all
 ```
 
-Require exit 0, verified R2 objects/checksums/readback, correct new destination,
-and actual independent success/failure/stale-notification delivery using w48's
-documented test procedure. Inspect diagnostics privately. Retrieve a real new
+Separately test the independent monitor's missing-host/unreachable and stale-check
+paths using its reviewed test mechanism, and confirm actual notification delivery
+and subsequent recovery. Do not stop at a local mail test: a lost VM cannot send
+mail. Retain this evidence as a separate acceptance gate. Inspect diagnostics
+privately. Retrieve a real new
 backup from R2 with the separate recovery identity and restore into an isolated
 scratch PostgreSQL 18 destination using the merged guide. Record archive SHA256,
 object identity, restore PASS, readable application tables, elapsed restore time
