@@ -2,6 +2,7 @@ import { expect, test } from "bun:test";
 import { preflightReleaseSpace, minimumReleaseFreeBytes } from "../release/hygiene";
 import { daemonStartMilliseconds, localDockerEnvironment, parseContainerdConfig, type StorageHost } from "../release/storage";
 import { dockerHost, dockerSockets } from "./fixtures/release-dockerd";
+import { containerd242 } from "./fixtures/containerd-v2.4.2";
 
 const address = "/run/containerd/containerd.sock";
 const info = { DockerRootDir: "/var/lib/docker", Driver: "overlayfs", DriverStatus: [["driver-type", "io.containerd.snapshotter.v1"]],
@@ -40,8 +41,8 @@ function host(change: Change = {}) {
     if (args[0] === "getconf") return "100";
     if (args[2] === "ss") return args.includes("-xapn") ? change.dockerSockets ?? dockerSockets.replace("pid=812", `pid=${daemonPid}`) :
       change.sockets ?? `u_str LISTEN 0 4096 ${address} 123 * 0 users:(("containerd",pid=${daemonPid},fd=9))`;
-    if (args[3] === "config" && args[4] === "default") return change.defaults ?? dump;
-    if (args[3] === "config" && args[4] === "dump") { dumped = true; return change.dump ?? dump; }
+    if (args[3] === "config" && args[4] === "default") return change.defaults ?? (change.production ? containerd242 : dump);
+    if (args[3] === "config" && args[4] === "dump") { dumped = true; return change.dump ?? (change.production ? containerd242 : dump); }
     throw new Error("Unexpected command");
   };
   const io: StorageHost = {
@@ -203,6 +204,31 @@ test("exact production timestamps accept an unrelated later etc change", async (
   await expect(h.preflight()).resolves.toBeUndefined();
   expect(h.paths).toHaveLength(5);
   expect(daemonStartMilliseconds(procStat.replace("10000 0", "3988762 0"), "btime 1792610199", "100")).toBe(1792650086620);
+});
+
+test("schema 4 qualifies the server plugin and built-in storage paths", async () => {
+  const h = host({ dump: containerd242, defaults: containerd242 });
+  await expect(h.preflight()).resolves.toBeUndefined();
+  expect(h.paths).toEqual(["/var/lib/docker", "/var/lib/containerd", "/var/lib/containerd/io.containerd.content.v1.content",
+    "/var/lib/containerd/io.containerd.snapshotter.v1.overlayfs", process.cwd()]);
+});
+
+const schema4Refusals: [string, string, string?][] = [
+  ["unknown schema", containerd242.replace("version = 4", "version = 5"), containerd242.replace("version = 4", "version = 5")],
+  ["mismatched executable schema", containerd242, dump],
+  ["legacy grpc cannot replace the server plugin", containerd242.replace("plugins.'io.containerd.server.v1.grpc'", "grpc"),
+    containerd242.replace("plugins.'io.containerd.server.v1.grpc'", "grpc")],
+  ["wrong server address even in defaults", containerd242.replace(address, "/run/other.sock"), containerd242.replace(address, "/run/other.sock")],
+  ["changed server plugin", containerd242.replace("uid = 0", "uid = 1000")],
+  ["overlay override even in defaults", containerd242.replace("root_path = ''", "root_path = '/full'"),
+    containerd242.replace("root_path = ''", "root_path = '/full'")],
+  ["content override", containerd242 + "[plugins.'io.containerd.content.v1.content']\nroot = '/full'\n"],
+  ["proxy provider", containerd242 + "[proxy_plugins.overlayfs]\ntype = 'snapshot'\naddress = '/proxy.sock'\n"],
+];
+for (const [name, value, defaults = containerd242] of schema4Refusals) test(`schema 4 refuses ${name}`, async () => {
+  const h = host({ dump: value, defaults });
+  await expect(h.preflight()).rejects.toThrow("Unknown");
+  expect(h.paths).toEqual([]);
 });
 
 test("classic overlay2 also rejects a forwarded or namespaced Docker endpoint", async () => {

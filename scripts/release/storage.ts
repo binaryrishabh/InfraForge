@@ -27,7 +27,7 @@ function canonical(value: unknown): string {
 }
 
 export function qualifiedContainerdPaths(dump: Table, defaults: Table, address: string) {
-  if (![2, 3].includes(dump.version as number) || dump.version !== defaults.version) return refuse();
+  if (![2, 3, 4].includes(dump.version as number) || dump.version !== defaults.version) return refuse();
   const known = new Set(["version", "root", "state", "temp", "plugin_dir", "imports", "disabled_plugins", "required_plugins",
     "oom_score", "grpc", "ttrpc", "debug", "metrics", "plugins", "proxy_plugins", "timeouts", "stream_processors", "cgroup"]);
   if (Object.keys(dump).some(key => !known.has(key))) return refuse();
@@ -42,7 +42,10 @@ export function qualifiedContainerdPaths(dump: Table, defaults: Table, address: 
   if (overlay.root_path !== undefined && overlay.root_path !== "") return refuse();
   if (Object.keys(plugins).some(key => /snapshotter|content/.test(key) && !(key in table(defaults.plugins)))) return refuse();
   const base = dump.root;
-  if (!absoluteStoragePath(base) || table(dump.grpc).address !== address || dump.state !== defaults.state) return refuse();
+  // Schema 4 migrates server settings into plugins; legacy grpc must not mask
+  // a missing or different effective server plugin. All plugins still match defaults.
+  const grpc = table(dump.version === 4 ? plugins["io.containerd.server.v1.grpc"] : dump.grpc);
+  if (!absoluteStoragePath(base) || grpc.address !== address || dump.state !== defaults.state) return refuse();
   return [base.replace(/\/+$/, ""), `${base.replace(/\/+$/, "")}/io.containerd.content.v1.content`,
     `${base.replace(/\/+$/, "")}/io.containerd.snapshotter.v1.overlayfs`];
 }
