@@ -39,6 +39,8 @@ class Queue extends EventEmitter {
   async clean() { return []; }
   async getJobs() { return []; }
   async getJobCounts() { return {}; }
+  // Startup resumes global delivery after the live qualification renewal.
+  async resume() {}
   async add() {}
   async close() {}
 }
@@ -78,6 +80,9 @@ mock.module("../firstStack/qualificationFingerprint", () => ({
 mock.module("../firstStack/verifierProductionProbe", () => ({ assertVerifierProductionResponsive: async () => {} }));
 mock.module("../firstStack/isolationOwnership", () => ({
   withFirstStackOwnership: async () => { throw Error("The canary is not part of this race"); },
+}));
+mock.module("../firstStack/isolationRunner", () => ({
+  checkFirstStackCanary: async () => { throw Error("The canary is not part of this race"); },
 }));
 mock.module("../firstStack/verifierOwnership", () => ({ acquireVerifierOwnership: async () => {
   ownsLifecycle = true;
