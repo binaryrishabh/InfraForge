@@ -657,7 +657,11 @@ for service in api ws-server worker migration; do
     test "$(docker inspect --format '{{index .Config.Labels "com.docker.compose.project"}}:{{index .Config.Labels "com.docker.compose.service"}}' "$id")" = "infraforge:$service"
     docker update --restart=no "$id" >/dev/null
     docker stop --timeout 30 "$id" >/dev/null
-    test "$(docker inspect --format '{{.State.Running}}:{{.State.Restarting}}:{{.State.Paused}}' "$id")" = false:false:false
+    # A stopped --rm migration helper may already have disappeared.
+    remaining=$(docker ps -aq --filter "id=$id")
+    if test -n "$remaining"; then
+      test "$(docker inspect --format '{{.State.Running}}:{{.State.Restarting}}:{{.State.Paused}}' "$id")" = false:false:false
+    fi
   done
 done
 ```
