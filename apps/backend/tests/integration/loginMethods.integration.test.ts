@@ -18,6 +18,7 @@ import { methodSettingsRouter, unlinkMethod } from "../../auth/methodSettings";
 import { createOriginCheck } from "../../auth/origin";
 import { HOSTED_LOGIN_ORIGIN } from "../../auth/loginMethods";
 import { deleteAccount } from "../../auth/accountData";
+import { accountAuthHandler } from "../../auth/accountPolicy";
 
 (process.env.INTEGRATION_RUN === "1" ? test : test.skip)(
   "PostgreSQL email login, concurrent redemption/removal, account ownership and hosted origins", async () => {
@@ -43,7 +44,8 @@ import { deleteAccount } from "../../auth/accountData";
       const quota = { allow: async () => true };
       const options = createAuth(db, settings, quota, queue).options;
       const auth = betterAuth({ ...options, rateLimit: { enabled: false } });
-      const call = (path: string, body?: object, cookie?: string) => auth.handler(new Request(
+      const handler = accountAuthHandler(auth.handler, true, Date.now, async () => {}, settings.loginMethods);
+      const call = (path: string, body?: object, cookie?: string) => handler(new Request(
         `${settings.baseURL}/api/auth/${path}`, { method: body ? "POST" : "GET",
           headers: { Origin: HOSTED_LOGIN_ORIGIN, "Content-Type": "application/json", ...(cookie ? { cookie } : {}) },
           ...(body ? { body: JSON.stringify(body) } : {}) }));
@@ -97,6 +99,12 @@ import { deleteAccount } from "../../auth/accountData";
         `http://127.0.0.1:${address.port}/${route}`, { method: body ? "POST" : "GET",
           headers: { cookie, Origin: origin, "Content-Type": "application/json" },
           ...(body ? { body: JSON.stringify(body) } : {}) });
+      settings.loginMethods.settings = false;
+      expect((await api("methods")).status).toBe(404);
+      settings.loginMethods.settings = true;
+      expect((await fetch(`http://127.0.0.1:${address.port}/methods`, {
+        headers: { Origin: HOSTED_LOGIN_ORIGIN },
+      })).status).toBe(401);
       const methods = await api("methods");
       expect(methods.headers.get("access-control-allow-origin")).toBe(HOSTED_LOGIN_ORIGIN);
       const methodBody = await methods.text(); expect(methodBody).toContain(credential.id);
@@ -120,6 +128,13 @@ import { deleteAccount } from "../../auth/accountData";
         unlinkMethod(db, user.id, current!.session.id, social.id, ["google"])]);
       expect(removals.filter(r => r.status === "fulfilled")).toHaveLength(1);
       expect(await db.account.count({ where: { userId: user.id } })).toBe(1);
+      const stale = await (await auth.$context).internalAdapter.createSession(user.id);
+      await db.session.delete({ where: { id: stale.id } });
+      let staleError: unknown;
+      try { await unlinkMethod(db, user.id, stale.id, credential.id, ["google"]); }
+      catch (error) { staleError = error; }
+      expect(staleError).toBeInstanceOf(Error);
+      expect((staleError as Error).message).toBe("Sign in to continue");
       // Retired mailbox proofs must not follow a newly registered account.
       path = await magic(); code = await otp();
       await deleteAccount(db, user.id);
