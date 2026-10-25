@@ -591,7 +591,9 @@ monthly restore drills off the live host; don't add an unbudgeted restore worklo
 Observe at least **48 hours**, including two daily backup cycles, real native
 release acceptance, representative load and a controlled Oracle reboot. Before
 reboot confirm how the worker resumes: it may deliberately have restart disabled;
-use the existing guarded same-SHA recovery/retry, never an extra worker. Verify
+use the recovery path rehearsed before section 4, including retained-current
+image/settings/schema/worker checks; a same-SHA workflow retry alone is not a
+worker-resume procedure. Never start an extra worker. Verify
 clock synchronization, persisted iptables, SSH, Nginx/TLS, Docker limits, exactly
 one healthy worker, public identity/product checks, backup timers and independent
 alerts after reboot. Record memory/CPU/network trends and OCI notices for the
