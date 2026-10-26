@@ -81,6 +81,16 @@ jobs:
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: vercel project inspect "$VERCEL_PROJECT_ID" --token "$VERCEL_TOKEN" > /dev/null
+      # The home server has no public SSH; reach it over an ephemeral Tailscale node.
+      # The EC2_* secrets then hold the home server's Tailscale address, user, key and host fingerprint.
+      - name: Join Tailscale for the home server
+        if: vars.DEPLOY_OVER_TAILSCALE == 'true'
+        uses: tailscale/github-action@53acf823325fe9ca47f4cdaa951f90b4b0de5bb9 # v4.1.1
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+          tags: tag:infraforge-ci
+          ping: ${{ secrets.EC2_HOST }}
       - name: Release exact backend commit
         uses: appleboy/ssh-action@029f5b4aeeeb58fdfe1410a5d17f967dacf36262 # v1.0.3
         with:

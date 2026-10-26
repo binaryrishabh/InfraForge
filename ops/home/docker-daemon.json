@@ -1,0 +1,7 @@
+{
+  "storage-driver": "overlay2",
+  "features": { "containerd-snapshotter": false },
+  "log-driver": "local",
+  "log-opts": { "max-size": "20m", "max-file": "5" },
+  "live-restore": true
+}
