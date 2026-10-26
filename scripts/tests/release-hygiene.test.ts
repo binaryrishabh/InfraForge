@@ -2,6 +2,7 @@ import { expect, test } from "bun:test";
 import { mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { refusalTag } from "../release/storage";
 import { assertReleaseSpace, availableReleaseBytes, minimumReleaseFreeBytes, preflightReleaseSpace as preflight, pruneAcceptedImages, selectReleaseImages } from "../release/hygiene";
 import { dockerHost, dockerSockets } from "./fixtures/release-dockerd";
 
@@ -35,8 +36,8 @@ test("preflight measures DockerRootDir, image directory and nearest existing sta
     expect(commands.filter(args => args[2] === "ss")).toHaveLength(2);
     expect(await Bun.file(join(directory, "new", "state", "release.lock")).exists()).toBe(false);
     expect(await readdir(directory)).toEqual([]);
-    await expect(preflightReleaseSpace(".", directory, async () => "")).rejects.toThrow("Unknown");
-    await expect(preflightReleaseSpace(".", directory, async args => context(args) ?? JSON.stringify(dockerInfo), async () => { throw new Error("statfs unavailable"); })).rejects.toThrow("Unknown");
+    await expect(preflightReleaseSpace(".", directory, async () => "")).rejects.toThrow(refusalTag);
+    await expect(preflightReleaseSpace(".", directory, async args => context(args) ?? JSON.stringify(dockerInfo), async () => { throw new Error("statfs unavailable"); })).rejects.toThrow(refusalTag);
   } finally { await rm(directory, { recursive: true }); }
 });
 
@@ -65,15 +66,15 @@ test("preflight refuses a low image filesystem even when Docker metadata and sta
     const capacities = new Map([[dockerInfo.DockerRootDir, minimumReleaseFreeBytes], [directory, minimumReleaseFreeBytes],
       ["/docker-root/overlay2", 7n], ["/separate/containerd", 3n]]);
     const measure = async (path: string) => capacities.get(path)!;
-    await expect(preflightReleaseSpace(".", directory, async args => context(args) ?? JSON.stringify(dockerInfo), measure)).rejects.toThrow("/docker-root/overlay2: 7 bytes available");
+    await expect(preflightReleaseSpace(".", directory, async args => context(args) ?? JSON.stringify(dockerInfo), measure)).rejects.toThrow(/\/docker-root\/overlay2: 7 bytes available.* \[hygiene check capacity\]$/);
     capacities.set("/docker-root/overlay2", minimumReleaseFreeBytes);
     // The old DockerRootDir-only query would pass this fixture. The active
     // containerd root cannot be verified from info, so this layout must refuse.
     const containerd = { ...dockerInfo, Driver: "overlayfs", DriverStatus: [["driver-type", "io.containerd.snapshotter.v1"]] };
     const run = async (args: string[]) => context(args) ?? (args.at(-1) === "{{.DockerRootDir}}" ? dockerInfo.DockerRootDir : JSON.stringify(containerd));
-    await expect(preflightReleaseSpace(".", directory, run, measure)).rejects.toThrow("image/snapshot storage filesystem is Unknown");
+    await expect(preflightReleaseSpace(".", directory, run, measure)).rejects.toThrow(refusalTag);
     for (const change of [{ Driver: "unknown" }, { DriverStatus: null }, { DriverStatus: containerd.DriverStatus }]) {
-      await expect(preflightReleaseSpace(".", directory, async args => context(args) ?? JSON.stringify({ ...dockerInfo, ...change }), measure)).rejects.toThrow("Unknown");
+      await expect(preflightReleaseSpace(".", directory, async args => context(args) ?? JSON.stringify({ ...dockerInfo, ...change }), measure)).rejects.toThrow(refusalTag);
     }
   } finally { await rm(directory, { recursive: true }); }
 });
@@ -132,5 +133,24 @@ test("cleanup reads durable accepted IDs, inspects all containers and only remov
     await rm(join(directory, "accepted.json")); calls.length = 0;
     await expect(pruneAcceptedImages(".", directory, run)).rejects.toThrow();
     expect(calls).toEqual([["docker", "context", "show"], ["docker", "context", "inspect", "default"]]);
+  } finally { await rm(directory, { recursive: true }); }
+});
+
+test("refusals keep the originating check and never pass through uncoded host text", async () => {
+  const directory = await mkdtemp(join(tmpdir(), "infraforge-refusal-tags-"));
+  try {
+    // A remote Docker context is refused inside the storage module; its own site must survive.
+    const remote = async (args: string[]) => args[1] === "context" && args[2] === "show" ? "remote" : context(args) ?? "{}";
+    await expect(preflightReleaseSpace(".", directory, remote)).rejects.toThrow(/ \[storage check \d+\]$/);
+    // An unexpected error that merely starts like a refusal is replaced, not rethrown with its text.
+    const marker = "PRIVATE_HOST_MARKER";
+    const leaky = async (args: string[]) => {
+      if (args[0] === "docker" && args[1] === "info") throw new Error(`Release disk preflight refused: image/snapshot storage filesystem is Unknown. ${marker}`);
+      return context(args) ?? "{}";
+    };
+    let caught: unknown;
+    try { await preflightReleaseSpace(".", directory, leaky); } catch (error) { caught = error; }
+    expect((caught as Error).message).toMatch(/ \[hygiene check docker-info\]$/);
+    expect((caught as Error).message).not.toContain(marker);
   } finally { await rm(directory, { recursive: true }); }
 });

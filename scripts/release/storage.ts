@@ -11,7 +11,8 @@ export const absoluteStoragePath = (value: unknown): value is string => typeof v
   value.startsWith("/") && /[^/]/.test(value) && !value.split("/").includes("..") && !/[\x00-\x20\x7f]/.test(value);
 // Each refusal names only its fixed check site, never observed host data, so operators can see which proof failed.
 const refuse = (site: number): never => { throw new Error(`${unknownStorage} [storage check ${site}]`); };
-const coded = (error: unknown) => error instanceof Error && error.message.startsWith(unknownStorage);
+export const refusalTag = / \[(storage|hygiene) check [a-z0-9-]+\]$/;
+export const coded = (error: unknown): error is Error => error instanceof Error && refusalTag.test(error.message);
 type Table = Record<string, unknown>;
 function table(value: unknown): Table {
   if (!value || typeof value !== "object" || Array.isArray(value)) return refuse(17);

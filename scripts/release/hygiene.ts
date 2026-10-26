@@ -1,7 +1,7 @@
 import { open, readFile, statfs, stat, unlink } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { command } from "./process";
-import { absoluteStoragePath, containerdStorage, dockerdEvidence, storageHost, unknownStorage, verifyLocalDocker, type StorageHost } from "./storage";
+import { absoluteStoragePath, coded, containerdStorage, dockerdEvidence, storageHost, unknownStorage, verifyLocalDocker, type StorageHost } from "./storage";
 import type { AcceptedState } from "./image";
 
 export const minimumReleaseFreeBytes = 8n * 1024n ** 3n;
@@ -13,7 +13,7 @@ export function assertReleaseSpace(measurements: { path: string; available: bigi
   if (measurements.some(({ available }) => available < minimumReleaseFreeBytes)) {
     throw new Error(`Release disk preflight refused: ${measured}; require ${minimumReleaseFreeBytes} bytes (8 GiB) on EACH filesystem. ` +
       `Safe retained-image cleanup: bun --no-env-file scripts/release/hygiene.ts prune ${JSON.stringify(resolve(stateDirectory))}. ` +
-      "This preserves accepted/previous/in-use images; if insufficient, expand the disk or review database/backup capacity. Never use docker system prune --volumes.");
+      "This preserves accepted/previous/in-use images; if insufficient, expand the disk or review database/backup capacity. Never use docker system prune --volumes. [hygiene check capacity]");
   }
   console.log(`Release disk preflight: ${measured}; minimum ${minimumReleaseFreeBytes} bytes each`);
 }
@@ -48,25 +48,27 @@ export async function preflightReleaseSpace(root: string, stateDirectory: string
   host: StorageHost = storageHost(run, root), env = process.env) {
   let info: { DockerRootDir?: unknown; Driver?: unknown; DriverStatus?: unknown; Containerd?: unknown; SecurityOptions?: unknown };
   try { await verifyLocalDocker(root, run, env); info = JSON.parse(await run(["docker", "info", "--format", "{{json .}}"], root)); }
-  catch (error) { throw new Error("Docker storage layout unavailable; disk capacity is Unknown, release refused [hygiene check 51]", { cause: error }); }
+  catch (error) { if (coded(error)) throw error; throw new Error("Docker storage layout unavailable; disk capacity is Unknown, release refused [hygiene check docker-info]", { cause: error }); }
   const dockerRoot = info?.DockerRootDir;
-  if (!absoluteStoragePath(dockerRoot)) throw new Error("Docker data root unavailable; disk capacity is Unknown, release refused");
-  if (!Array.isArray(info.SecurityOptions) || info.SecurityOptions.some(value => typeof value !== "string" || /rootless/i.test(value))) throw new Error(`${unknownStorage} [hygiene check 54]`);
-  if (!Array.isArray(info.DriverStatus)) throw new Error(`${unknownStorage} [hygiene check 55]`);
+  if (!absoluteStoragePath(dockerRoot)) throw new Error("Docker data root unavailable; disk capacity is Unknown, release refused [hygiene check docker-root]");
+  if (!Array.isArray(info.SecurityOptions) || info.SecurityOptions.some(value => typeof value !== "string" || /rootless/i.test(value))) throw new Error(`${unknownStorage} [hygiene check rootless]`);
+  if (!Array.isArray(info.DriverStatus)) throw new Error(`${unknownStorage} [hygiene check driver-status]`);
   const docker = await dockerdEvidence(root, run, host);
   const driverTypes = info.DriverStatus.filter(row => Array.isArray(row) && row[0] === "driver-type");
   let imagePaths: string[];
   if (info.Driver === "overlay2" && driverTypes.length === 0) imagePaths = [`${dockerRoot.replace(/\/+$/, "")}/overlay2`];
   else if (driverTypes.length === 1 && driverTypes[0]![1] === "io.containerd.snapshotter.v1") {
     try { imagePaths = await containerdStorage(info, root, run, host); }
-    catch (error) { if (error instanceof Error && error.message.startsWith(unknownStorage)) throw error; throw new Error(unknownStorage, { cause: error }); }
-  } else throw new Error(`${unknownStorage} [hygiene check 63]`);
-  if (await dockerdEvidence(root, run, host) !== docker) throw new Error(`${unknownStorage} [hygiene check 64]`);
-  const statePath = await existingParent(resolve(stateDirectory));
+    catch (error) { if (coded(error)) throw error; throw new Error(`${unknownStorage} [hygiene check containerd]`); }
+  } else throw new Error(`${unknownStorage} [hygiene check layout]`);
+  if (await dockerdEvidence(root, run, host) !== docker) throw new Error(`${unknownStorage} [hygiene check instance-changed]`);
+  let statePath: string;
+  try { statePath = await existingParent(resolve(stateDirectory)); }
+  catch { throw new Error("Release state directory is Unknown; release refused [hygiene check state-dir]"); }
   const measurements = [];
   for (const path of [dockerRoot, ...imagePaths, statePath]) {
     try { measurements.push({ path, available: await measure(path) }); }
-    catch (error) { throw new Error(`Disk capacity for ${path} is Unknown; release refused`, { cause: error }); }
+    catch (error) { throw new Error(`Disk capacity for ${path} is Unknown; release refused [hygiene check measure]`, { cause: error }); }
   }
   assertReleaseSpace(measurements, stateDirectory);
   console.log(`Release Docker instance: ${docker}`);

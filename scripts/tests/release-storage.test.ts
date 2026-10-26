@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import type { Stats } from "node:fs";
 import { preflightReleaseSpace, minimumReleaseFreeBytes } from "../release/hygiene";
-import { daemonStartMilliseconds, localDockerEnvironment, parseContainerdConfig, socketVfsIdentity, storageHost, type StorageHost } from "../release/storage";
+import { daemonStartMilliseconds, localDockerEnvironment, parseContainerdConfig, refusalTag, socketVfsIdentity, storageHost, type StorageHost } from "../release/storage";
 import { dockerHost, dockerSockets } from "./fixtures/release-dockerd";
 import { containerd242 } from "./fixtures/containerd-v2.4.2";
 
@@ -219,7 +219,7 @@ for (const [name, change] of refusals) test(`storage refuses ${name}`, async () 
   expect(caught).toBeInstanceOf(Error);
   expect((caught as Error).message).toContain("Unknown");
   // Operators must see which fixed check refused, and nothing observed from the host.
-  expect((caught as Error).message).toMatch(/ \[(storage|hygiene) check \d+\]$/);
+  expect((caught as Error).message).toMatch(refusalTag);
   expect(Bun.inspect(caught)).not.toContain("PRIVATE_CONFIG_MARKER");
   expect(h.paths).toEqual([]);
 });
@@ -238,7 +238,7 @@ test("isolated later ancestor activity accepts literal imports in schema 4", asy
   await expect(h.preflight()).resolves.toBeUndefined();
   expect(h.paths).toHaveLength(5);
   for (const config of ["imports = ['/etc/containerd/*.toml']", "imports = ['extra.toml']"]) {
-    await expect(host({ dump: containerd242, defaults: containerd242, config }).preflight()).rejects.toThrow("Unknown");
+    await expect(host({ dump: containerd242, defaults: containerd242, config }).preflight()).rejects.toThrow(refusalTag);
   }
 });
 
@@ -264,7 +264,7 @@ const schema4Refusals: [string, string, string?][] = [
 ];
 for (const [name, value, defaults = containerd242] of schema4Refusals) test(`schema 4 refuses ${name}`, async () => {
   const h = host({ dump: value, defaults });
-  await expect(h.preflight()).rejects.toThrow("Unknown");
+  await expect(h.preflight()).rejects.toThrow(refusalTag);
   expect(h.paths).toEqual([]);
 });
 
@@ -273,7 +273,7 @@ test("classic overlay2 also rejects a forwarded or namespaced Docker endpoint", 
   await host({ info: classic }).preflight();
   for (const change of [{ dockerExe: "/usr/bin/socat" }, { dockerNamespace: "mnt:[456]" }]) {
     const h = host({ info: classic, ...change });
-    await expect(h.preflight()).rejects.toThrow("Unknown");
+    await expect(h.preflight()).rejects.toThrow(refusalTag);
     expect(h.paths).toEqual([]);
   }
 });
@@ -298,7 +298,7 @@ const bindingRefusals: [string, Change][] = [
 for (const store of ["containerd", "classic"] as const) {
   for (const [name, change] of bindingRefusals) test(`${store} endpoint refuses ${name}`, async () => {
     const h = host({ ...change, ...(store === "classic" ? { info: { Driver: "overlay2", DriverStatus: [] } } : {}) });
-    await expect(h.preflight()).rejects.toThrow("Unknown");
+    await expect(h.preflight()).rejects.toThrow(refusalTag);
     expect(h.paths).toEqual([]);
   });
   test(`${store} endpoint accepts VFS binding and socket activation`, async () => {
@@ -388,7 +388,7 @@ test("valid TOML syntax preserves field meaning and suppresses parser diagnostic
 
 test("Docker environment rejects remote overrides and pins all ordinary release calls locally", async () => {
   for (const env of [{ DOCKER_HOST: "ssh://other" }, { DOCKER_CONTEXT: "other" }, { DOCKER_TLS_VERIFY: "1" }]) {
-    await expect(host().preflight(env)).rejects.toThrow("Unknown");
+    await expect(host().preflight(env)).rejects.toThrow(refusalTag);
   }
   expect(localDockerEnvironment({ DOCKER_CONTEXT: "default" })).toMatchObject({ DOCKER_HOST: "unix:///var/run/docker.sock", DOCKER_CONTEXT: undefined });
 });
@@ -401,7 +401,7 @@ test("each containerd storage path independently refuses low, missing and unread
         if (path !== target) return minimumReleaseFreeBytes;
         if (failure === "low") return 7n;
         throw Object.assign(new Error("unavailable"), { code: failure });
-      }, h.io, {})).rejects.toThrow(failure === "low" ? "7 bytes available" : "Unknown");
+      }, h.io, {})).rejects.toThrow(failure === "low" ? /7 bytes available.* \[hygiene check capacity\]$/ : refusalTag);
     }
   }
 });
