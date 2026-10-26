@@ -1,0 +1,8 @@
+[Unit]
+Description=InfraForge database backup to R2 with a restore check
+Requires=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/infraforge-backup

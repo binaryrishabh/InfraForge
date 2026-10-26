@@ -87,3 +87,16 @@ Give it its own Compose project, its own loopback ports, its own `/etc/<project>
   not yet have the "check your email" screen or the captcha widget, so turning either on blocks
   email signup. Turn them back on only after those screens ship and a real signup is tested.
 - Google and GitHub sign-in are on. Email/password signup works without email verification.
+
+## Database backups
+
+`ops/home/backup.sh` is installed as `/usr/local/sbin/infraforge-backup` and runs daily at 03:17 UTC
+(`ops/home/infraforge-backup.timer`). It dumps the database, restores the dump into a scratch database
+and counts its tables (a backup only counts if it restores), uploads it to the R2 bucket
+`infraforge-backups` under `home/daily/`, keeps 14 days there and the newest 3 in
+`/var/lib/infraforge/backups`. The R2 key pair lives in `/etc/infraforge/ops/r2.credentials`
+(root, 0600, `[default]` with `aws_access_key_id` and `aws_secret_access_key`). Run it by hand with
+`sudo infraforge-backup`; check the last run with `systemctl status infraforge-backup.service`.
+
+To restore: `rclone copyto r2:infraforge-backups/home/daily/<file> /tmp/<file>`, then
+`docker exec -i infraforge-postgres-1 sh -c 'pg_restore -U "$POSTGRES_USER" -d "$POSTGRES_DB" --clean --no-owner' < /tmp/<file>`.
