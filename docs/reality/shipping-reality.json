@@ -4369,16 +4369,24 @@
       "legacyM2gStatus": "REAL"
     },
     {
-      "id": "control:apps/web/src/features/deployment/components/DeployDialog.tsx:Dialog-42a537afb10cf1ae8aae:0",
+      "id": "control:apps/web/src/features/deployment/components/DeployDialog.tsx:Dialog-52f019f8465193349d8d:0",
       "source": "apps/web/src/features/deployment/components/DeployDialog.tsx",
-      "identity": "Dialog-42a537afb10cf1ae8aae",
+      "identity": "Dialog-52f019f8465193349d8d",
+      "description": "Dialog: onOpenChange={onOpenChange}",
       "kind": "control",
+      "category": "UNREVIEWED",
+      "categoryReason": "Classification requires semantic review; new surfaces fail closed",
+      "ui": {
+        "status": "NOT_APPLICABLE",
+        "behavior": "Unreviewed",
+        "proofs": []
+      },
       "resources": [
-        "PRODUCT_UI"
+        "ALL"
       ],
-      "model1Meaning": "Existing application UI state/authentication/navigation event forwarding, outside infrastructure physics: Dialog: onOpenChange={onOpenChange}",
-      "model2Owner": "NOT_APPLICABLE",
-      "changesState": true,
+      "model1Meaning": "New visible surface requires explicit semantic review",
+      "model2Owner": "UNASSIGNED",
+      "changesState": false,
       "effects": {
         "physics": false,
         "reachability": false,
@@ -4387,32 +4395,31 @@
         "evidence": false
       },
       "provenanceRequirements": [
-        "Reviewed promised software action/presentation and a relevant behavior proof; no simulation-physics owner required"
+        "Trace input to state owner and downstream proof; record units/domain for numeric values"
       ],
-      "status": "NOT_APPLICABLE",
+      "status": "UNKNOWN",
       "finalProductEligible": false,
-      "plan": "Prove software behavior through PRODUCT_UI_VALIDITY. No physics owner required.",
-      "description": "Dialog: onOpenChange={onOpenChange}",
-      "category": "PRODUCT_UI_ACTION",
-      "categoryReason": "Software interaction or authored presentation; no infrastructure truth claim",
-      "ui": {
-        "status": "REVIEW_REQUIRED",
-        "behavior": "Dialog: onOpenChange={onOpenChange}",
-        "proofs": []
-      },
-      "legacyM2gStatus": "REAL"
+      "plan": "Implement and prove the real mechanism or remove before Model-2 shipping"
     },
     {
-      "id": "control:apps/web/src/features/deployment/components/DeployDialog.tsx:Input-16d51e4e327518bdf341:0",
+      "id": "control:apps/web/src/features/deployment/components/DeployDialog.tsx:Input-28d04b3dff84bce86634:0",
       "source": "apps/web/src/features/deployment/components/DeployDialog.tsx",
-      "identity": "Input-16d51e4e327518bdf341",
+      "identity": "Input-28d04b3dff84bce86634",
+      "description": "Input: value={name} onChange={(e) => setName(e.target.value)} onBlur={() => setTouched(true)}",
       "kind": "control",
+      "category": "UNREVIEWED",
+      "categoryReason": "Classification requires semantic review; new surfaces fail closed",
+      "ui": {
+        "status": "NOT_APPLICABLE",
+        "behavior": "Unreviewed",
+        "proofs": []
+      },
       "resources": [
-        "PRODUCT_UI"
+        "ALL"
       ],
-      "model1Meaning": "Existing application UI state/authentication/navigation event forwarding, outside infrastructure physics: Input: value={name} onChange={(e) => setName(e.target.value)} onBlur={() => setTouched(true)}",
-      "model2Owner": "NOT_APPLICABLE",
-      "changesState": true,
+      "model1Meaning": "New visible surface requires explicit semantic review",
+      "model2Owner": "UNASSIGNED",
+      "changesState": false,
       "effects": {
         "physics": false,
         "reachability": false,
@@ -4421,20 +4428,11 @@
         "evidence": false
       },
       "provenanceRequirements": [
-        "Reviewed promised software action/presentation and a relevant behavior proof; no simulation-physics owner required"
+        "Trace input to state owner and downstream proof; record units/domain for numeric values"
       ],
-      "status": "NOT_APPLICABLE",
+      "status": "UNKNOWN",
       "finalProductEligible": false,
-      "plan": "Prove software behavior through PRODUCT_UI_VALIDITY. No physics owner required.",
-      "description": "Input: value={name} onChange={(e) => setName(e.target.value)} onBlur={() => setTouched(true)}",
-      "category": "PRODUCT_UI_ACTION",
-      "categoryReason": "Software interaction or authored presentation; no infrastructure truth claim",
-      "ui": {
-        "status": "REVIEW_REQUIRED",
-        "behavior": "Input: value={name} onChange={(e) => setName(e.target.value)} onBlur={() => setTouched(true)}",
-        "proofs": []
-      },
-      "legacyM2gStatus": "REAL"
+      "plan": "Implement and prove the real mechanism or remove before Model-2 shipping"
     },
     {
       "id": "control:apps/web/src/features/deployment/components/DeployDialog.tsx:Input-cc3255f297042667700b:0",
@@ -4607,16 +4605,24 @@
       "legacyM2gStatus": "REAL"
     },
     {
-      "id": "control:apps/web/src/features/deployment/components/DeployDialog.tsx:form-4d10002cada59de71262:0",
+      "id": "control:apps/web/src/features/deployment/components/DeployDialog.tsx:form-e128531fbc6bac89cd56:0",
       "source": "apps/web/src/features/deployment/components/DeployDialog.tsx",
-      "identity": "form-4d10002cada59de71262",
+      "identity": "form-e128531fbc6bac89cd56",
+      "description": "form: onSubmit={submit}",
       "kind": "control",
+      "category": "UNREVIEWED",
+      "categoryReason": "Classification requires semantic review; new surfaces fail closed",
+      "ui": {
+        "status": "NOT_APPLICABLE",
+        "behavior": "Unreviewed",
+        "proofs": []
+      },
       "resources": [
-        "PRODUCT_UI"
+        "ALL"
       ],
-      "model1Meaning": "Existing application UI state/authentication/navigation event forwarding, outside infrastructure physics: form: onSubmit={submit}",
-      "model2Owner": "NOT_APPLICABLE",
-      "changesState": true,
+      "model1Meaning": "New visible surface requires explicit semantic review",
+      "model2Owner": "UNASSIGNED",
+      "changesState": false,
       "effects": {
         "physics": false,
         "reachability": false,
@@ -4625,20 +4631,11 @@
         "evidence": false
       },
       "provenanceRequirements": [
-        "Reviewed promised software action/presentation and a relevant behavior proof; no simulation-physics owner required"
+        "Trace input to state owner and downstream proof; record units/domain for numeric values"
       ],
-      "status": "NOT_APPLICABLE",
+      "status": "UNKNOWN",
       "finalProductEligible": false,
-      "plan": "Prove software behavior through PRODUCT_UI_VALIDITY. No physics owner required.",
-      "description": "form: onSubmit={submit}",
-      "category": "PRODUCT_UI_ACTION",
-      "categoryReason": "Software interaction or authored presentation; no infrastructure truth claim",
-      "ui": {
-        "status": "REVIEW_REQUIRED",
-        "behavior": "form: onSubmit={submit}",
-        "proofs": []
-      },
-      "legacyM2gStatus": "REAL"
+      "plan": "Implement and prove the real mechanism or remove before Model-2 shipping"
     },
     {
       "id": "control:apps/web/src/features/deployment/components/DeployDialog.tsx:input-727d12bd8c3d1d006510:0",
@@ -8781,6 +8778,72 @@
       "legacyM2gStatus": "MODEL1_ONLY"
     },
     {
+      "id": "control:apps/web/src/features/reports/components/LiveRunNotice.tsx:Button-c555e0e5ea2b043694c8:0",
+      "source": "apps/web/src/features/reports/components/LiveRunNotice.tsx",
+      "identity": "Button-c555e0e5ea2b043694c8",
+      "description": "Button: onClick={() => setConfirm(true)}",
+      "kind": "control",
+      "category": "UNREVIEWED",
+      "categoryReason": "Classification requires semantic review; new surfaces fail closed",
+      "ui": {
+        "status": "NOT_APPLICABLE",
+        "behavior": "Unreviewed",
+        "proofs": []
+      },
+      "resources": [
+        "ALL"
+      ],
+      "model1Meaning": "New visible surface requires explicit semantic review",
+      "model2Owner": "UNASSIGNED",
+      "changesState": false,
+      "effects": {
+        "physics": false,
+        "reachability": false,
+        "security": false,
+        "cost": false,
+        "evidence": false
+      },
+      "provenanceRequirements": [
+        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+      ],
+      "status": "UNKNOWN",
+      "finalProductEligible": false,
+      "plan": "Implement and prove the real mechanism or remove before Model-2 shipping"
+    },
+    {
+      "id": "control:apps/web/src/features/reports/components/LiveRunNotice.tsx:ConfirmDialog-b3588c71076b075b5c2a:0",
+      "source": "apps/web/src/features/reports/components/LiveRunNotice.tsx",
+      "identity": "ConfirmDialog-b3588c71076b075b5c2a",
+      "description": "ConfirmDialog: onOpenChange={setConfirm} onConfirm={async () => { if (await stop()) setConfirm(false); }}",
+      "kind": "control",
+      "category": "UNREVIEWED",
+      "categoryReason": "Classification requires semantic review; new surfaces fail closed",
+      "ui": {
+        "status": "NOT_APPLICABLE",
+        "behavior": "Unreviewed",
+        "proofs": []
+      },
+      "resources": [
+        "ALL"
+      ],
+      "model1Meaning": "New visible surface requires explicit semantic review",
+      "model2Owner": "UNASSIGNED",
+      "changesState": false,
+      "effects": {
+        "physics": false,
+        "reachability": false,
+        "security": false,
+        "cost": false,
+        "evidence": false
+      },
+      "provenanceRequirements": [
+        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+      ],
+      "status": "UNKNOWN",
+      "finalProductEligible": false,
+      "plan": "Implement and prove the real mechanism or remove before Model-2 shipping"
+    },
+    {
       "id": "control:apps/web/src/features/reports/components/OpenDesignToImprove.tsx:Button-6f90e20852c5681edb96:0",
       "source": "apps/web/src/features/reports/components/OpenDesignToImprove.tsx",
       "identity": "Button-6f90e20852c5681edb96",
@@ -8883,6 +8946,39 @@
       "legacyM2gStatus": "MODEL1_ONLY"
     },
     {
+      "id": "control:apps/web/src/features/reports/components/ReportContent.tsx:ReportView-704c9e6234781db25934:0",
+      "source": "apps/web/src/features/reports/components/ReportContent.tsx",
+      "identity": "ReportView-704c9e6234781db25934",
+      "description": "ReportView: onStopped={retry}",
+      "kind": "control",
+      "category": "UNREVIEWED",
+      "categoryReason": "Classification requires semantic review; new surfaces fail closed",
+      "ui": {
+        "status": "NOT_APPLICABLE",
+        "behavior": "Unreviewed",
+        "proofs": []
+      },
+      "resources": [
+        "ALL"
+      ],
+      "model1Meaning": "New visible surface requires explicit semantic review",
+      "model2Owner": "UNASSIGNED",
+      "changesState": false,
+      "effects": {
+        "physics": false,
+        "reachability": false,
+        "security": false,
+        "cost": false,
+        "evidence": false
+      },
+      "provenanceRequirements": [
+        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+      ],
+      "status": "UNKNOWN",
+      "finalProductEligible": false,
+      "plan": "Implement and prove the real mechanism or remove before Model-2 shipping"
+    },
+    {
       "id": "control:apps/web/src/features/reports/components/ReportMeasurements.tsx:HealthMark-12347b1b2e4a15b5ec86:0",
       "source": "apps/web/src/features/reports/components/ReportMeasurements.tsx",
       "identity": "HealthMark-12347b1b2e4a15b5ec86",
@@ -8983,6 +9079,39 @@
         "proofs": []
       },
       "legacyM2gStatus": "MODEL1_ONLY"
+    },
+    {
+      "id": "control:apps/web/src/features/reports/components/ReportView.tsx:LiveRunNotice-b9fe52bc23d00bbab983:0",
+      "source": "apps/web/src/features/reports/components/ReportView.tsx",
+      "identity": "LiveRunNotice-b9fe52bc23d00bbab983",
+      "description": "LiveRunNotice: onStopped={onStopped}",
+      "kind": "control",
+      "category": "UNREVIEWED",
+      "categoryReason": "Classification requires semantic review; new surfaces fail closed",
+      "ui": {
+        "status": "NOT_APPLICABLE",
+        "behavior": "Unreviewed",
+        "proofs": []
+      },
+      "resources": [
+        "ALL"
+      ],
+      "model1Meaning": "New visible surface requires explicit semantic review",
+      "model2Owner": "UNASSIGNED",
+      "changesState": false,
+      "effects": {
+        "physics": false,
+        "reachability": false,
+        "security": false,
+        "cost": false,
+        "evidence": false
+      },
+      "provenanceRequirements": [
+        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+      ],
+      "status": "UNKNOWN",
+      "finalProductEligible": false,
+      "plan": "Implement and prove the real mechanism or remove before Model-2 shipping"
     },
     {
       "id": "control:apps/web/src/features/reports/components/RerunDialog.tsx:Button-7c755234fe7e1faa6a33:0",
@@ -10206,16 +10335,24 @@
       "legacyM2gStatus": "REAL"
     },
     {
-      "id": "control:apps/web/src/ui/ConfirmDialogs.tsx:Dialog-080fd1995c540464876a:0",
+      "id": "control:apps/web/src/ui/ConfirmDialogs.tsx:Dialog-0b88032d8b5b3bf0b86e:0",
       "source": "apps/web/src/ui/ConfirmDialogs.tsx",
-      "identity": "Dialog-080fd1995c540464876a",
+      "identity": "Dialog-0b88032d8b5b3bf0b86e",
+      "description": "Dialog: onOpenChange={onOpenChange}",
       "kind": "control",
+      "category": "UNREVIEWED",
+      "categoryReason": "Classification requires semantic review; new surfaces fail closed",
+      "ui": {
+        "status": "NOT_APPLICABLE",
+        "behavior": "Unreviewed",
+        "proofs": []
+      },
       "resources": [
-        "PRODUCT_UI"
+        "ALL"
       ],
-      "model1Meaning": "Existing application UI state/authentication/navigation event forwarding, outside infrastructure physics: Dialog: onOpenChange={onOpenChange}",
-      "model2Owner": "NOT_APPLICABLE",
-      "changesState": true,
+      "model1Meaning": "New visible surface requires explicit semantic review",
+      "model2Owner": "UNASSIGNED",
+      "changesState": false,
       "effects": {
         "physics": false,
         "reachability": false,
@@ -10224,20 +10361,11 @@
         "evidence": false
       },
       "provenanceRequirements": [
-        "Reviewed promised software action/presentation and a relevant behavior proof; no simulation-physics owner required"
+        "Trace input to state owner and downstream proof; record units/domain for numeric values"
       ],
-      "status": "NOT_APPLICABLE",
+      "status": "UNKNOWN",
       "finalProductEligible": false,
-      "plan": "Prove software behavior through PRODUCT_UI_VALIDITY. No physics owner required.",
-      "description": "Dialog: onOpenChange={onOpenChange}",
-      "category": "PRODUCT_UI_ACTION",
-      "categoryReason": "Software interaction or authored presentation; no infrastructure truth claim",
-      "ui": {
-        "status": "REVIEW_REQUIRED",
-        "behavior": "Dialog: onOpenChange={onOpenChange}",
-        "proofs": []
-      },
-      "legacyM2gStatus": "REAL"
+      "plan": "Implement and prove the real mechanism or remove before Model-2 shipping"
     },
     {
       "id": "control:apps/web/src/ui/ConfirmDialogs.tsx:Dialog-7f8052a05bbcabaff11c:0",
@@ -10308,16 +10436,24 @@
       "legacyM2gStatus": "REAL"
     },
     {
-      "id": "control:apps/web/src/ui/ConfirmDialogs.tsx:Input-57270000c052dbdb4e6c:0",
+      "id": "control:apps/web/src/ui/ConfirmDialogs.tsx:Input-3c132b5112e94e6181c9:0",
       "source": "apps/web/src/ui/ConfirmDialogs.tsx",
-      "identity": "Input-57270000c052dbdb4e6c",
+      "identity": "Input-3c132b5112e94e6181c9",
+      "description": "Input: value={value} onChange={(event) => setValue(event.target.value)} onBlur={() => setTouched(true)} onFocus={(event) => event.target.select()}",
       "kind": "control",
+      "category": "UNREVIEWED",
+      "categoryReason": "Classification requires semantic review; new surfaces fail closed",
+      "ui": {
+        "status": "NOT_APPLICABLE",
+        "behavior": "Unreviewed",
+        "proofs": []
+      },
       "resources": [
-        "PRODUCT_UI"
+        "ALL"
       ],
-      "model1Meaning": "Existing application UI state/authentication/navigation event forwarding, outside infrastructure physics: Input: value={value} onChange={(event) => setValue(event.target.value)} onBlur={() => setTouched(true)} onFocus={(event) => event.target.select()}",
-      "model2Owner": "NOT_APPLICABLE",
-      "changesState": true,
+      "model1Meaning": "New visible surface requires explicit semantic review",
+      "model2Owner": "UNASSIGNED",
+      "changesState": false,
       "effects": {
         "physics": false,
         "reachability": false,
@@ -10326,20 +10462,11 @@
         "evidence": false
       },
       "provenanceRequirements": [
-        "Reviewed promised software action/presentation and a relevant behavior proof; no simulation-physics owner required"
+        "Trace input to state owner and downstream proof; record units/domain for numeric values"
       ],
-      "status": "NOT_APPLICABLE",
+      "status": "UNKNOWN",
       "finalProductEligible": false,
-      "plan": "Prove software behavior through PRODUCT_UI_VALIDITY. No physics owner required.",
-      "description": "Input: value={value} onChange={(event) => setValue(event.target.value)} onBlur={() => setTouched(true)} onFocus={(event) => event.target.select()}",
-      "category": "PRODUCT_UI_ACTION",
-      "categoryReason": "Software interaction or authored presentation; no infrastructure truth claim",
-      "ui": {
-        "status": "REVIEW_REQUIRED",
-        "behavior": "Input: value={value} onChange={(event) => setValue(event.target.value)} onBlur={() => setTouched(true)} onFocus={(event) => event.target.select()}",
-        "proofs": []
-      },
-      "legacyM2gStatus": "REAL"
+      "plan": "Implement and prove the real mechanism or remove before Model-2 shipping"
     },
     {
       "id": "control:apps/web/src/ui/ConfirmDialogs.tsx:Input-7ac71e2ca1bb3fa431f1:0",
@@ -10376,16 +10503,24 @@
       "legacyM2gStatus": "REAL"
     },
     {
-      "id": "control:apps/web/src/ui/ConfirmDialogs.tsx:form-7d33de75310dccad4a2b:0",
+      "id": "control:apps/web/src/ui/ConfirmDialogs.tsx:form-1336340cd9f2c8d6cbdd:0",
       "source": "apps/web/src/ui/ConfirmDialogs.tsx",
-      "identity": "form-7d33de75310dccad4a2b",
+      "identity": "form-1336340cd9f2c8d6cbdd",
+      "description": "form: onSubmit={submit}",
       "kind": "control",
+      "category": "UNREVIEWED",
+      "categoryReason": "Classification requires semantic review; new surfaces fail closed",
+      "ui": {
+        "status": "NOT_APPLICABLE",
+        "behavior": "Unreviewed",
+        "proofs": []
+      },
       "resources": [
-        "PRODUCT_UI"
+        "ALL"
       ],
-      "model1Meaning": "Existing application UI state/authentication/navigation event forwarding, outside infrastructure physics: form: onSubmit={submit}",
-      "model2Owner": "NOT_APPLICABLE",
-      "changesState": true,
+      "model1Meaning": "New visible surface requires explicit semantic review",
+      "model2Owner": "UNASSIGNED",
+      "changesState": false,
       "effects": {
         "physics": false,
         "reachability": false,
@@ -10394,20 +10529,11 @@
         "evidence": false
       },
       "provenanceRequirements": [
-        "Reviewed promised software action/presentation and a relevant behavior proof; no simulation-physics owner required"
+        "Trace input to state owner and downstream proof; record units/domain for numeric values"
       ],
-      "status": "NOT_APPLICABLE",
+      "status": "UNKNOWN",
       "finalProductEligible": false,
-      "plan": "Prove software behavior through PRODUCT_UI_VALIDITY. No physics owner required.",
-      "description": "form: onSubmit={submit}",
-      "category": "PRODUCT_UI_ACTION",
-      "categoryReason": "Software interaction or authored presentation; no infrastructure truth claim",
-      "ui": {
-        "status": "REVIEW_REQUIRED",
-        "behavior": "form: onSubmit={submit}",
-        "proofs": []
-      },
-      "legacyM2gStatus": "REAL"
+      "plan": "Implement and prove the real mechanism or remove before Model-2 shipping"
     },
     {
       "id": "control:apps/web/src/ui/ConfirmDialogs.tsx:form-f6c333026169187ff7ea:0",

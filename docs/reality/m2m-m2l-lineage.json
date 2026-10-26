@@ -284,7 +284,7 @@
     },
     {
       "file": "apps/web/src/api/internalLesson.api.ts",
-      "hash": "1b3640dac41000a0792c5d8030f0ed236286eebc4eb15cbf398ee3c1e2f4e83f"
+      "hash": "963cac6e7d579a5523e08640685deaa7104b33e640ddcda2cc41cb9aff4a01b1"
     },
     {
       "file": "apps/web/src/api/internalModel2.api.ts",
@@ -300,7 +300,7 @@
     },
     {
       "file": "apps/web/src/components/shell/AppShell.tsx",
-      "hash": "cc084954e743c254565b83740703133a682ccc28e8c6a7f1acc231a8e1ac21cb"
+      "hash": "ace993e3f5fc4fd38367e611bf48dce2babe5de29652f9a447cd80826893c3d8"
     },
     {
       "file": "apps/web/src/features/internalLessons/InternalLesson.tsx",
