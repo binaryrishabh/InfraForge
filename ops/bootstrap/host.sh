@@ -58,10 +58,5 @@ else
 fi
 test "$(bun --version)" = 1.3.14
 bash "$here/layout.sh" "$operator"
-install -d -m 0755 /etc/letsencrypt/renewal-hooks/deploy
-hook=/etc/letsencrypt/renewal-hooks/deploy/infraforge-nginx
-if [[ -e $hook ]] && ! cmp -s "$here/renew-nginx.sh" "$hook"; then
-  echo 'Existing InfraForge renewal hook differs; review before replacing' >&2; exit 1
-fi
-install -m 0755 "$here/renew-nginx.sh" "$hook"
+echo 'Skipping Certbot renew hook: the home server terminates TLS at Cloudflare.'
 echo 'Host pieces ready. Reconnect the operator to acquire Docker group membership. Configure private release.env, DNS and TLS per the runbook.'

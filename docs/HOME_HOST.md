@@ -9,7 +9,7 @@ process itself is unchanged: the same workflow, approval and `scripts/deploy/bac
 
 - Docker CE with the classic `overlay2` store ([ops/home/docker-daemon.json](../ops/home/docker-daemon.json)),
   so the release disk preflight takes its verified overlay2 path. Compose, Buildx, Bun 1.3.14.
-- `ops/bootstrap/host.sh ubuntu` (its last step, the certbot renew hook, is not used here).
+- `ops/bootstrap/host.sh ubuntu` (skips the Certbot renew hook because TLS ends at Cloudflare).
 - nginx gateway shared by all projects on this host:
   [ops/home/nginx-gateway.conf](../ops/home/nginx-gateway.conf) answers 404 for unclaimed hostnames.
   Each project adds its own `sites-available` file with `listen 127.0.0.1:8080; server_name <host>;`.

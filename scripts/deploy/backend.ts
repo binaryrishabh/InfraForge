@@ -1,7 +1,7 @@
 import { readFile, lstat } from "node:fs/promises";
 import { resolve } from "node:path";
 import { command } from "../release/process";
-import { verifyLocalDocker } from "../release/storage";
+import { verifyLocalDocker } from "../release/docker-endpoint";
 import { ComposeRelease, settingsFingerprint, verifyImage } from "../release/compose";
 import type { Release } from "../release/sequence";
 import { fullSha } from "../release/public-check";

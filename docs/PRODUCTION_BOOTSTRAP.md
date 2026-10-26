@@ -8,15 +8,14 @@ provider switching, mandatory daily R2 backups and a scratch restore test.
 
 Current operation is described in [DEPLOYMENT.md](DEPLOYMENT.md). This runbook is
 for provisioning or recovery, when initial operator access is appropriate. Normal
-releases use GitHub Actions and need no EC2 terminal. Commands below require an
+releases use GitHub Actions and need no host terminal. Commands below require an
 explicitly selected new/recovery host; they are never run by workspace tests.
 
 ## Choose the recovery case first
 
 | Situation | Preserve | Explicit changes |
 | --- | --- | --- |
-| Replace EC2, keep database and domain | PostgreSQL database/volume or off-host restore, stable auth secret, OAuth clients, frontend project/domain, backups | Fence old API/WS/worker, provision host, independently verify new SSH identity, update GitHub EC2 settings and backend DNS, issue/reuse valid TLS certificate |
-| Move AWS account, keep data | Same items; data need not move with EC2 | Recreate network/security groups/IAM in new account, transfer DNS authority if necessary, verify new SSH identity, fence old writers before enabling new worker |
+| Replace the home server, keep database and domain | PostgreSQL database/volume or off-host restore, stable auth secret, OAuth clients, frontend project/domain, backups | Fence old API/WS/worker, provision host, independently verify new SSH identity, update GitHub SSH settings and the Cloudflare Tunnel |
 | Fresh database/account | Preserve only deliberately selected account/domain configuration | Create a new PostgreSQL database and roles, use explicit empty-database first release; old users/designs/sessions do not appear automatically. A restored database is a data-preserving migration, not this case |
 
 Never run workers on old and new hosts concurrently. The session advisory lock is
@@ -26,7 +25,7 @@ Keep the old host fenced until new acceptance, including DNS cache overlap.
 
 ## External services and prerequisites
 
-Obtain owner-controlled AWS/hosting, GitHub, database-provider (if remote), DNS and Vercel access. Optional
+Obtain owner-controlled host, Cloudflare, GitHub, database-provider (if remote), DNS and Vercel access. Optional
 Google/GitHub OAuth applications are separate. Know who owns database backups,
 retention, restore approval, encryption keys, DNS and billing. Keep these records
 and real credentials in the operator secret manager, outside the repository.
@@ -38,13 +37,9 @@ Choose an Ubuntu image, create a non-root release operator (for example the imag
 `ubuntu` user), and supply an authorized SSH public key through the hosting provider.
 Docker group membership is root-equivalent host authority; restrict this account.
 
-Security group/host firewall: public TCP 443; TCP 80 for redirect/ACME; SSH 22 only
-from approved administration/release sources. GitHub-hosted runner source addresses
-can change; choose a maintained network policy, not a guessed permanent runner IP.
-Do not open 3000, 3001, 3002, 6379 or 5432. Compose binds API/WS to loopback and
-publishes neither worker, Redis nor PostgreSQL. The local PostgreSQL service
-uses only an internal Docker bridge; remote providers require verified TLS. No second public proxy
-may inject forwarded identity headers without reviewing the existing trust contract.
+The home server uses Tailscale for SSH and Cloudflare Tunnel for public HTTPS.
+Use [HOME_HOST.md](HOME_HOST.md) for the tunnel and loopback Nginx configuration.
+Do not open public inbound ports or expose 3000, 3001, 3002, 6379 or 5432.
 
 ## Bootstrap repeatable host pieces
 
@@ -134,37 +129,11 @@ coordinated process, not casually regenerated during host replacement.
 
 ## DNS, Nginx and certificates
 
-Point the backend A/AAAA records to the intended host only after fencing old writers.
-Remove stale IPv6 records if the new host has no IPv6 service. Attach a stable address
-if the host provider supports it. Frontend DNS follows Vercel's project instructions;
-it does not point to EC2. Keep current API and WS on **one backend hostname**.
-
-On a fresh host, first install an HTTP-only ACME site (other requests return 503):
-
-```sh
-sudo bash ops/bootstrap/nginx.sh BACKEND_DNS_NAME http
-sudo certbot certonly --webroot -w /var/lib/infraforge/acme -d BACKEND_DNS_NAME
-sudo bash ops/bootstrap/nginx.sh BACKEND_DNS_NAME tls /etc/letsencrypt/live/BACKEND_DNS_NAME/fullchain.pem /etc/letsencrypt/live/BACKEND_DNS_NAME/privkey.pem
-sudo certbot renew --dry-run
-```
-
-Bootstrap installs a root-owned Certbot deploy hook that runs `nginx -t` then
-`systemctl reload nginx` after successful renewal. Verify the host's renewal timer
-is enabled. Certificate requests/renewal require owner-controlled DNS and public port
-80; bootstrap does not request certificates automatically. Initial ACME is an explicit
-host setup step, not part of normal application deployment.
-
-For an existing installation, review its server blocks before adopting the managed
-site. The installer refuses to overwrite an unmanaged `infraforge` file. Remove a
-duplicate backend server block only through a reviewed operator change; do not run
-the fresh-host installer over today's host architecture blindly. TLS mode validates
-the chain against the host CA store, hostname, expiry and key match, tests the complete Nginx configuration and restores
-the prior site on failure. HTTP mode cannot downgrade a managed TLS site.
-
-HTTPS proxies API/WS to 127.0.0.1:3000/3001, replaces forwarded headers and preserves
-the maintenance marker. `/health/ready` remains available through maintenance for
-release acceptance. A 200 health response alone does not prove maintenance is off.
-Both `/api/auth/providers` and `/ws` must return 503 while the marker exists.
+The home server terminates public TLS at Cloudflare. Install the loopback gateway
+and project site described in [HOME_HOST.md](HOME_HOST.md); point the tunnel at
+`127.0.0.1:8080`. Public SSH and ACME ports are unnecessary.
+Bootstrap skips the Certbot renew hook. Legacy direct-TLS hosts need their own
+reviewed certificate renewal setup; that setup is not used by production.
 
 ## GitHub and Vercel setup
 
@@ -248,38 +217,11 @@ filesystem and `/var/lib/infraforge/releases` before a release, and on the class
 storage path below before any build/state/service mutation. Protected Docker directories
 require noninteractive read-only `sudo -n stat --file-system` access. The budget and assumptions
 are documented in [release disk capacity and image retention](DEPLOYMENT.md#release-disk-capacity-and-image-retention).
-Two layouts are qualified: local rootful classic `overlay2`, and the narrow
-**default system containerd overlayfs** contract in the
-[qualification checklist and exact owner commands](DEPLOYMENT.md#release-disk-capacity-and-image-retention).
-The latter requires a flagless live systemd PID, its actual `/proc/PID/exe`,
-matching mount namespace and socket ownership, and configuration/import files
-plus their own containing directories predating process start. All ancestors
-must be root-owned, non-writable directories without symlinks. The root directory
-must predate startup; no two adjacent ancestor directories may have later or
-uncertain ctimes. This detects renamed subtrees while allowing an isolated later
-`/etc` change between older `/` and `/etc/containerd`. A missing default file requires its own directory to predate
-start. Config/import mounts below the root filesystem refuse; root mount records
-must match the operator, daemon and PID 1. Systemd's captured start time must
-agree with the reconstructed start. These are current observations, not a full
-historical mount/clock audit; the linked checklist defines that boundary.
-For both stores, the Docker socket must actually be listened on by local rootful
-dockerd in our mount namespace/root. For the containerd store, established socket
-peer inodes must bind that dockerd to the verified containerd instance. The server
-row must carry the verified local pathname and PID; client peer names may be `*`.
-Only absolute literal imports are qualified; glob/relative imports and symlinks
-refuse. The dump must retain default plugin settings: custom content/snapshotter
-roots, proxies and unknown storage configuration refuse. Noninteractive read-only
-sudo is needed for `ss`, `/proc`/config reads when protected, filesystem `stat`,
-and `/proc/PID/exe config default` / `config dump`.
-The controller measures containerd's root, content and overlayfs snapshot paths
-as well as Docker metadata and release state, each against the unchanged 8 GiB
-floor. Requalify before first release and after relevant updates or relocation.
-Finish all pre-cutover package/configuration setup before recording the final
-qualification; an earlier pre-install pass does not authorize cutover.
-Ubuntu 24.04 ARM64 and fresh Docker packages alone do not certify the layout;
-collect the linked sanitized evidence on that host. Unknown layouts refuse;
-never bypass the gate, manufacture plugin directories or switch storage drivers
-as cleanup. An accepted-backend frontend retry is not a fresh disk qualification.
+Only local rootful classic `overlay2` is supported. Other stores refuse with:
+"Use the classic overlay2 store (see ops/home/docker-daemon.json)".
+Run `bun --no-env-file scripts/release/hygiene.ts qualify /var/lib/infraforge/releases`
+to check capacity without changing services. An accepted-backend retry does not
+build or pull an image and does not need another capacity check.
 After acceptance it retains the exact accepted/previous images plus all images
 used by containers, and logs removal of other exclusively `infraforge-backend:*`
 images. It never prunes volumes, database/cache images or shared builders. The
@@ -304,7 +246,7 @@ Set `EC2_HOST_FINGERPRINT` to the host's **ECDSA** key fingerprint
 (`ssh-keygen -lf /etc/ssh/ssh_host_ecdsa_key.pub`): the release SSH client negotiates ECDSA
 before Ed25519, so an Ed25519 fingerprint fails with "host key fingerprint mismatch".
 The wrapper can reuse a recorded accepted SHA only after image/settings/container
-readiness checks, and public verification repeats outside EC2. It refuses maintenance
+readiness checks, and public verification repeats outside the host. It refuses maintenance
 or an interrupted release lock. It never rebuilds a retained accepted image.
 
 Verify from outside the host: HTTPS `/health/ready` is 200, `success=true`, full SHA
@@ -380,5 +322,5 @@ non-root release/service reads and reproduces EACCES in an unfixed control.
 runs, real Nginx syntax/TLS/maintenance/ACME, failure rollback and refusals. It uses a
 fixture reload adapter because Docker is not systemd PID 1. It does not install AWS,
 exercise live apt/systemd bootstrap, issue Let's Encrypt certificates, change DNS or
-prove EC2 capacity. Hosted credentials, network policy, OAuth and actual promotion
+prove host capacity. Hosted credentials, network policy, OAuth and actual promotion
 remain separate operational evidence. See [research decisions](deployment-research.md).

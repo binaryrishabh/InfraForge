@@ -179,7 +179,7 @@ from production being live.
    and permits only branch `main`. Review the exact SHA, compatibility, maintenance
    window, no active runs and backup/restore readiness before approving.
 4. A serialized release checks all setting names/formats and Vercel access before
-   touching EC2. Pinned SSH fetches main, requires a clean checkout and exact SHA,
+   touching the home server. Pinned SSH fetches main, requires a clean checkout and exact SHA,
    verifies Bun 1.3.14, and invokes the existing controlled release operator.
 5. From the independent GitHub runner, public readiness must be HTTP 200 with the
    intended full SHA/auth contract, maintenance false, and working credential providers.
@@ -196,7 +196,7 @@ SHAs refuse before mutation. Do not cancel an active production run casually.
 The single owner can approve their own release; this is a deliberate production
 pause after CI, not a claim of independent two-person review.
 
-Ordinary EC2 terminal work is unnecessary once the hosted setup is complete. Manual
+Ordinary host terminal work is unnecessary once the hosted setup is complete. Manual
 SSH/console is for initial bootstrap and genuine incident/recovery. Manual dispatch
 is a retry tool: it requires the current full main SHA and existing successful push
 CI, and does not run the expensive suite again. A same-SHA retry can reuse the
@@ -216,143 +216,13 @@ operator cannot traverse Docker's private directory, a read-only
 sudo access for that read is required on such hosts. Missing paths, denied sudo
 or unavailable measurements refuse the release; capacity is never guessed.
 
-The containerd image store (`overlayfs` with exactly one `driver-type
-io.containerd.snapshotter.v1`) is qualified only for the narrow default **local,
-rootful system containerd** contract below. A fresh config dump alone is not proof
-of the running daemon's configuration.
+Other image stores refuse with: "Use the classic overlay2 store (see ops/home/docker-daemon.json)".
+The Docker context must select the local default rootful endpoint. To check capacity
+without changing services, run:
 
-- Docker must select context `default` and `unix:///var/run/docker.sock`.
-  Remote `DOCKER_HOST`, non-default `DOCKER_CONTEXT` or selected context, TLS
-  endpoint overrides, rootless security options and missing security evidence
-  refuse. Release Docker subprocesses pin the local endpoint, including cleanup
-  and already-accepted backend verification. The separate owned-local rehearsal
-  continues to use its explicitly selected local development engine.
-  For both stores, the endpoint must be a root-owned Unix socket with an actual
-  `dockerd` listener, a root-owned process, our mount namespace and `/` root.
-  Extended `ss -H -O -xapn -e` VFS inode/device evidence must match the current
-  endpoint's filesystem identity. Saved socket names and the ordinary socket
-  inode column cannot establish that binding: renaming or overmounting a socket
-  can leave a stale name beside another listener. Missing, ambiguous or mismatched
-  VFS evidence refuses; inode/device values outside the lossless 32-bit diagnostic
-  range refuse too. Device encoding is converted between stat, kernel and ss formats.
-  A forwarding listener or another namespace refuses. Systemd may retain a
-  socket-activation descriptor alongside dockerd. For the containerd store,
-  The same `ss` observation must show reciprocal established socket inodes connecting that
-  dockerd to the verified containerd PID and server-local address. Client peer
-  names may be `*`, as in ordinary netlink output. These checks repeat after
-  the dump; a local socket pathname or matching path strings alone do not qualify.
-- `containerd.service` must have a positive MainPID, a readable flagless
-  `containerd` command line and an absolute, non-deleted executable ending in
-  `/containerd`. All flags are outside this qualified contract, even harmless
-  ones. The process must share our mount namespace, have `/` as its root, and
-  own the exact listening socket reported by Docker (`sudo -n ss -H -xlpn`).
-- Both `config default` and `config dump` run through `sudo -n /proc/PID/exe`.
-  This uses the live executable inode rather than whichever binary PATH finds.
-  Version 2, 3 or 4 TOML is parsed with Bun 1.3.14's `Bun.TOML.parse`. Schema 4
-  (including containerd v2.4.2) uses `plugins."io.containerd.server.v1.grpc"`
-  for the gRPC address; versions 2/3 use top-level `grpc`. Parser errors
-  and command failures never expose the dump or parser causes.
-- `/etc/containerd/config.toml`, every recursively imported file, and each
-  file's **own containing directory** must have ctime plus one second strictly
-  before startup. All ancestors must be real, root-owned directories without
-  group/world write permission and with finite ctimes. The filesystem root `/`
-  must also predate startup. Higher ancestors may change later, provided no two
-  adjacent directories in the input's ancestry have ctime plus one second at or
-  after startup. A subtree rename changes both the moved directory and its
-  destination parent; this rule refuses even when nested files/directories
-  retain old timestamps. An isolated later `/etc` change between older `/` and
-  `/etc/containerd` therefore passes. Unrelated changes to adjacent ancestors
-  or `/` conservatively refuse and need a reviewed restart/requalification.
-  Config files must also be root-owned,
-  non-writable by group/others and regular. A missing default file means
-  executable defaults only when its own directory passes; missing directories
-  or imports refuse. Symlinks, glob/relative/non-normalized imports, cycles,
-  more than 64 files and unreadable metadata refuse. Metadata is observed again
-  after the dump, including the higher ancestors.
-- Mount attachment does not change the source inode's ctime, and `mountinfo`
-  supplies no mount timestamp. This narrow gate therefore refuses **all mounts
-  below `/` covering a config, import or containing directory**, even if mounted
-  before startup. Each input must be on the same whole-filesystem root mount
-  (including mount ID) in `/proc/self/mountinfo`, `/proc/PID/mountinfo` and
-  `/proc/1/mountinfo`. A later bind mount of an old file/directory refuses.
-  Relevant mount records are observed again after the dump. This is a root-disk
-  contract, not support for independently mounted configuration directories.
-- The start cutoff uses systemd's captured `ExecMainStartTimestamp`
-  (`systemctl --timestamp=unix`), checked against boot `btime` plus process-start
-  ticks. Missing timestamps or a discrepancy over one second refuse; both are
-  rechecked after the dump. A later clock correction cannot simply move the
-  reconstructed cutoff forward. These observations are not a historical mount
-  or clock audit: arbitrary root replacement or clock steps that later cancel
-  cannot be certified from current `/proc` metadata. Such administration is
-  outside this qualification contract and requires a reviewed restart and
-  requalification. Do not describe ctime alone as proof of loaded configuration.
-- The dump must match that executable's default plugin settings, disabled and
-  required plugins, plugin directory, temp path and stream processors. Even
-  harmless plugin customization is currently unqualified. Non-empty proxy
-  plugins, any non-empty overlayfs `root_path`, content/snapshotter overrides,
-  unknown top-level configuration keys and plugin fields absent from defaults
-  refuse. State must match the executable default; the root must be an absolute,
-  non-empty path without traversal, whitespace or control characters. The parsed
-  gRPC address must match Docker's socket. PID, start time, executable, mount
-  namespace and config evidence are rechecked after the dump.
-
-The gate measures Docker's root, the qualified containerd root, its built-in
-`io.containerd.content.v1.content` and `io.containerd.snapshotter.v1.overlayfs`
-directories, and the release state directory, each against **8 GiB**. Missing
-plugin paths refuse; do not create empty stale directories to satisfy this test.
-Every unsupported or unavailable observation refuses before building. Never
-assume `/var/lib/containerd`, bypass the gate, or switch storage drivers as cleanup.
-Subprocess deadlines remain active through both output and exit (120 seconds,
-10 minutes for builds), with a 16 MiB combined output cap. Timeout rejection does
-not wait for privileged descendants; OS-level process-tree termination is not
-certified by the local tests.
-
-Before first release and after daemon/package/config/storage changes, qualify the
-endpoint, instance, unchanged inputs, default plugins and capacity. Keep a small
-sanitized record of version, PID/start, executable, namespace/socket ownership,
-config timestamps and measured capacities. Do not publish raw config dumps.
-A frontend retry reusing accepted backend state verifies the local endpoint but
-skips capacity preflight; that is not a new host qualification. The supplied
-production root/driver/socket/free-space facts alone do not establish these
-additional checks, and Ubuntu 24.04 ARM64 bootstrap does not certify them.
-
-The owner can paste the following **read-only** commands from the production
-checkout, as the release operator. They do not restart services or create state.
-Endpoint overrides are classified without disclosing values:
-
-<!-- owner-endpoint-evidence -->
-```bash
-printf 'DOCKER_HOST=%s DOCKER_CONTEXT=%s\n' "$(if [ -n "${DOCKER_HOST-}" ]; then printf set; else printf empty; fi)" "$(if [ -n "${DOCKER_CONTEXT-}" ]; then printf set; else printf empty; fi)"
-```
-
-Run this sequence in one shell. `set -e` stops on failed evidence; the helper is
-bounded by 30 seconds, 64 files and a combined 1 MiB read budget. It requires
-Python 3.11+ (`tomllib`). It validates flagless containerd before printing a
-selected process summary, and never prints arbitrary argv or config contents.
-The helper checks kind **before** opening, uses descriptor-relative directory
-walks and no-follow/nonblocking regular-file reads, and matches the gate's
-literal normalized import rules. It emits generic parsing/read failures.
-
-```bash
-set -euo pipefail
-pid=$(systemctl show containerd.service --property=MainPID --value)
-[[ "$pid" =~ ^[1-9][0-9]*$ ]]
-timeout 30s sudo -n python3 scripts/release/config-evidence.py "$pid"
+```sh
 bun --no-env-file scripts/release/hygiene.ts qualify /var/lib/infraforge/releases
 ```
-
-The final command is authoritative: it runs the read-only preflight, both config
-commands, mount and clock checks, Docker listener/process/namespace/connection
-checks, and every capacity measurement. It prints selected verified Docker and
-containerd instance metadata and capacities, not raw socket listings, command
-lines or dumps. Keep that sanitized output with the helper timestamps. A failed
-helper or qualify result is a stop condition. Only a successful result confirms
-this checkout's checks pass at that moment; the supplied production facts do
-not yet contain all the newly required observations.
-
-After all package/configuration setup, run and record this sequence again before
-cutover, while the replacement host is still out of service. An earlier
-pre-install pass is not final cutover evidence. The real release repeats its gate.
 
 This is a minimum operating budget, not a prediction: the incident's roughly
 1.46 GB backend image rounds up to **1.5 GiB loaded image + 1.5 GiB export/load

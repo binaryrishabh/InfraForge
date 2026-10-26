@@ -2,18 +2,32 @@ import { expect, test } from "bun:test";
 import { mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { refusalTag } from "../release/storage";
+import { verifyLocalDocker } from "../release/docker-endpoint";
+const refusalTag = / \[hygiene check [a-z-]+\]$/;
 import { assertReleaseSpace, availableReleaseBytes, minimumReleaseFreeBytes, preflightReleaseSpace as preflight, pruneAcceptedImages, selectReleaseImages } from "../release/hygiene";
-import { dockerHost, dockerSockets } from "./fixtures/release-dockerd";
 
 const preflightReleaseSpace = (root: string, state: string, run: Parameters<typeof preflight>[2], measure?: Parameters<typeof preflight>[3]) =>
-  preflight(root, state, run, measure, dockerHost, {});
-const context = (args: string[]) => args[2] === "ss" ? dockerSockets : args[1] === "context" ? args[2] === "show" ? "default" : JSON.stringify([{ Name: "default", Endpoints: { docker: { Host: "unix:///var/run/docker.sock" } } }]) : undefined;
+  preflight(root, state, run, measure, {});
+const context = (args: string[]) => args[1] === "context" ? args[2] === "show" ? "default" : JSON.stringify([{ Name: "default", Endpoints: { docker: { Host: "unix:///var/run/docker.sock" } } }]) : undefined;
 const release = (imageId: string) => ({ sha: imageId, image: `infraforge-backend:${imageId}`, imageId,
   authContract: 1, migrationFingerprint: "schema", settingsFingerprint: "settings" });
 const state = { current: release("accepted"), previous: release("previous") };
 const image = (Id: string, ...RepoTags: string[]) => ({ Id, RepoTags });
 const dockerInfo = { SecurityOptions: ["name=seccomp,profile=builtin"], DockerRootDir: "/docker-root", Driver: "overlay2", DriverStatus: [["Backing Filesystem", "extfs"]] };
+
+test("disk checks refuse remote endpoints, rootless Docker and invalid data roots", async () => {
+  for (const env of [{ DOCKER_HOST: "ssh://remote" }, { DOCKER_CONTEXT: "remote" }, { DOCKER_TLS_VERIFY: "1" }, { DOCKER_CERT_PATH: "/certs" }]) {
+    await expect(verifyLocalDocker(".", async () => { throw Error("must not run"); }, env)).rejects.toThrow("local default rootful endpoint");
+  }
+  await expect(verifyLocalDocker(".", async args => args[2] === "show" ? "default" : JSON.stringify([
+    { Name: "default", Endpoints: { docker: { Host: "tcp://remote:2375" } } },
+  ]), {})).rejects.toThrow("local default Docker endpoint");
+  for (const change of [{ SecurityOptions: ["name=rootless"] }, { SecurityOptions: null },
+    ...[null, "relative", "/", "/var/../docker", "/bad\npath"].map(DockerRootDir => ({ DockerRootDir }))]) {
+    await expect(preflightReleaseSpace(".", ".", async args => context(args) ?? JSON.stringify({ ...dockerInfo, ...change }),
+      async () => { throw Error("must not measure"); })).rejects.toThrow(refusalTag);
+  }
+});
 
 test("disk floor checks each filesystem, includes exact numbers and safe recovery, accepts equality", () => {
   for (const low of [0, 1]) {
@@ -33,10 +47,9 @@ test("preflight measures DockerRootDir, image directory and nearest existing sta
       async path => { paths.push(path); return minimumReleaseFreeBytes; });
     expect(paths).toEqual(["/docker-root", "/docker-root/overlay2", directory]);
     expect(commands.filter(args => args[0] === "docker")).toEqual([["docker", "context", "show"], ["docker", "context", "inspect", "default"], ["docker", "info", "--format", "{{json .}}"]]);
-    expect(commands.filter(args => args[2] === "ss")).toHaveLength(2);
     expect(await Bun.file(join(directory, "new", "state", "release.lock")).exists()).toBe(false);
     expect(await readdir(directory)).toEqual([]);
-    await expect(preflightReleaseSpace(".", directory, async () => "")).rejects.toThrow(refusalTag);
+    await expect(preflightReleaseSpace(".", directory, async () => "")).rejects.toThrow("local default Docker context");
     await expect(preflightReleaseSpace(".", directory, async args => context(args) ?? JSON.stringify(dockerInfo), async () => { throw new Error("statfs unavailable"); })).rejects.toThrow(refusalTag);
   } finally { await rm(directory, { recursive: true }); }
 });
@@ -64,7 +77,7 @@ test("preflight refuses a low image filesystem even when Docker metadata and sta
   const directory = await mkdtemp(join(tmpdir(), "infraforge-split-store-"));
   try {
     const capacities = new Map([[dockerInfo.DockerRootDir, minimumReleaseFreeBytes], [directory, minimumReleaseFreeBytes],
-      ["/docker-root/overlay2", 7n], ["/separate/containerd", 3n]]);
+      ["/docker-root/overlay2", 7n]]);
     const measure = async (path: string) => capacities.get(path)!;
     await expect(preflightReleaseSpace(".", directory, async args => context(args) ?? JSON.stringify(dockerInfo), measure)).rejects.toThrow(/\/docker-root\/overlay2: 7 bytes available.* \[hygiene check capacity\]$/);
     capacities.set("/docker-root/overlay2", minimumReleaseFreeBytes);
@@ -72,9 +85,9 @@ test("preflight refuses a low image filesystem even when Docker metadata and sta
     // containerd root cannot be verified from info, so this layout must refuse.
     const containerd = { ...dockerInfo, Driver: "overlayfs", DriverStatus: [["driver-type", "io.containerd.snapshotter.v1"]] };
     const run = async (args: string[]) => context(args) ?? (args.at(-1) === "{{.DockerRootDir}}" ? dockerInfo.DockerRootDir : JSON.stringify(containerd));
-    await expect(preflightReleaseSpace(".", directory, run, measure)).rejects.toThrow(refusalTag);
+    await expect(preflightReleaseSpace(".", directory, run, measure)).rejects.toThrow("Use the classic overlay2 store (see ops/home/docker-daemon.json)");
     for (const change of [{ Driver: "unknown" }, { DriverStatus: null }, { DriverStatus: containerd.DriverStatus }]) {
-      await expect(preflightReleaseSpace(".", directory, async args => context(args) ?? JSON.stringify({ ...dockerInfo, ...change }), measure)).rejects.toThrow(refusalTag);
+      await expect(preflightReleaseSpace(".", directory, async args => context(args) ?? JSON.stringify({ ...dockerInfo, ...change }), measure)).rejects.toThrow("Use the classic overlay2 store (see ops/home/docker-daemon.json)");
     }
   } finally { await rm(directory, { recursive: true }); }
 });
@@ -139,9 +152,9 @@ test("cleanup reads durable accepted IDs, inspects all containers and only remov
 test("refusals keep the originating check and never pass through uncoded host text", async () => {
   const directory = await mkdtemp(join(tmpdir(), "infraforge-refusal-tags-"));
   try {
-    // A remote Docker context is refused inside the storage module; its own site must survive.
+    // A remote Docker context must be refused before measuring local disk.
     const remote = async (args: string[]) => args[1] === "context" && args[2] === "show" ? "remote" : context(args) ?? "{}";
-    await expect(preflightReleaseSpace(".", directory, remote)).rejects.toThrow(/ \[storage check \d+\]$/);
+    await expect(preflightReleaseSpace(".", directory, remote)).rejects.toThrow("local default Docker context");
     // An unexpected error that merely starts like a refusal is replaced, not rethrown with its text.
     const marker = "PRIVATE_HOST_MARKER";
     const leaky = async (args: string[]) => {
