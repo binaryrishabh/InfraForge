@@ -1,6 +1,6 @@
 {
   "schema": "execution-loading-analysis/1",
-  "policy": "0b3c165d711214d8fe7e2d3541fc1ca969d2eff202afa050eaca798fab6b5a92",
+  "policy": "82a1905c25eef4eb79434722bd59fb4e4703dc421491c75550645b38358db489",
   "modules": {
     "apps/backend/actions/contract.ts": {
       "hash": "15fe6aa3879ab8ccc67a23d579a4e2e9b79f71631dd7687ad192f788c27229ad",
@@ -103,7 +103,7 @@
       ]
     },
     "apps/backend/auth/accountData.ts": {
-      "hash": "b967dd2e650814b2279b595b8ac8d5485f55196f3e7abe490fb163eea0e6303b",
+      "hash": "091e438ebaf9177b5e8996954fb457a3d15508f239ed6c32ce258cecbb246d00",
       "requests": [
         {
           "path": "node:crypto",
@@ -124,7 +124,7 @@
       ]
     },
     "apps/backend/auth/accountPolicy.ts": {
-      "hash": "0fa68dd2404c8da0a43332223627a190f4f445f39a647eabe796413ab6d7e550",
+      "hash": "03f1e8e2afeecefa9d6025d7b00e57bd2dcf935700fd52488d6c5c4c7bb71ab0",
       "requests": [
         {
           "path": "node:crypto",
@@ -195,7 +195,7 @@
       ]
     },
     "apps/backend/auth/createAuth.ts": {
-      "hash": "c7b66085d5dffd852cdc3299c0ce5c98b17eb56e5acf4d2e83ef6c6e57159282",
+      "hash": "a70935b83466b31c1b8d7012dc13f126ff53e6cbc43fbf1b50ea0c2d3b642fa8",
       "requests": [
         {
           "path": "better-auth",
@@ -240,6 +240,14 @@
         {
           "path": "./accountPolicy",
           "kind": "import-statement"
+        },
+        {
+          "path": "./loginMethods",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./mailIntent",
+          "kind": "import-statement"
         }
       ]
     },
@@ -282,7 +290,7 @@
       ]
     },
     "apps/backend/auth/emailTemplate.ts": {
-      "hash": "0c7c4299de86c16c83cadee1d9e88886aef771a1f9ed7222ecfb16b0280d15e9",
+      "hash": "273fba5321b34043292473bc57fda709ee64d4a1235bab3237cfe7aa30b31d44",
       "requests": []
     },
     "apps/backend/auth/httpSecurity.ts": {
@@ -302,6 +310,23 @@
         }
       ]
     },
+    "apps/backend/auth/loginMethods.ts": {
+      "hash": "514b8f7306acbb3540bd6925b734d55016e997035203096e8b6f2f0d7eaaaa11",
+      "requests": [
+        {
+          "path": "better-auth/api",
+          "kind": "import-statement"
+        },
+        {
+          "path": "zod",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./mailAdmission",
+          "kind": "import-statement"
+        }
+      ]
+    },
     "apps/backend/auth/mailAdmission.ts": {
       "hash": "1677f3daf3dabbaedc6ffaa35e89830c97c8b95aeaf47bb39b77bf41b996dfb0",
       "requests": [
@@ -316,7 +341,7 @@
       ]
     },
     "apps/backend/auth/mailIntent.ts": {
-      "hash": "d898dd26bb55a00fa1ce591a3ba5da0afdf6028ac661c78afaa230b6a138eafa",
+      "hash": "b005c24c704d12e89c4fdda65699351d1bee818e91551fb490514f6eb5f98fe7",
       "requests": [
         {
           "path": "node:crypto",
@@ -341,7 +366,7 @@
       ]
     },
     "apps/backend/auth/mailRequests.ts": {
-      "hash": "6696cf7a5501a36e6666085ce1e9fc763f08f8c1a428008b4a8cac8565b99bf9",
+      "hash": "9428a24e7c259c9f5eccb446545fbdd68a96396c5ce287c8e2931d4fe10a9cdf",
       "requests": [
         {
           "path": "node:crypto",
@@ -361,12 +386,33 @@
         }
       ]
     },
+    "apps/backend/auth/methodSettings.ts": {
+      "hash": "405b72cb3fa1238a3187272ef8477507ef17d30f903de489d45f0aa6587c8425",
+      "requests": [
+        {
+          "path": "express",
+          "kind": "import-statement"
+        },
+        {
+          "path": "better-auth/node",
+          "kind": "import-statement"
+        },
+        {
+          "path": "zod",
+          "kind": "import-statement"
+        },
+        {
+          "path": "../utils/errors",
+          "kind": "import-statement"
+        }
+      ]
+    },
     "apps/backend/auth/origin.ts": {
       "hash": "b41d243139ac3fb4303963547a205ac9405472457d5ab880ab93908e4f3a828c",
       "requests": []
     },
     "apps/backend/auth/settings.ts": {
-      "hash": "1d761093479be310b8b58eae6eb4e9b9e5171c7d5f21aad580fdfff02e1dc7e6",
+      "hash": "a9b72f49c5efe54c119c6a9dc513f60b0e5e6a89f733f194a5ea726db03ec974",
       "requests": [
         {
           "path": "./email",
@@ -379,7 +425,7 @@
       ]
     },
     "apps/backend/auth/turnstile.ts": {
-      "hash": "3cc4dee84f7a8cf6e343af4d3220b186d69a816b997a3e8573fd4ffd1f70e118",
+      "hash": "cc5cdb377c954d9968bb94719688bbe699d05161a855a906ae90199d7d911379",
       "requests": []
     },
     "apps/backend/auth/verification.ts": {
@@ -2342,7 +2388,7 @@
       "requests": []
     },
     "apps/backend/index.ts": {
-      "hash": "88744cd1d80540b53414a7b47d9d65f629f62e2f5fabd59f0c442498e3c24236",
+      "hash": "e4b1640ec0a1d0e3fb1473b7852b492e7255289bc684a60b0fe47962c667ee18",
       "requests": [
         {
           "path": "express",
@@ -2378,6 +2424,10 @@
         },
         {
           "path": "./auth/accountRoutes",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./auth/methodSettings",
           "kind": "import-statement"
         },
         {
@@ -3570,7 +3620,7 @@
       ]
     },
     "apps/backend/release/migrations.ts": {
-      "hash": "3385fb8c3fd94ebd843cb05f77aec03ecd830f6cf48f5e52604cde7f8638f35e",
+      "hash": "5b64cd88472c77a79216ec8828247b15e140df1f4102548717f51c54fb380eed",
       "requests": [
         {
           "path": "node:crypto",
