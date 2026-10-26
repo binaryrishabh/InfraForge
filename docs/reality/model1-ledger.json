@@ -1252,7 +1252,7 @@
     },
     {
       "file": "apps/web/src/app/App.tsx",
-      "sha256": "53625e22a5e224af9c9aac187b8cf22e4692e75b9cb9f341628283300af84394",
+      "sha256": "a65b59a471676a0a0a2c61fea1d37fe987bad2777a302ce90645603e669e3f32",
       "numericSites": 1
     },
     {
@@ -1301,6 +1301,16 @@
       "numericSites": 0
     },
     {
+      "file": "apps/web/src/features/auth/accountFlow.ts",
+      "sha256": "fec479feb8739363c64d7e2212ed05f2a41ac5bffef2b943fcedba38097c62d7",
+      "numericSites": 6
+    },
+    {
+      "file": "apps/web/src/features/auth/authCallback.ts",
+      "sha256": "3ddb6934eabd3b0e351cae1146d7872e23c10a1dbd291a69adc49ad8ac30a4e3",
+      "numericSites": 0
+    },
+    {
       "file": "apps/web/src/features/auth/components/AuthLayout.tsx",
       "sha256": "2dbadca6ac4b0db0915ba6c65de5a4ed173ae5443e992ce800a735d89babcefe",
       "numericSites": 2
@@ -1308,6 +1318,11 @@
     {
       "file": "apps/web/src/features/auth/components/SocialSignIn.tsx",
       "sha256": "ae1996593e6b0b6376feea1bd8feaf084a9f6e7c9b9630db0056f91fed53af8f",
+      "numericSites": 0
+    },
+    {
+      "file": "apps/web/src/features/auth/components/TurnstileWidget.tsx",
+      "sha256": "dd76e68a3f454e19504ab481c9bac5af585018bfe1678e4b781ba117f9935562",
       "numericSites": 0
     },
     {
@@ -1321,9 +1336,14 @@
       "numericSites": 0
     },
     {
+      "file": "apps/web/src/features/auth/pages/PasswordResetPage.tsx",
+      "sha256": "136d6c9cd896dd268cadfeda8511754c54213a35c4d858efc30786235c45ebe0",
+      "numericSites": 3
+    },
+    {
       "file": "apps/web/src/features/auth/pages/SignInPage.tsx",
-      "sha256": "53d7cd8f8726cf72e05c1329c136a0be91d1eb2d30878a36e2da605f435961f1",
-      "numericSites": 4
+      "sha256": "a5888c55494d9894715a8dad8c5432eda353abb1f15244ae0cec9fc0add31c3f",
+      "numericSites": 6
     },
     {
       "file": "apps/web/src/features/auth/sessionClient.ts",
@@ -1332,12 +1352,17 @@
     },
     {
       "file": "apps/web/src/features/auth/store/auth.store.ts",
-      "sha256": "8824ce00aca0d8c0a0d08401d46b19eed09b520eb89353051d180e7982bf2930",
+      "sha256": "774addc5b6d51308bf9bbdc61d0814d601f0ed31bfc1eb11fc0816906639ccb0",
       "numericSites": 1
     },
     {
       "file": "apps/web/src/features/auth/turnstileToken.ts",
       "sha256": "8e47b5dca54c24fc846b6bf2dd7cd94765a4ac5d7b537ee6dfd546f36e9a7190",
+      "numericSites": 1
+    },
+    {
+      "file": "apps/web/src/features/auth/turnstileWidget.ts",
+      "sha256": "6c889d2eccb3448b52c1f7af5ee9464feff209c20e4e95777820ab19957cc205",
       "numericSites": 1
     },
     {
@@ -78103,7 +78128,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/app/App.tsx#L57",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/app/App.tsx#L64",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -78117,7 +78142,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/app/App.tsx",
-        "line": 57,
+        "line": 64,
         "column": 43
       }
     },
@@ -78410,6 +78435,222 @@
       }
     },
     {
+      "id": "m1.apps.web.src.features.auth.accountFlow.1",
+      "concept": "[seconds, setSeconds] · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.features.auth.accountFlow.1"
+        ]
+      },
+      "formula": "const [seconds, setSeconds] = useState(0);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/auth/accountFlow.ts#L19",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/features/auth/accountFlow.ts",
+        "line": 19,
+        "column": 42
+      }
+    },
+    {
+      "id": "m1.apps.web.src.features.auth.accountFlow.2",
+      "concept": "timer · literal 1",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.features.auth.accountFlow.2"
+        ]
+      },
+      "formula": "const timer = setTimeout(() => setSeconds(seconds - 1), 1000);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/auth/accountFlow.ts#L22",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/features/auth/accountFlow.ts",
+        "line": 22,
+        "column": 57
+      }
+    },
+    {
+      "id": "m1.apps.web.src.features.auth.accountFlow.3",
+      "concept": "timer · literal 1000",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1000,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.features.auth.accountFlow.3"
+        ]
+      },
+      "formula": "const timer = setTimeout(() => setSeconds(seconds - 1), 1000);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/auth/accountFlow.ts#L22",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/features/auth/accountFlow.ts",
+        "line": 22,
+        "column": 61
+      }
+    },
+    {
+      "id": "m1.apps.web.src.features.auth.accountFlow.4",
+      "concept": "useMailCooldown.start · literal 60",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 60,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.features.auth.accountFlow.4"
+        ]
+      },
+      "formula": "start: () => setSeconds(60)",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/auth/accountFlow.ts#L25",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/features/auth/accountFlow.ts",
+        "line": 25,
+        "column": 45
+      }
+    },
+    {
+      "id": "m1.apps.web.src.features.auth.accountFlow.5",
+      "concept": "accountError · literal 429",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 429,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.features.auth.accountFlow.5"
+        ]
+      },
+      "formula": "if (failure instanceof CredentialError && failure.status === 429) return \"Too many attempts. Wait a moment before trying again.\";",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/auth/accountFlow.ts#L38",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/features/auth/accountFlow.ts",
+        "line": 38,
+        "column": 64
+      }
+    },
+    {
+      "id": "m1.apps.web.src.features.auth.accountFlow.6",
+      "concept": "accountError · literal 403",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 403,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.features.auth.accountFlow.6"
+        ]
+      },
+      "formula": "if (failure instanceof CredentialError && failure.status === 403 || error instanceof Error && /security check/i.test(error.message)) return \"Complete the security check and try again.\";",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/auth/accountFlow.ts#L39",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/features/auth/accountFlow.ts",
+        "line": 39,
+        "column": 64
+      }
+    },
+    {
       "id": "m1.apps.web.src.features.auth.components.AuthLayout.1",
       "concept": "AuthLayout · literal 1",
       "modelVersion": "1",
@@ -78482,8 +78723,116 @@
       }
     },
     {
+      "id": "m1.apps.web.src.features.auth.pages.PasswordResetPage.1",
+      "concept": "submit · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.features.auth.pages.PasswordResetPage.1"
+        ]
+      },
+      "formula": "if (busy.current || !features?.emailEnabled || !reset && cooldown.seconds > 0 || reset && !token) return;",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/auth/pages/PasswordResetPage.tsx#L24",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/features/auth/pages/PasswordResetPage.tsx",
+        "line": 24,
+        "column": 81
+      }
+    },
+    {
+      "id": "m1.apps.web.src.features.auth.pages.PasswordResetPage.2",
+      "concept": "PasswordResetPage · literal 254",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 254,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.features.auth.pages.PasswordResetPage.2"
+        ]
+      },
+      "formula": "return <AuthLayout> <p className=\"if-eyebrow\">Password reset</p> <h1 className=\"if-display mt-3 text-[34px] leading-tight\">{done ? \"Password updated\" : sent ? \"Check your email\" : reset ? \"Set a new password\" : \"Forgot your password?\"}</h1> {done ? <p role=\"status\" className=\"mt-4 text-sm text-ink-2\">Your password has changed. Sign in with your new password.</p> : <> {sent && <p role=\"status\" className=\"mt-4 text-sm text-ink-2\">If eligible, you’ll receive a reset link. Check your inbox and spam ",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/auth/pages/PasswordResetPage.tsx#L48",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/features/auth/pages/PasswordResetPage.tsx",
+        "line": 48,
+        "column": 58
+      }
+    },
+    {
+      "id": "m1.apps.web.src.features.auth.pages.PasswordResetPage.3",
+      "concept": "PasswordResetPage · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.features.auth.pages.PasswordResetPage.3"
+        ]
+      },
+      "formula": "return <AuthLayout> <p className=\"if-eyebrow\">Password reset</p> <h1 className=\"if-display mt-3 text-[34px] leading-tight\">{done ? \"Password updated\" : sent ? \"Check your email\" : reset ? \"Set a new password\" : \"Forgot your password?\"}</h1> {done ? <p role=\"status\" className=\"mt-4 text-sm text-ink-2\">Your password has changed. Sign in with your new password.</p> : <> {sent && <p role=\"status\" className=\"mt-4 text-sm text-ink-2\">If eligible, you’ll receive a reset link. Check your inbox and spam ",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/auth/pages/PasswordResetPage.tsx#L54",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/features/auth/pages/PasswordResetPage.tsx",
+        "line": 54,
+        "column": 146
+      }
+    },
+    {
       "id": "m1.apps.web.src.features.auth.pages.SignInPage.1",
-      "concept": "first · literal 0",
+      "concept": "submit · literal 0",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
       "quantity": {
@@ -78494,12 +78843,12 @@
           "m1.apps.web.src.features.auth.pages.SignInPage.1"
         ]
       },
-      "formula": "const first = Object.keys(invalid)[0];",
+      "formula": "if (busy.current || !capabilities?.credentials || signup && !features || emailOnly && cooldown.seconds > 0) return;",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/auth/pages/SignInPage.tsx#L45",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/auth/pages/SignInPage.tsx#L49",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -78513,8 +78862,8 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/features/auth/pages/SignInPage.tsx",
-        "line": 45,
-        "column": 40
+        "line": 49,
+        "column": 110
       }
     },
     {
@@ -78530,12 +78879,12 @@
           "m1.apps.web.src.features.auth.pages.SignInPage.2"
         ]
       },
-      "formula": "if (failure.status === 429) setError(\"Too many attempts. Wait a moment before trying again.\"); else if (signup) { const { message, ...fieldErrors } = signupFailure(failure.code); setErrors(fieldErrors); setError(message ?? null); } else setError(LOGIN_ERROR);",
+      "formula": "if (failure.status === 429) setError(\"Too many attempts. Wait a moment before trying again.\"); else if (failure.code === \"INVALID_EMAIL_PROOF\") setError(\"This signup link is invalid or expired. Request a new link below.\"); else if (failure.code === \"SIGNUP_SIGNIN_FAILED\") { setFields(prev => ({ ...prev, password: \"\" })); setError(\"Your account is ready. Sign in to continue.\"); } else if (failure.status === 403) setError(accountError(failure)); else if (signup) { const { message, ...fieldErrors }",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/auth/pages/SignInPage.tsx#L54",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/auth/pages/SignInPage.tsx#L73",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -78549,54 +78898,54 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/features/auth/pages/SignInPage.tsx",
-        "line": 54,
+        "line": 73,
         "column": 32
       }
     },
     {
       "id": "m1.apps.web.src.features.auth.pages.SignInPage.3",
+      "concept": "submit · literal 403",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 403,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.features.auth.pages.SignInPage.3"
+        ]
+      },
+      "formula": "if (failure.status === 403) setError(accountError(failure)); else if (signup) { const { message, ...fieldErrors } = signupFailure(failure.code); setErrors(fieldErrors); setError(message ?? null); } else setError(LOGIN_ERROR);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/auth/pages/SignInPage.tsx#L76",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/features/auth/pages/SignInPage.tsx",
+        "line": 76,
+        "column": 37
+      }
+    },
+    {
+      "id": "m1.apps.web.src.features.auth.pages.SignInPage.4",
       "concept": "field · literal 30",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
       "quantity": {
         "kind": "known",
         "value": 30,
-        "unit": "code-number",
-        "provenance": [
-          "m1.apps.web.src.features.auth.pages.SignInPage.3"
-        ]
-      },
-      "formula": "const field = (name: Field, label: string, autoComplete: string, hint?: string) => ( <div> <label className=\"mb-1.5 block text-sm font-medium text-ink\" htmlFor={`auth-${name}`}>{label}</label> <input id={`auth-${name}`} name={name} type={name === \"password\" ? \"password\" : name === \"email\" ? \"email\" : \"text\"} autoComplete={autoComplete} autoCapitalize=\"none\" spellCheck={false} required maxLength={name === \"password\" ? PASSWORD_MAX : name === \"username\" ? 30 : 254} value={fields[name]} disabled={p",
-      "classification": "implementation-policy",
-      "confidence": "high",
-      "provenance": [
-        {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/auth/pages/SignInPage.tsx#L65",
-          "supports": "implementation",
-          "detail": "Exact historical literal and source expression; not external validation."
-        }
-      ],
-      "assumptions": [
-        "This literal is not evidence of real infrastructure capacity or performance.",
-        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
-      ],
-      "researchedOn": "2026-10-15",
-      "freeMode": "conditional",
-      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
-      "location": {
-        "file": "apps/web/src/features/auth/pages/SignInPage.tsx",
-        "line": 65,
-        "column": 79
-      }
-    },
-    {
-      "id": "m1.apps.web.src.features.auth.pages.SignInPage.4",
-      "concept": "field · literal 254",
-      "modelVersion": "1",
-      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
-      "quantity": {
-        "kind": "known",
-        "value": 254,
         "unit": "code-number",
         "provenance": [
           "m1.apps.web.src.features.auth.pages.SignInPage.4"
@@ -78607,7 +78956,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/auth/pages/SignInPage.tsx#L65",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/auth/pages/SignInPage.tsx#L87",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -78621,8 +78970,80 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/features/auth/pages/SignInPage.tsx",
-        "line": 65,
+        "line": 87,
+        "column": 79
+      }
+    },
+    {
+      "id": "m1.apps.web.src.features.auth.pages.SignInPage.5",
+      "concept": "field · literal 254",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 254,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.features.auth.pages.SignInPage.5"
+        ]
+      },
+      "formula": "const field = (name: Field, label: string, autoComplete: string, hint?: string) => ( <div> <label className=\"mb-1.5 block text-sm font-medium text-ink\" htmlFor={`auth-${name}`}>{label}</label> <input id={`auth-${name}`} name={name} type={name === \"password\" ? \"password\" : name === \"email\" ? \"email\" : \"text\"} autoComplete={autoComplete} autoCapitalize=\"none\" spellCheck={false} required maxLength={name === \"password\" ? PASSWORD_MAX : name === \"username\" ? 30 : 254} value={fields[name]} disabled={p",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/auth/pages/SignInPage.tsx#L87",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/features/auth/pages/SignInPage.tsx",
+        "line": 87,
         "column": 84
+      }
+    },
+    {
+      "id": "m1.apps.web.src.features.auth.pages.SignInPage.6",
+      "concept": "SignInPage · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.features.auth.pages.SignInPage.6"
+        ]
+      },
+      "formula": "return ( <AuthLayout> <p className=\"if-eyebrow\">{signup ? \"Sign up\" : \"Sign in\"}</p> <h1 className=\"if-display mt-3 text-[34px] leading-tight\">{emailSent ? \"Check your email\" : proof && signup ? \"Finish creating your account.\" : signup ? \"Make room for your ideas.\" : \"Your workbench is waiting.\"}</h1> <p className=\"mt-3 text-sm text-ink-2\">{emailSent ? \"If eligible, you’ll receive a signup link. Check your inbox and spam folder. Links expire after 30 minutes.\" : emailOnly ? \"First, confirm your ",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/auth/pages/SignInPage.tsx#L110",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/features/auth/pages/SignInPage.tsx",
+        "line": 110,
+        "column": 229
       }
     },
     {
@@ -78643,7 +79064,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/auth/store/auth.store.ts#L20",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/auth/store/auth.store.ts#L22",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -78657,7 +79078,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/features/auth/store/auth.store.ts",
-        "line": 20,
+        "line": 22,
         "column": 18
       }
     },
@@ -78695,6 +79116,42 @@
         "file": "apps/web/src/features/auth/turnstileToken.ts",
         "line": 14,
         "column": 32
+      }
+    },
+    {
+      "id": "m1.apps.web.src.features.auth.turnstileWidget.1",
+      "concept": "timer · literal 15000",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 15000,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.features.auth.turnstileWidget.1"
+        ]
+      },
+      "formula": "const timer = setTimeout(failed, 15000);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/auth/turnstileWidget.ts#L14",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/features/auth/turnstileWidget.ts",
+        "line": 14,
+        "column": 38
       }
     },
     {
