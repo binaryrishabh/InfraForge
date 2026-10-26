@@ -2468,7 +2468,7 @@
     },
     {
       "path": "scripts/tests/release-hygiene.test.ts",
-      "hash": "24683880306f6bac230c58152a17a3a1143b420c2c572cd5b79c3972426fe2b4"
+      "hash": "2f93b50d281c35b260483945ed876c704935e0ed0027a0554dd380b932bc726d"
     },
     {
       "path": "scripts/tests/release-image.test.ts",
@@ -2480,7 +2480,7 @@
     },
     {
       "path": "scripts/tests/release-storage.test.ts",
-      "hash": "41e9acd3ee86aee8084a5d21fbf2d8f2b76f1280cfa93d2b30dd67c73ddbcd79"
+      "hash": "21ba67b8d8bc9c969a6caa1eeee5219fb5fbfdc314b680741741c0e31fa2d52b"
     },
     {
       "path": "scripts/tests/release.test.ts",
