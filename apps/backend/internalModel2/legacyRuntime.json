@@ -2355,12 +2355,20 @@
       "hash": "4221c7bc3304c6e44c264a116e2e7037e539e7ed880ce29ecf6f0ed48ca084dd"
     },
     {
+      "path": "scripts/tests/fixtures/containerd-v2.4.2.ts",
+      "hash": "f932f6d1deac3de3c87340e92d739f0e43b928e057d9f5ed923b7de4ae7ee40c"
+    },
+    {
       "path": "scripts/tests/fixtures/execution-launch-probe.ts",
       "hash": "9c91911450ba57ea9c556e3363d8a7f28af5d2aa4c9185fbb46ac12acbdff998"
     },
     {
       "path": "scripts/tests/fixtures/reconfigure.ts",
-      "hash": "2f25a381bfc62489aa7ab10e634f65518fdacb68751c8d3b58ef264f8ea59e7f"
+      "hash": "3655fc636e27adf9c1286568b472be9fe1747114ecb6fa64426eaae162fc99b4"
+    },
+    {
+      "path": "scripts/tests/fixtures/release-dockerd.ts",
+      "hash": "e214081278ba7feb64fb5aa26e7a46265d6e0dd4da8882e2c49cbfa8e6d5d757"
     },
     {
       "path": "scripts/tests/fixtures/unreviewed-host.ts",
@@ -2392,7 +2400,7 @@
     },
     {
       "path": "scripts/tests/historical-analysis-cache.test.ts",
-      "hash": "8a388497e0e31df36fe7f3acb7aa2bf66b4fe5bd297c760dc6a45ebb382b15ee"
+      "hash": "7b9427c732791040e7f58933904fe7167505c0405cc5f9ba082dd8f16394eba1"
     },
     {
       "path": "scripts/tests/historical-isolation.test.ts",
@@ -2460,11 +2468,19 @@
     },
     {
       "path": "scripts/tests/release-hygiene.test.ts",
-      "hash": "b17cca0ee30f38ad8cb5f4465fcc695fd40dea8d84aa2c172345c9b9977d69ed"
+      "hash": "24683880306f6bac230c58152a17a3a1143b420c2c572cd5b79c3972426fe2b4"
     },
     {
       "path": "scripts/tests/release-image.test.ts",
       "hash": "22d4adb22a4746d5a2a704f798e71946e84e43073b5a3e4f041b411e5f3f71f4"
+    },
+    {
+      "path": "scripts/tests/release-process.test.ts",
+      "hash": "f9f0ce017d0ee23a335a1a0ab17d16ef479087fcfae083058cef02d66295a034"
+    },
+    {
+      "path": "scripts/tests/release-storage.test.ts",
+      "hash": "41e9acd3ee86aee8084a5d21fbf2d8f2b76f1280cfa93d2b30dd67c73ddbcd79"
     },
     {
       "path": "scripts/tests/release.test.ts",
