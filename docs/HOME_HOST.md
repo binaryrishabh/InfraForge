@@ -45,18 +45,27 @@ process itself is unchanged: the same workflow, approval and `scripts/deploy/bac
    scope for that tag. Save its ID and secret as repository secrets `TS_OAUTH_CLIENT_ID` and
    `TS_OAUTH_SECRET`.
 5. **Deploy key.** Make a new key only for GitHub, add its public half to the home server's
-   `~/.ssh/authorized_keys`, then repoint the existing release secrets (the lead gives the exact
-   fingerprint command): `EC2_HOST=100.75.14.4`, `EC2_USERNAME=ubuntu`, `EC2_SSH_KEY`,
-   `EC2_HOST_FINGERPRINT`. Keep the old EC2 values somewhere safe for rollback.
+   `~/.ssh/authorized_keys`, then repoint the existing release secrets: `EC2_HOST=100.75.14.4`,
+   `EC2_USERNAME=ubuntu`, `EC2_SSH_KEY`, and `EC2_HOST_FINGERPRINT` = the host's **ECDSA** key
+   (`ssh-keygen -lf /etc/ssh/ssh_host_ecdsa_key.pub`); the release SSH client checks ECDSA, so an
+   Ed25519 fingerprint fails. Keep the old EC2 values somewhere safe for rollback.
 6. **GitHub variables.** `DEPLOY_OVER_TAILSCALE=true` and
-   `PRODUCTION_BACKEND_ORIGIN=https://infraforge-backend.lapwork.in`.
+   `PRODUCTION_BACKEND_ORIGIN=https://infraforge-backend.lapwork.in`. Change secrets and variables
+   *before* a release run is created; a queued run keeps the old values.
+7. **Vercel** (Production environment variables): `VITE_BACKEND_API_URL=https://infraforge-backend.lapwork.in/api`
+   and `VITE_WS_URL=wss://infraforge-backend.lapwork.in/ws`.
 
 ## Cutover
 
-1. Approve the next release. It builds and starts on the home server, creates a fresh database (the
-   EC2 data was test data only and is not moved), clears
+1. A brand-new host starts in maintenance, so the workflow refuses its first release. Run it once over SSH
+   from the clean checkout (docs/PRODUCTION_BOOTSTRAP.md "New host"):
+   `cd ~/InfraForge && bun --no-env-file scripts/release.ts apply <SHA> /etc/infraforge/release.env /var/lib/infraforge/releases`.
+   It builds and starts on the home server, creates a fresh database (the EC2 data was test data
+   only and is not moved), clears
    maintenance and checks `https://infraforge-backend.lapwork.in/health/ready`.
-2. The same release then deploys the frontend built against the new backend address.
+2. Re-run the release workflow for the same SHA; it deploys the frontend built against the new
+   backend address. Any later change to `/etc/infraforge/release.env` needs a new release (a new
+   commit), not a re-run.
 3. Users sign in again once (cookies belong to the old hostname).
 
 EC2 keeps running untouched as the fallback.
