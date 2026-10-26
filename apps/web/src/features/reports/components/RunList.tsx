@@ -23,6 +23,7 @@ function RunRow({ run, selected, onToggle }: { run: RunSummary; selected?: strin
         </p>
         {run.workload && <p className="mt-0.5 truncate text-xs text-ink-3">{describeWorkload(run.workload)}</p>}
         {run.infrastructureId === null && <p className="mt-0.5 text-xs text-ink-3">Saved design deleted; run history retained.</p>}
+        {run.status === "live" && <Link to={`/design?run=${encodeURIComponent(run.id)}`} className="mt-1 mr-3 inline-block text-[13px] font-medium text-accent hover:underline">Open live run<span className="sr-only">: {run.infrastructureName}</span></Link>}
         <Link to={`/runs/${run.id}`} className="mt-1 inline-block text-[13px] font-medium text-accent hover:underline">
           {run.challenge ? "Read the result" : run.hasReportData ? "Understand this run" : "View inputs and evidence limits"}<span className="sr-only">: {run.infrastructureName}</span>
         </Link>

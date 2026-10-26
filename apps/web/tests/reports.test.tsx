@@ -1,10 +1,15 @@
-import { expect, test } from "bun:test";
+import { expect, spyOn, test } from "bun:test";
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
 import type { RunReport, RunSummary } from "@infraforge/contracts/reports";
 import { DeploymentChaosNames } from "@infraforge/domain/resource";
 import { HistoryContent } from "../src/features/reports/components/RunList";
 import { ReportContent } from "../src/features/reports/components/ReportContent";
+import * as dialogs from "../src/ui/ConfirmDialogs";
+import { http, API_URL } from "../src/client/httpClient";
+import { reenterRun } from "../src/features/live/reenterRun";
+import { useAuthStore } from "../src/features/auth/store/auth.store";
+import { useCanvasStore } from "../src/features/canvas/store/canvasStore";
 
 const run: RunSummary = { id: "11111111-1111-4111-8111-111111111111", infrastructureId: "design",
   infrastructureName: "My saved architecture", status: "torn-down", createdAt: "2026-10-11T10:00:00.000Z",
@@ -17,6 +22,48 @@ const report: RunReport = { version: 1, run, originalSeed: null, legacySeed: nul
   interpreted: [], unknown: ["No usable simulation checkpoint was retained."], inspectNext: ["Compare original inputs."] };
 const render = (element: React.ReactNode) => renderToStaticMarkup(<MemoryRouter>{element}</MemoryRouter>);
 const retry = () => {};
+
+test("live reports and history reopen the exact run and reports offer a stop control", async () => {
+  const live = { ...run, status: "live" };
+  const history = render(<HistoryContent loading={false} error={null} runs={[live]} retry={retry} />);
+  const detail = render(<ReportContent loading={false} error={null} data={{ ...report, run: live }} retry={retry} />);
+  for (const html of [history, detail]) {
+    expect(html).toContain(`href="/design?run=${run.id}"`);
+    expect(html).toContain("Open live run");
+  }
+  expect(detail).toContain("Stop run</button>");
+  const stopped = render(<ReportContent loading={false} error={null} data={report} retry={retry} />);
+  expect(stopped).not.toContain("Open live run");
+  expect(stopped).not.toContain("Stop run</button>");
+
+  const Original = dialogs.ConfirmDialog;
+  let confirm: (() => void) | undefined;
+  const dialog = spyOn(dialogs, "ConfirmDialog").mockImplementation((props) => {
+    if (props.title === "Stop this run?") confirm = props.onConfirm;
+    return <Original {...props} />;
+  });
+  const post = spyOn(http, "post").mockResolvedValue({ data: { action: { id: "stop", status: "requested" } } });
+  const topology = { resources: [{ id: "api", type: "Virtual Machine", x: 0, y: 0 }], connectionLines: [] };
+  const get = spyOn(http, "get").mockResolvedValue({ data: { deployment: { id: run.id, status: "live", liveTopology: topology,
+    topologyRevision: 3, infrastructureId: "design", runName: "Recorded name", challengeId: null } } });
+  const auth = useAuthStore.getState();
+  const canvas = useCanvasStore.getState();
+  try {
+    render(<ReportContent loading={false} error={null} data={{ ...report, run: live }} retry={retry} />);
+    expect(post).not.toHaveBeenCalled();
+    expect(confirm).toBeDefined();
+    await confirm!();
+    expect(post).toHaveBeenCalledWith(`${API_URL}/deployments/${run.id}/teardown`);
+    useAuthStore.setState({ user: { id: "alice", name: "Alice", username: null, email: "alice@example.test", emailVerified: true, createdAt: run.createdAt } });
+    await reenterRun(run.id);
+    expect(get).toHaveBeenCalledWith(`${API_URL}/deployments/${run.id}`);
+    expect(useCanvasStore.getState()).toMatchObject({ activeDeploymentId: run.id, resources: topology.resources, topologyRevision: 3, currentLayoutName: "Recorded name", liveLocked: false });
+    useCanvasStore.getState().clearCanvas();
+    const cancelled = new AbortController(); cancelled.abort();
+    await reenterRun(run.id, undefined, cancelled.signal);
+    expect(useCanvasStore.getState().activeDeploymentId).toBeNull();
+  } finally { dialog.mockRestore(); post.mockRestore(); get.mockRestore(); useAuthStore.setState(auth); useCanvasStore.setState(canvas); }
+});
 
 test("history loading, empty and retry states are distinct and expose navigation", () => {
   const loading = render(<HistoryContent loading error={null} runs={[]} retry={retry} />);

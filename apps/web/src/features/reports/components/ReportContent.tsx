@@ -13,5 +13,5 @@ export function ReportContent({ loading, error, data, retry }: { loading: boolea
       <Link className="text-sm font-medium text-accent hover:underline" to="/runs">Back to runs</Link>
     </div>
   );
-  return <ReportView report={data} />;
+  return <ReportView report={data} onStopped={retry} />;
 }

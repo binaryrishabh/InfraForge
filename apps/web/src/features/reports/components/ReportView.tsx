@@ -21,6 +21,7 @@ import { runKind, runStatus } from "../runKind";
 import { STAGE_LABEL, STAGE_STATUS_LABEL } from "../labels";
 import { ReplayStage } from "@/features/replay/ReplayStage";
 import { NextExperiment } from "@/features/replay/NextExperiment";
+import { LiveRunNotice } from "./LiveRunNotice";
 
 const active = (status: string) => ["pending", "running", "live"].includes(status);
 
@@ -36,7 +37,7 @@ function Debrief({ report }: { report: RunReport }) {
 through; the next experiment follows; the complete evidence record (what ran, every
 recorded fact, the gates, actions, lineage and the limits of the evidence) stays on the
 page in full, folded below so it never stands between the learner and the result. */
-export function ReportView({ report }: { report: RunReport }) {
+export function ReportView({ report, onStopped }: { report: RunReport; onStopped?: () => void }) {
   const { run, topology } = report;
   const status = runStatus(run.status);
   const kind = runKind(run);
@@ -72,7 +73,7 @@ export function ReportView({ report }: { report: RunReport }) {
           {run.sourceRunId && eligible && <ButtonLink to={`/runs/compare?a=${run.sourceRunId}&b=${run.id}`} variant="ghost" size="sm" icon={<GitCompareArrows size={14} aria-hidden="true" />}>Compare with source run</ButtonLink>}
           {run.learning?.sourceRunId && eligible && <ButtonLink to={`/runs/compare?a=${run.learning.sourceRunId}&b=${run.id}`} variant="secondary" size="sm" icon={<GitCompareArrows size={14} aria-hidden="true" />}>Compare with the attempt you {run.learning.intent === "repeat" ? "repeated" : "improved"}</ButtonLink>}
         </div>
-        {run.status === "live" && <Notice className="mt-4" tone="info">This run is still live. The report shows retained evidence, not a live monitor.</Notice>}
+        {run.status === "live" && <LiveRunNotice key={run.id} id={run.id} onStopped={onStopped} />}
         {!run.hasReportData && <Notice className="mt-4" tone="warn">No usable stages, events or checkpoint data were retained for this run.</Notice>}
       </header>
       {run.learning && <aside aria-label="Your experiment hypothesis" className="mt-5 border-l-2 border-accent pl-4 text-sm">
