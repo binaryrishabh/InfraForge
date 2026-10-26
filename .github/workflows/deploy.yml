@@ -91,6 +91,10 @@ jobs:
           oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
           tags: tag:infraforge-ci
           ping: ${{ secrets.EC2_HOST }}
+      # The action downloads tailscale.tgz into the checkout; the frontend deploy needs it clean.
+      - name: Remove the Tailscale download from the checkout
+        if: vars.DEPLOY_OVER_TAILSCALE == 'true'
+        run: rm -f tailscale.tgz && test -z "$(git status --porcelain)"
       - name: Release exact backend commit
         uses: appleboy/ssh-action@029f5b4aeeeb58fdfe1410a5d17f967dacf36262 # v1.0.3
         with:
