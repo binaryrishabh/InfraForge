@@ -3,6 +3,7 @@ import { BrowserRouter, Navigate, Route, Routes, useLocation, useParams } from "
 import { Toaster } from "sonner";
 import { Analytics } from "@vercel/analytics/react";
 import { SignInPage } from "../features/auth/pages/SignInPage";
+import { PasswordResetPage } from "../features/auth/pages/PasswordResetPage";
 import { HomePage } from "../features/dashboard/pages/HomePage";
 import { NotFoundPage } from "../features/dashboard/pages/NotFoundPage";
 import { ChallengesPage } from "../features/challenges/pages/ChallengesPage";
@@ -46,6 +47,12 @@ function MarketingHome() {
   return null;
 }
 
+function PageAnalytics() {
+  const { pathname } = useLocation();
+  const authPath = (path: string) => /^\/(signin|signup|forgot-password|reset-password)\/?$/.test(path);
+  return authPath(pathname) ? null : <Analytics beforeSend={event => authPath(new URL(event.url).pathname) ? null : event} />;
+}
+
 function App() {
   const hydrate = useAuthStore((s) => s.hydrate);
   useEffect(() => {
@@ -67,9 +74,11 @@ function App() {
   return (
     <BrowserRouter>
       <ThemedToaster />
-      <Analytics />
+      <PageAnalytics />
       <Routes>
         <Route path="/" element={<MarketingHome />} />
+        <Route path="/forgot-password" element={<PasswordResetPage key="forgot" />} />
+        <Route path="/reset-password" element={<PasswordResetPage key="reset" reset />} />
         <Route element={<PublicOnlyRoute />}>
           <Route path="/signin" element={<SignInPage key="signin" />} />
           <Route path="/signup" element={<SignInPage key="signup" mode="signup" />} />

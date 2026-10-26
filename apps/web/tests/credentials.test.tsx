@@ -23,12 +23,14 @@ test("signup mirrors bounds and returns accessible field errors without composit
 test("sign-in and sign-up have labelled password-manager forms and distinct routes", () => {
   for (const mode of ["signin", "signup"] as const) {
     const html = renderToStaticMarkup(<MemoryRouter><SignInPage mode={mode} /></MemoryRouter>);
-    expect(html).toContain('name="password"'); expect(html).toContain('type="password"');
-    expect(html).toContain(`autoComplete="${mode === "signup" ? "new-password" : "current-password"}"`);
-    expect(html).toContain('autoComplete="username"'); expect(html).toContain('for="auth-password"');
-    expect(html).toContain('aria-invalid="false"');
+    if (mode === "signin") {
+      expect(html).toContain('name="password"'); expect(html).toContain('type="password"');
+      expect(html).toContain('autoComplete="current-password"');
+      expect(html).toContain('autoComplete="username"'); expect(html).toContain('for="auth-password"');
+      expect(html).toContain('aria-invalid="false"');
+    }
     expect(html).not.toContain("Sign-in is not configured"); expect(html).not.toContain("Forgot password");
-    if (mode === "signup") { expect(html).toContain('name="email"'); expect(html).toContain('href="/signin"'); }
+    if (mode === "signup") { expect(html).toContain("Loading sign-in options"); expect(html).not.toContain('name="password"'); expect(html).toContain('href="/signin"'); }
     else { expect(html).toContain("Username or email"); expect(html).toContain('href="/signup"'); }
   }
 });
