@@ -23,8 +23,8 @@ process itself is unchanged: the same workflow, approval and `scripts/deploy/bac
 1. **Cloudflare** → Zero Trust → Networks → Tunnels → `asus-backend` → Public hostnames → add
    `infraforge-backend.lapwork.in` → `http://127.0.0.1:8080`. (Cloudflare's free certificate covers
    one subdomain level, so the old `infraforge.backend.lapwork.in` cannot use the tunnel.)
-2. **Secrets file.** Copy EC2's file to the home server without displaying it. The same values are
-   required: encrypted rows must stay readable after a data move. From PowerShell:
+2. **Secrets file.** Copy EC2's file to the home server without displaying it; it carries the sign-in,
+   email and captcha keys. From PowerShell:
 
    ```powershell
    ssh <ec2-user>@<ec2-host> "sudo cat /etc/infraforge/release.env" | ssh -i "$env:USERPROFILE\.ssh\asus_backend_ed25519" ubuntu@100.75.14.4 "umask 077; cat > /etc/infraforge/release.env"
@@ -53,7 +53,8 @@ process itself is unchanged: the same workflow, approval and `scripts/deploy/bac
 
 ## Cutover
 
-1. Approve the next release. It builds and starts on the home server, migrates the database, clears
+1. Approve the next release. It builds and starts on the home server, creates a fresh database (the
+   EC2 data was test data only and is not moved), clears
    maintenance and checks `https://infraforge-backend.lapwork.in/health/ready`.
 2. The same release then deploys the frontend built against the new backend address.
 3. Users sign in again once (cookies belong to the old hostname).
