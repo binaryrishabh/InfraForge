@@ -1232,8 +1232,8 @@
     },
     {
       "file": "apps/web/src/api/internalLesson.api.ts",
-      "sha256": "d737d75283a90b3f345f0d70c5be0758d24f5aee931a3546ef4b0dfd27bfc191",
-      "numericSites": 5
+      "sha256": "abe30875e09d87cbf9f925e2c3b5c9defe6b68394eaf055278b1fa992e710e11",
+      "numericSites": 9
     },
     {
       "file": "apps/web/src/api/internalModel2.api.ts",
@@ -1282,7 +1282,7 @@
     },
     {
       "file": "apps/web/src/components/shell/AppShell.tsx",
-      "sha256": "f01b1d96c4fcfb2fdabb41d08c0ead992ab7889620fe3bccef357c254fc5efea",
+      "sha256": "b984af5b040e3f7777f9a60436789f7d992f0264909e53fa2a1516c4e632bcfa",
       "numericSites": 2
     },
     {
@@ -1352,7 +1352,7 @@
     },
     {
       "file": "apps/web/src/features/canvas/components/CanvasDesignerPage.tsx",
-      "sha256": "367884193c7c452eb0e96b0cc0511339b85d3e17d744a1a5b61545484f72331f",
+      "sha256": "6e677f0dc81af324560b4eae37a00b2561854b92b76963a076f181de1fc9a291",
       "numericSites": 0
     },
     {
@@ -1847,7 +1847,7 @@
     },
     {
       "file": "apps/web/src/features/deployment/components/DeployDialog.tsx",
-      "sha256": "cfe6f5b914e6625a8e09a53f78dd373dd275f52793ad266b84874ea8a7f6f0ae",
+      "sha256": "297c1c7474a656b583f454d5c2a638ece0604745a729d29d9521578848f2cb4f",
       "numericSites": 27
     },
     {
@@ -2037,7 +2037,7 @@
     },
     {
       "file": "apps/web/src/features/live/reenterRun.ts",
-      "sha256": "0d06240c3e00c00a1e3a97f54f4eb1356369e0dc5f20604912c60c98fe98c85b",
+      "sha256": "93c61bece51ef77c15526142cee54c83793b0743732611cc6dfd0218149b8690",
       "numericSites": 0
     },
     {
@@ -2116,13 +2116,18 @@
       "numericSites": 1
     },
     {
+      "file": "apps/web/src/features/reports/components/LiveRunNotice.tsx",
+      "sha256": "7fbdf361fda1c51599c26708b55b350b4d37befe67c1b4217d576eb55ade5d92",
+      "numericSites": 0
+    },
+    {
       "file": "apps/web/src/features/reports/components/OpenDesignToImprove.tsx",
       "sha256": "8a73c76b858e6f9aaa54a06118adbbec40161707cf34ab75c216f77c595599a6",
       "numericSites": 1
     },
     {
       "file": "apps/web/src/features/reports/components/ReportContent.tsx",
-      "sha256": "90715026ea1e088c6e89f05835e02bc09271060698386171d3da5aefb1de97ad",
+      "sha256": "63dc13c2e0d1a528a6b0461cf43c9355e226708c471769c078bd2f2e764fc995",
       "numericSites": 0
     },
     {
@@ -2137,7 +2142,7 @@
     },
     {
       "file": "apps/web/src/features/reports/components/ReportView.tsx",
-      "sha256": "17a1ab4d3ff30ebc6742357382299147214305848fbe23e662b932b9964a546b",
+      "sha256": "615b6be463ddf14b8e4a764efe4774e1752d2b6e7cde900969ce2c6d82642f48",
       "numericSites": 24
     },
     {
@@ -2152,7 +2157,7 @@
     },
     {
       "file": "apps/web/src/features/reports/components/RunList.tsx",
-      "sha256": "bd09b707be98d0b9f0667938236ec128d0e00b23de0a842a6fd1ca28f6990548",
+      "sha256": "5688f74f835cf15ca56ccc9274594fdc42807ce1e89d5971541c2e030718edd1",
       "numericSites": 2
     },
     {
@@ -2316,6 +2321,11 @@
       "numericSites": 0
     },
     {
+      "file": "apps/web/src/lib/designName.ts",
+      "sha256": "b53497d2addaffc53cb80331987cc4b50b675381b5841465bfee25fcb61e6737",
+      "numericSites": 2
+    },
+    {
       "file": "apps/web/src/lib/format.ts",
       "sha256": "c131e7e085b69c95ec0490780b98c9a25ff38b0494eb389b91cd2fee1d2d3b5f",
       "numericSites": 20
@@ -2347,7 +2357,7 @@
     },
     {
       "file": "apps/web/src/ui/ConfirmDialogs.tsx",
-      "sha256": "6a96dc842cbc5c3944d9444a235e8e06386ad9173de2d82fd7aa96e44fd0138e",
+      "sha256": "f3ae07f3ed6ec355df734dda3e601920133c606a0905377bb37f4977881599e2",
       "numericSites": 3
     },
     {
@@ -77141,7 +77151,7 @@
     },
     {
       "id": "m1.apps.web.src.api.internalLesson.api.1",
-      "concept": "capability.timeout · literal 15000",
+      "concept": "response.timeout · literal 15000",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
       "quantity": {
@@ -77153,114 +77163,6 @@
         ]
       },
       "formula": "timeout: 15000",
-      "classification": "implementation-policy",
-      "confidence": "high",
-      "provenance": [
-        {
-          "source": "workspace:apps/web/src/api/internalLesson.api.ts#L4",
-          "supports": "implementation",
-          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
-        }
-      ],
-      "assumptions": [
-        "This literal is not evidence of real infrastructure capacity or performance.",
-        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
-      ],
-      "researchedOn": "2026-10-15",
-      "freeMode": "conditional",
-      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
-      "location": {
-        "file": "apps/web/src/api/internalLesson.api.ts",
-        "line": 4,
-        "column": 156
-      }
-    },
-    {
-      "id": "m1.apps.web.src.api.internalLesson.api.2",
-      "concept": "lessonWorkspace.timeout · literal 15000",
-      "modelVersion": "1",
-      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
-      "quantity": {
-        "kind": "known",
-        "value": 15000,
-        "unit": "code-number",
-        "provenance": [
-          "m1.apps.web.src.api.internalLesson.api.2"
-        ]
-      },
-      "formula": "timeout: 15000",
-      "classification": "implementation-policy",
-      "confidence": "high",
-      "provenance": [
-        {
-          "source": "workspace:apps/web/src/api/internalLesson.api.ts#L5",
-          "supports": "implementation",
-          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
-        }
-      ],
-      "assumptions": [
-        "This literal is not evidence of real infrastructure capacity or performance.",
-        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
-      ],
-      "researchedOn": "2026-10-15",
-      "freeMode": "conditional",
-      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
-      "location": {
-        "file": "apps/web/src/api/internalLesson.api.ts",
-        "line": 5,
-        "column": 155
-      }
-    },
-    {
-      "id": "m1.apps.web.src.api.internalLesson.api.3",
-      "concept": "createLessonDesign.timeout · literal 15000",
-      "modelVersion": "1",
-      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
-      "quantity": {
-        "kind": "known",
-        "value": 15000,
-        "unit": "code-number",
-        "provenance": [
-          "m1.apps.web.src.api.internalLesson.api.3"
-        ]
-      },
-      "formula": "timeout: 15000",
-      "classification": "implementation-policy",
-      "confidence": "high",
-      "provenance": [
-        {
-          "source": "workspace:apps/web/src/api/internalLesson.api.ts#L6",
-          "supports": "implementation",
-          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
-        }
-      ],
-      "assumptions": [
-        "This literal is not evidence of real infrastructure capacity or performance.",
-        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
-      ],
-      "researchedOn": "2026-10-15",
-      "freeMode": "conditional",
-      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
-      "location": {
-        "file": "apps/web/src/api/internalLesson.api.ts",
-        "line": 6,
-        "column": 154
-      }
-    },
-    {
-      "id": "m1.apps.web.src.api.internalLesson.api.4",
-      "concept": "reviewLesson.timeout · literal 20000",
-      "modelVersion": "1",
-      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
-      "quantity": {
-        "kind": "known",
-        "value": 20000,
-        "unit": "code-number",
-        "provenance": [
-          "m1.apps.web.src.api.internalLesson.api.4"
-        ]
-      },
-      "formula": "timeout: 20000",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
@@ -77280,28 +77182,28 @@
       "location": {
         "file": "apps/web/src/api/internalLesson.api.ts",
         "line": 7,
-        "column": 180
+        "column": 22
       }
     },
     {
-      "id": "m1.apps.web.src.api.internalLesson.api.5",
-      "concept": "submitLesson.timeout · literal 20000",
+      "id": "m1.apps.web.src.api.internalLesson.api.2",
+      "concept": "response.validateStatus · literal 404",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
       "quantity": {
         "kind": "known",
-        "value": 20000,
+        "value": 404,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.web.src.api.internalLesson.api.5"
+          "m1.apps.web.src.api.internalLesson.api.2"
         ]
       },
-      "formula": "timeout: 20000",
+      "formula": "validateStatus: (status) => status === 404 || (status >= 200 && status < 300)",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/web/src/api/internalLesson.api.ts#L8",
+          "source": "workspace:apps/web/src/api/internalLesson.api.ts#L7",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -77315,7 +77217,259 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/api/internalLesson.api.ts",
-        "line": 8,
+        "line": 7,
+        "column": 68
+      }
+    },
+    {
+      "id": "m1.apps.web.src.api.internalLesson.api.3",
+      "concept": "response.validateStatus · literal 200",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 200,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.api.internalLesson.api.3"
+        ]
+      },
+      "formula": "validateStatus: (status) => status === 404 || (status >= 200 && status < 300)",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/web/src/api/internalLesson.api.ts#L7",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/api/internalLesson.api.ts",
+        "line": 7,
+        "column": 86
+      }
+    },
+    {
+      "id": "m1.apps.web.src.api.internalLesson.api.4",
+      "concept": "response.validateStatus · literal 300",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 300,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.api.internalLesson.api.4"
+        ]
+      },
+      "formula": "validateStatus: (status) => status === 404 || (status >= 200 && status < 300)",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/web/src/api/internalLesson.api.ts#L7",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/api/internalLesson.api.ts",
+        "line": 7,
+        "column": 102
+      }
+    },
+    {
+      "id": "m1.apps.web.src.api.internalLesson.api.5",
+      "concept": "capability · literal 404",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 404,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.api.internalLesson.api.5"
+        ]
+      },
+      "formula": "return response.status === 404 ? null : response.data;",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/web/src/api/internalLesson.api.ts#L9",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/api/internalLesson.api.ts",
+        "line": 9,
+        "column": 30
+      }
+    },
+    {
+      "id": "m1.apps.web.src.api.internalLesson.api.6",
+      "concept": "lessonWorkspace.timeout · literal 15000",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 15000,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.api.internalLesson.api.6"
+        ]
+      },
+      "formula": "timeout: 15000",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/web/src/api/internalLesson.api.ts#L11",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/api/internalLesson.api.ts",
+        "line": 11,
+        "column": 155
+      }
+    },
+    {
+      "id": "m1.apps.web.src.api.internalLesson.api.7",
+      "concept": "createLessonDesign.timeout · literal 15000",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 15000,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.api.internalLesson.api.7"
+        ]
+      },
+      "formula": "timeout: 15000",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/web/src/api/internalLesson.api.ts#L12",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/api/internalLesson.api.ts",
+        "line": 12,
+        "column": 154
+      }
+    },
+    {
+      "id": "m1.apps.web.src.api.internalLesson.api.8",
+      "concept": "reviewLesson.timeout · literal 20000",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 20000,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.api.internalLesson.api.8"
+        ]
+      },
+      "formula": "timeout: 20000",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/web/src/api/internalLesson.api.ts#L13",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/api/internalLesson.api.ts",
+        "line": 13,
+        "column": 180
+      }
+    },
+    {
+      "id": "m1.apps.web.src.api.internalLesson.api.9",
+      "concept": "submitLesson.timeout · literal 20000",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 20000,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.api.internalLesson.api.9"
+        ]
+      },
+      "formula": "timeout: 20000",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "workspace:apps/web/src/api/internalLesson.api.ts#L14",
+          "supports": "implementation",
+          "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/api/internalLesson.api.ts",
+        "line": 14,
         "column": 190
       }
     },
@@ -97857,7 +98011,7 @@
       "confidence": "low",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/deployment/components/DeployDialog.tsx#L14",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/deployment/components/DeployDialog.tsx#L15",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -97870,7 +98024,7 @@
       "replacement": "M2B: request classes and measured/configured service-demand profiles, explicit arrival model and assumptions.",
       "location": {
         "file": "apps/web/src/features/deployment/components/DeployDialog.tsx",
-        "line": 14,
+        "line": 15,
         "column": 65
       }
     },
@@ -97892,7 +98046,7 @@
       "confidence": "low",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/deployment/components/DeployDialog.tsx#L14",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/deployment/components/DeployDialog.tsx#L15",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -97905,7 +98059,7 @@
       "replacement": "M2B: request classes and measured/configured service-demand profiles, explicit arrival model and assumptions.",
       "location": {
         "file": "apps/web/src/features/deployment/components/DeployDialog.tsx",
-        "line": 14,
+        "line": 15,
         "column": 144
       }
     },
@@ -97927,7 +98081,7 @@
       "confidence": "low",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/deployment/components/DeployDialog.tsx#L14",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/deployment/components/DeployDialog.tsx#L15",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -97940,7 +98094,7 @@
       "replacement": "M2B: request classes and measured/configured service-demand profiles, explicit arrival model and assumptions.",
       "location": {
         "file": "apps/web/src/features/deployment/components/DeployDialog.tsx",
-        "line": 14,
+        "line": 15,
         "column": 163
       }
     },
@@ -97962,7 +98116,7 @@
       "confidence": "low",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/deployment/components/DeployDialog.tsx#L15",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/deployment/components/DeployDialog.tsx#L16",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -97975,7 +98129,7 @@
       "replacement": "M2B: request classes and measured/configured service-demand profiles, explicit arrival model and assumptions.",
       "location": {
         "file": "apps/web/src/features/deployment/components/DeployDialog.tsx",
-        "line": 15,
+        "line": 16,
         "column": 67
       }
     },
@@ -97997,7 +98151,7 @@
       "confidence": "low",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/deployment/components/DeployDialog.tsx#L15",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/deployment/components/DeployDialog.tsx#L16",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -98010,7 +98164,7 @@
       "replacement": "M2B: request classes and measured/configured service-demand profiles, explicit arrival model and assumptions.",
       "location": {
         "file": "apps/web/src/features/deployment/components/DeployDialog.tsx",
-        "line": 15,
+        "line": 16,
         "column": 144
       }
     },
@@ -98032,7 +98186,7 @@
       "confidence": "low",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/deployment/components/DeployDialog.tsx#L15",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/deployment/components/DeployDialog.tsx#L16",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -98045,7 +98199,7 @@
       "replacement": "M2B: request classes and measured/configured service-demand profiles, explicit arrival model and assumptions.",
       "location": {
         "file": "apps/web/src/features/deployment/components/DeployDialog.tsx",
-        "line": 15,
+        "line": 16,
         "column": 163
       }
     },
@@ -98067,7 +98221,7 @@
       "confidence": "low",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/deployment/components/DeployDialog.tsx#L16",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/deployment/components/DeployDialog.tsx#L17",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -98080,7 +98234,7 @@
       "replacement": "M2B: request classes and measured/configured service-demand profiles, explicit arrival model and assumptions.",
       "location": {
         "file": "apps/web/src/features/deployment/components/DeployDialog.tsx",
-        "line": 16,
+        "line": 17,
         "column": 67
       }
     },
@@ -98102,7 +98256,7 @@
       "confidence": "low",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/deployment/components/DeployDialog.tsx#L16",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/deployment/components/DeployDialog.tsx#L17",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -98115,7 +98269,7 @@
       "replacement": "M2B: request classes and measured/configured service-demand profiles, explicit arrival model and assumptions.",
       "location": {
         "file": "apps/web/src/features/deployment/components/DeployDialog.tsx",
-        "line": 16,
+        "line": 17,
         "column": 144
       }
     },
@@ -98137,7 +98291,7 @@
       "confidence": "low",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/deployment/components/DeployDialog.tsx#L16",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/deployment/components/DeployDialog.tsx#L17",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -98150,7 +98304,7 @@
       "replacement": "M2B: request classes and measured/configured service-demand profiles, explicit arrival model and assumptions.",
       "location": {
         "file": "apps/web/src/features/deployment/components/DeployDialog.tsx",
-        "line": 16,
+        "line": 17,
         "column": 163
       }
     },
@@ -98172,7 +98326,7 @@
       "confidence": "low",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/deployment/components/DeployDialog.tsx#L17",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/deployment/components/DeployDialog.tsx#L18",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -98185,7 +98339,7 @@
       "replacement": "M2B: request classes and measured/configured service-demand profiles, explicit arrival model and assumptions.",
       "location": {
         "file": "apps/web/src/features/deployment/components/DeployDialog.tsx",
-        "line": 17,
+        "line": 18,
         "column": 68
       }
     },
@@ -98207,7 +98361,7 @@
       "confidence": "low",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/deployment/components/DeployDialog.tsx#L17",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/deployment/components/DeployDialog.tsx#L18",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -98220,7 +98374,7 @@
       "replacement": "M2B: request classes and measured/configured service-demand profiles, explicit arrival model and assumptions.",
       "location": {
         "file": "apps/web/src/features/deployment/components/DeployDialog.tsx",
-        "line": 17,
+        "line": 18,
         "column": 147
       }
     },
@@ -98242,7 +98396,7 @@
       "confidence": "low",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/deployment/components/DeployDialog.tsx#L17",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/deployment/components/DeployDialog.tsx#L18",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -98255,7 +98409,7 @@
       "replacement": "M2B: request classes and measured/configured service-demand profiles, explicit arrival model and assumptions.",
       "location": {
         "file": "apps/web/src/features/deployment/components/DeployDialog.tsx",
-        "line": 17,
+        "line": 18,
         "column": 166
       }
     },
@@ -98277,7 +98431,7 @@
       "confidence": "low",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/deployment/components/DeployDialog.tsx#L18",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/deployment/components/DeployDialog.tsx#L19",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -98290,7 +98444,7 @@
       "replacement": "M2B: request classes and measured/configured service-demand profiles, explicit arrival model and assumptions.",
       "location": {
         "file": "apps/web/src/features/deployment/components/DeployDialog.tsx",
-        "line": 18,
+        "line": 19,
         "column": 70
       }
     },
@@ -98312,7 +98466,7 @@
       "confidence": "low",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/deployment/components/DeployDialog.tsx#L18",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/deployment/components/DeployDialog.tsx#L19",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -98325,7 +98479,7 @@
       "replacement": "M2B: request classes and measured/configured service-demand profiles, explicit arrival model and assumptions.",
       "location": {
         "file": "apps/web/src/features/deployment/components/DeployDialog.tsx",
-        "line": 18,
+        "line": 19,
         "column": 149
       }
     },
@@ -98347,7 +98501,7 @@
       "confidence": "low",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/deployment/components/DeployDialog.tsx#L18",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/deployment/components/DeployDialog.tsx#L19",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -98360,7 +98514,7 @@
       "replacement": "M2B: request classes and measured/configured service-demand profiles, explicit arrival model and assumptions.",
       "location": {
         "file": "apps/web/src/features/deployment/components/DeployDialog.tsx",
-        "line": 18,
+        "line": 19,
         "column": 168
       }
     },
@@ -98382,7 +98536,7 @@
       "confidence": "low",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/deployment/components/DeployDialog.tsx#L29",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/deployment/components/DeployDialog.tsx#L30",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -98395,7 +98549,7 @@
       "replacement": "M2B: request classes and measured/configured service-demand profiles, explicit arrival model and assumptions.",
       "location": {
         "file": "apps/web/src/features/deployment/components/DeployDialog.tsx",
-        "line": 29,
+        "line": 30,
         "column": 77
       }
     },
@@ -98417,7 +98571,7 @@
       "confidence": "low",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/deployment/components/DeployDialog.tsx#L36",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/deployment/components/DeployDialog.tsx#L37",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -98430,7 +98584,7 @@
       "replacement": "M2B: request classes and measured/configured service-demand profiles, explicit arrival model and assumptions.",
       "location": {
         "file": "apps/web/src/features/deployment/components/DeployDialog.tsx",
-        "line": 36,
+        "line": 37,
         "column": 74
       }
     },
@@ -98452,7 +98606,7 @@
       "confidence": "low",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/deployment/components/DeployDialog.tsx#L44",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/deployment/components/DeployDialog.tsx#L45",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -98465,7 +98619,7 @@
       "replacement": "M2B: request classes and measured/configured service-demand profiles, explicit arrival model and assumptions.",
       "location": {
         "file": "apps/web/src/features/deployment/components/DeployDialog.tsx",
-        "line": 44,
+        "line": 45,
         "column": 104
       }
     },
@@ -98487,7 +98641,7 @@
       "confidence": "low",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/deployment/components/DeployDialog.tsx#L67",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/deployment/components/DeployDialog.tsx#L68",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -98500,7 +98654,7 @@
       "replacement": "M2B: request classes and measured/configured service-demand profiles, explicit arrival model and assumptions.",
       "location": {
         "file": "apps/web/src/features/deployment/components/DeployDialog.tsx",
-        "line": 67,
+        "line": 68,
         "column": 106
       }
     },
@@ -98522,7 +98676,7 @@
       "confidence": "low",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/deployment/components/DeployDialog.tsx#L75",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/deployment/components/DeployDialog.tsx#L76",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -98535,7 +98689,7 @@
       "replacement": "M2B: request classes and measured/configured service-demand profiles, explicit arrival model and assumptions.",
       "location": {
         "file": "apps/web/src/features/deployment/components/DeployDialog.tsx",
-        "line": 75,
+        "line": 76,
         "column": 108
       }
     },
@@ -98557,7 +98711,7 @@
       "confidence": "low",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/deployment/components/DeployDialog.tsx#L75",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/deployment/components/DeployDialog.tsx#L76",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -98570,7 +98724,7 @@
       "replacement": "M2B: request classes and measured/configured service-demand profiles, explicit arrival model and assumptions.",
       "location": {
         "file": "apps/web/src/features/deployment/components/DeployDialog.tsx",
-        "line": 75,
+        "line": 76,
         "column": 116
       }
     },
@@ -98592,7 +98746,7 @@
       "confidence": "low",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/deployment/components/DeployDialog.tsx#L75",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/deployment/components/DeployDialog.tsx#L76",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -98605,7 +98759,7 @@
       "replacement": "M2B: request classes and measured/configured service-demand profiles, explicit arrival model and assumptions.",
       "location": {
         "file": "apps/web/src/features/deployment/components/DeployDialog.tsx",
-        "line": 75,
+        "line": 76,
         "column": 126
       }
     },
@@ -98627,7 +98781,7 @@
       "confidence": "low",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/deployment/components/DeployDialog.tsx#L79",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/deployment/components/DeployDialog.tsx#L80",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -98640,7 +98794,7 @@
       "replacement": "M2B: request classes and measured/configured service-demand profiles, explicit arrival model and assumptions.",
       "location": {
         "file": "apps/web/src/features/deployment/components/DeployDialog.tsx",
-        "line": 79,
+        "line": 80,
         "column": 154
       }
     },
@@ -98662,7 +98816,7 @@
       "confidence": "low",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/deployment/components/DeployDialog.tsx#L80",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/deployment/components/DeployDialog.tsx#L81",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -98675,7 +98829,7 @@
       "replacement": "M2B: request classes and measured/configured service-demand profiles, explicit arrival model and assumptions.",
       "location": {
         "file": "apps/web/src/features/deployment/components/DeployDialog.tsx",
-        "line": 80,
+        "line": 81,
         "column": 51
       }
     },
@@ -98697,7 +98851,7 @@
       "confidence": "low",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/deployment/components/DeployDialog.tsx#L80",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/deployment/components/DeployDialog.tsx#L81",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -98710,7 +98864,7 @@
       "replacement": "M2B: request classes and measured/configured service-demand profiles, explicit arrival model and assumptions.",
       "location": {
         "file": "apps/web/src/features/deployment/components/DeployDialog.tsx",
-        "line": 80,
+        "line": 81,
         "column": 59
       }
     },
@@ -98732,7 +98886,7 @@
       "confidence": "low",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/deployment/components/DeployDialog.tsx#L80",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/deployment/components/DeployDialog.tsx#L81",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -98745,7 +98899,7 @@
       "replacement": "M2B: request classes and measured/configured service-demand profiles, explicit arrival model and assumptions.",
       "location": {
         "file": "apps/web/src/features/deployment/components/DeployDialog.tsx",
-        "line": 80,
+        "line": 81,
         "column": 107
       }
     },
@@ -98767,7 +98921,7 @@
       "confidence": "low",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/deployment/components/DeployDialog.tsx#L80",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/deployment/components/DeployDialog.tsx#L81",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -98780,7 +98934,7 @@
       "replacement": "M2B: request classes and measured/configured service-demand profiles, explicit arrival model and assumptions.",
       "location": {
         "file": "apps/web/src/features/deployment/components/DeployDialog.tsx",
-        "line": 80,
+        "line": 81,
         "column": 179
       }
     },
@@ -105057,7 +105211,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/reports/components/ReportView.tsx#L47",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/reports/components/ReportView.tsx#L48",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -105071,7 +105225,7 @@
       "replacement": "Keep existing historical report semantics; design separate versioned M2 evidence with units/provenance.",
       "location": {
         "file": "apps/web/src/features/reports/components/ReportView.tsx",
-        "line": 47,
+        "line": 48,
         "column": 11
       }
     },
@@ -105093,7 +105247,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/reports/components/ReportView.tsx#L48",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/reports/components/ReportView.tsx#L49",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -105107,7 +105261,7 @@
       "replacement": "Keep existing historical report semantics; design separate versioned M2 evidence with units/provenance.",
       "location": {
         "file": "apps/web/src/features/reports/components/ReportView.tsx",
-        "line": 48,
+        "line": 49,
         "column": 90
       }
     },
@@ -105129,7 +105283,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/reports/components/ReportView.tsx#L48",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/reports/components/ReportView.tsx#L49",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -105143,7 +105297,7 @@
       "replacement": "Keep existing historical report semantics; design separate versioned M2 evidence with units/provenance.",
       "location": {
         "file": "apps/web/src/features/reports/components/ReportView.tsx",
-        "line": 48,
+        "line": 49,
         "column": 111
       }
     },
@@ -105165,7 +105319,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/reports/components/ReportView.tsx#L49",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/reports/components/ReportView.tsx#L50",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -105179,7 +105333,7 @@
       "replacement": "Keep existing historical report semantics; design separate versioned M2 evidence with units/provenance.",
       "location": {
         "file": "apps/web/src/features/reports/components/ReportView.tsx",
-        "line": 49,
+        "line": 50,
         "column": 20
       }
     },
@@ -105201,7 +105355,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/reports/components/ReportView.tsx#L49",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/reports/components/ReportView.tsx#L50",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -105215,7 +105369,7 @@
       "replacement": "Keep existing historical report semantics; design separate versioned M2 evidence with units/provenance.",
       "location": {
         "file": "apps/web/src/features/reports/components/ReportView.tsx",
-        "line": 49,
+        "line": 50,
         "column": 24
       }
     },
@@ -105237,7 +105391,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/reports/components/ReportView.tsx#L49",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/reports/components/ReportView.tsx#L50",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -105251,7 +105405,7 @@
       "replacement": "Keep existing historical report semantics; design separate versioned M2 evidence with units/provenance.",
       "location": {
         "file": "apps/web/src/features/reports/components/ReportView.tsx",
-        "line": 49,
+        "line": 50,
         "column": 40
       }
     },
@@ -105273,7 +105427,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/reports/components/ReportView.tsx#L49",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/reports/components/ReportView.tsx#L50",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -105287,7 +105441,7 @@
       "replacement": "Keep existing historical report semantics; design separate versioned M2 evidence with units/provenance.",
       "location": {
         "file": "apps/web/src/features/reports/components/ReportView.tsx",
-        "line": 49,
+        "line": 50,
         "column": 44
       }
     },
@@ -105309,7 +105463,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/reports/components/ReportView.tsx#L52",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/reports/components/ReportView.tsx#L53",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -105323,7 +105477,7 @@
       "replacement": "Keep existing historical report semantics; design separate versioned M2 evidence with units/provenance.",
       "location": {
         "file": "apps/web/src/features/reports/components/ReportView.tsx",
-        "line": 52,
+        "line": 53,
         "column": 42
       }
     },
@@ -105345,7 +105499,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/reports/components/ReportView.tsx#L52",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/reports/components/ReportView.tsx#L53",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -105359,7 +105513,7 @@
       "replacement": "Keep existing historical report semantics; design separate versioned M2 evidence with units/provenance.",
       "location": {
         "file": "apps/web/src/features/reports/components/ReportView.tsx",
-        "line": 52,
+        "line": 53,
         "column": 84
       }
     },
@@ -105381,7 +105535,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/reports/components/ReportView.tsx#L52",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/reports/components/ReportView.tsx#L53",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -105395,7 +105549,7 @@
       "replacement": "Keep existing historical report semantics; design separate versioned M2 evidence with units/provenance.",
       "location": {
         "file": "apps/web/src/features/reports/components/ReportView.tsx",
-        "line": 52,
+        "line": 53,
         "column": 128
       }
     },
@@ -105417,7 +105571,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/reports/components/ReportView.tsx#L53",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/reports/components/ReportView.tsx#L54",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -105431,7 +105585,7 @@
       "replacement": "Keep existing historical report semantics; design separate versioned M2 evidence with units/provenance.",
       "location": {
         "file": "apps/web/src/features/reports/components/ReportView.tsx",
-        "line": 53,
+        "line": 54,
         "column": 64
       }
     },
@@ -105453,7 +105607,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/reports/components/ReportView.tsx#L53",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/reports/components/ReportView.tsx#L54",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -105467,7 +105621,7 @@
       "replacement": "Keep existing historical report semantics; design separate versioned M2 evidence with units/provenance.",
       "location": {
         "file": "apps/web/src/features/reports/components/ReportView.tsx",
-        "line": 53,
+        "line": 54,
         "column": 108
       }
     },
@@ -105489,7 +105643,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/reports/components/ReportView.tsx#L54",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/reports/components/ReportView.tsx#L55",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -105503,7 +105657,7 @@
       "replacement": "Keep existing historical report semantics; design separate versioned M2 evidence with units/provenance.",
       "location": {
         "file": "apps/web/src/features/reports/components/ReportView.tsx",
-        "line": 54,
+        "line": 55,
         "column": 43
       }
     },
@@ -105525,7 +105679,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/reports/components/ReportView.tsx#L58",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/reports/components/ReportView.tsx#L59",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -105539,7 +105693,7 @@
       "replacement": "Keep existing historical report semantics; design separate versioned M2 evidence with units/provenance.",
       "location": {
         "file": "apps/web/src/features/reports/components/ReportView.tsx",
-        "line": 58,
+        "line": 59,
         "column": 130
       }
     },
@@ -105561,7 +105715,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/reports/components/ReportView.tsx#L65",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/reports/components/ReportView.tsx#L66",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -105575,7 +105729,7 @@
       "replacement": "Keep existing historical report semantics; design separate versioned M2 evidence with units/provenance.",
       "location": {
         "file": "apps/web/src/features/reports/components/ReportView.tsx",
-        "line": 65,
+        "line": 66,
         "column": 60
       }
     },
@@ -105590,42 +105744,6 @@
         "unit": "code-number",
         "provenance": [
           "m1.apps.web.src.features.reports.components.ReportView.16"
-        ]
-      },
-      "formula": "return ( <article className=\"min-w-0 break-words pt-6\"> <Link to=\"/runs\" className=\"inline-flex items-center gap-1 text-sm font-medium text-ink-2 hover:text-ink\"><ArrowLeft size={14} aria-hidden=\"true\" /> Runs</Link> <header className=\"mt-4\"> <p className=\"if-eyebrow\">{kind.label}{kind.detail ? ` · ${kind.detail}` : \"\"}</p> <h1 className=\"if-display mt-2 text-[36px] sm:text-[52px]\">{run.infrastructureName}</h1> <p className=\"mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-ink-2\"> <",
-      "classification": "implementation-policy",
-      "confidence": "high",
-      "provenance": [
-        {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/reports/components/ReportView.tsx#L72",
-          "supports": "implementation",
-          "detail": "Exact historical literal and source expression; not external validation."
-        }
-      ],
-      "assumptions": [
-        "Bounds govern what can be claimed, not infrastructure capacity. Missing evidence remains unknown.",
-        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
-      ],
-      "researchedOn": "2026-10-15",
-      "freeMode": "conditional",
-      "replacement": "Keep existing historical report semantics; design separate versioned M2 evidence with units/provenance.",
-      "location": {
-        "file": "apps/web/src/features/reports/components/ReportView.tsx",
-        "line": 72,
-        "column": 165
-      }
-    },
-    {
-      "id": "m1.apps.web.src.features.reports.components.ReportView.17",
-      "concept": "ReportView · literal 14",
-      "modelVersion": "1",
-      "scope": "Evidence retention, authoring, comparison or report presentation guard",
-      "quantity": {
-        "kind": "known",
-        "value": 14,
-        "unit": "code-number",
-        "provenance": [
-          "m1.apps.web.src.features.reports.components.ReportView.17"
         ]
       },
       "formula": "return ( <article className=\"min-w-0 break-words pt-6\"> <Link to=\"/runs\" className=\"inline-flex items-center gap-1 text-sm font-medium text-ink-2 hover:text-ink\"><ArrowLeft size={14} aria-hidden=\"true\" /> Runs</Link> <header className=\"mt-4\"> <p className=\"if-eyebrow\">{kind.label}{kind.detail ? ` · ${kind.detail}` : \"\"}</p> <h1 className=\"if-display mt-2 text-[36px] sm:text-[52px]\">{run.infrastructureName}</h1> <p className=\"mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-ink-2\"> <",
@@ -105648,6 +105766,42 @@
       "location": {
         "file": "apps/web/src/features/reports/components/ReportView.tsx",
         "line": 73,
+        "column": 165
+      }
+    },
+    {
+      "id": "m1.apps.web.src.features.reports.components.ReportView.17",
+      "concept": "ReportView · literal 14",
+      "modelVersion": "1",
+      "scope": "Evidence retention, authoring, comparison or report presentation guard",
+      "quantity": {
+        "kind": "known",
+        "value": 14,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.features.reports.components.ReportView.17"
+        ]
+      },
+      "formula": "return ( <article className=\"min-w-0 break-words pt-6\"> <Link to=\"/runs\" className=\"inline-flex items-center gap-1 text-sm font-medium text-ink-2 hover:text-ink\"><ArrowLeft size={14} aria-hidden=\"true\" /> Runs</Link> <header className=\"mt-4\"> <p className=\"if-eyebrow\">{kind.label}{kind.detail ? ` · ${kind.detail}` : \"\"}</p> <h1 className=\"if-display mt-2 text-[36px] sm:text-[52px]\">{run.infrastructureName}</h1> <p className=\"mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-ink-2\"> <",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/reports/components/ReportView.tsx#L74",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "Bounds govern what can be claimed, not infrastructure capacity. Missing evidence remains unknown.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep existing historical report semantics; design separate versioned M2 evidence with units/provenance.",
+      "location": {
+        "file": "apps/web/src/features/reports/components/ReportView.tsx",
+        "line": 74,
         "column": 188
       }
     },
@@ -105669,7 +105823,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/reports/components/ReportView.tsx#L120",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/reports/components/ReportView.tsx#L121",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -105683,7 +105837,7 @@
       "replacement": "Keep existing historical report semantics; design separate versioned M2 evidence with units/provenance.",
       "location": {
         "file": "apps/web/src/features/reports/components/ReportView.tsx",
-        "line": 120,
+        "line": 121,
         "column": 36
       }
     },
@@ -105705,7 +105859,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/reports/components/ReportView.tsx#L128",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/reports/components/ReportView.tsx#L129",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -105719,7 +105873,7 @@
       "replacement": "Keep existing historical report semantics; design separate versioned M2 evidence with units/provenance.",
       "location": {
         "file": "apps/web/src/features/reports/components/ReportView.tsx",
-        "line": 128,
+        "line": 129,
         "column": 31
       }
     },
@@ -105734,42 +105888,6 @@
         "unit": "code-number",
         "provenance": [
           "m1.apps.web.src.features.reports.components.ReportView.20"
-        ]
-      },
-      "formula": "return ( <article className=\"min-w-0 break-words pt-6\"> <Link to=\"/runs\" className=\"inline-flex items-center gap-1 text-sm font-medium text-ink-2 hover:text-ink\"><ArrowLeft size={14} aria-hidden=\"true\" /> Runs</Link> <header className=\"mt-4\"> <p className=\"if-eyebrow\">{kind.label}{kind.detail ? ` · ${kind.detail}` : \"\"}</p> <h1 className=\"if-display mt-2 text-[36px] sm:text-[52px]\">{run.infrastructureName}</h1> <p className=\"mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-ink-2\"> <",
-      "classification": "implementation-policy",
-      "confidence": "high",
-      "provenance": [
-        {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/reports/components/ReportView.tsx#L143",
-          "supports": "implementation",
-          "detail": "Exact historical literal and source expression; not external validation."
-        }
-      ],
-      "assumptions": [
-        "Bounds govern what can be claimed, not infrastructure capacity. Missing evidence remains unknown.",
-        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
-      ],
-      "researchedOn": "2026-10-15",
-      "freeMode": "conditional",
-      "replacement": "Keep existing historical report semantics; design separate versioned M2 evidence with units/provenance.",
-      "location": {
-        "file": "apps/web/src/features/reports/components/ReportView.tsx",
-        "line": 143,
-        "column": 32
-      }
-    },
-    {
-      "id": "m1.apps.web.src.features.reports.components.ReportView.21",
-      "concept": "ReportView · literal 5",
-      "modelVersion": "1",
-      "scope": "Evidence retention, authoring, comparison or report presentation guard",
-      "quantity": {
-        "kind": "known",
-        "value": 5,
-        "unit": "code-number",
-        "provenance": [
-          "m1.apps.web.src.features.reports.components.ReportView.21"
         ]
       },
       "formula": "return ( <article className=\"min-w-0 break-words pt-6\"> <Link to=\"/runs\" className=\"inline-flex items-center gap-1 text-sm font-medium text-ink-2 hover:text-ink\"><ArrowLeft size={14} aria-hidden=\"true\" /> Runs</Link> <header className=\"mt-4\"> <p className=\"if-eyebrow\">{kind.label}{kind.detail ? ` · ${kind.detail}` : \"\"}</p> <h1 className=\"if-display mt-2 text-[36px] sm:text-[52px]\">{run.infrastructureName}</h1> <p className=\"mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-ink-2\"> <",
@@ -105792,6 +105910,42 @@
       "location": {
         "file": "apps/web/src/features/reports/components/ReportView.tsx",
         "line": 144,
+        "column": 32
+      }
+    },
+    {
+      "id": "m1.apps.web.src.features.reports.components.ReportView.21",
+      "concept": "ReportView · literal 5",
+      "modelVersion": "1",
+      "scope": "Evidence retention, authoring, comparison or report presentation guard",
+      "quantity": {
+        "kind": "known",
+        "value": 5,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.features.reports.components.ReportView.21"
+        ]
+      },
+      "formula": "return ( <article className=\"min-w-0 break-words pt-6\"> <Link to=\"/runs\" className=\"inline-flex items-center gap-1 text-sm font-medium text-ink-2 hover:text-ink\"><ArrowLeft size={14} aria-hidden=\"true\" /> Runs</Link> <header className=\"mt-4\"> <p className=\"if-eyebrow\">{kind.label}{kind.detail ? ` · ${kind.detail}` : \"\"}</p> <h1 className=\"if-display mt-2 text-[36px] sm:text-[52px]\">{run.infrastructureName}</h1> <p className=\"mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-ink-2\"> <",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/reports/components/ReportView.tsx#L145",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "Bounds govern what can be claimed, not infrastructure capacity. Missing evidence remains unknown.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Keep existing historical report semantics; design separate versioned M2 evidence with units/provenance.",
+      "location": {
+        "file": "apps/web/src/features/reports/components/ReportView.tsx",
+        "line": 145,
         "column": 132
       }
     },
@@ -105813,7 +105967,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/reports/components/ReportView.tsx#L149",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/reports/components/ReportView.tsx#L150",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -105827,7 +105981,7 @@
       "replacement": "Keep existing historical report semantics; design separate versioned M2 evidence with units/provenance.",
       "location": {
         "file": "apps/web/src/features/reports/components/ReportView.tsx",
-        "line": 149,
+        "line": 150,
         "column": 36
       }
     },
@@ -105849,7 +106003,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/reports/components/ReportView.tsx#L168",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/reports/components/ReportView.tsx#L169",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -105863,7 +106017,7 @@
       "replacement": "Keep existing historical report semantics; design separate versioned M2 evidence with units/provenance.",
       "location": {
         "file": "apps/web/src/features/reports/components/ReportView.tsx",
-        "line": 168,
+        "line": 169,
         "column": 33
       }
     },
@@ -105885,7 +106039,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/reports/components/ReportView.tsx#L169",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/reports/components/ReportView.tsx#L170",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -105899,7 +106053,7 @@
       "replacement": "Keep existing historical report semantics; design separate versioned M2 evidence with units/provenance.",
       "location": {
         "file": "apps/web/src/features/reports/components/ReportView.tsx",
-        "line": 169,
+        "line": 170,
         "column": 176
       }
     },
@@ -120880,6 +121034,78 @@
       }
     },
     {
+      "id": "m1.apps.web.src.lib.designName.1",
+      "concept": "defaultDesignName · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.lib.designName.1"
+        ]
+      },
+      "formula": "return name.trim() || `design-${new Date().toISOString().slice(0, 10).replaceAll(\"-\", \"\")}`;",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/lib/designName.ts#L2",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/lib/designName.ts",
+        "line": 2,
+        "column": 66
+      }
+    },
+    {
+      "id": "m1.apps.web.src.lib.designName.2",
+      "concept": "defaultDesignName · literal 10",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 10,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.lib.designName.2"
+        ]
+      },
+      "formula": "return name.trim() || `design-${new Date().toISOString().slice(0, 10).replaceAll(\"-\", \"\")}`;",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/lib/designName.ts#L2",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/lib/designName.ts",
+        "line": 2,
+        "column": 69
+      }
+    },
+    {
       "id": "m1.apps.web.src.lib.format.1",
       "concept": "plural · literal 1",
       "modelVersion": "1",
@@ -121653,7 +121879,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/ui/ConfirmDialogs.tsx#L17",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/ui/ConfirmDialogs.tsx#L18",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -121667,7 +121893,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/ui/ConfirmDialogs.tsx",
-        "line": 17,
+        "line": 18,
         "column": 30
       }
     },
@@ -121684,12 +121910,12 @@
           "m1.apps.web.src.ui.ConfirmDialogs.2"
         ]
       },
-      "formula": "function OpenNameDialog({ open, onOpenChange, title, description, initialValue = \"\", submitLabel, loading = false, onSubmit }: Parameters<typeof NameDialog>[0]) { const [value, setValue] = useState(initialValue); const [touched, setTouched] = useState(false); const error = touched ? validateInfrastructureName(value) : null; const submit = (event: FormEvent) => { event.preventDefault(); setTouched(true); if (!validateInfrastructureName(value)) onSubmit(value.trim()); }; return ( <Dialog open={ope",
+      "formula": "function OpenNameDialog({ open, onOpenChange, title, description, initialValue = \"\", submitLabel, loading = false, onSubmit }: Parameters<typeof NameDialog>[0]) { const [value, setValue] = useState(() => defaultDesignName(initialValue)); const [touched, setTouched] = useState(false); const error = touched ? validateInfrastructureName(value) : null; const submit = (event: FormEvent) => { event.preventDefault(); setTouched(true); if (!validateInfrastructureName(value)) onSubmit(value.trim()); }; r",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/ui/ConfirmDialogs.tsx#L29",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/ui/ConfirmDialogs.tsx#L30",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -121703,7 +121929,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/ui/ConfirmDialogs.tsx",
-        "line": 29,
+        "line": 30,
         "column": 158
       }
     },
@@ -121725,7 +121951,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/ui/ConfirmDialogs.tsx#L62",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/ui/ConfirmDialogs.tsx#L63",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -121739,7 +121965,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/ui/ConfirmDialogs.tsx",
-        "line": 62,
+        "line": 63,
         "column": 125
       }
     },

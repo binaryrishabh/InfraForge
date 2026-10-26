@@ -2,6 +2,7 @@ import { http, API_URL } from "@/client/httpClient";
 import type { LessonChoice, LessonReview, LessonSubmission, LessonWorkspace } from "@infraforge/contracts/internal-lessons";
 const base = `${API_URL}/internal/model2`;
 export async function capability(signal?: AbortSignal) {
+  if (import.meta.env?.VITE_INTERNAL_MODEL2_ENABLED !== "true") return null;
   const response = await http.get<{ scope: "operator" | "lesson" }>(`${base}/capability`, {
     signal, timeout: 15000, validateStatus: (status) => status === 404 || (status >= 200 && status < 300),
   });

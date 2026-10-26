@@ -1,5 +1,5 @@
 import { expect, mock, test } from "bun:test";
-import { Children, isValidElement, type ComponentProps, type FormEvent, type ReactElement } from "react";
+import { Children, isValidElement, type ComponentProps, type SubmitEvent, type ReactElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { validateInfrastructureName } from "@infraforge/domain/validation";
 import { Dialog } from "../src/ui/Dialog";
@@ -24,7 +24,7 @@ test("unnamed designs submit a real default in both dialogs while saved names an
       const value = html.match(/<input[^>]*value="([^"]*)"/)?.[1];
       if (!initial.trim()) { expect(value).toMatch(/^design-\d{8}$/); expect(validateInfrastructureName(value!)).toBeNull(); }
       else expect(value).toBe(initial);
-      form!.props.onSubmit!({ preventDefault() {} } as FormEvent<HTMLFormElement>);
+      form!.props.onSubmit!({ preventDefault() {} } as SubmitEvent<HTMLFormElement>);
       expect(submitted).toEqual(initial === "ab" ? [] : [value!]);
     }
   } finally { mock.module("../src/ui/Dialog", () => ({ Dialog: original })); }
