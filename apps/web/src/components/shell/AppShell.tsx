@@ -47,7 +47,7 @@ export function AppShell() {
   const [lesson, setLesson] = useState(false);
   useEffect(() => {
     const controller = new AbortController();
-    if (owner) void capability(controller.signal).then((value) => { if (!controller.signal.aborted) { setGrantedOwner(owner); setLesson(value.scope === "lesson"); } }).catch(() => { if (!controller.signal.aborted) setGrantedOwner(null); });
+    if (owner) void capability(controller.signal).then((value) => { if (!controller.signal.aborted) { setGrantedOwner(value ? owner : null); setLesson(value?.scope === "lesson"); } }).catch(() => { if (!controller.signal.aborted) setGrantedOwner(null); });
     return () => controller.abort();
   }, [owner]);
   const internal = !!owner && grantedOwner === owner;
