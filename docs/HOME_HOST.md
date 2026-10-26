@@ -80,3 +80,10 @@ stable week, EC2 becomes a development instance.
 
 Give it its own Compose project, its own loopback ports, its own `/etc/<project>` and
 `/var/lib/<project>`, and its own nginx file next to InfraForge's. Add its hostname to the same tunnel.
+
+## Feature flags on the home server (2026-10-26)
+
+- `ACCOUNT_ESSENTIALS_ENABLED=false` and the `TURNSTILE_*` keys are commented out. The web app does
+  not yet have the "check your email" screen or the captcha widget, so turning either on blocks
+  email signup. Turn them back on only after those screens ship and a real signup is tested.
+- Google and GitHub sign-in are on. Email/password signup works without email verification.
