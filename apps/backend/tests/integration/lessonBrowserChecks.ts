@@ -10,7 +10,7 @@ export async function checkLessonBrowser(h: LocalHarness, cookie: string, output
   await context.addCookies([{ name: cookie.slice(0, at), value: cookie.slice(at + 1), url: h.api, sameSite: "Lax" }]);
   const page = await context.newPage(); page.setDefaultTimeout(20000);
   const node = Bun.which("node"); if (!node) throw Error("Node required for browser proof");
-  const server = Bun.spawn([node, "../../node_modules/vite/bin/vite.js", "--host", "127.0.0.1", "--port", "5173", "--strictPort"], { cwd: fileURLToPath(new URL("../../../web/", import.meta.url)), env: { PATH: process.env.PATH, VITE_BACKEND_API_URL: h.api, DO_NOT_TRACK: "1" }, stdout: "pipe", stderr: "pipe" });
+  const server = Bun.spawn([node, "../../node_modules/vite/bin/vite.js", "--host", "127.0.0.1", "--port", "5173", "--strictPort"], { cwd: fileURLToPath(new URL("../../../web/", import.meta.url)), env: { PATH: process.env.PATH, VITE_BACKEND_API_URL: h.api, VITE_INTERNAL_MODEL2_ENABLED: "true", DO_NOT_TRACK: "1" }, stdout: "pipe", stderr: "pipe" });
   let log = ""; for (const stream of [server.stdout, server.stderr]) void (async () => { for await (const chunk of stream) log = (log + new TextDecoder().decode(chunk)).slice(-4000); })();
   try {
     await until(async () => { if (server.exitCode !== null) throw Error(log); try { return (await fetch("http://127.0.0.1:5173", { signal: AbortSignal.timeout(1500) })).ok || undefined; } catch { return undefined; } }, "lesson Vite");

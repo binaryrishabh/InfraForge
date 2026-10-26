@@ -20,7 +20,7 @@ export async function checkModel2Browser(h: LocalHarness, sessions: SessionFixtu
   const node = Bun.which("node"); if (!node) throw Error("Node is required for the real Vite browser proof");
   const server = Bun.spawn([node, "../../node_modules/vite/bin/vite.js", "--host", "127.0.0.1", "--port", "5173", "--strictPort"], {
     cwd: fileURLToPath(new URL("../../../web/", import.meta.url)),
-    env: { PATH: process.env.PATH, VITE_BACKEND_API_URL: h.api, DO_NOT_TRACK: "1" }, stdout: "pipe", stderr: "pipe" });
+    env: { PATH: process.env.PATH, VITE_BACKEND_API_URL: h.api, VITE_INTERNAL_MODEL2_ENABLED: "true", DO_NOT_TRACK: "1" }, stdout: "pipe", stderr: "pipe" });
   let serverLog = "";
   for (const stream of [server.stdout, server.stderr]) void (async () => { for await (const chunk of stream) serverLog = (serverLog + new TextDecoder().decode(chunk)).slice(-12000); })();
   const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
