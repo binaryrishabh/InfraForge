@@ -4,6 +4,7 @@ import type { WorkloadProfile } from "@infraforge/domain/workload";
 import { INFRASTRUCTURE_NAME_MAX_LENGTH, validateInfrastructureName } from "@infraforge/domain/validation";
 import { describeWorkload, requestsPerSecond, plural } from "@/lib/format";
 import { Dialog } from "@/ui/Dialog";
+import { defaultDesignName } from "@/lib/designName";
 import { Button } from "@/ui/Button";
 import { Field, Input } from "@/ui/Field";
 import { Segmented } from "@/ui/Segmented";
@@ -24,7 +25,7 @@ export function DeployDialog({ open, onOpenChange, initialName, resourceCount, c
   open: boolean; onOpenChange: (open: boolean) => void; initialName: string; resourceCount: number; connectionCount: number; loading: boolean;
   onRun: (profile: WorkloadProfile, name: string) => void;
 }) {
-  const [name, setName] = useState(initialName);
+  const [name, setName] = useState(() => defaultDesignName(initialName));
   const [touched, setTouched] = useState(false);
   const [profile, setProfile] = useState<Required<WorkloadProfile>>(PRESETS[0]!.profile);
   const preset = PRESETS.find((p) => JSON.stringify(p.profile) === JSON.stringify(profile));
@@ -46,7 +47,7 @@ export function DeployDialog({ open, onOpenChange, initialName, resourceCount, c
       <form id="deploy-form" onSubmit={submit} className="flex flex-col gap-5">
         <Field label="Design name" error={nameError}>
           {({ id, describedBy, invalid }) => <Input id={id} aria-describedby={describedBy} aria-invalid={invalid} autoFocus value={name} maxLength={INFRASTRUCTURE_NAME_MAX_LENGTH}
-            onChange={(e) => setName(e.target.value)} onBlur={() => setTouched(true)} placeholder="checkout-api" />}
+            onChange={(e) => setName(e.target.value)} onBlur={() => setTouched(true)} />}
         </Field>
         <fieldset>
           <legend className="text-[13px] font-medium text-ink-2">Traffic</legend>

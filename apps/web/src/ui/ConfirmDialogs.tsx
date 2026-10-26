@@ -3,6 +3,7 @@ import { INFRASTRUCTURE_NAME_MAX_LENGTH, validateInfrastructureName } from "@inf
 import { Dialog } from "./Dialog";
 import { Button } from "./Button";
 import { Field, Input } from "./Field";
+import { defaultDesignName } from "@/lib/designName";
 
 export function ConfirmDialog({ open, onOpenChange, title, description, consequences = [], confirmLabel, danger = false, loading = false, onConfirm }: {
   open: boolean; onOpenChange: (open: boolean) => void; title: string; description?: string; consequences?: string[];
@@ -27,7 +28,7 @@ export function NameDialog(props: { open: boolean; onOpenChange: (open: boolean)
 }
 
 function OpenNameDialog({ open, onOpenChange, title, description, initialValue = "", submitLabel, loading = false, onSubmit }: Parameters<typeof NameDialog>[0]) {
-  const [value, setValue] = useState(initialValue);
+  const [value, setValue] = useState(() => defaultDesignName(initialValue));
   const [touched, setTouched] = useState(false);
   const error = touched ? validateInfrastructureName(value) : null;
   const submit = (event: FormEvent) => {
@@ -42,7 +43,7 @@ function OpenNameDialog({ open, onOpenChange, title, description, initialValue =
           {({ id, describedBy, invalid }) => (
             <Input id={id} aria-describedby={describedBy} aria-invalid={invalid} autoFocus value={value} maxLength={INFRASTRUCTURE_NAME_MAX_LENGTH}
               onChange={(event) => setValue(event.target.value)} onBlur={() => setTouched(true)} onFocus={(event) => event.target.select()}
-              placeholder="checkout-api" disabled={loading} />
+              disabled={loading} />
           )}
         </Field>
         <div className="flex justify-end gap-2">
