@@ -172,7 +172,11 @@ from production being live.
 
 ## One normal release authority
 
-1. Push `main`. **Validate workspaces** runs the complete suite once for that SHA.
+1. Push `main`. **Validate workspaces** always checks execution identity and resolution.
+   Code changes run the full suite. Pushes changing only `docs/**`, Markdown or `.agent/**`
+   skip heavy jobs; `docs/reality/**` still runs them because it contains runtime proof data.
+   Missing history and pull requests use full validation. The workflow still completes
+   successfully for prose-only pushes so the release workflow runs.
 2. **Release InfraForge** consumes its completed push run. It re-reads GitHub's run,
    requires successful same-repository main validation and current main identity.
 3. The `Production` environment disallows admin bypass (owner approval is delegated until launch),
@@ -199,9 +203,21 @@ pause after CI, not a claim of independent two-person review.
 Ordinary host terminal work is unnecessary once the hosted setup is complete. Manual
 SSH/console is for initial bootstrap and genuine incident/recovery. Manual dispatch
 is a retry tool: it requires the current full main SHA and existing successful push
-CI, and does not run the expensive suite again. A same-SHA retry can reuse the
+CI, and does not run the expensive suite again. A same-SHA retry or prose-only change can reuse the
 recorded accepted backend only after image/settings/container readiness verification;
 it cannot rebuild/retag a retained image or clear maintenance/a release lock.
+The prose-only check compares the entire range from the accepted commit to the
+requested commit, so an earlier undeployed code change still requires a build.
+Reused images keep their original SHA and acceptance/rollback record. Public checks
+require that exact SHA on both tiers. A matching frontend is reused too; otherwise
+the accepted checkout is staged and verified normally. Receipts for a fully reused
+release record both the requested commit and the running SHA.
+
+The release builder retains its 768 MiB memory cap and isolated cleanup, with a
+one-core CPU budget (previously 0.2 cores). Readiness polls return as soon as healthy;
+there is no fixed readiness sleep to remove. Migration, backup, health and rollback
+checks are unchanged. CI no longer repeats boundary/challenge tests already run by
+lint/workspace tests, and execution identity is checked once before the heavy jobs.
 
 ## Release disk capacity and image retention
 

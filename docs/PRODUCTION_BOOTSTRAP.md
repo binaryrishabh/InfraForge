@@ -245,7 +245,7 @@ first acceptance, re-run the workflow for the same SHA to stage and promote the 
 Set `EC2_HOST_FINGERPRINT` to the host's **ECDSA** key fingerprint
 (`ssh-keygen -lf /etc/ssh/ssh_host_ecdsa_key.pub`): the release SSH client negotiates ECDSA
 before Ed25519, so an Ed25519 fingerprint fails with "host key fingerprint mismatch".
-The wrapper can reuse a recorded accepted SHA only after image/settings/container
+The wrapper can reuse a recorded accepted SHA for retries or prose-only changes only after image/settings/container
 readiness checks, and public verification repeats outside the host. It refuses maintenance
 or an interrupted release lock. It never rebuilds a retained accepted image.
 

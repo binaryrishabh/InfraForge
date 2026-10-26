@@ -7,21 +7,33 @@ import { compatibleReviewedSource, compatibleV1Source, legacyLineage } from "../
 import { verifyConnectedProof } from "../verify-connected-proof";
 import { frozenHistoryText, lastCommit } from "../execution-identity";
 const { requireFullValidation } = require("../ci/validation.cjs");
-test("full validation fails closed for every red, skipped, cancelled or missing dependency", () => {
-  const green = Object.fromEntries(["checks", "integration", "m2m-preview", "packaging", "operations"].map(j => [j, { result: "success" }]));
-  expect(() => requireFullValidation(green)).not.toThrow();
-  for (const job of Object.keys(green)) {
-    for (const result of ["failure", "skipped", "cancelled", "in_progress", undefined]) expect(() => requireFullValidation({ ...green, [job]: { result } })).toThrow();
-    const missing = { ...green }; delete missing[job]; expect(() => requireFullValidation(missing)).toThrow();
+test("validation permits only deliberate docs skips after mandatory identity checks", () => {
+  const jobs = ["checks", "integration", "m2m-preview", "packaging", "operations"];
+  for (const docsOnly of [false, true]) {
+    const green = { changes: { result: "success", outputs: { docs_only: String(docsOnly) } },
+      ...Object.fromEntries(jobs.map(job => [job, { result: docsOnly ? "skipped" : "success" }])) };
+    expect(() => requireFullValidation(green)).not.toThrow();
+    for (const job of Object.keys(green)) {
+      for (const result of ["failure", "cancelled", "in_progress", undefined, docsOnly && job !== "changes" ? "success" : "skipped"]) {
+        expect(() => requireFullValidation({ ...green, [job]: { result } })).toThrow();
+      }
+      const missing = { ...green } as Record<string, unknown>; delete missing[job];
+      expect(() => requireFullValidation(missing)).toThrow();
+    }
+    expect(() => requireFullValidation({ ...green, changes: { result: "success", outputs: {} } })).toThrow();
   }
-  const workflow = readFileSync(".github/workflows/validate.yml", "utf8");
-  const config = Bun.YAML.parse(workflow) as any;
-  expect(Object.keys(config.jobs).sort()).toEqual(["validation", ...Object.keys(green)].sort());
+  const config = Bun.YAML.parse(readFileSync(".github/workflows/validate.yml", "utf8")) as any;
+  expect(Object.keys(config.jobs).sort()).toEqual(["validation", "changes", ...jobs].sort());
   expect(config.jobs.validation.if).toBe("always()");
-  expect(config.jobs.validation.needs.slice().sort()).toEqual(Object.keys(green).sort());
+  expect(config.jobs.validation.needs.slice().sort()).toEqual(["changes", ...jobs].sort());
   expect(config.jobs.validation.steps[1].run).toBe("node scripts/ci/validation.cjs");
   expect(config.jobs.validation.steps[1].env.VALIDATION_RESULTS).toBe("${{ toJSON(needs) }}");
-  for (const job of Object.keys(green)) expect(config.jobs[job].if).toBeUndefined();
+  expect(config.jobs.changes.steps.map((step: any) => step.run)).toContain("bun --no-env-file scripts/execution-identity.ts --check");
+  expect(config.jobs.changes.steps.map((step: any) => step.run)).toContain("bun --no-env-file scripts/execution-resolution.ts");
+  for (const job of jobs) {
+    expect(config.jobs[job].needs).toBe("changes");
+    expect(config.jobs[job].if).toBe("needs.changes.outputs.docs_only != 'true'");
+  }
 });
 test("Analytics review proves the entire prior lock is unchanged and rejects transitive/workspace drift", () => {
   const before = legacyLineage().reviewedExecution!.original.find(p => p.path === "bun.lock")!.text!;

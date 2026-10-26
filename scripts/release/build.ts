@@ -13,7 +13,7 @@ export async function cleanupReleaseBuilder(run = command, root = process.cwd())
 export async function buildReleaseImage(sha: string, image: string, root: string, run = command) {
   const builder = `infraforge-release-${sha.slice(0, 12)}-${process.pid}`;
   await run(["docker", "buildx", "create", "--name", builder, "--driver", "docker-container",
-    "--driver-opt", "memory=768m,memory-swap=768m,cpu-period=100000,cpu-quota=20000"], root);
+    "--driver-opt", "memory=768m,memory-swap=768m,cpu-period=100000,cpu-quota=100000"], root);
   ownedBuilder = builder;
   try {
     await run(["docker", "buildx", "build", "--builder", builder, "--load", "--build-arg", `RELEASE_SHA=${sha}`,

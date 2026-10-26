@@ -63,7 +63,7 @@ jobs:
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version: 1.3.14
-      - name: Verify release prerequisites before touching EC2
+      - name: Verify release prerequisites before touching the home server
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           EC2_HOST: ${{ secrets.EC2_HOST }}
@@ -77,7 +77,7 @@ jobs:
         run: test "$(gh api "repos/$GITHUB_REPOSITORY/commits/main" --jq .sha)" = "$RELEASE_SHA"
       - name: Install pinned frontend release client
         run: bash scripts/deploy/install-vercel.sh
-      - name: Check Vercel access before touching EC2
+      - name: Check Vercel access before touching the home server
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: vercel project inspect "$VERCEL_PROJECT_ID" --token "$VERCEL_TOKEN" > /dev/null
@@ -120,21 +120,24 @@ jobs:
             export PATH="$HOME/.bun/bin:$PATH"
             test "$(bun --version)" = 1.3.14
             bun --no-env-file scripts/deploy/backend.ts "$RELEASE_SHA" /etc/infraforge/release.env /var/lib/infraforge/releases
-      - name: Independently verify public backend
-        run: bun --no-env-file scripts/release/public-check.ts "$RELEASE_SHA" "$BACKEND_ORIGIN"
-      - name: Stage, verify and promote the same frontend commit
+      - name: Independently verify public backend and select its exact release
+        id: backend
+        run: bun --no-env-file scripts/deploy/backend.ts --public "$RELEASE_SHA" "$BACKEND_ORIGIN" "$FRONTEND_ORIGIN"
+      - name: Select the accepted checkout for frontend promotion
+        if: steps.backend.outputs.reuse_frontend != 'true'
         env:
+          ACCEPTED_SHA: ${{ steps.backend.outputs.sha }}
+        run: git checkout --detach "$ACCEPTED_SHA"
+      - name: Stage, verify and promote the same frontend commit
+        if: steps.backend.outputs.reuse_frontend != 'true'
+        env:
+          RELEASE_SHA: ${{ steps.backend.outputs.sha }}
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: bash scripts/deploy/frontend.sh
-      - name: Final public production verification
-        run: |
-          # The production alias propagates through the CDN; retry the public check for up to ~90s.
-          for attempt in $(seq 1 18); do
-            if bun --no-env-file scripts/release/frontend-check.ts "$RELEASE_SHA" "$FRONTEND_ORIGIN" "$BACKEND_ORIGIN"; then break; fi
-            [[ $attempt -lt 18 ]] || { echo 'Public frontend did not serve the release within 90s' >&2; exit 1; }
-            sleep 5
-          done
-          printf 'Accepted backend and frontend %s.\n' "$RELEASE_SHA" >> "$GITHUB_STEP_SUMMARY"
+      - name: Record the verified production release
+        env:
+          ACCEPTED_SHA: ${{ steps.backend.outputs.sha }}
+        run: printf 'Requested %s; verified backend and frontend %s.\n' "$RELEASE_SHA" "$ACCEPTED_SHA" >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
         with:

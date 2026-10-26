@@ -1,9 +1,10 @@
+import { execFileSync } from "node:child_process";
 import { expect, test } from "bun:test";
 import { checkBackend, checkFrontend, verifyBackend } from "../release/public-check";
 import { deploymentSettings } from "../deploy/preflight";
 import { nginxConfig } from "../../ops/bootstrap/render";
-import { backendState } from "../deploy/backend";
-import { mkdtemp, readFile, rm, writeFile, unlink, symlink } from "node:fs/promises";
+import { backendReleaseSha, backendState } from "../deploy/backend";
+import { mkdtemp, mkdir, readFile, rm, writeFile, unlink, symlink } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 const { admitRelease, requireRun, requireEnvironment } = require("../deploy/gate.cjs");
@@ -121,4 +122,35 @@ test("bootstrap rendering refuses injection and missing TLS inputs while HTTP re
   }
   expect(() => nginxConfig(template, "backend.example.invalid", "tls")).toThrow();
   expect(() => nginxConfig(template, "backend.example.invalid", "tls", "/tmp/../private", "/tmp/key")).toThrow();
+});
+
+
+test("docs-only reuse compares the complete accepted-to-requested range and keeps exact image identity", async () => {
+  const { docsOnlyPaths, docsOnlyChange } = require("../ci/validation.cjs");
+  expect(docsOnlyPaths(["docs/guide.txt", "Readme.md", ".agent/notes"])).toBe(true);
+  for (const paths of [[], ["docs/guide.md", "apps/backend/index.ts"], ["docs/reality/proof.json"], ["docs/reality/proof.md"], [".github/workflows/validate.yml"], ["bun.lock"]]) {
+    expect(docsOnlyPaths(paths)).toBe(false);
+  }
+  const directory = await mkdtemp(join(tmpdir(), "infraforge-docs-release-"));
+  const git = (...args: string[]) => execFileSync("git", args, { cwd: directory, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }).trim();
+  const commit = () => { git("add", "."); git("-c", "user.name=Release fixture", "-c", "user.email=release@example.invalid", "commit", "-qm", "Update fixture"); return git("rev-parse", "HEAD"); };
+  try {
+    git("init", "-q");
+    await writeFile(join(directory, "app.ts"), "original"); const accepted = commit();
+    await mkdir(join(directory, "docs"));
+    await writeFile(join(directory, "docs", "guide.md"), "guide"); const docs = commit();
+    expect(docsOnlyChange(accepted, docs, directory)).toBe(true);
+    expect(backendReleaseSha(docs, accepted, directory)).toBe(accepted);
+    expect(backendReleaseSha(accepted, accepted, directory)).toBe(accepted);
+    expect(docsOnlyChange(docs, accepted, directory)).toBe(false);
+    expect(docsOnlyChange("0".repeat(40), docs, directory)).toBe(false);
+    expect(docsOnlyChange("--help", docs, directory)).toBe(false);
+    await writeFile(join(directory, "app.ts"), "changed"); const code = commit();
+    await writeFile(join(directory, "docs", "guide.md"), "another guide"); const laterDocs = commit();
+    expect(docsOnlyChange(code, laterDocs, directory)).toBe(true);
+    expect(docsOnlyChange(accepted, laterDocs, directory)).toBe(false);
+    expect(() => backendReleaseSha(laterDocs, accepted, directory)).toThrow("differs");
+    git("mv", "app.ts", "docs/moved.md"); const moved = commit();
+    expect(docsOnlyChange(laterDocs, moved, directory)).toBe(false);
+  } finally { await rm(directory, { recursive: true, force: true }); }
 });

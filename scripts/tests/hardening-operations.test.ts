@@ -34,7 +34,7 @@ test("the 4 GiB host retains 896 MiB for host work even during the bounded build
   const cpus = names.reduce((sum, name) => sum + services[name]!.cpus, 0);
   expect(memory).toBe(2432);
   expect(4096 - memory - 768).toBe(896);
-  expect(cpus + 0.2).toBeCloseTo(1.95);
+  expect(cpus + 1).toBeCloseTo(2.75);
   expect(Number.parseInt(services.migration!.mem_limit)).toBe(256);
   // Preflight can overlap the live services; it never overlaps the build.
   expect(memory + 256 + 896).toBeLessThanOrEqual(4096);
@@ -54,7 +54,7 @@ test("a release uses a bounded isolated builder and removes it after success or 
     else await promise;
     expect(calls).toHaveLength(3);
     expect(calls[0]).toContain("docker-container");
-    expect(calls[0]).toContain("memory=768m,memory-swap=768m,cpu-period=100000,cpu-quota=20000");
+    expect(calls[0]).toContain("memory=768m,memory-swap=768m,cpu-period=100000,cpu-quota=100000");
     expect(calls[0]).not.toContain("--use");
     const name = calls[0]![4]!;
     expect(calls[1]).toEqual(["docker", "buildx", "build", "--builder", name, "--load", "--build-arg", `RELEASE_SHA=${"a".repeat(40)}`, "-f", "apps/backend/Dockerfile", "-t", "owned:test", "."]);
@@ -83,7 +83,7 @@ test.skipIf(process.env.HARDENING_SERVICES !== "owned-local")("the real BuildKit
         const [record] = JSON.parse(await command(["docker", "inspect", container], cwd));
         expect(record.HostConfig.Memory).toBe(768 * 1024 * 1024);
         expect(record.HostConfig.MemorySwap).toBe(record.HostConfig.Memory);
-        expect(record.HostConfig.CpuQuota).toBe(20000);
+        expect(record.HostConfig.CpuQuota).toBe(100000);
         expect(record.HostConfig.CpuPeriod).toBe(100000);
       }
       return command(args, cwd);
