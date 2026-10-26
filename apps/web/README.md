@@ -15,4 +15,8 @@ Explicit save/update and the pre-run deploy path persist
 layouts through the API; live edits affect the running simulation without saving.
 Monitoring displays backend snapshots; it must not generate simulation results.
 
+Internal Model 2 navigation is opt-in: set `VITE_INTERNAL_MODEL2_ENABLED=true`
+when building or serving an internal frontend. Other builds skip the capability
+probe. The backend must also enable the feature and grant the signed-in user access.
+
 See [project setup](../../Readme.md) and [accepted architecture and risks](../../docs/PROJECT_STATE.md).
