@@ -218,6 +218,8 @@ for (const [name, change] of refusals) test(`storage refuses ${name}`, async () 
   try { await h.preflight(); } catch (error) { caught = error; }
   expect(caught).toBeInstanceOf(Error);
   expect((caught as Error).message).toContain("Unknown");
+  // Operators must see which fixed check refused, and nothing observed from the host.
+  expect((caught as Error).message).toMatch(/ \[(storage|hygiene) check \d+\]$/);
   expect(Bun.inspect(caught)).not.toContain("PRIVATE_CONFIG_MARKER");
   expect(h.paths).toEqual([]);
 });

@@ -48,20 +48,20 @@ export async function preflightReleaseSpace(root: string, stateDirectory: string
   host: StorageHost = storageHost(run, root), env = process.env) {
   let info: { DockerRootDir?: unknown; Driver?: unknown; DriverStatus?: unknown; Containerd?: unknown; SecurityOptions?: unknown };
   try { await verifyLocalDocker(root, run, env); info = JSON.parse(await run(["docker", "info", "--format", "{{json .}}"], root)); }
-  catch (error) { throw new Error("Docker storage layout unavailable; disk capacity is Unknown, release refused", { cause: error }); }
+  catch (error) { throw new Error("Docker storage layout unavailable; disk capacity is Unknown, release refused [hygiene check 51]", { cause: error }); }
   const dockerRoot = info?.DockerRootDir;
   if (!absoluteStoragePath(dockerRoot)) throw new Error("Docker data root unavailable; disk capacity is Unknown, release refused");
-  if (!Array.isArray(info.SecurityOptions) || info.SecurityOptions.some(value => typeof value !== "string" || /rootless/i.test(value))) throw new Error(unknownStorage);
-  if (!Array.isArray(info.DriverStatus)) throw new Error(unknownStorage);
+  if (!Array.isArray(info.SecurityOptions) || info.SecurityOptions.some(value => typeof value !== "string" || /rootless/i.test(value))) throw new Error(`${unknownStorage} [hygiene check 54]`);
+  if (!Array.isArray(info.DriverStatus)) throw new Error(`${unknownStorage} [hygiene check 55]`);
   const docker = await dockerdEvidence(root, run, host);
   const driverTypes = info.DriverStatus.filter(row => Array.isArray(row) && row[0] === "driver-type");
   let imagePaths: string[];
   if (info.Driver === "overlay2" && driverTypes.length === 0) imagePaths = [`${dockerRoot.replace(/\/+$/, "")}/overlay2`];
   else if (driverTypes.length === 1 && driverTypes[0]![1] === "io.containerd.snapshotter.v1") {
     try { imagePaths = await containerdStorage(info, root, run, host); }
-    catch (error) { throw new Error(unknownStorage, { cause: error }); }
-  } else throw new Error(unknownStorage);
-  if (await dockerdEvidence(root, run, host) !== docker) throw new Error(unknownStorage);
+    catch (error) { if (error instanceof Error && error.message.startsWith(unknownStorage)) throw error; throw new Error(unknownStorage, { cause: error }); }
+  } else throw new Error(`${unknownStorage} [hygiene check 63]`);
+  if (await dockerdEvidence(root, run, host) !== docker) throw new Error(`${unknownStorage} [hygiene check 64]`);
   const statePath = await existingParent(resolve(stateDirectory));
   const measurements = [];
   for (const path of [dockerRoot, ...imagePaths, statePath]) {
