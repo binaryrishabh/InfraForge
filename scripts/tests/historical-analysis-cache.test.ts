@@ -4,7 +4,7 @@ import { historicalIsolationLoading } from "../historical-isolation-loading";
 import { historicalHostLoading } from "../historical-host-loading";
 import { sourceHash, digest } from "../../apps/backend/executionIdentity/hash";
 import { loadTransitions } from "../../apps/backend/executionIdentity/transitions";
-import { historicalDeclaredHostDescriptor } from "../historical-declared-host-descriptor";
+import { frozenBaselineAlgorithms } from "../frozen-baseline";
 import { resolve } from "node:path";
 
 test("historical memo keys bind algorithm, path, exact source and complete review; values cannot poison later hits", () => {
@@ -46,6 +46,8 @@ test("warm reconstruction binds every historical blob, descriptor and snapshot i
   const row = store.table.entries.at(-1)!, files = history.trees[row.commit]!;
   const tree = { paths: Object.keys(files), read: (path: string) => history.blobs[files[path]!]! };
   const runtime = store.table.descriptors[row.descriptor]!.runtime;
+  // Reconstruct with the frozen algorithm the newest row records, not a fixed older version.
+  const historicalDeclaredHostDescriptor = frozenBaselineAlgorithms.find(item => item.id === row.algorithm)!.reconstruct;
   withHistoricalAnalysisCache(() => {
     expect(digest(historicalDeclaredHostDescriptor(tree, runtime))).toBe(row.descriptor);
     const path = "packages/contracts/src/internal-model2/index.ts";
