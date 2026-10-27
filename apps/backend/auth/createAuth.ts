@@ -15,6 +15,7 @@ import { consumeVerification, EMAIL_TOKEN_SECONDS } from "./verification";
 import { enforceAccountPolicy, type AccountQuota } from "./accountPolicy";
 import { loginMethodPolicy, validateLink, magicConfirmation, returnURL } from "./loginMethods";
 import { otpDigest, loginProofHash } from "./mailIntent";
+import { authLogger } from "./logger";
 
 export function createAuth(
   prisma: PrismaClient, settings: ReturnType<typeof readAuthSettings>, quota?: AccountQuota, mailQueue?: MailRequests,
@@ -121,7 +122,7 @@ export function createAuth(
     }) },
     // Keep operational errors visible without routine login/signup identifiers.
     // Neither the application nor auth middleware logs credential request bodies.
-    logger: { level: "error", log: () => console.error("Authentication operation failed") },
+    logger: authLogger,
     session: { cookieCache: { enabled: false }, disableSessionRefresh: true },
     account: { accountLinking: methods.linking ? {
       enabled: true, trustedProviders: ["google", "github"], requireLocalEmailVerified: true,
