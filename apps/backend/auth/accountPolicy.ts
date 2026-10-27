@@ -20,6 +20,20 @@ export async function enforceAccountPolicy(input: {
   enabled: boolean; proofSignup?: boolean; challenge?: SignupChallenge; quota?: AccountQuota;
   loginMethods?: { magicLink: boolean; emailOtp: boolean } }) {
   const { path, enabled, challenge, quota, ip, body } = input;
+  const publicLimit = path === "/is-username-available" ? 120
+    : path === "/signup-handoff/confirm" ? 30 : path === "/signup-handoff/status" ? 1200 : 0;
+  if (publicLimit) {
+    if (!quota) throw new APIError("SERVICE_UNAVAILABLE", { message: "Account service unavailable" });
+    try {
+      if (!await quota.allow(`${path}:ip`, ip, publicLimit)) {
+        throw new APIError("TOO_MANY_REQUESTS", { message: "Try again later" });
+      }
+    } catch (error) {
+      if (error instanceof APIError) throw error;
+      throw new APIError("SERVICE_UNAVAILABLE", { message: "Account service unavailable" });
+    }
+    return;
+  }
   const signup = path === "/sign-up/email";
   const completion = input.proofSignup === true && signup && body?.emailProof !== undefined;
   const loginRequest = input.loginMethods?.magicLink && path === "/sign-in/magic-link"
@@ -100,7 +114,7 @@ export function accountAuthHandler(handler: (request: Request) => Promise<Respon
       await sleep(Math.max(0, 750 - (now() - start)));
       // Keep input/challenge/quota/CSRF errors; native successful requests share
       // one body. Provider delivery is separate from durable queue insertion.
-      if (uniform && response.ok) response = Response.json(acceptedMail);
+      if (uniform && response.ok) response = Response.json(acceptedMail, { headers: response.headers });
       // A lockout-specific native error would reveal that an OTP record exists.
       // Incorrect, expired, absent and exhausted proofs share one public failure.
       if (otpRedeem && [400, 401, 403].includes(response.status)) {

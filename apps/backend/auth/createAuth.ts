@@ -16,6 +16,8 @@ import { enforceAccountPolicy, type AccountQuota } from "./accountPolicy";
 import { loginMethodPolicy, validateLink, magicConfirmation, returnURL } from "./loginMethods";
 import { otpDigest, loginProofHash } from "./mailIntent";
 import { authLogger } from "./logger";
+import { passwordBreachPolicy } from "./passwordPolicy";
+import { signupHandoff, clearHandoff, clearHandoffCookie } from "./signupHandoff";
 
 export function createAuth(
   prisma: PrismaClient, settings: ReturnType<typeof readAuthSettings>, quota?: AccountQuota, mailQueue?: MailRequests,
@@ -53,6 +55,7 @@ export function createAuth(
       if (typeof proof !== "string") throw invalidProof();
       const row = await ctx.context.internalAdapter.consumeVerificationValue(`signup-proof:${proof}`);
       if (!row || row.value !== user.email || row.expiresAt <= new Date()) throw invalidProof();
+      await clearHandoff(ctx, proof);
       return { data: { ...user, emailVerified: true } };
     } } }, ...(methods.magicLink || methods.emailOtp ? { session: { create: { before: async (session, ctx) => {
       const magic = methods.magicLink && ctx?.path === "/magic-link/verify";
@@ -68,7 +71,8 @@ export function createAuth(
       }, data: { usedAt: new Date() } });
       if (consumed.count !== 1) throw invalidProof();
     } } } } : {}) },
-    plugins: [username({ displayUsername: false, immutableUsername: true,
+    plugins: [passwordBreachPolicy(), ...(deliver ? [signupHandoff(settings.secret)] : []),
+      username({ displayUsername: false, immutableUsername: true,
       minUsernameLength: USERNAME_MIN, maxUsernameLength: USERNAME_MAX,
       usernameValidator: validUsername, usernameNormalization: normalizeUsername }),
       // Installed plugins/{magic-link/index,email-otp/types}.d.mts. Public
@@ -78,7 +82,7 @@ export function createAuth(
       ...(methods.emailOtp ? [emailOTP({ otpLength: 6, expiresIn: 600, allowedAttempts: 3,
         disableSignUp: true, storeOTP: { hash: async otp => otpDigest(otp, settings.secret) },
         sendVerificationOTP: async () => { throw Error("Use durable mail admission"); } })] : [])],
-    disabledPaths: ["/is-username-available", "/delete-user", "/delete-user/callback",
+    disabledPaths: ["/delete-user", "/delete-user/callback",
       ...(methods.settings ? ["/unlink-account"] : []),
       ...(methods.emailOtp ? ["/email-otp/check-verification-otp", "/email-otp/verify-email",
         "/forget-password/email-otp", "/email-otp/request-password-reset", "/email-otp/reset-password",
@@ -90,7 +94,7 @@ export function createAuth(
         const confirmation = magicConfirmation(settings, ctx.request);
         if (confirmation) return confirmation;
       }
-      if (ctx.path === "/sign-up/email") {
+      if (["/sign-up/email", "/is-username-available", "/signup-handoff/confirm"].includes(ctx.path)) {
         // These native middleware checks must also precede the username
         // plugin's early duplicate response, including form/Fetch Metadata.
         await originCheckMiddleware(ctx);
@@ -119,6 +123,10 @@ export function createAuth(
         && (!deliver || !await consumeVerification(prisma, String(ctx.query?.token ?? "")))) {
         throw new APIError("BAD_REQUEST", { code: "INVALID_TOKEN", message: "Invalid or expired link" });
       }
+    }), after: createAuthMiddleware(async ctx => {
+      if (deliver && ctx.path === "/sign-up/email" && ctx.body?.emailProof
+        && ctx.context.returned && typeof ctx.context.returned === "object" && !(ctx.context.returned instanceof APIError)
+        && "user" in ctx.context.returned) clearHandoffCookie(ctx, settings.secure);
     }) },
     // Keep operational errors visible without routine login/signup identifiers.
     // Neither the application nor auth middleware logs credential request bodies.
@@ -128,7 +136,10 @@ export function createAuth(
       enabled: true, trustedProviders: ["google", "github"], requireLocalEmailVerified: true,
       allowDifferentEmails: false, allowUnlinkingAll: false, updateUserInfoOnLink: false,
     } : { enabled: false }, encryptOAuthTokens: true },
-    rateLimit: { enabled: true },
+    rateLimit: { enabled: true, customRules: {
+      "/is-username-available": { window: 900, max: 120 },
+      "/signup-handoff/status": { window: 900, max: 1200 },
+    } },
     advanced: { useSecureCookies: settings.secure, disableOriginCheck: false, disableCSRFCheck: false,
       defaultCookieAttributes: { httpOnly: true, sameSite: "lax", path: "/" } },
   });

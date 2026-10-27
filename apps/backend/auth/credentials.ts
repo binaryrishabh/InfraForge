@@ -1,6 +1,6 @@
 import { APIError, createAuthMiddleware } from "better-auth/api";
 import type { Request, Response, RequestHandler } from "express";
-import { LOGIN_ERROR, PASSWORD_MIN, PASSWORD_MAX, validUsername } from "@infraforge/contracts/auth";
+import { LOGIN_ERROR, PASSWORD_MAX, passwordAcceptable, validUsername } from "@infraforge/contracts/auth";
 import { z } from "zod";
 
 // 1.7.7 provides separate native email/username handlers. Adapt the single
@@ -24,10 +24,17 @@ export function identifierSignIn(handler: (req: Request, res: Response) => Promi
 // The native username plugin makes usernames optional for OAuth users. Require
 // one only on credential registration, without changing historical identities.
 export const credentialValidation = createAuthMiddleware(async (ctx) => {
-  if (ctx.path === "/sign-up/email") {
+  if (ctx.path === "/sign-up/email" || ctx.path === "/is-username-available") {
     if (typeof ctx.body?.username !== "string" || !validUsername(ctx.body.username)) {
       throw new APIError("BAD_REQUEST", { code: "INVALID_USERNAME",
         message: "Use 3–30 letters, numbers or underscores, starting with a letter." });
+    }
+  }
+  if (["/sign-up/email", "/reset-password", "/change-password", "/set-password"].includes(ctx.path)) {
+    const password = ctx.path === "/sign-up/email" ? ctx.body?.password : ctx.body?.newPassword;
+    if (typeof password !== "string" || !passwordAcceptable(password)) {
+      throw new APIError("BAD_REQUEST", { code: "PASSWORD_TOO_WEAK",
+        message: "Use 8–128 characters with a lowercase letter, uppercase letter, digit and symbol." });
     }
   }
   if (ctx.path === "/sign-up/email" || ctx.path === "/sign-in/email") {
@@ -41,11 +48,6 @@ export const credentialValidation = createAuthMiddleware(async (ctx) => {
     // input errors cannot themselves disclose membership.
     if (!z.email().safeParse(ctx.body?.email).success) {
       throw new APIError("BAD_REQUEST", { code: "INVALID_EMAIL", message: "Enter a valid email address." });
-    }
-    if (typeof ctx.body?.password !== "string"
-      || ctx.body.password.length < PASSWORD_MIN || ctx.body.password.length > PASSWORD_MAX) {
-      throw new APIError("BAD_REQUEST", { code: "INVALID_PASSWORD",
-        message: "Enter a password within the supported length." });
     }
     const details = z.object({
       name: z.string(), image: z.string().optional(),

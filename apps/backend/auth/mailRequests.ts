@@ -18,11 +18,11 @@ export class AccountEmailRequests implements MailRequests {
     private failed = () => console.error("Transactional email delivery failed"),
   ) {}
 
-  async admit(kind: MailKind, email: string, callbackURL: string) {
+  async admit(kind: MailKind, email: string, callbackURL: string, handoffHash?: string) {
     // No membership reads, username, password, challenge token or bearer link.
     const payload = await symmetricEncrypt({
       key: this.settings.secret,
-      data: JSON.stringify({ email, callbackURL }),
+      data: JSON.stringify({ email, callbackURL, ...(kind === "signup" && handoffHash ? { handoffHash } : {}) }),
     });
     await this.db.accountMailIntent.create({ data: {
       id: randomUUID(), kind, payload, availableAt: new Date(),

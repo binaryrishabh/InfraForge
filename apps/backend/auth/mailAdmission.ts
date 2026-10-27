@@ -1,6 +1,8 @@
-import { APIError, createAuthMiddleware, originCheckMiddleware, formCsrfMiddleware } from "better-auth/api";
+import { APIError, originCheckMiddleware, formCsrfMiddleware } from "better-auth/api";
+import type { GenericEndpointContext } from "@better-auth/core";
 import { z } from "zod";
 import type { MailRequests, MailSettings } from "./mailIntent";
+import { signupProof, startHandoff } from "./signupHandoff";
 
 export const acceptedMail = { status: true, message: "If eligible, check your email for the link" };
 export const invalidProof = () => new APIError("BAD_REQUEST", {
@@ -9,7 +11,7 @@ export const invalidProof = () => new APIError("BAD_REQUEST", {
 
 // Initial public requests commit generic work before any account/plugin lookup.
 export function mailAdmission(queue: MailRequests, settings: MailSettings) {
-  return createAuthMiddleware(async ctx => {
+  return async (ctx: GenericEndpointContext) => {
     const kind = ctx.path === "/sign-up/email" ? "signup"
       : ctx.path === "/request-password-reset" ? "reset"
         : ctx.path === "/send-verification-email" ? "verify" : undefined;
@@ -23,9 +25,8 @@ export function mailAdmission(queue: MailRequests, settings: MailSettings) {
     ctx.body.email = email;
     if (kind === "signup" && ctx.body.emailProof !== undefined) {
       const proof = ctx.body.emailProof;
-      if (typeof proof !== "string" || !/^[A-Za-z0-9_-]{43}$/.test(proof)) throw invalidProof();
-      const row = await ctx.context.internalAdapter.findVerificationValue(`signup-proof:${proof}`);
-      if (!row || row.value !== email || row.expiresAt <= new Date()) throw invalidProof();
+      const row = await signupProof(ctx, proof);
+      if (row.value !== email) throw invalidProof();
       return;
     }
     const rawCallback = (kind === "reset" ? ctx.body.redirectTo : ctx.body.callbackURL)
@@ -36,8 +37,9 @@ export function mailAdmission(queue: MailRequests, settings: MailSettings) {
     if (!settings.origins.includes(callback.origin) || callback.username || callback.password) {
       throw new APIError("FORBIDDEN", { message: "Invalid callback URL" });
     }
-    try { await queue.admit(kind, email, callback.href); }
+    const handoff = kind === "signup" ? await startHandoff(ctx, settings.secret, settings.baseURL.startsWith("https:")) : undefined;
+    try { await queue.admit(kind, email, callback.href, handoff); }
     catch { throw new APIError("SERVICE_UNAVAILABLE", { message: "Account service unavailable" }); }
     return ctx.json(acceptedMail);
-  });
+  };
 }

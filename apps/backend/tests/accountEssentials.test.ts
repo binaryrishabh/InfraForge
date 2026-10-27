@@ -14,7 +14,9 @@ import { prepareMailIntent, renderMailIntent } from "../auth/mailIntent";
 import { createOriginCheck } from "../auth/origin";
 
 const config = { BETTER_AUTH_SECRET: "fixture-only-secret-at-least-32-characters", BETTER_AUTH_URL: "http://localhost:3100", APP_ORIGINS: "http://localhost:5173" };
-const password = "fixture-only-password-long-enough";
+import { mockPasswordBreachService } from "./passwordBreachFixture";
+mockPasswordBreachService();
+const password = "Fixture-only-password-8!";
 let requestSequence = 0;
 class Quota implements AccountQuota {
   counts = new Map<string, number>();
@@ -44,10 +46,10 @@ function fixture(enabled = true, verificationRequired = true) {
     user: [], session: [], account: [], verification: [],
   };
   const admission = { wait: async () => {} };
-  const options = createAuth(prisma, settings, quota, { admit: async (kind, email, callbackURL) => {
+  const options = createAuth(prisma, settings, quota, { admit: async (kind, email, callbackURL, handoffHash) => {
     await admission.wait();
     const intent = { id: crypto.randomUUID(), kind, expiresAt: new Date(Date.now() + 1800_000),
-      payload: await symmetricEncrypt({ key: settings.secret, data: JSON.stringify({ email, callbackURL }) }) };
+      payload: await symmetricEncrypt({ key: settings.secret, data: JSON.stringify({ email, callbackURL, handoffHash }) }) };
     const tx = { verification: { create: async ({ data }: any) => database.verification.push(data) },
       $queryRaw: async (parts: TemplateStringsArray, ...args: any[]) => parts.join("").trimStart().startsWith('SELECT id, "emailVerified"')
         ? database.user.filter(u => u.email === args[0]) : (prisma.$queryRaw as any)(parts, ...args) };
@@ -111,7 +113,7 @@ test("native email verification expires and redeems once, including concurrent r
   const f = fixture(), signup = await f.signup();
   f.database.user[0].emailVerified = false;
   await f.call("send-verification-email", { email: "learner@example.test" });
-  expect(signup.status).toBe(200); expect(signup.headers.get("set-cookie")).toBeNull();
+  expect(signup.status).toBe(200); expect(signup.headers.get("set-cookie")).toContain("Max-Age=0");
   expect(f.database.user[0].emailVerified).toBe(false);
   const token = link(f.mail).searchParams.get("token")!;
   expect(f.ledger.has(verificationHash(token))).toBe(true);
@@ -133,7 +135,7 @@ test("native reset uses expiring single-use tokens and revokes old sessions", as
   expect((await f.call("request-password-reset", { email: "learner@example.test", redirectTo: `${config.APP_ORIGINS}/reset`, turnstileToken: "fixture-pass" })).status).toBe(200);
   await delivered();
   const token = link(f.mail).pathname.split("/").at(-1)!;
-  expect((await f.call("reset-password", { token, newPassword: "new-fixture-password-long-enough" })).status).toBe(200);
+  expect((await f.call("reset-password", { token, newPassword: "New-fixture-password-9!" })).status).toBe(200);
   expect(f.database.session).toHaveLength(0);
   expect((await f.call("reset-password", { token, newPassword: password })).status).toBe(400);
   await f.call("request-password-reset", { email: "learner@example.test", turnstileToken: "fixture-pass" }); await delivered();
@@ -245,7 +247,8 @@ test("verified-email signup masks duplicate username, email and absent identifie
   for (const [username, email] of [["Learner", "fresh@example.test"], ["fresh_name", "learner@example.test"], ["fresh_name", "fresh@example.test"]]) {
     const response = await f.call("sign-up/email", { username, email, name: "Name", password, turnstileToken: "fixture" });
     expect(response.status).toBe(200); expect(await response.text()).toBe(expected);
-    expect(response.headers.get("set-cookie")).toBeNull();
+    expect(response.headers.get("set-cookie")).toContain("infraforge_signup_handoff=");
+    expect(response.headers.get("set-cookie")).not.toContain("session_token");
   }
   expect(f.database.user).toHaveLength(1);
   expect(f.database.account).toHaveLength(1);
@@ -263,7 +266,7 @@ test("invalid signup input is rejected consistently before username membership l
 
 test("optional verification sends mail and keeps signup generic while allowing password sign-in", async () => {
   const f = fixture(true, false);
-  expect((await f.signup()).headers.get("set-cookie")).toBeNull();
+  expect((await f.signup()).headers.get("set-cookie")).toContain("Max-Age=0");
   expect(f.mail.messages).toHaveLength(1);
   expect((await f.call("sign-in/email", { email: "learner@example.test", password })).status).toBe(200);
   const taken = await f.call("sign-up/email", { username: "Learner", email: "another@example.test", name: "Name", password, turnstileToken: "fixture" });

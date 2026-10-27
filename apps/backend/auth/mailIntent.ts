@@ -13,9 +13,9 @@ export type MailIntent = {
   payload: string;
   expiresAt: Date;
 };
-export type MailPayload = { email: string; callbackURL: string; verificationToken?: string };
+export type MailPayload = { email: string; callbackURL: string; verificationToken?: string; handoffHash?: string };
 export interface MailRequests {
-  admit(kind: MailKind, email: string, callbackURL: string): Promise<void>;
+  admit(kind: MailKind, email: string, callbackURL: string, handoffHash?: string): Promise<void>;
 }
 
 // Matches Better Auth 1.7.7 verification.storeIdentifier = "hashed".
@@ -59,6 +59,11 @@ export async function prepareMailIntent(
 
   // Signup proof delivery never consults User or the requested username.
   if (intent.kind === "signup") {
+    if (data.handoffHash) await tx.verification.create({ data: {
+      id: `handoff:${intent.id}`,
+      identifier: `signup-handoff-proof:${storedIdentifier(mailCredential(intent, settings.secret))}`,
+      value: data.handoffHash, expiresAt: intent.expiresAt,
+    } });
     await tx.verification.create({ data: {
       id: `mail:${intent.id}`,
       identifier: storedIdentifier(`signup-proof:${mailCredential(intent, settings.secret)}`),
