@@ -422,7 +422,7 @@
     },
     {
       "file": "apps/backend/executionIdentity/loading.ts",
-      "sha256": "61ee37229baaeac847cccb6277387abb6ee5f7215103484893cdaae9f914e74a",
+      "sha256": "3db92311eb70d1c634baec8111a23adfb0fc0e9747123f87a1b668f22e070037",
       "numericSites": 14
     },
     {
@@ -607,7 +607,7 @@
     },
     {
       "file": "apps/backend/firstStack/scoredChallenges/projection.ts",
-      "sha256": "ae64bb684624658590fbd58f4d26f9758431384a56320d9640460062336628d5",
+      "sha256": "afe4415b101159ad9909620366a0fea3e62b8025811f06de2eee2ca45e4bb7e1",
       "numericSites": 0
     },
     {
@@ -2342,8 +2342,8 @@
     },
     {
       "file": "apps/web/src/firstStack/submissions.ts",
-      "sha256": "5a745ada8c7686d002fcd6b8e44a4f4fd0728371b77dd6a9b73e359e7b731a5e",
-      "numericSites": 1
+      "sha256": "a27d51caa082321cbb0eb8a22e11bb06645e09736854b217e5a236c874824036",
+      "numericSites": 4
     },
     {
       "file": "apps/web/src/firstStack/worker/entry.ts",
@@ -2657,7 +2657,7 @@
     },
     {
       "file": "packages/contracts/src/reports/runRecord.ts",
-      "sha256": "cc02581996ae8804e3a55cb7929ab6b5ba8bc8bf7e95eb0f097d74fa8df4c2c2",
+      "sha256": "bb957409e41286232291dfc2bed9e095a1281041eb79ef8066e38ab4c14252e2",
       "numericSites": 0
     },
     {
@@ -122747,7 +122747,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/submissions.ts#L49",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/submissions.ts#L60",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -122761,8 +122761,116 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/firstStack/submissions.ts",
-        "line": 49,
+        "line": 60,
         "column": 72
+      }
+    },
+    {
+      "id": "m1.apps.web.src.firstStack.submissions.2",
+      "concept": "createFirstStackSubmissionClient · literal 80",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 80,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.firstStack.submissions.2"
+        ]
+      },
+      "formula": "if (snapshot.purpose === \"scored\" ? !snapshot.challenge || !snapshot.challenge.id || snapshot.challenge.id.length > 80 || !snapshot.challenge.version || snapshot.challenge.version.length > 32 : snapshot.challenge !== undefined) throw Error(\"Supply an exact challenge id and version for scored submissions\");",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/submissions.ts#L61",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/firstStack/submissions.ts",
+        "line": 61,
+        "column": 123
+      }
+    },
+    {
+      "id": "m1.apps.web.src.firstStack.submissions.3",
+      "concept": "createFirstStackSubmissionClient · literal 32",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 32,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.firstStack.submissions.3"
+        ]
+      },
+      "formula": "if (snapshot.purpose === \"scored\" ? !snapshot.challenge || !snapshot.challenge.id || snapshot.challenge.id.length > 80 || !snapshot.challenge.version || snapshot.challenge.version.length > 32 : snapshot.challenge !== undefined) throw Error(\"Supply an exact challenge id and version for scored submissions\");",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/submissions.ts#L62",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/firstStack/submissions.ts",
+        "line": 62,
+        "column": 76
+      }
+    },
+    {
+      "id": "m1.apps.web.src.firstStack.submissions.4",
+      "concept": "createFirstStackSubmissionClient · literal 503",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 503,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.firstStack.submissions.4"
+        ]
+      },
+      "formula": "throw new SubmissionError(503);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/firstStack/submissions.ts#L64",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/firstStack/submissions.ts",
+        "line": 64,
+        "column": 58
       }
     },
     {
