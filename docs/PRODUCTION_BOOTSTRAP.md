@@ -2,9 +2,8 @@
 
 Production now runs on the home server: [HOME_HOST.md](HOME_HOST.md).
 
-For the owner-decided fresh database replacement, follow the copy-paste
-[self-hosted PostgreSQL cutover](SELF_HOSTED_POSTGRES.md). It includes URL-only
-provider switching, mandatory daily R2 backups and a scratch restore test.
+The database is a self-hosted PostgreSQL 18 container; daily R2 backups with a restore check
+are described in [HOME_HOST.md](HOME_HOST.md).
 
 Current operation is described in [DEPLOYMENT.md](DEPLOYMENT.md). This runbook is
 for provisioning or recovery, when initial operator access is appropriate. Normal
@@ -275,7 +274,7 @@ separately recorded compatible frontend only after backend acceptance. Failed mi
 or postcheck leaves services stopped and maintenance/lock retained. No `migrate resolve`,
 marker deletion or automatic database downgrade is part of recovery.
 
-The data owner must install the mandatory [daily R2 backup](operations/backup-alerts.md)
+The data owner must install the mandatory [daily R2 backup](HOME_HOST.md#database-backups)
 and test restoring into a separate approved scratch database before relying on it. Keep dump credentials in private libpq service/
 password files, not shell history. Record restore point, migration state and application
 SHA. Disposable packaging exercises `pg_dump`/restore mechanics; it proves neither
@@ -323,4 +322,4 @@ runs, real Nginx syntax/TLS/maintenance/ACME, failure rollback and refusals. It 
 fixture reload adapter because Docker is not systemd PID 1. It does not install AWS,
 exercise live apt/systemd bootstrap, issue Let's Encrypt certificates, change DNS or
 prove host capacity. Hosted credentials, network policy, OAuth and actual promotion
-remain separate operational evidence. See [research decisions](deployment-research.md).
+remain separate operational evidence.

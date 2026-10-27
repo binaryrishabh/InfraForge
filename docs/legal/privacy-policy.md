@@ -56,18 +56,17 @@ Use browser privacy settings or tracking protection to block analytics requests;
 
 | Provider | Role and relevant data | Status or condition |
 | --- | --- | --- |
-| Neon (PostgreSQL) | Account, session, design and run database | Database provider; project region and recovery-history window are not established by source |
-| AWS EC2, us-east-1 (United States) | Backend processing, authenticated requests and server execution | Hosting region supplied by the task brief; not a live-account audit |
-| AWS S3, planned in us-east-1 | Encrypted database backup copies containing database personal data | Planned; not yet installed in the new AWS account |
+| Owner-operated server (self-hosted PostgreSQL 18 and the backend) | Account, session, design and run database; backend processing, authenticated requests and simulation execution | In production since 2026-10-26. [OWNER: confirm the server's country] |
+| Cloudflare (Tunnel) | Carries all backend requests between your browser and our server (request metadata and encrypted traffic) | Active |
+| Cloudflare R2 | Encrypted daily database backup copies containing database personal data | Active since 2026-10-27; [OWNER: confirm the R2 storage location] |
 | Vercel | Frontend delivery/request metadata and cookieless aggregate Web Analytics | Frontend and retained analytics provider; collection depends on project settings |
-| Amazon Web Services, Simple Email Service (SES) | Recipient address and signup-proof/verification/reset text, HTML and bearer link; no template tracking pixels or third-party links | Optional email processor when selected; [OWNER: confirm selection, AWS contracting entity, SES region, retention and transfer safeguards] |
-| Resend | Recipient address and signup-proof/verification/reset text, HTML and bearer link; optional magic links or sign-in codes; no template tracking pixels or third-party links | Email processor when selected; required for optional email login; [OWNER: confirm selection, contracting entity, sending region, provider retention, disabled tracking and transfer safeguards] |
-| Cloudflare, Turnstile | Bot-check browser/network signals; validation sends the token, secret and client IP | Optional signup/reset challenge processor and required for optional magic-link/code requests; owner widget pending; [OWNER: confirm activation, widget mode, domains, contracting entity, provider retention and transfers] |
+| Resend | Recipient address and signup-proof/verification/reset text, HTML and bearer link; optional magic links or sign-in codes; no template tracking pixels or third-party links | Email processor (active); required for optional email login; [OWNER: confirm selection, contracting entity, sending region, provider retention, disabled tracking and transfer safeguards] |
+| Cloudflare, Turnstile | Bot-check browser/network signals; validation sends the token, secret and client IP | Active on signup and password reset, and required for optional magic-link/code requests; [OWNER: confirm activation, widget mode, domains, contracting entity, provider retention and transfers] |
 | Google or GitHub | Authorised profile/account information for sign-in | Only if configured and selected by you; provider privacy terms also apply |
 
 Turnstile protects credential signup when configured, independently of the account-essentials flag, and password reset when that API is enabled. Optional magic-link and sign-in-code requests require it. No configured Turnstile provider is inferred from the presence of its adapter.
 
-Data is processed in the United States for the specified AWS hosting and may be processed internationally through Neon, Vercel and any enabled providers. We do not claim India-only storage, a particular Neon region, an adequacy decision or signed transfer safeguards without evidence. Contact the privacy/grievance email for information about applicable destinations and safeguards. Sources and configuration limits are recorded in the [review register](README.md).
+Data is processed on our own server [OWNER: country] and may be processed internationally through Cloudflare, Vercel, Resend and any enabled sign-in provider. We do not claim a particular storage country, an adequacy decision or signed transfer safeguards without evidence. Contact the privacy contact above for details.
 
 ## Retention and deletion
 
@@ -79,7 +78,7 @@ Data is processed in the United States for the specified AWS hosting and may be 
 | Optional magic-link/code proofs and delivery requests | Magic proofs and requests expire within 15 minutes; codes and their requests within 10 minutes. Native proof records are consumed at login; the user-bound used-proof ledger is retained until expiry to prevent reuse. The existing five-second mail poll purges expired records; downtime delays physical cleanup, not validity. Delivery metadata is erased on success or final uncertainty. Account deletion removes user-linked proofs and retires native mailbox records. Pending generic requests have no user association and expire within the same limits. Resend's message copies and Cloudflare's request records follow their provider retention terms, which the owner must confirm before activation. |
 | Designs, runs and evidence | Kept until account deletion; deletion scrubs saved designs but retains immutable historical run records under a disabled opaque owner ID |
 | Operational logs | 30-day retention target; Docker size rotation alone does not enforce this period |
-| Backups | Planned rolling 28-day backup policy once installed, with the recovery and deletion limits below |
+| Backups | Daily copies kept for 14 days in Cloudflare R2 and the newest 3 on our server, with the recovery and deletion limits below |
 
 When enabled, deletion requires a signed-in session, your current password and typing `DELETE`. Finish or stop active runs first: pending, running, live or unresolved reserved work blocks deletion. OAuth-only users can first establish a password through mailbox recovery. Export before deletion, which revokes subsequent access.
 
@@ -87,7 +86,7 @@ Deletion removes sessions, credentials/OAuth tokens, user-linked reset/verificat
 
 Run IDs, owner IDs, captured run names, immutable inputs, lineage, actions, samples, cuts and results remain unchanged. This is profile erasure and pseudonymisation, not complete erasure of arbitrary personal text in historical runs. Pseudonymised data may still be personal data. Re-registering with the same email or username cannot recover or adopt that history. Sign-out does not erase browser drafts; clear site data on shared devices. Sources: [deletion semantics](../AUTHENTICATION.md#deletion-and-retained-history), [transaction](../../apps/backend/auth/accountData.ts) and [account routes](../../apps/backend/auth/accountRoutes.ts).
 
-Backups are designed but not yet installed in the new AWS account. The plan is a daily `pg_dump` archive, encrypted at rest on encrypted host storage and in private S3 storage, targeting 28 daily copies and four weekly copies. Daily and weekly S3 objects expire after 28 days; noncurrent versions expire after one day. Lifecycle deletion is asynchronous. The latest successful local copy remains until a replacement upload succeeds, so the current design does not guarantee a 28-day limit for that local copy. Neon point-in-time recovery (PITR)/restore history is a separate provider capability; its actual window must be checked in the project, not inferred from this backup plan. These are planned controls, not active independent backups. Deletion cannot instantly erase older backup copies; a restore must reapply account deletions before resumed service. Source: [backup design](../operations/backup-alerts.md).
+Backups are a daily `pg_dump` archive, checked by restoring it into a scratch database, kept on our server (newest 3) and in a private Cloudflare R2 bucket, encrypted at rest, for 14 days. A deletion is reflected in backups once older copies expire; if a backup is ever restored, earlier deletion decisions are applied again before service resumes.
 
 ## Requests, choices and human review
 

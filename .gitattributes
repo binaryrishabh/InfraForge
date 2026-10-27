@@ -10,5 +10,3 @@ scripts/reality/controlled-service.mjs text eol=lf
 ops/bootstrap/*.sh text eol=lf
 scripts/deploy/*.sh text eol=lf
 scripts/release/permission-proof.sh text eol=lf
-ops/backup-alerts/*.sh text eol=lf
-ops/backup-alerts/systemd/* text eol=lf

@@ -301,9 +301,6 @@ jobs:
       - run: bun install --frozen-lockfile
       - run: for script in ops/bootstrap/*.sh scripts/deploy/*.sh scripts/release/permission-proof.sh; do bash -n "$script"; done
       - run: shellcheck ops/bootstrap/*.sh scripts/deploy/*.sh scripts/release/permission-proof.sh
-      - run: bash -n ops/backup-alerts/run.sh && shellcheck ops/backup-alerts/run.sh
-      - run: python3 -m venv /tmp/infraforge-cfn-lint && /tmp/infraforge-cfn-lint/bin/pip install cfn-lint==1.46.0
-      - run: /tmp/infraforge-cfn-lint/bin/cfn-lint -t ops/backup-alerts/stack.json
       - run: bash scripts/deploy/check-workflows.sh
       - run: bash scripts/deploy/prove-frontend.sh
       - run: pwsh -NoProfile -File scripts/deploy/prove-setup.ps1
