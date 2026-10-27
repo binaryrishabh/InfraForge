@@ -37,9 +37,12 @@ for (const mode of ["success", "cleanup-failure", "cleanup-SIGINT", "cleanup-SIG
       if (mode === "disk-full") expect(events.some(args => args[0] === "docker")).toBe(false);
       expect(result.accepted.current).toEqual(result.current);
       expect(starts).toHaveLength(mode === "readiness-failure" ? 1 : 0);
-      const mutated = mode === "migration-failure" || mode === "readiness-failure";
+      // Same schema: a failed migration step restores the previous containers and reopens traffic.
+      const restored = mode === "migration-failure", mutated = mode === "readiness-failure";
       expect(result.lock).toBe(mutated || mode === "database-start-failure");
       expect(result.maintenance).toBe(mutated || mode === "proxy-failure");
+      expect(events.some(args => args.includes("start") && args.includes("api") && !args.includes("up"))).toBe(restored);
+      if (restored) expect(result.failure).toContain("restored");
       if (mode === "active" || mode === "wrong-main") expect(events.some(args => args.includes("stop"))).toBe(false);
     }
   }, 30000);
