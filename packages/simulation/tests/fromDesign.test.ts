@@ -7,6 +7,8 @@ import { createProductModel2 } from "../src/model2/product/run";
 import type { SavedProductDesign } from "../src/model2/product/contracts";
 import { validateLedger } from "../src/reality/ledger";
 import { CHALLENGE_VERSIONS } from "../../../apps/backend/challenges/definitions";
+import { CATALOG } from "@infraforge/catalog";
+import { requireKnown } from "../src/reality/quantity";
 
 function design(types: Record<string, Resource["type"]>, links: string[][] = []): SavedProductDesign {
   return { schema: "infraforge-saved-design/1", resources: Object.entries(types).map(([id, type]) => ({ id, type, x: 0, y: 0 })), connections: links.map(([s, t], i) => ({ id: `edge-${i}`, sourceId: s!, targetId: t!, sourceType: types[s!]!, targetType: types[t!]!, port: RESOURCE_PORTS[types[t!]!] })), workload: { targetThroughput: 600, throughputUnit: "per-minute", trafficShape: "steady", readWriteRatio: 0.8, payloadSize: "light" } };
@@ -77,4 +79,81 @@ test("impossible wiring returns plain refusals", () => {
     const result = contractFromDesign(d); expect("refused" in result).toBe(true);
     if ("refused" in result) expect(result.refused.every((d) => d.message.length > 20 && d.severity === "error")).toBe(true);
   }
+});
+
+test("separate app-to-cache and app-to-database connections execute cache-aside work", () => {
+  const d = design({ app: "Virtual Machine", cache: "Cache", db: "Database" }, [["app", "cache"], ["app", "db"]]);
+  const f = prepare(d), runtime = createProductModel2(f.compiled); runtime.advanceTo(10000000);
+  expect(runtime.evidence().data.caches[0]!.hits).toBeGreaterThan(0);
+  expect(runtime.evidence().data.databases[0]!.transactions.committed).toBeGreaterThan(0);
+});
+
+test("every catalog CPU and memory label sizes an explicitly assumed profile", () => {
+  for (const sku of CATALOG) {
+    const d = design({ app: "Virtual Machine", db: "Database" }, [["app", "db"]]);
+    const r = d.resources.find((r) => r.type === sku.category)!; r.skuId = sku.skuId;
+    const f = prepare(d), main = f.contract.nodes[r.id]!.resources.find((r) => r.role === "main")!.config;
+    const execution = main.kind === "compute" ? main : main.kind === "relational" ? main.execution : undefined;
+    expect(execution).toBeDefined(); expect(requireKnown(execution!.cores, "cores")).toBe(sku.vCpu);
+    expect(f.assumptions.find((a) => a.id === `${r.id}.sizing`)?.value).toEqual({ cores: sku.vCpu, memoryGb: sku.ramGb });
+    expect(f.contract.capabilities[0]!.value).toMatchObject({ value: sku.vCpu });
+  }
+  for (const [size, cores] of [["small", 1], ["medium", 2], ["large", 4]] as const) {
+    const d = design({ app: "Virtual Machine" }); d.resources[0]!.size = size;
+    expect(prepare(d).assumptions.find((a) => a.id === "app.main.cores")?.value).toBe(cores);
+  }
+});
+
+test("monitoring collects and exports real observations every ten seconds", () => {
+  const f = prepare(minimal[10]![1]), runtime = createProductModel2(f.compiled);
+  runtime.advanceTo(21000000); const samples = runtime.evidence().systems.backends[0]!.samples;
+  expect(samples.length).toBeGreaterThan(0);
+  expect(samples.some((s) => s.measurementAt >= 10000000)).toBe(true);
+  expect(f.assumptions.find((a) => a.id === "monitor.interval")?.value).toBe(10000000);
+});
+
+test("VM autoscaling provisions a real image before new replicas become ready", () => {
+  const d = design({ lb: "Load Balancer", app: "Virtual Machine" }, [["lb", "app"]]);
+  d.resources[1]!.autoscaling = { enabled: true, minReplicas: 1, maxReplicas: 2, targetCpu: 10 };
+  d.workload.targetThroughput = 12000;
+  const f = prepare(d), runtime = createProductModel2(f.compiled);
+  runtime.advanceTo(1000000); expect(runtime.evidence().counts.completed).toBeGreaterThan(0);
+  expect(runtime.evidence().product.controllers[0]!.replicas[0]!.readyAt).toBe(0);
+  runtime.advanceTo(16000000);
+  const e = runtime.evidence(), events = e.product.controllers[0]!.events;
+  expect(e.counts.completed).toBeGreaterThan(0);
+  const acquired = events.find((e) => e.id === "app#1" && e.kind === "artifacts-acquired");
+  const ready = events.find((e) => e.id === "app#1" && e.kind === "readiness");
+  expect(acquired).toBeDefined(); expect(ready).toBeDefined(); expect(ready!.at).toBeGreaterThan(acquired!.at);
+}, 30000);
+
+test("saved LB policies preserve total bounds without mutating the canvas", () => {
+  const d = design({ lb: "Load Balancer", a: "Virtual Machine", b: "Virtual Machine" }, [["lb", "a"], ["lb", "b"]]);
+  d.resources[0]!.autoscaling = { enabled: true, minReplicas: 2, maxReplicas: 4, targetCpu: 60 };
+  const before = structuredClone(d), f = prepare(d), controller = f.contract.nodes.a!.controller!;
+  expect(requireKnown(controller.min, "count") + 1).toBe(2); expect(requireKnown(controller.max, "count") + 1).toBe(4);
+  expect(d).toEqual(before); expect(f.contract.nodes.b!.controller).toBeUndefined();
+  const reordered = structuredClone(d); reordered.resources.reverse(); reordered.connections.reverse();
+  expect(prepare(reordered).contract).toEqual(f.contract);
+  // Compiler still refuses a contract that disagrees with the saved policy.
+  controller.min = controller.max; expect(compileProduct(d, f.contract).ok).toBe(false);
+});
+
+test("autoscaling uses an explicitly drawn registry when available", () => {
+  const d = design({ lb: "Load Balancer", app: "Virtual Machine", registry: "Container Registry", store: "Object Storage" }, [["lb", "app"], ["app", "registry"], ["registry", "store"]]);
+  d.resources[1]!.autoscaling = { enabled: true, minReplicas: 1, maxReplicas: 2, targetCpu: 10 }; d.workload.targetThroughput = 12000;
+  const f = prepare(d), runtime = createProductModel2(f.compiled); runtime.advanceTo(16000000);
+  expect(f.contract.nodes.app!.resources.some((r) => r.role === "registry")).toBe(false);
+  expect(runtime.evidence().systems.registries).toHaveLength(1);
+  expect(runtime.evidence().product.controllers[0]!.replicas[1]!.readyAt).not.toBeNull();
+});
+
+test("disconnected services, bad IDs, missing endpoints, invalid workloads and malformed input refuse", () => {
+  const disconnected = design({ app: "Virtual Machine", store: "Object Storage" });
+  const sku = design({ app: "Virtual Machine" }); sku.resources[0]!.skuId = "unknown";
+  const missing = design({ app: "Virtual Machine", db: "Database" }, [["app", "db"]]); missing.resources.pop();
+  const duplicate = design({ app: "Virtual Machine" }); duplicate.resources.push({ ...duplicate.resources[0]! });
+  const workload = design({ app: "Virtual Machine" }); workload.workload.targetThroughput = NaN;
+  const cyclic = design({ app: "Virtual Machine" }); Object.assign(cyclic, { cycle: cyclic });
+  for (const d of [disconnected, sku, missing, duplicate, workload, cyclic, null as unknown as SavedProductDesign]) expect("refused" in contractFromDesign(d)).toBe(true);
 });

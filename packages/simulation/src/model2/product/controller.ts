@@ -77,7 +77,15 @@ export function replicaController(pool: CompiledPool, kernel: EventKernel, conte
     }
     reconcile(); schedule(n(p.interval, "us"), "evaluate", tick);
   };
-  for (const r of replicas) { context.setReady(r.id, false); context.setAvailable(r.id, false); }
+  for (const r of replicas) {
+    const ready = p.initialReady === true && r.ordinal < desired;
+    context.setReady(r.id, ready); context.setAvailable(r.id, ready);
+    if (ready) {
+      r.state = "ready"; r.createdAt = 0; r.readyAt = 0;
+      if (p.signal.kind === "direct-core-time") previous.set(r.id, direct(r.id));
+      event("initial-ready", r.id, "explicitly authored already deployed replica; future replicas still acquire artifacts and start");
+    }
+  }
   for (const m of p.manual) kernel.schedule(n(m.at, "us"), 0, JSON.stringify(["manual-desired", pool.id, m.id]), () => { desired = n(m.desired, "count"); lastChange = kernel.now; event("manual-desired", pool.id, String(desired)); reconcile(); });
   schedule(0, "initial", reconcile); schedule(n(p.interval, "us"), "evaluate", tick);
   return { evidence: () => ({ id: pool.id, profile: p.schema, metricSource: p.signal.kind, desired, evaluations, missingMeasurements: missing, identityBudgetExhausted: budgetExhausted, populations: Object.fromEntries((["reserved", "provisioning", "pulling", "starting", "ready", "draining", "failed", "terminated"] as ReplicaState[]).map((state) => [state, replicas.filter((r) => r.state === state).length])), inService: replicas.filter((r) => r.state === "ready" && context.endpoint(r.id).alive && context.endpoint(r.id).ready && context.backend(p.loadBalancer, r.id).health).length, replicas: replicas.map((r) => ({ ...r, endpoint: context.endpoint(r.id), lb: context.backend(p.loadBalancer, r.id) })), events: [...events], omitted }) };

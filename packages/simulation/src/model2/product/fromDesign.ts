@@ -3,7 +3,7 @@ import { RESOURCE_PORTS, type Resource } from "@infraforge/domain/resource";
 import type { Quantity, Unit } from "../../reality/quantity";
 import type { ComputeResource } from "../compute/contracts";
 import type { CommandConfig } from "../async/contracts";
-import type { ProductContract, SavedProductDesign, Diagnostic, NodeContract, ResourceTemplate, EdgeContract } from "./contracts";
+import type { ProductContract, SavedProductDesign, Diagnostic, ResourceTemplate, EdgeContract } from "./contracts";
 import { compileProduct, savedPoolPolicies } from "./compiler";
 import { boundedProduct } from "./bounds";
 import { canonical } from "./provenance";
@@ -33,12 +33,16 @@ export function contractFromDesign(saved: SavedProductDesign): { contract: Produ
       if (r.skuId && findSku(r.skuId)?.category !== r.type) error(`resources.${r.id}.skuId`, "Choose a catalog size belonging to this resource type.");
       if (r.type === "Database" && !incoming(r.id).some((s) => ["Virtual Machine", "Cache"].includes(s.type))) error(`resources.${r.id}`, "Connect an app server or a cache to this database so something can call it.");
       if (r.type === "Load Balancer" && (!outgoing(r.id).length || outgoing(r.id).some((t) => t.type !== "Virtual Machine"))) error(`resources.${r.id}`, "Connect the load balancer to at least one app server.");
-      if (["Cache", "CDN", "Container Registry", "DNS"].includes(r.type) && outgoing(r.id).length !== 1) error(`resources.${r.id}`, "Connect this resource to exactly one database, object store or entry point as appropriate.");
+      if (["CDN", "Container Registry", "DNS"].includes(r.type) && outgoing(r.id).length !== 1) error(`resources.${r.id}`, "Connect this resource to exactly one object store or entry point as appropriate.");
+      if (r.type === "Cache" && (outgoing(r.id).length > 1 || (!outgoing(r.id).length && !incoming(r.id).some((s) => s.type === "Virtual Machine" && outgoing(s.id).some((t) => t.type === "Database"))))) error(`resources.${r.id}`, "Connect the cache to one database, or connect both the cache and a database to its app server.");
       if (r.type === "Monitoring Agent" && !outgoing(r.id).length) error(`resources.${r.id}`, "Connect the monitoring agent to a resource to observe.");
       if (r.autoscaling?.enabled && (r.type !== "Virtual Machine" || incoming(r.id).filter((s) => s.type === "Load Balancer").length !== 1)) error(`resources.${r.id}.autoscaling`, "Autoscaling needs an app server behind exactly one load balancer.");
     }
     const entries = resources.filter((r) => ["Load Balancer", "CDN", "Virtual Machine"].includes(r.type) && !incoming(r.id).some((s) => ["Load Balancer", "Virtual Machine", "CDN"].includes(s.type)));
     if (entries.length !== 1) error("caller.entry", "Connect the design into one entry point: one load balancer, CDN or app server.");
+    const connected = new Set<string>(), visit = (id: string): void => { if (connected.has(id)) return; connected.add(id); for (const r of [...outgoing(id), ...incoming(id)]) visit(r.id); };
+    if (entries[0]) visit(entries[0].id);
+    for (const r of resources) if (!connected.has(r.id)) error(`resources.${r.id}`, "Connect this resource to the application's graph before running it.");
     if (refused.length) return { refused };
     const entry = entries[0]!, assumptions: Assumption[] = [], ledger: ProductContract["ledger"] = [];
     const note = <T>(id: string, value: T, unit: string, sentence: string): T => { assumptions.push({ id, value, unit, sentence }); return value; };
@@ -83,20 +87,25 @@ export function contractFromDesign(saved: SavedProductDesign): { contract: Produ
       switch (r.type) {
         case "Virtual Machine": {
           const data = outgoing(id).filter((t) => ["Database", "Cache"].includes(t.type));
-          if (data.length > 1) { error(`resources.${id}`, "Connect the app to one database or one cache backed by a database; multiple application dependencies need an authored operation plan."); break; }
+          const cache = data.find((t) => t.type === "Cache"), database = data.find((t) => t.type === "Database");
+          if (data.length > 1 && !(data.length === 2 && cache && database && !outgoing(cache.id).length)) { error(`resources.${id}`, "Connect the app to one database, one database-backed cache, or one cache and one database; other combinations need an authored operation plan."); break; }
           const config = execution(r, "main");
           config.memory.limit = q(`${id}.memory.limit`, memory.get(id)! * 1073741824, "bytes", "The memory label is interpreted as GiB for this partial observation only; total memory use remains unknown.");
-          if (data[0]) config.downstream = `$${data[0].id}${data[0].type === "Cache" ? "/aside" : ""}`;
+          if (cache && database) {
+            config.downstream = "$self/aside";
+            add(r, "aside", { kind: "cache-aside", execution: execution(r, "aside"), cache: `$${cache.id}`, database: `$${database.id}`, keys: ["key"], access: "cycle", coalesce: true, onCacheFailure: "database", invalidateWrites: true, operations: { read: "read", write: "write", health: "read" } }); internal(r, "main", "aside");
+          } else if (data[0]) config.downstream = `$${data[0].id}${data[0].type === "Cache" ? "/aside" : ""}`;
           add(r, "main", config); break;
         }
-        case "Load Balancer": add(r, "main", { kind: "load-balancer", backends: [], policy: "least-outstanding", maxOutstanding: q(`${id}.outstanding`, 1024 * cores.get(id)!, "count"), maxPending: q(`${id}.pending`, 256, "count"), pendingTimeout: q(`${id}.timeout`, 1000000, "us"), health: { interval: q(`${id}.health.interval`, 5000000, "us"), timeout: q(`${id}.health.timeout`, 1000000, "us"), healthy: q(`${id}.healthy`, 1, "count"), unhealthy: q(`${id}.unhealthy`, 2, "count"), operation: "health", initial: "eligible" } }); break;
+        case "Load Balancer": add(r, "main", { kind: "load-balancer", backends: [], policy: "least-outstanding", maxOutstanding: q(`${id}.outstanding`, 1024 * cores.get(id)!, "count"), maxPending: q(`${id}.pending`, 256, "count"), pendingTimeout: q(`${id}.timeout`, 1000000, "us"), health: { interval: q(`${id}.health.interval`, 5000000, "us"), timeout: q(`${id}.health.timeout`, 1000000, "us"), healthy: q(`${id}.healthy`, 1, "count"), unhealthy: q(`${id}.unhealthy`, 1, "count"), operation: "health", initial: "eligible" } }); break;
         case "Database": {
           const plan = (op: string) => ({ statements: [{ kind: op === "write" ? "write" as const : "snapshot-read" as const, keys: ["key"], cpu: q(`${id}.${op}.cpu`, op === "write" ? 2000 : 1000, "cpu-us"), parallelism: q(`${id}.${op}.parallelism`, 1, "cores"), blockingWait: q(`${id}.${op}.wait`, 0, "us"), logBytes: q(`${id}.${op}.log`, 0, "bytes") }], statementTimeout: q(`${id}.${op}.statementTimeout`, 1000000, "us"), lockTimeout: q(`${id}.${op}.lockTimeout`, 1000000, "us"), transactionTimeout: q(`${id}.${op}.transactionTimeout`, 2000000, "us"), commitWait: q(`${id}.${op}.commitWait`, 0, "us"), durability: "logical-only" as const });
           add(r, "main", { kind: "relational", semantics: "read-committed-keyed/1", execution: execution(r, "main"), maxSessions: q(`${id}.sessions`, Math.min(512, memory.get(id)! * 50), "count"), activeTransactions: q(`${id}.active`, 16 * cores.get(id)!, "count"), pendingQueries: q(`${id}.pending`, 256, "count"), keys: ["key"], initial: [{ key: "key", version: 1, bytes: q(`${id}.row`, 1024, "bytes") }], plans: Object.fromEntries(operations.map((op) => [op, plan(op)])) }); break;
         }
         case "Cache":
-          if (target?.type !== "Database") { error(`resources.${id}`, "Connect the cache to one database for cache-aside reads and write invalidation."); break; }
+          if (target && target.type !== "Database") { error(`resources.${id}`, "Connect the cache to one database for cache-aside reads and write invalidation."); break; }
           add(r, "main", { kind: "cache", semantics: "keyed-cache/1", execution: execution(r, "main"), capacity: q(`${id}.capacity`, memory.get(id)! * 1073741824, "bytes"), entryOverhead: q(`${id}.overhead`, 64, "bytes"), policy: "lru", ttl: q(`${id}.ttl`, 60000000, "us"), initial: [], commandCpu: q(`${id}.cpu`, 100, "cpu-us") });
+          if (!target) break;
           add(r, "aside", { kind: "cache-aside", execution: execution(r, "aside"), cache: "$self", database: `$${target.id}`, keys: ["key"], access: "cycle", coalesce: true, onCacheFailure: "database", invalidateWrites: true, operations: { read: "read", write: "write", health: "read" } }); internal(r, "aside", "main"); break;
         case "Object Storage": objects(r, "main"); break;
         case "CDN":
@@ -127,14 +136,17 @@ export function contractFromDesign(saved: SavedProductDesign): { contract: Produ
     for (const r of resources.filter((r) => r.autoscaling?.enabled)) {
       const p = r.autoscaling!, id = r.id, lb = incoming(id).find((s) => s.type === "Load Balancer")!;
       if (p.minReplicas === undefined || p.maxReplicas === undefined || p.targetCpu === undefined) { error(`resources.${id}.autoscaling`, "Set the minimum replicas, maximum replicas and CPU target before enabling autoscaling."); continue; }
-      // Owned bootstrap services allow the canvas pool to run without inventing extra drawn nodes.
-      objects(r, "image-store");
-      add(r, "registry", { kind: "registry", ...command(r, "registry", ["upload", "manifest", "tag", "resolve", "blob"]), store: "$self/image-store", namespace: "registry" });
-      add(r, "image", { kind: "artifact-client", ...command(r, "image", ["start"]), registry: "$self/registry", cacheBytes: q(`${id}.image.cache`, 1048576, "bytes"), attempts: q(`${id}.image.attempts`, 3, "count"), backoff: q(`${id}.image.backoff`, 1000000, "us"), replicas: [] });
-      internal(r, "registry", "image-store", "origin"); internal(r, "image", "registry", "artifact");
-      for (let slot = 0; slot < p.maxReplicas && slot < 128; slot++) seedRegistry(`${id}.seed.${slot}`, `$${id}#${slot}/image`, `$${id}#${slot}/registry`);
-      nodes[id]!.controller = { schema: "generic-reconcile/1", version: "1", provenance: [SOURCE], loadBalancer: `$${lb.id}`, initial: q(`${id}.controller.initial`, p.minReplicas, "count"), min: q(`${id}.controller.min`, p.minReplicas, "count", "The pool minimum comes from the saved policy.", true), max: q(`${id}.controller.max`, p.maxReplicas, "count", "The pool maximum comes from the saved policy.", true), slots: q(`${id}.controller.slots`, p.maxReplicas, "count"), target: q(`${id}.controller.target`, p.targetCpu / 100, "ratio", "The CPU target comes from the saved percentage.", true), interval: q(`${id}.controller.interval`, 10000000, "us"), tolerance: q(`${id}.controller.tolerance`, 0.1, "ratio"), cooldown: q(`${id}.controller.cooldown`, 10000000, "us"), downStabilization: q(`${id}.controller.stabilization`, 30000000, "us"), provision: q(`${id}.controller.provision`, 1000000, "us"), startup: q(`${id}.controller.startup`, 1000000, "us"), drain: q(`${id}.controller.drain`, 5000000, "us"), attempts: q(`${id}.controller.attempts`, 3, "count"), retry: q(`${id}.controller.retry`, 1000000, "us"), signal: { kind: "direct-core-time" }, artifact: { node: id, role: "image", reference: "release" }, provisionFailures: [], manual: [] };
-      note(`${id}.controller.bootstrap`, "owned registry and object store", "policy", "Scaling uses an assumed local image registry and one small release image; initially ready replicas already have their image.");
+      const registry = outgoing(id).find((t) => t.type === "Container Registry");
+      // Missing image infrastructure is explicit, owned startup overhead, not a drawn node.
+      if (!registry) {
+        objects(r, "image-store");
+        add(r, "registry", { kind: "registry", ...command(r, "registry", ["upload", "manifest", "tag", "resolve", "blob"]), store: "$self/image-store", namespace: "registry" });
+        internal(r, "registry", "image-store", "origin"); internal(r, "image", "registry", "artifact");
+      }
+      add(r, "image", { kind: "artifact-client", ...command(r, "image", ["start"]), registry: registry ? `$${registry.id}` : "$self/registry", cacheBytes: q(`${id}.image.cache`, 1048576, "bytes"), attempts: q(`${id}.image.attempts`, 3, "count"), backoff: q(`${id}.image.backoff`, 1000000, "us"), replicas: [] });
+      for (let slot = 0; slot < (registry ? 1 : p.maxReplicas) && slot < 128; slot++) seedRegistry(`${id}.seed.${slot}`, `$${id}#${slot}/image`, registry ? `$${registry.id}` : `$${id}#${slot}/registry`);
+      nodes[id]!.controller = { schema: "generic-reconcile/1", version: "1", provenance: [SOURCE], loadBalancer: `$${lb.id}`, initialReady: true, initial: q(`${id}.controller.initial`, p.minReplicas, "count"), min: q(`${id}.controller.min`, p.minReplicas, "count", "The pool minimum comes from the saved policy.", true), max: q(`${id}.controller.max`, p.maxReplicas, "count", "The pool maximum comes from the saved policy.", true), slots: q(`${id}.controller.slots`, p.maxReplicas, "count"), target: q(`${id}.controller.target`, p.targetCpu / 100, "ratio", "The CPU target comes from the saved percentage.", true), interval: q(`${id}.controller.interval`, 10000000, "us"), tolerance: q(`${id}.controller.tolerance`, 0.1, "ratio"), cooldown: q(`${id}.controller.cooldown`, 10000000, "us"), downStabilization: q(`${id}.controller.stabilization`, 30000000, "us"), provision: q(`${id}.controller.provision`, 1000000, "us"), startup: q(`${id}.controller.startup`, 1000000, "us"), drain: q(`${id}.controller.drain`, 5000000, "us"), attempts: q(`${id}.controller.attempts`, 3, "count"), retry: q(`${id}.controller.retry`, 1000000, "us"), signal: { kind: "direct-core-time" }, artifact: { node: id, role: "image", reference: "release" }, provisionFailures: [], manual: [] };
+      note(`${id}.controller.bootstrap`, registry ? "drawn registry" : "owned registry and object store", "policy", "Scaling uses one assumed small release image in the drawn registry or owned startup services; initially ready replicas already have their image.");
     }
     for (const e of connections) {
       const s = byId.get(e.sourceId)!, t = byId.get(e.targetId)!;
@@ -145,7 +157,11 @@ export function contractFromDesign(saved: SavedProductDesign): { contract: Produ
       else if (["CDN", "Container Registry"].includes(s.type) && t.type === "Object Storage") purpose = "origin";
       else if (s.type === "Cache" && t.type === "Database") sourceRole = "aside";
       else if (s.type === "DNS" && t.id === entry.id) purpose = "dependency";
-      else if (s.type === "Virtual Machine" && ["Database", "Cache"].includes(t.type)) targetRole = t.type === "Cache" ? "aside" : "main";
+      else if (s.type === "Virtual Machine" && ["Database", "Cache"].includes(t.type)) {
+        if (nodes[s.id]!.resources.some((c) => c.role === "aside")) sourceRole = "aside";
+        else targetRole = t.type === "Cache" ? "aside" : "main";
+      }
+      else if (s.type === "Virtual Machine" && s.autoscaling?.enabled && t.type === "Container Registry") { purpose = "artifact"; sourceRole = "image"; }
       else if (s.type === "Virtual Machine" && ["Object Storage", "Message Queue", "Container Registry"].includes(t.type) && !s.autoscaling?.enabled) {
         purpose = t.type === "Container Registry" ? "artifact" : "consumer";
         if (t.type === "Container Registry") seedRegistry(e.id, `$${s.id}`, `$${t.id}`);
@@ -182,9 +198,11 @@ export function contractFromDesign(saved: SavedProductDesign): { contract: Produ
     for (const target of [...new Set(resources.filter((r) => r.type === "Monitoring Agent").flatMap((r) => outgoing(r.id).map((t) => t.id)))].sort()) contract.instrumentation.push({ target: `$${target}`, bytes: q(`instrumentation.${target}`, 128, "bytes") });
     note("security.scope", "logical TCP admission only", "policy", "Public exposure, encryption and open ports stay saved metadata; assumed listeners and allow policies do not certify the design's security.");
     note("application.scope", "one-key educational application", "policy", "Requests use one assumed key; queue, object and registry edges receive explicit bootstrap commands rather than invented application fan-out.");
+    note("workload.arrivals", "deterministic open-loop", "policy", "Requests begin immediately at evenly spaced intervals with a fractional read/write mixture; peak traffic occupies seconds ten through twenty.");
     for (const r of saved.resources.filter((r) => r.type === "Load Balancer" && r.autoscaling?.enabled)) note(`${r.id}.poolMapping`, resources.filter((x) => x.autoscaling?.enabled).map((x) => x.id), "policy", "The first app by ID owns the adjustable replicas while its drawn siblings stay fixed, preserving the load balancer's total replica bounds.");
     // Non-numeric policy choices are also reviewable; quantity leaves are already listed above.
     const inspect = (value: unknown, path: string): void => {
+      if (/^contract\.nodes\.[^.]+\.type$/.test(path)) return; // The user chose the resource type.
       if (value && typeof value === "object" && "kind" in value && "unit" in value && "provenance" in value) return;
       if (value && typeof value === "object" && Object.keys(value).length) { for (const [key, child] of Object.entries(value)) if (!["ledger", "capabilities", "provenance", "evidence"].includes(key)) inspect(child, `${path}.${key}`); }
       else note(`default.${path}`, value, "setting", `The assumed ${path.replaceAll(".", " ")} is ${JSON.stringify(value)}.`);

@@ -16,7 +16,7 @@ import { numericOrigins } from "./origins";
 export function savedPoolPolicies(design: SavedProductDesign): SavedProductDesign {
   const resources = design.resources.map((r) => ({ ...r }));
   for (const lb of resources.filter((r) => r.type === "Load Balancer" && r.autoscaling?.enabled)) {
-    const children = resources.filter((r) => design.connections.some((e) => e.sourceId === lb.id && e.targetId === r.id)).sort((a, b) => a.id.localeCompare(b.id, "en"));
+    const children = resources.filter((r) => design.connections.some((e) => e.sourceId === lb.id && e.targetId === r.id)).sort((a, b) => a.id < b.id ? -1 : 1);
     const policy = lb.autoscaling!, fixed = children.length - 1;
     if (!children.length || children.some((r) => r.type !== "Virtual Machine" || r.autoscaling?.enabled) || policy.minReplicas === undefined || policy.maxReplicas === undefined || policy.minReplicas <= fixed) throw Error("Load balancer autoscaling needs app servers without competing pool policies and a minimum covering every drawn server");
     children[0]!.autoscaling = { ...policy, minReplicas: policy.minReplicas - fixed, maxReplicas: policy.maxReplicas - fixed };

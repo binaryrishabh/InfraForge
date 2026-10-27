@@ -2,6 +2,7 @@ import type { RealityEntry } from "../../reality/ledger";
 import { requireKnown, type Quantity } from "../../reality/quantity";
 import type { ControllerProfile } from "./contracts";
 export function validateController(p: ControllerProfile, ledger: RealityEntry[]) {
+  if (p.initialReady !== undefined && typeof p.initialReady !== "boolean") throw Error("Initial replica readiness must be an explicit boolean");
   const count = (q: Quantity<"count">, min = 0) => { const n = requireKnown(q, "count"); if (!Number.isSafeInteger(n) || n < min) throw Error("Invalid controller population"); return n; };
   if (p.schema !== "generic-reconcile/1" || !p.version || !p.provenance.length || !p.loadBalancer || !p.artifact.reference) throw Error("Versioned authored generic controller and artifact reference required");
   const min = count(p.min, 1), max = count(p.max, min), initial = count(p.initial, min), slots = count(p.slots, max);

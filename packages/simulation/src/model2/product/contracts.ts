@@ -46,6 +46,8 @@ export interface EdgeContract {
 export interface ControllerProfile {
   schema: "generic-reconcile/1"; version: string; provenance: string[];
   loadBalancer: string; initial: Quantity<"count">; min: Quantity<"count">; max: Quantity<"count">;
+  // Explicit warm start for an already deployed canvas; new replicas still provision normally.
+  initialReady?: boolean;
   // Finite predeclared station slots are dormant, not capacity. Identities are created on provision.
   slots: Quantity<"count">; interval: Quantity<"us">; target: Quantity<"ratio">; tolerance: Quantity<"ratio">;
   cooldown: Quantity<"us">; downStabilization: Quantity<"us">; provision: Quantity<"us">; startup: Quantity<"us">;
