@@ -6,6 +6,7 @@ import { prisma } from "../lib/prisma";
 import { ValidationError, NotFoundError } from "../utils/errors";
 import { DeploymentCreateBodySchema, DeploymentIdSchema } from "../zod_schemas/deployment.schema";
 import { captureRunInputs } from "../deployments/runInputs";
+import { hasInternalGrant } from "../internalModel2/store";
 import { reportRouter } from "../reports/routes";
 import { actionRouter } from "../actions/routes";
 import { rerunRouter } from "../reruns/routes";
@@ -19,12 +20,14 @@ deploymentRouter.post("/", async (req, res) => {
   const body = DeploymentCreateBodySchema.safeParse(req.body);
   if (!body.success) throw new ValidationError("A saved infrastructure ID and valid workload are required.");
   const { infrastructureId, workloadProfile } = body.data;
+  // Model 2 live runs open to granted accounts first; everyone moves to Model 2 when Model 1 is removed.
+  const engine = await hasInternalGrant(res.locals.userId) ? "2" : "1";
   const createdDeployment = await prisma.$transaction(async (tx) => {
     await tx.$queryRaw`SELECT id FROM "Infrastructure" WHERE id = ${infrastructureId} FOR UPDATE`;
     const infrastructure = await tx.infrastructure.findUnique({ where: { id: infrastructureId, ownerId: res.locals.userId } });
     if (!infrastructure) throw new NotFoundError("Infrastructure not found");
-    const runInputs = captureRunInputs(infrastructure.layout, workloadProfile);
-    requireCapability(infrastructure.ownerId!, { capability: "run.start", purpose: "engineer", engine: "1", profile: runInputs.simulationModelVersion, durationSeconds: null });
+    const runInputs = captureRunInputs(infrastructure.layout, workloadProfile, undefined, engine);
+    requireCapability(infrastructure.ownerId!, { capability: "run.start", purpose: "engineer", engine, profile: runInputs.simulationModelVersion, durationSeconds: null });
     const run = await admitDeployment(tx, { id: randomUUID(), infrastructureId,
       ownerId: infrastructure.ownerId, runName: infrastructure.name,
       resourceCount: runInputs.resources.length, workloadProfile: runInputs.workloadProfile,

@@ -23,11 +23,13 @@ const RunInputsV2Schema = RunInputsV1Schema.extend({ version: z.literal(2),
   simulationModelVersion: z.string().min(1).max(64), catalogSnapshot: z.string().min(1).max(64) });
 const RunInputsSchema = z.discriminatedUnion("version", [RunInputsV1Schema, RunInputsV2Schema]);
 
-export function captureRunInputs(layout: unknown, workload?: WorkloadProfile, seed: string = randomUUID()) {
+// Model 2 runs record engine "2"; until Model 1 is removed, other runs keep the Model 1 version.
+export const MODEL2_ENGINE_VERSION = "2";
+export function captureRunInputs(layout: unknown, workload?: WorkloadProfile, seed: string = randomUUID(), engine: "1" | "2" = "1") {
   const parsed = LayoutSchema.safeParse(layout);
   if (!parsed.success) throw new ValidationError("Saved infrastructure layout is invalid. Update it before deploying.");
   return RunInputsV2Schema.parse({
-    version: 2, simulationModelVersion: SIMULATION_MODEL_VERSION, catalogSnapshot: CATALOG_SNAPSHOT_DATE,
+    version: 2, simulationModelVersion: engine === "2" ? MODEL2_ENGINE_VERSION : SIMULATION_MODEL_VERSION, catalogSnapshot: CATALOG_SNAPSHOT_DATE,
     resources: parsed.data.resources,
     connectionLines: parsed.data.connectionLines,
     workloadProfile: resolveWorkload(workload),
@@ -48,7 +50,9 @@ export function engineSeed(seed: string): number {
 }
 
 export function assertSimulationContext(input: RunInputs) {
-  if (input.version === 2 && (input.simulationModelVersion !== SIMULATION_MODEL_VERSION || input.catalogSnapshot !== CATALOG_SNAPSHOT_DATE)) {
+  if (input.version === 2 && (![SIMULATION_MODEL_VERSION, MODEL2_ENGINE_VERSION].includes(input.simulationModelVersion) || input.catalogSnapshot !== CATALOG_SNAPSHOT_DATE)) {
     throw new Error("Captured simulation model/catalog differs from this runtime. Create a new run; inputs will not be silently changed.");
   }
 }
+
+export const runsOnModel2 = (input: RunInputs) => input.version === 2 && input.simulationModelVersion === MODEL2_ENGINE_VERSION;

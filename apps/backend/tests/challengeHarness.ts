@@ -78,10 +78,10 @@ export function attemptRow(def: ChallengeDefinition, design: ChallengeStarter, p
   const actions: StoredAction[] = [];
   const deploymentId = randomUUID();
   for (let i = 0; i < (options.stopAt ?? def.evaluationSeconds); i++) {
-    instance.state = tick(instance.state, {}).state;
+    instance.state = tick(instance.state!, {}).state;
     instance.metricsComputedAt = new Date().toISOString();
     captureEvidenceTick(instance);
-    const second = instance.state.simulatedSeconds;
+    const second = instance.state!.simulatedSeconds;
     for (const [id, running] of instance.actions) {
       const done = actionCompletion(instance, running);
       if (!done) continue;
@@ -97,7 +97,7 @@ export function attemptRow(def: ChallengeDefinition, design: ChallengeStarter, p
         outcome: applied.outcome as StoredAction["outcome"], failureReason: null });
     }
   }
-  instance.tickCount = instance.state.simulatedSeconds;
+  instance.tickCount = instance.state!.simulatedSeconds;
   const now = new Date().toISOString();
   const stage = (name: string, result: { summary: string; details: object }) =>
     ({ name, status: "completed", startedAt: now, completedAt: now, message: result.summary, details: result.details });

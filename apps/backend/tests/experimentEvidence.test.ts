@@ -53,12 +53,12 @@ test("a failed/lost batch reply freezes and retries the identical captures befor
     pending.length = 0;
   };
   await expect(advanceTickBatch(instance, async () => {}, undefined, persist)).rejects.toThrow("reply lost");
-  expect(instance.state.simulatedSeconds).toBe(60);
+  expect(instance.state!.simulatedSeconds).toBe(60);
   await expect(advanceTickBatch(instance, async () => {}, undefined, persist)).rejects.toThrow("reply lost");
-  expect(instance.state.simulatedSeconds).toBe(60); expect(instance.evidence!.pending).toEqual(original);
+  expect(instance.state!.simulatedSeconds).toBe(60); expect(instance.evidence!.pending).toEqual(original);
   fail = false;
   await advanceTickBatch(instance, async () => {}, undefined, persist);
-  expect(instance.state.simulatedSeconds).toBe(60); expect(saved.size).toBe(31);
+  expect(instance.state!.simulatedSeconds).toBe(60); expect(saved.size).toBe(31);
   expect([...saved.values()].map((p) => p.sampledAt)).toEqual(original.map((p) => p.sampledAt));
 });
 
@@ -103,21 +103,21 @@ test("an uncapturable tick freezes instead of dropping a sample and continuing",
   const instance = run(60);
   instance.topologyRevision = 1_000_001; instance.metricsTopologyRevision = instance.topologyRevision;
   await expect(advanceTickBatch(instance, async () => {})).rejects.toThrow("advancement is frozen");
-  expect(instance.state.simulatedSeconds).toBe(30);
+  expect(instance.state!.simulatedSeconds).toBe(30);
   await expect(advanceTickBatch(instance, async () => {})).rejects.toThrow("advancement is frozen");
-  expect(instance.state.simulatedSeconds).toBe(30);
+  expect(instance.state!.simulatedSeconds).toBe(30);
 });
 
 for (const speed of [1, 10, 60]) test(`CPU spike schedules at 60 and ends at 80 at ${speed}x, with 51 exact tick samples`, async () => {
   const def = definition("headroom-under-cpu-pressure"), instance = run(speed, def), saved: CapturedEvidence[] = [];
   const persist = async (r: SimulationInstance) => { saved.push(...r.evidence!.pending); r.evidence!.pending.length = 0; };
   while (!experimentDue(instance)) await advanceTickBatch(instance, async () => {}, undefined, persist);
-  expect(instance.state.simulatedSeconds).toBe(60); expect(saved.at(-1)?.simulatedSeconds).toBe(60);
+  expect(instance.state!.simulatedSeconds).toBe(60); expect(saved.at(-1)?.simulatedSeconds).toBe(60);
   applyAction(instance, "fault", { kind: "chaos", parameters: { type: instance.experiment!.plan.fault, resourceId: "app-2", trigger: "challenge-experiment" } });
   instance.experiment!.phase = "applied";
   const completed: number[] = [];
   while (!reachedMatchedStop(instance)) await advanceTickBatch(instance, async (r) => {
-    if (actionCompletion(r, r.actions.get("fault")!)) completed.push(r.state.simulatedSeconds);
+    if (actionCompletion(r, r.actions.get("fault")!)) completed.push(r.state!.simulatedSeconds);
   }, undefined, persist);
   expect(completed).toEqual([80]); expect(saved.map((p) => p.simulatedSeconds)).toEqual(Array.from({ length: 51 }, (_, i) => 30 + i));
 });

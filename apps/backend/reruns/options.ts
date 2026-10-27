@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import type { RerunOptions } from "@infraforge/contracts/reports";
 import type { RunInputs } from "@infraforge/contracts/run-inputs";
-import { captureRunInputs, readRunInputs, assertSimulationContext } from "../deployments/runInputs";
+import { captureRunInputs, readRunInputs, assertSimulationContext, runsOnModel2 } from "../deployments/runInputs";
 import { summarizeRun, type StoredRun } from "../reports/report";
 import { readRecords } from "../reports/records";
 import { compareInputs } from "../comparison/inputs";
@@ -11,7 +11,8 @@ import { historicalExecutionPolicy, type HistoricalExecutionPolicy } from "../ru
 export const MAX_MATCHED_STOP_SECONDS = 604800;
 export function rerunInputHash(input: RunInputs) { return createHash("sha256").update(canonical(input)).digest("hex"); }
 export function currentDesignInput(source: RunInputs, layout: unknown) {
-  return { ...captureRunInputs(layout, source.workloadProfile), seed: source.seed };
+  // A rerun keeps the engine of the run it repeats.
+  return { ...captureRunInputs(layout, source.workloadProfile, undefined, runsOnModel2(source) ? "2" : "1"), seed: source.seed };
 }
 export function buildRerunOptions(source: StoredRun & { runtimeActive?: boolean }, layout: unknown | null, policy: HistoricalExecutionPolicy = historicalExecutionPolicy): RerunOptions {
   let input: RunInputs | null = null;

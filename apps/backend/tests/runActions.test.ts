@@ -22,8 +22,8 @@ test("load records actual previous/applied target; paused controls require no en
   const run = instance();
   expect(applyAction(run, "pause", { kind: "speed", parameters: { speed: 0 } })).toEqual({ status: "completed", outcome: { previousSpeed: 1, appliedSpeed: 0 } });
   expect(applyAction(run, "load", { kind: "load", parameters: { targetLoadFraction: 0.5 } }).outcome).toEqual({ previousTarget: 1, appliedTarget: 0.5 });
-  expect(run.state.loadFraction).toBe(0);
-  expect(run.state.simulatedSeconds).toBe(0);
+  expect(run.state!.loadFraction).toBe(0);
+  expect(run.state!.simulatedSeconds).toBe(0);
   expect(applyAction(run, "resume", { kind: "speed", parameters: { speed: 60 } }).outcome).toEqual({ previousSpeed: 0, appliedSpeed: 60 });
 });
 
@@ -35,13 +35,13 @@ test("chaos completion observes the exact tick within a high-speed batch and doe
   expect(actionCompletion(run, action)).toBeNull();
   let endedAt: number | undefined;
   for (let i = 0; i < 60; i++) {
-    run.state = tick(run.state, {}).state;
+    run.state = tick(run.state!, {}).state;
     const completion = actionCompletion(run, action);
     if (completion && endedAt === undefined) {
-      endedAt = run.state.simulatedSeconds;
+      endedAt = run.state!.simulatedSeconds;
       expect(completion.outcome.faultEnded).toBe(true);
-      expect(completion.outcome.observedOverallHealth).toBe(run.state.overallHealth);
-      expect(run.state.metrics["vm-a"]?.health).toBe(ResourceHealth.FAILED);
+      expect(completion.outcome.observedOverallHealth).toBe(run.state!.overallHealth);
+      expect(run.state!.metrics["vm-a"]?.health).toBe(ResourceHealth.FAILED);
     }
   }
   expect(endedAt).toBe(SIMULATION_CONSTANTS.CHAOS.CRASH_DURATION);
@@ -52,11 +52,11 @@ test("vertical scaling completes only after the requested SKU is installed and t
   expect(applyAction(run, "vertical", { kind: "vertical-scale", parameters: { resourceId: "vm-a", skuId: "m5.xlarge" } }).status).toBe("running");
   const action = run.actions.get("vertical")!;
   for (let i = 0; i < SIMULATION_CONSTANTS.VERTICAL_SCALING.RESTART_TICKS; i++) {
-    run.state = tick(run.state, {}).state;
+    run.state = tick(run.state!, {}).state;
     expect(actionCompletion(run, action)).toBeNull();
   }
-  expect(run.state.resourceSkus["vm-a"]?.skuId).toBe("m5.xlarge");
-  run.state = tick(run.state, {}).state;
+  expect(run.state!.resourceSkus["vm-a"]?.skuId).toBe("m5.xlarge");
+  run.state = tick(run.state!, {}).state;
   expect(actionCompletion(run, action)?.outcome).toMatchObject({ installedSkuId: "m5.xlarge", online: true, fromSkuId: "m5.large" });
 });
 
@@ -67,7 +67,7 @@ test("pool operations record the replica transition and actual final counts for 
     const action = run.actions.get(id)!;
     let completed = actionCompletion(run, action);
     for (let tickCount = 0; tickCount < 120 && !completed; tickCount++) {
-      run.state = tick(run.state, {}).state;
+      run.state = tick(run.state!, {}).state;
       completed = actionCompletion(run, action);
     }
     expect(completed?.status).toBe("completed");
@@ -79,14 +79,14 @@ test("pool operations record the replica transition and actual final counts for 
 
 test("invalid targets/SKUs and impossible pool operations never change simulation state", () => {
   const run = instance();
-  const original = structuredClone(run.state);
+  const original = structuredClone(run.state!);
   for (const request of [
     { kind: "chaos", parameters: { type: DeploymentChaosNames.Crash, resourceId: "missing" } },
     { kind: "vertical-scale", parameters: { resourceId: "db", skuId: "m5.xlarge" } },
     { kind: "pool-scale", parameters: { lbId: "missing", delta: 1 } },
     { kind: "pool-scale", parameters: { lbId: "lb", delta: -1 } },
   ] as const) expect(() => applyAction(run, "invalid", request)).toThrow();
-  expect(run.state).toEqual(original);
+  expect(run.state!).toEqual(original);
   expect(run.actions.size).toBe(0);
   expect(() => validateActionTarget({ kind: "pool-scale", parameters: { lbId: "dns", delta: 1 } }, layout, captureRunInputs(layout))).toThrow("current");
   expect(() => readActionRequest({ kind: "load", parameters: { targetLoadFraction: 1, arbitrary: "blob" } })).toThrow();
@@ -111,7 +111,7 @@ test("terminal/checkpoint captures have real time/revision and cannot drift when
   expect(Number.isFinite(Date.parse(snapshot.capturedAt))).toBe(true);
   expect(snapshot.topologyRevision).toBe(3);
   expect(snapshot.accumulatedCostUsd).toBe(0.25);
-  run.state.metrics.db!.cpu = 99;
+  run.state!.metrics.db!.cpu = 99;
   expect(snapshot.metrics.db?.cpu).toBe(0);
   expect(captureSnapshot("unit-run", run, "checkpoint").kind).toBe("checkpoint");
 });

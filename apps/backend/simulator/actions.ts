@@ -6,6 +6,7 @@ import { acknowledgeAction, flushAcknowledgement } from "./actionAcknowledgement
 import { finishTeardown } from "./terminal";
 import { ActionExecutionError, type SimulationInstance } from "./instance";
 import { isExperimentAction } from "../challenges/experiment";
+import { currentSecond } from "./engineView";
 
 // The experiment's phase follows its one durable row; a failed row is final and is never retried.
 function settleExperiment(instance: SimulationInstance, action: { kind: string; parameters: unknown }, applied: boolean) {
@@ -39,15 +40,15 @@ export async function processRunActions(deploymentId: string, instance: Simulati
     catch (error) {
       settleExperiment(instance, action, false);
       await acknowledgeAction(instance, action.id, { status: "failed", completedAt: new Date(),
-        completedSimulatedSeconds: instance.state.simulatedSeconds,
+        completedSimulatedSeconds: currentSecond(instance),
         failureReason: error instanceof ActionExecutionError ? error.message : "Action application could not be established; it will not be replayed." });
       continue;
     }
     // Applied in memory now; a failed acknowledgement freezes this state and is retried, never replayed.
     settleExperiment(instance, action, true);
     const appliedAt = new Date();
-    await acknowledgeAction(instance, action.id, { ...result, appliedAt, appliedSimulatedSeconds: instance.state.simulatedSeconds,
-      ...(result.status === "completed" ? { completedAt: appliedAt, completedSimulatedSeconds: instance.state.simulatedSeconds } : {}) });
+    await acknowledgeAction(instance, action.id, { ...result, appliedAt, appliedSimulatedSeconds: currentSecond(instance),
+      ...(result.status === "completed" ? { completedAt: appliedAt, completedSimulatedSeconds: currentSecond(instance) } : {}) });
     await recordActionCompletions(instance);
   }
   return null;
@@ -57,7 +58,7 @@ export async function recordActionCompletions(instance: SimulationInstance) {
   for (const [id, running] of instance.actions) {
     const completion = actionCompletion(instance, running);
     if (!completion) continue;
-    await acknowledgeAction(instance, id, { ...completion, completedAt: new Date(), completedSimulatedSeconds: instance.state.simulatedSeconds });
+    await acknowledgeAction(instance, id, { ...completion, completedAt: new Date(), completedSimulatedSeconds: currentSecond(instance) });
     instance.actions.delete(id);
   }
 }

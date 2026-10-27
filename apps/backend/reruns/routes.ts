@@ -6,7 +6,7 @@ import { prisma } from "../lib/prisma";
 import { NotFoundError, ValidationError, ConflictError } from "../utils/errors";
 import { reportSelection } from "../reports/routes";
 import { buildRerunOptions, currentDesignInput, rerunInputHash } from "./options";
-import { readRunInputs } from "../deployments/runInputs";
+import { readRunInputs, runsOnModel2 } from "../deployments/runInputs";
 import { storedJson } from "../utils/json";
 import { LayoutSchema } from "../zod_schemas/layout.schema";
 
@@ -58,7 +58,7 @@ rerunRouter.post("/:id/reruns", async (req, res) => {
     const input = readRunInputs(source.runInputs);
     const runInputs = mode === "exact" ? input : currentDesignInput(input, design!.layout);
     if (mode === "current-design" && body.data.expectedInputHash !== rerunInputHash(runInputs)) throw new ConflictError("The saved design changed since preview. Refresh the preview before running.");
-    requireCapability(res.locals.userId, { capability: "run.start", purpose: "engineer", engine: "1", profile: runInputs.version === 2 ? runInputs.simulationModelVersion : null, durationSeconds: body.data.matchedStop ? options.matchedStop.target : null });
+    requireCapability(res.locals.userId, { capability: "run.start", purpose: "engineer", engine: runsOnModel2(runInputs) ? "2" : "1", profile: runInputs.version === 2 ? runInputs.simulationModelVersion : null, durationSeconds: body.data.matchedStop ? options.matchedStop.target : null });
     const created = await admitDeployment(tx, { infrastructureId: source.infrastructureId, ownerId: res.locals.userId,
       runName: source.runName, sourceRunId: source.id, rerunMode: mode,
       autoStopAtSimulatedSeconds: body.data.matchedStop ? options.matchedStop.target : null,

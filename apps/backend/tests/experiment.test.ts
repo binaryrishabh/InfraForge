@@ -28,14 +28,14 @@ for (const [speed, start] of [[1, 57], [10, 55], [60, 0]] as const) {
   test(`${speed}x stops exactly at the scheduled second${speed > 1 ? " inside its batch" : ""}, then stays frozen until the fault is applied`, async () => {
     const run = instance(speed, start);
     const ticked: number[] = [];
-    while (!experimentDue(run)) await advanceTickBatch(run, async (r) => { ticked.push(r.state.simulatedSeconds); });
-    expect(run.state.simulatedSeconds).toBe(60);
+    while (!experimentDue(run)) await advanceTickBatch(run, async (r) => { ticked.push(r.state!.simulatedSeconds); });
+    expect(run.state!.simulatedSeconds).toBe(60);
     expect(ticked.at(-1)).toBe(60);
     // The durable write may fail any number of times: the run never moves past second 60 meanwhile.
     for (const phase of ["scheduled", "requested"] as const) {
       run.experiment!.phase = phase;
       await advanceTickBatch(run, async () => { throw new Error(`no tick while ${phase}`); });
-      expect(run.state.simulatedSeconds).toBe(60);
+      expect(run.state!.simulatedSeconds).toBe(60);
     }
   });
 }
@@ -43,7 +43,7 @@ for (const [speed, start] of [[1, 57], [10, 55], [60, 0]] as const) {
 test("the fault applies at the second it was due, records its baseline, and the evaluation lands on its last active second", async () => {
   const run = instance(60, 0);
   while (!experimentDue(run)) await advanceTickBatch(run, async () => {});
-  const baseline = run.state.overallHealth;
+  const baseline = run.state!.overallHealth;
   const applied = applyAction(run, "fault", fault);
   run.experiment!.phase = "applied";
   expect(applied).toEqual({ status: "running", outcome: { durationSimulatedSeconds: 30, baselineOverallHealth: baseline } });
@@ -51,7 +51,7 @@ test("the fault applies at the second it was due, records its baseline, and the 
   let completedAt: number | undefined;
   while (!reachedMatchedStop(run)) await advanceTickBatch(run, async (r) => {
     const done = actionCompletion(r, r.actions.get("fault")!);
-    if (done && completedAt === undefined) { completedAt = r.state.simulatedSeconds; expect(done.outcome).toMatchObject({ faultEnded: true, observedOverallHealth: "critical" }); }
+    if (done && completedAt === undefined) { completedAt = r.state!.simulatedSeconds; expect(done.outcome).toMatchObject({ faultEnded: true, observedOverallHealth: "critical" }); }
   });
   // Completion is recorded inside the tick that reaches 90, before the terminal capture at 90.
   expect(completedAt).toBe(90);
@@ -66,9 +66,9 @@ test("a completion due at the scheduled second is recorded before the fault is a
   applyAction(run, "earlier", { kind: "chaos", parameters: { type: DeploymentChaosNames.CpuSpike, resourceId: "db" } });
   const order: string[] = [];
   while (!experimentDue(run)) await advanceTickBatch(run, async (r) => {
-    if (r.actions.has("earlier") && actionCompletion(r, r.actions.get("earlier")!)) { order.push(`completed earlier at ${r.state.simulatedSeconds}`); r.actions.delete("earlier"); }
+    if (r.actions.has("earlier") && actionCompletion(r, r.actions.get("earlier")!)) { order.push(`completed earlier at ${r.state!.simulatedSeconds}`); r.actions.delete("earlier"); }
   });
-  order.push(`fault applied at ${run.state.simulatedSeconds}`);
+  order.push(`fault applied at ${run.state!.simulatedSeconds}`);
   applyAction(run, "fault", fault);
   expect(order).toEqual(["completed earlier at 40", "fault applied at 60"]);
 });
@@ -79,8 +79,8 @@ test("a fault recorded as failed releases the run without pretending it happened
   run.experiment!.phase = "failed";
   expect(experimentDue(run)).toBe(false);
   await advanceTickBatch(run, async () => {});
-  expect(run.state.simulatedSeconds).toBe(90);
-  expect(run.state.activeChaos).toEqual([]);
+  expect(run.state!.simulatedSeconds).toBe(90);
+  expect(run.state!.activeChaos).toEqual([]);
 });
 
 test("freeform faults keep their existing outcome, and runs without a plan never wait", async () => {
@@ -88,6 +88,6 @@ test("freeform faults keep their existing outcome, and runs without a plan never
   freeform.experiment = null;
   expect(applyAction(freeform, "manual", { kind: "chaos", parameters: { type: DeploymentChaosNames.Crash, resourceId: "app-2" } }).outcome).toEqual({ durationSimulatedSeconds: 30 });
   await advanceTickBatch(freeform, async () => {});
-  expect(freeform.state.simulatedSeconds).toBe(60);
+  expect(freeform.state!.simulatedSeconds).toBe(60);
   expect(experimentDue(freeform)).toBe(false);
 });

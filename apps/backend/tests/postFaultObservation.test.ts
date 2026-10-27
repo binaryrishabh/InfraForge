@@ -163,16 +163,16 @@ for (const speed of [1, 10, 60]) test(`${speed}x captures every post-fault secon
       actions: new Map(), acknowledge: null, metricsComputedAt: null, metricsTopologyRevision: 0,
       autoStopAtSimulatedSeconds: 135, experiment: { plan, phase: "scheduled" }, evidence: createEvidenceBuffer(plan, 135) };
     while (!experimentDue(instance)) await advanceTickBatch(instance, async () => {});
-    expect(instance.state.simulatedSeconds).toBe(60);
+    expect(instance.state!.simulatedSeconds).toBe(60);
     applyAction(instance, "fault", { kind: "chaos", parameters: { type: Fault.Crash, resourceId: "cache", trigger: "challenge-experiment" } });
     instance.experiment!.phase = "applied";
     const completed: number[] = [];
     while (!reachedMatchedStop(instance)) await advanceTickBatch(instance, async (r) => {
       const running = r.actions.get("fault");
-      if (running && actionCompletion(r, running)) { completed.push(r.state.simulatedSeconds); r.actions.delete("fault"); }
+      if (running && actionCompletion(r, running)) { completed.push(r.state!.simulatedSeconds); r.actions.delete("fault"); }
     });
     await advanceTickBatch(instance, async () => {});
-    expect(completed).toEqual([90]); expect(instance.state.simulatedSeconds).toBe(135);
+    expect(completed).toEqual([90]); expect(instance.state!.simulatedSeconds).toBe(135);
     const expected = attemptRow(d, design, prediction).evidenceSamples!;
     expect(instance.evidence!.pending.map((p) => p.hash)).toEqual(expected.map((p) => p.hash));
   }

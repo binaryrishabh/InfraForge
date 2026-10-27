@@ -4,13 +4,18 @@ import type { RecordedExperiment } from "@infraforge/contracts/challenges";
 import type { SimulationLog } from "@infraforge/contracts/telemetry";
 import type { SimulationState } from "@infraforge/simulation/types";
 import type { EvidenceBuffer } from "../evidence/contract";
+import type { Model2Engine } from "./model2Engine";
 
 export interface RunningAction {
   id: string; request: ActionRequest; outcome: ActionOutcome; endSecond?: number; replicaId?: string;
+  // Model 2 replica changes: the count before the change, and the second it was applied.
+  previousReplicas?: number; appliedSecond?: number;
 }
 export interface SimulationInstance {
   evidence?: EvidenceBuffer | null;
-  state: SimulationState; tickCount: number; pendingLogs: SimulationLog[]; speed: number;
+  // Exactly one engine: Model 1 state, or a Model 2 run (Model 1 is removed before launch).
+  state?: SimulationState; model2?: Model2Engine;
+  tickCount: number; pendingLogs: SimulationLog[]; speed: number;
   lastCheckpointAt: number; accumulatedCostUsd: number; topology: RunTopology; topologyRevision: number;
   actions: Map<string, RunningAction>;
   metricsComputedAt: string | null;
