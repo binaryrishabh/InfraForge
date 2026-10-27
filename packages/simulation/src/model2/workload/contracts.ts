@@ -16,7 +16,16 @@ export type ArrivalSource =
   | (Source & { kind: "periodic"; count: Quantity<"count">; interval: Quantity<"us"> })
   | (Source & { kind: "poisson"; count: Quantity<"count">; meanInterval: Quantity<"us"> })
   | (Source & { kind: "closed"; users: Quantity<"count">; perUser: Quantity<"count">; think: Quantity<"us"> })
-  | { id: string; kind: "trace"; trace: ArrivalTrace };
+  | { id: string; kind: "trace"; trace: ArrivalTrace }
+  | { id: string; kind: "rate"; rate: RateArrivals };
+// Arrivals generated while the run advances instead of stored: a declared rate with an optional peak window and
+// load changes (each a fraction of the rate from its time on). Row for row the same as the equivalent trace.
+export interface RateArrivals {
+  schema: "infraforge-rate-arrivals/1"; provenance: string;
+  startUs: number; endUs: number; intervalUs: number; readFraction: number; readOperation: string; writeOperation: string;
+  peak?: { startUs: number; endUs: number; multiplier: number };
+  changes: Array<{ atUs: number; fraction: number }>;
+}
 export interface TraceRow { id: string; atUs: number; operation: string; payloadBytes?: number }
 export interface ArrivalTrace {
   schema: "infraforge-arrivals/1";

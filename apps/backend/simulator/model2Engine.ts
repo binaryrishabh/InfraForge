@@ -37,7 +37,8 @@ export function createModel2Engine(input: RunTopology & { workloadProfile: Resol
   const design: SavedProductDesign = { schema: "infraforge-saved-design/1", resources: input.resources, connections: input.connectionLines, workload: input.workloadProfile };
   const built = build(design, horizonSeconds);
   if ("refused" in built) throw new ActionRefused(`Model 2 cannot run this design yet: ${built.refused.join(" ")}`);
-  const contract = built.contract, nodeIds = input.resources.map((r) => r.id);
+  // Live runs generate arrivals as they advance, so long runs and rebuilds after actions stay small and fast.
+  const contract: ProductContract = { ...built.contract, arrival: { ...built.contract.arrival, generated: true } }, nodeIds = input.resources.map((r) => r.id);
   const run = createActionableLiveModel2(design, contract, nodeIds);
   const types = new Map(input.resources.map((r) => [r.id, r.type]));
   const pools = poolLayout(input, contract);

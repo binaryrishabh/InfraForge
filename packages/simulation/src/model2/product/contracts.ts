@@ -64,7 +64,8 @@ export interface ProductContract {
   caller: { address: string; entry: string; transport: string; request: string[]; response: string[]; security: Omit<DialConfig, "path">; dependencies: Array<Omit<EdgeContract, "sourceRole" | "targetRole"> & { id: string; target: string }> };
   seed: string; horizon: Quantity<"us">; sampleInterval: Quantity<"us">;
   // changes: live load changes, each a fraction of the declared workload from its time on.
-  arrival: { start: Quantity<"us">; peak?: { start: Quantity<"us">; end: Quantity<"us"> }; changes?: Array<{ at: Quantity<"us">; fraction: Quantity<"ratio"> }> };
+  // generated: produce arrivals while the run advances instead of storing them (live runs).
+  arrival: { start: Quantity<"us">; peak?: { start: Quantity<"us">; end: Quantity<"us"> }; changes?: Array<{ at: Quantity<"us">; fraction: Quantity<"ratio"> }>; generated?: true };
   limits: SystemsInput["limits"];
   instrumentation: SystemsInput["systems"]["instrumentation"];
   commands: SystemsInput["systems"]["commands"];

@@ -121,3 +121,19 @@ test("load and replica actions take effect from their second on; a refused actio
   expect(acting.project().simulatedSeconds).toBe(12);
 });
 
+test("generated arrivals run exactly like the stored trace, without storing it", () => {
+  const f = fixture(12, 150), nodes = f.design.resources.map((r) => r.id);
+  const pause = [{ id: "pause", kind: "load" as const, fraction: 0, atUs: 4_000_001 }, { id: "resume", kind: "load" as const, fraction: 1.5, atUs: 7_000_001 }];
+  const stored = compileProduct(f.design, withTimeline(f.contract, pause));
+  const generated = compileProduct(f.design, withTimeline({ ...f.contract, arrival: { ...f.contract.arrival, generated: true } }, pause));
+  if (!stored.ok || !generated.ok) throw new Error("refused");
+  expect(generated.value.input.arrivals[0]!.kind).toBe("rate");
+  expect(JSON.stringify(generated.value.input.arrivals).length).toBeLessThan(1_000); // a rate, not ~1,600 stored rows
+  expect(JSON.stringify(stored.value.input.arrivals).length).toBeGreaterThan(50_000);
+  const a = createLiveModel2(stored.value, nodes), b = createLiveModel2(generated.value, nodes);
+  const seconds = Array.from({ length: 12 }, () => { a.advanceSecond(); b.advanceSecond(); return [a.project(), b.project()] as const; });
+  for (const [x, y] of seconds) expect(y).toEqual(x);
+  expect(seconds.slice(5, 7).every(([x]) => x.offeredRps === 0)).toBe(true);
+  expect(seconds[9]![0].offeredRps).toBeGreaterThanOrEqual(224);
+});
+

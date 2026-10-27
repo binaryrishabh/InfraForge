@@ -1,7 +1,7 @@
 import { validateLedger } from "../../reality/ledger";
 import { requireKnown, type Quantity, type Unit } from "../../reality/quantity";
 import { micros } from "../time";
-import { ingestTrace } from "./arrivals";
+import { ingestTrace, rateRows, validateRate } from "./arrivals";
 import { resolveDemand, validateProfile, type ProfileContext } from "./profiles";
 import type { WorkloadInput } from "./contracts";
 import { WORKLOAD_LIMITS as caps } from "./policy";
@@ -91,6 +91,11 @@ export function validateWorkload(input: WorkloadInput) {
           if (!bound || bound.unit !== "bytes" || row.payloadBytes < bound.min || row.payloadBytes > bound.max) errors.push("Trace payload outside explicit profile domain");
         }
       }
+    } else if (a.kind === "rate") {
+      const invalid = validateRate(a.rate, new Set(operations.keys()));
+      errors.push(...invalid);
+      // Counted without storing rows; stops one past the budget.
+      if (!invalid.length) for (const _row of rateRows(a.rate)) if (++count > input.limits.maxRequests) break;
     } else {
       if (!operations.has(a.operation)) errors.push("Unknown arrival operation");
       const start = number(a.start, "us");

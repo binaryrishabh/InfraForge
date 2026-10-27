@@ -142,7 +142,7 @@ test("3000 deterministic data-plane cases conserve transactions, keys, bytes, CP
     const input = dataFixture({ count: n("count", 10), interval: n("arrival", 300), horizon: 8000, sample: 2000, raw: 20, keys: n("keys", 8), slots: n("workers", 12), connections: n("pool", 4), sessions: n("sessions", 4), activeTransactions: n("queries", 4), dbCpu: n("dbCpu", 600), ttl: n("ttl", 3000), capacity: n("capacity", 8) * 80, coalesce: i % 2 === 0, timeout: n("deadline", 6000), acquireTimeout: n("acquire", 4000), responseTimeout: n("response", 5000) }), q = quantities();
     const db = database(input), c = cache(input); c.policy = i % 3 ? "lru" : "no-eviction";
     for (const row of db.initial) row.bytes = q.q(`sweep.row.${row.key}`, n(`bytes.${row.key}`, 256), "bytes");
-    const arrival = input.arrivals[0]!; if (i % 3 === 0 && arrival.kind !== "trace") arrival.operation = "heavy";
+    const arrival = input.arrivals[0]!; if (i % 3 === 0 && arrival.kind !== "trace" && arrival.kind !== "rate") arrival.operation = "heavy";
     if (i % 5 === 0) db.plans.heavy!.statements.push(structuredClone(db.plans.heavy!.statements[0]!));
     if (i % 7 === 0) { db.plans.heavy!.durability = "authored-log-ack"; db.plans.heavy!.commitWait = q.q("sweep.commit", n("commit", 2000), "us"); }
     if (i % 11 === 0) input.dataInterventions.push({ id: "flush", kind: "flush", target: "cache", at: q.q("sweep.flush.at", n("flush", 3000), "us") });

@@ -1,4 +1,4 @@
-import type { ArrivalSource, ArrivalTrace, TraceRow } from "./contracts";
+import type { ArrivalSource, ArrivalTrace, RateArrivals, TraceRow } from "./contracts";
 import { requireKnown } from "../../reality/quantity";
 import { keyedUniform } from "../random";
 import { micros } from "../time";
@@ -28,6 +28,7 @@ export function ingestTrace(header: Omit<ArrivalTrace, "rows">, rows: Iterable<T
 
 export function* openRows(source: Exclude<ArrivalSource, { kind: "closed" }>, seed: string): Generator<TraceRow> {
   if (source.kind === "trace") { yield* source.trace.rows; return; }
+  if (source.kind === "rate") { yield* rateRows(source.rate); return; }
   const count = requireKnown(source.count, "count");
   let at = requireKnown(source.start, "us");
   for (let index = 0; index < count; index++) {
@@ -40,3 +41,29 @@ export function* openRows(source: Exclude<ArrivalSource, { kind: "closed" }>, se
     yield { id: identity(source.id, index), atUs: at, operation: source.operation };
   }
 }
+
+// Deterministic open-loop spacing with a fractional read accumulator. A load change applies to arrivals scheduled
+// at or after its time; at load 0 the next arrival waits for the next change.
+export function* rateRows(r: RateArrivals): Generator<TraceRow> {
+  const fraction = (time: number) => { let f = 1; for (const c of r.changes) if (c.atUs <= time) f = c.fraction; else break; return f; };
+  let at = r.startUs, index = 0, readDebt = 0;
+  while (Math.round(at) < r.endUs) {
+    if (fraction(at) === 0) { const next = r.changes.find((c) => c.atUs > at); if (!next) return; at = next.atUs; continue; }
+    readDebt += r.readFraction; const read = readDebt >= 1; if (read) readDebt -= 1;
+    yield { id: `arrival-${index++}`, atUs: Math.round(at), operation: read ? r.readOperation : r.writeOperation };
+    const inPeak = r.peak !== undefined && at >= r.peak.startUs && at < r.peak.endUs;
+    const gap = r.intervalUs / ((inPeak ? r.peak!.multiplier : 1) * fraction(at)); if (gap < 1) throw Error("Peak exceeds microsecond resolution"); at += gap;
+  }
+}
+
+export function validateRate(r: RateArrivals, operations: Set<string>): string[] {
+  const finite = [r.startUs, r.endUs, r.intervalUs, r.readFraction, ...(r.peak ? [r.peak.startUs, r.peak.endUs, r.peak.multiplier] : []), ...r.changes.flatMap((c) => [c.atUs, c.fraction])];
+  if (r.schema !== "infraforge-rate-arrivals/1" || !r.provenance || finite.some((n) => !Number.isFinite(n))) return ["Invalid rate arrival schema/provenance"];
+  const errors: string[] = [];
+  if (r.startUs < 0 || r.endUs <= r.startUs || r.intervalUs < 1 || r.readFraction < 0 || r.readFraction > 1) errors.push("Invalid rate arrival window/interval/read fraction");
+  if (!operations.has(r.readOperation) || !operations.has(r.writeOperation)) errors.push("Unknown rate arrival operation");
+  if (r.peak && (r.peak.startUs < r.startUs || r.peak.endUs <= r.peak.startUs || r.peak.endUs > r.endUs || r.peak.multiplier < 1)) errors.push("Invalid rate arrival peak window");
+  if (r.changes.some((c, i) => !Number.isSafeInteger(c.atUs) || c.atUs < 0 || c.fraction < 0 || c.fraction > 10 || (i > 0 && c.atUs <= r.changes[i - 1]!.atUs))) errors.push("Invalid rate arrival load changes");
+  return errors;
+}
+
