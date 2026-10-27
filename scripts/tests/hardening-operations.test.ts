@@ -54,7 +54,7 @@ test("a release uses a bounded isolated builder and removes it after success or 
     else await promise;
     expect(calls).toHaveLength(3);
     expect(calls[0]).toContain("docker-container");
-    expect(calls[0]).toContain("memory=768m,memory-swap=768m,cpu-period=100000,cpu-quota=100000");
+    expect(calls[0]).toContain("memory=768m,memory-swap=768m,cpu-period=100000,cpu-quota=20000");
     expect(calls[0]).not.toContain("--use");
     const name = calls[0]![4]!;
     expect(calls[1]).toEqual(["docker", "buildx", "build", "--builder", name, "--load", "--build-arg", `RELEASE_SHA=${"a".repeat(40)}`, "-f", "apps/backend/Dockerfile", "-t", "owned:test", "."]);
