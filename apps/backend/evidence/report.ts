@@ -44,12 +44,15 @@ export function buildExperimentTrace(row: { challengeExperiment?: unknown; evalu
   const observation = postFaultObservation(plan!, window.end, points, row.experiment);
   const resourceFacts = resourceIds.slice(0, EXPERIMENT_MAX_RESOURCES).map((id) => {
     const values = points.flatMap((p) => { const r = p.resources.find((r) => r.id === id); return r ? [{ ...r, second: p.simulatedSeconds }] : []; });
-    const cpu = values.reduce((a, b) => b.cpu > a.cpu ? b : a);
-    const memory = values.reduce((a, b) => b.memory > a.memory ? b : a);
+    // Unknown values are skipped; a resource with no known value has no highest value.
+    const highest = (key: "cpu" | "memory") => values.reduce<{ second: number; value: number } | null>((top, v) => {
+      const value = v[key];
+      return value !== null && (!top || value > top.value) ? { second: v.second, value } : top;
+    }, null);
     const end = plan!.atSimulatedSecond + plan!.durationSimulatedSeconds;
     const healthy = observation.faultEndSecond !== null ? values.find((v) => v.second > end && v.health === "healthy") : undefined;
     const retained = new Set(values.map((v) => v.second));
-    return { id, highestCpu: { second: cpu.second, value: cpu.cpu }, highestMemory: { second: memory.second, value: memory.memory },
+    return { id, highestCpu: highest("cpu"), highestMemory: highest("memory"),
       firstHealthChange: firstChange(values), firstHealthyAfterFault: healthy?.second ?? null,
       firstHealthyAfterFaultComplete: !!healthy && Array.from({ length: healthy.second - end + 1 }, (_, i) => end + i).every((s) => retained.has(s)) };
   });

@@ -5,6 +5,8 @@ import { Notice } from "@/ui/Page";
 import { HealthMark } from "@/ui/HealthMark";
 import { TraceCharts } from "./TraceCharts";
 
+const percent = (value: number | null) => value === null ? "unknown" : `${value}%`;
+
 export function ExperimentTraceView({ trace, experiment }: { trace?: ExperimentTrace; experiment: ExperimentResult }) {
   const id = useId();
   const [chosen, setChosen] = useState(experiment.targetResourceId);
@@ -16,7 +18,7 @@ export function ExperimentTraceView({ trace, experiment }: { trace?: ExperimentT
     { label: "At the fault boundary (tick measured before application)", second: experiment.appliedSimulatedSeconds ?? experiment.atSimulatedSecond },
     { label: "First retained tick after the boundary", second: trace.moments?.firstAfterFault ?? null },
     { label: "First measured overall-health change between adjacent ticks", second: trace.moments?.firstOverallHealthChange ?? null },
-    { label: "Highest recorded CPU in the retained experiment window", second: facts?.highestCpu.second ?? null },
+    { label: "Highest recorded CPU in the retained experiment window", second: facts?.highestCpu?.second ?? null },
     { label: "Last active-fault tick (fault ends after measurement)", second: trace.moments?.lastActiveFault ?? null },
     { label: "First retained sample after fault end", second: trace.moments?.firstPostFault ?? null },
     { label: "First retained Healthy target sample after fault end", second: trace.moments?.firstTargetHealthy ?? null },
@@ -42,7 +44,7 @@ export function ExperimentTraceView({ trace, experiment }: { trace?: ExperimentT
         <thead className="border-y border-line bg-sunken text-xs text-ink-2"><tr><th className="p-2">Moment</th><th className="p-2">Second</th><th className="p-2">System / resource health</th><th className="p-2">CPU / memory</th></tr></thead>
         <tbody>{rows.map((row) => { const point = trace.points.find((p) => p.simulatedSeconds === row.second), r = point?.resources.find((r) => r.id === resourceId);
           return <tr key={row.label} className="border-t border-line"><th scope="row" className="p-2 text-xs font-medium text-ink">{row.label}</th><td className="if-num p-2">{point ? <button className="text-accent underline" onClick={() => setSecond(point.simulatedSeconds)} aria-label={`Inspect retained sample at second ${point.simulatedSeconds}`}>{point.simulatedSeconds}s</button> : row.second == null ? "Not recorded" : `${row.second}s · missing`}</td>
-            <td className="p-2"><div><HealthMark size="sm" value={point?.overallHealth} /></div><HealthMark size="sm" value={r?.health} /></td><td className="if-num p-2">{r ? `${r.cpu}% / ${r.memory}%` : "Unknown"}</td></tr>; })}</tbody>
+            <td className="p-2"><div><HealthMark size="sm" value={point?.overallHealth} /></div><HealthMark size="sm" value={r?.health} /></td><td className="if-num p-2">{r ? `${percent(r.cpu)} / ${percent(r.memory)}` : "Unknown"}</td></tr>; })}</tbody>
       </table>
     </div>
     <label htmlFor={`${id}-second`} className="mt-4 block text-sm font-medium text-ink">Inspect any retained second</label>
@@ -51,7 +53,7 @@ export function ExperimentTraceView({ trace, experiment }: { trace?: ExperimentT
     </select>
     <div role="status" aria-live="polite" className="mt-2 space-y-1 text-sm text-ink-2">
       <p>Second {selected.simulatedSeconds} · topology revision {selected.topologyRevision} · computed at {selected.sampledAt}. System {selected.overallHealth} · load {selected.loadFraction} / target {selected.targetLoadFraction}.</p>
-      <p>{resourceId}: {selectedResource ? `${selectedResource.health}, CPU ${selectedResource.cpu}%, memory ${selectedResource.memory}%, RPS ${selectedResource.rps ?? "not recorded"}, connections ${selectedResource.connections ?? "not recorded"}` : "No measurement retained at this second."}</p>
+      <p>{resourceId}: {selectedResource ? `${selectedResource.health}, CPU ${percent(selectedResource.cpu)}, memory ${percent(selectedResource.memory)}, RPS ${selectedResource.rps ?? "not recorded"}, connections ${selectedResource.connections ?? "not recorded"}` : "No measurement retained at this second."}</p>
       {selected.pools.map((p) => <p key={p.id}>{p.id}: {p.currentReplicas} current replicas ({p.baseReplicas} placed plus active spawned replicas); {p.pending ? `${p.pending.action === "up" ? "provisioning" : "draining"}, ${p.pending.secondsRemaining} seconds remaining` : "no pending replica change"}. Replica count does not establish healthy serving capacity.</p>)}
     </div>
     <p className="mt-3 text-sm text-ink-3">{facts?.firstHealthyAfterFault == null ? "No Healthy sample for this resource was retained after the scheduled fault window." : `First retained Healthy sample for ${resourceId} ${facts.firstHealthyAfterFaultComplete ? "after the fault" : "after missing evidence"}: second ${facts.firstHealthyAfterFault}.`} Highest values describe this retained window only. Samples do not establish continuous health or production recovery.</p>

@@ -12,14 +12,15 @@ export function experimentWindow(plan: RecordedExperiment, evaluationSecond: num
   return { start, end: evaluationSecond! };
 }
 
+// Version 2 may record a measurement the engine does not model as null ("unknown"), never as zero.
 export interface ExperimentEvidencePayload {
-  version: 1;
+  version: 1 | 2;
   topologyRevision: number;
   overallHealth: "healthy" | "degraded" | "saturated" | "critical";
   loadFraction: number;
   targetLoadFraction: number;
-  resources: Array<{ id: string; health: "healthy" | "degraded" | "saturated" | "failed";
-    cpu: number; memory: number; rps?: number; connections?: number }>;
+  resources: Array<{ id: string; health: "healthy" | "degraded" | "saturated" | "failed" | "unknown";
+    cpu: number | null; memory: number | null; rps?: number; connections?: number }>;
   pools: Array<{ id: string; currentReplicas: number; baseReplicas: number;
     pending: { action: "up" | "down"; secondsRemaining: number } | null }>;
 }
@@ -61,8 +62,8 @@ export interface ExperimentTrace {
     lastActiveFault?: number | null; firstPostFault?: number | null;
     firstTargetHealthy?: number | null; firstOverallHealthy?: number | null;
     firstOverallHealthChange: number | null; evaluation: number | null } | null;
-  resourceFacts: Array<{ id: string; highestCpu: { second: number; value: number };
-    highestMemory: { second: number; value: number }; firstHealthChange: number | null; firstHealthyAfterFault: number | null;
+  resourceFacts: Array<{ id: string; highestCpu: { second: number; value: number } | null;
+    highestMemory: { second: number; value: number } | null; firstHealthChange: number | null; firstHealthyAfterFault: number | null;
     firstHealthyAfterFaultComplete?: boolean }>;
   resourceFactsOmitted: number;
 }

@@ -71,11 +71,20 @@ integration("migration 15 preserves history and enforces bounded immutable sampl
     await rejects(insert(resilience, 31, { ...payload, resources: [payload.resources[0], payload.resources[0]] }), /Duplicate/);
     await rejects(insert(resilience, 31, { ...payload, logs: "x".repeat(70000) }), /oversized|check constraint/);
     await rejects(db.query('UPDATE "RunEvidenceSample" SET payload=$1 WHERE "deploymentId"=$2', [conflict, resilience]), /immutable/);
+    // The later forward migration lets version 2 say a value is unknown; version 1 still cannot.
+    await db.query(await Bun.file(new URL("20261028000000_evidence_unknown_values/migration.sql", directory)).text());
+    const unknown = { ...payload, version: 2, resources: [{ id: "vm-a", cpu: null, memory: null, health: "unknown" }] };
+    await insert(resilience, 31, unknown);
+    await rejects(insert(resilience, 32, { ...unknown, version: 1 }), /Malformed/);
+    await rejects(insert(resilience, 32, { ...unknown, version: 3 }), /Malformed/);
+    await rejects(insert(resilience, 32, { ...unknown, resources: [{ id: "vm-a", cpu: 101, memory: null, health: "unknown" }] }), /Malformed/);
+    await rejects(insert(resilience, 32, { ...unknown, resources: [{ id: "vm-a", cpu: "0", memory: null, health: "unknown" }] }), /Malformed/);
+    await insert(resilience, 32);
     await db.query('UPDATE "Deployment" SET status=\'failed\',"runtimeActive"=false WHERE id=$1', [resilience]);
     await rejects(insert(resilience, 31), /owned live resilience attempt/);
     await db.query('DELETE FROM "Infrastructure" WHERE id=$1', [workspace]);
     expect((await db.query('SELECT "infrastructureId" FROM "Deployment" WHERE id=$1', [resilience])).rows[0].infrastructureId).toBeNull();
-    expect((await db.query('SELECT count(*)::int AS count FROM "RunEvidenceSample"')).rows[0].count).toBe(1);
+    expect((await db.query('SELECT count(*)::int AS count FROM "RunEvidenceSample"')).rows[0].count).toBe(3);
     await db.query('DELETE FROM "Deployment" WHERE id=$1', [resilience]);
     expect((await db.query('SELECT count(*)::int AS count FROM "RunEvidenceSample"')).rows[0].count).toBe(0);
   } finally {

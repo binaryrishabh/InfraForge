@@ -86,6 +86,12 @@ test("normal runs do not allocate a trace, legacy remains unavailable, and windo
   await advanceTickBatch(instance, async () => {});
   const p = instance.evidence!.pending[0]!.payload;
   expect(evidencePayload.safeParse({ ...p, logs: [] }).success).toBe(false);
+  // New samples are version 2, which can say a value is unknown instead of recording zero; version 1 cannot.
+  expect(p.version).toBe(2);
+  const unknown = { ...p, resources: [{ ...p.resources[0]!, cpu: null, memory: null, health: "unknown" }] };
+  expect(evidencePayload.safeParse(unknown).success).toBe(true);
+  expect(evidencePayload.safeParse({ ...unknown, version: 1 }).success).toBe(false);
+  expect(evidencePayload.safeParse({ ...p, version: 1 }).success).toBe(true);
   expect(evidencePayload.safeParse({ ...p, resources: Array.from({ length: 129 }, (_, i) => ({ ...p.resources[0]!, id: String(i) })) }).success).toBe(false);
   expect(sampleHash(p)).toBe(sampleHash({ ...p, resources: [...p.resources].reverse() }));
   instance.evidence = null;

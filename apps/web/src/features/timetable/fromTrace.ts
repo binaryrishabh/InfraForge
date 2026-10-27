@@ -21,7 +21,7 @@ export function fromExperimentTrace({ trace, experiment, stations, predictions =
   const known = new Set(trace.points.flatMap((p) => p.resources.map((r) => r.id)));
   const ordered = [...stations.filter((s) => known.has(s.id)), ...[...known].filter((id) => !stations.some((s) => s.id === id)).map((id) => ({ id, label: id, type: null }))];
   for (const s of ordered) lanes[s.id] = { station: s.id, samples: [], bands: [] };
-  for (const point of trace.points) for (const r of point.resources) lanes[r.id]?.samples.push({ t: point.simulatedSeconds, health: r.health, cpu: r.cpu, memory: r.memory, rps: r.rps, connections: r.connections });
+  for (const point of trace.points) for (const r of point.resources) lanes[r.id]?.samples.push({ t: point.simulatedSeconds, health: r.health, cpu: r.cpu ?? undefined, memory: r.memory ?? undefined, rps: r.rps, connections: r.connections });
 
   const windows: Window[] = [];
   if (trace.expectedStart > start) windows.push({ from: start, to: trace.expectedStart, kind: "unknown", label: "Not retained: only the experiment window keeps per-second measurements" });

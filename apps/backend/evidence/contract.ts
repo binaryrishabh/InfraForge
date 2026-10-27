@@ -8,15 +8,20 @@ export interface EvidenceBuffer { window: { start: number; end: number }; pendin
 const id = z.string().min(1).max(256);
 const amount = z.number().finite().min(0).max(1e12);
 const count = z.number().int().min(0).max(EXPERIMENT_MAX_RESOURCES);
+const percent = amount.max(100);
 export const evidencePayload = z.object({
-  version: z.literal(1), topologyRevision: z.number().int().min(0).max(1_000_000),
+  version: z.union([z.literal(1), z.literal(2)]), topologyRevision: z.number().int().min(0).max(1_000_000),
   overallHealth: z.enum(["healthy", "degraded", "saturated", "critical"]),
   loadFraction: amount.max(10), targetLoadFraction: amount.max(10),
-  resources: z.array(z.object({ id, health: z.enum(["healthy", "degraded", "saturated", "failed"]),
-    cpu: amount.max(100), memory: amount.max(100), rps: amount.optional(), connections: amount.optional() }).strict()).min(1).max(EXPERIMENT_MAX_RESOURCES),
+  resources: z.array(z.object({ id, health: z.enum(["healthy", "degraded", "saturated", "failed", "unknown"]),
+    cpu: percent.nullable(), memory: percent.nullable(), rps: amount.optional(), connections: amount.optional() }).strict()).min(1).max(EXPERIMENT_MAX_RESOURCES),
   pools: z.array(z.object({ id, currentReplicas: count, baseReplicas: count,
     pending: z.object({ action: z.enum(["up", "down"]), secondsRemaining: z.number().int().min(0).max(3600) }).strict().nullable() }).strict()).max(EXPERIMENT_MAX_RESOURCES),
 }).strict().superRefine((value, ctx) => {
+  // Only version 2 can say a measurement is unknown; version 1 rows always carried numbers.
+  if (value.version === 1 && value.resources.some((r) => r.cpu === null || r.memory === null || r.health === "unknown")) {
+    ctx.addIssue({ code: "custom", message: "Version 1 evidence cannot record unknown measurements" });
+  }
   for (const field of ["resources", "pools"] as const) {
     if (new Set(value[field].map((r) => r.id)).size !== value[field].length) ctx.addIssue({ code: "custom", message: `${field} ids must be unique` });
   }

@@ -19,7 +19,8 @@ for (const fault of [DeploymentChaosNames.CpuSpike, DeploymentChaosNames.MemoryL
     const control = attemptReport(d, d.starter!, prediction, { registry, skipExperiment: true });
     const reference = attemptReport(d, REFERENCE[original.id]!, prediction, { registry });
     const points = measured.experimentTrace!.points;
-    const target = (second: number, report = measured) => report.experimentTrace!.points.find((p) => p.simulatedSeconds === second)!.resources.find((r) => r.id === "app-2")!;
+    // Model 1 always records CPU and memory as numbers.
+    const target = (second: number, report = measured) => report.experimentTrace!.points.find((p) => p.simulatedSeconds === second)!.resources.find((r) => r.id === "app-2")! as { cpu: number; memory: number; health: string };
     expect(measured.experimentTrace?.status).toBe("complete");
     expect(points).toHaveLength(31 + FAULT_DURATIONS[fault]);
     expect(target(60)).toEqual(target(60, control));

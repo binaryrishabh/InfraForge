@@ -28,7 +28,7 @@ export function guidedReview(report: RunReport, canImprove: boolean, unavailable
       const resource = point?.resources.find((r) => r.id === target);
       if (!point || !resource) continue;
       cues.push({ id: `trace:${point.simulatedSeconds}`, kind: "measurement", title: phase,
-        statement: `${target} recorded ${resource.cpu}% CPU, ${resource.memory}% memory and ${resource.health} health at second ${point.simulatedSeconds}.`,
+        statement: `${target} recorded ${resource.cpu === null ? "unknown" : `${resource.cpu}%`} CPU, ${resource.memory === null ? "unknown" : `${resource.memory}%`} memory and ${resource.health} health at second ${point.simulatedSeconds}.`,
         sources: [`RunEvidenceSample[${point.simulatedSeconds}].resources[${target}]`, `RunAction[${experiment.actionId}].appliedSimulatedSeconds`],
         resourceId: target, simulatedSecond: point.simulatedSeconds,
         limit: "These are retained samples around the scheduled action. Their sequence alone does not prove causality or recovery." });

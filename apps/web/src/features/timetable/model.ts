@@ -6,7 +6,7 @@ Model 1 records per-second resource state, so its timetable has rails and state 
 Trains (individual requests moving between stations) appear only when a recorded causal
 journal gives each request an identity; drawing them anywhere else would invent traffic. */
 
-export type Health = "healthy" | "degraded" | "saturated" | "failed";
+export type Health = "healthy" | "degraded" | "saturated" | "failed" | "unknown";
 export type SystemHealth = "healthy" | "degraded" | "saturated" | "critical";
 export type TimeUnit = "s" | "us";
 

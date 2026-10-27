@@ -15,7 +15,7 @@ export function captureEvidenceTick(instance: SimulationInstance) {
   try {
     if (!instance.metricsComputedAt) throw new Error("Experiment evidence requires a completed tick");
     const pools = buildPoolSnapshots(instance.state).pools;
-    const payload = evidencePayload.parse({ version: 1, topologyRevision: instance.metricsTopologyRevision,
+    const payload = evidencePayload.parse({ version: 2, topologyRevision: instance.metricsTopologyRevision,
       overallHealth: instance.state.overallHealth, loadFraction: instance.state.loadFraction,
       targetLoadFraction: instance.state.targetLoadFraction,
       resources: Object.entries(instance.state.metrics).map(([id, value]) => ({ id, ...value })),

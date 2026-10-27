@@ -5,7 +5,7 @@ export function pressureSegments(points: ExperimentEvidenceSample[], id: string,
   let current: (typeof segments)[number] | null = null;
   for (const point of points) {
     const value = point.resources.find((r) => r.id === id)?.[field];
-    if (value === undefined) { current = null; continue; }
+    if (value == null) { current = null; continue; } // unknown values break the line; they are never drawn as zero
     if (!current || current.at(-1)!.second + 1 !== point.simulatedSeconds) { current = []; segments.push(current); }
     current.push({ second: point.simulatedSeconds, value });
   }
