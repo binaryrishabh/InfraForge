@@ -1975,7 +1975,7 @@
       ]
     },
     "apps/backend/firstStack/scoredChallenges/projection.ts": {
-      "hash": "ae64bb684624658590fbd58f4d26f9758431384a56320d9640460062336628d5",
+      "hash": "afe4415b101159ad9909620366a0fea3e62b8025811f06de2eee2ca45e4bb7e1",
       "requests": [
         {
           "path": "zod",
@@ -4826,7 +4826,7 @@
       "requests": []
     },
     "packages/contracts/src/reports/runRecord.ts": {
-      "hash": "cc02581996ae8804e3a55cb7929ab6b5ba8bc8bf7e95eb0f097d74fa8df4c2c2",
+      "hash": "bb957409e41286232291dfc2bed9e095a1281041eb79ef8066e38ab4c14252e2",
       "requests": []
     },
     "packages/contracts/src/run-inputs/RunInputs.interface.ts": {
