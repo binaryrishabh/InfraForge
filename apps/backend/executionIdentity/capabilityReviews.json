@@ -1616,7 +1616,7 @@
     "review": "Exact account-service review: fixed SES/Resend/Turnstile HTTPS adapters; bounded email delivery after native transaction commit; atomic single-statement verification ledger; native Better Auth tokens/passwords; keyed quotas; owner-filtered export and serialized profile deletion. No evaluators, dynamic imports, new process adapters, engine changes or activation."
   },
   "apps/backend/auth/createAuth.ts": {
-    "hash": "413772c276abde02342e772501621abdcd9209d9a88cbda8e7aa498f9a539068",
+    "hash": "e8b03d78e1be48cb296ceaf5fa9e31bcc95ef07adb50b798278ef8b377ec66ec",
     "capabilities": [],
     "review": "Reviewed exact default-off Better Auth 1.7.7 wiring: redirect-link verification hook, native signup-disabled magic/OTP, exact disabled legacy reset alias, backend magic confirmation before consumption and fresh challenge extraction from header or form query. Existing owner-bound session proof ledger retained. Fixed parsed fields and injected adapters only; no new syntax capability, loader or evaluator. While any new login flag enables strict returns, native onAPIError.errorURL uses the existing returnURL validator and app-only allowlist, covering callbacks before state recovery. All-off configuration omits the option and retains main's backend fallback. No added capabilities or globals. 2026-10-27 signup rebuild: cross-device signup handoff (HttpOnly cookie, HMAC-only storage, encrypted proof), username availability quota, 8+ four-type password rule with fail-open breach check; no new capabilities."
   },

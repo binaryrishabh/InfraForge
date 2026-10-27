@@ -125,7 +125,8 @@ export function createAuth(
       }
     }), after: createAuthMiddleware(async ctx => {
       if (deliver && ctx.path === "/sign-up/email" && ctx.body?.emailProof
-        && ctx.context.returned && typeof ctx.context.returned === "object" && !(ctx.context.returned instanceof APIError)
+        && ctx.context.returned && typeof ctx.context.returned === "object"
+        && !(ctx.context.returned instanceof APIError)
         && "user" in ctx.context.returned) {
         // Native duplicate-email success also ends the handoff, without
         // changing that generic response or adding credentials to the account.
