@@ -1,6 +1,8 @@
 // Explicit internal bridge; the published Model-1 engine entry point is unchanged.
 export { compileProduct } from "./model2/product/compiler";
 export { createActionableLiveModel2 } from "./model2/product/live";
+export { createModel2Run, ActionRefused, FAULT_DURATIONS } from "./model2/product/liveRun";
+export { buildModel2Contract, withRunLength } from "./model2/product/runContract";
 export { contractFromDesign } from "./model2/product/fromDesign";
 export { WORKLOAD_LIMITS } from "./model2/workload/policy";
 export { boundedProduct } from "./model2/product/bounds";
@@ -15,6 +17,7 @@ export type { ContentHasher } from "./reality/provider/fingerprint";
 export type { ProductContract, SavedProductDesign, CompiledProduct, Diagnostic } from "./model2/product/contracts";
 export type { LiveProjection, LiveNodeMetrics } from "./model2/product/live";
 export type { TimedAction } from "./model2/product/timeline";
+export type { LiveView, ContractBuilder, Model2Run } from "./model2/product/liveRun";
 export type { Assumption } from "./model2/product/fromDesign";
 export type { ProductEvidence } from "./model2/product/presentation";
 export type { MeteringConfig } from "./reality/metering/contracts";
