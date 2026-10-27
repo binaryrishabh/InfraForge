@@ -40,6 +40,8 @@ const CRASH_RESTART_US = 1_000_000; // process start and readiness after the cra
 const CPU_SPIKE_SHARE = 0.45; // a competing process wants 45% of the target's cores
 const NETWORK_DELAY_US = 200_000; // added delay on every link into the target
 const HOURS_PER_MONTH = 730;
+// The server replays each action by rebuilding the run up to its second, so a run takes at most this many actions.
+export const MAX_RUN_ACTIONS = 20;
 const SECOND = 1_000_000;
 
 export function createModel2Run(input: RunTopology & { workloadProfile: ResolvedWorkloadProfile; seed: string }, horizonSeconds: number, build: ContractBuilder = buildModel2Contract) {
@@ -98,6 +100,7 @@ export function createModel2Run(input: RunTopology & { workloadProfile: Resolved
     apply(request: ActionRequest): { outcome: ActionOutcome; endSecond?: number } {
       // Ids follow accepted actions only, so the browser and the server number the same timeline the same way.
       const now = run.simulatedSeconds, actionId = `a${run.actions.length + 1}`;
+      if (request.kind !== "speed" && request.kind !== "teardown" && run.actions.length >= MAX_RUN_ACTIONS) throw new ActionRefused(`A run takes at most ${MAX_RUN_ACTIONS} actions. Stop and start a new run to keep experimenting.`);
       const attempt = (action: Parameters<typeof run.apply>[0]) => {
         try { run.apply(action); } catch (error) { throw new ActionRefused(`Model 2 cannot apply this here: ${(error as Error).message}`); }
       };

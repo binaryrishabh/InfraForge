@@ -4,6 +4,7 @@
   "type": "module",
   "exports": {
     "./internal-product": { "types": "./src/internalProduct.ts", "default": "./src/internalProduct.ts" },
+    "./model2-run": { "types": "./src/model2Run.ts", "default": "./src/model2Run.ts" },
     "./capacity": {
       "types": "./src/capacity.ts",
       "default": "./src/capacity.ts"

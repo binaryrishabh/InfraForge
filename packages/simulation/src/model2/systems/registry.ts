@@ -1,4 +1,3 @@
-import { requireKnown } from "../../reality/quantity";
 import { copy } from "./copy";
 import { messageClient } from "../async/client";
 import type { ObjectReply } from "../async/contracts";

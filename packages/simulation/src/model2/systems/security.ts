@@ -1,7 +1,7 @@
 import { requireKnown } from "../../reality/quantity";
 import { copy } from "./copy";
 import type { NetworkContext } from "../network/run";
-import type { ConnectionHook, ConnectionRoute, PathConfig } from "../network/contracts";
+import type { ConnectionHook, PathConfig } from "../network/contracts";
 import type { Invocation, Receipt, RemoteOutcome } from "../workload/contracts";
 import type { EventKernel } from "../time";
 import type { DialConfig, DnsReply, FirewallRule, Scope, SystemsInput } from "./contracts";
