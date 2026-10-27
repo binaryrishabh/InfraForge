@@ -5,7 +5,7 @@ import { verifyLocalDocker } from "../release/docker-endpoint";
 import { ComposeRelease, settingsFingerprint, verifyImage } from "../release/compose";
 import type { Release } from "../release/sequence";
 import { checkFrontend, fullSha, publicJSON, verifyBackend } from "../release/public-check";
-const { docsOnlyChange } = require("../ci/validation.cjs");
+const { docsOnlyChange } = require("./docs-only.cjs");
 
 export function backendReleaseSha(requested: string, running: string, root = process.cwd()) {
   fullSha(requested); fullSha(running);

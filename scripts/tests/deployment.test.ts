@@ -8,6 +8,7 @@ import { mkdtemp, mkdir, readFile, rm, writeFile, unlink, symlink } from "node:f
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 const { admitRelease, requireRun, requireEnvironment } = require("../deploy/gate.cjs");
+const { requireFullValidation } = require("../ci/validation.cjs");
 const sha = "a".repeat(40);
 const repository = "owner/repo";
 const run = { id: 1, head_sha: sha, head_branch: "main", event: "push", path: ".github/workflows/validate.yml",
@@ -125,8 +126,8 @@ test("bootstrap rendering refuses injection and missing TLS inputs while HTTP re
 });
 
 
-test("docs-only reuse compares the complete accepted-to-requested range and keeps exact image identity", async () => {
-  const { docsOnlyPaths, docsOnlyChange } = require("../ci/validation.cjs");
+test("docs-only reuse keeps exact image identity and cannot release an earlier failed code change", async () => {
+  const { docsOnlyPaths, docsOnlyChange } = require("../deploy/docs-only.cjs");
   expect(docsOnlyPaths(["docs/guide.txt", "Readme.md", ".agent/notes"])).toBe(true);
   for (const paths of [[], ["docs/guide.md", "apps/backend/index.ts"], ["docs/reality/proof.json"], ["docs/reality/proof.md"], [".github/workflows/validate.yml"], ["bun.lock"]]) {
     expect(docsOnlyPaths(paths)).toBe(false);
@@ -145,11 +146,23 @@ test("docs-only reuse compares the complete accepted-to-requested range and keep
     expect(docsOnlyChange(docs, accepted, directory)).toBe(false);
     expect(docsOnlyChange("0".repeat(40), docs, directory)).toBe(false);
     expect(docsOnlyChange("--help", docs, directory)).toBe(false);
-    await writeFile(join(directory, "app.ts"), "changed"); const code = commit();
+    await writeFile(join(directory, "app.ts"), 'throw new Error("Code regression");'); const code = commit();
+    const validateCode = () => execFileSync(process.execPath, ["--no-env-file", "app.ts"], { cwd: directory, stdio: "pipe" });
+    expect(validateCode).toThrow();
     await writeFile(join(directory, "docs", "guide.md"), "another guide"); const laterDocs = commit();
     expect(docsOnlyChange(code, laterDocs, directory)).toBe(true);
     expect(docsOnlyChange(accepted, laterDocs, directory)).toBe(false);
     expect(() => backendReleaseSha(laterDocs, accepted, directory)).toThrow("differs");
+    // C only changes prose after failing B, but still contains B's broken code.
+    expect(validateCode).toThrow();
+    for (const result of ["failure", "skipped"]) {
+      const results = { identity: { result: "success" }, ...Object.fromEntries(
+        ["checks", "integration", "m2m-preview", "packaging", "operations"].map(job => [job, { result }])) };
+      expect(() => requireFullValidation(results)).toThrow();
+      expect(() => requireRun({ ...run, head_sha: laterDocs, conclusion: "failure" }, laterDocs, repository)).toThrow();
+    }
+    // Earlier CI cannot authorize the current docs commit either.
+    expect(() => requireRun({ ...run, head_sha: code }, laterDocs, repository)).toThrow();
     git("mv", "app.ts", "docs/moved.md"); const moved = commit();
     expect(docsOnlyChange(laterDocs, moved, directory)).toBe(false);
   } finally { await rm(directory, { recursive: true, force: true }); }

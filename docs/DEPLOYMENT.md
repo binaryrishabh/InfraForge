@@ -172,11 +172,9 @@ from production being live.
 
 ## One normal release authority
 
-1. Push `main`. **Validate workspaces** always checks execution identity and resolution.
-   Code changes run the full suite. Pushes changing only `docs/**`, Markdown or `.agent/**`
-   skip heavy jobs; `docs/reality/**` still runs them because it contains runtime proof data.
-   Missing history and pull requests use full validation. The workflow still completes
-   successfully for prose-only pushes so the release workflow runs.
+1. Push `main`. **Validate workspaces** runs execution identity, resolution and the
+   full validation suite on every push, including documentation-only changes. Every
+   required job must succeed before the release workflow can proceed.
 2. **Release InfraForge** consumes its completed push run. It re-reads GitHub's run,
    requires successful same-repository main validation and current main identity.
 3. The `Production` environment disallows admin bypass (owner approval is delegated until launch),

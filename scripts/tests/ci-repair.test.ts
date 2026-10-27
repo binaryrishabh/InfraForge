@@ -7,34 +7,36 @@ import { compatibleReviewedSource, compatibleV1Source, legacyLineage } from "../
 import { verifyConnectedProof } from "../verify-connected-proof";
 import { frozenHistoryText, lastCommit } from "../execution-identity";
 const { requireFullValidation } = require("../ci/validation.cjs");
-test("validation permits only deliberate docs skips after mandatory identity checks", () => {
-  const jobs = ["checks", "integration", "m2m-preview", "packaging", "operations"];
-  for (const docsOnly of [false, true]) {
-    const green = { changes: { result: "success", outputs: { docs_only: String(docsOnly) } },
-      ...Object.fromEntries(jobs.map(job => [job, { result: docsOnly ? "skipped" : "success" }])) };
-    expect(() => requireFullValidation(green)).not.toThrow();
-    for (const job of Object.keys(green)) {
-      for (const result of ["failure", "cancelled", "in_progress", undefined, docsOnly && job !== "changes" ? "success" : "skipped"]) {
-        expect(() => requireFullValidation({ ...green, [job]: { result } })).toThrow();
-      }
-      const missing = { ...green } as Record<string, unknown>; delete missing[job];
-      expect(() => requireFullValidation(missing)).toThrow();
+test("validation requires every job to succeed on every main push", () => {
+  const jobs = ["identity", "checks", "integration", "m2m-preview", "packaging", "operations"];
+  const green = Object.fromEntries(jobs.map(job => [job, { result: "success" }]));
+  expect(() => requireFullValidation(green)).not.toThrow();
+  for (const job of jobs) {
+    for (const result of ["failure", "cancelled", "in_progress", undefined, "skipped"]) {
+      expect(() => requireFullValidation({ ...green, [job]: { result } })).toThrow();
     }
-    expect(() => requireFullValidation({ ...green, changes: { result: "success", outputs: {} } })).toThrow();
+    const missing = { ...green }; delete missing[job];
+    expect(() => requireFullValidation(missing)).toThrow();
   }
+  expect(() => requireFullValidation({ ...green, unexpected: { result: "success" } })).toThrow();
   const config = Bun.YAML.parse(readFileSync(".github/workflows/validate.yml", "utf8")) as any;
-  expect(Object.keys(config.jobs).sort()).toEqual(["validation", "changes", ...jobs].sort());
+  expect(config.on.push.branches).toEqual(["main"]);
+  expect(config.on.push.paths).toBeUndefined();
+  expect(config.on.push["paths-ignore"]).toBeUndefined();
+  expect(Object.keys(config.jobs).sort()).toEqual(["validation", ...jobs].sort());
   expect(config.jobs.validation.if).toBe("always()");
-  expect(config.jobs.validation.needs.slice().sort()).toEqual(["changes", ...jobs].sort());
+  expect(config.jobs.validation.needs.slice().sort()).toEqual(jobs.slice().sort());
   expect(config.jobs.validation.steps[1].run).toBe("node scripts/ci/validation.cjs");
   expect(config.jobs.validation.steps[1].env.VALIDATION_RESULTS).toBe("${{ toJSON(needs) }}");
-  expect(config.jobs.changes.steps.map((step: any) => step.run)).toContain("bun --no-env-file scripts/execution-identity.ts --check");
-  expect(config.jobs.changes.steps.map((step: any) => step.run)).toContain("bun --no-env-file scripts/execution-resolution.ts");
+  expect(config.jobs.identity.steps.map((step: any) => step.run)).toContain("bun --no-env-file scripts/execution-identity.ts --check");
+  expect(config.jobs.identity.steps.map((step: any) => step.run)).toContain("bun --no-env-file scripts/execution-resolution.ts");
   for (const job of jobs) {
-    expect(config.jobs[job].needs).toBe("changes");
-    expect(config.jobs[job].if).toBe("needs.changes.outputs.docs_only != 'true'");
+    if (job !== "identity") expect(config.jobs[job].needs).toBe("identity");
+    expect(config.jobs[job].if).toBeUndefined();
+    expect(config.jobs[job].steps.every((step: any) => !String(step.if).includes("docs_only"))).toBe(true);
   }
 });
+
 test("Analytics review proves the entire prior lock is unchanged and rejects transitive/workspace drift", () => {
   const before = legacyLineage().reviewedExecution!.original.find(p => p.path === "bun.lock")!.text!;
   const after = frozenHistoryText(lastCommit, "bun.lock");
