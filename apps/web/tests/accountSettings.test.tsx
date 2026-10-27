@@ -2,8 +2,8 @@ import { afterEach, expect, spyOn, test } from "bun:test";
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
 import { http } from "../src/client/httpClient";
-import { activeSessions, loginMethods } from "../src/features/settings/accountSettings.api";
-import { SignInMethodsSection, YourDataSection, deviceName } from "../src/features/settings/AccountSections";
+import { activeSessions, deviceName, loginMethods } from "../src/features/settings/accountSettings.api";
+import { SignInMethodsSection, YourDataSection } from "../src/features/settings/AccountSections";
 
 afterEach(() => { (http.get as unknown as { mockRestore?: () => void }).mockRestore?.(); });
 

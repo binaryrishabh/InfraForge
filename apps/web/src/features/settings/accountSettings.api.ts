@@ -30,3 +30,9 @@ export async function activeSessions(): Promise<ActiveSession[]> {
 }
 export async function revokeSession(sessionId: string) { await http.post(`${base}/sessions/revoke`, { sessionId }); }
 export async function revokeOtherSessions() { await http.post(`${base}/sessions/revoke-others`, {}); }
+export function deviceName(agent: string | null) {
+  if (!agent) return "Unknown device";
+  const browser = /Edg\//.test(agent) ? "Edge" : /Firefox\//.test(agent) ? "Firefox" : /Chrome\//.test(agent) ? "Chrome" : /Safari\//.test(agent) ? "Safari" : "Browser";
+  const os = /Windows/.test(agent) ? "Windows" : /Android/.test(agent) ? "Android" : /iPhone|iPad/.test(agent) ? "iOS" : /Mac OS/.test(agent) ? "macOS" : /Linux/.test(agent) ? "Linux" : "";
+  return os ? `${browser} on ${os}` : browser;
+}

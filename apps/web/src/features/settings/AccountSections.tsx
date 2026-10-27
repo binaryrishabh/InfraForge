@@ -9,7 +9,7 @@ import { Field, Input } from "@/ui/Field";
 import { Notice, Section } from "@/ui/Page";
 import { Tag } from "@/ui/Tag";
 import { formatDate } from "@/lib/format";
-import { activeSessions, connectProvider, loginMethods, revokeOtherSessions, revokeSession, unlinkMethod,
+import { activeSessions, connectProvider, deviceName, loginMethods, revokeOtherSessions, revokeSession, unlinkMethod,
   type ActiveSession, type LoginMethod } from "./accountSettings.api";
 
 const PROVIDERS = [
@@ -83,13 +83,6 @@ export function SignInMethodsSection() {
         onConfirm={async (password) => { await unlinkMethod(removing!.id, password); toast.success("Disconnected."); load(); }} />
     </Section>
   );
-}
-
-export function deviceName(agent: string | null) {
-  if (!agent) return "Unknown device";
-  const browser = /Edg\//.test(agent) ? "Edge" : /Firefox\//.test(agent) ? "Firefox" : /Chrome\//.test(agent) ? "Chrome" : /Safari\//.test(agent) ? "Safari" : "Browser";
-  const os = /Windows/.test(agent) ? "Windows" : /Android/.test(agent) ? "Android" : /iPhone|iPad/.test(agent) ? "iOS" : /Mac OS/.test(agent) ? "macOS" : /Linux/.test(agent) ? "Linux" : "";
-  return os ? `${browser} on ${os}` : browser;
 }
 
 export function SessionsSection() {
