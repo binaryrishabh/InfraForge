@@ -2247,10 +2247,6 @@
       "hash": "b3e5a48d7f7f8cd3e82684b058ee722880af99c352b26f03f88cca69ad784fd0"
     },
     {
-      "path": "scripts/tests/backup-alerts.test.ts",
-      "hash": "d683b852a881083fb9c87c7c6d4ada7c2ed51efe613d512465fd4bffbf3e56d7"
-    },
-    {
       "path": "scripts/tests/boundaries.test.ts",
       "hash": "7e9b4eafd4b5849e5d110665ba4e387636e5c3afb82e7b50a3131556b7721744"
     },
