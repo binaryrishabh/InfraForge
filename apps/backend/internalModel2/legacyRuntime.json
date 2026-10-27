@@ -2388,7 +2388,7 @@
     },
     {
       "path": "scripts/tests/hardening-operations.test.ts",
-      "hash": "7c2737be8324276dbb310e8b47fdb23b589345107d66609a16834bcc86c2eeda"
+      "hash": "07d9247add27ee9e82be8c1ec8be95e338dff2bd3c2eebf3996ad473bdeb6bce"
     },
     {
       "path": "scripts/tests/historical-analysis-cache.test.ts",
