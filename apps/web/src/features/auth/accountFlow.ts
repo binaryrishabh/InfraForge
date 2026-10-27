@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { isAxiosError } from "axios";
-import type { AccountFeatures } from "@infraforge/contracts/auth";
+import type { AccountFeatures, AuthCapabilities } from "@infraforge/contracts/auth";
 import { accountFeatures, requestPasswordReset, requestSignupProof } from "./accountClient";
+import { API_URL } from "../../client/httpClient";
 import { obtainTurnstileToken, type TurnstileAction } from "./turnstileToken";
 import { CredentialError } from "./credentials";
 
@@ -14,6 +15,18 @@ export function useAccountFeatures() {
     return () => { active = false; };
   }, []);
   return { features, failed };
+}
+// Configured social providers for the sign-in and sign-up pages (empty until loaded).
+export function useAuthProviders() {
+  const [providers, setProviders] = useState<string[]>([]);
+  useEffect(() => {
+    const abort = new AbortController();
+    fetch(`${API_URL}/auth/providers`, { signal: abort.signal, credentials: "include" })
+      .then(async (response) => (response.ok ? (await response.json() as AuthCapabilities).providers : []))
+      .then(setProviders).catch(() => {});
+    return () => abort.abort();
+  }, []);
+  return providers;
 }
 export function useMailCooldown() {
   const [seconds, setSeconds] = useState(0);

@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect } from "react";
 import { BrowserRouter, Navigate, Route, Routes, useLocation, useParams } from "react-router-dom";
 import { Toaster } from "sonner";
 import { Analytics } from "@vercel/analytics/react";
+import { SignupPage } from "../features/auth/pages/SignupPage";
 import { SignInPage } from "../features/auth/pages/SignInPage";
 import { PasswordResetPage } from "../features/auth/pages/PasswordResetPage";
 import { HomePage } from "../features/dashboard/pages/HomePage";
@@ -81,7 +82,7 @@ function App() {
         <Route path="/reset-password" element={<PasswordResetPage key="reset" reset />} />
         <Route element={<PublicOnlyRoute />}>
           <Route path="/signin" element={<SignInPage key="signin" />} />
-          <Route path="/signup" element={<SignInPage key="signup" mode="signup" />} />
+          <Route path="/signup" element={<SignupPage />} />
         </Route>
         <Route element={<ProtectedRoute />}>
           <Route element={<AppShell />}>
