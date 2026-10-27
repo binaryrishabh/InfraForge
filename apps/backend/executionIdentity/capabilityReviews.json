@@ -380,12 +380,12 @@
     "review": "Fixed data indexing; resource adapters require the separate documented review"
   },
   "apps/backend/release/migrations.ts": {
-    "hash": "591fac1da0d1caaf701ad5601fe1684c73c87decae489844858b1150f359d7c9",
+    "hash": "ab59f17854c95ed665cd64aeeac278f0c544aae0efa1ab42216919fb2cfc04e7",
     "capabilities": [
       "computed-data",
       "resources"
     ],
-    "review": "Reviewed process receipt slice: separate immutable worker generation and token, source/image and confirmed exit fences, offline service-stop recovery, old Docker readers and release migration validation. Only bounded data/schema handling and existing database operations; Docker execution remains active; no process authority, dynamic loader, physics or public activation changes."
+    "review": "Reviewed process receipt slice: separate immutable worker generation and token, source/image and confirmed exit fences, offline service-stop recovery, old Docker readers and release migration validation. Only bounded data/schema handling and existing database operations; Docker execution remains active; no process authority, dynamic loader, physics or public activation changes. Also lists the separate VALIDATE migration 20261027000001 (constraint added NOT VALID, validated without blocking reads/writes); no capability change."
   },
   "apps/backend/release/model2Schema.ts": {
     "hash": "938f32e0a1b5371155aced66767440a78dd80e2e4a34bdac50c86374b9ca0a39",
@@ -1361,12 +1361,12 @@
     "review": "Exact historical compatibility review: versioned stored-data readers, typed migration audit lineage and bounded replay under the existing isolated executor/session fence; additive replay reservations; no evaluator, new process permission, physics change, latest-input resolution or activation w46: astra-reviewed queue operations, reconciliation and storage reserve, merged onto the reviewed release-lock schema checks and drain-aware health."
   },
   "apps/backend/release/firstStackSchema.ts": {
-    "hash": "b4cec13f2c3dc11bcfb1551fd241dcf875290653c467907975095a739e965839",
+    "hash": "27dfc99307fbd48cb38e804133159ded3d5b3419b1034de48fbc5d4e6fca1cc0",
     "capabilities": [
       "computed-data",
       "resources"
     ],
-    "review": "Reviewed process receipt slice: separate immutable worker generation and token, source/image and confirmed exit fences, offline service-stop recovery, old Docker readers and release migration validation. Only bounded data/schema handling and existing database operations; Docker execution remains active; no process authority, dynamic loader, physics or public activation changes."
+    "review": "Reviewed process receipt slice: separate immutable worker generation and token, source/image and confirmed exit fences, offline service-stop recovery, old Docker readers and release migration validation. Only bounded data/schema handling and existing database operations; Docker execution remains active; no process authority, dynamic loader, physics or public activation changes. Also lists the separate VALIDATE migration 20261027000001 (constraint added NOT VALID, validated without blocking reads/writes); no capability change."
   },
   "apps/backend/lib/generated/prisma/browser.ts": {
     "hash": "1b1d585e284ec626b0af3aac1819417fc080443b3852490c30c7534bdc710ae0",
