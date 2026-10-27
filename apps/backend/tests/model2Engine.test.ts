@@ -5,7 +5,7 @@ import { ActionRefused, createModel2Engine, type ContractBuilder } from "../simu
 import { buildModel2Contract } from "../simulator/contractBuilder";
 import { captureRunInputs } from "../deployments/runInputs";
 import { definition } from "./challengeHarness";
-import { advanceTickBatch } from "../simulator/tickBatch";
+import { advanceTickBatch, replayDue } from "../simulator/tickBatch";
 import { buildSnapshot, captureSnapshot } from "../simulator/snapshot";
 import { applyAction } from "../simulator/actionApplication";
 import { actionCompletion } from "../simulator/actionCompletion";
@@ -130,3 +130,17 @@ test("a challenge's starting design runs on Model 2 through the design adapter, 
   expect(() => createModel2Engine({ ...input, resources: [], connectionLines: [] }, 40, buildModel2Contract)).toThrow(ActionRefused);
 });
 
+
+test("a replay batch stops at each submitted action's second so it is applied exactly there", async () => {
+  const instance: SimulationInstance = { model2: engine(60), tickCount: 0, pendingLogs: [], speed: 3600, lastCheckpointAt: 0, accumulatedCostUsd: 0,
+    topology: topology(), topologyRevision: 0, actions: new Map(), acknowledge: null, metricsComputedAt: null, metricsTopologyRevision: 0,
+    autoStopAtSimulatedSeconds: 30, replay: { actions: [{ atSecond: 7, request: { kind: "load", parameters: { targetLoadFraction: 2 } } },
+      { atSecond: 7, request: { kind: "chaos", parameters: { type: DeploymentChaosNames.Crash, resourceId: "vm" } } }], next: 0 } };
+  await advanceTickBatch(instance, async () => {});
+  expect(instance.model2!.simulatedSeconds).toBe(7);
+  expect(replayDue(instance)).toBe(true);
+  instance.replay!.next = 2; // recorded and applied by the cycle
+  // Then on to the submitted stop second, one budgeted batch per cycle, as the worker does.
+  for (let cycle = 0; cycle < 20 && !(await advanceTickBatch(instance, async () => {})); cycle++);
+  expect(instance.model2!.simulatedSeconds).toBe(30);
+});

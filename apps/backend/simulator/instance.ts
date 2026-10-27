@@ -5,6 +5,7 @@ import type { SimulationLog } from "@infraforge/contracts/telemetry";
 import type { SimulationState } from "@infraforge/simulation/types";
 import type { EvidenceBuffer } from "../evidence/contract";
 import type { Model2Engine } from "./model2Engine";
+import type { BrowserSubmission } from "../browserRuns/submission";
 
 export interface RunningAction {
   id: string; request: ActionRequest; outcome: ActionOutcome; endSecond?: number; replicaId?: string;
@@ -29,5 +30,7 @@ export interface SimulationInstance {
   // A resilience attempt's one scheduled fault. Ticks never pass its second until it
   // is durably requested and applied, or durably recorded as failed.
   experiment?: { plan: RecordedExperiment; phase: "scheduled" | "requested" | "applied" | "failed" } | null;
+  // A browser run's server replay: the submitted actions, each recorded as a run action at its second.
+  replay?: { actions: BrowserSubmission["actions"]; next: number } | null;
 }
 export class ActionExecutionError extends Error {}

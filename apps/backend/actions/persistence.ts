@@ -29,6 +29,7 @@ export async function requestRunAction(deploymentId: string, ownerId: string, in
       }
     }
     if (run.status !== "live" || !run.runtimeActive) throw new ConflictError("Actions require a live run.");
+    if (run.browserSubmission !== null) throw new ConflictError("The server is replaying this browser run; it finishes by itself.");
     if (stopping) throw new ConflictError("This run is stopping; no further controls are accepted.");
     // A challenge attempt is evaluated under its fixed conditions; only pacing and stopping stay available.
     if (run.challengeId && request.kind !== "speed" && request.kind !== "teardown") {
