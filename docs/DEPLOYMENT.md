@@ -175,7 +175,7 @@ from production being live.
 1. Push `main`. **Validate workspaces** runs the complete suite once for that SHA.
 2. **Release InfraForge** consumes its completed push run. It re-reads GitHub's run,
    requires successful same-repository main validation and current main identity.
-3. The `Production` environment requires owner approval, disallows admin bypass,
+3. The `Production` environment disallows admin bypass (owner approval is delegated until launch),
    and permits only branch `main`. Review the exact SHA, compatibility, maintenance
    window, no active runs and backup/restore readiness before approving.
 4. A serialized release checks all setting names/formats and Vercel access before

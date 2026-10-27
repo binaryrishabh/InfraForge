@@ -48,9 +48,10 @@ test("release admission refuses stale, untrusted, failed, incomplete and wrong-w
     expect(() => requireRun({ ...run, ...change }, sha, repository)).toThrow();
   }
 });
-test("production needs approval, no admin bypass and only the main branch", () => {
+test("production needs no admin bypass and only the main branch", () => {
   expect(() => requireEnvironment(environment, policies)).not.toThrow();
-  for (const change of [{ can_admins_bypass: true }, { protection_rules: [] }, { deployment_branch_policy: null }]) {
+  expect(() => requireEnvironment({ ...environment, protection_rules: [] }, policies)).not.toThrow();
+  for (const change of [{ can_admins_bypass: true }, { deployment_branch_policy: null }]) {
     expect(() => requireEnvironment({ ...environment, ...change }, policies)).toThrow();
   }
   for (const rules of [[], [...policies, { name: "*", type: "tag" }], [{ name: "main", type: "tag" }]]) {

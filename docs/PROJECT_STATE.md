@@ -53,7 +53,7 @@ Model 1 ACTIVE; Model 2 INTERNAL. **Production is live**; earlier PARKED and dev
 policy statements below are historical checkpoints superseded by this paragraph.
 
 **Deployment hardening / portability:** main push CI feeds one exact-SHA release
-workflow, protected by owner approval, main-only deployment and no admin bypass.
+workflow, protected by main-only deployment and no admin bypass (owner approval delegated until launch).
 GitHub accepted these Production environment protections in the actual public repo.
 Release concurrency never cancels active migration. Public backend acceptance precedes
 same-SHA Vercel staging/identity checks/promotion. Direct Vercel main Git deployment

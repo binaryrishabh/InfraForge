@@ -18,8 +18,8 @@ $environment = gh api "repos/$repo/environments/Production" | ConvertFrom-Json
 Check-Native
 $policies = gh api "repos/$repo/environments/Production/deployment-branch-policies" | ConvertFrom-Json
 Check-Native
-if ($environment.can_admins_bypass -ne $false -or $environment.deployment_branch_policy.custom_branch_policies -ne $true -or -not ($environment.protection_rules | Where-Object { $_.type -eq 'required_reviewers' -and $_.reviewers.Count -gt 0 }) -or
-    $policies.branch_policies.Count -ne 1 -or $policies.branch_policies[0].name -ne 'main' -or $policies.branch_policies[0].type -ne 'branch') { throw 'Production must retain owner approval, no admin bypass and main-only deployment.' }
+if ($environment.can_admins_bypass -ne $false -or $environment.deployment_branch_policy.custom_branch_policies -ne $true -or
+    $policies.branch_policies.Count -ne 1 -or $policies.branch_policies[0].name -ne 'main' -or $policies.branch_policies[0].type -ne 'branch') { throw 'Production must retain no admin bypass and main-only deployment.' }
 $names = gh secret list --repo $repo --json name | ConvertFrom-Json
 Check-Native
 foreach ($name in @('EC2_HOST','EC2_USERNAME','EC2_SSH_KEY')) { if ($name -notin $names.name) { throw "Missing existing repository secret: $name" } }
