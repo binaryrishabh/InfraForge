@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 import { randomBytes } from "node:crypto";
 import { ComposeRelease, settingsFingerprint } from "./compose";
 import { cancelCommands, command, waitFor } from "./process";
-import { releaseSequence, rollbackSequence, type Release } from "./sequence";
+import { PreviousReleaseRestored, releaseSequence, rollbackSequence, type Release } from "./sequence";
 import { proveCutoverDatabase } from "./cutover-proof";
 import { proveWorkerRecovery } from "./worker-recovery";
 import { connectDatabase } from "../../apps/backend/cutover/database";
@@ -232,6 +232,14 @@ try {
   await mustFail(() => releaseSequence(operations!, bad, release), "actual unhealthy container release");
   await operations.ready(release);
   phase("failed health gate restored the accepted image");
+  // A step that fails after the services stop, with no schema change, must bring the
+  // stopped previous containers back by itself (production outage of 2026-10-27).
+  await fixtureCommand("drift");
+  const restored = await releaseSequence(operations, release, release).then(() => false, (error) => error instanceof PreviousReleaseRestored);
+  if (!restored) throw new Error("A failed same-schema release did not restore the previous release");
+  await operations.ready(release);
+  await fixtureCommand("clear-drift");
+  phase("a release failing before any schema change restored the previous containers by itself");
   await operations.compose(["stop", "redis"]);
   await mustFail(() => operations!.compose(["exec", "-T", "api", "bun", "health/probe.ts", "3000"]), "API with unavailable Redis");
   await mustFail(() => operations!.compose(["exec", "-T", "ws-server", "bun", "health/probe.ts", "3001"]), "WS with unavailable Redis");
