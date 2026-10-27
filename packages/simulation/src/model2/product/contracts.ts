@@ -65,7 +65,7 @@ export interface ProductContract {
   seed: string; horizon: Quantity<"us">; sampleInterval: Quantity<"us">;
   // changes: live load changes, each a fraction of the declared workload from its time on.
   // generated: produce arrivals while the run advances instead of storing them (live runs).
-  arrival: { start: Quantity<"us">; peak?: { start: Quantity<"us">; end: Quantity<"us"> }; changes?: Array<{ at: Quantity<"us">; fraction: Quantity<"ratio"> }>; generated?: true };
+  arrival: { start: Quantity<"us">; peak?: { start: Quantity<"us">; end: Quantity<"us">; every?: Quantity<"us"> }; changes?: Array<{ at: Quantity<"us">; fraction: Quantity<"ratio"> }>; generated?: true };
   limits: SystemsInput["limits"];
   instrumentation: SystemsInput["systems"]["instrumentation"];
   commands: SystemsInput["systems"]["commands"];

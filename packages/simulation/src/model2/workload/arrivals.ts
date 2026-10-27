@@ -51,18 +51,20 @@ export function* rateRows(r: RateArrivals): Generator<TraceRow> {
     if (fraction(at) === 0) { const next = r.changes.find((c) => c.atUs > at); if (!next) return; at = next.atUs; continue; }
     readDebt += r.readFraction; const read = readDebt >= 1; if (read) readDebt -= 1;
     yield { id: `arrival-${index++}`, atUs: Math.round(at), operation: read ? r.readOperation : r.writeOperation };
-    const inPeak = r.peak !== undefined && at >= r.peak.startUs && at < r.peak.endUs;
+    const inPeak = r.peak !== undefined && at >= r.peak.startUs && (r.peak.everyUs === undefined ? at < r.peak.endUs : (at - r.peak.startUs) % r.peak.everyUs < r.peak.endUs - r.peak.startUs);
     const gap = r.intervalUs / ((inPeak ? r.peak!.multiplier : 1) * fraction(at)); if (gap < 1) throw Error("Peak exceeds microsecond resolution"); at += gap;
   }
 }
 
 export function validateRate(r: RateArrivals, operations: Set<string>): string[] {
-  const finite = [r.startUs, r.endUs, r.intervalUs, r.readFraction, ...(r.peak ? [r.peak.startUs, r.peak.endUs, r.peak.multiplier] : []), ...r.changes.flatMap((c) => [c.atUs, c.fraction])];
+  const finite = [r.startUs, r.endUs, r.intervalUs, r.readFraction, ...(r.peak ? [r.peak.startUs, r.peak.endUs, r.peak.multiplier, r.peak.everyUs ?? 1] : []), ...r.changes.flatMap((c) => [c.atUs, c.fraction])];
   if (r.schema !== "infraforge-rate-arrivals/1" || !r.provenance || finite.some((n) => !Number.isFinite(n))) return ["Invalid rate arrival schema/provenance"];
   const errors: string[] = [];
   if (r.startUs < 0 || r.endUs <= r.startUs || r.intervalUs < 1 || r.readFraction < 0 || r.readFraction > 1) errors.push("Invalid rate arrival window/interval/read fraction");
   if (!operations.has(r.readOperation) || !operations.has(r.writeOperation)) errors.push("Unknown rate arrival operation");
-  if (r.peak && (r.peak.startUs < r.startUs || r.peak.endUs <= r.peak.startUs || r.peak.endUs > r.endUs || r.peak.multiplier < 1)) errors.push("Invalid rate arrival peak window");
+  // A repeating window may begin after the run ends (then it never applies); a single window must fit the run.
+  if (r.peak && (r.peak.startUs < r.startUs || r.peak.endUs <= r.peak.startUs || r.peak.multiplier < 1 ||
+    (r.peak.everyUs === undefined ? r.peak.endUs > r.endUs : r.peak.everyUs <= r.peak.endUs - r.peak.startUs))) errors.push("Invalid rate arrival peak window");
   if (r.changes.some((c, i) => !Number.isSafeInteger(c.atUs) || c.atUs < 0 || c.fraction < 0 || c.fraction > 10 || (i > 0 && c.atUs <= r.changes[i - 1]!.atUs))) errors.push("Invalid rate arrival load changes");
   return errors;
 }

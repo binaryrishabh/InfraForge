@@ -23,7 +23,8 @@ export type ArrivalSource =
 export interface RateArrivals {
   schema: "infraforge-rate-arrivals/1"; provenance: string;
   startUs: number; endUs: number; intervalUs: number; readFraction: number; readOperation: string; writeOperation: string;
-  peak?: { startUs: number; endUs: number; multiplier: number };
+  // A peak window repeats every `everyUs` when set (for example a 20-second burst every 120 seconds).
+  peak?: { startUs: number; endUs: number; multiplier: number; everyUs?: number };
   changes: Array<{ atUs: number; fraction: number }>;
 }
 export interface TraceRow { id: string; atUs: number; operation: string; payloadBytes?: number }

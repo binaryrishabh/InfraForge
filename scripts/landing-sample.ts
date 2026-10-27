@@ -36,16 +36,17 @@ export function generateLandingSample() {
   const ids = input.resources.map((r) => r.id);
   const points: Array<{ t: number; system: number; resources: Array<[number, number]> }> = [];
   let faultDuration = 0;
-  while (instance.state.simulatedSeconds < definition.evaluationSeconds) {
+  while (instance.state!.simulatedSeconds < definition.evaluationSeconds) {
     // The worker stops at the experiment second and applies the fault before the next tick.
-    if (instance.state.simulatedSeconds === atSimulatedSecond) {
+    if (instance.state!.simulatedSeconds === atSimulatedSecond) {
       const applied = applyAction(instance, "landing-experiment", { kind: "chaos", parameters: { type: fault, resourceId: target.resourceId, trigger: "challenge-experiment" } });
       faultDuration = Number(applied.outcome.durationSimulatedSeconds ?? 0);
     }
-    instance.state = tick(instance.state, {}).state;
-    const s = instance.state;
+    instance.state = tick(instance.state!, {}).state;
+    const s = instance.state!;
+    // Model 1 records every CPU value; this sample is re-recorded on Model 2 before launch.
     points.push({ t: s.simulatedSeconds, system: SYSTEM.indexOf(s.overallHealth as typeof SYSTEM[number]),
-      resources: ids.map((id) => [HEALTH.indexOf(s.metrics[id]!.health as typeof HEALTH[number]), Math.round(s.metrics[id]!.cpu * 10) / 10]) });
+      resources: ids.map((id) => [HEALTH.indexOf(s.metrics[id]!.health as typeof HEALTH[number]), Math.round(s.metrics[id]!.cpu! * 10) / 10]) });
   }
   return {
     schema: "infraforge-landing-sample/1", model: SIMULATION_MODEL_VERSION,

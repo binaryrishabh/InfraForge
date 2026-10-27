@@ -137,3 +137,17 @@ test("generated arrivals run exactly like the stored trace, without storing it",
   expect(seconds[9]![0].offeredRps).toBeGreaterThanOrEqual(224);
 });
 
+test("a peak window can repeat, like a 2-second burst every 6 seconds", () => {
+  const f = fixture(14, 100), nodes = f.design.resources.map((r) => r.id);
+  f.design.workload = { ...f.design.workload, trafficShape: "peak", peakMultiplier: 2 };
+  const us = (value: number) => ({ kind: "known" as const, value, unit: "us" as const, provenance: ["test-peak"] });
+  f.contract.arrival = { ...f.contract.arrival, generated: true, peak: { start: us(4_000_000), end: us(6_000_000), every: us(6_000_000) } };
+  const compiled = compileProduct(f.design, f.contract);
+  if (!compiled.ok) throw new Error(JSON.stringify(compiled.diagnostics));
+  const run = createLiveModel2(compiled.value, nodes);
+  const offered = Array.from({ length: 14 }, () => { run.advanceSecond(); return run.project().offeredRps; });
+  // Seconds 5-6 and 11-12 carry the bursts (arrivals in [4,6) and [10,12)); the others carry the base rate.
+  for (const s of [5, 6, 11, 12]) expect(offered[s - 1]).toBeGreaterThanOrEqual(198);
+  for (const s of [3, 4, 8, 9, 14]) expect(offered[s - 1]).toBeLessThanOrEqual(102);
+});
+
