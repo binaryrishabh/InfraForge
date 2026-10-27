@@ -21,21 +21,30 @@ function loadTurnstile() {
   return loading;
 }
 export function mountTurnstile(element: HTMLElement, siteKey: string | null, action: TurnstileAction,
-  status: (message: string) => void, load = loadTurnstile) {
+  status: (message: string) => void, load = loadTurnstile, waitMs = 15000) {
   if (!siteKey) return () => {};
   let disposed = false, token = "", id: string | undefined, api: Turnstile | undefined;
+  let waiters: Array<(value: string) => void> = [];
+  // A submit waits for the widget's (usually invisible) check instead of failing at once,
+  // so a quick click or a second request never shows a spurious "security check" error.
+  const nextToken = () => token ? Promise.resolve(token) : new Promise<string>((resolve, reject) => {
+    const timer = setTimeout(() => { waiters = waiters.filter(w => w !== done); reject(Error("Complete the security check")); }, waitMs);
+    const done = (value: string) => { clearTimeout(timer); resolve(value); };
+    waiters.push(done);
+  });
   const unregister = setTurnstileTokenProvider(async requested => {
-    if (requested !== action || !token || !api || id === undefined) throw Error("Complete the security check");
-    const fresh = token; token = ""; api.reset(id); status("Complete the security check before your next request.");
+    if (requested !== action || disposed) throw Error("Complete the security check");
+    const fresh = await nextToken();
+    token = ""; if (api && id !== undefined) api.reset(id);
     return fresh;
   });
   void load().then(widget => {
     if (disposed) return;
     api = widget;
-    const invalid = () => { token = ""; status("Complete the security check. If it cannot load, reload this page."); };
+    const invalid = () => { token = ""; status("The security check did not complete. If it keeps failing, reload this page."); };
     id = widget.render(element, { sitekey: siteKey, action, "response-field": false,
-      callback: value => { token = value; status("Security check complete."); },
-      "expired-callback": invalid, "error-callback": invalid, "timeout-callback": invalid });
-  }).catch(() => { if (!disposed) status("Security check is unavailable. Reload to try again."); });
+      callback: value => { token = value; status(""); const ready = waiters; waiters = []; ready.forEach(w => w(value)); },
+      "expired-callback": () => { token = ""; }, "error-callback": invalid, "timeout-callback": invalid });
+  }).catch(() => { if (!disposed) status("The security check could not load. Reload to try again."); });
   return () => { disposed = true; token = ""; unregister(); if (api && id !== undefined) api.remove(id); };
 }

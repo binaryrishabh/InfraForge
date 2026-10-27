@@ -14,7 +14,7 @@ test("widget supplies one-use tokens for the matching action, invalidates failur
     let resets = 0, removes = 0;
     const api: Turnstile = { render: (_, value) => { options = value; return "widget"; },
       reset: () => { resets++; }, remove: () => { removes++; } };
-    const dispose = mountTurnstile({} as HTMLElement, "public-key", action, () => {}, async () => api);
+    const dispose = mountTurnstile({} as HTMLElement, "public-key", action, () => {}, async () => api, 20);
     await Promise.resolve();
     expect(options?.action).toBe(action);
     expect(options?.sitekey).toBe("public-key");
@@ -43,9 +43,21 @@ test("leaving a page while the script loads never mounts a late widget", async (
 });
 test("script failures give an actionable status and cannot supply tokens", async () => {
   const messages: string[] = [];
-  const dispose = mountTurnstile({} as HTMLElement, "key", "signup", value => messages.push(value), async () => { throw Error("offline"); });
+  const dispose = mountTurnstile({} as HTMLElement, "key", "signup", value => messages.push(value), async () => { throw Error("offline"); }, 20);
   await Promise.resolve(); await Promise.resolve();
-  expect(messages).toEqual(["Security check is unavailable. Reload to try again."]);
+  expect(messages).toEqual(["The security check could not load. Reload to try again."]);
   await expect(obtainTurnstileToken("signup")).rejects.toThrow("Complete");
+  dispose();
+});
+test("a request made while the check is still running waits for it instead of failing", async () => {
+  let options: Parameters<Turnstile["render"]>[1] | undefined;
+  const messages: string[] = [];
+  const dispose = mountTurnstile({} as HTMLElement, "key", "signup", value => messages.push(value),
+    async () => ({ render: (_, value) => { options = value; return "id"; }, reset: () => {}, remove: () => {} }), 1000);
+  await Promise.resolve();
+  const pending = obtainTurnstileToken("signup");
+  setTimeout(() => options!.callback("late-token"), 10);
+  expect(await pending).toBe("late-token");
+  expect(messages.filter(Boolean)).toEqual([]);
   dispose();
 });
