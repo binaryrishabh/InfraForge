@@ -100,3 +100,18 @@ and counts its tables (a backup only counts if it restores), uploads it to the R
 
 To restore: `rclone copyto r2:infraforge-backups/home/daily/<file> /tmp/<file>`, then
 `docker exec -i infraforge-postgres-1 sh -c 'pg_restore -U "$POSTGRES_USER" -d "$POSTGRES_DB" --clean --no-owner' < /tmp/<file>`.
+
+### Backup failure alert
+
+If the daily backup fails, systemd runs `infraforge-backup-alert.service`, which emails the owner
+through Resend with the app's existing `RESEND_API_KEY` and `TRANSACTIONAL_EMAIL_FROM` (read from
+`/etc/infraforge/release.env`, never printed). The recipient is the single line `ALERT_EMAIL=<address>`
+in `/etc/infraforge/ops/alert.env` (root, 0600). Install or update:
+
+```bash
+sudo install -o root -g root -m 0750 ops/home/backup-alert.sh /usr/local/sbin/infraforge-backup-alert
+sudo install -o root -g root -m 0644 ops/home/infraforge-backup-alert.service ops/home/infraforge-backup.service /etc/systemd/system/
+sudo systemctl daemon-reload
+```
+
+Test it once with `sudo systemctl start infraforge-backup-alert` (sends one alert email).

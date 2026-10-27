@@ -1,0 +1,6 @@
+[Unit]
+Description=Email the owner that the InfraForge database backup failed
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/infraforge-backup-alert

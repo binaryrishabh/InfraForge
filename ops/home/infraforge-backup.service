@@ -2,6 +2,7 @@
 Description=InfraForge database backup to R2 with a restore check
 Requires=docker.service
 After=docker.service
+OnFailure=infraforge-backup-alert.service
 
 [Service]
 Type=oneshot
