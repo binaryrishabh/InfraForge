@@ -44,6 +44,11 @@ export async function command(args: string[], cwd: string, env: Record<string, s
   children.add(child);
   const [output, diagnostic, exitCode] = await collectCommand(child,
     (args[1] === "build" || args[1] === "buildx" && args[2] === "build") ? 600000 : 120000)
+    .catch((error: Error) => {
+      // Name the command that hung so a deadline is diagnosable from the release log (no settings values).
+      if (error.message === "Release command deadline exceeded") throw new Error(`${error.message}: ${args.slice(0, 8).join(" ")}`);
+      throw error;
+    })
     .finally(() => { children.delete(child); });
   if (exitCode !== 0) {
     const detail = env.RELEASE_REHEARSAL === "owned-local" ? redactReleaseDiagnostic(diagnostic, env).slice(-2000)

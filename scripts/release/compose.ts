@@ -139,6 +139,10 @@ export class ComposeRelease implements ReleaseOperations {
     }
   }
   async postcheck() { await this.compose(["run", "--rm", "--no-deps", "migration", "bun", "release/cli.ts", "postcheck"], this.next); }
+  async resume() {
+    this.stopped = false;
+    await this.compose(["start", ...services]);
+  }
   async start(release: Release) {
     this.stopped = false;
     this.active = release;

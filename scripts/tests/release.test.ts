@@ -1,6 +1,6 @@
 import { expect, spyOn, test } from "bun:test";
 import { readFileSync } from "node:fs";
-import { releaseSequence, rollbackSequence, type Release, type ReleaseOperations } from "../release/sequence";
+import { PreviousReleaseRestored, releaseSequence, rollbackSequence, type Release, type ReleaseOperations } from "../release/sequence";
 import { webRelease } from "../../apps/web/releaseConfig";
 import { cancelCommands, command } from "../release/process";
 import { applicationStopBlockers, ComposeRelease, releaseDependencyClosure } from "../release/compose";
@@ -26,6 +26,8 @@ function fixture(failure?: string) {
   const operations: ReleaseOperations = {
     preflight: async () => { events.push("preflight"); if (failure === "preflight") throw new Error("active run"); },
     stop: async () => { events.push("stop"); },
+    resume: async () => { events.push("resume"); },
+    stopMigration: async () => { events.push("stopMigration"); },
     migrate: async () => { events.push("migrate"); if (failure === "migrate") throw new Error("migration failed"); },
     postcheck: async () => { events.push("postcheck"); if (failure === "postcheck") throw new Error("drift"); },
     start: async (item) => { events.push(`start:${item.sha}`); },
@@ -40,13 +42,28 @@ test("release orders stop/migrate/postcheck before one start and acceptance", as
   await releaseSequence(operations, release("new"), release("old"));
   expect(events).toEqual(["preflight", "stop", "migrate", "postcheck", "start:new", "ready:new", "save:new"]);
 });
-test("active runs do not get stopped and migration failures never start any worker", async () => {
-  for (const failure of ["preflight", "migrate", "postcheck"]) {
+test("active runs do not get stopped and a real schema change that fails stays stopped", async () => {
+  const blocked = fixture("preflight");
+  await expect(releaseSequence(blocked.operations, release("new"), release("old"))).rejects.toThrow();
+  expect(blocked.events).toEqual(["preflight"]);
+  for (const failure of ["migrate", "postcheck"]) {
     const { events, operations } = fixture(failure);
-    await expect(releaseSequence(operations, release("new"), release("old"))).rejects.toThrow();
-    expect(events.some((event) => event.startsWith("start"))).toBe(false);
-    if (failure === "preflight") expect(events).toEqual(["preflight"]);
+    await expect(releaseSequence(operations, { ...release("new"), migrationFingerprint: "new-schema" }, release("old"))).rejects.toThrow();
+    expect(events.some((event) => event.startsWith("start") || event === "resume")).toBe(false);
   }
+});
+test("a failed or hung step with no schema change restores the previous release as it was", async () => {
+  for (const failure of ["migrate", "postcheck"]) {
+    const { events, operations } = fixture(failure);
+    await expect(releaseSequence(operations, release("new"), release("old"))).rejects.toBeInstanceOf(PreviousReleaseRestored);
+    expect(events.slice(-3)).toEqual(["stopMigration", "resume", "ready:old"]);
+    expect(events).not.toContain("start:new");
+    expect(events.some((event) => event.startsWith("save"))).toBe(false);
+  }
+  const broken = fixture("migrate");
+  broken.operations.ready = async () => { broken.events.push("ready:old"); throw new Error("old down too"); };
+  await expect(releaseSequence(broken.operations, release("new"), release("old"))).rejects.toThrow("could not be restored");
+  expect(broken.events.at(-1)).toBe("stop");
 });
 test("health failure rolls back containers only when schema/auth/settings agree", async () => {
   const { events, operations } = fixture("new");

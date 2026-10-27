@@ -3,7 +3,7 @@ import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { ComposeRelease, settingsFingerprint } from "./release/compose";
 import { cancelCommands, command } from "./release/process";
-import { releaseSequence, rollbackSequence, type Release } from "./release/sequence";
+import { PreviousReleaseRestored, releaseSequence, rollbackSequence, type Release } from "./release/sequence";
 import { prepareReleaseImage, type AcceptedState, type ReleaseAction } from "./release/image";
 import { preflightReleaseSpace, pruneAcceptedImages } from "./release/hygiene";
 
@@ -30,6 +30,7 @@ let interrupted = false;
 let operationsInProgress: ComposeRelease | undefined;
 let mutationStarted = false;
 let failedAfterStop = false;
+const maintenance = resolve(directory, "maintenance");
 let acceptanceComplete = false;
 let lockCleanup: Promise<void> | undefined;
 const releaseLock = () => lockCleanup ??= lock.close().then(() => unlink(lockPath));
@@ -73,7 +74,6 @@ try {
   const origin = configuration.services.api.environment.BETTER_AUTH_URL as string;
   if (new URL(origin).protocol !== "https:") throw new Error("Release requires a public HTTPS proxy");
   await operations.preflight();
-  const maintenance = resolve(directory, "maintenance");
   await Bun.write(maintenance, `${sha}\n`);
   for (const path of ["/api/auth/providers", "/ws"]) {
     const response = await fetch(origin + path, { signal: AbortSignal.timeout(10000), redirect: "error" });
@@ -105,7 +105,12 @@ try {
   try { await pruneAcceptedImages(root, directory); }
   catch (error) { console.error(`Accepted release cleanup incomplete: ${(error as Error).message}`); }
 } catch (error) {
-  failedAfterStop = mutationStarted && !acceptanceComplete;
+  if (error instanceof PreviousReleaseRestored) {
+    // The previous release is serving again: reopen traffic and free the lock, but still fail.
+    await unlink(maintenance).catch(() => {});
+    console.error(error.message);
+  }
+  failedAfterStop = mutationStarted && !acceptanceComplete && !(error instanceof PreviousReleaseRestored);
   if (failedAfterStop && operationsInProgress) await operationsInProgress.stopMigration().catch(() => {});
   throw error;
 } finally {
