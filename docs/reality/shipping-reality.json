@@ -1069,7 +1069,7 @@
       "status": "NOT_APPLICABLE",
       "finalProductEligible": false,
       "plan": "Prove software behavior through PRODUCT_UI_VALIDITY. No physics owner required.",
-      "description": "div: aria-label={label} onPointerDown={viewport.handlePanStart} onPointerMove={viewport.handlePanMove} onPointerUp={viewport.handlePanEnd} onClick={(event) => {\n        if (event.target !== event.currentTarget) return;\n        const store = useCanvasStore.getState();\n        store.setSelectedConnectionId(null); store.setSelectedResourceId(null);\n      }}",
+      "description": "div: aria-label={label} onPointerDown={viewport.handlePanStart} onPointerMove={viewport.handlePanMove} onPointerUp={viewport.handlePanEnd} onClick={(event) => {\r\n        if (event.target !== event.currentTarget) return;\r\n        const store = useCanvasStore.getState();\r\n        store.setSelectedConnectionId(null); store.setSelectedResourceId(null);\r\n      }}",
       "category": "PRESENTATION_ONLY",
       "categoryReason": "Software interaction or authored presentation; no infrastructure truth claim",
       "ui": {
@@ -2870,7 +2870,7 @@
       "status": "MODEL1_ONLY",
       "finalProductEligible": false,
       "plan": "Retain historical Model-1 meaning. Before Model-2 shipping, bind this surface to the appropriate explicit Model-2 workload/resource/evidence contract and prove downstream effects, or remove it.",
-      "description": "Input: value={ports} onChange={(event) => {\n                setPorts(event.target.value);\n                const next = parsePorts(event.target.value);\n                if (next) updateResource(resource.id, { openPorts: next.length ? next : undefined });\n              }}",
+      "description": "Input: value={ports} onChange={(event) => {\r\n                setPorts(event.target.value);\r\n                const next = parsePorts(event.target.value);\r\n                if (next) updateResource(resource.id, { openPorts: next.length ? next : undefined });\r\n              }}",
       "category": "SECURITY_CONTROL",
       "categoryReason": "Infrastructure intent or technical evidence; Model-2 mechanism/evidence required",
       "ui": {
@@ -9479,7 +9479,7 @@
       "status": "NOT_APPLICABLE",
       "finalProductEligible": false,
       "plan": "Prove software behavior through PRODUCT_UI_VALIDITY. No physics owner required.",
-      "description": "Button: onClick={() => {\n        const canvas = useCanvasStore.getState();\n        if (canvas.activeDeploymentId || (!canvas.currentLayoutSaved && canvas.resources.length)) setConfirm(true);\n        else void open();\n      }}",
+      "description": "Button: onClick={() => {\r\n        const canvas = useCanvasStore.getState();\r\n        if (canvas.activeDeploymentId || (!canvas.currentLayoutSaved && canvas.resources.length)) setConfirm(true);\r\n        else void open();\r\n      }}",
       "category": "PRODUCT_UI_ACTION",
       "categoryReason": "Software interaction or authored presentation; no infrastructure truth claim",
       "ui": {
@@ -10069,7 +10069,7 @@
       "id": "control:apps/web/src/features/reports/components/RerunDialog.tsx:form-76214d2e8af07dda9801:0",
       "source": "apps/web/src/features/reports/components/RerunDialog.tsx",
       "identity": "form-76214d2e8af07dda9801",
-      "description": "form: onSubmit={async (event) => {\n      event.preventDefault(); if (busy) return;\n      setBusy(true); onBusy(true); setError(null);\n      const owner = useAuthStore.getState().user?.id;\n      try {\n        const run = await createRerun(id, mode, matched, mode === \"current-design\" ? options.currentDesign.inputHash ?? undefined : undefined);\n        if (!mounted.current || !owner || useAuthStore.getState().user?.id !== owner) return;\n        if (!run.liveTopology) throw new Error(\"No captured topology\");\n        const store = useCanvasStore.getState();\n        store.loadRunTopology(run.id, run.liveTopology, run.topologyRevision, run.infrastructureId, run.runName);\n        store.setIsDeploying(true); store.setLiveLocked(false);\n        // A rerun is always a freeform run, even when its sour",
+      "description": "form: onSubmit={async (event) => {\r\n      event.preventDefault(); if (busy) return;\r\n      setBusy(true); onBusy(true); setError(null);\r\n      const owner = useAuthStore.getState().user?.id;\r\n      try {\r\n        const run = await createRerun(id, mode, matched, mode === \"current-design\" ? options.currentDesign.inputHash ?? undefined : undefined);\r\n        if (!mounted.current || !owner || useAuthStore.getState().user?.id !== owner) return;\r\n        if (!run.liveTopology) throw new Error(\"No captured topology\");\r\n        const store = useCanvasStore.getState();\r\n        store.loadRunTopology(run.id, run.liveTopology, run.topologyRevision, run.infrastructureId, run.runName);\r\n        store.setIsDeploying(true); store.setLiveLocked(false);\r\n        // A rerun is always a freeform run, even wh",
       "kind": "control",
       "category": "UNREVIEWED",
       "categoryReason": "Classification requires semantic review; new surfaces fail closed",
@@ -11667,7 +11667,7 @@
       "status": "NOT_APPLICABLE",
       "finalProductEligible": false,
       "plan": "Prove software behavior through PRODUCT_UI_VALIDITY. No physics owner required.",
-      "description": "Radix.Content: onCloseAutoFocus={(event) => {\n            // Back to the control that opened it; a dialog the page opened itself hands focus to the main content.\n            const target = opener?.isConnected ? opener : document.getElementById(\"main\");\n            if (target) { event.preventDefault(); target.focus(); }\n          }} onPointerDownOutside={outside} onEscapeKeyDown={(event) => { if (busy) event.preventDefault(); }}",
+      "description": "Radix.Content: onCloseAutoFocus={(event) => {\r\n            // Back to the control that opened it; a dialog the page opened itself hands focus to the main content.\r\n            const target = opener?.isConnected ? opener : document.getElementById(\"main\");\r\n            if (target) { event.preventDefault(); target.focus(); }\r\n          }} onPointerDownOutside={outside} onEscapeKeyDown={(event) => { if (busy) event.preventDefault(); }}",
       "category": "PRESENTATION_ONLY",
       "categoryReason": "Software interaction or authored presentation; no infrastructure truth claim",
       "ui": {
