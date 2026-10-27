@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
 import { SignInPage } from "../src/features/auth/pages/SignInPage";
-import { credentialBody, signinFailure, signupErrors, signupFailure } from "../src/features/auth/credentials";
+import { credentialBody, signinFailure, signupFailure } from "../src/features/auth/credentials";
 import { normalizeUsername, validUsername } from "@infraforge/contracts/auth";
 import { SocialSignIn } from "../src/features/auth/components/SocialSignIn";
 
@@ -13,26 +13,19 @@ test("one identifier reaches the auth server without a browser account lookup", 
   for (const username of ["ab", "1name", "name space", "mail@email.test", "a".repeat(31)]) expect(validUsername(username)).toBe(false);
   expect(validUsername("Learner_123")).toBe(true);
 });
-test("signup mirrors bounds and returns accessible field errors without composition rules", () => {
-  expect(signupErrors({ username: "Rishabh", email: "user@example.test", password: "a".repeat(15) })).toEqual({});
-  expect(Object.keys(signupErrors({ username: "1bad", email: "invalid", password: "short" }))).toEqual(["username", "email", "password"]);
-  expect(signupErrors({ username: "Rishabh", email: "user@example.test", password: "a".repeat(129) }).password).toBeDefined();
+test("signup failures map to the field that needs fixing", () => {
   expect(signupFailure("USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL").message).toContain("original method");
   expect(signupFailure("USERNAME_IS_ALREADY_TAKEN").username).toContain("unavailable");
+  expect(signupFailure("PASSWORD_COMPROMISED").password).toContain("data breach");
+  expect(signupFailure("PASSWORD_TOO_WEAK").password).toContain("password rule");
 });
-test("sign-in and sign-up have labelled password-manager forms and distinct routes", () => {
-  for (const mode of ["signin", "signup"] as const) {
-    const html = renderToStaticMarkup(<MemoryRouter><SignInPage mode={mode} /></MemoryRouter>);
-    if (mode === "signin") {
-      expect(html).toContain('name="password"'); expect(html).toContain('type="password"');
-      expect(html).toContain('autoComplete="current-password"');
-      expect(html).toContain('autoComplete="username"'); expect(html).toContain('for="auth-password"');
-      expect(html).toContain('aria-invalid="false"');
-    }
-    expect(html).not.toContain("Sign-in is not configured"); expect(html).not.toContain("Forgot password");
-    if (mode === "signup") { expect(html).toContain("Loading sign-in options"); expect(html).not.toContain('name="password"'); expect(html).toContain('href="/signin"'); }
-    else { expect(html).toContain("Username or email"); expect(html).toContain('href="/signup"'); }
-  }
+test("sign-in has a labelled password-manager form and links to sign-up", () => {
+  const html = renderToStaticMarkup(<MemoryRouter><SignInPage /></MemoryRouter>);
+  expect(html).toContain('name="password"'); expect(html).toContain('type="password"');
+  expect(html).toContain('autoComplete="current-password"');
+  expect(html).toContain('autoComplete="username"'); expect(html).toContain('for="auth-password"');
+  expect(html).toContain('aria-invalid="false"'); expect(html).not.toContain("Forgot password");
+  expect(html).toContain("Username or email"); expect(html).toContain('href="/signup"');
 });
 test("social options are optional and only configured providers appear", () => {
   expect(renderToStaticMarkup(<SocialSignIn providers={[]} pending={null} onSignIn={() => {}} />)).toBe("");

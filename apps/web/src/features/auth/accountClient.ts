@@ -28,9 +28,6 @@ export async function completeEmailSignup(input: {
 }) {
   return (await http.post(`${API_URL}/auth/sign-up/email`, input)).data;
 }
-export async function signupWithChallenge(input: { username: string; name: string; email: string; password: string; callbackURL?: string; turnstileToken?: string }): Promise<{ status: true; message: string } | { user: { id: string; email: string; name: string }; token: string | null }> {
-  return (await http.post(`${API_URL}/auth/sign-up/email`, input)).data;
-}
 export async function deleteAccount(password: string, confirmation: "DELETE"): Promise<{ success: true }> {
   return (await http.post(`${API_URL}/account/delete`, { password, confirmation })).data;
 }

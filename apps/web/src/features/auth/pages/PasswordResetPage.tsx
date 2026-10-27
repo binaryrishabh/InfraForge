@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
-import { PASSWORD_MIN, PASSWORD_MAX } from "@infraforge/contracts/auth";
+import { PASSWORD_MAX, passwordAcceptable } from "@infraforge/contracts/auth";
+import { PasswordChecklist } from "../components/PasswordChecklist";
 import { AuthLayout } from "../components/AuthLayout";
 import { TurnstileWidget } from "../components/TurnstileWidget";
 import { accountError, requestAccountMail, useAccountFeatures, useMailCooldown } from "../accountFlow";
@@ -22,7 +23,7 @@ export function PasswordResetPage({ reset = false }: { reset?: boolean }) {
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (busy.current || !features?.emailEnabled || !reset && cooldown.seconds > 0 || reset && !token) return;
-    if (reset && (value.length < PASSWORD_MIN || value.length > PASSWORD_MAX)) { setError(`Use ${PASSWORD_MIN}–${PASSWORD_MAX} characters.`); return; }
+    if (reset && !passwordAcceptable(value)) { setError("Meet every password rule below."); return; }
     if (!reset && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())) { setError("Enter a valid email address."); return; }
     busy.current = true; setPending(true); setError(null);
     try {
@@ -32,7 +33,13 @@ export function PasswordResetPage({ reset = false }: { reset?: boolean }) {
         await requestAccountMail("password_reset", value, features.turnstileSiteKey, window.location.origin);
         setSent(true); cooldown.start();
       }
-    } catch (failure) { setError(reset ? "The password could not be reset. The link may be expired or already used. Request a new link below." : accountError(failure)); }
+    } catch (failure) {
+      const code = (failure as { response?: { data?: { code?: string } } }).response?.data?.code;
+      setError(!reset ? accountError(failure)
+        : code === "PASSWORD_COMPROMISED" ? "This password appeared in a data breach. Choose another."
+        : code === "PASSWORD_TOO_WEAK" ? "Meet every password rule below."
+        : "The password could not be reset. The link may be expired or already used. Request a new link below.");
+    }
     finally { busy.current = false; setPending(false); }
   };
   return <AuthLayout>
@@ -47,7 +54,7 @@ export function PasswordResetPage({ reset = false }: { reset?: boolean }) {
             <input id="reset-value" name={reset ? "password" : "email"} type={reset ? "password" : "email"} autoComplete={reset ? "new-password" : "email"}
               required maxLength={reset ? PASSWORD_MAX : 254} value={value} disabled={pending} aria-describedby={reset ? "reset-hint" : undefined}
               onChange={event => setValue(event.target.value)} className="h-11 w-full rounded-md border border-line bg-surface px-3 text-sm text-ink outline-none focus-visible:ring-2 focus-visible:ring-accent" />
-            {reset && <p id="reset-hint" className="mt-2 text-xs text-ink-3">{PASSWORD_MIN}–{PASSWORD_MAX} characters. Use a long, unique passphrase.</p>}
+            {reset && <PasswordChecklist password={value} id="reset-hint" />}
           </div>}
           {!reset && <TurnstileWidget siteKey={features?.turnstileSiteKey ?? null} action="password_reset" />}
           {error && <Notice tone="fail" role="alert">{error}</Notice>}

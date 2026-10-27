@@ -5,7 +5,7 @@ import { useCanvasStore } from "../../canvas/store/canvasStore";
 import { useSimulationStore } from "../../monitoring/store/simulationStore";
 import { cancelUserRequests } from "../../../client/httpClient";
 import { credentialBody, CredentialError, type CredentialFields } from "../credentials";
-import { completeEmailSignup, signupWithChallenge } from "../accountClient";
+import { completeEmailSignup } from "../accountClient";
 import { asCredentialError } from "../accountFlow";
 
 export interface SessionUser { id: string; name: string; username: string | null; email: string; emailVerified: boolean; createdAt: string }
@@ -15,7 +15,7 @@ interface AuthState {
   hydrate: () => Promise<void>;
   signIn: (provider: "google" | "github") => Promise<void>;
   signInCredentials: (identifier: string, password: string) => Promise<void>;
-  signUp: (fields: CredentialFields, options?: { emailProof?: string; turnstileToken?: string }) => Promise<void>;
+  signUp: (fields: CredentialFields, options?: { emailProof?: string }) => Promise<void>;
   signOut: () => Promise<void>;
   expire: () => void;
 }
@@ -67,7 +67,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const input = { username, name: username, email: email.trim().toLowerCase(), password };
     try {
       if (options.emailProof) await completeEmailSignup({ ...input, emailProof: options.emailProof });
-      else if (options.turnstileToken) await signupWithChallenge({ ...input, turnstileToken: options.turnstileToken });
       else {
         const { error } = await authClient.signUp.email(input);
         if (error) throw new CredentialError(error.code, error.status);
