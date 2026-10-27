@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
 import { SignInPage } from "../src/features/auth/pages/SignInPage";
-import { credentialBody, signupErrors, signupFailure } from "../src/features/auth/credentials";
+import { credentialBody, signinFailure, signupErrors, signupFailure } from "../src/features/auth/credentials";
 import { normalizeUsername, validUsername } from "@infraforge/contracts/auth";
 import { SocialSignIn } from "../src/features/auth/components/SocialSignIn";
 
@@ -39,4 +39,10 @@ test("social options are optional and only configured providers appear", () => {
   const html = renderToStaticMarkup(<SocialSignIn providers={["github", "google"]} pending={null} onSignIn={() => {}} />);
   expect(html).toContain("Continue with GitHub"); expect(html).toContain("Continue with Google");
   expect(renderToStaticMarkup(<SocialSignIn providers={["github"]} pending="credentials" onSignIn={() => {}} />)).toContain("disabled");
+});
+test("an unconfirmed email asks for confirmation instead of a security check", () => {
+  expect(signinFailure("EMAIL_NOT_VERIFIED", 403)).toBe("unverified");
+  expect(signinFailure(undefined, 403)).toBe("login");
+  expect(signinFailure("INVALID_EMAIL_OR_PASSWORD", 401)).toBe("login");
+  expect(signinFailure(undefined, 429)).toBe("rate");
 });

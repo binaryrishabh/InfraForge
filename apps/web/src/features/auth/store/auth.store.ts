@@ -58,8 +58,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     if (error) throw new Error("Sign-in could not be started. Try again.");
   },
   signInCredentials: async (identifier, password) => {
-    const { error } = await authClient.$fetch("/sign-in/identifier", { method: "POST", body: credentialBody(identifier, password) });
-    if (error) throw new CredentialError(undefined, error.status);
+    const { error } = await authClient.$fetch<unknown, { code?: string }>("/sign-in/identifier", { method: "POST", body: credentialBody(identifier, password) });
+    if (error) throw new CredentialError(error.code, error.status);
     await get().hydrate();
     if (get().status !== "authenticated") throw new Error("Your session could not be loaded. Try signing in again.");
   },

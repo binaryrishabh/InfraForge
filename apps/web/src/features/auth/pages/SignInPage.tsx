@@ -4,11 +4,12 @@ import { LOGIN_ERROR, PASSWORD_MIN, PASSWORD_MAX, type AuthCapabilities } from "
 import { AuthLayout } from "../components/AuthLayout";
 import { SocialSignIn } from "../components/SocialSignIn";
 import { useAuthStore } from "../store/auth.store";
-import { CredentialError, signupErrors, signupFailure, type FieldErrors } from "../credentials";
+import { CredentialError, signinFailure, signupErrors, signupFailure, type FieldErrors } from "../credentials";
 import { API_URL } from "../../../client/httpClient";
 import { Button } from "@/ui/Button";
 import { Notice } from "@/ui/Page";
 import { accountError, asCredentialError, requestAccountMail, useAccountFeatures, useMailCooldown } from "../accountFlow";
+import { sendVerificationEmail } from "../accountClient";
 import { authCallback } from "../authCallback";
 import { TurnstileWidget } from "../components/TurnstileWidget";
 import { obtainTurnstileToken } from "../turnstileToken";
@@ -29,6 +30,14 @@ export function SignInPage({ mode = "signin" }: { mode?: "signin" | "signup" }) 
   const [error, setError] = useState<string | null>(null);
   const [fields, setFields] = useState({ username: "", email: "", password: "", identifier: "" });
   const [errors, setErrors] = useState<FieldErrors>({});
+  // Accounts created before email confirmation was required must confirm before signing in.
+  const [unverified, setUnverified] = useState<"needed" | "sent" | null>(null);
+  const verifyCooldown = useMailCooldown();
+  const [returned] = useState(() => {
+    if (typeof window === "undefined" || signup) return null;
+    const params = new URLSearchParams(window.location.search);
+    return params.get("verified") === "1" ? (params.get("error") ? "failed" : "confirmed") : null;
+  });
   useEffect(() => {
     authCallback.emailProof = null;
     const abort = new AbortController();
@@ -51,7 +60,7 @@ export function SignInPage({ mode = "signin" }: { mode?: "signin" | "signup" }) 
       ...(!fields.identifier.trim() ? { identifier: "Enter your username or email." } : {}),
       ...(!fields.password || fields.password.length > PASSWORD_MAX ? { password: "Enter your password." } : {}),
     };
-    setErrors(invalid); setError(null);
+    setErrors(invalid); setError(null); setUnverified(null);
     const first = Object.keys(invalid).find(key => invalid[key as Field]);
     if (first) { event.currentTarget.querySelector<HTMLInputElement>(`[name="${first}"]`)?.focus(); return; }
     busy.current = true; setPending("credentials");
@@ -73,11 +82,21 @@ export function SignInPage({ mode = "signin" }: { mode?: "signin" | "signup" }) 
         if (failure.status === 429) setError("Too many attempts. Wait a moment before trying again.");
         else if (failure.code === "INVALID_EMAIL_PROOF") setError("This signup link is invalid or expired. Request a new link below.");
         else if (failure.code === "SIGNUP_SIGNIN_FAILED") { setFields(prev => ({ ...prev, password: "" })); setError("Your account is ready. Sign in to continue."); }
-        else if (failure.status === 403) setError(accountError(failure));
+        else if (!signup && signinFailure(failure.code, failure.status) === "unverified") setUnverified("needed");
+        else if (failure.status === 403 && signup) setError(accountError(failure));
         else if (signup) { const { message, ...fieldErrors } = signupFailure(failure.code); setErrors(fieldErrors); setError(message ?? null); }
         else setError(LOGIN_ERROR);
       } else setError(signup ? accountError(failure) : "Your session could not be loaded. Try signing in again.");
     } finally { busy.current = false; setPending(null); }
+  };
+  const sendConfirmation = async () => {
+    if (busy.current || verifyCooldown.seconds) return;
+    busy.current = true; setPending("verify"); setError(null);
+    try {
+      await sendVerificationEmail(fields.identifier.trim().toLowerCase(), `${window.location.origin}/signin?verified=1`);
+      setUnverified("sent"); verifyCooldown.start();
+    } catch (caught) { setError(accountError(caught)); }
+    finally { busy.current = false; setPending(null); }
   };
   const field = (name: Field, label: string, autoComplete: string, hint?: string) => (
     <div>
@@ -105,6 +124,16 @@ export function SignInPage({ mode = "signin" }: { mode?: "signin" | "signup" }) 
         </> : field("identifier", "Username or email", "username"))}
         {!emailSent && !emailOnly && (!signup || features) && field("password", "Password", signup ? "new-password" : "current-password", signup ? `${PASSWORD_MIN}–${PASSWORD_MAX} characters. A long, unique passphrase works well.` : undefined)}
         {signup && !proof && <TurnstileWidget siteKey={features?.turnstileSiteKey ?? null} action="signup" />}
+        {returned === "confirmed" && !unverified && <Notice tone="ok" role="status">Email confirmed. Sign in to continue.</Notice>}
+        {returned === "failed" && !unverified && <Notice tone="fail" role="alert">That confirmation link is invalid or expired. Sign in to get a new one.</Notice>}
+        {unverified && <Notice tone="warn" role="alert" title="Confirm your email to sign in">
+          {unverified === "sent" ? "Check your inbox and spam folder for the confirmation link, then sign in again."
+            : fields.identifier.includes("@") ? "We need to confirm this email address once before you can sign in with a password."
+            : "Enter your email address instead of your username, then press Sign in again to get a confirmation link."}
+          {fields.identifier.includes("@") && <div className="mt-3"><Button type="button" variant="secondary" size="sm" loading={pending === "verify"}
+            disabled={pending !== null || verifyCooldown.seconds > 0} onClick={() => void sendConfirmation()}>
+            {verifyCooldown.seconds ? `Send again in ${verifyCooldown.seconds}s` : unverified === "sent" ? "Send again" : "Send confirmation link"}</Button></div>}
+        </Notice>}
         {error && <Notice tone="fail" role="alert">{error}</Notice>}
         {failed && <Notice tone="fail" role="alert">Account options could not be loaded. Reload to try again.</Notice>}
         <Button type="submit" variant="primary" size="lg" className="w-full" loading={pending === "credentials"} disabled={pending !== null || !capabilities?.credentials || signup && !features || emailOnly && cooldown.seconds > 0}>{emailOnly && cooldown.seconds ? `Resend in ${cooldown.seconds}s` : emailSent ? "Resend signup link" : emailOnly ? "Send signup link" : signup ? "Create account" : "Sign in"}</Button>

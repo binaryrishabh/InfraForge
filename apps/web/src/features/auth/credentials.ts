@@ -22,3 +22,8 @@ export function credentialBody(identifier: string, password: string) {
 export class CredentialError extends Error {
   constructor(readonly code?: string, readonly status?: number) { super(LOGIN_ERROR); }
 }
+// Sign-in failures: an unconfirmed email is actionable; everything else stays generic.
+export function signinFailure(code?: string, status?: number): "unverified" | "rate" | "login" {
+  if (status === 429) return "rate";
+  return code === "EMAIL_NOT_VERIFIED" ? "unverified" : "login";
+}
