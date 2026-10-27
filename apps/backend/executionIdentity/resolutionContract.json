@@ -40392,6 +40392,14 @@
     },
     {
       "owner": null,
+      "file": "apps/backend/firstStack/executionReceipt.ts",
+      "specifier": "zod",
+      "kind": "import-statement",
+      "targetOwner": "zod@4.6.6:4",
+      "targetFile": "index.js"
+    },
+    {
+      "owner": null,
       "file": "apps/backend/firstStack/historicalReplay.ts",
       "specifier": "zod",
       "kind": "import-statement",
@@ -40469,6 +40477,14 @@
       "kind": "import-statement",
       "targetOwner": "smol-toml@1.9.1:279",
       "targetFile": "dist/index.js"
+    },
+    {
+      "owner": null,
+      "file": "apps/backend/firstStack/recoveryOperations.ts",
+      "specifier": "zod",
+      "kind": "import-statement",
+      "targetOwner": "zod@4.6.6:4",
+      "targetFile": "index.js"
     },
     {
       "owner": null,

@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { randomUUID } from "node:crypto";
-import { readExecutionReceipt, receiptState, type ProcessReceipt } from "../firstStack/executionReceipt";
+import { readExecutionReceipt, receiptState, type ProcessReceipt, type ExecutionReceipt } from "../firstStack/executionReceipt";
 import { verificationOutcome } from "../firstStack/submissionWorker";
 import { submissionFixture } from "./submissionFixture";
 import { firstStackRunRecord } from "../runRecords/firstStack";
@@ -34,7 +34,7 @@ test("historical readers preserve Docker and process receipts and refuse corrupt
   const f = await submissionFixture();
   const processReceipt: ProcessReceipt = { schema: "first-stack-process-receipt/1", token: randomUUID(), generation: randomUUID(),
     ...f.engine, exit: { code: 0, signal: null }, termination: "confirmed" };
-  const docker = { schema: "first-stack-isolation-receipt/1", daemon: "c".repeat(64), image: f.engine.image,
+  const docker: ExecutionReceipt = { schema: "first-stack-isolation-receipt/1", daemon: "c".repeat(64), image: f.engine.image,
     container: "fixture-container", enforcement: null, elapsedMs: 1, outputBytes: 0, exit: { code: 0, oom: false }, cleanup: "removed" };
   for (const receipt of [docker, processReceipt]) {
     expect(readExecutionReceipt(receipt)).toEqual(receipt);
@@ -42,10 +42,10 @@ test("historical readers preserve Docker and process receipts and refuse corrupt
     const row = { ...f, id: randomUUID(), inputHash: f.request.browserCut.inputHash, browserCut: f.request.browserCut,
       durablePrefix: f.request.browserCut, status: "terminal", result, resultHash: hash(result),
       lineage: { infrastructureId: f.request.infrastructureId }, createdAt: new Date() };
-    expect(firstStackRunRecord(row).availability.report).toBe("readable");
+    expect(firstStackRunRecord(row).availability?.report).toBe("readable");
     if (receipt === processReceipt) {
       const corrupt = { ...result, receipt: { ...receipt, exit: null } };
-      expect(firstStackRunRecord({ ...row, result: corrupt, resultHash: hash(corrupt) }).availability.report).toBe("unavailable");
+      expect(firstStackRunRecord({ ...row, result: corrupt, resultHash: hash(corrupt) }).availability?.report).toBe("unavailable");
     }
   }
 });

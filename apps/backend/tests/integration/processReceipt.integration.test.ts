@@ -65,9 +65,9 @@ describe.skipIf(!url)("process receipt PostgreSQL guards", () => {
   test("forward migration retains old evidence and release schema checks the new guards", async () => {
     await checkFirstStackSchema(pool);
     expect(JSON.stringify(await result(legacy.id))).toBe(original);
-    expect((await legacy.service.read(legacy.owner, legacy.id)).availability.report).toBe("readable");
+    expect((await legacy.service.read(legacy.owner, legacy.id)).availability?.report).toBe("readable");
     const f = await fixture(); await f.cut(); await finish(f);
-    expect((await f.service.read(f.owner, f.id)).availability.report).toBe("readable");
+    expect((await f.service.read(f.owner, f.id)).availability?.report).toBe("readable");
     const db = await pool.connect();
     try {
       await db.query("BEGIN");
@@ -134,7 +134,7 @@ describe.skipIf(!url)("process receipt PostgreSQL guards", () => {
     } finally { await owner.query("SELECT pg_advisory_unlock_all()"); owner.release(); }
     await closeSubmissionRecovery(pool, f.id, review);
     expect((await result(f.id)).body.recovery).toEqual(review);
-    expect((await f.service.read(f.owner, f.id)).availability.report).toBe("readable");
+    expect((await f.service.read(f.owner, f.id)).availability?.report).toBe("readable");
   });
 
   test("process ownership, append-only evidence and reserved recovery size stay enforced", async () => {
