@@ -40,7 +40,7 @@ function PasswordDialog({ open, title, description, confirmLabel, danger, extra,
       footer={<><Button variant="ghost" onClick={close} disabled={busy}>Cancel</Button>
         <Button variant={danger ? "danger" : "primary"} loading={busy} disabled={!password || !ready} onClick={() => void submit()}>{confirmLabel}</Button></>}>
       <form className="flex flex-col gap-4" onSubmit={(event) => { event.preventDefault(); if (password && ready) void submit(); }}>
-        <Field label="Current password"><Input type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} autoFocus /></Field>
+        <Field label="Current password">{({ id }) => <Input id={id} type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} autoFocus />}</Field>
         {extra?.(setReady)}
       </form>
     </Dialog>
@@ -144,7 +144,7 @@ export function YourDataSection() {
       </div>
       <PasswordDialog open={deleting} danger title="Delete your account?" confirmLabel="Delete forever"
         description="Your profile is erased and every session ends. Type DELETE to confirm."
-        extra={(ok) => <Field label="Type DELETE"><Input onChange={(e) => ok(e.target.value === "DELETE")} autoComplete="off" /></Field>}
+        extra={(ok) => <Field label="Type DELETE">{({ id }) => <Input id={id} onChange={(e) => ok(e.target.value === "DELETE")} autoComplete="off" />}</Field>}
         onClose={() => setDeleting(false)}
         onConfirm={async (password) => { await deleteAccount(password, "DELETE"); expire(); navigate("/signin", { replace: true }); }} />
     </Section>
