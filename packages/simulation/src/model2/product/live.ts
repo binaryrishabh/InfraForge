@@ -63,10 +63,13 @@ export function createLiveModel2(compiled: CompiledProduct, nodeIds: string[]) {
       if (now + SECOND > runtime.horizon) throw new Error("The run has reached its simulated horizon");
       now += SECOND; runtime.advanceTo(now);
     },
-    // Jump to a whole second without reporting the seconds in between; the next project() covers only the second after it.
-    fastForward(seconds: number) {
-      if (!Number.isSafeInteger(seconds) || seconds * SECOND < now || seconds * SECOND > runtime.horizon) throw new Error("Invalid fast-forward target");
-      now = seconds * SECOND; runtime.advanceTo(now); this.project();
+    // Moves toward a whole second without reporting the seconds in between, at most `step` seconds per call.
+    // Returns true once there; the next project() then covers only the second after it.
+    catchUp(seconds: number, step: number) {
+      if (!Number.isSafeInteger(seconds) || seconds * SECOND < now || seconds * SECOND > runtime.horizon) throw new Error("Invalid catch-up target");
+      now = Math.min(seconds * SECOND, now + step * SECOND); runtime.advanceTo(now);
+      if (now < seconds * SECOND) return false;
+      this.project(); return true;
     },
     project(): LiveProjection {
       const ready = new Map<string, { ready: number; total: number }>();
@@ -117,8 +120,9 @@ export function createLiveModel2(compiled: CompiledProduct, nodeIds: string[]) {
   };
 }
 
-// A live run that accepts actions. Each action rebuilds the run from its design plus every action so far
-// and fast-forwards to the current second. Model 2 is deterministic, so the seconds already shown never change.
+// A live run that accepts actions. Each action rebuilds the run from its design plus every action so far,
+// then catches up to the current second in steps the caller paces, so a long run never blocks its host.
+// Model 2 is deterministic, so the seconds already shown never change. The run holds still while catching up.
 export function createActionableLiveModel2(design: SavedProductDesign, base: ProductContract, nodeIds: string[]) {
   const actions: TimedAction[] = [];
   const build = () => {
@@ -126,19 +130,31 @@ export function createActionableLiveModel2(design: SavedProductDesign, base: Pro
     if (!compiled.ok) throw new Error(compiled.diagnostics.map((d) => d.message).join("; "));
     return createLiveModel2(compiled.value, nodeIds);
   };
-  let run = build();
+  let run = build(), shown = 0;
+  let rebuilding: { run: ReturnType<typeof createLiveModel2>; target: number } | null = null;
   return {
-    get simulatedSeconds() { return run.simulatedSeconds; },
+    get simulatedSeconds() { return shown; },
     get horizon() { return run.horizon; },
     get actions(): readonly TimedAction[] { return actions; },
-    advanceSecond() { run.advanceSecond(); },
+    get catchingUp() { return rebuilding !== null; },
+    // Advances the rebuilt run by at most `step` simulated seconds; true once it has replaced the shown run.
+    catchUp(step = 1) {
+      if (!rebuilding) return true;
+      if (!rebuilding.run.catchUp(rebuilding.target, step)) return false;
+      run = rebuilding.run; rebuilding = null; return true;
+    },
+    advanceSecond() {
+      if (rebuilding) throw new Error("The run is still catching up after an action");
+      run.advanceSecond(); shown = run.simulatedSeconds;
+    },
     project() { return run.project(); },
-    // The action takes effect just after the current second, which has already been shown. A refused action leaves the run unchanged.
+    // The action takes effect just after the current second, which has already been shown. A design or action
+    // Model 2 cannot compile is refused here and leaves the run unchanged. A second action while catching up joins the same rebuild.
     apply(action: TimedAction extends infer A ? A extends TimedAction ? Omit<A, "atUs"> : never : never) {
-      const seconds = run.simulatedSeconds;
-      actions.push({ ...action, atUs: seconds * SECOND + 1 } as TimedAction);
-      try { const next = build(); next.fastForward(seconds); run = next; }
-      catch (error) { actions.pop(); throw error; }
+      actions.push({ ...action, atUs: shown * SECOND + 1 } as TimedAction);
+      let next;
+      try { next = build(); } catch (error) { actions.pop(); throw error; }
+      rebuilding = { run: next, target: shown };
     },
   };
 }

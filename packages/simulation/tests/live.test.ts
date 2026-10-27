@@ -83,6 +83,12 @@ test("an action rebuilds the run without changing any second before it", () => {
   const seconds = (run: { advanceSecond(): void; project(): unknown }, n: number) => Array.from({ length: n }, () => { run.advanceSecond(); return run.project(); });
   const before = seconds(acting, 10);
   acting.apply(crash);
+  expect(acting.catchingUp).toBe(true);
+  expect(() => acting.advanceSecond()).toThrow("catching up");
+  let steps = 0;
+  while (!acting.catchUp(3)) steps++;
+  expect(steps).toBe(3); // 10 seconds in steps of 3: 3, 6, 9, then 10
+  expect(acting.simulatedSeconds).toBe(10);
   const after = seconds(acting, 10), fromScratch = seconds(scratch, 20);
   expect(fromScratch.slice(0, 10)).toEqual(seconds(plain, 10)); // a later action never reaches back in time
   expect(fromScratch.slice(0, 10)).toEqual(before);
@@ -98,11 +104,13 @@ test("load and replica actions take effect from their second on; a refused actio
   for (let s = 0; s < 6; s++) acting.advanceSecond();
   acting.project();
   acting.apply({ id: "pause", kind: "load", fraction: 0 });
+  acting.catchUp(100);
   acting.advanceSecond(); acting.advanceSecond(); acting.project();
   acting.advanceSecond();
   expect(acting.project().offeredRps).toBe(0);
   acting.apply({ id: "double", kind: "load", fraction: 2 });
   acting.apply({ id: "grow", kind: "replicas", node: "vm", desired: 3 });
+  acting.catchUp(100);
   acting.advanceSecond();
   expect(acting.project().metrics.vm!.replicas!.total).toBe(3); // the fixture's fast autoscaler may later scale an idle pool back in
   acting.advanceSecond();

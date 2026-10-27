@@ -22,7 +22,11 @@ export async function advanceTickBatch(instance: SimulationInstance, complete: (
   await persist?.(instance);
   const started = performance.now();
   for (let i = 0; i < instance.speed && !stopped() && !reachedMatchedStop(instance) && !experimentDue(instance); i++) {
-    if (instance.model2 && i > 0 && performance.now() - started > MODEL2_BATCH_BUDGET_MS) break;
+    if (instance.model2) {
+      const remaining = MODEL2_BATCH_BUDGET_MS - (performance.now() - started);
+      // Catching up after an action uses the same budget; the run resumes once it is caught up.
+      if ((i > 0 && remaining <= 0) || !instance.model2.catchUp(Math.max(0, remaining))) break;
+    }
     if (instance.model2) {
       instance.pendingLogs.push(...instance.model2.advance());
       instance.accumulatedCostUsd += instance.model2.burnRatePerHourUsd() / 3600;

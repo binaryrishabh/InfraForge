@@ -59,8 +59,17 @@ export function createModel2Engine(input: RunTopology & { workloadProfile: Resol
     get simulatedSeconds() { return run.simulatedSeconds; },
     get horizonSeconds() { return run.horizon / SECOND; },
     view,
-    // One simulated second. Returns what changed, as log lines.
+    // After an action the run is rebuilt and catches up to the shown second, here within a wall-time budget.
+    // Returns true once it can advance again. The shown second does not move while catching up.
+    get catchingUp() { return run.catchingUp; },
+    catchUp(budgetMs: number) {
+      const started = performance.now();
+      while (run.catchingUp && performance.now() - started < budgetMs) run.catchUp(1);
+      return !run.catchingUp;
+    },
+    // One simulated second (finishing any catch-up first). Returns what changed, as log lines.
     advance(): SimulationLog[] {
+      while (run.catchingUp) run.catchUp(10);
       run.advanceSecond();
       const previous = last;
       last = run.project();
