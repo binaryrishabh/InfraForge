@@ -1,6 +1,6 @@
 {
   "schema": "execution-loading-analysis/1",
-  "policy": "82a1905c25eef4eb79434722bd59fb4e4703dc421491c75550645b38358db489",
+  "policy": "c8616103b01231d7accd1e7defd71284428e6857529957da153ff885c6f2590b",
   "modules": {
     "apps/backend/actions/contract.ts": {
       "hash": "15fe6aa3879ab8ccc67a23d579a4e2e9b79f71631dd7687ad192f788c27229ad",
@@ -195,7 +195,7 @@
       ]
     },
     "apps/backend/auth/createAuth.ts": {
-      "hash": "a70935b83466b31c1b8d7012dc13f126ff53e6cbc43fbf1b50ea0c2d3b642fa8",
+      "hash": "5783e1de4a004c9ccda154a230161175a3344d5289b258c765957afb01ce8210",
       "requests": [
         {
           "path": "better-auth",
@@ -247,6 +247,10 @@
         },
         {
           "path": "./mailIntent",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./logger",
           "kind": "import-statement"
         }
       ]
@@ -306,6 +310,15 @@
         },
         {
           "path": "./origin",
+          "kind": "import-statement"
+        }
+      ]
+    },
+    "apps/backend/auth/logger.ts": {
+      "hash": "77bc5f6257f0b7165337c35eb9d7fc15e0ff9f826c89c4479a82511600aa8362",
+      "requests": [
+        {
+          "path": "@better-auth/core/error",
           "kind": "import-statement"
         }
       ]
@@ -2288,7 +2301,7 @@
       ]
     },
     "apps/backend/firstStack/verifierOwnership.ts": {
-      "hash": "ecf8e9a9501a2cc99e8ca09898cdf4568b5aff53e0f3bee3692dfda653253211",
+      "hash": "8719e7579294bd8a6d2f888154b4347d0cd295986ed9f4e0c9cbc80655aa9edb",
       "requests": [
         {
           "path": "pg",

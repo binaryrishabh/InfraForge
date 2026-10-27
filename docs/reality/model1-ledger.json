@@ -47,7 +47,7 @@
     },
     {
       "file": "apps/backend/auth/createAuth.ts",
-      "sha256": "a70935b83466b31c1b8d7012dc13f126ff53e6cbc43fbf1b50ea0c2d3b642fa8",
+      "sha256": "5783e1de4a004c9ccda154a230161175a3344d5289b258c765957afb01ce8210",
       "numericSites": 5
     },
     {
@@ -69,6 +69,11 @@
       "file": "apps/backend/auth/httpSecurity.ts",
       "sha256": "b61d0741b9da0726bf8aac194c727603bd483b55ff269593728daf289912b18b",
       "numericSites": 1
+    },
+    {
+      "file": "apps/backend/auth/logger.ts",
+      "sha256": "77bc5f6257f0b7165337c35eb9d7fc15e0ff9f826c89c4479a82511600aa8362",
+      "numericSites": 9
     },
     {
       "file": "apps/backend/auth/loginMethods.ts",
@@ -417,7 +422,7 @@
     },
     {
       "file": "apps/backend/executionIdentity/loading.ts",
-      "sha256": "557cd2d9c96e3ede2a0d50b460f0c36f14dadd41910c81c02be36d950317fcf3",
+      "sha256": "61ee37229baaeac847cccb6277387abb6ee5f7215103484893cdaae9f914e74a",
       "numericSites": 14
     },
     {
@@ -662,7 +667,7 @@
     },
     {
       "file": "apps/backend/firstStack/verifierOwnership.ts",
-      "sha256": "ecf8e9a9501a2cc99e8ca09898cdf4568b5aff53e0f3bee3692dfda653253211",
+      "sha256": "8719e7579294bd8a6d2f888154b4347d0cd295986ed9f4e0c9cbc80655aa9edb",
       "numericSites": 7
     },
     {
@@ -5691,7 +5696,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/createAuth.ts#L68",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/createAuth.ts#L69",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -5705,7 +5710,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/auth/createAuth.ts",
-        "line": 68,
+        "line": 69,
         "column": 30
       }
     },
@@ -5727,7 +5732,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/createAuth.ts#L75",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/createAuth.ts#L76",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -5741,7 +5746,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/auth/createAuth.ts",
-        "line": 75,
+        "line": 76,
         "column": 55
       }
     },
@@ -5763,7 +5768,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/createAuth.ts#L77",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/createAuth.ts#L78",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -5777,7 +5782,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/auth/createAuth.ts",
-        "line": 77,
+        "line": 78,
         "column": 53
       }
     },
@@ -5799,7 +5804,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/createAuth.ts#L77",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/createAuth.ts#L78",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -5813,7 +5818,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/auth/createAuth.ts",
-        "line": 77,
+        "line": 78,
         "column": 67
       }
     },
@@ -5835,7 +5840,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/createAuth.ts#L77",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/createAuth.ts#L78",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -5849,7 +5854,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/auth/createAuth.ts",
-        "line": 77,
+        "line": 78,
         "column": 89
       }
     },
@@ -6283,6 +6288,330 @@
         "file": "apps/backend/auth/httpSecurity.ts",
         "line": 11,
         "column": 16
+      }
+    },
+    {
+      "id": "m1.apps.backend.auth.logger.1",
+      "concept": "safeReason · literal 1",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.auth.logger.1"
+        ]
+      },
+      "formula": "return reasons.find(reason => value === reason || value.startsWith(reason) && /^[\\s:.,;(\\[]/.test(value.slice(reason.length, reason.length + 1)));",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/logger.ts#L27",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/auth/logger.ts",
+        "line": 27,
+        "column": 71
+      }
+    },
+    {
+      "id": "m1.apps.backend.auth.logger.2",
+      "concept": "authLogger · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.auth.logger.2"
+        ]
+      },
+      "formula": "for (const value of [message, ...args.slice(0, 4)]) { if (value instanceof Error) { const error = value as Error & { code?: unknown; body?: { code?: unknown; message?: unknown } }; const name = error.name; names.add(classes.has(name) ? name : \"Error\"); for (const text of [error.code, error.body?.code, error.message, error.body?.message]) { const reason = safeReason(text); if (reason) diagnostics.push(reason); } } else { const reason = safeReason(value); if (reason) diagnostics.push(reason); } }",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/logger.ts#L32",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/auth/logger.ts",
+        "line": 32,
+        "column": 47
+      }
+    },
+    {
+      "id": "m1.apps.backend.auth.logger.3",
+      "concept": "authLogger · literal 4",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 4,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.auth.logger.3"
+        ]
+      },
+      "formula": "for (const value of [message, ...args.slice(0, 4)]) { if (value instanceof Error) { const error = value as Error & { code?: unknown; body?: { code?: unknown; message?: unknown } }; const name = error.name; names.add(classes.has(name) ? name : \"Error\"); for (const text of [error.code, error.body?.code, error.message, error.body?.message]) { const reason = safeReason(text); if (reason) diagnostics.push(reason); } } else { const reason = safeReason(value); if (reason) diagnostics.push(reason); } }",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/logger.ts#L32",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/auth/logger.ts",
+        "line": 32,
+        "column": 50
+      }
+    },
+    {
+      "id": "m1.apps.backend.auth.logger.4",
+      "concept": "authLogger.reason · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.auth.logger.4"
+        ]
+      },
+      "formula": "reason: [...new Set(diagnostics)].slice(0, 3).join(\"; \").slice(0, 400) || \"Unknown auth error\"",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/logger.ts#L47",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/auth/logger.ts",
+        "line": 47,
+        "column": 52
+      }
+    },
+    {
+      "id": "m1.apps.backend.auth.logger.5",
+      "concept": "authLogger.reason · literal 3",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 3,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.auth.logger.5"
+        ]
+      },
+      "formula": "reason: [...new Set(diagnostics)].slice(0, 3).join(\"; \").slice(0, 400) || \"Unknown auth error\"",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/logger.ts#L47",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/auth/logger.ts",
+        "line": 47,
+        "column": 55
+      }
+    },
+    {
+      "id": "m1.apps.backend.auth.logger.6",
+      "concept": "authLogger.reason · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.auth.logger.6"
+        ]
+      },
+      "formula": "reason: [...new Set(diagnostics)].slice(0, 3).join(\"; \").slice(0, 400) || \"Unknown auth error\"",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/logger.ts#L47",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/auth/logger.ts",
+        "line": 47,
+        "column": 75
+      }
+    },
+    {
+      "id": "m1.apps.backend.auth.logger.7",
+      "concept": "authLogger.reason · literal 400",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 400,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.auth.logger.7"
+        ]
+      },
+      "formula": "reason: [...new Set(diagnostics)].slice(0, 3).join(\"; \").slice(0, 400) || \"Unknown auth error\"",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/logger.ts#L47",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/auth/logger.ts",
+        "line": 47,
+        "column": 78
+      }
+    },
+    {
+      "id": "m1.apps.backend.auth.logger.8",
+      "concept": "authLogger.errorClass · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.auth.logger.8"
+        ]
+      },
+      "formula": "errorClass: [...names].slice(0, 2).join(\", \") || \"Unknown\"",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/logger.ts#L48",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/auth/logger.ts",
+        "line": 48,
+        "column": 34
+      }
+    },
+    {
+      "id": "m1.apps.backend.auth.logger.9",
+      "concept": "authLogger.errorClass · literal 2",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 2,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.auth.logger.9"
+        ]
+      },
+      "formula": "errorClass: [...names].slice(0, 2).join(\", \") || \"Unknown\"",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/logger.ts#L48",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/auth/logger.ts",
+        "line": 48,
+        "column": 37
       }
     },
     {
@@ -49483,7 +49812,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/firstStack/verifierOwnership.ts#L13",
+          "source": "workspace:apps/backend/firstStack/verifierOwnership.ts#L20",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -49497,13 +49826,13 @@
       "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
       "location": {
         "file": "apps/backend/firstStack/verifierOwnership.ts",
-        "line": 13,
+        "line": 20,
         "column": 98
       }
     },
     {
       "id": "m1.apps.backend.firstStack.verifierOwnership.7",
-      "concept": "acquireVerifierOwnership · literal 0",
+      "concept": "acquireVerifierOwnership.assertHeld · literal 0",
       "modelVersion": "1",
       "scope": "Internal first-stack authoring/import validation and qualification ceilings, not infrastructure physics",
       "quantity": {
@@ -49519,7 +49848,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "workspace:apps/backend/firstStack/verifierOwnership.ts#L24",
+          "source": "workspace:apps/backend/firstStack/verifierOwnership.ts#L31",
           "supports": "implementation",
           "detail": "Current internal product implementation policy; file identity is retained by this inventory. Not a cloud fact or Model-1 physical assumption."
         }
@@ -49533,7 +49862,7 @@
       "replacement": "Keep versioned input/provenance and Unknowns; qualify any executor separately before admission.",
       "location": {
         "file": "apps/backend/firstStack/verifierOwnership.ts",
-        "line": 24,
+        "line": 31,
         "column": 25
       }
     },
