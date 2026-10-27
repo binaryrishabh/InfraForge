@@ -22,4 +22,6 @@ export interface SimulationSnapshot {
     accumulatedCostUsd?: number;
     liveTopology?: RunTopology;
     topologyRevision?: number;
+    // Model 2: caller traffic during the last simulated second; latency is null when nothing completed.
+    traffic?: { offeredRps: number; completedRps: number; failedRps: number; latencyMs: { p50: number | null; p95: number | null } };
 }

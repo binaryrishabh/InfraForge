@@ -6,4 +6,6 @@ export interface ResourceMetrics {
   connections?: number;
   rps?: number;
   health: ResourceHealthType;
+  // Model 2 replica pools: replicas up and serving, and replicas that exist (starting, ready or draining).
+  replicas?: { ready: number; total: number };
 }
