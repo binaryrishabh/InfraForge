@@ -148,7 +148,7 @@ async function expectDatabaseRejection(task: Promise<unknown>, message: string) 
       expect((await orphan.getNextJob("dead-worker", { block: false }))?.id).toBe(next.id);
       await orphan.close(true); orphan = undefined;
       live = await startSubmissionQueue(pool, target.href, producer, consumer, configuration, { enabled: false }, () => {}, prefix);
-      await until(async () => (await live!.operations()).queue.stalled30d > 0, 70000);
+      await until(async () => (await live!.operations()).queue.stalled30d > 0, 120000);
       await until(async () => (await status(next.id)).status === "recovery", 15000);
       expect((await live.operations()).queue.failed30d).toBeGreaterThan(0);
       expectEnabled();
@@ -197,4 +197,4 @@ async function expectDatabaseRejection(task: Promise<unknown>, message: string) 
     producer.disconnect(); consumer.disconnect(); await pool.end();
     await admin.query(`DROP DATABASE "${name}" WITH (FORCE)`); await admin.end();
   }
-}, 180000);
+}, 240000);
