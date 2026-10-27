@@ -144,3 +144,16 @@ test("a replay batch stops at each submitted action's second so it is applied ex
   for (let cycle = 0; cycle < 20 && !(await advanceTickBatch(instance, async () => {})); cycle++);
   expect(instance.model2!.simulatedSeconds).toBe(30);
 });
+
+test("a load balancer shares light traffic between its app servers in turn", () => {
+  const def = definition("first-production-api");
+  const design = { resources: [["dns", "DNS"], ["lb", "Load Balancer"], ["vm1", "Virtual Machine"], ["vm2", "Virtual Machine"], ["db", "Database"]]
+    .map(([id, type], x) => ({ id, type: type as never, x, y: 0 })), connectionLines: [["dns", "lb"], ["lb", "vm1"], ["lb", "vm2"], ["vm1", "db"], ["vm2", "db"]]
+    .map(([sourceId, targetId]) => ({ id: `${sourceId}-${targetId}`, sourceId: sourceId!, targetId: targetId!, sourceType: "", targetType: "", port: 443 })) };
+  const run = createModel2Engine(captureRunInputs({ ...design, layoutVersion: 3 }, def.workload, "seed-b", "2"), 20, buildModel2Contract);
+  for (let s = 0; s < 10; s++) run.advance();
+  const { vm1, vm2 } = run.view().metrics;
+  expect(Math.abs(vm1!.rps! - vm2!.rps!)).toBeLessThanOrEqual(2);
+  expect(vm1!.rps!).toBeGreaterThan(40);
+});
+
