@@ -7,9 +7,10 @@ import { Button } from "@/ui/Button";
 import { Page, PageHeader, Section } from "@/ui/Page";
 import { Segmented } from "@/ui/Segmented";
 import { formatDate } from "@/lib/format";
+import { SessionsSection, SignInMethodsSection, YourDataSection } from "./AccountSections";
 
-/* Only settings that exist: appearance and density for this browser, and the
-signed-in account. */
+/* Appearance and density for this browser, the signed-in account, how you sign
+in, where you are signed in, and your data. */
 export function SettingsPage() {
   const navigate = useNavigate();
   const { user, signOut } = useAuthStore();
@@ -20,7 +21,7 @@ export function SettingsPage() {
   };
   return (
     <Page width="narrow">
-      <PageHeader eyebrow="Settings" title="Settings" lede="Appearance and density are saved in this browser only." />
+      <PageHeader eyebrow="Settings" title="Settings" lede="Appearance and density are saved in this browser only. Everything else applies to your account." />
       <Section number={1} title="Appearance" className="mt-8">
         <div className="flex flex-col gap-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
@@ -46,6 +47,7 @@ export function SettingsPage() {
         )}
         <Button className="mt-5" variant="secondary" icon={<LogOut size={15} aria-hidden="true" />} onClick={() => void leave()}>Sign out</Button>
       </Section>
+      {user && <><SignInMethodsSection /><SessionsSection /><YourDataSection /></>}
     </Page>
   );
 }
