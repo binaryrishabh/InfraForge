@@ -2,6 +2,7 @@ import { expect, test } from "bun:test";
 import { productFixture } from "./productFixture";
 import { compileProduct } from "../src/model2/product/compiler";
 import { createLiveModel2 } from "../src/model2/product/live";
+import { createProductModel2 } from "../src/model2/product/run";
 
 // The fixture's authored intervals are microseconds; live runs use realistic ones.
 const realistic: Record<string, number> = { "lb.health.interval": 5_000_000, "monitor.interval": 10_000_000, "run.sample": 1_000_000 };
@@ -17,7 +18,7 @@ function live(seconds: number, rps: number) {
   f.design.workload = { ...f.design.workload, targetThroughput: rps * 60, throughputUnit: "per-minute" };
   const compiled = compileProduct(f.design, f.contract);
   if (!compiled.ok) throw new Error(JSON.stringify(compiled.diagnostics));
-  return { run: createLiveModel2(compiled.value, f.design.resources.map((r) => r.id)), nodes: f.design.resources.map((r) => r.id) };
+  return { run: createLiveModel2(compiled.value, f.design.resources.map((r) => r.id)), nodes: f.design.resources.map((r) => r.id), compiled: compiled.value };
 }
 
 test("each simulated second projects every drawn node, with Unknown kept as null", () => {
@@ -38,6 +39,21 @@ test("each simulated second projects every drawn node, with Unknown kept as null
   expect(steady.some((s) => (s.metrics.vm!.rps ?? 0) > 0)).toBe(true);
   expect(steady.some((s) => (s.metrics.lb!.rps ?? 0) > 0)).toBe(true);
   expect(last.metrics.vm!.replicas!.ready).toBeGreaterThan(0);
+  expect(steady.every((s) => s.completedRps === 0 ? s.latencyMs.p50 === null : s.latencyMs.p50! > 0 && s.latencyMs.p95! >= s.latencyMs.p50!)).toBe(true);
+});
+
+test("per-second totals add up to the same run's full evidence", () => {
+  const { run, compiled, nodes } = live(10, 120);
+  const seconds = Array.from({ length: 10 }, () => { run.advanceSecond(); return run.project(); });
+  const full = createProductModel2(compiled); full.advanceTo(10_000_000);
+  const e = full.evidence(), sum = (key: "offeredRps" | "completedRps" | "failedRps") => seconds.reduce((n, s) => n + s[key], 0);
+  expect(sum("offeredRps")).toBe(e.counts.offered);
+  expect(sum("completedRps")).toBe(e.counts.completed);
+  expect(sum("failedRps")).toBe(e.counts.rejected + e.counts.deadlineExceeded + e.counts.abandoned);
+  // The application tier's per-second throughput adds up to its own station counters.
+  const vm = e.samples.at(-1)!.resources.filter((r: { id: string }) => r.id === "vm" || r.id.startsWith("vm#") && !r.id.includes("/"));
+  expect(seconds.reduce((n, s) => n + (s.metrics.vm!.rps ?? 0), 0)).toBe(vm.reduce((n: number, r: { completed: number }) => n + r.completed, 0));
+  expect(nodes).toContain("vm");
 });
 
 test("the same run projects exactly the same seconds again", () => {

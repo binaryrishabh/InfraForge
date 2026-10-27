@@ -1,5 +1,6 @@
 import { createProductModel2 } from "./run";
 import type { CompiledProduct } from "./contracts";
+import type { CausalObserver } from "../workload/causal";
 
 // One simulated second at a time, projected onto the canvas nodes the person drew.
 // Values Model 2 does not know stay null ("Unknown"); they are never shown as zero.
@@ -12,32 +13,46 @@ export interface LiveNodeMetrics {
 export interface LiveProjection {
   simulatedSeconds: number;
   offeredRps: number; completedRps: number; failedRps: number;
+  // Caller response times of requests that completed during this second; null when none completed.
+  latencyMs: { p50: LiveValue; p95: LiveValue };
   metrics: Record<string, LiveNodeMetrics>;
   overallHealth: "healthy" | "degraded" | "saturated" | "critical";
 }
 
-type Counters = { received: number; completed: number; failed: number; rejected: number; queued: number; serving: number; used: number; available: number | null; consumed: number };
-type SampleResource = { id: string; received: number; completed: number; failed: number; rejected: number; queued: number; serving: number; consumedCoreUs: number;
+type Counters = { received: number; completed: number; failed: number; queued: number; serving: number; used: number; available: number | null; consumed: number };
+type Station = { received: number; completed: number; failed: number; rejected: number; queued: number; serving: number; consumedCoreUs: number;
   compute?: { cpu?: { appCoreUs: number; competitorCoreUs: number; availableCoreUs: number } } };
+type Balancer = { received: number; completed: number; rejected: number; active: number; pending: number; backends: Array<{ health: boolean; draining: boolean }> };
 
 const SECOND = 1_000_000;
 const ratio = (part: number, whole: number) => whole > 0 ? part / whole : null;
+const percentile = (sorted: number[], p: number) => sorted.length ? sorted[Math.min(sorted.length - 1, Math.ceil(p * sorted.length) - 1)]! / 1000 : null;
 
 export function createLiveModel2(compiled: CompiledProduct, nodeIds: string[]) {
-  const runtime = createProductModel2(compiled);
-  let now = 0;
-  const previous = new Map<string, Counters>();
-  let previousTotals = { offered: 0, completed: 0, failed: 0 };
-  let previousLb = new Map<string, { received: number; completed: number; rejected: number }>();
+  // Caller outcomes are counted as they happen, so a second's totals never need the run's history.
+  const caller = { offered: 0, completed: 0, failed: 0 };
+  let responses: number[] = [];
+  const observe: CausalObserver = (event) => {
+    if (event.kind === "caller-offered") caller.offered++;
+    else if (event.kind === "caller-terminal") {
+      if (event.detail.outcome === "completed") { caller.completed++; responses.push(event.detail.responseUs as number); } else caller.failed++;
+    }
+  };
+  const runtime = createProductModel2(compiled, undefined, observe);
   // A node owns its own resource and every replica or helper named after it (vm#0, vm#0/aside).
+  const owner = (resourceId: string) => nodeIds.find((n) => resourceId === n || resourceId.startsWith(`${n}#`) || resourceId.startsWith(`${n}/`));
+  const resources = (compiled.input.resources as Array<{ id: string; cores?: { kind: string; value?: number }; execution?: { cores?: { kind: string; value?: number } } }>);
   // Authored cores per runtime resource, for resources whose CPU is reported as consumed core-time only.
   const cores = new Map<string, number>();
-  for (const r of compiled.input.resources as Array<{ id: string; cores?: { kind: string; value?: number }; execution?: { cores?: { kind: string; value?: number } } }>) {
+  for (const r of resources) {
     const q = r.cores ?? r.execution?.cores;
     if (q?.kind === "known" && typeof q.value === "number") cores.set(r.id, q.value);
   }
-  let previousAt = 0;
-  const owner = (resourceId: string) => nodeIds.find((n) => resourceId === n || resourceId.startsWith(`${n}#`) || resourceId.startsWith(`${n}/`));
+  const members = new Map(nodeIds.map((n) => [n, resources.map((r) => r.id).filter((id) => owner(id) === n)]));
+  let now = 0, previousAt = 0;
+  const previous = new Map<string, Counters>();
+  let previousLb = new Map<string, { received: number; completed: number; rejected: number }>();
+  let previousCaller = { ...caller };
 
   return {
     get simulatedSeconds() { return now / SECOND; },
@@ -47,40 +62,34 @@ export function createLiveModel2(compiled: CompiledProduct, nodeIds: string[]) {
       now += SECOND; runtime.advanceTo(now);
     },
     project(): LiveProjection {
-      const e = runtime.evidence();
-      const sample = e.samples.at(-1) as { resources: SampleResource[] } | undefined;
-      const current = new Map<string, Counters>();
-      for (const r of sample?.resources ?? []) {
-        const cpu = r.compute?.cpu;
-        current.set(r.id, { received: r.received, completed: r.completed, failed: r.failed, rejected: r.rejected, queued: r.queued, serving: r.serving,
-          used: cpu ? cpu.appCoreUs + cpu.competitorCoreUs : 0, available: cpu ? cpu.availableCoreUs : null, consumed: r.consumedCoreUs });
-      }
       const ready = new Map<string, { ready: number; total: number }>();
-      for (const pool of e.product.controllers) {
-        const node = owner(pool.id) ?? pool.id;
-        ready.set(node, { ready: pool.replicas.filter((r) => r.state === "ready").length, total: pool.replicas.filter((r) => r.state !== "reserved").length });
-      }
+      for (const pool of runtime.pools()) ready.set(owner(pool.id) ?? pool.id, { ready: pool.ready, total: pool.total });
       const metrics: Record<string, LiveNodeMetrics> = {};
+      const lbNow = new Map<string, { received: number; completed: number; rejected: number }>();
       for (const node of nodeIds) {
-        const members = [...current.keys()].filter((id) => owner(id) === node);
-        const lb = e.network.loadBalancers.find((l: { id: string }) => l.id === node);
-        if (lb) {
-          const before = previousLb.get(node) ?? { received: 0, completed: 0, rejected: 0 };
+        const own = runtime.inspect(node) as Partial<Balancer> | undefined;
+        if (own && Array.isArray(own.backends)) {
+          const lb = own as Balancer, before = previousLb.get(node) ?? { received: 0, completed: 0, rejected: 0 };
+          lbNow.set(node, { received: lb.received, completed: lb.completed, rejected: lb.rejected });
           const received = lb.received - before.received, completed = lb.completed - before.completed, rejected = lb.rejected - before.rejected;
-          const healthyBackends = lb.backends.filter((b: { health: boolean; draining: boolean }) => b.health && !b.draining).length;
+          const healthyBackends = lb.backends.filter((b) => b.health && !b.draining).length;
           metrics[node] = { cpu: null, memory: null, connections: lb.active + lb.pending, rps: completed, errorRate: ratio(rejected, received),
             health: healthyBackends === 0 ? "failed" : rejected > 0 ? "saturated" : lb.pending > 0 ? "degraded" : "healthy" };
           continue;
         }
-        if (!members.length) { metrics[node] = { cpu: null, memory: null, connections: null, rps: null, errorRate: null, health: "unknown" }; continue; }
+        const ids = (members.get(node) ?? []).filter((id) => runtime.inspect(id) !== undefined);
+        if (!ids.length) { metrics[node] = { cpu: null, memory: null, connections: null, rps: null, errorRate: null, health: "unknown" }; continue; }
         let used = 0, available = 0, knownCpu = false, completed = 0, received = 0, failed = 0, queued = 0, serving = 0;
-        for (const id of members) {
-          const c = current.get(id)!, p = previous.get(id);
+        for (const id of ids) {
+          const r = runtime.inspect(id) as Station, cpu = r.compute?.cpu, p = previous.get(id);
+          const c: Counters = { received: r.received, completed: r.completed, failed: r.failed + r.rejected, queued: r.queued, serving: r.serving,
+            used: cpu ? cpu.appCoreUs + cpu.competitorCoreUs : 0, available: cpu ? cpu.availableCoreUs : null, consumed: r.consumedCoreUs };
           if (c.available !== null) { knownCpu = true; used += c.used - (p?.used ?? 0); available += c.available - (p?.available ?? 0); }
           else if (cores.has(id)) { knownCpu = true; used += c.consumed - (p?.consumed ?? 0); available += cores.get(id)! * (now - previousAt); }
           queued += c.queued; serving += c.serving;
           // Throughput counts only the node's own entry resources, not its helper processes.
-          if (!id.includes("/")) { completed += c.completed - (p?.completed ?? 0); received += c.received - (p?.received ?? 0); failed += c.failed - (p?.failed ?? 0) + c.rejected - (p?.rejected ?? 0); }
+          if (!id.includes("/")) { completed += c.completed - (p?.completed ?? 0); received += c.received - (p?.received ?? 0); failed += c.failed - (p?.failed ?? 0); }
+          previous.set(id, c);
         }
         const cpu = knownCpu && available > 0 ? Math.min(100, (used / available) * 100) : null;
         const errorRate = ratio(failed, received), pool = ready.get(node);
@@ -89,17 +98,14 @@ export function createLiveModel2(compiled: CompiledProduct, nodeIds: string[]) {
           health: down ? "failed" : (cpu ?? 0) >= 95 || (errorRate ?? 0) > 0.05 ? "saturated" : (cpu ?? 0) >= 80 || (errorRate ?? 0) > 0.01 ? "degraded" : "healthy",
           ...(pool ? { replicas: pool } : {}) };
       }
-      const totals = { offered: e.counts.offered, completed: e.counts.completed, failed: e.counts.rejected + e.counts.deadlineExceeded + e.counts.abandoned };
-      const offered = totals.offered - previousTotals.offered, completedRps = totals.completed - previousTotals.completed, failedRps = totals.failed - previousTotals.failed;
+      const offered = caller.offered - previousCaller.offered, completedRps = caller.completed - previousCaller.completed, failedRps = caller.failed - previousCaller.failed;
+      const sorted = responses.sort((a, b) => a - b), latencyMs = { p50: percentile(sorted, 0.5), p95: percentile(sorted, 0.95) };
       const lost = ratio(failedRps, offered) ?? 0, nodes = Object.values(metrics);
       const overallHealth = lost > 0.2 || nodes.some((m) => m.health === "failed") && lost > 0.05 ? "critical"
         : lost > 0.05 || nodes.some((m) => m.health === "saturated") ? "saturated"
         : lost > 0.01 || nodes.some((m) => m.health === "degraded" || m.health === "failed") ? "degraded" : "healthy";
-      for (const [id, c] of current) previous.set(id, c);
-      previousAt = now;
-      previousTotals = totals;
-      previousLb = new Map(e.network.loadBalancers.map((l: { id: string; received: number; completed: number; rejected: number }) => [l.id, { received: l.received, completed: l.completed, rejected: l.rejected }]));
-      return { simulatedSeconds: now / SECOND, offeredRps: offered, completedRps, failedRps, metrics, overallHealth };
+      previousAt = now; previousCaller = { ...caller }; previousLb = lbNow; responses = [];
+      return { simulatedSeconds: now / SECOND, offeredRps: offered, completedRps, failedRps, latencyMs, metrics, overallHealth };
     },
   };
 }
