@@ -90,6 +90,7 @@ export function replicaController(pool: CompiledPool, kernel: EventKernel, conte
   schedule(0, "initial", reconcile); schedule(n(p.interval, "us"), "evaluate", tick);
   return {
     // Current replica counts only, for once-per-second live reads (evidence() also copies history).
-    status: () => ({ id: pool.id, desired, ready: replicas.filter((r) => r.state === "ready").length, total: replicas.filter((r) => r.state !== "reserved" && r.state !== "terminated").length }),
+    // Ready means started and currently up: a crashed replica keeps its lifecycle state but is not ready.
+    status: () => ({ id: pool.id, desired, ready: replicas.filter((r) => r.state === "ready" && context.endpoint(r.id).alive && context.endpoint(r.id).ready).length, total: replicas.filter((r) => r.state !== "reserved" && r.state !== "terminated").length }),
     evidence: () => ({ id: pool.id, profile: p.schema, metricSource: p.signal.kind, desired, evaluations, missingMeasurements: missing, identityBudgetExhausted: budgetExhausted, populations: Object.fromEntries((["reserved", "provisioning", "pulling", "starting", "ready", "draining", "failed", "terminated"] as ReplicaState[]).map((state) => [state, replicas.filter((r) => r.state === state).length])), inService: replicas.filter((r) => r.state === "ready" && context.endpoint(r.id).alive && context.endpoint(r.id).ready && context.backend(p.loadBalancer, r.id).health).length, replicas: replicas.map((r) => ({ ...r, endpoint: context.endpoint(r.id), lb: context.backend(p.loadBalancer, r.id) })), events: [...events], omitted }) };
 }

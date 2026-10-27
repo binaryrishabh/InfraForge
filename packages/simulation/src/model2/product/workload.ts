@@ -18,14 +18,19 @@ export function compileArrivals(design: SavedProductDesign, contract: ProductCon
   const peak = contract.arrival.peak;
   if (p.trafficShape === "peak" && (!peak || p.peakMultiplier === undefined || p.peakMultiplier < 1 || !Number.isFinite(p.peakMultiplier))) throw Error("Peak needs explicit window and multiplier; legacy shape has no timing information");
   if (peak && (requireKnown(peak.start, "us") < start || requireKnown(peak.end, "us") <= requireKnown(peak.start, "us") || requireKnown(peak.end, "us") > horizon)) throw Error("Invalid peak window");
+  // A load change applies to arrivals scheduled at or after its time; earlier arrivals never change.
+  const changes = (contract.arrival.changes ?? []).map((c) => ({ at: requireKnown(c.at, "us"), fraction: requireKnown(c.fraction, "ratio") }));
+  if (changes.some((c, i) => !Number.isSafeInteger(c.at) || c.at < 0 || c.fraction < 0 || c.fraction > 10 || (i > 0 && c.at <= changes[i - 1]!.at))) throw Error("Load changes need increasing whole-microsecond times and fractions from 0 to 10");
+  const fraction = (time: number) => { let f = 1; for (const c of changes) if (c.at <= time) f = c.fraction; else break; return f; };
   let at = start, index = 0, readDebt = 0;
   const rows: Array<{ id: string; atUs: number; operation: string }> = [];
   while (Math.round(at) < horizon) {
+    if (fraction(at) === 0) { const next = changes.find((c) => c.at > at); if (!next) break; at = next.at; continue; }
     if (rows.length >= contract.limits.maxRequests || rows.length >= contract.limits.maxTraceRows) throw Error("Compiled arrival budget exceeded");
     readDebt += p.readWriteRatio; const read = readDebt >= 1; if (read) readDebt -= 1;
     rows.push({ id: `arrival-${index++}`, atUs: Math.round(at), operation: read ? app.readOperation : app.writeOperation });
     const inPeak = p.trafficShape === "peak" && at >= requireKnown(peak!.start, "us") && at < requireKnown(peak!.end, "us");
-    const gap = baseInterval / (inPeak ? p.peakMultiplier! : 1); if (gap < 1) throw Error("Peak exceeds microsecond resolution"); at += gap;
+    const gap = baseInterval / ((inPeak ? p.peakMultiplier! : 1) * fraction(at)); if (gap < 1) throw Error("Peak exceeds microsecond resolution"); at += gap;
   }
   provenance.q("m2h.workload.baseInterval", baseInterval, "us", ["design.workload.targetThroughput", "design.workload.throughputUnit: dimensional conversion only"]);
   provenance.q("m2h.workload.readFraction", p.readWriteRatio, "ratio", ["design.workload.readWriteRatio", `application:${app.id}@${app.version}: explicit read/write operation meanings`], "user-input");

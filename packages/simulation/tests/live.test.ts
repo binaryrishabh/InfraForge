@@ -1,11 +1,13 @@
 import { expect, test } from "bun:test";
 import { productFixture } from "./productFixture";
 import { compileProduct } from "../src/model2/product/compiler";
-import { createLiveModel2 } from "../src/model2/product/live";
+import { createActionableLiveModel2, createLiveModel2 } from "../src/model2/product/live";
+import { withTimeline } from "../src/model2/product/timeline";
 import { createProductModel2 } from "../src/model2/product/run";
 
 // The fixture's authored intervals are microseconds; live runs use realistic ones.
-const realistic: Record<string, number> = { "lb.health.interval": 5_000_000, "monitor.interval": 10_000_000, "run.sample": 1_000_000 };
+const realistic: Record<string, number> = { "lb.health.interval": 5_000_000, "monitor.interval": 10_000_000, "run.sample": 1_000_000,
+  "controller.interval": 15_000_000, "controller.cooldown": 60_000_000, "controller.stabilization": 300_000_000 };
 function retune(node: unknown): void {
   if (!node || typeof node !== "object") return;
   const o = node as Record<string, unknown>;
@@ -13,9 +15,13 @@ function retune(node: unknown): void {
   if (typeof o.id === "string" && o.id in realistic && o.quantity && typeof o.quantity === "object") { (o.quantity as Record<string, unknown>).value = realistic[o.id]; o.formula = String(realistic[o.id]); }
   for (const value of Object.values(o)) retune(value);
 }
-function live(seconds: number, rps: number) {
+function fixture(seconds: number, rps: number) {
   const f = productFixture({ horizon: seconds * 1_000_000 }); retune(f);
-  f.design.workload = { ...f.design.workload, targetThroughput: rps * 60, throughputUnit: "per-minute" };
+  f.design.workload = { ...f.design.workload, targetThroughput: rps * 60, throughputUnit: "per-minute", trafficShape: "steady" };
+  return f;
+}
+function live(seconds: number, rps: number) {
+  const f = fixture(seconds, rps);
   const compiled = compileProduct(f.design, f.contract);
   if (!compiled.ok) throw new Error(JSON.stringify(compiled.diagnostics));
   return { run: createLiveModel2(compiled.value, f.design.resources.map((r) => r.id)), nodes: f.design.resources.map((r) => r.id), compiled: compiled.value };
@@ -66,3 +72,44 @@ test("a run cannot be advanced past its horizon", () => {
   run.advanceSecond(); run.advanceSecond();
   expect(() => run.advanceSecond()).toThrow("horizon");
 });
+
+test("an action rebuilds the run without changing any second before it", () => {
+  const f = fixture(20, 100), nodes = f.design.resources.map((r) => r.id);
+  const crash = { id: "crash-1", kind: "crash" as const, node: "vm", durationUs: 4_000_000, restartUs: 1_000_000 };
+  const compiled = (contract: typeof f.contract) => { const c = compileProduct(f.design, contract); if (!c.ok) throw new Error("refused"); return c.value; };
+  const plain = createLiveModel2(compiled(f.contract), nodes);
+  const scratch = createLiveModel2(compiled(withTimeline(f.contract, [{ ...crash, atUs: 10_000_001 }])), nodes);
+  const acting = createActionableLiveModel2(f.design, f.contract, nodes);
+  const seconds = (run: { advanceSecond(): void; project(): unknown }, n: number) => Array.from({ length: n }, () => { run.advanceSecond(); return run.project(); });
+  const before = seconds(acting, 10);
+  acting.apply(crash);
+  const after = seconds(acting, 10), fromScratch = seconds(scratch, 20);
+  expect(fromScratch.slice(0, 10)).toEqual(seconds(plain, 10)); // a later action never reaches back in time
+  expect(fromScratch.slice(0, 10)).toEqual(before);
+  expect(after).toEqual(fromScratch.slice(10)); // rebuild + fast-forward equals a run that always had the action
+  const health = (s: unknown) => (s as { metrics: Record<string, { health: string }> }).metrics;
+  expect(after.slice(0, 3).every((s) => health(s).vm!.health === "failed" && health(s).lb!.health === "failed")).toBe(true);
+  expect(health(after.at(-1)).vm!.health).toBe("healthy"); // restarted after 4 s down plus 1 s restart
+  expect(acting.actions).toEqual([{ ...crash, atUs: 10_000_001 }]);
+});
+
+test("load and replica actions take effect from their second on; a refused action changes nothing", () => {
+  const f = fixture(16, 100), acting = createActionableLiveModel2(f.design, f.contract, f.design.resources.map((r) => r.id));
+  for (let s = 0; s < 6; s++) acting.advanceSecond();
+  acting.project();
+  acting.apply({ id: "pause", kind: "load", fraction: 0 });
+  acting.advanceSecond(); acting.advanceSecond(); acting.project();
+  acting.advanceSecond();
+  expect(acting.project().offeredRps).toBe(0);
+  acting.apply({ id: "double", kind: "load", fraction: 2 });
+  acting.apply({ id: "grow", kind: "replicas", node: "vm", desired: 3 });
+  acting.advanceSecond();
+  expect(acting.project().metrics.vm!.replicas!.total).toBe(3); // the fixture's fast autoscaler may later scale an idle pool back in
+  acting.advanceSecond();
+  expect(acting.project().offeredRps).toBeGreaterThanOrEqual(199);
+  expect(() => acting.apply({ id: "bad", kind: "replicas", node: "db", desired: 2 })).toThrow("no replica pool");
+  expect(acting.actions.map((a) => a.id)).toEqual(["pause", "double", "grow"]);
+  acting.advanceSecond();
+  expect(acting.project().simulatedSeconds).toBe(12);
+});
+

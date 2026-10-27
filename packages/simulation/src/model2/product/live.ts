@@ -1,5 +1,7 @@
 import { createProductModel2 } from "./run";
-import type { CompiledProduct } from "./contracts";
+import { compileProduct } from "./compiler";
+import { withTimeline, type TimedAction } from "./timeline";
+import type { CompiledProduct, ProductContract, SavedProductDesign } from "./contracts";
 import type { CausalObserver } from "../workload/causal";
 
 // One simulated second at a time, projected onto the canvas nodes the person drew.
@@ -61,6 +63,11 @@ export function createLiveModel2(compiled: CompiledProduct, nodeIds: string[]) {
       if (now + SECOND > runtime.horizon) throw new Error("The run has reached its simulated horizon");
       now += SECOND; runtime.advanceTo(now);
     },
+    // Jump to a whole second without reporting the seconds in between; the next project() covers only the second after it.
+    fastForward(seconds: number) {
+      if (!Number.isSafeInteger(seconds) || seconds * SECOND < now || seconds * SECOND > runtime.horizon) throw new Error("Invalid fast-forward target");
+      now = seconds * SECOND; runtime.advanceTo(now); this.project();
+    },
     project(): LiveProjection {
       const ready = new Map<string, { ready: number; total: number }>();
       for (const pool of runtime.pools()) ready.set(owner(pool.id) ?? pool.id, { ready: pool.ready, total: pool.total });
@@ -109,3 +116,30 @@ export function createLiveModel2(compiled: CompiledProduct, nodeIds: string[]) {
     },
   };
 }
+
+// A live run that accepts actions. Each action rebuilds the run from its design plus every action so far
+// and fast-forwards to the current second. Model 2 is deterministic, so the seconds already shown never change.
+export function createActionableLiveModel2(design: SavedProductDesign, base: ProductContract, nodeIds: string[]) {
+  const actions: TimedAction[] = [];
+  const build = () => {
+    const compiled = compileProduct(design, withTimeline(base, actions));
+    if (!compiled.ok) throw new Error(compiled.diagnostics.map((d) => d.message).join("; "));
+    return createLiveModel2(compiled.value, nodeIds);
+  };
+  let run = build();
+  return {
+    get simulatedSeconds() { return run.simulatedSeconds; },
+    get horizon() { return run.horizon; },
+    get actions(): readonly TimedAction[] { return actions; },
+    advanceSecond() { run.advanceSecond(); },
+    project() { return run.project(); },
+    // The action takes effect just after the current second, which has already been shown. A refused action leaves the run unchanged.
+    apply(action: TimedAction extends infer A ? A extends TimedAction ? Omit<A, "atUs"> : never : never) {
+      const seconds = run.simulatedSeconds;
+      actions.push({ ...action, atUs: seconds * SECOND + 1 } as TimedAction);
+      try { const next = build(); next.fastForward(seconds); run = next; }
+      catch (error) { actions.pop(); throw error; }
+    },
+  };
+}
+
