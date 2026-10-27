@@ -2272,7 +2272,7 @@
     },
     {
       "path": "scripts/tests/ci-repair.test.ts",
-      "hash": "22d098886ab53c575fae0506e55565e936ed41c091122828d7c350ee4e7811c2"
+      "hash": "28c4c642512ac330ecef67ec67f9cab4bf0ed42c0cfb4cda32d2a5e04fe3629d"
     },
     {
       "path": "scripts/tests/compose-entrypoints.test.ts",
@@ -2292,7 +2292,7 @@
     },
     {
       "path": "scripts/tests/deployment.test.ts",
-      "hash": "e7ede63eddec39c7778738dfab3c908b1f46757c7a9fe309f690ed1630cc6f7d"
+      "hash": "fbb4101ecf3b7e715bf51980d6e3dcdabc9d9033b41f6b8dd2cb672773ae79d8"
     },
     {
       "path": "scripts/tests/execution-identity-adversarial.test.ts",
@@ -2355,20 +2355,12 @@
       "hash": "4221c7bc3304c6e44c264a116e2e7037e539e7ed880ce29ecf6f0ed48ca084dd"
     },
     {
-      "path": "scripts/tests/fixtures/containerd-v2.4.2.ts",
-      "hash": "f932f6d1deac3de3c87340e92d739f0e43b928e057d9f5ed923b7de4ae7ee40c"
-    },
-    {
       "path": "scripts/tests/fixtures/execution-launch-probe.ts",
       "hash": "9c91911450ba57ea9c556e3363d8a7f28af5d2aa4c9185fbb46ac12acbdff998"
     },
     {
       "path": "scripts/tests/fixtures/reconfigure.ts",
       "hash": "3655fc636e27adf9c1286568b472be9fe1747114ecb6fa64426eaae162fc99b4"
-    },
-    {
-      "path": "scripts/tests/fixtures/release-dockerd.ts",
-      "hash": "e214081278ba7feb64fb5aa26e7a46265d6e0dd4da8882e2c49cbfa8e6d5d757"
     },
     {
       "path": "scripts/tests/fixtures/unreviewed-host.ts",
@@ -2396,7 +2388,7 @@
     },
     {
       "path": "scripts/tests/hardening-operations.test.ts",
-      "hash": "ac9cd977778d0607fbde84ace136a4e58560cdc21030ce6e0b48a6e5318ee76b"
+      "hash": "7c2737be8324276dbb310e8b47fdb23b589345107d66609a16834bcc86c2eeda"
     },
     {
       "path": "scripts/tests/historical-analysis-cache.test.ts",
@@ -2468,7 +2460,7 @@
     },
     {
       "path": "scripts/tests/release-hygiene.test.ts",
-      "hash": "2f93b50d281c35b260483945ed876c704935e0ed0027a0554dd380b932bc726d"
+      "hash": "c2cf4a05ff0c4f5cae7495bf7d96da6b2351101c024082ef555fa631f3690ca5"
     },
     {
       "path": "scripts/tests/release-image.test.ts",
@@ -2477,10 +2469,6 @@
     {
       "path": "scripts/tests/release-process.test.ts",
       "hash": "f9f0ce017d0ee23a335a1a0ab17d16ef479087fcfae083058cef02d66295a034"
-    },
-    {
-      "path": "scripts/tests/release-storage.test.ts",
-      "hash": "21ba67b8d8bc9c969a6caa1eeee5219fb5fbfdc314b680741741c0e31fa2d52b"
     },
     {
       "path": "scripts/tests/release.test.ts",
