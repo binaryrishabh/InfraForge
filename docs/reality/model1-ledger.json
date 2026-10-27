@@ -32,8 +32,8 @@
     },
     {
       "file": "apps/backend/auth/accountPolicy.ts",
-      "sha256": "03f1e8e2afeecefa9d6025d7b00e57bd2dcf935700fd52488d6c5c4c7bb71ab0",
-      "numericSites": 18
+      "sha256": "4fc6ac4a4b95b7b5c2ea1a8450f844f09337fd38ac73e8699c5343e879a9da44",
+      "numericSites": 22
     },
     {
       "file": "apps/backend/auth/accountRoutes.ts",
@@ -47,12 +47,12 @@
     },
     {
       "file": "apps/backend/auth/createAuth.ts",
-      "sha256": "5783e1de4a004c9ccda154a230161175a3344d5289b258c765957afb01ce8210",
-      "numericSites": 5
+      "sha256": "e8b03d78e1be48cb296ceaf5fa9e31bcc95ef07adb50b798278ef8b377ec66ec",
+      "numericSites": 9
     },
     {
       "file": "apps/backend/auth/credentials.ts",
-      "sha256": "e3646c96c39fd6b4ddea2f676878dd1a2c4fb69371553bd93a255a45ff90bbb5",
+      "sha256": "8e7e7ada340170b0b12fadd7f5fec386a1a2b9f99a0cee734834fbc81640653f",
       "numericSites": 3
     },
     {
@@ -82,17 +82,17 @@
     },
     {
       "file": "apps/backend/auth/mailAdmission.ts",
-      "sha256": "1677f3daf3dabbaedc6ffaa35e89830c97c8b95aeaf47bb39b77bf41b996dfb0",
+      "sha256": "fbce5aa9058a6f327d6e6c6126f8ebb9cc42b0a0775e9d6c6428dec2106f157b",
       "numericSites": 2
     },
     {
       "file": "apps/backend/auth/mailIntent.ts",
-      "sha256": "b005c24c704d12e89c4fdda65699351d1bee818e91551fb490514f6eb5f98fe7",
+      "sha256": "f3770c2d06cdea7e6f4614621dd7177614ab42fb7039e63650b0e061f393ffd3",
       "numericSites": 7
     },
     {
       "file": "apps/backend/auth/mailRequests.ts",
-      "sha256": "9428a24e7c259c9f5eccb446545fbdd68a96396c5ce287c8e2931d4fe10a9cdf",
+      "sha256": "8569bf1229dfc39d1b021ff3e5b58a904b5c8555f441f8c8282e16aab69d3a7a",
       "numericSites": 15
     },
     {
@@ -106,6 +106,11 @@
       "numericSites": 1
     },
     {
+      "file": "apps/backend/auth/passwordPolicy.ts",
+      "sha256": "8f02a362842b09f2ce949173cedefe49a549718b01155288b76b83c482b698fe",
+      "numericSites": 1
+    },
+    {
       "file": "apps/backend/auth/recoverOwnership.ts",
       "sha256": "3cbaa9d7df0e031026e465a0e51b14d5e5e371f7b75db05c0403f61d38816fd5",
       "numericSites": 0
@@ -114,6 +119,11 @@
       "file": "apps/backend/auth/settings.ts",
       "sha256": "a9b72f49c5efe54c119c6a9dc513f60b0e5e6a89f733f194a5ea726db03ec974",
       "numericSites": 1
+    },
+    {
+      "file": "apps/backend/auth/signupHandoff.ts",
+      "sha256": "ff2f9ec6018a9dbb44bbdf3e5008f2c842641b3661b0e1b2b014a0794163865d",
+      "numericSites": 3
     },
     {
       "file": "apps/backend/auth/turnstile.ts",
@@ -422,7 +432,7 @@
     },
     {
       "file": "apps/backend/executionIdentity/loading.ts",
-      "sha256": "61ee37229baaeac847cccb6277387abb6ee5f7215103484893cdaae9f914e74a",
+      "sha256": "15d4601958b5d706369edba78e145a7c259eabd73a57be02312b34d8270d1d3c",
       "numericSites": 14
     },
     {
@@ -707,7 +717,7 @@
     },
     {
       "file": "apps/backend/index.ts",
-      "sha256": "e4b1640ec0a1d0e3fb1473b7852b492e7255289bc684a60b0fe47962c667ee18",
+      "sha256": "d44a9168cb73a26fc9cd218d7702c278cf9828dc652fadd743c44671736d9442",
       "numericSites": 7
     },
     {
@@ -1267,7 +1277,7 @@
     },
     {
       "file": "apps/web/src/app/App.tsx",
-      "sha256": "a65b59a471676a0a0a2c61fea1d37fe987bad2777a302ce90645603e669e3f32",
+      "sha256": "fa73cf7e8d6be1cff3b48369af773a83a5fec47331da6546ce151c670eaa89f4",
       "numericSites": 1
     },
     {
@@ -1312,12 +1322,12 @@
     },
     {
       "file": "apps/web/src/features/auth/accountClient.ts",
-      "sha256": "4c3232ac7c910945c47297d5720c3c853277ab24a961efbfb88f7aa24e2d7bd1",
+      "sha256": "7ec8a5b0b5299f5d709b89ad91ceb34f04966e10756a3d82301cdffbd33361bd",
       "numericSites": 0
     },
     {
       "file": "apps/web/src/features/auth/accountFlow.ts",
-      "sha256": "fec479feb8739363c64d7e2212ed05f2a41ac5bffef2b943fcedba38097c62d7",
+      "sha256": "9d4a3247742dbf65bf06cfa47b294b54f31d10efc60197e6c551ec18e215d8d6",
       "numericSites": 6
     },
     {
@@ -1331,19 +1341,24 @@
       "numericSites": 2
     },
     {
+      "file": "apps/web/src/features/auth/components/PasswordChecklist.tsx",
+      "sha256": "5348a9ad7b48dfdcb9493c761de3ba72ad25604c549213d7729a44cc956d80f0",
+      "numericSites": 2
+    },
+    {
       "file": "apps/web/src/features/auth/components/SocialSignIn.tsx",
       "sha256": "ae1996593e6b0b6376feea1bd8feaf084a9f6e7c9b9630db0056f91fed53af8f",
       "numericSites": 0
     },
     {
       "file": "apps/web/src/features/auth/components/TurnstileWidget.tsx",
-      "sha256": "dd76e68a3f454e19504ab481c9bac5af585018bfe1678e4b781ba117f9935562",
+      "sha256": "e478b79bacecfc7a2a5c0d80a8042aad08d14054a64c4f538ddf77706ab11e55",
       "numericSites": 0
     },
     {
       "file": "apps/web/src/features/auth/credentials.ts",
-      "sha256": "2445177f1ffce75656ded45be4d14dd10000d1ffa672846837e24eeb82845d16",
-      "numericSites": 0
+      "sha256": "5f4d879d089d54efbdf518360e5a1d52bbc83ff9c850bd56d15eaff59f9338f9",
+      "numericSites": 1
     },
     {
       "file": "apps/web/src/features/auth/drafts.ts",
@@ -1352,13 +1367,18 @@
     },
     {
       "file": "apps/web/src/features/auth/pages/PasswordResetPage.tsx",
-      "sha256": "136d6c9cd896dd268cadfeda8511754c54213a35c4d858efc30786235c45ebe0",
+      "sha256": "b258c9746b2f11dc06336df93f775a2ac40e460e18ab934e86d88c922a4420ce",
       "numericSites": 3
     },
     {
       "file": "apps/web/src/features/auth/pages/SignInPage.tsx",
-      "sha256": "a5888c55494d9894715a8dad8c5432eda353abb1f15244ae0cec9fc0add31c3f",
-      "numericSites": 6
+      "sha256": "d07878ebceba93a304f2e134fff5012a935eeaf4965574db01ec0b9bc02ce456",
+      "numericSites": 2
+    },
+    {
+      "file": "apps/web/src/features/auth/pages/SignupPage.tsx",
+      "sha256": "086638f44527fb5487db30e75f7d438e29acdab57cc82dfd9e6e9ccc39703a36",
+      "numericSites": 11
     },
     {
       "file": "apps/web/src/features/auth/sessionClient.ts",
@@ -1366,8 +1386,13 @@
       "numericSites": 0
     },
     {
+      "file": "apps/web/src/features/auth/signupHandoff.ts",
+      "sha256": "1240232fda9707cecc88970167411ce3c9d2049311b720778fec1c53ddee714a",
+      "numericSites": 3
+    },
+    {
       "file": "apps/web/src/features/auth/store/auth.store.ts",
-      "sha256": "774addc5b6d51308bf9bbdc61d0814d601f0ed31bfc1eb11fc0816906639ccb0",
+      "sha256": "336d148fb53f04a3e5aa831ba9e896bb1808341be6afd9fc2e408ce6785020a0",
       "numericSites": 1
     },
     {
@@ -1377,8 +1402,8 @@
     },
     {
       "file": "apps/web/src/features/auth/turnstileWidget.ts",
-      "sha256": "6c889d2eccb3448b52c1f7af5ee9464feff209c20e4e95777820ab19957cc205",
-      "numericSites": 1
+      "sha256": "8e12245c4f0e3ed2923c9a5ca361afaf131c77c495243d07a747cab4247ffd61",
+      "numericSites": 2
     },
     {
       "file": "apps/web/src/features/canvas/actions.ts",
@@ -2522,7 +2547,7 @@
     },
     {
       "file": "packages/contracts/src/auth/index.ts",
-      "sha256": "a1c8867912e1d39e92276440a9b98202c54f0070ccca963b033d4114fa3aa715",
+      "sha256": "8edf382d5d0abb4c233022099bccc03c54e8b49c36e922d97966fd36a17bfc84",
       "numericSites": 4
     },
     {
@@ -4466,23 +4491,23 @@
     },
     {
       "id": "m1.apps.backend.auth.accountPolicy.2",
-      "concept": "email · literal 0",
+      "concept": "publicLimit · literal 120",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
       "quantity": {
         "kind": "known",
-        "value": 0,
+        "value": 120,
         "unit": "code-number",
         "provenance": [
           "m1.apps.backend.auth.accountPolicy.2"
         ]
       },
-      "formula": "const email = typeof body?.email === \"string\" ? body.email.trim().toLowerCase().slice(0, 254) : \"\";",
+      "formula": "const publicLimit = path === \"/is-username-available\" ? 120 : path === \"/signup-handoff/confirm\" ? 30 : path === \"/signup-handoff/status\" ? 1200 : 0;",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountPolicy.ts#L34",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountPolicy.ts#L23",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -4496,49 +4521,13 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/auth/accountPolicy.ts",
-        "line": 34,
-        "column": 91
+        "line": 23,
+        "column": 59
       }
     },
     {
       "id": "m1.apps.backend.auth.accountPolicy.3",
-      "concept": "email · literal 254",
-      "modelVersion": "1",
-      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
-      "quantity": {
-        "kind": "known",
-        "value": 254,
-        "unit": "code-number",
-        "provenance": [
-          "m1.apps.backend.auth.accountPolicy.3"
-        ]
-      },
-      "formula": "const email = typeof body?.email === \"string\" ? body.email.trim().toLowerCase().slice(0, 254) : \"\";",
-      "classification": "implementation-policy",
-      "confidence": "high",
-      "provenance": [
-        {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountPolicy.ts#L34",
-          "supports": "implementation",
-          "detail": "Exact historical literal and source expression; not external validation."
-        }
-      ],
-      "assumptions": [
-        "This literal is not evidence of real infrastructure capacity or performance.",
-        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
-      ],
-      "researchedOn": "2026-10-15",
-      "freeMode": "conditional",
-      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
-      "location": {
-        "file": "apps/backend/auth/accountPolicy.ts",
-        "line": 34,
-        "column": 94
-      }
-    },
-    {
-      "id": "m1.apps.backend.auth.accountPolicy.4",
-      "concept": "ipAllowed · literal 30",
+      "concept": "publicLimit · literal 30",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
       "quantity": {
@@ -4546,15 +4535,15 @@
         "value": 30,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.auth.accountPolicy.4"
+          "m1.apps.backend.auth.accountPolicy.3"
         ]
       },
-      "formula": "const ipAllowed = await quota.allow(`${scope}:ip`, ip, redeem || completion ? 30 : 20);",
+      "formula": "const publicLimit = path === \"/is-username-available\" ? 120 : path === \"/signup-handoff/confirm\" ? 30 : path === \"/signup-handoff/status\" ? 1200 : 0;",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountPolicy.ts#L36",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountPolicy.ts#L24",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -4568,29 +4557,65 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/auth/accountPolicy.ts",
-        "line": 36,
-        "column": 83
+        "line": 24,
+        "column": 44
       }
     },
     {
-      "id": "m1.apps.backend.auth.accountPolicy.5",
-      "concept": "ipAllowed · literal 20",
+      "id": "m1.apps.backend.auth.accountPolicy.4",
+      "concept": "publicLimit · literal 1200",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
       "quantity": {
         "kind": "known",
-        "value": 20,
+        "value": 1200,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.auth.accountPolicy.4"
+        ]
+      },
+      "formula": "const publicLimit = path === \"/is-username-available\" ? 120 : path === \"/signup-handoff/confirm\" ? 30 : path === \"/signup-handoff/status\" ? 1200 : 0;",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountPolicy.ts#L24",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/auth/accountPolicy.ts",
+        "line": 24,
+        "column": 85
+      }
+    },
+    {
+      "id": "m1.apps.backend.auth.accountPolicy.5",
+      "concept": "publicLimit · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
         "unit": "code-number",
         "provenance": [
           "m1.apps.backend.auth.accountPolicy.5"
         ]
       },
-      "formula": "const ipAllowed = await quota.allow(`${scope}:ip`, ip, redeem || completion ? 30 : 20);",
+      "formula": "const publicLimit = path === \"/is-username-available\" ? 120 : path === \"/signup-handoff/confirm\" ? 30 : path === \"/signup-handoff/status\" ? 1200 : 0;",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountPolicy.ts#L36",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountPolicy.ts#L24",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -4604,13 +4629,13 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/auth/accountPolicy.ts",
-        "line": 36,
-        "column": 88
+        "line": 24,
+        "column": 92
       }
     },
     {
       "id": "m1.apps.backend.auth.accountPolicy.6",
-      "concept": "identity · literal 0",
+      "concept": "email · literal 0",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
       "quantity": {
@@ -4621,12 +4646,12 @@
           "m1.apps.backend.auth.accountPolicy.6"
         ]
       },
-      "formula": "const identity = completion ? String(body?.emailProof).slice(0, 100) : emailRequest || signup || path === \"/sign-in/email-otp\" ? email : input.token ?? \"\";",
+      "formula": "const email = typeof body?.email === \"string\" ? body.email.trim().toLowerCase().slice(0, 254) : \"\";",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountPolicy.ts#L37",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountPolicy.ts#L48",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -4640,12 +4665,156 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/auth/accountPolicy.ts",
-        "line": 37,
-        "column": 66
+        "line": 48,
+        "column": 91
       }
     },
     {
       "id": "m1.apps.backend.auth.accountPolicy.7",
+      "concept": "email · literal 254",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 254,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.auth.accountPolicy.7"
+        ]
+      },
+      "formula": "const email = typeof body?.email === \"string\" ? body.email.trim().toLowerCase().slice(0, 254) : \"\";",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountPolicy.ts#L48",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/auth/accountPolicy.ts",
+        "line": 48,
+        "column": 94
+      }
+    },
+    {
+      "id": "m1.apps.backend.auth.accountPolicy.8",
+      "concept": "ipAllowed · literal 30",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 30,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.auth.accountPolicy.8"
+        ]
+      },
+      "formula": "const ipAllowed = await quota.allow(`${scope}:ip`, ip, redeem || completion ? 30 : 20);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountPolicy.ts#L50",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/auth/accountPolicy.ts",
+        "line": 50,
+        "column": 83
+      }
+    },
+    {
+      "id": "m1.apps.backend.auth.accountPolicy.9",
+      "concept": "ipAllowed · literal 20",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 20,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.auth.accountPolicy.9"
+        ]
+      },
+      "formula": "const ipAllowed = await quota.allow(`${scope}:ip`, ip, redeem || completion ? 30 : 20);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountPolicy.ts#L50",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/auth/accountPolicy.ts",
+        "line": 50,
+        "column": 88
+      }
+    },
+    {
+      "id": "m1.apps.backend.auth.accountPolicy.10",
+      "concept": "identity · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.auth.accountPolicy.10"
+        ]
+      },
+      "formula": "const identity = completion ? String(body?.emailProof).slice(0, 100) : emailRequest || signup || path === \"/sign-in/email-otp\" ? email : input.token ?? \"\";",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountPolicy.ts#L51",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/auth/accountPolicy.ts",
+        "line": 51,
+        "column": 66
+      }
+    },
+    {
+      "id": "m1.apps.backend.auth.accountPolicy.11",
       "concept": "identity · literal 100",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
@@ -4654,7 +4823,7 @@
         "value": 100,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.auth.accountPolicy.7"
+          "m1.apps.backend.auth.accountPolicy.11"
         ]
       },
       "formula": "const identity = completion ? String(body?.emailProof).slice(0, 100) : emailRequest || signup || path === \"/sign-in/email-otp\" ? email : input.token ?? \"\";",
@@ -4662,7 +4831,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountPolicy.ts#L37",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountPolicy.ts#L51",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -4676,12 +4845,12 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/auth/accountPolicy.ts",
-        "line": 37,
+        "line": 51,
         "column": 69
       }
     },
     {
-      "id": "m1.apps.backend.auth.accountPolicy.8",
+      "id": "m1.apps.backend.auth.accountPolicy.12",
       "concept": "accountAllowed · literal 3",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
@@ -4690,7 +4859,7 @@
         "value": 3,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.auth.accountPolicy.8"
+          "m1.apps.backend.auth.accountPolicy.12"
         ]
       },
       "formula": "const accountAllowed = await quota.allow(`${scope}:account`, identity, path === \"/sign-in/email-otp\" ? 3 : completion ? 5 : emailRequest || signup ? 3 : 5);",
@@ -4698,7 +4867,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountPolicy.ts#L40",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountPolicy.ts#L54",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -4712,12 +4881,12 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/auth/accountPolicy.ts",
-        "line": 40,
+        "line": 54,
         "column": 39
       }
     },
     {
-      "id": "m1.apps.backend.auth.accountPolicy.9",
+      "id": "m1.apps.backend.auth.accountPolicy.13",
       "concept": "accountAllowed · literal 5",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
@@ -4726,7 +4895,7 @@
         "value": 5,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.auth.accountPolicy.9"
+          "m1.apps.backend.auth.accountPolicy.13"
         ]
       },
       "formula": "const accountAllowed = await quota.allow(`${scope}:account`, identity, path === \"/sign-in/email-otp\" ? 3 : completion ? 5 : emailRequest || signup ? 3 : 5);",
@@ -4734,7 +4903,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountPolicy.ts#L40",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountPolicy.ts#L54",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -4748,12 +4917,12 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/auth/accountPolicy.ts",
-        "line": 40,
+        "line": 54,
         "column": 56
       }
     },
     {
-      "id": "m1.apps.backend.auth.accountPolicy.10",
+      "id": "m1.apps.backend.auth.accountPolicy.14",
       "concept": "accountAllowed · literal 3",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
@@ -4762,7 +4931,7 @@
         "value": 3,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.auth.accountPolicy.10"
+          "m1.apps.backend.auth.accountPolicy.14"
         ]
       },
       "formula": "const accountAllowed = await quota.allow(`${scope}:account`, identity, path === \"/sign-in/email-otp\" ? 3 : completion ? 5 : emailRequest || signup ? 3 : 5);",
@@ -4770,7 +4939,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountPolicy.ts#L40",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountPolicy.ts#L54",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -4784,12 +4953,12 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/auth/accountPolicy.ts",
-        "line": 40,
+        "line": 54,
         "column": 85
       }
     },
     {
-      "id": "m1.apps.backend.auth.accountPolicy.11",
+      "id": "m1.apps.backend.auth.accountPolicy.15",
       "concept": "accountAllowed · literal 5",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
@@ -4798,7 +4967,7 @@
         "value": 5,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.auth.accountPolicy.11"
+          "m1.apps.backend.auth.accountPolicy.15"
         ]
       },
       "formula": "const accountAllowed = await quota.allow(`${scope}:account`, identity, path === \"/sign-in/email-otp\" ? 3 : completion ? 5 : emailRequest || signup ? 3 : 5);",
@@ -4806,7 +4975,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountPolicy.ts#L40",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountPolicy.ts#L54",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -4820,12 +4989,12 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/auth/accountPolicy.ts",
-        "line": 40,
+        "line": 54,
         "column": 89
       }
     },
     {
-      "id": "m1.apps.backend.auth.accountPolicy.12",
+      "id": "m1.apps.backend.auth.accountPolicy.16",
       "concept": "accountAuthHandler.status · literal 404",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
@@ -4834,7 +5003,7 @@
         "value": 404,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.auth.accountPolicy.12"
+          "m1.apps.backend.auth.accountPolicy.16"
         ]
       },
       "formula": "status: 404",
@@ -4842,7 +5011,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountPolicy.ts#L74",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountPolicy.ts#L88",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -4856,12 +5025,12 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/auth/accountPolicy.ts",
-        "line": 74,
+        "line": 88,
         "column": 50
       }
     },
     {
-      "id": "m1.apps.backend.auth.accountPolicy.13",
+      "id": "m1.apps.backend.auth.accountPolicy.17",
       "concept": "accountAuthHandler · literal 0",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
@@ -4870,7 +5039,7 @@
         "value": 0,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.auth.accountPolicy.13"
+          "m1.apps.backend.auth.accountPolicy.17"
         ]
       },
       "formula": "await sleep(Math.max(0, 750 - (now() - start)));",
@@ -4878,7 +5047,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountPolicy.ts#L100",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountPolicy.ts#L114",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -4892,12 +5061,12 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/auth/accountPolicy.ts",
-        "line": 100,
+        "line": 114,
         "column": 28
       }
     },
     {
-      "id": "m1.apps.backend.auth.accountPolicy.14",
+      "id": "m1.apps.backend.auth.accountPolicy.18",
       "concept": "accountAuthHandler · literal 750",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
@@ -4906,7 +5075,7 @@
         "value": 750,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.auth.accountPolicy.14"
+          "m1.apps.backend.auth.accountPolicy.18"
         ]
       },
       "formula": "await sleep(Math.max(0, 750 - (now() - start)));",
@@ -4914,7 +5083,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountPolicy.ts#L100",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountPolicy.ts#L114",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -4928,12 +5097,12 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/auth/accountPolicy.ts",
-        "line": 100,
+        "line": 114,
         "column": 31
       }
     },
     {
-      "id": "m1.apps.backend.auth.accountPolicy.15",
+      "id": "m1.apps.backend.auth.accountPolicy.19",
       "concept": "accountAuthHandler · literal 400",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
@@ -4942,7 +5111,7 @@
         "value": 400,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.auth.accountPolicy.15"
+          "m1.apps.backend.auth.accountPolicy.19"
         ]
       },
       "formula": "if (otpRedeem && [400, 401, 403].includes(response.status)) { response = Response.json({ code: \"INVALID_OTP\", message: \"Invalid or expired code\" }, { status: 400 }); }",
@@ -4950,7 +5119,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountPolicy.ts#L106",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountPolicy.ts#L126",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -4964,12 +5133,12 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/auth/accountPolicy.ts",
-        "line": 106,
+        "line": 126,
         "column": 25
       }
     },
     {
-      "id": "m1.apps.backend.auth.accountPolicy.16",
+      "id": "m1.apps.backend.auth.accountPolicy.20",
       "concept": "accountAuthHandler · literal 401",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
@@ -4978,7 +5147,7 @@
         "value": 401,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.auth.accountPolicy.16"
+          "m1.apps.backend.auth.accountPolicy.20"
         ]
       },
       "formula": "if (otpRedeem && [400, 401, 403].includes(response.status)) { response = Response.json({ code: \"INVALID_OTP\", message: \"Invalid or expired code\" }, { status: 400 }); }",
@@ -4986,7 +5155,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountPolicy.ts#L106",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountPolicy.ts#L126",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -5000,12 +5169,12 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/auth/accountPolicy.ts",
-        "line": 106,
+        "line": 126,
         "column": 30
       }
     },
     {
-      "id": "m1.apps.backend.auth.accountPolicy.17",
+      "id": "m1.apps.backend.auth.accountPolicy.21",
       "concept": "accountAuthHandler · literal 403",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
@@ -5014,7 +5183,7 @@
         "value": 403,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.auth.accountPolicy.17"
+          "m1.apps.backend.auth.accountPolicy.21"
         ]
       },
       "formula": "if (otpRedeem && [400, 401, 403].includes(response.status)) { response = Response.json({ code: \"INVALID_OTP\", message: \"Invalid or expired code\" }, { status: 400 }); }",
@@ -5022,7 +5191,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountPolicy.ts#L106",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountPolicy.ts#L126",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -5036,12 +5205,12 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/auth/accountPolicy.ts",
-        "line": 106,
+        "line": 126,
         "column": 35
       }
     },
     {
-      "id": "m1.apps.backend.auth.accountPolicy.18",
+      "id": "m1.apps.backend.auth.accountPolicy.22",
       "concept": "accountAuthHandler.status · literal 400",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
@@ -5050,7 +5219,7 @@
         "value": 400,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.backend.auth.accountPolicy.18"
+          "m1.apps.backend.auth.accountPolicy.22"
         ]
       },
       "formula": "status: 400",
@@ -5058,7 +5227,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountPolicy.ts#L107",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/accountPolicy.ts#L127",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -5072,7 +5241,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/auth/accountPolicy.ts",
-        "line": 107,
+        "line": 127,
         "column": 105
       }
     },
@@ -5706,7 +5875,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/createAuth.ts#L69",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/createAuth.ts#L72",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -5720,7 +5889,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/auth/createAuth.ts",
-        "line": 69,
+        "line": 72,
         "column": 30
       }
     },
@@ -5742,7 +5911,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/createAuth.ts#L76",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/createAuth.ts#L80",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -5756,7 +5925,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/auth/createAuth.ts",
-        "line": 76,
+        "line": 80,
         "column": 55
       }
     },
@@ -5778,7 +5947,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/createAuth.ts#L78",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/createAuth.ts#L82",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -5792,7 +5961,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/auth/createAuth.ts",
-        "line": 78,
+        "line": 82,
         "column": 53
       }
     },
@@ -5814,7 +5983,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/createAuth.ts#L78",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/createAuth.ts#L82",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -5828,7 +5997,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/auth/createAuth.ts",
-        "line": 78,
+        "line": 82,
         "column": 67
       }
     },
@@ -5850,7 +6019,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/createAuth.ts#L78",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/createAuth.ts#L82",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -5864,8 +6033,152 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/auth/createAuth.ts",
-        "line": 78,
+        "line": 82,
         "column": 89
+      }
+    },
+    {
+      "id": "m1.apps.backend.auth.createAuth.6",
+      "concept": "createAuth.rateLimit.customRules.\"/is-username-available\".window · literal 900",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 900,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.auth.createAuth.6"
+        ]
+      },
+      "formula": "window: 900",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/createAuth.ts#L146",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/auth/createAuth.ts",
+        "line": 146,
+        "column": 43
+      }
+    },
+    {
+      "id": "m1.apps.backend.auth.createAuth.7",
+      "concept": "createAuth.rateLimit.customRules.\"/is-username-available\".max · literal 120",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 120,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.auth.createAuth.7"
+        ]
+      },
+      "formula": "max: 120",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/createAuth.ts#L146",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/auth/createAuth.ts",
+        "line": 146,
+        "column": 53
+      }
+    },
+    {
+      "id": "m1.apps.backend.auth.createAuth.8",
+      "concept": "createAuth.rateLimit.customRules.\"/signup-handoff/status\".window · literal 900",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 900,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.auth.createAuth.8"
+        ]
+      },
+      "formula": "window: 900",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/createAuth.ts#L147",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/auth/createAuth.ts",
+        "line": 147,
+        "column": 43
+      }
+    },
+    {
+      "id": "m1.apps.backend.auth.createAuth.9",
+      "concept": "createAuth.rateLimit.customRules.\"/signup-handoff/status\".max · literal 1200",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1200,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.auth.createAuth.9"
+        ]
+      },
+      "formula": "max: 1200",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/createAuth.ts#L147",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/auth/createAuth.ts",
+        "line": 147,
+        "column": 53
       }
     },
     {
@@ -5958,7 +6271,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/credentials.ts#L35",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/credentials.ts#L42",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -5972,7 +6285,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/auth/credentials.ts",
-        "line": 35,
+        "line": 42,
         "column": 72
       }
     },
@@ -6750,7 +7063,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/mailAdmission.ts#L34",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/mailAdmission.ts#L33",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -6764,7 +7077,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/auth/mailAdmission.ts",
-        "line": 34,
+        "line": 33,
         "column": 60
       }
     },
@@ -6786,7 +7099,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/mailIntent.ts#L35",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/mailIntent.ts#L37",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -6800,7 +7113,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/auth/mailIntent.ts",
-        "line": 35,
+        "line": 37,
         "column": 36
       }
     },
@@ -6822,7 +7135,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/mailIntent.ts#L35",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/mailIntent.ts#L37",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -6836,7 +7149,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/auth/mailIntent.ts",
-        "line": 35,
+        "line": 37,
         "column": 41
       }
     },
@@ -6858,7 +7171,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/mailIntent.ts#L35",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/mailIntent.ts#L37",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -6872,7 +7185,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/auth/mailIntent.ts",
-        "line": 35,
+        "line": 37,
         "column": 61
       }
     },
@@ -6894,7 +7207,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/mailIntent.ts#L57",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/mailIntent.ts#L59",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -6908,7 +7221,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/auth/mailIntent.ts",
-        "line": 57,
+        "line": 59,
         "column": 76
       }
     },
@@ -6930,7 +7243,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/mailIntent.ts#L58",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/mailIntent.ts#L60",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -6944,7 +7257,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/auth/mailIntent.ts",
-        "line": 58,
+        "line": 60,
         "column": 20
       }
     },
@@ -6966,7 +7279,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/mailIntent.ts#L77",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/mailIntent.ts#L84",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -6980,7 +7293,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/auth/mailIntent.ts",
-        "line": 77,
+        "line": 84,
         "column": 22
       }
     },
@@ -7002,7 +7315,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/mailIntent.ts#L134",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/mailIntent.ts#L141",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -7016,7 +7329,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/auth/mailIntent.ts",
-        "line": 134,
+        "line": 141,
         "column": 74
       }
     },
@@ -8569,6 +8882,42 @@
       }
     },
     {
+      "id": "m1.apps.backend.auth.passwordPolicy.1",
+      "concept": "passwordBreachPolicy · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.auth.passwordPolicy.1"
+        ]
+      },
+      "formula": "return { ...plugin, hooks: { before: [{ matcher: (ctx: { path?: string }) => ctx.path === \"/reset-password\", handler: createAuthMiddleware(async ctx => { // The pinned reset handler consumes its proof before hashing. Use the // plugin's checker before entering that handler so refusals keep the link. let compromised = false; try { compromised = await isPasswordCompromised(ctx.body.newPassword); } catch { console.error(\"Password breach check unavailable\"); } if (compromised) throw new APIError(\"BA",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/passwordPolicy.ts#L26",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/auth/passwordPolicy.ts",
+        "line": 26,
+        "column": 50
+      }
+    },
+    {
       "id": "m1.apps.backend.auth.settings.1",
       "concept": "readAuthSettings · literal 32",
       "modelVersion": "1",
@@ -8602,6 +8951,114 @@
         "file": "apps/backend/auth/settings.ts",
         "line": 18,
         "column": 66
+      }
+    },
+    {
+      "id": "m1.apps.backend.auth.signupHandoff.1",
+      "concept": "secret · literal 32",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 32,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.auth.signupHandoff.1"
+        ]
+      },
+      "formula": "const secret = randomBytes(32).toString(\"base64url\");",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/signupHandoff.ts#L20",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/auth/signupHandoff.ts",
+        "line": 20,
+        "column": 30
+      }
+    },
+    {
+      "id": "m1.apps.backend.auth.signupHandoff.2",
+      "concept": "startHandoff.expiresAt · literal 1000",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1000,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.auth.signupHandoff.2"
+        ]
+      },
+      "formula": "expiresAt: new Date(Date.now() + EMAIL_TOKEN_SECONDS * 1000)",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/signupHandoff.ts#L23",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/auth/signupHandoff.ts",
+        "line": 23,
+        "column": 71
+      }
+    },
+    {
+      "id": "m1.apps.backend.auth.signupHandoff.3",
+      "concept": "clearHandoffCookie.maxAge · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.backend.auth.signupHandoff.3"
+        ]
+      },
+      "formula": "maxAge: 0",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/auth/signupHandoff.ts#L38",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/backend/auth/signupHandoff.ts",
+        "line": 38,
+        "column": 73
       }
     },
     {
@@ -52558,7 +53015,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/index.ts#L65",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/index.ts#L66",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -52572,7 +53029,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/index.ts",
-        "line": 65,
+        "line": 66,
         "column": 18
       }
     },
@@ -52594,7 +53051,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/index.ts#L86",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/backend/index.ts#L87",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -52608,7 +53065,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/backend/index.ts",
-        "line": 86,
+        "line": 87,
         "column": 35
       }
     },
@@ -80133,7 +80590,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/app/App.tsx#L64",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/app/App.tsx#L65",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -80147,7 +80604,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/app/App.tsx",
-        "line": 64,
+        "line": 65,
         "column": 43
       }
     },
@@ -80457,7 +80914,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/auth/accountFlow.ts#L19",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/auth/accountFlow.ts#L32",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -80471,7 +80928,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/features/auth/accountFlow.ts",
-        "line": 19,
+        "line": 32,
         "column": 42
       }
     },
@@ -80493,7 +80950,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/auth/accountFlow.ts#L22",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/auth/accountFlow.ts#L35",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -80507,7 +80964,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/features/auth/accountFlow.ts",
-        "line": 22,
+        "line": 35,
         "column": 57
       }
     },
@@ -80529,7 +80986,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/auth/accountFlow.ts#L22",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/auth/accountFlow.ts#L35",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -80543,7 +81000,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/features/auth/accountFlow.ts",
-        "line": 22,
+        "line": 35,
         "column": 61
       }
     },
@@ -80565,7 +81022,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/auth/accountFlow.ts#L25",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/auth/accountFlow.ts#L38",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -80579,7 +81036,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/features/auth/accountFlow.ts",
-        "line": 25,
+        "line": 38,
         "column": 45
       }
     },
@@ -80601,7 +81058,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/auth/accountFlow.ts#L38",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/auth/accountFlow.ts#L51",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -80615,7 +81072,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/features/auth/accountFlow.ts",
-        "line": 38,
+        "line": 51,
         "column": 64
       }
     },
@@ -80637,7 +81094,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/auth/accountFlow.ts#L39",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/auth/accountFlow.ts#L52",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -80651,7 +81108,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/features/auth/accountFlow.ts",
-        "line": 39,
+        "line": 52,
         "column": 64
       }
     },
@@ -80728,6 +81185,114 @@
       }
     },
     {
+      "id": "m1.apps.web.src.features.auth.components.PasswordChecklist.1",
+      "concept": "PasswordChecklist · literal 13",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 13,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.features.auth.components.PasswordChecklist.1"
+        ]
+      },
+      "formula": "return ( <ul id={id} className=\"mt-2 grid gap-1 text-xs sm:grid-cols-2\" aria-label=\"Password requirements\"> {passwordChecks(password).map(({ id: rule, ok }) => ( <li key={rule} className={ok ? \"flex items-center gap-1.5 text-ok\" : \"flex items-center gap-1.5 text-ink-3\"}> {ok ? <Check size={13} aria-hidden=\"true\" /> : <Circle size={11} aria-hidden=\"true\" />} <span>{LABELS[rule]}<span className=\"sr-only\">{ok ? \" — done\" : \" — not yet\"}</span></span> </li> ))} </ul> );",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/auth/components/PasswordChecklist.tsx#L18",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/features/auth/components/PasswordChecklist.tsx",
+        "line": 18,
+        "column": 30
+      }
+    },
+    {
+      "id": "m1.apps.web.src.features.auth.components.PasswordChecklist.2",
+      "concept": "PasswordChecklist · literal 11",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 11,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.features.auth.components.PasswordChecklist.2"
+        ]
+      },
+      "formula": "return ( <ul id={id} className=\"mt-2 grid gap-1 text-xs sm:grid-cols-2\" aria-label=\"Password requirements\"> {passwordChecks(password).map(({ id: rule, ok }) => ( <li key={rule} className={ok ? \"flex items-center gap-1.5 text-ok\" : \"flex items-center gap-1.5 text-ink-3\"}> {ok ? <Check size={13} aria-hidden=\"true\" /> : <Circle size={11} aria-hidden=\"true\" />} <span>{LABELS[rule]}<span className=\"sr-only\">{ok ? \" — done\" : \" — not yet\"}</span></span> </li> ))} </ul> );",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/auth/components/PasswordChecklist.tsx#L18",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/features/auth/components/PasswordChecklist.tsx",
+        "line": 18,
+        "column": 72
+      }
+    },
+    {
+      "id": "m1.apps.web.src.features.auth.credentials.1",
+      "concept": "signinFailure · literal 429",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 429,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.features.auth.credentials.1"
+        ]
+      },
+      "formula": "if (status === 429) return \"rate\";",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/auth/credentials.ts#L21",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/features/auth/credentials.ts",
+        "line": 21,
+        "column": 18
+      }
+    },
+    {
       "id": "m1.apps.web.src.features.auth.pages.PasswordResetPage.1",
       "concept": "submit · literal 0",
       "modelVersion": "1",
@@ -80745,7 +81310,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/auth/pages/PasswordResetPage.tsx#L24",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/auth/pages/PasswordResetPage.tsx#L25",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -80759,7 +81324,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/features/auth/pages/PasswordResetPage.tsx",
-        "line": 24,
+        "line": 25,
         "column": 81
       }
     },
@@ -80781,7 +81346,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/auth/pages/PasswordResetPage.tsx#L48",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/auth/pages/PasswordResetPage.tsx#L55",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -80795,7 +81360,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/features/auth/pages/PasswordResetPage.tsx",
-        "line": 48,
+        "line": 55,
         "column": 58
       }
     },
@@ -80817,7 +81382,7 @@
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/auth/pages/PasswordResetPage.tsx#L54",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/auth/pages/PasswordResetPage.tsx#L61",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -80831,156 +81396,12 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/features/auth/pages/PasswordResetPage.tsx",
-        "line": 54,
+        "line": 61,
         "column": 146
       }
     },
     {
       "id": "m1.apps.web.src.features.auth.pages.SignInPage.1",
-      "concept": "submit · literal 0",
-      "modelVersion": "1",
-      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
-      "quantity": {
-        "kind": "known",
-        "value": 0,
-        "unit": "code-number",
-        "provenance": [
-          "m1.apps.web.src.features.auth.pages.SignInPage.1"
-        ]
-      },
-      "formula": "if (busy.current || !capabilities?.credentials || signup && !features || emailOnly && cooldown.seconds > 0) return;",
-      "classification": "implementation-policy",
-      "confidence": "high",
-      "provenance": [
-        {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/auth/pages/SignInPage.tsx#L49",
-          "supports": "implementation",
-          "detail": "Exact historical literal and source expression; not external validation."
-        }
-      ],
-      "assumptions": [
-        "This literal is not evidence of real infrastructure capacity or performance.",
-        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
-      ],
-      "researchedOn": "2026-10-15",
-      "freeMode": "conditional",
-      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
-      "location": {
-        "file": "apps/web/src/features/auth/pages/SignInPage.tsx",
-        "line": 49,
-        "column": 110
-      }
-    },
-    {
-      "id": "m1.apps.web.src.features.auth.pages.SignInPage.2",
-      "concept": "submit · literal 429",
-      "modelVersion": "1",
-      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
-      "quantity": {
-        "kind": "known",
-        "value": 429,
-        "unit": "code-number",
-        "provenance": [
-          "m1.apps.web.src.features.auth.pages.SignInPage.2"
-        ]
-      },
-      "formula": "if (failure.status === 429) setError(\"Too many attempts. Wait a moment before trying again.\"); else if (failure.code === \"INVALID_EMAIL_PROOF\") setError(\"This signup link is invalid or expired. Request a new link below.\"); else if (failure.code === \"SIGNUP_SIGNIN_FAILED\") { setFields(prev => ({ ...prev, password: \"\" })); setError(\"Your account is ready. Sign in to continue.\"); } else if (failure.status === 403) setError(accountError(failure)); else if (signup) { const { message, ...fieldErrors }",
-      "classification": "implementation-policy",
-      "confidence": "high",
-      "provenance": [
-        {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/auth/pages/SignInPage.tsx#L73",
-          "supports": "implementation",
-          "detail": "Exact historical literal and source expression; not external validation."
-        }
-      ],
-      "assumptions": [
-        "This literal is not evidence of real infrastructure capacity or performance.",
-        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
-      ],
-      "researchedOn": "2026-10-15",
-      "freeMode": "conditional",
-      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
-      "location": {
-        "file": "apps/web/src/features/auth/pages/SignInPage.tsx",
-        "line": 73,
-        "column": 32
-      }
-    },
-    {
-      "id": "m1.apps.web.src.features.auth.pages.SignInPage.3",
-      "concept": "submit · literal 403",
-      "modelVersion": "1",
-      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
-      "quantity": {
-        "kind": "known",
-        "value": 403,
-        "unit": "code-number",
-        "provenance": [
-          "m1.apps.web.src.features.auth.pages.SignInPage.3"
-        ]
-      },
-      "formula": "if (failure.status === 403) setError(accountError(failure)); else if (signup) { const { message, ...fieldErrors } = signupFailure(failure.code); setErrors(fieldErrors); setError(message ?? null); } else setError(LOGIN_ERROR);",
-      "classification": "implementation-policy",
-      "confidence": "high",
-      "provenance": [
-        {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/auth/pages/SignInPage.tsx#L76",
-          "supports": "implementation",
-          "detail": "Exact historical literal and source expression; not external validation."
-        }
-      ],
-      "assumptions": [
-        "This literal is not evidence of real infrastructure capacity or performance.",
-        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
-      ],
-      "researchedOn": "2026-10-15",
-      "freeMode": "conditional",
-      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
-      "location": {
-        "file": "apps/web/src/features/auth/pages/SignInPage.tsx",
-        "line": 76,
-        "column": 37
-      }
-    },
-    {
-      "id": "m1.apps.web.src.features.auth.pages.SignInPage.4",
-      "concept": "field · literal 30",
-      "modelVersion": "1",
-      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
-      "quantity": {
-        "kind": "known",
-        "value": 30,
-        "unit": "code-number",
-        "provenance": [
-          "m1.apps.web.src.features.auth.pages.SignInPage.4"
-        ]
-      },
-      "formula": "const field = (name: Field, label: string, autoComplete: string, hint?: string) => ( <div> <label className=\"mb-1.5 block text-sm font-medium text-ink\" htmlFor={`auth-${name}`}>{label}</label> <input id={`auth-${name}`} name={name} type={name === \"password\" ? \"password\" : name === \"email\" ? \"email\" : \"text\"} autoComplete={autoComplete} autoCapitalize=\"none\" spellCheck={false} required maxLength={name === \"password\" ? PASSWORD_MAX : name === \"username\" ? 30 : 254} value={fields[name]} disabled={p",
-      "classification": "implementation-policy",
-      "confidence": "high",
-      "provenance": [
-        {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/auth/pages/SignInPage.tsx#L87",
-          "supports": "implementation",
-          "detail": "Exact historical literal and source expression; not external validation."
-        }
-      ],
-      "assumptions": [
-        "This literal is not evidence of real infrastructure capacity or performance.",
-        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
-      ],
-      "researchedOn": "2026-10-15",
-      "freeMode": "conditional",
-      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
-      "location": {
-        "file": "apps/web/src/features/auth/pages/SignInPage.tsx",
-        "line": 87,
-        "column": 79
-      }
-    },
-    {
-      "id": "m1.apps.web.src.features.auth.pages.SignInPage.5",
       "concept": "field · literal 254",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
@@ -80989,10 +81410,10 @@
         "value": 254,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.web.src.features.auth.pages.SignInPage.5"
+          "m1.apps.web.src.features.auth.pages.SignInPage.1"
         ]
       },
-      "formula": "const field = (name: Field, label: string, autoComplete: string, hint?: string) => ( <div> <label className=\"mb-1.5 block text-sm font-medium text-ink\" htmlFor={`auth-${name}`}>{label}</label> <input id={`auth-${name}`} name={name} type={name === \"password\" ? \"password\" : name === \"email\" ? \"email\" : \"text\"} autoComplete={autoComplete} autoCapitalize=\"none\" spellCheck={false} required maxLength={name === \"password\" ? PASSWORD_MAX : name === \"username\" ? 30 : 254} value={fields[name]} disabled={p",
+      "formula": "const field = (name: Field, label: string, autoComplete: string) => ( <div> <label className=\"mb-1.5 block text-sm font-medium text-ink\" htmlFor={`auth-${name}`}>{label}</label> <input id={`auth-${name}`} name={name} type={name === \"password\" ? \"password\" : \"text\"} autoComplete={autoComplete} autoCapitalize=\"none\" spellCheck={false} required maxLength={name === \"password\" ? PASSWORD_MAX : 254} value={fields[name]} disabled={pending !== null} aria-invalid={!!errors[name]} aria-describedby={errors",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
@@ -81012,11 +81433,11 @@
       "location": {
         "file": "apps/web/src/features/auth/pages/SignInPage.tsx",
         "line": 87,
-        "column": 84
+        "column": 57
       }
     },
     {
-      "id": "m1.apps.web.src.features.auth.pages.SignInPage.6",
+      "id": "m1.apps.web.src.features.auth.pages.SignInPage.2",
       "concept": "SignInPage · literal 0",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
@@ -81025,10 +81446,10 @@
         "value": 0,
         "unit": "code-number",
         "provenance": [
-          "m1.apps.web.src.features.auth.pages.SignInPage.6"
+          "m1.apps.web.src.features.auth.pages.SignInPage.2"
         ]
       },
-      "formula": "return ( <AuthLayout> <p className=\"if-eyebrow\">{signup ? \"Sign up\" : \"Sign in\"}</p> <h1 className=\"if-display mt-3 text-[34px] leading-tight\">{emailSent ? \"Check your email\" : proof && signup ? \"Finish creating your account.\" : signup ? \"Make room for your ideas.\" : \"Your workbench is waiting.\"}</h1> <p className=\"mt-3 text-sm text-ink-2\">{emailSent ? \"If eligible, you’ll receive a signup link. Check your inbox and spam folder. Links expire after 30 minutes.\" : emailOnly ? \"First, confirm your ",
+      "formula": "return ( <AuthLayout> <p className=\"if-eyebrow\">Sign in</p> <h1 className=\"if-display mt-3 text-[34px] leading-tight\">Your workbench is waiting.</h1> <p className=\"mt-3 text-sm text-ink-2\">Continue with your username or email.</p> <form className=\"mt-7 flex flex-col gap-4\" onSubmit={(event) => void submit(event)} noValidate aria-label=\"Sign in with a password\"> {field(\"identifier\", \"Username or email\", \"username\")} {field(\"password\", \"Password\", \"current-password\")} {returned === \"confirmed\" && ",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
@@ -81048,7 +81469,511 @@
       "location": {
         "file": "apps/web/src/features/auth/pages/SignInPage.tsx",
         "line": 110,
-        "column": 229
+        "column": 68
+      }
+    },
+    {
+      "id": "m1.apps.web.src.features.auth.pages.SignupPage.1",
+      "concept": "sendLink · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.features.auth.pages.SignupPage.1"
+        ]
+      },
+      "formula": "if (cooldown.seconds > 0) return;",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/auth/pages/SignupPage.tsx#L80",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/features/auth/pages/SignupPage.tsx",
+        "line": 80,
+        "column": 28
+      }
+    },
+    {
+      "id": "m1.apps.web.src.features.auth.pages.SignupPage.2",
+      "concept": "create · literal 429",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 429,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.features.auth.pages.SignupPage.2"
+        ]
+      },
+      "formula": "if (failure.status === 429) { setError(\"Too many attempts. Wait a moment before trying again.\"); return; }",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/auth/pages/SignupPage.tsx#L110",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/features/auth/pages/SignupPage.tsx",
+        "line": 110,
+        "column": 32
+      }
+    },
+    {
+      "id": "m1.apps.web.src.features.auth.pages.SignupPage.3",
+      "concept": "SignupPage · literal 254",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 254,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.features.auth.pages.SignupPage.3"
+        ]
+      },
+      "formula": "return ( <AuthLayout> <p className=\"if-eyebrow\">Sign up</p> <h1 className=\"if-display mt-3 text-[34px] leading-tight\">{title}</h1> {step.kind === \"email\" && <form className=\"mt-7 flex flex-col gap-4\" onSubmit={sendLink} noValidate aria-label=\"Start signup with your email\"> <p className=\"text-sm text-ink-2\">Start with your email. We'll send a link to confirm it, then you choose a username and password.</p> <div> <label className=\"mb-1.5 block text-sm font-medium text-ink\" htmlFor=\"signup-email\">E",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/auth/pages/SignupPage.tsx#L133",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/features/auth/pages/SignupPage.tsx",
+        "line": 133,
+        "column": 135
+      }
+    },
+    {
+      "id": "m1.apps.web.src.features.auth.pages.SignupPage.4",
+      "concept": "SignupPage · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.features.auth.pages.SignupPage.4"
+        ]
+      },
+      "formula": "return ( <AuthLayout> <p className=\"if-eyebrow\">Sign up</p> <h1 className=\"if-display mt-3 text-[34px] leading-tight\">{title}</h1> {step.kind === \"email\" && <form className=\"mt-7 flex flex-col gap-4\" onSubmit={sendLink} noValidate aria-label=\"Start signup with your email\"> <p className=\"text-sm text-ink-2\">Start with your email. We'll send a link to confirm it, then you choose a username and password.</p> <div> <label className=\"mb-1.5 block text-sm font-medium text-ink\" htmlFor=\"signup-email\">E",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/auth/pages/SignupPage.tsx#L148",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/features/auth/pages/SignupPage.tsx",
+        "line": 148,
+        "column": 44
+      }
+    },
+    {
+      "id": "m1.apps.web.src.features.auth.pages.SignupPage.5",
+      "concept": "SignupPage · literal 0",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 0,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.features.auth.pages.SignupPage.5"
+        ]
+      },
+      "formula": "return ( <AuthLayout> <p className=\"if-eyebrow\">Sign up</p> <h1 className=\"if-display mt-3 text-[34px] leading-tight\">{title}</h1> {step.kind === \"email\" && <form className=\"mt-7 flex flex-col gap-4\" onSubmit={sendLink} noValidate aria-label=\"Start signup with your email\"> <p className=\"text-sm text-ink-2\">Start with your email. We'll send a link to confirm it, then you choose a username and password.</p> <div> <label className=\"mb-1.5 block text-sm font-medium text-ink\" htmlFor=\"signup-email\">E",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/auth/pages/SignupPage.tsx#L151",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/features/auth/pages/SignupPage.tsx",
+        "line": 151,
+        "column": 131
+      }
+    },
+    {
+      "id": "m1.apps.web.src.features.auth.pages.SignupPage.6",
+      "concept": "SignupPage · literal 18",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 18,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.features.auth.pages.SignupPage.6"
+        ]
+      },
+      "formula": "return ( <AuthLayout> <p className=\"if-eyebrow\">Sign up</p> <h1 className=\"if-display mt-3 text-[34px] leading-tight\">{title}</h1> {step.kind === \"email\" && <form className=\"mt-7 flex flex-col gap-4\" onSubmit={sendLink} noValidate aria-label=\"Start signup with your email\"> <p className=\"text-sm text-ink-2\">Start with your email. We'll send a link to confirm it, then you choose a username and password.</p> <div> <label className=\"mb-1.5 block text-sm font-medium text-ink\" htmlFor=\"signup-email\">E",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/auth/pages/SignupPage.tsx#L159",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/features/auth/pages/SignupPage.tsx",
+        "line": 159,
+        "column": 87
+      }
+    },
+    {
+      "id": "m1.apps.web.src.features.auth.pages.SignupPage.7",
+      "concept": "SignupPage · literal 16",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 16,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.features.auth.pages.SignupPage.7"
+        ]
+      },
+      "formula": "return ( <AuthLayout> <p className=\"if-eyebrow\">Sign up</p> <h1 className=\"if-display mt-3 text-[34px] leading-tight\">{title}</h1> {step.kind === \"email\" && <form className=\"mt-7 flex flex-col gap-4\" onSubmit={sendLink} noValidate aria-label=\"Start signup with your email\"> <p className=\"text-sm text-ink-2\">Start with your email. We'll send a link to confirm it, then you choose a username and password.</p> <div> <label className=\"mb-1.5 block text-sm font-medium text-ink\" htmlFor=\"signup-email\">E",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/auth/pages/SignupPage.tsx#L173",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/features/auth/pages/SignupPage.tsx",
+        "line": 173,
+        "column": 87
+      }
+    },
+    {
+      "id": "m1.apps.web.src.features.auth.pages.SignupPage.8",
+      "concept": "SignupPage · literal 254",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 254,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.features.auth.pages.SignupPage.8"
+        ]
+      },
+      "formula": "return ( <AuthLayout> <p className=\"if-eyebrow\">Sign up</p> <h1 className=\"if-display mt-3 text-[34px] leading-tight\">{title}</h1> {step.kind === \"email\" && <form className=\"mt-7 flex flex-col gap-4\" onSubmit={sendLink} noValidate aria-label=\"Start signup with your email\"> <p className=\"text-sm text-ink-2\">Start with your email. We'll send a link to confirm it, then you choose a username and password.</p> <div> <label className=\"mb-1.5 block text-sm font-medium text-ink\" htmlFor=\"signup-email\">E",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/auth/pages/SignupPage.tsx#L176",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/features/auth/pages/SignupPage.tsx",
+        "line": 176,
+        "column": 107
+      }
+    },
+    {
+      "id": "m1.apps.web.src.features.auth.pages.SignupPage.9",
+      "concept": "SignupPage · literal 30",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 30,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.features.auth.pages.SignupPage.9"
+        ]
+      },
+      "formula": "return ( <AuthLayout> <p className=\"if-eyebrow\">Sign up</p> <h1 className=\"if-display mt-3 text-[34px] leading-tight\">{title}</h1> {step.kind === \"email\" && <form className=\"mt-7 flex flex-col gap-4\" onSubmit={sendLink} noValidate aria-label=\"Start signup with your email\"> <p className=\"text-sm text-ink-2\">Start with your email. We'll send a link to confirm it, then you choose a username and password.</p> <div> <label className=\"mb-1.5 block text-sm font-medium text-ink\" htmlFor=\"signup-email\">E",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/auth/pages/SignupPage.tsx#L182",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/features/auth/pages/SignupPage.tsx",
+        "line": 182,
+        "column": 131
+      }
+    },
+    {
+      "id": "m1.apps.web.src.features.auth.pages.SignupPage.10",
+      "concept": "SignupPage · literal 16",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 16,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.features.auth.pages.SignupPage.10"
+        ]
+      },
+      "formula": "return ( <AuthLayout> <p className=\"if-eyebrow\">Sign up</p> <h1 className=\"if-display mt-3 text-[34px] leading-tight\">{title}</h1> {step.kind === \"email\" && <form className=\"mt-7 flex flex-col gap-4\" onSubmit={sendLink} noValidate aria-label=\"Start signup with your email\"> <p className=\"text-sm text-ink-2\">Start with your email. We'll send a link to confirm it, then you choose a username and password.</p> <div> <label className=\"mb-1.5 block text-sm font-medium text-ink\" htmlFor=\"signup-email\">E",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/auth/pages/SignupPage.tsx#L198",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/features/auth/pages/SignupPage.tsx",
+        "line": 198,
+        "column": 45
+      }
+    },
+    {
+      "id": "m1.apps.web.src.features.auth.pages.SignupPage.11",
+      "concept": "SignupPage · literal 16",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 16,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.features.auth.pages.SignupPage.11"
+        ]
+      },
+      "formula": "return ( <AuthLayout> <p className=\"if-eyebrow\">Sign up</p> <h1 className=\"if-display mt-3 text-[34px] leading-tight\">{title}</h1> {step.kind === \"email\" && <form className=\"mt-7 flex flex-col gap-4\" onSubmit={sendLink} noValidate aria-label=\"Start signup with your email\"> <p className=\"text-sm text-ink-2\">Start with your email. We'll send a link to confirm it, then you choose a username and password.</p> <div> <label className=\"mb-1.5 block text-sm font-medium text-ink\" htmlFor=\"signup-email\">E",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/auth/pages/SignupPage.tsx#L198",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/features/auth/pages/SignupPage.tsx",
+        "line": 198,
+        "column": 84
+      }
+    },
+    {
+      "id": "m1.apps.web.src.features.auth.signupHandoff.1",
+      "concept": "check · literal 10000",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 10000,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.features.auth.signupHandoff.1"
+        ]
+      },
+      "formula": "timer = setTimeout(() => void check(), document.hidden ? 10000 : 3000);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/auth/signupHandoff.ts#L35",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/features/auth/signupHandoff.ts",
+        "line": 35,
+        "column": 78
+      }
+    },
+    {
+      "id": "m1.apps.web.src.features.auth.signupHandoff.2",
+      "concept": "check · literal 3000",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 3000,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.features.auth.signupHandoff.2"
+        ]
+      },
+      "formula": "timer = setTimeout(() => void check(), document.hidden ? 10000 : 3000);",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/auth/signupHandoff.ts#L35",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/features/auth/signupHandoff.ts",
+        "line": 35,
+        "column": 86
+      }
+    },
+    {
+      "id": "m1.apps.web.src.features.auth.signupHandoff.3",
+      "concept": "useUsernameAvailability · literal 400",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 400,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.features.auth.signupHandoff.3"
+        ]
+      },
+      "formula": "export function useUsernameAvailability(username: string, delay = 400): UsernameState { const [result, setResult] = useState<{ name: string; state: UsernameState }>({ name: \"\", state: \"idle\" }); const trimmed = username.trim(); const valid = validUsername(trimmed); useEffect(() => { if (!valid) return; const abort = new AbortController(); const timer = setTimeout(() => { http.post<{ available: boolean }>(`${API_URL}/auth/is-username-available`, { username: normalizeUsername(trimmed) }, { signal:",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/auth/signupHandoff.ts#L47",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/features/auth/signupHandoff.ts",
+        "line": 47,
+        "column": 67
       }
     },
     {
@@ -81157,6 +82082,42 @@
         "file": "apps/web/src/features/auth/turnstileWidget.ts",
         "line": 14,
         "column": 38
+      }
+    },
+    {
+      "id": "m1.apps.web.src.features.auth.turnstileWidget.2",
+      "concept": "mountTurnstile · literal 15000",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 15000,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.features.auth.turnstileWidget.2"
+        ]
+      },
+      "formula": "export function mountTurnstile(element: HTMLElement, siteKey: string | null, action: TurnstileAction, status: (message: string) => void, load = loadTurnstile, waitMs = 15000) { if (!siteKey) return () => {}; let disposed = false, token = \"\", id: string | undefined, api: Turnstile | undefined; let waiters: Array<(value: string) => void> = []; // A submit waits for the widget's (usually invisible) check instead of failing at once, // so a quick click or a second request never shows a spurious \"sec",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/auth/turnstileWidget.ts#L24",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/features/auth/turnstileWidget.ts",
+        "line": 24,
+        "column": 69
       }
     },
     {
@@ -132113,18 +133074,18 @@
     },
     {
       "id": "m1.packages.contracts.src.auth.index.3",
-      "concept": "PASSWORD_MIN · literal 15",
+      "concept": "PASSWORD_MIN · literal 8",
       "modelVersion": "1",
       "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
       "quantity": {
         "kind": "known",
-        "value": 15,
+        "value": 8,
         "unit": "code-number",
         "provenance": [
           "m1.packages.contracts.src.auth.index.3"
         ]
       },
-      "formula": "export const PASSWORD_MIN = 15;",
+      "formula": "export const PASSWORD_MIN = 8;",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [

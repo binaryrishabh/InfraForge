@@ -766,7 +766,7 @@
       "owner": "@infraforge/contracts@workspace:packages/contracts:155",
       "file": "src/auth/index.ts",
       "key": "@infraforge/contracts/src/auth/index.ts",
-      "hash": "a1c8867912e1d39e92276440a9b98202c54f0070ccca963b033d4114fa3aa715"
+      "hash": "8edf382d5d0abb4c233022099bccc03c54e8b49c36e922d97966fd36a17bfc84"
     },
     {
       "owner": "@infraforge/contracts@workspace:packages/contracts:155",
@@ -40005,6 +40005,46 @@
       "kind": "import-statement",
       "targetOwner": "zod@4.6.6:3",
       "targetFile": "index.js"
+    },
+    {
+      "owner": null,
+      "file": "apps/backend/auth/passwordPolicy.ts",
+      "specifier": "better-auth/api",
+      "kind": "import-statement",
+      "targetOwner": "better-auth@1.7.7:177",
+      "targetFile": "dist/api/index.mjs"
+    },
+    {
+      "owner": null,
+      "file": "apps/backend/auth/passwordPolicy.ts",
+      "specifier": "better-auth/plugins",
+      "kind": "import-statement",
+      "targetOwner": "better-auth@1.7.7:177",
+      "targetFile": "dist/plugins/index.mjs"
+    },
+    {
+      "owner": null,
+      "file": "apps/backend/auth/passwordPolicy.ts",
+      "specifier": "better-auth/plugins/haveibeenpwned",
+      "kind": "import-statement",
+      "targetOwner": "better-auth@1.7.7:177",
+      "targetFile": "dist/plugins/haveibeenpwned/index.mjs"
+    },
+    {
+      "owner": null,
+      "file": "apps/backend/auth/signupHandoff.ts",
+      "specifier": "better-auth/api",
+      "kind": "import-statement",
+      "targetOwner": "better-auth@1.7.7:177",
+      "targetFile": "dist/api/index.mjs"
+    },
+    {
+      "owner": null,
+      "file": "apps/backend/auth/signupHandoff.ts",
+      "specifier": "better-auth/crypto",
+      "kind": "import-statement",
+      "targetOwner": "better-auth@1.7.7:177",
+      "targetFile": "dist/crypto/index.mjs"
     },
     {
       "owner": null,

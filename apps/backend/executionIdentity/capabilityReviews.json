@@ -164,7 +164,7 @@
     }
   },
   "apps/backend/executionIdentity/loading.ts": {
-    "hash": "61ee37229baaeac847cccb6277387abb6ee5f7215103484893cdaae9f914e74a",
+    "hash": "15d4601958b5d706369edba78e145a7c259eabd73a57be02312b34d8270d1d3c",
     "capabilities": [
       "computed-data",
       "verifier",
@@ -172,7 +172,7 @@
     ],
     "review": "Fixed data indexing; resource adapters require the separate documented review Replayed onto main after w44b.",
     "globals": {
-      "hash": "61ee37229baaeac847cccb6277387abb6ee5f7215103484893cdaae9f914e74a",
+      "hash": "15d4601958b5d706369edba78e145a7c259eabd73a57be02312b34d8270d1d3c",
       "names": [
         "Bun"
       ]

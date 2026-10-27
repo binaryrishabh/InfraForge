@@ -348,9 +348,9 @@
       "plan": "Implement and prove the real mechanism or remove before Model-2 shipping"
     },
     {
-      "id": "control:apps/web/src/features/auth/pages/PasswordResetPage.tsx:form-90b39e5cd859e4e8f5aa:0",
+      "id": "control:apps/web/src/features/auth/pages/PasswordResetPage.tsx:form-4a33a23c1fb44869f658:0",
       "source": "apps/web/src/features/auth/pages/PasswordResetPage.tsx",
-      "identity": "form-90b39e5cd859e4e8f5aa",
+      "identity": "form-4a33a23c1fb44869f658",
       "description": "form: onSubmit={event => void submit(event)} aria-label={reset ? \"Set a new password\" : \"Request a password reset\"}",
       "kind": "control",
       "category": "UNREVIEWED",
@@ -414,10 +414,10 @@
       "plan": "Implement and prove the real mechanism or remove before Model-2 shipping"
     },
     {
-      "id": "control:apps/web/src/features/auth/pages/SignInPage.tsx:Button-0988220dbb2daaf57bab:0",
+      "id": "control:apps/web/src/features/auth/pages/SignInPage.tsx:Button-eea88c5765584e604865:0",
       "source": "apps/web/src/features/auth/pages/SignInPage.tsx",
-      "identity": "Button-0988220dbb2daaf57bab",
-      "description": "Button: <Button type=\"submit\" variant=\"primary\" size=\"lg\" className=\"w-full\" loading={pending === \"credentials\"} disabled={pending !== null || !capabilities?.credentials || signup && !features || emailOnly && cooldown.seconds > 0}>{emailOnly && cooldown.seconds ? `Resend in ${cooldown.seconds}s` : emailSent ? \"Resend signup link\" : emailOnly ? \"Send signup link\" : signup ? \"Create account\" : \"Sign in\"}</Button>",
+      "identity": "Button-eea88c5765584e604865",
+      "description": "Button: <Button type=\"submit\" variant=\"primary\" size=\"lg\" className=\"w-full\" loading={pending === \"credentials\"} disabled={pending !== null || !capabilities?.credentials}>Sign in</Button>",
       "kind": "control",
       "category": "UNREVIEWED",
       "categoryReason": "Classification requires semantic review; new surfaces fail closed",
@@ -447,10 +447,10 @@
       "plan": "Implement and prove the real mechanism or remove before Model-2 shipping"
     },
     {
-      "id": "control:apps/web/src/features/auth/pages/SignInPage.tsx:Button-8738d80092da93c6b9fd:0",
+      "id": "control:apps/web/src/features/auth/pages/SignInPage.tsx:Button-f7a2cd9aa785408734c8:0",
       "source": "apps/web/src/features/auth/pages/SignInPage.tsx",
-      "identity": "Button-8738d80092da93c6b9fd",
-      "description": "Button: onClick={() => { setEmailSent(false); setError(null); }}",
+      "identity": "Button-f7a2cd9aa785408734c8",
+      "description": "Button: onClick={() => void sendConfirmation()}",
       "kind": "control",
       "category": "UNREVIEWED",
       "categoryReason": "Classification requires semantic review; new surfaces fail closed",
@@ -518,10 +518,10 @@
       "legacyM2gStatus": "REAL"
     },
     {
-      "id": "control:apps/web/src/features/auth/pages/SignInPage.tsx:form-fa2114cf83c61fd45d80:0",
+      "id": "control:apps/web/src/features/auth/pages/SignInPage.tsx:form-a49768150d7a797f26cd:0",
       "source": "apps/web/src/features/auth/pages/SignInPage.tsx",
-      "identity": "form-fa2114cf83c61fd45d80",
-      "description": "form: onSubmit={(event) => void submit(event)} aria-label={signup ? \"Create an account\" : \"Sign in with a password\"}",
+      "identity": "form-a49768150d7a797f26cd",
+      "description": "form: onSubmit={(event) => void submit(event)} aria-label=\"Sign in with a password\"",
       "kind": "control",
       "category": "UNREVIEWED",
       "categoryReason": "Classification requires semantic review; new surfaces fail closed",
@@ -551,16 +551,24 @@
       "plan": "Implement and prove the real mechanism or remove before Model-2 shipping"
     },
     {
-      "id": "control:apps/web/src/features/auth/pages/SignInPage.tsx:input-730c260bfc773f303fd4:0",
+      "id": "control:apps/web/src/features/auth/pages/SignInPage.tsx:input-a990b192bdf90805948c:0",
       "source": "apps/web/src/features/auth/pages/SignInPage.tsx",
-      "identity": "input-730c260bfc773f303fd4",
+      "identity": "input-a990b192bdf90805948c",
+      "description": "input: value={fields[name]} onChange={(event) => { setFields((prev) => ({ ...prev, [name]: event.target.value })); setErrors((prev) => ({ ...prev, [name]: undefined })); }}",
       "kind": "control",
+      "category": "UNREVIEWED",
+      "categoryReason": "Classification requires semantic review; new surfaces fail closed",
+      "ui": {
+        "status": "NOT_APPLICABLE",
+        "behavior": "Unreviewed",
+        "proofs": []
+      },
       "resources": [
-        "PRODUCT_UI"
+        "ALL"
       ],
-      "model1Meaning": "Existing application UI state/authentication/navigation event forwarding, outside infrastructure physics: input: value={fields[name]} onChange={(event) => { setFields((prev) => ({ ...prev, [name]: event.target.value })); setErrors((prev) => ({ ...prev, [name]: undefined })); }}",
-      "model2Owner": "NOT_APPLICABLE",
-      "changesState": true,
+      "model1Meaning": "New visible surface requires explicit semantic review",
+      "model2Owner": "UNASSIGNED",
+      "changesState": false,
       "effects": {
         "physics": false,
         "reachability": false,
@@ -569,24 +577,473 @@
         "evidence": false
       },
       "provenanceRequirements": [
-        "Reviewed promised software action/presentation and a relevant behavior proof; no simulation-physics owner required"
+        "Trace input to state owner and downstream proof; record units/domain for numeric values"
       ],
-      "status": "NOT_APPLICABLE",
-      "finalProductEligible": true,
-      "plan": "Prove software behavior through PRODUCT_UI_VALIDITY. No physics owner required.",
-      "description": "input: value={fields[name]} onChange={(event) => { setFields((prev) => ({ ...prev, [name]: event.target.value })); setErrors((prev) => ({ ...prev, [name]: undefined })); }}",
-      "category": "PRODUCT_UI_ACTION",
-      "categoryReason": "Software interaction or authored presentation; no infrastructure truth claim",
+      "status": "UNKNOWN",
+      "finalProductEligible": false,
+      "plan": "Implement and prove the real mechanism or remove before Model-2 shipping"
+    },
+    {
+      "id": "control:apps/web/src/features/auth/pages/SignupPage.tsx:Button-225b955e36a033d865a2:0",
+      "source": "apps/web/src/features/auth/pages/SignupPage.tsx",
+      "identity": "Button-225b955e36a033d865a2",
+      "description": "Button: onClick={() => sendLink()}",
+      "kind": "control",
+      "category": "UNREVIEWED",
+      "categoryReason": "Classification requires semantic review; new surfaces fail closed",
       "ui": {
-        "status": "VALID",
-        "behavior": "input: value={fields[name]} onChange={(event) => { setFields((prev) => ({ ...prev, [name]: event.target.value })); setErrors((prev) => ({ ...prev, [name]: undefined })); }}; reviewed existing handler wiring and named focused regressions; no simulator claim",
-        "proofs": [
-          "apps/web/src/features/auth/pages/SignInPage.tsx",
-          "apps/web/tests/credentials.test.tsx",
-          "apps/web/tests/sessionIsolation.test.ts"
-        ]
+        "status": "NOT_APPLICABLE",
+        "behavior": "Unreviewed",
+        "proofs": []
       },
-      "legacyM2gStatus": "REAL"
+      "resources": [
+        "ALL"
+      ],
+      "model1Meaning": "New visible surface requires explicit semantic review",
+      "model2Owner": "UNASSIGNED",
+      "changesState": false,
+      "effects": {
+        "physics": false,
+        "reachability": false,
+        "security": false,
+        "cost": false,
+        "evidence": false
+      },
+      "provenanceRequirements": [
+        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+      ],
+      "status": "UNKNOWN",
+      "finalProductEligible": false,
+      "plan": "Implement and prove the real mechanism or remove before Model-2 shipping"
+    },
+    {
+      "id": "control:apps/web/src/features/auth/pages/SignupPage.tsx:Button-4bfe060650c33af3a904:0",
+      "source": "apps/web/src/features/auth/pages/SignupPage.tsx",
+      "identity": "Button-4bfe060650c33af3a904",
+      "description": "Button: <Button type=\"submit\" variant=\"primary\" size=\"lg\" className=\"w-full\" loading={pending === \"create\"} disabled={pending !== null || availability === \"checking\" || availability === \"taken\"}>Create account</Button>",
+      "kind": "control",
+      "category": "UNREVIEWED",
+      "categoryReason": "Classification requires semantic review; new surfaces fail closed",
+      "ui": {
+        "status": "NOT_APPLICABLE",
+        "behavior": "Unreviewed",
+        "proofs": []
+      },
+      "resources": [
+        "ALL"
+      ],
+      "model1Meaning": "New visible surface requires explicit semantic review",
+      "model2Owner": "UNASSIGNED",
+      "changesState": false,
+      "effects": {
+        "physics": false,
+        "reachability": false,
+        "security": false,
+        "cost": false,
+        "evidence": false
+      },
+      "provenanceRequirements": [
+        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+      ],
+      "status": "UNKNOWN",
+      "finalProductEligible": false,
+      "plan": "Implement and prove the real mechanism or remove before Model-2 shipping"
+    },
+    {
+      "id": "control:apps/web/src/features/auth/pages/SignupPage.tsx:Button-52a665e5acf25a47c818:0",
+      "source": "apps/web/src/features/auth/pages/SignupPage.tsx",
+      "identity": "Button-52a665e5acf25a47c818",
+      "description": "Button: <Button type=\"submit\" variant=\"primary\" size=\"lg\" className=\"w-full\" loading={pending === \"send\"} disabled={pending !== null || !features}>Send confirmation link</Button>",
+      "kind": "control",
+      "category": "UNREVIEWED",
+      "categoryReason": "Classification requires semantic review; new surfaces fail closed",
+      "ui": {
+        "status": "NOT_APPLICABLE",
+        "behavior": "Unreviewed",
+        "proofs": []
+      },
+      "resources": [
+        "ALL"
+      ],
+      "model1Meaning": "New visible surface requires explicit semantic review",
+      "model2Owner": "UNASSIGNED",
+      "changesState": false,
+      "effects": {
+        "physics": false,
+        "reachability": false,
+        "security": false,
+        "cost": false,
+        "evidence": false
+      },
+      "provenanceRequirements": [
+        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+      ],
+      "status": "UNKNOWN",
+      "finalProductEligible": false,
+      "plan": "Implement and prove the real mechanism or remove before Model-2 shipping"
+    },
+    {
+      "id": "control:apps/web/src/features/auth/pages/SignupPage.tsx:Button-ea4fda56953aa79c2c08:0",
+      "source": "apps/web/src/features/auth/pages/SignupPage.tsx",
+      "identity": "Button-ea4fda56953aa79c2c08",
+      "description": "Button: onClick={() => { setStep({ kind: \"email\" }); setError(null); }}",
+      "kind": "control",
+      "category": "UNREVIEWED",
+      "categoryReason": "Classification requires semantic review; new surfaces fail closed",
+      "ui": {
+        "status": "NOT_APPLICABLE",
+        "behavior": "Unreviewed",
+        "proofs": []
+      },
+      "resources": [
+        "ALL"
+      ],
+      "model1Meaning": "New visible surface requires explicit semantic review",
+      "model2Owner": "UNASSIGNED",
+      "changesState": false,
+      "effects": {
+        "physics": false,
+        "reachability": false,
+        "security": false,
+        "cost": false,
+        "evidence": false
+      },
+      "provenanceRequirements": [
+        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+      ],
+      "status": "UNKNOWN",
+      "finalProductEligible": false,
+      "plan": "Implement and prove the real mechanism or remove before Model-2 shipping"
+    },
+    {
+      "id": "control:apps/web/src/features/auth/pages/SignupPage.tsx:Button-f653d90a3bf4c68c6735:0",
+      "source": "apps/web/src/features/auth/pages/SignupPage.tsx",
+      "identity": "Button-f653d90a3bf4c68c6735",
+      "description": "Button: onClick={() => setStep({ kind: \"details\", email: step.email, emailProof: step.emailProof })}",
+      "kind": "control",
+      "category": "UNREVIEWED",
+      "categoryReason": "Classification requires semantic review; new surfaces fail closed",
+      "ui": {
+        "status": "NOT_APPLICABLE",
+        "behavior": "Unreviewed",
+        "proofs": []
+      },
+      "resources": [
+        "ALL"
+      ],
+      "model1Meaning": "New visible surface requires explicit semantic review",
+      "model2Owner": "UNASSIGNED",
+      "changesState": false,
+      "effects": {
+        "physics": false,
+        "reachability": false,
+        "security": false,
+        "cost": false,
+        "evidence": false
+      },
+      "provenanceRequirements": [
+        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+      ],
+      "status": "UNKNOWN",
+      "finalProductEligible": false,
+      "plan": "Implement and prove the real mechanism or remove before Model-2 shipping"
+    },
+    {
+      "id": "control:apps/web/src/features/auth/pages/SignupPage.tsx:Button-f6d2e53276154c19ce9f:0",
+      "source": "apps/web/src/features/auth/pages/SignupPage.tsx",
+      "identity": "Button-f6d2e53276154c19ce9f",
+      "description": "Button: onClick={() => { setStep({ kind: \"email\" }); setError(null); }}",
+      "kind": "control",
+      "category": "UNREVIEWED",
+      "categoryReason": "Classification requires semantic review; new surfaces fail closed",
+      "ui": {
+        "status": "NOT_APPLICABLE",
+        "behavior": "Unreviewed",
+        "proofs": []
+      },
+      "resources": [
+        "ALL"
+      ],
+      "model1Meaning": "New visible surface requires explicit semantic review",
+      "model2Owner": "UNASSIGNED",
+      "changesState": false,
+      "effects": {
+        "physics": false,
+        "reachability": false,
+        "security": false,
+        "cost": false,
+        "evidence": false
+      },
+      "provenanceRequirements": [
+        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+      ],
+      "status": "UNKNOWN",
+      "finalProductEligible": false,
+      "plan": "Implement and prove the real mechanism or remove before Model-2 shipping"
+    },
+    {
+      "id": "control:apps/web/src/features/auth/pages/SignupPage.tsx:SocialSignIn-cc094039c152c62a0e5e:0",
+      "source": "apps/web/src/features/auth/pages/SignupPage.tsx",
+      "identity": "SocialSignIn-cc094039c152c62a0e5e",
+      "description": "SocialSignIn: onSignIn={(p) => void run(p, () => useAuthStore.getState().signIn(p).catch(() => setError(\"Sign-in could not be started. Try again.\")))}",
+      "kind": "control",
+      "category": "UNREVIEWED",
+      "categoryReason": "Classification requires semantic review; new surfaces fail closed",
+      "ui": {
+        "status": "NOT_APPLICABLE",
+        "behavior": "Unreviewed",
+        "proofs": []
+      },
+      "resources": [
+        "ALL"
+      ],
+      "model1Meaning": "New visible surface requires explicit semantic review",
+      "model2Owner": "UNASSIGNED",
+      "changesState": false,
+      "effects": {
+        "physics": false,
+        "reachability": false,
+        "security": false,
+        "cost": false,
+        "evidence": false
+      },
+      "provenanceRequirements": [
+        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+      ],
+      "status": "UNKNOWN",
+      "finalProductEligible": false,
+      "plan": "Implement and prove the real mechanism or remove before Model-2 shipping"
+    },
+    {
+      "id": "control:apps/web/src/features/auth/pages/SignupPage.tsx:button-af18c6f15bc03f8c77ea:0",
+      "source": "apps/web/src/features/auth/pages/SignupPage.tsx",
+      "identity": "button-af18c6f15bc03f8c77ea",
+      "description": "button: onClick={() => setShowPassword((v) => !v)} aria-label={showPassword ? \"Hide password\" : \"Show password\"}",
+      "kind": "control",
+      "category": "UNREVIEWED",
+      "categoryReason": "Classification requires semantic review; new surfaces fail closed",
+      "ui": {
+        "status": "NOT_APPLICABLE",
+        "behavior": "Unreviewed",
+        "proofs": []
+      },
+      "resources": [
+        "ALL"
+      ],
+      "model1Meaning": "New visible surface requires explicit semantic review",
+      "model2Owner": "UNASSIGNED",
+      "changesState": false,
+      "effects": {
+        "physics": false,
+        "reachability": false,
+        "security": false,
+        "cost": false,
+        "evidence": false
+      },
+      "provenanceRequirements": [
+        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+      ],
+      "status": "UNKNOWN",
+      "finalProductEligible": false,
+      "plan": "Implement and prove the real mechanism or remove before Model-2 shipping"
+    },
+    {
+      "id": "control:apps/web/src/features/auth/pages/SignupPage.tsx:form-5d09b5c55198076ab263:0",
+      "source": "apps/web/src/features/auth/pages/SignupPage.tsx",
+      "identity": "form-5d09b5c55198076ab263",
+      "description": "form: onSubmit={sendLink} aria-label=\"Start signup with your email\"",
+      "kind": "control",
+      "category": "UNREVIEWED",
+      "categoryReason": "Classification requires semantic review; new surfaces fail closed",
+      "ui": {
+        "status": "NOT_APPLICABLE",
+        "behavior": "Unreviewed",
+        "proofs": []
+      },
+      "resources": [
+        "ALL"
+      ],
+      "model1Meaning": "New visible surface requires explicit semantic review",
+      "model2Owner": "UNASSIGNED",
+      "changesState": false,
+      "effects": {
+        "physics": false,
+        "reachability": false,
+        "security": false,
+        "cost": false,
+        "evidence": false
+      },
+      "provenanceRequirements": [
+        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+      ],
+      "status": "UNKNOWN",
+      "finalProductEligible": false,
+      "plan": "Implement and prove the real mechanism or remove before Model-2 shipping"
+    },
+    {
+      "id": "control:apps/web/src/features/auth/pages/SignupPage.tsx:form-a3572ac9194a866b4936:0",
+      "source": "apps/web/src/features/auth/pages/SignupPage.tsx",
+      "identity": "form-a3572ac9194a866b4936",
+      "description": "form: onSubmit={create} aria-label=\"Create your account\"",
+      "kind": "control",
+      "category": "UNREVIEWED",
+      "categoryReason": "Classification requires semantic review; new surfaces fail closed",
+      "ui": {
+        "status": "NOT_APPLICABLE",
+        "behavior": "Unreviewed",
+        "proofs": []
+      },
+      "resources": [
+        "ALL"
+      ],
+      "model1Meaning": "New visible surface requires explicit semantic review",
+      "model2Owner": "UNASSIGNED",
+      "changesState": false,
+      "effects": {
+        "physics": false,
+        "reachability": false,
+        "security": false,
+        "cost": false,
+        "evidence": false
+      },
+      "provenanceRequirements": [
+        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+      ],
+      "status": "UNKNOWN",
+      "finalProductEligible": false,
+      "plan": "Implement and prove the real mechanism or remove before Model-2 shipping"
+    },
+    {
+      "id": "control:apps/web/src/features/auth/pages/SignupPage.tsx:input-0cd8a224edfefa8bfa2f:0",
+      "source": "apps/web/src/features/auth/pages/SignupPage.tsx",
+      "identity": "input-0cd8a224edfefa8bfa2f",
+      "description": "input: value={email} onChange={(e) => { setEmail(e.target.value); setError(null); }}",
+      "kind": "control",
+      "category": "UNREVIEWED",
+      "categoryReason": "Classification requires semantic review; new surfaces fail closed",
+      "ui": {
+        "status": "NOT_APPLICABLE",
+        "behavior": "Unreviewed",
+        "proofs": []
+      },
+      "resources": [
+        "ALL"
+      ],
+      "model1Meaning": "New visible surface requires explicit semantic review",
+      "model2Owner": "UNASSIGNED",
+      "changesState": false,
+      "effects": {
+        "physics": false,
+        "reachability": false,
+        "security": false,
+        "cost": false,
+        "evidence": false
+      },
+      "provenanceRequirements": [
+        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+      ],
+      "status": "UNKNOWN",
+      "finalProductEligible": false,
+      "plan": "Implement and prove the real mechanism or remove before Model-2 shipping"
+    },
+    {
+      "id": "control:apps/web/src/features/auth/pages/SignupPage.tsx:input-a9e9dd3b28b0b3009810:0",
+      "source": "apps/web/src/features/auth/pages/SignupPage.tsx",
+      "identity": "input-a9e9dd3b28b0b3009810",
+      "description": "input: value={password} onChange={(e) => { setPassword(e.target.value); setFieldError((f) => ({ ...f, password: undefined })); }}",
+      "kind": "control",
+      "category": "UNREVIEWED",
+      "categoryReason": "Classification requires semantic review; new surfaces fail closed",
+      "ui": {
+        "status": "NOT_APPLICABLE",
+        "behavior": "Unreviewed",
+        "proofs": []
+      },
+      "resources": [
+        "ALL"
+      ],
+      "model1Meaning": "New visible surface requires explicit semantic review",
+      "model2Owner": "UNASSIGNED",
+      "changesState": false,
+      "effects": {
+        "physics": false,
+        "reachability": false,
+        "security": false,
+        "cost": false,
+        "evidence": false
+      },
+      "provenanceRequirements": [
+        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+      ],
+      "status": "UNKNOWN",
+      "finalProductEligible": false,
+      "plan": "Implement and prove the real mechanism or remove before Model-2 shipping"
+    },
+    {
+      "id": "control:apps/web/src/features/auth/pages/SignupPage.tsx:input-d56a20b4c6e298f60432:0",
+      "source": "apps/web/src/features/auth/pages/SignupPage.tsx",
+      "identity": "input-d56a20b4c6e298f60432",
+      "description": "input: value={step.email} onChange={(e) => setStep({ ...step, email: e.target.value })}",
+      "kind": "control",
+      "category": "UNREVIEWED",
+      "categoryReason": "Classification requires semantic review; new surfaces fail closed",
+      "ui": {
+        "status": "NOT_APPLICABLE",
+        "behavior": "Unreviewed",
+        "proofs": []
+      },
+      "resources": [
+        "ALL"
+      ],
+      "model1Meaning": "New visible surface requires explicit semantic review",
+      "model2Owner": "UNASSIGNED",
+      "changesState": false,
+      "effects": {
+        "physics": false,
+        "reachability": false,
+        "security": false,
+        "cost": false,
+        "evidence": false
+      },
+      "provenanceRequirements": [
+        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+      ],
+      "status": "UNKNOWN",
+      "finalProductEligible": false,
+      "plan": "Implement and prove the real mechanism or remove before Model-2 shipping"
+    },
+    {
+      "id": "control:apps/web/src/features/auth/pages/SignupPage.tsx:input-ff31b9c34572808f4ab6:0",
+      "source": "apps/web/src/features/auth/pages/SignupPage.tsx",
+      "identity": "input-ff31b9c34572808f4ab6",
+      "description": "input: value={username} onChange={(e) => { setUsername(e.target.value); setFieldError((f) => ({ ...f, username: undefined })); }}",
+      "kind": "control",
+      "category": "UNREVIEWED",
+      "categoryReason": "Classification requires semantic review; new surfaces fail closed",
+      "ui": {
+        "status": "NOT_APPLICABLE",
+        "behavior": "Unreviewed",
+        "proofs": []
+      },
+      "resources": [
+        "ALL"
+      ],
+      "model1Meaning": "New visible surface requires explicit semantic review",
+      "model2Owner": "UNASSIGNED",
+      "changesState": false,
+      "effects": {
+        "physics": false,
+        "reachability": false,
+        "security": false,
+        "cost": false,
+        "evidence": false
+      },
+      "provenanceRequirements": [
+        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+      ],
+      "status": "UNKNOWN",
+      "finalProductEligible": false,
+      "plan": "Implement and prove the real mechanism or remove before Model-2 shipping"
     },
     {
       "id": "control:apps/web/src/features/canvas/components/CanvasBoard.tsx:div-86493cd7c52f69106e2b:0",
