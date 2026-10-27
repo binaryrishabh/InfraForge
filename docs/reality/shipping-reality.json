@@ -612,7 +612,7 @@
       "status": "NOT_APPLICABLE",
       "finalProductEligible": false,
       "plan": "Prove software behavior through PRODUCT_UI_VALIDITY. No physics owner required.",
-      "description": "div: aria-label={label} onPointerDown={viewport.handlePanStart} onPointerMove={viewport.handlePanMove} onPointerUp={viewport.handlePanEnd} onClick={(event) => {\r\n        if (event.target !== event.currentTarget) return;\r\n        const store = useCanvasStore.getState();\r\n        store.setSelectedConnectionId(null); store.setSelectedResourceId(null);\r\n      }}",
+      "description": "div: aria-label={label} onPointerDown={viewport.handlePanStart} onPointerMove={viewport.handlePanMove} onPointerUp={viewport.handlePanEnd} onClick={(event) => {\n        if (event.target !== event.currentTarget) return;\n        const store = useCanvasStore.getState();\n        store.setSelectedConnectionId(null); store.setSelectedResourceId(null);\n      }}",
       "category": "PRESENTATION_ONLY",
       "categoryReason": "Software interaction or authored presentation; no infrastructure truth claim",
       "ui": {
@@ -2413,7 +2413,7 @@
       "status": "MODEL1_ONLY",
       "finalProductEligible": false,
       "plan": "Retain historical Model-1 meaning. Before Model-2 shipping, bind this surface to the appropriate explicit Model-2 workload/resource/evidence contract and prove downstream effects, or remove it.",
-      "description": "Input: value={ports} onChange={(event) => {\r\n                setPorts(event.target.value);\r\n                const next = parsePorts(event.target.value);\r\n                if (next) updateResource(resource.id, { openPorts: next.length ? next : undefined });\r\n              }}",
+      "description": "Input: value={ports} onChange={(event) => {\n                setPorts(event.target.value);\n                const next = parsePorts(event.target.value);\n                if (next) updateResource(resource.id, { openPorts: next.length ? next : undefined });\n              }}",
       "category": "SECURITY_CONTROL",
       "categoryReason": "Infrastructure intent or technical evidence; Model-2 mechanism/evidence required",
       "ui": {
@@ -9022,7 +9022,7 @@
       "status": "NOT_APPLICABLE",
       "finalProductEligible": false,
       "plan": "Prove software behavior through PRODUCT_UI_VALIDITY. No physics owner required.",
-      "description": "Button: onClick={() => {\r\n        const canvas = useCanvasStore.getState();\r\n        if (canvas.activeDeploymentId || (!canvas.currentLayoutSaved && canvas.resources.length)) setConfirm(true);\r\n        else void open();\r\n      }}",
+      "description": "Button: onClick={() => {\n        const canvas = useCanvasStore.getState();\n        if (canvas.activeDeploymentId || (!canvas.currentLayoutSaved && canvas.resources.length)) setConfirm(true);\n        else void open();\n      }}",
       "category": "PRODUCT_UI_ACTION",
       "categoryReason": "Software interaction or authored presentation; no infrastructure truth claim",
       "ui": {
@@ -9612,7 +9612,7 @@
       "id": "control:apps/web/src/features/reports/components/RerunDialog.tsx:form-76214d2e8af07dda9801:0",
       "source": "apps/web/src/features/reports/components/RerunDialog.tsx",
       "identity": "form-76214d2e8af07dda9801",
-      "description": "form: onSubmit={async (event) => {\r\n      event.preventDefault(); if (busy) return;\r\n      setBusy(true); onBusy(true); setError(null);\r\n      const owner = useAuthStore.getState().user?.id;\r\n      try {\r\n        const run = await createRerun(id, mode, matched, mode === \"current-design\" ? options.currentDesign.inputHash ?? undefined : undefined);\r\n        if (!mounted.current || !owner || useAuthStore.getState().user?.id !== owner) return;\r\n        if (!run.liveTopology) throw new Error(\"No captured topology\");\r\n        const store = useCanvasStore.getState();\r\n        store.loadRunTopology(run.id, run.liveTopology, run.topologyRevision, run.infrastructureId, run.runName);\r\n        store.setIsDeploying(true); store.setLiveLocked(false);\r\n        // A rerun is always a freeform run, even wh",
+      "description": "form: onSubmit={async (event) => {\n      event.preventDefault(); if (busy) return;\n      setBusy(true); onBusy(true); setError(null);\n      const owner = useAuthStore.getState().user?.id;\n      try {\n        const run = await createRerun(id, mode, matched, mode === \"current-design\" ? options.currentDesign.inputHash ?? undefined : undefined);\n        if (!mounted.current || !owner || useAuthStore.getState().user?.id !== owner) return;\n        if (!run.liveTopology) throw new Error(\"No captured topology\");\n        const store = useCanvasStore.getState();\n        store.loadRunTopology(run.id, run.liveTopology, run.topologyRevision, run.infrastructureId, run.runName);\n        store.setIsDeploying(true); store.setLiveLocked(false);\n        // A rerun is always a freeform run, even when its sour",
       "kind": "control",
       "category": "UNREVIEWED",
       "categoryReason": "Classification requires semantic review; new surfaces fail closed",
@@ -10082,6 +10082,468 @@
         "proofs": []
       },
       "legacyM2gStatus": "MODEL1_ONLY"
+    },
+    {
+      "id": "control:apps/web/src/features/settings/AccountSections.tsx:Button-09f4a682512657a5799f:0",
+      "source": "apps/web/src/features/settings/AccountSections.tsx",
+      "identity": "Button-09f4a682512657a5799f",
+      "description": "Button: onClick={() => void submit()}",
+      "kind": "control",
+      "category": "UNREVIEWED",
+      "categoryReason": "Classification requires semantic review; new surfaces fail closed",
+      "ui": {
+        "status": "NOT_APPLICABLE",
+        "behavior": "Unreviewed",
+        "proofs": []
+      },
+      "resources": [
+        "ALL"
+      ],
+      "model1Meaning": "New visible surface requires explicit semantic review",
+      "model2Owner": "UNASSIGNED",
+      "changesState": false,
+      "effects": {
+        "physics": false,
+        "reachability": false,
+        "security": false,
+        "cost": false,
+        "evidence": false
+      },
+      "provenanceRequirements": [
+        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+      ],
+      "status": "UNKNOWN",
+      "finalProductEligible": false,
+      "plan": "Implement and prove the real mechanism or remove before Model-2 shipping"
+    },
+    {
+      "id": "control:apps/web/src/features/settings/AccountSections.tsx:Button-449ebe6af1b8962ae209:0",
+      "source": "apps/web/src/features/settings/AccountSections.tsx",
+      "identity": "Button-449ebe6af1b8962ae209",
+      "description": "Button: onClick={() => void connectProvider(id).catch(() => toast.error(`${label} could not be connected. Try again.`))}",
+      "kind": "control",
+      "category": "UNREVIEWED",
+      "categoryReason": "Classification requires semantic review; new surfaces fail closed",
+      "ui": {
+        "status": "NOT_APPLICABLE",
+        "behavior": "Unreviewed",
+        "proofs": []
+      },
+      "resources": [
+        "ALL"
+      ],
+      "model1Meaning": "New visible surface requires explicit semantic review",
+      "model2Owner": "UNASSIGNED",
+      "changesState": false,
+      "effects": {
+        "physics": false,
+        "reachability": false,
+        "security": false,
+        "cost": false,
+        "evidence": false
+      },
+      "provenanceRequirements": [
+        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+      ],
+      "status": "UNKNOWN",
+      "finalProductEligible": false,
+      "plan": "Implement and prove the real mechanism or remove before Model-2 shipping"
+    },
+    {
+      "id": "control:apps/web/src/features/settings/AccountSections.tsx:Button-7c755234fe7e1faa6a33:0",
+      "source": "apps/web/src/features/settings/AccountSections.tsx",
+      "identity": "Button-7c755234fe7e1faa6a33",
+      "description": "Button: onClick={close}",
+      "kind": "control",
+      "category": "UNREVIEWED",
+      "categoryReason": "Classification requires semantic review; new surfaces fail closed",
+      "ui": {
+        "status": "NOT_APPLICABLE",
+        "behavior": "Unreviewed",
+        "proofs": []
+      },
+      "resources": [
+        "ALL"
+      ],
+      "model1Meaning": "New visible surface requires explicit semantic review",
+      "model2Owner": "UNASSIGNED",
+      "changesState": false,
+      "effects": {
+        "physics": false,
+        "reachability": false,
+        "security": false,
+        "cost": false,
+        "evidence": false
+      },
+      "provenanceRequirements": [
+        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+      ],
+      "status": "UNKNOWN",
+      "finalProductEligible": false,
+      "plan": "Implement and prove the real mechanism or remove before Model-2 shipping"
+    },
+    {
+      "id": "control:apps/web/src/features/settings/AccountSections.tsx:Button-80791966f4ce24a0477b:0",
+      "source": "apps/web/src/features/settings/AccountSections.tsx",
+      "identity": "Button-80791966f4ce24a0477b",
+      "description": "Button: onClick={() => void download()}",
+      "kind": "control",
+      "category": "UNREVIEWED",
+      "categoryReason": "Classification requires semantic review; new surfaces fail closed",
+      "ui": {
+        "status": "NOT_APPLICABLE",
+        "behavior": "Unreviewed",
+        "proofs": []
+      },
+      "resources": [
+        "ALL"
+      ],
+      "model1Meaning": "New visible surface requires explicit semantic review",
+      "model2Owner": "UNASSIGNED",
+      "changesState": false,
+      "effects": {
+        "physics": false,
+        "reachability": false,
+        "security": false,
+        "cost": false,
+        "evidence": false
+      },
+      "provenanceRequirements": [
+        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+      ],
+      "status": "UNKNOWN",
+      "finalProductEligible": false,
+      "plan": "Implement and prove the real mechanism or remove before Model-2 shipping"
+    },
+    {
+      "id": "control:apps/web/src/features/settings/AccountSections.tsx:Button-9776d179ba1ccd559024:0",
+      "source": "apps/web/src/features/settings/AccountSections.tsx",
+      "identity": "Button-9776d179ba1ccd559024",
+      "description": "Button: onClick={() => setDeleting(true)}",
+      "kind": "control",
+      "category": "UNREVIEWED",
+      "categoryReason": "Classification requires semantic review; new surfaces fail closed",
+      "ui": {
+        "status": "NOT_APPLICABLE",
+        "behavior": "Unreviewed",
+        "proofs": []
+      },
+      "resources": [
+        "ALL"
+      ],
+      "model1Meaning": "New visible surface requires explicit semantic review",
+      "model2Owner": "UNASSIGNED",
+      "changesState": false,
+      "effects": {
+        "physics": false,
+        "reachability": false,
+        "security": false,
+        "cost": false,
+        "evidence": false
+      },
+      "provenanceRequirements": [
+        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+      ],
+      "status": "UNKNOWN",
+      "finalProductEligible": false,
+      "plan": "Implement and prove the real mechanism or remove before Model-2 shipping"
+    },
+    {
+      "id": "control:apps/web/src/features/settings/AccountSections.tsx:Button-cfbd84bd0480fb0d1684:0",
+      "source": "apps/web/src/features/settings/AccountSections.tsx",
+      "identity": "Button-cfbd84bd0480fb0d1684",
+      "description": "Button: onClick={() => void act(() => revokeSession(s.id), \"Signed out that device.\")}",
+      "kind": "control",
+      "category": "UNREVIEWED",
+      "categoryReason": "Classification requires semantic review; new surfaces fail closed",
+      "ui": {
+        "status": "NOT_APPLICABLE",
+        "behavior": "Unreviewed",
+        "proofs": []
+      },
+      "resources": [
+        "ALL"
+      ],
+      "model1Meaning": "New visible surface requires explicit semantic review",
+      "model2Owner": "UNASSIGNED",
+      "changesState": false,
+      "effects": {
+        "physics": false,
+        "reachability": false,
+        "security": false,
+        "cost": false,
+        "evidence": false
+      },
+      "provenanceRequirements": [
+        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+      ],
+      "status": "UNKNOWN",
+      "finalProductEligible": false,
+      "plan": "Implement and prove the real mechanism or remove before Model-2 shipping"
+    },
+    {
+      "id": "control:apps/web/src/features/settings/AccountSections.tsx:Button-e7ab52a0b51908076971:0",
+      "source": "apps/web/src/features/settings/AccountSections.tsx",
+      "identity": "Button-e7ab52a0b51908076971",
+      "description": "Button: onClick={() => void act(revokeOtherSessions, \"Signed out everywhere else.\")}",
+      "kind": "control",
+      "category": "UNREVIEWED",
+      "categoryReason": "Classification requires semantic review; new surfaces fail closed",
+      "ui": {
+        "status": "NOT_APPLICABLE",
+        "behavior": "Unreviewed",
+        "proofs": []
+      },
+      "resources": [
+        "ALL"
+      ],
+      "model1Meaning": "New visible surface requires explicit semantic review",
+      "model2Owner": "UNASSIGNED",
+      "changesState": false,
+      "effects": {
+        "physics": false,
+        "reachability": false,
+        "security": false,
+        "cost": false,
+        "evidence": false
+      },
+      "provenanceRequirements": [
+        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+      ],
+      "status": "UNKNOWN",
+      "finalProductEligible": false,
+      "plan": "Implement and prove the real mechanism or remove before Model-2 shipping"
+    },
+    {
+      "id": "control:apps/web/src/features/settings/AccountSections.tsx:Button-f3ee56ba6286dcaa5bd6:0",
+      "source": "apps/web/src/features/settings/AccountSections.tsx",
+      "identity": "Button-f3ee56ba6286dcaa5bd6",
+      "description": "Button: onClick={() => setRemoving(linked)}",
+      "kind": "control",
+      "category": "UNREVIEWED",
+      "categoryReason": "Classification requires semantic review; new surfaces fail closed",
+      "ui": {
+        "status": "NOT_APPLICABLE",
+        "behavior": "Unreviewed",
+        "proofs": []
+      },
+      "resources": [
+        "ALL"
+      ],
+      "model1Meaning": "New visible surface requires explicit semantic review",
+      "model2Owner": "UNASSIGNED",
+      "changesState": false,
+      "effects": {
+        "physics": false,
+        "reachability": false,
+        "security": false,
+        "cost": false,
+        "evidence": false
+      },
+      "provenanceRequirements": [
+        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+      ],
+      "status": "UNKNOWN",
+      "finalProductEligible": false,
+      "plan": "Implement and prove the real mechanism or remove before Model-2 shipping"
+    },
+    {
+      "id": "control:apps/web/src/features/settings/AccountSections.tsx:Dialog-e6b5e2546e3f69c9b72c:0",
+      "source": "apps/web/src/features/settings/AccountSections.tsx",
+      "identity": "Dialog-e6b5e2546e3f69c9b72c",
+      "description": "Dialog: onOpenChange={(next) => { if (!next) close(); }}",
+      "kind": "control",
+      "category": "UNREVIEWED",
+      "categoryReason": "Classification requires semantic review; new surfaces fail closed",
+      "ui": {
+        "status": "NOT_APPLICABLE",
+        "behavior": "Unreviewed",
+        "proofs": []
+      },
+      "resources": [
+        "ALL"
+      ],
+      "model1Meaning": "New visible surface requires explicit semantic review",
+      "model2Owner": "UNASSIGNED",
+      "changesState": false,
+      "effects": {
+        "physics": false,
+        "reachability": false,
+        "security": false,
+        "cost": false,
+        "evidence": false
+      },
+      "provenanceRequirements": [
+        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+      ],
+      "status": "UNKNOWN",
+      "finalProductEligible": false,
+      "plan": "Implement and prove the real mechanism or remove before Model-2 shipping"
+    },
+    {
+      "id": "control:apps/web/src/features/settings/AccountSections.tsx:Input-3f33624f12ece2686b1c:0",
+      "source": "apps/web/src/features/settings/AccountSections.tsx",
+      "identity": "Input-3f33624f12ece2686b1c",
+      "description": "Input: onChange={(e) => ok(e.target.value === \"DELETE\")}",
+      "kind": "control",
+      "category": "UNREVIEWED",
+      "categoryReason": "Classification requires semantic review; new surfaces fail closed",
+      "ui": {
+        "status": "NOT_APPLICABLE",
+        "behavior": "Unreviewed",
+        "proofs": []
+      },
+      "resources": [
+        "ALL"
+      ],
+      "model1Meaning": "New visible surface requires explicit semantic review",
+      "model2Owner": "UNASSIGNED",
+      "changesState": false,
+      "effects": {
+        "physics": false,
+        "reachability": false,
+        "security": false,
+        "cost": false,
+        "evidence": false
+      },
+      "provenanceRequirements": [
+        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+      ],
+      "status": "UNKNOWN",
+      "finalProductEligible": false,
+      "plan": "Implement and prove the real mechanism or remove before Model-2 shipping"
+    },
+    {
+      "id": "control:apps/web/src/features/settings/AccountSections.tsx:Input-5a5114cf5410a232aafc:0",
+      "source": "apps/web/src/features/settings/AccountSections.tsx",
+      "identity": "Input-5a5114cf5410a232aafc",
+      "description": "Input: value={password} onChange={(e) => setPassword(e.target.value)}",
+      "kind": "control",
+      "category": "UNREVIEWED",
+      "categoryReason": "Classification requires semantic review; new surfaces fail closed",
+      "ui": {
+        "status": "NOT_APPLICABLE",
+        "behavior": "Unreviewed",
+        "proofs": []
+      },
+      "resources": [
+        "ALL"
+      ],
+      "model1Meaning": "New visible surface requires explicit semantic review",
+      "model2Owner": "UNASSIGNED",
+      "changesState": false,
+      "effects": {
+        "physics": false,
+        "reachability": false,
+        "security": false,
+        "cost": false,
+        "evidence": false
+      },
+      "provenanceRequirements": [
+        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+      ],
+      "status": "UNKNOWN",
+      "finalProductEligible": false,
+      "plan": "Implement and prove the real mechanism or remove before Model-2 shipping"
+    },
+    {
+      "id": "control:apps/web/src/features/settings/AccountSections.tsx:PasswordDialog-bb87abe60491c66f5b0f:0",
+      "source": "apps/web/src/features/settings/AccountSections.tsx",
+      "identity": "PasswordDialog-bb87abe60491c66f5b0f",
+      "description": "PasswordDialog: onClose={() => setDeleting(false)} onConfirm={async (password) => { await deleteAccount(password, \"DELETE\"); expire(); navigate(\"/signin\", { replace: true }); }}",
+      "kind": "control",
+      "category": "UNREVIEWED",
+      "categoryReason": "Classification requires semantic review; new surfaces fail closed",
+      "ui": {
+        "status": "NOT_APPLICABLE",
+        "behavior": "Unreviewed",
+        "proofs": []
+      },
+      "resources": [
+        "ALL"
+      ],
+      "model1Meaning": "New visible surface requires explicit semantic review",
+      "model2Owner": "UNASSIGNED",
+      "changesState": false,
+      "effects": {
+        "physics": false,
+        "reachability": false,
+        "security": false,
+        "cost": false,
+        "evidence": false
+      },
+      "provenanceRequirements": [
+        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+      ],
+      "status": "UNKNOWN",
+      "finalProductEligible": false,
+      "plan": "Implement and prove the real mechanism or remove before Model-2 shipping"
+    },
+    {
+      "id": "control:apps/web/src/features/settings/AccountSections.tsx:PasswordDialog-f0cf71a88ceef3f30057:0",
+      "source": "apps/web/src/features/settings/AccountSections.tsx",
+      "identity": "PasswordDialog-f0cf71a88ceef3f30057",
+      "description": "PasswordDialog: onClose={() => setRemoving(null)} onConfirm={async (password) => { await unlinkMethod(removing!.id, password); toast.success(\"Disconnected.\"); load(); }}",
+      "kind": "control",
+      "category": "UNREVIEWED",
+      "categoryReason": "Classification requires semantic review; new surfaces fail closed",
+      "ui": {
+        "status": "NOT_APPLICABLE",
+        "behavior": "Unreviewed",
+        "proofs": []
+      },
+      "resources": [
+        "ALL"
+      ],
+      "model1Meaning": "New visible surface requires explicit semantic review",
+      "model2Owner": "UNASSIGNED",
+      "changesState": false,
+      "effects": {
+        "physics": false,
+        "reachability": false,
+        "security": false,
+        "cost": false,
+        "evidence": false
+      },
+      "provenanceRequirements": [
+        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+      ],
+      "status": "UNKNOWN",
+      "finalProductEligible": false,
+      "plan": "Implement and prove the real mechanism or remove before Model-2 shipping"
+    },
+    {
+      "id": "control:apps/web/src/features/settings/AccountSections.tsx:form-8bcbd95c1c7b931524ce:0",
+      "source": "apps/web/src/features/settings/AccountSections.tsx",
+      "identity": "form-8bcbd95c1c7b931524ce",
+      "description": "form: onSubmit={(event) => { event.preventDefault(); if (password && ready) void submit(); }}",
+      "kind": "control",
+      "category": "UNREVIEWED",
+      "categoryReason": "Classification requires semantic review; new surfaces fail closed",
+      "ui": {
+        "status": "NOT_APPLICABLE",
+        "behavior": "Unreviewed",
+        "proofs": []
+      },
+      "resources": [
+        "ALL"
+      ],
+      "model1Meaning": "New visible surface requires explicit semantic review",
+      "model2Owner": "UNASSIGNED",
+      "changesState": false,
+      "effects": {
+        "physics": false,
+        "reachability": false,
+        "security": false,
+        "cost": false,
+        "evidence": false
+      },
+      "provenanceRequirements": [
+        "Trace input to state owner and downstream proof; record units/domain for numeric values"
+      ],
+      "status": "UNKNOWN",
+      "finalProductEligible": false,
+      "plan": "Implement and prove the real mechanism or remove before Model-2 shipping"
     },
     {
       "id": "control:apps/web/src/features/settings/SettingsPage.tsx:Button-ba297abba443fb24ba19:0",
@@ -10748,7 +11210,7 @@
       "status": "NOT_APPLICABLE",
       "finalProductEligible": false,
       "plan": "Prove software behavior through PRODUCT_UI_VALIDITY. No physics owner required.",
-      "description": "Radix.Content: onCloseAutoFocus={(event) => {\r\n            // Back to the control that opened it; a dialog the page opened itself hands focus to the main content.\r\n            const target = opener?.isConnected ? opener : document.getElementById(\"main\");\r\n            if (target) { event.preventDefault(); target.focus(); }\r\n          }} onPointerDownOutside={outside} onEscapeKeyDown={(event) => { if (busy) event.preventDefault(); }}",
+      "description": "Radix.Content: onCloseAutoFocus={(event) => {\n            // Back to the control that opened it; a dialog the page opened itself hands focus to the main content.\n            const target = opener?.isConnected ? opener : document.getElementById(\"main\");\n            if (target) { event.preventDefault(); target.focus(); }\n          }} onPointerDownOutside={outside} onEscapeKeyDown={(event) => { if (busy) event.preventDefault(); }}",
       "category": "PRESENTATION_ONLY",
       "categoryReason": "Software interaction or authored presentation; no infrastructure truth claim",
       "ui": {

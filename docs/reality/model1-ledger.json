@@ -2256,9 +2256,19 @@
       "numericSites": 1
     },
     {
+      "file": "apps/web/src/features/settings/AccountSections.tsx",
+      "sha256": "dbc446cade8f90ca9b1d860bdaae0754b1e1e978a582bf49bace3028258e731f",
+      "numericSites": 5
+    },
+    {
       "file": "apps/web/src/features/settings/SettingsPage.tsx",
-      "sha256": "d8c591a15e77fb3d7d90b88415ccacc79d821a1aa62e2e69513ec651e1ee35cd",
+      "sha256": "ccc400a05fa4280272b1dbdee35ae47d1cf513a89a88f3f79b21169f5b00d9da",
       "numericSites": 3
+    },
+    {
+      "file": "apps/web/src/features/settings/accountSettings.api.ts",
+      "sha256": "9a31c055c31653dbc11f124b9a77acf30e13d73eb39246584d092251da89f9ae",
+      "numericSites": 1
     },
     {
       "file": "apps/web/src/features/timetable/Legend.tsx",
@@ -109302,6 +109312,186 @@
       }
     },
     {
+      "id": "m1.apps.web.src.features.settings.AccountSections.1",
+      "concept": "SignInMethodsSection · literal 3",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 3,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.features.settings.AccountSections.1"
+        ]
+      },
+      "formula": "return ( <Section number={3} title=\"Sign-in methods\" className=\"mt-10\"> {error ? <Notice tone=\"fail\" role=\"alert\">Sign-in methods could not be loaded. Reload to try again.</Notice> : methods === undefined ? <p role=\"status\" className=\"text-sm text-ink-3\">Loading…</p> : methods === null ? <p className=\"text-sm text-ink-2\">Managing sign-in methods is not available yet.</p> : <ul className=\"flex flex-col divide-y divide-line\"> {PROVIDERS.map(({ id, label }) => { const linked = methods.find((m) => m",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/settings/AccountSections.tsx#L58",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/features/settings/AccountSections.tsx",
+        "line": 58,
+        "column": 22
+      }
+    },
+    {
+      "id": "m1.apps.web.src.features.settings.AccountSections.2",
+      "concept": "SessionsSection · literal 4",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 4,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.features.settings.AccountSections.2"
+        ]
+      },
+      "formula": "return ( <Section number={4} title=\"Where you're signed in\" className=\"mt-10\"> {sessions === undefined ? <p role=\"status\" className=\"text-sm text-ink-3\">Loading…</p> : <> <ul className=\"flex flex-col divide-y divide-line\"> {sessions.map((s) => ( <li key={s.id} className=\"flex flex-wrap items-center justify-between gap-3 py-3\"> <div> <p className=\"flex items-center gap-2 text-sm font-medium text-ink\">{deviceName(s.userAgent)}{s.current && <Tag tone=\"accent\">This device</Tag>}</p> <p className=\"te",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/settings/AccountSections.tsx#L98",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/features/settings/AccountSections.tsx",
+        "line": 98,
+        "column": 22
+      }
+    },
+    {
+      "id": "m1.apps.web.src.features.settings.AccountSections.3",
+      "concept": "SessionsSection · literal 1",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 1,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.features.settings.AccountSections.3"
+        ]
+      },
+      "formula": "return ( <Section number={4} title=\"Where you're signed in\" className=\"mt-10\"> {sessions === undefined ? <p role=\"status\" className=\"text-sm text-ink-3\">Loading…</p> : <> <ul className=\"flex flex-col divide-y divide-line\"> {sessions.map((s) => ( <li key={s.id} className=\"flex flex-wrap items-center justify-between gap-3 py-3\"> <div> <p className=\"flex items-center gap-2 text-sm font-medium text-ink\">{deviceName(s.userAgent)}{s.current && <Tag tone=\"accent\">This device</Tag>}</p> <p className=\"te",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/settings/AccountSections.tsx#L111",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/features/settings/AccountSections.tsx",
+        "line": 111,
+        "column": 28
+      }
+    },
+    {
+      "id": "m1.apps.web.src.features.settings.AccountSections.4",
+      "concept": "url · literal 2",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 2,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.features.settings.AccountSections.4"
+        ]
+      },
+      "formula": "const url = URL.createObjectURL(new Blob([JSON.stringify({ exportedAt: new Date().toISOString(), pages }, null, 2)], { type: \"application/json\" }));",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/settings/AccountSections.tsx#L127",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/features/settings/AccountSections.tsx",
+        "line": 127,
+        "column": 119
+      }
+    },
+    {
+      "id": "m1.apps.web.src.features.settings.AccountSections.5",
+      "concept": "YourDataSection · literal 5",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 5,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.features.settings.AccountSections.5"
+        ]
+      },
+      "formula": "return ( <Section number={5} title=\"Your data\" className=\"mt-10\"> <div className=\"flex flex-col gap-4\"> <div className=\"flex flex-wrap items-center justify-between gap-3\"> <div><p className=\"text-sm font-medium text-ink\">Download your data</p><p className=\"text-xs text-ink-3\">Designs, runs and reports as one JSON file.</p></div> <Button variant=\"secondary\" loading={exporting} onClick={() => void download()}>Download</Button> </div> <div className=\"flex flex-wrap items-center justify-between gap-",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/settings/AccountSections.tsx#L134",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/features/settings/AccountSections.tsx",
+        "line": 134,
+        "column": 22
+      }
+    },
+    {
       "id": "m1.apps.web.src.features.settings.SettingsPage.1",
       "concept": "SettingsPage · literal 1",
       "modelVersion": "1",
@@ -109314,12 +109504,12 @@
           "m1.apps.web.src.features.settings.SettingsPage.1"
         ]
       },
-      "formula": "return ( <Page width=\"narrow\"> <PageHeader eyebrow=\"Settings\" title=\"Settings\" lede=\"Appearance and density are saved in this browser only.\" /> <Section number={1} title=\"Appearance\" className=\"mt-8\"> <div className=\"flex flex-col gap-5\"> <div className=\"flex flex-wrap items-center justify-between gap-3\"> <div><p className=\"text-sm font-medium text-ink\">Theme</p><p className=\"text-xs text-ink-3\">Live runs always use Ink so measurements read as an instrument.</p></div> <Segmented label=\"Theme\" va",
+      "formula": "return ( <Page width=\"narrow\"> <PageHeader eyebrow=\"Settings\" title=\"Settings\" lede=\"Appearance and density are saved in this browser only. Everything else applies to your account.\" /> <Section number={1} title=\"Appearance\" className=\"mt-8\"> <div className=\"flex flex-col gap-5\"> <div className=\"flex flex-wrap items-center justify-between gap-3\"> <div><p className=\"text-sm font-medium text-ink\">Theme</p><p className=\"text-xs text-ink-3\">Live runs always use Ink so measurements read as an instrume",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/settings/SettingsPage.tsx#L24",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/settings/SettingsPage.tsx#L25",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -109333,7 +109523,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/features/settings/SettingsPage.tsx",
-        "line": 24,
+        "line": 25,
         "column": 24
       }
     },
@@ -109350,12 +109540,12 @@
           "m1.apps.web.src.features.settings.SettingsPage.2"
         ]
       },
-      "formula": "return ( <Page width=\"narrow\"> <PageHeader eyebrow=\"Settings\" title=\"Settings\" lede=\"Appearance and density are saved in this browser only.\" /> <Section number={1} title=\"Appearance\" className=\"mt-8\"> <div className=\"flex flex-col gap-5\"> <div className=\"flex flex-wrap items-center justify-between gap-3\"> <div><p className=\"text-sm font-medium text-ink\">Theme</p><p className=\"text-xs text-ink-3\">Live runs always use Ink so measurements read as an instrument.</p></div> <Segmented label=\"Theme\" va",
+      "formula": "return ( <Page width=\"narrow\"> <PageHeader eyebrow=\"Settings\" title=\"Settings\" lede=\"Appearance and density are saved in this browser only. Everything else applies to your account.\" /> <Section number={1} title=\"Appearance\" className=\"mt-8\"> <div className=\"flex flex-col gap-5\"> <div className=\"flex flex-wrap items-center justify-between gap-3\"> <div><p className=\"text-sm font-medium text-ink\">Theme</p><p className=\"text-xs text-ink-3\">Live runs always use Ink so measurements read as an instrume",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/settings/SettingsPage.tsx#L37",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/settings/SettingsPage.tsx#L38",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -109369,7 +109559,7 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/features/settings/SettingsPage.tsx",
-        "line": 37,
+        "line": 38,
         "column": 24
       }
     },
@@ -109386,12 +109576,12 @@
           "m1.apps.web.src.features.settings.SettingsPage.3"
         ]
       },
-      "formula": "return ( <Page width=\"narrow\"> <PageHeader eyebrow=\"Settings\" title=\"Settings\" lede=\"Appearance and density are saved in this browser only.\" /> <Section number={1} title=\"Appearance\" className=\"mt-8\"> <div className=\"flex flex-col gap-5\"> <div className=\"flex flex-wrap items-center justify-between gap-3\"> <div><p className=\"text-sm font-medium text-ink\">Theme</p><p className=\"text-xs text-ink-3\">Live runs always use Ink so measurements read as an instrument.</p></div> <Segmented label=\"Theme\" va",
+      "formula": "return ( <Page width=\"narrow\"> <PageHeader eyebrow=\"Settings\" title=\"Settings\" lede=\"Appearance and density are saved in this browser only. Everything else applies to your account.\" /> <Section number={1} title=\"Appearance\" className=\"mt-8\"> <div className=\"flex flex-col gap-5\"> <div className=\"flex flex-wrap items-center justify-between gap-3\"> <div><p className=\"text-sm font-medium text-ink\">Theme</p><p className=\"text-xs text-ink-3\">Live runs always use Ink so measurements read as an instrume",
       "classification": "implementation-policy",
       "confidence": "high",
       "provenance": [
         {
-          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/settings/SettingsPage.tsx#L47",
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/settings/SettingsPage.tsx#L48",
           "supports": "implementation",
           "detail": "Exact historical literal and source expression; not external validation."
         }
@@ -109405,8 +109595,44 @@
       "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
       "location": {
         "file": "apps/web/src/features/settings/SettingsPage.tsx",
-        "line": 47,
+        "line": 48,
         "column": 74
+      }
+    },
+    {
+      "id": "m1.apps.web.src.features.settings.accountSettings.api.1",
+      "concept": "loginMethods · literal 404",
+      "modelVersion": "1",
+      "scope": "Application bookkeeping, presentation or operational guard; not infrastructure physics",
+      "quantity": {
+        "kind": "known",
+        "value": 404,
+        "unit": "code-number",
+        "provenance": [
+          "m1.apps.web.src.features.settings.accountSettings.api.1"
+        ]
+      },
+      "formula": "if ((error as { response?: { status?: number } }).response?.status === 404) return null;",
+      "classification": "implementation-policy",
+      "confidence": "high",
+      "provenance": [
+        {
+          "source": "repo:361a3b1afe33740d8f45d9c79601c6476657d602/apps/web/src/features/settings/accountSettings.api.ts#L12",
+          "supports": "implementation",
+          "detail": "Exact historical literal and source expression; not external validation."
+        }
+      ],
+      "assumptions": [
+        "This literal is not evidence of real infrastructure capacity or performance.",
+        "Permitted only as nonphysical bookkeeping, UI or an explicit implementation guard; never an infrastructure performance claim."
+      ],
+      "researchedOn": "2026-10-15",
+      "freeMode": "conditional",
+      "replacement": "Retain as an implementation policy; separate from modeled infrastructure measurements.",
+      "location": {
+        "file": "apps/web/src/features/settings/accountSettings.api.ts",
+        "line": 12,
+        "column": 90
       }
     },
     {
