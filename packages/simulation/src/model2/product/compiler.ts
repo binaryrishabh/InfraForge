@@ -12,12 +12,25 @@ import { boundedProduct } from "./bounds";
 import { validateMaterializedSemantics } from "./semantics";
 import { capabilityFacts } from "./capabilities";
 import { numericOrigins } from "./origins";
+// Model 1 saves a pool policy on its LB; keep fixed siblings and expand one named VM.
+export function savedPoolPolicies(design: SavedProductDesign): SavedProductDesign {
+  const resources = design.resources.map((r) => ({ ...r }));
+  for (const lb of resources.filter((r) => r.type === "Load Balancer" && r.autoscaling?.enabled)) {
+    const children = resources.filter((r) => design.connections.some((e) => e.sourceId === lb.id && e.targetId === r.id)).sort((a, b) => a.id.localeCompare(b.id, "en"));
+    const policy = lb.autoscaling!, fixed = children.length - 1;
+    if (!children.length || children.some((r) => r.type !== "Virtual Machine" || r.autoscaling?.enabled) || policy.minReplicas === undefined || policy.maxReplicas === undefined || policy.minReplicas <= fixed) throw Error("Load balancer autoscaling needs app servers without competing pool policies and a minimum covering every drawn server");
+    children[0]!.autoscaling = { ...policy, minReplicas: policy.minReplicas - fixed, maxReplicas: policy.maxReplicas - fixed };
+    lb.autoscaling = { ...policy, enabled: false };
+  }
+  return { ...design, resources };
+}
 export function compileProduct(design: SavedProductDesign, contract: ProductContract): CompileResult {
   const diagnostics: Diagnostic[] = [];
   const error = (code: string, path: string, message: string) => diagnostics.push({ code, path, message, severity: "error" });
   let semantic: SemanticSpec | undefined, phase = "design";
   try {
     boundedProduct(design); boundedProduct(contract);
+    design = savedPoolPolicies(design);
     if (design.schema !== "infraforge-saved-design/1" || contract.schema !== "infraforge-product-model2/1" || !contract.version || !contract.designVersion || !contract.catalogVersion || contract.workloadVersion !== "product-arrivals/1") error("VERSION_REQUIRED", "versions", "Explicit design/compiler/application/catalog/workload versions required");
     if (!contract.application) error("MISSING_APPLICATION_PROFILE", "application", "Missing application execution profile; provider hardware cannot supply operation demand");
     if (design.resources.length > 256 || design.connections.length > 2048 || !design.resources.length) error("DESIGN_BUDGET", "design", "Bounded nonempty design required");
