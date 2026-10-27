@@ -32,7 +32,7 @@ export const authLogger: Logger = { level: "error", log(level, message, ...args:
   for (const value of [message, ...args.slice(0, 4)]) {
     if (value instanceof Error) {
       const error = value as Error & { code?: unknown; body?: { code?: unknown; message?: unknown } };
-      const name = error.constructor.name;
+      const name = error.name;
       names.add(classes.has(name) ? name : "Error");
       for (const text of [error.code, error.body?.code, error.message, error.body?.message]) {
         const reason = safeReason(text);

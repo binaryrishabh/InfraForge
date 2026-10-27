@@ -19,6 +19,7 @@ test("auth logs retain safe reasons and error classes without identifiers or cre
     logger.error("Failed to parse state", Object.assign(new Error(privateText), { code: "state_mismatch" }));
     logger.error(new TypeError(`Connection terminated unexpectedly ${privateText}`) as never);
     logger.error("x".repeat(10000) + privateText, { message: privateText, email: "person@example.test" });
+    logger.error(Object.assign(new Error(privateText), { name: privateText }) as never);
     const logged = output.mock.calls.map(call => JSON.stringify(call));
     expect(logged[0]).toContain("error");
     expect(logged[0]).toContain("account_not_linked");
