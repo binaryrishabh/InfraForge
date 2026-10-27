@@ -48,7 +48,10 @@ export async function command(args: string[], cwd: string, env: Record<string, s
   if (exitCode !== 0) {
     const detail = env.RELEASE_REHEARSAL === "owned-local" ? redactReleaseDiagnostic(diagnostic, env).slice(-2000)
       : args[0] === "docker" && args[1] === "compose" && diagnosticsDirectory
-        ? await composeFailureDetail(diagnostic, diagnosticsDirectory, env) : "inspect private operator diagnostics";
+        ? await composeFailureDetail(diagnostic, diagnosticsDirectory, env)
+        // A failed image build shows its own redacted tail; it never reads settings.
+        : args[0] === "docker" && args[1] === "build" ? redactReleaseDiagnostic(diagnostic, env).slice(-4000)
+        : "inspect private operator diagnostics";
     // Readiness retries may catch this exception. Report the private path here
     // as well so their eventual deadline never hides the operator's evidence.
     if (args[0] === "docker" && args[1] === "compose" && diagnosticsDirectory && env.RELEASE_REHEARSAL !== "owned-local") {

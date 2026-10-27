@@ -119,6 +119,8 @@ jobs:
             # A non-interactive session skips .bashrc; a user-installed Bun lives here.
             export PATH="$HOME/.bun/bin:$PATH"
             test "$(bun --version)" = 1.3.14
+            # Fresh, restore-checked database backup (also uploaded to R2) before any migration.
+            sudo -n /usr/local/sbin/infraforge-backup
             bun --no-env-file scripts/deploy/backend.ts "$RELEASE_SHA" /etc/infraforge/release.env /var/lib/infraforge/releases
       - name: Independently verify public backend and select its exact release
         id: backend

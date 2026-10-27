@@ -1,4 +1,3 @@
-import { cleanupReleaseBuilder } from "./release/build";
 import { mkdir, readFile, rename, open, unlink } from "node:fs/promises";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -43,7 +42,6 @@ const interrupt = async () => {
     console.error("Accepted release cleanup interrupted; application remains running and release lock is removed.");
     return process.exit(0);
   }
-  await cleanupReleaseBuilder(command, root);
   if (mutationStarted && operationsInProgress) {
     await operationsInProgress.compose(["stop", "--timeout", "30", "api", "worker", "ws-server"]).catch(() => {});
     await operationsInProgress.stopMigration().catch(() => {});
