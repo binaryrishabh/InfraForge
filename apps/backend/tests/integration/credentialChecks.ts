@@ -10,7 +10,7 @@ export async function checkCredentials(harness: LocalHarness, fixtures: SessionF
   const suffix = randomUUID().replaceAll("-", "").slice(0, 12);
   const username = `Learner_${suffix}`;
   const email = `${suffix}@infraforge.test`;
-  const password = randomBytes(24).toString("base64url");
+  const password = randomBytes(24).toString("base64url") + "Aa1!";
   let requestNumber = 1;
   const call = async (path: string, body?: object, options: { cookie?: string; origin?: string; ip?: string } = {}) => {
     const response = await fetch(harness.api + "/auth/" + path, {
@@ -78,7 +78,7 @@ export async function checkCredentials(harness: LocalHarness, fixtures: SessionF
     expect((await harness.sql.query('SELECT * FROM "User" WHERE id=$1', [oauth.user.id])).rows[0]).toEqual(oauthBefore);
     expect((await harness.sql.query('SELECT count(*)::int AS n FROM "Account" WHERE "userId"=$1', [oauth.user.id])).rows[0].n).toBe(0);
     expect((await call("sign-in/username", { username, password }, { origin: "http://evil.invalid" })).status).toBe(403);
-    expect((await call("is-username-available", { username })).status).toBe(404);
+    expect((await call("is-username-available", { username })).data).toEqual({ available: false });
     const ip = "198.51.100.20";
     for (let n = 0; n < 3; n++) expect((await call("sign-in/username", { username, password: "wrong-password-long" }, { ip })).status).toBe(401);
     expect((await call("sign-in/username", { username, password: "wrong-password-long" }, { ip })).status).toBe(429);

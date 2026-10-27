@@ -14,7 +14,7 @@ import { passwordAcceptable, passwordChecks } from "@infraforge/contracts/auth";
 import { HANDOFF_COOKIE } from "../auth/signupHandoff";
 const breach = mockPasswordBreachService();
 export const password = "Fixture-only-password-8!";
-export function admissionFixture(secure = false, limits = false) {
+export function admissionFixture(secure = false, limits = false, nativeLimits = false) {
   const database: { user: any[]; account: any[]; session: any[]; verification: any[] } = { user: [], account: [], session: [], verification: [] };
   const settings = readAuthSettings({
     BETTER_AUTH_SECRET: "fixture-only-secret-at-least-32-characters",
@@ -43,10 +43,12 @@ export function admissionFixture(secure = false, limits = false) {
   const options = createAuth({} as any, { ...settings, accountEssentials: {
     ...settings.accountEssentials, emailEnabled: true, email: mail,
   } }, quota, queue).options;
-  const auth = betterAuth({ ...options, database: memoryAdapter(database), rateLimit: { enabled: false } });
+  const auth = betterAuth({ ...options, database: memoryAdapter(database),
+    rateLimit: { ...options.rateLimit, enabled: nativeLimits } });
   const handler = accountAuthHandler(auth.handler, true, Date.now, async () => {});
   const call = (path: string, body?: object, headers: Record<string, string> = {}) => handler(new Request(`${settings.baseURL}/api/auth/${path}`, {
-    method: body ? "POST" : "GET", headers: { Origin: settings.origins[0]!, "Content-Type": "application/json", ...headers },
+    method: body ? "POST" : "GET", headers: { Origin: settings.origins[0]!, "Content-Type": "application/json",
+      "x-forwarded-for": "192.0.2.66", ...headers },
     body: body ? JSON.stringify(body) : undefined,
   }));
   const drain = async () => {
@@ -226,7 +228,7 @@ test("username availability validates public handles and has a 120 per IP quota"
 });
 
 test("handoff confirmation enforces origin, Fetch Metadata and quotas; polling permits 30 minutes", async () => {
-  const f = admissionFixture(false, true);
+  const f = admissionFixture(false, true, true);
   const cookie = cookieFrom(await f.signup()); await f.drain();
   for (const path of ["signup-handoff/confirm", "is-username-available"]) {
     const body = { emailProof: proofFrom(f), username: "learner" };
@@ -240,8 +242,27 @@ test("handoff confirmation enforces origin, Fetch Metadata and quotas; polling p
   }
 });
 
+test("breached reset and authenticated password changes leave the old credentials and reset proof usable", async () => {
+  const f = admissionFixture(); await f.signup(); await f.drain();
+  expect((await f.signup("learner", "learner@example.test", proofFrom(f))).status).toBe(200);
+  const signedIn = await f.call("sign-in/email", { email: "learner@example.test", password });
+  const Cookie = cookieFrom(signedIn);
+  await f.call("request-password-reset", { email: "learner@example.test" }); await f.drain();
+  const token = new URL(f.mail.messages.at(-1)!.text.split("\n").at(-1)!).pathname.split("/").at(-1)!;
+  breach.compromised = "Different-password-9!";
+  for (const path of ["reset-password", "change-password"]) {
+    const refused = await f.call(path, { token, currentPassword: password, newPassword: breach.compromised }, { Cookie });
+    expect(refused.status).toBe(400);
+    expect(await refused.json()).toMatchObject({ code: "PASSWORD_COMPROMISED" });
+  }
+  expect((await f.call("sign-in/email", { email: "learner@example.test", password })).status).toBe(200);
+  breach.compromised = "";
+  expect((await f.call("reset-password", { token, newPassword: "Different-password-9!" })).status).toBe(200);
+  expect((await f.call("sign-in/email", { email: "learner@example.test", password: "Different-password-9!" })).status).toBe(200);
+});
+
 test("shared password checklist covers length and each composition rule", () => {
-  const cases: [string, string[]][] = [
+  const cases: [string, ReturnType<typeof passwordChecks>[number]["id"][]][] = [
     ["Ab1!", ["length"]], ["a".repeat(125) + "Ab1!", ["length"]],
     ["ABCDEFG1!", ["lower"]], ["abcdefg1!", ["upper"]], ["Abcdefg!!", ["digit"]],
     ["Abcdefg12", ["symbol"]], ["Abcdefg1é", ["symbol"]], ["Abcdefg1９", ["symbol"]],

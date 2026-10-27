@@ -71,7 +71,7 @@ export async function challengeCompatibilityResponses(flags: Record<string, stri
       }, body: JSON.stringify({ email: "absent@example.test", username: "fixtureuser",
         password: "fixture-long-password", turnstileToken: bodyToken }) }));
       result.push({ path, name, status: response.status, headers: [...response.headers].sort(),
-        body: await response.text(), attempts: [...attempts], admissions: [...admissions], database });
+        body: await response.text(), attempts: [...attempts], admissions: [...admissions], database: structuredClone(database) });
     }
   }
   // No usable OAuth state: all-off behavior must retain main's backend fallback.

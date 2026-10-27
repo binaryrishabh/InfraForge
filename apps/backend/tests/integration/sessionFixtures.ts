@@ -30,7 +30,7 @@ export class SessionFixtures {
     const response = await fetch(this.harness.api + "/auth/sign-up/email", {
       method: "POST", headers: { "Content-Type": "application/json", Origin: this.harness.origin,
         "X-Forwarded-For": "198.51.100.50" }, body: JSON.stringify({ username: `User_${suffix}`,
-        name: "Credential fixture", email: `${suffix}@infraforge.test`, password: randomBytes(24).toString("base64url") }),
+        name: "Credential fixture", email: `${suffix}@infraforge.test`, password: randomBytes(24).toString("base64url") + "Aa1!" }),
     });
     if (!response.ok) throw new Error(`Public credential fixture returned ${response.status}`);
     const context = await this.auth.$context;

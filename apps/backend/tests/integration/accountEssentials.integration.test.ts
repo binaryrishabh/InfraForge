@@ -1,4 +1,6 @@
 import { expect, test } from "bun:test";
+import { mockPasswordBreachService } from "../passwordBreachFixture";
+mockPasswordBreachService();
 import { randomUUID } from "node:crypto";
 import { readdir } from "node:fs/promises";
 import { Pool } from "pg";
@@ -44,7 +46,7 @@ import { createEmailVerificationToken } from "better-auth/api";
     expect(preserved).toEqual(before); expect(deletedAt).toBeNull();
     await checkAccountSchema(sql); await checkFirstStackSchema(sql);
     const mail = new FakeEmail(), quota = { allow: async () => true };
-    const origin = "http://localhost:5173", password = "fixture-password-long-enough";
+    const origin = "http://localhost:5173", password = "Fixture-password-long-8!";
     // Hold each native signup transaction just before commit. The production
     // mail callback must not borrow a second connection or touch the ledger
     // while the new user is still invisible outside that transaction.

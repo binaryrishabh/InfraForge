@@ -2,12 +2,10 @@ import { APIError, originCheckMiddleware, formCsrfMiddleware } from "better-auth
 import type { GenericEndpointContext } from "@better-auth/core";
 import { z } from "zod";
 import type { MailRequests, MailSettings } from "./mailIntent";
-import { signupProof, startHandoff } from "./signupHandoff";
+import { invalidProof, signupProof, startHandoff } from "./signupHandoff";
+export { invalidProof };
 
 export const acceptedMail = { status: true, message: "If eligible, check your email for the link" };
-export const invalidProof = () => new APIError("BAD_REQUEST", {
-  code: "INVALID_EMAIL_PROOF", message: "Request a new signup link",
-});
 
 // Initial public requests commit generic work before any account/plugin lookup.
 export function mailAdmission(queue: MailRequests, settings: MailSettings) {
@@ -37,7 +35,8 @@ export function mailAdmission(queue: MailRequests, settings: MailSettings) {
     if (!settings.origins.includes(callback.origin) || callback.username || callback.password) {
       throw new APIError("FORBIDDEN", { message: "Invalid callback URL" });
     }
-    const handoff = kind === "signup" ? await startHandoff(ctx, settings.secret, settings.baseURL.startsWith("https:")) : undefined;
+    const handoff = kind === "signup"
+      ? await startHandoff(ctx, settings.secret, settings.baseURL.startsWith("https:")) : undefined;
     try { await queue.admit(kind, email, callback.href, handoff); }
     catch { throw new APIError("SERVICE_UNAVAILABLE", { message: "Account service unavailable" }); }
     return ctx.json(acceptedMail);

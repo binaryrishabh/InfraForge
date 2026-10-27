@@ -44,7 +44,23 @@ a session; the user then signs in. Registering an existing OAuth email does not 
 a credential account or merge identities: use the original sign-in method.
 
 Passwords use Better Auth's salted scrypt implementation and verification, with
-explicit 15–128 library string-length bounds and no composition rules. The
+8–128 JavaScript string-length bounds, at least one ASCII lowercase letter,
+one ASCII uppercase letter, one digit and one symbol (a character that is neither
+a Unicode letter nor a Unicode number). `passwordChecks(password)` and
+`passwordAcceptable(password)` in `@infraforge/contracts/auth` share the pure
+composition rule with the web. Signup completion, reset-password, change-password
+and the native server-only set-password flow enforce it. Rule failures return
+400 `PASSWORD_TOO_WEAK` with an actionable message. Existing sign-in passwords
+are not revalidated against the new rule.
+
+The [Better Auth HIBP plugin](https://better-auth.com/docs/plugins/have-i-been-pwned)
+checks the breach/common-password corpus before changing credentials; only the first
+five SHA-1 hex characters leave the server (k-anonymity). A match returns 400
+`PASSWORD_COMPROMISED`, "This password appeared in a data breach. Choose another."
+An unavailable check fails open and logs exactly `Password breach check unavailable`,
+without passwords, hash prefixes or provider errors. Reset runs the plugin's exported
+checker before its native handler consumes the token. Invalid or compromised choices
+leave signup/reset proofs usable. Native hashing and verification remain unchanged. The
 [native credential flow](https://better-auth.com/docs/authentication/email-password)
 and [username plugin](https://better-auth.com/docs/plugins/username) are supported
 by pinned 1.7.7; InfraForge does not duplicate hashing or credential verification.
@@ -61,16 +77,20 @@ raw-handler path. Origin and rate checks run first. Auth logs retain operational
 errors and omit routine login/signup messages; passwords are never logged, returned or persisted
 in browser storage. Forms use password-manager autocomplete and keep passwords
 only in transient input state. Sign-in failures use a common message; rate limits
-have a separate retry message. The username-availability endpoint is disabled.
+have a separate retry message. Public usernames may be checked while typing via
+`POST /api/auth/is-username-available {username}` returning `{available: boolean}`.
+It uses the exact-Origin/CSRF checks and a 120/IP/15-minute quota. Invalid format
+returns 400 `INVALID_USERNAME`. Public handle availability is intentionally
+discoverable; this endpoint does not disclose email addresses.
 With email disabled, native registration still returns a failure for duplicate
 email/username; automatic sign-in cannot provide a sessionless synthetic duplicate
 response. With email enabled, initial signup accepts an email address and sends
 mailbox proof without consulting username or account membership. Requested
 usernames/passwords are neither checked nor stored at this stage. After the user
-opens that link, the UI submits email, proof and credentials. Username availability
-is actionable only after valid mailbox proof and is rate limited (5/proof, 30/IP
-per 15 minutes). A taken name leaves the proof usable for another attempt within
-those limits. The availability endpoint stays disabled. Initial acceptance promises
+opens that link, the UI confirms the handoff and submits email, proof and credentials.
+Completion remains rate limited (5/proof, 30/IP per 15 minutes). A taken name leaves
+the proof usable for another attempt within those limits. Availability checks do
+not reserve a name; completion remains authoritative. Initial acceptance promises
 durable work, not account creation or username reservation.
 
 Migration 16 adds nullable `User.username`, its format/unique guards and the email
@@ -230,11 +250,14 @@ Turnstile before implementing the UI needs below will interrupt existing signup 
 | `GET /api/auth/account-features` | `{enabled, emailEnabled, verificationRequired, turnstileSiteKey}`; site key is public; no secrets |
 | `POST /api/auth/sign-up/email` (email enabled, initial) | `{email, callbackURL?, turnstileToken?}`; action `signup`; generic durable admission, no account/username lookup; callback defaults to first app origin `/signup` |
 | `POST /api/auth/sign-up/email` (email enabled, completion) | `{email, emailProof, username, name, password}`; proof from emailed callback query; native credential validation and username errors after proof; verified account, no session |
+| `POST /api/auth/signup-handoff/confirm` | `{emailProof}`; no cookie needed; 200 `{email}`; invalid/expired/consumed proof: 400 `{code:"INVALID_EMAIL_PROOF", message:"Request a new signup link"}`; idempotent, does not consume the proof |
+| `GET /api/auth/signup-handoff/status` | Handoff cookie; 200 `{state:"pending"}`, `{state:"confirmed", email, emailProof}` or `{state:"expired"}`; missing/unknown/expired cookie means expired; `Cache-Control: no-store` |
+| `POST /api/auth/is-username-available` | `{username}` returning `{available: boolean}`; 400 `INVALID_USERNAME` for invalid format; public handles only |
 | `POST /api/auth/sign-up/email` (email disabled) | Native credential fields plus configured `turnstileToken`; existing sessionful behavior |
 | `POST /api/auth/send-verification-email` | `{email, callbackURL}`; uniform response regardless of existence/verification/session |
 | `GET /api/auth/verify-email?token=...` | Native verification; expired, invalid or redeemed links fail |
 | `POST /api/auth/request-password-reset` | `{email, redirectTo, turnstileToken?}`; action `password_reset`; uniform response |
-| `POST /api/auth/reset-password` | `{token, newPassword}`; native password policy; revokes all sessions |
+| `POST /api/auth/reset-password` | `{token, newPassword}`; shared composition and HIBP policy; revokes all sessions |
 | `POST /api/account/delete` | Session plus `{password, confirmation:"DELETE"}`; current password required on every attempt |
 | `GET /api/account/export?section=...&after=...` | Session; paginated JSON, opaque `next` cursor or null |
 
@@ -253,9 +276,32 @@ ID using `BETTER_AUTH_SECRET`. Only SHA-256 digests of `reset-password:<bearer>`
 and `signup-proof:<bearer>` enter `Verification`; reset bearers are never persisted
 as plaintext or encrypted payloads. Better Auth 1.7.7's supported
 `verification.storeIdentifier` hashing handles lookup/redemption. Native reset
-atomically consumes the value, updates the password and revokes sessions. Signup
+checks the password before atomically consuming the value, then updates the password
+and revokes sessions. Signup
 proof consumption and native user creation share the same database transaction.
 The proof is bound to the normalized email and cannot authorize another address.
+
+Every accepted initial email signup sets a fresh 32-byte base64url
+`infraforge_signup_handoff` cookie, including requests for which no mail is delivered.
+The JSON remains `{status:true, message:"If eligible, check your email for the link"}`.
+The cookie is HttpOnly, SameSite=Lax, Path=/api/auth/signup-handoff, Max-Age=1800,
+and Secure when the auth base URL is HTTPS. Storage contains only its domain-separated
+HMAC under the auth secret. Expiring `Verification` rows bind that digest to the
+specific mail intent/proof; no database migration is needed. Confirm stores the proof
+only encrypted with the auth secret, and status rechecks that it is still unexpired
+and unconsumed before returning it to the cookie holder. Other browsers receive only
+their own state. Confirmation is limited to 30/IP/15 minutes; status allows
+1200/IP/15 minutes (enough for polling every three seconds for 30 minutes).
+The usual native rate limiter also allows these polling/typing budgets.
+
+The email-link page can confirm from any device. The original tab polls status with
+credentials included, then continues username/password selection on confirmation.
+Successful completion consumes the proof and deletes its binding/handoff records
+inside the native signup transaction, and expires the handoff cookie on the completing
+browser. If completion is on another device, the original cookie remains physically
+present until expiry but status immediately returns expired. Failed completion leaves
+the handoff usable. Do not cache or log status bodies, cookies or link parameters.
+
 
 Verification resend uses the library's signed JWT and a hash-only single-use
 `AccountEmailToken` ledger. A prepared verification JWT is encrypted in the mail
@@ -276,7 +322,7 @@ under infrastructure overload.
 
 The API polls `AccountMailIntent` every five seconds, preparing at most 16 requests
 and sending at most 16 messages sequentially per poll. Pending encrypted metadata
-contains only email and callback, never username, password or reset bearer.
+contains email, callback and (for signup) the handoff HMAC, never username, password or reset bearer.
 Preparation and token issuance share a transaction: rollback leaves pending work
 for restart; a ready request is never reissued. Reset/resend membership lookup
 happens here, while signup always prepares the same mailbox-proof step.

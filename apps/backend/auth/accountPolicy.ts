@@ -114,7 +114,13 @@ export function accountAuthHandler(handler: (request: Request) => Promise<Respon
       await sleep(Math.max(0, 750 - (now() - start)));
       // Keep input/challenge/quota/CSRF errors; native successful requests share
       // one body. Provider delivery is separate from durable queue insertion.
-      if (uniform && response.ok) response = Response.json(acceptedMail, { headers: response.headers });
+      if (uniform && response.ok) {
+        const generic = Response.json(acceptedMail);
+        for (const cookie of response.headers.getSetCookie()) {
+          if (cookie.startsWith("infraforge_signup_handoff=")) generic.headers.append("set-cookie", cookie);
+        }
+        response = generic;
+      }
       // A lockout-specific native error would reveal that an OTP record exists.
       // Incorrect, expired, absent and exhausted proofs share one public failure.
       if (otpRedeem && [400, 401, 403].includes(response.status)) {

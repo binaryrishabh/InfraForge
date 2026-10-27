@@ -1,4 +1,6 @@
 import { expect, test } from "bun:test";
+import { mockPasswordBreachService } from "../passwordBreachFixture";
+mockPasswordBreachService();
 import { randomUUID } from "node:crypto";
 import { readdir } from "node:fs/promises";
 import { Pool } from "pg";
@@ -32,7 +34,7 @@ import { registerVerification } from "../../auth/verification";
     const challenge = new Turnstile("fixture", ["localhost"], (async () => Response.json({ success: challengeAccepted, hostname: "localhost", action: "signup" })) as unknown as typeof fetch, false);
     const auth = createAuth(db, { ...defaults, accountEssentials: { ...defaults.accountEssentials, emailEnabled: true, email: mail, challenge } }, { allow: async () => true }, queue);
     const handler = accountAuthHandler(auth.handler, true);
-    const password = "fixture-password-long-enough";
+    const password = "Fixture-password-long-8!";
     let ip = 0;
     const call = (path: string, body?: object) => handler(new Request(`${defaults.baseURL}/api/auth/${path}`, {
       method: body ? "POST" : "GET", headers: { Origin: defaults.origins[0]!, "Content-Type": "application/json", "x-forwarded-for": `198.18.0.${++ip}`, "x-infraforge-client-ip": `198.18.0.${ip}` },
@@ -44,12 +46,12 @@ import { registerVerification } from "../../auth/verification";
     expect(await db.user.count()).toBe(0); expect(await db.accountMailIntent.count()).toBe(0);
     challengeAccepted = true;
     const fresh = await signup("learner", "learner@example.test"), accepted = await fresh.text();
-    expect(fresh.status).toBe(200); expect(fresh.headers.get("set-cookie")).toBeNull();
+    expect(fresh.status).toBe(200); expect(fresh.headers.get("set-cookie")).toContain("infraforge_signup_handoff=");
     expect(mail.messages).toHaveLength(0); // Durable insertion precedes delivery.
     const queued = await db.accountMailIntent.findFirstOrThrow();
     expect(queued.payload).not.toContain("learner@example.test"); expect(queued.status).toBe("pending");
     for (const [username, email] of [["learner", "other@example.test"], ["another", "learner@example.test"], ["another", "other@example.test"]]) {
-      const result = await signup(username!, email!); expect(result.status).toBe(200); expect(await result.text()).toBe(accepted); expect(result.headers.get("set-cookie")).toBeNull();
+      const result = await signup(username!, email!); expect(result.status).toBe(200); expect(await result.text()).toBe(accepted); expect(result.headers.get("set-cookie")).toContain("infraforge_signup_handoff=");
     }
     expect(await db.user.count()).toBe(0); expect(await db.account.count()).toBe(0);
     // A new dispatcher/process can deliver pending rows; concurrent pollers

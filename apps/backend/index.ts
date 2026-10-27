@@ -58,6 +58,7 @@ app.use("/api/auth", (req, res, next) => {
 // callbacks keep the library's original raw-body handling.
 app.post(["/api/auth/sign-up/email", "/api/auth/sign-in/email", "/api/auth/sign-in/username", "/api/auth/sign-in/identifier",
   "/api/auth/request-password-reset", "/api/auth/send-verification-email", "/api/auth/reset-password",
+  "/api/auth/signup-handoff/confirm", "/api/auth/is-username-available", "/api/auth/change-password",
   ...(authSettings.loginMethods.magicLink ? ["/api/auth/sign-in/magic-link"] : []),
   ...(authSettings.loginMethods.emailOtp ? ["/api/auth/email-otp/send-verification-otp", "/api/auth/sign-in/email-otp"] : [])],
   (req, res, next) => {

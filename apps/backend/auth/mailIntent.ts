@@ -13,7 +13,9 @@ export type MailIntent = {
   payload: string;
   expiresAt: Date;
 };
-export type MailPayload = { email: string; callbackURL: string; verificationToken?: string; handoffHash?: string };
+export type MailPayload = {
+  email: string; callbackURL: string; verificationToken?: string; handoffHash?: string;
+};
 export interface MailRequests {
   admit(kind: MailKind, email: string, callbackURL: string, handoffHash?: string): Promise<void>;
 }

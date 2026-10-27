@@ -1,11 +1,13 @@
 import { createHmac, randomBytes } from "node:crypto";
-import { createAuthEndpoint, originCheckMiddleware, formCsrfMiddleware } from "better-auth/api";
+import { APIError, createAuthEndpoint, originCheckMiddleware, formCsrfMiddleware } from "better-auth/api";
 import type { GenericEndpointContext } from "@better-auth/core";
 import { symmetricDecrypt, symmetricEncrypt } from "better-auth/crypto";
-import { invalidProof } from "./mailAdmission";
 import { storedIdentifier } from "./mailIntent";
 import { EMAIL_TOKEN_SECONDS } from "./verification";
 
+export const invalidProof = () => new APIError("BAD_REQUEST", {
+  code: "INVALID_EMAIL_PROOF", message: "Request a new signup link",
+});
 export const HANDOFF_COOKIE = "infraforge_signup_handoff";
 const cookieOptions = (secure: boolean) => ({ httpOnly: true, secure, sameSite: "lax" as const,
   path: "/api/auth/signup-handoff", maxAge: EMAIL_TOKEN_SECONDS });
