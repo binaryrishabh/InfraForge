@@ -63,6 +63,7 @@ model Deployment {
   seed                  String?
   simulationState       Json?
   runInputs             Json?
+  browserSubmission     Json?   // Model 2 browser run: { stopAtSecond, actions } submitted when the run ended
   liveTopology          Json?
   topologyRevision      Int                         @default(0)
   runtimeActive         Boolean                     @default(false)

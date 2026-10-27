@@ -1,12 +1,15 @@
 import { admitDeployment } from "../deployments/admission";
-import { authorizeCapability, requireCapability } from "../capabilities/policy";
+import { authorizeCapability, executionAllowance, requireCapability } from "../capabilities/policy";
 import { Router } from "express";
 import { randomUUID } from "node:crypto";
 import { prisma } from "../lib/prisma";
-import { ValidationError, NotFoundError } from "../utils/errors";
+import { ConflictError, ValidationError, NotFoundError } from "../utils/errors";
 import { DeploymentCreateBodySchema, DeploymentIdSchema } from "../zod_schemas/deployment.schema";
 import { captureRunInputs } from "../deployments/runInputs";
-import { hasInternalGrant } from "../internalModel2/store";
+import { runtimeHorizon } from "../deployments/operationalLimits";
+import { checkSubmission } from "../browserRuns/submission";
+import { storedJson } from "../utils/json";
+import { DeploymentStatus } from "@infraforge/contracts/deployment";
 import { reportRouter } from "../reports/routes";
 import { actionRouter } from "../actions/routes";
 import { rerunRouter } from "../reruns/routes";
@@ -21,7 +24,7 @@ deploymentRouter.post("/", async (req, res) => {
   if (!body.success) throw new ValidationError("A saved infrastructure ID and valid workload are required.");
   const { infrastructureId, workloadProfile } = body.data;
   // Model 2 live runs open to granted accounts first; everyone moves to Model 2 when Model 1 is removed.
-  const engine = await hasInternalGrant(res.locals.userId) ? "2" : "1";
+  const engine = await prisma.internalModel2Grant.count({ where: { userId: res.locals.userId } }) ? "2" : "1";
   const createdDeployment = await prisma.$transaction(async (tx) => {
     await tx.$queryRaw`SELECT id FROM "Infrastructure" WHERE id = ${infrastructureId} FOR UPDATE`;
     const infrastructure = await tx.infrastructure.findUnique({ where: { id: infrastructureId, ownerId: res.locals.userId } });
@@ -60,4 +63,22 @@ deploymentRouter.get("/:deploymentId", async (req, res) => {
   const deployment = await prisma.deployment.findUnique({ where: { id: parsed.data.deploymentId, ownerId: res.locals.userId } });
   if (!deployment) throw new NotFoundError("Run not found");
   res.json({ success: true, deployment });
+});
+
+// The browser finished a Model 2 run: store what it did and queue the server's replay, which alone becomes the record.
+deploymentRouter.post("/:deploymentId/submit", async (req, res) => {
+  const parsed = DeploymentIdSchema.safeParse(req.params);
+  if (!parsed.success) throw new ValidationError("A valid deployment ID is required.");
+  const id = parsed.data.deploymentId;
+  await prisma.$transaction(async (tx) => {
+    await tx.$queryRaw`SELECT id FROM "Deployment" WHERE id = ${id} FOR UPDATE`;
+    const run = await tx.deployment.findFirst({ where: { id, ownerId: res.locals.userId } });
+    if (!run) throw new NotFoundError("Run not found");
+    if (run.status !== DeploymentStatus.BROWSER) throw new ConflictError("This run is not waiting for a browser submission.");
+    const allowance = executionAllowance(run.autoStopAtSimulatedSeconds ?? run.evaluationStopAtSimulatedSeconds);
+    const submission = checkSubmission(req.body, { horizonSeconds: runtimeHorizon(allowance.durationSeconds), challenge: run.challengeId !== null });
+    await tx.deployment.update({ where: { id }, data: { browserSubmission: storedJson(submission), status: DeploymentStatus.PENDING } });
+    await tx.outbox.create({ data: { eventType: "deployment-replay", payload: { deploymentId: id } } });
+  });
+  res.status(202).json({ success: true, message: "Submitted. The server is replaying the run for the official result." });
 });
