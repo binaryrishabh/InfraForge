@@ -1,0 +1,17 @@
+{
+  "schema": "infraforge-heldout-billing-vectors/1",
+  "scope": "Independent analytic boundary vectors for the retained USD 0.096/hour Linux shared m5.large quote and documented per-start 60-second minimum; no performance fit",
+  "sourceRateCode": "6C86BEPQVG73ZGGR.JRTCKXETXF.6YS6EN2CT7",
+  "cases": [
+    { "name": "instant-start-stop", "durationsUs": [0], "usd": { "numerator": "1", "denominator": "625" } },
+    { "name": "one-microsecond", "durationsUs": [1], "usd": { "numerator": "1", "denominator": "625" } },
+    { "name": "below-minimum", "durationsUs": [59999999], "usd": { "numerator": "1", "denominator": "625" } },
+    { "name": "minimum", "durationsUs": [60000000], "usd": { "numerator": "1", "denominator": "625" } },
+    { "name": "fractional-next-second", "durationsUs": [60000001], "usd": { "numerator": "61", "denominator": "37500" } },
+    { "name": "hundred-seconds", "durationsUs": [100000000], "usd": { "numerator": "1", "denominator": "375" } },
+    { "name": "two-minutes", "durationsUs": [120000000], "usd": { "numerator": "2", "denominator": "625" } },
+    { "name": "hour-boundary", "durationsUs": [3599999999], "usd": { "numerator": "12", "denominator": "125" } },
+    { "name": "one-hour", "durationsUs": [3600000000], "usd": { "numerator": "12", "denominator": "125" } },
+    { "name": "two-independent-starts", "durationsUs": [1, 1], "usd": { "numerator": "2", "denominator": "625" } }
+  ]
+}
