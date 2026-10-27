@@ -184,7 +184,7 @@ class Judge {
         if (!t || !input) return unknown(this.missingMeasurement(), ["terminalSnapshot"]);
         const top = busiestTypes(t, input);
         if (!top.types.length) return unknown("No CPU measurement was recorded.", ["terminalSnapshot.metrics"]);
-        return compare(top.types.join(" / "), top.types.includes(predicted), `Highest CPU at second ${t.simulatedSeconds}: ${list(top.types)} at ${top.cpu}%${top.types.length > 1 ? " (tied)" : ""}. Autoscaled replicas count as Virtual Machines.`, ["terminalSnapshot.metrics"]);
+        return compare(top.types.join(" / "), top.types.includes(predicted), `Highest known CPU at second ${t.simulatedSeconds}: ${list(top.types)} at ${top.cpu}%${top.types.length > 1 ? " (tied)" : ""}. Unknown CPU values are excluded. Autoscaled replicas count as Virtual Machines.`, ["terminalSnapshot.metrics"]);
       }
       case "baseline-health": {
         const e = this.experiment;

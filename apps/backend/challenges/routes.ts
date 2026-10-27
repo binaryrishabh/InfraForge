@@ -166,7 +166,7 @@ challengeRouter.post("/:id/attempts", async (req, res) => {
     }
     const active = await tx.deployment.count({ where: { ownerId, challengeId: definition.id, OR: [{ status: { in: ["pending", "running", "live"] } }, { runtimeActive: true }] } });
     if (active) throw new ConflictError("An attempt at this challenge is still running. Stop it or let it reach the evaluation second first.");
-    const runInputs = captureRunInputs(design.layout, definition.workload, challengeSeed(definition));
+    const runInputs = captureRunInputs(design.layout, definition.workload, challengeSeed(definition), definition.engine);
     const improvement = body.data.improvement;
     if (improvement) {
       await tx.$queryRaw`SELECT id FROM "Deployment" WHERE id = ${improvement.sourceRunId} AND "ownerId" = ${ownerId} FOR SHARE`;
@@ -182,12 +182,12 @@ challengeRouter.post("/:id/attempts", async (req, res) => {
     const readiness = validateDeploymentReadiness(runInputs.resources, runInputs.connectionLines);
     if (!readiness.valid) throw new ValidationError(`Fix the design before starting: ${readiness.errors.join("; ")}`);
     if (definition.experiment) {
-      const ready = experimentReadiness(definition.experiment, runInputs);
+      const ready = experimentReadiness(definition.experiment, runInputs, definition.engine);
       if (!ready.ready) throw new ValidationError(`The experiment cannot run: ${ready.detail}`);
     }
     const prediction = readPrediction(body.data.prediction, definition, runInputs.resources.map((r) => r.type));
     const experiment = recordedExperiment(definition);
-    requireCapability(ownerId, { capability: "run.start", purpose: "learner", engine: "1", profile: runInputs.simulationModelVersion, durationSeconds: definition.evaluationSeconds });
+    requireCapability(ownerId, { capability: "run.start", purpose: "learner", engine: definition.engine ?? "1", profile: runInputs.simulationModelVersion, durationSeconds: definition.evaluationSeconds });
     const created = await admitDeployment(tx, { id: randomUUID(), infrastructureId: design.id, ownerId, runName: design.name,
       resourceCount: runInputs.resources.length, workloadProfile: runInputs.workloadProfile, seed: runInputs.seed, runInputs,
       liveTopology: { resources: runInputs.resources, connectionLines: runInputs.connectionLines },

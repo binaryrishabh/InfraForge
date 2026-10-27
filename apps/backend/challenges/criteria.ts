@@ -38,7 +38,7 @@ export function measuredType(id: string, topology: Topology) {
 export function busiestTypes(terminal: ReportCheckpoint, topology: Topology) {
   const peak = new Map<string, number>();
   for (const resource of terminal.resources) {
-    if (resource.cpu === undefined) continue;
+    if (typeof resource.cpu !== "number" || !Number.isFinite(resource.cpu)) continue;
     const type = measuredType(resource.id, topology);
     peak.set(type, Math.max(peak.get(type) ?? 0, resource.cpu));
   }

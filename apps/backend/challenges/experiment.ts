@@ -33,7 +33,7 @@ export function readRecordedExperiment(value: unknown): RecordedExperiment | nul
 /* Preconditions checked on the attempt's captured design, the same way in preflight
 and when the attempt is created. The target is a named resource kept from the
 starter; when it is missing nothing else is substituted. */
-export function experimentReadiness(experiment: ChallengeExperiment, topology: Topology): { ready: boolean; detail: string } {
+export function experimentReadiness(experiment: ChallengeExperiment, topology: Topology, engine?: "2"): { ready: boolean; detail: string } {
   const limit = evidenceResourceLimit(topology);
   if (limit) return { ready: false, detail: limit };
   const { resourceId, type } = experiment.target;
@@ -47,7 +47,7 @@ export function experimentReadiness(experiment: ChallengeExperiment, topology: T
     const pooled = topology.connectionLines.some((line) => {
       if (line.targetId !== resourceId) return false;
       const source = topology.resources.find((r) => r.id === line.sourceId);
-      return source?.type === RESOURCE_TYPES.LoadBalancer && source.autoscaling?.enabled !== false;
+      return source?.type === RESOURCE_TYPES.LoadBalancer && (engine === "2" || source.autoscaling?.enabled !== false);
     });
     if (!pooled) return { ready: false, detail: `${resourceId} must stay behind a load balancer that manages its app servers as a pool (autoscaling on). In this model only a pool sends requests away from a crashed server.` };
   }

@@ -72,8 +72,8 @@ export function attemptReport(def: ChallengeDefinition, design: ChallengeStarter
   return buildRunReport(attemptRow(def, design, prediction, options), options.registry);
 }
 export function attemptRow(def: ChallengeDefinition, design: ChallengeStarter, prediction: ChallengePrediction, options: AttemptOptions = {}): StoredRun {
-  const runInputs = captureRunInputs({ ...design, layoutVersion: 3 }, def.workload, challengeSeed(def), options.engine ?? "1");
-  const engine = options.engine === "2" ? { model2: createModel2Engine(runInputs, def.evaluationSeconds, options.builder ?? buildModel2Contract) }
+  const runInputs = captureRunInputs({ ...design, layoutVersion: 3 }, def.workload, challengeSeed(def), options.engine ?? def.engine ?? "1");
+  const engine = (options.engine ?? def.engine) === "2" ? { model2: createModel2Engine(runInputs, def.evaluationSeconds, options.builder ?? buildModel2Contract) }
     : { state: createInitialState("attempt", runInputs.resources, runInputs.connectionLines, runInputs.workloadProfile, engineSeed(runInputs.seed)) };
   const instance: SimulationInstance = { ...engine, tickCount: 0, pendingLogs: [], speed: 1, lastCheckpointAt: 0,
     accumulatedCostUsd: 0, topology: runInputs, topologyRevision: 0, actions: new Map(), acknowledge: null,

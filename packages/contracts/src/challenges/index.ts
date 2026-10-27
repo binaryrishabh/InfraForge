@@ -88,6 +88,8 @@ export interface RecordedExperiment {
 }
 
 export interface ChallengeDefinition {
+  // Omitted on historical Model 1 versions.
+  engine?: "2";
   id: string;
   version: number;
   title: string;

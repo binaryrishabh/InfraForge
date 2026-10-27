@@ -24,7 +24,7 @@ const workload = z.object({
 const resource = z.object({ id: z.string().min(1).max(64), type: z.enum(types), x: z.number(), y: z.number() }).passthrough();
 const line = z.object({ id: z.string().min(1), sourceId: z.string().min(1), targetId: z.string().min(1), sourceType: z.enum(types), targetType: z.enum(types), port: z.number().int().min(0).max(65535) }).strict();
 const definition = z.object({
-  id, version: z.number().int().min(1).max(10_000), title: text(60), difficulty: z.enum(["starter", "core", "advanced"]),
+  engine: z.literal("2").optional(), id, version: z.number().int().min(1).max(10_000), title: text(60), difficulty: z.enum(["starter", "core", "advanced"]),
   summary: text(200), concepts: z.array(text(40)).min(1).max(4), story: z.array(text(400)).min(1).max(4), objective: text(300),
   workload, workloadNote: text(160), evaluationSeconds: z.number().int().min(1).max(3600), evaluationNote: text(200),
   criteria: z.array(z.object({ id, kind: z.string(), label: text(120) }).passthrough()).min(1).max(8),
@@ -74,12 +74,13 @@ function checkDefinition(d: ChallengeDefinition): string[] {
     if (!experimentWindow(recordedExperiment(d)!, d.evaluationSeconds)) problems.push(`${where}: evidence window exceeds ${EXPERIMENT_MAX_POINTS} retained points`);
     if (!d.starter) problems.push(`${where}: an experiment needs a starter that contains its target`);
     else {
-      const ready = experimentReadiness(e, d.starter);
+      const ready = experimentReadiness(e, d.starter, d.engine);
       if (!ready.ready) problems.push(`${where}: experiment target: ${ready.detail}`);
     }
     // The baseline is measured at full traffic, so the fault waits for the ramp to finish.
-    if (e.atSimulatedSecond < SIMULATION_CONSTANTS.RAMP_SECONDS) problems.push(`${where}: the fault must not start before the ${SIMULATION_CONSTANTS.RAMP_SECONDS}-second ramp ends`);
+    if (d.engine !== "2" && e.atSimulatedSecond < SIMULATION_CONSTANTS.RAMP_SECONDS) problems.push(`${where}: the fault must not start before the ${SIMULATION_CONSTANTS.RAMP_SECONDS}-second ramp ends`);
     // The expiry tick still measures the fault. Observation starts with the next completed tick.
+    if (e.atSimulatedSecond < 1) problems.push(`${where}: the fault needs a measured baseline at second 1 or later`);
     const last = e.atSimulatedSecond + FAULT_DURATIONS[e.fault];
     const evaluation = last + (e.postFaultObservationSeconds ?? 0);
     if (d.evaluationSeconds !== evaluation) problems.push(e.postFaultObservationSeconds === undefined

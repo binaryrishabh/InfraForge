@@ -33,7 +33,7 @@ export function preflight(definition: ChallengeDefinition, topology: Topology): 
         return { ...base, status: "during-run", detail: `Measured at simulated second ${definition.evaluationSeconds}.` };
     }
   });
-  const experiment = definition.experiment ? experimentReadiness(definition.experiment, topology) : null;
+  const experiment = definition.experiment ? experimentReadiness(definition.experiment, topology, definition.engine) : null;
   return { valid: readiness.valid && experiment?.ready !== false, errors: [...readiness.errors, ...(experiment && !experiment.ready ? [experiment.detail] : [])],
     warnings: readiness.warnings, monthlyEstimateUsd: monthly.monthlyEstimate, checks,
     resourceTypes: [...new Set(topology.resources.map((r) => r.type))], experiment };
