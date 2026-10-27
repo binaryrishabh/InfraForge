@@ -351,18 +351,18 @@
     "review": "Prisma 7.9.1 generated client for the additive immutable submission schema; fixed literal imports, pinned generator/schema and no authored runtime injected"
   },
   "apps/backend/lib/generated/prisma/internal/class.ts": {
-    "hash": "40dd8f5e59e384c32c4ef392a7d7fde3913299970f18a4c6089f327219b852ab",
+    "hash": "dcefc48855b84b0d8cce82943178a28cc42cadeb0a24dc2217fdbcffe7c87631",
     "capabilities": [
       "generated-client"
     ],
-    "review": "Prisma 7.9.1 generated client after additive queue-event model and optional delivery timestamps. Reviewed generator bootstrap, static imports and runtime schema/model expansion; unchanged pinned generator/runtime, no authored runtime adapter or evaluator. w46: regenerated for the merged schema with the strictly additive FirstStackQueueEvent model and nullable deliveredAt columns."
+    "review": "Pinned Prisma 7.9.1 regeneration reviewed: one nullable FirstStackWork.generation column; unchanged generator/runtime and permissions."
   },
   "apps/backend/lib/generated/prisma/internal/prismaNamespace.ts": {
-    "hash": "61e2a043c4e8f3c9910cacb86a565b83a22127cdc47f2b261cc8dfa66de6491f",
+    "hash": "05d9bda71797ccaf9140a3b8259b54b7e6d80425a455ee3fc9062c41a6da5819",
     "capabilities": [
       "generated-client"
     ],
-    "review": "Prisma 7.9.1 generated client after additive queue-event model and optional delivery timestamps. Reviewed generator bootstrap, static imports and runtime schema/model expansion; unchanged pinned generator/runtime, no authored runtime adapter or evaluator. w46: regenerated for the merged schema with the strictly additive FirstStackQueueEvent model and nullable deliveredAt columns."
+    "review": "Pinned Prisma 7.9.1 regeneration reviewed: one nullable FirstStackWork.generation column; unchanged generator/runtime and permissions."
   },
   "apps/backend/release/credentialSchema.ts": {
     "hash": "6ba47f47089be38386b53ed90e8c8f8635753d0f83cd1503a3d8ed6ebe8a1589",
@@ -380,12 +380,12 @@
     "review": "Fixed data indexing; resource adapters require the separate documented review"
   },
   "apps/backend/release/migrations.ts": {
-    "hash": "5b64cd88472c77a79216ec8828247b15e140df1f4102548717f51c54fb380eed",
+    "hash": "591fac1da0d1caaf701ad5601fe1684c73c87decae489844858b1150f359d7c9",
     "capabilities": [
       "computed-data",
       "resources"
     ],
-    "review": "Reviewed exact release manifest and filesystem inventory: adds 20261025120000_email_login_intents, which widens only the mail-kind CHECK constraint and preserves rows, Prisma schema and relation defaults. Native PostgreSQL schema drift passed. Existing computed-data/resources authority and release locks/guards retained; no new process/loader permission."
+    "review": "Reviewed process receipt slice: separate immutable worker generation and token, source/image and confirmed exit fences, offline service-stop recovery, old Docker readers and release migration validation. Only bounded data/schema handling and existing database operations; Docker execution remains active; no process authority, dynamic loader, physics or public activation changes."
   },
   "apps/backend/release/model2Schema.ts": {
     "hash": "938f32e0a1b5371155aced66767440a78dd80e2e4a34bdac50c86374b9ca0a39",
@@ -1333,11 +1333,11 @@
     "review": "Internal first-stack V2 review/compiler/qualification: fixed JSON indexing and statically imported Stage 1 registry/host composition; bounded recorded keys and DB health; opt-in host bounds, finite reducers and cooperative qualification only; no evaluator, dynamic loader, product dispatch, HTTP executor or activation"
   },
   "apps/backend/firstStack/admission.ts": {
-    "hash": "a70d4bccf00de4e2f6acb86714cce2e039e9d9e8180f2d4e8162c2ddd9581c99",
+    "hash": "235e687959062eb38d1969a345ff345a5f61767b839155d48b81177684818e9f",
     "capabilities": [
       "computed-data"
     ],
-    "review": "Exact queue/storage operations review: stable-ID delivery reconciliation only quarantines queued reservations using original guarded claims; no redispatch or successful evidence. Numeric loopback-only queue/storage aggregates include full retained JSON and physical allocation. Bounded Redis diagnostic pruning and thirty-day operational event deletion only. Offline reviewed closure holds lifecycle/executor transaction locks; no engine change, public activation, hidden-content output or user-history deletion."
+    "review": "Reviewed process receipt slice: separate immutable worker generation and token, source/image and confirmed exit fences, offline service-stop recovery, old Docker readers and release migration validation. Only bounded data/schema handling and existing database operations; Docker execution remains active; no process authority, dynamic loader, physics or public activation changes."
   },
   "apps/backend/firstStack/submissionRoutes.ts": {
     "hash": "6840ed301decafc64ab1d036cd2dfdce946bb7d80e79c73d1ca4ca76fc86b24a",
@@ -1347,11 +1347,11 @@
     "review": "Exact historical compatibility review: versioned stored-data readers, typed migration audit lineage and bounded replay under the existing isolated executor/session fence; additive replay reservations; no evaluator, new process permission, physics change, latest-input resolution or activation"
   },
   "apps/backend/firstStack/submissionWorker.ts": {
-    "hash": "1b1ae55283764d5a37b17841ba73487a2730d0c32add5e8a4d4cd6b63fa0c658",
+    "hash": "a9607d6a7ff93dbf6692badd4eb98feee4a5425b1d832f75555b8385396a8dfd",
     "capabilities": [
       "computed-data"
     ],
-    "review": "Exact verifier lifecycle review: fail-closed admission and qualified engine availability, one session-owned queue lifecycle, bounded connections and scored drain; release refuses the lifecycle lock. No engine physics, dynamic evaluator or public activation."
+    "review": "Reviewed process receipt slice: separate immutable worker generation and token, source/image and confirmed exit fences, offline service-stop recovery, old Docker readers and release migration validation. Only bounded data/schema handling and existing database operations; Docker execution remains active; no process authority, dynamic loader, physics or public activation changes."
   },
   "apps/backend/firstStack/submissionQueue.ts": {
     "hash": "4c719cd623775d55efad2d6164fefa0f37c87b14ee3d9d806795d51e368a8307",
@@ -1361,12 +1361,12 @@
     "review": "Exact historical compatibility review: versioned stored-data readers, typed migration audit lineage and bounded replay under the existing isolated executor/session fence; additive replay reservations; no evaluator, new process permission, physics change, latest-input resolution or activation w46: astra-reviewed queue operations, reconciliation and storage reserve, merged onto the reviewed release-lock schema checks and drain-aware health."
   },
   "apps/backend/release/firstStackSchema.ts": {
-    "hash": "1557c0c63f76c5b32456b1fe297da1e15ee121cd06062406057ba492263abc4e",
+    "hash": "b4cec13f2c3dc11bcfb1551fd241dcf875290653c467907975095a739e965839",
     "capabilities": [
       "computed-data",
       "resources"
     ],
-    "review": "Exact historical compatibility review: versioned stored-data readers, typed migration audit lineage and bounded replay under the existing isolated executor/session fence; additive replay reservations; no evaluator, new process permission, physics change, latest-input resolution or activation w46: checks the queue-operations recovery triggers, FirstStackQueueEvent and deliveredAt columns (migration renamed to 20261025000000)."
+    "review": "Reviewed process receipt slice: separate immutable worker generation and token, source/image and confirmed exit fences, offline service-stop recovery, old Docker readers and release migration validation. Only bounded data/schema handling and existing database operations; Docker execution remains active; no process authority, dynamic loader, physics or public activation changes."
   },
   "apps/backend/lib/generated/prisma/browser.ts": {
     "hash": "1b1d585e284ec626b0af3aac1819417fc080443b3852490c30c7534bdc710ae0",
@@ -1383,11 +1383,11 @@
     "review": "Prisma 7.9.1 generated client after additive queue-event model and optional delivery timestamps. Reviewed generator bootstrap, static imports and runtime schema/model expansion; unchanged pinned generator/runtime, no authored runtime adapter or evaluator."
   },
   "apps/backend/lib/generated/prisma/internal/prismaNamespaceBrowser.ts": {
-    "hash": "5dc6f54fc7388ff775accdae6862a7b08ec882fa08cfda7ed9bae1ecc15d7202",
+    "hash": "e35a3dafa2d12fe8a3fe814f70ad252baf8859e485a5f9e7b6164824f54e43bf",
     "capabilities": [
       "generated-client"
     ],
-    "review": "Prisma 7.9.1 generated client after additive queue-event model and optional delivery timestamps. Reviewed generator bootstrap, static imports and runtime schema/model expansion; unchanged pinned generator/runtime, no authored runtime adapter or evaluator. w46: regenerated for the merged schema with the strictly additive FirstStackQueueEvent model and nullable deliveredAt columns."
+    "review": "Pinned Prisma 7.9.1 regeneration reviewed: one nullable FirstStackWork.generation column; unchanged generator/runtime and permissions."
   },
   "apps/backend/lib/generated/prisma/models/Account.ts": {
     "hash": "c2c4ddfae8f1c226cb18ad186086a0e7e0985f0bb914c07647aea4b4af31b9f6",
@@ -1432,11 +1432,11 @@
     "review": "Exact Prisma 7.9.1 generated bytes for the strictly additive historical replay reservation; pinned schema/generator, fixed literal imports"
   },
   "apps/backend/lib/generated/prisma/models/FirstStackWork.ts": {
-    "hash": "57ae745e91ddd37c51fbae6ac0c2050446c56e7613f89de4a8d6ac8fd72d2d98",
+    "hash": "9dc4d55b5d11de009bec03a32ebdcfaded9b2841e992703596b0d617c7905b11",
     "capabilities": [
       "generated-client"
     ],
-    "review": "Prisma 7.9.1 generated client for the additive immutable submission schema; fixed literal imports, pinned generator/schema and no authored runtime injected"
+    "review": "Pinned Prisma 7.9.1 regeneration reviewed: one nullable FirstStackWork.generation column; unchanged generator/runtime and permissions."
   },
   "apps/backend/lib/generated/prisma/models/Infrastructure.ts": {
     "hash": "131d80c5c7e86e7d286b30428425c26ef0b1883b631d84e9a7c6359f71410b5a",
@@ -1516,11 +1516,11 @@
     "review": "Prisma 7.9.1 generated client after additive queue-event model and optional delivery timestamps. Reviewed generator bootstrap, static imports and runtime schema/model expansion; unchanged pinned generator/runtime, no authored runtime adapter or evaluator. w46: regenerated for the merged schema with the strictly additive FirstStackQueueEvent model and nullable deliveredAt columns."
   },
   "apps/backend/firstStack/report.ts": {
-    "hash": "0c672631922df98c3d22edbbad30da89fb87f8cce0714b3c60cffcc91fdbea5b",
+    "hash": "3b9aa93cf9820f93f2a39f638e0e5bdecf7a347c57ec65b017cf8cbc92e90ff2",
     "capabilities": [
       "computed-data"
     ],
-    "review": "Server-only frozen tariff projection from matching verified usage; shared pure simulation capture has no tariff inputs; exact EC2 arithmetic, no process/clock/network access, provider inference or activation; merged slice 13 server-side cost projection with slice 16 versioned historical reads and typed migrated-from lineage (static imports and a type-only import() annotation; no loader or host capability)"
+    "review": "Reviewed process receipt slice: separate immutable worker generation and token, source/image and confirmed exit fences, offline service-stop recovery, old Docker readers and release migration validation. Only bounded data/schema handling and existing database operations; Docker execution remains active; no process authority, dynamic loader, physics or public activation changes."
   },
   "apps/backend/firstStack/reportCapture.ts": {
     "hash": "4d6d7fc81d23645722fdf27d03f4ed58e11a1c0f96b05682c2537664b7425639",
@@ -1557,11 +1557,11 @@
     }
   },
   "apps/backend/firstStack/scoredChallenges/execution.ts": {
-    "hash": "e879f195764f31a7c5f0fa89194e8ee94641724db271ed47acccec59e830394f",
+    "hash": "5e096aa50f62c92e144d16675aab7032da77f688fef2bcca16a3a100492d46ec",
     "capabilities": [
       "computed-data"
     ],
-    "review": "Exact serial scoring review: resolve and authenticate the private bundle before hidden execution; missing, unreadable or mismatched store returns only a fixed scoring-unavailable state. Existing evidence, ownership, cleanup and compile-lock fences preserved; no retry or score is granted on unavailable data."
+    "review": "Reviewed process receipt slice: separate immutable worker generation and token, source/image and confirmed exit fences, offline service-stop recovery, old Docker readers and release migration validation. Only bounded data/schema handling and existing database operations; Docker execution remains active; no process authority, dynamic loader, physics or public activation changes."
   },
   "apps/backend/firstStack/scoredChallenges/projection.ts": {
     "hash": "ae64bb684624658590fbd58f4d26f9758431384a56320d9640460062336628d5",
@@ -1868,11 +1868,11 @@
     "review": "Exact queue/storage operations review: stable-ID delivery reconciliation only quarantines queued reservations using original guarded claims; no redispatch or successful evidence. Numeric loopback-only queue/storage aggregates include full retained JSON and physical allocation. Bounded Redis diagnostic pruning and thirty-day operational event deletion only. Offline reviewed closure holds lifecycle/executor transaction locks; no engine change, public activation, hidden-content output or user-history deletion."
   },
   "apps/backend/firstStack/recoveryOperations.ts": {
-    "hash": "014d45e8baae06cfa5972e476bf5f697158120b08241bc93dcdaa40649cfe7d3",
+    "hash": "a4534e840d3e6d0cccb3fa82647c4728f020c88a59cbf04a3d42bd237cad1608",
     "capabilities": [
       "computed-data"
     ],
-    "review": "Exact queue/storage operations review: stable-ID delivery reconciliation only quarantines queued reservations using original guarded claims; no redispatch or successful evidence. Numeric loopback-only queue/storage aggregates include full retained JSON and physical allocation. Bounded Redis diagnostic pruning and thirty-day operational event deletion only. Offline reviewed closure holds lifecycle/executor transaction locks; no engine change, public activation, hidden-content output or user-history deletion."
+    "review": "Reviewed process receipt slice: separate immutable worker generation and token, source/image and confirmed exit fences, offline service-stop recovery, old Docker readers and release migration validation. Only bounded data/schema handling and existing database operations; Docker execution remains active; no process authority, dynamic loader, physics or public activation changes."
   },
   "apps/backend/release/firstStackOperations.ts": {
     "hash": "8047c8b17ed9dd618f97848214d5c84b74c9a01c6fe7c75601361196368f4ce1",
@@ -1959,5 +1959,12 @@
     "capabilities": [],
     "hash": "405b72cb3fa1238a3187272ef8477507ef17d30f903de489d45f0aa6587c8425",
     "review": "Reviewed exact account-settings router: authenticates authoritative session, applies shared quotas, filters every method/session query by owner, requires native password verification before unlink, serializes last-usable-method checks and rechecks the session inside the transaction. Returns selected non-secret fields only. Injected database and auth API; no direct host/network globals, computed-data, loader or evaluator authority."
+  },
+  "apps/backend/firstStack/executionReceipt.ts": {
+    "hash": "c816c4b5a740729e054513ccaabd898da515abfbf4c7eb0fcb5e8c84f8007472",
+    "capabilities": [
+      "computed-data"
+    ],
+    "review": "Reviewed strict versioned receipt schemas and pure ownership/exit comparisons. No host IO, process access, loaders, evaluators or activation."
   }
 }

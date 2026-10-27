@@ -2,12 +2,12 @@ import type { Client } from "pg";
 import { canonical, designRevision, hash } from "../canonical";
 import { inputDigest, readIsolatedCut, type IsolatedCut } from "../isolationProtocol";
 import type { IsolationAuthority } from "../isolationRunner";
-import type { executeFirstStackIsolated } from "../isolatedExecution";
+import { receiptState, type ExecutionResult } from "../executionReceipt";
 import { serverChallenges, prepareChallengeWorkload, validateChallengeDesign, type ChallengeRegistry } from "./definition";
 import { ScoringUnavailableError, scoringUnavailable } from "./privateStore";
 import { evaluateWorkload, scoreRecord } from "./scoring";
 
-type Result = Awaited<ReturnType<typeof executeFirstStackIsolated>>;
+type Result = ExecutionResult;
 export interface HiddenTarget { inputHash: string; lock: unknown; cut: IsolatedCut | null }
 export function challengeFence(visible: { check(db: Client): Promise<void>; commit(db: Client, cut: IsolatedCut): Promise<void> }, source: string) {
   let target: HiddenTarget | null = null;
@@ -27,8 +27,9 @@ export async function executeScoredChallenge(run: any, sample: Result, authority
   select: (target: HiddenTarget | null) => void, execute: (input: string, authority: IsolationAuthority, signal: AbortSignal) => Promise<Result>,
   registry: ChallengeRegistry = serverChallenges) {
   const visible = sample.durablePrefix;
+  const owner = { token: authority.token!, generation: run.generation, ...run.engine };
   if (run.purpose !== "scored") return null;
-  if (sample.status !== "completed" || sample.receipt.cleanup !== "removed" || !visible ||
+  if (sample.status !== "completed" || !receiptState(sample.receipt, owner).completed || !visible ||
     !visible.cut.completeness.horizonReached || visible.cut.interruption || hash(visible.cut.lock) !== hash(run.lock) ||
     visible.source !== run.engine.source || visible.inputHash !== run.inputHash || visible.fingerprint !== run.browserCut.fingerprint) return null;
   readIsolatedCut(visible, run.engine.source, run.inputHash);
@@ -52,8 +53,8 @@ export async function executeScoredChallenge(run: any, sample: Result, authority
     select(target);
     const result = await execute(input, authority, signal);
     await authority.assertHeld(signal);
-    if (!["removed", "not-created"].includes(result.receipt.cleanup)) throw Error("Hidden executor cleanup unconfirmed");
-    const evidence = result.status === "completed" && result.receipt.cleanup === "removed" && target.cut && result.durablePrefix &&
+    if (!receiptState(result.receipt, owner).clean) throw Error("Hidden executor cleanup unconfirmed");
+    const evidence = result.status === "completed" && receiptState(result.receipt, owner).completed && target.cut && result.durablePrefix &&
       target.cut.fingerprint === result.durablePrefix.fingerprint ? target.cut : null;
     records.push({ reference: workload, input, evidence, receipt: result.receipt, outcomes: evaluateWorkload(definition, workload, input, evidence) });
   }

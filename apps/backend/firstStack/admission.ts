@@ -13,7 +13,7 @@ import { publicScore } from "./scoredChallenges/projection";
 import { migrationSource, migrationSourceSchema } from "./migration";
 import type { RunReference } from "@infraforge/contracts/reports";
 import { submissionStorage, requireSubmissionStorage } from "./submissionStorage";
-import { requireOfflineRecovery } from "./recoveryOperations";
+import { requireOfflineRecovery, submissionRecoverySchema, recoveryMatches } from "./recoveryOperations";
 
 export const submissionEnvelope = Object.freeze({ revision: "first-stack-submission/1", queued: 16,
   queuedBytes: 256 * 1024 * 1024, retainedBytes: 2 * 1024 * 1024 * 1024,
@@ -144,18 +144,17 @@ export async function appendSubmissionResult(db: Pick<PoolClient, "query">, id: 
 
 // Offline operator boundary only, deliberately absent from public routes and
 // queue startup. The operator first stops the owner and verifies/removes the
-// exact labelled container under the isolation runbook. This records that
+// exact labelled container or confirms the captured process service has stopped. This records that
 // review; it never asserts a successful execution or retries uncertain work.
 export async function closeSubmissionRecovery(pool: Pool, id: string, value: unknown) {
-  const review = z.object({ token: z.string().min(1).max(256), daemon: z.string().regex(digestPattern), image: z.string().regex(imagePattern),
-    cleanup: z.enum(["removed", "not-created"]), reviewer: z.string().trim().min(1).max(256), proof: z.string().trim().min(1).max(500) }).strict().parse(value);
+  const review = submissionRecoverySchema.parse(value);
   await submissionTransaction(pool, async db => {
     await requireOfflineRecovery(db);
     const run = (await db.query('SELECT r.engine,w.* FROM "FirstStackRun" r JOIN "FirstStackWork" w ON w."runId"=r.id WHERE r.id=$1 FOR UPDATE OF w', [id])).rows[0];
-    if (!run || run.status !== "recovery" || run.token !== review.token || run.daemon !== review.daemon || run.engine.image !== review.image) throw new ConflictError("Recovery identity does not match the captured owner");
+    if (!run || run.status !== "recovery" || !recoveryMatches(run, review)) throw new ConflictError("Recovery identity does not match the captured owner");
     const prefix = (await db.query('SELECT body FROM "FirstStackCut" WHERE "runId"=$1 ORDER BY sequence DESC LIMIT 1', [id])).rows[0]?.body;
     await appendSubmissionResult(db, id, { verification: "interrupted", reason: "Operator reviewed cleanup; execution is not resumable",
-      actual: prefix?.fingerprint ?? null, recovery: { ...review, kind: "operator-reviewed" } });
+      actual: prefix?.fingerprint ?? null, recovery: "kind" in review ? review : { ...review, kind: "operator-reviewed" } });
     await db.query('UPDATE "FirstStackWork" SET status=\'terminal\' WHERE "runId"=$1', [id]);
   });
 }

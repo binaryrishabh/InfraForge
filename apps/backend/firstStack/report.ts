@@ -1,3 +1,4 @@
+import { readExecutionReceipt } from "./executionReceipt";
 import { z } from "zod";
 import type { FirstStackReport, FirstStackReportCapture, ReportJson } from "@infraforge/contracts/reports";
 import { hash } from "./canonical";
@@ -34,7 +35,8 @@ const cutSchema = z.object({ throughUs: count, timestampComplete: z.boolean(),
   interruption: z.object({ classification: z.literal("executor-interrupted"), kind: text, reason: text }).nullable(),
   reportCapture: ReportCaptureSchema.optional(),
 });
-const resultSchema = z.object({ verification: z.enum(["unverified", "verified", "mismatch", "interrupted", "cancelled", "unavailable"]), reason: text.optional(), actual: z.string().nullable().optional() });
+const resultSchema = z.object({ verification: z.enum(["unverified", "verified", "mismatch", "interrupted", "cancelled", "unavailable"]), reason: text.optional(), actual: z.string().nullable().optional(),
+  receipt: z.unknown().optional().transform(value => value === undefined ? undefined : readExecutionReceipt(value)) });
 
 export interface FirstStackStoredReportRow {
   id: string; input: string; inputHash: string; engine: { source: string }; lock: ReportJson;

@@ -52,7 +52,7 @@ if (mode === "child") {
     ]);
     assert.equal(code, 0, error);
     return { status: "completed", durablePrefix: JSON.parse(output),
-      receipt: { cleanup: "removed", fixture: "subprocess software proof only" } } as any;
+      receipt: { schema: "first-stack-isolation-receipt/1", cleanup: "removed", fixture: "subprocess software proof only" } } as any;
   };
   job = (async () => {
     const owner = "service-stop-fixture", sample = await publicChallenge(owner, "lose-an-app-server", "1");

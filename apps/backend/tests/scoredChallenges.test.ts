@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { fixtureChallenges, fixtureDefinition, fixtureDirectory } from "./scoringFixtures";
 import { privateBundleSchema } from "../firstStack/scoredChallenges/schema";
 import { expect, test } from "bun:test";
@@ -23,7 +24,7 @@ function qualification(input: string) {
   const saved = JSON.parse(input), prepared = prepareFirstStackExecution(saved.owner, saved.layout, saved.candidate, saved.recording, saved.policy);
   const runtime = instantiatePreparedFirstStack(prepared); runtime.advanceTo(runtime.horizon);
   const cut = isolatedCut(captureExecutionCut(prepared, runtime, 1, limits, null).value, engine.source, inputDigest(input));
-  return { status: "completed", durablePrefix: cut, receipt: { cleanup: "removed", fixture: "in-process software qualification only" }, summary: "{}", journal: "", interruption: null } as any;
+  return { status: "completed", durablePrefix: cut, receipt: { schema: "first-stack-isolation-receipt/1", cleanup: "removed", fixture: "in-process software qualification only" }, summary: "{}", journal: "", interruption: null } as any;
 }
 async function fixture(cores = 4, workers = 8, queue = 64) {
   const sample = await publicChallenge(owner, "lose-an-app-server", "2", fixtureChallenges), sidecar = sample.layout.firstStack;
@@ -33,7 +34,7 @@ async function fixture(cores = 4, workers = 8, queue = 64) {
   const admitted = await admitScoredChallenge(owner, sample.layout, { id: sample.id, version: sample.version }, sample.workload, sample.policy, fixtureChallenges);
   const input = canonical({ owner, layout: sample.layout, candidate: admitted.prepared.sidecar, recording: sample.workload, policy: sample.policy });
   const result = qualification(input);
-  const run = { purpose: "scored", ownerId: owner, engine, input, inputHash: inputDigest(input), lock: admitted.prepared.lock,
+  const run = { token: randomUUID(), generation: randomUUID(), purpose: "scored", ownerId: owner, engine, input, inputHash: inputDigest(input), lock: admitted.prepared.lock,
     browserCut: result.durablePrefix, workload: { challenge: admitted.reference },
     lineage: { kind: "design", infrastructureId: "00000000-0000-4000-8000-000000000029", designRevision: designRevision(sample.layout), updatedAt: "2026-10-22T00:00:00.000Z" } };
   return { sample, admitted, result, run };
@@ -41,7 +42,7 @@ async function fixture(cores = 4, workers = 8, queue = 64) {
 async function scored(f: Awaited<ReturnType<typeof fixture>>, transform: (r: any, input: string) => any = r => r) {
   let active = 0, executions = 0;
   const fence = challengeFence({ async check() {}, async commit() { throw Error("Hidden cut reached visible storage"); } }, engine.source);
-  const authority = { token: "test", async assertHeld(signal: AbortSignal) { signal.throwIfAborted(); },
+  const authority = { token: f.run.token, async assertHeld(signal: AbortSignal) { signal.throwIfAborted(); },
     async commit(cut: any) { await fence.commit({} as any, cut); } };
   const score = await executeScoredChallenge(f.run, f.result, authority, new AbortController().signal, fence.select, async (input, a, signal) => {
     expect(active++).toBe(0); executions++;
@@ -140,7 +141,7 @@ test("threshold equality is deterministic; missing and interrupted evidence rema
 });
 test("unconfirmed cleanup retains recovery; lost evidence cannot grant required points", async () => {
   const f = await fixture();
-  await expect(scored(f, r => ({ ...r, receipt: { cleanup: "unconfirmed" } }))).rejects.toThrow("cleanup unconfirmed");
+  await expect(scored(f, r => ({ ...r, receipt: { schema: "first-stack-isolation-receipt/1", cleanup: "unconfirmed" } }))).rejects.toThrow("cleanup unconfirmed");
   const { score } = await scored(f, r => ({ ...r, durablePrefix: null, status: "interrupted" }));
   expect(score.earned).toBe(0); expect(score.pending).toBe(10); expect(score.systemPassed).toBe(false);
 });
@@ -203,4 +204,20 @@ test("missing or mismatched private bundles execute no hidden work and publish o
     expect(JSON.stringify(response.score)).not.toMatch(/earned|assessed|systemPassed|workloads|rubric/);
     expect(publicScore({ ...result, score: { ...unavailable, input: "PRIVATE-SENTINEL" } }, hash({ ...result, score: { ...unavailable, input: "PRIVATE-SENTINEL" } }))).toEqual(unavailable);
   }
+});
+
+
+test("scoring accepts process receipts and refuses hidden ownership or termination loss", async () => {
+  const f = await fixture();
+  const receipt = { schema: "first-stack-process-receipt/1", token: f.run.token, generation: f.run.generation,
+    ...engine, exit: { code: 0, signal: null }, termination: "confirmed" };
+  f.result.receipt = receipt;
+  const result = await scored(f, r => ({ ...r, receipt }));
+  expect(result.executions).toBe(2); expect(result.score.systemPassed).toBe(true);
+  for (const edit of [{ token: randomUUID() }, { generation: randomUUID() }, { source: "f".repeat(64) },
+    { image: `sha256:${"f".repeat(64)}` }, { termination: "unconfirmed" }]) {
+    await expect(scored(f, r => ({ ...r, receipt: { ...receipt, ...edit } }))).rejects.toThrow("cleanup unconfirmed");
+  }
+  f.result.receipt = { ...receipt, exit: { code: 1, signal: null } };
+  expect((await scored(f)).executions).toBe(0);
 });

@@ -300,6 +300,7 @@ model FirstStackWork {
   status String @default("queued")
   token String? @unique
   daemon String? @db.VarChar(64)
+  generation String? @db.VarChar(36)
   cancelRequested Boolean @default(false)
   authorized Boolean @default(true)
   captureBytes Int @default(0)

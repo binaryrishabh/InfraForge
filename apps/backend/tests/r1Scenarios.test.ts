@@ -15,7 +15,7 @@ function execute(input: string) {
   const saved = JSON.parse(input), prepared = prepareFirstStackExecution(saved.owner, saved.layout, saved.candidate, saved.recording, saved.policy);
   const runtime = instantiatePreparedFirstStack(prepared); runtime.advanceTo(runtime.horizon);
   return { status: "completed", durablePrefix: isolatedCut(captureExecutionCut(prepared, runtime, 1, limits, null).value, engine.source, inputDigest(input)),
-    receipt: { cleanup: "removed", fixture: "in-process software qualification only" }, summary: "{}", journal: "", interruption: null } as any;
+    receipt: { schema: "first-stack-isolation-receipt/1", cleanup: "removed", fixture: "in-process software qualification only" }, summary: "{}", journal: "", interruption: null } as any;
 }
 async function attempt(id: string, cores: number, workers: number, queue: number) {
   const sample = await publicChallenge(owner, id, "2", fixtureChallenges);

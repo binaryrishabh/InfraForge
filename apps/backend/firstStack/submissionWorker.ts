@@ -1,3 +1,4 @@
+import { receiptState, type ExecutionResult } from "./executionReceipt";
 import { randomUUID } from "node:crypto";
 import type { Client, Pool } from "pg";
 import { hash, canonical } from "./canonical";
@@ -29,7 +30,7 @@ export function createSubmissionFence(run: any, token: string, allowed: () => bo
     async check(db: Client) {
       const row = (await db.query(`SELECT w.* FROM "FirstStackWork" w JOIN "FirstStackRun" r ON r.id=w."runId"
         WHERE r.id=$1 AND r."ownerId"=$2 AND r."inputHash"=$3 FOR UPDATE OF w`, [run.id, run.ownerId, run.inputHash])).rows[0];
-      if (!allowed() || !row || row.status !== "running" || row.token !== token || row.daemon !== run.daemon || row.cancelRequested || !row.authorized) throw Error("Submission ownership cancelled, revoked or lost");
+      if (!allowed() || !row || row.status !== "running" || row.token !== token || row.daemon !== run.daemon || (row.generation ?? null) !== (run.generation ?? null) || row.cancelRequested || !row.authorized) throw Error("Submission ownership cancelled, revoked or lost");
     },
     async commit(db: Client, cut: IsolatedCut) {
       const previous = (await db.query('SELECT body FROM "FirstStackCut" WHERE "runId"=$1 ORDER BY sequence DESC LIMIT 1', [run.id])).rows[0]?.body;
@@ -40,11 +41,11 @@ export function createSubmissionFence(run: any, token: string, allowed: () => bo
   };
 }
 // Pure decision boundary: browser input can never set verification status.
-export function verificationOutcome(run: any, result: Awaited<ReturnType<typeof executeFirstStackIsolated>>, allowed: boolean) {
-  const clean = result.receipt.cleanup === "removed" || result.receipt.cleanup === "not-created";
+export function verificationOutcome(run: any, result: ExecutionResult, allowed: boolean) {
+  const { clean, completed } = receiptState(result.receipt, { token: run.token, generation: run.generation, ...run.engine });
   const cut = result.durablePrefix;
-  const complete = allowed && clean && result.status === "completed" && result.receipt.cleanup === "removed" &&
-    cut?.cut.completeness.horizonReached && hash(cut.cut.lock) === hash(run.lock) && cut.source === run.engine.source && cut.inputHash === run.inputHash;
+  const complete = allowed && clean && result.status === "completed" && completed &&
+    cut?.cut.completeness.horizonReached && !cut.cut.interruption && hash(cut.cut.lock) === hash(run.lock) && cut.source === run.engine.source && cut.inputHash === run.inputHash;
   return { clean, body: { verification: complete ? cut.fingerprint === run.browserCut.fingerprint ? "verified" : "mismatch" : "interrupted",
     actual: cut?.fingerprint ?? null, expected: run.browserCut.fingerprint, receipt: result.receipt,
     interruption: result.interruption, summary: result.summary, journal: result.journal } };
@@ -63,7 +64,7 @@ export async function verifySubmission(pool: Pool, databaseUrl: string, id: stri
     }
     if (inputDigest(row.input) !== row.inputHash || hash(JSON.parse(row.input).policy.seed) !== hash(row.seed)) throw Error("Stored immutable input identity differs");
     await db.query('UPDATE "FirstStackWork" SET status=\'running\',token=$2,daemon=$3 WHERE "runId"=$1', [id, token, configuration.control.identity]);
-    return { ...row, daemon: configuration.control.identity };
+    return { ...row, token, daemon: configuration.control.identity };
   });
   if (!run) return;
   const allowed = () => verifierExecutionAllowed(configuration) &&

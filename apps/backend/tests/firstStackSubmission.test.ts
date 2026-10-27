@@ -25,16 +25,16 @@ test("forged owner fields and wrong engine refuse before a database transaction"
 
 test("verification requires complete server evidence, exact identity, authorization and cleanup", async () => {
   const f = await submissionFixture(), run = { ...f, inputHash: f.request.browserCut.inputHash, browserCut: f.request.browserCut };
-  const result: any = { status: "completed", durablePrefix: run.browserCut, receipt: { cleanup: "removed" }, interruption: null, summary: "{}", journal: "" };
+  const result: any = { status: "completed", durablePrefix: run.browserCut, receipt: { schema: "first-stack-isolation-receipt/1", cleanup: "removed" }, interruption: null, summary: "{}", journal: "" };
   expect(verificationOutcome(run, result, true).body.verification).toBe("verified");
   expect(verificationOutcome({ ...run, browserCut: { ...run.browserCut, fingerprint: "c".repeat(64) } }, result, true).body.verification).toBe("mismatch");
   for (const changed of [
     { ...result, status: "interrupted" }, { ...result, durablePrefix: null },
-    { ...result, receipt: { cleanup: "not-created" } }, { ...result, receipt: { cleanup: "unconfirmed" } },
+    { ...result, receipt: { schema: "first-stack-isolation-receipt/1", cleanup: "not-created" } }, { ...result, receipt: { schema: "first-stack-isolation-receipt/1", cleanup: "unconfirmed" } },
     { ...result, durablePrefix: { ...run.browserCut, source: "c".repeat(64) } },
     { ...result, durablePrefix: { ...run.browserCut, cut: { ...run.browserCut.cut, lock: {} } } },
     { ...result, durablePrefix: { ...run.browserCut, cut: { ...run.browserCut.cut, completeness: { horizonReached: false } } } },
   ]) expect(verificationOutcome(run, changed, true).body.verification).toBe("interrupted");
   expect(verificationOutcome(run, result, false).body.verification).toBe("interrupted");
-  expect(verificationOutcome(run, { ...result, receipt: { cleanup: "failed" } }, true).clean).toBe(false);
+  expect(verificationOutcome(run, { ...result, receipt: { schema: "first-stack-isolation-receipt/1", cleanup: "failed" } }, true).clean).toBe(false);
 });
