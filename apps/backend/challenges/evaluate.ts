@@ -119,7 +119,7 @@ class Judge {
         const missing = this.experimentMissing();
         if (missing || !target) return { ...base, status: "not-evaluated" as const, detail: missing ?? "This challenge has no recorded experiment.", sources: ["RunAction"] };
         if (!t) return pending(this.missingMeasurement(), ["terminalSnapshot"]);
-        const hot = t.resources.filter((r) => r.id !== target && (r.health === "saturated" || r.health === "failed")).map((r) => `${r.id} (${r.health}, ${r.cpu}% CPU)`);
+        const hot = t.resources.filter((r) => r.id !== target && (r.health === "saturated" || r.health === "failed")).map((r) => `${r.id} (${r.health}${r.cpu === undefined ? "" : `, ${r.cpu}% CPU`})`);
         return decided(!hot.length, hot.length ? `Besides ${target}, at second ${t.simulatedSeconds}: ${list(hot)}.` : `Apart from ${target}, no resource was saturated or failed at second ${t.simulatedSeconds}.`, ["terminalSnapshot.metrics", "RunAction.parameters"]);
       }
       case "overall-health": {
@@ -130,7 +130,7 @@ class Judge {
       case "no-saturation": {
         const t = this.atEvaluation;
         if (!t) return pending(this.missingMeasurement(), ["terminalSnapshot"]);
-        const hot = t.resources.filter((r) => r.health === "saturated" || r.health === "failed").map((r) => `${r.id} (${r.health}, ${r.cpu}% CPU)`);
+        const hot = t.resources.filter((r) => r.health === "saturated" || r.health === "failed").map((r) => `${r.id} (${r.health}${r.cpu === undefined ? "" : `, ${r.cpu}% CPU`})`);
         return decided(!hot.length, hot.length ? `At second ${t.simulatedSeconds}: ${list(hot)}.` : `No resource was saturated or failed at second ${t.simulatedSeconds}.`, ["terminalSnapshot.metrics"]);
       }
       case "database-healthy": {

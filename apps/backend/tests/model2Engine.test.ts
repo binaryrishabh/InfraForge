@@ -7,6 +7,8 @@ import { buildSnapshot, captureSnapshot } from "../simulator/snapshot";
 import { applyAction } from "../simulator/actionApplication";
 import { actionCompletion } from "../simulator/actionCompletion";
 import { createEvidenceBuffer } from "../evidence/capture";
+import { readRecords } from "../reports/records";
+import { storedJson } from "../utils/json";
 import { ActionExecutionError, type SimulationInstance } from "../simulator/instance";
 
 // The fixture's authored intervals are microseconds; live runs use realistic ones.
@@ -102,5 +104,13 @@ test("the run loop drives a Model 2 run: ticks, snapshots, actions and version 2
   expect(samples.every((p) => p.payload.version === 2 && p.payload.resources.find((r) => r.id === "lb")!.cpu === null)).toBe(true);
   const terminal = captureSnapshot("m2", instance, "terminal");
   expect(terminal).toMatchObject({ kind: "terminal", simulatedSeconds: 50, targetLoadFraction: 1, verticalScaling: [] });
+  // Reports read the Model 2 terminal record; an unknown value is simply not recorded.
+  const limits: string[] = [];
+  const report = readRecords({ stages: [], timeline: [], chaosEvents: [], runInputs: null, liveTopology: null, workloadProfile: null,
+    simulationState: null, terminalSnapshot: storedJson(terminal) }, limits).terminal!;
+  expect(limits).toEqual([]);
+  expect(report.resources.find((r) => r.id === "lb")).not.toHaveProperty("cpu");
+  expect(report.resources.find((r) => r.id === "vm")!.cpu).toBeGreaterThan(0);
+  expect(report.health).toBe(terminal.overallHealth);
 });
 

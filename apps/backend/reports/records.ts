@@ -17,8 +17,10 @@ const event = z.object({ timestamp, event: text, message: text });
 const chaos = z.object({ timestamp, type: text, resourceId: text, message: text });
 const stage = z.object({ name: text, status: z.enum(["pending", "running", "completed", "failed"]),
   message: text, startedAt: timestamp, completedAt: timestamp, details: z.unknown().optional() });
-const metrics = z.object({ cpu: amount.max(100).optional(), memory: amount.max(100).optional(),
-  rps: amount.optional(), connections: amount.optional(), health: z.enum(["healthy", "degraded", "saturated", "failed"]).optional() });
+// Model 2 records a value it does not model as null ("unknown"); reports treat it as not recorded, never as zero.
+const health = z.enum(["healthy", "degraded", "saturated", "failed", "unknown"]);
+const metrics = z.object({ cpu: amount.max(100).nullable().optional(), memory: amount.max(100).nullable().optional(),
+  rps: amount.optional(), connections: amount.optional(), health: health.optional() });
 const checkpoint = z.object({ simulatedSeconds: amount.optional(), loadFraction: amount.optional(),
   overallHealth: z.enum(["healthy", "degraded", "saturated", "critical"]).optional(), accumulatedCostUsd: amount.optional(),
   capturedAt: timestamp.optional(), topologyRevision: z.number().int().nonnegative().optional(), speed: amount.optional(),
@@ -32,8 +34,7 @@ const checkpoint = z.object({ simulatedSeconds: amount.optional(), loadFraction:
 const terminal = checkpoint.extend({ version: z.literal(1), kind: z.literal("terminal"), capturedAt: timestamp,
   topologyRevision: z.number().int().nonnegative(), simulatedSeconds: amount, accumulatedCostUsd: amount,
   overallHealth: z.enum(["healthy", "degraded", "saturated", "critical"]),
-  metrics: boundedMap(metrics.extend({ cpu: amount.max(100), memory: amount.max(100),
-    health: z.enum(["healthy", "degraded", "saturated", "failed"]) })) });
+  metrics: boundedMap(metrics.extend({ cpu: amount.max(100).nullable(), memory: amount.max(100).nullable(), health })) });
 
 export function readRecords(value: unknown, limits: string[]) {
   const list = <T>(input: unknown, schema: z.ZodType<T>, field: string): T[] => {
@@ -86,7 +87,8 @@ function readCheckpoint(value: unknown, limits: string[]): ReportCheckpoint | nu
       const entries = Object.entries(data.metrics);
       for (const [id, value] of entries.slice(0, 500)) {
         const item = metrics.safeParse(value);
-        if (item.success && Object.keys(item.data).length) resources.push({ id, ...item.data });
+        const known = item.success ? Object.fromEntries(Object.entries(item.data).filter(([, v]) => v !== null)) : {};
+        if (item.success && Object.keys(item.data).length) resources.push({ id, ...known });
         else limits.push(`Checkpoint measurements for resource ${id} are malformed or empty.`);
       }
       if (entries.length > 500) limits.push("Only the first 500 checkpoint resources are shown.");
