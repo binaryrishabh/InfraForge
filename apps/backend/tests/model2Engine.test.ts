@@ -2,6 +2,9 @@ import { expect, test } from "bun:test";
 import { productFixture } from "../../../packages/simulation/tests/productFixture";
 import { DeploymentChaosNames, ResourceHealth } from "@infraforge/domain/resource";
 import { ActionRefused, createModel2Engine, type ContractBuilder } from "../simulator/model2Engine";
+import { buildModel2Contract } from "../simulator/contractBuilder";
+import { captureRunInputs } from "../deployments/runInputs";
+import { definition } from "./challengeHarness";
 import { advanceTickBatch } from "../simulator/tickBatch";
 import { buildSnapshot, captureSnapshot } from "../simulator/snapshot";
 import { applyAction } from "../simulator/actionApplication";
@@ -27,7 +30,7 @@ function engine(seconds: number, rps = 100) {
   const f = fixture(seconds);
   const workload = { ...f.design.workload, targetThroughput: rps * 60, throughputUnit: "per-minute" as const, trafficShape: "steady" as const };
   const build: ContractBuilder = (_design, horizon) => ({ contract: fixture(horizon).contract });
-  return createModel2Engine({ resources: f.design.resources, connectionLines: f.design.connections, workloadProfile: workload as never }, seconds, build);
+  return createModel2Engine({ resources: f.design.resources, connectionLines: f.design.connections, workloadProfile: workload as never, seed: "test-seed" }, seconds, build);
 }
 
 test("a live Model 2 run fills the live view every second, keeping unknown values unknown", () => {
@@ -112,5 +115,18 @@ test("the run loop drives a Model 2 run: ticks, snapshots, actions and version 2
   expect(report.resources.find((r) => r.id === "lb")).not.toHaveProperty("cpu");
   expect(report.resources.find((r) => r.id === "vm")!.cpu).toBeGreaterThan(0);
   expect(report.health).toBe(terminal.overallHealth);
+});
+
+test("a challenge's starting design runs on Model 2 through the design adapter, for the run's own length and seed", () => {
+  const def = definition("lose-an-app-server");
+  const input = captureRunInputs({ ...def.starter!, layoutVersion: 3 }, def.workload, "seed-a", "2");
+  const run = createModel2Engine(input, 40, buildModel2Contract);
+  expect(run.horizonSeconds).toBe(40);
+  for (let s = 0; s < 20; s++) run.advance();
+  const view = run.view();
+  expect(view.traffic.completedRps).toBeGreaterThan(100); // 468,000 requests an hour is 130 a second
+  expect(view.metrics["app-1"]!.cpu).toBeGreaterThan(0);
+  expect(view.metrics.lb!.cpu).toBeNull();
+  expect(() => createModel2Engine({ ...input, resources: [], connectionLines: [] }, 40, buildModel2Contract)).toThrow(ActionRefused);
 });
 

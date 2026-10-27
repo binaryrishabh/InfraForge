@@ -23,7 +23,7 @@ export interface LiveView {
   activeChaos: ChaosEffect[];
   traffic: NonNullable<SimulationSnapshot["traffic"]>;
 }
-export type ContractBuilder = (design: SavedProductDesign, horizonSeconds: number) => { contract: ProductContract } | { refused: string[] };
+export type ContractBuilder = (design: SavedProductDesign, horizonSeconds: number, seed: string) => { contract: ProductContract } | { refused: string[] };
 export class ActionRefused extends Error {}
 
 // Assumptions for live faults, shown with the action's outcome.
@@ -33,9 +33,9 @@ const NETWORK_DELAY_US = 200_000; // added delay on every link into the target
 const HOURS_PER_MONTH = 730;
 const SECOND = 1_000_000;
 
-export function createModel2Engine(input: RunTopology & { workloadProfile: ResolvedWorkloadProfile }, horizonSeconds: number, build: ContractBuilder) {
+export function createModel2Engine(input: RunTopology & { workloadProfile: ResolvedWorkloadProfile; seed: string }, horizonSeconds: number, build: ContractBuilder) {
   const design: SavedProductDesign = { schema: "infraforge-saved-design/1", resources: input.resources, connections: input.connectionLines, workload: input.workloadProfile };
-  const built = build(design, horizonSeconds);
+  const built = build(design, horizonSeconds, input.seed);
   if ("refused" in built) throw new ActionRefused(`Model 2 cannot run this design yet: ${built.refused.join(" ")}`);
   // Live runs generate arrivals as they advance, so long runs and rebuilds after actions stay small and fast.
   const contract: ProductContract = { ...built.contract, arrival: { ...built.contract.arrival, generated: true } }, nodeIds = input.resources.map((r) => r.id);
