@@ -2,7 +2,7 @@ import { readFile } from "node:fs/promises";
 import type { Client, Pool } from "pg";
 
 export async function checkFirstStackSchema(db: Pick<Client | Pool, "query">) {
-  const source = (await Promise.all(["20261021000000_first_stack_submissions", "20261022000000_historical_replay", "20261025000000_first_stack_queue_operations", "20261027000000_first_stack_process_receipts"].map(name =>
+  const source = (await Promise.all(["20261021000000_first_stack_submissions", "20261022000000_historical_replay", "20261025000000_first_stack_queue_operations", "20261027000000_first_stack_process_receipts", "20261027000001_validate_first_stack_work"].map(name =>
     readFile(new URL(`../prisma/migrations/${name}/migration.sql`, import.meta.url), "utf8")))).join("\n");
   const bodies = new Map([...source.matchAll(/CREATE (?:OR REPLACE )?FUNCTION (\w+)\(\) RETURNS trigger LANGUAGE plpgsql AS \$\$([\s\S]*?)\$\$/g)]
     .map(m => [m[1], m[2]!.replaceAll("\r\n", "\n").trim()]));

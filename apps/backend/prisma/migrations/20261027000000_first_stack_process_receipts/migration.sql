@@ -1,5 +1,7 @@
 -- Add a distinct process owner; existing Docker rows and evidence are untouched.
 ALTER TABLE "FirstStackWork" ADD COLUMN generation VARCHAR(36);
+-- NOT VALID keeps the exclusive lock short; the next migration validates existing rows
+-- under a lock that still allows reads and writes.
 ALTER TABLE "FirstStackWork" DROP CONSTRAINT first_stack_work;
 ALTER TABLE "FirstStackWork" ADD CONSTRAINT first_stack_work CHECK ((
   status IN ('queued','running','recovery','terminal') AND "captureBytes" BETWEEN 0 AND 33554432
@@ -7,7 +9,7 @@ ALTER TABLE "FirstStackWork" ADD CONSTRAINT first_stack_work CHECK ((
     AND token ~ '^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$'))
   AND (status NOT IN ('running','recovery') OR (token IS NOT NULL AND
     ((generation IS NULL AND daemon IS NOT NULL AND daemon ~ '^[a-f0-9]{64}$') OR generation IS NOT NULL)))
-) IS TRUE);
+) IS TRUE) NOT VALID;
 
 CREATE OR REPLACE FUNCTION protect_first_stack_work() RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN

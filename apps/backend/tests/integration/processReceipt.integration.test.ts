@@ -51,10 +51,10 @@ describe.skipIf(!url)("process receipt PostgreSQL guards", () => {
     pool = new Pool({ connectionString: target.href, max: 2 });
     const manifest = await migrationManifest();
     // Exercise an actual upgrade with an immutable old result already present.
-    for (const migration of manifest.slice(0, -1)) await pool.query(await readFile(new URL(`../../prisma/migrations/${migration.name}/migration.sql`, import.meta.url), "utf8"));
+    for (const migration of manifest.slice(0, -2)) await pool.query(await readFile(new URL(`../../prisma/migrations/${migration.name}/migration.sql`, import.meta.url), "utf8"));
     legacy = await fixture(false); await legacy.cut(); await finish(legacy); original = JSON.stringify(await result(legacy.id));
-    expect(manifest.at(-1)!.name).toBe("20261027000000_first_stack_process_receipts");
-    await pool.query(await readFile(new URL(`../../prisma/migrations/${manifest.at(-1)!.name}/migration.sql`, import.meta.url), "utf8"));
+    expect(manifest.slice(-2).map(m => m.name)).toEqual(["20261027000000_first_stack_process_receipts", "20261027000001_validate_first_stack_work"]);
+    for (const migration of manifest.slice(-2)) await pool.query(await readFile(new URL(`../../prisma/migrations/${migration.name}/migration.sql`, import.meta.url), "utf8"));
   }, 60000);
   afterAll(async () => {
     await pool?.end();
