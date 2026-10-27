@@ -64,7 +64,7 @@ export const failureVoice = (
         }
     }
     if (health === ResourceHealth.SATURATED) {
-        if (metric.memory >= 97) {
+        if ((metric.memory ?? 0) >= 97) {
             return type === RESOURCE_TYPES.VirtualMachine
                 ? "Out of memory: Killed process (kernel oom-killer invoked)"
                 : "memory limit exceeded — thrashing";

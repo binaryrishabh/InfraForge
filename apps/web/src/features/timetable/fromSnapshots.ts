@@ -5,7 +5,7 @@ import { faultLabel } from "./fromTrace";
 export interface ReceivedSecond {
   t: number;
   system: SystemHealth;
-  resources: Record<string, { health: Health; cpu: number }>;
+  resources: Record<string, { health: Health; cpu: number | null }>;
 }
 
 interface LiveInput {
@@ -29,7 +29,7 @@ export function fromLiveSnapshots({ stations, received, now, plan = null, evalua
   for (const second of received) {
     if (second.t < start || second.t > end) continue;
     system.push({ t: second.t, health: second.system });
-    for (const [id, r] of Object.entries(second.resources)) lanes[id]?.samples.push({ t: second.t, health: r.health, cpu: r.cpu });
+    for (const [id, r] of Object.entries(second.resources)) lanes[id]?.samples.push({ t: second.t, health: r.health, cpu: r.cpu ?? undefined }); // unknown CPU is not drawn
   }
   const windows: Window[] = [], marks: Mark[] = [];
   if (plan) {

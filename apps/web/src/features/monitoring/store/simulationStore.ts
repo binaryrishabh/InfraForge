@@ -59,7 +59,9 @@ export const useSimulationStore = create<SimulationStoreState>()((set, get) => (
       const metricKeys = Object.keys(snapshot.metrics);
       
       for (const resourceId of metricKeys) {
-        const currentCpu = snapshot.metrics[resourceId]?.cpu ?? 0;
+        // Unknown CPU is skipped, never recorded as 0 %.
+        const currentCpu = snapshot.metrics[resourceId]?.cpu;
+        if (currentCpu == null) continue;
         const existingHistory = nextCpuHistory[resourceId] ?? [];
         const updatedHistory = [...existingHistory, currentCpu];
         
