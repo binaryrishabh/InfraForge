@@ -1597,11 +1597,11 @@
     "review": "Reviewed exact owner-locked deletion and exports: retire native magic-link/OTP mailbox records before releasing an address, alongside existing user-linked proof rows and sessions. All new lookups are fixed fields and parameterized data; no new syntax or resource authority."
   },
   "apps/backend/auth/accountPolicy.ts": {
-    "hash": "03f1e8e2afeecefa9d6025d7b00e57bd2dcf935700fd52488d6c5c4c7bb71ab0",
+    "hash": "4fc6ac4a4b95b7b5c2ea1a8450f844f09337fd38ac73e8699c5343e879a9da44",
     "capabilities": [],
-    "review": "Reviewed exact HMAC Redis quotas and public-response policy. Email login redemption requires a nonempty fresh challenge with email_login_redeem action before native proof consumption; issuance retains email_login. Missing challenge service and provider errors fail closed. Existing cookie stripping, OTP generic failures and 750ms floor retained. Existing Request/Response/Headers/URLSearchParams globals only, no direct network or loader authority. Header/query challenge assertions are selected only for enabled email-login issuance/redemption paths; legacy signup/reset retains main's body-only selection regardless of login flags. No added capabilities or globals.",
+    "review": "Reviewed exact HMAC Redis quotas and public-response policy. Email login redemption requires a nonempty fresh challenge with email_login_redeem action before native proof consumption; issuance retains email_login. Missing challenge service and provider errors fail closed. Existing cookie stripping, OTP generic failures and 750ms floor retained. Existing Request/Response/Headers/URLSearchParams globals only, no direct network or loader authority. Header/query challenge assertions are selected only for enabled email-login issuance/redemption paths; legacy signup/reset retains main's body-only selection regardless of login flags. No added capabilities or globals. 2026-10-27 signup rebuild: cross-device signup handoff (HttpOnly cookie, HMAC-only storage, encrypted proof), username availability quota, 8+ four-type password rule with fail-open breach check; no new capabilities.",
     "globals": {
-      "hash": "03f1e8e2afeecefa9d6025d7b00e57bd2dcf935700fd52488d6c5c4c7bb71ab0",
+      "hash": "4fc6ac4a4b95b7b5c2ea1a8450f844f09337fd38ac73e8699c5343e879a9da44",
       "names": [
         "Headers",
         "Request",
@@ -1616,14 +1616,14 @@
     "review": "Exact account-service review: fixed SES/Resend/Turnstile HTTPS adapters; bounded email delivery after native transaction commit; atomic single-statement verification ledger; native Better Auth tokens/passwords; keyed quotas; owner-filtered export and serialized profile deletion. No evaluators, dynamic imports, new process adapters, engine changes or activation."
   },
   "apps/backend/auth/createAuth.ts": {
-    "hash": "a70935b83466b31c1b8d7012dc13f126ff53e6cbc43fbf1b50ea0c2d3b642fa8",
+    "hash": "413772c276abde02342e772501621abdcd9209d9a88cbda8e7aa498f9a539068",
     "capabilities": [],
-    "review": "Reviewed exact default-off Better Auth 1.7.7 wiring: redirect-link verification hook, native signup-disabled magic/OTP, exact disabled legacy reset alias, backend magic confirmation before consumption and fresh challenge extraction from header or form query. Existing owner-bound session proof ledger retained. Fixed parsed fields and injected adapters only; no new syntax capability, loader or evaluator. While any new login flag enables strict returns, native onAPIError.errorURL uses the existing returnURL validator and app-only allowlist, covering callbacks before state recovery. All-off configuration omits the option and retains main's backend fallback. No added capabilities or globals."
+    "review": "Reviewed exact default-off Better Auth 1.7.7 wiring: redirect-link verification hook, native signup-disabled magic/OTP, exact disabled legacy reset alias, backend magic confirmation before consumption and fresh challenge extraction from header or form query. Existing owner-bound session proof ledger retained. Fixed parsed fields and injected adapters only; no new syntax capability, loader or evaluator. While any new login flag enables strict returns, native onAPIError.errorURL uses the existing returnURL validator and app-only allowlist, covering callbacks before state recovery. All-off configuration omits the option and retains main's backend fallback. No added capabilities or globals. 2026-10-27 signup rebuild: cross-device signup handoff (HttpOnly cookie, HMAC-only storage, encrypted proof), username availability quota, 8+ four-type password rule with fail-open breach check; no new capabilities."
   },
   "apps/backend/auth/credentials.ts": {
-    "hash": "e3646c96c39fd6b4ddea2f676878dd1a2c4fb69371553bd93a255a45ff90bbb5",
+    "hash": "8e7e7ada340170b0b12fadd7f5fec386a1a2b9f99a0cee734834fbc81640653f",
     "capabilities": [],
-    "review": "Reviewed exact credential validation and sign-in routing: validates bounded identifiers/passwords and trusted callbacks, selects one of two literal credential handlers, and constructs an email-or-username field without dynamic property reads. Native handlers retain hashing/session checks. No resource, computed-data or verifier exception is needed."
+    "review": "Reviewed exact credential validation and sign-in routing: validates bounded identifiers/passwords and trusted callbacks, selects one of two literal credential handlers, and constructs an email-or-username field without dynamic property reads. Native handlers retain hashing/session checks. No resource, computed-data or verifier exception is needed. 2026-10-27 signup rebuild: cross-device signup handoff (HttpOnly cookie, HMAC-only storage, encrypted proof), username availability quota, 8+ four-type password rule with fail-open breach check; no new capabilities."
   },
   "apps/backend/auth/email.ts": {
     "hash": "69ec92db44a2497ac5f573f8fae06ff628aaeccdcf3e4be96493ea9bc42ff8a3",
@@ -1672,9 +1672,9 @@
     "review": "Exact account-service review: fixed SES/Resend/Turnstile HTTPS adapters; bounded email delivery after native transaction commit; atomic single-statement verification ledger; native Better Auth tokens/passwords; keyed quotas; owner-filtered export and serialized profile deletion. No evaluators, dynamic imports, new process adapters, engine changes or activation."
   },
   "apps/backend/index.ts": {
-    "hash": "e4b1640ec0a1d0e3fb1473b7852b492e7255289bc684a60b0fe47962c667ee18",
+    "hash": "d44a9168cb73a26fc9cd218d7702c278cf9828dc652fadd743c44671736d9442",
     "capabilities": [],
-    "review": "Reviewed exact API composition: conditionally bounds new email POST bodies, supplies enabled login methods to generic response wrapper, and mounts method settings only when enabled. Hosted origin list feeds unchanged CORS/origin enforcement; host-only cookie/server topology retained. Existing schema/readiness/startup/shutdown adapters only, no new syntax permission."
+    "review": "Reviewed exact API composition: conditionally bounds new email POST bodies, supplies enabled login methods to generic response wrapper, and mounts method settings only when enabled. Hosted origin list feeds unchanged CORS/origin enforcement; host-only cookie/server topology retained. Existing schema/readiness/startup/shutdown adapters only, no new syntax permission. 2026-10-27 signup rebuild: cross-device signup handoff (HttpOnly cookie, HMAC-only storage, encrypted proof), username availability quota, 8+ four-type password rule with fail-open breach check; no new capabilities."
   },
   "apps/backend/release/accountSchema.ts": {
     "hash": "b0873eaaeeb0e2e5eec1ced90f5a02a42edacaeb4c76216acf4e7fe8f4c248b4",
@@ -1826,25 +1826,25 @@
     "review": "Pinned Prisma 7.9.1 output regenerated for the additive AccountMailOutbox model and User relation; existing generator/template and literal imports, no authored runtime code or widened adapter capability."
   },
   "apps/backend/auth/mailIntent.ts": {
-    "hash": "b005c24c704d12e89c4fdda65699351d1bee818e91551fb490514f6eb5f98fe7",
+    "hash": "f3770c2d06cdea7e6f4614621dd7177614ab42fb7039e63650b0e061f393ffd3",
     "capabilities": [],
-    "review": "Reviewed exact transactional mail preparation: domain-separated HMAC magic/OTP credentials and user-bound digests, native hashed magic record/keyed OTP record, existing verified users only, OTP preparation serializes on the user row. Encrypted request metadata contains no bearer/code. Fixed crypto/SQL/model calls and encodeURIComponent for callback query only; no additional resource, indexing or verifier capability.",
+    "review": "Reviewed exact transactional mail preparation: domain-separated HMAC magic/OTP credentials and user-bound digests, native hashed magic record/keyed OTP record, existing verified users only, OTP preparation serializes on the user row. Encrypted request metadata contains no bearer/code. Fixed crypto/SQL/model calls and encodeURIComponent for callback query only; no additional resource, indexing or verifier capability. 2026-10-27 signup rebuild: cross-device signup handoff (HttpOnly cookie, HMAC-only storage, encrypted proof), username availability quota, 8+ four-type password rule with fail-open breach check; no new capabilities.",
     "globals": {
-      "hash": "b005c24c704d12e89c4fdda65699351d1bee818e91551fb490514f6eb5f98fe7",
+      "hash": "f3770c2d06cdea7e6f4614621dd7177614ab42fb7039e63650b0e061f393ffd3",
       "names": [
         "encodeURIComponent"
       ]
     }
   },
   "apps/backend/auth/mailRequests.ts": {
-    "hash": "9428a24e7c259c9f5eccb446545fbdd68a96396c5ce287c8e2931d4fe10a9cdf",
+    "hash": "8569bf1229dfc39d1b021ff3e5b58a904b5c8555f441f8c8282e16aab69d3a7a",
     "capabilities": [],
-    "review": "Reviewed exact durable dispatcher: existing injected database/sender, bounded claims, idempotency and cleanup remain. New intent kinds expire 15/10 minutes from admission, without membership lookup or credentials in public enqueue. No direct filesystem/network globals or dynamic loader authority."
+    "review": "Reviewed exact durable dispatcher: existing injected database/sender, bounded claims, idempotency and cleanup remain. New intent kinds expire 15/10 minutes from admission, without membership lookup or credentials in public enqueue. No direct filesystem/network globals or dynamic loader authority. 2026-10-27 signup rebuild: cross-device signup handoff (HttpOnly cookie, HMAC-only storage, encrypted proof), username availability quota, 8+ four-type password rule with fail-open breach check; no new capabilities."
   },
   "apps/backend/auth/mailAdmission.ts": {
-    "hash": "1677f3daf3dabbaedc6ffaa35e89830c97c8b95aeaf47bb39b77bf41b996dfb0",
+    "hash": "fbce5aa9058a6f327d6e6c6126f8ebb9cc42b0a0775e9d6c6428dec2106f157b",
     "capabilities": [],
-    "review": "Reviewed exact public mail admission: fixed Better Auth/Zod imports validate origin, normalized email, first-party callback and email-bound proof; generic queue admission is awaited before acceptance and failures become uniform 503. Fixed properties and literal origin index only; no resource, computed-data, verifier or extra-global exception."
+    "review": "Reviewed exact public mail admission: fixed Better Auth/Zod imports validate origin, normalized email, first-party callback and email-bound proof; generic queue admission is awaited before acceptance and failures become uniform 503. Fixed properties and literal origin index only; no resource, computed-data, verifier or extra-global exception. 2026-10-27 signup rebuild: cross-device signup handoff (HttpOnly cookie, HMAC-only storage, encrypted proof), username availability quota, 8+ four-type password rule with fail-open breach check; no new capabilities."
   },
   "apps/backend/auth/emailTemplate.ts": {
     "hash": "273fba5321b34043292473bc57fda709ee64d4a1235bab3237cfe7aa30b31d44",
