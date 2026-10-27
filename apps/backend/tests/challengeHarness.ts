@@ -17,6 +17,9 @@ import { storedJson } from "../utils/json";
 import type { SimulationInstance } from "../simulator/instance";
 import { captureEvidenceTick, createEvidenceBuffer } from "../evidence/capture";
 import { afterTheCacheReturnsV1 } from "../challenges/definitions/after-the-cache-returns/v1";
+import { createModel2Engine, type ContractBuilder } from "../simulator/model2Engine";
+import { buildModel2Contract } from "../simulator/contractBuilder";
+import { currentSecond } from "../simulator/engineView";
 
 export const definition = (id: string) => latestChallenge(id)!.definition;
 
@@ -59,18 +62,20 @@ export function answers(def: ChallengeDefinition, values: Record<string, string>
   return { answers: Object.fromEntries(def.predictions.map((q) => [q.id, values[q.id] ?? values[q.kind]!])), reasoning: null };
 }
 
-/* Runs the real model-1 engine for an attempt and builds the report exactly as the
+/* Runs the real engine (Model 1, or Model 2 with engine: "2") for an attempt and builds the report exactly as the
 API does: same captured inputs, gate functions, terminal capture and evaluation.
 A resilience attempt's fault is applied after the tick that reaches its second with
 the worker's own functions, and recorded as the durable action the worker writes. */
-type AttemptOptions = { stopAt?: number; status?: string; runtimeActive?: boolean; hash?: string; skipExperiment?: boolean; registry?: ChallengeRegistry; plan?: unknown };
+type AttemptOptions = { stopAt?: number; status?: string; runtimeActive?: boolean; hash?: string; skipExperiment?: boolean; registry?: ChallengeRegistry; plan?: unknown;
+  engine?: "1" | "2"; builder?: ContractBuilder };
 export function attemptReport(def: ChallengeDefinition, design: ChallengeStarter, prediction: ChallengePrediction, options: AttemptOptions = {}) {
   return buildRunReport(attemptRow(def, design, prediction, options), options.registry);
 }
 export function attemptRow(def: ChallengeDefinition, design: ChallengeStarter, prediction: ChallengePrediction, options: AttemptOptions = {}): StoredRun {
-  const runInputs = captureRunInputs({ ...design, layoutVersion: 3 }, def.workload, challengeSeed(def));
-  const state = createInitialState("attempt", runInputs.resources, runInputs.connectionLines, runInputs.workloadProfile, engineSeed(runInputs.seed));
-  const instance: SimulationInstance = { state, tickCount: 0, pendingLogs: [], speed: 1, lastCheckpointAt: 0,
+  const runInputs = captureRunInputs({ ...design, layoutVersion: 3 }, def.workload, challengeSeed(def), options.engine ?? "1");
+  const engine = options.engine === "2" ? { model2: createModel2Engine(runInputs, def.evaluationSeconds, options.builder ?? buildModel2Contract) }
+    : { state: createInitialState("attempt", runInputs.resources, runInputs.connectionLines, runInputs.workloadProfile, engineSeed(runInputs.seed)) };
+  const instance: SimulationInstance = { ...engine, tickCount: 0, pendingLogs: [], speed: 1, lastCheckpointAt: 0,
     accumulatedCostUsd: 0, topology: runInputs, topologyRevision: 0, actions: new Map(), acknowledge: null,
     metricsComputedAt: new Date().toISOString(), metricsTopologyRevision: 0 };
   const plan = recordedExperiment(def);
@@ -78,10 +83,10 @@ export function attemptRow(def: ChallengeDefinition, design: ChallengeStarter, p
   const actions: StoredAction[] = [];
   const deploymentId = randomUUID();
   for (let i = 0; i < (options.stopAt ?? def.evaluationSeconds); i++) {
-    instance.state = tick(instance.state!, {}).state;
+    if (instance.model2) instance.model2.advance(); else instance.state = tick(instance.state!, {}).state;
     instance.metricsComputedAt = new Date().toISOString();
     captureEvidenceTick(instance);
-    const second = instance.state!.simulatedSeconds;
+    const second = currentSecond(instance);
     for (const [id, running] of instance.actions) {
       const done = actionCompletion(instance, running);
       if (!done) continue;
@@ -97,7 +102,7 @@ export function attemptRow(def: ChallengeDefinition, design: ChallengeStarter, p
         outcome: applied.outcome as StoredAction["outcome"], failureReason: null });
     }
   }
-  instance.tickCount = instance.state!.simulatedSeconds;
+  instance.tickCount = currentSecond(instance);
   const now = new Date().toISOString();
   const stage = (name: string, result: { summary: string; details: object }) =>
     ({ name, status: "completed", startedAt: now, completedAt: now, message: result.summary, details: result.details });
