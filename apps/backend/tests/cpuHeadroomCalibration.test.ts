@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import type { ChallengeDefinition } from "@infraforge/contracts/challenges";
 import { DeploymentChaosNames } from "@infraforge/domain/resource";
 import { buildRegistry } from "../challenges/registry";
-import { answers, attemptReport, definition, REFERENCE } from "./challengeHarness";
+import { answers, attemptReport, legacyDefinition as definition, REFERENCE } from "./challengeHarness";
 
 test("CPU headroom candidate separates a starter from spare capacity under a fixed model-1 seed", () => {
   const original = definition("lose-an-app-server");

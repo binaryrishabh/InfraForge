@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { answers, attemptReport, attemptRow, definition, tier } from "./challengeHarness";
+import { answers, attemptReport, attemptRow, legacyDefinition as definition, tier } from "./challengeHarness";
 import { reviewDesignChanges } from "../challenges/designChanges";
 import { improvementSource } from "../challenges/improvements";
 import { captureRunInputs } from "../deployments/runInputs";

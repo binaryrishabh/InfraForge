@@ -2,7 +2,7 @@ import { useCapabilityAvailability } from "@/api/capabilities.api";
 import { useState, type FormEvent } from "react";
 import { Lock } from "lucide-react";
 import { toast } from "sonner";
-import { PREDICTION_REASONING_MAX, type ChallengeBrief, type ChallengePreflight, type PredictionQuestion } from "@infraforge/contracts/challenges";
+import { predictionResourceTypes, PREDICTION_REASONING_MAX, type ChallengeBrief, type ChallengePreflight, type PredictionQuestion } from "@infraforge/contracts/challenges";
 import { errorMessage } from "@/api/errorMessage";
 import { describeWorkload } from "@/lib/format";
 import { Dialog } from "@/ui/Dialog";
@@ -45,7 +45,7 @@ export function AttemptDialog({ brief, preflight, open, onOpenChange }: { brief:
   const resources = useCanvasStore((s) => s.resources);
   const capabilityReason = availability?.run.allowed === false ? availability.run.reason : null;
   const saved = useCanvasStore((s) => s.currentLayoutSaved);
-  const designTypes = [...new Set(resources.map((r) => r.type))];
+  const designTypes = predictionResourceTypes(resources.map((r) => r.type), brief.engine);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [reasoning, setReasoning] = useState("");
   const [busy, setBusy] = useState(false);

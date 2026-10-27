@@ -12,7 +12,7 @@ import { advanceTickBatch, experimentDue, reachedMatchedStop } from "../simulato
 import { applyAction } from "../simulator/actionApplication";
 import { actionCompletion } from "../simulator/actionCompletion";
 import type { SimulationInstance } from "../simulator/instance";
-import { definition } from "./challengeHarness";
+import { legacyDefinition as definition } from "./challengeHarness";
 
 const d = definition("lose-an-app-server"), plan = recordedExperiment(d)!;
 function run(speed: number, def = d): SimulationInstance {

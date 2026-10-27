@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { PREDICTION_CHOICES, PREDICTION_REASONING_MAX, type ChallengeDefinition, type ChallengePrediction } from "@infraforge/contracts/challenges";
+import { predictionResourceTypes, PREDICTION_CHOICES, PREDICTION_REASONING_MAX, type ChallengeDefinition, type ChallengePrediction } from "@infraforge/contracts/challenges";
 import { RESOURCE_TYPES } from "@infraforge/domain/resource";
 import { ValidationError } from "../utils/errors";
 
@@ -8,8 +8,8 @@ const body = z.object({
   reasoning: z.string().max(PREDICTION_REASONING_MAX * 2).nullable().optional(),
 }).strict();
 
-export function choicesFor(kind: ChallengeDefinition["predictions"][number]["kind"], designTypes: string[]) {
-  return kind === "busiest-type" ? [...new Set(designTypes)] : PREDICTION_CHOICES[kind].map((choice) => choice.value);
+export function choicesFor(kind: ChallengeDefinition["predictions"][number]["kind"], designTypes: string[], engine?: "2") {
+  return kind === "busiest-type" ? predictionResourceTypes(designTypes, engine) : PREDICTION_CHOICES[kind].map((choice) => choice.value);
 }
 
 /* Every question must be answered before the attempt exists. The answer set is
@@ -24,7 +24,7 @@ export function readPrediction(input: unknown, definition: ChallengeDefinition, 
   }
   for (const question of definition.predictions) {
     const answer = answers[question.id]!;
-    const valid = choicesFor(question.kind, designTypes).includes(answer) &&
+    const valid = choicesFor(question.kind, designTypes, definition.engine).includes(answer) &&
       (question.kind !== "busiest-type" || Object.values(RESOURCE_TYPES).includes(answer as never));
     if (!valid) throw new ValidationError(`"${question.prompt}" needs one of the offered answers.`);
   }

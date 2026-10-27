@@ -9,7 +9,7 @@ import type { SimulationInstance } from "../simulator/instance";
 import { captureRunInputs, engineSeed } from "../deployments/runInputs";
 import { challengeSeed } from "../challenges/registry";
 import { EXPERIMENT_TRIGGER, recordedExperiment } from "../challenges/experiment";
-import { definition } from "./challengeHarness";
+import { legacyDefinition as definition } from "./challengeHarness";
 
 const d = definition("lose-an-app-server");
 const plan = recordedExperiment(d)!;

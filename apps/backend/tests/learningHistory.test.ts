@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { learningAttempt } from "../challenges/history";
-import { answers, attemptRow, definition, REFERENCE } from "./challengeHarness";
+import { answers, attemptRow, legacyDefinition as definition, REFERENCE } from "./challengeHarness";
 
 test("learning facts preserve the recorded version, raw requirements and separate predictions", () => {
   const d = definition("headroom-under-cpu-pressure");

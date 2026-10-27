@@ -4,7 +4,7 @@ import { resolveWorkload } from "@infraforge/domain/workload";
 import { ActionRefused, createModel2Engine } from "../simulator/model2Engine";
 import { buildModel2Contract } from "../simulator/contractBuilder";
 import { captureRunInputs } from "../deployments/runInputs";
-import { definition } from "./challengeHarness";
+import { legacyDefinition as definition } from "./challengeHarness";
 import { CHALLENGE_VERSIONS } from "../challenges/definitions";
 import { findChallenge } from "../challenges/registry";
 import { advanceTickBatch, replayDue } from "../simulator/tickBatch";

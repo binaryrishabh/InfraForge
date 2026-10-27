@@ -34,6 +34,11 @@ export type PredictionQuestion =
   | { id: string; kind: "survivor-health"; prompt: string }
   | { id: string; kind: "target-health"; prompt: string };
 
+// These routing/policy nodes have no CPU measurement in the Model 2 canvas profile.
+export function predictionResourceTypes(types: string[], engine?: "2") {
+  return [...new Set(types)].filter((type) => engine !== "2" || (type !== "Load Balancer" && type !== "Firewall"));
+}
+
 export interface PredictionChoice { value: string; label: string }
 
 /* Fixed answer sets. A busiest-type prediction instead chooses among the

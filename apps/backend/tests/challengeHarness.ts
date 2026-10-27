@@ -7,7 +7,7 @@ import { captureSnapshot } from "../simulator/snapshot";
 import { runSecurityScan } from "../stages/securityScan.stages";
 import { runCostEstimation } from "../stages/costEstimation.stages";
 import { buildRunReport, type StoredRun } from "../reports/report";
-import { challengeSeed, latestChallenge, specHash, type ChallengeRegistry } from "../challenges/registry";
+import { challengeSeed, findChallenge, latestChallenge, specHash, type ChallengeRegistry } from "../challenges/registry";
 import { EXPERIMENT_TRIGGER, recordedExperiment } from "../challenges/experiment";
 import { applyAction } from "../simulator/actionApplication";
 import { actionCompletion } from "../simulator/actionCompletion";
@@ -21,6 +21,8 @@ import { createModel2Engine, type ContractBuilder } from "../simulator/model2Eng
 import { buildModel2Contract } from "../simulator/contractBuilder";
 import { currentSecond } from "../simulator/engineView";
 
+// Historical report fixtures deliberately keep their published Model 1 conditions.
+export const legacyDefinition = (id: string) => findChallenge(id, 1)!.definition;
 export const definition = (id: string) => latestChallenge(id)!.definition;
 
 const vms = (n: number, skuId?: string) => Array.from({ length: n }, (_, i) =>

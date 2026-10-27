@@ -6,7 +6,7 @@ import { normalizedFinalState } from "../comparison/outcomes";
 import type { StoredRun } from "../reports/report";
 import type { RunAction } from "../lib/generated/prisma/client";
 import { layout, workload } from "./integration/scenario";
-import { REFERENCE, answers, attemptRow, definition } from "./challengeHarness";
+import { REFERENCE, answers, attemptRow, legacyDefinition as definition } from "./challengeHarness";
 
 const at = new Date("2026-10-13T10:00:00.000Z");
 const captured = { ...captureRunInputs(layout, workload), seed: "comparison-seed" };

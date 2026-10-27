@@ -3,7 +3,7 @@ import type { ChallengeDefinition } from "@infraforge/contracts/challenges";
 import { DeploymentChaosNames } from "@infraforge/domain/resource";
 import { FAULT_DURATIONS } from "../simulator/faults";
 import { buildRegistry } from "../challenges/registry";
-import { answers, attemptReport, definition, REFERENCE } from "./challengeHarness";
+import { answers, attemptReport, legacyDefinition as definition, REFERENCE } from "./challengeHarness";
 
 // Research fixtures, not published challenges. Keep the real model and fixed seed;
 // compare the same design with/without the fault to isolate its modeled operation.

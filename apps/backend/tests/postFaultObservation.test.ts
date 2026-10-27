@@ -15,7 +15,7 @@ import { applyAction } from "../simulator/actionApplication";
 import { actionCompletion } from "../simulator/actionCompletion";
 import { displaySimulationLogs } from "../simulator/logs";
 import type { SimulationInstance } from "../simulator/instance";
-import { answers, attemptReport, attemptRow, definition, REFERENCE } from "./challengeHarness";
+import { answers, attemptReport, attemptRow, legacyDefinition as definition, REFERENCE } from "./challengeHarness";
 import { observeCandidate } from "./recoveryExploration";
 
 const d = definition("after-the-cache-returns"), plan = recordedExperiment(d)!;

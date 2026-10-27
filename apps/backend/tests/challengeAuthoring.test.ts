@@ -39,12 +39,12 @@ describe("challenge authoring", () => {
 
   test("a changed, removed, unpinned, duplicated or skipped version is rejected", () => {
     const edited = withEdit((d) => ({ ...d, hints: [...d.hints.slice(0, -1), "Rewritten hint."] }));
-    expect(validateChallengeVersions(edited, PUBLISHED)).toContainEqual(expect.stringContaining("cache-failure@1: a published version changed; ship the change as version 2"));
+    expect(validateChallengeVersions(edited, PUBLISHED)).toContainEqual(expect.stringContaining("cache-failure@1: a published version changed; ship the change as version 3"));
     expect(validateChallengeVersions(CHALLENGE_VERSIONS.filter((d) => d !== cache), PUBLISHED)).toContainEqual("cache-failure@1: a published version was removed; old attempts need it");
-    const next = { ...cache, version: 2 };
-    expect(validateChallengeVersions([...CHALLENGE_VERSIONS, next], PUBLISHED)).toContainEqual("cache-failure@2: not pinned; add its spec hash to the published list");
+    const next = { ...cache, version: 3 };
+    expect(validateChallengeVersions([...CHALLENGE_VERSIONS, next], PUBLISHED)).toContainEqual("cache-failure@3: not pinned; add its spec hash to the published list");
     expect(validateChallengeVersions([...CHALLENGE_VERSIONS, { ...cache }], PUBLISHED)).toContainEqual("Duplicate challenge version cache-failure@1");
-    expect(validateChallengeVersions([...CHALLENGE_VERSIONS, { ...cache, version: 3 }], PUBLISHED)).toContainEqual(expect.stringContaining("without gaps"));
+    expect(validateChallengeVersions([...CHALLENGE_VERSIONS, { ...cache, version: 4 }], PUBLISHED)).toContainEqual(expect.stringContaining("without gaps"));
   });
 
   test("malformed content, unsupported rules and impossible predictions are named", () => {

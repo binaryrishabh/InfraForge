@@ -9,14 +9,14 @@ import { preflight } from "../challenges/preflight";
 import { experimentReadiness, recordedExperiment } from "../challenges/experiment";
 import { captureRunInputs } from "../deployments/runInputs";
 import { WorkloadProfileSchema } from "../zod_schemas/deployment.schema";
-import { REFERENCE, answers, attemptReport, definition, tier } from "./challengeHarness";
+import { REFERENCE, answers, attemptReport, legacyDefinition as definition, tier } from "./challengeHarness";
 
 describe("versioned registry", () => {
   const v1 = findChallenge("cache-matters", 1)!.definition;
   // A materially different second version: a tighter budget is a different task.
   const v2: ChallengeDefinition = { ...v1, version: 2, objective: "Same, for $350 a month or less.",
     criteria: v1.criteria.map((c) => c.kind === "monthly-budget" ? { ...c, label: "Monthly estimate is $350 or less", maxUsd: 350 } : c) };
-  const registry = buildRegistry([...CHALLENGE_VERSIONS, v2]);
+  const registry = buildRegistry([...CHALLENGE_VERSIONS.filter((d) => d.version === 1), v2]);
 
   test("every challenge is listed once, at its latest version, with its category", () => {
     const listed = listLatestChallenges().map((e) => e.definition);
