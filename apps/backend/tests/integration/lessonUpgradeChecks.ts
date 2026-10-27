@@ -11,7 +11,7 @@ export async function checkLessonUpgrade(h: LocalHarness) {
   try {
     await h.sql.query(`CREATE DATABASE "${name}" TEMPLATE template0`); created = true;
     const directory = new URL("../../prisma/migrations/", import.meta.url), folders = (await readdir(directory, { withFileTypes: true })).filter((e) => e.isDirectory()).map((e) => e.name).sort();
-    expect(folders).toHaveLength(26);
+    expect(folders).toHaveLength(27);
     for (const folder of folders.slice(0, 18)) await db.query(await Bun.file(new URL(`${folder}/migration.sql`, directory)).text());
     const owner = crypto.randomUUID(), design = crypto.randomUUID(), run = crypto.randomUUID(), hash = "0".repeat(64);
     await db.query('INSERT INTO "User" (id,name,email,"updatedAt") VALUES ($1,\'Legacy M2M fixture\',$2,now())', [owner, `${owner}@infraforge.test`]);
