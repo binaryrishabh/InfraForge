@@ -2448,7 +2448,7 @@
     },
     {
       "path": "scripts/tests/reconfigure.test.ts",
-      "hash": "01b592e87b21ac376b3bf70013507d676af2baf7b2948ad00dce42476d3a7a86"
+      "hash": "bd1531a540d4d427ea8e6e0ae295c59538d41608538fe9043669d14642437846"
     },
     {
       "path": "scripts/tests/release-compose.test.ts",
@@ -2472,7 +2472,7 @@
     },
     {
       "path": "scripts/tests/release.test.ts",
-      "hash": "baf4878d5106255d37481befe7d5e284bafd41b7ced76c114a7e0fb6f587251a"
+      "hash": "9284ec027303847994544358038ad34c6ea11bb8d1524de2ac8c84e4af528951"
     },
     {
       "path": "scripts/tests/scored-challenges.test.ts",
