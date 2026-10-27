@@ -68,7 +68,7 @@ for (const scored of [false, true]) test(`client emits the actual strict admissi
 
 test("client rejects owner changes, mutated evidence, unfinished runs and oversized evidence before transport", async () => {
   let requests = 0, owner = "qualification";
-  const client = createFirstStackSubmissionClient({ endpoint: "/test", owner: () => owner, fetch: (async () => { requests++; return Response.json({ id, reused: false }); }) as typeof fetch });
+  const client = createFirstStackSubmissionClient({ endpoint: "/test", owner: () => owner, fetch: (async () => { requests++; return Response.json({ id, reused: false }); }) as unknown as typeof fetch });
   const o = await options(); owner = "another-owner";
   await expect(client.submit(o)).rejects.toThrow("owner"); owner = "qualification";
   o.result.evidence!.fingerprint = "a".repeat(64); await expect(client.submit(o)).rejects.toThrow("changed");
@@ -107,7 +107,7 @@ test("authenticated availability rejects a stale source pin, changed image, expi
   state = { ...available(o), engine: { ...o.run.engine, image: `sha256:${"c".repeat(64)}` } };
   await expect(client.submit(o)).rejects.toThrow("engine changed");
   state = { ...available(o), expiresAt: Date.now() - 1 }; await expect(client.submit(o)).rejects.toThrow("unavailable");
-  state = { available: false, engine: null }; expect(await client.availability()).toEqual(state);
+  state = { available: false, engine: null }; expect(await client.availability()).toEqual({ available: false, engine: null });
   await expect(client.submit(o)).rejects.toMatchObject({ status: 503 }); expect(posts).toBe(0);
 });
 
@@ -142,7 +142,7 @@ for (const nextOwner of [null, "another-owner"]) for (const phase of ["transport
     const client = createFirstStackSubmissionClient({ endpoint: "/test", owner: () => owner, fetch: (async () => {
       if (phase === "transport") owner = nextOwner;
       return { ok: true, json: async () => { if (phase === "json") owner = nextOwner; return body; } } as Response;
-    }) as typeof fetch });
+    }) as unknown as typeof fetch });
     await expect(client.read(id)).rejects.toThrow(/owner/i);
   });
 }
