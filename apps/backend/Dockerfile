@@ -25,15 +25,12 @@ COPY apps/backend/cutover ./apps/backend/cutover/
 COPY apps/backend/deployments ./apps/backend/deployments/
 COPY apps/backend/reports ./apps/backend/reports/
 COPY apps/backend/evidence ./apps/backend/evidence/
-COPY apps/backend/internalModel2 ./apps/backend/internalModel2/
-COPY apps/backend/executionIdentity ./apps/backend/executionIdentity/
 COPY apps/backend/resources ./apps/backend/resources/
 COPY apps/backend/comparison ./apps/backend/comparison/
 COPY apps/backend/reruns ./apps/backend/reruns/
 COPY apps/backend/actions ./apps/backend/actions/
 COPY apps/backend/capabilities ./apps/backend/capabilities/
 COPY apps/backend/runRecords ./apps/backend/runRecords/
-COPY apps/backend/firstStack ./apps/backend/firstStack/
 COPY apps/backend/challenges ./apps/backend/challenges/
 COPY apps/backend/scripts ./apps/backend/scripts/
 COPY apps/backend/lib/prisma.ts ./apps/backend/lib/
@@ -60,4 +57,4 @@ RUN cd apps/backend && bun --no-env-file release/cli.ts manifest "$RELEASE_SHA" 
 RUN chmod -R u=rwX,go=rX /app/apps /app/packages
 USER bun
 
-CMD ["bun", "--no-env-file", "--no-install", "apps/backend/executionIdentity/launcher.ts", "api"]
+CMD ["bun", "--no-env-file", "--no-install", "apps/backend/index.ts"]

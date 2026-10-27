@@ -17,9 +17,6 @@ import { accountRouter } from "../../auth/accountRoutes";
 import { createOriginCheck } from "../../auth/origin";
 import { deleteAccount, exportAccountPage, exportSections } from "../../auth/accountData";
 import { checkAccountSchema } from "../../release/accountSchema";
-import { checkFirstStackSchema } from "../../release/firstStackSchema";
-import { submissionFixture } from "../submissionFixture";
-import { createSubmissionService } from "../../firstStack/admission";
 import { registerVerification } from "../../auth/verification";
 import { AccountEmailRequests } from "../../auth/mailRequests";
 import { createEmailVerificationToken } from "better-auth/api";
@@ -44,7 +41,7 @@ import { createEmailVerificationToken } from "better-auth/api";
     for (const migration of migrations.slice(accountIndex)) await sql.query(await Bun.file(new URL(`${migration}/migration.sql`, folder)).text());
     const { deletedAt, ...preserved } = (await sql.query('SELECT * FROM "User" WHERE id=\'legacy\'')).rows[0];
     expect(preserved).toEqual(before); expect(deletedAt).toBeNull();
-    await checkAccountSchema(sql); await checkFirstStackSchema(sql);
+    await checkAccountSchema(sql);
     const mail = new FakeEmail(), quota = { allow: async () => true };
     const origin = "http://localhost:5173", password = "Fixture-password-long-8!";
     // Hold each native signup transaction just before commit. The production
@@ -103,17 +100,10 @@ import { createEmailVerificationToken } from "better-auth/api";
     // More than pool-size signups, each followed by a new promptly-starting tx.
     for (let n = 0; n < poolSize + 1; n++) await create(`pool_probe_${n}`);
     const alice = await create("alice"), bob = await create("bobby");
-    const a = await submissionFixture(alice.id), b = await submissionFixture(bob.id);
-    for (const [user, fixture] of [[alice, a], [bob, b]] as const) {
-      fixture.request.infrastructureId = randomUUID();
-      await db.infrastructure.create({ data: { id: fixture.request.infrastructureId, userId: user.id, ownerId: user.id, name: `${user.id} personal design`, layout: JSON.parse(JSON.stringify(fixture.layout)),
-        updatedAt: new Date(fixture.request.expectedDesignUpdatedAt) } });
+    const designs = { alice: randomUUID(), bob: randomUUID() };
+    for (const [user, id] of [[alice, designs.alice], [bob, designs.bob]] as const) {
+      await db.infrastructure.create({ data: { id, userId: user.id, ownerId: user.id, name: `${user.id} personal design`, layout: { resources: [], connectionLines: [] } } });
     }
-    const service = createSubmissionService(sql, { enabled: true, available: async () => true, engine: a.engine });
-    const privateRun = await service.submit(alice.id, { ...a.request, purpose: "private" });
-    await service.submit(bob.id, { ...b.request, purpose: "private" });
-    const immutableBefore = (await sql.query('SELECT * FROM "FirstStackRun" WHERE "ownerId"=$1', [alice.id])).rows;
-    const resultBefore = (await sql.query('SELECT * FROM "FirstStackResult" WHERE "runId"=$1', [privateRun.id])).rows;
     // Cross-user cursors cannot grant access, and worker fence tokens never export.
     for (const section of exportSections) {
       const page = await exportAccountPage(db, alice.id, section);
@@ -132,9 +122,8 @@ import { createEmailVerificationToken } from "better-auth/api";
     expect((await call("/delete", { password: "wrong-password", confirmation: "DELETE" })).status).toBe(403);
     expect((await call("/delete", { password, confirmation: "yes" })).status).toBe(400);
     expect((await call("/delete", { password, confirmation: "DELETE", userId: bob.id })).status).toBe(400);
-    const exported = await call("/export?section=results"); expect(exported.status).toBe(200);
-    expect((await exported.json() as any).records[0].runId).toBe(privateRun.id);
-    await db.deployment.create({ data: { ownerId: alice.id, infrastructureId: a.request.infrastructureId, status: "pending" } });
+    expect((await call("/export?section=results")).status).toBe(200);
+    await db.deployment.create({ data: { ownerId: alice.id, infrastructureId: designs.alice, status: "pending" } });
     expect((await call("/delete", { password, confirmation: "DELETE" })).status).toBe(409);
     await db.deployment.updateMany({ where: { ownerId: alice.id }, data: { status: "failed" } });
     expect((await call("/delete", { password, confirmation: "DELETE" })).status).toBe(200);
@@ -144,9 +133,7 @@ import { createEmailVerificationToken } from "better-auth/api";
     expect(await db.account.count({ where: { userId: alice.id } })).toBe(0);
     expect(await db.accountEmailToken.count({ where: { userId: alice.id } })).toBe(0);
     expect((await call("/export?section=results")).status).toBe(401);
-    expect((await sql.query('SELECT * FROM "FirstStackRun" WHERE "ownerId"=$1', [alice.id])).rows).toEqual(immutableBefore);
-    expect((await sql.query('SELECT * FROM "FirstStackResult" WHERE "runId"=$1', [privateRun.id])).rows).toEqual(resultBefore);
-    expect((await db.infrastructure.findUniqueOrThrow({ where: { id: a.request.infrastructureId } })).layout).toEqual({});
+    expect((await db.infrastructure.findUniqueOrThrow({ where: { id: designs.alice } })).layout).toEqual({});
     expect((await db.user.findUniqueOrThrow({ where: { id: bob.id } })).email).toBe("bobby@example.test");
     const refused = async (work: () => PromiseLike<unknown>, message: string) => {
       let failure: unknown;

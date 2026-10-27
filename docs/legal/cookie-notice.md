@@ -27,8 +27,6 @@ All use the flags and API-host scope above. Local HTTP uses the same names witho
 | Local storage: `infraforge:palette-rail` | Palette display preference | No automatic expiry. [Workspace](../../apps/web/src/features/canvas/components/designer/DesignWorkspace.tsx) |
 | Local storage: `infraforge:hints:<challengeId>:v<version>` | Number of hints revealed in this browser | No automatic expiry; key is not account-specific. [Hints](../../apps/web/src/features/challenges/components/HintReveal.tsx) |
 | Local storage: `if-mode` | Marketing page light/dark appearance | No automatic expiry. [Marketing theme](../../apps/web/marketing/sections/site.mjs) |
-| Session storage: `infraforge-model2-authoring/1:<owner>` | Internal authoring draft, review and last-run reference | Browser page-session lifetime; internal-feature access applies. [Authoring draft](../../apps/web/src/features/internalModel2/draft.ts) |
-| Session storage: `infraforge-object-restart/1:<owner>` | Internal lesson draft and review | Browser page-session lifetime; internal-feature access applies. [Lesson draft](../../apps/web/src/features/internalLessons/lessonDraft.ts) |
 
 Legacy local-storage keys `infraforge_auth_registry`, `infraforge_auth_session` and `Infraforge_Infrastucture_Draft` are removed by [migration cleanup](../../apps/web/src/features/auth/drafts.ts); they are not new account storage.
 

@@ -23,9 +23,6 @@ import { checkLearningHistory } from "./learningHistoryChecks";
 import { checkCredentials } from "./credentialChecks";
 import { checkLearningExperiments } from "./learningChecks";
 import { checkPostFaultObservation } from "./postFaultChecks";
-import { checkInternalModel2 } from "./model2Checks";
-import { checkModel2Browser } from "./model2BrowserChecks";
-import { checkConnected } from "./connectedChecks";
 import { checkOperationalDeadline } from "./operationalChecks";
 
 type Event = Record<string, any>;
@@ -116,12 +113,6 @@ integration("local deployment lifecycle", () => {
       sessions = new SessionFixtures(harness);
       phase("public credential authentication");
       evidence.credentials = await checkCredentials(harness, sessions);
-      if (process.env.INTEGRATION_MODEL2_ONLY === "1") {
-        await harness.startWorker(); workerStarted = true;
-        evidence.model2 = await checkInternalModel2(harness, sessions, infrastructureIds);
-        evidence.connected = await checkConnected(harness, sessions, infrastructureIds);
-        evidence.result = "passed"; return;
-      }
       if (process.env.INTEGRATION_LEARNING_ONLY === "1") {
         await harness.startWorker(); workerStarted = true;
         evidence.learning = await checkLearningExperiments(harness, sessions, infrastructureIds, deploymentIds);
@@ -138,12 +129,6 @@ integration("local deployment lifecycle", () => {
         await checkUserIsolation(harness, sessions, infrastructureIds[0]!, deploymentIds[0]!);
         evidence.result = "passed"; return;
       }
-      phase("internal Model-2 saved design, durable worker and read-only historical report");
-      evidence.model2 = await checkInternalModel2(harness, sessions, infrastructureIds);
-      phase("versioned connected Model-2 durable causality");
-      evidence.connected = await checkConnected(harness, sessions, infrastructureIds);
-      phase("internal Model-2 browser authoring, review and durable reporting");
-      evidence.model2Browser = await checkModel2Browser(harness, sessions, infrastructureIds);
       const invalidJson = await fetch(harness.api + "/infrastructure", {
         method: "POST", headers: harness.headers, body: "{",
       });

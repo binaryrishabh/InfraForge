@@ -2,15 +2,13 @@ import { createHash } from "node:crypto";
 import { readdir, readFile } from "node:fs/promises";
 import type { Client, Pool } from "pg";
 import { checkCredentialSchema } from "./credentialSchema";
-import { checkInternalModel2Schema } from "./model2Schema";
-import { checkLessonSchema } from "./lessonSchema";
-import { checkFirstStackSchema } from "./firstStackSchema";
 import { checkAccountSchema } from "./accountSchema";
-import { verifierLock } from "../firstStack/verifierOwnership";
 
 type Database = Pick<Client | Pool, "query">;
 export type Migration = { name: string; checksum: string; checksums: string[] };
 const hash = (value: string) => createHash("sha256").update(value).digest("hex");
+// The advisory lock a release holds on its own database session.
+const releaseLock = [186542854, 12];
 // Reviewed additive migrations: safe to apply to a populated, idle database. They also define the guarded triggers.
 export const ADDITIVE_MIGRATIONS = new Set(["20261009000000_capture_run_inputs", "20261009010000_add_authentication",
   "20261013000000_reliable_run_evidence", "20261013010000_honest_reruns", "20261014000000_challenge_attempts",
@@ -110,19 +108,10 @@ export async function checkModel1SchemaGuards(db: Database) {
 
 export async function checkSchemaGuards(db: Database) {
   await checkModel1SchemaGuards(db);
-  await checkInternalModel2Schema(db);
-  await checkLessonSchema(db);
-  await checkFirstStackSchema(db);
   await checkAccountSchema(db);
 }
 
 export async function assertReleaseIdle(db: Database) {
-  const replays = await db.query("SELECT to_regclass('public.\"FirstStackReplay\"') IS NOT NULL AS present");
-  if (replays.rows[0].present && (await db.query('SELECT 1 FROM "FirstStackReplay" WHERE status<>\'terminal\' LIMIT 1')).rowCount) throw Error("Historical replays must finish or undergo operator recovery before release");
-  const submissions = await db.query("SELECT to_regclass('public.\"FirstStackWork\"') IS NOT NULL AS present");
-  if (submissions.rows[0].present && (await db.query('SELECT 1 FROM "FirstStackWork" WHERE status<>\'terminal\' LIMIT 1')).rowCount) throw Error("First-stack reservations must finish or undergo operator recovery before release");
-  const internal = await db.query("SELECT to_regclass('public.\"InternalModel2Run\"') IS NOT NULL AS present");
-  if (internal.rows[0].present && (await db.query('SELECT 1 FROM "InternalModel2Run" WHERE status IN (\'queued\',\'running\') LIMIT 1')).rowCount) throw Error("Active internal Model-2 runs must finish or be cancelled before release");
   const tables = await db.query("SELECT to_regclass('public.\"Deployment\"') IS NOT NULL AS present");
   if (tables.rows[0].present) {
     // The JSON lookup also works before the additive runtimeActive column exists.
@@ -135,8 +124,8 @@ export async function assertReleaseIdle(db: Database) {
 // The caller owns this dedicated session until migrate/postcheck has finished,
 // including all Prisma subprocesses. Client.end() releases the lock on every exit.
 export async function acquireReleaseOwnership(db: Client) {
-  const result = await db.query("SELECT pg_try_advisory_lock($1,$2) AS held", verifierLock);
-  if (result.rows[0]?.held !== true) throw new Error("A verifier or another release still owns this database");
+  const result = await db.query("SELECT pg_try_advisory_lock($1,$2) AS held", releaseLock);
+  if (result.rows[0]?.held !== true) throw new Error("Another release still owns this database");
 }
 
 export async function assertNoWorker(db: Database) {

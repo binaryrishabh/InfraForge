@@ -146,7 +146,7 @@ services:
       TURNSTILE_ENABLED: ${TURNSTILE_ENABLED:-}
       TURNSTILE_PROTECT_RESET: ${TURNSTILE_PROTECT_RESET:-true}
       TURNSTILE_DEV_BYPASS: ${TURNSTILE_DEV_BYPASS:-false}
-    command: [bun, --no-env-file, --no-install, executionIdentity/launcher.ts, api]
+    command: [bun, --no-env-file, --no-install, index.ts]
     healthcheck:
       <<: *health
       test: [CMD, bun, health/probe.ts, "3000"]
@@ -159,7 +159,7 @@ services:
       <<: *environment
       DATABASE_URL: ${WORKER_DATABASE_URL:?Set a session-preserving PostgreSQL worker URL}
       WORKER_DATABASE_MODE: ${WORKER_DATABASE_MODE:?Set direct or session after checking the provider}
-    command: [bun, --no-env-file, --no-install, executionIdentity/launcher.ts, worker]
+    command: [bun, --no-env-file, --no-install, worker.ts]
     healthcheck:
       <<: *health
       test: [CMD, bun, health/probe.ts, "3002"]
@@ -170,7 +170,7 @@ services:
     cpus: 0.25
     ports: ["127.0.0.1:${WS_PORT:-3001}:3001"]
     environment: *auth
-    command: [bun, --no-env-file, --no-install, executionIdentity/launcher.ts, ws]
+    command: [bun, --no-env-file, --no-install, ws-server.ts]
     healthcheck:
       <<: *health
       test: [CMD, bun, health/probe.ts, "3001"]

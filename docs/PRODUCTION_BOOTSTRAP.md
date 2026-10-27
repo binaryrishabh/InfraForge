@@ -109,8 +109,7 @@ volume only; changing them later does not rotate credentials in an existing DB.
 
 Do not configure `RELEASE_SHA` or `RELEASE_IMAGE` in this file; the release operator
 supplies them. `API_PORT`/`WS_PORT` should remain default 3000/3001 to match the proxy.
-Compose supplies production mode and private Redis host/port. General Model 2 stays
-INTERNAL; do not add lesson grants, a runner socket or activation settings here.
+Compose supplies production mode and private Redis host/port.
 
 Transaction pooling (including Neon's pooler endpoint) is unsuitable for the worker's session
 advisory lock. Runtime probes cannot certify an arbitrary transparent pooler; use

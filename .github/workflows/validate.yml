@@ -18,7 +18,7 @@ jobs:
   validation:
     name: Full validation
     if: always()
-    needs: [identity, checks, integration, m2m-preview, packaging, operations]
+    needs: [checks, integration, packaging, operations]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
@@ -29,25 +29,7 @@ jobs:
         env:
           VALIDATION_RESULTS: ${{ toJSON(needs) }}
 
-  identity:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-        with:
-          ref: ${{ inputs.ref || github.sha }}
-          fetch-depth: 0
-          persist-credentials: false
-      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
-        with:
-          bun-version: 1.3.14
-      - run: bun install --frozen-lockfile
-      - run: bun --no-env-file run db:generate
-        working-directory: apps/backend
-      - run: bun --no-env-file scripts/execution-identity.ts --check
-      - run: bun --no-env-file scripts/execution-resolution.ts
-
   checks:
-    needs: identity
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -79,7 +61,6 @@ jobs:
           VALIDATION_COMMAND: ${{ matrix.command }}
 
   integration:
-    needs: identity
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -101,7 +82,6 @@ jobs:
       INTEGRATION_DATABASE_URL: postgresql://postgres@127.0.0.1:55432/infraforge_it_0123abcd
       INTEGRATION_REDIS_PORT: "56379"
       INTEGRATION_API_PORT: "3100"
-      MODEL2_BROWSER_MODULE: /tmp/infraforge-browser/node_modules/playwright/index.mjs
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
@@ -111,39 +91,9 @@ jobs:
         with:
           bun-version: 1.3.14
       - run: bun install --frozen-lockfile
-      # Browser tooling is test-only; keep the application lockfile/runtime unchanged.
-      - run: npm install --prefix /tmp/infraforge-browser --no-save --package-lock=false playwright@1.64.1 # zizmor: ignore[adhoc-packages] -- Exact-version disposable browser tooling; no production secrets. Transitive registry resolution remains a documented risk.
-      # PR caches are scoped to refs/pull/*/merge and cannot overwrite main's cache.
-      # Separate browser sets prevent a Chromium-only cache from shadowing this one.
-      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
-        with:
-          path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-${{ runner.arch }}-playwright-1.64.1-chromium-shell-firefox-webkit
-      - name: Configure browser dependency downloads
-        # Runs 39953201724 / 39953244900 stalled on Azure's Ubuntu mirror, not the browser CDN.
-        run: |
-          for source in /etc/apt/apt-mirrors.txt /etc/apt/sources.list /etc/apt/sources.list.d/ubuntu.sources; do
-            if [ -f "$source" ]; then
-              sudo sed -i 's|azure.archive.ubuntu.com|archive.ubuntu.com|g' "$source"
-            fi
-          done
-          printf 'Acquire::http::Timeout "30";\nAcquire::https::Timeout "30";\nAcquire::Retries "3";\n' | sudo tee /etc/apt/apt.conf.d/80-browser-downloads
-      # System dependencies must be installed even on a browser cache hit.
-      - run: node /tmp/infraforge-browser/node_modules/playwright/cli.js install --with-deps --only-shell chromium firefox webkit
       - run: bun --no-env-file run db:generate
         working-directory: apps/backend
-      - run: bun --no-env-file scripts/browser-first-stack/pin.ts
-      - run: bun --no-env-file scripts/browser-first-stack/determinism.ts
-      - run: node scripts/browser-first-stack/build.mjs
-      - run: bun --no-env-file scripts/browser-first-stack/determinism.ts --worker --vite
       - run: bun run test:integration
-      - run: bun --no-env-file scripts/verify-internal-model2-proof.ts /tmp/infraforge-model2-*.json
-      - run: bun --no-env-file scripts/verify-internal-model2-proof.ts docs/reality/m2k-product-proof.json
-      - run: bun --no-env-file scripts/verify-model2-workspace-proof.ts /tmp/infraforge-m2l/browser-proof.json
-      - run: bun --no-env-file scripts/verify-model2-workspace-proof.ts docs/reality/m2l-browser-proof.json
-      - run: bun --no-env-file scripts/verify-connected-proof.ts /tmp/infraforge-connected-proof.json
-      - run: bun --no-env-file scripts/verify-connected-proof.ts docs/reality/connected-web-proof.json
-      - run: bun --no-env-file scripts/connected-proof-negative.ts /tmp/infraforge-connected-proof.json
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
         with:
@@ -151,106 +101,8 @@ jobs:
           path: /tmp/infraforge-integration-*.json
           if-no-files-found: error
           retention-days: 14
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        if: always()
-        with:
-          name: internal-model2-connected-proof
-          path: /tmp/infraforge-connected-proof.json
-          if-no-files-found: error
-          retention-days: 14
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        if: always()
-        with:
-          name: internal-model2-product-proof
-          path: /tmp/infraforge-model2-*.json
-          if-no-files-found: ignore
-          retention-days: 14
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        if: always()
-        with:
-          name: internal-model2-browser-proof
-          path: /tmp/infraforge-m2l/
-          if-no-files-found: error
-          retention-days: 14
-
-  m2m-preview:
-    needs: identity
-    runs-on: ubuntu-latest
-    timeout-minutes: 12
-    services:
-      postgres:
-        image: postgres:18-alpine@sha256:898c60cb390d1085bc97bdd6a1ae968757421df394b071848b52b1c09c89d6a5
-        env:
-          POSTGRES_HOST_AUTH_METHOD: trust
-          POSTGRES_DB: infraforge_it_4567abcd
-        ports: ["55432:5432"]
-        options: >-
-          --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 12
-      redis:
-        image: redis:8-alpine@sha256:0bf6577d7774e592b29d093e3ac9390eb91e13d72c21e506afce736de5e0eeb0
-        ports: ["56379:6379"]
-        options: >-
-          --health-cmd "redis-cli ping" --health-interval 5s --health-timeout 5s --health-retries 12
-    env:
-      M2M_RUN: "1"
-      NODE_ENV: test
-      MODEL2_LESSON_ENDPOINT: unix:///var/run/docker.sock
-      MODEL2_LESSON_DOCKER_MODE: disposable-rootful-ci
-      INTEGRATION_DISPOSABLE: local-only
-      INTEGRATION_DATABASE_URL: postgresql://postgres@127.0.0.1:55432/infraforge_it_4567abcd
-      INTEGRATION_REDIS_PORT: "56379"
-      INTEGRATION_API_PORT: "3100"
-      MODEL2_BROWSER_MODULE: /tmp/infraforge-browser/node_modules/playwright/index.mjs
-    steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-        with:
-          ref: ${{ inputs.ref || github.sha }}
-          persist-credentials: false
-      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
-        with:
-          bun-version: 1.3.14
-      - run: bun install --frozen-lockfile
-      - run: bun run db:generate
-        working-directory: apps/backend
-      - run: docker --host "$MODEL2_LESSON_ENDPOINT" build --build-arg RELEASE_SHA="$RELEASE_SHA" -f apps/backend/Dockerfile -t infraforge-m2m-proof .
-        env:
-          RELEASE_SHA: ${{ inputs.ref || github.sha }}
-      - run: echo "MODEL2_LESSON_IMAGE=$(docker --host "$MODEL2_LESSON_ENDPOINT" image inspect infraforge-m2m-proof --format '{{.Id}}')" >> "$GITHUB_ENV"
-      - run: bun --no-env-file node_modules/typescript/bin/tsc --noEmit -p scripts/lesson-host/tsconfig.json
-      - run: bun --no-env-file test scripts/lesson-host
-        env:
-          LESSON_HOST_CI_REFUSAL: "1"
-      - run: npm install --prefix /tmp/infraforge-browser --no-save --package-lock=false playwright@1.64.1 # zizmor: ignore[adhoc-packages] -- Exact-version disposable browser tooling; no production secrets. Transitive registry resolution remains a documented risk.
-      # Fork PR writes stay in their merge-ref scope; main never restores that scope.
-      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
-        with:
-          path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-${{ runner.arch }}-playwright-1.64.1-chromium-shell
-      - name: Configure browser dependency downloads
-        # Keep the same mirror fix and bounded transport retries as integration.
-        run: |
-          for source in /etc/apt/apt-mirrors.txt /etc/apt/sources.list /etc/apt/sources.list.d/ubuntu.sources; do
-            if [ -f "$source" ]; then
-              sudo sed -i 's|azure.archive.ubuntu.com|archive.ubuntu.com|g' "$source"
-            fi
-          done
-          printf 'Acquire::http::Timeout "30";\nAcquire::https::Timeout "30";\nAcquire::Retries "3";\n' | sudo tee /etc/apt/apt.conf.d/80-browser-downloads
-      - run: node /tmp/infraforge-browser/node_modules/playwright/cli.js install --with-deps --only-shell chromium
-      - run: bun --no-env-file --no-install test tests/integration/lesson.integration.test.ts
-        working-directory: apps/backend
-      - run: bun --no-env-file scripts/verify-model2-lesson-proof.ts /tmp/infraforge-m2m/preview-proof.json
-      - run: bun --no-env-file scripts/m2m-proof-negative.ts /tmp/infraforge-m2m/preview-proof.json
-      - run: bun --no-env-file scripts/verify-model2-lesson-proof.ts docs/reality/m2m-preview-proof.json
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        if: always()
-        with:
-          name: internal-model2-lesson-proof
-          path: /tmp/infraforge-m2m/
-          if-no-files-found: error
-          retention-days: 14
 
   packaging:
-    needs: identity
     runs-on: ubuntu-latest
     env:
       DATABASE_URL: postgresql://postgres@localhost/infraforge_packaging
@@ -287,7 +139,6 @@ jobs:
           retention-days: 90
 
   operations:
-    needs: identity
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:

@@ -391,16 +391,14 @@ promotion after backend acceptance.
 ## Validation and historical material
 
 CI preserves build/type/lint/workspace/tooling/challenge/boundary/audit checks,
-PostgreSQL/Redis integration with real browser proof, Model-2 lesson isolation proof,
-and the full disposable packaging/release rehearsal. The packaging image is now built
+PostgreSQL/Redis integration, and the full disposable packaging/release rehearsal. The packaging image is now built
 from deliberately restrictive source permissions; an unfixed negative control must
 reproduce EACCES. A separate operations job checks shell syntax/ShellCheck, workflow
 structure with pinned actionlint, and real disposable Ubuntu Nginx/TLS/bootstrap layout.
 New positive/negative tooling tests cover admission, public release identity, missing
 settings and safe proxy rendering. Tests never use production credentials or databases.
 
-These fixtures do not prove AWS networking, live apt/systemd bootstrap, actual
-rootless lesson hosting, provider backup retention, hosted OAuth or Vercel promotion.
+These fixtures do not prove AWS networking, live apt/systemd bootstrap, provider backup retention, hosted OAuth or Vercel promotion.
 Keep those claims separate.
 
 The old ownerless-data/eight-migration cutover, Neon disposable-branch rehearsal,

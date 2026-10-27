@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync, readdirSync } from "node:fs";
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { checkBoundaries, cycles, imports } from "../boundaries";
@@ -26,42 +26,6 @@ function withWorkspaceFixture(run: (root: string, put: (file: string, text: stri
 }
 
 describe("source import boundaries", () => {
-  test("every shipped scenario JSON remains server-only through direct and transitive browser imports", () => {
-    const folder = "apps/backend/firstStack/scoredChallenges/";
-    const files = readdirSync(folder).filter(name => name.endsWith(".json"));
-    expect(files.length).toBeGreaterThan(1);
-    withWorkspaceFixture((root, put) => {
-      for (const file of files) {
-        put(folder + file, '{"hidden":"server-only"}');
-        for (const statement of [
-          `import '../../backend/firstStack/scoredChallenges/${file}';`,
-          `export { default } from '../../backend/firstStack/scoredChallenges/${file}';`,
-          `import('../../backend/firstStack/scoredChallenges/${file}');`,
-          `type Data = typeof import('../../backend/firstStack/scoredChallenges/${file}');`,
-        ]) {
-          put("apps/web/src/bridge.ts", statement);
-          put("apps/web/src/app.ts", "import './bridge';");
-          expect(checkBoundaries(root).errors.join("\n")).toContain("browser closure reaches server-only challenge data or rubric");
-          put("apps/web/src/app.ts", statement);
-          expect(checkBoundaries(root).errors.join("\n")).toContain("browser closure reaches server-only challenge data or rubric");
-        }
-      }
-    });
-  });
-  test("hidden challenge data cannot enter a browser through values, types, JSON or transitive exports", () => {
-    withWorkspaceFixture((root, put) => {
-      put("apps/backend/firstStack/scoredChallenges/definition.ts", "export type Hidden = string; export const secret = 1;");
-      put("apps/backend/firstStack/scoredChallenges/heldout.json", '{"hidden":"server-only"}');
-      for (const statement of ["import '../../../backend/firstStack/scoredChallenges/definition';",
-        "import type { Hidden } from '../../../backend/firstStack/scoredChallenges/definition';",
-        "import('../../../backend/firstStack/scoredChallenges/heldout.json');",
-        "export { secret } from '../../../backend/firstStack/scoredChallenges/definition';"]) {
-        put("apps/web/src/bridge.ts", statement.replaceAll("../../../backend", "../../backend"));
-        put("apps/web/src/app.ts", "import './bridge';");
-        expect(checkBoundaries(root).errors.join("\n")).toContain("browser closure reaches server-only challenge data or rubric");
-      }
-    });
-  });
   test("finds aliases, re-exports, dynamic/require and type-only imports", () => {
     const edges = imports("example.ts", `
       import type { A } from '@/a';

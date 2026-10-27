@@ -17,10 +17,11 @@ challenges) and engineers (a free canvas).
 - **Model 2** — an event-by-event causal engine (`packages/simulation/src/model2`): every
   request is followed through load balancer, application, database session, transaction and
   outcome, deterministically, with provenance and honest "unknown" values. Mechanisms exist
-  for all 11 component types. It runs internally (lessons, connected runs) today.
-- **Plan:** Model 2 replaces Model 1 for every new run before the public launch on
-  **6 November 2026**; Model 1 code is then removed. Old Model 1 runs and reports stay
-  readable and are never relabelled.
+  for all 11 component types.
+- **Plan (locked 2026-10-28):** Model 2 replaces Model 1 for every new run before the
+  public launch on **6 November 2026**; Model 1 code is then removed. Runs execute in
+  the browser; the server re-runs each finished run's inputs for the official result.
+  Old Model 1 runs and reports stay readable and are never relabelled.
 
 ## Production
 
@@ -54,4 +55,3 @@ lowercase, uppercase, number and symbol) and Cloudflare Turnstile. Details:
 - [DESIGN.md](DESIGN.md) — interface truth rules.
 - [PRODUCTION_BOOTSTRAP.md](PRODUCTION_BOOTSTRAP.md) — rebuilding a host from scratch.
 - [legal/](legal/) — privacy policy and terms (effective dates are set at publication).
-- [reality/](reality/) — engine evidence and validation records.

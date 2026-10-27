@@ -1,5 +1,0 @@
-{
-  "extends": "../../tsconfig.base.json",
-  "compilerOptions": { "target": "ESNext", "module": "Preserve", "moduleResolution": "bundler", "types": ["bun", "node"], "strict": true, "noUncheckedIndexedAccess": true },
-  "include": ["./*.ts"]
-}

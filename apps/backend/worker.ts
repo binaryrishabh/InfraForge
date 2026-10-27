@@ -1,6 +1,5 @@
 import { claimDeployment } from "./deployments/admission";
 import { operationalLimits } from "./deployments/operationalLimits";
-import { assertExecutionHost } from "./executionIdentity/launch";
 import { Queue, Worker, DelayedError } from "bullmq";
 import { redis, commandRedis } from "./infra/redis";
 import { prisma } from "./lib/prisma";
@@ -37,13 +36,8 @@ import type { OutboxPayload } from "./types/OutboxPayload.interface";
 import type { DeploymentJob } from "./types/DeploymentJob.interface";
 import type { DeploymentStages } from "@infraforge/contracts/deployment";
 import type { DeploymentTimeline } from "@infraforge/contracts/deployment";
-import { internalWorker } from "./internalModel2/worker";
-import { retireInternalRuns, failInternalDelivery } from "./internalModel2/execution";
-import { internalModel2Queue } from "./internalModel2/queue";
-import { reapLessonContainers } from "./internalModel2/lessonExecution";
 import { deploymentFailureStatus, isRetiredDeployment } from "./utils/deploymentJobPolicy";
 
-assertExecutionHost();
 await assertRuntimeSchema();
 const databaseUrl = workerDatabaseUrl(process.env);
 if (config.NODE_ENV === "production") await verifyWorkerSession(databaseUrl);
@@ -53,21 +47,7 @@ const ownership = await WorkerOwnership.acquire(databaseUrl, () => {
   process.exit(1);
 });
 await retireInterruptedRuns();
-await retireInternalRuns(ownership);
-await reapLessonContainers().catch(() => {
-  // Lesson admission/execution still refuses an unavailable runner. A parked
-  // preview runner must not prevent the existing Model-1 worker from starting.
-  console.error("Lesson container cleanup unavailable; isolated lesson execution remains fail closed.");
-});
 await startRuntime(ownership);
-const model2Worker = internalWorker(ownership);
-await model2Worker.waitUntilReady();
-// Keep the engine-owned queue definition untouched, but deliver via a bounded
-// producer connection rather than its consumer's unlimited retry connection.
-const internalDeliveryQueue = new Queue(internalModel2Queue.name, {
-  connection: commandRedis, defaultJobOptions: internalModel2Queue.opts.defaultJobOptions,
-});
-internalDeliveryQueue.on("error", operationalWarning("Internal delivery queue unavailable; outbox will retry."));
 let stopping = false;
 let outboxTimer: ReturnType<typeof setTimeout> | undefined;
 let outboxPoll: Promise<void> | undefined;
@@ -123,9 +103,7 @@ async function pollOutbox() {
             entry as unknown as { payload: OutboxPayload },
           );
         } else if (entry.eventType === "model2-internal-created") {
-          const id = (entry.payload as { internalModel2RunId?: string }).internalModel2RunId;
-          if (!id) throw new Error("Missing internal Model-2 run identity");
-          await internalDeliveryQueue.add(entry.eventType, { internalModel2RunId: id }, { jobId: id });
+          // Internal Model 2 runs were removed; an old event of this kind needs no delivery.
         } else {
           // Add Deployment to BullMQ queue for worker to process it.
           // jobId = deploymentId ensures idempotency, duplicates are ignored by BullMQ automatically, ensures processing only once at max.
@@ -162,10 +140,6 @@ async function pollOutbox() {
 
         // If permanently failed, mark deployment as failed and notify
         if (isFailed) {
-          if (entry.eventType === "model2-internal-created") {
-            const id = (entry.payload as { internalModel2RunId?: string }).internalModel2RunId;
-            if (id) await failInternalDelivery(ownership, id);
-          }
           try {
             if (entry.eventType === "deployment-created") {
               const failure = await prisma.deployment.updateMany({
@@ -454,9 +428,6 @@ const readiness = createReadiness(async () => {
     throw new Error("Worker is not processing jobs/outbox");
   }
   await ownership.assertHeld();
-  const internalBackend = model2Worker.getBackend();
-  const [internalConnection, internalBlocking] = await Promise.all([internalBackend.client, internalBackend.blockingClient]);
-  if (!model2Worker.isRunning() || internalConnection.status !== "ready" || internalBlocking?.status !== "ready") throw new Error("Internal Model-2 worker is unavailable");
 });
 await readiness.started;
 const server = http.createServer(async (req, res) => {
@@ -477,9 +448,6 @@ async function shutdown() {
   const deadline = setTimeout(() => process.exit(1), 25000);
   try {
     await worker.close();
-    await model2Worker.close();
-    await internalModel2Queue.close();
-    await internalDeliveryQueue.close();
     await deploymentQueue.close();
     await Promise.all([runtimeStopped, outboxPoll]);
     await readiness.close();

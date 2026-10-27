@@ -156,8 +156,7 @@ test("docs-only reuse keeps exact image identity and cannot release an earlier f
     // C only changes prose after failing B, but still contains B's broken code.
     expect(validateCode).toThrow();
     for (const result of ["failure", "skipped"]) {
-      const results = { identity: { result: "success" }, ...Object.fromEntries(
-        ["checks", "integration", "m2m-preview", "packaging", "operations"].map(job => [job, { result }])) };
+      const results = Object.fromEntries(["checks", "integration", "packaging", "operations"].map(job => [job, { result }]));
       expect(() => requireFullValidation(results)).toThrow();
       expect(() => requireRun({ ...run, head_sha: laterDocs, conclusion: "failure" }, laterDocs, repository)).toThrow();
     }

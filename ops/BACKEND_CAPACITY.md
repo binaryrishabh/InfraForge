@@ -92,11 +92,10 @@ Resource driver reference: [Docker container driver](https://docs.docker.com/bui
 
 ## PostgreSQL connection allowance
 
-Budget **54 steady application client slots**, not 54 always-open backends:
+Budget **34 steady application client slots**, not 54 always-open backends:
 Prisma 10 × 3 processes = 30 (`apps/backend/utils/connectionPolicy.ts`);
 readiness 1 × 3 = 3 (`apps/backend/health/readiness.ts`); worker ownership = 1
-(`apps/backend/infra/workerOwnership.ts`); internal store default pool 10 × API
-and worker = 20 (`apps/backend/internalModel2/store.ts`, installed pg-pool max=10).
+(`apps/backend/infra/workerOwnership.ts`).
 All three roles may use direct connections. API/WS may instead use transaction
 pooling; worker and migrations require session-preserving connections, checked
 by the live advisory-lock probes. For the optional Neon topology, the same pools
@@ -134,18 +133,3 @@ pooling limits](https://neon.com/docs/connect/connection-pooling#understanding-c
 
 References: [PostgreSQL memory settings](https://www.postgresql.org/docs/18/runtime-config-resource.html) and [connection settings](https://www.postgresql.org/docs/18/runtime-config-connection.html). Limits are initial allowances, not measured headroom.
 
-## Prepared first-stack verifier (off)
-
-The opt-in host unit in [FIRST_STACK_VERIFIER.md](FIRST_STACK_VERIFIER.md) adds a
-512 MiB/0.15 CPU trusted supervisor and a separate 768 MiB/0.5 CPU executor.
-With the self-hosted PostgreSQL service, the steady stack's ceilings are
-2432 MiB/1.75 CPU (API 384/0.35, worker 768/0.50, WS 256/0.25, Redis 256/0.15,
-PostgreSQL 768/0.50). Adding the verifier gives 3712 MiB/2.40 CPU, which does
-**not** fit the current 2 vCPU/4 GiB host. Enabling verification requires a larger
-host (for example the planned 2 OCPU/8 GB Oracle A1 VM, whose CPU ceiling still
-needs measurement) or lower budgets. These are ceiling arithmetic, not measured use.
-Its four additional steady database slots raise the application allowance to 58;
-with seven reserved slots and ten operations slots, the corresponding floor is
-75 plus other consumers. No concurrent build/backup/migration budget is approved
-while verification is enabled; stop and drain it first. Default Compose and
-Model 1 activation are unchanged.

@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useState } from "react";
+import { Suspense } from "react";
 import { Link, NavLink, Outlet } from "react-router-dom";
 import { PencilRuler } from "lucide-react";
 import { Wordmark } from "@/ui/Brand";
@@ -6,8 +6,6 @@ import { ButtonLink } from "@/ui/Button";
 import { cx } from "@/ui/cx";
 import { Loading, Page } from "@/ui/Page";
 import { AccountMenu } from "./AccountMenu";
-import { capability } from "@/api/internalLesson.api";
-import { useAuthStore } from "@/features/auth/store/auth.store";
 
 const NAV = [
   { to: "/home", label: "Home" },
@@ -21,7 +19,7 @@ export function SkipLink() {
 }
 
 /* The navigation is a short line of stations: the page you are on is the filled one. */
-function NavItems({ className, internal, lesson }: { className?: string; internal: boolean; lesson: boolean }) {
+function NavItems({ className }: { className?: string }) {
   return (
     <ul className={cx("relative flex w-fit items-center", className)}>
       <li aria-hidden="true" className="pointer-events-none absolute inset-x-4 top-1/2 h-px bg-line-strong" />
@@ -36,34 +34,24 @@ function NavItems({ className, internal, lesson }: { className?: string; interna
           </NavLink>
         </li>
       ))}
-      {internal && <li className="relative shrink-0"><NavLink to={lesson ? "/internal/model2/learn" : "/internal/model2"} className="inline-flex h-9 items-center gap-2 whitespace-nowrap bg-bg px-3 text-sm font-semibold text-ink-3 hover:text-ink">
-        <span aria-hidden="true" className="size-[9px] border-[1.5px] border-dashed border-ink-3" />Model 2 · internal</NavLink></li>}
     </ul>
   );
 }
 
 export function AppShell() {
-  const owner = useAuthStore((s) => s.user?.id), [grantedOwner, setGrantedOwner] = useState<string | null>(null);
-  const [lesson, setLesson] = useState(false);
-  useEffect(() => {
-    const controller = new AbortController();
-    if (owner) void capability(controller.signal).then((value) => { if (!controller.signal.aborted) { setGrantedOwner(value ? owner : null); setLesson(value?.scope === "lesson"); } }).catch(() => { if (!controller.signal.aborted) setGrantedOwner(null); });
-    return () => controller.abort();
-  }, [owner]);
-  const internal = !!owner && grantedOwner === owner;
   return (
     <div className="min-h-dvh bg-bg text-ink">
       <SkipLink />
       <header className="sticky top-0 z-30 border-b border-line bg-bg">
         <div className="mx-auto flex h-14 max-w-[1440px] items-center gap-6 px-4 sm:px-6 lg:px-8">
           <Link to="/home" aria-label="InfraForge home" className="rounded-md"><Wordmark /></Link>
-          <nav aria-label="Primary" className="hidden flex-1 md:block"><NavItems internal={internal} lesson={lesson} /></nav>
+          <nav aria-label="Primary" className="hidden flex-1 md:block"><NavItems /></nav>
           <div className="ml-auto flex items-center gap-3 md:ml-0">
             <ButtonLink to="/design" size="sm" variant="secondary" className="max-sm:hidden" icon={<PencilRuler size={14} aria-hidden="true" />}>Designer</ButtonLink>
             <AccountMenu />
           </div>
         </div>
-        <nav aria-label="Primary" className="if-scroll overflow-x-auto overflow-y-hidden border-t border-line px-2 md:hidden"><NavItems internal={internal} lesson={lesson} className="h-11" /></nav>
+        <nav aria-label="Primary" className="if-scroll overflow-x-auto overflow-y-hidden border-t border-line px-2 md:hidden"><NavItems className="h-11" /></nav>
       </header>
       <main id="main" tabIndex={-1} className="outline-none"><Suspense fallback={<Page><Loading label="Loading…" /></Page>}><Outlet /></Suspense></main>
     </div>

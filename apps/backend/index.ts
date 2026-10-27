@@ -16,7 +16,6 @@ import { deploymentRouter } from "./routes/deployment.routes";
 import { challengeRouter } from "./challenges/routes";
 import { assertRuntimeSchema } from "./release/runtime";
 import { createReadiness } from "./health/readiness";
-import { internalModel2Router } from "./internalModel2/routes";
 import { prisma } from "./lib/prisma";
 import { redis, commandRedis } from "./infra/redis";
 import { configureHttpServer, createShutdown, shutdownOnSignals } from "./utils/lifecycle";
@@ -77,7 +76,6 @@ app.use("/api/account", express.json({ limit: "8kb" }), accountRouter(prisma, au
 app.use("/api/infrastructure", requireSession);
 app.use("/api/deployments", requireSession);
 app.use("/api/challenges", requireSession);
-app.use("/api/internal/model2", requireSession, internalModel2Router);
 app.use(express.json());
 
 // Domain routers
