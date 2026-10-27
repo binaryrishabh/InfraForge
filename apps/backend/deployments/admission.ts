@@ -1,6 +1,6 @@
 import type { Prisma } from "../lib/generated/prisma/client";
 import { AppError, ConflictError, ValidationError } from "../utils/errors";
-import { lifetimeExpired, operationalLimits, reservationWhere, type OperationalLimits } from "./operationalLimits";
+import { lifetimeExpired, operationalLimits, reservationWhere, serverWorkWhere, type OperationalLimits } from "./operationalLimits";
 
 // All admission and pending -> running transitions use this transaction lock.
 // Deployment rows ARE the durable reservations: no separate expiring lease can
@@ -18,7 +18,7 @@ export async function admitDeployment(tx: Prisma.TransactionClient, data: Prisma
   }
   const [owner, global, queued] = await Promise.all([
     tx.deployment.count({ where: { ...reservationWhere, ownerId: data.ownerId } }),
-    tx.deployment.count({ where: reservationWhere }),
+    tx.deployment.count({ where: serverWorkWhere }),
     tx.deployment.count({ where: { status: "pending" } }),
   ]);
   if (owner >= limits.perOwner || global >= limits.global || queued >= limits.queued) {

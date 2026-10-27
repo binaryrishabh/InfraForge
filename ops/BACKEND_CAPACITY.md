@@ -54,8 +54,8 @@ not override these limits.
 | Environment setting | Default | Meaning |
 | --- | ---: | --- |
 | `MODEL1_OWNER_RESERVATIONS` | 2 | All queued/gating/live work for one owner, including paused work. |
-| `MODEL1_GLOBAL_RESERVATIONS` | 4 | Total nonterminal reservations across all owners. |
-| `MODEL1_QUEUED_RESERVATIONS` | 2 | Pending rows, including delivery retries and capacity waits. |
+| `MODEL1_GLOBAL_RESERVATIONS` | 24 | Server work across all owners: queued, in gates, live or replaying. Browser runs are not counted. |
+| `MODEL1_QUEUED_RESERVATIONS` | 20 | Pending rows, including delivery retries, capacity waits and submitted browser runs awaiting replay. |
 | `MODEL1_ACTIVE_RESERVATIONS` | 2 | Running gates plus live simulations; simulator also checks its local registry. |
 | `MODEL1_ADMISSION_BYTES` | 131072 | Maximum UTF-8 JSON create data per admitted row; two queued inputs total at most 256 KiB, excluding database/index overhead and completed history. |
 | `MODEL1_FREEFORM_SECONDS` | 900 | Simulated horizon for ordinary runs and unmatched reruns. |
