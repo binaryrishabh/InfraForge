@@ -23,3 +23,17 @@ export interface RunRecord {
   // Guidance and prediction decorate an experiment; they never select different physics.
   learning?: { kind: "challenge" | "lesson"; profile: string | null; prediction?: unknown };
 }
+
+export interface ScoredChallengeVersion { id: string; version: string }
+/** Aggregate owner projection only; hidden workloads and raw results stay on the server. */
+export type FirstStackScore = {
+  schema: "infraforge-score-summary/1"; challenge: ScoredChallengeVersion; rubricVersion: string;
+  assessment: "incomplete" | "assessed"; earned: number; assessed: number; pending: number;
+  systemPassed: boolean; support: string;
+  criteria: { id: string; required: boolean; outcome: "pass" | "fail" | "Unknown"; reason: string | null }[];
+} | { schema: "infraforge-scoring-unavailable/1"; state: "unavailable"; message: "Scoring unavailable" };
+export type FirstStackSubmissionRecord = RunRecord & { score?: FirstStackScore | null };
+/** Returned by the authenticated submission mount's /availability endpoint. */
+export type FirstStackSubmissionAvailability = { available: false; engine: null } | {
+  available: true; engine: { source: string; image: string }; expiresAt: number;
+};

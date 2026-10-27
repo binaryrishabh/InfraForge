@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { FirstStackScore } from "@infraforge/contracts/reports";
 import { hash } from "../canonical";
 
 const scoreSchema = z.object({ schema: z.literal("infraforge-server-score/1"),
@@ -8,7 +9,7 @@ const scoreSchema = z.object({ schema: z.literal("infraforge-server-score/1"),
     outcome: z.enum(["pass", "fail", "Unknown"]), reason: z.string().nullable(), support: z.enum(["supported-logical", "assumption-only", "Unknown"]) })) })) });
 // No raw result, input, workload identity, cuts, rubric, journal, receipt or
 // arbitrary exception text crosses this allowlist. It does not resolve a registry.
-export function publicScore(result: any, resultHash: string | null) {
+export function publicScore(result: any, resultHash: string | null): FirstStackScore | null {
   if (!result || hash(result) !== resultHash || result.verification !== "verified") return null;
   if (result.score?.schema === "infraforge-scoring-unavailable/1" && result.score.state === "unavailable") {
     return { schema: "infraforge-scoring-unavailable/1" as const, state: "unavailable" as const, message: "Scoring unavailable" };

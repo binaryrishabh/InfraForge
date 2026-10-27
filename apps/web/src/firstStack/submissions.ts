@@ -1,19 +1,15 @@
 import pin from "./enginePin.json";
 import { browserLimits, canonical, hash, sha256, fingerprintFields, digestPattern } from "./protocol";
-import type { BrowserRequest, BrowserResult, BrowserEvidence, BrowserEngine } from "./protocol";
+import type { BrowserRequest, BrowserResult } from "./protocol";
+import type { FirstStackSubmissionAvailability, FirstStackSubmissionRecord, ScoredChallengeVersion } from "@infraforge/contracts/reports";
 
 export interface SavedDesignRevision { infrastructureId: string; updatedAt: string; revision: string }
-export interface SubmissionOptions {
+export type SubmissionOptions = {
   design: SavedDesignRevision; run: BrowserRequest; result: BrowserResult;
-  idempotencyKey: string; purpose: "private" | "shared" | "scored";
-}
+  idempotencyKey: string;
+} & ({ purpose: "scored"; challenge: ScoredChallengeVersion } | { purpose: "private" | "shared"; challenge?: never });
 export interface SubmissionReceipt { id: string; reused: boolean }
-export interface SubmissionProjection {
-  id: string; ownerId: string; status: "queued" | "running" | "terminal" | "recovery"; cancelRequested: boolean;
-  seed: string; engine: BrowserEngine; browserCut: BrowserEvidence; durablePrefix: unknown;
-  result: { verification: "unverified" | "verified" | "mismatch" | "interrupted" | "unavailable" | "cancelled"; [key: string]: unknown } | null;
-  resultHash: string | null;
-}
+export type SubmissionProjection = FirstStackSubmissionRecord;
 export class SubmissionError extends Error {
   constructor(readonly status: number) { super(`First-stack submission request failed (${status})`); }
 }
@@ -25,13 +21,28 @@ const runId = (id: string) => { if (!uuid.test(id)) throw Error("Supply a submis
 export function createFirstStackSubmissionClient(configuration: { endpoint: string; owner(): string | null; fetch?: typeof fetch }) {
   if (!configuration.endpoint.startsWith("/") || configuration.endpoint.startsWith("//") || /[?#\\]/.test(configuration.endpoint)) throw Error("Supply a same-origin submission mount path");
   const endpoint = configuration.endpoint.replace(/\/$/, ""), transport = configuration.fetch ?? fetch;
-  async function request(path: string, init: RequestInit, signal?: AbortSignal) {
-    if (!configuration.owner()) throw Error("Authenticated owner required");
+  const assertOwner = (owner: string | null) => {
+    if (!owner) throw Error("Authenticated owner required");
+    if (configuration.owner() !== owner) throw Error("Authenticated owner changed during request");
+  };
+  async function request<T>(path: string, init: RequestInit, signal?: AbortSignal, owner = configuration.owner(), json = true): Promise<T> {
+    assertOwner(owner);
     const response = await transport(endpoint + path, { ...init, signal, credentials: "same-origin", cache: "no-store", redirect: "error" });
+    assertOwner(owner);
     if (!response.ok) throw new SubmissionError(response.status);
-    return response;
+    const value = json ? await response.json() : undefined;
+    assertOwner(owner);
+    return value as T;
+  }
+  async function availability(signal?: AbortSignal, owner = configuration.owner()): Promise<FirstStackSubmissionAvailability> {
+    const value = await request<FirstStackSubmissionAvailability>("/availability", { method: "GET" }, signal, owner);
+    if (value?.available === false && value.engine === null) return value;
+    if (value?.available !== true || value.engine?.source !== pin.source || !/^sha256:[a-f0-9]{64}$/.test(value.engine.image) ||
+      !Number.isSafeInteger(value.expiresAt) || value.expiresAt <= Date.now()) throw Error("Approved engine unavailable or browser pin stale; run again under the approved engine");
+    return value;
   }
   return {
+    availability,
     async submit(options: SubmissionOptions, signal?: AbortSignal): Promise<SubmissionReceipt> {
       // Snapshot before any async hash so concurrent edits cannot replace the
       // checked seed, workload, engine or cut between validation and transport.
@@ -47,26 +58,32 @@ export function createFirstStackSubmissionClient(configuration: { endpoint: stri
         canonical(run.input.layout.firstStack) !== canonical(run.input.candidate)) throw Error("Submission input, design or browser evidence changed");
       if (!uuid.test(design.infrastructureId) || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(design.updatedAt) || !Number.isFinite(Date.parse(design.updatedAt))) throw Error("Supply the exact saved design revision and timestamp");
       if (!snapshot.idempotencyKey || snapshot.idempotencyKey.length > 80 || !["private", "shared", "scored"].includes(snapshot.purpose)) throw Error("Supply submission purpose and idempotency key");
+      if (snapshot.purpose === "scored" ? !snapshot.challenge || !snapshot.challenge.id || snapshot.challenge.id.length > 80 ||
+        !snapshot.challenge.version || snapshot.challenge.version.length > 32 : snapshot.challenge !== undefined) throw Error("Supply an exact challenge id and version for scored submissions");
+      const approved = await availability(signal, owner);
+      if (!approved.available) throw new SubmissionError(503);
+      if (canonical(approved.engine) !== canonical(run.engine)) throw Error("Approved engine changed; run again under the approved engine");
       // Slice 11's strict schema has no owner/input/seed fields: session supplies
       // owner, saved design supplies input, and policy carries the explicit seed.
       const body = canonical({ infrastructureId: design.infrastructureId, expectedDesignUpdatedAt: design.updatedAt,
         expectedDesignRevision: design.revision, idempotencyKey: snapshot.idempotencyKey, purpose: snapshot.purpose,
-        engine: run.engine, workload: run.input.recording, policy: run.input.policy, browserCut: evidence });
+        engine: approved.engine, workload: run.input.recording, policy: run.input.policy, browserCut: evidence,
+        ...(snapshot.purpose === "scored" ? { challenge: snapshot.challenge } : {}) });
       // Recheck after hashing: a logout/owner switch must not reuse prior work.
       if (configuration.owner() !== owner) throw Error("Authenticated owner changed during submission");
-      const response = await request("/", { method: "POST", headers: { "content-type": "application/json" }, body }, signal);
-      const receipt = await response.json() as SubmissionReceipt;
-      if (!uuid.test(receipt.id) || typeof receipt.reused !== "boolean") throw Error("Invalid submission receipt");
+      const receipt = await request<SubmissionReceipt>("/", { method: "POST", headers: { "content-type": "application/json" }, body }, signal, owner);
+      if (!receipt || !uuid.test(receipt.id) || typeof receipt.reused !== "boolean") throw Error("Invalid submission receipt");
       return receipt;
     },
     async read(id: string, signal?: AbortSignal): Promise<SubmissionProjection> {
-      const response = await request(`/${runId(id)}`, { method: "GET" }, signal);
-      const projection = await response.json() as SubmissionProjection;
-      if (projection.id !== id || projection.ownerId !== configuration.owner() || !["queued", "running", "terminal", "recovery"].includes(projection.status)) throw Error("Invalid owned submission projection");
+      const projection = await request<SubmissionProjection>(`/${runId(id)}`, { method: "GET" }, signal);
+      if (projection?.schema !== "infraforge-run-record/1" || projection.id !== id || projection.reference?.id !== id ||
+        projection.reference.engine !== "2" || projection.reference.store !== "FirstStackRun" || projection.engine?.lineage !== "2" ||
+        !["queued", "running", "terminal", "recovery"].includes(projection.status)) throw Error("Invalid submission RunRecord projection");
       return projection;
     },
     async cancel(id: string, signal?: AbortSignal): Promise<void> {
-      await request(`/${runId(id)}/cancel`, { method: "POST" }, signal);
+      await request<void>(`/${runId(id)}/cancel`, { method: "POST" }, signal, configuration.owner(), false);
     },
   };
 }
