@@ -44,13 +44,19 @@ async function launch(deploymentId: string, onEnd?: (error?: string) => void) {
 }
 
 // A submission survives a brief network or release outage and a busy replay queue (429): it is retried before giving up.
-// A run stopped before its first second has nothing to replay; it is cancelled instead.
+// A run stopped before its first second has nothing to replay; it is cancelled instead, with the same retries.
 async function submit(deploymentId: string, submission: RunSubmission) {
-  if (submission.stopAtSecond === 0) { await http.post(`${API_URL}/deployments/${deploymentId}/cancel`, {}); return; }
+  const cancel = submission.stopAtSecond === 0;
   for (let attempt = 1; ; attempt++) {
-    try { await http.post(`${API_URL}/deployments/${deploymentId}/submit`, submission); return; }
+    try {
+      if (cancel) await http.post(`${API_URL}/deployments/${deploymentId}/cancel`, {});
+      else await http.post(`${API_URL}/deployments/${deploymentId}/submit`, submission);
+      return;
+    }
     catch (error) {
       const status = (error as { response?: { status?: number } }).response?.status;
+      // 409 on cancel: the run is no longer waiting (an earlier cancel succeeded but its reply was lost).
+      if (cancel && status === 409) return;
       if ((status !== undefined && status < 500 && status !== 429) || attempt === 8) throw new Error("The finished run could not be submitted for the official replay.", { cause: error });
       await new Promise((resolve) => setTimeout(resolve, 3000 * attempt));
     }

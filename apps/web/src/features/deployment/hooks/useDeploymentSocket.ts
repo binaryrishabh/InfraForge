@@ -43,7 +43,7 @@ export function useDeploymentSocket(deploymentId: string) {
                     // Restore pipeline state from Database
                     setDeployment(fetchedDeployment);
                     // A Model 2 run waiting for the browser runs here; the live view treats it as live.
-                    if (fetchedDeployment.status === DeploymentStatus.BROWSER) { browserStarted = true; setStatus(DeploymentStatus.LIVE); void startBrowserRun(deploymentId).catch(() => {}); }
+                    if (fetchedDeployment.status === DeploymentStatus.BROWSER) { browserStarted = true; setStatus(DeploymentStatus.LIVE); void startBrowserRun(deploymentId).catch(() => { browserStarted = false; }); }
                     else setStatus(fetchedDeployment.status);
                     setCompletedStages(
                         (fetchedDeployment.stages || [])
@@ -144,7 +144,7 @@ export function useDeploymentSocket(deploymentId: string) {
                         setStatus(DeploymentStatus.LIVE);
                         // A Model 2 run starts in this browser once its gates have passed.
                         void getSpecificDeployment(deploymentId).then((current) => {
-                            if (!isClose && current.status === DeploymentStatus.BROWSER) { browserStarted = true; return startBrowserRun(deploymentId); }
+                            if (!isClose && current.status === DeploymentStatus.BROWSER) { browserStarted = true; return startBrowserRun(deploymentId).catch(() => { browserStarted = false; }); }
                         }).catch(() => {});
                         setTimeline(prev => [...prev, {
                             event: DeploymentTimelineEventNames.DeploymentLive,
@@ -210,7 +210,8 @@ export function useDeploymentSocket(deploymentId: string) {
                 // A missed live notification must not leave the run unstarted: start it from here, once per page.
                 if (current.status === DeploymentStatus.BROWSER && !browserStarted) {
                     browserStarted = true; setDeployment(current); setStatus(DeploymentStatus.LIVE);
-                    void startBrowserRun(deploymentId).catch(() => {});
+                    // A failed start is retried by the next poll.
+                    void startBrowserRun(deploymentId).catch(() => { browserStarted = false; });
                     return;
                 }
                 if (![DeploymentStatus.TORN_DOWN, DeploymentStatus.FAILED, DeploymentStatus.COMPLETED].includes(current.status)) return;

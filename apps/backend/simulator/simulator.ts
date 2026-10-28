@@ -138,8 +138,12 @@ async function advanceSimulations() {
         continue;
       }
       // Actions the browser took at its stop second are applied before the terminal capture, as the browser did.
-      const applyDueReplay = async () => replayDue(instance)
-        && (await recordReplayActions(deploymentId, instance), await processRunActions(deploymentId, instance, () => registry.delete(deploymentId)));
+      // Recorded actions still waiting (an earlier cycle failed after recording them) are applied too.
+      const applyDueReplay = async () => {
+        if (!instance.replay) return false;
+        if (replayDue(instance)) await recordReplayActions(deploymentId, instance);
+        return processRunActions(deploymentId, instance, () => registry.delete(deploymentId));
+      };
       if (reachedMatchedStop(instance)) {
         if (await applyDueReplay()) continue;
         await recordActionCompletions(instance);
