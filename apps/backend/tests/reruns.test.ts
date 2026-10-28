@@ -22,7 +22,7 @@ test("exact rerun remains available after design deletion without reconstructing
   expect(options.matchedStop).toMatchObject({ available: true, target: 620, defaultEnabled: true });
 });
 test("exact refuses V1, mismatched provenance, active and unsupported inputs", () => {
-  for (const runInputs of [{ ...input, version: 1 }, { ...input, simulationModelVersion: "2" },
+  for (const runInputs of [{ ...input, version: 1 }, { ...input, simulationModelVersion: "3" },
     { ...input, catalogSnapshot: "other" }, { ...input, unknownRoot: "must not be discarded" }, null]) {
     expect(buildRerunOptions(source({ runInputs }), layout).exact.available).toBe(false);
   }

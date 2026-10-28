@@ -6,7 +6,6 @@ import { compileProduct } from "../src/model2/product/compiler";
 import { createProductModel2 } from "../src/model2/product/run";
 import type { SavedProductDesign } from "../src/model2/product/contracts";
 import { validateLedger } from "../src/reality/ledger";
-import { CHALLENGE_VERSIONS } from "../../../apps/backend/challenges/definitions";
 import { CATALOG } from "@infraforge/catalog";
 import { requireKnown } from "../src/reality/quantity";
 
@@ -65,14 +64,6 @@ test("load balancers serve immediately and retain five-second health checks", ()
   expect(f.assumptions.find((a) => a.id === "run.sampleInterval")?.value).toBe(1000000);
 });
 
-for (const challenge of CHALLENGE_VERSIONS) test(`challenge ${challenge.id}: actual starter at its workload for thirty seconds`, () => {
-  const d: SavedProductDesign = { schema: "infraforge-saved-design/1", resources: challenge.starter?.resources ?? [], connections: challenge.starter?.connectionLines ?? [], workload: challenge.workload };
-  if (!challenge.starter) { expect(contractFromDesign(d)).toMatchObject({ refused: [{ path: "resources" }] }); return; }
-  const f = prepare(d), runtime = createProductModel2(f.compiled);
-  runtime.advanceTo(30000000); const e = runtime.evidence();
-  expect(e.counts.offered).toBeGreaterThan(1000); expect(e.counts.completed).toBeGreaterThan(0);
-  expect(f.contract.horizon).toMatchObject({ value: 30000000 });
-}, 60000);
 
 test("impossible wiring returns plain refusals", () => {
   for (const d of [design({}), design({ db: "Database" }), design({ lb: "Load Balancer" }), design({ a: "Virtual Machine", b: "Virtual Machine" }), design({ app: "Virtual Machine", cdn: "CDN" }, [["cdn", "app"]]), design({ app: "Virtual Machine", db: "Database" }, [["db", "app"]])]) {

@@ -1,8 +1,9 @@
 import { contractFromDesign } from "./fromDesign";
 import { WORKLOAD_LIMITS } from "../workload/policy";
 import type { Quantity } from "../../reality/quantity";
-import type { ProductContract } from "./contracts";
-import type { ContractBuilder } from "./liveRun";
+import type { ProductContract, SavedProductDesign } from "./contracts";
+
+export type ContractBuilder = (design: SavedProductDesign, horizonSeconds: number, seed: string) => { contract: ProductContract } | { refused: string[] };
 
 // A run's design as a Model 2 contract: the adapter's listed assumptions, with the run's own length and seed.
 // Limits are the engine's ceilings; a run that reaches one ends there and says so.
@@ -34,6 +35,6 @@ function assumed(contract: ProductContract, id: string, value: number): Quantity
   contract.ledger.push({ id, concept: id, modelVersion: "2", scope: "Live run traffic pattern", validityDomain: "Live run traffic pattern",
     quantity: { kind: "known", value, unit: "us", provenance: [id] }, formula: String(value), classification: "educational-assumption", confidence: "conditional",
     provenance: [{ source: "packages/simulation/src/model2/product/runContract.ts", supports: "implementation", detail: sentence }], assumptions: [sentence],
-    researchedOn: "2026-10-28", freeMode: "allowed", replacement: "A recorded or chosen traffic pattern" });
+    researchedOn: "2026-10-28", freeMode: "forbidden", replacement: "A recorded or chosen traffic pattern" });
   return { kind: "known", value, unit: "us", provenance: [id] };
 }

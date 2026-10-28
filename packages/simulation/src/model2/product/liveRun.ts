@@ -2,30 +2,20 @@ import { findSku } from "@infraforge/catalog";
 import { GENERIC_MONTHLY_USD } from "../../cost";
 import { SIMULATION_CONSTANTS } from "../../tuning";
 import { createActionableLiveModel2, type LiveProjection } from "./live";
-import { buildModel2Contract } from "./runContract";
+import { buildModel2Contract, type ContractBuilder } from "./runContract";
+export type { ContractBuilder };
 import type { ProductContract, SavedProductDesign } from "./contracts";
 import { RESOURCE_TYPES, ResourceHealth, type ChaosType, type ResourceHealthType } from "@infraforge/domain/resource";
 import type { ResolvedWorkloadProfile } from "@infraforge/domain/workload";
 import type { ActionOutcome, ActionRequest } from "@infraforge/contracts/actions";
 import type { RunTopology } from "@infraforge/contracts/run-inputs";
-import type { ChaosEffect, PoolSnapshot, ResourceMetrics, SimulationLog, SimulationSnapshot } from "@infraforge/contracts/telemetry";
+import type { LiveView, PoolSnapshot, ResourceMetrics, SimulationLog } from "@infraforge/contracts/telemetry";
 
 /* One Model 2 run, shared by the browser (live) and the server (official re-run): the run's design compiled to a
 Model 2 contract, advanced one simulated second at a time and read back in the shapes the live view, evidence and
 reports already use. Values Model 2 does not model stay null ("unknown"); nothing is shown as a fake zero. */
 
-export type SystemHealth = "healthy" | "degraded" | "saturated" | "critical";
-export interface LiveView {
-  simulatedSeconds: number;
-  // Model 2 applies a load change from the next arrival, so the load equals its target.
-  loadFraction: number; targetLoadFraction: number;
-  metrics: Record<string, ResourceMetrics>;
-  overallHealth: SystemHealth;
-  pools: Record<string, PoolSnapshot>;
-  activeChaos: ChaosEffect[];
-  traffic: NonNullable<SimulationSnapshot["traffic"]>;
-}
-export type ContractBuilder = (design: SavedProductDesign, horizonSeconds: number, seed: string) => { contract: ProductContract } | { refused: string[] };
+export type { LiveView };
 export class ActionRefused extends Error {}
 
 // How long each fault lasts, in simulated seconds. One source for manual faults and challenge experiments.

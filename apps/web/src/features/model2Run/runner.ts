@@ -11,7 +11,7 @@ type WorkerLike = Pick<Worker, "postMessage" | "terminate"> & { onmessage: Worke
 
 // Page-side control of one browser run. The worker does the simulation; the page only sends and receives messages.
 export function startModel2Run(start: RunStart, callbacks: RunCallbacks,
-  createWorker: () => WorkerLike = () => new Worker(new URL("./worker.ts", import.meta.url), { type: "module", name: "model2-run" })) {
+  createWorker: () => WorkerLike = () => new Worker(new URL("./worker/worker.ts", import.meta.url), { type: "module", name: "model2-run" })) {
   const worker = createWorker(), pending = new Map<string, (result: ActionResult) => void>();
   let next = 0, ended = false;
   const send = (message: ToWorker) => worker.postMessage(message);

@@ -1,10 +1,12 @@
 import { expect, test } from "bun:test";
-import { productFixture } from "../../../packages/simulation/tests/productFixture";
-import { DeploymentChaosNames, ResourceHealth } from "@infraforge/domain/resource";
-import { ActionRefused, createModel2Engine, type ContractBuilder } from "../simulator/model2Engine";
+import { DeploymentChaosNames, ResourceHealth, type Resource } from "@infraforge/domain/resource";
+import { resolveWorkload } from "@infraforge/domain/workload";
+import { ActionRefused, createModel2Engine } from "../simulator/model2Engine";
 import { buildModel2Contract } from "../simulator/contractBuilder";
 import { captureRunInputs } from "../deployments/runInputs";
 import { definition } from "./challengeHarness";
+import { CHALLENGE_VERSIONS } from "../challenges/definitions";
+import { findChallenge } from "../challenges/registry";
 import { advanceTickBatch, replayDue } from "../simulator/tickBatch";
 import { buildSnapshot, captureSnapshot } from "../simulator/snapshot";
 import { applyAction } from "../simulator/actionApplication";
@@ -14,23 +16,16 @@ import { readRecords } from "../reports/records";
 import { storedJson } from "../utils/json";
 import { ActionExecutionError, type SimulationInstance } from "../simulator/instance";
 
-// The fixture's authored intervals are microseconds; live runs use realistic ones.
-const realistic: Record<string, number> = { "lb.health.interval": 5_000_000, "monitor.interval": 10_000_000, "run.sample": 1_000_000,
-  "controller.interval": 15_000_000, "controller.cooldown": 60_000_000, "controller.stabilization": 300_000_000 };
-function retune(node: unknown): void {
-  if (!node || typeof node !== "object") return;
-  const o = node as Record<string, unknown>;
-  if (o.kind === "known" && Array.isArray(o.provenance) && typeof o.provenance[0] === "string" && o.provenance[0] in realistic) o.value = realistic[o.provenance[0]];
-  if (typeof o.id === "string" && o.id in realistic && o.quantity && typeof o.quantity === "object") { (o.quantity as Record<string, unknown>).value = realistic[o.id]; o.formula = String(realistic[o.id]); }
-  for (const value of Object.values(o)) retune(value);
+// A small real canvas: DNS, a load balancer with an autoscaled app server pool, and a database.
+const at = (id: string, type: string, x: number, extra: Partial<Resource> = {}): Resource => ({ id, type: type as Resource["type"], x, y: 0, ...extra });
+const line = (sourceId: string, targetId: string) => ({ id: `${sourceId}-${targetId}`, sourceId, targetId, sourceType: "", targetType: "", port: 443 });
+function topology() {
+  return { resources: [at("dns", "DNS", 0), at("lb", "Load Balancer", 1, { autoscaling: { enabled: true, minReplicas: 1, maxReplicas: 3, targetCpu: 60 } }),
+    at("vm", "Virtual Machine", 2), at("db", "Database", 3)], connectionLines: [line("dns", "lb"), line("lb", "vm"), line("vm", "db")] };
 }
-function topology() { const f = productFixture(); return { resources: f.design.resources, connectionLines: f.design.connections }; }
 function engine(seconds: number, rps = 100) {
-  const fixture = (horizon: number) => { const f = productFixture({ horizon: horizon * 1_000_000 }); retune(f); return f; };
-  const f = fixture(seconds);
-  const workload = { ...f.design.workload, targetThroughput: rps * 60, throughputUnit: "per-minute" as const, trafficShape: "steady" as const };
-  const build: ContractBuilder = (_design, horizon) => ({ contract: fixture(horizon).contract });
-  return createModel2Engine({ resources: f.design.resources, connectionLines: f.design.connections, workloadProfile: workload as never, seed: "test-seed" }, seconds, build);
+  const workloadProfile = resolveWorkload({ targetThroughput: rps * 60, throughputUnit: "per-minute", trafficShape: "steady", readWriteRatio: 0.8, payloadSize: "light" });
+  return createModel2Engine({ ...topology(), workloadProfile, seed: "test-seed" }, seconds, buildModel2Contract);
 }
 
 test("a live Model 2 run fills the live view every second, keeping unknown values unknown", () => {
@@ -157,3 +152,12 @@ test("a load balancer shares light traffic between its app servers in turn", () 
   expect(vm1!.rps!).toBeGreaterThan(40);
 });
 
+test("every challenge's starting design runs on Model 2 at its workload", () => {
+  for (const { id, version } of CHALLENGE_VERSIONS.filter((c) => c.version === 1)) {
+    const def = findChallenge(id, version)!.definition;
+    if (!def.starter) { expect(() => createModel2Engine(captureRunInputs({ resources: [], connectionLines: [], layoutVersion: 3 }, def.workload, "s", "2"), 10, buildModel2Contract)).toThrow(ActionRefused); continue; }
+    const run = createModel2Engine(captureRunInputs({ ...def.starter, layoutVersion: 3 }, def.workload, "s", "2"), 10, buildModel2Contract);
+    for (let s = 0; s < 10; s++) run.advance();
+    expect(run.view().traffic.completedRps).toBeGreaterThan(0);
+  }
+}, 120000);

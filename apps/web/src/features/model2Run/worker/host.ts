@@ -1,5 +1,5 @@
 import { ActionRefused, createModel2Run, type Model2Run } from "@infraforge/simulation/model2-run";
-import type { FromWorker, RunStart, RunSubmission, ToWorker } from "./protocol";
+import type { FromWorker, RunStart, RunSubmission, ToWorker } from "../protocol";
 
 type Timers = { set: (run: () => void, ms: number) => unknown; clear: (handle: unknown) => void };
 const realTimers: Timers = { set: (run, ms) => setTimeout(run, ms), clear: (handle) => clearTimeout(handle as ReturnType<typeof setTimeout>) };

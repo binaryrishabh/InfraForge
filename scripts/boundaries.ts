@@ -163,9 +163,11 @@ export function checkBoundaries(root: string): { errors: string[]; edges: Import
     }
   }
   for (const cycle of cycles(graph)) errors.push(`File import cycle: ${cycle.join(" -> ")}`);
-  // Ordinary page imports retain the simulation-runtime ban, including types.
+  // Ordinary page imports retain the simulation-runtime ban, including types. The Model 2 run worker is its own
+  // bundle: it may run the engine, and pages reach it only through a module Worker URL, never an import.
+  const workerFolder = "apps/web/src/features/model2Run/worker/";
   const reachable = new Set<string>();
-  const pending = files.map((file) => normalized(relative(root, file))).filter((file) => file.startsWith("apps/web/src/"));
+  const pending = files.map((file) => normalized(relative(root, file))).filter((file) => file.startsWith("apps/web/src/") && !file.startsWith(workerFolder));
   while (pending.length) {
     const source = pending.pop()!;
     if (reachable.has(source)) continue;
@@ -174,10 +176,25 @@ export function checkBoundaries(root: string): { errors: string[]; edges: Import
       errors.push(`${source}: browser closure reaches forbidden simulation runtime`);
     }
     for (const edge of edges.filter((item) => item.source === source)) {
+      if (edge.target?.startsWith(workerFolder)) errors.push(`${source}:${edge.line}: page imports a run worker module`);
       if (edge.specifier.startsWith("node:") || builtins.has(edge.specifier) || edge.specifier === "bun" || edge.specifier === "bun:test") {
         errors.push(`${source}:${edge.line}: browser closure imports runtime-only module ${edge.specifier}`);
       }
       if (edge.target) pending.push(edge.target);
+    }
+  }
+  // The worker closure stays browser-safe and reaches the engine only through its browser entry.
+  const workerPending = files.map((file) => normalized(relative(root, file))).filter((file) => file.startsWith(workerFolder));
+  const workerSeen = new Set<string>();
+  while (workerPending.length) {
+    const source = workerPending.pop()!;
+    if (workerSeen.has(source)) continue;
+    workerSeen.add(source);
+    if (source.startsWith("apps/backend/")) errors.push(`${source}: run worker reaches server code`);
+    for (const edge of edges.filter((item) => item.source === source)) {
+      if (edge.specifier.startsWith("node:") || builtins.has(edge.specifier) || ["bun", "bun:test"].includes(edge.specifier)) errors.push(`${source}:${edge.line}: run worker imports runtime-only module ${edge.specifier}`);
+      if (source.startsWith(workerFolder) && edge.specifier.startsWith("@infraforge/simulation/") && edge.specifier !== "@infraforge/simulation/model2-run") errors.push(`${source}:${edge.line}: run worker must use the browser run entry`);
+      if (edge.target) workerPending.push(edge.target);
     }
   }
   const packageGraph = new Map<string, string[]>();

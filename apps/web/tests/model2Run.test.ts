@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { RESOURCE_TYPES as T, DeploymentChaosNames, type Resource } from "@infraforge/domain/resource";
 import { resolveWorkload } from "@infraforge/domain/workload";
-import { createRunHost } from "../src/features/model2Run/host";
+import { createRunHost } from "../src/features/model2Run/worker/host";
 import type { FromWorker, RunStart } from "../src/features/model2Run/protocol";
 
 const at = (id: string, type: Resource["type"], x: number): Resource => ({ id, type, x, y: 0 });
@@ -47,13 +47,13 @@ test("accepted actions are recorded with their second for the server replay; ref
   expect(results.map((m) => [m.id, m.ok])).toEqual([["1", true], ["2", false], ["3", true]]);
   expect(h.messages.at(-1)).toEqual({ type: "done", submission: { stopAtSecond: 5, actions: [
     { atSecond: 3, request: { kind: "load", parameters: { targetLoadFraction: 1.5 } } },
-    { atSecond: 5, request: { kind: "chaos", parameters: { type: "crash", resourceId: "app-2" } } }] } });
+    { atSecond: 5, request: { kind: "chaos", parameters: { type: DeploymentChaosNames.Crash, resourceId: "app-2" } } }] } });
 });
 
 test("a challenge's scheduled fault is applied right after its second; speed 0 pauses", () => {
   const h = harness({ experiment: { fault: DeploymentChaosNames.Crash, resourceId: "app-1", atSimulatedSecond: 2 }, stopAtSecond: 8 });
   h.tick(3);
-  expect(h.seconds().at(-1)!.view.activeChaos).toEqual([{ chaosType: "crash", resourceId: "app-1", durationTicks: 30, remainingTicks: 29 }]);
+  expect(h.seconds().at(-1)!.view.activeChaos).toEqual([{ chaosType: DeploymentChaosNames.Crash, resourceId: "app-1", durationTicks: 30, remainingTicks: 29 }]);
   h.host.handle({ type: "speed", speed: 0 });
   h.tick(5);
   const paused = h.seconds().length;

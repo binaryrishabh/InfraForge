@@ -1,8 +1,7 @@
 import type { ActionOutcome, ActionRequest } from "@infraforge/contracts/actions";
 import type { RunTopology } from "@infraforge/contracts/run-inputs";
-import type { SimulationLog } from "@infraforge/contracts/telemetry";
+import type { LiveView, SimulationLog } from "@infraforge/contracts/telemetry";
 import type { ResolvedWorkloadProfile } from "@infraforge/domain/workload";
-import type { LiveView } from "@infraforge/simulation/model2-run";
 
 // Messages between the page and the Model 2 run worker.
 export interface RunStart {
