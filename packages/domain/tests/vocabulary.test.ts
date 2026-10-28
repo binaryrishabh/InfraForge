@@ -17,7 +17,7 @@ describe("resource and workload vocabulary", () => {
   });
 
   test("preserves health, chaos and the default workload", () => {
-    expect(Object.values(ResourceHealth).map(String)).toEqual(["healthy", "degraded", "saturated", "failed"]);
+    expect(Object.values(ResourceHealth).map(String)).toEqual(["healthy", "degraded", "saturated", "failed", "unknown"]);
     expect(Object.values(DeploymentChaosNames).map(String)).toEqual([
       "crash", "network-delay", "cpu-spike", "memory-leak", "disk-failure",
     ]);
