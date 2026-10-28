@@ -1,4 +1,4 @@
-import { admitDeployment } from "../deployments/admission";
+import { admitDeployment, admitReplay } from "../deployments/admission";
 import { authorizeCapability, executionAllowance, requireCapability } from "../capabilities/policy";
 import { Router } from "express";
 import { randomUUID } from "node:crypto";
@@ -85,6 +85,7 @@ deploymentRouter.post("/:deploymentId/submit", async (req, res) => {
   if (!parsed.success) throw new ValidationError("A valid deployment ID is required.");
   const id = parsed.data.deploymentId;
   await prisma.$transaction(async (tx) => {
+    await admitReplay(tx);
     await tx.$queryRaw`SELECT id FROM "Deployment" WHERE id = ${id} FOR UPDATE`;
     const run = await tx.deployment.findFirst({ where: { id, ownerId: res.locals.userId } });
     if (!run) throw new NotFoundError("Run not found");
@@ -95,4 +96,16 @@ deploymentRouter.post("/:deploymentId/submit", async (req, res) => {
     await tx.outbox.create({ data: { eventType: "deployment-replay", payload: { deploymentId: id } } });
   });
   res.status(202).json({ success: true, message: "Submitted. The server is replaying the run for the official result." });
+});
+
+// The browser stopped before its first second: nothing ran, so the run closes without a record.
+deploymentRouter.post("/:deploymentId/cancel", async (req, res) => {
+  const parsed = DeploymentIdSchema.safeParse(req.params);
+  if (!parsed.success) throw new ValidationError("A valid deployment ID is required.");
+  const closed = await prisma.$executeRaw`UPDATE "Deployment" SET status = 'failed', "updatedAt" = CURRENT_TIMESTAMP,
+    timeline = COALESCE(timeline::jsonb, '[]'::jsonb) || jsonb_build_array(jsonb_build_object(
+      'timestamp', CURRENT_TIMESTAMP, 'event', 'Deployment Failed', 'message', 'Stopped before its first simulated second; nothing was recorded.'::text))
+    WHERE id = ${parsed.data.deploymentId} AND "ownerId" = ${res.locals.userId} AND status = 'browser'`;
+  if (!closed) throw new ConflictError("This run is not waiting for the browser.");
+  res.json({ success: true });
 });

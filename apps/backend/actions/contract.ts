@@ -60,7 +60,8 @@ export function actionDto(row: StoredAction): RunAction {
         if (status === "completed") z.object({ installedSkuId: id, online: z.literal(true) }).parse(outcome);
         break;
       case "pool-scale":
-        z.object({ delta: outcomeSchema.shape.delta.unwrap(), previousReplicaCount: amount, replicaId: id }).parse(outcome);
+        // Model 2 changes a replica count; only Model 1 records name the replica.
+        z.object({ delta: outcomeSchema.shape.delta.unwrap(), previousReplicaCount: amount, replicaId: id.optional() }).parse(outcome);
         if (status === "completed") z.object({ finalReplicaCount: amount }).parse(outcome);
         break;
       case "topology": z.object({ acceptedRevision: amount, appliedRevision: amount }).parse(outcome); break;

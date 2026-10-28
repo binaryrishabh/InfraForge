@@ -14,8 +14,18 @@ const active = new Map<string, { controls: Controls; speed: number }>();
 
 export const browserRunFor = (deploymentId: string) => active.get(deploymentId);
 
-export async function startBrowserRun(deploymentId: string, onEnd?: (error?: string) => void) {
-  if (active.has(deploymentId)) return;
+// Concurrent callers (live notification, resync, status polling) share one start, so one worker runs.
+const starting = new Map<string, Promise<void>>();
+export function startBrowserRun(deploymentId: string, onEnd?: (error?: string) => void) {
+  if (active.has(deploymentId)) return Promise.resolve();
+  let pending = starting.get(deploymentId);
+  if (!pending) {
+    pending = launch(deploymentId, onEnd).finally(() => starting.delete(deploymentId));
+    starting.set(deploymentId, pending);
+  }
+  return pending;
+}
+async function launch(deploymentId: string, onEnd?: (error?: string) => void) {
   const start: Omit<RunStart, "speed"> = (await http.get(`${API_URL}/deployments/${deploymentId}/browser-run`)).data.browserRun;
   let costUsd = 0;
   const entry = { speed: 1, controls: null as unknown as Controls };
@@ -33,14 +43,16 @@ export async function startBrowserRun(deploymentId: string, onEnd?: (error?: str
   active.set(deploymentId, entry);
 }
 
-// A submission survives a brief network or release outage: it is retried a few times before giving up.
+// A submission survives a brief network or release outage and a busy replay queue (429): it is retried before giving up.
+// A run stopped before its first second has nothing to replay; it is cancelled instead.
 async function submit(deploymentId: string, submission: RunSubmission) {
+  if (submission.stopAtSecond === 0) { await http.post(`${API_URL}/deployments/${deploymentId}/cancel`, {}); return; }
   for (let attempt = 1; ; attempt++) {
     try { await http.post(`${API_URL}/deployments/${deploymentId}/submit`, submission); return; }
     catch (error) {
       const status = (error as { response?: { status?: number } }).response?.status;
-      if ((status !== undefined && status < 500) || attempt === 5) throw new Error("The finished run could not be submitted for the official replay.", { cause: error });
-      await new Promise((resolve) => setTimeout(resolve, 2000 * attempt));
+      if ((status !== undefined && status < 500 && status !== 429) || attempt === 8) throw new Error("The finished run could not be submitted for the official replay.", { cause: error });
+      await new Promise((resolve) => setTimeout(resolve, 3000 * attempt));
     }
   }
 }

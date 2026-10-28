@@ -137,7 +137,11 @@ async function advanceSimulations() {
         await finishMatchedStop(deploymentId, instance, () => registry.delete(deploymentId));
         continue;
       }
+      // Actions the browser took at its stop second are applied before the terminal capture, as the browser did.
+      const applyDueReplay = async () => replayDue(instance)
+        && (await recordReplayActions(deploymentId, instance), await processRunActions(deploymentId, instance, () => registry.delete(deploymentId)));
       if (reachedMatchedStop(instance)) {
+        if (await applyDueReplay()) continue;
         await recordActionCompletions(instance);
         await finishMatchedStop(deploymentId, instance, () => registry.delete(deploymentId));
         continue;
@@ -153,6 +157,7 @@ async function advanceSimulations() {
       if (runtimeStopped || registry.get(deploymentId) !== instance) continue;
       // Poll actions before considering speed. Pause never prevents resume or teardown.
       if (await advanceTickBatch(instance, recordActionCompletions, () => runtimeStopped, (run) => flushEvidence(deploymentId, run))) {
+        if (await applyDueReplay()) continue;
         await finishMatchedStop(deploymentId, instance, () => registry.delete(deploymentId));
         continue;
       }

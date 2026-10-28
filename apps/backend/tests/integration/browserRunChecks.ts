@@ -29,21 +29,24 @@ export async function checkBrowserRun(h: LocalHarness, designs: string[], runs: 
   const start = (await h.request(`/deployments/${run.id}/browser-run`)).browserRun;
   expect(start).toMatchObject({ horizonSeconds: 900, stopAtSecond: 900 });
 
-  // The browser side: one action at second 5, stop at second 12.
+  // The browser side: an action at second 5, another at second 12, then stop at 12 before any further second.
   const browser = createModel2Run(start.input, start.horizonSeconds);
   for (let s = 0; s < 5; s++) browser.advance();
   browser.apply({ kind: "load", parameters: { targetLoadFraction: 1.5 } });
   for (let s = 5; s < 12; s++) browser.advance();
+  browser.apply({ kind: "load", parameters: { targetLoadFraction: 0.8 } });
   const shown = browser.view();
 
   await h.request(`/deployments/${run.id}/load`, { targetLoadFraction: 1 }, "POST", 409); // no server controls during a browser run
   await h.request(`/deployments/${run.id}/submit`, { stopAtSecond: 12,
-    actions: [{ atSecond: 5, request: { kind: "load", parameters: { targetLoadFraction: 1.5 } } }] }, "POST", 202);
+    actions: [{ atSecond: 5, request: { kind: "load", parameters: { targetLoadFraction: 1.5 } } },
+      { atSecond: 12, request: { kind: "load", parameters: { targetLoadFraction: 0.8 } } }] }, "POST", 202);
   const done = await until(async () => { const r = await read(); return r.status === "torn-down" ? r : undefined; }, "browser run replayed", 60000, 250);
   expect(done.terminalSnapshot.simulatedSeconds).toBe(12);
   expect(done.terminalSnapshot.metrics).toEqual(JSON.parse(JSON.stringify(shown.metrics))); // official record = what the browser showed
   expect(done.terminalSnapshot.overallHealth).toBe(shown.overallHealth);
+  expect(done.terminalSnapshot.loadFraction).toBe(0.8); // the action at the stop second is in the record
   const actions = (await h.sql.query('SELECT kind, status, "appliedSimulatedSeconds" AS at FROM "RunAction" WHERE "deploymentId"=$1 ORDER BY sequence', [run.id])).rows;
-  expect(actions).toEqual([{ kind: "load", status: "completed", at: 5 }, { kind: "teardown", status: "completed", at: 12 }]);
+  expect(actions).toEqual([{ kind: "load", status: "completed", at: 5 }, { kind: "load", status: "completed", at: 12 }, { kind: "teardown", status: "completed", at: 12 }]);
   await h.request(`/deployments/${run.id}/submit`, { stopAtSecond: 12, actions: [] }, "POST", 409); // a run is replayed once
 }

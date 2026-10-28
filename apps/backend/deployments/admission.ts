@@ -8,6 +8,15 @@ import { lifetimeExpired, operationalLimits, reservationWhere, serverWorkWhere, 
 async function lockAdmission(tx: Prisma.TransactionClient) {
   await tx.$queryRaw`SELECT pg_advisory_xact_lock(186542854, 20)::text`;
 }
+// A browser run's submission becomes server work: it takes the same lock and server limits as admission.
+// The run already holds its owner reservation, so that is not counted again.
+export async function admitReplay(tx: Prisma.TransactionClient, limits: OperationalLimits = operationalLimits) {
+  await lockAdmission(tx);
+  const [global, queued] = await Promise.all([tx.deployment.count({ where: serverWorkWhere }), tx.deployment.count({ where: { status: "pending" } })]);
+  if (global >= limits.global || queued >= limits.queued) {
+    throw new AppError("The server is busy replaying other runs. Your run is kept and will be submitted again shortly.", 429);
+  }
+}
 export async function admitDeployment(tx: Prisma.TransactionClient, data: Prisma.DeploymentUncheckedCreateInput,
   limits: OperationalLimits = operationalLimits) {
   if (!data.ownerId) throw new ValidationError("A run owner is required.");

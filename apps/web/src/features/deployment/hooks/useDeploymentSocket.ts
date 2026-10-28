@@ -33,6 +33,7 @@ export function useDeploymentSocket(deploymentId: string) {
         let reconnectTimeout: ReturnType<typeof setTimeout>;
         const owner = useAuthStore.getState().user?.id;
         let pollBusy = false;
+        let browserStarted = false; // This page started (or is starting) the browser run.
 
         const connect = async () => {
             // i. First fetch current state from DB
@@ -42,7 +43,7 @@ export function useDeploymentSocket(deploymentId: string) {
                     // Restore pipeline state from Database
                     setDeployment(fetchedDeployment);
                     // A Model 2 run waiting for the browser runs here; the live view treats it as live.
-                    if (fetchedDeployment.status === DeploymentStatus.BROWSER) { setStatus(DeploymentStatus.LIVE); void startBrowserRun(deploymentId).catch(() => {}); }
+                    if (fetchedDeployment.status === DeploymentStatus.BROWSER) { browserStarted = true; setStatus(DeploymentStatus.LIVE); void startBrowserRun(deploymentId).catch(() => {}); }
                     else setStatus(fetchedDeployment.status);
                     setCompletedStages(
                         (fetchedDeployment.stages || [])
@@ -143,7 +144,7 @@ export function useDeploymentSocket(deploymentId: string) {
                         setStatus(DeploymentStatus.LIVE);
                         // A Model 2 run starts in this browser once its gates have passed.
                         void getSpecificDeployment(deploymentId).then((current) => {
-                            if (!isClose && current.status === DeploymentStatus.BROWSER) return startBrowserRun(deploymentId);
+                            if (!isClose && current.status === DeploymentStatus.BROWSER) { browserStarted = true; return startBrowserRun(deploymentId); }
                         }).catch(() => {});
                         setTimeline(prev => [...prev, {
                             event: DeploymentTimelineEventNames.DeploymentLive,
@@ -206,6 +207,12 @@ export function useDeploymentSocket(deploymentId: string) {
             pollBusy = true;
             void getSpecificDeployment(deploymentId).then((current) => {
                 if (isClose || !owner || useAuthStore.getState().user?.id !== owner) return;
+                // A missed live notification must not leave the run unstarted: start it from here, once per page.
+                if (current.status === DeploymentStatus.BROWSER && !browserStarted) {
+                    browserStarted = true; setDeployment(current); setStatus(DeploymentStatus.LIVE);
+                    void startBrowserRun(deploymentId).catch(() => {});
+                    return;
+                }
                 if (![DeploymentStatus.TORN_DOWN, DeploymentStatus.FAILED, DeploymentStatus.COMPLETED].includes(current.status)) return;
                 setDeployment(current);
                 setStatus(current.status);
