@@ -35,7 +35,10 @@ export async function checkCredentials(harness: LocalHarness, fixtures: SessionF
     }
     expect((await harness.sql.query('SELECT count(*)::int AS n FROM "User" WHERE email=$1', [email])).rows[0].n).toBe(0);
     const alice = await signup({ email: email.toUpperCase() });
-    expect(alice.status).toBe(200); users.push(alice.data.user.id);
+    // A failed sign-up shows the API's own last log lines (no secrets are logged there).
+    if (alice.status !== 200) throw new Error(`Sign-up returned ${alice.status}: ${JSON.stringify(alice.data)}
+${String(harness.logs().api ?? "").slice(-1500)}`);
+    users.push(alice.data.user.id);
     expect(alice.data.user).toMatchObject({ username: username.toLowerCase(), email, emailVerified: false });
     expect(alice.cookie.length > 0).toBe(true);
     expect(alice.cookies.some((value) => /HttpOnly/i.test(value) && /SameSite=Lax/i.test(value) && !/Domain=/i.test(value))).toBe(true);
