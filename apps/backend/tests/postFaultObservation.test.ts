@@ -151,8 +151,7 @@ test("Compare and improvement preserve observation conditions and present sample
   expect(comparison.challengeConditions).toBe("same"); expect(comparison.designChangeReview?.count).toBe(1);
   expect(comparison.experimentEvidence?.comparable).toBe(true);
   expect(comparison.experimentEvidence?.traces.map((t) => t.observation?.system.healthAtEvaluation)).toEqual(["saturated", "healthy"]);
-  expect(improvementSource(a, d.id).definition.experiment?.postFaultObservationSeconds).toBe(45);
-  expect(() => improvementSource({ ...a, evaluationStopAtSimulatedSeconds: 120 }, d.id)).toThrow();
+  expect(() => improvementSource(a, d.id)).toThrow("retired Model 1");
 });
 
 for (const speed of [1, 10, 60]) test(`${speed}x captures every post-fault second and stops exactly at 135 without overshoot`, async () => {

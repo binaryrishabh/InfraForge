@@ -1,3 +1,4 @@
+import { ACTIVE_RUN_STATUSES } from "@infraforge/contracts/deployment";
 import { admitDeployment } from "../deployments/admission";
 import { requireCapability } from "../capabilities/policy";
 import { Router } from "express";
@@ -38,6 +39,12 @@ function entryFor(raw: unknown, version?: unknown) {
   return entry;
 }
 
+// A challenge whose latest version still needs the retired Model 1 leaves the list; its briefs and attempts stay readable.
+const retired = (definition: { engine?: "2" }) => definition.engine !== "2";
+function refuseRetired(definition: { engine?: "2" }) {
+  if (retired(definition)) throw new ConflictError("This challenge is retired until it is rebuilt for the current simulation model. Earlier attempts stay readable.");
+}
+
 function attemptSummary(row: StoredRun): ChallengeAttemptSummary {
   const run = summarizeRun(row);
   return { runId: run.id, version: row.challengeVersion ?? 0, createdAt: run.createdAt, status: run.challenge?.status ?? "unavailable",
@@ -58,7 +65,7 @@ function workspacesOf(ownerId: string, id?: string) {
 
 challengeRouter.get("/", async (_req, res) => {
   const ownerId: string = res.locals.userId;
-  const entries = listLatestChallenges();
+  const entries = listLatestChallenges().filter(({ definition }) => !retired(definition));
   // One bounded indexed query per challenge, in the counts' snapshot. Activity in
   // another challenge can never evict this challenge's actual latest attempt.
   const { attempts, counts } = await prisma.$transaction(async (tx) => {
@@ -114,6 +121,7 @@ explicitly copies an earlier workspace's design into a new one. */
 const workspaceBody = z.object({ fresh: z.boolean().default(false), copyFrom: z.uuid().optional() }).strict();
 challengeRouter.post("/:id/workspace", async (req, res) => {
   const { definition } = entryFor(req.params.id);
+  refuseRetired(definition);
   const body = workspaceBody.safeParse(req.body ?? {});
   if (!body.success) throw new ValidationError("Only a fresh-start flag or an earlier workspace to copy is accepted.");
   const ownerId: string = res.locals.userId;
@@ -155,6 +163,7 @@ challengeRouter.post("/:id/attempts", async (req, res) => {
   const body = attemptBody.safeParse(req.body);
   if (!body.success) throw new ValidationError("A challenge design and a complete prediction are required. Workload, rules and the experiment cannot be supplied.");
   const { definition, hash } = entryFor(req.params.id, body.data.improvement ? req.query.version : undefined);
+  refuseRetired(definition);
   const ownerId: string = res.locals.userId;
   const run = await prisma.$transaction(async (tx) => {
     await tx.$queryRaw`SELECT id FROM "Infrastructure" WHERE id = ${body.data.infrastructureId} FOR UPDATE`;
@@ -164,7 +173,7 @@ challengeRouter.post("/:id/attempts", async (req, res) => {
     if (design.challengeVersion !== definition.version) {
       throw new ConflictError(`This workspace belongs to version ${design.challengeVersion} of the challenge. Start version ${definition.version} before attempting it.`);
     }
-    const active = await tx.deployment.count({ where: { ownerId, challengeId: definition.id, OR: [{ status: { in: ["pending", "running", "live"] } }, { runtimeActive: true }] } });
+    const active = await tx.deployment.count({ where: { ownerId, challengeId: definition.id, OR: [{ status: { in: [...ACTIVE_RUN_STATUSES] } }, { runtimeActive: true }] } });
     if (active) throw new ConflictError("An attempt at this challenge is still running. Stop it or let it reach the evaluation second first.");
     const runInputs = captureRunInputs(design.layout, definition.workload, challengeSeed(definition), definition.engine);
     const improvement = body.data.improvement;

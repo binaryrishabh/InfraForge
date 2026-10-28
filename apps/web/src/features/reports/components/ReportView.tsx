@@ -1,3 +1,4 @@
+import { isActiveRunStatus } from "@infraforge/contracts/deployment";
 import { useCallback } from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft, GitCompareArrows } from "lucide-react";
@@ -23,7 +24,7 @@ import { ReplayStage } from "@/features/replay/ReplayStage";
 import { NextExperiment } from "@/features/replay/NextExperiment";
 import { LiveRunNotice } from "./LiveRunNotice";
 
-const active = (status: string) => ["pending", "running", "live"].includes(status);
+const active = isActiveRunStatus;
 
 function Debrief({ report }: { report: RunReport }) {
   const { challengeId: id, version } = report.challenge!;

@@ -1,3 +1,4 @@
+import { ACTIVE_RUN_STATUSES } from "@infraforge/contracts/deployment";
 import type { Prisma } from "../lib/generated/prisma/client";
 import { ConflictError } from "../utils/errors";
 
@@ -5,7 +6,7 @@ export async function assertNoActiveRuns(tx: Prisma.TransactionClient, infrastru
   const active = await tx.deployment.count({
     where: {
       infrastructureId,
-      OR: [{ status: { in: ["pending", "running", "live"] } }, { runtimeActive: true }],
+      OR: [{ status: { in: [...ACTIVE_RUN_STATUSES] } }, { runtimeActive: true }],
     },
   });
   if (active) throw new ConflictError("Stop active runs and wait for the simulator to stop before deleting the design.");

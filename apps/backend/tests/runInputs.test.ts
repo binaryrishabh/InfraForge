@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { captureRunInputs, readRunInputs, engineSeed, assertSimulationContext } from "../deployments/runInputs";
+import { captureRunInputs, readRunInputs, engineSeed, assertSimulationContext, MODEL2_ENGINE_VERSION } from "../deployments/runInputs";
 import { CATALOG_SNAPSHOT_DATE } from "@infraforge/catalog/types";
 import { SIMULATION_MODEL_VERSION } from "@infraforge/simulation/tuning";
 import { resolveWorkload } from "@infraforge/domain/workload";
@@ -28,7 +28,7 @@ test("legacy, unknown versions and incomplete persisted inputs fail explicitly",
 test("V2 captures model/catalog provenance and V1 reads without invented metadata", () => {
   const v2 = captureRunInputs(layout, workload);
   expect(v2.version).toBe(2);
-  expect(v2.simulationModelVersion).toBe(SIMULATION_MODEL_VERSION);
+  expect(v2.simulationModelVersion).toBe(MODEL2_ENGINE_VERSION);
   expect(v2.catalogSnapshot).toBe(CATALOG_SNAPSHOT_DATE);
   const v1 = readRunInputs({ ...v2, version: 1 });
   expect(v1.version).toBe(1);

@@ -4,12 +4,11 @@ import { ConflictError } from "../utils/errors";
 import { findChallenge, challengeSeed } from "./registry";
 import { recordedExperiment } from "./experiment";
 import { readPrediction } from "./prediction";
-import { historicalExecutionPolicy, type HistoricalExecutionPolicy } from "../runRecords/availability";
 
 // Never substitute the latest version, current saved design, seed or rules.
 export function improvementSource(row: { challengeId?: string | null; challengeVersion?: number | null; challengeSpecHash?: string | null;
   status: string; runtimeActive?: boolean; runInputs: unknown; challengePrediction?: unknown;
-  evaluationStopAtSimulatedSeconds?: number | null; challengeExperiment?: unknown }, challengeId: string, policy: HistoricalExecutionPolicy = historicalExecutionPolicy) {
+  evaluationStopAtSimulatedSeconds?: number | null; challengeExperiment?: unknown }, challengeId: string) {
   const entry = row.challengeId === challengeId && row.challengeVersion ? findChallenge(challengeId, row.challengeVersion) : null;
   if (!entry || entry.hash !== row.challengeSpecHash || row.runtimeActive || !["completed", "failed", "torn-down"].includes(row.status)) {
     throw new ConflictError("The source must be a finished attempt with its exact challenge version available.");
@@ -18,7 +17,7 @@ export function improvementSource(row: { challengeId?: string | null; challengeV
   try { input = readRunInputs(row.runInputs); assertSimulationContext(input); }
   catch { throw new ConflictError("The source's captured inputs cannot be reused safely."); }
   const { definition } = entry;
-  if (policy.model1Retired && definition.engine !== "2") throw new ConflictError("Execution retired: historical Model 1 improvements are unavailable; migrate a reviewed design into a new Model 2 run.");
+  if (definition.engine !== "2") throw new ConflictError("This attempt ran on the retired Model 1. Its report stays readable, but it cannot be improved; start the challenge's current version instead.");
 
   try { readPrediction(row.challengePrediction, definition, input.resources.map((r) => r.type)); }
   catch { throw new ConflictError("The source has no readable complete prediction; its challenge conditions cannot be reused safely."); }

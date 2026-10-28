@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { answers, attemptReport, attemptRow, legacyDefinition as definition, tier } from "./challengeHarness";
+import { answers, attemptReport, attemptRow, definition as currentDefinition, legacyDefinition as definition, tier } from "./challengeHarness";
 import { reviewDesignChanges } from "../challenges/designChanges";
 import { improvementSource } from "../challenges/improvements";
 import { captureRunInputs } from "../deployments/runInputs";
@@ -55,7 +55,8 @@ test("one-change accounting reuses canonical diff and ignores only visual facts"
   expect(reviewDesignChanges(a, many)).toMatchObject({ classification: "several-changes", count: 2 });
   const reorder = changed(); reorder.resources.reverse();
   expect(reviewDesignChanges(a, reorder).count).toBe(1);
-  expect(reviewDesignChanges(a, reorder).starting.alignment.code).toBe("shifted");
+  // Positional starting-jitter alignment is a Model 1 idea; Model 2 pairs never claim it.
+  expect(reviewDesignChanges(a, reorder).starting.alignment.code).toBe("unknown");
   const connections = changed(); connections.connectionLines.reverse();
   expect(reviewDesignChanges(a, connections).count).toBe(1);
   const workload = changed(); workload.workloadProfile.targetThroughput++;
@@ -63,8 +64,10 @@ test("one-change accounting reuses canonical diff and ignores only visual facts"
 });
 
 test("improvement source refuses altered fixed conditions, active runs, another challenge and unavailable versions", () => {
-  const d = definition("first-production-api"), row = attemptRow(d, tier(1), answers(d, { health: "healthy", busiest: "Database" }));
-  expect(improvementSource(row, d.id).input.seed).toBe(`challenge:${d.id}:v1`);
+  const d = currentDefinition("first-production-api"), row = attemptRow(d, tier(1), answers(d, { health: "healthy", busiest: "Database" }));
+  expect(improvementSource(row, d.id).input.seed).toBe(`challenge:${d.id}:v2`);
+  const legacy = definition("first-production-api");
+  expect(() => improvementSource(attemptRow(legacy, tier(1), answers(legacy, { health: "healthy", busiest: "Database" })), legacy.id)).toThrow("retired Model 1");
   for (const patch of [{ runtimeActive: true }, { challengeVersion: 999 }, { challengeSpecHash: "0".repeat(64) },
     { evaluationStopAtSimulatedSeconds: 1 }, { challengeExperiment: {} }, { runInputs: { ...row.runInputs as object, seed: "different" } }]) {
     expect(() => improvementSource({ ...row, ...patch }, d.id)).toThrow();

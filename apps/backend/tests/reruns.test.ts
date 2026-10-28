@@ -36,13 +36,18 @@ test("current-design preview preserves resolved source workload/seed and detects
   const candidate = currentDesignInput(input, edited);
   expect(candidate.seed).toBe(input.seed);
   expect(candidate.workloadProfile).toEqual(input.workloadProfile);
-  expect(candidate.simulationModelVersion).toBe("1");
+  expect(candidate.simulationModelVersion).toBe("2");
   expect(options.currentDesign.inputHash).toBe(rerunInputHash(candidate));
   expect(rerunInputHash(currentDesignInput(input, layout))).not.toBe(options.currentDesign.inputHash);
-  const legacy = buildRerunOptions(source({ runInputs: { ...input, version: 1 } }), layout);
-  expect(legacy.currentDesign.available).toBe(true);
-  expect(legacy.currentDesign.modelCatalogCompatible).toBe(false);
-  expect(legacy.currentDesign.preview?.grade).toBe("side-by-side-only");
+});
+test("a Model 1 run stays readable but is never rerun", () => {
+  for (const runInputs of [{ ...input, version: 1 }, { ...input, simulationModelVersion: "1" }]) {
+    const options = buildRerunOptions(source({ runInputs }), layout);
+    expect(options.exact.available).toBe(false);
+    expect(options.currentDesign.available).toBe(false);
+    expect(options.currentDesign.reason).toContain("retired Model 1");
+    expect(options.matchedStop.available).toBe(false);
+  }
 });
 test("matched stop is bounded and uses only validated exact terminal duration", () => {
   const final = source().terminalSnapshot as object;

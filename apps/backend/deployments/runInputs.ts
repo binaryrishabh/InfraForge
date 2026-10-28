@@ -23,9 +23,9 @@ const RunInputsV2Schema = RunInputsV1Schema.extend({ version: z.literal(2),
   simulationModelVersion: z.string().min(1).max(64), catalogSnapshot: z.string().min(1).max(64) });
 const RunInputsSchema = z.discriminatedUnion("version", [RunInputsV1Schema, RunInputsV2Schema]);
 
-// Model 2 runs record engine "2"; until Model 1 is removed, other runs keep the Model 1 version.
+// Every new run is a Model 2 run. Model 1 inputs remain readable for historical reports.
 export const MODEL2_ENGINE_VERSION = "2";
-export function captureRunInputs(layout: unknown, workload?: WorkloadProfile, seed: string = randomUUID(), engine: "1" | "2" = "1") {
+export function captureRunInputs(layout: unknown, workload?: WorkloadProfile, seed: string = randomUUID(), engine: "1" | "2" = "2") {
   const parsed = LayoutSchema.safeParse(layout);
   if (!parsed.success) throw new ValidationError("Saved infrastructure layout is invalid. Update it before deploying.");
   return RunInputsV2Schema.parse({

@@ -116,9 +116,6 @@ apps/backend/browserRuns/**
 !apps/backend/capabilities/
 apps/backend/capabilities/**
 !apps/backend/capabilities/*.ts
-!apps/backend/runRecords/
-apps/backend/runRecords/**
-!apps/backend/runRecords/*.ts
 !apps/backend/challenges/
 apps/backend/challenges/**
 !apps/backend/challenges/*.ts

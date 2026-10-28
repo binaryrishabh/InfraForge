@@ -9,7 +9,8 @@ import { layout, workload } from "./integration/scenario";
 import { REFERENCE, answers, attemptRow, legacyDefinition as definition } from "./challengeHarness";
 
 const at = new Date("2026-10-13T10:00:00.000Z");
-const captured = { ...captureRunInputs(layout, workload), seed: "comparison-seed" };
+// A historical Model 1 pair: positional starting-jitter alignment exists only for Model 1.
+const captured = { ...captureRunInputs(layout, workload, undefined, "1"), seed: "comparison-seed" };
 const terminal = { version: 1, kind: "terminal", capturedAt: at.toISOString(), topologyRevision: 0,
   metricsComputedAt: at.toISOString(), metricsTopologyRevision: 0, simulatedSeconds: 20,
   overallHealth: "healthy", loadFraction: 1, targetLoadFraction: 1, accumulatedCostUsd: 0.02, burnRatePerHourUsd: 3.6,
@@ -35,6 +36,8 @@ test("orders ties by ID and compares deterministic normalized final state withou
   expect(c.headline).toBe("determinism-match");
   expect(c.evidence.deterministicState).toBe("matches");
   expect(normalizedFinalState(c.evidence.states[0]!)).toBe(normalizedFinalState(c.evidence.states[1]!));
+  const model2 = { ...captured, simulationModelVersion: "2" };
+  expect(pair({ runInputs: model2 }, { runInputs: model2 }).headline).toBe("determinism-match");
   const mismatch = pair({}, { terminalSnapshot: { ...terminal, accumulatedCostUsd: 0.03 } });
   expect(mismatch.headline).toBe("determinism-mismatch");
   expect(mismatch.interpreted.at(-1)?.message).toContain("determinism defect");

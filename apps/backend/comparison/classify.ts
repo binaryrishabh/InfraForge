@@ -1,3 +1,4 @@
+import { isActiveRunStatus } from "@infraforge/contracts/deployment";
 import type { RunComparison, ReportStatement } from "@infraforge/contracts/reports";
 import { buildRunReport, type StoredRun } from "../reports/report";
 import { readRunInputs } from "../deployments/runInputs";
@@ -11,6 +12,8 @@ const input = (v: unknown) => { try { return readRunInputs(v); } catch { return 
 type Attempt = StoredRun & { sourceRunId?: string | null };
 // Identity of the conditions a challenge attempt ran under, all recorded on the attempt itself.
 const conditions = (r: Attempt) => canonical([r.challengeId, r.challengeVersion, r.challengeSpecHash, input(r.runInputs)?.workloadProfile ?? null, input(r.runInputs)?.seed ?? r.seed, r.evaluationStopAtSimulatedSeconds, r.challengeExperiment ?? null]);
+// Both engines are deterministic: the same inputs, seed and conduct give the same final state.
+const deterministicModel = (version: string | null) => version === "1" || version === "2";
 export function classifyComparison(first: StoredRun & { sourceRunId?: string | null; runtimeActive?: boolean }, second: typeof first): RunComparison {
   const rows: [typeof first, typeof first] = first.createdAt.getTime() < second.createdAt.getTime() ||
     (first.createdAt.getTime() === second.createdAt.getTime() && first.id < second.id) ? [first, second] : [second, first];
@@ -20,9 +23,9 @@ export function classifyComparison(first: StoredRun & { sourceRunId?: string | n
   const [a, b] = reports.map((r) => r.terminal ?? r.checkpoint);
   const exact = !!reports[0].terminal && !!reports[1].terminal;
   const matchedDuration = exact ? a!.simulatedSeconds === b!.simulatedSeconds : null;
-  const available = rows.every((r) => !["pending", "running", "live"].includes(r.status) && !r.runtimeActive);
+  const available = rows.every((r) => !isActiveRunStatus(r.status) && !r.runtimeActive);
   const deterministic = available && exact && matchedDuration && starting.grade === "same-starting-point" &&
-    reports[0].provenance.simulationModelVersion === "1" && conduct.code === "same" &&
+    deterministicModel(reports[0].provenance.simulationModelVersion) && conduct.code === "same" &&
     !affectingActions(reports[0].actions).length && !affectingActions(reports[1].actions).length;
   const deterministicState = deterministic ? normalizedFinalState(a!) === normalizedFinalState(b!) ? "matches" : "differs" : "not-established";
   const strongest = available && exact && matchedDuration && conduct.code === "same" && starting.grade !== "side-by-side-only";
@@ -35,7 +38,7 @@ export function classifyComparison(first: StoredRun & { sourceRunId?: string | n
       observation: trace.observation,
       highestCpu: trace.resourceFacts.find((f) => f.id === target)?.highestCpu ?? null };
   }) as NonNullable<RunComparison["experimentEvidence"]>["traces"];
-  const traceComparable = challengeConditions === "same" && reports.every((r) => r.provenance.simulationModelVersion === "1") &&
+  const traceComparable = challengeConditions === "same" && reports.every((r) => deterministicModel(r.provenance.simulationModelVersion)) &&
     starting.facets.catalog === "same" && traceFacts.every((t) => t.status === "complete");
   const observed = [fact("starting", `Starting inputs: ${starting.grade}.`, ["runInputs"]),
     fact("conduct", `Recorded outcome-affecting conduct: ${conduct.code}.`, ["RunAction.parameters", "RunAction.appliedSimulatedSeconds", "RunAction.outcome"]),

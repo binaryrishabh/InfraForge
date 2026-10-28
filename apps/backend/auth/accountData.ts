@@ -1,3 +1,4 @@
+import { ACTIVE_RUN_STATUSES } from "@infraforge/contracts/deployment";
 import { randomUUID } from "node:crypto";
 import type { PrismaClient } from "../lib/generated/prisma/client";
 import { AppError } from "../utils/errors";
@@ -12,7 +13,7 @@ export async function deleteAccount(db: PrismaClient, userId: string) {
       SELECT id, email, "deletedAt" FROM "User" WHERE id = ${userId} FOR UPDATE`;
     if (!users[0] || users[0].deletedAt) throw new AppError("Sign in to continue", 401);
     const [deployments, internal, firstStack] = await Promise.all([
-      tx.deployment.count({ where: { ownerId: userId, OR: [{ status: { in: ["pending", "running", "live"] } }, { runtimeActive: true }] } }),
+      tx.deployment.count({ where: { ownerId: userId, OR: [{ status: { in: [...ACTIVE_RUN_STATUSES] } }, { runtimeActive: true }] } }),
       tx.internalModel2Run.count({ where: { ownerId: userId, status: { in: ["queued", "running"] } } }),
       tx.firstStackRun.count({ where: { ownerId: userId, work: { status: { not: "terminal" } } } }),
     ]);

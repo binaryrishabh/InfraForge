@@ -1,3 +1,4 @@
+import { isActiveRunStatus } from "@infraforge/contracts/deployment";
 import { PREDICTION_CHOICES } from "@infraforge/contracts/challenges";
 import { RESOURCE_TYPES } from "@infraforge/domain/resource";
 import type { RunAction } from "@infraforge/contracts/actions";
@@ -28,7 +29,7 @@ class Judge {
   readonly atEvaluation: ReportCheckpoint | null;
   readonly experiment: ExperimentResult | null;
   constructor(readonly definition: ChallengeDefinition, readonly evidence: ChallengeEvidence, readonly plan: RecordedExperiment | null) {
-    this.active = evidence.runtimeActive || ["pending", "running", "live"].includes(evidence.status);
+    this.active = evidence.runtimeActive || isActiveRunStatus(evidence.status);
     const terminal = evidence.terminal;
     this.atEvaluation = terminal && terminal.simulatedSeconds === definition.evaluationSeconds ? terminal : null;
     this.experiment = plan ? this.experimentResult(plan) : null;
