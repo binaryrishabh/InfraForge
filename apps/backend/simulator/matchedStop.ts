@@ -4,7 +4,7 @@ import { captureSnapshot } from "./snapshot";
 import { finishTeardown } from "./terminal";
 import { flushEvidence } from "../evidence/persist";
 
-async function claimTeardown(deploymentId: string, capturedAt: string, simulatedSeconds: number, trigger: "matched-stop" | "challenge-evaluation" | "operational-limit") {
+async function claimTeardown(deploymentId: string, capturedAt: string, simulatedSeconds: number, trigger: NonNullable<SimulationInstance["stopTrigger"]>) {
   return prisma.$transaction(async (tx) => {
     await tx.$queryRaw`SELECT id FROM "Deployment" WHERE id = ${deploymentId} FOR UPDATE`;
     const run = await tx.deployment.findUniqueOrThrow({ where: { id: deploymentId } });
@@ -15,9 +15,9 @@ async function claimTeardown(deploymentId: string, capturedAt: string, simulated
     if (existing) return existing.status === "requested" ? tx.runAction.update({ where: { id: existing.id }, data: { status: "applying" } }) : existing;
     await tx.runAction.updateMany({ where: { deploymentId, kind: "teardown", requestedAt: { gt: new Date(capturedAt) }, status: { in: ["requested", "applying", "running"] } },
       data: { status: "cancelled", completedAt: new Date(), completedSimulatedSeconds: simulatedSeconds,
-        failureReason: `${trigger === "challenge-evaluation" ? "Challenge evaluation" : trigger === "operational-limit" ? "Operational limit" : "Matched stop"} had already captured the terminal state before this request.` } });
+        failureReason: `${trigger === "challenge-evaluation" ? "Challenge evaluation" : trigger === "operational-limit" ? "Operational limit" : trigger === "user" ? "The run's own stop" : "Matched stop"} had already captured the terminal state before this request.` } });
     const sequence = await tx.deployment.update({ where: { id: deploymentId }, data: { actionSequence: { increment: 1 } } });
-    const action = await tx.runAction.create({ data: { deploymentId, sequence: sequence.actionSequence, kind: "teardown", requestedAt: new Date(capturedAt), parameters: { trigger } } });
+    const action = await tx.runAction.create({ data: { deploymentId, sequence: sequence.actionSequence, kind: "teardown", requestedAt: new Date(capturedAt), parameters: trigger === "user" ? {} : { trigger } } });
     return tx.runAction.update({ where: { id: action.id }, data: { status: "applying" } });
   });
 }

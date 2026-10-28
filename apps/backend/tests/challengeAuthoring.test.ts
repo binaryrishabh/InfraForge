@@ -27,7 +27,7 @@ export const PUBLISHED: Record<string, string> = {
   "secure-the-edge@2": "998084b396de1fdc5bea0d90edc0594e0220a7a1e74e4b727de4ec706af92e49",
   "cache-matters@2": "37f7bf8b4e934f56b17877e0922d1247778a1a92c118d4cd674f46eda4ff04c8",
   "write-heavy@2": "f485a8fd571af01ef9b7633bc949b71dd403c0bdb300729fc86612d5b8c3a67b",
-  "scale-out-safely@2": "c00547f724b901af3d36f88f6c3e0e1827900c31e5d9d15682b0f825fe7eda4d",
+  "scale-out-safely@2": "ad955a3b59cd7ae2d3d2f8b786c7693686b18493ce0abc12804d5469084150ee",
   "peak-traffic@2": "c9bf7894d00a86a0cf6a7ba29d2ce8c4469d187b10138035c72e3ed20850a088",
   "lose-an-app-server@2": "14220bd9ab19e9a1c37b68e1c040098b247bedf0be1cac6fab3b60d74172b9e9",
   "headroom-under-cpu-pressure@2": "f72994553399762ecd00739b55aedf34651618f23946f601e25f8ddfcfce9677",
@@ -108,7 +108,8 @@ describe("challenge authoring", () => {
 });
 
 describe("calibration against the real engine", () => {
-  for (const { definition: d } of listLatestChallenges()) {
+  // Challenges whose latest version still needs Model 1 are retired and never run, so only Model 2 versions are calibrated.
+  for (const { definition: d } of listLatestChallenges().filter(({ definition }) => definition.engine === "2")) {
     test(`${d.id}@${d.version}: a hidden reference meets every requirement and the starter does not`, () => {
       const passed = attemptReport(d, REFERENCE[d.id]!, answers(d, ANSWERS));
       expect(passed.challenge?.criteria.filter((r) => r.status !== "met")).toEqual([]);
@@ -121,6 +122,6 @@ describe("calibration against the real engine", () => {
         expect(report.challenge?.experiment).toMatchObject({ state: "ended", appliedSimulatedSeconds: d.experiment.atSimulatedSecond,
           endedSimulatedSeconds: d.evaluationSeconds - (d.experiment.postFaultObservationSeconds ?? 0), baselineOverallHealth: "healthy" });
       }
-    }, 120000); // Model 2 versions run two full simulations
+    }, 120000); // two full Model 2 simulations
   }
 });

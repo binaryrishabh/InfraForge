@@ -166,8 +166,8 @@ EC2 cutover, healthy API/WS/worker/private Redis and a fresh Neon database, and
 manually tested the product. Public checks do not independently inspect the host or
 database. At that earlier acceptance, API used Neon pooling; migration/worker used direct connections with
 `sslmode=verify-full`, `WORKER_DATABASE_MODE=direct` per the verified owner handoff.
-Model 1 remains ACTIVE and Model 2 INTERNAL; no general Model-2 activation follows
-from production being live.
+At that time Model 1 was active and Model 2 internal; since the October 2026 switch every
+new run uses Model 2.
 
 ## One normal release authority
 

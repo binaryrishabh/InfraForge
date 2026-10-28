@@ -2,7 +2,7 @@ import type { Health, SystemHealth, TimetableModel } from "@/features/timetable/
 import { faultLabel } from "@/features/timetable/fromTrace";
 import sample from "./sampleRun.json";
 
-// Produced by scripts/landing-sample.ts from the Model 1 engine; see that file for how.
+// Produced by scripts/landing-sample.ts from Model 2; see that file for how. CPU is null where Model 2 does not model it.
 export interface LandingSample {
   schema: string; model: string;
   challenge: { id: string; version: number; title: string };
@@ -11,10 +11,10 @@ export interface LandingSample {
   connections: Array<[string, string]>;
   fault: { type: string; target: string; at: number; duration: number };
   evaluation: number;
-  points: Array<{ t: number; system: number; resources: Array<[number, number]> }>;
+  points: Array<{ t: number; system: number; resources: Array<[number, number | null]> }>;
 }
 
-const HEALTH: Health[] = ["healthy", "degraded", "saturated", "failed"];
+const HEALTH: Health[] = ["healthy", "degraded", "saturated", "failed", "unknown"];
 const SYSTEM: SystemHealth[] = ["healthy", "degraded", "saturated", "critical"];
 
 export const landingSample = sample as LandingSample;
@@ -23,7 +23,7 @@ export const landingSample = sample as LandingSample;
 export function landingModel(run: LandingSample = landingSample): TimetableModel {
   const lanes: TimetableModel["lanes"] = {};
   run.stations.forEach((s, i) => {
-    lanes[s.id] = { station: s.id, bands: [], samples: run.points.map((p) => ({ t: p.t, health: HEALTH[p.resources[i]![0]]!, cpu: p.resources[i]![1] })) };
+    lanes[s.id] = { station: s.id, bands: [], samples: run.points.map((p) => ({ t: p.t, health: HEALTH[p.resources[i]![0]]!, cpu: p.resources[i]![1] ?? undefined })) };
   });
   const end = run.evaluation, faultEnd = run.fault.at + run.fault.duration;
   return {

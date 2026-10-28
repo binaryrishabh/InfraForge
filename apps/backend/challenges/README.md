@@ -82,7 +82,7 @@ Research applied to model 1 (not imported as real-cloud guarantees):
   actions, pauses and subsequent probes distinguish intervention from later observation. InfraForge
   needs one authored horizon, not a workflow language or an adaptive wait-until-healthy stop.
 - [Google SRE cascading failures](https://sre.google/sre-book/addressing-cascading-failures/):
-  interacting resource pressure can outlast the trigger. Model 1 uses previous-tick health and
+  interacting resource pressure can outlast the trigger. Model 1 used previous-tick health and
   discrete provisioning; it has no real retry queue, cache warm-up or persistent leaked memory.
 - [OpenTelemetry metrics data model](https://opentelemetry.io/docs/specs/otel/metrics/data-model/):
   timestamps and gaps matter. Retained point measurements cannot establish continuous health.

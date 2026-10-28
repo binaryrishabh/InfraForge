@@ -41,7 +41,7 @@ not consume the host reserve to make an unmeasured build pass. Also verify disk
 space for old/new images and Redis AOF. No production sizing, limits or deployment
 was changed by writing this policy.
 
-## Model 1 work admission and lifetime
+## Run admission and lifetime
 
 The following defaults are an initial operational containment policy for this
 owner-confirmed c7i-flex.large host and the worker's **768 MiB / 0.50 CPU**
@@ -51,12 +51,14 @@ simulation memory, ticks per second and host capacity remain **Unknown**. Measur
 representative topologies before raising them. Commercial capability policy does
 not override these limits.
 
+The setting names keep their historical `MODEL1_` prefix; they apply to every run.
+
 | Environment setting | Default | Meaning |
 | --- | ---: | --- |
-| `MODEL1_OWNER_RESERVATIONS` | 2 | All queued/gating/live work for one owner, including paused work. |
+| `MODEL1_OWNER_RESERVATIONS` | 2 | All unfinished runs for one owner: queued, in gates, running in the browser or replaying. |
 | `MODEL1_GLOBAL_RESERVATIONS` | 24 | Server work across all owners: queued, in gates, live or replaying. Browser runs are not counted. |
 | `MODEL1_QUEUED_RESERVATIONS` | 20 | Pending rows, including delivery retries, capacity waits and submitted browser runs awaiting replay. |
-| `MODEL1_ACTIVE_RESERVATIONS` | 2 | Running gates plus live simulations; simulator also checks its local registry. |
+| `MODEL1_ACTIVE_RESERVATIONS` | 2 | Running gates plus server replays; simulator also checks its local registry. |
 | `MODEL1_ADMISSION_BYTES` | 131072 | Maximum UTF-8 JSON create data per admitted row; two queued inputs total at most 256 KiB, excluding database/index overhead and completed history. |
 | `MODEL1_FREEFORM_SECONDS` | 900 | Simulated horizon for ordinary runs and unmatched reruns. |
 | `MODEL1_RUNTIME_SECONDS` | 3600 | Simulator ceiling on every recorded/freeform horizon. |

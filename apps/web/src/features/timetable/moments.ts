@@ -1,6 +1,6 @@
 import type { TimetableModel } from "./model";
 
-/* The times a cursor may rest on. Model 1 has one per retained second; a causal run has
+/* The times a cursor may rest on. A recorded run has one per retained second; a causal run has
 one per recorded event, so stepping never lands between two facts that were recorded. */
 export function momentsOf(model: TimetableModel): number[] {
   const times = new Set<number>([model.start, model.end]);

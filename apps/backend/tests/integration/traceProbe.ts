@@ -3,6 +3,7 @@ import type { LocalHarness } from "./localHarness";
 
 // Fail real fixture writes until the test releases them. Sequence increments
 // survive transaction rollback, so the caller can observe repeated attempts.
+// The run is a lose-an-app-server attempt: evidence from second 1, the fault at 30.
 export async function traceProbe(harness: LocalHarness, runId: string, blockedSecond: number, terminalBlocked: boolean) {
   if (!/^[a-f0-9-]{36}$/.test(runId) || !Number.isInteger(blockedSecond)) throw new Error("Invalid owned trace probe");
   const name = `trace_probe_${randomUUID().replaceAll("-", "").slice(0, 12)}`;
@@ -19,13 +20,13 @@ export async function traceProbe(harness: LocalHarness, runId: string, blockedSe
       CREATE TRIGGER ${name}_sample BEFORE INSERT ON "RunEvidenceSample" FOR EACH ROW EXECUTE FUNCTION ${name}_sample_fn();
       CREATE FUNCTION ${name}_action_fn() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN
         IF NEW."deploymentId"='${runId}' AND NEW.kind='chaos' AND NEW.parameters->>'trigger'='challenge-experiment' AND
-          (SELECT count(*) FROM "RunEvidenceSample" WHERE "deploymentId"=NEW."deploymentId" AND "simulatedSeconds" BETWEEN 30 AND 60) <> 31 THEN
+          (SELECT count(*) FROM "RunEvidenceSample" WHERE "deploymentId"=NEW."deploymentId" AND "simulatedSeconds" BETWEEN 1 AND 30) <> 30 THEN
           RAISE EXCEPTION 'fault boundary preceded durable tick evidence';
         END IF; RETURN NEW; END $$;
       CREATE TRIGGER ${name}_action BEFORE INSERT ON "RunAction" FOR EACH ROW EXECUTE FUNCTION ${name}_action_fn();
       CREATE FUNCTION ${name}_terminal_fn() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN
         IF NEW.id='${runId}' AND NEW."terminalSnapshot" IS NOT NULL THEN
-          IF (SELECT count(*) FROM "RunEvidenceSample" WHERE "deploymentId"=NEW.id) <> (NEW."terminalSnapshot"->>'simulatedSeconds')::integer - 29 THEN
+          IF (SELECT count(*) FROM "RunEvidenceSample" WHERE "deploymentId"=NEW.id) <> (NEW."terminalSnapshot"->>'simulatedSeconds')::integer THEN
             RAISE EXCEPTION 'terminal capture preceded durable tick evidence';
           END IF;
           IF (SELECT terminal_block FROM ${name}) THEN PERFORM nextval('${name}_terminal'); RAISE EXCEPTION 'owned experiment terminal write blocked'; END IF;

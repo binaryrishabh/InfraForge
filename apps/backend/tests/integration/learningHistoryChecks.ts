@@ -29,15 +29,15 @@ export async function checkLearningHistory(harness: LocalHarness, sessions: Sess
 
   // A newer recorded version absent from this release stays unavailable, never re-judged as v1.
   const futureWorkspace = randomUUID(), future = randomUUID(); designs.push(futureWorkspace); runs.push(future);
-  await harness.sql.query('INSERT INTO "Infrastructure" (id,"userId","ownerId",name,layout,"challengeId","challengeVersion","updatedAt") VALUES ($1,\'test-user\',$2,\'Future fixture\',$3,$4,2,now())',
+  await harness.sql.query('INSERT INTO "Infrastructure" (id,"userId","ownerId",name,layout,"challengeId","challengeVersion","updatedAt") VALUES ($1,\'test-user\',$2,\'Future fixture\',$3,$4,99,now())',
     [futureWorkspace, owner, { ...d.definition.starter!, layoutVersion: 3 }, d.definition.id]);
   await harness.sql.query(`INSERT INTO "Deployment" (id,"infrastructureId","ownerId","challengeId","challengeVersion","challengeSpecHash","challengePrediction",
     "predictionSubmittedAt","evaluationStopAtSimulatedSeconds",status,"runInputs",seed,"workloadProfile","updatedAt")
-    VALUES ($1,$2,$3,$4,2,$5,$6,now(),$7,'pending',$8,$9,$10,now())`, [future, futureWorkspace, owner, d.definition.id, "b".repeat(64),
+    VALUES ($1,$2,$3,$4,99,$5,$6,now(),$7,'pending',$8,$9,$10,now())`, [future, futureWorkspace, owner, d.definition.id, "b".repeat(64),
     { answers: {}, reasoning: null }, d.definition.evaluationSeconds, input, input.seed, input.workloadProfile]);
   await harness.sql.query('UPDATE "Deployment" SET status=\'failed\' WHERE id=$1', [future]);
   const history: LearningHistory = (await harness.request("/challenges/attempt-history?limit=3")).history;
-  expect(history.attempts[0]).toMatchObject({ runId: future, version: 2, status: "unavailable", canRetry: false, predictionMatched: 0 });
+  expect(history.attempts[0]).toMatchObject({ runId: future, version: 99, status: "unavailable", canRetry: false, predictionMatched: 0 });
   expect(history.attempts.every((a) => a.challengeId)).toBe(true); expect(history.nextCursor).not.toBeNull();
   const next: LearningHistory = (await harness.request(`/challenges/attempt-history?limit=3&before=${history.nextCursor}`)).history;
   expect(next.attempts.some((a) => history.attempts.some((b) => a.runId === b.runId))).toBe(false);

@@ -1,20 +1,24 @@
 import { expect, test } from "bun:test";
-import { createInitialState, tick } from "@infraforge/simulation/engine";
 import { DeploymentChaosNames, ResourceHealth } from "@infraforge/domain/resource";
 import { SIMULATION_CONSTANTS } from "@infraforge/simulation/tuning";
 import { applyAction } from "../simulator/actionApplication";
 import { actionCompletion } from "../simulator/actionCompletion";
 import { captureSnapshot } from "../simulator/snapshot";
+import { currentSecond } from "../simulator/engineView";
+import { createModel2Engine } from "../simulator/model2Engine";
+import { buildModel2Contract } from "../simulator/contractBuilder";
 import { readActionRequest } from "../actions/contract";
-import { validateActionTarget } from "../actions/targets";
 import { captureRunInputs } from "../deployments/runInputs";
 import type { SimulationInstance } from "../simulator/instance";
 import { layout, workload } from "./integration/scenario";
 
-function instance(): SimulationInstance {
-  return { state: createInitialState("unit-run", layout.resources, layout.connectionLines, workload, 123),
+// The load balancer's autoscaling switched on, so its two app servers form a pool of 2 to 3 replicas.
+const pooled = { ...layout, resources: layout.resources.map((r) => r.id === "lb" ? { ...r, autoscaling: { ...r.autoscaling, enabled: true } } : r) };
+function instance(design = layout): SimulationInstance {
+  const input = { ...captureRunInputs(design, workload), seed: "unit-run" };
+  return { model2: createModel2Engine(input, 120, buildModel2Contract),
     tickCount: 0, pendingLogs: [], speed: 1, lastCheckpointAt: 0, accumulatedCostUsd: 0,
-    topology: structuredClone(layout), topologyRevision: 0, actions: new Map(), acknowledge: null,
+    topology: structuredClone(design), topologyRevision: 0, actions: new Map(), acknowledge: null,
     metricsComputedAt: null, metricsTopologyRevision: 0 };
 }
 
@@ -22,12 +26,11 @@ test("load records actual previous/applied target; paused controls require no en
   const run = instance();
   expect(applyAction(run, "pause", { kind: "speed", parameters: { speed: 0 } })).toEqual({ status: "completed", outcome: { previousSpeed: 1, appliedSpeed: 0 } });
   expect(applyAction(run, "load", { kind: "load", parameters: { targetLoadFraction: 0.5 } }).outcome).toEqual({ previousTarget: 1, appliedTarget: 0.5 });
-  expect(run.state!.loadFraction).toBe(0);
-  expect(run.state!.simulatedSeconds).toBe(0);
+  expect(currentSecond(run)).toBe(0);
   expect(applyAction(run, "resume", { kind: "speed", parameters: { speed: 60 } }).outcome).toEqual({ previousSpeed: 0, appliedSpeed: 60 });
-});
+}, 60000);
 
-test("chaos completion observes the exact tick within a high-speed batch and does not claim recovery", () => {
+test("chaos completion observes the exact second the fault ends and does not claim recovery", () => {
   const run = instance();
   const started = applyAction(run, "fault", { kind: "chaos", parameters: { type: DeploymentChaosNames.Crash, resourceId: "vm-a" } });
   expect(started.status).toBe("running");
@@ -35,39 +38,30 @@ test("chaos completion observes the exact tick within a high-speed batch and doe
   expect(actionCompletion(run, action)).toBeNull();
   let endedAt: number | undefined;
   for (let i = 0; i < 60; i++) {
-    run.state = tick(run.state!, {}).state;
+    run.model2.advance();
     const completion = actionCompletion(run, action);
     if (completion && endedAt === undefined) {
-      endedAt = run.state!.simulatedSeconds;
+      endedAt = currentSecond(run);
+      const view = run.model2.view();
       expect(completion.outcome.faultEnded).toBe(true);
-      expect(completion.outcome.observedOverallHealth).toBe(run.state!.overallHealth);
-      expect(run.state!.metrics["vm-a"]?.health).toBe(ResourceHealth.FAILED);
+      expect(completion.outcome.observedOverallHealth).toBe(view.overallHealth);
+      expect(view.metrics["vm-a"]?.health).toBe(ResourceHealth.FAILED);
     }
   }
   expect(endedAt).toBe(SIMULATION_CONSTANTS.CHAOS.CRASH_DURATION);
-});
+}, 60000);
 
-test("vertical scaling completes only after the requested SKU is installed and the target is observed online", () => {
-  const run = instance();
-  expect(applyAction(run, "vertical", { kind: "vertical-scale", parameters: { resourceId: "vm-a", skuId: "m5.xlarge" } }).status).toBe("running");
-  const action = run.actions.get("vertical")!;
-  for (let i = 0; i < SIMULATION_CONSTANTS.VERTICAL_SCALING.RESTART_TICKS; i++) {
-    run.state = tick(run.state!, {}).state;
-    expect(actionCompletion(run, action)).toBeNull();
-  }
-  expect(run.state!.resourceSkus["vm-a"]?.skuId).toBe("m5.xlarge");
-  run.state = tick(run.state!, {}).state;
-  expect(actionCompletion(run, action)?.outcome).toMatchObject({ installedSkuId: "m5.xlarge", online: true, fromSkuId: "m5.large" });
-});
-
-test("pool operations record the replica transition and actual final counts for provisioning and draining", () => {
-  const run = instance();
+test("pool operations record the replica change and the actual final counts for provisioning and draining", () => {
+  const run = instance(pooled);
+  run.model2.advance();
+  // Counts are the balancer's totals, as the user set them: Model 2 scales one server and keeps its sibling fixed.
+  expect(run.model2.view().pools.lb).toMatchObject({ minReplicas: 2, maxReplicas: 3, currentReplicas: 2 });
   for (const [id, delta, final] of [["up", 1, 3], ["down", -1, 2]] as const) {
     expect(applyAction(run, id, { kind: "pool-scale", parameters: { lbId: "lb", delta } }).status).toBe("running");
     const action = run.actions.get(id)!;
     let completed = actionCompletion(run, action);
-    for (let tickCount = 0; tickCount < 120 && !completed; tickCount++) {
-      run.state = tick(run.state!, {}).state;
+    for (let second = 0; second < 60 && !completed; second++) {
+      run.model2.advance();
       completed = actionCompletion(run, action);
     }
     expect(completed?.status).toBe("completed");
@@ -75,43 +69,37 @@ test("pool operations record the replica transition and actual final counts for 
     expect(completed?.outcome.delta).toBe(delta);
     run.actions.delete(id);
   }
-});
+}, 60000);
 
-test("invalid targets/SKUs and impossible pool operations never change simulation state", () => {
-  const run = instance();
-  const original = structuredClone(run.state!);
+test("invalid targets, impossible pool changes, resizing and live topology edits are refused without changing the run", () => {
+  const run = instance(pooled);
+  run.model2.advance();
+  const before = JSON.stringify(run.model2.view());
   for (const request of [
     { kind: "chaos", parameters: { type: DeploymentChaosNames.Crash, resourceId: "missing" } },
-    { kind: "vertical-scale", parameters: { resourceId: "db", skuId: "m5.xlarge" } },
     { kind: "pool-scale", parameters: { lbId: "missing", delta: 1 } },
     { kind: "pool-scale", parameters: { lbId: "lb", delta: -1 } },
+    { kind: "vertical-scale", parameters: { resourceId: "vm-a", skuId: "m5.xlarge" } },
+    { kind: "topology", parameters: { ...layout, expectedRevision: 0, acceptedRevision: 1 } },
   ] as const) expect(() => applyAction(run, "invalid", request)).toThrow();
-  expect(run.state!).toEqual(original);
+  expect(JSON.stringify(run.model2.view())).toBe(before);
   expect(run.actions.size).toBe(0);
-  expect(() => validateActionTarget({ kind: "pool-scale", parameters: { lbId: "dns", delta: 1 } }, layout, captureRunInputs(layout))).toThrow("current");
   expect(() => readActionRequest({ kind: "load", parameters: { targetLoadFraction: 1, arbitrary: "blob" } })).toThrow();
-});
+}, 60000);
 
-test("topology application is revision ordered, preserves original input and cancels removed targets", () => {
+test("terminal/checkpoint captures have real time/revision and cannot drift as the run continues", () => {
   const run = instance();
-  applyAction(run, "chaos", { kind: "chaos", parameters: { type: DeploymentChaosNames.Crash, resourceId: "vm-a" } });
-  const topology = { resources: layout.resources.filter((r) => r.id !== "vm-a"), connectionLines: layout.connectionLines.filter((c) => c.sourceId !== "vm-a" && c.targetId !== "vm-a") };
-  expect(applyAction(run, "edit", { kind: "topology", parameters: { ...topology, expectedRevision: 0, acceptedRevision: 1 } }).outcome).toEqual({ acceptedRevision: 1, appliedRevision: 1 });
-  expect(actionCompletion(run, run.actions.get("chaos")!)?.status).toBe("cancelled");
-  expect(layout.resources.some((r) => r.id === "vm-a")).toBe(true);
-  expect(() => applyAction(run, "stale", { kind: "topology", parameters: { ...layout, expectedRevision: 0, acceptedRevision: 2 } })).toThrow("order");
-});
-
-test("terminal/checkpoint captures have real time/revision and cannot drift when memory changes", () => {
-  const run = instance();
+  run.model2.advance();
   run.topologyRevision = 3;
   run.accumulatedCostUsd = 0.25;
   const snapshot = captureSnapshot("unit-run", run, "terminal");
+  const captured = JSON.stringify(snapshot.metrics);
   expect(snapshot.kind).toBe("terminal");
   expect(Number.isFinite(Date.parse(snapshot.capturedAt))).toBe(true);
   expect(snapshot.topologyRevision).toBe(3);
   expect(snapshot.accumulatedCostUsd).toBe(0.25);
-  run.state!.metrics.db!.cpu = 99;
-  expect(snapshot.metrics.db?.cpu).toBe(0);
+  for (let i = 0; i < 5; i++) run.model2.advance();
+  expect(snapshot.simulatedSeconds).toBe(1);
+  expect(JSON.stringify(snapshot.metrics)).toBe(captured);
   expect(captureSnapshot("unit-run", run, "checkpoint").kind).toBe("checkpoint");
-});
+}, 60000);

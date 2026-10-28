@@ -47,13 +47,13 @@ test("signed differences convey units without value judgements", () => {
   expect(signedValue(2)).toBe("+2"); expect(signedValue(-2)).toBe("-2"); expect(signedValue(0)).toBe("0"); expect(signedValue(null)).toBe("withheld");
 });
 
-test("starting design disclosure retains connection order and its model-1 significance", () => {
+test("starting design disclosure retains connection order", () => {
   const a = { sourceId: "lb", targetId: "a", port: 80 }, b = { ...a, targetId: "b" };
   const html = render(<StartingInputs detailed starting={{ ...comparison.starting, grade: "one-change-design", design: {
     added: [], removed: [], reconfigured: [], addedConnections: [], removedConnections: [], resourceOrder: null,
     connectionOrder: { earlier: [a, b], later: [b, a] },
   } }} />);
-  expect(html).toContain("Connection order changed"); expect(html).toContain("autoscaling pool templates");
+  expect(html).toContain("Connection order changed");
   expect(html).toContain("Earlier connection order: lb → a:80; lb → b:80");
   expect(html).toContain("Later connection order: lb → b:80; lb → a:80");
 });

@@ -19,14 +19,15 @@ test("guided facts deterministically prioritize failed requirements and mismatch
 });
 
 test("resilience cues use actual fault-boundary samples and never infer recovery or causal solutions", () => {
-  const d = definition("headroom-under-cpu-pressure"), r = attemptReport(d, d.starter!, answers(d, { "baseline-health": "healthy", "overall-health": "healthy", "target-health": "healthy", "scale-out": "no" }));
+  // The CPU spike starts at second 30: the cues read the seconds on either side of it.
+  const d = currentDefinition("headroom-under-cpu-pressure"), r = attemptReport(d, d.starter!, answers(d, { "baseline-health": "healthy", "overall-health": "healthy", "target-health": "healthy", "scale-out": "no" }));
   const cues = r.guidedReview!.cues, facts = cues.filter((c) => c.id.startsWith("trace:"));
-  expect(facts.map((c) => c.simulatedSecond)).toEqual([60, 61]);
-  expect(facts[0]!.statement).toContain("48.2% CPU"); expect(facts[1]!.statement).toContain("93.3% CPU");
+  expect(facts.map((c) => c.simulatedSecond)).toEqual([30, 31]);
+  expect(facts[0]!.statement).toContain("55.1% CPU"); expect(facts[1]!.statement).toContain("96.4% CPU");
   expect(facts.every((c) => c.resourceId === "app-2" && c.sources[0]?.startsWith("RunEvidenceSample["))).toBe(true);
   expect(JSON.stringify(cues)).not.toMatch(/caused|will solve|upgrade.*c5|production ready/i);
   expect(cues.at(-1)?.statement).toContain("recovery");
-});
+}, 60000);
 
 test("missing and legacy evidence stays unknown rather than reconstructing a series", () => {
   const d = definition("headroom-under-cpu-pressure"), row = attemptRow(d, d.starter!, answers(d, {}));

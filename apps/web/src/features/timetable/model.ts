@@ -2,7 +2,7 @@
 rail running through time, left to right. What the simulator recorded is drawn solid,
 what it did not retain is hatched, and nothing between two records is interpolated.
 
-Model 1 records per-second resource state, so its timetable has rails and state only.
+Runs record per-second resource state, so their timetable has rails and state only.
 Trains (individual requests moving between stations) appear only when a recorded causal
 journal gives each request an identity; drawing them anywhere else would invent traffic. */
 

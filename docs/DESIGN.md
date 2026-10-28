@@ -24,20 +24,20 @@ Every mark keeps one meaning wherever it appears.
 | Dotted train segment | Between two records the request's position was not recorded |
 | Ring at a train's end | No caller outcome by the horizon: outcome Unknown, not failure |
 
-Model 1 records per-second resource state, so its timetables have rails and state
+Runs record per-second resource state, so their timetables have rails and state
 and never trains. Snapshots and traces are never interpolated: `sampleAt` returns a
 sample only inside its own second, and `statesAt` gives `null` health (drawn dashed,
 read as "Not retained") when nothing was retained.
 
 ## Where it appears
 
-- **Landing** (`features/landing`): a real Model 1 run produced by the engine
+- **Landing** (`features/landing`): a real Model 2 run produced by the engine
   (`scripts/landing-sample.ts`, checked by `scripts/tests/landingSample.test.ts`),
   stopped at the fault. You commit to a prediction, then the recorded run plays.
 - **Sign in / sign up**: the same recorded run at its judged second.
 - **Brief and home**: the challenge's starter as a station map with the fault target marked.
 - **Designer**: station tiles at the existing card footprint; transit rails
-  (straight, one 45° run, straight). No moving dashes: Model 1 records no
+  (straight, one 45° run, straight). No moving dashes: live views carry no
   per-connection traffic. Below 1100 px the palette folds to a rail and details open
   as a sheet; on phones both are sheets. There is no width wall.
 - **Live run**: the timetable grows one received second at a time beneath the

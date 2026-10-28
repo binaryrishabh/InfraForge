@@ -2,7 +2,8 @@ import { expect } from "bun:test";
 import type { RunHistory, RunReport } from "@infraforge/contracts/reports";
 import type { LocalHarness } from "./localHarness";
 
-export async function checkRecordedReports(harness: LocalHarness, checkpointRun: string, failedRun: string) {
+/* recordedRun: the main run, replayed from its browser submission with a load change and a crash. */
+export async function checkRecordedReports(harness: LocalHarness, recordedRun: string, failedRun: string) {
   const session = await harness.request("/auth/get-session");
   const rows = (await harness.sql.query(`SELECT id, status FROM "Deployment"
     WHERE "ownerId" = $1 ORDER BY "createdAt" DESC, id DESC`, [session.user.id])).rows;
@@ -21,16 +22,15 @@ export async function checkRecordedReports(harness: LocalHarness, checkpointRun:
   for (const query of ["limit=0", "limit=101", "limit=abc", "before=bad", "userId=someone-else"]) {
     await harness.request(`/deployments/history?${query}`, undefined, "GET", 400);
   }
-  const checkpoint: RunReport = (await harness.request(`/deployments/${checkpointRun}/report`)).report;
-  expect(checkpoint.run.status).toBe("failed");
-  expect(checkpoint.checkpoint?.simulatedSeconds).toBeGreaterThan(0);
-  expect(checkpoint.actions.some((action) => action.kind === "chaos" && action.appliedAt)).toBe(true);
-  expect(checkpoint.topology.original?.resources.some((r) => r.id === "saved-only")).toBe(false);
-  expect(checkpoint.topology.changes?.added).toContain("live-storage");
-  expect(checkpoint.observed.some((fact) => fact.id === "failure")).toBe(true);
-  expect(checkpoint.checkpoint?.capturedAt).toBeDefined();
-  expect(checkpoint.unknown.join(" ")).toContain("not an exact final state");
-  expect((await harness.request(`/deployments/${checkpointRun}/report`)).report).toEqual(checkpoint);
+  const recorded: RunReport = (await harness.request(`/deployments/${recordedRun}/report`)).report;
+  expect(recorded.run.status).toBe("torn-down");
+  expect(recorded.terminal?.simulatedSeconds).toBe(40);
+  expect(recorded.actions.some((action) => action.kind === "chaos" && action.appliedAt)).toBe(true);
+  expect(recorded.actions.some((action) => action.kind === "load" && action.appliedAt)).toBe(true);
+  // The saved design was edited after the run started; the run keeps the design it captured.
+  expect(recorded.topology.original?.resources.some((r) => r.id === "saved-only")).toBe(false);
+  expect(recorded.provenance.simulationModelVersion).toBe("2");
+  expect((await harness.request(`/deployments/${recordedRun}/report`)).report).toEqual(recorded);
   const failure: RunReport = (await harness.request(`/deployments/${failedRun}/report`)).report;
   expect(failure.run.status).toBe("failed");
   expect(failure.stages).toEqual([]);
@@ -42,6 +42,6 @@ export async function checkRecordedReports(harness: LocalHarness, checkpointRun:
   expect(retired.run.status).toBe("torn-down");
   expect(retired.checkpoint).toBeNull();
   expect(retired.stages.map((stage) => stage.name)).toEqual(["Validate", "SecurityScan", "CostEstimate"]);
-  return { ownerScopedPages: true, runCount: ids.length, checkpointAndChaos: true,
+  return { ownerScopedPages: true, runCount: ids.length, replayedActions: true,
     capturedTopologyPreserved: true, failureAndTeardown: true, deterministic: true };
 }

@@ -3,6 +3,7 @@ import { expect } from "bun:test";
 import { LocalHarness, until } from "./localHarness";
 import { SessionFixtures } from "./sessionFixtures";
 import { tier } from "../challengeHarness";
+import { submitBrowserRun } from "./browserRunChecks";
 import type { DesignChangeReview } from "@infraforge/contracts/reports";
 
 export async function checkLearningExperiments(harness: LocalHarness, sessions: SessionFixtures, designs: string[], runs: string[]) {
@@ -15,11 +16,7 @@ export async function checkLearningExperiments(harness: LocalHarness, sessions: 
     const source = (await harness.request(`${base}/attempts`, { infrastructureId: workspace, prediction }, "POST", 201)).createdDeployment;
     runs.push(source.id);
     const read = async (id: string) => (await harness.sql.query('SELECT * FROM "Deployment" WHERE id=$1', [id])).rows[0];
-    const finish = async (id: string) => {
-      await until(async () => (await read(id)).status === "live" || undefined, "learning attempt live", 30000, 100);
-      await harness.request(`/deployments/${id}/speed`, { speed: 60 }, "POST", 202);
-      return until(async () => { const row = await read(id); return row.status === "torn-down" ? row : undefined; }, "learning attempt evaluated", 30000, 100);
-    };
+    const finish = (id: string) => submitBrowserRun(harness, id, 60);
     await finish(source.id);
     const report = (await harness.request(`/deployments/${source.id}/report`)).report;
     expect(report.challenge.status).toBe("not-met"); expect(report.guidedReview.canImprove).toBe(true);
@@ -28,7 +25,7 @@ export async function checkLearningExperiments(harness: LocalHarness, sessions: 
     await harness.request(`/infrastructure/${workspace}`, undefined, "DELETE");
     const copy = (await harness.request(`${base}/improvement-workspace`, { sourceRunId: source.id }, "POST", 201)).infrastructure;
     designs.push(copy.id);
-    expect(copy.layout.resources).toEqual(source.runInputs.resources); expect(copy.challengeVersion).toBe(1);
+    expect(copy.layout.resources).toEqual(source.runInputs.resources); expect(copy.challengeVersion).toBe(2);
     const preview = async (layout: object): Promise<DesignChangeReview> => (await harness.request(`${base}/improvement-preview`, { sourceRunId: source.id, infrastructureId: copy.id, layout }, "POST")).review;
     const unchanged = await preview(copy.layout); expect(unchanged.classification).toBe("no-change");
     const hypothesis = "I expect changing one app server size to change the recorded health.";

@@ -22,7 +22,7 @@ export function configuration(r: Resource): Record<string, unknown> {
 const edge = (c: ConnectionLine) => ({ sourceId: c.sourceId, targetId: c.targetId, port: c.port });
 export function normalizedTopology(topology: RunTopology) {
   return { resources: topology.resources.map((r) => ({ id: r.id, ...configuration(r) })).sort((a, b) => a.id.localeCompare(b.id)),
-    // Model 1 preserves adjacency order and chooses a pool's first VM as its template.
+    // Connection order is kept as captured: Model 1 runs used it for routing and pool templates.
     connections: topology.connectionLines.map(edge) };
 }
 export function unambiguous(topology: RunTopology) {

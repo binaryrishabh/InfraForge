@@ -36,6 +36,14 @@ export function startSimulation(deploymentId: string): Promise<boolean> {
   return initialization;
 }
 
+// Why the browser stopped, read from the second it stopped at: the challenge's evaluation second, a rerun's
+// matched stop, the run's length, or else the learner's own stop.
+function replayStop(second: number, run: { evaluationStopAtSimulatedSeconds: number | null; autoStopAtSimulatedSeconds: number | null }, horizon: number) {
+  if (second === run.evaluationStopAtSimulatedSeconds) return "challenge-evaluation" as const;
+  if (second === run.autoStopAtSimulatedSeconds) return "matched-stop" as const;
+  return second === horizon ? "operational-limit" as const : "user" as const;
+}
+
 async function initialize(deploymentId: string) {
   if (registry.has(deploymentId)) return true;
   const deployment = await prisma.deployment.findUnique({ where: { id: deploymentId } });
@@ -68,7 +76,7 @@ async function initialize(deploymentId: string) {
     topology: { resources: input.resources, connectionLines: input.connectionLines }, topologyRevision: 0,
     actions: new Map(), acknowledge: null, metricsComputedAt: null, metricsTopologyRevision: 0,
     autoStopAtSimulatedSeconds: submission ? submission.stopAtSecond : horizon,
-    stopTrigger: submission ? (submission.stopAtSecond === deployment.evaluationStopAtSimulatedSeconds ? "challenge-evaluation" : "matched-stop")
+    stopTrigger: submission ? replayStop(submission.stopAtSecond, deployment, horizon)
       : allowance.durationSeconds === null || allowance.durationSeconds > operationalLimits.runtimeSeconds
       ? "operational-limit" : deployment.evaluationStopAtSimulatedSeconds != null ? "challenge-evaluation" : "matched-stop", finishMatchedStop: null,
     replay: submission ? { actions: submission.actions, next: 0 } : null,

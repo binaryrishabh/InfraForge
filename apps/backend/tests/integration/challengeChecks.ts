@@ -7,6 +7,7 @@ import { SessionFixtures } from "./sessionFixtures";
 import { layout } from "./scenario";
 import { challengeSeed, latestChallenge } from "../../challenges/registry";
 import { REFERENCE } from "../challengeHarness";
+import { submitBrowserRun } from "./browserRunChecks";
 
 export async function checkChallengeAttempts(harness: LocalHarness, sessions: SessionFixtures, designs: string[], runs: string[]) {
   const cookie = harness.cookie;
@@ -64,14 +65,17 @@ export async function checkChallengeAttempts(harness: LocalHarness, sessions: Se
   await rejects(harness.sql.query(`UPDATE "Deployment" SET "challengePrediction"='{"answers":{},"reasoning":null}' WHERE id=$1`, [run.id]), /immutable/);
   await rejects(harness.sql.query('UPDATE "Deployment" SET "evaluationStopAtSimulatedSeconds"=999 WHERE id=$1', [run.id]), /immutable/);
 
-  await until(async () => (await read(run.id)).status === "live" || undefined, "challenge attempt live", 30000, 500);
+  await until(async () => (await read(run.id)).status === "browser" || undefined, "challenge attempt in the browser", 30000, 500);
   for (const [path, body] of [["load", { targetLoadFraction: 1.5 }], ["chaos", { type: "crash", resourceId: "vm1" }],
     ["scale-pool", { lbId: "lb", delta: 1 }], ["scale-vertical", { resourceId: "vm1", skuId: "m5.xlarge" }]] as const) {
     await harness.request(`/deployments/${run.id}/${path}`, body, "POST", 409);
   }
   await rejects(harness.sql.query(`INSERT INTO "RunAction" (id,"deploymentId",sequence,kind,parameters) VALUES (gen_random_uuid()::text,$1,999,'load','{"targetLoadFraction":1}')`, [run.id]), /Challenge attempts/);
-  await harness.request(`/deployments/${run.id}/speed`, { speed: 60 }, "POST", 202);
-  const done = await until(async () => { const r = await read(run.id); return r.status === "torn-down" ? r : undefined; }, "challenge evaluation stop", 40000, 500);
+  // The browser cannot submit actions for an attempt either.
+  await harness.request(`/deployments/${run.id}/submit`, { stopAtSecond: definition.evaluationSeconds,
+    actions: [{ atSecond: 1, request: { kind: "load", parameters: { targetLoadFraction: 1.5 } } }] }, "POST", 400);
+  const done = await submitBrowserRun(harness, run.id, definition.evaluationSeconds);
+  expect(done.status).toBe("torn-down");
   expect(done.terminalSnapshot.simulatedSeconds).toBe(definition.evaluationSeconds);
   const stops = (await harness.sql.query(`SELECT * FROM "RunAction" WHERE "deploymentId"=$1 AND kind='teardown'`, [run.id])).rows;
   expect(stops).toHaveLength(1);
@@ -80,7 +84,7 @@ export async function checkChallengeAttempts(harness: LocalHarness, sessions: Se
 
   const report: RunReport = (await harness.request(`/deployments/${run.id}/report`)).report;
   expect(report.challenge).toMatchObject({ status: "met", metCount: definition.criteria.length, definitionMatches: true });
-  expect(report.challenge?.predictions.map((p) => p.outcome)).toEqual(["matched", "different"]);
+  expect(report.challenge?.predictions.map((p) => p.outcome)).toEqual(["matched", "matched"]);
   expect(report.run.challenge?.status).toBe("met");
   expect((await brief()).debrief).toEqual(definition.debrief);
   const history = async (kind: string) => (await harness.request(`/deployments/history?kind=${kind}&limit=100`)).runs.map((r: { id: string }) => r.id);
@@ -92,17 +96,13 @@ export async function checkChallengeAttempts(harness: LocalHarness, sessions: Se
   const rerun = (await harness.request(`/deployments/${run.id}/reruns`, { mode: "exact", matchedStop: true }, "POST", 201)).createdDeployment;
   runs.push(rerun.id);
   expect(rerun).toMatchObject({ challengeId: null, challengePrediction: null, evaluationStopAtSimulatedSeconds: null, autoStopAtSimulatedSeconds: definition.evaluationSeconds });
-  await until(async () => (await read(rerun.id)).status === "live" || undefined, "attempt rerun live", 30000, 500);
-  await harness.request(`/deployments/${rerun.id}/speed`, { speed: 60 }, "POST", 202);
-  await until(async () => (await read(rerun.id)).status === "torn-down" || undefined, "attempt rerun stop", 40000, 500);
+  expect((await submitBrowserRun(harness, rerun.id, definition.evaluationSeconds)).status).toBe("torn-down");
   expect((await harness.request(`/deployments/compare?a=${run.id}&b=${rerun.id}`)).comparison.headline).toBe("determinism-match");
 
   // An attempt stopped early is not judged on what it never reached.
   const early = (await attempt({ infrastructureId: created.designId, prediction }, 201)).createdDeployment;
   runs.push(early.id);
-  await until(async () => (await read(early.id)).status === "live" || undefined, "early attempt live", 30000, 500);
-  await harness.request(`/deployments/${early.id}/teardown`, {}, "POST", 202);
-  await until(async () => (await read(early.id)).status === "torn-down" || undefined, "early attempt stop", 30000, 500);
+  expect((await submitBrowserRun(harness, early.id, 10)).terminalSnapshot.simulatedSeconds).toBe(10);
   const earlyReport: RunReport = (await harness.request(`/deployments/${early.id}/report`)).report;
   expect(earlyReport.challenge?.status).toBe("not-evaluated");
 
@@ -116,13 +116,13 @@ export async function checkChallengeAttempts(harness: LocalHarness, sessions: Se
 }
 
 /* A resilience attempt end to end: the target is required, the fault cannot be
-supplied or spoofed, and the worker applies exactly one durable fault at its
-second inside 10x and 60x batches, then judges the attempt at the fault's last second. */
+supplied or spoofed, and the server's replay applies exactly one durable fault at its
+second, then judges the attempt at the fault's last second. */
 export async function checkResilienceAttempt(harness: LocalHarness, designs: string[], runs: string[]) {
   const { definition, hash } = latestChallenge("lose-an-app-server")!;
   const read = async (id: string) => (await harness.sql.query('SELECT * FROM "Deployment" WHERE id=$1', [id])).rows[0];
   const starter = { ...definition.starter!, layoutVersion: 3 };
-  const prediction = { answers: { baseline: "healthy", survivors: "saturated", scale: "no" }, reasoning: null };
+  const prediction = { answers: { baseline: "healthy", survivors: "saturated" }, reasoning: null };
   const attempt = (body: unknown, status: number) => harness.request(`/challenges/${definition.id}/attempts`, body, "POST", status);
 
   const workspace = (await harness.request(`/challenges/${definition.id}/workspace`, {}, "POST", 201)).designId;
@@ -130,7 +130,7 @@ export async function checkResilienceAttempt(harness: LocalHarness, designs: str
   expect((await harness.sql.query('SELECT "challengeId","challengeVersion" FROM "Infrastructure" WHERE id=$1', [workspace])).rows[0])
     .toEqual({ challengeId: definition.id, challengeVersion: definition.version });
   const brief: ChallengeBrief = (await harness.request(`/challenges/${definition.id}`)).challenge;
-  expect(brief).toMatchObject({ category: "resilience", latestVersion: 1, workspaceDesignId: workspace, earlierWorkspace: null, experiment: definition.experiment });
+  expect(brief).toMatchObject({ category: "resilience", latestVersion: 2, workspaceDesignId: workspace, earlierWorkspace: null, experiment: definition.experiment });
   await harness.request(`/challenges/${definition.id}?version=9`, undefined, "GET", 404);
 
   // Without its target the experiment cannot run, and nothing else is substituted.
@@ -140,34 +140,35 @@ export async function checkResilienceAttempt(harness: LocalHarness, designs: str
   expect(blocked).toMatchObject({ valid: false, experiment: { ready: false } });
   await harness.request(`/infrastructure/${workspace}`, { layout: without }, "PUT");
   expect((await attempt({ infrastructureId: workspace, prediction }, 400)).message).toContain("The experiment cannot run");
-  await attempt({ infrastructureId: workspace, prediction, experiment: { fault: "crash", atSimulatedSecond: 61 } }, 400);
+  await attempt({ infrastructureId: workspace, prediction, experiment: { fault: "crash", atSimulatedSecond: 31 } }, 400);
   await harness.request(`/infrastructure/${workspace}`, { layout: starter }, "PUT");
 
   const ids: string[] = [];
-  for (const speed of [1, 10, 60] as const) {
+  for (let i = 0; i < 2; i++) {
     const run = (await attempt({ infrastructureId: workspace, prediction }, 201)).createdDeployment;
     runs.push(run.id); ids.push(run.id);
-    expect(await read(run.id)).toMatchObject({ challengeVersion: definition.version, challengeSpecHash: hash, evaluationStopAtSimulatedSeconds: 90,
-      challengeExperiment: { version: 1, fault: "crash", atSimulatedSecond: 60, durationSimulatedSeconds: 30, targetResourceId: "app-2", targetType: "Virtual Machine" } });
-    await until(async () => (await read(run.id)).status === "live" || undefined, "resilience attempt live", 30000, 500);
+    expect(await read(run.id)).toMatchObject({ challengeVersion: definition.version, challengeSpecHash: hash, evaluationStopAtSimulatedSeconds: 60,
+      challengeExperiment: { version: 1, fault: "crash", atSimulatedSecond: 30, durationSimulatedSeconds: 30, targetResourceId: "app-2", targetType: "Virtual Machine" } });
+    await until(async () => (await read(run.id)).status === "browser" || undefined, "resilience attempt in the browser", 30000, 500);
     // People cannot schedule, spoof or add faults during an attempt.
     await harness.request(`/deployments/${run.id}/chaos`, { type: "crash", resourceId: "app-1", trigger: "challenge-experiment" }, "POST", 400);
     await harness.request(`/deployments/${run.id}/chaos`, { type: "crash", resourceId: "app-1" }, "POST", 409);
-    await harness.request(`/deployments/${run.id}/speed`, { speed }, "POST", 202);
-    const done = await until(async () => { const r = await read(run.id); return r.status === "torn-down" ? r : undefined; }, `resilience attempt at ${speed}x`, speed === 1 ? 140000 : 60000, 500);
-    expect(done.terminalSnapshot.simulatedSeconds).toBe(90);
+    await harness.request(`/deployments/${run.id}/submit`, { stopAtSecond: 60,
+      actions: [{ atSecond: 30, request: { kind: "chaos", parameters: { type: "crash", resourceId: "app-2" } } }] }, "POST", 400);
+    const done = await submitBrowserRun(harness, run.id, 60);
+    expect(done.terminalSnapshot.simulatedSeconds).toBe(60);
     const actions = (await harness.sql.query('SELECT * FROM "RunAction" WHERE "deploymentId"=$1 ORDER BY sequence', [run.id])).rows;
     const faults = actions.filter((a) => a.kind === "chaos");
     expect(faults).toHaveLength(1);
     expect(faults[0]).toMatchObject({ parameters: { type: "crash", resourceId: "app-2", trigger: "challenge-experiment" }, status: "completed",
-      appliedSimulatedSeconds: 60, completedSimulatedSeconds: 90,
-      outcome: { durationSimulatedSeconds: 30, faultEnded: true, observedOverallHealth: "critical", baselineOverallHealth: "healthy" } });
-    expect(actions.at(-1)).toMatchObject({ kind: "teardown", parameters: { trigger: "challenge-evaluation" }, appliedSimulatedSeconds: 90 });
+      appliedSimulatedSeconds: 30, completedSimulatedSeconds: 60,
+      outcome: { durationSimulatedSeconds: 30, faultEnded: true, observedOverallHealth: "saturated", baselineOverallHealth: "healthy" } });
+    expect(actions.at(-1)).toMatchObject({ kind: "teardown", parameters: { trigger: "challenge-evaluation" }, appliedSimulatedSeconds: 60 });
     const report: RunReport = (await harness.request(`/deployments/${run.id}/report`)).report;
-    expect(report.experimentTrace).toMatchObject({ status: "complete", expectedStart: 30, expectedEnd: 90, sampleCount: 61 });
+    expect(report.experimentTrace).toMatchObject({ status: "complete", expectedStart: 1, expectedEnd: 60, sampleCount: 60 });
     expect(report.challenge).toMatchObject({ status: "not-met", definitionMatches: true,
-      experiment: { state: "ended", appliedSimulatedSeconds: 60, endedSimulatedSeconds: 90, baselineOverallHealth: "healthy", targetHealthAtEvaluation: "failed" } });
-    expect(report.challenge?.predictions.map((p) => p.outcome)).toEqual(["matched", "matched", "matched"]);
+      experiment: { state: "ended", appliedSimulatedSeconds: 30, endedSimulatedSeconds: 60, baselineOverallHealth: "healthy", targetHealthAtEvaluation: "failed" } });
+    expect(report.challenge?.predictions.map((p) => p.outcome)).toEqual(["matched", "matched"]);
     expect(report.actions.find((a) => a.kind === "chaos")?.parameters).toMatchObject({ trigger: "challenge-experiment" });
   }
   const comparison = (await harness.request(`/deployments/compare?a=${ids[0]}&b=${ids[1]}`)).comparison;
@@ -176,6 +177,6 @@ export async function checkResilienceAttempt(harness: LocalHarness, designs: str
   expect(comparison).toMatchObject({ challengeConditions: "same", headline: "matched-pair" });
   expect(comparison.conduct.code).toBe("same");
   const listed = ((await harness.request("/challenges")).challenges as ChallengeSummary[]).find((c) => c.id === definition.id)!;
-  expect(listed).toMatchObject({ category: "resilience", attempts: 3, workspaceDesignId: workspace });
+  expect(listed).toMatchObject({ category: "resilience", attempts: 2, workspaceDesignId: workspace });
   return ids;
 }

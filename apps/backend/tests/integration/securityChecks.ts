@@ -71,7 +71,7 @@ export async function checkUserIsolation(harness: LocalHarness, fixtures: Sessio
     expect((await harness.request("/deployments/live")).deployments).toEqual([]);
     expect((await harness.request("/deployments/history")).runs).toEqual([]);
     await harness.request(`/deployments/history?before=${runId}`, undefined, "GET", 404);
-    for (const path of [`/infrastructure/${designId}`, `/infrastructure/${designId}/deployments`, `/deployments/${runId}`, `/deployments/${runId}/report`]) {
+    for (const path of [`/infrastructure/${designId}`, `/infrastructure/${designId}/deployments`, `/deployments/${runId}`, `/deployments/${runId}/report`, `/deployments/${runId}/browser-run`]) {
       await harness.request(path, undefined, "GET", 404);
     }
     await harness.request(`/infrastructure/${designId}`, { name: "Stolen", userId: bob.user.id }, "PUT", 404);
@@ -79,7 +79,7 @@ export async function checkUserIsolation(harness: LocalHarness, fixtures: Sessio
     await harness.request("/deployments", { infrastructureId: designId, userId: bob.user.id }, "POST", 404);
     const commands = { chaos: { type: "crash", resourceId: "vm-a" }, load: { targetLoadFraction: 1 },
       "scale-vertical": { resourceId: "vm-a", skuId: "m5.xlarge" }, "scale-pool": { lbId: "lb", delta: 1 },
-      speed: { speed: 60 }, "sync-topology": { ...layout, expectedRevision: 0 }, teardown: {} };
+      speed: { speed: 60 }, "sync-topology": { ...layout, expectedRevision: 0 }, teardown: {}, submit: { stopAtSecond: 10, actions: [] } };
     for (const [action, body] of Object.entries(commands)) await harness.request(`/deployments/${runId}/${action}`, body, "POST", 404);
     harness.cookie = "";
     await harness.request(`/deployments/${runId}/speed`, { speed: 60 }, "POST", 401);

@@ -6,10 +6,9 @@ the same simulation engine and the same run record.
 
 ## Status
 
-The public application still runs **Model 1**, the older educational engine.
-**Model 2** replaces it for every new run before the public launch on
-**6 November 2026**; Model 1 is then removed. Old Model 1 reports stay readable and
-are never relabelled. See [project state](docs/PROJECT_STATE.md).
+Every new run uses **Model 2**. The older Model 1 engine has been removed; reports of
+earlier Model 1 runs stay readable and are never relabelled, but those runs are never
+run again. Public launch: **6 November 2026**. See [project state](docs/PROJECT_STATE.md).
 
 ## How a Model 2 run works
 
@@ -32,7 +31,7 @@ apps/backend/         API, authentication, worker, persistence, challenges and r
 packages/domain/      Resource and workload types, graph rules and examples
 packages/contracts/   Shared input, event, evidence and report contracts
 packages/catalog/     Provider catalog data and lookups
-packages/simulation/  Simulation engines (Model 1 and Model 2)
+packages/simulation/  Simulation engine (Model 2)
 scripts/              Validation and release tooling
 ops/                  Home-server and release configuration
 docs/                 Project state, deployment, authentication and legal drafts

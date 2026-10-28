@@ -35,7 +35,7 @@ export function StartingInputs({ starting, detailed = false }: { starting: Start
           <p className="break-words">Removed connections: {d.removedConnections.map(edge).join(", ") || "none"}</p>
           {d.resourceOrder && <><p className="break-words">Earlier order: {d.resourceOrder.earlier.join(" → ")}</p><p className="break-words">Later order: {d.resourceOrder.later.join(" → ")}</p></>}
           {d.connectionOrder && <>
-            <p>Connection order changed. Model 1 uses this order for routing and autoscaling pool templates.</p>
+            <p>Connection order changed.</p>
             <p className="break-words">Earlier connection order: {d.connectionOrder.earlier.map(edge).join("; ")}</p>
             <p className="break-words">Later connection order: {d.connectionOrder.later.map(edge).join("; ")}</p>
           </>}

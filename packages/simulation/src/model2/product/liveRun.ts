@@ -122,9 +122,9 @@ export function createModel2Run(input: RunTopology & { workloadProfile: Resolved
         case "pool-scale": {
           const { lbId, delta } = request.parameters, pool = pools.find((p) => p.lbId === lbId);
           if (!pool?.scaled) throw new ActionRefused("This load balancer has no adjustable replica pool.");
-          const current = last?.metrics[pool.scaled]?.replicas?.total ?? pool.min, desired = current + delta;
+          const current = (last?.metrics[pool.scaled]?.replicas?.total ?? pool.min - pool.fixed) + pool.fixed, desired = current + delta;
           if (desired < pool.min || desired > pool.max) throw new ActionRefused(`The pool stays between ${pool.min} and ${pool.max} replicas.`);
-          attempt({ id: actionId, kind: "replicas", node: pool.scaled, desired });
+          attempt({ id: actionId, kind: "replicas", node: pool.scaled, desired: desired - pool.fixed });
           return { outcome: { delta, previousReplicaCount: current } };
         }
         case "vertical-scale": throw new ActionRefused("Resizing during a Model 2 run is not available yet. Stop, change the size and start a new run.");
@@ -135,7 +135,7 @@ export function createModel2Run(input: RunTopology & { workloadProfile: Resolved
     // A replica change is finished once the pool holds the requested count, all ready.
     poolSettled(lbId: string, previous: number, delta: number) {
       const pool = pools.find((p) => p.lbId === lbId), r = pool?.scaled ? last?.metrics[pool.scaled]?.replicas : undefined;
-      return !!r && r.total === previous + delta && r.ready === r.total ? r.total : null;
+      return !!r && r.total + pool!.fixed === previous + delta && r.ready === r.total ? r.total + pool!.fixed : null;
     },
     get actions() { return run.actions; },
   };
@@ -149,15 +149,16 @@ function metric(m: LiveProjection["metrics"][string] | undefined): ResourceMetri
 }
 const round = (value: number) => Math.round(value * 10) / 10;
 
-// Load balancer pools as people drew them: the app servers behind each balancer, and the one Model 2 scales.
+/* Load balancer pools as people drew them: the app servers behind each balancer, and the one Model 2 scales.
+Model 2 scales the first app server and keeps its drawn siblings fixed, so every count here is the balancer's total. */
 function poolLayout(input: RunTopology, contract: ProductContract) {
   const behind = (lb: string) => input.connectionLines.filter((c) => c.sourceId === lb && input.resources.find((r) => r.id === c.targetId)?.type === RESOURCE_TYPES.VirtualMachine).map((c) => c.targetId);
   return input.resources.filter((r) => r.type === RESOURCE_TYPES.LoadBalancer).map((lb) => {
     const scaled = Object.entries(contract.nodes).find(([, n]) => n.controller && n.controller.loadBalancer.replace(/^\$/, "").split("/")[0] === lb.id)?.[0];
     const controller = scaled ? contract.nodes[scaled]!.controller! : undefined;
     const count = (q: { kind: string; value?: number } | undefined, fallback: number) => q?.kind === "known" && typeof q.value === "number" ? q.value : fallback;
-    const vms = behind(lb.id);
-    return { lbId: lb.id, vms, scaled, min: count(controller?.min, 1), max: count(controller?.max, 1),
+    const vms = behind(lb.id), fixed = scaled ? vms.length - 1 : vms.length;
+    return { lbId: lb.id, vms, scaled, fixed, min: count(controller?.min, 0) + fixed, max: count(controller?.max, 0) + fixed,
       targetCpu: Math.round(count(controller?.target, 0) * 100), startSeconds: Math.ceil((count(controller?.provision, 0) + count(controller?.startup, 0)) / SECOND),
       drainSeconds: Math.ceil(count(controller?.drain, 0) / SECOND) };
   });

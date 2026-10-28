@@ -11,7 +11,7 @@ interface TraceInput {
   questions?: PredictionQuestion[];
 }
 
-/* Model 1 resilience evidence: one completed tick per retained second, per resource.
+/* Resilience evidence: one completed second per retained second, per resource.
 The fault tick is measured before the fault applies, so its effect first shows on the
 next tick. Seconds outside the retained window, and missing ranges inside it, are Unknown. */
 export function fromExperimentTrace({ trace, experiment, stations, predictions = [], questions = [] }: TraceInput): TimetableModel | null {

@@ -5,12 +5,9 @@ import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { Queue } from "bullmq";
 import WebSocket from "ws";
-import { createInitialState, tick } from "@infraforge/simulation/engine";
-import type { SimulationSnapshot } from "@infraforge/contracts/telemetry";
-import { ResourceHealth } from "@infraforge/domain/resource";
 import { LocalHarness, readLocalSettings, until } from "./localHarness";
 import { layout, seed, workload } from "./scenario";
-import { engineSeed, captureRunInputs } from "../../deployments/runInputs";
+import { captureRunInputs } from "../../deployments/runInputs";
 import { SessionFixtures } from "./sessionFixtures";
 import { checkUserIsolation } from "./securityChecks";
 import { checkRecordedReports } from "./reportChecks";
@@ -22,12 +19,10 @@ import { checkExperimentTraces } from "./experimentTraceChecks";
 import { checkLearningHistory } from "./learningHistoryChecks";
 import { checkCredentials } from "./credentialChecks";
 import { checkLearningExperiments } from "./learningChecks";
-import { checkPostFaultObservation } from "./postFaultChecks";
 import { checkOperationalDeadline } from "./operationalChecks";
-import { checkBrowserRun } from "./browserRunChecks";
+import { checkBrowserRun, submitBrowserRun } from "./browserRunChecks";
 
 type Event = Record<string, any>;
-type Snapshot = SimulationSnapshot & { publishType: string };
 const integration = process.env.INTEGRATION_RUN === "1" ? describe : describe.skip;
 
 integration("local deployment lifecycle", () => {
@@ -41,7 +36,6 @@ integration("local deployment lifecycle", () => {
     const observer = harness.redis.duplicate({ lazyConnect: true });
     observer.on("error", () => {});
     let queue: Queue | undefined;
-    let latest: Snapshot;
     let workerStarted = false;
     let schemaReady = false;
     let actualSeed: string;
@@ -71,41 +65,6 @@ integration("local deployment lifecycle", () => {
       expect(Number(counts[1])).toBe(1);
       return socket;
     };
-    const command = async (id: string, path: string, body: unknown) => {
-      const revision = path === "sync-topology" ? (await deployment(id)).topologyRevision : null;
-      const request = path === "sync-topology" ? { ...(body as object), expectedRevision: revision } : body;
-      const response = await harness.request(`/deployments/${id}/${path}`, request, "POST", 202);
-      expect(response.action.status).toBe("requested");
-      expect(response.action.appliedAt).toBeNull();
-      expect(response.action.id).toBeDefined();
-      if (revision !== null) expect(response.topologyRevision).toBe(revision + 1);
-      const applied = await until(async () => {
-        const action = (await harness.request(`/deployments/${id}/actions/${response.action.id}`)).action;
-        return ["running", "completed", "failed", "cancelled"].includes(action.status) ? action : undefined;
-      }, `${path} durable application`, 20_000, 500);
-      expect(["running", "completed"]).toContain(applied.status);
-      expect(applied.appliedAt).not.toBeNull();
-      expect(evidence.redisEvents.filter((e: Event) => e.channel === "simulator:control")).toHaveLength(0);
-      evidence.controls.push({ beforeTick: latest?.simulatedSeconds ?? null, path, body, action: applied });
-      return applied;
-    };
-    const snapshotAfter = async (id: string, seconds: number, fromEvent = 0) => until(async () => {
-      const snapshot = evidence.wsEvents.slice(fromEvent).find((e: Event) => e.deploymentId === id &&
-        e.publishType === "simulation-snapshot" && e.simulatedSeconds > seconds);
-      return snapshot as Snapshot | undefined;
-    }, "next simulation snapshot");
-    const advance = async (id: string, speed: 1 | 10 | 60) => {
-      const before = latest.simulatedSeconds;
-      await command(id, "speed", { speed });
-      latest = await snapshotAfter(id, before);
-      await command(id, "speed", { speed: 0 });
-      expect(latest.simulatedSeconds).toBe(before + speed);
-      expect(latest.speed).toBe(speed);
-      const raw = evidence.redisEvents.find((e: Event) => e.event.publishType === "simulation-snapshot" &&
-        e.event.deploymentId === id && e.event.simulatedSeconds === latest.simulatedSeconds);
-      expect(latest).toEqual(raw?.event);
-      return latest;
-    };
 
     try {
       phase("prepare");
@@ -125,7 +84,7 @@ integration("local deployment lifecycle", () => {
         const run = await harness.request("/deployments", { infrastructureId: infrastructureIds[0], workloadProfile: workload }, "POST", 201);
         deploymentIds.push(run.createdDeployment.id);
         await harness.startWorker(); workerStarted = true;
-        await until(async () => (await deployment(deploymentIds[0]!)).status === "live" || undefined, "credential user live run", 60000);
+        await until(async () => (await deployment(deploymentIds[0]!)).status === "browser" || undefined, "credential user browser run", 60000);
         phase("credential user HTTP and WS isolation");
         await checkUserIsolation(harness, sessions, infrastructureIds[0]!, deploymentIds[0]!);
         evidence.result = "passed"; return;
@@ -247,22 +206,8 @@ integration("local deployment lifecycle", () => {
       await harness.sql.query("DROP FUNCTION integration_worker_retry()");
       await harness.sql.query("DROP SEQUENCE integration_worker_attempt");
       evidence.workerRetry = { intermediateStatus, recovered: false };
-      latest = await snapshotAfter(id, 0);
-      await command(id, "speed", { speed: 0 });
-      expect(latest.simulatedSeconds).toBe(1);
-      const initial = tick(createInitialState(id, layout.resources, layout.connectionLines,
-        created.createdDeployment.runInputs.workloadProfile, engineSeed(actualSeed)), {}).state;
-      expect(latest.metrics).toEqual(initial.metrics);
-      expect(latest.health).toBe(initial.overallHealth);
-      expect(latest.loadFraction).toBe(initial.loadFraction);
-      expect(latest.burnRatePerHourUsd).toBeGreaterThan(0);
-      expect(latest.accumulatedCostUsd).toBeCloseTo(latest.burnRatePerHourUsd! / 3600, 12);
-      evidence.firstSnapshot = latest;
-      expect(Object.keys(latest).sort()).toEqual([
-        "deploymentId", "timestamp", "simulatedSeconds", "loadFraction", "metrics", "logs", "health", "pools",
-        "spawnedVms", "restarting", "activeChaos", "speed", "burnRatePerHourUsd", "accumulatedCostUsd", "publishType",
-        "liveTopology", "topologyRevision",
-      ].sort());
+      // After its gates the run waits for the learner's browser; the server simulates nothing until the browser submits.
+      await until(async () => (await deployment(id)).status === "browser" || undefined, "run waiting for the browser", 60000, 200);
       const wireEvents = evidence.wsEvents.filter((e: Event) => e.deploymentId === id);
       expect(wireEvents.filter((e: Event) => e.publishType === "stage-of-deployment-completed").map((e: Event) => e.stageName))
         .toEqual(["Validate", "SecurityScan", "CostEstimate"]);
@@ -277,16 +222,10 @@ integration("local deployment lifecycle", () => {
       }
 
       const live = await deployment(id);
-      const first = evidence.wsEvents.find((event: Event) => event.deploymentId === id && event.publishType === "simulation-snapshot");
-      expect(first.simulatedSeconds).toBe(0);
-      expect(first.accumulatedCostUsd).toBe(0);
-      expect(first.liveTopology).toEqual(layout);
-      expect(first.topologyRevision).toBe(0);
-      evidence.initialSnapshot = first;
-      expect(live.status).toBe("live");
+      expect(evidence.wsEvents.some((event: Event) => event.deploymentId === id && event.publishType === "simulation-snapshot")).toBe(false);
+      expect(live.status).toBe("browser");
       expect(live.seed).toBe(actualSeed);
-      expect(latest.liveTopology).toEqual(layout);
-      expect(latest.metrics["saved-only"]).toBeUndefined();
+      expect(live.liveTopology).toEqual(layout);
       expect(live.runInputs).toEqual(created.createdDeployment.runInputs);
       const legacy = await deployment(legacyId);
       expect(legacy.status).toBe("failed");
@@ -305,7 +244,7 @@ integration("local deployment lifecycle", () => {
       expect(live.stages[2].details.lineItems).toHaveLength(layout.resources.length);
       expect((await harness.request("/deployments/live")).deployments.find((d: Event) => d.id === id)).toEqual({
         id, infrastructureId, infrastructureName: "Integration saved layout", resourceCount: layout.resources.length,
-        status: "live", createdAt: live.createdAt, updatedAt: live.updatedAt, challengeId: null,
+        status: "browser", createdAt: live.createdAt, updatedAt: live.updatedAt, challengeId: null,
       });
       const validJob = await queue.getJob(id);
       expect(validJob?.id).toBe(id);
@@ -324,11 +263,9 @@ integration("local deployment lifecycle", () => {
       for (const duplicate of duplicateJobs) await until(async () => (await duplicate.getState()) === "completed" || undefined, "duplicate job skip");
       expect((await deployment(id)).runInputs).toEqual(live.runInputs);
       expect((await deployment(id)).stages).toEqual(live.stages);
-      expect(evidence.wsEvents.filter((event: Event) => event.deploymentId === id && event.publishType === "simulation-snapshot")
-        .map((event: Event) => event.simulatedSeconds).filter((value: number, index: number, values: number[]) => index === 0 || value !== values[index - 1])).toEqual([0, 1]);
       await harness.startWorker("competing-worker");
       expect(await harness.waitForExit("competing-worker")).toBe(1);
-      expect((await deployment(id)).status).toBe("live");
+      expect((await deployment(id)).status).toBe("browser");
       expect(harness.logs()["competing-worker"]).toContain("Another InfraForge worker owns");
       await harness.stop("competing-worker");
       evidence.duplicateJobs = { skipped: duplicateJobs.length, runInputsUnchanged: true, competingWorkerExit: 1 };
@@ -366,17 +303,13 @@ integration("local deployment lifecycle", () => {
       const bootstrapJob = await fixtureJob(bootstrap.deploymentId);
       await until(async () => (await bootstrapJob.getState()) === "completed" || undefined, "captured bootstrap completion");
       const failedBootstrapJob = await queue.getJob(bootstrap.deploymentId);
-      expect((await deployment(bootstrap.deploymentId)).status).toBe("live");
+      expect((await deployment(bootstrap.deploymentId)).status).toBe("browser");
       expect(failedBootstrapJob?.attemptsMade).toBe(1);
       expect(fixtureEvents(bootstrap.deploymentId, "deployment-failed")).toHaveLength(0);
       expect(fixtureEvents(bootstrap.deploymentId, "deployment-started")).toHaveLength(1);
       expect(fixtureEvents(bootstrap.deploymentId, "stage-of-deployment-completed")).toHaveLength(3);
-      const bootstrapSnapshot = await until(async () => fixtureEvents(bootstrap.deploymentId, "simulation-snapshot")
-        .map((entry: Event) => entry.event).find((snapshot: Snapshot) => snapshot.simulatedSeconds > 0), "captured bootstrap snapshot");
-      expect(Object.keys(bootstrapSnapshot.metrics).sort()).toEqual(layout.resources.map((resource) => resource.id).sort());
-      evidence.savedLayoutIsolation = { status: (await deployment(bootstrap.deploymentId)).status, snapshot: bootstrapSnapshot };
-      await harness.request(`/deployments/${bootstrap.deploymentId}/teardown`, {}, "POST", 202);
-      await until(async () => !(await deployment(bootstrap.deploymentId)).runtimeActive || undefined, "bootstrap stop acknowledgement");
+      expect((await deployment(bootstrap.deploymentId)).liveTopology).toEqual(layout);
+      evidence.savedLayoutIsolation = { status: (await deployment(bootstrap.deploymentId)).status };
       await harness.sql.query('DELETE FROM "Deployment" WHERE id = $1', [bootstrap.deploymentId]);
 
       phase("gate retries");
@@ -399,10 +332,10 @@ integration("local deployment lifecycle", () => {
           const processedJob = await queue.getJob(fixture.deploymentId);
           const current = await deployment(fixture.deploymentId);
           expect(processedJob?.attemptsMade).toBe(2);
-          expect(current.status).toBe(recover ? "live" : "failed");
+          expect(current.status).toBe(recover ? "browser" : "failed");
           expect(current.stages.map((stage: Event) => stage.name)).toEqual(recover ? ["Validate", "SecurityScan", "CostEstimate"] : ["Validate"]);
           expect(current.timeline.map((entry: Event) => entry.event)).toEqual(recover ? ["Validate", "SecurityScan", "CostEstimate"] : ["Validate"]);
-          await until(async () => fixtureEvents(fixture.deploymentId, recover ? "simulation-snapshot" : "deployment-failed").length > 0 || undefined,
+          await until(async () => fixtureEvents(fixture.deploymentId, recover ? "deployment-live" : "deployment-failed").length > 0 || undefined,
             "gate retry published outcome");
           expect(fixtureEvents(fixture.deploymentId, "deployment-started")).toHaveLength(2);
           expect(fixtureEvents(fixture.deploymentId, "deployment-failed")).toHaveLength(recover ? 0 : 1);
@@ -410,7 +343,8 @@ integration("local deployment lifecycle", () => {
             .toEqual(recover ? ["Validate", "SecurityScan", "CostEstimate"] : ["Validate"]);
           evidence[recover ? "gateRetryRecovery" : "gateRetryExhaustion"] = { status: current.status, attemptsMade: processedJob?.attemptsMade,
             stages: current.stages, timeline: current.timeline, startedEvents: fixtureEvents(fixture.deploymentId, "deployment-started").length };
-          if (recover) await harness.request(`/deployments/${fixture.deploymentId}/teardown`, {}, "POST", 202);
+          // The browser never submits this fixture: release its run reservation.
+          if (recover) await harness.sql.query(`UPDATE "Deployment" SET status = 'failed' WHERE id = $1`, [fixture.deploymentId]);
         } finally {
           await harness.sql.query('DROP TRIGGER integration_gate_retry ON "Deployment"');
           await harness.sql.query("DROP FUNCTION integration_gate_retry()");
@@ -432,68 +366,38 @@ integration("local deployment lifecycle", () => {
           const result = await harness.sql.query('SELECT status FROM "Outbox" WHERE id = $1', [notificationId]);
           return result.rows[0]?.status === "failed" || undefined;
         }, "notification outbox exhaustion");
-        expect((await deployment(id)).status).toBe("live");
+        expect((await deployment(id)).status).toBe("browser");
       } finally {
         await harness.redis.call("ACL", "SETUSER", "default", ...originalCommands.split(" "));
       }
       expect(fixtureEvents(id, "outbox-BullMQ-push-failed")).toHaveLength(0);
       evidence.notificationFailure = { outboxId: notificationId, deploymentStatus: (await deployment(id)).status };
 
-      const pausedCount = evidence.wsEvents.filter((e: Event) => e.publishType === "simulation-snapshot" && e.deploymentId === id).length;
-      phase("live controls");
-      await Bun.sleep(1500);
-      expect(evidence.wsEvents.filter((e: Event) => e.publishType === "simulation-snapshot" && e.deploymentId === id).slice(pausedCount)
-        .every((event: Event) => event.simulatedSeconds === latest.simulatedSeconds && event.speed === 0)).toBe(true);
-
-      await command(id, "load", { targetLoadFraction: 0.5 });
-      await harness.request(`/deployments/${id}/sync-topology`, { resources: [null], connectionLines: [] }, "POST", 400);
-      await command(id, "chaos", { type: "crash", resourceId: "vm-a" });
-      await command(id, "scale-vertical", { resourceId: "vm-b", skuId: "m5.xlarge" });
-      await command(id, "scale-pool", { lbId: "lb", delta: 1 });
-      const liveLayout = { ...layout, resources: [...layout.resources, { id: "live-storage", type: "Object Storage", x: 800, y: 0 }] };
-      await command(id, "sync-topology", liveLayout);
+      phase("browser submission and server replay");
+      // The browser halved the load and crashed vm-a at second 2, then stopped at 40. The server replays exactly that.
+      const beforeReplay = evidence.wsEvents.length;
+      const replayed = await submitBrowserRun(harness, id, 40, [
+        { atSecond: 2, request: { kind: "load", parameters: { targetLoadFraction: 0.5 } } },
+        { atSecond: 2, request: { kind: "chaos", parameters: { type: "crash", resourceId: "vm-a" } } }]);
+      expect(replayed.status).toBe("torn-down");
+      expect(replayed.terminalSnapshot).toMatchObject({ kind: "terminal", simulatedSeconds: 40, loadFraction: 0.5, activeChaos: [] });
+      expect(replayed.runInputs).toEqual(live.runInputs);
+      expect(replayed.liveTopology).toEqual(layout);
       expect((await harness.request(`/infrastructure/${infrastructureId}`)).infrastructure.layout).toEqual(editedSavedLayout);
-      expect((await deployment(id)).runInputs).toEqual(live.runInputs);
-      await harness.request(`/deployments/${id}/sync-topology`, { ...layout, expectedRevision: 0 }, "POST", 409);
-      expect((await deployment(id)).liveTopology).toEqual(liveLayout);
-      // Two editors using the same revision: exactly one may commit.
-      const concurrent = await Promise.all([liveLayout, layout].map(async (topology) => {
-        const response = await fetch(harness.api + `/deployments/${id}/sync-topology`, {
-          method: "POST", headers: harness.headers, body: JSON.stringify({ ...topology, expectedRevision: 1 }),
-        });
-        return { status: response.status, topology };
-      }));
-      expect(concurrent.map((result) => result.status).sort()).toEqual([202, 409]);
-      expect((await deployment(id)).liveTopology).toEqual(concurrent.find((result) => result.status === 202)!.topology);
-      // Put the chosen learning fixture back through its current revision.
-      await command(id, "sync-topology", liveLayout);
-      const at2 = await advance(id, 1);
-      expect(at2.activeChaos?.[0]?.resourceId).toBe("vm-a");
-      expect(at2.metrics["vm-a"]?.health).toBe(ResourceHealth.FAILED);
-      expect(at2.restarting).toEqual(["vm-b"]);
-      expect(at2.spawnedVms?.[0]?.status).toBe("provisioning");
-      expect(at2.metrics["live-storage"]).toBeDefined();
-      expect(evidence.wsEvents.some((event: Event) => event.deploymentId === id &&
-        event.logs?.some((log: Event) => log.source === "load-tester"))).toBe(true);
-      const chaosStored = (await deployment(id)).chaosEvents;
-      expect(chaosStored).toHaveLength(0);
-      expect((await harness.sql.query('SELECT parameters, status FROM "RunAction" WHERE "deploymentId"=$1 AND kind=\'chaos\'', [id])).rows[0])
-        .toMatchObject({ parameters: { type: "crash", resourceId: "vm-a" }, status: "running" });
-      await advance(id, 10);
-      const at22 = await advance(id, 10);
-      expect(at22.restarting).toEqual([]);
-      expect(at22.burnRatePerHourUsd).toBeGreaterThan(at2.burnRatePerHourUsd!);
-      const at82 = await advance(id, 60);
-      expect(at82.loadFraction).toBe(0.5);
-      expect(at82.activeChaos).toEqual([]);
-      expect(at82.pools?.lb?.currentReplicas).toBe(3);
-      expect(at82.spawnedVms?.[0]?.status).toBe("active");
-      await command(id, "scale-pool", { lbId: "lb", delta: -1 });
-      await advance(id, 10);
-      const at102 = await advance(id, 10);
-      expect(at102.pools?.lb?.currentReplicas).toBe(2);
-      expect(at102.spawnedVms).toEqual([]);
-      expect(at102.accumulatedCostUsd).toBeGreaterThan(at2.accumulatedCostUsd!);
+      const replayActions = (await harness.sql.query('SELECT kind, status, "appliedSimulatedSeconds" AS at, "completedSimulatedSeconds" AS done FROM "RunAction" WHERE "deploymentId"=$1 ORDER BY sequence', [id])).rows;
+      expect(replayActions).toEqual([{ kind: "load", status: "completed", at: 2, done: 2 }, { kind: "chaos", status: "completed", at: 2, done: 32 },
+        { kind: "teardown", status: "completed", at: 40, done: 40 }]);
+      expect((await deployment(id)).chaosEvents).toHaveLength(0);
+      // The replay streamed its seconds to the open socket, as published, from second 0.
+      const streamed = evidence.wsEvents.slice(beforeReplay).filter((e: Event) => e.deploymentId === id && e.publishType === "simulation-snapshot");
+      expect(streamed[0]).toMatchObject({ simulatedSeconds: 0, accumulatedCostUsd: 0, liveTopology: layout, topologyRevision: 0 });
+      expect(Object.keys(streamed[0])).toEqual(expect.arrayContaining(["deploymentId", "timestamp", "simulatedSeconds", "loadFraction", "metrics", "logs",
+        "health", "pools", "spawnedVms", "restarting", "activeChaos", "speed", "burnRatePerHourUsd", "accumulatedCostUsd", "publishType", "liveTopology", "topologyRevision"]));
+      for (const snapshot of streamed) {
+        expect(evidence.redisEvents.some((e: Event) => e.channel === `deployment:${id}:updates` && JSON.stringify(e.event) === JSON.stringify(snapshot))).toBe(true);
+      }
+      await until(async () => evidence.wsEvents.some((e: Event) => e.deploymentId === id && e.publishType === "deployment-torn-down") || undefined, "replay end event");
+      evidence.replay = { terminal: replayed.terminalSnapshot, actions: replayActions, streamed: streamed.length };
 
       socket.close();
       await until(async () => socket.readyState === WebSocket.CLOSED || undefined, "socket disconnect");
@@ -502,8 +406,7 @@ integration("local deployment lifecycle", () => {
         return Number(counts[1]) === 0 || undefined;
       }, "subscription cleanup");
       socket = await connectWs(id);
-      expect((await deployment(id)).status).toBe("live");
-      await advance(id, 1);
+      expect((await deployment(id)).status).toBe("torn-down");
 
       const retry = await until(async () => {
         const rows = await harness.sql.query('SELECT * FROM "Outbox" WHERE id = $1', [retryOutboxId]);
@@ -514,36 +417,21 @@ integration("local deployment lifecycle", () => {
       expect((await harness.sql.query('SELECT status FROM "Deployment" WHERE id = \'0\'')).rows[0].status).toBe("failed");
       evidence.retry = { status: retry.status, retries: retry.retries, error: retry.error };
 
-      // Diagnostic checkpoints are preserved; they are not recovery state.
-      phase("checkpoint");
-      // Keep the checkpoint below the finite freeform horizon during the real minute wait.
-      await command(id, "speed", { speed: 1 });
-      const checkpoint = await until(async () => {
-        const current = await deployment(id);
-        return current.simulationState?.simulatedSeconds > 103 ? current.simulationState : undefined;
-      }, "real simulation checkpoint", 70000, 500);
-      latest = evidence.wsEvents.filter((e: Event) => e.deploymentId === id && e.publishType === "simulation-snapshot").at(-1);
-      await command(id, "speed", { speed: 0 });
-      expect(checkpoint.metrics["live-storage"]).toBeDefined();
-      expect(checkpoint.accumulatedCostUsd).toBeGreaterThan(at102.accumulatedCostUsd!);
-      evidence.checkpoint = checkpoint;
       phase("worker restart");
+      // The server holds nothing in memory for a run waiting for its browser, so a restart does not touch it.
+      const waitingFixture = await workerFixture("Waiting across a restart");
+      await fixtureJob(waitingFixture.deploymentId);
+      await until(async () => (await deployment(waitingFixture.deploymentId)).status === "browser" || undefined, "fixture waiting for the browser");
       await harness.stop("worker");
-      const beforeRestart = evidence.wsEvents.length;
       await harness.startWorker();
-      await until(async () => (await deployment(id)).status === "failed" || undefined, "explicit interrupted run failure");
       await Bun.sleep(1500);
-      expect(evidence.wsEvents.slice(beforeRestart).some((event: Event) => event.deploymentId === id && event.publishType === "simulation-snapshot")).toBe(false);
-      expect((await deployment(id)).runtimeActive).toBe(false);
-      expect((await deployment(id)).seed).toBe(actualSeed);
-      expect((await deployment(id)).stages).toEqual(live.stages);
-      expect((await deployment(id)).runInputs).toEqual(live.runInputs);
-      expect((await deployment(id)).liveTopology).toEqual(liveLayout);
-      expect((await deployment(id)).simulationState).toEqual(checkpoint);
-      expect((await deployment(id)).timeline.at(-1).message).toContain("Checkpoints are diagnostic only");
-      const staleRestart = await queue.add("deployment-created", { deploymentId: id, resources: [] }, { jobId: randomUUID() });
-      await until(async () => (await staleRestart.getState()) === "completed" || undefined, "interrupted duplicate skip");
-      evidence.restart = { status: (await deployment(id)).status, originalInputsPreserved: true, checkpointPreserved: true, snapshotsAfterRestart: 0 };
+      expect((await deployment(waitingFixture.deploymentId)).status).toBe("browser");
+      const resumed = await submitBrowserRun(harness, waitingFixture.deploymentId, 5);
+      expect(resumed.status).toBe("torn-down");
+      const staleRestart = await queue.add("deployment-created", { deploymentId: waitingFixture.deploymentId, resources: [] }, { jobId: randomUUID() });
+      await until(async () => (await staleRestart.getState()) === "completed" || undefined, "finished duplicate skip");
+      expect((await deployment(waitingFixture.deploymentId)).status).toBe("torn-down");
+      evidence.restart = { waitingRunSurvived: true, replayedAfterRestart: true };
 
       phase("paused operational deadline and durable capacity release");
       evidence.operationalDeadline = await checkOperationalDeadline(harness, infrastructureIds, deploymentIds);
@@ -553,15 +441,11 @@ integration("local deployment lifecycle", () => {
       socket.close();
       socket = await connectWs(retiredId);
       await fixtureJob(retiredId);
-      latest = await snapshotAfter(retiredId, 0);
+      await until(async () => (await deployment(retiredId)).status === "browser" || undefined, "teardown fixture waiting for the browser");
       await harness.request(`/infrastructure/${teardownFixture.infrastructureId}`, undefined, "DELETE", 409);
 
-      const beforeResume = evidence.wsEvents.length;
       phase("teardown");
-      await command(retiredId, "speed", { speed: 1 });
-      latest = await snapshotAfter(retiredId, latest.simulatedSeconds, beforeResume);
-      expect(latest.speed).toBe(1);
-      await command(retiredId, "teardown", {});
+      await submitBrowserRun(harness, retiredId, 5);
       await until(async () => evidence.wsEvents.some((e: Event) => e.deploymentId === retiredId && e.publishType === "deployment-torn-down") || undefined,
         "teardown WebSocket event");
       expect((await deployment(retiredId)).status).toBe("torn-down");
@@ -591,8 +475,8 @@ integration("local deployment lifecycle", () => {
         expect(race[1]!.status).toBe(409);
         const raceRun = ((await race[0]!.json()) as Event).createdDeployment;
         deploymentIds.push(raceRun.id);
-        await until(async () => (await deployment(raceRun.id)).status === "live" || undefined, "racing creation preserved");
-        await harness.request(`/deployments/${raceRun.id}/teardown`, {}, "POST", 202);
+        await until(async () => (await deployment(raceRun.id)).status === "browser" || undefined, "racing creation preserved");
+        await harness.sql.query(`UPDATE "Deployment" SET status = 'failed' WHERE id = $1`, [raceRun.id]);
       } else {
         expect(race[0]!.status).toBe(404);
         expect(race[1]!.status).toBe(200);
@@ -604,8 +488,11 @@ integration("local deployment lifecycle", () => {
       phase("worker ownership loss");
       const lossFixture = await workerFixture("Worker connection loss");
       await fixtureJob(lossFixture.deploymentId);
+      await until(async () => (await deployment(lossFixture.deploymentId)).status === "browser" || undefined, "ownership fixture waiting");
+      // A long submission, so the replay is still running when the worker loses ownership.
+      await harness.request(`/deployments/${lossFixture.deploymentId}/submit`, { stopAtSecond: 900, actions: [] }, "POST", 202);
       await until(async () => fixtureEvents(lossFixture.deploymentId, "simulation-snapshot")
-        .some((entry: Event) => entry.event.simulatedSeconds > 0) || undefined, "ownership fixture snapshot");
+        .some((entry: Event) => entry.event.simulatedSeconds > 0) || undefined, "ownership fixture replaying");
       const owner = await harness.sql.query(`SELECT pid FROM pg_locks WHERE locktype = 'advisory'
         AND classid = 186542854 AND objid = 1 AND objsubid = 2 AND granted`);
       expect(owner.rows).toHaveLength(1);
@@ -657,8 +544,6 @@ integration("local deployment lifecycle", () => {
       evidence.resilience = await checkResilienceAttempt(harness, infrastructureIds, deploymentIds);
       phase("bounded experiment traces");
       evidence.experimentTraces = await checkExperimentTraces(harness, sessions, infrastructureIds, deploymentIds);
-      phase("post-fault observation, improvement and interruption");
-      evidence.postFaultObservation = await checkPostFaultObservation(harness, sessions, infrastructureIds, deploymentIds);
       phase("cross-challenge learning history");
       evidence.learningHistory = await checkLearningHistory(harness, sessions, infrastructureIds, deploymentIds);
       phase("deliberate challenge improvements");

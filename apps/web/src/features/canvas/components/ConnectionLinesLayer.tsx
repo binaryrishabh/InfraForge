@@ -22,7 +22,7 @@ export const ConnectionLinesLayer = memo(function ConnectionLinesLayer({ resourc
         const source = byId.get(line.sourceId), target = byId.get(line.targetId);
         if (!source || !target) return null;
         const selected = selectedConnectionId === line.id;
-        // Qualitative only: a line takes the health recorded for the resource it feeds. Model 1 records no
+        // Qualitative only: a line takes the health recorded for the resource it feeds. Live views carry no
         // per-connection traffic, so nothing moves along the rails.
         const health = metrics?.[target.id]?.health;
         const tone = health === "failed" || health === "saturated" ? "fail" : health === "degraded" ? "warn" : null;

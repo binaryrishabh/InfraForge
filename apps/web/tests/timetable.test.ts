@@ -21,7 +21,7 @@ const trace = (missing: number[] = []): ExperimentTrace => ({
 });
 const stations = [{ id: "app-2", label: "app-2", type: "Virtual Machine" }];
 
-test("a Model 1 trace has rails and state, never trains, and unretained time is an Unknown window", () => {
+test("a recorded trace has rails and state, never trains, and unretained time is an Unknown window", () => {
   const model = fromExperimentTrace({ trace: trace(), experiment: experimentResult, stations })!;
   expect(model.trains).toEqual([]);
   expect(model.windows.find((w) => w.kind === "unknown")).toMatchObject({ from: 0, to: 30 });
@@ -109,5 +109,5 @@ test("the landing sample is a complete recorded run with nothing to hatch", () =
   const model = landingModel();
   expect(model.windows.filter((w) => w.kind === "unknown")).toEqual([]);
   expect(model.trains).toEqual([]);
-  expect(Object.values(model.lanes).every((l) => l.samples.length === 90)).toBe(true);
+  expect(Object.values(model.lanes).every((l) => l.samples.length === 60)).toBe(true);
 });

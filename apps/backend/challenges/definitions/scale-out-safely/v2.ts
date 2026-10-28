@@ -7,20 +7,19 @@ import { MODEL_NOTE } from "../modelNote";
 // Model 2: calibrated with Model 2 runs of the starting and reference designs (2026-10-28).
 export const scaleOutSafelyV2: ChallengeDefinition = {
   engine: "2", id: "scale-out-safely", version: 2, title: "Scale out safely", difficulty: "advanced",
-  summary: "More app servers should help, until each one opens its own database connections.",
-  concepts: ["Autoscaling", "Connection limits", "Instance catalog"],
+  summary: "Three app servers cannot keep up. Add real capacity, sized from the catalog, within the budget.",
+  concepts: ["Horizontal scaling", "Instance catalog", "Headroom"],
   story: [
     "A read-heavy service at 3.4 million requests an hour already uses a cache, but its three app servers cannot keep up.",
-    "Every app server holds its own pool of database connections. Nobody has checked how many the database accepts.",
+    "The team wants catalog instance sizes and enough app servers that none of them runs hot at full traffic.",
   ],
-  objective: "Use catalog sizes, stay within the database's connection limit and avoid saturation at the evaluation second, for $650 a month or less.",
+  objective: "Use catalog sizes and avoid saturation at the evaluation second, for $650 a month or less.",
   workload: { targetThroughput: 3_400_000, throughputUnit: "per-hour", trafficShape: "steady", peakMultiplier: 3, readWriteRatio: 0.95, payloadSize: "light" },
   workloadNote: "3,400,000 requests per hour (about 944 per second), steady, 95% reads, light payloads.",
   evaluationSeconds: 60, evaluationNote: "Checked at simulated second 60, with traffic at full rate from the start.",
   criteria: [
     { id: "checks", kind: "deployment-checks", label: "Passes the deployment checks" },
     { id: "sizes", kind: "catalog-sizes", label: "Every app server and database uses a catalog instance size" },
-    { id: "connections", kind: "database-connections", label: "Database connections stay within the instance limit at second 60" },
     { id: "capacity", kind: "no-saturation", label: "No resource saturated or failed at second 60" },
     { id: "budget", kind: "monthly-budget", label: "Monthly estimate is $650 or less", maxUsd: 650 },
   ],
@@ -30,12 +29,13 @@ export const scaleOutSafelyV2: ChallengeDefinition = {
   ],
   hints: [
     "Three generic app servers are the bottleneck: check their CPU.",
-    "More app servers spread the CPU, but each one opens its own database connections.",
-    "Use catalog sizes, add app servers until each one has headroom, and keep the database's connection count within its limit.",
+    "More app servers spread the CPU; a compute-optimized size gives each one more room.",
+    "Use catalog sizes and add app servers until each one has headroom, then check the monthly estimate.",
   ],
   debrief: [
     "Three generic app servers each run near 99% CPU and saturate; the cache (about 10%) and the database (about 14%) are fine. The fix is more app capacity.",
-    "Seven compute-optimized app servers run near 21% each. Every one keeps its own database connections, so the database's connection limit is the thing to watch as the pool grows: here it stays within its limit.",
+    "Seven compute-optimized app servers run near 21% each, well clear of saturation, for about $607 a month.",
+    "This model does not count database connections per app server; in a real system each new server also opens its own connections, so check the database's limit as the pool grows.",
     MODEL_NOTE,
   ],
   starter: starter([

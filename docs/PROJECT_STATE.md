@@ -12,16 +12,16 @@ challenges) and engineers (a free canvas).
 
 ## Engines
 
-- **Model 1** — the original tick-based simulator. It runs every public simulation today
-  (live runs, controls, reports, the 12 guided challenges). It is being replaced.
+- **Model 1** — the original tick-based simulator, removed in October 2026. Reports of its
+  runs stay readable and are never relabelled; its runs cannot be rerun or improved.
 - **Model 2** — an event-by-event causal engine (`packages/simulation/src/model2`): every
   request is followed through load balancer, application, database session, transaction and
   outcome, deterministically, with provenance and honest "unknown" values. Mechanisms exist
   for all 11 component types.
-- **Plan (locked 2026-10-28):** Model 2 replaces Model 1 for every new run before the
-  public launch on **6 November 2026**; Model 1 code is then removed. Runs execute in
-  the browser; the server re-runs each finished run's inputs for the official result.
-  Old Model 1 runs and reports stay readable and are never relabelled.
+- **How runs work:** every new run, rerun and challenge attempt is a Model 2 run. It executes
+  in the browser; when it ends, the server replays its inputs and actions for the official
+  result. Eight guided challenges run on Model 2; cache-failure and after-the-cache-returns
+  are retired until Model 2 models database connection pools. Public launch: **6 November 2026**.
 
 ## Production
 

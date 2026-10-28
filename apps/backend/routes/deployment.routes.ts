@@ -50,7 +50,8 @@ deploymentRouter.get("/capabilities", (_req, res) => {
 });
 
 deploymentRouter.get("/live", async (_req, res) => {
-  const rows = await prisma.deployment.findMany({ where: { status: "live", ownerId: res.locals.userId }, orderBy: { updatedAt: "desc" } });
+  // Includes runs still running in the browser.
+  const rows = await prisma.deployment.findMany({ where: { status: { in: ["live", "browser"] }, ownerId: res.locals.userId }, orderBy: { updatedAt: "desc" } });
   res.json({ success: true, deployments: rows.map((run) => ({ id: run.id, infrastructureId: run.infrastructureId,
     infrastructureName: run.runName ?? "Unnamed legacy run", resourceCount: run.resourceCount, challengeId: run.challengeId,
     status: run.status, createdAt: run.createdAt, updatedAt: run.updatedAt })) });

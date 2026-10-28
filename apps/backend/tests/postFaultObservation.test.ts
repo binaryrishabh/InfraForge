@@ -1,65 +1,45 @@
 import { expect, test } from "bun:test";
-import { DeploymentChaosNames as Fault, ResourceHealth } from "@infraforge/domain/resource";
-import { createInitialState } from "@infraforge/simulation/engine";
-import { captureRunInputs, engineSeed } from "../deployments/runInputs";
+import { DeploymentChaosNames as Fault } from "@infraforge/domain/resource";
 import { recordedExperiment } from "../challenges/experiment";
-import { challengeSeed, specHash } from "../challenges/registry";
+import { specHash } from "../challenges/registry";
 import { validateChallengeVersions } from "../challenges/validate";
 import { improvementSource } from "../challenges/improvements";
 import { classifyComparison } from "../comparison/classify";
 import { buildRunReport } from "../reports/report";
 import { sampleHash } from "../evidence/contract";
-import { createEvidenceBuffer } from "../evidence/capture";
-import { advanceTickBatch, experimentDue, reachedMatchedStop } from "../simulator/tickBatch";
-import { applyAction } from "../simulator/actionApplication";
-import { actionCompletion } from "../simulator/actionCompletion";
-import { displaySimulationLogs } from "../simulator/logs";
-import type { SimulationInstance } from "../simulator/instance";
+import type { CapturedEvidence } from "../evidence/contract";
+import type { StoredRun } from "../reports/report";
 import { answers, attemptReport, attemptRow, legacyDefinition as definition, REFERENCE } from "./challengeHarness";
-import { observeCandidate } from "./recoveryExploration";
 
 const d = definition("after-the-cache-returns"), plan = recordedExperiment(d)!;
 const prediction = answers(d, { "target-health": "healthy", "overall-health": "saturated", "scale-out": "yes" });
-const row = () => attemptRow(d, d.starter!, prediction);
 
-test("presentation translates model log shorthand without changing engine behavior", () => {
-  const logs = [
-    { timestamp: "now", severity: "info" as const, resourceId: "cache", source: "chaos", message: "cache recovered from crash" },
-    { timestamp: "now", severity: "info" as const, resourceId: "cache", source: "app", message: "utilization recovered on cache — cpu 4.5%" },
-    { timestamp: "now", severity: "info" as const, resourceId: "lb", source: "nginx", message: "lb recovered — backends healthy, 502s stopped" },
-  ];
-  const displayed = displaySimulationLogs(logs);
-  expect(displayed[0]?.message).toContain("injected fault ended");
-  expect(displayed[1]?.message).toBe("cache recorded Healthy — CPU 4.5%");
-  expect(displayed[2]?.message).toContain("previous-tick measurements");
-  expect(displayed.some((l) => /recovered|502s stopped/.test(l.message))).toBe(false);
-  expect(logs[0]?.message).toBe("cache recovered from crash");
-});
-
-test("published post-fault exercise has a fixed hash, failing starter and passing one-change reference", () => {
-  expect(specHash(d)).toBe("4511ec082bcd0127140ea1689ccdc0fb5179362f891645ccef6008dde0e645e6");
-  const starter = attemptReport(d, d.starter!, prediction);
-  const reference = attemptReport(d, REFERENCE[d.id]!, answers(d, { "target-health": "healthy", "overall-health": "healthy", "scale-out": "yes" }));
-  expect(starter.challenge?.status).toBe("not-met"); expect(reference.challenge?.status).toBe("met");
-  for (const report of [starter, reference]) {
-    expect(report.challenge?.predictions.map((p) => p.outcome)).toEqual(["matched", "matched", "matched"]);
-    expect(report.challenge?.experiment).toMatchObject({ state: "ended", appliedSimulatedSeconds: 60, endedSimulatedSeconds: 90 });
-    expect(report.experimentTrace).toMatchObject({ status: "complete", sampleCount: 106, expectedStart: 30, expectedEnd: 135 });
-    expect(report.experimentTrace?.observation).toMatchObject({ status: "samples-retained", sampleCount: 45,
-      target: { firstSample: { second: 91, health: "healthy" }, firstHealthy: { second: 91, completeSinceFaultEnd: true } },
-      system: { firstHealthy: { second: 92, completeSinceFaultEnd: true } } });
-  }
-  expect(starter.experimentTrace?.observation?.system.healthAtEvaluation).toBe("saturated");
-  expect(reference.experimentTrace?.observation?.system.healthAtEvaluation).toBe("healthy");
-  const point = (second: number) => starter.experimentTrace!.points.find((p) => p.simulatedSeconds === second)!;
-  expect(point(90).resources.find((r) => r.id === "cache")?.health).toBe("failed");
-  expect(point(91).resources.find((r) => r.id === "cache")?.health).toBe("healthy");
-  expect(point(91).resources.find((r) => r.id === "db")?.health).toBe("saturated");
-  expect(point(125).pools[0]?.pending?.secondsRemaining).toBe(1);
-  expect(point(126).pools[0]?.currentReplicas).toBe(6);
-  expect(point(127).resources.find((r) => r.id === "db")).toMatchObject({ health: "saturated", connections: 120 });
-  expect(starter.guidedReview?.cues.map((c) => c.title)).toEqual(["Expectation", "Fault", "After the fault", "Evaluation", "Unknown"]);
-});
+/* A recorded attempt of the retired after-the-cache-returns exercise. Its reports stay readable, so the observation
+logic is checked on records built here, not on an engine: the cache crashes at 60 and is down until the fault ends at
+90; at 91 the cache is back and the database is briefly saturated; from 92 the system is healthy. The starter's
+database saturates again from 127; the reference stays healthy through the evaluation at 135. */
+function recorded(design = d.starter!, last = 135): StoredRun {
+  const row = attemptRow(d, design, prediction, { stopAt: 1 });
+  const starter = design === d.starter;
+  const sample = (second: number): CapturedEvidence => {
+    const cache = second > 60 && second <= 90 ? "failed" as const : "healthy" as const;
+    const db = second === 91 || (starter && second >= 127) ? "saturated" as const : "healthy" as const;
+    const overall = cache === "failed" ? "critical" as const : db === "saturated" ? "saturated" as const : "healthy" as const;
+    const payload = { version: 2 as const, topologyRevision: 0, overallHealth: overall, loadFraction: 1, targetLoadFraction: 1,
+      resources: [{ id: "cache", health: cache, cpu: cache === "failed" ? null : 20, memory: null }, { id: "db", health: db, cpu: db === "saturated" ? 97 : 60, memory: null }],
+      pools: [{ id: "lb", currentReplicas: 4, baseReplicas: 4, pending: null }] };
+    return { simulatedSeconds: second, sampledAt: new Date(), payload, hash: sampleHash(payload) };
+  };
+  const evidenceSamples = Array.from({ length: last - 29 }, (_, i) => sample(30 + i));
+  const now = new Date(), parameters = { type: plan.fault, resourceId: plan.targetResourceId, trigger: "challenge-experiment" };
+  const fault = { id: "fault", deploymentId: row.id, sequence: 1, kind: "chaos", parameters, status: last >= 90 ? "completed" : "running", requestedAt: now, appliedAt: now,
+    appliedSimulatedSeconds: 60, completedAt: last >= 90 ? now : null, completedSimulatedSeconds: last >= 90 ? 90 : null, failureReason: null,
+    outcome: { durationSimulatedSeconds: 30, baselineOverallHealth: "healthy", ...(last >= 90 ? { faultEnded: true, observedOverallHealth: "critical" } : {}) } };
+  const final = evidenceSamples.at(-1)!.payload;
+  return { ...row, evidenceSamples, actions: [fault] as StoredRun["actions"],
+    terminalSnapshot: { ...(row.terminalSnapshot as object), simulatedSeconds: last, overallHealth: final.overallHealth } };
+}
+const row = () => recorded();
 
 test("authoring keeps legacy rules and rejects implicit, unsupported or unretainable observation windows", () => {
   const problems = (patch: Partial<typeof d>) => { const def = { ...d, ...patch }; return validateChallengeVersions([def], { [`${def.id}@1`]: specHash(def) }); };
@@ -69,7 +49,7 @@ test("authoring keeps legacy rules and rejects implicit, unsupported or unretain
   expect(problems({ experiment: { ...d.experiment!, fault: Fault.MemoryLeak, postFaultObservationSeconds: 60 }, evaluationSeconds: 160 }).join(" ")).toContain("121 retained points");
   const legacy = definition("cache-failure");
   expect(legacy.experiment).not.toHaveProperty("postFaultObservationSeconds");
-  expect(attemptReport(legacy, legacy.starter!, answers(legacy, { "baseline-health": "healthy", "database-health": "saturated" })).experimentTrace?.observation?.status).toBe("not-applicable");
+  expect(attemptReport(legacy, legacy.starter!, answers(legacy, { "baseline-health": "healthy", "database-health": "saturated" }), { stopAt: 1 }).experimentTrace?.observation?.status).toBe("not-applicable");
 });
 
 test("sample and resource gaps qualify first Healthy facts independently; a later gap does not erase an earlier fact", () => {
@@ -125,7 +105,7 @@ test("no evidence, never Healthy and incomplete evidence are different observati
 });
 
 test("early stop and worker interruption during observation keep partial facts without evaluating or resuming", () => {
-  const early = attemptRow(d, d.starter!, prediction, { stopAt: 95 });
+  const early = recorded(d.starter!, 95);
   const report = buildRunReport(early);
   expect(report.challenge?.status).toBe("not-evaluated");
   expect(report.experimentTrace).toMatchObject({ status: "incomplete", actualLast: 95, missingRanges: [{ start: 96, end: 135 }] });
@@ -137,15 +117,13 @@ test("early stop and worker interruption during observation keep partial facts w
   expect(interrupted.experimentTrace?.points).toEqual(report.experimentTrace?.points);
   expect(interrupted.experimentTrace?.moments?.evaluation).toBeNull();
   const expensive = (design: NonNullable<typeof d.starter>) => ({ ...design, resources: design.resources.map((r) => r.id === "db" ? { ...r, skuId: "db.m5.2xlarge" } : r) });
-  const legacy = definition("cache-failure");
-  expect(attemptReport(legacy, expensive(legacy.starter!), answers(legacy, { "baseline-health": "healthy", "database-health": "healthy" }), { stopAt: 75 }).challenge?.status).toBe("not-met");
-  const stopped = attemptReport(d, expensive(d.starter!), prediction, { stopAt: 95 });
+  const stopped = buildRunReport(recorded(expensive(d.starter!), 95));
   expect(stopped.challenge?.criteria.some((c) => c.status === "not-met")).toBe(true);
   expect(stopped.challenge?.status).toBe("not-evaluated");
 });
 
 test("Compare and improvement preserve observation conditions and present sample facts without a timing winner", () => {
-  const a = row(), b = attemptRow(d, REFERENCE[d.id]!, prediction);
+  const a = row(), b = recorded(REFERENCE[d.id]!);
   b.createdAt = new Date(a.createdAt.getTime() + 1000);
   const comparison = classifyComparison(a, b);
   expect(comparison.challengeConditions).toBe("same"); expect(comparison.designChangeReview?.count).toBe(1);
@@ -153,39 +131,3 @@ test("Compare and improvement preserve observation conditions and present sample
   expect(comparison.experimentEvidence?.traces.map((t) => t.observation?.system.healthAtEvaluation)).toEqual(["saturated", "healthy"]);
   expect(() => improvementSource(a, d.id)).toThrow("retired Model 1");
 });
-
-for (const speed of [1, 10, 60]) test(`${speed}x captures every post-fault second and stops exactly at 135 without overshoot`, async () => {
-  for (const design of [d.starter!, REFERENCE[d.id]!]) {
-    const input = captureRunInputs(design, d.workload, challengeSeed(d));
-    const instance: SimulationInstance = { state: createInitialState("batch", input.resources, input.connectionLines, input.workloadProfile, engineSeed(input.seed)),
-      tickCount: 0, pendingLogs: [], speed, lastCheckpointAt: 0, accumulatedCostUsd: 0, topology: input, topologyRevision: 0,
-      actions: new Map(), acknowledge: null, metricsComputedAt: null, metricsTopologyRevision: 0,
-      autoStopAtSimulatedSeconds: 135, experiment: { plan, phase: "scheduled" }, evidence: createEvidenceBuffer(plan, 135) };
-    while (!experimentDue(instance)) await advanceTickBatch(instance, async () => {});
-    expect(instance.state!.simulatedSeconds).toBe(60);
-    applyAction(instance, "fault", { kind: "chaos", parameters: { type: Fault.Crash, resourceId: "cache", trigger: "challenge-experiment" } });
-    instance.experiment!.phase = "applied";
-    const completed: number[] = [];
-    while (!reachedMatchedStop(instance)) await advanceTickBatch(instance, async (r) => {
-      const running = r.actions.get("fault");
-      if (running && actionCompletion(r, running)) { completed.push(r.state!.simulatedSeconds); r.actions.delete("fault"); }
-    });
-    await advanceTickBatch(instance, async () => {});
-    expect(completed).toEqual([90]); expect(instance.state!.simulatedSeconds).toBe(135);
-    const expected = attemptRow(d, design, prediction).evidenceSamples!;
-    expect(instance.evidence!.pending.map((p) => p.hash)).toEqual(expected.map((p) => p.hash));
-  }
-});
-
-for (const fault of Object.values(Fault))
-  test(`model 1 ${fault}: last active metrics precede removal; next tick is actual post-fault evidence`, () => {
-    const result = observeCandidate(d.starter!, { fault, target: "cache", rps: 300, seed: challengeSeed(d) });
-    const last = result.samples.find((p) => p.second === result.end)!;
-    expect(last.active).toBe(0);
-    if (fault === "crash") expect(last.metrics.cache?.health).toBe(ResourceHealth.FAILED);
-    if (fault === "disk-failure") expect(last.metrics.cache?.cpu).toBeGreaterThan(95);
-    if (fault === "memory-leak") expect(last.metrics.cache?.memory).toBe(100);
-    const next = result.samples.find((p) => p.second === result.end + 1)!;
-    expect(next.active).toBe(0); expect(next.metrics.cache?.health).toBe(ResourceHealth.HEALTHY);
-    expect(next.metrics.cache?.memory).toBeLessThan(70);
-  });

@@ -41,7 +41,7 @@ export function LandingPage() {
           <div>
             <HeroInstrument />
             <p className="mt-3 max-w-[70ch] text-xs leading-relaxed text-ink-3">
-              Recorded by the Model 1 simulator from the challenge's unchanged starting design, its fixed workload and seed
+              Recorded by the simulator from the challenge's unchanged starting design, its fixed workload and seed
               ({landingSample.seed}): the run any first, unchanged attempt at “{landingSample.challenge.title}” records.
             </p>
           </div>

@@ -15,6 +15,6 @@ export function DesignChangeSummary({ review }: { review: DesignChangeReview }) 
     {d.addedConnections.map((c) => <li key={`add:${c.sourceId}:${c.targetId}:${c.port}`}>Connection added: {c.sourceId} → {c.targetId}, port {c.port}</li>)}
     {d.removedConnections.map((c) => <li key={`remove:${c.sourceId}:${c.targetId}:${c.port}`}>Connection removed: {c.sourceId} → {c.targetId}, port {c.port}</li>)}
     {d.resourceOrder && !d.added.length && !d.removed.length && <li>Starting resource order changed: {d.resourceOrder.later.join(" → ")}. Model-1 random draws may shift.</li>}
-    {d.connectionOrder && !d.addedConnections.length && !d.removedConnections.length && <li>Connection order changed. Model 1 uses this order for routing and pool templates.</li>}
+    {d.connectionOrder && !d.addedConnections.length && !d.removedConnections.length && <li>Connection order changed.</li>}
   </ul>;
 }

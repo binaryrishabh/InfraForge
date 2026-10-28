@@ -13,4 +13,4 @@ test("the landing sample is the engine's output for the unchanged challenge atte
   const target = fresh.stations.findIndex((s) => s.id === fresh.fault.target);
   expect(fresh.points[fresh.fault.at - 1]!.resources[target]![0]).not.toBe(3);
   expect(fresh.points[fresh.fault.at]!.resources[target]![0]).toBe(3);
-});
+}, 60000);
