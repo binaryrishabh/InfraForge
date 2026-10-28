@@ -17,8 +17,8 @@ export async function checkLearningHistory(harness: LocalHarness, sessions: Sess
   // Synthetic, inactive records in this owned fixture DB; no worker jobs or simulated results are invented.
   const inserted = await harness.sql.query(`INSERT INTO "Deployment" (id,"infrastructureId","ownerId","challengeId","challengeVersion","challengeSpecHash",
     "challengePrediction","predictionSubmittedAt","evaluationStopAtSimulatedSeconds",status,"runInputs",seed,"workloadProfile","updatedAt")
-    SELECT gen_random_uuid()::text,$1,$2,$3,1,$4,$5,now(),$6,'pending',$7,$8,$9,now() FROM generate_series(1,301) RETURNING id`,
-  [workspace, owner, d.definition.id, d.hash, { answers: { database: "healthy", busiest: "Database" }, reasoning: null }, d.definition.evaluationSeconds, input, input.seed, input.workloadProfile]);
+    SELECT gen_random_uuid()::text,$1,$2,$3,$10,$4,$5,now(),$6,'pending',$7,$8,$9,now() FROM generate_series(1,301) RETURNING id`,
+  [workspace, owner, d.definition.id, d.hash, { answers: { database: "healthy", busiest: "Database" }, reasoning: null }, d.definition.evaluationSeconds, input, input.seed, input.workloadProfile, d.definition.version]);
   const ids = inserted.rows.map((r) => r.id as string); runs.push(...ids);
   await harness.sql.query('UPDATE "Deployment" SET status=\'failed\',"runtimeActive"=false WHERE id=ANY($1::text[])', [ids]);
   const listed = (await harness.request("/challenges")).challenges as ChallengeSummary[];
@@ -41,7 +41,7 @@ export async function checkLearningHistory(harness: LocalHarness, sessions: Sess
   expect(history.attempts.every((a) => a.challengeId)).toBe(true); expect(history.nextCursor).not.toBeNull();
   const next: LearningHistory = (await harness.request(`/challenges/attempt-history?limit=3&before=${history.nextCursor}`)).history;
   expect(next.attempts.some((a) => history.attempts.some((b) => a.runId === b.runId))).toBe(false);
-  expect((await harness.request(`/challenges/${d.definition.id}`)).challenge.attempts.every((a: { version: number }) => a.version === 1)).toBe(true);
+  expect((await harness.request(`/challenges/${d.definition.id}`)).challenge.attempts.every((a: { version: number }) => a.version === d.definition.version)).toBe(true);
   const bob = await sessions.create();
   try {
     harness.cookie = bob.cookie;
