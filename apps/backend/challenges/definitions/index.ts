@@ -9,6 +9,14 @@ import { loseAnAppServerV1 } from "./lose-an-app-server/v1";
 import { cacheFailureV1 } from "./cache-failure/v1";
 import { headroomUnderCpuPressureV1 } from "./headroom-under-cpu-pressure/v1";
 import { afterTheCacheReturnsV1 } from "./after-the-cache-returns/v1";
+import { loseAnAppServerV2 } from "./lose-an-app-server/v2";
+import { firstProductionApiV2 } from "./first-production-api/v2";
+import { secureTheEdgeV2 } from "./secure-the-edge/v2";
+import { cacheMattersV2 } from "./cache-matters/v2";
+import { writeHeavyV2 } from "./write-heavy/v2";
+import { scaleOutSafelyV2 } from "./scale-out-safely/v2";
+import { peakTrafficV2 } from "./peak-traffic/v2";
+import { headroomUnderCpuPressureV2 } from "./headroom-under-cpu-pressure/v2";
 
 /* Every published version of every challenge, calibrated against simulation model
 "1" and catalog "2026-08". Versions are immutable and never removed: historical
@@ -25,4 +33,13 @@ export const CHALLENGE_VERSIONS: readonly ChallengeDefinition[] = [
   cacheFailureV1,
   headroomUnderCpuPressureV1,
   afterTheCacheReturnsV1,
+  // Model 2 versions (calibrated 2026-10-28).
+  firstProductionApiV2,
+  secureTheEdgeV2,
+  cacheMattersV2,
+  writeHeavyV2,
+  scaleOutSafelyV2,
+  peakTrafficV2,
+  loseAnAppServerV2,
+  headroomUnderCpuPressureV2,
 ];

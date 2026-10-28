@@ -8,7 +8,7 @@ test("learning facts preserve the recorded version, raw requirements and separat
   const row = attemptRow(d, d.starter!, prediction), result = learningAttempt(row);
   expect(result).toMatchObject({ version: 1, category: "resilience", fault: "cpu-spike", status: "not-met", metCount: 2, total: 3,
     predictionMatched: 4, predictionKnown: 4, predictionTotal: 4, canRetry: true });
-  expect(learningAttempt({ ...row, challengeVersion: 2, challengeSpecHash: "b".repeat(64) })).toMatchObject({ version: 2, status: "unavailable", canRetry: false });
+  expect(learningAttempt({ ...row, challengeVersion: 99, challengeSpecHash: "b".repeat(64) })).toMatchObject({ version: 99, status: "unavailable", canRetry: false });
   expect(() => learningAttempt({ ...row, challengeId: null })).toThrow("challenge attempt");
 });
 
