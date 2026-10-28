@@ -151,3 +151,15 @@ test("a peak window can repeat, like a 2-second burst every 6 seconds", () => {
   for (const s of [3, 4, 8, 9, 14]) expect(offered[s - 1]).toBeLessThanOrEqual(102);
 });
 
+test("a crashed cache shows failed; cache misses and refused stale fills are not errors", () => {
+  const f = fixture(16, 100), nodes = f.design.resources.map((r) => r.id);
+  const crash = { id: "c1", kind: "crash" as const, node: "cache", durationUs: 4_000_000, restartUs: 1_000_000, atUs: 8_000_001 };
+  const compiled = compileProduct(f.design, withTimeline(f.contract, [crash]));
+  if (!compiled.ok) throw new Error("refused");
+  const run = createLiveModel2(compiled.value, nodes);
+  const seconds = Array.from({ length: 16 }, () => { run.advanceSecond(); return run.project(); });
+  expect(seconds.slice(0, 8).every((s) => s.metrics.cache!.health === "healthy")).toBe(true);
+  expect(seconds.slice(9, 12).every((s) => s.metrics.cache!.health === "failed")).toBe(true);
+  expect(seconds[15]!.metrics.cache!.health).toBe("healthy");
+});
+

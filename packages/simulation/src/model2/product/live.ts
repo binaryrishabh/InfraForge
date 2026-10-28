@@ -43,7 +43,9 @@ export function createLiveModel2(compiled: CompiledProduct, nodeIds: string[]) {
   const runtime = createProductModel2(compiled, undefined, observe);
   // A node owns its own resource and every replica or helper named after it (vm#0, vm#0/aside).
   const owner = (resourceId: string) => nodeIds.find((n) => resourceId === n || resourceId.startsWith(`${n}#`) || resourceId.startsWith(`${n}/`));
-  const resources = (compiled.input.resources as Array<{ id: string; cores?: { kind: string; value?: number }; execution?: { cores?: { kind: string; value?: number } } }>);
+  const resources = (compiled.input.resources as Array<{ id: string; kind?: string; cores?: { kind: string; value?: number }; execution?: { cores?: { kind: string; value?: number } } }>);
+  // A cache refuses stale cache-aside fills by design; callers fall back, so only its rejections count as errors.
+  const caches = new Set(resources.filter((r) => r.kind === "cache").map((r) => r.id));
   // Authored cores per runtime resource, for resources whose CPU is reported as consumed core-time only.
   const cores = new Map<string, number>();
   for (const r of resources) {
@@ -92,7 +94,7 @@ export function createLiveModel2(compiled: CompiledProduct, nodeIds: string[]) {
         let used = 0, available = 0, knownCpu = false, completed = 0, received = 0, failed = 0, queued = 0, serving = 0;
         for (const id of ids) {
           const r = runtime.inspect(id) as Station, cpu = r.compute?.cpu, p = previous.get(id);
-          const c: Counters = { received: r.received, completed: r.completed, failed: r.failed + r.rejected, queued: r.queued, serving: r.serving,
+          const c: Counters = { received: r.received, completed: r.completed, failed: (caches.has(id) ? 0 : r.failed) + r.rejected, queued: r.queued, serving: r.serving,
             used: cpu ? cpu.appCoreUs + cpu.competitorCoreUs : 0, available: cpu ? cpu.availableCoreUs : null, consumed: r.consumedCoreUs };
           if (c.available !== null) { knownCpu = true; used += c.used - (p?.used ?? 0); available += c.available - (p?.available ?? 0); }
           else if (cores.has(id)) { knownCpu = true; used += c.consumed - (p?.consumed ?? 0); available += cores.get(id)! * (now - previousAt); }
@@ -103,7 +105,8 @@ export function createLiveModel2(compiled: CompiledProduct, nodeIds: string[]) {
         }
         const cpu = knownCpu && available > 0 ? Math.min(100, (used / available) * 100) : null;
         const errorRate = ratio(failed, received), pool = ready.get(node);
-        const down = pool ? pool.ready === 0 : false;
+        // A pool is down with no ready replica; any other node when its own resource is down (crashed).
+        const down = pool ? pool.ready === 0 : !runtime.up(node);
         metrics[node] = { cpu, memory: null, connections: queued + serving, rps: completed, errorRate,
           health: down ? "failed" : (cpu ?? 0) >= 95 || (errorRate ?? 0) > 0.05 ? "saturated" : (cpu ?? 0) >= 80 || (errorRate ?? 0) > 0.01 ? "degraded" : "healthy",
           ...(pool ? { replicas: pool } : {}) };
