@@ -25,7 +25,7 @@ import { workerDatabaseUrl, verifyWorkerSession } from "./infra/workerConnection
 import { assertRuntimeSchema } from "./release/runtime";
 import { createReadiness } from "./health/readiness";
 import { retireInterruptedRuns, QUARANTINED_RUN_MESSAGE } from "./deployments/restartPolicy";
-import { readRunInputs, assertSimulationContext, runsOnModel2 } from "./deployments/runInputs";
+import { readRunInputs, assertSimulationContext } from "./deployments/runInputs";
 import { runSecurityScan } from "./stages/securityScan.stages";
 import { runCostEstimation } from "./stages/costEstimation.stages";
 import { OutboxBullMQStatus } from "./types/OutboxBullMQStatus.enum";
@@ -388,21 +388,10 @@ const worker = new Worker(
       );
       if (!costPassed) return;
 
-      // A Model 2 run executes in the browser. It waits here, costing the server nothing, until the browser submits.
-      if (runsOnModel2(inputs)) {
-        const waiting = await prisma.deployment.updateMany({ where: { id: deploymentId, status: DeploymentStatus.RUNNING },
-          data: { status: DeploymentStatus.BROWSER } });
-        if (waiting.count === 1) await publishDeploymentLive(deploymentId, resources.length);
-        return;
-      }
-
-      // Construct from the same immutable inputs before making the run LIVE.
-      if (!(await startSimulation(deploymentId))) return;
-
-      // broadcasts to Redis pub/sub. Websocket server will forward it to frontend.
-      // Publish that current deployment is now live
-      await publishDeploymentLive(deploymentId, resources.length);
-      console.log(`Deployment is LIVE ${deploymentId}`);
+      // The run executes in the browser. It waits here, costing the server nothing, until the browser submits.
+      const waiting = await prisma.deployment.updateMany({ where: { id: deploymentId, status: DeploymentStatus.RUNNING },
+        data: { status: DeploymentStatus.BROWSER } });
+      if (waiting.count === 1) await publishDeploymentLive(deploymentId, resources.length);
     } catch (err: any) {
       if (err instanceof DelayedError) throw err;
       const status = deploymentFailureStatus(job.attemptsMade, job.opts.attempts);

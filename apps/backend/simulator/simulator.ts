@@ -2,8 +2,7 @@ import { operationalLimits, runtimeHorizon, lifetimeExpired } from "../deploymen
 import { executionAllowance } from "../capabilities/policy";
 import { prisma } from "../lib/prisma";
 import { publishDeploymentFailed, publishSimulationSnapshot } from "../infra/pubsub";
-import { createInitialState } from "@infraforge/simulation/engine";
-import { engineSeed, readRunInputs, assertSimulationContext, runsOnModel2 } from "../deployments/runInputs";
+import { readRunInputs, assertSimulationContext } from "../deployments/runInputs";
 import { ActionRefused, createModel2Engine } from "./model2Engine";
 import { buildModel2Contract } from "./contractBuilder";
 import { SubmissionSchema } from "../browserRuns/submission";
@@ -46,27 +45,25 @@ async function initialize(deploymentId: string) {
   assertSimulationContext(input);
   const allowance = executionAllowance(deployment.autoStopAtSimulatedSeconds ?? deployment.evaluationStopAtSimulatedSeconds);
   const horizon = runtimeHorizon(allowance.durationSeconds);
-  let engine: Pick<SimulationInstance, "state" | "model2">;
-  if (runsOnModel2(input)) {
-    // A design Model 2 cannot run fails now with its reason; it is not retried.
-    try { engine = { model2: createModel2Engine(input, horizon, buildModel2Contract) }; }
-    catch (error) {
-      if (!(error instanceof ActionRefused)) throw error;
-      const failed = await prisma.deployment.updateMany({ where: { id: deploymentId, status: "running", runtimeActive: false },
-        data: { status: "failed", timeline: [...(Array.isArray(deployment.timeline) ? deployment.timeline : []),
-          { timestamp: new Date().toISOString(), event: "Deployment Failed", message: error.message }] } });
-      if (failed.count === 1) await publishDeploymentFailed(deploymentId, error.message);
-      return false;
-    }
-  } else engine = { state: createInitialState(deploymentId, input.resources, input.connectionLines, input.workloadProfile, engineSeed(input.seed)) };
+  let model2: SimulationInstance["model2"];
+  // A design Model 2 cannot run fails now with its reason; it is not retried.
+  try { model2 = createModel2Engine(input, horizon, buildModel2Contract); }
+  catch (error) {
+    if (!(error instanceof ActionRefused)) throw error;
+    const failed = await prisma.deployment.updateMany({ where: { id: deploymentId, status: "running", runtimeActive: false },
+      data: { status: "failed", timeline: [...(Array.isArray(deployment.timeline) ? deployment.timeline : []),
+        { timestamp: new Date().toISOString(), event: "Deployment Failed", message: error.message }] } });
+    if (failed.count === 1) await publishDeploymentFailed(deploymentId, error.message);
+    return false;
+  }
   // A recorded plan that cannot be read is never guessed at: the fault is not scheduled and the attempt is not judged.
   const plan = deployment.challengeExperiment == null ? null : readRecordedExperiment(deployment.challengeExperiment);
   // A browser run's replay runs at full speed (within the batch budget) to the second the browser stopped at.
-  const submission = engine.model2 && deployment.browserSubmission != null ? SubmissionSchema.parse(deployment.browserSubmission) : null;
+  const submission = deployment.browserSubmission != null ? SubmissionSchema.parse(deployment.browserSubmission) : null;
   const started = await prisma.deployment.updateMany({ where: { id: deploymentId, status: "running", runtimeActive: false },
     data: { status: "live", runtimeActive: true } });
   if (started.count !== 1) return false;
-  const instance: SimulationInstance = { ...engine, tickCount: 0, pendingLogs: [], speed: submission ? REPLAY_SPEED : 1,
+  const instance: SimulationInstance = { model2, tickCount: 0, pendingLogs: [], speed: submission ? REPLAY_SPEED : 1,
     lastCheckpointAt: Date.now(), accumulatedCostUsd: 0,
     topology: { resources: input.resources, connectionLines: input.connectionLines }, topologyRevision: 0,
     actions: new Map(), acknowledge: null, metricsComputedAt: null, metricsTopologyRevision: 0,

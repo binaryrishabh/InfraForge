@@ -114,7 +114,7 @@ test("the run loop drives a Model 2 run: ticks, snapshots, actions and version 2
 
 test("a challenge's starting design runs on Model 2 through the design adapter, for the run's own length and seed", () => {
   const def = definition("lose-an-app-server");
-  const input = captureRunInputs({ ...def.starter!, layoutVersion: 3 }, def.workload, "seed-a", "2");
+  const input = captureRunInputs({ ...def.starter!, layoutVersion: 3 }, def.workload, "seed-a");
   const run = createModel2Engine(input, 40, buildModel2Contract);
   expect(run.horizonSeconds).toBe(40);
   for (let s = 0; s < 20; s++) run.advance();
@@ -145,7 +145,7 @@ test("a load balancer shares light traffic between its app servers in turn", () 
   const design = { resources: [["dns", "DNS"], ["lb", "Load Balancer"], ["vm1", "Virtual Machine"], ["vm2", "Virtual Machine"], ["db", "Database"]]
     .map(([id, type], x) => ({ id, type: type as never, x, y: 0 })), connectionLines: [["dns", "lb"], ["lb", "vm1"], ["lb", "vm2"], ["vm1", "db"], ["vm2", "db"]]
     .map(([sourceId, targetId]) => ({ id: `${sourceId}-${targetId}`, sourceId: sourceId!, targetId: targetId!, sourceType: "", targetType: "", port: 443 })) };
-  const run = createModel2Engine(captureRunInputs({ ...design, layoutVersion: 3 }, def.workload, "seed-b", "2"), 20, buildModel2Contract);
+  const run = createModel2Engine(captureRunInputs({ ...design, layoutVersion: 3 }, def.workload, "seed-b"), 20, buildModel2Contract);
   for (let s = 0; s < 10; s++) run.advance();
   const { vm1, vm2 } = run.view().metrics;
   expect(Math.abs(vm1!.rps! - vm2!.rps!)).toBeLessThanOrEqual(2);
@@ -155,8 +155,8 @@ test("a load balancer shares light traffic between its app servers in turn", () 
 test("every challenge's starting design runs on Model 2 at its workload", () => {
   for (const { id, version } of CHALLENGE_VERSIONS.filter((c) => c.version === 1)) {
     const def = findChallenge(id, version)!.definition;
-    if (!def.starter) { expect(() => createModel2Engine(captureRunInputs({ resources: [], connectionLines: [], layoutVersion: 3 }, def.workload, "s", "2"), 10, buildModel2Contract)).toThrow(ActionRefused); continue; }
-    const run = createModel2Engine(captureRunInputs({ ...def.starter, layoutVersion: 3 }, def.workload, "s", "2"), 10, buildModel2Contract);
+    if (!def.starter) { expect(() => createModel2Engine(captureRunInputs({ resources: [], connectionLines: [], layoutVersion: 3 }, def.workload, "s"), 10, buildModel2Contract)).toThrow(ActionRefused); continue; }
+    const run = createModel2Engine(captureRunInputs({ ...def.starter, layoutVersion: 3 }, def.workload, "s"), 10, buildModel2Contract);
     for (let s = 0; s < 10; s++) run.advance();
     expect(run.view().traffic.completedRps).toBeGreaterThan(0);
   }

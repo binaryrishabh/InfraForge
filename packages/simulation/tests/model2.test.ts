@@ -2,9 +2,7 @@ import { expect, test } from "bun:test";
 import { createModel2 } from "../src/model2/run";
 import { EventKernel, micros } from "../src/model2/time";
 import { keyedUniform, philox } from "../src/model2/random";
-import { resolveModel, ACTIVE_MODEL_VERSION } from "../src/model2/registry";
-import { tick } from "../src/engine";
-import { SIMULATION_MODEL_VERSION } from "../src/tuning";
+import { resolveModel } from "../src/model2/registry";
 import { proofInput, setProofValue } from "./model2Fixture";
 import { exploreProof, propertyProof } from "./model2Exploration";
 import { validateLedger } from "../src/reality/ledger";
@@ -15,10 +13,8 @@ function run(input = proofInput(), speed = 1) {
   for (let at = 0; at < model.horizon; at += speed * 100000) model.advanceTo(Math.min(model.horizon, at + speed * 100000));
   return model.evidence();
 }
-test("only Model 1 is published; Model 2 dispatch is explicit and unknown models are rejected", () => {
-  expect(ACTIVE_MODEL_VERSION).toBe("1"); expect(SIMULATION_MODEL_VERSION).toBe("1");
-  const legacy = resolveModel("1"); expect(legacy.version).toBe("1");
-  if (legacy.version === "1") expect(legacy.tick).toBe(tick);
+test("layered Model 2 dispatch is explicit and unknown models are rejected", () => {
+  expect(() => resolveModel("1")).toThrow("Unsupported");
   expect(() => resolveModel("2")).toThrow("internal"); expect(resolveModel("2", { internal: true }).version).toBe("2");
   expect(() => resolveModel("3", { internal: true })).toThrow("Unsupported");
 });

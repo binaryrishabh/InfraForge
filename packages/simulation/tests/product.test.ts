@@ -119,7 +119,7 @@ test("resource-specific crashes retain or lose owned state and keep fault end se
   }
 }, 30000);
 test("internal M2H dispatch and explicit warm layer ownership do not activate public Model 2", () => {
-  expect(() => resolveModel("2", { workloadVersion: "m2h/1" })).toThrow("internal"); expect(resolveModel("1").published).toBe(true);
+  expect(() => resolveModel("2", { workloadVersion: "m2h/1" })).toThrow("internal");
   const f = productFixture(); const image = f.contract.nodes.vm!.resources.find((r) => r.role === "image")!.config; if (image.kind !== "artifact-client") throw Error("Image role missing"); image.initialLayers = [{ digest: `sha256:${"a".repeat(64)}`, bytes: f.q.q("warm.layer", 4096, "bytes") }];
   const c = compileProduct(f.design, f.contract); if (!c.ok) throw Error(JSON.stringify(c)); const model = resolveModel("2", { internal: true, workloadVersion: "m2h/1" }); if (model.workloadVersion !== "m2h/1") throw Error("Wrong model"); const r = model.create(c.value); r.advanceTo(10000); expect(r.evidence().systems.clients[0]!.pulledBytes).toBe(0); expect(r.evidence().systems.clients[0]!.reusedLayers).toBe(1);
 });

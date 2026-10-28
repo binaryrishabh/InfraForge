@@ -13,17 +13,9 @@
       "types": "./src/cost.ts",
       "default": "./src/cost.ts"
     },
-    "./engine": {
-      "types": "./src/engine.ts",
-      "default": "./src/engine.ts"
-    },
     "./tuning": {
       "types": "./src/tuning.ts",
       "default": "./src/tuning.ts"
-    },
-    "./types": {
-      "types": "./src/types/index.ts",
-      "default": "./src/types/index.ts"
     }
   },
   "scripts": {

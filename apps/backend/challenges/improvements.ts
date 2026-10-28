@@ -21,7 +21,7 @@ export function improvementSource(row: { challengeId?: string | null; challengeV
 
   try { readPrediction(row.challengePrediction, definition, input.resources.map((r) => r.type)); }
   catch { throw new ConflictError("The source has no readable complete prediction; its challenge conditions cannot be reused safely."); }
-  const fixed = captureRunInputs(input, definition.workload, challengeSeed(definition), definition.engine);
+  const fixed = captureRunInputs(input, definition.workload, challengeSeed(definition));
   if (input.version !== 2 || input.simulationModelVersion !== fixed.simulationModelVersion || canonical(input) !== canonical(row.runInputs) ||
       canonical(input.workloadProfile) !== canonical(fixed.workloadProfile) || input.seed !== fixed.seed ||
       row.evaluationStopAtSimulatedSeconds !== definition.evaluationSeconds ||

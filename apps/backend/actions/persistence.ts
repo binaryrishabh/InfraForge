@@ -40,7 +40,7 @@ export async function requestRunAction(deploymentId: string, ownerId: string, in
       throw new ConflictError("Run action capacity reached; wait for pending actions or stop the run.");
     }
     const topology = LayoutSchema.parse(run.liveTopology);
-    validateActionTarget(request, topology, run.runInputs);
+    validateActionTarget(request, topology);
     if (request.kind !== "teardown") requireCapability(ownerId, { capability: "run.control", runId: deploymentId, control: request.kind });
     if (request.kind === "topology") {
       if (request.parameters.expectedRevision !== run.topologyRevision) throw new ConflictError("Live topology changed. Re-enter the environment before editing again.");

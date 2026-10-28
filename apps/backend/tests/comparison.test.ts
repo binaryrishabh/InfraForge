@@ -10,7 +10,7 @@ import { REFERENCE, answers, attemptRow, legacyDefinition as definition } from "
 
 const at = new Date("2026-10-13T10:00:00.000Z");
 // A historical Model 1 pair: positional starting-jitter alignment exists only for Model 1.
-const captured = { ...captureRunInputs(layout, workload, undefined, "1"), seed: "comparison-seed" };
+const captured = { ...captureRunInputs(layout, workload), simulationModelVersion: "1", seed: "comparison-seed" };
 const terminal = { version: 1, kind: "terminal", capturedAt: at.toISOString(), topologyRevision: 0,
   metricsComputedAt: at.toISOString(), metricsTopologyRevision: 0, simulatedSeconds: 20,
   overallHealth: "healthy", loadFraction: 1, targetLoadFraction: 1, accumulatedCostUsd: 0.02, burnRatePerHourUsd: 3.6,

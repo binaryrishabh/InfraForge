@@ -1,8 +1,7 @@
 import { randomUUID } from "node:crypto";
-import { createInitialState, tick } from "@infraforge/simulation/engine";
 import { RESOURCE_TYPES as T, type Resource } from "@infraforge/domain/resource";
 import type { ChallengeDefinition, ChallengePrediction, ChallengeStarter } from "@infraforge/contracts/challenges";
-import { captureRunInputs, engineSeed } from "../deployments/runInputs";
+import { captureRunInputs } from "../deployments/runInputs";
 import { captureSnapshot } from "../simulator/snapshot";
 import { runSecurityScan } from "../stages/securityScan.stages";
 import { runCostEstimation } from "../stages/costEstimation.stages";
@@ -64,28 +63,27 @@ export function answers(def: ChallengeDefinition, values: Record<string, string>
   return { answers: Object.fromEntries(def.predictions.map((q) => [q.id, values[q.id] ?? values[q.kind]!])), reasoning: null };
 }
 
-/* Runs the real engine (Model 1, or Model 2 with engine: "2") for an attempt and builds the report exactly as the
-API does: same captured inputs, gate functions, terminal capture and evaluation.
+/* Runs Model 2 for an attempt and builds the report exactly as the API does: same captured inputs, gate functions, terminal capture and evaluation.
 A resilience attempt's fault is applied after the tick that reaches its second with
 the worker's own functions, and recorded as the durable action the worker writes. */
 type AttemptOptions = { stopAt?: number; status?: string; runtimeActive?: boolean; hash?: string; skipExperiment?: boolean; registry?: ChallengeRegistry; plan?: unknown;
-  engine?: "1" | "2"; builder?: ContractBuilder };
+  builder?: ContractBuilder };
 export function attemptReport(def: ChallengeDefinition, design: ChallengeStarter, prediction: ChallengePrediction, options: AttemptOptions = {}) {
   return buildRunReport(attemptRow(def, design, prediction, options), options.registry);
 }
 export function attemptRow(def: ChallengeDefinition, design: ChallengeStarter, prediction: ChallengePrediction, options: AttemptOptions = {}): StoredRun {
-  const runInputs = captureRunInputs({ ...design, layoutVersion: 3 }, def.workload, challengeSeed(def), options.engine ?? def.engine ?? "1");
-  const engine = (options.engine ?? def.engine) === "2" ? { model2: createModel2Engine(runInputs, def.evaluationSeconds, options.builder ?? buildModel2Contract) }
-    : { state: createInitialState("attempt", runInputs.resources, runInputs.connectionLines, runInputs.workloadProfile, engineSeed(runInputs.seed)) };
-  const instance: SimulationInstance = { ...engine, tickCount: 0, pendingLogs: [], speed: 1, lastCheckpointAt: 0,
+  const runInputs = captureRunInputs({ ...design, layoutVersion: 3 }, def.workload, challengeSeed(def));
+  const seconds = options.stopAt ?? def.evaluationSeconds;
+  const model2 = createModel2Engine(runInputs, Math.max(seconds, def.evaluationSeconds), options.builder ?? buildModel2Contract);
+  const instance: SimulationInstance = { model2, tickCount: 0, pendingLogs: [], speed: 1, lastCheckpointAt: 0,
     accumulatedCostUsd: 0, topology: runInputs, topologyRevision: 0, actions: new Map(), acknowledge: null,
     metricsComputedAt: new Date().toISOString(), metricsTopologyRevision: 0 };
   const plan = recordedExperiment(def);
   instance.evidence = createEvidenceBuffer(plan, def.evaluationSeconds);
   const actions: StoredAction[] = [];
   const deploymentId = randomUUID();
-  for (let i = 0; i < (options.stopAt ?? def.evaluationSeconds); i++) {
-    if (instance.model2) instance.model2.advance(); else instance.state = tick(instance.state!, {}).state;
+  for (let i = 0; i < seconds; i++) {
+    instance.model2.advance();
     instance.metricsComputedAt = new Date().toISOString();
     captureEvidenceTick(instance);
     const second = currentSecond(instance);

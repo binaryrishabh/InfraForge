@@ -6,7 +6,8 @@ export const EXPERIMENT_MAX_RESOURCES = 128;
 export const EXPERIMENT_MAX_SAMPLE_BYTES = 65536;
 
 export function experimentWindow(plan: RecordedExperiment, evaluationSecond: number | null | undefined) {
-  const start = Math.max(0, plan.atSimulatedSecond - EXPERIMENT_BASELINE_SECONDS);
+  // Second 0 comes before the first tick, so it is never measured; the window starts at second 1 at the earliest.
+  const start = Math.max(1, plan.atSimulatedSecond - EXPERIMENT_BASELINE_SECONDS);
   if (!Number.isInteger(evaluationSecond) || evaluationSecond! < plan.atSimulatedSecond ||
       evaluationSecond! - start + 1 > EXPERIMENT_MAX_POINTS) return null;
   return { start, end: evaluationSecond! };

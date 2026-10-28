@@ -1,7 +1,4 @@
-import { tick } from "@infraforge/simulation/engine";
-import { computeHourlyBurnRateUsd } from "@infraforge/simulation/cost";
 import type { SimulationInstance } from "./instance";
-import { displaySimulationLogs } from "./logs";
 import { captureEvidenceTick } from "../evidence/capture";
 import { currentSecond } from "./engineView";
 
@@ -27,20 +24,11 @@ export async function advanceTickBatch(instance: SimulationInstance, complete: (
   await persist?.(instance);
   const started = performance.now();
   for (let i = 0; i < instance.speed && !stopped() && !reachedMatchedStop(instance) && !experimentDue(instance) && !replayDue(instance); i++) {
-    if (instance.model2) {
-      const remaining = MODEL2_BATCH_BUDGET_MS - (performance.now() - started);
-      // Catching up after an action uses the same budget; the run resumes once it is caught up.
-      if ((i > 0 && remaining <= 0) || !instance.model2.catchUp(Math.max(0, remaining))) break;
-    }
-    if (instance.model2) {
-      instance.pendingLogs.push(...instance.model2.advance());
-      instance.accumulatedCostUsd += instance.model2.burnRatePerHourUsd() / 3600;
-    } else {
-      const result = tick(instance.state!, {});
-      instance.state = result.state;
-      instance.pendingLogs.push(...displaySimulationLogs(result.logs));
-      instance.accumulatedCostUsd += computeHourlyBurnRateUsd(instance.state) / 3600;
-    }
+    const remaining = MODEL2_BATCH_BUDGET_MS - (performance.now() - started);
+    // Catching up after an action uses the same budget; the run resumes once it is caught up.
+    if ((i > 0 && remaining <= 0) || !instance.model2.catchUp(Math.max(0, remaining))) break;
+    instance.pendingLogs.push(...instance.model2.advance());
+    instance.accumulatedCostUsd += instance.model2.burnRatePerHourUsd() / 3600;
     instance.metricsComputedAt = new Date().toISOString();
     instance.metricsTopologyRevision = instance.topologyRevision;
     instance.tickCount += 1;

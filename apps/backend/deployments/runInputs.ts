@@ -2,7 +2,6 @@ import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import { resolveWorkload } from "@infraforge/domain/workload";
 import { CATALOG_SNAPSHOT_DATE } from "@infraforge/catalog/types";
-import { SIMULATION_MODEL_VERSION } from "@infraforge/simulation/tuning";
 import type { WorkloadProfile } from "@infraforge/domain/workload";
 import type { RunInputs } from "@infraforge/contracts/run-inputs";
 import { LayoutSchema } from "../zod_schemas/layout.schema";
@@ -23,13 +22,13 @@ const RunInputsV2Schema = RunInputsV1Schema.extend({ version: z.literal(2),
   simulationModelVersion: z.string().min(1).max(64), catalogSnapshot: z.string().min(1).max(64) });
 const RunInputsSchema = z.discriminatedUnion("version", [RunInputsV1Schema, RunInputsV2Schema]);
 
-// Every new run is a Model 2 run. Model 1 inputs remain readable for historical reports.
+// Every new run is a Model 2 run. Model 1 inputs ("1", or version 1 without provenance) remain readable for historical reports.
 export const MODEL2_ENGINE_VERSION = "2";
-export function captureRunInputs(layout: unknown, workload?: WorkloadProfile, seed: string = randomUUID(), engine: "1" | "2" = "2") {
+export function captureRunInputs(layout: unknown, workload?: WorkloadProfile, seed: string = randomUUID()) {
   const parsed = LayoutSchema.safeParse(layout);
   if (!parsed.success) throw new ValidationError("Saved infrastructure layout is invalid. Update it before deploying.");
   return RunInputsV2Schema.parse({
-    version: 2, simulationModelVersion: engine === "2" ? MODEL2_ENGINE_VERSION : SIMULATION_MODEL_VERSION, catalogSnapshot: CATALOG_SNAPSHOT_DATE,
+    version: 2, simulationModelVersion: MODEL2_ENGINE_VERSION, catalogSnapshot: CATALOG_SNAPSHOT_DATE,
     resources: parsed.data.resources,
     connectionLines: parsed.data.connectionLines,
     workloadProfile: resolveWorkload(workload),
@@ -43,14 +42,8 @@ export function readRunInputs(value: unknown): RunInputs {
   return parsed.data;
 }
 
-export function engineSeed(seed: string): number {
-  let hash = 0;
-  for (let i = 0; i < seed.length; i++) hash = ((hash << 5) - hash + seed.charCodeAt(i)) | 0;
-  return Math.abs(hash);
-}
-
 export function assertSimulationContext(input: RunInputs) {
-  if (input.version === 2 && (![SIMULATION_MODEL_VERSION, MODEL2_ENGINE_VERSION].includes(input.simulationModelVersion) || input.catalogSnapshot !== CATALOG_SNAPSHOT_DATE)) {
+  if (input.version !== 2 || input.simulationModelVersion !== MODEL2_ENGINE_VERSION || input.catalogSnapshot !== CATALOG_SNAPSHOT_DATE) {
     throw new Error("Captured simulation model/catalog differs from this runtime. Create a new run; inputs will not be silently changed.");
   }
 }

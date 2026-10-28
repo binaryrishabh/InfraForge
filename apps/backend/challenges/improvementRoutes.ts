@@ -45,7 +45,7 @@ improvementRouter.post("/:id/improvement-preview", async (req, res) => {
     const design = await tx.infrastructure.findFirst({ where: { id: body.data.infrastructureId, ownerId } });
     if (!design) throw new NotFoundError("Design not found");
     if (design.challengeId !== definition.id || design.challengeVersion !== definition.version) throw new ConflictError("The design must belong to the source's exact challenge version.");
-    const current = captureRunInputs(body.data.layout, definition.workload, input.seed, definition.engine);
+    const current = captureRunInputs(body.data.layout, definition.workload, input.seed);
     return reviewDesignChanges(input, current);
   }, { isolationLevel: "RepeatableRead" });
   res.json({ success: true, review: result });

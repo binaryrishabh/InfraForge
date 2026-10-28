@@ -1,10 +1,7 @@
 import { expect, test } from "bun:test";
-import { captureRunInputs, readRunInputs, engineSeed, assertSimulationContext, MODEL2_ENGINE_VERSION } from "../deployments/runInputs";
+import { captureRunInputs, readRunInputs, assertSimulationContext, MODEL2_ENGINE_VERSION } from "../deployments/runInputs";
 import { CATALOG_SNAPSHOT_DATE } from "@infraforge/catalog/types";
-import { SIMULATION_MODEL_VERSION } from "@infraforge/simulation/tuning";
-import { resolveWorkload } from "@infraforge/domain/workload";
-import { createInitialState, tick } from "@infraforge/simulation/engine";
-import { layout, seed, workload } from "./integration/scenario";
+import { layout, workload } from "./integration/scenario";
 
 test("capture detaches topology and resolves all workload defaults", () => {
   const design = structuredClone(layout);
@@ -34,19 +31,9 @@ test("V2 captures model/catalog provenance and V1 reads without invented metadat
   expect(v1.version).toBe(1);
   expect(Object.hasOwn(v1, "simulationModelVersion")).toBe(false);
   expect(Object.hasOwn(v1, "catalogSnapshot")).toBe(false);
-  expect(() => assertSimulationContext(v1)).not.toThrow();
+  // Version 1 inputs predate provenance: they were Model 1 runs, readable but never run again.
+  expect(() => assertSimulationContext(v1)).toThrow("differs");
+  expect(() => assertSimulationContext({ ...v2, simulationModelVersion: "1" })).toThrow("differs");
   expect(() => assertSimulationContext({ ...v2, simulationModelVersion: "different-model" })).toThrow("differs");
   expect(() => assertSimulationContext({ ...v2, catalogSnapshot: "different-catalog" })).toThrow("differs");
-});
-
-test("resolved defaults preserve existing seeded engine outcomes", () => {
-  expect(engineSeed(seed.text)).toBe(seed.engine);
-  let implicit = createInitialState("run", layout.resources, layout.connectionLines, workload, seed.engine);
-  let resolved = createInitialState("run", layout.resources, layout.connectionLines, resolveWorkload(workload), seed.engine);
-  for (let i = 0; i < 120; i++) {
-    implicit = tick(implicit, {}).state;
-    resolved = tick(resolved, {}).state;
-    expect(resolved.metrics).toEqual(implicit.metrics);
-    expect(resolved.overallHealth).toBe(implicit.overallHealth);
-  }
 });

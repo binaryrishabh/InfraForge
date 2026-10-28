@@ -175,7 +175,7 @@ challengeRouter.post("/:id/attempts", async (req, res) => {
     }
     const active = await tx.deployment.count({ where: { ownerId, challengeId: definition.id, OR: [{ status: { in: [...ACTIVE_RUN_STATUSES] } }, { runtimeActive: true }] } });
     if (active) throw new ConflictError("An attempt at this challenge is still running. Stop it or let it reach the evaluation second first.");
-    const runInputs = captureRunInputs(design.layout, definition.workload, challengeSeed(definition), definition.engine);
+    const runInputs = captureRunInputs(design.layout, definition.workload, challengeSeed(definition));
     const improvement = body.data.improvement;
     if (improvement) {
       await tx.$queryRaw`SELECT id FROM "Deployment" WHERE id = ${improvement.sourceRunId} AND "ownerId" = ${ownerId} FOR SHARE`;
