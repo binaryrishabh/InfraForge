@@ -16,7 +16,7 @@ import { readLocalSettings } from "./localHarness";
   await admin.query(`CREATE DATABASE "${name}" TEMPLATE template0`);
   const sql = new Pool({ connectionString: target.href, max: 1 });
   const db = new PrismaClient({ adapter: new PrismaPg({ connectionString: target.href, max: 4 }) });
-  const limits = readOperationalLimits({});
+  const limits = { ...readOperationalLimits({}), global: 4, queued: 2 }; // small explicit limits exercise the locking
   try {
     const directory = new URL("../../prisma/migrations/", import.meta.url);
     const migrations = (await readdir(directory, { withFileTypes: true })).filter(e => e.isDirectory()).map(e => e.name).sort();

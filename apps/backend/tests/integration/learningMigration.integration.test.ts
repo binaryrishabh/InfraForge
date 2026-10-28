@@ -35,6 +35,8 @@ integration("migration 17 preserves populated schema 16 and enforces immutable s
     expect((await db.query('SELECT * FROM "Deployment"')).rows.map(({ improvementSourceId, learningHypothesis, learningIntent, ...row }) => {
       expect([improvementSourceId, learningHypothesis, learningIntent]).toEqual([null, null, null]); return row;
     })).toEqual(before);
+    // Releases expect the newest guard bodies; this later migration only replaces one function body.
+    await db.query(await Bun.file(new URL("20261028000000_evidence_unknown_values/migration.sql", directory)).text());
     await checkSchemaGuards(db);
     const insert = (id: string, parent: string, seed = input.seed, hypothesis: string | null = "A learner-owned hypothesis") => db.query(`
       INSERT INTO "Deployment" (id,"infrastructureId","ownerId","runInputs",seed,"workloadProfile","challengeId","challengeVersion",
