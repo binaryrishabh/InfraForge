@@ -5,7 +5,8 @@ import { randomUUID } from "node:crypto";
 import { prisma } from "../lib/prisma";
 import { ConflictError, ValidationError, NotFoundError } from "../utils/errors";
 import { DeploymentCreateBodySchema, DeploymentIdSchema } from "../zod_schemas/deployment.schema";
-import { captureRunInputs } from "../deployments/runInputs";
+import { captureRunInputs, readRunInputs } from "../deployments/runInputs";
+import { readRecordedExperiment } from "../challenges/experiment";
 import { runtimeHorizon } from "../deployments/operationalLimits";
 import { checkSubmission } from "../browserRuns/submission";
 import { storedJson } from "../utils/json";
@@ -63,6 +64,20 @@ deploymentRouter.get("/:deploymentId", async (req, res) => {
   const deployment = await prisma.deployment.findUnique({ where: { id: parsed.data.deploymentId, ownerId: res.locals.userId } });
   if (!deployment) throw new NotFoundError("Run not found");
   res.json({ success: true, deployment });
+});
+
+// Everything the browser needs to run a Model 2 run exactly as the server will replay it.
+deploymentRouter.get("/:deploymentId/browser-run", async (req, res) => {
+  const parsed = DeploymentIdSchema.safeParse(req.params);
+  if (!parsed.success) throw new ValidationError("A valid deployment ID is required.");
+  const run = await prisma.deployment.findFirst({ where: { id: parsed.data.deploymentId, ownerId: res.locals.userId } });
+  if (!run) throw new NotFoundError("Run not found");
+  if (run.status !== DeploymentStatus.BROWSER) throw new ConflictError("This run is not waiting for the browser.");
+  const input = readRunInputs(run.runInputs);
+  const horizonSeconds = runtimeHorizon(executionAllowance(run.autoStopAtSimulatedSeconds ?? run.evaluationStopAtSimulatedSeconds).durationSeconds);
+  const plan = run.challengeExperiment == null ? null : readRecordedExperiment(run.challengeExperiment);
+  res.json({ success: true, browserRun: { input, horizonSeconds, stopAtSecond: run.evaluationStopAtSimulatedSeconds ?? horizonSeconds,
+    ...(plan ? { experiment: { fault: plan.fault, resourceId: plan.targetResourceId, atSimulatedSecond: plan.atSimulatedSecond } } : {}) } });
 });
 
 // The browser finished a Model 2 run: store what it did and queue the server's replay, which alone becomes the record.

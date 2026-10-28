@@ -25,7 +25,7 @@ import { workerDatabaseUrl, verifyWorkerSession } from "./infra/workerConnection
 import { assertRuntimeSchema } from "./release/runtime";
 import { createReadiness } from "./health/readiness";
 import { retireInterruptedRuns, QUARANTINED_RUN_MESSAGE } from "./deployments/restartPolicy";
-import { readRunInputs, assertSimulationContext } from "./deployments/runInputs";
+import { readRunInputs, assertSimulationContext, runsOnModel2 } from "./deployments/runInputs";
 import { runSecurityScan } from "./stages/securityScan.stages";
 import { runCostEstimation } from "./stages/costEstimation.stages";
 import { OutboxBullMQStatus } from "./types/OutboxBullMQStatus.enum";
@@ -107,8 +107,10 @@ async function pollOutbox() {
         } else {
           // Add Deployment to BullMQ queue for worker to process it.
           // jobId = deploymentId ensures idempotency, duplicates are ignored by BullMQ automatically, ensures processing only once at max.
+          // A browser run's replay is a second job for the same run, so it needs its own job ID.
+          const runId = (entry.payload as unknown as OutboxPayload).deploymentId;
           await deploymentQueue.add(entry.eventType, entry.payload, {
-            jobId: (entry.payload as unknown as OutboxPayload).deploymentId,
+            jobId: entry.eventType === "deployment-replay" ? `${runId}-replay` : runId,
           });
         }
 
@@ -141,7 +143,7 @@ async function pollOutbox() {
         // If permanently failed, mark deployment as failed and notify
         if (isFailed) {
           try {
-            if (entry.eventType === "deployment-created") {
+            if (entry.eventType === "deployment-created" || entry.eventType === "deployment-replay") {
               const failure = await prisma.deployment.updateMany({
                 where: {
                   id: (entry.payload as unknown as OutboxPayload).deploymentId,
@@ -248,6 +250,12 @@ const worker = new Worker(
           throw new DelayedError();
         }
         if (claimed !== "claimed") return;
+      }
+
+      // A submitted browser run passed its gates before the browser ran it; the worker only replays it.
+      if (deploymentState.browserSubmission !== null) {
+        if (await startSimulation(deploymentId)) console.log(`Replaying browser run ${deploymentId}`);
+        return;
       }
 
       // Publish as current deployment has started running
@@ -379,6 +387,14 @@ const worker = new Worker(
         runCostEstimation(resources),
       );
       if (!costPassed) return;
+
+      // A Model 2 run executes in the browser. It waits here, costing the server nothing, until the browser submits.
+      if (runsOnModel2(inputs)) {
+        const waiting = await prisma.deployment.updateMany({ where: { id: deploymentId, status: DeploymentStatus.RUNNING },
+          data: { status: DeploymentStatus.BROWSER } });
+        if (waiting.count === 1) await publishDeploymentLive(deploymentId, resources.length);
+        return;
+      }
 
       // Construct from the same immutable inputs before making the run LIVE.
       if (!(await startSimulation(deploymentId))) return;

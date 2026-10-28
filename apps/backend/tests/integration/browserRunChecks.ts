@@ -19,9 +19,11 @@ export async function checkBrowserRun(h: LocalHarness, designs: string[], runs: 
     const waiting = await until(async () => { const r = await read(); return r.status === "browser" ? r : undefined; }, "browser run ready", 30000, 200);
     const input = readRunInputs(waiting.runInputs);
     expect(input.version === 2 ? input.simulationModelVersion : null).toBe("2");
+    const start = (await h.request(`/deployments/${run.id}/browser-run`)).browserRun;
+    expect(start).toMatchObject({ horizonSeconds: 900, stopAtSecond: 900 });
 
     // The browser side: one action at second 5, stop at second 12.
-    const browser = createModel2Run(input as Parameters<typeof createModel2Run>[0], 900);
+    const browser = createModel2Run(start.input, start.horizonSeconds);
     for (let s = 0; s < 5; s++) browser.advance();
     browser.apply({ kind: "load", parameters: { targetLoadFraction: 1.5 } });
     for (let s = 5; s < 12; s++) browser.advance();

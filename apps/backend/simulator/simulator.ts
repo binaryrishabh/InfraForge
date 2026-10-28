@@ -8,6 +8,7 @@ import { ActionRefused, createModel2Engine } from "./model2Engine";
 import { buildModel2Contract } from "./contractBuilder";
 import { SubmissionSchema } from "../browserRuns/submission";
 import { recordReplayActions } from "./replay";
+import { closeAbandonedBrowserRuns } from "../browserRuns/abandon";
 import type { WorkerOwnership } from "../infra/workerOwnership";
 import { storedJson } from "../utils/json";
 import type { SimulationInstance } from "./instance";
@@ -89,6 +90,7 @@ export async function stopSimulation(deploymentId: string) {
 let runtimeTimer: ReturnType<typeof setTimeout> | undefined;
 let runtimeCycle: Promise<void> | undefined;
 let runtimeStopped = true;
+let lastAbandonSweep = 0;
 
 export async function startRuntime(ownership: WorkerOwnership) {
   runtimeStopped = false;
@@ -96,6 +98,7 @@ export async function startRuntime(ownership: WorkerOwnership) {
     try {
       await ownership.assertHeld();
       if (!runtimeStopped) await advanceSimulations();
+      if (!runtimeStopped && Date.now() - lastAbandonSweep >= 60000) { lastAbandonSweep = Date.now(); await closeAbandonedBrowserRuns(); }
     } catch (error) { console.error("Simulator cycle failed", error); }
     finally { if (!runtimeStopped) runtimeTimer = setTimeout(() => { runtimeCycle = cycle(); }, 1000); }
   };

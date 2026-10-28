@@ -24,6 +24,7 @@ import { checkCredentials } from "./credentialChecks";
 import { checkLearningExperiments } from "./learningChecks";
 import { checkPostFaultObservation } from "./postFaultChecks";
 import { checkOperationalDeadline } from "./operationalChecks";
+import { checkBrowserRun } from "./browserRunChecks";
 
 type Event = Record<string, any>;
 type Snapshot = SimulationSnapshot & { publishType: string };
@@ -662,6 +663,8 @@ integration("local deployment lifecycle", () => {
       evidence.learningHistory = await checkLearningHistory(harness, sessions, infrastructureIds, deploymentIds);
       phase("deliberate challenge improvements");
       evidence.learning = await checkLearningExperiments(harness, sessions, infrastructureIds, deploymentIds);
+      phase("Model 2 browser run, submission and server replay");
+      await checkBrowserRun(harness, infrastructureIds, deploymentIds);
       evidence.result = "passed";
     } catch (error) {
       evidence.result = "failed";
