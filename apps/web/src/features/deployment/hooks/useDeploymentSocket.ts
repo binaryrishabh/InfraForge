@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getSpecificDeployment } from "@/api/deployment.api";
+import { startBrowserRun } from "@/features/model2Run/browserRuns";
 import { Publish } from "@infraforge/contracts/events";
 import { WebSocketMessage } from "@infraforge/contracts/events";
 import { DeploymentStatus, type DeploymentStatusType } from "@infraforge/contracts/deployment";
@@ -40,7 +41,9 @@ export function useDeploymentSocket(deploymentId: string) {
                 if(fetchedDeployment && !isClose) {
                     // Restore pipeline state from Database
                     setDeployment(fetchedDeployment);
-                    setStatus(fetchedDeployment.status);
+                    // A Model 2 run waiting for the browser runs here; the live view treats it as live.
+                    if (fetchedDeployment.status === DeploymentStatus.BROWSER) { setStatus(DeploymentStatus.LIVE); void startBrowserRun(deploymentId).catch(() => {}); }
+                    else setStatus(fetchedDeployment.status);
                     setCompletedStages(
                         (fetchedDeployment.stages || [])
                             .filter((stage: DeploymentStages) => stage.status === DeploymentStageStatus.COMPLETED)
@@ -138,6 +141,10 @@ export function useDeploymentSocket(deploymentId: string) {
                         break;
                     case Publish.publishDeploymentLive:
                         setStatus(DeploymentStatus.LIVE);
+                        // A Model 2 run starts in this browser once its gates have passed.
+                        void getSpecificDeployment(deploymentId).then((current) => {
+                            if (!isClose && current.status === DeploymentStatus.BROWSER) return startBrowserRun(deploymentId);
+                        }).catch(() => {});
                         setTimeline(prev => [...prev, {
                             event: DeploymentTimelineEventNames.DeploymentLive,
                             message: data.message,
