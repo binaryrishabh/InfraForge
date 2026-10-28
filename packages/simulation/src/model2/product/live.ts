@@ -96,8 +96,11 @@ export function createLiveModel2(compiled: CompiledProduct, nodeIds: string[]) {
           const r = runtime.inspect(id) as Station, cpu = r.compute?.cpu, p = previous.get(id);
           const c: Counters = { received: r.received, completed: r.completed, failed: (caches.has(id) ? 0 : r.failed) + r.rejected, queued: r.queued, serving: r.serving,
             used: cpu ? cpu.appCoreUs + cpu.competitorCoreUs : 0, available: cpu ? cpu.availableCoreUs : null, consumed: r.consumedCoreUs };
-          if (c.available !== null) { knownCpu = true; used += c.used - (p?.used ?? 0); available += c.available - (p?.available ?? 0); }
-          else if (cores.has(id)) { knownCpu = true; used += c.consumed - (p?.consumed ?? 0); available += cores.get(id)! * (now - previousAt); }
+          // CPU is the node's running app processes only: reserved replica slots and helper processes do not dilute it.
+          if (!id.includes("/") && runtime.up(id)) {
+            if (c.available !== null) { knownCpu = true; used += c.used - (p?.used ?? 0); available += c.available - (p?.available ?? 0); }
+            else if (cores.has(id)) { knownCpu = true; used += c.consumed - (p?.consumed ?? 0); available += cores.get(id)! * (now - previousAt); }
+          }
           queued += c.queued; serving += c.serving;
           // Throughput counts only the node's own entry resources, not its helper processes.
           if (!id.includes("/")) { completed += c.completed - (p?.completed ?? 0); received += c.received - (p?.received ?? 0); failed += c.failed - (p?.failed ?? 0); }

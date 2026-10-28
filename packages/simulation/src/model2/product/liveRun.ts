@@ -27,7 +27,7 @@ export const FAULT_DURATIONS: Record<ChaosType, number> = {
 
 // Assumptions for live faults, shown with the action's outcome.
 const CRASH_RESTART_US = 1_000_000; // process start and readiness after the crash ends
-const CPU_SPIKE_SHARE = 0.45; // a competing process wants 45% of the target's cores
+const CPU_SPIKE_SHARE = 0.45; // a competing process holds 45% of the target's cores for the whole fault
 const NETWORK_DELAY_US = 200_000; // added delay on every link into the target
 const HOURS_PER_MONTH = 730;
 // The server replays each action by rebuilding the run up to its second, so a run takes at most this many actions.
@@ -110,7 +110,7 @@ export function createModel2Run(input: RunTopology & { workloadProfile: Resolved
           else if (type === "cpu-spike") {
             const cores = coresOf(contract, resourceId);
             if (!cores) throw new ActionRefused("A CPU spike needs a resource whose CPU Model 2 models.");
-            attempt({ id: actionId, kind: "cpu-spike", node: resourceId, durationUs: duration * SECOND, coreUs: Math.round(CPU_SPIKE_SHARE * cores * duration * SECOND), cores });
+            attempt({ id: actionId, kind: "cpu-spike", node: resourceId, durationUs: duration * SECOND, coreUs: Math.round(CPU_SPIKE_SHARE * cores * duration * SECOND), cores: CPU_SPIKE_SHARE * cores });
           } else {
             const links = linksInto(contract, resourceId);
             if (!links.length) throw new ActionRefused("No network link leads into this resource.");
