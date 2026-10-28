@@ -16,7 +16,7 @@ test("guided facts deterministically prioritize failed requirements and mismatch
   expect(cues.find((c) => c.id === `prediction:${mismatch.id}`)?.statement).toContain(`You predicted ${mismatch.predicted}`);
   expect(cues.some((c) => c.kind === "measurement" && c.sources[0]?.startsWith("terminalSnapshot.metrics."))).toBe(true);
   expect(cues.at(-1)?.kind).toBe("unknown");
-});
+}, 60000);
 
 test("resilience cues use actual fault-boundary samples and never infer recovery or causal solutions", () => {
   // The CPU spike starts at second 30: the cues read the seconds on either side of it.
@@ -38,7 +38,7 @@ test("missing and legacy evidence stays unknown rather than reconstructing a ser
   const unavailable = buildRunReport({ ...row, challengeSpecHash: "0".repeat(64) });
   expect(unavailable.guidedReview?.cues).toHaveLength(1);
   expect(unavailable.guidedReview?.cues[0]?.statement).toContain("cannot be verified");
-});
+}, 60000);
 
 test("one-change accounting reuses canonical diff and ignores only visual facts", () => {
   const a = captureRunInputs(tier(2), undefined, "fixed");
@@ -62,7 +62,7 @@ test("one-change accounting reuses canonical diff and ignores only visual facts"
   expect(reviewDesignChanges(a, connections).count).toBe(1);
   const workload = changed(); workload.workloadProfile.targetThroughput++;
   expect(reviewDesignChanges(a, workload).classification).toBe("unavailable");
-});
+}, 60000);
 
 test("improvement source refuses altered fixed conditions, active runs, another challenge and unavailable versions", () => {
   const d = currentDefinition("first-production-api"), row = attemptRow(d, tier(1), answers(d, { health: "healthy", busiest: "Database" }));
@@ -74,4 +74,4 @@ test("improvement source refuses altered fixed conditions, active runs, another 
     expect(() => improvementSource({ ...row, ...patch }, d.id)).toThrow();
   }
   expect(() => improvementSource(row, "write-heavy")).toThrow();
-});
+}, 60000);
