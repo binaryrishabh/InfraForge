@@ -5,7 +5,7 @@ import { findChallenge } from "../challenges/registry";
 import type { ReportCheckpoint } from "@infraforge/contracts/reports";
 
 test("busiest type ignores unknown CPU, including when every known value is zero", () => {
-  const topology = { resources: [{id:"lb",type:"Load Balancer"},{id:"vm",type:"Virtual Machine"}], connectionLines: [] } as Parameters<typeof busiestTypes>[1];
+  const topology = { resources: [{id:"lb",type:"Load Balancer"},{id:"vm",type:"Virtual Machine"}], connectionLines: [] } as unknown as Parameters<typeof busiestTypes>[1];
   const terminal = { resources: [{id:"lb",cpu:null},{id:"vm",cpu:0}] } as unknown as ReportCheckpoint;
   expect(busiestTypes(terminal, topology)).toEqual({types:["Virtual Machine"],cpu:0});
   expect(busiestTypes({resources:[{id:"lb"}]} as ReportCheckpoint, topology).types).toEqual([]);
