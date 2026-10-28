@@ -253,7 +253,9 @@ const worker = new Worker(
       }
 
       // A submitted browser run passed its gates before the browser ran it; the worker only replays it.
-      if (deploymentState.browserSubmission !== null) {
+      // Read the submission after the claim: the browser may have submitted while this job waited.
+      const { browserSubmission } = await prisma.deployment.findUniqueOrThrow({ where: { id: deploymentId }, select: { browserSubmission: true } });
+      if (browserSubmission !== null) {
         if (await startSimulation(deploymentId)) console.log(`Replaying browser run ${deploymentId}`);
         return;
       }

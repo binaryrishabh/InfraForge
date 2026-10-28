@@ -25,7 +25,8 @@ export async function checkExperimentTraces(harness: LocalHarness, sessions: Ses
     await submit(blocked, 60);
     await until(async () => (await probe.attempts("sample")) >= 2 || undefined, "two blocked trace batches", 30000);
     const sampleBlockedAt = new Date();
-    expect(await samples(blocked)).toHaveLength(0);
+    // Replays save evidence batch by batch; nothing at or after the blocked second is saved while it fails.
+    expect((await samples(blocked)).every((p) => p.simulatedSeconds < 30)).toBe(true);
     expect((await harness.sql.query('SELECT count(*)::int AS count FROM "RunAction" WHERE "deploymentId"=$1 AND kind=\'chaos\'', [blocked])).rows[0].count).toBe(0);
     expect((await row(blocked)).terminalSnapshot).toBeNull();
     await probe.releaseSamples();
