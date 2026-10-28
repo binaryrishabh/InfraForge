@@ -10,5 +10,5 @@
     "strict": true,
     "noUncheckedIndexedAccess": true
   },
-  "include": ["../release.ts", "./*.ts", "../deploy/*.ts", "../../ops/bootstrap/*.ts", "../tests/*.ts"]
+  "include": ["../release.ts", "./*.ts", "../deploy/*.ts", "../load/*.ts", "../../ops/bootstrap/*.ts", "../tests/*.ts"]
 }
