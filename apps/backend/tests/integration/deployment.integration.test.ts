@@ -208,6 +208,8 @@ integration("local deployment lifecycle", () => {
       evidence.workerRetry = { intermediateStatus, recovered: false };
       // After its gates the run waits for the learner's browser; the server simulates nothing until the browser submits.
       await until(async () => (await deployment(id)).status === "browser" || undefined, "run waiting for the browser", 60000, 200);
+      // The status is written before the live event is published; wait for the event itself.
+      await until(async () => evidence.wsEvents.some((e: Event) => e.deploymentId === id && e.publishType === "deployment-live") || undefined, "live event", 10000, 100);
       const wireEvents = evidence.wsEvents.filter((e: Event) => e.deploymentId === id);
       expect(wireEvents.filter((e: Event) => e.publishType === "stage-of-deployment-completed").map((e: Event) => e.stageName))
         .toEqual(["Validate", "SecurityScan", "CostEstimate"]);
