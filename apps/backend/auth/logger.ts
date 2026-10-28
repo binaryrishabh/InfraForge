@@ -34,6 +34,8 @@ export const authLogger: Logger = { level: "error", log(level, message, ...args:
       const error = value as Error & { code?: unknown; body?: { code?: unknown; message?: unknown } };
       const name = error.name;
       names.add(classes.has(name) ? name : "Error");
+      // A database error code (for example P2024, connection pool timeout) names the failure without any user data.
+      if (typeof error.code === "string" && /^P[0-9]{4}$/.test(error.code)) diagnostics.push(`database ${error.code}`);
       for (const text of [error.code, error.body?.code, error.message, error.body?.message]) {
         const reason = safeReason(text);
         if (reason) diagnostics.push(reason);
