@@ -1,4 +1,4 @@
-import { RESOURCE_PORTS, applicationFlowError, asyncSettingsError, circuitBreakerSettingsError, retrySettingsError } from "@infraforge/domain/resource";
+import { RESOURCE_PORTS, securitySettingsError, applicationFlowError, asyncSettingsError, circuitBreakerSettingsError, retrySettingsError } from "@infraforge/domain/resource";
 import { requireKnown } from "../../reality/quantity";
 import { validateSystems } from "../systems/validate";
 import type { SystemsInput } from "../systems/contracts";
@@ -12,6 +12,7 @@ import { validateController } from "./controller-policy";
 import type { SavedProductDesign, ProductContract, CompileResult, Diagnostic, SemanticSpec, CompiledPool, EdgeContract } from "./contracts";
 import { COMPILER_VERSION } from "./contracts";
 import { boundedProduct } from "./bounds";
+import { validateSecurityBinding, expandFirewallRules } from "./security";
 import { validateMaterializedSemantics } from "./semantics";
 import { capabilityFacts } from "./capabilities";
 import { WORKLOAD_LIMITS } from "../workload/policy";
@@ -42,11 +43,15 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
     if (design.schema !== "infraforge-saved-design/1" || contract.schema !== "infraforge-product-model2/1" || !contract.version || !contract.designVersion || !contract.catalogVersion || contract.workloadVersion !== "product-arrivals/1") error("VERSION_REQUIRED", "versions", "Explicit design/compiler/application/catalog/workload versions required");
     if (!contract.application) error("MISSING_APPLICATION_PROFILE", "application", "Missing application execution profile; provider hardware cannot supply operation demand");
     if (design.resources.length > 256 || design.connections.length > 2048 || !design.resources.length) error("DESIGN_BUDGET", "design", "Bounded nonempty design required");
+    const hasSecurity = design.resources.some(r => r.listenerSettings !== undefined || r.firewallSettings !== undefined);
+    if ((contract.securityProfile !== undefined && contract.securityProfile !== "canvas-security/1") || hasSecurity !== (contract.securityProfile === "canvas-security/1")) error("SECURITY_PROFILE", "securityProfile", "Saved security settings require canvas-security/1 and matching intent");
     const nodes = new Map(design.resources.map((r) => [r.id, r]));
     if (nodes.size !== design.resources.length || design.resources.some((r) => !/^[a-zA-Z0-9_-]{1,64}$/.test(r.id))) error("RESOURCE_ID", "resources", "Unique bounded semantic IDs required; labels/coordinates do not define identity");
     const edgeIds = new Set(design.connections.map((e) => e.id));
     if (edgeIds.size !== design.connections.length) error("EDGE_ID", "connections", "Unique connection identities required");
     for (const r of design.resources) {
+      const securityError = securitySettingsError(r.type, r.listenerSettings, r.firewallSettings, design.resources);
+      if (securityError) error("INVALID_SECURITY", `resources.${r.id}.security`, securityError);
       const flowError = applicationFlowError(r.type, r.applicationFlow);
       if (flowError) error("INVALID_FLOW", `resources.${r.id}.applicationFlow`, flowError);
       if (r.applicationFlow && (r.asyncWorker?.enabled || r.asyncQueue?.enabled)) error("INVALID_FLOW", `resources.${r.id}.applicationFlow`, "Async flow ownership is unsupported");
@@ -56,11 +61,12 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
       if (breakerError) error("INVALID_CIRCUIT_BREAKER", `resources.${r.id}.circuitBreaker`, breakerError);
       const retryError = retrySettingsError(r.type, r.retry);
       if (retryError) error("INVALID_RETRY", `resources.${r.id}.retry`, retryError);
-      const allowed = new Set(["id", "type", "x", "y", "skuId", "autoscaling", "asyncQueue", "asyncWorker", "applicationFlow", "retry", "circuitBreaker", "public", "encryption", "openPorts", "size", "region", "name"]);
+      const allowed = new Set(["id", "type", "x", "y", "skuId", "autoscaling", "asyncQueue", "asyncWorker", "applicationFlow", "listenerSettings", "firewallSettings", "retry", "circuitBreaker", "public", "encryption", "openPorts", "size", "region", "name"]);
       for (const key of Object.keys(r)) if (!allowed.has(key)) error("UNSUPPORTED_RESOURCE_SETTING", `resources.${r.id}.${key}`, "Unrecognized saved setting needs an explicit compiler-version owner");
       const spec = contract.nodes[r.id];
       if (!(r.type in TRANSLATION_OWNERS)) { error("UNSUPPORTED_RESOURCE", `resources.${r.id}`, `No translation owner for ${r.type}`); continue; }
       if (!spec) { error("MISSING_RESOURCE_PROFILE", `nodes.${r.id}`, TRANSLATION_OWNERS[r.type].requires); continue; }
+      validateSecurityBinding(r, spec);
       if (spec.type !== r.type || !spec.profileVersion || !spec.provenance.length) error("RESOURCE_PROFILE", `nodes.${r.id}`, "Matching versioned resource profile/provenance required");
       if (r.circuitBreaker?.enabled && !spec.circuitBreaker) error("MISSING_BREAKER_PROFILE", `nodes.${r.id}.circuitBreaker`, "Enabled circuit breaker requires a reviewed path policy");
       if (spec.circuitBreaker && r.circuitBreaker?.enabled && (requireKnown(spec.circuitBreaker.failureThreshold, "count") !== r.circuitBreaker.failureThreshold || requireKnown(spec.circuitBreaker.cooldown, "us") !== r.circuitBreaker.cooldownMs! * 1000)) error("BREAKER_MISMATCH", `nodes.${r.id}.circuitBreaker`, "Path policy must match saved threshold and cooldown");
@@ -92,7 +98,7 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
     const app = contract.application!;
     if (app.schema !== "infraforge-application/1" || !app.version || !app.id || !app.validityDomain || !app.provenance.length || !app.operations.some((o) => o.id === app.controlOperation)) throw Error("Versioned application provenance/validity, operations and explicit control operation required");
     phase = "provenance"; const provenance = derivedLedger(contract.ledger);
-    const runtime: SystemsInput = { ...(contract.failureCauseProfile ? { failureCauseProfile: contract.failureCauseProfile } : {}), modelVersion: "2", workloadVersion: "m2g/1", seed: contract.seed, ledger: provenance.ledger, profiles: [...app.demands].sort((a, b) => a.id < b.id ? -1 : 1), resources: [], operations: [], arrivals: [], faults: [], horizon: contract.horizon, sampleInterval: contract.sampleInterval, limits: contract.limits, interventions: [], links: [], paths: [], networkInterventions: [], endpoints: {}, dataInterventions: [], asyncInterventions: [], systems: { operation: app.controlOperation, identities: [{ id: "$caller", zone: "external", address: contract.caller.address }], listeners: [], firewalls: [], connections: [], instrumentation: [], interventions: [], commands: [] } };
+    const runtime: SystemsInput = { ...(contract.securityProfile ? { securityProfile: contract.securityProfile } : {}), ...(contract.failureCauseProfile ? { failureCauseProfile: contract.failureCauseProfile } : {}), modelVersion: "2", workloadVersion: "m2g/1", seed: contract.seed, ledger: provenance.ledger, profiles: [...app.demands].sort((a, b) => a.id < b.id ? -1 : 1), resources: [], operations: [], arrivals: [], faults: [], horizon: contract.horizon, sampleInterval: contract.sampleInterval, limits: contract.limits, interventions: [], links: [], paths: [], networkInterventions: [], endpoints: {}, dataInterventions: [], asyncInterventions: [], systems: { operation: app.controlOperation, identities: [{ id: "$caller", zone: "external", address: contract.caller.address }], listeners: [], firewalls: [], connections: [], instrumentation: [], interventions: [], commands: [] } };
     const pools: CompiledPool[] = [], expansion = new Map<string, string[]>(), roleIds = new Map<string, string>();
     const resources = [...design.resources].sort((a, b) => a.id < b.id ? -1 : 1);
     for (const r of resources) {
@@ -109,7 +115,7 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
     phase = "nodes";
     for (const r of resources) {
       const spec = contract.nodes[r.id]!;
-      if (spec.firewall) runtime.systems.firewalls.push({ ...spec.firewall, id: r.id });
+      if (spec.firewall) runtime.systems.firewalls.push({ ...spec.firewall, ...(r.firewallSettings ? { rules: expandFirewallRules(spec.firewall.rules, roleIds) } : {}), id: r.id });
       for (const instance of expansion.get(r.id)!) for (const resource of [...spec.resources].sort((a, b) => a.role < b.role ? -1 : 1)) {
         const id = roleIds.get(`${instance}/${resource.role}`)!;
         const material = { ...rewriteReferences(resource.config, (value) => ref(value, instance)), id } as SystemsInput["resources"][number];
@@ -211,7 +217,7 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
     phase = "numeric-provenance"; provenance.audit(runtime); for (const p of pools) provenance.audit(p); provenance.audit(crashes);
     semantic.numericOrigins = numericOrigins(runtime, pools, contract, crashes);
     runtime.ledger.sort((a, b) => a.id < b.id ? -1 : 1);
-    phase = "runtime-contract"; validateMaterializedSemantics(runtime, semantic.edges); validateSystems(runtime);
+    phase = "runtime-contract"; validateMaterializedSemantics(runtime, semantic.edges, new Set(design.resources.filter(r => r.listenerSettings !== undefined).flatMap(r => [...roleIds.entries()].filter(([key]) => key.split("/")[0]!.split("#")[0] === r.id).map(([,id]) => id)))); validateSystems(runtime);
     return { ok: true, value: canonical({ schema: "infraforge-compiled-product/1", semantic, input: runtime, pools, crashes, ...(interventionReceipts.length ? {interventionReceipts} : {}) }), diagnostics };
   } catch (cause) {
     const message = cause instanceof Error ? cause.message : String(cause);

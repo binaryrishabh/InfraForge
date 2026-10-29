@@ -1,5 +1,5 @@
 import * as z from "zod";
-import { applicationFlowError, asyncSettingsError, circuitBreakerSettingsError, RESOURCE_TYPES, RETRY_GROUPS, retrySettingsError } from "@infraforge/domain/resource";
+import { securitySettingsError, applicationFlowError, asyncSettingsError, circuitBreakerSettingsError, RESOURCE_TYPES, RETRY_GROUPS, retrySettingsError } from "@infraforge/domain/resource";
 
 const ResourceIdSchema = z.string().min(1).refine(
   (id) => !Object.hasOwn(Object.prototype, id),
@@ -28,6 +28,11 @@ const ResourceSchema = z.object({
     maxReplicas: z.number().int().positive().optional(),
     targetCpu: z.number().min(0).max(100).optional(),
   }).optional(),
+  listenerSettings: z.object({ version: z.literal(1), ports: z.array(z.number().int().min(1).max(65535)).max(32) }).strict().optional(),
+  firewallSettings: z.object({ version: z.literal(1), default: z.enum(["allow", "deny"]), rules: z.array(z.object({
+    id: z.string().min(1).max(64), priority: z.number().int().min(0).max(65535), direction: z.enum(["ingress", "egress"]),
+    source: z.string(), destination: z.string(), fromPort: z.number().int().min(1).max(65535), toPort: z.number().int().min(1).max(65535), action: z.enum(["allow", "deny"]),
+  }).strict()).max(32) }).strict().optional(),
   applicationFlow: ApplicationFlowSchema.optional(),
   asyncQueue: z.object({ enabled: z.boolean(), visibilityTimeoutSeconds: z.number().optional(), maxReceives: z.number().optional(), retentionSeconds: z.number().optional(), deadLetterCapacity: z.number().optional() }).strict().optional(),
   asyncWorker: z.object({ enabled: z.boolean(), concurrency: z.number().optional(), prefetch: z.number().optional(), cpuMsPerJob: z.number().optional(), badJobPercent: z.number().optional() }).strict().optional(),
@@ -47,6 +52,8 @@ const ResourceSchema = z.object({
   region: z.string().optional(),
   name: z.string().optional(),
 }).catchall(z.json()).superRefine((resource, ctx) => {
+  const securityMessage = securitySettingsError(resource.type, resource.listenerSettings, resource.firewallSettings);
+  if (securityMessage) ctx.addIssue({ code: "custom", path: ["security"], message: securityMessage });
   const flowMessage = applicationFlowError(resource.type, resource.applicationFlow);
   if (flowMessage) ctx.addIssue({ code: "custom", path: ["applicationFlow"], message: flowMessage });
   const asyncMessage = asyncSettingsError(resource.type, resource.asyncQueue, resource.asyncWorker);
@@ -72,9 +79,16 @@ export const LayoutSchema = z.object({
   layoutVersion: z.number().int().positive().optional(),
   // Internal semantic review data is additive; stale drafts remain readable.
   firstStack: z.json().optional(),
-}).catchall(z.json());
+}).catchall(z.json()).superRefine(validateSecurityScopes);
 
 export const LiveTopologySchema = z.object({
   resources: z.array(ResourceSchema).min(1),
   connectionLines: z.array(ConnectionSchema),
-});
+}).superRefine(validateSecurityScopes);
+
+function validateSecurityScopes(layout: { resources: z.infer<typeof ResourceSchema>[] }, ctx: z.RefinementCtx) {
+  for (const [i, r] of layout.resources.entries()) {
+    const message = securitySettingsError(r.type, r.listenerSettings, r.firewallSettings, layout.resources);
+    if (message) ctx.addIssue({ code: "custom", path: ["resources", i, "security"], message });
+  }
+}

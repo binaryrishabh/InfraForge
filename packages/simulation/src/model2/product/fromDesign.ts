@@ -1,6 +1,6 @@
 import type { AdapterProfile } from "@infraforge/contracts/run-inputs";
 import { findSku, CATALOG_SNAPSHOT_DATE } from "@infraforge/catalog";
-import { RESOURCE_PORTS, applicationFlowError, asyncSettingsError, circuitBreakerSettingsError, retrySettingsError, type Resource } from "@infraforge/domain/resource";
+import { RESOURCE_PORTS, securitySettingsError, applicationFlowError, asyncSettingsError, circuitBreakerSettingsError, retrySettingsError, type Resource } from "@infraforge/domain/resource";
 import type { Quantity, Unit } from "../../reality/quantity";
 import type { ComputeResource } from "../compute/contracts";
 import type { CommandConfig } from "../async/contracts";
@@ -31,6 +31,7 @@ export function contractFromDesign(saved: SavedProductDesign, history?: { failur
     const profiles = history && "adapterProfiles" in history ? history.adapterProfiles : history ? [] : currentAdapterProfiles(resources);
     if (profiles.some(p => p !== "failure-cause/1") || profiles.length > 1) error("adapterProfiles", "Unsupported adapter profile selection.");
     const failureCause = profiles.includes("failure-cause/1");
+    const hasSecurity = resources.some(r => r.listenerSettings !== undefined || r.firewallSettings !== undefined);
     const hasFlow = resources.some(r => r.applicationFlow !== undefined);
     const byId = new Map(resources.map((r) => [r.id, r]));
     const connections = [...design.connections].sort((a, b) => a.id < b.id ? -1 : 1);
@@ -41,6 +42,8 @@ export function contractFromDesign(saved: SavedProductDesign, history?: { failur
     for (const e of connections) if (!byId.has(e.sourceId) || !byId.has(e.targetId) || e.sourceId === e.targetId) error(`connections.${e.id}`, "Connect two different resources that both exist on the canvas.");
     if (refused.length) return { refused };
     for (const r of resources) {
+      const securityError = securitySettingsError(r.type, r.listenerSettings, r.firewallSettings, resources);
+      if (securityError) error(`resources.${r.id}.security`, securityError);
       const flowError = applicationFlowError(r.type, r.applicationFlow);
       if (flowError) error(`resources.${r.id}.applicationFlow`, flowError);
       if (r.applicationFlow && (r.asyncWorker?.enabled || outgoing(r.id).some(t => !["Virtual Machine", "Load Balancer"].includes(t.type)))) error(`resources.${r.id}.applicationFlow`, "Flow v1 calls connected VM or load balancer services only; async/data/publish bindings are unsupported.");
@@ -268,14 +271,36 @@ export function contractFromDesign(saved: SavedProductDesign, history?: { failur
       const n = nodes[r.id]!, count = r.autoscaling?.enabled ? r.autoscaling.maxReplicas! : 1;
       for (const { role } of n.resources) {
         n.identities.push({ role, zone: "internal", address: Array.from({ length: Math.min(count, 128) }, () => { const a = address++; return `10.0.${Math.floor(a / 254)}.${a % 254 + 1}`; }).join(",") });
-        const ports = new Set([RESOURCE_PORTS[r.type], ...connections.filter((e) => e.targetId === r.id && edges[e.id]!.targetRole === role).map((e) => e.port)]);
-        for (const port of [...ports].sort((a, b) => a - b)) n.listeners.push({ role, protocol: "tcp", port: q(`${r.id}.${role}.listener.${port}`, port, "count"), tls: "plaintext" });
+        const ports = new Set(r.listenerSettings?.ports ?? [RESOURCE_PORTS[r.type], ...connections.filter((e) => e.targetId === r.id && edges[e.id]!.targetRole === role).map((e) => e.port)]);
+        for (const port of [...ports].sort((a, b) => a - b)) n.listeners.push({ role, protocol: "tcp", port: q(`${r.id}.${role}.listener.${port}`, port, "count", r.listenerSettings !== undefined ? "Saved explicit TCP listener port." : undefined, r.listenerSettings !== undefined), tls: "plaintext" });
+      }
+    }
+    for (const r of resources) {
+      const n = nodes[r.id]!;
+      if (r.listenerSettings !== undefined) n.listenerIntent = { version: 1, ports: [...r.listenerSettings.ports] };
+      if (r.firewallSettings) {
+        const p = r.firewallSettings;
+        n.firewall!.default = p.default;
+        n.firewall!.rules = [...p.rules].sort((a,b) => a.priority - b.priority || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)).map(rule => ({
+          id: rule.id, priority: q(`${r.id}.rule.${rule.id}.priority`, rule.priority, "count", "Saved rule priority.", true),
+          direction: rule.direction, protocol: "tcp", action: rule.action,
+          source: rule.source === "any" ? { kind: "any" } : { kind: "identity", value: `$${rule.source}` },
+          destination: rule.destination === "any" ? { kind: "any" } : { kind: "identity", value: `$${rule.destination}` },
+          fromPort: q(`${r.id}.rule.${rule.id}.fromPort`, rule.fromPort, "count", "Saved first TCP port.", true),
+          toPort: q(`${r.id}.rule.${rule.id}.toPort`, rule.toPort, "count", "Saved last TCP port.", true),
+        }));
+      }
+      if (r.listenerSettings !== undefined || r.firewallSettings !== undefined) {
+        n.profileVersion += "/canvas-security/1";
+        n.provenance.push(`saved-design:${r.id}.security`);
+        n.authoredSecurity = { ...(r.listenerSettings !== undefined ? { listenerSettings: { value: r.listenerSettings, sources: [`saved-design:${r.id}.listenerSettings`] } } : {}), ...(r.firewallSettings !== undefined ? { firewallSettings: { value: r.firewallSettings, sources: [`saved-design:${r.id}.firewallSettings`] } } : {}) };
       }
     }
     const payloads = { light: q("payload.light", 1024, "bytes"), medium: q("payload.medium", 16384, "bytes"), heavy: q("payload.heavy", 262144, "bytes") };
     const payload = payloads[design.workload.payloadSize];
     const assumedTransport: ProductContract["transports"][string] = { version: "canvas-assumptions/2", ownership: "per-path", provenance: [SOURCE], links: ["request", "response"].map((id) => ({ id, from: id === "request" ? "$source" : "$target", to: id === "request" ? "$target" : "$source", policy: "fifo-message/1", bandwidth: q(`link.${id}.bandwidth`, 125000000, "bytes/s"), propagation: q(`link.${id}.propagation`, 100, "us"), bufferBytes: q(`link.${id}.buffer`, 16777216, "bytes") })), pool: { mode: "serial", reuse: true, maxConnections: q("pool.connections", 32, "count"), streams: q("pool.streams", 1, "count"), pending: q("pool.pending", 256, "count"), establish: q("pool.establish", 100, "us"), acquireTimeout: q("pool.acquireTimeout", 1000000, "us"), connectTimeout: q("pool.connectTimeout", 1000000, "us"), responseTimeout: q("pool.responseTimeout", 4000000, "us"), remoteCancellation: "request-cancellation" }, bytes: Object.fromEntries(operations.map((id) => [id, { request: payload, response: payload }])) };
     const contract: ProductContract = {
+      ...(hasSecurity ? { securityProfile: "canvas-security/1" as const } : {}),
       ...(hasFlow ? { applicationFlowProfile: "application-flow/1" as const } : {}),
       ...(failureCause ? { failureCauseProfile: "failure-cause/1" as const } : {}),
       schema: "infraforge-product-model2/1", version: (failureCause ? "canvas-assumptions/2/failure-cause/1" : "canvas-assumptions/2") + (hasFlow ? "/application-flow/1" : ""), designVersion: "saved-domain/1", catalogVersion: CATALOG_SNAPSHOT_DATE, workloadVersion: "product-arrivals/1", ledger, nodes, edges, capabilities,
@@ -303,6 +328,7 @@ export function contractFromDesign(saved: SavedProductDesign, history?: { failur
     for (const r of saved.resources.filter((r) => r.type === "Load Balancer" && r.autoscaling?.enabled)) note(`${r.id}.poolMapping`, resources.filter((x) => x.autoscaling?.enabled).map((x) => x.id), "policy", "The first app by ID owns the adjustable replicas while its drawn siblings stay fixed, preserving the load balancer's total replica bounds.");
     // Non-numeric policy choices are also reviewable; quantity leaves are already listed above.
     const inspect = (value: unknown, path: string): void => {
+      if (hasSecurity && (path.includes(".authoredSecurity") || path.includes(".listenerIntent") || resources.some(r => r.firewallSettings && (path.startsWith(`contract.nodes.${r.id}.firewall.rules`) || path === `contract.nodes.${r.id}.firewall.default`)))) return;
       if (path.includes(".circuitBreaker")) return; // Authored settings and fixed v1 policy quantities have explicit provenance.
       if (path.includes(".config.retry")) return; // Authored quantities and enum/list origins are retained by the retry profile.
       if (/^contract\.nodes\.[^.]+\.type$/.test(path)) return; // The user chose the resource type.

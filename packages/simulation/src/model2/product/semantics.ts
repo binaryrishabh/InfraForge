@@ -18,7 +18,7 @@ const fields: Record<string, string[]> = {
 fields["async-publisher"] = ["execution", "broker", "store", "namespace", "objectBytes", "messageBytes", "delay", "publishAttempts"];
 fields["async-worker"] = ["execution", "broker", "store", "database", "databaseOperation", "databaseKey", "namespace", "concurrency", "prefetch", "pollInterval", "cpu", "blockingWait", "ackDelay", "resultBytes", "idempotency", "poisonKeys"];
 const commandKinds = new Set(["dns-authority", "dns-resolver", "cdn", "registry", "artifact-client", "monitor", "telemetry-backend", "object-store", "delivery-queue"]);
-export function validateMaterializedSemantics(input: SystemsInput, edges: SemanticSpec["edges"]) {
+export function validateMaterializedSemantics(input: SystemsInput, edges: SemanticSpec["edges"], explicitListeners: ReadonlySet<string> = new Set()) {
   const resources = new Map(input.resources.map((r) => [r.id, r]));
   const paths = new Map(input.paths.map((p) => [p.id, p])), pairs = new Set(input.paths.map((p) => JSON.stringify([p.source, p.target]))), dials = new Map(input.systems.connections.map((d) => [d.path, d]));
   const listeners = new Set(input.systems.listeners.map((l) => JSON.stringify([l.resource, l.protocol, requireKnown(l.port, "count")])));
@@ -28,7 +28,7 @@ export function validateMaterializedSemantics(input: SystemsInput, edges: Semant
   }
   for (const p of input.paths) {
     const dial = dials.get(p.id)!;
-    if (!listeners.has(JSON.stringify([p.target, dial.protocol, requireKnown(dial.port, "count")]))) throw Error(`Missing listener for ${p.id} -> ${p.target}; port permission is not a service`);
+    if (!listeners.has(JSON.stringify([p.target, dial.protocol, requireKnown(dial.port, "count")])) && !explicitListeners.has(p.target)) throw Error(`Missing listener for ${p.id} -> ${p.target}; port permission is not a service`);
   }
   for (const e of edges) {
     if (!["queue-poll", "dependency", "routing", "origin", "dns-query", "artifact", "monitor-target", "telemetry-export", "consumer", "policy-attachment"].includes(e.purpose)) throw Error(`Unsupported edge intent ${e.id}`);

@@ -22,6 +22,8 @@ export interface ApplicationProfile {
 type RuntimeResource = SystemsInput["resources"][number];
 export type ResourceTemplate = RuntimeResource extends infer R ? R extends RuntimeResource ? Omit<R, "id"> : never : never;
 export interface NodeContract {
+  listenerIntent?: import("@infraforge/domain/resource").ListenerSettings;
+  authoredSecurity?: Record<string, { value: unknown; sources: string[] }>;
   asyncBadJobPercent?: Quantity<"percent">;
   type: Resource["type"]; profileVersion: string; provenance: string[];
   resources: Array<{ role: string; config: ResourceTemplate }>;
@@ -62,6 +64,7 @@ export interface ControllerProfile {
   manual: Array<{ id: string; at: Quantity<"us">; desired: Quantity<"count"> }>;
 }
 export interface ProductContract {
+  securityProfile?: "canvas-security/1";
   applicationFlowProfile?: "application-flow/1";
   failureCauseProfile?: "failure-cause/1";
   schema: "infraforge-product-model2/1"; version: string; designVersion: string; catalogVersion: string; workloadVersion: "product-arrivals/1";

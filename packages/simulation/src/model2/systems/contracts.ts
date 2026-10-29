@@ -36,6 +36,7 @@ export type SystemIntervention = { id: string; at: Quantity<"us"> } & (
   { kind: "cdn-purge"; target: string; key?: string } |
   { kind: "firewall-rules"; target: string; rules: FirewallRule[] });
 export interface SystemsInput extends Omit<AsyncInput, "workloadVersion" | "resources"> {
+  securityProfile?: "canvas-security/1";
   workloadVersion: "m2g/1"; resources: Array<AsyncInput["resources"][number] | SystemResource>;
   systems: { operation: string; identities: Array<{ id: string; zone: "external" | "internal"; address: string }>; listeners: Listener[]; firewalls: FirewallConfig[]; connections: DialConfig[]; instrumentation: Array<{ target: string; bytes: Quantity<"bytes"> }>; interventions: SystemIntervention[]; commands: Array<{ id: string; at: Quantity<"us">; source: string; target: string; operation: string; request: unknown; bodyBytes: Quantity<"bytes">; provenance: string }> };
 }
