@@ -1,3 +1,5 @@
+import { SecurityReadings } from "./SecuritySection";
+import { useSimulationStore } from "@/features/monitoring/store/simulationStore";
 import { useRef, useState } from "react";
 import { ArrowRight, X } from "lucide-react";
 import { validateConnection } from "@infraforge/domain/validation";
@@ -12,6 +14,7 @@ import { InspectorSection } from "./InspectorSection";
 /* Keyboard-complete wiring: every connection is listed with a remove control,
 and "Connect to" offers only targets the connection rules allow. */
 export function ConnectionsSection({ resource, disabled }: { resource: Resource; disabled: boolean }) {
+  const security = useSimulationStore(s=>s.metrics[resource.id]?.security);
   const resources = useCanvasStore((s) => s.resources);
   const lines = useCanvasStore((s) => s.connectionLines);
   const [target, setTarget] = useState("");
@@ -29,9 +32,10 @@ export function ConnectionsSection({ resource, disabled }: { resource: Resource;
   const chosen = candidates.some((c) => c.id === target) ? target : "";
   const row = (id: string, label: string, other: string, direction: "to" | "from", port: number) => (
     <li key={id} className="flex items-center gap-2 py-1">
-      <span className="min-w-0 flex-1 truncate text-[13px] text-ink">
+      <div className="min-w-0 flex-1 text-[13px] text-ink">
         <span className="text-ink-3">{direction === "to" ? "To" : "From"}</span> {other} <span className="if-num text-xs text-ink-3">:{port}</span>
-      </span>
+        {security && <SecurityReadings metrics={{ ...security, firewall: undefined, edges: security.edges.filter(e=>e.path.startsWith(`${id}:`)) }} />}
+      </div>
       {!disabled && <IconButton size="sm" label={`Remove connection ${label}`} icon={<X size={14} />} onClick={() => { deleteConnection(id); settle(`Removed connection ${label}.`); }} />}
     </li>
   );

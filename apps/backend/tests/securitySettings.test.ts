@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test";
 import { LayoutSchema, LiveTopologySchema } from "../zod_schemas/layout.schema";
+import { configuration, fields } from "../comparison/design";
 
 test("layout and live topology validate security ownership, versions, ports and canvas scopes", () => {
   const db = { id: "db", type: "Database", x: 0, y: 0, listenerSettings: {version:1,ports:[]} };
@@ -12,4 +13,12 @@ test("layout and live topology validate security ownership, versions, ports and 
     const bad = structuredClone(firewall); bad.firewallSettings.rules[0]!.destination = "missing";
     expect(schema.safeParse({...base,resources:[db,bad]}).success).toBe(false);
   }
+});
+
+test("design comparison retains explicit empty listeners and ordered firewall settings",()=>{
+  const base={id:"db",type:"Database" as const,x:0,y:0};
+  const listenerSettings={version:1 as const,ports:[]};
+  expect(fields(configuration(base),configuration({...base,listenerSettings}))).toEqual([{field:"listenerSettings",earlier:null,later:listenerSettings}]);
+  const fw={...base,type:"Firewall" as const}, firewallSettings={version:1 as const,default:"deny" as const,rules:[]};
+  expect(fields(configuration(fw),configuration({...fw,firewallSettings}))).toEqual([{field:"firewallSettings",earlier:null,later:firewallSettings}]);
 });

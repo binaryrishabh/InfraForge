@@ -1,3 +1,4 @@
+import { SecuritySection } from "./SecuritySection";
 import { FlowSection } from "./FlowSection";
 import { AsyncSection } from "./AsyncSection";
 import { CircuitBreakerSection } from "./CircuitBreakerSection";
@@ -36,7 +37,7 @@ export function Inspector({ resource }: { resource: Resource | undefined }) {
         <div className="min-w-0">
           <p className="if-eyebrow">{resource.type}</p>
           <p className="truncate text-[16px] font-semibold text-ink">{resource.name || resource.id}</p>
-          <p className="if-num truncate text-xs text-ink-3">{resource.id} · listens on :{RESOURCE_PORTS[resource.type]}</p>
+          <p className="if-num truncate text-xs text-ink-3">{resource.id} · {resource.type === "Firewall" ? "policy attachment" : resource.listenerSettings ? `TCP listeners: ${resource.listenerSettings.ports.join(", ") || "none"}` : `inferred TCP :${RESOURCE_PORTS[resource.type]}`}</p>
         </div>
       </div>
       <div className="px-4 pb-4">
@@ -53,6 +54,7 @@ export function Inspector({ resource }: { resource: Resource | undefined }) {
       {resource.type === RESOURCE_TYPES.LoadBalancer && <CircuitBreakerSection key={`breaker-${resource.id}`} resource={resource} disabled={locked} />}
       {(resource.type === "Message Queue" || resource.type === "Virtual Machine") && <AsyncSection key={`async-${resource.id}`} resource={resource} disabled={locked} />}
       {resource.type === "Virtual Machine" && <FlowSection key={`flow-${resource.id}`} resource={resource} disabled={locked} />}
+      <SecuritySection key={`security-${resource.id}`} resource={resource} disabled={locked} />
       <ExposureSection key={`exposure-${resource.id}`} resource={resource} disabled={locked} />
       <ConnectionsSection resource={resource} disabled={locked} />
       {!locked && (

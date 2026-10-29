@@ -9,6 +9,7 @@ import pins from "./securityCanvas.pins.json";
 import { createLiveModel2 } from "../src/model2/product/live";
 import type { CausalEvent } from "../src/model2/workload/causal";
 import { quantities } from "./workloadFixture";
+import { expandFirewallRules } from "../src/model2/product/security";
 
 const hash = (v: unknown) => createHash("sha256").update(JSON.stringify(v).replaceAll("\r\n", "\n")).digest("hex");
 test("absent security preserves pre-edit LF-normalized contract, compiled and evidence SHA-256 pins", () => {
@@ -64,6 +65,23 @@ test("live security counters show zero delivery and Firewall remains Unknown wit
   const edge = m.db!.security!.edges.find(e=>e.target === "db")!;
   expect(edge.noListener).toBeGreaterThan(0); expect(edge.backendDeliveries).toBe(0); expect(m.db!.health).toBe("failed");
   expect(m.firewall!.health).toBe("unknown"); expect(m.firewall!.security!.firewall!.occupancy).toBe(0); expect(m.firewall!.security!.firewall!.limit).toBe(10000);
+});
+
+test("default deny permits only when both directions match allow rules", () => {
+  for (const both of [false,true]) {
+    const d=securityDesign();d.resources.find(r=>r.id === "firewall")!.firewallSettings={version:1,default:"deny",rules:[rule("in",0,"allow"),...(both ? [rule("out",0,"allow","egress")] : [])]};
+    const p=prepareSecurity(d),r=createProductModel2(p.compiled);r.advanceTo(1000000);
+    expect(r.evidence().counts.completed).toBe(both ? 10 : 0);
+    if(both) expect(r.evidence().systems.security.edges!.find(e=>e.target === "db")!.backendDeliveries).toBeGreaterThan(0);
+  }
+});
+
+test("resource scopes expand through every replica/helper with original rule tie ordering", () => {
+  const q=quantities(), rules=["a","a_"].map((id,i)=>({...rule(id,0,i === 0 ? "deny" : "allow"),protocol:"tcp" as const,source:{kind:"identity" as const,value:"$app"},destination:{kind:"identity" as const,value:"$db"},priority:q.q(`${id}.priority`,0,"count"),fromPort:q.q(`${id}.from`,5432,"count"),toPort:q.q(`${id}.to`,5432,"count")}));
+  const expanded=expandFirewallRules(rules,new Map([["app#0/main","app#0"],["app#1/main","app#1"],["app#1/aside","app#1/aside"],["db/main","db"]]));
+  expect(expanded).toHaveLength(6);expect(new Set(expanded.map(r=>r.id)).size).toBe(6);
+  expect(expanded.map(r=>r.source.value)).toEqual(["app#0","app#1","app#1/aside","app#0","app#1","app#1/aside"]);
+  expect([...expanded].sort((a,b)=>a.id < b.id ? -1 : 1).slice(0,3).every(r=>r.authoredId === "a")).toBe(true);
 });
 
 test("canvas-compiled sessions survive policy change while fresh flows fail at generation two", () => {
