@@ -29,7 +29,7 @@ test("versioned interventions enforce strict parameters, bounds, remaining horiz
   const action = {atSecond: 5, request: {kind: "intervention", parameters: {interventionId: "session-capacity", revision: 1, target: {resourceId: "db"}, parameters: {sessions: 0, duration: 2}}}};
   const submit = (a: unknown = action, run = free) => checkSubmission({stopAtSecond: 10, actions: [a]}, run);
   expect(submit()).toEqual({stopAtSecond: 10, actions: [action]} as never);
-  for (const parameters of [{sessions: -1, duration: 2}, {sessions: 513, duration: 2}, {sessions: 0.1, duration: 2}, {sessions: 0, duration: 301}, {sessions: 0, duration: 2, extra: true}])
+  for (const parameters of [{sessions: -1, duration: 2}, {sessions: 0.1, duration: 2}, {sessions: 0, duration: 301}, {sessions: 0, duration: 2, extra: true}])
     expect(() => submit({...action, request: {...action.request, parameters: {...action.request.parameters, parameters}}})).toThrow();
   expect(() => submit({...action, request: {...action.request, parameters: {...action.request.parameters, revision: 2}}})).toThrow();
   expect(() => submit({...action, request: {...action.request, parameters: {...action.request.parameters, trigger: "challenge-experiment"}}})).toThrow();

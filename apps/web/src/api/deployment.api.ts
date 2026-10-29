@@ -52,7 +52,7 @@ export const setDeploymentLoad = async(deploymentId: string, targetLoadFraction:
   return response.data.message;
 }
 
-// Tear down a LIVE deployment â€” stops the simulation permanently
+// Tear down a LIVE deployment — stops the simulation permanently
 export const teardownDeployment = async(deploymentId: string): Promise<RunAction> => {
   if (browserRunFor(deploymentId)) return stopBrowserRun(deploymentId);
   const response = await axios.post(`${API_URL}/deployments/${deploymentId}/teardown`);
@@ -75,7 +75,7 @@ export const injectChaos = async(deploymentId: string, type: string, resourceId:
   return response.data.message;
 }
 
-// Vertical scaling â€” swap a resource's SKU with realistic restart downtime
+// Vertical scaling — swap a resource's SKU with realistic restart downtime
 export const scaleVertical = async(deploymentId: string, resourceId: string, skuId: string): Promise<string> => {
   const response = await axios.post(`${API_URL}/deployments/${deploymentId}/scale-vertical`, {
     resourceId,
@@ -84,7 +84,7 @@ export const scaleVertical = async(deploymentId: string, resourceId: string, sku
   return response.data.message;
 }
 
-// Manual horizontal scale â€” nudge a VM pool's replica count up or down on a LIVE deployment
+// Manual horizontal scale — nudge a VM pool's replica count up or down on a LIVE deployment
 export const scalePool = async(deploymentId: string, lbId: string, delta: number): Promise<string> => {
   if (browserRunFor(deploymentId)) return actInBrowser(deploymentId, { kind: "pool-scale", parameters: { lbId, delta: delta as 1 | -1 } });
   const response = await axios.post(`${API_URL}/deployments/${deploymentId}/scale-pool`, {

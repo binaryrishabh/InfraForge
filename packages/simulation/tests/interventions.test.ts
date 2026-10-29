@@ -63,6 +63,8 @@ test("bad revision, role, path, bounds, horizon and overlap leave timeline and e
   refuse(intervention("session-capacity", {sessions: 0, duration: 1}, {resourceId: "app"}), "ROLE");
   refuse(intervention("delay", {delay: 1, duration: 1}, {edgeId: "missing", direction: "both"}), "PATH");
   refuse(intervention("cpu-capacity", {cores: 100, duration: 1}), "BOUNDS");
+  // Session capacity can only be lowered from the authored limit (the bound needs the design, so the compile step enforces it).
+  refuse(intervention("session-capacity", {sessions: 1_000_000, duration: 1}), "BOUNDS");
   refuse(intervention("session-capacity", {sessions: 0, duration: 7}), "BOUNDS");
   run.apply(intervention("session-capacity", {sessions: 0, duration: 2}));
   refuse(intervention("session-capacity", {sessions: 1, duration: 1}), "OVERLAP");

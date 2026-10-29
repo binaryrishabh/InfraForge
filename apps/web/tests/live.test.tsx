@@ -3,6 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
 import { DeploymentStatus, type Deployment } from "@infraforge/contracts/deployment";
 import { LivePanel } from "../src/features/live/LivePanel";
+import { FaultControl } from "../src/features/live/controls/FaultControl";
 import { runPhase, stopTarget } from "../src/features/live/runState";
 import { FAULTS } from "../src/features/live/faults";
 import { useSimulationStore } from "../src/features/monitoring/store/simulationStore";
@@ -45,4 +46,11 @@ test("run phase and the automatic stop come from recorded run state", () => {
 test("fault descriptions state the model's actual effect", () => {
   expect(FAULTS.find((f) => f.id === "cpu-spike")?.effect).toBe("A competing process holds 45% of the target's modeled cores.");
   expect(FAULTS.some((f) => f.id === "disk-failure" || f.id === "memory-leak")).toBe(false);
+});
+test("the live fault control offers the classic crash and CPU spike, never the options the engine refuses", () => {
+  const html = renderToStaticMarkup(<FaultControl deploymentId="run" resources={resources} />);
+  expect(html).toContain("Inject a classic fault");
+  expect(html).toContain("Crash");
+  expect(html).toContain("CPU spike");
+  for (const refused of ["Memory leak", "memory-leak", "Disk failure", "disk-failure"]) expect(html).not.toContain(refused);
 });

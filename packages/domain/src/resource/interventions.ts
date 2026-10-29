@@ -11,7 +11,7 @@ export interface InterventionDescriptor {
 const duration: InterventionParameter = { name: "duration", kind: "integer", unit: "s", min: 1, max: "remaining-seconds" };
 export const INTERVENTIONS: readonly InterventionDescriptor[] = [
   { id: "session-capacity", revision: 1, label: "Session capacity", targetKind: "Database", mechanism: "relational",
-    parameters: [{ name: "sessions", kind: "integer", unit: "sessions", min: 0, max: 512 }, duration], reversible: true, endPolicy: "timed", requires: ["fixed relational role"] },
+    parameters: [{ name: "sessions", kind: "integer", unit: "sessions", min: 0, max: "authored-baseline" }, duration], reversible: true, endPolicy: "timed", requires: ["fixed relational role"] },
   { id: "cpu-capacity", revision: 1, label: "CPU capacity", targetKind: "Database", mechanism: "relational",
     parameters: [{ name: "cores", kind: "number", unit: "cores", min: 0, max: "authored-baseline" }, duration], reversible: true, endPolicy: "timed", requires: ["fixed relational role", "known authored cores"] },
   { id: "flush", revision: 1, label: "Flush cache", targetKind: "Cache", mechanism: "cache",

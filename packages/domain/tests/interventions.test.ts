@@ -6,10 +6,15 @@ test("capabilities round-trip as data and enforce product policy at contextual b
   expect(INTERVENTIONS.map(d => d.id)).toEqual(["session-capacity", "cpu-capacity", "flush", "delay", "partition"]);
   expect(interventionError(request, { remainingSeconds: 1 })).toBeNull();
   for (const parameters of [{sessions: -1, duration: 1}, {sessions: 513, duration: 1}, {sessions: 0.5, duration: 1}, {sessions: Infinity, duration: 1}, {sessions: 0, duration: 301}, {sessions: 0}, {sessions: 0, duration: 1, extra: true}])
-    expect(interventionError({...request, parameters})).toContain("INTERVENTION_");
+    expect(interventionError({...request, parameters}, {authoredBaseline: 512})).toContain("INTERVENTION_");
   expect(interventionError(request, {remainingSeconds: 0})).toContain("BOUNDS");
   expect(interventionError({...request, revision: 2})).toContain("REVISION");
   expect(interventionError({...request, target: {edgeId: "edge", direction: "both"}})).toContain("TARGET");
+  // Session capacity can only be lowered from the authored limit: a real database needs a restart to raise max_connections.
+  const sessions = (n: number) => ({...request, parameters: {sessions: n, duration: 1}});
+  expect(interventionError(sessions(101), {authoredBaseline: 100, remainingSeconds: 10})).toContain("BOUNDS");
+  expect(interventionError(sessions(100), {authoredBaseline: 100, remainingSeconds: 10})).toBeNull();
+  expect(interventionError(sessions(0), {authoredBaseline: 100, remainingSeconds: 10})).toBeNull();
   const cpu = {...request, interventionId: "cpu-capacity", parameters: {cores: 2, duration: 1}};
   expect(interventionError(cpu, {authoredBaseline: 1})).toContain("BOUNDS");
   expect(interventionError(cpu, {authoredBaseline: 2})).toBeNull();

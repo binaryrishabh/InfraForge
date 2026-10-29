@@ -16,9 +16,9 @@ export function resolveIntervention(design: SavedProductDesign, contract: Produc
     const spec = contract.nodes[target.resourceId], resource = design.resources.find(r => r.id === target.resourceId);
     const role = spec?.resources.find(r => r.role === spec.primary), material = input.resources.find(r => r.id === target.resourceId);
     if (!resource || resource.type !== d.targetKind || !spec || spec.controller || role?.config.kind !== d.mechanism || material?.kind !== d.mechanism) throw Error("INTERVENTION_ROLE: target lacks a fixed declared mechanism role");
-    if (d.id === "cpu-capacity") {
+    if (d.id === "cpu-capacity" || d.id === "session-capacity") {
       if (material.kind !== "relational") throw Error("INTERVENTION_ROLE: relational execution required");
-      authoredBaseline = requireKnown(material.execution.cores, "cores");
+      authoredBaseline = d.id === "cpu-capacity" ? requireKnown(material.execution.cores, "cores") : requireKnown(material.maxSessions, "count");
     }
     resolvedTargets = [material.id];
   } else {
