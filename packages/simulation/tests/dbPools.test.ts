@@ -82,13 +82,13 @@ test("PG2 cancel before commit preserves the session and rolls back writes", () 
   expect(receipt.cancel()).toBe("cancelled"); expect(f.db.evidence().rows[0]!.version).toBe(1); expect(f.db.sessionAlive("a")).toBe(true);
 });
 
-function transport2() {
+function transport2(leaseHeldOnlyWithRemote = true) {
   const f = database2(), path = structuredClone(f.input.paths.find(p => p.target === "db")!);
   const links = new Map(f.input.links.map(l => [l.id, networkLink(l, f.clock)]));
   let alive = true; const events: Array<{ kind: string; detail: string }> = [];
   const transport = pathTransport(path, f.clock, links, (_target, work, done) => f.db.accept(work, done), () => alive,
     (kind, _id, detail) => events.push({ kind, detail }), id => f.db.closeSession(id),
-    { holdLeaseUntilRemoteTerminal: true, open(id, done) { done(undefined, f.db.openSession(id) ? undefined : "session-limit"); return () => false; }, close: id => f.db.closeSession(id), returnTraffic: id => f.db.sessionAlive(id) });
+    { holdLeaseUntilRemoteTerminal: true, leaseHeldOnlyWithRemote, open(id, done) { done(undefined, f.db.openSession(id) ? undefined : "session-limit"); return () => false; }, close: id => f.db.closeSession(id), returnTraffic: id => f.db.sessionAlive(id) });
   return { ...f, path, links, transport, events, crash: () => { alive = false; f.db.pause(true); } };
 }
 
@@ -177,4 +177,29 @@ test("connection lifecycle causal evidence is promoted only for the opted-in pro
   expect(seen).toEqual([]);
   for (const kind of ["connection-acquired", "connection-closed", "connection-released", "db-session-open", "db-session-refused", "db-session-closed"]) trace.emit(kind, "id", "connection", undefined, undefined, true);
   expect(seen).toHaveLength(6);
+});
+
+test("older revisions keep the original lease rule, newer revisions release a lease whose remote never started", () => {
+  for (const newer of [false, true]) {
+    const f = transport2(newer);
+    const receipt = f.transport.exchange(f.work("a", "light"), () => {});
+    f.clock.advanceTo(11); f.crash(); f.clock.advanceTo(30);
+    receipt.cancel(); f.clock.advanceTo(5000);
+    const pool = f.transport.measure().pool;
+    expect(pool.acquired).toBe(1);
+    // Before the correction the lease stayed held for good; PostgreSQL/2 releases it.
+    expect(pool.released).toBe(newer ? 1 : 0);
+  }
+});
+
+test("PostgreSQL/1 pause closes and forgets the per-session traces it holds", () => {
+  const input = pgInput(), config = input.resources.find(r => r.kind === "relational") as RelationalConfig;
+  expect(config.semantics).toBe("postgresql-keyed/1");
+  const db = relationalDatabase(config, new EventKernel(10000)), kinds: string[] = [];
+  expect(db.openSession("s1", kind => kinds.push(`s1:${kind}`))).toBe(true);
+  db.pause(true);
+  expect(kinds.filter(k => k.endsWith("db-session-closed"))).toEqual(["s1:db-session-closed"]);
+  // Nothing is retained: closing the vanished sessions later emits nothing more.
+  db.pause(false); db.closeSession("s1");
+  expect(kinds.filter(k => k.endsWith("db-session-closed")).length).toBe(1);
 });

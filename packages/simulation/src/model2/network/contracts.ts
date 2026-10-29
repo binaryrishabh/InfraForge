@@ -51,6 +51,8 @@ export interface TransportResult { ok: boolean; reason?: FailureReason; ambiguou
 export interface ConnectionRoute { target: string; request: string[]; response: string[] }
 export interface ConnectionHook {
   holdLeaseUntilRemoteTerminal?: boolean;
+  // Hold a cancelled caller's lease only when a remote request actually started (newer revisions); older ones hold once delivered.
+  leaseHeldOnlyWithRemote?: boolean;
   open(id: string, done: (route?: ConnectionRoute, failure?: FailureReason) => void): () => boolean;
   close(id: string): void;
   returnTraffic?(id: string): boolean;
