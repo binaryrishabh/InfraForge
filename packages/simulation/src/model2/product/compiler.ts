@@ -5,6 +5,7 @@ import type { SystemsInput } from "../systems/contracts";
 import { canonical, derivedLedger } from "./provenance";
 import { TRANSLATION_OWNERS, ownerAccepts, rewriteReferences } from "./owners";
 import { compileArrivals } from "./workload";
+import { compileInterventions } from "./interventions";
 import { compileFaults } from "./faults";
 import { validateController } from "./controller-policy";
 import type { SavedProductDesign, ProductContract, CompileResult, Diagnostic, SemanticSpec, CompiledPool, EdgeContract } from "./contracts";
@@ -199,6 +200,7 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
       runtime.limits = { ...contract.limits, maxEvents, maxLiveCalls };
     }
     phase = "faults"; const crashes = compileFaults(contract.faults, runtime, (id) => expansion.get(id) ?? [id], provenance);
+    phase = "interventions"; const interventionReceipts = compileInterventions(design, contract, runtime, provenance);
     phase = "capabilities";
     const capabilities = capabilityFacts(contract, resources);
     semantic = { schema: "infraforge-semantic-infrastructure/1", versions: { design: contract.designVersion, compiler: COMPILER_VERSION, model: "2", application: `${app.id}@${app.version}`, catalog: contract.catalogVersion, workload: contract.workloadVersion, contract: contract.version }, nodes: resources.map((r) => ({ id: r.id, type: r.type, owner: TRANSLATION_OWNERS[r.type].owner, profile: contract.nodes[r.id]!.profileVersion })), edges: semanticEdges, capabilities, legacyMetadata: resources.map(({ id, region, public: exposed, encryption, openPorts }) => ({ id, region, public: exposed, encryption, openPorts })), unknown: ["Provider effective CPU/credits, memory/device failure, price/region physics", "TLS crypto CPU/timing, physical link demand unless explicitly supplied", "Application profiles prove only their authored validity domain"], numericOrigins: [] };
@@ -206,7 +208,7 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
     semantic.numericOrigins = numericOrigins(runtime, pools, contract, crashes);
     runtime.ledger.sort((a, b) => a.id < b.id ? -1 : 1);
     phase = "runtime-contract"; validateMaterializedSemantics(runtime, semantic.edges); validateSystems(runtime);
-    return { ok: true, value: canonical({ schema: "infraforge-compiled-product/1", semantic, input: runtime, pools, crashes }), diagnostics };
+    return { ok: true, value: canonical({ schema: "infraforge-compiled-product/1", semantic, input: runtime, pools, crashes, ...(interventionReceipts.length ? {interventionReceipts} : {}) }), diagnostics };
   } catch (cause) {
     const message = cause instanceof Error ? cause.message : String(cause);
     const code = message.startsWith("Missing listener") ? "MISSING_LISTENER" : message.startsWith("Unsupported resource setting") ? "UNSUPPORTED_RESOURCE_SETTING" : /provenance|Anonymous compiler number/.test(message) ? "MISSING_PROVENANCE" : /Missing.*operation|read\/write operation/.test(message) ? "MISSING_OPERATION_MAPPING" : phase.toUpperCase().replaceAll("-", "_") + "_INCOMPLETE";

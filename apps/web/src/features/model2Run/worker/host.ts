@@ -40,6 +40,7 @@ export function createRunHost(post: (message: FromWorker) => void, timers: Timer
   };
 
   const act = (id: string, request: Extract<ToWorker, { type: "action" }>["request"]) => {
+    if (start?.experiment) return post({type: "action", id, ok: false, message: "Challenge attempts take only the server-authored experiment."});
     if (!run || finished) return post({ type: "action", id, ok: false, message: "The run is not running." });
     try {
       const at = run.simulatedSeconds, applied = run.apply(request);

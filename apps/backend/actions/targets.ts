@@ -16,6 +16,10 @@ export function validateActionTarget(request: ActionRequest, topology: RunTopolo
       }
     }
   }
+  if (request.kind === "intervention") {
+    const target = request.parameters.target;
+    if ("resourceId" in target ? !topology.resources.some(r => r.id === target.resourceId) : !topology.connectionLines.some(e => e.id === target.edgeId)) throw new ValidationError("INTERVENTION_TARGET: absent from accepted topology");
+  }
   if (request.kind === "topology") {
     const { resources, connectionLines } = request.parameters;
     const ids = new Set(resources.map((r) => r.id));

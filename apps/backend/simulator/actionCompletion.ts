@@ -6,6 +6,9 @@ const MODEL2_POOL_SETTLE_SECONDS = 300;
 export function actionCompletion(instance: SimulationInstance, running: RunningAction):
   { status: "completed" | "failed" | "cancelled"; outcome: ActionOutcome; failureReason?: string } | null {
   const engine = instance.model2, { request, outcome } = running, now = engine.simulatedSeconds;
+  if (request.kind === "intervention" && now >= running.endSecond!) {
+    return {status: "completed", outcome: {...outcome, interventionEnded: true}};
+  }
   if (request.kind === "chaos" && now >= running.endSecond!) {
     return { status: "completed" as const, outcome: { ...outcome, faultEnded: true, observedOverallHealth: engine.view().overallHealth } };
   }

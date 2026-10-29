@@ -1,3 +1,5 @@
+import type { InterventionRequest } from "@infraforge/domain/resource";
+import type { InterventionReceipt } from "@infraforge/contracts/actions";
 import type { Resource, ConnectionLine } from "@infraforge/domain/resource";
 import type { WorkloadProfile } from "@infraforge/domain/workload";
 import type { Quantity } from "../../reality/quantity";
@@ -73,13 +75,14 @@ export interface ProductContract {
   instrumentation: SystemsInput["systems"]["instrumentation"];
   commands: SystemsInput["systems"]["commands"];
   faults: ProductFault[];
+  interventions?: Array<{id: string; atUs: number; request: InterventionRequest}>;
   capabilities: Array<{ resource: string; sku: string; catalogVersion: string; field: "vCpu" | "memoryGb"; value: Quantity; fact: string }>;
 }
 export interface ProductFault { id: string; kind: "Crash" | "CpuSpike" | "MemoryLeak" | "NetworkDelay" | "DiskFailure"; target: string; at: Quantity<"us">; duration: Quantity<"us">; restart?: Quantity<"us">; scope?: string[]; cpu?: Quantity<"cpu-us">; parallelism?: Quantity<"cores">; delay?: Quantity<"us">; profile?: "retain-logical-state/1" }
 export interface Diagnostic { code: string; path: string; message: string; severity: "error" | "warning" }
 export interface SemanticSpec { schema: "infraforge-semantic-infrastructure/1"; versions: { design: string; compiler: string; model: "2"; application: string; catalog: string; workload: string; contract: string }; nodes: Array<{ id: string; type: Resource["type"]; owner: string; profile: string }>; edges: Array<{ id: string; source: string; target: string; purpose: EdgePurpose }>; capabilities: Array<ProductContract["capabilities"][number] & { scope: string }>; unknown: string[]; legacyMetadata: Array<{ id: string; region?: string; public?: boolean; encryption?: boolean; openPorts?: number[] }>; numericOrigins: Array<{ path: string; origin: "user-authored" | "application-profile" | "provider-fact" | "derived" | "policy" | "Unknown"; sources: string[] }> }
 export interface CompiledPool { id: string; replicas: string[]; profile: ControllerProfile; artifactClients: Array<{ id: string; replica: string }> }
-export interface CompiledProduct { schema: "infraforge-compiled-product/1"; semantic: SemanticSpec; input: SystemsInput; pools: CompiledPool[]; crashes: Array<{ target: string; at: Quantity<"us">; restartAt: Quantity<"us"> }> }
+export interface CompiledProduct { interventionReceipts?: InterventionReceipt[]; schema: "infraforge-compiled-product/1"; semantic: SemanticSpec; input: SystemsInput; pools: CompiledPool[]; crashes: Array<{ target: string; at: Quantity<"us">; restartAt: Quantity<"us"> }> }
 export type CompileResult = { ok: true; value: CompiledProduct; diagnostics: Diagnostic[] } | { ok: false; diagnostics: Diagnostic[]; semantic?: SemanticSpec };
 export type ExecutionTemplate = Omit<ComputeResource, "id">;
 export type ApplicationDemand = ComputeProfile;

@@ -26,5 +26,5 @@ export function createProductModel2(compiled: CompiledProduct, usage?: RuntimeUs
     pools: () => controllers.map((c) => c.status()),
     // Whether a resource is up and taking work right now (a crash makes it neither).
     up: (id: string) => { const e = network?.endpoint(id); return !!e && e.alive && e.ready; },
-    evidence() { return { ...runtime.evidence(), ...(flow ? { applicationFlow: flow.measure() } : {}), workloadVersion: "m2h/1" as const, product: { versions: compiled.semantic.versions, semantic: compiled.semantic, controllers: controllers.map((c) => c.evidence()), scope: "Internal compiled authored contracts; no provider calibration/public activation" } }; } };
+    evidence() { const evidence = runtime.evidence(); return { ...evidence, ...(flow ? { applicationFlow: flow.measure() } : {}), workloadVersion: "m2h/1" as const, product: { ...(compiled.interventionReceipts?.length ? {interventions: compiled.interventionReceipts.map(r => ({...r, phase: evidence.capture.throughUs < r.atUs ? "scheduled" : r.endUs !== null && evidence.capture.throughUs < r.endUs ? "active" : "completed"}))} : {}), versions: compiled.semantic.versions, semantic: compiled.semantic, controllers: controllers.map((c) => c.evidence()), scope: "Internal compiled authored contracts; no provider calibration/public activation" } }; } };
 }

@@ -1,7 +1,9 @@
+import type { InterventionRequest } from "@infraforge/domain/resource";
 import type { ChaosType } from "@infraforge/domain/resource";
 import type { RunTopology } from "../run-inputs/RunInputs.interface";
 
 export type ActionRequest =
+  | { kind: "intervention"; parameters: InterventionRequest }
   | { kind: "load"; parameters: { targetLoadFraction: number } }
   | { kind: "speed"; parameters: { speed: 0 | 1 | 10 | 60 } }
   // `trigger` marks the one fault a resilience challenge schedules itself; people never set it.
@@ -11,7 +13,11 @@ export type ActionRequest =
   | { kind: "topology"; parameters: RunTopology & { expectedRevision: number; acceptedRevision?: number } }
   | { kind: "teardown"; parameters: { trigger?: "matched-stop" | "challenge-evaluation" | "operational-limit" } };
 
+export interface InterventionReceipt extends InterventionRequest {
+  actionId: string; resolvedTargets: string[]; affectedPaths: string[]; atUs: number; endUs: number | null;
+}
 export interface ActionOutcome {
+  intervention?: InterventionReceipt; interventionEnded?: boolean;
   previousTarget?: number; appliedTarget?: number;
   previousSpeed?: number; appliedSpeed?: number;
   durationSimulatedSeconds?: number; faultEnded?: boolean; observedOverallHealth?: string;

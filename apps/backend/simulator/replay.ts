@@ -12,7 +12,7 @@ export async function recordReplayActions(deploymentId: string, instance: Simula
   replay.next = await prisma.$transaction(async (tx) => {
     await tx.$queryRaw`SELECT id FROM "Deployment" WHERE id = ${deploymentId} FOR UPDATE`;
     // Browser runs with actions are never challenge attempts, so these kinds are only ever submitted actions here.
-    let next = await tx.runAction.count({ where: { deploymentId, kind: { in: ["load", "chaos", "pool-scale"] } } });
+    let next = await tx.runAction.count({ where: { deploymentId, kind: { in: ["load", "chaos", "pool-scale", "intervention"] } } });
     while (next < replay.actions.length && replay.actions[next]!.atSecond <= second) {
       const { request } = replay.actions[next]!;
       const run = await tx.deployment.update({ where: { id: deploymentId }, data: { actionSequence: { increment: 1 } } });

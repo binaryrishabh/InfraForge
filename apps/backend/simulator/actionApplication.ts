@@ -16,7 +16,7 @@ export function applyAction(instance: SimulationInstance, id: string, request: A
   catch (error) { if (error instanceof ActionRefused) throw new ActionExecutionError(error.message); throw error; }
   if (request.kind === "load") instance.pendingLogs.push({ timestamp: new Date().toISOString(), source: "load-tester", severity: request.parameters.targetLoadFraction > 1 ? "warn" : "info",
     message: `Load target applied at ${Math.round(request.parameters.targetLoadFraction * 100)}% of declared workload.` });
-  if (request.kind === "chaos") { instance.actions.set(id, { id, request, outcome: applied.outcome, endSecond: applied.endSecond }); return { status: "running", outcome: applied.outcome }; }
+  if (request.kind === "chaos" || (request.kind === "intervention" && applied.endSecond !== undefined)) { instance.actions.set(id, { id, request, outcome: applied.outcome, endSecond: applied.endSecond }); return { status: "running", outcome: applied.outcome }; }
   if (request.kind === "pool-scale") {
     const previousReplicas = (applied.outcome as { previousReplicaCount: number }).previousReplicaCount;
     instance.actions.set(id, { id, request, outcome: applied.outcome, previousReplicas, appliedSecond: engine.simulatedSeconds });

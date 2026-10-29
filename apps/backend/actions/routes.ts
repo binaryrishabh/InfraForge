@@ -7,7 +7,7 @@ import { requestRunAction } from "./persistence";
 import { actionDto } from "./contract";
 
 export const actionRouter = Router();
-const paths = { load: "load", speed: "speed", chaos: "chaos", "scale-vertical": "vertical-scale",
+const paths = { intervention: "intervention", load: "load", speed: "speed", chaos: "chaos", "scale-vertical": "vertical-scale",
   "scale-pool": "pool-scale", "sync-topology": "topology", teardown: "teardown" } as const;
 for (const [path, kind] of Object.entries(paths)) {
   actionRouter.post(`/:deploymentId/${path}`, async (req, res) => {

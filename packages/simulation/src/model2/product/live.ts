@@ -62,6 +62,7 @@ export function createLiveModel2(compiled: CompiledProduct, nodeIds: string[]) {
   return {
     get simulatedSeconds() { return now / SECOND; },
     get horizon() { return runtime.horizon; },
+    evidence: runtime.evidence,
     applicationFlowEvidence: runtime.applicationFlowEvidence,
     advanceSecond() {
       if (now + SECOND > runtime.horizon) throw new Error("The run has reached its simulated horizon");
@@ -154,6 +155,7 @@ export function createActionableLiveModel2(design: SavedProductDesign, base: Pro
   return {
     get simulatedSeconds() { return shown; },
     get horizon() { return run.horizon; },
+    evidence: () => run.evidence(),
     applicationFlowEvidence: () => run.applicationFlowEvidence(),
     get actions(): readonly TimedAction[] { return actions; },
     get catchingUp() { return rebuilding !== null; },

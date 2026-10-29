@@ -1,3 +1,7 @@
+import { withTimeline } from "./timeline";
+import { compileProduct } from "./compiler";
+import { interventionOptions, incomingMaterializedLinks } from "./interventions";
+import { interventionError } from "@infraforge/domain/resource";
 import { findSku } from "@infraforge/catalog";
 import { GENERIC_MONTHLY_USD } from "../../cost";
 import { SIMULATION_CONSTANTS } from "../../tuning";
@@ -40,6 +44,9 @@ export function createModel2Run(input: CapturedModel2Input, horizonSeconds: numb
   // Live runs generate arrivals as they advance, so long runs and rebuilds after actions stay small and fast.
   const contract: ProductContract = { ...built.contract, arrival: { ...built.contract.arrival, generated: true } }, nodeIds = input.resources.map((r) => r.id);
   const run = createActionableLiveModel2(design, contract, nodeIds);
+  const initial = compileProduct(design, contract);
+  if (!initial.ok) throw new ActionRefused(initial.diagnostics.map(d => d.message).join("; "));
+  const options = interventionOptions(design, contract, initial.value.input);
   const types = new Map(input.resources.map((r) => [r.id, r.type]));
   const pools = poolLayout(input, contract);
   let target = 1;
@@ -57,6 +64,8 @@ export function createModel2Run(input: CapturedModel2Input, horizonSeconds: numb
   });
 
   return {
+    evidence: () => run.evidence(),
+    interventionOptions: () => options,
     applicationFlowEvidence: () => run.applicationFlowEvidence(),
     get simulatedSeconds() { return run.simulatedSeconds; },
     get horizonSeconds() { return run.horizon / SECOND; },
@@ -95,6 +104,17 @@ export function createModel2Run(input: CapturedModel2Input, horizonSeconds: numb
         try { run.apply(action); } catch (error) { throw new ActionRefused(`Model 2 cannot apply this here: ${(error as Error).message}`); }
       };
       switch (request.kind) {
+        case "intervention": {
+          const error = interventionError(request.parameters, {remainingSeconds: Math.floor((run.horizon - now * SECOND - 1) / SECOND)});
+          if (error) throw new ActionRefused(error);
+          attempt({id: actionId, kind: "intervention", request: request.parameters});
+          // The compiler has revalidated the materialized role, bounds, path and overlap.
+          const applied = compileProduct(design, withTimeline(contract, [...run.actions]));
+          if (!applied.ok) throw new Error("Accepted intervention failed recompilation");
+          const receipt = applied.value.interventionReceipts!.find(r => r.actionId === actionId)!;
+          return {outcome: {intervention: receipt, ...(receipt.endUs === null ? {interventionEnded: true} : {durationSimulatedSeconds: Number(request.parameters.parameters.duration)})},
+            ...(receipt.endUs === null ? {} : {endSecond: Math.ceil(receipt.endUs / SECOND)})};
+        }
         case "load": {
           const previous = target;
           attempt({ id: actionId, kind: "load", fraction: request.parameters.targetLoadFraction });
@@ -112,7 +132,7 @@ export function createModel2Run(input: CapturedModel2Input, horizonSeconds: numb
             if (!cores) throw new ActionRefused("A CPU spike needs a resource whose CPU Model 2 models.");
             attempt({ id: actionId, kind: "cpu-spike", node: resourceId, durationUs: duration * SECOND, coreUs: Math.round(CPU_SPIKE_SHARE * cores * duration * SECOND), cores: CPU_SPIKE_SHARE * cores });
           } else {
-            const links = linksInto(contract, resourceId);
+            const links = incomingMaterializedLinks(initial.value.input, resourceId);
             if (!links.length) throw new ActionRefused("No network link leads into this resource.");
             attempt({ id: actionId, kind: "network-delay", links, durationUs: duration * SECOND, delayUs: NETWORK_DELAY_US });
           }
@@ -174,9 +194,6 @@ function coresOf(contract: ProductContract, node: string) {
   const n = contract.nodes[node], primary = n?.resources.find((r) => r.role === n.primary.replace(/^\$self\/?/, "") || r.role === "main");
   const config = primary?.config as { kind?: string; cores?: { kind: string; value?: number } } | undefined;
   return config?.kind === "compute" && config.cores?.kind === "known" ? config.cores.value ?? null : null;
-}
-function linksInto(contract: ProductContract, node: string) {
-  return Object.values(contract.transports).flatMap((t) => t.links).filter((l) => l.to === `$${node}` || l.to.startsWith(`$${node}/`)).map((l) => l.id);
 }
 // What changed in one second, in plain words.
 function transitions(before: LiveProjection | null, after: LiveProjection, types: Map<string, string>): SimulationLog[] {

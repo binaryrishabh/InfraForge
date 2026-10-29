@@ -1,3 +1,4 @@
+import { interventionError, type InterventionRequest } from "@infraforge/domain/resource";
 import type { RealityEntry } from "../../reality/ledger";
 import type { Quantity, Unit } from "../../reality/quantity";
 import type { ProductContract } from "./contracts";
@@ -6,6 +7,7 @@ import type { ProductContract } from "./contracts";
 // A live run is its design plus this timeline: rebuilding it with a new action at time T
 // leaves everything before T exactly as it was, because Model 2 is deterministic.
 export type TimedAction = { id: string; atUs: number } & (
+  | { kind: "intervention"; request: InterventionRequest }
   | { kind: "load"; fraction: number }
   | { kind: "crash"; node: string; durationUs: number; restartUs: number }
   | { kind: "cpu-spike"; node: string; durationUs: number; coreUs: number; cores: number }
@@ -27,7 +29,12 @@ export function withTimeline(base: ProductContract, actions: TimedAction[]): Pro
     if (!/^[A-Za-z0-9_-]{1,64}$/.test(action.id) || ids.has(action.id) || !Number.isSafeInteger(action.atUs) || action.atUs < 0) throw Error("Each action needs a unique simple id and a whole-microsecond time");
     ids.add(action.id);
     const at = known(action, "at", action.atUs, "us");
-    if (action.kind === "load") (contract.arrival.changes ??= []).push({ at, fraction: known(action, "fraction", action.fraction, "ratio") });
+    if (action.kind === "intervention") {
+      const error = interventionError(action.request);
+      if (error) throw Error(error);
+      (contract.interventions ??= []).push({id: action.id, atUs: action.atUs, request: action.request});
+    }
+    else if (action.kind === "load") (contract.arrival.changes ??= []).push({ at, fraction: known(action, "fraction", action.fraction, "ratio") });
     else if (action.kind === "crash") contract.faults.push({ id: action.id, kind: "Crash", target: action.node, at, duration: known(action, "duration", action.durationUs, "us"),
       restart: known(action, "restart", action.restartUs, "us"), profile: "retain-logical-state/1" });
     else if (action.kind === "cpu-spike") contract.faults.push({ id: action.id, kind: "CpuSpike", target: action.node, at, duration: known(action, "duration", action.durationUs, "us"),
