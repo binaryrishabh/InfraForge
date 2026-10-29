@@ -133,6 +133,8 @@ test("security evidence has row and byte bounds; omitted details project Unknown
     expect(m.security!.edges.some(edge=>(edge.denied ?? 0)>0)).toBe(true);
     expect(m.health).toBe("failed");expect(metrics.app!.health).not.toBe("unknown");
     expect(metrics.lb!.health).not.toBe("unknown");expect(metrics.firewall!.health).toBe("unknown");
+    const uncapped=createLiveModel2(p.compiled,d.resources.map(r=>r.id));uncapped.advanceSecond();const original=uncapped.project().metrics;
+    for(const node of ["app","lb","firewall"]) expect(metrics[node]!.health).toBe(original[node]!.health);
   }
 });
 
