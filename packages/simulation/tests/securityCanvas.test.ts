@@ -151,3 +151,25 @@ for (const deny of [false,true]) test(`real request, LB, app, DB admission failu
   expect(r.evidence().data.databases[0]!.transactions.committed).toBe(0);
   const again=createProductModel2(p.compiled);again.advanceTo(1000000);expect(hash(again.evidence())).toBe(hash(r.evidence()));
 });
+
+
+test("target health uses this window's denials and deliveries across every incoming edge",()=>{
+  for(const fullyDenied of [false,true]){
+    const d=securityDesign({lb:"Load Balancer",app1:"Virtual Machine",app2:"Virtual Machine",db:"Database",firewall:"Firewall"},[["lb","app1"],["lb","app2"],["app1","db"],["app2","db"],["firewall","db"]]);
+    d.resources.find(r=>r.id === "firewall")!.firewallSettings={version:1,default:"allow",rules:[{...rule("deny",0,"deny"),source:fullyDenied ? "any" : "app2"}]};
+    const p=prepareSecurity(d);
+    for(const source of p.compiled.input.arrivals){
+      if(source.kind !== "trace")throw Error("Expected explicit test arrivals");
+      source.trace.rows=source.trace.rows.filter(row=>row.atUs < 500000);
+    }
+    const live=createLiveModel2(p.compiled,d.resources.map(r=>r.id));
+    live.advanceSecond();const active=live.project().metrics.db!;
+    expect(active.security!.edges.reduce((n,e)=>n+e.denied!,0)).toBeGreaterThan(0);
+    expect(active.security!.edges.reduce((n,e)=>n+e.backendDeliveries!,0)>0).toBe(!fullyDenied);
+    expect(active.health === "failed").toBe(fullyDenied);
+    live.advanceSecond();const idle=live.project();
+    expect(idle.offeredRps).toBe(0);expect(idle.metrics.db!.rps).toBe(0);
+    expect(idle.metrics.db!.health).toBe("healthy");
+    expect(live.project().metrics.db!.health).toBe("healthy");
+  }
+});

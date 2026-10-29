@@ -59,6 +59,7 @@ export function createLiveModel2(compiled: CompiledProduct, nodeIds: string[]) {
   const previous = new Map<string, Counters>();
   let previousLb = new Map<string, { received: number; completed: number; rejected: number }>();
   let previousCaller = { ...caller };
+  let previousSecurity = new Map<string, { denied: number; backendDeliveries: number }>();
 
   return {
     get simulatedSeconds() { return now / SECOND; },
@@ -134,8 +135,12 @@ export function createLiveModel2(compiled: CompiledProduct, nodeIds: string[]) {
         const policy = security.policies.find(p => p.id === node), unknown = security.omitted > 0;
         const edges = security.edges.filter(e => owner(e.source) === node || owner(e.target) === node).map(e => ({ ...e, lastDenial: unknown ? undefined : e.lastDenial }));
         metrics[node]!.security = { version: 1, evidence: unknown ? "omitted" : "complete", omitted: security.omitted, edges, ...(policy ? { firewall: { occupancy: policy.occupancy, limit: policy.limit, admissions: policy.admissions, generation: policy.generation } } : {}) };
-        if (edges.some(e => (e.denied ?? 0) > 0 && owner(e.target) === node) && metrics[node]!.rps === 0) metrics[node]!.health = "failed";
+        const incoming = security.edges.filter(e => owner(e.target) === node);
+        const denied = incoming.reduce((n, e) => n + e.denied - (previousSecurity.get(e.path)?.denied ?? 0), 0);
+        const delivered = incoming.reduce((n, e) => n + e.backendDeliveries - (previousSecurity.get(e.path)?.backendDeliveries ?? 0), 0);
+        if (denied > 0 && delivered === 0) metrics[node]!.health = "failed";
       }
+      if (security) previousSecurity = new Map(security.edges.map(e => [e.path, { denied: e.denied, backendDeliveries: e.backendDeliveries }]));
       const offered = caller.offered - previousCaller.offered, completedRps = caller.completed - previousCaller.completed, failedRps = caller.failed - previousCaller.failed;
       const sorted = responses.sort((a, b) => a - b), latencyMs = { p50: percentile(sorted, 0.5), p95: percentile(sorted, 0.95) };
       const lost = ratio(failedRps, offered) ?? 0, nodes = Object.values(metrics);
