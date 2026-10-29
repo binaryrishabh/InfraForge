@@ -126,7 +126,7 @@ test("versioned worker actions replay in same-second order with identical quanti
     replay.advance(); expect(replay.view()).toEqual(h.seconds()[second]!.view);
   }
   expect(replay.actions).toEqual(server.actions);
-  expect(replay.evidence()).toEqual(h.host.evidence());
+  expect(replay.evidence()).toEqual(h.host.evidence()!);
   expect(replay.evidence().product.interventions).toHaveLength(5);
 });
 
@@ -136,4 +136,21 @@ test("a challenge worker refuses a free intervention before recording or changin
   h.host.handle({type: "action", id: "spoof", request: {kind: "intervention", parameters: {interventionId: "session-capacity", revision: 1, target: {resourceId: "db"}, parameters: {sessions: 0, duration: 1}}}});
   expect(h.messages.at(-1)).toMatchObject({type: "action", id: "spoof", ok: false});
   expect(h.host.actions()).toEqual([]); expect(h.host.evidence()).toEqual(before);
+});
+
+test("versioned same-second ordering survives the tenth accepted action", () => {
+  const h = harness({horizonSeconds: 4, stopAtSecond: 4}), server = createModel2Run(start().input, 4);
+  const first = {kind: "intervention" as const, parameters: {interventionId: "session-capacity", revision: 1, target: {resourceId: "db"}, parameters: {sessions: 0, duration: 1}}};
+  h.host.handle({type: "action", id: "first", request: first}); server.apply(first);
+  for (let n = 1; n <= 11; n++) {
+    const request = {kind: "load" as const, parameters: {targetLoadFraction: n / 10}};
+    h.host.handle({type: "action", id: String(n), request}); server.apply(request);
+  }
+  h.tick(4); for (let n = 0; n < 4; n++) server.advance();
+  expect(h.host.actions()).toEqual(server.actions);
+  expect(h.host.evidence()).toEqual(server.evidence());
+  const changes = server.evidence().provenance.ledger.filter(r => r.concept.includes("live action load fraction"));
+  expect(changes.map(r => r.quantity.kind === "known" ? r.quantity.value : null)).toHaveLength(11);
+  expect(server.evidence().counts.offered).toBeGreaterThan(400);
+  expect(server.evidence().counts.offered).toBeLessThan(450); // Final target 1.1, never lexical a9's 0.8.
 });

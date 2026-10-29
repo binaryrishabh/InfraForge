@@ -1,5 +1,3 @@
-import { withTimeline } from "./timeline";
-import { compileProduct } from "./compiler";
 import { interventionOptions, incomingMaterializedLinks } from "./interventions";
 import { interventionError } from "@infraforge/domain/resource";
 import { findSku } from "@infraforge/catalog";
@@ -44,9 +42,8 @@ export function createModel2Run(input: CapturedModel2Input, horizonSeconds: numb
   // Live runs generate arrivals as they advance, so long runs and rebuilds after actions stay small and fast.
   const contract: ProductContract = { ...built.contract, arrival: { ...built.contract.arrival, generated: true } }, nodeIds = input.resources.map((r) => r.id);
   const run = createActionableLiveModel2(design, contract, nodeIds);
-  const initial = compileProduct(design, contract);
-  if (!initial.ok) throw new ActionRefused(initial.diagnostics.map(d => d.message).join("; "));
-  const options = interventionOptions(design, contract, initial.value.input);
+  const initial = run.compiled;
+  const options = interventionOptions(design, contract, initial.input);
   const types = new Map(input.resources.map((r) => [r.id, r.type]));
   const pools = poolLayout(input, contract);
   let target = 1;
@@ -109,9 +106,7 @@ export function createModel2Run(input: CapturedModel2Input, horizonSeconds: numb
           if (error) throw new ActionRefused(error);
           attempt({id: actionId, kind: "intervention", request: request.parameters});
           // The compiler has revalidated the materialized role, bounds, path and overlap.
-          const applied = compileProduct(design, withTimeline(contract, [...run.actions]));
-          if (!applied.ok) throw new Error("Accepted intervention failed recompilation");
-          const receipt = applied.value.interventionReceipts!.find(r => r.actionId === actionId)!;
+          const receipt = run.compiled.interventionReceipts!.find(r => r.actionId === actionId)!;
           return {outcome: {intervention: receipt, ...(receipt.endUs === null ? {} : {durationSimulatedSeconds: Number(request.parameters.parameters.duration)})},
             endSecond: Math.ceil((receipt.endUs ?? receipt.atUs) / SECOND)};
         }
@@ -132,7 +127,7 @@ export function createModel2Run(input: CapturedModel2Input, horizonSeconds: numb
             if (!cores) throw new ActionRefused("A CPU spike needs a resource whose CPU Model 2 models.");
             attempt({ id: actionId, kind: "cpu-spike", node: resourceId, durationUs: duration * SECOND, coreUs: Math.round(CPU_SPIKE_SHARE * cores * duration * SECOND), cores: CPU_SPIKE_SHARE * cores });
           } else {
-            const links = incomingMaterializedLinks(initial.value.input, resourceId);
+            const links = incomingMaterializedLinks(initial.input, resourceId);
             if (!links.length) throw new ActionRefused("No network link leads into this resource.");
             attempt({ id: actionId, kind: "network-delay", links, durationUs: duration * SECOND, delayUs: NETWORK_DELAY_US });
           }

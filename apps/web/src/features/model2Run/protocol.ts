@@ -1,4 +1,4 @@
-import type { InterventionOption } from "@infraforge/simulation/model2-run";
+import type { InterventionOption } from "@infraforge/contracts/actions";
 import type { ActionOutcome, ActionRequest } from "@infraforge/contracts/actions";
 import type { RunTopology, RunProfileSelection } from "@infraforge/contracts/run-inputs";
 import type { ApplicationFlowEvidence, LiveView, SimulationLog } from "@infraforge/contracts/telemetry";

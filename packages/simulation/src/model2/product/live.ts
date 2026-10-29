@@ -145,14 +145,16 @@ export function createLiveModel2(compiled: CompiledProduct, nodeIds: string[]) {
 // Model 2 is deterministic, so the seconds already shown never change. The run holds still while catching up.
 export function createActionableLiveModel2(design: SavedProductDesign, base: ProductContract, nodeIds: string[]) {
   const actions: TimedAction[] = [];
+  let compiledInput: CompiledProduct;
   const build = () => {
     const compiled = compileProduct(design, withTimeline(base, actions));
     if (!compiled.ok) throw new Error(compiled.diagnostics.map((d) => d.message).join("; "));
-    return createLiveModel2(compiled.value, nodeIds);
+    const built = createLiveModel2(compiled.value, nodeIds); compiledInput = compiled.value; return built;
   };
   let run = build(), shown = 0;
   let rebuilding: { run: ReturnType<typeof createLiveModel2>; target: number } | null = null;
   return {
+    get compiled() { return compiledInput; },
     get simulatedSeconds() { return shown; },
     get horizon() { return run.horizon; },
     evidence: () => run.evidence(),
@@ -173,7 +175,7 @@ export function createActionableLiveModel2(design: SavedProductDesign, base: Pro
     // The action takes effect just after the current second, which has already been shown. A design or action
     // Model 2 cannot compile is refused here and leaves the run unchanged. A second action while catching up joins the same rebuild.
     apply(action: TimedAction extends infer A ? A extends TimedAction ? Omit<A, "atUs"> : never : never) {
-      actions.push({ ...action, atUs: shown * SECOND + 1 } as TimedAction);
+      actions.push(JSON.parse(JSON.stringify({ ...action, atUs: shown * SECOND + 1 })) as TimedAction);
       let next;
       try { next = build(); } catch (error) { actions.pop(); throw error; }
       rebuilding = { run: next, target: shown };

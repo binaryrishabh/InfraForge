@@ -1,7 +1,7 @@
 import { z } from "zod";
 import type { ActionRequest, RunAction } from "@infraforge/contracts/actions";
 import type { RunAction as StoredAction } from "../lib/generated/prisma/client";
-import { interventionError, type InterventionRequest } from "@infraforge/domain/resource";
+import { DeploymentChaosNames, interventionError, type InterventionRequest } from "@infraforge/domain/resource";
 import { LiveTopologySchema } from "../zod_schemas/layout.schema";
 
 const id = z.string().min(1).max(256);
@@ -29,7 +29,7 @@ export const ActionRequestSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("intervention"), parameters: intervention }).strict(),
   z.object({ kind: z.literal("load"), parameters: z.object({ targetLoadFraction: z.number().min(0).max(2) }).strict() }),
   z.object({ kind: z.literal("speed"), parameters: z.object({ speed: z.union([z.literal(0), z.literal(1), z.literal(10), z.literal(60)]) }).strict() }),
-  z.object({ kind: z.literal("chaos"), parameters: z.object({ type: z.enum(["crash", "cpu-spike", "network-delay", "memory-leak", "disk-failure"]), resourceId: id,
+  z.object({ kind: z.literal("chaos"), parameters: z.object({ type: z.enum([DeploymentChaosNames.Crash, DeploymentChaosNames.CpuSpike, DeploymentChaosNames.NetworkDelay, DeploymentChaosNames.MemoryLeak, DeploymentChaosNames.DiskFailure]), resourceId: id,
     trigger: z.literal("challenge-experiment").optional() }).strict() }),
   z.object({ kind: z.literal("vertical-scale"), parameters: z.object({ resourceId: id, skuId: id }).strict() }),
   z.object({ kind: z.literal("pool-scale"), parameters: z.object({ lbId: id, delta: z.union([z.literal(1), z.literal(-1)]) }).strict() }),
@@ -58,12 +58,12 @@ export function actionDto(row: StoredAction): RunAction {
     switch (request.kind) {
       case "intervention": {
         const recorded = receipt.parse(outcome?.intervention);
-        if (JSON.stringify({interventionId: recorded.interventionId, revision: recorded.revision, target: recorded.target, parameters: recorded.parameters}) !== JSON.stringify(request.parameters)) {
-          // Compare structurally: JSON object key order is not semantic.
-          if (recorded.interventionId !== request.parameters.interventionId || recorded.revision !== request.parameters.revision ||
-            JSON.stringify(Object.entries(recorded.target).sort()) !== JSON.stringify(Object.entries(request.parameters.target).sort()) ||
-            JSON.stringify(Object.entries(recorded.parameters).sort()) !== JSON.stringify(Object.entries(request.parameters.parameters).sort())) throw Error("Intervention receipt differs from request");
-        }
+        if (recorded.interventionId !== request.parameters.interventionId || recorded.revision !== request.parameters.revision ||
+          JSON.stringify(Object.entries(recorded.target).sort()) !== JSON.stringify(Object.entries(request.parameters.target).sort()) ||
+          JSON.stringify(Object.entries(recorded.parameters).sort()) !== JSON.stringify(Object.entries(request.parameters.parameters).sort())) throw Error("Intervention receipt differs from request");
+        const expectedEnd = request.parameters.interventionId === "flush" ? null : recorded.atUs + Number(request.parameters.parameters.duration) * 1_000_000;
+        if (recorded.atUs !== row.appliedSimulatedSeconds! * 1_000_000 + 1 || recorded.endUs !== expectedEnd) throw Error("Intervention timing differs from application");
+        if (status === "completed" && row.completedSimulatedSeconds! * 1_000_000 < (recorded.endUs ?? recorded.atUs)) throw Error("Intervention completion precedes its effect");
         if (status === "completed" && outcome?.interventionEnded !== true) throw Error("Intervention completion lacks end evidence");
         break;
       }

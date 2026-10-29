@@ -1,4 +1,4 @@
-import type { InterventionRequest } from "@infraforge/domain/resource";
+import type { InterventionRequest, InterventionTarget } from "@infraforge/domain/resource";
 import type { ChaosType } from "@infraforge/domain/resource";
 import type { RunTopology } from "../run-inputs/RunInputs.interface";
 
@@ -13,6 +13,10 @@ export type ActionRequest =
   | { kind: "topology"; parameters: RunTopology & { expectedRevision: number; acceptedRevision?: number } }
   | { kind: "teardown"; parameters: { trigger?: "matched-stop" | "challenge-evaluation" | "operational-limit" } };
 
+export interface InterventionOption {
+  interventionId: string; revision: number; target: InterventionTarget; authoredBaseline?: number;
+  resolvedTargets: string[]; affectedPaths: string[];
+}
 export interface InterventionReceipt extends InterventionRequest {
   actionId: string; resolvedTargets: string[]; affectedPaths: string[]; atUs: number; endUs: number | null;
 }

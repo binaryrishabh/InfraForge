@@ -25,7 +25,9 @@ export function withTimeline(base: ProductContract, actions: TimedAction[]): Pro
       assumptions: ["The person applied this action during the run"], researchedOn: "2026-10-28", freeMode: "allowed", replacement: "None: the person chose this action" } satisfies RealityEntry);
     return { kind: "known", value, unit, provenance: [id] };
   };
-  for (const action of [...actions].sort((a, b) => a.atUs - b.atUs || (a.id < b.id ? -1 : 1))) {
+  const versioned = actions.some(a => a.kind === "intervention");
+  // Stable ties preserve accepted submission order in the versioned action contract.
+  for (const action of [...actions].sort((a, b) => a.atUs - b.atUs || (versioned ? 0 : a.id < b.id ? -1 : 1))) {
     if (!/^[A-Za-z0-9_-]{1,64}$/.test(action.id) || ids.has(action.id) || !Number.isSafeInteger(action.atUs) || action.atUs < 0) throw Error("Each action needs a unique simple id and a whole-microsecond time");
     ids.add(action.id);
     const at = known(action, "at", action.atUs, "us");
@@ -34,7 +36,12 @@ export function withTimeline(base: ProductContract, actions: TimedAction[]): Pro
       if (error) throw Error(error);
       (contract.interventions ??= []).push({id: action.id, atUs: action.atUs, request: action.request});
     }
-    else if (action.kind === "load") (contract.arrival.changes ??= []).push({ at, fraction: known(action, "fraction", action.fraction, "ratio") });
+    else if (action.kind === "load") {
+      const changes = contract.arrival.changes ??= [], fraction = known(action, "fraction", action.fraction, "ratio");
+      const sameTime = versioned ? changes.find(c => c.at.kind === "known" && c.at.value === action.atUs) : undefined;
+      if (sameTime) { sameTime.at = at; sameTime.fraction = fraction; }
+      else changes.push({at, fraction});
+    }
     else if (action.kind === "crash") contract.faults.push({ id: action.id, kind: "Crash", target: action.node, at, duration: known(action, "duration", action.durationUs, "us"),
       restart: known(action, "restart", action.restartUs, "us"), profile: "retain-logical-state/1" });
     else if (action.kind === "cpu-spike") contract.faults.push({ id: action.id, kind: "CpuSpike", target: action.node, at, duration: known(action, "duration", action.durationUs, "us"),

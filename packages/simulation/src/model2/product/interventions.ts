@@ -1,14 +1,10 @@
 import { INTERVENTIONS, interventionError, type InterventionRequest, type InterventionTarget } from "@infraforge/domain/resource";
-import type { InterventionReceipt } from "@infraforge/contracts/actions";
+import type { InterventionReceipt, InterventionOption } from "@infraforge/contracts/actions";
 import type { ProductContract, SavedProductDesign } from "./contracts";
 import type { SystemsInput } from "../systems/contracts";
 import type { derivedLedger } from "./provenance";
 import { requireKnown } from "../../reality/quantity";
 const SECOND = 1_000_000;
-export interface InterventionOption {
-  interventionId: string; revision: number; target: InterventionTarget; authoredBaseline?: number;
-  resolvedTargets: string[]; affectedPaths: string[];
-}
 // Only declared primary mechanism roles and already materialized directed paths are selectable.
 // Fixed roles stay fixed; a lifecycle-controlled role cannot silently select a new generation.
 export function resolveIntervention(design: SavedProductDesign, contract: ProductContract, input: SystemsInput, request: InterventionRequest): InterventionOption {
@@ -41,7 +37,9 @@ export function interventionOptions(design: SavedProductDesign, contract: Produc
     const targets: InterventionTarget[] = d.targetKind === "edge" ? design.connections.flatMap(e => (["request", "response", "both"] as const).map(direction => ({edgeId: e.id, direction})))
       : design.resources.filter(r => r.type === d.targetKind).map(r => ({resourceId: r.id}));
     for (const target of targets) {
-      try { result.push(resolveIntervention(design, contract, input, {interventionId: d.id, revision: d.revision, target, parameters: {}})); }
+      const sample = {interventionId: d.id, revision: d.revision, target, parameters: Object.fromEntries(d.parameters.map(p => [p.name, p.min ?? (p.kind === "boolean" ? false : p.values?.[0] ?? 0)]))};
+      if (interventionError(sample)) continue;
+      try { result.push(resolveIntervention(design, contract, input, sample)); }
       catch { /* Unsupported roles/paths are unavailable, never zero capacity. */ }
     }
   }
@@ -79,7 +77,7 @@ export function compileInterventions(design: SavedProductDesign, contract: Produ
       else if (kind === "session-capacity") input.dataInterventions.push({...common, kind, duration: duration!, sessions: q("sessions", Number(parameters.sessions), "count")});
       else if (kind === "cpu-capacity") input.dataInterventions.push({...common, kind, duration: duration!, cores: q("cores", Number(parameters.cores), "cores")});
       else if (kind === "delay" || kind === "partition") {
-        // Reuse one quantity per action even when it affects shared links.
+        // Each materialized link retains an exact sourced delay quantity.
         const delay = kind === "delay" ? provenance.q(`intervention.${row.id}.delay.${input.networkInterventions.length}`, Number(parameters.delay), "us", [`intervention delay@1; product policy`], "user-input") : undefined;
         input.networkInterventions.push(kind === "delay" ? {...common, kind, duration: duration!, delay: delay!} : {...common, kind, duration: duration!});
       } else throw Error("INTERVENTION_ADAPTER: no real mechanism adapter");

@@ -1,3 +1,4 @@
+import { DeploymentChaosNames } from "@infraforge/domain/resource";
 import { expect, test } from "bun:test";
 import { createHash } from "node:crypto";
 import { buildContractFromRunInputs } from "../src/model2/product/runContract";
@@ -134,7 +135,7 @@ for (const kind of ["session-capacity", "cpu-capacity", "delay", "partition"] as
 test("capacity actions refuse process replacement overlap in both request orders", () => {
   for (const reverse of [false, true]) {
     const run = createModel2Run(interventionInput(), 40);
-    const requests = [intervention("session-capacity", {sessions: 0, duration: 2}), {kind: "chaos" as const, parameters: {type: "crash" as const, resourceId: "db"}}];
+    const requests = [intervention("session-capacity", {sessions: 0, duration: 2}), {kind: "chaos" as const, parameters: {type: DeploymentChaosNames.Crash, resourceId: "db"}}];
     if (reverse) requests.reverse(); run.apply(requests[0]!);
     expect(() => run.apply(requests[1]!)).toThrow("GENERATION"); expect(run.actions).toHaveLength(1);
   }
@@ -142,8 +143,36 @@ test("capacity actions refuse process replacement overlap in both request orders
 
 test("legacy canvas delay resolves materialized links instead of symbolic template endpoints", () => {
   const run = createModel2Run(interventionInput(), 40);
-  run.apply({kind: "chaos", parameters: {type: "network-delay", resourceId: "db"}});
+  run.apply({kind: "chaos", parameters: {type: DeploymentChaosNames.NetworkDelay, resourceId: "db"}});
   advance(run, 2);
   expect(run.evidence().network.links.find(l => l.to === "db")!.addedPropagationUs).toBe(200_000);
   expect(run.view().traffic.latencyMs.p95).toBeGreaterThan(200);
+});
+
+test("shared physical links report all paths and refuse direction aliases before accepting overlap", () => {
+  const input = interventionInput(), built = buildContractFromRunInputs(input, 5);
+  if ("refused" in built) throw Error(JSON.stringify(built));
+  const contract = built.contract, edge = contract.edges["app-db"]!, transport = structuredClone(contract.transports.database!);
+  transport.ownership = "shared";
+  const request = transport.links[0]!, response = transport.links[1]!;
+  transport.links = [
+    {...request, id: "app-in", from: "$app", to: "hub"}, {...request, id: "caller-in", from: "$caller", to: "hub"},
+    {...request, id: "common-in", from: "hub", to: "$db"}, {...response, id: "common-out", from: "$db", to: "hub"},
+    {...response, id: "app-out", from: "hub", to: "$app"}, {...response, id: "caller-out", from: "hub", to: "$caller"},
+  ];
+  contract.transports.shared = transport;
+  Object.assign(edge, {transport: "shared", request: ["app-in", "common-in"], response: ["common-out", "app-out"]});
+  contract.caller.dependencies.push({...edge, id: "probe", target: "$db", request: ["caller-in", "common-in"], response: ["common-out", "caller-out"]});
+  const design = {schema: "infraforge-saved-design/1" as const, resources: input.resources, connections: input.connectionLines, workload: input.workloadProfile};
+  const first = {id: "one", kind: "intervention" as const, atUs: 1, request: intervention("delay", {delay: 123, duration: 2}, {edgeId: "app-db", direction: "request"}).parameters};
+  const c = compileProduct(design, withTimeline(contract, [first]));
+  if (!c.ok) throw Error(JSON.stringify(c.diagnostics));
+  expect(c.value.interventionReceipts![0]!.affectedPaths).toEqual(["app-db:app:db", "external/probe"]);
+  expect(c.value.interventionReceipts![0]!.resolvedTargets).toEqual(["transport:shared/app-in", "transport:shared/common-in"]);
+  const second = {...first, id: "two", request: {...first.request, target: {edgeId: "app-db", direction: "both" as const}}};
+  const refused = compileProduct(design, withTimeline(contract, [first, second]));
+  expect(refused.ok).toBe(false);
+  expect(refused.diagnostics[0]!.message).toContain("OVERLAP");
+  const run = createProductModel2(c.value); run.advanceTo(1);
+  expect(run.evidence().network.links.find(l => l.id === "transport:shared/common-in")!.addedPropagationUs).toBe(123);
 });

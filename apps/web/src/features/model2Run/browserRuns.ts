@@ -1,4 +1,4 @@
-import type { InterventionOption } from "@infraforge/simulation/model2-run";
+import type { InterventionOption } from "@infraforge/contracts/actions";
 import type { ActionRequest, RunAction } from "@infraforge/contracts/actions";
 import type { SimulationSnapshot } from "@infraforge/contracts/telemetry";
 import { http, API_URL } from "@/client/httpClient";

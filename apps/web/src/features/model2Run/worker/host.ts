@@ -44,7 +44,7 @@ export function createRunHost(post: (message: FromWorker) => void, timers: Timer
     if (!run || finished) return post({ type: "action", id, ok: false, message: "The run is not running." });
     try {
       const at = run.simulatedSeconds, applied = run.apply(request);
-      submitted.push({ atSecond: at, request });
+      submitted.push({ atSecond: at, request: structuredClone(request) });
       post({ type: "action", id, ok: true, outcome: applied.outcome });
     } catch (error) {
       post({ type: "action", id, ok: false, message: error instanceof ActionRefused ? error.message : "The action could not be applied." });

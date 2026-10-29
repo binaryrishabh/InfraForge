@@ -13,6 +13,7 @@ export async function requestRunAction(deploymentId: string, ownerId: string, in
   let request: ActionRequest;
   try { request = readActionRequest(input); } catch { throw new ValidationError("Invalid or oversized action parameters."); }
   // Only the worker records a challenge's scheduled fault; a person's request can never claim that origin.
+  if (request.kind === "chaos" && ["memory-leak", "disk-failure"].includes(request.parameters.type)) throw new ValidationError("This legacy fault is decoded for recorded runs but is unavailable as a new control.");
   if (request.kind === "chaos" && request.parameters.trigger !== undefined) throw new ValidationError("Faults requested here cannot carry a system trigger.");
   if (request.kind === "teardown" && request.parameters.trigger === "operational-limit") throw new ValidationError("Operational stops are worker-owned.");
   return prisma.$transaction(async (tx) => {
