@@ -68,14 +68,14 @@ test("stale in-flight completion cannot change an open or later generation; disp
   f.breaker.admit(work("probe")); f.breaker.dispose(); expect(f.breaker.measure().probeInFlight).toBe(false); expect(f.kernel.pending).toBe(0);
 });
 
-function transportFixture() {
-  const f = machine(1), input = networkFixture({ bytes: 0, responseBytes: 0, propagation: 0, establish: 0 }), config = input.paths[0]!;
+function transportFixture(options: { timeout?: number; service?: number; streams?: number } = {}) {
+  const f = machine(1), input = networkFixture({ bytes: 0, responseBytes: 0, propagation: 0, establish: 0, responseTimeout: options.timeout, streams: options.streams }), config = input.paths[0]!;
   config.circuitBreaker = f.policy; config.pool.remoteCancellation = "request-cancellation";
   const links = new Map(input.links.map((l) => [l.id, networkLink(l, f.kernel, f.trace.emit)]));
   let delivered = 0, acquiredSessions = 0, entered = 0, budgetLive = 0, fail = true;
   const path = pathTransport(config, f.kernel, links, (_target, w, done): Receipt => {
     delivered++; let terminal = false;
-    const cancel = f.kernel.schedule(f.kernel.now + 10, 2, w.callId, () => { terminal = true; done(fail ? "rejected" : "completed"); });
+    const cancel = f.kernel.schedule(f.kernel.now + (options.service ?? 10), 2, w.callId, () => { terminal = true; done(fail ? "rejected" : "completed"); });
     return { admitted: true, state: () => terminal ? "finished" : "waiting", cancel() { if (terminal) return "already-finished"; terminal = true; cancel(); done("cancelled"); return "cancelled"; } };
   }, () => true, f.trace.emit, undefined, { open(_id, done) { acquiredSessions++; done(); return () => false; }, close() {} }, { enter() { entered++; budgetLive++; return () => { budgetLive--; }; } });
   return { ...f, path, success: () => { fail = false; }, counts: () => ({ delivered, acquiredSessions, entered, budgetLive }) };
@@ -187,4 +187,12 @@ test("LB health checks obey OPEN and close only by completing a reserved half-op
   expect(f.path.measure().circuitBreaker!.state).toBe("closed");
   const probe=f.trace.measure().events.find((e)=>e.kind === "breaker-probe-start" && JSON.parse(e.detail).health === true);
   expect(probe).toBeDefined(); lb.dispose(); f.path.dispose(); expect(f.kernel.pending).toBe(0);
+});
+
+
+test("a timeout opens on the first terminal before a shared-lease failure cascades to another call", () => {
+  const f=transportFixture({timeout:100,service:1000,streams:2});
+  f.path.exchange(work("first"),()=>{}); f.path.exchange(work("second"),()=>{}); f.kernel.advanceTo(100);
+  const transition=f.trace.measure().events.find((e)=>e.kind === "breaker-transition")!;
+  expect(transition.root).toBe("first"); f.path.dispose();
 });

@@ -33,10 +33,10 @@ export function pathTransport(config: PathConfig, kernel: EventKernel, links: Ma
         if (terminal) return; terminal = true; liveReceipts.delete(key); releaseCall?.(); state = "finished"; live--; cancelAcquire?.(); cancelTimeout?.(); cancelTransfer?.();
         if (result.ok) completed++; else if (isCancellation) cancelled++; else { failed++; reasons[result.reason!] = (reasons[result.reason!] ?? 0) + 1; }
         trace("transport-terminal", key, result.ok ? "completed" : isCancellation ? "cancelled" : result.reason!, work.rootId, work.attempt);
+        if (token) breaker!.complete(token, result, isCancellation, localReset && result.reason === "reset");
         heldAfterStop = !!hook?.holdLeaseUntilRemoteTerminal && isCancellation && (hook?.leaseHeldOnlyWithRemote ? !!remote : delivered) && !remoteFinished;
         if (!result.ok && !isCancellation && ["response-timeout", "reset", "drained"].includes(result.reason!)) lease?.fail(result.reason!); else if (!heldAfterStop) lease?.release();
         if (!result.ok && delivered && config.pool.remoteCancellation === "request-cancellation") remote?.cancel();
-        if (token) breaker!.complete(token, result, isCancellation, localReset && result.reason === "reset");
         done(result);
       };
       if (breaker) liveReceipts.set(key, () => finish({ ok: false, reason: "reset", ambiguous: delivered }, true));
