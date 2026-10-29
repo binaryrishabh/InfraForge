@@ -7,9 +7,9 @@ import { lockManager } from "./locks";
 import type { CausalObserver } from "../workload/causal";
 import type { DatabaseIo } from "./io";
 
-interface Tx { work: Invocation; plan: TransactionPlan; step: number; phase: "queued" | "lock" | "cpu" | "io" | "wait" | "commit"; terminal: boolean; phaseAt: number; writes: Map<string, { version: number; bytes: number }>; rows: DataReply["rows"]; cancelTx?: () => boolean; cancelStatement?: () => boolean; cancelLock?: () => boolean; cancelWait?: () => boolean; cancelIo?: () => void; done(outcome: RemoteOutcome): void; session: string }
+interface Tx { orphaned?: boolean; work: Invocation; plan: TransactionPlan; step: number; phase: "queued" | "lock" | "cpu" | "io" | "wait" | "commit"; terminal: boolean; phaseAt: number; writes: Map<string, { version: number; bytes: number }>; rows: DataReply["rows"]; cancelTx?: () => boolean; cancelStatement?: () => boolean; cancelLock?: () => boolean; cancelWait?: () => boolean; cancelIo?: () => void; done(outcome: RemoteOutcome): void; session: string }
 export function relationalDatabase(config: RelationalConfig, kernel: EventClock, causal?: CausalObserver, ownedCpu?: ReturnType<typeof cpuScheduler>, io?: DatabaseIo) {
-  const pg = config.semantics === "postgresql-keyed/1";
+  const pg2 = config.semantics === "postgresql-keyed/2", pg = pg2 || config.semantics === "postgresql-keyed/1";
   if (io && !pg) throw Error("Finite IO requires PostgreSQL session semantics");
   const cpu = ownedCpu ?? cpuScheduler(config.id, requireKnown(config.execution.cores, "cores"), kernel), locks = lockManager();
   const rows = new Map(config.initial.map((r) => [r.key, { version: r.version, bytes: requireKnown(r.bytes, "bytes") }]));
@@ -42,7 +42,8 @@ export function relationalDatabase(config: RelationalConfig, kernel: EventClock,
     if (ok) { for (const [key, row] of t.writes) rows.set(key, row); committed++; logicalWrites += t.writes.size; if (t.plan.durability === "authored-log-ack") durableCommits++; }
     else { if (cancel) cancelled++; else aborted++; reasons[reason] = (reasons[reason] ?? 0) + 1; }
     causal?.({ atUs: kernel.now, kind: "db-terminal", resource: config.id, work: t.work, detail: { session: t.session, outcome: ok ? "committed" : cancel ? "cancelled" : "aborted", reason, writes: ok ? t.writes.size : 0 } });
-    if (pg && reason === "transaction-timeout") { sessions.delete(t.session); sessionEvents.transactionTerminated++; }
+    if (pg && reason === "transaction-timeout") { sessions.delete(t.session); sessionTrace.get(t.session)?.("db-session-closed"); sessionTrace.delete(t.session); sessionEvents.transactionTerminated++; }
+    if (t.orphaned) closeSlot(t.session);
     if (t.work.message) t.work.message.response = { ok, rows: t.rows, durable: ok && t.plan.durability === "authored-log-ack", ...(reason ? { reason } : {}) } satisfies DataReply;
     locks.release(t.work.callId); t.done(ok ? "completed" : cancel ? "cancelled" : "rejected"); pump();
   };
@@ -65,6 +66,7 @@ export function relationalDatabase(config: RelationalConfig, kernel: EventClock,
   };
   const execute = (t: Tx) => {
     if (t.terminal) return;
+    if (t.orphaned) { finish(t, false, "connection-closed"); return; }
     if (!pg || t.step > 0 || t.step === t.plan.statements.length) t.cancelStatement?.(); t.cancelLock?.();
     if (t.step === t.plan.statements.length) {
       if (pg) causal?.({ atUs: kernel.now, kind: "db-commit-protected", resource: config.id, work: t.work, detail: { session: t.session } });
@@ -139,13 +141,13 @@ export function relationalDatabase(config: RelationalConfig, kernel: EventClock,
       if (pg) t.cancelStatement = deadline(t, "statement"); else t.cancelTx = deadline(t, "transaction"); pump();
       return { admitted: true, state: () => t.terminal ? "finished" : t.phase === "queued" ? "queued" : t.phase === "lock" ? "waiting" : "serving", cancel() { if (t.terminal) return "already-finished"; if (pg && t.phase === "commit") { sessionEvents.protectedCommitCancels++; return "unsupported"; } finish(t, false, "cancelled", true); return "cancelled"; } };
     },
-    closeSession(id: string) { const tx = sessions.get(id); closeSlot(id); if (tx && !(pg && tx.phase === "commit")) finish(tx, false, "connection-closed"); },
-    pause(value: boolean) { paused = value; cpu.pause(value); if (value) { for (const t of [...active.values(), ...queue.values()]) if (!(pg && t.phase === "commit")) finish(t, false, "database-unavailable"); if (pg) sessionEvents.closed += sessions.size; sessions.clear(); } else pump(); },
+    closeSession(id: string) { const tx = sessions.get(id); if (pg2 && tx && tx.phase !== "queued") { tx.orphaned = true; return; } closeSlot(id); if (tx && !(pg && tx.phase === "commit")) finish(tx, false, "connection-closed"); },
+    pause(value: boolean) { paused = value; cpu.pause(value); if (value) { for (const t of [...active.values(), ...queue.values()]) if (!(pg && t.phase === "commit")) finish(t, false, "database-unavailable"); if (pg2) { for (const id of [...sessions.keys()]) closeSlot(id); } else { if (pg) sessionEvents.closed += sessions.size; sessions.clear(); } } else pump(); },
     capacity(value: number) { cpu.capacity(value); }, sessionCapacity(value: number) { sessionLimit = value; },
-    measure: () => ({ id: config.id, sessions: sessions.size, sessionLimit, paused, received, admitted, rejected, completed: committed, failed: aborted, cancelled, queued: queue.size, serving: [...active.values()].filter((t) => t.phase !== "lock").length, waiting: [...active.values()].filter((t) => t.phase === "lock").length, consumedCoreUs: cpu.measure().appCoreUs, busySlotUs: activeArea + active.size * (kernel.now - activeAnchor) }),
+    measure: () => ({ id: config.id, ...(pg2 ? { sessions: sessions.size, sessionLimit, sessionRefused: sessionEvents.refused, orphaned: [...sessions.values()].filter(t => t?.orphaned).length } : {}), paused, received, admitted, rejected, completed: committed, failed: aborted, cancelled, queued: queue.size, serving: [...active.values()].filter((t) => t.phase !== "lock").length, waiting: [...active.values()].filter((t) => t.phase === "lock").length, consumedCoreUs: cpu.measure().appCoreUs, busySlotUs: activeArea + active.size * (kernel.now - activeAnchor) }),
     evidence: () => ({ id: config.id, ...(io ? { ioProfile: "postgresql-keyed-io/1", ioPhases: {
       elapsedUs: Object.fromEntries(Object.entries(phaseUs).map(([name, elapsed]) => [name, elapsed + [...active.values(), ...queue.values()].filter(t => t.phase === name).reduce((n, t) => n + kernel.now - t.phaseAt, 0)])),
-      entries: { ...phaseEntries }, note: "Transaction phase durations/populations; CPU phase includes scheduler contention, IO phase includes coalesced waiting. Device queue/service receipts remain separate; pool wait belongs to transport." } } : {}), ...(pg ? { profile: "postgresql-keyed/1", sessionEvents: { ...sessionEvents }, timing: "assumption-only", queryAdmission: "authored gate; not a PostgreSQL server setting" } : {}), sessions: { total: sessions.size, active: [...sessions.values()].filter(Boolean).length, idle: [...sessions.values()].filter((s) => !s).length, limit: sessionLimit }, transactions: { admitted, committed, aborted, cancelled, live: active.size + queue.size }, statements, logicalReads, logicalWrites, generatedLogBytes: logBytes, durableAcknowledgedCommits: durableCommits,
+      entries: { ...phaseEntries }, note: "Transaction phase durations/populations; CPU phase includes scheduler contention, IO phase includes coalesced waiting. Device queue/service receipts remain separate; pool wait belongs to transport." } } : {}), ...(pg ? { profile: config.semantics, sessionEvents: { ...sessionEvents }, timing: "assumption-only", queryAdmission: "authored gate; not a PostgreSQL server setting" } : {}), sessions: { ...(pg2 ? { orphaned: [...sessions.values()].filter(t => t?.orphaned).length } : {}), total: sessions.size, active: [...sessions.values()].filter(Boolean).length, idle: [...sessions.values()].filter((s) => !s).length, limit: sessionLimit }, transactions: { admitted, committed, aborted, cancelled, live: active.size + queue.size }, statements, logicalReads, logicalWrites, generatedLogBytes: logBytes, durableAcknowledgedCommits: durableCommits,
       rows: [...rows].sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0).map(([key, value]) => ({ key, ...value })), locks: locks.measure(), waiters: locks.waiters(), cpu: cpu.measure(), reasons: { ...reasons }, queryClasses: Object.fromEntries([...byClass].sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0)), queries: { executingCpu: [...active.values()].filter((t) => t.phase === "cpu").length, lockWaiting: [...active.values()].filter((t) => t.phase === "lock").length, blockingWait: [...active.values()].filter((t) => t.phase === "wait").length, committing: [...active.values()].filter((t) => t.phase === "commit").length }, active: [...active.values()].map((t) => ({ id: t.work.callId, session: t.session, operation: t.work.operation, step: t.step, phase: t.phase, pendingWrites: t.writes.size })), queued: queue.size, physicalBufferHits: "Unknown", storageDeviceLatency: "Unknown" }),
   };
 }

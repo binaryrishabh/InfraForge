@@ -6,7 +6,7 @@ import { ASYNC_LIMITS as caps } from "./policy";
 import { micros } from "../time";
 export const isAsync = (r: AsyncInput["resources"][number]): r is AsyncResource => ["delivery-queue", "object-store", "async-publisher", "async-worker"].includes(r.kind);
 // Databases with PostgreSQL semantics (per-connection sessions) run under the PostgreSQL data revision.
-const dataRevision = (i: AsyncInput) => i.resources.some((r) => r.kind === "relational" && r.semantics === "postgresql-keyed/1") ? "m2e-pg/1" as const : "m2e/1" as const;
+const dataRevision = (i: AsyncInput) => i.resources.some((r) => r.kind === "relational" && r.semantics === "postgresql-keyed/2") ? "m2e-pg/2" as const : i.resources.some((r) => r.kind === "relational" && r.semantics === "postgresql-keyed/1") ? "m2e-pg/1" as const : "m2e/1" as const;
 export const dataAdapter = (i: AsyncInput): DataInput => ({ ...i, workloadVersion: dataRevision(i), resources: i.resources.map((r) => isAsync(r) ? { ...r.execution, id: r.id, downstream: undefined } : r) });
 export function validateAsync(i: AsyncInput) {
   validateData(dataAdapter(i));

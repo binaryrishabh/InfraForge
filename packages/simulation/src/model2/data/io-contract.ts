@@ -38,7 +38,7 @@ export function validateFiniteIo(p: FiniteIoProfile, input: DataInput, compositi
   bindings: Array<{ resource: string; host: string; reservedMemory: Quantity<"bytes"> }>;
 }) {
   fields(p, ["schema", "identity", "devices", "buffers", "bindings", "background", "limits"]);
-  if (p.schema !== "postgresql-keyed-io/1" || input.workloadVersion !== "m2e-pg/1") throw Error("Finite IO requires explicit PG revision");
+  if (p.schema !== "postgresql-keyed-io/1" || !["m2e-pg/1", "m2e-pg/2"].includes(input.workloadVersion)) throw Error("Finite IO requires explicit PG revision");
   fields(p.identity, ["profile", "revision", "workload", "evidence"]); [p.identity.profile, p.identity.revision, p.identity.workload].forEach(id); evidence(p.identity.evidence);
   fields(p.limits, ["maxPages", "maxReceipts", "maxScheduledBackgroundOperations", "maxScheduledBackgroundBytes"]);
   for (const key of ["maxPages", "maxReceipts", "maxScheduledBackgroundOperations"] as const) if (!Number.isSafeInteger(p.limits[key]) || p.limits[key] < (key === "maxScheduledBackgroundOperations" ? 0 : 1) || p.limits[key] > 10000) throw Error("Invalid IO limits");
@@ -76,7 +76,7 @@ export function validateFiniteIo(p: FiniteIoProfile, input: DataInput, compositi
     identities.push(JSON.stringify([b.role, b.operation, b.keys]));
     const r = input.resources.find(r => r.id === b.role) as RelationalConfig | undefined, buffer = buffers.get(b.buffer);
     const plan = r?.kind === "relational" ? r.plans[b.operation] : undefined;
-    if (!plan || r!.semantics !== "postgresql-keyed/1" || !buffer || !composition.bindings.some(x => x.resource === b.role && x.host === buffer.host) || b.keys.some(k => !r!.keys.includes(k)) || b.statementPages.length !== plan.statements.length) throw Error("Invalid IO role/key/plan placement");
+    if (!plan || !r!.semantics.startsWith("postgresql-keyed/") || !buffer || !composition.bindings.some(x => x.resource === b.role && x.host === buffer.host) || b.keys.some(k => !r!.keys.includes(k)) || b.statementPages.length !== plan.statements.length) throw Error("Invalid IO role/key/plan placement");
     const expectedKeys = [...new Set(plan.statements.flatMap(s => s.keys.flatMap(k => k === "$key" ? b.keys : [k])))];
     if (JSON.stringify(expectedKeys) !== JSON.stringify(b.keys) || (plan.statements.some(s => s.keys.includes("$key")) && b.keys.length !== 1)) throw Error("IO key binding mismatch");
     if (requireKnown(plan.commitWait, "us") !== 0) throw Error("Finite IO replaces authored commit wait; explicit zero required");

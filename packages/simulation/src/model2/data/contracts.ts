@@ -10,7 +10,7 @@ export interface Statement {
 }
 export interface TransactionPlan { statements: Statement[]; statementTimeout: Quantity<"us">; lockTimeout: Quantity<"us">; transactionTimeout: Quantity<"us">; commitWait: Quantity<"us">; durability: "logical-only" | "authored-log-ack" }
 export interface RelationalConfig {
-  id: string; kind: "relational"; semantics: "read-committed-keyed/1" | "postgresql-keyed/1";
+  id: string; kind: "relational"; semantics: "read-committed-keyed/1" | "postgresql-keyed/1" | "postgresql-keyed/2";
   execution: ComputeResource; maxSessions: Quantity<"count">; activeTransactions: Quantity<"count">; pendingQueries: Quantity<"count">;
   keys: string[]; initial: Row[]; plans: Record<string, TransactionPlan>;
 }
@@ -29,7 +29,7 @@ export type DataResource = RelationalConfig | CacheConfig | AsideConfig;
 export type DataIntervention = { id: string; at: Quantity<"us"> } & (
   { kind: "flush"; target: string } | { kind: "session-capacity"; target: string; sessions: Quantity<"count">; duration: Quantity<"us"> } | { kind: "cpu-capacity"; target: string; cores: Quantity<"cores">; duration: Quantity<"us"> });
 export interface DataInput extends Omit<NetworkInput, "workloadVersion" | "resources"> {
-  workloadVersion: "m2e/1" | "m2e-pg/1";
+  workloadVersion: "m2e/1" | "m2e-pg/1" | "m2e-pg/2";
   resources: Array<NetworkInput["resources"][number] | DataResource>;
   dataInterventions: DataIntervention[];
 }

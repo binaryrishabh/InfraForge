@@ -33,12 +33,12 @@ export function createDataRuntime(authored: DataInput, extension?: NetworkExtens
     connection(path, kernel, send, context) {
       const external = extension?.connection?.(path, kernel, send, context);
       const config = input.resources.find(r => r.id === path.target);
-      if (config?.kind !== "relational" || config.semantics !== "postgresql-keyed/1") return external;
+      if (config?.kind !== "relational" || !config.semantics.startsWith("postgresql-keyed/")) return external;
       const database = databases.get(path.target)!;
       // A connection first passes the other gate (for example the TLS handshake), then asks the database for a session,
       // as a real client does. The database refuses it when its session limit is full.
       const open = (id: string) => database.openSession(id, path.pool.evidenceProfile ? kind => sessionTrace?.(kind, id, path.target, undefined, undefined, true) : undefined);
-      const refusal = path.pool.evidenceProfile ? "session-limit" as const : "backend-rejected" as const;
+      const refusal = path.pool.evidenceProfile || config.semantics === "postgresql-keyed/2" ? "session-limit" as const : "backend-rejected" as const;
       return {
         holdLeaseUntilRemoteTerminal: true,
         open(id, done) {

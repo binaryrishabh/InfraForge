@@ -1,4 +1,6 @@
 import { expect, test } from "bun:test";
+import { relationalDatabase } from "../src/model2/data/database";
+import type { Invocation } from "../src/model2/workload/contracts";
 import { dataFixture } from "./dataFixture";
 import { quantities } from "./workloadFixture";
 import { createDataModel2 } from "../src/model2/data/run";
@@ -38,4 +40,35 @@ test("pool stays lazy at normal load, saturates in FIFO order and clears timed o
   expect(order).toEqual(["a", "b", "c"]); expect(pool.measure()).toMatchObject({ pending: 0, acquired: 3, released: 3 });
   pool.acquire("held", () => {}, r => failures.push(r)); pool.acquire("timeout", () => {}, r => failures.push(r)); clock.advanceTo(200);
   expect(failures).toEqual(["acquire-timeout"]); expect(pool.measure().pending).toBe(0);
+});
+
+function database2() {
+  const input = pgInput(), q = quantities("PG2 boundaries"), config = input.resources.find(r => r.kind === "relational") as RelationalConfig;
+  config.semantics = "postgresql-keyed/2";
+  for (const plan of Object.values(config.plans)) {
+    plan.statementTimeout = q.q("statement.disabled", 0, "us"); plan.transactionTimeout = q.q("transaction.disabled", 0, "us");
+    plan.lockTimeout = q.q("lock.disabled", 0, "us");
+  }
+  const clock = new EventKernel(10000), db = relationalDatabase(config, clock);
+  const work = (id: string, operation = "heavy"): Invocation => ({ rootId: id, callId: id, sessionId: id, operation, attempt: 0, offeredAt: clock.now, message: { request: { kind: "query", key: "k0" } } });
+  return { input, config, q, clock, db, work };
+}
+
+test("PG2 close mid statement retains an orphan slot then rolls back at the boundary", () => {
+  const f = database2(); f.db.openSession("a"); f.db.accept(f.work("a"), () => {}); f.clock.advanceTo(100);
+  f.db.closeSession("a"); expect(f.db.measure()).toMatchObject({ sessions: 1, orphaned: 1 }); expect(f.db.openSession("b")).toBe(false);
+  f.clock.advanceTo(5000); expect(f.db.measure()).toMatchObject({ sessions: 0, orphaned: 0 });
+  expect(f.db.evidence().rows[0]!.version).toBe(1); expect(f.db.openSession("b")).toBe(true);
+});
+
+test("PG2 close after entering commit preserves the committed effect and eventually frees its slot", () => {
+  const f = database2(); const plan = f.config.plans.heavy!; plan.commitWait = f.q.q("commit.wait", 2000, "us"); plan.durability = "authored-log-ack";
+  f.db.openSession("a"); f.db.accept(f.work("a"), () => {}); f.clock.advanceTo(1500);
+  expect(f.db.evidence().queries.committing).toBe(1); f.db.closeSession("a"); expect(f.db.measure().sessions).toBe(1);
+  f.clock.advanceTo(5000); expect(f.db.evidence().rows[0]!.version).toBe(2); expect(f.db.measure().sessions).toBe(0);
+});
+
+test("PG2 cancel before commit preserves the session and rolls back writes", () => {
+  const f = database2(); f.db.openSession("a"); const receipt = f.db.accept(f.work("a"), () => {}); f.clock.advanceTo(100);
+  expect(receipt.cancel()).toBe("cancelled"); expect(f.db.evidence().rows[0]!.version).toBe(1); expect(f.db.sessionAlive("a")).toBe(true);
 });
