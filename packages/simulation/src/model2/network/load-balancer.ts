@@ -7,28 +7,38 @@ import type { LoadBalancer, Trace, TransportResult } from "./contracts";
 import type { pathTransport } from "./transport";
 import type { CausalObserver } from "../workload/causal";
 
-interface Request { work: Invocation; done(outcome: RemoteOutcome): void; receipt?: Receipt; timer?: () => boolean; retryTimer?: () => boolean; attempt: number; backend?: string; retrying: boolean; terminal: boolean }
+interface Request { work: Invocation; done(outcome: RemoteOutcome): void; receipt?: Receipt; timer?: () => boolean; retryTimer?: () => boolean; attempt: number; backend?: string; retrying: boolean; waiting?: boolean; terminal: boolean }
 export function loadBalancer(config: LoadBalancer, kernel: EventClock, paths: Map<string, ReturnType<typeof pathTransport>>, operations: Map<string, OperationClass>, seed: string, horizon: number, trace: Trace, causal?: CausalObserver) {
   const members = [...config.backends].sort().map((id) => ({ id, health: config.health.initial === "eligible", draining: false, successes: 0, failures: 0, outstanding: 0, selected: 0, probes: 0, epoch: 0, cancelCheck: undefined as (() => boolean) | undefined }));
   const active = new Map<string, Request>(), pending = new Map<string, Request>();
   const membersById = new Map(members.map((m) => [m.id, m]));
   let received = 0, completed = 0, rejected = 0, cancelled = 0, attempts = 0, retries = 0, retryLimited = 0, activeRetries = 0, cursor = 0, pumping = false;
+  const enhanced = config.retry?.profile === "canvas-retries/1";
+  let retriesWaiting = 0;
+  const suppressedByReason = { "max-attempts": 0, budget: 0, deadline: 0, "non-retryable": 0, "ambiguous-write": 0 };
+  const suppress = (r: Request, reason: keyof typeof suppressedByReason, id = r.work.callId) => {
+    if (enhanced) { suppressedByReason[reason]++; trace("retry-suppressed", id, reason, r.work.rootId, r.work.attempt + r.attempt - 1, true); }
+    finish(r, "rejected");
+  };
   const path = (backend: string) => paths.get(JSON.stringify([config.id, backend]))!;
   const finish = (r: Request, outcome: RemoteOutcome) => {
-    if (r.terminal) return; r.terminal = true; r.timer?.(); r.retryTimer?.(); active.delete(r.work.callId); pending.delete(r.work.callId);
+    if (r.terminal) return; r.terminal = true; r.timer?.(); r.retryTimer?.(); if (r.waiting) { retriesWaiting--; r.waiting = false; } active.delete(r.work.callId); pending.delete(r.work.callId);
     if (outcome === "completed") completed++; else if (outcome === "cancelled") cancelled++; else rejected++;
     r.done(outcome); pump();
   };
-  const choose = () => {
-    const eligible = members.filter((m) => m.health && !m.draining);
+  const choose = (previous?: string) => {
+    let eligible = members.filter((m) => m.health && !m.draining);
+    if (config.retry?.preferDifferentBackend && eligible.some((m) => m.id !== previous)) eligible = eligible.filter((m) => m.id !== previous);
     if (!eligible.length) return;
     if (config.policy === "least-outstanding") return eligible.sort((a, b) => a.outstanding - b.outstanding || lexical(a.id, b.id))[0];
-    for (let i = 0; i < members.length; i++) { const m = members[cursor++ % members.length]!; if (m.health && !m.draining) return m; }
+    for (let i = 0; i < members.length; i++) { const m = members[cursor++ % members.length]!; if (eligible.includes(m)) return m; }
   };
   const attempt = (r: Request) => {
     if (r.terminal) return;
-    const member = choose(); if (!member) { trace("lb-failure", r.work.callId, "no-backend", r.work.rootId, r.work.attempt); finish(r, "rejected"); return; }
-    if (r.attempt && config.retry && activeRetries >= requireKnown(config.retry.maxConcurrentRetries, "count")) { retryLimited++; finish(r, "rejected"); return; }
+    if (r.waiting) { retriesWaiting--; r.waiting = false; }
+    if (r.attempt && config.retry?.enforceCallerDeadline && kernel.now >= r.work.offeredAt + requireKnown(operations.get(r.work.operation)!.callerTimeout, "us")) { suppress(r, "deadline"); return; }
+    const member = choose(r.backend); if (!member) { trace("lb-failure", r.work.callId, "no-backend", r.work.rootId, r.work.attempt); finish(r, "rejected"); return; }
+    if (r.attempt && config.retry && (activeRetries + (config.retry.reserveBackoffBudget ? retriesWaiting : 0)) >= requireKnown(config.retry.maxConcurrentRetries, "count")) { retryLimited++; suppress(r, "budget"); return; }
     r.attempt++; attempts++; member.outstanding++; member.selected++; r.backend = member.id;
     if (r.attempt > 1) { retries++; activeRetries++; r.retrying = true; }
     const work: Invocation = { ...r.work, attempt: r.work.attempt + r.attempt - 1, parentCallId: r.work.callId,
@@ -41,11 +51,18 @@ export function loadBalancer(config: LoadBalancer, kernel: EventClock, paths: Ma
       if (result.ok) { finish(r, "completed"); return; }
       const policy = config.retry, op = operations.get(r.work.operation)!;
       const safe = !result.ambiguous || ["read-only", "idempotent"].includes(op.idempotency) || policy?.allowAmbiguousNonIdempotent;
-      if (!policy || (policy.operations && !policy.operations.includes(op.id)) || r.attempt >= requireKnown(policy.maxAttempts, "count") || !policy.retryOn.includes(result.reason!) || !safe) { finish(r, "rejected"); return; }
+      if (!policy) { finish(r, "rejected"); return; }
+      if (!safe) { suppress(r, "ambiguous-write", work.callId); return; }
+      if ((policy.operations && !policy.operations.includes(op.id)) || !policy.retryOn.includes(result.reason!)) { suppress(r, "non-retryable", work.callId); return; }
+      if (r.attempt >= requireKnown(policy.maxAttempts, "count")) { suppress(r, "max-attempts", work.callId); return; }
       const jitter = 1 + requireKnown(policy.jitter, "ratio") * (2 * keyedUniform(seed, config.id, work.callId, "retry-backoff") - 1);
       const delay = Math.ceil(requireKnown(policy.backoff, "us") * 2 ** (r.attempt - 1) * jitter);
-      if (policy.operations && kernel.now + delay >= r.work.offeredAt + requireKnown(op.callerTimeout, "us")) { finish(r, "rejected"); return; }
-      trace("retry-scheduled", work.callId, `${result.reason}:${delay}us`, work.rootId, work.attempt);
+      if ((policy.operations || policy.enforceCallerDeadline) && kernel.now + delay >= r.work.offeredAt + requireKnown(op.callerTimeout, "us")) { suppress(r, "deadline", work.callId); return; }
+      if (policy.reserveBackoffBudget) {
+        if (activeRetries + retriesWaiting >= requireKnown(policy.maxConcurrentRetries, "count")) { retryLimited++; suppress(r, "budget", work.callId); return; }
+        retriesWaiting++; r.waiting = true;
+      }
+      trace("retry-scheduled", work.callId, `${result.reason}:${delay}us`, work.rootId, work.attempt, enhanced);
       r.retryTimer = kernel.schedule(kernel.now + delay, 3, JSON.stringify(["retry", config.id, r.work.callId, r.attempt]), () => attempt(r));
     });
   };
@@ -94,6 +111,7 @@ export function loadBalancer(config: LoadBalancer, kernel: EventClock, paths: Ma
     },
     drain(backend: string, grace: number) { const m = members.find((m) => m.id === backend)!; m.draining = true; m.cancelCheck?.(); path(backend).drain(grace); trace("backend-draining", config.id, `${backend}:${grace}us`); },
     measure: () => ({ id: config.id, received, completed, rejected, cancelled, active: active.size, pending: pending.size, attempts, retries, retryLimited, activeRetries,
+      ...(enhanced ? { retriesWaiting, suppressedByReason: { ...suppressedByReason } } : {}),
       backends: members.map(({ cancelCheck: _cancel, epoch: _epoch, ...m }) => ({ ...m })) }),
   };
 }

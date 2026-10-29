@@ -18,6 +18,11 @@ export interface PathConfig {
   bytes: Record<string, { request: Quantity<"bytes">; response: Quantity<"bytes"> }>;
 }
 export interface RetryPolicy {
+  profile?: "canvas-retries/1";
+  enforceCallerDeadline?: boolean;
+  reserveBackoffBudget?: boolean;
+  preferDifferentBackend?: boolean;
+  authored?: Record<string, { value: boolean | string[]; sources: string[] }>;
   operations?: string[];
   maxAttempts: Quantity<"count">; backoff: Quantity<"us">; jitter: Quantity<"ratio">;
   maxConcurrentRetries: Quantity<"count">;

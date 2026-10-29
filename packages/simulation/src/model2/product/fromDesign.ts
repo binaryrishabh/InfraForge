@@ -1,5 +1,5 @@
 import { findSku, CATALOG_SNAPSHOT_DATE } from "@infraforge/catalog";
-import { RESOURCE_PORTS, type Resource } from "@infraforge/domain/resource";
+import { RESOURCE_PORTS, retrySettingsError, type Resource } from "@infraforge/domain/resource";
 import type { Quantity, Unit } from "../../reality/quantity";
 import type { ComputeResource } from "../compute/contracts";
 import type { CommandConfig } from "../async/contracts";
@@ -29,6 +29,8 @@ export function contractFromDesign(saved: SavedProductDesign): { contract: Produ
     for (const e of connections) if (!byId.has(e.sourceId) || !byId.has(e.targetId) || e.sourceId === e.targetId) error(`connections.${e.id}`, "Connect two different resources that both exist on the canvas.");
     if (refused.length) return { refused };
     for (const r of resources) {
+      const retryError = retrySettingsError(r.type, r.retry);
+      if (retryError) error(`resources.${r.id}.retry`, retryError);
       if (!(r.type in RESOURCE_PORTS)) error(`resources.${r.id}`, "This resource type has no Model 2 profile.");
       if (r.skuId && findSku(r.skuId)?.category !== r.type) error(`resources.${r.id}.skuId`, "Choose a catalog size belonging to this resource type.");
       if (r.type === "Database" && !incoming(r.id).some((s) => ["Virtual Machine", "Cache"].includes(s.type))) error(`resources.${r.id}`, "Connect an app server or a cache to this database so something can call it.");
@@ -134,6 +136,22 @@ export function contractFromDesign(saved: SavedProductDesign): { contract: Produ
       enqueue(`${id}.manifest`, source, target, 100000, { kind: "manifest", digest: manifest, bytes: 128, layers: [{ digest, bytes: 1024 }] }, 128);
       enqueue(`${id}.tag`, source, target, 200000, { kind: "tag", tag: "release", digest: manifest });
     };
+    for (const r of resources.filter((r) => r.retry?.enabled)) {
+      const p = r.retry!, id = `${r.id}.retry`, node = nodes[r.id]!;
+      const config = node.resources.find((r) => r.config.kind === "load-balancer")!.config;
+      if (config.kind !== "load-balancer") throw Error("Retry owner must be a load balancer");
+      const groups = { connectionFailure: ["connect-timeout", "reset", "drained"], timeout: ["acquire-timeout", "response-timeout"], overload: ["pool-overflow", "link-overflow"], backendFailure: ["backend-rejected"] } as const;
+      node.profileVersion += "/canvas-retries/1";
+      config.retry = {
+        profile: "canvas-retries/1", enforceCallerDeadline: true, reserveBackoffBudget: true, preferDifferentBackend: true,
+        maxAttempts: q(`${id}.maxAttempts`, p.maxAttempts!, "count", "Saved total attempt limit, including the first attempt.", true),
+        backoff: q(`${id}.backoffMs`, p.backoffMs! * 1000, "us", "Saved backoff in milliseconds converted to microseconds.", true),
+        jitter: q(`${id}.jitterRatio`, p.jitterRatio!, "ratio", "Saved deterministic jitter ratio.", true),
+        maxConcurrentRetries: q(`${id}.maxConcurrentRetries`, p.maxConcurrentRetries!, "count", "Saved limit for waiting and executing retries.", true),
+        retryOn: p.retryOn!.flatMap((g) => [...groups[g]]), allowAmbiguousNonIdempotent: false,
+        authored: { enabled: { value: true, sources: [`saved-design:${id}.enabled`] }, retryOn: { value: [...p.retryOn!], sources: [`saved-design:${id}.retryOn`] } },
+      };
+    }
     for (const r of resources.filter((r) => r.autoscaling?.enabled)) {
       const p = r.autoscaling!, id = r.id, lb = incoming(id).find((s) => s.type === "Load Balancer")!;
       if (p.minReplicas === undefined || p.maxReplicas === undefined || p.targetCpu === undefined) { error(`resources.${id}.autoscaling`, "Set the minimum replicas, maximum replicas and CPU target before enabling autoscaling."); continue; }
@@ -204,6 +222,7 @@ export function contractFromDesign(saved: SavedProductDesign): { contract: Produ
     for (const r of saved.resources.filter((r) => r.type === "Load Balancer" && r.autoscaling?.enabled)) note(`${r.id}.poolMapping`, resources.filter((x) => x.autoscaling?.enabled).map((x) => x.id), "policy", "The first app by ID owns the adjustable replicas while its drawn siblings stay fixed, preserving the load balancer's total replica bounds.");
     // Non-numeric policy choices are also reviewable; quantity leaves are already listed above.
     const inspect = (value: unknown, path: string): void => {
+      if (path.includes(".config.retry")) return; // Authored quantities and enum/list origins are retained by the retry profile.
       if (/^contract\.nodes\.[^.]+\.type$/.test(path)) return; // The user chose the resource type.
       if (value && typeof value === "object" && "kind" in value && "unit" in value && "provenance" in value) return;
       if (value && typeof value === "object" && Object.keys(value).length) { for (const [key, child] of Object.entries(value)) if (!["ledger", "capabilities", "provenance", "evidence"].includes(key)) inspect(child, `${path}.${key}`); }

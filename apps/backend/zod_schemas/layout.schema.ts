@@ -1,5 +1,5 @@
 import * as z from "zod";
-import { RESOURCE_TYPES } from "@infraforge/domain/resource";
+import { RESOURCE_TYPES, retrySettingsError } from "@infraforge/domain/resource";
 
 const ResourceIdSchema = z.string().min(1).refine(
   (id) => !Object.hasOwn(Object.prototype, id),
@@ -18,13 +18,17 @@ const ResourceSchema = z.object({
     maxReplicas: z.number().int().positive().optional(),
     targetCpu: z.number().min(0).max(100).optional(),
   }).optional(),
+  retry: z.json().optional(),
   public: z.boolean().optional(),
   encryption: z.boolean().optional(),
   openPorts: z.array(z.number().int().min(0).max(65535)).optional(),
   size: z.enum(["small", "medium", "large"]).optional(),
   region: z.string().optional(),
   name: z.string().optional(),
-}).catchall(z.json());
+}).catchall(z.json()).superRefine((resource, ctx) => {
+  const message = retrySettingsError(resource.type, resource.retry);
+  if (message) ctx.addIssue({ code: "custom", path: ["retry"], message });
+});
 
 const ConnectionSchema = z.object({
   id: z.string().min(1),

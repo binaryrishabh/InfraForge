@@ -17,6 +17,9 @@ export function numericOrigins(input: SystemsInput, pools: CompiledPool[], contr
     throw Error(`Anonymous compiler number has no origin: ${path}`);
   };
   const visit = (value: unknown, path: string) => {
+    if (value && typeof value === "object" && "value" in value && "sources" in value && path.includes(".retry.authored.")) {
+      rows.push({ path, origin: "user-authored", sources: (value as { sources: string[] }).sources }); return;
+    }
     if (typeof value === "number") { rows.push({ path, ...source(path) }); return; }
     if (!value || typeof value !== "object") return;
     if ("kind" in value && "unit" in value && "provenance" in value) {

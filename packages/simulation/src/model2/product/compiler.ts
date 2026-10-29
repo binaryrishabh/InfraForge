@@ -1,3 +1,4 @@
+import { retrySettingsError } from "@infraforge/domain/resource";
 import { requireKnown } from "../../reality/quantity";
 import { validateSystems } from "../systems/validate";
 import type { SystemsInput } from "../systems/contracts";
@@ -39,7 +40,9 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
     const edgeIds = new Set(design.connections.map((e) => e.id));
     if (edgeIds.size !== design.connections.length) error("EDGE_ID", "connections", "Unique connection identities required");
     for (const r of design.resources) {
-      const allowed = new Set(["id", "type", "x", "y", "skuId", "autoscaling", "public", "encryption", "openPorts", "size", "region", "name"]);
+      const retryError = retrySettingsError(r.type, r.retry);
+      if (retryError) error("INVALID_RETRY", `resources.${r.id}.retry`, retryError);
+      const allowed = new Set(["id", "type", "x", "y", "skuId", "autoscaling", "retry", "public", "encryption", "openPorts", "size", "region", "name"]);
       for (const key of Object.keys(r)) if (!allowed.has(key)) error("UNSUPPORTED_RESOURCE_SETTING", `resources.${r.id}.${key}`, "Unrecognized saved setting needs an explicit compiler-version owner");
       const spec = contract.nodes[r.id];
       if (!(r.type in TRANSLATION_OWNERS)) { error("UNSUPPORTED_RESOURCE", `resources.${r.id}`, `No translation owner for ${r.type}`); continue; }

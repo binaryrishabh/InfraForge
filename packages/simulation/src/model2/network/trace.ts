@@ -6,7 +6,7 @@ import type { CausalObserver } from "../workload/causal";
 export function networkTrace(kernel: EventKernel, limit: number, causal?: CausalObserver, byteLimit = Infinity) {
   const events: TraceEvent[] = [], totals: Record<string, number> = {}; let omitted = 0, retainedBytes = 0;
   const emit: Trace = (kind, id, detail, root, attempt, poolEvidence) => {
-    if (causal && ((poolEvidence && ["connection-acquired", "connection-closed", "connection-released", "db-session-open", "db-session-refused", "db-session-closed"].includes(kind)) || ["lb-selected", "lb-failure", "health-observation", "health-probe", "attempt-terminal", "request-delivered", "transport-terminal", "remote-after-transport-stop", "network-intervention", "backend-draining"].includes(kind))) causal({ atUs: kernel.now, kind, resource: "network", detail: { id, detail, ...(root === undefined ? {} : { root }), ...(attempt === undefined ? {} : { attempt }) } });
+    if (causal && ((poolEvidence && ["retry-scheduled", "retry-suppressed", "connection-acquired", "connection-closed", "connection-released", "db-session-open", "db-session-refused", "db-session-closed"].includes(kind)) || ["lb-selected", "lb-failure", "health-observation", "health-probe", "attempt-terminal", "request-delivered", "transport-terminal", "remote-after-transport-stop", "network-intervention", "backend-draining"].includes(kind))) causal({ atUs: kernel.now, kind, resource: "network", detail: { id, detail, ...(root === undefined ? {} : { root }), ...(attempt === undefined ? {} : { attempt }) } });
     totals[kind] = (totals[kind] ?? 0) + 1;
     // Count every transition, but do not allocate rows that cannot be retained.
     if (events.length >= limit) { omitted++; return; }
