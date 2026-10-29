@@ -1,8 +1,5 @@
 FROM oven/bun:1.3.14@sha256:e10577f0db68676a7024391c6e5cb4b879ebd17188ab750cf10024a6d700e5c4
 RUN command -v timeout
-ARG RELEASE_SHA
-LABEL org.opencontainers.image.source="https://github.com/binaryrishabh/InfraForge" \
-      org.opencontainers.image.revision=$RELEASE_SHA
 WORKDIR /app
 
 # Install the full workspace from its single lockfile.
@@ -52,6 +49,10 @@ COPY packages/simulation/tsconfig.json ./packages/simulation/
 
 # Generate after every authored copy so stale local output cannot replace it.
 RUN cd apps/backend && bun --bun run db:generate
+# The release SHA is declared last: a new SHA must not invalidate the dependency install or client generation.
+ARG RELEASE_SHA
+LABEL org.opencontainers.image.source="https://github.com/binaryrishabh/InfraForge" \
+      org.opencontainers.image.revision=$RELEASE_SHA
 RUN cd apps/backend && bun --no-env-file release/cli.ts manifest "$RELEASE_SHA" > release.json
 # Normalize copied and generated trees before dropping root, regardless of checkout modes.
 RUN chmod -R u=rwX,go=rX /app/apps /app/packages
