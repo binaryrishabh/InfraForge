@@ -59,6 +59,7 @@ export interface ControllerProfile {
   manual: Array<{ id: string; at: Quantity<"us">; desired: Quantity<"count"> }>;
 }
 export interface ProductContract {
+  applicationFlowProfile?: "application-flow/1";
   failureCauseProfile?: "failure-cause/1";
   schema: "infraforge-product-model2/1"; version: string; designVersion: string; catalogVersion: string; workloadVersion: "product-arrivals/1";
   application?: ApplicationProfile; ledger: RealityEntry[]; nodes: Record<string, NodeContract>;

@@ -1,3 +1,4 @@
+import type { RuntimeFlow } from "./flow";
 import type { Quantity } from "../../reality/quantity";
 import type { DemandProfile } from "../workload/profiles";
 import type { WorkStation, WorkloadInput, StationState } from "../workload/contracts";
@@ -14,6 +15,7 @@ export interface ComputeProfile extends Omit<DemandProfile, "schema" | "io" | "s
 }
 export interface ComputeResource extends Omit<WorkStation, "kind" | "concurrency"> {
   kind: "compute";
+  applicationFlow?: { schema: "application-flow/1"; operations: Record<string, RuntimeFlow> };
   // Explicit operation routing; omitted retains the historical single dependency.
   downstreamByOperation?: Record<string, string>;
   workers: Quantity<"count">;

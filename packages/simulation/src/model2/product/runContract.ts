@@ -35,7 +35,7 @@ export function withRunLength(base: ProductContract, horizonSeconds: number, see
   // "Peak" traffic is a 20-second burst every 120 seconds, starting at second 120, as in the guided challenges.
   if (contract.arrival.peak) contract.arrival.peak = { start: assumed(contract, "run.burst.start", 120_000_000), end: assumed(contract, "run.burst.end", 140_000_000),
     every: assumed(contract, "run.burst.every", 120_000_000) };
-  contract.limits = { ...contract.limits, maxEvents: WORKLOAD_LIMITS.events, maxRequests: WORKLOAD_LIMITS.requests, maxSamples: Math.min(WORKLOAD_LIMITS.samples, horizonSeconds + 1) };
+  contract.limits = { ...contract.limits, maxEvents: base.applicationFlowProfile ? base.limits.maxEvents : WORKLOAD_LIMITS.events, maxRequests: base.applicationFlowProfile ? base.limits.maxRequests : WORKLOAD_LIMITS.requests, maxSamples: Math.min(WORKLOAD_LIMITS.samples, horizonSeconds + 1) };
   return contract;
 }
 

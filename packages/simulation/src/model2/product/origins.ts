@@ -20,6 +20,12 @@ export function numericOrigins(input: SystemsInput, pools: CompiledPool[], contr
     if (value && typeof value === "object" && "value" in value && "sources" in value && (path.includes(".retry.authored.") || path.includes(".circuitBreaker.authored."))) {
       rows.push({ path, origin: "user-authored", sources: (value as { sources: string[] }).sources }); return;
     }
+    const flow = /^input.resources\.(\d+)\.applicationFlow(.*)$/.exec(path);
+    if (flow && flow[2] === "") rows.push({ path: `${path}.workerModel`, origin: "policy", sources: ["application-flow/1 authored assumption: thread-per-request: worker held while waiting; no CPU while waiting"] });
+    if (flow && (typeof value !== "object" || value === null)) {
+      const id = input.resources[+flow[1]!]!.id.split("#")[0]!;
+      rows.push({ path, origin: "user-authored", sources: [`saved-design:${id}.applicationFlow${flow[2]!.replace(/\.target$/, ".edge")}`] }); return;
+    }
     if (typeof value === "number") { rows.push({ path, ...source(path) }); return; }
     if (!value || typeof value !== "object") return;
     if ("kind" in value && "unit" in value && "provenance" in value) {

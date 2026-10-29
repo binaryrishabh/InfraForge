@@ -1,4 +1,4 @@
-import { RESOURCE_PORTS, asyncSettingsError, circuitBreakerSettingsError, retrySettingsError } from "@infraforge/domain/resource";
+import { RESOURCE_PORTS, applicationFlowError, asyncSettingsError, circuitBreakerSettingsError, retrySettingsError } from "@infraforge/domain/resource";
 import { requireKnown } from "../../reality/quantity";
 import { validateSystems } from "../systems/validate";
 import type { SystemsInput } from "../systems/contracts";
@@ -12,6 +12,7 @@ import { COMPILER_VERSION } from "./contracts";
 import { boundedProduct } from "./bounds";
 import { validateMaterializedSemantics } from "./semantics";
 import { capabilityFacts } from "./capabilities";
+import { WORKLOAD_LIMITS } from "../workload/policy";
 import { numericOrigins } from "./origins";
 // Model 1 saves a pool policy on its LB; keep fixed siblings and expand one named VM.
 export function savedPoolPolicies(design: SavedProductDesign): SavedProductDesign {
@@ -32,6 +33,9 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
   try {
     boundedProduct(design); boundedProduct(contract);
     design = savedPoolPolicies(design);
+    if (contract.applicationFlowProfile !== undefined && contract.applicationFlowProfile !== "application-flow/1") error("UNKNOWN_FLOW_PROFILE", "applicationFlowProfile", "Unsupported flow profile");
+    if (design.resources.some(r => r.applicationFlow) !== (contract.applicationFlowProfile === "application-flow/1")) error("FLOW_PROFILE", "applicationFlowProfile", "Saved flow requires the application-flow/1 adapter");
+    if (contract.applicationFlowProfile && !contract.version.endsWith("/application-flow/1")) error("FLOW_VERSION", "version", "Flow semantic version must identify application-flow/1");
     if (contract.failureCauseProfile !== undefined && contract.failureCauseProfile !== "failure-cause/1") error("UNKNOWN_CAUSE_PROFILE", "failureCauseProfile", "Unsupported failure cause profile");
     if (design.schema !== "infraforge-saved-design/1" || contract.schema !== "infraforge-product-model2/1" || !contract.version || !contract.designVersion || !contract.catalogVersion || contract.workloadVersion !== "product-arrivals/1") error("VERSION_REQUIRED", "versions", "Explicit design/compiler/application/catalog/workload versions required");
     if (!contract.application) error("MISSING_APPLICATION_PROFILE", "application", "Missing application execution profile; provider hardware cannot supply operation demand");
@@ -41,13 +45,16 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
     const edgeIds = new Set(design.connections.map((e) => e.id));
     if (edgeIds.size !== design.connections.length) error("EDGE_ID", "connections", "Unique connection identities required");
     for (const r of design.resources) {
+      const flowError = applicationFlowError(r.type, r.applicationFlow);
+      if (flowError) error("INVALID_FLOW", `resources.${r.id}.applicationFlow`, flowError);
+      if (r.applicationFlow && (r.asyncWorker?.enabled || r.asyncQueue?.enabled)) error("INVALID_FLOW", `resources.${r.id}.applicationFlow`, "Async flow ownership is unsupported");
       const asyncError = asyncSettingsError(r.type, r.asyncQueue, r.asyncWorker);
       if (asyncError) error("INVALID_ASYNC", `resources.${r.id}.async`, asyncError);
       const breakerError = circuitBreakerSettingsError(r.type, r.circuitBreaker);
       if (breakerError) error("INVALID_CIRCUIT_BREAKER", `resources.${r.id}.circuitBreaker`, breakerError);
       const retryError = retrySettingsError(r.type, r.retry);
       if (retryError) error("INVALID_RETRY", `resources.${r.id}.retry`, retryError);
-      const allowed = new Set(["id", "type", "x", "y", "skuId", "autoscaling", "asyncQueue", "asyncWorker", "retry", "circuitBreaker", "public", "encryption", "openPorts", "size", "region", "name"]);
+      const allowed = new Set(["id", "type", "x", "y", "skuId", "autoscaling", "asyncQueue", "asyncWorker", "applicationFlow", "retry", "circuitBreaker", "public", "encryption", "openPorts", "size", "region", "name"]);
       for (const key of Object.keys(r)) if (!allowed.has(key)) error("UNSUPPORTED_RESOURCE_SETTING", `resources.${r.id}.${key}`, "Unrecognized saved setting needs an explicit compiler-version owner");
       const spec = contract.nodes[r.id];
       if (!(r.type in TRANSLATION_OWNERS)) { error("UNSUPPORTED_RESOURCE", `resources.${r.id}`, `No translation owner for ${r.type}`); continue; }
@@ -102,6 +109,7 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
       for (const instance of expansion.get(r.id)!) for (const resource of [...spec.resources].sort((a, b) => a.role < b.role ? -1 : 1)) {
         const id = roleIds.get(`${instance}/${resource.role}`)!;
         const material = { ...rewriteReferences(resource.config, (value) => ref(value, instance)), id } as SystemsInput["resources"][number];
+        if (material.kind === "compute" && material.applicationFlow) throw Error("Application flows must be compiled from saved per-operation edge references");
         if ("execution" in material) material.execution.id = id;
         runtime.resources.push(material); runtime.endpoints[id] = { alive: true, ready: true };
         const identity = spec.identities.find((p) => p.role === resource.role); if (!identity) throw Error(`Missing explicit network identity ${r.id}/${resource.role}`);
@@ -150,6 +158,19 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
         if (intent.purpose === "monitor-target") { const agent = materialized.get(source); if (agent?.kind !== "monitor") throw Error("Monitor-target owner must be Monitoring Agent"); agent.targets.push(target); }
       }
     }
+    for (const r of resources) if (r.applicationFlow) for (const instance of expansion.get(r.id)!) {
+      const owner = materialized.get(ref(`$self/${contract.nodes[r.id]!.primary}`, instance));
+      if (owner?.kind !== "compute" || owner.applicationFlow || owner.downstream || owner.downstreamByOperation) throw Error("Flow requires an exclusive compute owner without downstream routing");
+      const call = (c: import("@infraforge/domain/resource").FlowCall) => {
+        const drawn = design.connections.find(e => e.id === c.edge && e.sourceId === r.id), binding = contract.edges[c.edge];
+        if (!drawn || !binding || binding.purpose !== "dependency" || binding.sourceRole !== contract.nodes[r.id]!.primary) throw Error(`Flow call ${c.id} needs a connected outgoing dependency edge`);
+        if (!["Virtual Machine", "Load Balancer"].includes(nodes.get(drawn.targetId)!.type) || binding.targetRole !== contract.nodes[drawn.targetId]!.primary) throw Error("Flow v1 supports primary VM/load balancer service roles only");
+        const target = ref(`$${drawn.targetId}/${binding.targetRole}`), targetOwner = materialized.get(target);
+        if (targetOwner?.kind !== "compute" && targetOwner?.kind !== "load-balancer") throw Error("Flow v1 targets must be compute or load balancer service owners; async workers are unsupported");
+        return { id: c.id, kind: "call" as const, target, ...(c.operation ? { operation: c.operation } : {}) };
+      };
+      owner.applicationFlow = { schema: "application-flow/1", operations: Object.fromEntries(Object.entries(r.applicationFlow.operations).map(([op, flow]) => [op, { steps: flow.steps.map(s => s.kind === "compute" ? s : s.kind === "call" ? call(s) : { ...s, branches: s.branches.map(call) }) }])) };
+    }
     const entry = ref(contract.caller.entry); path("external-entry", "$caller", entry, { purpose: "dependency", sourceRole: "external", targetRole: "entry", ...contract.caller });
     for (const e of contract.caller.dependencies) path(`external/${e.id}`, "$caller", ref(e.target), { ...e, sourceRole: "external", targetRole: "target" });
     for (const o of [...app.operations].sort((a, b) => a.id < b.id ? -1 : 1)) runtime.operations.push({ ...o, entry });
@@ -157,6 +178,26 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
     runtime.systems.instrumentation = contract.instrumentation.flatMap((p) => expansion.has(p.target.slice(1)) ? expansion.get(p.target.slice(1))!.map((target) => ({ ...p, target })) : [{ ...p, target: ref(p.target) }]);
     runtime.systems.commands = rewriteReferences(contract.commands, (v) => ref(v));
     phase = "workload"; runtime.arrivals = compileArrivals(design, contract, provenance);
+    if (contract.applicationFlowProfile) {
+      const memo = new Map<string, number>();
+      const calls = (id: string, operation: string, seen = new Set<string>()): number => {
+        const key = JSON.stringify([id, operation]); if (seen.has(key)) throw Error("Application flow operation dependency cycle");
+        const cached = memo.get(key); if (cached !== undefined) return cached;
+        const chain = new Set(seen).add(key), r = materialized.get(id); if (!r) throw Error("Missing flow target");
+        if (r.kind === "load-balancer") return 1 + Math.max(0, ...r.backends.map(b => calls(b, operation, chain))) * (r.retry ? requireKnown(r.retry.maxAttempts, "count") : 1);
+        if (r.kind !== "compute") return 1;
+        const flow = r.applicationFlow?.operations[operation];
+        if (!flow) { const target = r.downstreamByOperation?.[operation] ?? r.downstream; return 1 + (target ? calls(target, operation, chain) : 0); }
+        const total = 1 + flow.steps.reduce((sum, s) => sum + (s.kind === "compute" ? 1 : s.kind === "call" ? calls(s.target, s.operation ?? operation, chain) : s.branches.reduce((n, b) => n + calls(b.target, b.operation ?? operation, chain), 0)), 0);
+        memo.set(key, total); return total;
+      };
+      const factor = Math.max(...runtime.operations.map(op => calls(op.entry, op.id)));
+      const maxEvents = contract.limits.maxEvents * factor;
+      if (!Number.isSafeInteger(maxEvents) || maxEvents > WORKLOAD_LIMITS.events) throw Error("Flow fan-out exceeds executor event budget; shorten the flow or run");
+      const maxLiveCalls = contract.limits.maxRequests * factor;
+      if (!Number.isSafeInteger(maxLiveCalls)) throw Error("Flow live-call budget overflows");
+      runtime.limits = { ...contract.limits, maxEvents, maxLiveCalls };
+    }
     phase = "faults"; const crashes = compileFaults(contract.faults, runtime, (id) => expansion.get(id) ?? [id], provenance);
     phase = "capabilities";
     const capabilities = capabilityFacts(contract, resources);

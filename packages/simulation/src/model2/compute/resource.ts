@@ -1,3 +1,4 @@
+import { applicationFlow } from "./flow";
 import { carryCause, causeFields, type Cause } from "../workload/cause";
 import { requireKnown } from "../../reality/quantity";
 import type { EventClock } from "../time";
@@ -9,6 +10,7 @@ import { residentMemory } from "./memory";
 import type { CausalObserver } from "../workload/causal";
 
 interface Call { work: Invocation; phase: "queued" | "cpu" | "wait" | "dependency" | "finished";
+  flow?: ReturnType<typeof applicationFlow>; flowStep?: string; afterWait?: () => void;
   done(outcome: RemoteOutcome, cause?: Cause): void; child?: Receipt; cancelWait?: () => boolean; waitRemaining: number; waitSince: number }
 export function computeResource(config: ComputeResource, profiles: Map<string, ComputeProfile>, kernel: EventClock,
   send: (target: string, work: Invocation, done: Call["done"]) => Receipt, causal?: CausalObserver, ownedCpu?: ReturnType<typeof cpuScheduler>) {
@@ -22,6 +24,7 @@ export function computeResource(config: ComputeResource, profiles: Map<string, C
     if (call.phase === "finished") return;
     if (call.phase === "cpu") scheduler.remove(call.work.callId);
     accountOccupancy(); call.cancelWait?.(); active.delete(call.work.callId); queue.delete(call.work.callId); memory.release(call.work.callId); call.phase = "finished";
+    call.flow?.cancel();
     if (outcome === "completed") completed++; else if (outcome === "cancelled") cancelled++; else failed++;
     causal?.({ atUs: kernel.now, kind: "app-terminal", resource: config.id, work: call.work, detail: { outcome, ...causeFields(outcome === "completed" ? undefined : cause) } });
     call.done(outcome, outcome === "completed" ? undefined : cause); pump();
@@ -29,8 +32,9 @@ export function computeResource(config: ComputeResource, profiles: Map<string, C
   const scheduleWait = (call: Call) => {
     if (paused) return;
     call.waitSince = kernel.now;
-    call.cancelWait = kernel.schedule(kernel.now + call.waitRemaining, 2, identity("blocking-wait", config.id, call.work.callId), () => {
+    call.cancelWait = kernel.schedule(kernel.now + call.waitRemaining, 2, call.flowStep ? identity("flow-wait", config.id, call.work.callId, call.flowStep) : identity("blocking-wait", config.id, call.work.callId), () => {
       call.waitRemaining = 0;
+      if (call.afterWait) { call.phase = "dependency"; const done = call.afterWait; call.afterWait = undefined; done(); return; }
       const downstream = config.downstreamByOperation?.[call.work.operation] ?? config.downstream;
       if (downstream) {
         call.phase = "dependency";
@@ -48,6 +52,19 @@ export function computeResource(config: ComputeResource, profiles: Map<string, C
       if (!memory.activate(call.work.callId)) { allocationRejected++; finish(call, "rejected"); continue; }
       accountOccupancy(); active.set(call.work.callId, call); call.phase = "cpu";
       causal?.({ atUs: kernel.now, kind: "app-start", resource: config.id, work: call.work, detail: {} });
+      const flow = config.applicationFlow?.operations[call.work.operation];
+      if (flow) {
+        call.phase = "dependency";
+        call.flow = applicationFlow(config.id, call.work, flow, kernel, send, (step, done) => {
+          call.flowStep = step; call.phase = "cpu";
+          const p = profiles.get(call.work.operation)!;
+          scheduler.add({ id: call.work.callId, demand: requireKnown(p.cpu, "cpu-us"), cap: requireKnown(p.maxCpuParallelism, "cores"), done: () => {
+            if (call.phase === "finished") return;
+            call.phase = "wait"; call.afterWait = done; call.waitRemaining = requireKnown(p.blockingWait, "us"); scheduleWait(call);
+          } });
+        }, (outcome, cause) => finish(call, outcome, cause), causal);
+        call.flow.start(); continue;
+      }
       const p = profiles.get(call.work.operation)!;
       scheduler.add({ id: call.work.callId, demand: requireKnown(p.cpu, "cpu-us"), cap: requireKnown(p.maxCpuParallelism, "cores"), done: () => {
         if (call.phase === "finished") return;
@@ -77,6 +94,7 @@ export function computeResource(config: ComputeResource, profiles: Map<string, C
       if (value === paused) throw new Error("Overlapping/unmatched compute pause");
       if (value) for (const call of active.values()) if (call.phase === "wait") { call.waitRemaining -= kernel.now - call.waitSince; call.cancelWait?.(); }
       paused = value; scheduler.pause(value);
+      for (const call of active.values()) call.flow?.pause(value);
       if (!paused) { for (const call of active.values()) if (call.phase === "wait") scheduleWait(call); pump(); }
     },
     setCapacity(cores: number) { scheduler.capacity(cores); },

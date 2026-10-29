@@ -1,9 +1,11 @@
+import { validateFlows } from "./validateFlow";
 import { requireKnown, validateQuantity, type Quantity, type Unit } from "../../reality/quantity";
 import type { ComputeInput, ComputeResource, ComputeProfile } from "./contracts";
 import { micros } from "../time";
 import { COMPUTE_LIMITS } from "./policy";
 
 export function validateCompute(input: ComputeInput) {
+  validateFlows(input);
   if (input.workloadVersion !== "m2c/1" || input.resources.length > 256 || input.profiles.length > 16384 || input.interventions.length > COMPUTE_LIMITS.interventions) throw new Error("Invalid compute revision/structural budget");
   const ledger = new Map(input.ledger.map((e) => [e.id, e.quantity]));
   const check = (q: Quantity, unit: Unit, min = 0, unknown = false, integer = false) => {

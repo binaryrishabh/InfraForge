@@ -1,6 +1,6 @@
 import type { AdapterProfile } from "@infraforge/contracts/run-inputs";
 import { findSku, CATALOG_SNAPSHOT_DATE } from "@infraforge/catalog";
-import { RESOURCE_PORTS, asyncSettingsError, circuitBreakerSettingsError, retrySettingsError, type Resource } from "@infraforge/domain/resource";
+import { RESOURCE_PORTS, applicationFlowError, asyncSettingsError, circuitBreakerSettingsError, retrySettingsError, type Resource } from "@infraforge/domain/resource";
 import type { Quantity, Unit } from "../../reality/quantity";
 import type { ComputeResource } from "../compute/contracts";
 import type { CommandConfig } from "../async/contracts";
@@ -27,10 +27,11 @@ export function contractFromDesign(saved: SavedProductDesign, history?: { failur
   try {
     boundedProduct(saved);
     const design = savedPoolPolicies(saved), resources = [...design.resources].sort((a, b) => a.id < b.id ? -1 : 1);
-    // New canvas runs with retry/breaker intent need root-aware consumers; no learner control.
+    // New canvas runs with retry/breaker intent record observational cause evidence; no learner control, and no decision depends on it.
     const profiles = history && "adapterProfiles" in history ? history.adapterProfiles : history ? [] : currentAdapterProfiles(resources);
     if (profiles.some(p => p !== "failure-cause/1") || profiles.length > 1) error("adapterProfiles", "Unsupported adapter profile selection.");
     const failureCause = profiles.includes("failure-cause/1");
+    const hasFlow = resources.some(r => r.applicationFlow !== undefined);
     const byId = new Map(resources.map((r) => [r.id, r]));
     const connections = [...design.connections].sort((a, b) => a.id < b.id ? -1 : 1);
     const outgoing = (id: string) => connections.filter((e) => e.sourceId === id).map((e) => byId.get(e.targetId)!);
@@ -40,6 +41,9 @@ export function contractFromDesign(saved: SavedProductDesign, history?: { failur
     for (const e of connections) if (!byId.has(e.sourceId) || !byId.has(e.targetId) || e.sourceId === e.targetId) error(`connections.${e.id}`, "Connect two different resources that both exist on the canvas.");
     if (refused.length) return { refused };
     for (const r of resources) {
+      const flowError = applicationFlowError(r.type, r.applicationFlow);
+      if (flowError) error(`resources.${r.id}.applicationFlow`, flowError);
+      if (r.applicationFlow && (r.asyncWorker?.enabled || outgoing(r.id).some(t => !["Virtual Machine", "Load Balancer"].includes(t.type)))) error(`resources.${r.id}.applicationFlow`, "Flow v1 calls connected VM or load balancer services only; async/data/publish bindings are unsupported.");
       const asyncError = asyncSettingsError(r.type, r.asyncQueue, r.asyncWorker);
       if (asyncError) error(`resources.${r.id}.async`, asyncError);
       const breakerError = circuitBreakerSettingsError(r.type, r.circuitBreaker);
@@ -240,6 +244,7 @@ export function contractFromDesign(saved: SavedProductDesign, history?: { failur
       if (s.type === "Virtual Machine" && (s.asyncWorker?.enabled || producerQueue(s.id)) && ["Message Queue", "Object Storage"].includes(t.type)) { edges[e.id] = edge(t, `edge.${e.id}`, s.asyncWorker?.enabled ? "main" : "publisher", "main", "consumer", e.port, true); continue; }
       if (s.type === "Firewall") purpose = "policy-attachment";
       else if (s.type === "Load Balancer" && t.type === "Virtual Machine") purpose = "routing";
+      else if (s.type === "Virtual Machine" && s.applicationFlow && ["Virtual Machine", "Load Balancer"].includes(t.type)) purpose = "dependency";
       else if (s.type === "Monitoring Agent" && t.type !== "Firewall") purpose = "monitor-target";
       else if (["CDN", "Container Registry"].includes(s.type) && t.type === "Object Storage") purpose = "origin";
       else if (s.type === "Cache" && t.type === "Database") sourceRole = "aside";
@@ -270,13 +275,14 @@ export function contractFromDesign(saved: SavedProductDesign, history?: { failur
     const payload = payloads[design.workload.payloadSize];
     const assumedTransport: ProductContract["transports"][string] = { version: "canvas-assumptions/2", ownership: "per-path", provenance: [SOURCE], links: ["request", "response"].map((id) => ({ id, from: id === "request" ? "$source" : "$target", to: id === "request" ? "$target" : "$source", policy: "fifo-message/1", bandwidth: q(`link.${id}.bandwidth`, 125000000, "bytes/s"), propagation: q(`link.${id}.propagation`, 100, "us"), bufferBytes: q(`link.${id}.buffer`, 16777216, "bytes") })), pool: { mode: "serial", reuse: true, maxConnections: q("pool.connections", 32, "count"), streams: q("pool.streams", 1, "count"), pending: q("pool.pending", 256, "count"), establish: q("pool.establish", 100, "us"), acquireTimeout: q("pool.acquireTimeout", 1000000, "us"), connectTimeout: q("pool.connectTimeout", 1000000, "us"), responseTimeout: q("pool.responseTimeout", 4000000, "us"), remoteCancellation: "request-cancellation" }, bytes: Object.fromEntries(operations.map((id) => [id, { request: payload, response: payload }])) };
     const contract: ProductContract = {
+      ...(hasFlow ? { applicationFlowProfile: "application-flow/1" as const } : {}),
       ...(failureCause ? { failureCauseProfile: "failure-cause/1" as const } : {}),
-      schema: "infraforge-product-model2/1", version: failureCause ? "canvas-assumptions/2/failure-cause/1" : "canvas-assumptions/2", designVersion: "saved-domain/1", catalogVersion: CATALOG_SNAPSHOT_DATE, workloadVersion: "product-arrivals/1", ledger, nodes, edges, capabilities,
+      schema: "infraforge-product-model2/1", version: (failureCause ? "canvas-assumptions/2/failure-cause/1" : "canvas-assumptions/2") + (hasFlow ? "/application-flow/1" : ""), designVersion: "saved-domain/1", catalogVersion: CATALOG_SNAPSHOT_DATE, workloadVersion: "product-arrivals/1", ledger, nodes, edges, capabilities,
       application: { schema: "infraforge-application/1", id: "canvas-default", version: "1", provenance: [SOURCE], validityDomain: SCOPE, controlOperation: "health", readOperation: "read", writeOperation: "write", payloads, operations: operations.map((id) => ({ id, callerTimeout: q(`application.${id}.timeout`, 5000000, "us"), onCallerStop: "request-cancellation", idempotency: id === "write" ? "non-idempotent" : "read-only" })), demands: operations.map((op) => ({ schema: "infraforge-compute-demand/1", id: `canvas.${op}`, version: "1", application: "canvas-default", operation: op, stage: "compute", method: "synthetic", cpu: q(`application.${op}.cpu`, op === "health" ? 100 : op === "write" ? 6000 : 3000, "cpu-us"), blockingWait: q(`application.${op}.wait`, 0, "us"), maxCpuParallelism: q(`application.${op}.parallelism`, 1, "cores"), residentCoverage: "partial", obtainedBy: "Explicit educational defaults", evidence: [SOURCE], date: "2026-10-27", validity: { exact: { environment: "canvas-assumptions" }, ranges: {} }, uncertainty: [SCOPE], freeMode: "forbidden" })) },
       transports: { assumed: assumedTransport, caller: { ...assumedTransport, pool: { ...assumedTransport.pool, maxConnections: q("pool.caller.connections", 512, "count", "Authored open-loop load-generator allowance of 512 concurrent serial connections; this is separate from each app-to-database pool and is not a browser client default.") } }, cache: { ...assumedTransport, pool: { ...assumedTransport.pool, connectTimeout: q("pool.cache.connectTimeout", 10000, "us", "Authored 10 ms cache connect timeout: an unavailable optional cache falls back promptly rather than throttling database demand for a second."), responseTimeout: q("pool.cache.responseTimeout", 10000, "us", "Authored 10 ms cache response timeout for prompt cache-aside fallback, not a Redis/provider default; no retry is added.") } }, database: { ...assumedTransport, pool: { ...assumedTransport.pool, evidenceProfile: "postgresql-pools/2", maxConnections: q("pool.database.connections", 10, "count", "Authored assumption modelled on node-postgres-style pooling: lazy open, at most 10 connections per source replica and database path; the acquire timeout is an authored assumption."), idleTimeout: q("pool.database.idleTimeout", 10000000, "us", "Authored node-postgres-style idle close after 10 seconds.") } } },
       caller: { address: "198.51.100.1", entry: `$${entry.id}`, transport: "caller", request: ["request"], response: ["response"], security: security(entry, RESOURCE_PORTS[entry.type], "caller"), dependencies: [] },
       seed: "canvas-assumptions/2", horizon: q("run.horizon", 30000000, "us", "A saved canvas has no duration, so the default run lasts thirty seconds."), sampleInterval: q("run.sampleInterval", 1000000, "us"), arrival: { start: q("arrival.start", 0, "us"), ...(design.workload.trafficShape === "peak" ? { peak: { start: q("arrival.peak.start", 10000000, "us"), end: q("arrival.peak.end", 20000000, "us") } } : {}) },
-      limits: { maxEvents: 2000000, maxSamples: 1000, maxRequests: 100000, maxTraceRows: 100000, maxRawResults: 1000 }, instrumentation: [], commands, faults: [],
+      limits: { maxEvents: hasFlow ? 1000000 : 2000000, maxSamples: 1000, maxRequests: 100000, maxTraceRows: 100000, maxRawResults: 1000 }, instrumentation: [], commands, faults: [],
     };
     for (const r of resources.filter((r) => r.type === "DNS")) {
       const authority = nodes[r.id]!.resources[0]!.config;
@@ -285,6 +291,11 @@ export function contractFromDesign(saved: SavedProductDesign, history?: { failur
       contract.caller.security.dns = { name: "app.example", resolver: `$${r.id}/resolver`, routes: [{ address: nodes[entry.id]!.identities[0]!.address, path: "external-entry" }] };
     }
     for (const target of [...new Set(resources.filter((r) => r.type === "Monitoring Agent").flatMap((r) => outgoing(r.id).map((t) => t.id)))].sort()) contract.instrumentation.push({ target: `$${target}`, bytes: q(`instrumentation.${target}`, 128, "bytes") });
+    for (const r of resources.filter(r => r.applicationFlow)) {
+      nodes[r.id]!.profileVersion += "/application-flow/1";
+      nodes[r.id]!.provenance.push(`saved-design:${r.id}.applicationFlow`);
+      note(`${r.id}.applicationFlow.worker`, "thread-per-request: worker held while waiting", "policy", "Authored assumption: thread-per-request: worker held while waiting; waiting consumes no CPU.");
+    }
     note("security.scope", "logical TCP admission only", "policy", "Public exposure, encryption and open ports stay saved metadata; assumed listeners and allow policies do not certify the design's security.");
     note("application.scope", "one-key educational application", "policy", asyncQueues.length ? "Each served producer request uploads one object and publishes one message; the worker reads it, spends authored CPU, writes a result and acknowledges. Other service edges retain their bootstrap behavior." : "Requests use one assumed key; queue, object and registry edges receive explicit bootstrap commands rather than invented application fan-out.");
     note("workload.arrivals", "deterministic open-loop", "policy", "Requests begin immediately at evenly spaced intervals with a fractional read/write mixture; peak traffic occupies seconds ten through twenty.");
