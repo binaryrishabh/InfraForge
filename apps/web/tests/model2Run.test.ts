@@ -114,7 +114,7 @@ test("versioned worker actions replay in same-second order with identical quanti
     h.tick(); server.advance();
     expect(h.seconds().at(-1)!.view).toEqual(server.view());
     expect(h.host.actions()).toEqual(server.actions);
-    if (second === 0) expect(server.view().activeChaos).toMatchObject([{resourceId: "db", intervention: {label: "Session capacity", parameters: {sessions: 0, duration: 1}, restoreAtUs: 1_000_001}}]);
+    if (second === 0) expect(server.view().activeChaos.filter(c => c.resourceId === "db")).toMatchObject([{resourceId: "db", intervention: {label: "Session capacity", parameters: {sessions: 0, duration: 1}, restoreAtUs: 1_000_001}}]);
     if (second === 1) expect(server.view().activeChaos).toEqual([]);
   }
   const done = h.messages.at(-1) as Extract<FromWorker, {type: "done"}>;
@@ -155,4 +155,35 @@ test("versioned same-second ordering survives the tenth accepted action", () => 
   expect(changes.map(r => r.quantity.kind === "known" ? r.quantity.value : null)).toHaveLength(11);
   expect(server.evidence().counts.offered).toBeGreaterThan(400);
   expect(server.evidence().counts.offered).toBeLessThan(450); // Final target 1.1, never lexical a9's 0.8.
+});
+
+test("deny-port worker messages and serialized replay retain active state and complete evidence", () => {
+  const setup = start({horizonSeconds: 6, stopAtSecond: 6});
+  setup.input.resources.push(at("firewall", T.Firewall, 2));
+  setup.input.connectionLines.push(line("firewall", "db", T.Firewall, T.Database));
+  const h = harness(setup);
+  h.tick();
+  const request = {kind: "intervention" as const, parameters: {interventionId: "deny-port", revision: 1, target: {resourceId: "firewall"}, parameters: {port: 443, duration: 2}}};
+  for (const parameters of [{port: 0, duration: 2}, {port: 65536, duration: 2}, {port: 1.5, duration: 2}]) {
+    h.host.handle({type: "action", id: "bad", request: {...request, parameters: {...request.parameters, parameters}}});
+    expect(h.messages.at(-1)).toMatchObject({type: "action", ok: false});
+  }
+  h.host.handle({type: "action", id: "revision", request: {...request, parameters: {...request.parameters, revision: 2}}});
+  expect(h.messages.at(-1)).toMatchObject({type: "action", ok: false});
+  h.host.handle({type: "action", id: "deny", request});
+  expect(h.messages.at(-1)).toMatchObject({type: "action", ok: true});
+  h.tick(5);
+  const seconds = h.seconds();
+  expect(seconds[1]!.view.activeChaos.find(c => c.resourceId === "firewall")!.intervention).toMatchObject({label: "Deny TCP port", parameters: {port: 443, duration: 2}, restoreAtUs: 3_000_001});
+  expect(seconds[2]!.view.activeChaos.length).toBeGreaterThan(0);
+  expect(seconds[3]!.view.activeChaos).toEqual([]);
+  const done = h.messages.at(-1) as Extract<FromWorker, {type: "done"}>;
+  const wire = JSON.parse(JSON.stringify(done.submission)) as typeof done.submission;
+  expect(wire.actions).toEqual([{atSecond: 1, request}]);
+  const replay = createModel2Run(JSON.parse(JSON.stringify(setup.input)), 6);
+  for (let second = 0; second < 6; second++) {
+    for (const action of wire.actions.filter(a => a.atSecond === second)) replay.apply(action.request);
+    replay.advance(); expect(replay.view()).toEqual(seconds[second]!.view);
+  }
+  expect(replay.evidence()).toEqual(h.host.evidence()!);
 });

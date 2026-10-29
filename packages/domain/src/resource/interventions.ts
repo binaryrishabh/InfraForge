@@ -4,12 +4,14 @@ export interface InterventionParameter {
   min?: number; max?: number | "authored-baseline" | "remaining-seconds"; values?: string[];
 }
 export interface InterventionDescriptor {
-  id: string; revision: number; label: string; targetKind: "Database" | "Cache" | "edge";
-  mechanism: "relational" | "cache" | "transport"; parameters: InterventionParameter[];
+  id: string; revision: number; label: string; targetKind: "Database" | "Cache" | "Firewall" | "edge";
+  mechanism: "relational" | "cache" | "firewall" | "transport"; parameters: InterventionParameter[];
   reversible: boolean; endPolicy: "timed" | "one-shot"; requires: string[];
 }
 const duration: InterventionParameter = { name: "duration", kind: "integer", unit: "s", min: 1, max: "remaining-seconds" };
 export const INTERVENTIONS: readonly InterventionDescriptor[] = [
+  { id: "deny-port", revision: 1, label: "Deny TCP port", targetKind: "Firewall", mechanism: "firewall",
+    parameters: [{ name: "port", kind: "integer", unit: "TCP port", min: 1, max: 65535 }, duration], reversible: true, endPolicy: "timed", requires: ["fixed firewall policy"] },
   { id: "session-capacity", revision: 1, label: "Session capacity", targetKind: "Database", mechanism: "relational",
     parameters: [{ name: "sessions", kind: "integer", unit: "sessions", min: 0, max: "authored-baseline" }, duration], reversible: true, endPolicy: "timed", requires: ["fixed relational role"] },
   { id: "cpu-capacity", revision: 1, label: "CPU capacity", targetKind: "Database", mechanism: "relational",

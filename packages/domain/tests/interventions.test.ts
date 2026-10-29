@@ -3,7 +3,7 @@ import { INTERVENTIONS, interventionError } from "../src/resource";
 const request = { interventionId: "session-capacity", revision: 1, target: { resourceId: "db" }, parameters: { sessions: 0, duration: 1 } };
 test("capabilities round-trip as data and enforce product policy at contextual boundaries", () => {
   expect(JSON.parse(JSON.stringify(INTERVENTIONS))).toEqual(INTERVENTIONS);
-  expect(INTERVENTIONS.map(d => d.id)).toEqual(["session-capacity", "cpu-capacity", "flush", "delay", "partition"]);
+  expect(INTERVENTIONS.map(d => d.id)).toEqual(["deny-port", "session-capacity", "cpu-capacity", "flush", "delay", "partition"]);
   expect(interventionError(request, { remainingSeconds: 1 })).toBeNull();
   for (const parameters of [{sessions: -1, duration: 1}, {sessions: 513, duration: 1}, {sessions: 0.5, duration: 1}, {sessions: Infinity, duration: 1}, {sessions: 0, duration: 301}, {sessions: 0}, {sessions: 0, duration: 1, extra: true}])
     expect(interventionError({...request, parameters}, {authoredBaseline: 512})).toContain("INTERVENTION_");
@@ -19,4 +19,13 @@ test("capabilities round-trip as data and enforce product policy at contextual b
   expect(interventionError(cpu, {authoredBaseline: 1})).toContain("BOUNDS");
   expect(interventionError(cpu, {authoredBaseline: 2})).toBeNull();
   expect(interventionError({interventionId: "flush", revision: 1, target: {resourceId: "cache"}, parameters: {}})).toBeNull();
+});
+
+test("deny-port policy declares one bounded TCP port and timed restore", () => {
+  const d = INTERVENTIONS.find(d => d.id === "deny-port")!;
+  expect(d).toMatchObject({revision: 1, targetKind: "Firewall", mechanism: "firewall", endPolicy: "timed"});
+  const request = {interventionId: d.id, revision: 1, target: {resourceId: "firewall"}, parameters: {port: 1, duration: 1}};
+  expect(interventionError(request)).toBeNull();
+  expect(interventionError({...request, parameters: {port: 65535, duration: 300}})).toBeNull();
+  for (const port of [0, 65536, 1.1, Infinity]) expect(interventionError({...request, parameters: {port, duration: 1}})).toContain("BOUNDS");
 });

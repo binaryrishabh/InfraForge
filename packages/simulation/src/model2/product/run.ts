@@ -11,14 +11,15 @@ export function createProductModel2(compiled: CompiledProduct, usage?: RuntimeUs
   const flow = compiled.input.resources.some(r => r.kind === "compute" && r.applicationFlow)
     ? applicationFlowEvidence(Math.min(compiled.input.limits.maxRawResults, compiled.input.limits.maxTraceRows), Math.min(APPLICATION_FLOW_MAX_BYTES, compiled.input.limits.maxTraceBytes ?? APPLICATION_FLOW_MAX_BYTES)) : undefined;
   const observe: CausalObserver | undefined = flow ? event => { flow.observe(event); causal?.(event); } : causal;
+  const applied = new Map<string, NonNullable<CompiledProduct["interventionReceipts"]>[number]>();
   const active = new Map<string, NonNullable<CompiledProduct["interventionReceipts"]>[number]>();
   const controllers: ReturnType<typeof replicaController>[] = [];
   let network: NetworkContext | undefined;
   const runtime = createSystemsModel2(compiled.input, { usage, causal: observe, deferredClients: compiled.pools.flatMap((p) => p.artifactClients.map((a) => a.id)), crashes: compiled.crashes.map((f) => ({ target: f.target, at: requireKnown(f.at, "us"), restartAt: requireKnown(f.restartAt, "us") })), install(kernel, context, controls) {
     network = context;
-    for (const receipt of compiled.interventionReceipts ?? []) if (receipt.endUs !== null) {
-      kernel.schedule(receipt.atUs, 0, JSON.stringify(["product-intervention-active", receipt.actionId]), () => active.set(receipt.actionId, receipt));
-      kernel.schedule(receipt.endUs, 0, JSON.stringify(["product-intervention-ended", receipt.actionId]), () => active.delete(receipt.actionId));
+    for (const receipt of compiled.interventionReceipts ?? []) {
+      kernel.schedule(receipt.atUs, 0, JSON.stringify(["product-intervention-active", receipt.actionId]), () => { applied.set(receipt.actionId, receipt); if (receipt.endUs !== null) active.set(receipt.actionId, receipt); });
+      if (receipt.endUs !== null) kernel.schedule(receipt.endUs, 0, JSON.stringify(["product-intervention-ended", receipt.actionId]), () => active.delete(receipt.actionId));
     }
     for (const p of compiled.pools) controllers.push(replicaController(p, kernel, context, controls, requireKnown(compiled.input.horizon, "us")));
   } });
@@ -26,6 +27,7 @@ export function createProductModel2(compiled: CompiledProduct, usage?: RuntimeUs
     // Cheap current reads for live views: one resource's counters now, and replica counts. No history is copied.
     inspect: (id: string) => network?.inspect?.(id) ?? network?.observe(id),
     applicationFlowEvidence: () => flow?.measure(),
+    appliedInterventions: () => [...applied.values()],
     activeInterventions: () => [...active.values()],
     inspectSecurity: runtime.inspectSecurity,
     inspectQueue: runtime.inspectQueue,
@@ -33,5 +35,5 @@ export function createProductModel2(compiled: CompiledProduct, usage?: RuntimeUs
     pools: () => controllers.map((c) => c.status()),
     // Whether a resource is up and taking work right now (a crash makes it neither).
     up: (id: string) => { const e = network?.endpoint(id); return !!e && e.alive && e.ready; },
-    evidence() { const evidence = runtime.evidence(); return { ...evidence, ...(flow ? { applicationFlow: flow.measure() } : {}), workloadVersion: "m2h/1" as const, product: { ...(compiled.interventionReceipts?.length ? {interventions: compiled.interventionReceipts.map(r => ({...r, phase: evidence.capture.throughUs < r.atUs ? "scheduled" : r.endUs !== null && evidence.capture.throughUs < r.endUs ? "active" : "completed"}))} : {}), versions: compiled.semantic.versions, semantic: compiled.semantic, controllers: controllers.map((c) => c.evidence()), scope: "Internal compiled authored contracts; no provider calibration/public activation" } }; } };
+    evidence() { const evidence = runtime.evidence(); return { ...evidence, ...(flow ? { applicationFlow: flow.measure() } : {}), workloadVersion: "m2h/1" as const, product: { ...(compiled.interventionReceipts?.length ? {interventions: compiled.interventionReceipts.map(r => ({...r, phase: !applied.has(r.actionId) ? "scheduled" : active.has(r.actionId) ? "active" : "completed"}))} : {}), versions: compiled.semantic.versions, semantic: compiled.semantic, controllers: controllers.map((c) => c.evidence()), scope: "Internal compiled authored contracts; no provider calibration/public activation" } }; } };
 }

@@ -29,7 +29,7 @@ const EVIDENCE: Record<RunComparison["evidence"]["code"], string> = {
 const LINEAGE: Record<RunComparison["lineage"], string> = { "source-and-improvement": "One attempt records the other as its learning source.", "source-and-rerun": "One run is a rerun of the other.", siblings: "Both are reruns of the same source.", unrelated: "No recorded lineage between them." };
 
 export function CompareContent({ loading, error, data, retry }: { loading: boolean; error: string | null; data: RunComparison | null; retry: () => void }) {
-  if (loading) return <Loading label="Loading comparison…" />;
+  if (loading) return <Loading label="Loading comparisonâ€¦" />;
   if (error || !data) return (
     <div role="alert" className="mt-10 flex flex-col items-start gap-3"><Notice tone="fail">{error ?? "Comparison unavailable."}</Notice>
       <Button size="sm" onClick={retry}>Try again</Button><Link className="text-sm font-medium text-accent hover:underline" to="/runs">Back to runs</Link></div>
@@ -48,9 +48,9 @@ export function CompareView({ comparison: c }: { comparison: RunComparison }) {
       <div className="mt-6 grid gap-px overflow-hidden rounded-lg border border-line bg-line sm:grid-cols-2">
         {c.runs.map((r, i) => (
           <div key={r.id} className="min-w-0 bg-raised p-4">
-            <p className="if-eyebrow">{i === 0 ? "Earlier" : "Later"} · {runKind(r).label}</p>
+            <p className="if-eyebrow">{i === 0 ? "Earlier" : "Later"} Â· {runKind(r).label}</p>
             <Link className="mt-1 block truncate text-[17px] font-semibold text-ink underline-offset-4 hover:underline" to={`/runs/${r.id}`}>{r.infrastructureName}</Link>
-            <p className="text-xs text-ink-3">{runStatus(r.status).label} · {formatDate(r.createdAt)}</p>
+            <p className="text-xs text-ink-3">{runStatus(r.status).label} Â· {formatDate(r.createdAt)}</p>
             <p className="if-num mt-0.5 break-all text-[11px] text-ink-3">{r.id}</p>
           </div>
         ))}
@@ -80,8 +80,8 @@ export function CompareView({ comparison: c }: { comparison: RunComparison }) {
         <p className="mt-2 text-sm text-ink-3">{c.designChangeReview.count === 1 && c.headline === "matched-pair" && c.starting.alignment.code === "aligned" ? "With the same challenge conditions, matched exact evidence and one design fact changed, this pair is easier to interpret. " : "Read the comparability and evidence limits before relating these results to the design edits. "}One pair still cannot establish a general effect; model-1 ordering and random-draw alignment limits still apply.</p>
       </section>}
       <ExperimentCompare evidence={c.experimentEvidence} />
-      <ReportSection number={k()} title="Observed — recorded facts"><ul className="flex flex-col gap-3">{c.observed.map((f) => <Statement key={f.id} message={f.message} sources={f.sources} />)}</ul></ReportSection>
-      {c.interpreted.length > 0 && <ReportSection number={k()} title="Interpreted — what the evidence supports"><ul className="flex flex-col gap-3">{c.interpreted.map((f) => <Statement key={f.id} message={f.message} sources={f.sources} verb="Derived from" />)}</ul></ReportSection>}
+      <ReportSection number={k()} title="Observed â€” recorded facts"><ul className="flex flex-col gap-3">{c.observed.map((f) => <Statement key={f.id} message={f.message} sources={f.sources} />)}</ul></ReportSection>
+      {c.interpreted.length > 0 && <ReportSection number={k()} title="Interpreted â€” what the evidence supports"><ul className="flex flex-col gap-3">{c.interpreted.map((f) => <Statement key={f.id} message={f.message} sources={f.sources} verb="Derived from" />)}</ul></ReportSection>}
       <ReportSection number={k()} title="Final-state differences">
         <CompareMetrics metrics={c.outcomes} caption="Recorded stop state" />
         {c.resources.map((r) => (
@@ -104,15 +104,15 @@ export function CompareView({ comparison: c }: { comparison: RunComparison }) {
         <div className="grid gap-6 md:grid-cols-2">
           {c.evidence.states.map((s, i) => (
             <div key={i} className="min-w-0">
-              <h3 className="font-semibold text-ink">{i === 0 ? "Earlier" : "Later"} · {c.runs[i]!.infrastructureName}</h3>
+              <h3 className="font-semibold text-ink">{i === 0 ? "Earlier" : "Later"} Â· {c.runs[i]!.infrastructureName}</h3>
               {s ? <div className="mt-1 space-y-1">
-                <p>Health: {s.health ?? "unknown"} · simulated second: {s.simulatedSeconds ?? "unknown"} · captured: {s.capturedAt ?? "unknown"}</p>
-                <p>Topology revision: {s.topologyRevision ?? "unknown"} · measurement revision: {s.metricsTopologyRevision ?? "unknown"} · freshness: {s.measurementFreshness ?? "unknown"}</p>
-                <p>Measurements computed at: {s.metricsComputedAt ?? "not recorded/computed"} · speed: {s.speed ?? "unknown"}×</p>
+                <p>Health: {s.health ?? "unknown"} Â· simulated second: {s.simulatedSeconds ?? "unknown"} Â· captured: {s.capturedAt ?? "unknown"}</p>
+                <p>Topology revision: {s.topologyRevision ?? "unknown"} Â· measurement revision: {s.metricsTopologyRevision ?? "unknown"} Â· freshness: {s.measurementFreshness ?? "unknown"}</p>
+                <p>Measurements computed at: {s.metricsComputedAt ?? "not recorded/computed"} Â· speed: {s.speed ?? "unknown"}Ã—</p>
                 <p>Restarting resources: {s.restarting ? s.restarting.join(", ") || "none" : "unknown"}</p>
-                {s.activeChaos === undefined ? <p>Active faults: unknown.</p> : <ul className="list-disc pl-5">{s.activeChaos.map((f, j) => <li key={j}>{f.chaosType} on {f.resourceId}: {f.remainingTicks} simulated seconds remaining</li>)}</ul>}
+                {s.activeChaos === undefined ? <p>Active faults: unknown.</p> : <ul className="list-disc pl-5">{s.activeChaos.map((f, j) => <li key={j}>{f.intervention ? `${f.intervention.label} ${JSON.stringify(f.intervention.parameters)}; restores at ${f.intervention.restoreAtUs} us` : f.chaosType} on {f.resourceId}: {f.remainingTicks} simulated seconds remaining</li>)}</ul>}
                 {s.installedSkus === undefined ? <p>Installed sizes: unknown.</p> : <ul className="list-disc pl-5">{Object.entries(s.installedSkus).map(([id, sku]) => <li key={id}>{id}: installed {sku}</li>)}</ul>}
-                {s.pools === undefined ? <p>Pool state: unknown.</p> : <ul className="list-disc pl-5">{Object.values(s.pools).map((p) => <li key={p.lbId}>{p.lbId}: {p.currentReplicas} replicas ({p.minReplicas}–{p.maxReplicas}); {p.pending ? `${p.pending.action}, ${p.pending.secondsRemaining} s remaining` : "no pending change"}</li>)}</ul>}
+                {s.pools === undefined ? <p>Pool state: unknown.</p> : <ul className="list-disc pl-5">{Object.values(s.pools).map((p) => <li key={p.lbId}>{p.lbId}: {p.currentReplicas} replicas ({p.minReplicas}â€“{p.maxReplicas}); {p.pending ? `${p.pending.action}, ${p.pending.secondsRemaining} s remaining` : "no pending change"}</li>)}</ul>}
               </div> : <p className="mt-1">No usable final evidence.</p>}
             </div>
           ))}
@@ -121,7 +121,7 @@ export function CompareView({ comparison: c }: { comparison: RunComparison }) {
       <ReportSection number={k()} title="Gates and security" fold={{ summary: "Show both runs' recorded gate evidence", open: false }}>
         <div className="grid gap-6 md:grid-cols-2">{c.gates.map((stages, i) => (
           <div key={i}><h3 className="font-semibold text-ink">{i === 0 ? "Earlier" : "Later"}</h3>
-            {stages.length ? stages.map((s, j) => <div key={j} className="mt-2"><p className="text-ink">{STAGE_LABEL[s.name] ?? s.name}: {STAGE_STATUS_LABEL[s.status] ?? s.status} · {s.message}</p><ul className="list-disc pl-5">{[...s.warnings, ...s.issues].map((m, k) => <li key={k}>{m}</li>)}</ul></div>) : <p>No usable recorded gate evidence.</p>}
+            {stages.length ? stages.map((s, j) => <div key={j} className="mt-2"><p className="text-ink">{STAGE_LABEL[s.name] ?? s.name}: {STAGE_STATUS_LABEL[s.status] ?? s.status} Â· {s.message}</p><ul className="list-disc pl-5">{[...s.warnings, ...s.issues].map((m, k) => <li key={k}>{m}</li>)}</ul></div>) : <p>No usable recorded gate evidence.</p>}
           </div>))}
         </div>
       </ReportSection>

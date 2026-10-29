@@ -53,7 +53,7 @@ export function createSystemsModel2(authored: SystemsInput, extension?: SystemsE
       }
       extension?.install(kernel, network, { artifacts(client, replica, done) { clients.get(client)!.launch(replica, done); }, samples(backend, target) { return backends.get(backend)?.recent(target) ?? []; } });
       for (const monitor of monitors.values()) monitor.start(horizon);
-      for (const f of [...i.systems.interventions].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))) kernel.schedule(requireKnown(f.at, "us"), 0, JSON.stringify(["systems-intervention", f.id]), () => {
+      for (const f of [...i.systems.interventions].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))) kernel.schedule(requireKnown(f.at, "us"), f.kind === "firewall-rules" && f.restore ? -1 : 0, JSON.stringify(["systems-intervention", f.id]), () => {
         if (f.kind === "dns-record") authorities.get(f.target)!.update(f.record);
         if (f.kind === "cdn-purge") cdns.get(f.target)!.purge(f.key);
         if (f.kind === "firewall-rules") security.update(f.target, f.rules);
