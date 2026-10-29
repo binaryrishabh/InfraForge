@@ -13,7 +13,10 @@ test("placing, connecting, moving and removing resources are undoable and follow
   const lb = addResource("Load Balancer", { x: 0, y: 0 })!;
   const vm = addResource("Virtual Machine", { x: 480, y: 0 })!;
   expect(state().resources).toHaveLength(2);
-  expect(connectResources(vm.id, lb.id)).toBe(false);
+  // A service may call a load-balanced service (Application Flow), so this direction is accepted on purpose; undo restores the canvas.
+  expect(connectResources(vm.id, lb.id)).toBe(true);
+  undo();
+  expect(state().connectionLines).toHaveLength(0);
   expect(connectResources(lb.id, vm.id)).toBe(true);
   expect(state().connectionLines[0]).toMatchObject({ sourceId: lb.id, targetId: vm.id, port: 80 });
   expect(connectResources(lb.id, vm.id)).toBe(false);
@@ -29,6 +32,13 @@ test("placing, connecting, moving and removing resources are undoable and follow
   undo();
   expect(state().resources).toHaveLength(2);
   expect(state().connectionLines).toHaveLength(1);
+});
+
+test("connection rules still refuse directions that no mechanism supports", () => {
+  const db = addResource("Database", { x: 0, y: 200 })!;
+  const vm = addResource("Virtual Machine", { x: 480, y: 200 })!;
+  expect(connectResources(db.id, vm.id)).toBe(false);
+  expect(state().connectionLines).toHaveLength(0);
 });
 
 test("a locked challenge run cannot be edited through any action", () => {
