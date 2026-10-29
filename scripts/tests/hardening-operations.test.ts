@@ -25,19 +25,22 @@ test("rendered Compose services bound resources and logs without evicting queue 
 });
 
 
-test("the 4 GiB host retains 896 MiB for host work even during the bounded build", () => {
+test("the home server retains over 2 GiB for host work even during the bounded build", () => {
   const { services } = Bun.YAML.parse(readFileSync("apps/backend/docker-compose.yml", "utf8")) as {
     services: Record<string, { mem_limit: string; cpus: number }>;
   };
   const names = ["api", "worker", "ws-server", "redis", "postgres"];
   const memory = names.reduce((sum, name) => sum + Number.parseInt(services[name]!.mem_limit), 0);
   const cpus = names.reduce((sum, name) => sum + services[name]!.cpus, 0);
-  expect(memory).toBe(2432);
-  expect(4096 - memory - 768).toBe(896);
-  expect(cpus + 1).toBeCloseTo(2.75);
+  // Home server: 8 threads, 6.7 GiB reported by free(1) on 2026-10-29; 6656 MiB (6.5 GiB) is the conservative floor used here.
+  const hostMiB = 6656;
+  expect(memory).toBe(3584);
+  expect(hostMiB - memory - 768).toBe(2304);
+  expect(cpus).toBeCloseTo(4.4);
+  expect(cpus + 0.2).toBeLessThanOrEqual(8 * 0.6);
   expect(Number.parseInt(services.migration!.mem_limit)).toBe(256);
   // Preflight can overlap the live services; it never overlaps the build.
-  expect(memory + 256 + 896).toBeLessThanOrEqual(4096);
+  expect(memory + 256 + 2048).toBeLessThanOrEqual(hostMiB);
 });
 
 test("a release builds its image with one plain docker build", async () => {

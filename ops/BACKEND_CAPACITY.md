@@ -1,25 +1,27 @@
 # Backend capacity budget
 
-Owner-confirmed production host for w14: **c7i-flex.large, 2 vCPU, 4 GiB
-(4096 MiB)**. This fact came from the owner; the repository did not previously
-record a production instance type. Simulation-provider example instance sizes
-are not evidence of the production host. No production host was inspected.
+Production host: the owner's home server (AMD Ryzen 5 2500U, 8 threads). Read-only
+checks on 2026-10-29 reported 6.7 GiB RAM in total (5.7 GiB available with the
+stack idle) and 95 GiB free disk. Earlier revisions of this document assumed a
+c7i-flex.large (2 vCPU, 4 GiB); that was not the production host. The tables below
+use a conservative 6656 MiB (6.5 GiB) memory floor. Simulation-provider example
+instance sizes are not evidence of the production host.
 
 | Work | Memory ceiling | CPU ceiling | Reason for initial budget |
 | --- | ---: | ---: | --- |
-| API | 384 MiB | 0.35 | Request handling and auth; bounded pool, request sizes and limiter state. Larger than WS because it handles HTTP/auth bodies. |
-| Worker | 768 MiB | 0.50 | Largest allowance for execution, reports and queue processing; one worker only. A run exceeding it must fail rather than exhaust the host. |
+| API | 768 MiB | 1.50 | Request handling and auth; bounded pool, request sizes and limiter state. Larger than WS because it handles HTTP/auth bodies. Raised from 384 MiB / 0.35 CPU on 2026-10-29 after an AWS rehearsal: at 0.35 CPU concurrent sign-ups failed with Prisma P2028 (API CPU-starved, database idle); at 1.5 CPU there were none (peak 246 MiB). |
+| Worker | 1536 MiB | 2.00 | Largest allowance for execution, reports and queue processing; one worker only. A run exceeding it must fail rather than exhaust the host. Raised from 768 MiB / 0.50 CPU on 2026-10-29 after an AWS rehearsal: at 0.5 CPU, 9 of 25 simultaneous users completed (CPU pinned at its cap, memory peak 745 MiB); at 2 CPU / 1.5 GB, 25 of 25 completed (memory peak 512 MiB). A typical run costs about 50 CPU-seconds (measured replay profile). |
 | WS | 256 MiB | 0.25 | 128 sockets including authentication, heartbeat and bounded outbound buffers; no simulation execution. |
 | Redis | 256 MiB | 0.15 | 96 MiB key budget with noeviction; 160 MiB remains inside the cap for process overhead, AOF buffers and rewrite copy-on-write. This is bounded headroom, not a guarantee under every write pattern. |
 | PostgreSQL | 768 MiB | 0.50 | Private persistent PostgreSQL 18; shared_buffers=192MB, work_mem=2MB, maintenance_work_mem=32MB, max_connections=80. |
-| Steady total | **2432 MiB** | **1.75** | Sum of five independent cgroup ceilings. |
+| Steady total | **3584 MiB** | **4.40** | Sum of five independent cgroup ceilings. |
 | Release BuildKit, including its build steps | **768 MiB**, swap disabled | **0.20** | Separate docker-container builder; loading the image still uses the host Docker daemon. Failure blocks release before maintenance or service shutdown. |
-| Host remainder during build | **896 MiB** | **0.05** | OS, Docker/containerd, nginx, release controller and image loading. This is an arithmetic allowance, not a host cgroup or a measured consumption claim. |
+| Host remainder during build | **2304 MiB** (floor) | **3.40** | OS, Docker/containerd, nginx, release controller and image loading. This is an arithmetic allowance, not a host cgroup or a measured consumption claim. |
 | Migration/preflight | 256 MiB | 0.25 | Short-lived schema/readiness work. Preflight overlaps the live stack, but runs after the build and its builder cleanup; migration follows app shutdown. |
 
-Exact policy target: **2 vCPU / 4096 MiB host**, with at most **3200 MiB / 1.95
+Exact policy target: **8 threads / 6656 MiB host floor**, with at most **4352 MiB / 4.60
 CPU** assigned to the steady stack plus builder. During live preflight, the
-assigned total is **2688 MiB / 2.00 CPU** (1408 MiB remains for host work).
+assigned total is **3840 MiB / 4.65 CPU** (2816 MiB remains for host work).
 The local database is started only when a release URL selects `postgres`; a remote
 provider leaves its 768 MiB / 0.50 CPU allowance unused. CPU values are quotas, not dedicated
 cores; memory values are ceilings, not measured working sets or reservations.
@@ -44,7 +46,7 @@ was changed by writing this policy.
 ## Run admission and lifetime
 
 The following defaults are an initial operational containment policy for this
-owner-confirmed c7i-flex.large host and the worker's **768 MiB / 0.50 CPU**
+home server and the worker's **1536 MiB / 2.00 CPU**
 ceiling above. They are deliberately small limits chosen for initial operation;
 they do not establish how many simulations fit or a measured throughput. Peak
 simulation memory, ticks per second and host capacity remain **Unknown**. Measure
@@ -122,7 +124,7 @@ Measure OOM pressure and query concurrency before raising limits. Keep encrypted
 EBS space for WAL, the named volume, images and backup staging; sizes are Unknown.
 
 Backups (384 MiB / 0.25 CPU systemd ceiling) overlap a steady stack at
-2816 MiB / 2.00 CPU, leaving a 1280 MiB host allowance. Serialize backups and
+3968 MiB / 4.65 CPU, leaving a 2688 MiB host allowance (floor). Serialize backups and
 builds operationally. Run the full monthly synthetic restore drill on a separate
 scratch host or under a maintenance window with application containers stopped:
 its additional 768 MiB / 1 CPU database plus client cgroup is not a live-stack

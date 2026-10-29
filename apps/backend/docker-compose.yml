@@ -115,8 +115,8 @@ services:
 
   api:
     <<: *app
-    mem_limit: 384m
-    cpus: 0.35
+    mem_limit: 768m
+    cpus: 1.5
     ports: ["127.0.0.1:${API_PORT:-3000}:3000"]
     environment:
       <<: *auth
@@ -153,8 +153,8 @@ services:
 
   worker:
     <<: *app
-    mem_limit: 768m
-    cpus: 0.5
+    mem_limit: 1536m
+    cpus: 2
     environment:
       <<: *environment
       DATABASE_URL: ${WORKER_DATABASE_URL:?Set a session-preserving PostgreSQL worker URL}
