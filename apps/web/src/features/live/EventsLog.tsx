@@ -2,6 +2,8 @@ import { useEffect, useRef } from "react";
 import { useSimulationStore } from "@/features/monitoring/store/simulationStore";
 import { cx } from "@/ui/cx";
 
+import { ApplicationFlowLog } from "./ApplicationFlowLog";
+
 const SEVERITY: Record<string, { label: string; tone: string }> = {
   info: { label: "info", tone: "text-ink-3" },
   warn: { label: "warn", tone: "text-warn" },
@@ -10,6 +12,7 @@ const SEVERITY: Record<string, { label: string; tone: string }> = {
 
 /* Simulator events as they stream in (the last 150 are kept in this view). */
 export function EventsLog() {
+  const applicationFlow = useSimulationStore((s) => s.applicationFlow);
   const logs = useSimulationStore((s) => s.logs);
   const box = useRef<HTMLDivElement>(null);
   const pinned = useRef(true);
@@ -18,6 +21,7 @@ export function EventsLog() {
     <div ref={box} role="log" aria-label="Simulator events" tabIndex={0}
       onScroll={(e) => { const el = e.currentTarget; pinned.current = el.scrollHeight - el.scrollTop - el.clientHeight < 24; }}
       className="if-scroll h-full overflow-y-auto px-4 py-2 font-mono text-[12px] leading-relaxed outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent">
+      {applicationFlow && <ApplicationFlowLog evidence={applicationFlow} />}
       {logs.length === 0 ? <p className="text-ink-3">Waiting for simulator events…</p> : logs.map((log, i) => {
         const sev = SEVERITY[log.severity] ?? SEVERITY.info!;
         return (

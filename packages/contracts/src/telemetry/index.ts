@@ -7,3 +7,5 @@ export type * from "./SimulationSnapshot.interface";
 export type * from "./SpawnedVmInfo.interface";
 
 export type { AsyncQueueMetrics } from "./AsyncQueueMetrics.interface";
+
+export type * from "./ApplicationFlowEvidence.interface";

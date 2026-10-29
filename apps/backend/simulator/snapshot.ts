@@ -14,7 +14,8 @@ export function buildSnapshot(deploymentId: string, instance: SimulationInstance
 
 export function captureSnapshot(deploymentId: string, instance: SimulationInstance, kind: "terminal" | "checkpoint") {
   const snapshot = buildSnapshot(deploymentId, instance, [...instance.pendingLogs]), view = liveView(instance);
-  return structuredClone({ ...snapshot, version: 1, kind, capturedAt: snapshot.timestamp,
+  const applicationFlow = instance.model2.applicationFlowEvidence();
+  return structuredClone({ ...snapshot, ...(applicationFlow ? { applicationFlow } : {}), version: 1, kind, capturedAt: snapshot.timestamp,
     topologyRevision: instance.topologyRevision,
     metricsComputedAt: instance.metricsComputedAt, metricsTopologyRevision: instance.metricsTopologyRevision,
     overallHealth: snapshot.health, targetLoadFraction: view.targetLoadFraction,

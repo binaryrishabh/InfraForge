@@ -31,6 +31,7 @@ function harness(overrides: Partial<RunStart> = {}) {
 test("the browser run posts the live view every simulated second and stops at its stop second", () => {
   const h = harness({ stopAtSecond: 5 });
   h.tick(10);
+  expect(h.seconds().every(second => !Object.hasOwn(second, "applicationFlow"))).toBe(true);
   expect(h.seconds().map((s) => s.view.simulatedSeconds)).toEqual([1, 2, 3, 4, 5]);
   expect(h.seconds().at(-1)!.view.traffic.completedRps).toBeGreaterThan(90);
   expect(h.seconds().at(-1)!.view.metrics.lb!.cpu).toBeNull();

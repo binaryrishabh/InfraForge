@@ -28,7 +28,8 @@ export function createRunHost(post: (message: FromWorker) => void, timers: Timer
       if (plan && second === plan.atSimulatedSecond) {
         run.apply({ kind: "chaos", parameters: { type: plan.fault, resourceId: plan.resourceId, trigger: "challenge-experiment" } });
       }
-      post({ type: "second", view: run.view(), logs, burnRatePerHourUsd: run.burnRatePerHourUsd() });
+      const applicationFlow = run.applicationFlowEvidence();
+      post({ type: "second", ...(applicationFlow ? { applicationFlow } : {}), view: run.view(), logs, burnRatePerHourUsd: run.burnRatePerHourUsd() });
       if (second >= start.stopAtSecond) { finish(); return; }
     } catch (error) {
       finished = true;

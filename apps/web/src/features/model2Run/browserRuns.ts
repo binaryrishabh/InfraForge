@@ -30,9 +30,9 @@ async function launch(deploymentId: string, onEnd?: (error?: string) => void) {
   let costUsd = 0;
   const entry = { speed: 1, controls: null as unknown as Controls };
   entry.controls = startModel2Run({ ...start, speed: 1 }, {
-    onSecond: ({ view, logs, burnRatePerHourUsd }) => {
+    onSecond: ({ view, logs, burnRatePerHourUsd, applicationFlow }) => {
       costUsd += burnRatePerHourUsd / 3600;
-      const snapshot: SimulationSnapshot = { deploymentId, timestamp: new Date().toISOString(), simulatedSeconds: view.simulatedSeconds,
+      const snapshot: SimulationSnapshot = { ...(applicationFlow ? { applicationFlow } : {}), deploymentId, timestamp: new Date().toISOString(), simulatedSeconds: view.simulatedSeconds,
         loadFraction: view.loadFraction, metrics: view.metrics, logs, health: view.overallHealth, pools: view.pools, spawnedVms: [], restarting: [],
         activeChaos: view.activeChaos, speed: entry.speed, burnRatePerHourUsd, accumulatedCostUsd: costUsd, traffic: view.traffic };
       useSimulationStore.getState().applySnapshot(snapshot);

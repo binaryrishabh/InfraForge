@@ -5,7 +5,10 @@ import type { SimulationLog } from "./SimulationLog.interface";
 import type { ChaosEffect } from "./ChaosEffect.interface";
 import type { RunTopology } from "../run-inputs/RunInputs.interface";
 
+import type { ApplicationFlowEvidence } from "./ApplicationFlowEvidence.interface";
+
 export interface SimulationSnapshot {
+    applicationFlow?: ApplicationFlowEvidence;
     deploymentId: string;
     timestamp: string;
     simulatedSeconds: number;
