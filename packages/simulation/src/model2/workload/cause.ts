@@ -9,4 +9,4 @@ export function seedCause(rootReason: FailureReason | null, rootResource: string
     depth: Number.isFinite(depth) ? Math.min(255, Math.max(0, Math.floor(depth))) : 255 };
 }
 export const carryCause = (cause?: Cause): Cause => cause ? seedCause(cause.rootReason, cause.rootResource, cause.depth + 1) : seedCause(null, null);
-export const causeFields = (cause?: Cause) => cause ? { rootReason: cause.rootReason, rootResource: cause.rootResource, depth: cause.depth } : {};
+export const causeFields = (cause?: Cause): Record<string, string | number | null> => cause ? { rootReason: cause.rootReason, rootResource: cause.rootResource, depth: cause.depth } : {};

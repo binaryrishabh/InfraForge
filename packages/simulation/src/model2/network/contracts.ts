@@ -58,7 +58,7 @@ export interface NetworkInput extends Omit<ComputeInput, "workloadVersion" | "re
 }
 export const RETRYABLE_FAILURES = ["acquire-timeout", "connect-timeout", "response-timeout", "reset", "drained", "pool-overflow", "link-overflow", "backend-rejected"] as const;
 export type FailureReason = typeof RETRYABLE_FAILURES[number] | "session-limit" | "circuit-open";
-export interface TraceEvent { at: number; kind: string; id: string; root?: string; attempt?: number; detail: string }
+export interface TraceEvent extends Partial<Cause> { at: number; kind: string; id: string; root?: string; attempt?: number; detail: string }
 export type Trace = (kind: string, id: string, detail: string, root?: string, attempt?: number, poolEvidence?: boolean, cause?: Cause) => void;
 export interface TransportResult { ok: boolean; reason?: FailureReason; ambiguous: boolean; cause?: Cause }
 export interface ConnectionRoute { target: string; request: string[]; response: string[] }
