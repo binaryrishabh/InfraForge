@@ -126,6 +126,7 @@ export function contractFromDesign(saved: SavedProductDesign): { contract: Produ
       }
     }
     if (refused.length) return { refused };
+    note("database.deadlines", { statementUs: 1000000, transactionUs: 2000000 }, "authored assumption", "Canvas statement and transaction deadlines are authored 1 s / 2 s limits, unlike PostgreSQL/RDS defaults of 0 (disabled). They bound queued work and shorten the unhealthy phase after cache recovery; open idle sessions can persist for the pool idle timeout.");
     const enqueue = (id: string, source: string, target: string, at: number, request: unknown, bytes = 0) => commands.push({ id, source, target, at: q(`${id}.at`, at, "us"), operation: "read", request, bodyBytes: q(`${id}.body`, bytes, "bytes"), provenance: "Assumed bootstrap command, not application traffic." });
     const seedRegistry = (id: string, source: string, target: string) => {
       const digest = `sha256:${"a".repeat(64)}`, manifest = `sha256:${"b".repeat(64)}`;
