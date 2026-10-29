@@ -94,7 +94,8 @@ export function createLiveModel2(compiled: CompiledProduct, nodeIds: string[]) {
         let used = 0, available = 0, knownCpu = false, completed = 0, received = 0, failed = 0, queued = 0, serving = 0, sessions: number | null = null;
         for (const id of ids) {
           const r = runtime.inspect(id) as Station, cpu = r.compute?.cpu, p = previous.get(id);
-          const c: Counters = { received: r.received, completed: r.completed, failed: (caches.has(id) ? 0 : r.failed) + r.rejected, queued: r.queued, serving: r.serving,
+          const refused = (r as { sessionRefused?: number }).sessionRefused ?? 0;
+          const c: Counters = { received: r.received + refused, completed: r.completed, failed: (caches.has(id) ? 0 : r.failed) + r.rejected + refused, queued: r.queued, serving: r.serving,
             used: cpu ? cpu.appCoreUs + cpu.competitorCoreUs : 0, available: cpu ? cpu.availableCoreUs : null, consumed: r.consumedCoreUs };
           // CPU is the node's running app processes only: reserved replica slots and helper processes do not dilute it.
           if (!id.includes("/") && runtime.up(id)) {
