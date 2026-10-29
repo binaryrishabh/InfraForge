@@ -23,7 +23,13 @@ export function resolveIntervention(design: SavedProductDesign, contract: Produc
     resolvedTargets = [material.id];
   } else {
     if (d.targetKind !== "edge" || !design.connections.some(e => e.id === target.edgeId)) throw Error("INTERVENTION_PATH: semantic edge is absent");
-    const paths = input.paths.filter(p => p.id.startsWith(`${target.edgeId}:`));
+    const edge = design.connections.find(e => e.id === target.edgeId)!, binding = contract.edges[edge.id]!;
+    // Reconstruct the exact compiler key from explicit endpoints and declared roles.
+    const instance = (endpoint: string, node: string, role: string) => role === contract.nodes[node]!.primary ? endpoint : endpoint.slice(0, -(role.length + 1));
+    const paths = input.paths.filter(p => {
+      const source = binding.purpose === "queue-poll" ? p.target : p.source, destination = binding.purpose === "queue-poll" ? p.source : p.target;
+      return p.id === `${edge.id}:${instance(source, edge.sourceId, binding.sourceRole)}:${instance(destination, edge.targetId, binding.targetRole)}`;
+    });
     resolvedTargets = [...new Set(paths.flatMap(p => target.direction === "both" ? [...p.request, ...p.response] : p[target.direction]))].sort();
     if (!resolvedTargets.length || resolvedTargets.some(id => !input.links.some(l => l.id === id))) throw Error("INTERVENTION_PATH: edge has no materialized transport links");
   }

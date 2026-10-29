@@ -114,6 +114,8 @@ test("versioned worker actions replay in same-second order with identical quanti
     h.tick(); server.advance();
     expect(h.seconds().at(-1)!.view).toEqual(server.view());
     expect(h.host.actions()).toEqual(server.actions);
+    if (second === 0) expect(server.view().activeChaos).toMatchObject([{resourceId: "db", intervention: {label: "Session capacity", parameters: {sessions: 0, duration: 1}, restoreAtUs: 1_000_001}}]);
+    if (second === 1) expect(server.view().activeChaos).toEqual([]);
   }
   const done = h.messages.at(-1) as Extract<FromWorker, {type: "done"}>;
   expect(done).toEqual({type: "done", submission: {stopAtSecond: 10, actions: submitted}});

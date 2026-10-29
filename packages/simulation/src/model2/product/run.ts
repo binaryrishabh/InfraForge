@@ -11,16 +11,22 @@ export function createProductModel2(compiled: CompiledProduct, usage?: RuntimeUs
   const flow = compiled.input.resources.some(r => r.kind === "compute" && r.applicationFlow)
     ? applicationFlowEvidence(Math.min(compiled.input.limits.maxRawResults, compiled.input.limits.maxTraceRows), Math.min(APPLICATION_FLOW_MAX_BYTES, compiled.input.limits.maxTraceBytes ?? APPLICATION_FLOW_MAX_BYTES)) : undefined;
   const observe: CausalObserver | undefined = flow ? event => { flow.observe(event); causal?.(event); } : causal;
+  const active = new Map<string, NonNullable<CompiledProduct["interventionReceipts"]>[number]>();
   const controllers: ReturnType<typeof replicaController>[] = [];
   let network: NetworkContext | undefined;
   const runtime = createSystemsModel2(compiled.input, { usage, causal: observe, deferredClients: compiled.pools.flatMap((p) => p.artifactClients.map((a) => a.id)), crashes: compiled.crashes.map((f) => ({ target: f.target, at: requireKnown(f.at, "us"), restartAt: requireKnown(f.restartAt, "us") })), install(kernel, context, controls) {
     network = context;
+    for (const receipt of compiled.interventionReceipts ?? []) if (receipt.endUs !== null) {
+      kernel.schedule(receipt.atUs, 0, JSON.stringify(["product-intervention-active", receipt.actionId]), () => active.set(receipt.actionId, receipt));
+      kernel.schedule(receipt.endUs, 0, JSON.stringify(["product-intervention-ended", receipt.actionId]), () => active.delete(receipt.actionId));
+    }
     for (const p of compiled.pools) controllers.push(replicaController(p, kernel, context, controls, requireKnown(compiled.input.horizon, "us")));
   } });
   return { horizon: runtime.horizon, advanceTo: runtime.advanceTo,
     // Cheap current reads for live views: one resource's counters now, and replica counts. No history is copied.
     inspect: (id: string) => network?.inspect?.(id) ?? network?.observe(id),
     applicationFlowEvidence: () => flow?.measure(),
+    activeInterventions: () => [...active.values()],
     inspectSecurity: runtime.inspectSecurity,
     inspectQueue: runtime.inspectQueue,
     inspectWorker: runtime.inspectWorker,

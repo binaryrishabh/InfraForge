@@ -1,5 +1,5 @@
 import { interventionOptions, incomingMaterializedLinks } from "./interventions";
-import { interventionError } from "@infraforge/domain/resource";
+import { INTERVENTIONS, interventionError } from "@infraforge/domain/resource";
 import { findSku } from "@infraforge/catalog";
 import { GENERIC_MONTHLY_USD } from "../../cost";
 import { SIMULATION_CONSTANTS } from "../../tuning";
@@ -55,7 +55,13 @@ export function createModel2Run(input: CapturedModel2Input, horizonSeconds: numb
     metrics: Object.fromEntries(nodeIds.map((id) => [id, metric(last?.metrics[id])])),
     overallHealth: last?.overallHealth ?? "healthy",
     pools: Object.fromEntries(pools.map((p) => [p.lbId, poolSnapshot(p, last)])),
-    activeChaos: chaos.map((c) => ({ chaosType: c.type, resourceId: c.resourceId, durationTicks: c.duration, remainingTicks: Math.max(0, c.endsAt - run.simulatedSeconds) })),
+    activeChaos: [...chaos.map((c) => ({ chaosType: c.type, resourceId: c.resourceId, durationTicks: c.duration, remainingTicks: Math.max(0, c.endsAt - run.simulatedSeconds) })),
+      ...run.activeInterventions().flatMap(r => {
+        const edge = "edgeId" in r.target ? design.connections.find(e => e.id === r.target.edgeId) : undefined;
+        const affected = "resourceId" in r.target ? [r.target.resourceId] : edge ? [edge.sourceId, edge.targetId] : [];
+        return [...new Set(affected)].map(resourceId => ({resourceId, durationTicks: (r.endUs! - r.atUs) / SECOND, remainingTicks: (r.endUs! - run.simulatedSeconds * SECOND) / SECOND,
+          intervention: {actionId: r.actionId, label: INTERVENTIONS.find(d => d.id === r.interventionId)!.label, parameters: r.parameters, restoreAtUs: r.endUs!, ...(edge ? {edgeId: edge.id} : {})}}));
+      })],
     traffic: last ? { offeredRps: last.offeredRps, completedRps: last.completedRps, failedRps: last.failedRps, latencyMs: last.latencyMs }
       : { offeredRps: 0, completedRps: 0, failedRps: 0, latencyMs: { p50: null, p95: null } },
   });
