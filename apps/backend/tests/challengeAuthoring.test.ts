@@ -121,12 +121,15 @@ describe("calibration against the real engine", () => {
       expect(failed.challenge?.status).toBe("not-met");
       expect(failed.challenge!.metCount).toBeLessThan(failed.challenge!.total);
       if (d.id === "after-the-cache-returns" && d.version === 2) {
+        expect(validateChallengeVersions(CHALLENGE_VERSIONS, PUBLISHED)).toEqual([]);
         const at = (report: typeof failed, id: string) => report.terminal!.resources.find(r => r.id === id)!;
         expect(at(failed, "cache").health).toBe("healthy"); expect(at(failed, "db").health).toBe("saturated");
         expect(at(failed, "db").connections).toBe(85);
         expect(at(passed, "db").connections!).toBeLessThan(1360);
         expect(failed.experimentTrace?.moments?.firstTargetHealthy).toBe(132);
         expect(passed.experimentTrace?.moments?.firstOverallHealthy).toBe(132);
+        expect(failed.challenge?.criteria.find(c => c.id === "connections")?.status).toBe("not-met");
+        expect(REFERENCE[d.id]!.resources.filter(r => r.id !== "db")).toEqual(d.starter!.resources.filter(r => r.id !== "db"));
       }
       if (d.experiment) for (const report of [passed, failed]) {
         expect(report.challenge?.experiment).toMatchObject({ state: "ended", appliedSimulatedSeconds: d.experiment.atSimulatedSecond,

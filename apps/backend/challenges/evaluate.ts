@@ -151,8 +151,9 @@ class Judge {
         const dbs = databaseConnections(t, input);
         if (!dbs.length) return decided(false, "The design has no database.", ["runInputs.resources"]);
         if (dbs.some((d) => d.connections === undefined)) return pending("Connection counts were not recorded for every database.", ["terminalSnapshot.metrics"]);
-        const over = dbs.filter((d) => d.connections! > d.limit);
-        return decided(!over.length, list(dbs.map((d) => `${d.name} had ${d.connections} of ${d.limit} connections`)) + ` at second ${t.simulatedSeconds}.`, ["terminalSnapshot.metrics", "terminalSnapshot.installedSkus"]);
+        const full = dbs.filter((d) => d.connections! >= d.limit);
+        return decided(!full.length, list(dbs.map((d) => `${d.name} had ${d.connections} of ${d.limit} sessions (${d.limit - d.connections!} spare)`)) +
+          ` at second ${t.simulatedSeconds}; strictly positive spare session capacity is required.`, ["terminalSnapshot.metrics", "terminalSnapshot.installedSkus"]);
       }
     }
   }
