@@ -2,7 +2,7 @@ import { requireKnown, type Quantity, type Unit } from "../../reality/quantity";
 import { micros } from "../time";
 import type { NetworkInput } from "../network/contracts";
 import type { DataInput, DataResource } from "./contracts";
-import { DATA_LIMITS as caps } from "./policy";
+import { DATA_LIMITS as caps, POSTGRES_SESSION_CAP } from "./policy";
 import { validateNetwork, computeAdapter } from "../network/validate";
 import { validateComputeInput } from "../compute/run";
 export const isData = (r: DataInput["resources"][number]): r is DataResource => ["relational", "cache", "cache-aside"].includes(r.kind);
@@ -35,7 +35,7 @@ export function validateData(input: DataInput) {
       } else {
         const dataset = new Set(r.keys);
         if (!r.keys.length || r.keys.length > caps.keys || r.keys.some((k) => !validKey(k)) || dataset.size !== r.keys.length || r.initial.some((row) => !dataset.has(row.key))) throw new Error("Invalid bounded database dataset");
-        if (r.semantics !== (input.workloadVersion === "m2e-pg/1" ? "postgresql-keyed/1" : "read-committed-keyed/1") || num(r.maxSessions, "count", 1) > caps.sessions || num(r.activeTransactions, "count", 1) > caps.activeTransactions) throw new Error("Invalid relational policy/budget");
+        if (r.semantics !== (input.workloadVersion === "m2e-pg/1" ? "postgresql-keyed/1" : "read-committed-keyed/1") || num(r.maxSessions, "count", 1) > (r.semantics.startsWith("postgresql-keyed/") ? POSTGRES_SESSION_CAP : caps.sessions) || num(r.activeTransactions, "count", 1) > caps.activeTransactions) throw new Error("Invalid relational policy/budget");
         num(r.pendingQueries, "count");
         for (const op of input.operations) {
           const p = r.plans[op.id]; if (!p || !p.statements.length || p.statements.length > caps.statements || !["logical-only", "authored-log-ack"].includes(p.durability)) throw new Error("Missing/bounded transaction plan");
@@ -60,7 +60,7 @@ export function validateData(input: DataInput) {
     else {
       if (r?.kind !== "relational") throw new Error("Data capacity intervention requires relational resource");
       const key = JSON.stringify([i.kind, i.target]); if (at < (spans.get(key) ?? 0)) throw new Error("Overlapping data interventions"); spans.set(key, micros(at + num(i.duration, "us", 1)));
-      if (i.kind === "session-capacity") { if (num(i.sessions, "count") > caps.sessions) throw new Error("Session limit budget"); }
+      if (i.kind === "session-capacity") { if (num(i.sessions, "count") > (r.semantics.startsWith("postgresql-keyed/") ? POSTGRES_SESSION_CAP : caps.sessions)) throw new Error("Session limit budget"); }
       else num(i.cores, "cores", 0, false);
     }
   }
