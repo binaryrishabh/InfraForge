@@ -13,7 +13,9 @@ export function networkTrace(kernel: EventKernel, limit: number, causal?: Causal
     if (events.length >= limit) { omitted++; return; }
     const event = { at: kernel.now, kind, id, detail, ...causeFields(cause), ...(root === undefined ? {} : { root }), ...(attempt === undefined ? {} : { attempt }) };
     const bytes = byteLimit === Infinity ? 0 : utf8Bytes(JSON.stringify(event));
-    if (retainedBytes + bytes <= byteLimit) { events.push(event); retainedBytes += bytes; } else omitted++;
+    if (retainedBytes + bytes <= byteLimit) { events.push(event); retainedBytes += bytes;
+      if (causal && ["connection-acquire-failed", "security-denied", "security-admitted", "security-policy-updated"].includes(kind)) causal({ atUs: kernel.now, kind, resource: "network", detail: { id, detail, ...(root === undefined ? {} : { root }), ...(attempt === undefined ? {} : { attempt }) } });
+    } else omitted++;
   };
   return { emit, measure: () => ({ events: events.map((e) => ({ ...e })), totals: { ...totals }, retained: events.length, omitted }) };
 }

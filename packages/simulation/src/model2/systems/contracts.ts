@@ -23,7 +23,7 @@ export interface MonitorConfig extends CommandConfig {
 export interface TelemetryConfig extends CommandConfig { id: string; kind: "telemetry-backend"; samples: Quantity<"count"> }
 export type SystemResource = AuthorityConfig | ResolverConfig | CdnConfig | RegistryConfig | StartupConfig | MonitorConfig | TelemetryConfig;
 export interface Scope { kind: "any" | "identity" | "zone" | "cidr"; value?: string }
-export interface FirewallRule { id: string; direction: "ingress" | "egress"; protocol: "tcp"; source: Scope; destination: Scope; fromPort: Quantity<"count">; toPort: Quantity<"count">; priority: Quantity<"count">; action: "allow" | "deny" }
+export interface FirewallRule { authoredId?: string; id: string; direction: "ingress" | "egress"; protocol: "tcp"; source: Scope; destination: Scope; fromPort: Quantity<"count">; toPort: Quantity<"count">; priority: Quantity<"count">; action: "allow" | "deny" }
 export interface FirewallConfig { id: string; profile: "ordered-stateful/1"; default: "allow" | "deny"; maxFlows: Quantity<"count">; rules: FirewallRule[] }
 export interface Listener { resource: string; protocol: "tcp"; port: Quantity<"count">; tls: "plaintext" | "required" | "optional"; certificate?: { names: string[]; issuer: string; notBefore: Quantity<"us">; notAfter: Quantity<"us"> } }
 export interface DialConfig {

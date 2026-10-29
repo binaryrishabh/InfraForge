@@ -159,7 +159,7 @@ export type Model2Run = ReturnType<typeof createModel2Run>;
 
 function metric(m: LiveProjection["metrics"][string] | undefined): ResourceMetrics {
   if (!m) return { cpu: null, memory: null, health: ResourceHealth.UNKNOWN };
-  return { ...(m.asyncQueue ? { asyncQueue: m.asyncQueue } : {}), cpu: m.cpu === null ? null : round(m.cpu), memory: m.memory === null ? null : round(m.memory), health: m.health as ResourceHealthType,
+  return { ...(m.security ? { security: m.security } : {}), ...(m.asyncQueue ? { asyncQueue: m.asyncQueue } : {}), cpu: m.cpu === null ? null : round(m.cpu), memory: m.memory === null ? null : round(m.memory), health: m.health as ResourceHealthType,
     ...(m.rps === null ? {} : { rps: m.rps }), ...(m.connections === null ? {} : { connections: m.connections }), ...(m.replicas ? { replicas: m.replicas } : {}) };
 }
 const round = (value: number) => Math.round(value * 10) / 10;

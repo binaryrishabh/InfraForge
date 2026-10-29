@@ -43,7 +43,7 @@ export function createSystemsModel2(authored: SystemsInput, extension?: SystemsE
       const service = telemetryBackend(r, kernel); backends.set(id, service); return service;
     },
     install(kernel, _trace, network) {
-      context = network; clock = kernel; security = securityPlane(i, kernel, network, (id, name) => resolvers.get(id)?.peek(name));
+      context = network; clock = kernel; security = securityPlane(i, kernel, network, (id, name) => resolvers.get(id)?.peek(name), _trace);
       const horizon = requireKnown(i.horizon, "us");
       for (const [id, client] of clients) client.start(network, horizon, extension?.deferredClients.includes(id));
       for (const [index, crash] of (extension?.crashes ?? []).entries()) {
@@ -78,7 +78,7 @@ export function createSystemsModel2(authored: SystemsInput, extension?: SystemsE
     },
   });
   function runtimeNow() { return clock.now; }
-  return { horizon: runtime.horizon, advanceTo: runtime.advanceTo, inspectQueue: runtime.inspectQueue, inspectWorker: runtime.inspectWorker, evidence() {
+  return { horizon: runtime.horizon, advanceTo: runtime.advanceTo, inspectQueue: runtime.inspectQueue, inspectWorker: runtime.inspectWorker, inspectSecurity: () => security.metrics(), evidence() {
     const e = runtime.evidence(), ids = new Set(i.resources.filter(isSystem).map((r) => r.id));
     return { ...e, workloadVersion: "m2g/1" as const, computeConfiguration: e.computeConfiguration.filter((r) => !ids.has(r.id)), systemConfiguration: copy({ resources: i.resources.filter(isSystem), ...i.systems }), systems: copy({ authorities: [...authorities.values()].map((s) => s.evidence()), resolvers: [...resolvers.values()].map((s) => s.evidence()), cdns: [...cdns.values()].map((s) => s.evidence()), registries: [...registries.values()].map((s) => s.evidence()), clients: [...clients.values()].map((s) => s.evidence()), monitors: [...monitors.values()].map((s) => s.evidence()), backends: [...backends.values()].map((s) => s.evidence()), security: security.evidence(), assessment: security.assessment(), instrumentation: [...instrumentation.entries()].map(([target, p]) => ({ target, ...p })), observations: observations.snapshot(), commands: { offered: commandOffered, live: commandLive, completed: commandCompleted, failed: commandFailed, omitted: commandOmitted, results: commandResults }, policyLedger: SYSTEM_POLICY_LEDGER }), unmodeled: [...e.unmodeled.filter((s) => s !== "DNS/NAT/ephemeral ports"), "DNS delegation/CNAME/AAAA/DNSSEC/NAT", "TLS cryptographic processing/framing/revocation/mTLS", "full HTTP cache/OCI/observability protocols", "target instrumentation CPU and physical telemetry persistence"] };
   } };

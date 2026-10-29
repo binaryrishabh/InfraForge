@@ -9,6 +9,7 @@ import type { CausalObserver } from "../workload/causal";
 export type LiveValue = number | null;
 export type LiveHealth = "healthy" | "degraded" | "saturated" | "failed" | "unknown";
 export interface LiveNodeMetrics {
+  security?: import("@infraforge/contracts/telemetry").SecurityMetrics;
   asyncQueue?: import("@infraforge/contracts/telemetry").AsyncQueueMetrics;
   cpu: LiveValue; memory: LiveValue; connections: LiveValue; rps: LiveValue; errorRate: LiveValue; health: LiveHealth;
   replicas?: { ready: number; total: number };
@@ -127,6 +128,14 @@ export function createLiveModel2(compiled: CompiledProduct, nodeIds: string[]) {
         const workers = compiled.input.resources.filter((r) => r.kind === "async-worker" && r.broker === resource.id).map((r) => runtime.inspectWorker(r.id));
         if (metrics[resource.id] && queue && queue.ready > 0 && metrics[resource.id]!.health === "healthy") metrics[resource.id]!.health = "degraded";
         if (metrics[resource.id]) metrics[resource.id]!.asyncQueue = { version: 2, failedAttempts: workers.length && workers.every(Boolean) ? workers.reduce((n, w) => n + w!.failed, 0) : null, wastedCpuSeconds: workers.length && workers.every(Boolean) ? workers.reduce((n, w) => n + w!.failedCpuUs, 0) / SECOND : null, deadLetterOverflowDiscards: queue?.dlqOverflow ?? null, published: queue?.accepted ?? null, completed: workers.length && workers.every(Boolean) ? workers.reduce((n, w) => n + w!.processed, 0) : null, readyDepth: queue?.ready ?? null, oldestReadyAgeSeconds: queue?.oldestReadyAgeUs == null ? null : queue.oldestReadyAgeUs / SECOND, inFlight: queue?.inFlight ?? null, redeliveries: queue?.redelivered ?? null, deadLettered: queue?.deadLettered ?? null };
+      }
+      const security = runtime.inspectSecurity();
+      if (security) for (const node of nodeIds) {
+        const policy = security.policies.find(p => p.id === node), unknown = security.omitted > 0;
+        const edges = security.edges.filter(e => owner(e.source) === node || owner(e.target) === node).map(e => ({ ...e, admitted: unknown ? null : e.admitted, denied: unknown ? null : e.denied, noListener: unknown ? null : e.noListener, policyDenied: unknown ? null : e.policyDenied, lastDenial: unknown ? undefined : e.lastDenial, backendDeliveries: unknown ? null : e.backendDeliveries }));
+        metrics[node]!.security = { version: 1, evidence: unknown ? "omitted" : "complete", edges, ...(policy ? { firewall: { occupancy: policy.occupancy, limit: policy.limit, admissions: policy.admissions, generation: policy.generation } } : {}) };
+        if (unknown && edges.length) metrics[node]!.health = "unknown";
+        else if (edges.some(e => (e.denied ?? 0) > 0 && owner(e.target) === node) && metrics[node]!.rps === 0) metrics[node]!.health = "failed";
       }
       const offered = caller.offered - previousCaller.offered, completedRps = caller.completed - previousCaller.completed, failedRps = caller.failed - previousCaller.failed;
       const sorted = responses.sort((a, b) => a - b), latencyMs = { p50: percentile(sorted, 0.5), p95: percentile(sorted, 0.95) };

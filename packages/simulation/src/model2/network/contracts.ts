@@ -62,6 +62,8 @@ export type Trace = (kind: string, id: string, detail: string, root?: string, at
 export interface TransportResult { ok: boolean; reason?: FailureReason; ambiguous: boolean; cause?: Cause }
 export interface ConnectionRoute { target: string; request: string[]; response: string[] }
 export interface ConnectionHook {
+  securityEvidence?: true;
+  delivered?(): void;
   holdLeaseUntilRemoteTerminal?: boolean;
   // Hold a cancelled caller's lease only when a remote request actually started (newer revisions); older ones hold once delivered.
   leaseHeldOnlyWithRemote?: boolean;

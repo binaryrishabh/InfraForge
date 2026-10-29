@@ -41,6 +41,7 @@ export function createDataRuntime(authored: DataInput, extension?: NetworkExtens
       const open = (id: string) => database.openSession(id, path.pool.evidenceProfile ? kind => sessionTrace?.(kind, id, path.target, undefined, undefined, true) : undefined);
       const refusal = path.pool.evidenceProfile || config.semantics === "postgresql-keyed/2" ? "session-limit" as const : "backend-rejected" as const;
       return {
+        ...(external?.securityEvidence ? { securityEvidence: true as const, delivered: external.delivered } : {}),
         holdLeaseUntilRemoteTerminal: true,
         leaseHeldOnlyWithRemote: config.semantics === "postgresql-keyed/2",
         open(id, done) {

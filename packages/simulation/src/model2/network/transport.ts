@@ -70,6 +70,7 @@ export function pathTransport(config: PathConfig, kernel: EventKernel, links: Ma
         sendBytes(route.request, totalBytes(requireKnown(bytes.request, "bytes"), work.message?.bodyBytes?.request), "request", () => {
           delivered = true; state = "waiting"; const deliveredAt = kernel.now; latency.requestTransportUs += deliveredAt - readyAt;
           trace("request-delivered", key, route.target, work.rootId, work.attempt);
+          hook?.delivered?.();
           if (!alive(route.target)) return;
           const request: Invocation = { ...work, sessionId: acquired.connection, ...(work.message ? { message: { request: JSON.parse(JSON.stringify(work.message.request)) } } : {}) };
           remote = deliver(route.target, request, (outcome, cause) => {
@@ -88,7 +89,10 @@ export function pathTransport(config: PathConfig, kernel: EventKernel, links: Ma
             });
           });
         });
-      }, (reason: FailureReason, cause?: Cause) => finish({ ok: false, reason, ambiguous: delivered, ...(failureCauseProfile ? { cause: cause ? carryCause(cause) : seedCause(reason === "pool-overflow" ? reason : null, reason === "pool-overflow" ? config.id : null) } : {}) }));
+      }, (reason: FailureReason, cause?: Cause, connectionId?: string) => {
+        if (connectionId !== undefined) trace("connection-acquire-failed", key, connectionId, work.rootId, work.attempt, true);
+        finish({ ok: false, reason, ambiguous: delivered, ...(failureCauseProfile ? { cause: cause ? carryCause(cause) : seedCause(reason === "pool-overflow" ? reason : null, reason === "pool-overflow" ? config.id : null) } : {}) });
+      });
       return { admitted: !terminal, state: () => state, cancel: () => {
         if (terminal) return "already-finished";
         finish({ ok: false, reason: "reset", ambiguous: delivered }, true); return "cancelled";

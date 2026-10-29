@@ -21,6 +21,7 @@ export function createProductModel2(compiled: CompiledProduct, usage?: RuntimeUs
     // Cheap current reads for live views: one resource's counters now, and replica counts. No history is copied.
     inspect: (id: string) => network?.inspect?.(id) ?? network?.observe(id),
     applicationFlowEvidence: () => flow?.measure(),
+    inspectSecurity: runtime.inspectSecurity,
     inspectQueue: runtime.inspectQueue,
     inspectWorker: runtime.inspectWorker,
     pools: () => controllers.map((c) => c.status()),

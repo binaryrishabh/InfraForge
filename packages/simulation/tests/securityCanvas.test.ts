@@ -6,6 +6,9 @@ import { compileProduct } from "../src/model2/product/compiler";
 import { createProductModel2 } from "../src/model2/product/run";
 import { securityDesign, prepareSecurity } from "./securityCanvas.fixture";
 import pins from "./securityCanvas.pins.json";
+import { createLiveModel2 } from "../src/model2/product/live";
+import type { CausalEvent } from "../src/model2/workload/causal";
+import { quantities } from "./workloadFixture";
 
 const hash = (v: unknown) => createHash("sha256").update(JSON.stringify(v).replaceAll("\r\n", "\n")).digest("hex");
 test("absent security preserves pre-edit LF-normalized contract, compiled and evidence SHA-256 pins", () => {
@@ -37,4 +40,74 @@ test("invalid versions, ownership, duplicate ports/rules, scopes and ranges are 
   expect(compileProduct(valid,p.contract).ok).toBe(false);
   const incomplete = prepareSecurity(securityDesign()); incomplete.contract.nodes.db!.listeners = [];
   expect(compileProduct(securityDesign(), incomplete.contract).ok).toBe(false);
+});
+
+function rule(id: string, priority: number, action: "allow" | "deny", direction: "ingress" | "egress" = "ingress") {
+  return {id,priority,action,direction,source:"app",destination:"db",fromPort:5432,toPort:5432};
+}
+test("firewall priority then ID, both directions and default deny use real admission decisions", () => {
+  for (const rules of [[rule("z",1,"allow"),rule("a",0,"deny")], [rule("z",0,"allow"),rule("a",0,"deny")], []]) {
+    const d = securityDesign(); d.resources.find(r=>r.id === "firewall")!.firewallSettings = {version:1,default:rules.length ? "allow" : "deny",rules};
+    const p = prepareSecurity(d), events: CausalEvent[] = [], runtime = createProductModel2(p.compiled, undefined, e=>events.push(e)); runtime.advanceTo(1000000);
+    const e = runtime.evidence(), denial = e.systems.security.admission!.rows.find(r=>!r.allowed)!;
+    expect(denial).toMatchObject({path:"edge-1:app:db",source:"app",target:"db",port:5432,firewall:"firewall",generation:1, ...(rules.length ? {rule:"a",direction:"ingress"} : {defaultAction:"deny",direction:"egress"})});
+    expect(e.data.databases[0]!.transactions.committed).toBe(0);
+    const acquire = events.find(e=>e.kind === "connection-acquire-failed" && e.detail.detail === denial.connectionId)!;
+    expect(acquire.detail.root).toBeDefined(); expect(acquire.detail.attempt).toBeDefined();
+    expect(events.some(e=>e.kind === "security-denied" && e.detail.id === denial.connectionId)).toBe(true);
+  }
+});
+test("live security counters show zero delivery and Firewall remains Unknown without a station", () => {
+  const d = securityDesign(); d.resources.find(r=>r.id === "db")!.listenerSettings = {version:1,ports:[]};
+  const p = prepareSecurity(d), live = createLiveModel2(p.compiled,d.resources.map(r=>r.id)); live.advanceSecond();
+  const m = live.project().metrics;
+  const edge = m.db!.security!.edges.find(e=>e.target === "db")!;
+  expect(edge.noListener).toBeGreaterThan(0); expect(edge.backendDeliveries).toBe(0); expect(m.db!.health).toBe("failed");
+  expect(m.firewall!.health).toBe("unknown"); expect(m.firewall!.security!.firewall!.occupancy).toBe(0); expect(m.firewall!.security!.firewall!.limit).toBe(10000);
+});
+
+test("canvas-compiled sessions survive policy change while fresh flows fail at generation two", () => {
+  const run = (reuse: boolean) => {
+    const d = securityDesign(); d.resources.find(r=>r.id === "firewall")!.firewallSettings = {version:1,default:"allow",rules:[]};
+    const p = prepareSecurity(d), input = p.compiled.input, q = quantities();
+    const path = input.paths.find(p=>p.source === "app" && p.target === "db")!;
+    path.pool = {...path.pool,reuse};
+    input.systems.interventions.push({id:"test-policy-update",kind:"firewall-rules",target:"firewall",at:q.q("test.security.at",50000,"us"),rules:[{...rule("block-new",0,"deny"),protocol:"tcp",source:{kind:"any"},destination:{kind:"identity",value:"db"},priority:q.q("test.security.priority",0,"count"),fromPort:q.q("test.security.from",5432,"count"),toPort:q.q("test.security.to",5432,"count")}]});
+    input.ledger.push(...q.ledger);
+    const r = createProductModel2(p.compiled); r.advanceTo(1000000); return r.evidence();
+  };
+  const reused = run(true), fresh = run(false);
+  expect(reused.counts.completed).toBe(10); expect(fresh.counts.completed).toBe(1);
+  expect(reused.systems.security.policies[0]!.returnExchanges).toBeGreaterThan(1);
+  expect(fresh.systems.security.admission!.rows.filter(r=>!r.allowed).every(r=>r.generation === 2 && r.rule === "block-new")).toBe(true);
+  expect(fresh.systems.security.policies[0]!.flows).toHaveLength(0);
+});
+
+test("security evidence has row and byte bounds; omitted details project Unknown", () => {
+  for (const bytes of [undefined,1]) {
+    const d = securityDesign(); d.resources.find(r=>r.id === "db")!.listenerSettings={version:1,ports:[]};
+    const p = prepareSecurity(d); p.contract.arrival.generated=true; p.contract.limits={...p.contract.limits,maxTraceRows:1,...(bytes ? {maxTraceBytes:bytes} : {})};
+    const compiled=compileProduct(d,p.contract); if (!compiled.ok) throw Error(JSON.stringify(compiled.diagnostics));
+    const causal:CausalEvent[]=[], r=createProductModel2(compiled.value,undefined,e=>causal.push(e));r.advanceTo(1000000);
+    const e=r.evidence(); expect(e.systems.security.admission!.rows.length).toBeLessThanOrEqual(bytes ? 0 : 1); expect(e.systems.security.admission!.omitted).toBeGreaterThan(0);
+    expect(causal.filter(e=>e.kind === "security-denied" || e.kind === "security-admitted").length).toBeLessThanOrEqual(1);
+    const live=createLiveModel2(compiled.value,d.resources.map(r=>r.id));live.advanceSecond();const m=live.project().metrics.db!;
+    expect(m.security!.edges[0]!.backendDeliveries).toBeNull();expect(m.health).toBe("unknown");
+  }
+});
+
+for (const deny of [false,true]) test(`real request, LB, app, DB admission failure, attempt failure and retry chain; rule=${deny}`, () => {
+  const d=securityDesign(); d.resources.find(r=>r.id === "lb")!.retry={enabled:true,maxAttempts:2,backoffMs:10,jitterRatio:0,maxConcurrentRetries:4,retryOn:["backendFailure"]};
+  if (deny) d.resources.find(r=>r.id === "firewall")!.firewallSettings={version:1,default:"allow",rules:[rule("block-db",0,"deny")]};
+  else d.resources.find(r=>r.id === "db")!.listenerSettings={version:1,ports:[]};
+  const p=prepareSecurity(d), events:CausalEvent[]=[], r=createProductModel2(p.compiled,undefined,e=>events.push(e));r.advanceTo(1000000);
+  const acquisition=events.find(e=>e.kind === "connection-acquire-failed" && String(e.detail.root).startsWith('["root"'))!;
+  const denied=events.find(e=>e.kind === "security-denied" && e.detail.id === acquisition.detail.detail)!, detail=JSON.parse(denied.detail.detail as string);
+  const root=acquisition.detail.root, related=events.filter(e=>(e.work?.rootId ?? e.detail.root) === root);
+  for(const kind of ["caller-offered","lb-selected","request-delivered","connection-acquire-failed","attempt-terminal","retry-scheduled","caller-terminal"]) expect(related.some(e=>e.kind === kind)).toBe(true);
+  expect(detail.reason).toBe(deny ? "policy-denied:firewall:ingress:block-db" : "no-listener");
+  const terminal=related.find(e=>e.kind === "attempt-terminal")!;expect(terminal.detail.detail).toBe("backend-rejected");
+  expect(related.find(e=>e.kind === "retry-scheduled")!.atUs).toBeGreaterThanOrEqual(denied.atUs);
+  expect(r.evidence().data.databases[0]!.transactions.committed).toBe(0);
+  const again=createProductModel2(p.compiled);again.advanceTo(1000000);expect(hash(again.evidence())).toBe(hash(r.evidence()));
 });

@@ -4,7 +4,7 @@ import type { EventKernel } from "../time";
 import type { ConnectionHook, ConnectionRoute, FailureReason, PoolConfig, Trace } from "./contracts";
 
 export interface Lease { connection: string; route?: ConnectionRoute; release(): void; fail(reason: FailureReason): void }
-interface Acquisition { id: string; ready(lease: Lease): void; fail(reason: FailureReason, cause?: Cause): void; timer?: () => boolean; connection?: Connection }
+interface Acquisition { id: string; ready(lease: Lease): void; fail(reason: FailureReason, cause?: Cause, connectionId?: string): void; timer?: () => boolean; connection?: Connection }
 interface Connection { id: string; route?: ConnectionRoute; state: "connecting" | "ready" | "draining"; users: Map<string, Acquisition>; reserved: Map<string, Acquisition>; timers: Array<() => boolean>; expiry?: () => boolean; uses: number }
 export function connectionPool(id: string, config: PoolConfig, kernel: EventKernel, reachable: (route?: ConnectionRoute) => boolean, trace?: Trace, hook?: ConnectionHook) {
   const connections = new Map<string, Connection>(), waiting = new Map<string, Acquisition>();
@@ -16,7 +16,7 @@ export function connectionPool(id: string, config: PoolConfig, kernel: EventKern
     trace?.("connection-closed", c.id, reason ?? "closed", undefined, undefined, !!config.evidenceProfile);
     failedStreams += c.users.size;
     const owners = [...c.users.values(), ...c.reserved.values()]; c.users.clear(); c.reserved.clear();
-    for (const a of owners) { a.timer?.(); waiting.delete(a.id); a.fail(reason ?? "drained", cause); }
+    for (const a of owners) { a.timer?.(); waiting.delete(a.id); a.fail(reason ?? "drained", cause, hook?.securityEvidence ? c.id : undefined); }
   };
   const idle = (c: Connection) => {
     if (c.users.size || c.reserved.size || c.state === "connecting") return;
