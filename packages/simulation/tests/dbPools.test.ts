@@ -1,4 +1,8 @@
 import { expect, test } from "bun:test";
+import { contractFromDesign } from "../src/model2/product/fromDesign";
+import { requireKnown } from "../src/reality/quantity";
+import { DATA_LIMITS, DATA_POLICY_LEDGER, POSTGRES_SESSION_CAP } from "../src/model2/data/policy";
+import { networkTrace } from "../src/model2/network/trace";
 import { dbPoolCascade } from "./dbPoolCascadeFixture";
 import { createProductModel2 } from "../src/model2/product/run";
 import { createLiveModel2 } from "../src/model2/product/live";
@@ -152,4 +156,25 @@ test("transport close cannot cancel away a PG2 orphan before its statement bound
   f.transport.exchange(f.work("a"), () => {}); f.clock.advanceTo(200);
   expect(f.db.measure()).toMatchObject({ sessions: 1, orphaned: 1 }); expect(f.db.openSession("b")).toBe(false);
   f.clock.advanceTo(5000); expect(f.db.measure()).toMatchObject({ sessions: 0, orphaned: 0 }); expect(f.db.evidence().rows[0]!.version).toBe(1);
+});
+
+test("canvas uses catalog approximations for either provider and a generic 100-session default", () => {
+  const { design } = dbPoolCascade();
+  for (const [skuId, limit] of [[undefined, 100], ["db.t3.micro", 85], ["db-s-1vcpu-2gb", 150]] as const) {
+    const saved = structuredClone(design); saved.resources.find(r => r.id === "db")!.skuId = skuId;
+    const result = contractFromDesign(saved); if ("refused" in result) throw Error(JSON.stringify(result.refused));
+    const db = result.contract.nodes.db!.resources[0]!.config; if (db.kind !== "relational") throw Error("expected DB");
+    expect(requireKnown(db.maxSessions, "count")).toBe(limit); expect(result.contract.version).toBe("canvas-assumptions/2");
+    expect(result.assumptions.find(a => a.id === "db.sessions")!.sentence).toContain(skuId ? "catalog" : "Generic PostgreSQL");
+  }
+  expect(DATA_LIMITS.sessions).toBe(512); expect(POSTGRES_SESSION_CAP).toBe(5000);
+  expect(DATA_POLICY_LEDGER.find(e => e.id === "m2e.policy.sessions")!.quantity).toMatchObject({ value: 512 });
+});
+
+test("connection lifecycle causal evidence is promoted only for the opted-in profile", () => {
+  const clock = new EventKernel(100), seen: string[] = [], trace = networkTrace(clock, 100, event => seen.push(event.kind));
+  for (const kind of ["connection-acquired", "connection-closed", "connection-released"]) trace.emit(kind, "id", "connection");
+  expect(seen).toEqual([]);
+  for (const kind of ["connection-acquired", "connection-closed", "connection-released", "db-session-open", "db-session-refused", "db-session-closed"]) trace.emit(kind, "id", "connection", undefined, undefined, true);
+  expect(seen).toHaveLength(6);
 });
