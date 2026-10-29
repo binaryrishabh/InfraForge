@@ -21,7 +21,7 @@ export interface ExperimentEvidencePayload {
   loadFraction: number;
   targetLoadFraction: number;
   resources: Array<{ id: string; health: "healthy" | "degraded" | "saturated" | "failed" | "unknown";
-    cpu: number | null; memory: number | null; rps?: number; connections?: number; asyncQueue?: import("../telemetry").AsyncQueueMetrics }>;
+    cpu: number | null; memory: number | null; rps?: number; connections?: number; asyncQueue?: import("../telemetry").AsyncQueueMetricsV1 }>;
   pools: Array<{ id: string; currentReplicas: number; baseReplicas: number;
     pending: { action: "up" | "down"; secondsRemaining: number } | null }>;
 }

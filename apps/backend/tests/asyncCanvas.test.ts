@@ -66,3 +66,47 @@ test('capturing a real opt-in run chooses v3 and retains queue values',()=>{
  const payload=instance.evidence!.pending[0]!.payload;
  expect(payload.version).toBe(3);expect(payload.resources.find(r=>r.id==='queue')!.asyncQueue).toMatchObject({published:8,completed:3,readyDepth:4,inFlight:1,redeliveries:0,deadLettered:0});
 });
+
+test('poison browser/server replay agrees through retries, DLQ overflow and backlog drain',()=>{
+ const d=design();d.workload.targetThroughput=210;
+ d.resources.find(r=>r.id==='worker')!.asyncWorker!.badJobPercent=10;
+ d.resources.find(r=>r.id==='queue')!.asyncQueue!.deadLetterCapacity=2;
+ const layout={resources:d.resources,connectionLines:d.connections};
+ for(const schema of [LayoutSchema,LiveTopologySchema]) {
+  expect(schema.parse(layout).resources).toEqual(d.resources);
+  for(const [owner,field,values] of [['worker','badJobPercent',[-1,101,0.5,'10']],['queue','deadLetterCapacity',[-1,1001,1.5,'2']]] as const)for(const value of values){
+   const bad=structuredClone(layout),resource=bad.resources.find(r=>r.id===owner)!;
+   Object.assign(owner==='worker'?resource.asyncWorker!:resource.asyncQueue!,{[field]:value});expect(schema.safeParse(bad).success).toBe(false);
+  }
+ }
+ const input=readRunInputs(captureRunInputs(layout,d.workload,'async-proof'));
+ expect(input.resources).toEqual(d.resources);
+ const browser=createModel2Run(input,70),server=createModel2Engine(input,70,buildModel2Contract);
+ const samples=[];
+ for(let i=0;i<70;i++) {
+  if(i===35){const action={kind:'load' as const,parameters:{targetLoadFraction:0}};expect(browser.apply(action)).toEqual(server.apply(action));}
+  const stable=(logs:ReturnType<typeof browser.advance>)=>logs.map(({timestamp:_wall,...row})=>row);
+  expect(stable(browser.advance())).toEqual(stable(server.advance()));expect(browser.view()).toEqual(server.view());
+  samples.push(browser.view().metrics.queue!.asyncQueue);
+ }
+ expect(samples[34]).toMatchObject({version:2,readyDepth:8,failedAttempts:29,deadLetterOverflowDiscards:7,wastedCpuSeconds:7.25});
+ expect(samples[69]).toEqual({version:2,published:123,completed:112,readyDepth:0,oldestReadyAgeSeconds:null,inFlight:0,redeliveries:22,deadLettered:2,failedAttempts:33,deadLetterOverflowDiscards:9,wastedCpuSeconds:8.25});
+ const before=structuredClone(layout);before.resources.find(r=>r.id==='worker')!.asyncWorker!.badJobPercent=0;
+ const diff=designDifference(before,layout);expect(JSON.stringify(diff)).toContain('badJobPercent');expect(JSON.stringify(diff)).not.toContain('[object Object]');
+});
+
+test('poison failure observations stay live while persisted evidence retains DB-compatible revision 1',()=>{
+ const d=design();d.workload.targetThroughput=210;
+ d.resources.find(r=>r.id==='worker')!.asyncWorker!.badJobPercent=100;
+ d.resources.find(r=>r.id==='queue')!.asyncQueue!.deadLetterCapacity=0;
+ const input=captureRunInputs({resources:d.resources,connectionLines:d.connections},d.workload,'async-proof');
+ const instance: SimulationInstance = {model2:createModel2Engine(input,5,buildModel2Contract),tickCount:0,pendingLogs:[],speed:1,lastCheckpointAt:0,accumulatedCostUsd:0,topology:input,topologyRevision:0,actions:new Map(),acknowledge:null,metricsComputedAt:null,metricsTopologyRevision:0,evidence:{window:{start:1,end:5},pending:[]}};
+ for(let i=0;i<5;i++)instance.model2!.advance();
+ const live=instance.model2!.view().metrics.queue!.asyncQueue!;
+ expect(live).toMatchObject({version:2,deadLettered:0});if(live.version!==2)throw Error('Missing failure observations');
+ expect(live.failedAttempts).toBeGreaterThan(0);expect(live.wastedCpuSeconds).toBeGreaterThan(0);expect(live.deadLetterOverflowDiscards).toBeGreaterThan(0);
+ instance.metricsComputedAt=new Date().toISOString();captureEvidenceTick(instance);
+ const saved=instance.evidence!.pending[0]!.payload.resources.find(r=>r.id==='queue')!.asyncQueue!;
+ expect(saved.version).toBe(1);expect(saved).not.toHaveProperty('failedAttempts');expect(saved).not.toHaveProperty('wastedCpuSeconds');expect(saved).not.toHaveProperty('deadLetterOverflowDiscards');
+ expect(evidencePayload.safeParse({...instance.evidence!.pending[0]!.payload,resources:[{id:'queue',health:'degraded',cpu:null,memory:null,asyncQueue:live}]}).success).toBe(false);
+});

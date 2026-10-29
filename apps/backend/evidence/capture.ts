@@ -17,9 +17,10 @@ export function captureEvidenceTick(instance: SimulationInstance) {
     const view = liveView(instance), pools = view.pools;
     const payload = evidencePayload.parse({ version: Object.values(view.metrics).some((m) => m.asyncQueue) ? 3 : 2, topologyRevision: instance.metricsTopologyRevision,
       overallHealth: view.overallHealth, loadFraction: view.loadFraction, targetLoadFraction: view.targetLoadFraction,
+      // The DB guard accepts queue revision 1 only; new failure metrics stay live/terminal.
       // Evidence keeps the measured fields only; replica counts are retained in pools.
       resources: Object.entries(view.metrics).map(([id, { cpu, memory, rps, connections, health, asyncQueue }]) => ({ id, health, cpu, memory,
-        ...(asyncQueue === undefined ? {} : { asyncQueue }), ...(rps === undefined ? {} : { rps }), ...(connections === undefined ? {} : { connections }) })),
+        ...(asyncQueue === undefined ? {} : { asyncQueue: { version: 1, published: asyncQueue.published, completed: asyncQueue.completed, readyDepth: asyncQueue.readyDepth, oldestReadyAgeSeconds: asyncQueue.oldestReadyAgeSeconds, inFlight: asyncQueue.inFlight, redeliveries: asyncQueue.redeliveries, deadLettered: asyncQueue.deadLettered } }), ...(rps === undefined ? {} : { rps }), ...(connections === undefined ? {} : { connections }) })),
       pools: Object.entries(pools).map(([id, pool]) => ({ id, currentReplicas: pool.currentReplicas, baseReplicas: pool.baseVmIds.length, pending: pool.pending })),
     });
     buffer.pending.push({ simulatedSeconds: second, sampledAt: new Date(instance.metricsComputedAt), payload, hash: sampleHash(payload) });

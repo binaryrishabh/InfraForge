@@ -1,5 +1,5 @@
-/** Real queue/worker counters, opt-in upload journey revision 1. Null means Unknown. */
-export interface AsyncQueueMetrics {
+/** Persisted experiment evidence keeps revision 1. Null means Unknown. */
+export interface AsyncQueueMetricsV1 {
   version: 1;
   published: number | null;
   completed: number | null;
@@ -9,3 +9,11 @@ export interface AsyncQueueMetrics {
   redeliveries: number | null;
   deadLettered: number | null;
 }
+
+/** Revision 2 adds live/terminal failure observations without changing delivery behavior. */
+export type AsyncQueueMetrics = AsyncQueueMetricsV1 | (Omit<AsyncQueueMetricsV1, "version"> & {
+  version: 2;
+  failedAttempts: number | null;
+  deadLetterOverflowDiscards: number | null;
+  wastedCpuSeconds: number | null;
+});
