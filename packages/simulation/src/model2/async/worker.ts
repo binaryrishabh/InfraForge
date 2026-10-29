@@ -9,7 +9,7 @@ import { messageClient } from "./client";
 import { ASYNC_LIMITS } from "./policy";
 interface Processing { delivery: Delivery; work: Invocation; phase: "buffered" | "reading" | "cpu" | "blocking" | "effect" | "ack-wait" | "ack"; epoch: number; completedCpuUs?: number; cancel?: () => boolean }
 export function asyncWorker(config: WorkerConfig, kernel: EventKernel, send: Deliver, horizon: number) {
-  const local = new Map<string, Processing>(), active = new Set<string>(), cpu = cpuScheduler(config.id, requireKnown(config.execution.cores, "cores"), kernel);
+  const poison = new Set(config.poisonKeys), local = new Map<string, Processing>(), active = new Set<string>(), cpu = cpuScheduler(config.id, requireKnown(config.execution.cores, "cores"), kernel);
   let available = true, epoch = 0, sequence = 0, pendingReceive = false, cancelledPoll: (() => boolean) | undefined, deliveries = 0, processed = 0, failed = 0, failedCpuUs = 0, lostOnCrash = 0, acked = 0, ackFailed = 0, deduplicated = 0, effects = 0, reads = 0, databaseWrites = 0, area = 0, anchor = kernel.now, rejectedInbound = 0;
   const events: Array<{ at: number; kind: string; message: string; receipt: string }> = []; let omitted = 0;
   const record = (kind: string, p: Processing) => { if (events.length < ASYNC_LIMITS.evidenceRows) events.push({ at: kernel.now, kind, message: p.delivery.id, receipt: p.delivery.receipt }); else omitted++; };
@@ -44,7 +44,7 @@ export function asyncWorker(config: WorkerConfig, kernel: EventKernel, send: Del
         // Only a scheduler completion establishes spent CPU; failed reads spend none.
         // Crash-lost work is separate from attempts that reach negative().
         if (!valid(p)) return; p.completedCpuUs = requireKnown(config.cpu, "cpu-us"); p.phase = "blocking";
-        p.cancel = kernel.schedule(kernel.now + requireKnown(config.blockingWait, "us"), 2, JSON.stringify(["consumer-work", config.id, d.receipt]), () => { if (config.poisonKeys.includes(d.body.key)) negative(); else effect(); });
+        p.cancel = kernel.schedule(kernel.now + requireKnown(config.blockingWait, "us"), 2, JSON.stringify(["consumer-work", config.id, d.receipt]), () => { if (poison.has(d.body.key)) negative(); else effect(); });
       } });
     });
   };

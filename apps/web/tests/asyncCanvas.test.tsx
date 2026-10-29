@@ -20,7 +20,7 @@ import { undo, redo } from '../src/features/canvas/history';
 
 test('poison controls describe immediate nacks, overflow and deterministic finite sampling',()=>{
  const worker=renderToStaticMarkup(<AsyncSection resource={{id:'worker',type:'Virtual Machine',x:0,y:0,asyncWorker:DEFAULT_ASYNC_WORKER_SETTINGS}} disabled />);
- for(const text of ['Share of uploads that can never be processed','immediately nack','does not wait for lease expiry','run seed and upload identity','value="0"','disabled'])expect(worker).toContain(text);
+ for(const text of ['Share of arriving uploads that can never be processed','immediately nack','does not wait for lease expiry','run seed and upload identity','value="0"','disabled'])expect(worker).toContain(text);
  const queue=renderToStaticMarkup(<AsyncSection resource={{id:'queue',type:'Message Queue',x:0,y:0,asyncQueue:DEFAULT_ASYNC_QUEUE_SETTINGS}} disabled />);
  for(const text of ['Dead-letter list size','overflow is discarded and counted','Failed attempts (worker nacks sent)','Dead-letter overflow discards','CPU seconds spent on failed attempts'])expect(queue).toContain(text);
 });

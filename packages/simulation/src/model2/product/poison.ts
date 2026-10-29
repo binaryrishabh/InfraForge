@@ -25,7 +25,7 @@ export function compilePoisonKeys(input: SystemsInput, contract: ProductContract
         if (++arrivals > input.limits.maxRequests) throw Error("Poison arrival budget exceeded");
         const key = identity("root", source.id, row.id);
         if (keyedUniform(input.seed, worker.id, key, "poison-job/1") >= share / 100) continue;
-        if (keys.length >= ASYNC_LIMITS.messages) throw Error("Poison key budget exceeded");
+        if (keys.length >= ASYNC_LIMITS.messages) throw Error(`Poison key budget exceeded: ${ASYNC_LIMITS.messages} bad uploads is the limit; lower the bad-upload share or the offered load.`);
         keys.push(key);
       }
     }

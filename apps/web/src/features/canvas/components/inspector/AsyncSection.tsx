@@ -14,7 +14,7 @@ export function AsyncSection({ resource, disabled }: { resource: Resource; disab
     ? { asyncQueue: { ...resource.asyncQueue, enabled: policy?.enabled ?? false, ...patch } }
     : { asyncWorker: { ...resource.asyncWorker, enabled: policy?.enabled ?? false, ...patch } });
   const fields = queue ? [["visibilityTimeoutSeconds", "Visibility timeout (seconds)", 1, 3600], ["maxReceives", "Maximum deliveries before dead-lettering", 1, 10], ["retentionSeconds", "Message retention (seconds)", 1, 86400], ["deadLetterCapacity", "Dead-letter list size", 0, 1000]] as const
-    : [["concurrency", "Jobs in parallel", 1, 64], ["prefetch", "Prefetch credit (leased jobs)", 1, 64], ["cpuMsPerJob", "CPU milliseconds per job (authored assumption)", 1, 120000], ["badJobPercent", "Share of uploads that can never be processed", 0, 100]] as const;
+    : [["concurrency", "Jobs in parallel", 1, 64], ["prefetch", "Prefetch credit (leased jobs)", 1, 64], ["cpuMsPerJob", "CPU milliseconds per job (authored assumption)", 1, 120000], ["badJobPercent", "Share of arriving uploads that can never be processed", 0, 100]] as const;
   const error = asyncSettingsError(resource.type, resource.asyncQueue, resource.asyncWorker);
   return <InspectorSection title={queue ? "Upload queue" : "Background worker"}>
     <Switch label={queue ? "Process uploads asynchronously" : "Use this VM as a worker"} checked={policy?.enabled === true} disabled={disabled}
