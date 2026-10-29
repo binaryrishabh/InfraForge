@@ -8,6 +8,7 @@ import { peakTrafficV1 } from "./peak-traffic/v1";
 import { loseAnAppServerV1 } from "./lose-an-app-server/v1";
 import { cacheFailureV1 } from "./cache-failure/v1";
 import { headroomUnderCpuPressureV1 } from "./headroom-under-cpu-pressure/v1";
+import { afterTheCacheReturnsV2 } from "./after-the-cache-returns/v2";
 import { afterTheCacheReturnsV1 } from "./after-the-cache-returns/v1";
 import { loseAnAppServerV2 } from "./lose-an-app-server/v2";
 import { firstProductionApiV2 } from "./first-production-api/v2";
@@ -42,4 +43,5 @@ export const CHALLENGE_VERSIONS: readonly ChallengeDefinition[] = [
   peakTrafficV2,
   loseAnAppServerV2,
   headroomUnderCpuPressureV2,
+  afterTheCacheReturnsV2,
 ];

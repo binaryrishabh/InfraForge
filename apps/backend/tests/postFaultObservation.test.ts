@@ -9,9 +9,11 @@ import { buildRunReport } from "../reports/report";
 import { sampleHash } from "../evidence/contract";
 import type { CapturedEvidence } from "../evidence/contract";
 import type { StoredRun } from "../reports/report";
-import { answers, attemptReport, attemptRow, legacyDefinition as definition, REFERENCE } from "./challengeHarness";
+import { answers, attemptReport, attemptRow, legacyDefinition as definition } from "./challengeHarness";
 
 const d = definition("after-the-cache-returns"), plan = recordedExperiment(d)!;
+// Historical comparison fixtures keep the v1 topology and its one-change reference.
+const historicalReference = { ...d.starter!, resources: d.starter!.resources.map(r => r.id === "db" ? { ...r, skuId: "db.m5.large" } : r) };
 const prediction = answers(d, { "target-health": "healthy", "overall-health": "saturated", "scale-out": "yes" });
 
 /* A recorded attempt of the retired after-the-cache-returns exercise. Its reports stay readable, so the observation
@@ -123,7 +125,7 @@ test("early stop and worker interruption during observation keep partial facts w
 });
 
 test("Compare and improvement preserve observation conditions and present sample facts without a timing winner", () => {
-  const a = row(), b = recorded(REFERENCE[d.id]!);
+  const a = row(), b = recorded(historicalReference);
   b.createdAt = new Date(a.createdAt.getTime() + 1000);
   const comparison = classifyComparison(a, b);
   expect(comparison.challengeConditions).toBe("same"); expect(comparison.designChangeReview?.count).toBe(1);

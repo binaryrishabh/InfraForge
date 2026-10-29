@@ -74,6 +74,16 @@ the runtime. Initial cache candidates settle; the selected `after-the-cache-retu
 second lesson: delayed scale-out changes later database connection pressure. Its starter fails,
 its hidden one-change reference passes, and its 106 samples fit the existing bound.
 
+`after-the-cache-returns@2` restores the two retired cache lessons as one Model 2 exercise.
+It uses independent app pools, real database session admission and a cache crash, with a DB-tier-only
+reference change. At second 42 the starter's cache is Healthy but its database is Saturated at 85/85
+sessions (4.2% CPU); the reference is Healthy at 63/1,360 sessions. Actions apply one microsecond
+after a sampled second, so a crash applied at 10 ends at 40 plus one microsecond and restarts
+at 41 plus one microsecond; 42 is the first sampled cache return. The short retained tail is deliberate:
+canvas database deadlines remain authored 1s/2s, cache deadlines are authored 10ms, and the load
+generator permits 512 concurrent serial connections. These are not PostgreSQL, Redis or browser
+defaults. No retry policy is enabled. `cache-failure@1` stays retired and historical versions stay pinned.
+
 Research applied to model 1 (not imported as real-cloud guarantees):
 
 - [Principles of Chaos Engineering](https://principlesofchaos.org/): explicit measurable hypotheses;
