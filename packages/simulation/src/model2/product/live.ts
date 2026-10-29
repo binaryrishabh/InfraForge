@@ -123,7 +123,7 @@ export function createLiveModel2(compiled: CompiledProduct, nodeIds: string[]) {
         if (resource.kind !== "delivery-queue" || !compiled.semantic.nodes.find((n) => n.id === resource.id)?.profile.includes("canvas-async/1")) continue;
         const queue = runtime.inspectQueue(resource.id);
         const workers = compiled.input.resources.filter((r) => r.kind === "async-worker" && r.broker === resource.id).map((r) => runtime.inspectWorker(r.id));
-        if (metrics[resource.id] && queue && queue.ready > 0) metrics[resource.id]!.health = "degraded";
+        if (metrics[resource.id] && queue && queue.ready > 0 && metrics[resource.id]!.health === "healthy") metrics[resource.id]!.health = "degraded";
         if (metrics[resource.id]) metrics[resource.id]!.asyncQueue = { version: 1, published: queue?.accepted ?? null, completed: workers.length && workers.every(Boolean) ? workers.reduce((n, w) => n + w!.processed, 0) : null, readyDepth: queue?.ready ?? null, oldestReadyAgeSeconds: queue?.oldestReadyAgeUs == null ? null : queue.oldestReadyAgeUs / SECOND, inFlight: queue?.inFlight ?? null, redeliveries: queue?.redelivered ?? null, deadLettered: queue?.deadLettered ?? null };
       }
       const offered = caller.offered - previousCaller.offered, completedRps = caller.completed - previousCaller.completed, failedRps = caller.failed - previousCaller.failed;

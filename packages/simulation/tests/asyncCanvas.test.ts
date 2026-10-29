@@ -87,3 +87,13 @@ test('producer behind load balancer is refused so health polling cannot publish 
  const d=design();d.resources.push({id:'lb',type:'Load Balancer',x:0,y:0});d.connections.push({id:'lb-app',sourceId:'lb',targetId:'app',sourceType:'Load Balancer',targetType:'Virtual Machine',port:80});
  const a=contractFromDesign(d);expect('refused' in a && a.refused.some(r=>r.message.includes('health polling'))).toBe(true);
 });
+test('a crashed queue that still holds a backlog stays failed and is never relabelled degraded',()=>{
+ const d=design(true,8);const a=prepare(d);
+ let contract=withRunLength(a.contract,30,'async-queue-crash');
+ contract=withTimeline(contract,[{id:'crashq',kind:'crash',node:'queue',atUs:12000000,durationUs:10000000,restartUs:1000000}]);
+ const c=compileProduct(d,contract);if(!c.ok)throw Error(JSON.stringify(c));
+ const live=createLiveModel2(c.value,['app','queue','worker','store']);const seen:string[]=[];let backlogWhileDown=0;
+ for(let s=1;s<=20;s++){live.advanceSecond();const m=live.project().metrics.queue!;seen[s]=m.health;if(s===8)expect(m.health).toBe('degraded');if(s>=14&&s<=20&&(m.asyncQueue?.readyDepth??0)>0)backlogWhileDown++;}
+ expect(backlogWhileDown).toBeGreaterThan(0);
+ expect(seen.slice(14,21).every(h=>h==='failed')).toBe(true);
+});
